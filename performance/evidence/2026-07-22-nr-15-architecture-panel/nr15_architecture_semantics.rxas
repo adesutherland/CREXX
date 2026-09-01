@@ -1,0 +1,2837 @@
+/*
+ * SOURCE                 : nr15_architecture_semantics.crexx
+ */
+
+.meta "nr15_architecture_semantics.nr15panelstem"="b" ".unknown" .class
+.globals=0
+
+main() .locals=96
+   .meta "nr15_architecture_semantics.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "nr15_architecture_semantics.crexx" 5 1 16 "say \"CHECK: D1\""
+   say "CHECK: D1"
+   .srcstep 117 117 17 "nr15_architecture_semantics.crexx" 6 1 13 "call test_d1()"
+   .meta "nr15_architecture_semantics.main.result"="b" ".string" r6
+   .srcstep 2 2 17 "nr15_architecture_semantics.crexx" 16 3 19 "  result = .string"
+   null r6
+   .srcstep 3 3 17 "nr15_architecture_semantics.crexx" 15 3 17 "  target = .stem()"
+   load r10,0
+   call r8,§rxfnsb.stem.§factory(),r10
+   .traceevent "F" 4 "R" "O" "r" 8 3 3 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 8 3 3 0 "target" ""
+   .srcstep 4 4 17 "nr15_architecture_semantics.crexx" 17 3 18 "  say \"D1: empty\""
+   say "D1: empty"
+   .srcstep 5 5 17 "nr15_architecture_semantics.crexx" 18 3 11 "  key = \"\""
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 5 5 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 5 5 0 "key" ""
+   .srcstep 6 6 17 "nr15_architecture_semantics.crexx" 19 3 22 "  value = \"empty-key\""
+   load r9,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 9 6 6 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 6 6 0 "value" ""
+   .srcstep 7 7 17 "nr15_architecture_semantics.crexx" 20 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 8 8 17 "nr15_architecture_semantics.crexx" 21 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 16 16 17 "nr15_architecture_semantics.crexx" 22 3 47 "  call expect(result == value, \"D1 empty key\")"
+   .srcstep 9 9 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 9 9 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 9 9 0 "value" ""
+   seq r11,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 11 9 9 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 11 9 9 0 "condition" ""
+   .srcstep 14 14 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 11 14 14 0 "condition" ""
+   not r10,r11
+   .traceevent "P" 4 "R" "B" "r" 10 14 14 0 "" ""
+   brf l1398iffalse,r10
+   .srcstep 15 15 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 10 10 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 empty key"
+   .srcstep 13 13 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 11 11 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 11 11 0 "return_value" ""
+   .srcstep 12 12 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "return_value" ""
+   exit r12
+l1398iffalse:
+   .srcstep 17 17 17 "nr15_architecture_semantics.crexx" 24 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 17 17 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 17 17 0 "key" ""
+   .srcstep 18 18 17 "nr15_architecture_semantics.crexx" 25 3 20 "  say \"D1: Unicode\""
+   say "D1: Unicode"
+   .srcstep 19 19 17 "nr15_architecture_semantics.crexx" 26 3 26 "  value = \"unicode-value\""
+   load r9,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 9 19 19 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 19 19 0 "value" ""
+   .srcstep 20 20 17 "nr15_architecture_semantics.crexx" 27 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 21 21 17 "nr15_architecture_semantics.crexx" 28 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 29 29 17 "nr15_architecture_semantics.crexx" 29 3 45 "  call expect(result == value, \"D1 Unicode\")"
+   .srcstep 22 22 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 22 22 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 22 22 0 "value" ""
+   seq r13,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 13 22 22 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 13 22 22 0 "condition" ""
+   .srcstep 27 27 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 13 27 27 0 "condition" ""
+   not r10,r13
+   .traceevent "P" 4 "R" "B" "r" 10 27 27 0 "" ""
+   brf l1753iffalse,r10
+   .srcstep 28 28 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 23 23 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 Unicode"
+   .srcstep 26 26 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 24 24 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 24 24 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 24 24 0 "return_value" ""
+   .srcstep 25 25 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 14 0 0 0 "return_value" ""
+   exit r14
+l1753iffalse:
+   .srcstep 30 30 17 "nr15_architecture_semantics.crexx" 31 3 18 "  key = \"missing\""
+   load r3,"missing"
+   .traceevent "L" 4 "R" "S" "r" 3 30 30 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 30 30 0 "key" ""
+   .srcstep 31 31 17 "nr15_architecture_semantics.crexx" 32 3 18 "  say \"D1: reset\""
+   say "D1: reset"
+   .srcstep 32 32 17 "nr15_architecture_semantics.crexx" 33 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 40 40 17 "nr15_architecture_semantics.crexx" 34 3 47 "  call expect(result == \"\", \"D1 initial miss\")"
+   .srcstep 33 33 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 33 33 0 "result" ""
+   seq r15,r6,""
+   .traceevent "O" 4 "R" "B" "r" 15 33 33 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 15 33 33 0 "condition" ""
+   .srcstep 38 38 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 15 38 38 0 "condition" ""
+   not r10,r15
+   .traceevent "P" 4 "R" "B" "r" 10 38 38 0 "" ""
+   brf l2142iffalse,r10
+   .srcstep 39 39 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 34 34 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 initial miss"
+   .srcstep 37 37 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 35 35 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r16,1
+   .traceevent "L" 4 "R" "I" "r" 16 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 35 35 0 "return_value" ""
+   .srcstep 36 36 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 16 0 0 0 "return_value" ""
+   exit r16
+l2142iffalse:
+   .srcstep 41 41 17 "nr15_architecture_semantics.crexx" 35 3 29 "  value = \"assigned-default\""
+   load r9,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 9 41 41 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 41 41 0 "value" ""
+   .srcstep 42 42 17 "nr15_architecture_semantics.crexx" 36 13 37 "  assembler nr15d1reset target,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1reset r8,r9
+   .srcstep 43 43 17 "nr15_architecture_semantics.crexx" 37 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 51 51 17 "nr15_architecture_semantics.crexx" 38 3 53 "  call expect(result == value, \"D1 missing default\")"
+   .srcstep 44 44 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 44 44 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 44 44 0 "value" ""
+   seq r17,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 17 44 44 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 17 44 44 0 "condition" ""
+   .srcstep 49 49 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 17 49 49 0 "condition" ""
+   not r10,r17
+   .traceevent "P" 4 "R" "B" "r" 10 49 49 0 "" ""
+   brf l2280iffalse,r10
+   .srcstep 50 50 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 45 45 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 missing default"
+   .srcstep 48 48 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 46 46 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r18,1
+   .traceevent "L" 4 "R" "I" "r" 18 46 46 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 46 46 0 "return_value" ""
+   .srcstep 47 47 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 18 0 0 0 "return_value" ""
+   exit r18
+l2280iffalse:
+   .srcstep 52 52 17 "nr15_architecture_semantics.crexx" 39 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 52 52 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 52 52 0 "key" ""
+   .srcstep 53 53 17 "nr15_architecture_semantics.crexx" 40 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 61 61 17 "nr15_architecture_semantics.crexx" 41 3 54 "  call expect(result == value, \"D1 generation reset\")"
+   .srcstep 54 54 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 54 54 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 54 54 0 "value" ""
+   seq r19,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 19 54 54 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 19 54 54 0 "condition" ""
+   .srcstep 59 59 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 19 59 59 0 "condition" ""
+   not r10,r19
+   .traceevent "P" 4 "R" "B" "r" 10 59 59 0 "" ""
+   brf l2418iffalse,r10
+   .srcstep 60 60 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 55 55 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 generation reset"
+   .srcstep 58 58 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 56 56 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 56 56 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 56 56 0 "return_value" ""
+   .srcstep 57 57 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 20 0 0 0 "return_value" ""
+   exit r20
+l2418iffalse:
+   .srcstep 62 62 17 "nr15_architecture_semantics.crexx" 42 3 20 "  value = \"updated\""
+   load r9,"updated"
+   .traceevent "L" 4 "R" "S" "r" 9 62 62 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 62 62 0 "value" ""
+   .srcstep 63 63 17 "nr15_architecture_semantics.crexx" 43 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 64 64 17 "nr15_architecture_semantics.crexx" 44 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 72 72 17 "nr15_architecture_semantics.crexx" 45 3 56 "  call expect(result == value, \"D1 update after reset\")"
+   .srcstep 65 65 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 65 65 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 65 65 0 "value" ""
+   seq r21,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 21 65 65 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 21 65 65 0 "condition" ""
+   .srcstep 70 70 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 21 70 70 0 "condition" ""
+   not r10,r21
+   .traceevent "P" 4 "R" "B" "r" 10 70 70 0 "" ""
+   brf l2556iffalse,r10
+   .srcstep 71 71 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 66 66 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 update after reset"
+   .srcstep 69 69 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 67 67 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 67 67 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 67 67 0 "return_value" ""
+   .srcstep 68 68 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "return_value" ""
+   exit r22
+l2556iffalse:
+   .srcstep 73 73 17 "nr15_architecture_semantics.crexx" 47 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 73 73 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 73 73 0 "key" ""
+   .srcstep 74 74 17 "nr15_architecture_semantics.crexx" 48 3 22 "  say \"D1: collision\""
+   say "D1: collision"
+   .srcstep 75 75 17 "nr15_architecture_semantics.crexx" 49 3 23 "  value = \"chain-head\""
+   load r9,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 9 75 75 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 75 75 0 "value" ""
+   .srcstep 76 76 17 "nr15_architecture_semantics.crexx" 50 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 77 77 17 "nr15_architecture_semantics.crexx" 51 3 23 "  key = \"collision-60\""
+   load r3,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 3 77 77 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 77 77 0 "key" ""
+   .srcstep 78 78 17 "nr15_architecture_semantics.crexx" 52 3 23 "  value = \"chain-tail\""
+   load r9,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 9 78 78 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 78 78 0 "value" ""
+   .srcstep 79 79 17 "nr15_architecture_semantics.crexx" 53 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 80 80 17 "nr15_architecture_semantics.crexx" 54 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 88 88 17 "nr15_architecture_semantics.crexx" 55 3 52 "  call expect(result == value, \"D1 collision tail\")"
+   .srcstep 81 81 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 81 81 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 81 81 0 "value" ""
+   seq r23,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 23 81 81 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 23 81 81 0 "condition" ""
+   .srcstep 86 86 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 23 86 86 0 "condition" ""
+   not r10,r23
+   .traceevent "P" 4 "R" "B" "r" 10 86 86 0 "" ""
+   brf l2694iffalse,r10
+   .srcstep 87 87 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 82 82 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 collision tail"
+   .srcstep 85 85 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 83 83 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r24,1
+   .traceevent "L" 4 "R" "I" "r" 24 83 83 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 24 83 83 0 "return_value" ""
+   .srcstep 84 84 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 24 0 0 0 "return_value" ""
+   exit r24
+l2694iffalse:
+   .srcstep 89 89 17 "nr15_architecture_semantics.crexx" 56 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 89 89 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 89 89 0 "key" ""
+   .srcstep 90 90 17 "nr15_architecture_semantics.crexx" 57 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 91 91 17 "nr15_architecture_semantics.crexx" 58 3 59 "  call expect(result == \"chain-head\", \"D1 collision head\")"
+   .traceevent "V" 6 "R" "S" "r" 6 91 91 0 "result" ""
+   seq r26,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 91 91 0 "" ""
+   load r27,"D1 collision head"
+   .traceevent "L" 4 "R" "S" "r" 27 91 91 0 "" ""
+   settp r27,768
+   call2 r10,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 10 91 91 0 "expect" ""
+   .srcstep 92 92 17 "nr15_architecture_semantics.crexx" 60 3 19 "  left = \"account\""
+   load r4,"account"
+   .traceevent "L" 4 "R" "S" "r" 4 92 92 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 92 92 0 "left" ""
+   .srcstep 93 93 17 "nr15_architecture_semantics.crexx" 61 3 21 "  say \"D1: segments\""
+   say "D1: segments"
+   .srcstep 94 94 17 "nr15_architecture_semantics.crexx" 62 3 30 "  right = \"κλειδί-🔥\""
+   load r7,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 7 94 94 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 94 94 0 "right" ""
+   .srcstep 95 95 17 "nr15_architecture_semantics.crexx" 63 3 22 "  value = \"segmented\""
+   load r9,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 9 95 95 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 95 95 0 "value" ""
+   .srcstep 96 96 17 "nr15_architecture_semantics.crexx" 64 13 47 "  assembler nr15d1set2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set2 r8,r4,r7,r9
+   .srcstep 97 97 17 "nr15_architecture_semantics.crexx" 65 3 34 "  combined = left || \".\" || right"
+   .traceevent "V" 6 "R" "S" "r" 4 97 97 0 "left" ""
+   concat r27,r4,"."
+   .traceevent "O" 4 "R" "S" "r" 27 97 97 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 7 97 97 0 "right" ""
+   concat r0,r27,r7
+   .traceevent "O" 4 "R" "S" "r" 0 97 97 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 97 97 0 "combined" ""
+   .srcstep 98 98 17 "nr15_architecture_semantics.crexx" 66 13 45 "  assembler nr15d1get result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "combined" ""
+   nr15d1get r6,r8,r0
+   .srcstep 99 99 17 "nr15_architecture_semantics.crexx" 67 3 61 "  call expect(result == value, \"D1 segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 99 99 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 99 99 0 "value" ""
+   seq r26,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 26 99 99 0 "" ""
+   load r27,"D1 segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 27 99 99 0 "" ""
+   settp r27,768
+   call2 r28,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 28 99 99 0 "expect" ""
+   .srcstep 100 100 17 "nr15_architecture_semantics.crexx" 68 13 48 "  assembler nr15d1get2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   nr15d1get2 r6,r8,r4,r7
+   .srcstep 101 101 17 "nr15_architecture_semantics.crexx" 69 3 51 "  call expect(result == value, \"D1 segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 101 101 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 101 101 0 "value" ""
+   seq r26,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 26 101 101 0 "" ""
+   load r27,"D1 segmented get"
+   .traceevent "L" 4 "R" "S" "r" 27 101 101 0 "" ""
+   settp r27,768
+   call2 r29,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 29 101 101 0 "expect" ""
+   .srcstep 102 102 17 "nr15_architecture_semantics.crexx" 70 3 12 "  index = 1"
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 102 102 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 102 102 0 "index" ""
+   .srcstep 103 103 17 "nr15_architecture_semantics.crexx" 71 13 44 "  assembler nr15d1keyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d1keyat r6,r8,r2
+   .srcstep 104 104 17 "nr15_architecture_semantics.crexx" 72 3 54 "  call expect(result == \"\", \"D1 insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 6 104 104 0 "result" ""
+   seq r26,r6,""
+   .traceevent "O" 4 "R" "B" "r" 26 104 104 0 "" ""
+   load r27,"D1 insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 27 104 104 0 "" ""
+   settp r27,768
+   call2 r30,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 30 104 104 0 "expect" ""
+   .srcstep 105 105 17 "nr15_architecture_semantics.crexx" 73 13 46 "  assembler nr15d1valueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d1valueat r6,r8,r2
+   .srcstep 106 106 17 "nr15_architecture_semantics.crexx" 74 3 75 "  call expect(result == \"assigned-default\", \"D1 generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 6 106 106 0 "result" ""
+   seq r26,r6,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 26 106 106 0 "" ""
+   load r27,"D1 generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 27 106 106 0 "" ""
+   settp r27,768
+   call2 r31,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 31 106 106 0 "expect" ""
+   .srcstep 107 107 17 "nr15_architecture_semantics.crexx" 76 3 16 "  copy = target"
+   .traceevent "V" 6 "R" "O" "r" 8 107 107 0 "target" ""
+   copy r1,r8
+   .traceevent "A" 6 "R" "O" "r" 1 107 107 0 "copy" ""
+   .srcstep 108 108 17 "nr15_architecture_semantics.crexx" 77 3 17 "  say \"D1: copy\""
+   say "D1: copy"
+   .srcstep 109 109 17 "nr15_architecture_semantics.crexx" 78 3 22 "  value = \"copy-only\""
+   load r9,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 9 109 109 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 109 109 0 "value" ""
+   .srcstep 110 110 17 "nr15_architecture_semantics.crexx" 79 13 37 "  assembler nr15d1set copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r1,r3,r9
+   .srcstep 111 111 17 "nr15_architecture_semantics.crexx" 80 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 112 112 17 "nr15_architecture_semantics.crexx" 81 3 64 "  call expect(result == \"chain-head\", \"D1 deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 6 112 112 0 "result" ""
+   seq r26,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 112 112 0 "" ""
+   load r27,"D1 deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 27 112 112 0 "" ""
+   settp r27,768
+   call2 r32,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 32 112 112 0 "expect" ""
+   .srcstep 113 113 17 "nr15_architecture_semantics.crexx" 82 3 16 "  moved = .stem()"
+   load r27,0
+   call r5,§rxfnsb.stem.§factory(),r27
+   .traceevent "F" 4 "R" "O" "r" 5 113 113 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 113 113 0 "moved" ""
+   .srcstep 114 114 17 "nr15_architecture_semantics.crexx" 83 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   move r5,r1
+   .srcstep 115 115 17 "nr15_architecture_semantics.crexx" 84 13 39 "  assembler nr15d1get result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r5,r3
+   .srcstep 116 116 17 "nr15_architecture_semantics.crexx" 85 3 57 "  call expect(result == \"copy-only\", \"D1 move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 6 116 116 0 "result" ""
+   seq r26,r6,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 26 116 116 0 "" ""
+   load r27,"D1 move transfer"
+   .traceevent "L" 4 "R" "S" "r" 27 116 116 0 "" ""
+   settp r27,768
+   call2 r33,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 33 116 116 0 "expect" ""
+   .srcstep 118 118 17 "nr15_architecture_semantics.crexx" 7 1 16 "say \"CHECK: D2\""
+   say "CHECK: D2"
+   .srcstep 224 224 17 "nr15_architecture_semantics.crexx" 8 1 13 "call test_d2()"
+   .meta "nr15_architecture_semantics.main.result"="b" ".string" r40
+   .srcstep 119 119 17 "nr15_architecture_semantics.crexx" 90 3 19 "  result = .string"
+   null r40
+   .srcstep 123 123 17 "nr15_architecture_semantics.crexx" 89 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 120 120 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setattrs r44,0
+   .srcstep 121 121 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setobjtype r44,"nr15_architecture_semantics.nr15panelstem"
+   .srcstep 122 122 33 "nr15_architecture_semantics.crexx" 234 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 44 122 122 0 "§factory" ""
+   copy r42,r44
+   .traceevent "A" 6 "R" "O" "r" 42 122 122 0 "target" ""
+   .srcstep 124 124 17 "nr15_architecture_semantics.crexx" 91 3 11 "  key = \"\""
+   load r37,""
+   .traceevent "L" 4 "R" "S" "r" 37 124 124 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 124 124 0 "key" ""
+   .srcstep 125 125 17 "nr15_architecture_semantics.crexx" 92 3 22 "  value = \"empty-key\""
+   load r43,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 43 125 125 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 125 125 0 "value" ""
+   .srcstep 126 126 17 "nr15_architecture_semantics.crexx" 93 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r42,r37,r43
+   .srcstep 127 127 17 "nr15_architecture_semantics.crexx" 94 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 135 135 17 "nr15_architecture_semantics.crexx" 95 3 47 "  call expect(result == value, \"D2 empty key\")"
+   .srcstep 128 128 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 128 128 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 128 128 0 "value" ""
+   seq r45,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 45 128 128 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 45 128 128 0 "condition" ""
+   .srcstep 133 133 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 45 133 133 0 "condition" ""
+   not r27,r45
+   .traceevent "P" 4 "R" "B" "r" 27 133 133 0 "" ""
+   brf l1776iffalse,r27
+   .srcstep 134 134 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 129 129 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 empty key"
+   .srcstep 132 132 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 130 130 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r46,1
+   .traceevent "L" 4 "R" "I" "r" 46 130 130 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 46 130 130 0 "return_value" ""
+   .srcstep 131 131 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 46 0 0 0 "return_value" ""
+   exit r46
+l1776iffalse:
+   .srcstep 136 136 17 "nr15_architecture_semantics.crexx" 97 3 28 "  key = \"κλειδί-🔥\""
+   load r37,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 37 136 136 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 136 136 0 "key" ""
+   .srcstep 137 137 17 "nr15_architecture_semantics.crexx" 98 3 26 "  value = \"unicode-value\""
+   load r43,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 43 137 137 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 137 137 0 "value" ""
+   .srcstep 138 138 17 "nr15_architecture_semantics.crexx" 99 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r42,r37,r43
+   .srcstep 139 139 17 "nr15_architecture_semantics.crexx" 100 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 147 147 17 "nr15_architecture_semantics.crexx" 101 3 45 "  call expect(result == value, \"D2 Unicode\")"
+   .srcstep 140 140 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 140 140 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 140 140 0 "value" ""
+   seq r47,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 47 140 140 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 47 140 140 0 "condition" ""
+   .srcstep 145 145 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 47 145 145 0 "condition" ""
+   not r27,r47
+   .traceevent "P" 4 "R" "B" "r" 27 145 145 0 "" ""
+   brf l2165iffalse,r27
+   .srcstep 146 146 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 141 141 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 Unicode"
+   .srcstep 144 144 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 142 142 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r48,1
+   .traceevent "L" 4 "R" "I" "r" 48 142 142 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 48 142 142 0 "return_value" ""
+   .srcstep 143 143 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 48 0 0 0 "return_value" ""
+   exit r48
+l2165iffalse:
+   .srcstep 148 148 17 "nr15_architecture_semantics.crexx" 103 3 18 "  key = \"missing\""
+   load r37,"missing"
+   .traceevent "L" 4 "R" "S" "r" 37 148 148 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 148 148 0 "key" ""
+   .srcstep 149 149 17 "nr15_architecture_semantics.crexx" 104 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 157 157 17 "nr15_architecture_semantics.crexx" 105 3 47 "  call expect(result == \"\", \"D2 initial miss\")"
+   .srcstep 150 150 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 150 150 0 "result" ""
+   seq r49,r40,""
+   .traceevent "O" 4 "R" "B" "r" 49 150 150 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 49 150 150 0 "condition" ""
+   .srcstep 155 155 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 49 155 155 0 "condition" ""
+   not r27,r49
+   .traceevent "P" 4 "R" "B" "r" 27 155 155 0 "" ""
+   brf l2303iffalse,r27
+   .srcstep 156 156 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 151 151 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 initial miss"
+   .srcstep 154 154 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 152 152 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r50,1
+   .traceevent "L" 4 "R" "I" "r" 50 152 152 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 50 152 152 0 "return_value" ""
+   .srcstep 153 153 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 50 0 0 0 "return_value" ""
+   exit r50
+l2303iffalse:
+   .srcstep 158 158 17 "nr15_architecture_semantics.crexx" 106 3 29 "  value = \"assigned-default\""
+   load r43,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 43 158 158 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 158 158 0 "value" ""
+   .srcstep 159 159 17 "nr15_architecture_semantics.crexx" 107 13 37 "  assembler nr15d2reset target,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2reset r42,r43
+   .srcstep 160 160 17 "nr15_architecture_semantics.crexx" 108 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 168 168 17 "nr15_architecture_semantics.crexx" 109 3 53 "  call expect(result == value, \"D2 missing default\")"
+   .srcstep 161 161 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 161 161 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 161 161 0 "value" ""
+   seq r51,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 51 161 161 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 51 161 161 0 "condition" ""
+   .srcstep 166 166 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 51 166 166 0 "condition" ""
+   not r27,r51
+   .traceevent "P" 4 "R" "B" "r" 27 166 166 0 "" ""
+   brf l2441iffalse,r27
+   .srcstep 167 167 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 162 162 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 missing default"
+   .srcstep 165 165 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 163 163 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r52,1
+   .traceevent "L" 4 "R" "I" "r" 52 163 163 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 52 163 163 0 "return_value" ""
+   .srcstep 164 164 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 52 0 0 0 "return_value" ""
+   exit r52
+l2441iffalse:
+   .srcstep 169 169 17 "nr15_architecture_semantics.crexx" 110 3 28 "  key = \"κλειδί-🔥\""
+   load r37,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 37 169 169 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 169 169 0 "key" ""
+   .srcstep 170 170 17 "nr15_architecture_semantics.crexx" 111 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 178 178 17 "nr15_architecture_semantics.crexx" 112 3 54 "  call expect(result == value, \"D2 generation reset\")"
+   .srcstep 171 171 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 171 171 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 171 171 0 "value" ""
+   seq r53,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 53 171 171 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 53 171 171 0 "condition" ""
+   .srcstep 176 176 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 53 176 176 0 "condition" ""
+   not r27,r53
+   .traceevent "P" 4 "R" "B" "r" 27 176 176 0 "" ""
+   brf l2579iffalse,r27
+   .srcstep 177 177 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 172 172 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 generation reset"
+   .srcstep 175 175 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 173 173 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r54,1
+   .traceevent "L" 4 "R" "I" "r" 54 173 173 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 54 173 173 0 "return_value" ""
+   .srcstep 174 174 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 54 0 0 0 "return_value" ""
+   exit r54
+l2579iffalse:
+   .srcstep 179 179 17 "nr15_architecture_semantics.crexx" 113 3 20 "  value = \"updated\""
+   load r43,"updated"
+   .traceevent "L" 4 "R" "S" "r" 43 179 179 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 179 179 0 "value" ""
+   .srcstep 180 180 17 "nr15_architecture_semantics.crexx" 114 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r42,r37,r43
+   .srcstep 181 181 17 "nr15_architecture_semantics.crexx" 115 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 189 189 17 "nr15_architecture_semantics.crexx" 116 3 56 "  call expect(result == value, \"D2 update after reset\")"
+   .srcstep 182 182 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 40 182 182 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 182 182 0 "value" ""
+   seq r55,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 55 182 182 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 55 182 182 0 "condition" ""
+   .srcstep 187 187 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 55 187 187 0 "condition" ""
+   not r27,r55
+   .traceevent "P" 4 "R" "B" "r" 27 187 187 0 "" ""
+   brf l2717iffalse,r27
+   .srcstep 188 188 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 183 183 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 update after reset"
+   .srcstep 186 186 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 184 184 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r56,1
+   .traceevent "L" 4 "R" "I" "r" 56 184 184 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 56 184 184 0 "return_value" ""
+   .srcstep 185 185 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 56 0 0 0 "return_value" ""
+   exit r56
+l2717iffalse:
+   .srcstep 190 190 17 "nr15_architecture_semantics.crexx" 118 3 23 "  key = \"collision-15\""
+   load r37,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 37 190 190 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 190 190 0 "key" ""
+   .srcstep 191 191 17 "nr15_architecture_semantics.crexx" 119 3 23 "  value = \"chain-head\""
+   load r43,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 43 191 191 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 191 191 0 "value" ""
+   .srcstep 192 192 17 "nr15_architecture_semantics.crexx" 120 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r42,r37,r43
+   .srcstep 193 193 17 "nr15_architecture_semantics.crexx" 121 3 23 "  key = \"collision-60\""
+   load r37,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 37 193 193 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 193 193 0 "key" ""
+   .srcstep 194 194 17 "nr15_architecture_semantics.crexx" 122 3 23 "  value = \"chain-tail\""
+   load r43,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 43 194 194 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 194 194 0 "value" ""
+   .srcstep 195 195 17 "nr15_architecture_semantics.crexx" 123 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r42,r37,r43
+   .srcstep 196 196 17 "nr15_architecture_semantics.crexx" 124 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 197 197 17 "nr15_architecture_semantics.crexx" 125 3 52 "  call expect(result == value, \"D2 collision tail\")"
+   .traceevent "V" 6 "R" "S" "r" 40 197 197 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 197 197 0 "value" ""
+   seq r26,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 26 197 197 0 "" ""
+   load r27,"D2 collision tail"
+   .traceevent "L" 4 "R" "S" "r" 27 197 197 0 "" ""
+   settp r27,768
+   call2 r57,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 57 197 197 0 "expect" ""
+   .srcstep 198 198 17 "nr15_architecture_semantics.crexx" 126 3 23 "  key = \"collision-15\""
+   load r37,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 37 198 198 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 198 198 0 "key" ""
+   .srcstep 199 199 17 "nr15_architecture_semantics.crexx" 127 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 200 200 17 "nr15_architecture_semantics.crexx" 128 3 59 "  call expect(result == \"chain-head\", \"D2 collision head\")"
+   .traceevent "V" 6 "R" "S" "r" 40 200 200 0 "result" ""
+   seq r26,r40,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 200 200 0 "" ""
+   load r27,"D2 collision head"
+   .traceevent "L" 4 "R" "S" "r" 27 200 200 0 "" ""
+   settp r27,768
+   call2 r58,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 58 200 200 0 "expect" ""
+   .srcstep 201 201 17 "nr15_architecture_semantics.crexx" 130 3 19 "  left = \"account\""
+   load r38,"account"
+   .traceevent "L" 4 "R" "S" "r" 38 201 201 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 201 201 0 "left" ""
+   .srcstep 202 202 17 "nr15_architecture_semantics.crexx" 131 3 30 "  right = \"κλειδί-🔥\""
+   load r41,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 41 202 202 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 41 202 202 0 "right" ""
+   .srcstep 203 203 17 "nr15_architecture_semantics.crexx" 132 3 22 "  value = \"segmented\""
+   load r43,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 43 203 203 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 203 203 0 "value" ""
+   .srcstep 204 204 17 "nr15_architecture_semantics.crexx" 133 13 47 "  assembler nr15d2set2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 38 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 41 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set2 r42,r38,r41,r43
+   .srcstep 205 205 17 "nr15_architecture_semantics.crexx" 134 3 34 "  combined = left || \".\" || right"
+   .traceevent "V" 6 "R" "S" "r" 38 205 205 0 "left" ""
+   concat r27,r38,"."
+   .traceevent "O" 4 "R" "S" "r" 27 205 205 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 41 205 205 0 "right" ""
+   concat r34,r27,r41
+   .traceevent "O" 4 "R" "S" "r" 34 205 205 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 34 205 205 0 "combined" ""
+   .srcstep 206 206 17 "nr15_architecture_semantics.crexx" 135 13 45 "  assembler nr15d2get result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 34 0 0 0 "combined" ""
+   nr15d2get r40,r42,r34
+   .srcstep 207 207 17 "nr15_architecture_semantics.crexx" 136 3 61 "  call expect(result == value, \"D2 segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 40 207 207 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 207 207 0 "value" ""
+   seq r26,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 26 207 207 0 "" ""
+   load r27,"D2 segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 27 207 207 0 "" ""
+   settp r27,768
+   call2 r59,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 59 207 207 0 "expect" ""
+   .srcstep 208 208 17 "nr15_architecture_semantics.crexx" 137 13 48 "  assembler nr15d2get2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 38 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 41 0 0 0 "right" ""
+   nr15d2get2 r40,r42,r38,r41
+   .srcstep 209 209 17 "nr15_architecture_semantics.crexx" 138 3 51 "  call expect(result == value, \"D2 segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 40 209 209 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 43 209 209 0 "value" ""
+   seq r26,r40,r43
+   .traceevent "O" 4 "R" "B" "r" 26 209 209 0 "" ""
+   load r27,"D2 segmented get"
+   .traceevent "L" 4 "R" "S" "r" 27 209 209 0 "" ""
+   settp r27,768
+   call2 r60,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 60 209 209 0 "expect" ""
+   .srcstep 210 210 17 "nr15_architecture_semantics.crexx" 139 3 12 "  index = 1"
+   load r36,1
+   .traceevent "L" 4 "R" "I" "r" 36 210 210 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 210 210 0 "index" ""
+   .srcstep 211 211 17 "nr15_architecture_semantics.crexx" 140 13 44 "  assembler nr15d2keyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 36 0 0 0 "index" ""
+   nr15d2keyat r40,r42,r36
+   .srcstep 212 212 17 "nr15_architecture_semantics.crexx" 141 3 54 "  call expect(result == \"\", \"D2 insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 40 212 212 0 "result" ""
+   seq r26,r40,""
+   .traceevent "O" 4 "R" "B" "r" 26 212 212 0 "" ""
+   load r27,"D2 insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 27 212 212 0 "" ""
+   settp r27,768
+   call2 r61,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 61 212 212 0 "expect" ""
+   .srcstep 213 213 17 "nr15_architecture_semantics.crexx" 142 13 46 "  assembler nr15d2valueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 36 0 0 0 "index" ""
+   nr15d2valueat r40,r42,r36
+   .srcstep 214 214 17 "nr15_architecture_semantics.crexx" 143 3 75 "  call expect(result == \"assigned-default\", \"D2 generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 40 214 214 0 "result" ""
+   seq r26,r40,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 26 214 214 0 "" ""
+   load r27,"D2 generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 27 214 214 0 "" ""
+   settp r27,768
+   call2 r62,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 62 214 214 0 "expect" ""
+   .srcstep 215 215 17 "nr15_architecture_semantics.crexx" 145 3 16 "  copy = target"
+   .traceevent "V" 6 "R" "O" "r" 42 215 215 0 "target" ""
+   copy r35,r42
+   .traceevent "A" 6 "R" "O" "r" 35 215 215 0 "copy" ""
+   .srcstep 216 216 17 "nr15_architecture_semantics.crexx" 146 3 22 "  value = \"copy-only\""
+   load r43,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 43 216 216 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 216 216 0 "value" ""
+   .srcstep 217 217 17 "nr15_architecture_semantics.crexx" 147 13 37 "  assembler nr15d2set copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 35 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 43 0 0 0 "value" ""
+   nr15d2set r35,r37,r43
+   .srcstep 218 218 17 "nr15_architecture_semantics.crexx" 148 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 42 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r42,r37
+   .srcstep 219 219 17 "nr15_architecture_semantics.crexx" 149 3 64 "  call expect(result == \"chain-head\", \"D2 deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 40 219 219 0 "result" ""
+   seq r26,r40,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 219 219 0 "" ""
+   load r27,"D2 deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 27 219 219 0 "" ""
+   settp r27,768
+   call2 r63,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 63 219 219 0 "expect" ""
+   .srcstep 220 220 17 "nr15_architecture_semantics.crexx" 150 3 25 "  moved = .Nr15PanelStem()"
+   call r39,§nr15_architecture_semantics.nr15panelstem.§factory()
+   .traceevent "F" 4 "R" "O" "r" 39 220 220 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 39 220 220 0 "moved" ""
+   .srcstep 221 221 17 "nr15_architecture_semantics.crexx" 151 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 39 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 35 0 0 0 "copy" ""
+   move r39,r35
+   .srcstep 222 222 17 "nr15_architecture_semantics.crexx" 152 13 39 "  assembler nr15d2get result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 40 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 39 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 37 0 0 0 "key" ""
+   nr15d2get r40,r39,r37
+   .srcstep 223 223 17 "nr15_architecture_semantics.crexx" 153 3 57 "  call expect(result == \"copy-only\", \"D2 move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 40 223 223 0 "result" ""
+   seq r26,r40,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 26 223 223 0 "" ""
+   load r27,"D2 move transfer"
+   .traceevent "L" 4 "R" "S" "r" 27 223 223 0 "" ""
+   settp r27,768
+   call2 r64,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 64 223 223 0 "expect" ""
+   .srcstep 225 225 17 "nr15_architecture_semantics.crexx" 9 1 23 "say \"CHECK: D2-hybrid\""
+   say "CHECK: D2-hybrid"
+   .srcstep 331 331 17 "nr15_architecture_semantics.crexx" 10 1 14 "call test_d2h()"
+   .meta "nr15_architecture_semantics.main.result"="b" ".string" r71
+   .srcstep 226 226 17 "nr15_architecture_semantics.crexx" 158 3 19 "  result = .string"
+   null r71
+   .srcstep 230 230 17 "nr15_architecture_semantics.crexx" 157 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 227 227 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setattrs r75,0
+   .srcstep 228 228 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setobjtype r75,"nr15_architecture_semantics.nr15panelstem"
+   .srcstep 229 229 33 "nr15_architecture_semantics.crexx" 234 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 75 229 229 0 "§factory" ""
+   copy r73,r75
+   .traceevent "A" 6 "R" "O" "r" 73 229 229 0 "target" ""
+   .srcstep 231 231 17 "nr15_architecture_semantics.crexx" 159 3 11 "  key = \"\""
+   load r68,""
+   .traceevent "L" 4 "R" "S" "r" 68 231 231 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 231 231 0 "key" ""
+   .srcstep 232 232 17 "nr15_architecture_semantics.crexx" 160 3 22 "  value = \"empty-key\""
+   load r74,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 74 232 232 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 232 232 0 "value" ""
+   .srcstep 233 233 17 "nr15_architecture_semantics.crexx" 161 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r73,r68,r74
+   .srcstep 234 234 17 "nr15_architecture_semantics.crexx" 162 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 242 242 17 "nr15_architecture_semantics.crexx" 163 3 54 "  call expect(result == value, \"D2-hybrid empty key\")"
+   .srcstep 235 235 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 235 235 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 235 235 0 "value" ""
+   seq r76,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 76 235 235 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 76 235 235 0 "condition" ""
+   .srcstep 240 240 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 76 240 240 0 "condition" ""
+   not r27,r76
+   .traceevent "P" 4 "R" "B" "r" 27 240 240 0 "" ""
+   brf l1827iffalse,r27
+   .srcstep 241 241 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 236 236 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid empty key"
+   .srcstep 239 239 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 237 237 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r77,1
+   .traceevent "L" 4 "R" "I" "r" 77 237 237 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 77 237 237 0 "return_value" ""
+   .srcstep 238 238 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 77 0 0 0 "return_value" ""
+   exit r77
+l1827iffalse:
+   .srcstep 243 243 17 "nr15_architecture_semantics.crexx" 165 3 28 "  key = \"κλειδί-🔥\""
+   load r68,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 68 243 243 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 243 243 0 "key" ""
+   .srcstep 244 244 17 "nr15_architecture_semantics.crexx" 166 3 26 "  value = \"unicode-value\""
+   load r74,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 74 244 244 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 244 244 0 "value" ""
+   .srcstep 245 245 17 "nr15_architecture_semantics.crexx" 167 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r73,r68,r74
+   .srcstep 246 246 17 "nr15_architecture_semantics.crexx" 168 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 254 254 17 "nr15_architecture_semantics.crexx" 169 3 52 "  call expect(result == value, \"D2-hybrid Unicode\")"
+   .srcstep 247 247 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 247 247 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 247 247 0 "value" ""
+   seq r78,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 78 247 247 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 78 247 247 0 "condition" ""
+   .srcstep 252 252 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 78 252 252 0 "condition" ""
+   not r27,r78
+   .traceevent "P" 4 "R" "B" "r" 27 252 252 0 "" ""
+   brf l2188iffalse,r27
+   .srcstep 253 253 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 248 248 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid Unicode"
+   .srcstep 251 251 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 249 249 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r79,1
+   .traceevent "L" 4 "R" "I" "r" 79 249 249 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 79 249 249 0 "return_value" ""
+   .srcstep 250 250 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 79 0 0 0 "return_value" ""
+   exit r79
+l2188iffalse:
+   .srcstep 255 255 17 "nr15_architecture_semantics.crexx" 171 3 18 "  key = \"missing\""
+   load r68,"missing"
+   .traceevent "L" 4 "R" "S" "r" 68 255 255 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 255 255 0 "key" ""
+   .srcstep 256 256 17 "nr15_architecture_semantics.crexx" 172 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 264 264 17 "nr15_architecture_semantics.crexx" 173 3 54 "  call expect(result == \"\", \"D2-hybrid initial miss\")"
+   .srcstep 257 257 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 257 257 0 "result" ""
+   seq r80,r71,""
+   .traceevent "O" 4 "R" "B" "r" 80 257 257 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 80 257 257 0 "condition" ""
+   .srcstep 262 262 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 80 262 262 0 "condition" ""
+   not r27,r80
+   .traceevent "P" 4 "R" "B" "r" 27 262 262 0 "" ""
+   brf l2326iffalse,r27
+   .srcstep 263 263 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 258 258 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid initial miss"
+   .srcstep 261 261 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 259 259 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r81,1
+   .traceevent "L" 4 "R" "I" "r" 81 259 259 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 81 259 259 0 "return_value" ""
+   .srcstep 260 260 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 81 0 0 0 "return_value" ""
+   exit r81
+l2326iffalse:
+   .srcstep 265 265 17 "nr15_architecture_semantics.crexx" 174 3 29 "  value = \"assigned-default\""
+   load r74,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 74 265 265 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 265 265 0 "value" ""
+   .srcstep 266 266 17 "nr15_architecture_semantics.crexx" 175 13 38 "  assembler nr15d2hreset target,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hreset r73,r74
+   .srcstep 267 267 17 "nr15_architecture_semantics.crexx" 176 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 275 275 17 "nr15_architecture_semantics.crexx" 177 3 60 "  call expect(result == value, \"D2-hybrid missing default\")"
+   .srcstep 268 268 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 268 268 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 268 268 0 "value" ""
+   seq r82,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 82 268 268 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 82 268 268 0 "condition" ""
+   .srcstep 273 273 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 82 273 273 0 "condition" ""
+   not r27,r82
+   .traceevent "P" 4 "R" "B" "r" 27 273 273 0 "" ""
+   brf l2464iffalse,r27
+   .srcstep 274 274 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 269 269 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid missing default"
+   .srcstep 272 272 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 270 270 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r83,1
+   .traceevent "L" 4 "R" "I" "r" 83 270 270 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 83 270 270 0 "return_value" ""
+   .srcstep 271 271 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 83 0 0 0 "return_value" ""
+   exit r83
+l2464iffalse:
+   .srcstep 276 276 17 "nr15_architecture_semantics.crexx" 178 3 28 "  key = \"κλειδί-🔥\""
+   load r68,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 68 276 276 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 276 276 0 "key" ""
+   .srcstep 277 277 17 "nr15_architecture_semantics.crexx" 179 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 285 285 17 "nr15_architecture_semantics.crexx" 180 3 61 "  call expect(result == value, \"D2-hybrid generation reset\")"
+   .srcstep 278 278 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 278 278 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 278 278 0 "value" ""
+   seq r84,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 84 278 278 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 84 278 278 0 "condition" ""
+   .srcstep 283 283 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 84 283 283 0 "condition" ""
+   not r27,r84
+   .traceevent "P" 4 "R" "B" "r" 27 283 283 0 "" ""
+   brf l2602iffalse,r27
+   .srcstep 284 284 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 279 279 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid generation reset"
+   .srcstep 282 282 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 280 280 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r85,1
+   .traceevent "L" 4 "R" "I" "r" 85 280 280 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 85 280 280 0 "return_value" ""
+   .srcstep 281 281 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 85 0 0 0 "return_value" ""
+   exit r85
+l2602iffalse:
+   .srcstep 286 286 17 "nr15_architecture_semantics.crexx" 181 3 20 "  value = \"updated\""
+   load r74,"updated"
+   .traceevent "L" 4 "R" "S" "r" 74 286 286 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 286 286 0 "value" ""
+   .srcstep 287 287 17 "nr15_architecture_semantics.crexx" 182 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r73,r68,r74
+   .srcstep 288 288 17 "nr15_architecture_semantics.crexx" 183 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 296 296 17 "nr15_architecture_semantics.crexx" 184 3 63 "  call expect(result == value, \"D2-hybrid update after reset\")"
+   .srcstep 289 289 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 71 289 289 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 289 289 0 "value" ""
+   seq r86,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 86 289 289 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 86 289 289 0 "condition" ""
+   .srcstep 294 294 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 86 294 294 0 "condition" ""
+   not r27,r86
+   .traceevent "P" 4 "R" "B" "r" 27 294 294 0 "" ""
+   brf l2740iffalse,r27
+   .srcstep 295 295 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 290 290 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid update after reset"
+   .srcstep 293 293 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 291 291 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r87,1
+   .traceevent "L" 4 "R" "I" "r" 87 291 291 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 87 291 291 0 "return_value" ""
+   .srcstep 292 292 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 87 0 0 0 "return_value" ""
+   exit r87
+l2740iffalse:
+   .srcstep 297 297 17 "nr15_architecture_semantics.crexx" 186 3 23 "  key = \"collision-15\""
+   load r68,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 68 297 297 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 297 297 0 "key" ""
+   .srcstep 298 298 17 "nr15_architecture_semantics.crexx" 187 3 23 "  value = \"chain-head\""
+   load r74,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 74 298 298 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 298 298 0 "value" ""
+   .srcstep 299 299 17 "nr15_architecture_semantics.crexx" 188 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r73,r68,r74
+   .srcstep 300 300 17 "nr15_architecture_semantics.crexx" 189 3 23 "  key = \"collision-60\""
+   load r68,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 68 300 300 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 300 300 0 "key" ""
+   .srcstep 301 301 17 "nr15_architecture_semantics.crexx" 190 3 23 "  value = \"chain-tail\""
+   load r74,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 74 301 301 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 301 301 0 "value" ""
+   .srcstep 302 302 17 "nr15_architecture_semantics.crexx" 191 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r73,r68,r74
+   .srcstep 303 303 17 "nr15_architecture_semantics.crexx" 192 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 304 304 17 "nr15_architecture_semantics.crexx" 193 3 59 "  call expect(result == value, \"D2-hybrid collision tail\")"
+   .traceevent "V" 6 "R" "S" "r" 71 304 304 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 304 304 0 "value" ""
+   seq r26,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 26 304 304 0 "" ""
+   load r27,"D2-hybrid collision tail"
+   .traceevent "L" 4 "R" "S" "r" 27 304 304 0 "" ""
+   settp r27,768
+   call2 r88,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 88 304 304 0 "expect" ""
+   .srcstep 305 305 17 "nr15_architecture_semantics.crexx" 194 3 23 "  key = \"collision-15\""
+   load r68,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 68 305 305 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 68 305 305 0 "key" ""
+   .srcstep 306 306 17 "nr15_architecture_semantics.crexx" 195 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 307 307 17 "nr15_architecture_semantics.crexx" 196 3 66 "  call expect(result == \"chain-head\", \"D2-hybrid collision head\")"
+   .traceevent "V" 6 "R" "S" "r" 71 307 307 0 "result" ""
+   seq r26,r71,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 307 307 0 "" ""
+   load r27,"D2-hybrid collision head"
+   .traceevent "L" 4 "R" "S" "r" 27 307 307 0 "" ""
+   settp r27,768
+   call2 r89,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 89 307 307 0 "expect" ""
+   .srcstep 308 308 17 "nr15_architecture_semantics.crexx" 198 3 19 "  left = \"account\""
+   load r69,"account"
+   .traceevent "L" 4 "R" "S" "r" 69 308 308 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 69 308 308 0 "left" ""
+   .srcstep 309 309 17 "nr15_architecture_semantics.crexx" 199 3 30 "  right = \"κλειδί-🔥\""
+   load r72,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 72 309 309 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 72 309 309 0 "right" ""
+   .srcstep 310 310 17 "nr15_architecture_semantics.crexx" 200 3 22 "  value = \"segmented\""
+   load r74,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 74 310 310 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 310 310 0 "value" ""
+   .srcstep 311 311 17 "nr15_architecture_semantics.crexx" 201 13 48 "  assembler nr15d2hset2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 69 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 72 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset2 r73,r69,r72,r74
+   .srcstep 312 312 17 "nr15_architecture_semantics.crexx" 202 3 34 "  combined = left || \".\" || right"
+   .traceevent "V" 6 "R" "S" "r" 69 312 312 0 "left" ""
+   concat r27,r69,"."
+   .traceevent "O" 4 "R" "S" "r" 27 312 312 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 72 312 312 0 "right" ""
+   concat r65,r27,r72
+   .traceevent "O" 4 "R" "S" "r" 65 312 312 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 65 312 312 0 "combined" ""
+   .srcstep 313 313 17 "nr15_architecture_semantics.crexx" 203 13 46 "  assembler nr15d2hget result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 65 0 0 0 "combined" ""
+   nr15d2hget r71,r73,r65
+   .srcstep 314 314 17 "nr15_architecture_semantics.crexx" 204 3 68 "  call expect(result == value, \"D2-hybrid segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 71 314 314 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 314 314 0 "value" ""
+   seq r26,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 26 314 314 0 "" ""
+   load r27,"D2-hybrid segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 27 314 314 0 "" ""
+   settp r27,768
+   call2 r90,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 90 314 314 0 "expect" ""
+   .srcstep 315 315 17 "nr15_architecture_semantics.crexx" 205 13 49 "  assembler nr15d2hget2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 69 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 72 0 0 0 "right" ""
+   nr15d2hget2 r71,r73,r69,r72
+   .srcstep 316 316 17 "nr15_architecture_semantics.crexx" 206 3 58 "  call expect(result == value, \"D2-hybrid segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 71 316 316 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 74 316 316 0 "value" ""
+   seq r26,r71,r74
+   .traceevent "O" 4 "R" "B" "r" 26 316 316 0 "" ""
+   load r27,"D2-hybrid segmented get"
+   .traceevent "L" 4 "R" "S" "r" 27 316 316 0 "" ""
+   settp r27,768
+   call2 r91,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 91 316 316 0 "expect" ""
+   .srcstep 317 317 17 "nr15_architecture_semantics.crexx" 207 3 12 "  index = 1"
+   load r67,1
+   .traceevent "L" 4 "R" "I" "r" 67 317 317 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 67 317 317 0 "index" ""
+   .srcstep 318 318 17 "nr15_architecture_semantics.crexx" 208 13 45 "  assembler nr15d2hkeyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 67 0 0 0 "index" ""
+   nr15d2hkeyat r71,r73,r67
+   .srcstep 319 319 17 "nr15_architecture_semantics.crexx" 209 3 61 "  call expect(result == \"\", \"D2-hybrid insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 71 319 319 0 "result" ""
+   seq r26,r71,""
+   .traceevent "O" 4 "R" "B" "r" 26 319 319 0 "" ""
+   load r27,"D2-hybrid insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 27 319 319 0 "" ""
+   settp r27,768
+   call2 r92,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 92 319 319 0 "expect" ""
+   .srcstep 320 320 17 "nr15_architecture_semantics.crexx" 210 13 47 "  assembler nr15d2hvalueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 67 0 0 0 "index" ""
+   nr15d2hvalueat r71,r73,r67
+   .srcstep 321 321 17 "nr15_architecture_semantics.crexx" 211 3 82 "  call expect(result == \"assigned-default\", \"D2-hybrid generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 71 321 321 0 "result" ""
+   seq r26,r71,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 26 321 321 0 "" ""
+   load r27,"D2-hybrid generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 27 321 321 0 "" ""
+   settp r27,768
+   call2 r93,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 93 321 321 0 "expect" ""
+   .srcstep 322 322 17 "nr15_architecture_semantics.crexx" 213 3 16 "  copy = target"
+   .traceevent "V" 6 "R" "O" "r" 73 322 322 0 "target" ""
+   copy r66,r73
+   .traceevent "A" 6 "R" "O" "r" 66 322 322 0 "copy" ""
+   .srcstep 323 323 17 "nr15_architecture_semantics.crexx" 214 3 22 "  value = \"copy-only\""
+   load r74,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 74 323 323 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 74 323 323 0 "value" ""
+   .srcstep 324 324 17 "nr15_architecture_semantics.crexx" 215 13 38 "  assembler nr15d2hset copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 66 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 74 0 0 0 "value" ""
+   nr15d2hset r66,r68,r74
+   .srcstep 325 325 17 "nr15_architecture_semantics.crexx" 216 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 73 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r73,r68
+   .srcstep 326 326 17 "nr15_architecture_semantics.crexx" 217 3 71 "  call expect(result == \"chain-head\", \"D2-hybrid deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 71 326 326 0 "result" ""
+   seq r26,r71,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 26 326 326 0 "" ""
+   load r27,"D2-hybrid deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 27 326 326 0 "" ""
+   settp r27,768
+   call2 r94,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 94 326 326 0 "expect" ""
+   .srcstep 327 327 17 "nr15_architecture_semantics.crexx" 218 3 25 "  moved = .Nr15PanelStem()"
+   call r70,§nr15_architecture_semantics.nr15panelstem.§factory()
+   .traceevent "F" 4 "R" "O" "r" 70 327 327 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 70 327 327 0 "moved" ""
+   .srcstep 328 328 17 "nr15_architecture_semantics.crexx" 219 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 70 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 66 0 0 0 "copy" ""
+   move r70,r66
+   .srcstep 329 329 17 "nr15_architecture_semantics.crexx" 220 13 40 "  assembler nr15d2hget result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 71 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 70 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 68 0 0 0 "key" ""
+   nr15d2hget r71,r70,r68
+   .srcstep 330 330 17 "nr15_architecture_semantics.crexx" 221 3 64 "  call expect(result == \"copy-only\", \"D2-hybrid move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 71 330 330 0 "result" ""
+   seq r26,r71,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 26 330 330 0 "" ""
+   load r27,"D2-hybrid move transfer"
+   .traceevent "L" 4 "R" "S" "r" 27 330 330 0 "" ""
+   settp r27,768
+   call2 r95,expect(),r26,r27
+   .traceevent "F" 4 "R" "V" "r" 95 330 330 0 "expect" ""
+   .srcstep 332 332 17 "nr15_architecture_semantics.crexx" 11 1 47 "say \"PASS: NR-15 architecture panel semantics\""
+   say "PASS: NR-15 architecture panel semantics"
+   .srcstep 333 333 17 "nr15_architecture_semantics.crexx" 12 1 9 "return 0"
+   ret 0
+
+test_d1() .locals=35
+   .meta "nr15_architecture_semantics.test_d1"="b" ".void" test_d1() ""
+   .srcstep 457 457 17 "nr15_architecture_semantics.crexx" 14 1 19 "test_d1: procedure"
+   numsci 18,1,1
+   .meta "nr15_architecture_semantics.test_d1.result"="b" ".string" r6
+   .srcstep 334 334 17 "nr15_architecture_semantics.crexx" 16 3 19 "  result = .string"
+   null r6
+   .srcstep 335 335 17 "nr15_architecture_semantics.crexx" 15 3 17 "  target = .stem()"
+   .meta "nr15_architecture_semantics.test_d1.target"="b" ".stem" r8
+   load r10,0
+   call r8,§rxfnsb.stem.§factory(),r10
+   .traceevent "F" 4 "R" "O" "r" 8 335 335 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 8 335 335 0 "target" ""
+   .srcstep 336 336 17 "nr15_architecture_semantics.crexx" 17 3 18 "  say \"D1: empty\""
+   say "D1: empty"
+   .srcstep 337 337 17 "nr15_architecture_semantics.crexx" 18 3 11 "  key = \"\""
+   .meta "nr15_architecture_semantics.test_d1.key"="b" ".string" r3
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 337 337 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 337 337 0 "key" ""
+   .srcstep 338 338 17 "nr15_architecture_semantics.crexx" 19 3 22 "  value = \"empty-key\""
+   .meta "nr15_architecture_semantics.test_d1.value"="b" ".string" r9
+   load r9,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 9 338 338 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 338 338 0 "value" ""
+   .srcstep 339 339 17 "nr15_architecture_semantics.crexx" 20 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 340 340 17 "nr15_architecture_semantics.crexx" 21 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 348 348 17 "nr15_architecture_semantics.crexx" 22 3 47 "  call expect(result == value, \"D1 empty key\")"
+   .srcstep 341 341 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 341 341 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 341 341 0 "value" ""
+   seq r11,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 11 341 341 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 11 341 341 0 "condition" ""
+   .srcstep 346 346 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 11 346 346 0 "condition" ""
+   not r10,r11
+   .traceevent "P" 4 "R" "B" "r" 10 346 346 0 "" ""
+   brf l1352iffalse,r10
+   .srcstep 347 347 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 342 342 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 empty key"
+   .srcstep 345 345 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 343 343 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 343 343 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 343 343 0 "return_value" ""
+   .srcstep 344 344 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "return_value" ""
+   exit r12
+l1352iffalse:
+   .srcstep 349 349 17 "nr15_architecture_semantics.crexx" 24 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 349 349 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 349 349 0 "key" ""
+   .srcstep 350 350 17 "nr15_architecture_semantics.crexx" 25 3 20 "  say \"D1: Unicode\""
+   say "D1: Unicode"
+   .srcstep 351 351 17 "nr15_architecture_semantics.crexx" 26 3 26 "  value = \"unicode-value\""
+   load r9,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 9 351 351 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 351 351 0 "value" ""
+   .srcstep 352 352 17 "nr15_architecture_semantics.crexx" 27 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 353 353 17 "nr15_architecture_semantics.crexx" 28 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 361 361 17 "nr15_architecture_semantics.crexx" 29 3 45 "  call expect(result == value, \"D1 Unicode\")"
+   .srcstep 354 354 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 354 354 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 354 354 0 "value" ""
+   seq r13,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 13 354 354 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 13 354 354 0 "condition" ""
+   .srcstep 359 359 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 13 359 359 0 "condition" ""
+   not r10,r13
+   .traceevent "P" 4 "R" "B" "r" 10 359 359 0 "" ""
+   brf l1684iffalse,r10
+   .srcstep 360 360 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 355 355 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 Unicode"
+   .srcstep 358 358 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 356 356 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 356 356 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 356 356 0 "return_value" ""
+   .srcstep 357 357 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 14 0 0 0 "return_value" ""
+   exit r14
+l1684iffalse:
+   .srcstep 362 362 17 "nr15_architecture_semantics.crexx" 31 3 18 "  key = \"missing\""
+   load r3,"missing"
+   .traceevent "L" 4 "R" "S" "r" 3 362 362 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 362 362 0 "key" ""
+   .srcstep 363 363 17 "nr15_architecture_semantics.crexx" 32 3 18 "  say \"D1: reset\""
+   say "D1: reset"
+   .srcstep 364 364 17 "nr15_architecture_semantics.crexx" 33 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 372 372 17 "nr15_architecture_semantics.crexx" 34 3 47 "  call expect(result == \"\", \"D1 initial miss\")"
+   .srcstep 365 365 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 365 365 0 "result" ""
+   seq r15,r6,""
+   .traceevent "O" 4 "R" "B" "r" 15 365 365 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 15 365 365 0 "condition" ""
+   .srcstep 370 370 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 15 370 370 0 "condition" ""
+   not r10,r15
+   .traceevent "P" 4 "R" "B" "r" 10 370 370 0 "" ""
+   brf l2073iffalse,r10
+   .srcstep 371 371 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 366 366 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 initial miss"
+   .srcstep 369 369 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 367 367 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r16,1
+   .traceevent "L" 4 "R" "I" "r" 16 367 367 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 367 367 0 "return_value" ""
+   .srcstep 368 368 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 16 0 0 0 "return_value" ""
+   exit r16
+l2073iffalse:
+   .srcstep 373 373 17 "nr15_architecture_semantics.crexx" 35 3 29 "  value = \"assigned-default\""
+   load r9,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 9 373 373 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 373 373 0 "value" ""
+   .srcstep 374 374 17 "nr15_architecture_semantics.crexx" 36 13 37 "  assembler nr15d1reset target,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1reset r8,r9
+   .srcstep 375 375 17 "nr15_architecture_semantics.crexx" 37 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 383 383 17 "nr15_architecture_semantics.crexx" 38 3 53 "  call expect(result == value, \"D1 missing default\")"
+   .srcstep 376 376 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 376 376 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 376 376 0 "value" ""
+   seq r17,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 17 376 376 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 17 376 376 0 "condition" ""
+   .srcstep 381 381 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 17 381 381 0 "condition" ""
+   not r10,r17
+   .traceevent "P" 4 "R" "B" "r" 10 381 381 0 "" ""
+   brf l2211iffalse,r10
+   .srcstep 382 382 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 377 377 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 missing default"
+   .srcstep 380 380 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 378 378 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r18,1
+   .traceevent "L" 4 "R" "I" "r" 18 378 378 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 378 378 0 "return_value" ""
+   .srcstep 379 379 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 18 0 0 0 "return_value" ""
+   exit r18
+l2211iffalse:
+   .srcstep 384 384 17 "nr15_architecture_semantics.crexx" 39 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 384 384 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 384 384 0 "key" ""
+   .srcstep 385 385 17 "nr15_architecture_semantics.crexx" 40 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 393 393 17 "nr15_architecture_semantics.crexx" 41 3 54 "  call expect(result == value, \"D1 generation reset\")"
+   .srcstep 386 386 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 386 386 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 386 386 0 "value" ""
+   seq r19,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 19 386 386 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 19 386 386 0 "condition" ""
+   .srcstep 391 391 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 19 391 391 0 "condition" ""
+   not r10,r19
+   .traceevent "P" 4 "R" "B" "r" 10 391 391 0 "" ""
+   brf l2349iffalse,r10
+   .srcstep 392 392 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 387 387 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 generation reset"
+   .srcstep 390 390 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 388 388 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 388 388 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 388 388 0 "return_value" ""
+   .srcstep 389 389 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 20 0 0 0 "return_value" ""
+   exit r20
+l2349iffalse:
+   .srcstep 394 394 17 "nr15_architecture_semantics.crexx" 42 3 20 "  value = \"updated\""
+   load r9,"updated"
+   .traceevent "L" 4 "R" "S" "r" 9 394 394 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 394 394 0 "value" ""
+   .srcstep 395 395 17 "nr15_architecture_semantics.crexx" 43 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 396 396 17 "nr15_architecture_semantics.crexx" 44 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 404 404 17 "nr15_architecture_semantics.crexx" 45 3 56 "  call expect(result == value, \"D1 update after reset\")"
+   .srcstep 397 397 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 397 397 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 397 397 0 "value" ""
+   seq r21,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 21 397 397 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 21 397 397 0 "condition" ""
+   .srcstep 402 402 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 21 402 402 0 "condition" ""
+   not r10,r21
+   .traceevent "P" 4 "R" "B" "r" 10 402 402 0 "" ""
+   brf l2487iffalse,r10
+   .srcstep 403 403 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 398 398 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 update after reset"
+   .srcstep 401 401 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 399 399 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 399 399 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 399 399 0 "return_value" ""
+   .srcstep 400 400 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "return_value" ""
+   exit r22
+l2487iffalse:
+   .srcstep 405 405 17 "nr15_architecture_semantics.crexx" 47 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 405 405 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 405 405 0 "key" ""
+   .srcstep 406 406 17 "nr15_architecture_semantics.crexx" 48 3 22 "  say \"D1: collision\""
+   say "D1: collision"
+   .srcstep 407 407 17 "nr15_architecture_semantics.crexx" 49 3 23 "  value = \"chain-head\""
+   load r9,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 9 407 407 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 407 407 0 "value" ""
+   .srcstep 408 408 17 "nr15_architecture_semantics.crexx" 50 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 409 409 17 "nr15_architecture_semantics.crexx" 51 3 23 "  key = \"collision-60\""
+   load r3,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 3 409 409 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 409 409 0 "key" ""
+   .srcstep 410 410 17 "nr15_architecture_semantics.crexx" 52 3 23 "  value = \"chain-tail\""
+   load r9,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 9 410 410 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 410 410 0 "value" ""
+   .srcstep 411 411 17 "nr15_architecture_semantics.crexx" 53 13 39 "  assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r8,r3,r9
+   .srcstep 412 412 17 "nr15_architecture_semantics.crexx" 54 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 420 420 17 "nr15_architecture_semantics.crexx" 55 3 52 "  call expect(result == value, \"D1 collision tail\")"
+   .srcstep 413 413 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 413 413 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 413 413 0 "value" ""
+   seq r23,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 23 413 413 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 23 413 413 0 "condition" ""
+   .srcstep 418 418 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 23 418 418 0 "condition" ""
+   not r10,r23
+   .traceevent "P" 4 "R" "B" "r" 10 418 418 0 "" ""
+   brf l2625iffalse,r10
+   .srcstep 419 419 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 414 414 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 collision tail"
+   .srcstep 417 417 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 415 415 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r24,1
+   .traceevent "L" 4 "R" "I" "r" 24 415 415 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 24 415 415 0 "return_value" ""
+   .srcstep 416 416 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 24 0 0 0 "return_value" ""
+   exit r24
+l2625iffalse:
+   .srcstep 421 421 17 "nr15_architecture_semantics.crexx" 56 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 421 421 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 421 421 0 "key" ""
+   .srcstep 422 422 17 "nr15_architecture_semantics.crexx" 57 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 430 430 17 "nr15_architecture_semantics.crexx" 58 3 59 "  call expect(result == \"chain-head\", \"D1 collision head\")"
+   .srcstep 423 423 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 423 423 0 "result" ""
+   seq r25,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 25 423 423 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 25 423 423 0 "condition" ""
+   .srcstep 428 428 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 25 428 428 0 "condition" ""
+   not r10,r25
+   .traceevent "P" 4 "R" "B" "r" 10 428 428 0 "" ""
+   brf l2763iffalse,r10
+   .srcstep 429 429 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 424 424 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D1 collision head"
+   .srcstep 427 427 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 425 425 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r26,1
+   .traceevent "L" 4 "R" "I" "r" 26 425 425 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 425 425 0 "return_value" ""
+   .srcstep 426 426 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 26 0 0 0 "return_value" ""
+   exit r26
+l2763iffalse:
+   .srcstep 431 431 17 "nr15_architecture_semantics.crexx" 60 3 19 "  left = \"account\""
+   .meta "nr15_architecture_semantics.test_d1.left"="b" ".string" r4
+   load r4,"account"
+   .traceevent "L" 4 "R" "S" "r" 4 431 431 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 431 431 0 "left" ""
+   .srcstep 432 432 17 "nr15_architecture_semantics.crexx" 61 3 21 "  say \"D1: segments\""
+   say "D1: segments"
+   .srcstep 433 433 17 "nr15_architecture_semantics.crexx" 62 3 30 "  right = \"κλειδί-🔥\""
+   .meta "nr15_architecture_semantics.test_d1.right"="b" ".string" r7
+   load r7,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 7 433 433 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 433 433 0 "right" ""
+   .srcstep 434 434 17 "nr15_architecture_semantics.crexx" 63 3 22 "  value = \"segmented\""
+   load r9,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 9 434 434 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 434 434 0 "value" ""
+   .srcstep 435 435 17 "nr15_architecture_semantics.crexx" 64 13 47 "  assembler nr15d1set2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set2 r8,r4,r7,r9
+   .srcstep 436 436 17 "nr15_architecture_semantics.crexx" 65 3 34 "  combined = left || \".\" || right"
+   .meta "nr15_architecture_semantics.test_d1.combined"="b" ".string" r0
+   .traceevent "V" 6 "R" "S" "r" 4 436 436 0 "left" ""
+   concat r10,r4,"."
+   .traceevent "O" 4 "R" "S" "r" 10 436 436 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 7 436 436 0 "right" ""
+   concat r0,r10,r7
+   .traceevent "O" 4 "R" "S" "r" 0 436 436 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 436 436 0 "combined" ""
+   .srcstep 437 437 17 "nr15_architecture_semantics.crexx" 66 13 45 "  assembler nr15d1get result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "combined" ""
+   nr15d1get r6,r8,r0
+   .srcstep 438 438 17 "nr15_architecture_semantics.crexx" 67 3 61 "  call expect(result == value, \"D1 segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 438 438 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 438 438 0 "value" ""
+   seq r28,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 28 438 438 0 "" ""
+   load r29,"D1 segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 29 438 438 0 "" ""
+   settp r29,768
+   call2 r10,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 10 438 438 0 "expect" ""
+   .srcstep 439 439 17 "nr15_architecture_semantics.crexx" 68 13 48 "  assembler nr15d1get2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   nr15d1get2 r6,r8,r4,r7
+   .srcstep 440 440 17 "nr15_architecture_semantics.crexx" 69 3 51 "  call expect(result == value, \"D1 segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 440 440 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 440 440 0 "value" ""
+   seq r28,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 28 440 440 0 "" ""
+   load r29,"D1 segmented get"
+   .traceevent "L" 4 "R" "S" "r" 29 440 440 0 "" ""
+   settp r29,768
+   call2 r30,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 30 440 440 0 "expect" ""
+   .srcstep 441 441 17 "nr15_architecture_semantics.crexx" 70 3 12 "  index = 1"
+   .meta "nr15_architecture_semantics.test_d1.index"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 441 441 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 441 441 0 "index" ""
+   .srcstep 442 442 17 "nr15_architecture_semantics.crexx" 71 13 44 "  assembler nr15d1keyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d1keyat r6,r8,r2
+   .srcstep 443 443 17 "nr15_architecture_semantics.crexx" 72 3 54 "  call expect(result == \"\", \"D1 insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 6 443 443 0 "result" ""
+   seq r28,r6,""
+   .traceevent "O" 4 "R" "B" "r" 28 443 443 0 "" ""
+   load r29,"D1 insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 29 443 443 0 "" ""
+   settp r29,768
+   call2 r31,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 31 443 443 0 "expect" ""
+   .srcstep 444 444 17 "nr15_architecture_semantics.crexx" 73 13 46 "  assembler nr15d1valueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d1valueat r6,r8,r2
+   .srcstep 445 445 17 "nr15_architecture_semantics.crexx" 74 3 75 "  call expect(result == \"assigned-default\", \"D1 generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 6 445 445 0 "result" ""
+   seq r28,r6,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 28 445 445 0 "" ""
+   load r29,"D1 generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 29 445 445 0 "" ""
+   settp r29,768
+   call2 r32,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 32 445 445 0 "expect" ""
+   .srcstep 446 446 17 "nr15_architecture_semantics.crexx" 76 3 16 "  copy = target"
+   .meta "nr15_architecture_semantics.test_d1.copy"="b" ".stem" r1
+   .traceevent "V" 6 "R" "O" "r" 8 446 446 0 "target" ""
+   copy r1,r8
+   .traceevent "A" 6 "R" "O" "r" 1 446 446 0 "copy" ""
+   .srcstep 447 447 17 "nr15_architecture_semantics.crexx" 77 3 17 "  say \"D1: copy\""
+   say "D1: copy"
+   .srcstep 448 448 17 "nr15_architecture_semantics.crexx" 78 3 22 "  value = \"copy-only\""
+   load r9,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 9 448 448 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 448 448 0 "value" ""
+   .srcstep 449 449 17 "nr15_architecture_semantics.crexx" 79 13 37 "  assembler nr15d1set copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d1set r1,r3,r9
+   .srcstep 450 450 17 "nr15_architecture_semantics.crexx" 80 13 40 "  assembler nr15d1get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r8,r3
+   .srcstep 451 451 17 "nr15_architecture_semantics.crexx" 81 3 64 "  call expect(result == \"chain-head\", \"D1 deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 6 451 451 0 "result" ""
+   seq r28,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 28 451 451 0 "" ""
+   load r29,"D1 deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 29 451 451 0 "" ""
+   settp r29,768
+   call2 r33,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 33 451 451 0 "expect" ""
+   .srcstep 452 452 17 "nr15_architecture_semantics.crexx" 82 3 16 "  moved = .stem()"
+   .meta "nr15_architecture_semantics.test_d1.moved"="b" ".stem" r5
+   load r29,0
+   call r5,§rxfnsb.stem.§factory(),r29
+   .traceevent "F" 4 "R" "O" "r" 5 452 452 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 452 452 0 "moved" ""
+   .srcstep 453 453 17 "nr15_architecture_semantics.crexx" 83 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   move r5,r1
+   .srcstep 454 454 17 "nr15_architecture_semantics.crexx" 84 13 39 "  assembler nr15d1get result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d1get r6,r5,r3
+   .srcstep 455 455 17 "nr15_architecture_semantics.crexx" 85 3 57 "  call expect(result == \"copy-only\", \"D1 move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 6 455 455 0 "result" ""
+   seq r28,r6,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 28 455 455 0 "" ""
+   load r29,"D1 move transfer"
+   .traceevent "L" 4 "R" "S" "r" 29 455 455 0 "" ""
+   settp r29,768
+   call2 r34,expect(),r28,r29
+   .traceevent "F" 4 "R" "V" "r" 34 455 455 0 "expect" ""
+   .srcstep 456 456 17 "nr15_architecture_semantics.crexx" 86 3 9 "  return"
+   ret
+   .meta "nr15_architecture_semantics.test_d1.combined"
+   .meta "nr15_architecture_semantics.test_d1.copy"
+   .meta "nr15_architecture_semantics.test_d1.index"
+   .meta "nr15_architecture_semantics.test_d1.key"
+   .meta "nr15_architecture_semantics.test_d1.left"
+   .meta "nr15_architecture_semantics.test_d1.moved"
+   .meta "nr15_architecture_semantics.test_d1.result"
+   .meta "nr15_architecture_semantics.test_d1.right"
+   .meta "nr15_architecture_semantics.test_d1.target"
+   .meta "nr15_architecture_semantics.test_d1.value"
+
+test_d2() .locals=35
+   .meta "nr15_architecture_semantics.test_d2"="b" ".void" test_d2() ""
+   .srcstep 571 571 17 "nr15_architecture_semantics.crexx" 88 1 19 "test_d2: procedure"
+   numsci 18,1,1
+   .meta "nr15_architecture_semantics.test_d2.result"="b" ".string" r6
+   .srcstep 458 458 17 "nr15_architecture_semantics.crexx" 90 3 19 "  result = .string"
+   null r6
+   .srcstep 462 462 17 "nr15_architecture_semantics.crexx" 89 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 459 459 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setattrs r10,0
+   .srcstep 460 460 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setobjtype r10,"nr15_architecture_semantics.nr15panelstem"
+   .srcstep 461 461 33 "nr15_architecture_semantics.crexx" 234 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 10 461 461 0 "§factory" ""
+   copy r8,r10
+   .traceevent "A" 6 "R" "O" "r" 8 461 461 0 "target" ""
+   .srcstep 463 463 17 "nr15_architecture_semantics.crexx" 91 3 11 "  key = \"\""
+   .meta "nr15_architecture_semantics.test_d2.key"="b" ".string" r3
+   .meta "nr15_architecture_semantics.test_d2.target"="b" ".nr15panelstem" r8
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 463 463 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 463 463 0 "key" ""
+   .srcstep 464 464 17 "nr15_architecture_semantics.crexx" 92 3 22 "  value = \"empty-key\""
+   .meta "nr15_architecture_semantics.test_d2.value"="b" ".string" r9
+   load r9,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 9 464 464 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 464 464 0 "value" ""
+   .srcstep 465 465 17 "nr15_architecture_semantics.crexx" 93 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r8,r3,r9
+   .srcstep 466 466 17 "nr15_architecture_semantics.crexx" 94 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 474 474 17 "nr15_architecture_semantics.crexx" 95 3 47 "  call expect(result == value, \"D2 empty key\")"
+   .srcstep 467 467 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 467 467 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 467 467 0 "value" ""
+   seq r11,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 11 467 467 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 11 467 467 0 "condition" ""
+   .srcstep 472 472 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 11 472 472 0 "condition" ""
+   not r12,r11
+   .traceevent "P" 4 "R" "B" "r" 12 472 472 0 "" ""
+   brf l1707iffalse,r12
+   .srcstep 473 473 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 468 468 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 empty key"
+   .srcstep 471 471 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 469 469 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 469 469 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 469 469 0 "return_value" ""
+   .srcstep 470 470 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "return_value" ""
+   exit r13
+l1707iffalse:
+   .srcstep 475 475 17 "nr15_architecture_semantics.crexx" 97 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 475 475 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 475 475 0 "key" ""
+   .srcstep 476 476 17 "nr15_architecture_semantics.crexx" 98 3 26 "  value = \"unicode-value\""
+   load r9,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 9 476 476 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 476 476 0 "value" ""
+   .srcstep 477 477 17 "nr15_architecture_semantics.crexx" 99 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r8,r3,r9
+   .srcstep 478 478 17 "nr15_architecture_semantics.crexx" 100 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 486 486 17 "nr15_architecture_semantics.crexx" 101 3 45 "  call expect(result == value, \"D2 Unicode\")"
+   .srcstep 479 479 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 479 479 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 479 479 0 "value" ""
+   seq r14,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 14 479 479 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 14 479 479 0 "condition" ""
+   .srcstep 484 484 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 14 484 484 0 "condition" ""
+   not r12,r14
+   .traceevent "P" 4 "R" "B" "r" 12 484 484 0 "" ""
+   brf l2096iffalse,r12
+   .srcstep 485 485 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 480 480 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 Unicode"
+   .srcstep 483 483 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 481 481 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 481 481 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 481 481 0 "return_value" ""
+   .srcstep 482 482 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 15 0 0 0 "return_value" ""
+   exit r15
+l2096iffalse:
+   .srcstep 487 487 17 "nr15_architecture_semantics.crexx" 103 3 18 "  key = \"missing\""
+   load r3,"missing"
+   .traceevent "L" 4 "R" "S" "r" 3 487 487 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 487 487 0 "key" ""
+   .srcstep 488 488 17 "nr15_architecture_semantics.crexx" 104 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 496 496 17 "nr15_architecture_semantics.crexx" 105 3 47 "  call expect(result == \"\", \"D2 initial miss\")"
+   .srcstep 489 489 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 489 489 0 "result" ""
+   seq r16,r6,""
+   .traceevent "O" 4 "R" "B" "r" 16 489 489 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 16 489 489 0 "condition" ""
+   .srcstep 494 494 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 16 494 494 0 "condition" ""
+   not r12,r16
+   .traceevent "P" 4 "R" "B" "r" 12 494 494 0 "" ""
+   brf l2234iffalse,r12
+   .srcstep 495 495 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 490 490 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 initial miss"
+   .srcstep 493 493 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 491 491 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r17,1
+   .traceevent "L" 4 "R" "I" "r" 17 491 491 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 491 491 0 "return_value" ""
+   .srcstep 492 492 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "return_value" ""
+   exit r17
+l2234iffalse:
+   .srcstep 497 497 17 "nr15_architecture_semantics.crexx" 106 3 29 "  value = \"assigned-default\""
+   load r9,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 9 497 497 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 497 497 0 "value" ""
+   .srcstep 498 498 17 "nr15_architecture_semantics.crexx" 107 13 37 "  assembler nr15d2reset target,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2reset r8,r9
+   .srcstep 499 499 17 "nr15_architecture_semantics.crexx" 108 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 507 507 17 "nr15_architecture_semantics.crexx" 109 3 53 "  call expect(result == value, \"D2 missing default\")"
+   .srcstep 500 500 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 500 500 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 500 500 0 "value" ""
+   seq r18,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 18 500 500 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 18 500 500 0 "condition" ""
+   .srcstep 505 505 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 18 505 505 0 "condition" ""
+   not r12,r18
+   .traceevent "P" 4 "R" "B" "r" 12 505 505 0 "" ""
+   brf l2372iffalse,r12
+   .srcstep 506 506 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 501 501 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 missing default"
+   .srcstep 504 504 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 502 502 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 502 502 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 502 502 0 "return_value" ""
+   .srcstep 503 503 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "return_value" ""
+   exit r19
+l2372iffalse:
+   .srcstep 508 508 17 "nr15_architecture_semantics.crexx" 110 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 508 508 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 508 508 0 "key" ""
+   .srcstep 509 509 17 "nr15_architecture_semantics.crexx" 111 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 517 517 17 "nr15_architecture_semantics.crexx" 112 3 54 "  call expect(result == value, \"D2 generation reset\")"
+   .srcstep 510 510 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 510 510 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 510 510 0 "value" ""
+   seq r20,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 20 510 510 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 20 510 510 0 "condition" ""
+   .srcstep 515 515 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 20 515 515 0 "condition" ""
+   not r12,r20
+   .traceevent "P" 4 "R" "B" "r" 12 515 515 0 "" ""
+   brf l2510iffalse,r12
+   .srcstep 516 516 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 511 511 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 generation reset"
+   .srcstep 514 514 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 512 512 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 512 512 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 512 512 0 "return_value" ""
+   .srcstep 513 513 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "return_value" ""
+   exit r21
+l2510iffalse:
+   .srcstep 518 518 17 "nr15_architecture_semantics.crexx" 113 3 20 "  value = \"updated\""
+   load r9,"updated"
+   .traceevent "L" 4 "R" "S" "r" 9 518 518 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 518 518 0 "value" ""
+   .srcstep 519 519 17 "nr15_architecture_semantics.crexx" 114 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r8,r3,r9
+   .srcstep 520 520 17 "nr15_architecture_semantics.crexx" 115 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 528 528 17 "nr15_architecture_semantics.crexx" 116 3 56 "  call expect(result == value, \"D2 update after reset\")"
+   .srcstep 521 521 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 521 521 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 521 521 0 "value" ""
+   seq r22,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 22 521 521 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 22 521 521 0 "condition" ""
+   .srcstep 526 526 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 22 526 526 0 "condition" ""
+   not r12,r22
+   .traceevent "P" 4 "R" "B" "r" 12 526 526 0 "" ""
+   brf l2648iffalse,r12
+   .srcstep 527 527 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 522 522 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 update after reset"
+   .srcstep 525 525 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 523 523 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 523 523 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 523 523 0 "return_value" ""
+   .srcstep 524 524 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "return_value" ""
+   exit r23
+l2648iffalse:
+   .srcstep 529 529 17 "nr15_architecture_semantics.crexx" 118 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 529 529 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 529 529 0 "key" ""
+   .srcstep 530 530 17 "nr15_architecture_semantics.crexx" 119 3 23 "  value = \"chain-head\""
+   load r9,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 9 530 530 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 530 530 0 "value" ""
+   .srcstep 531 531 17 "nr15_architecture_semantics.crexx" 120 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r8,r3,r9
+   .srcstep 532 532 17 "nr15_architecture_semantics.crexx" 121 3 23 "  key = \"collision-60\""
+   load r3,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 3 532 532 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 532 532 0 "key" ""
+   .srcstep 533 533 17 "nr15_architecture_semantics.crexx" 122 3 23 "  value = \"chain-tail\""
+   load r9,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 9 533 533 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 533 533 0 "value" ""
+   .srcstep 534 534 17 "nr15_architecture_semantics.crexx" 123 13 39 "  assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r8,r3,r9
+   .srcstep 535 535 17 "nr15_architecture_semantics.crexx" 124 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 543 543 17 "nr15_architecture_semantics.crexx" 125 3 52 "  call expect(result == value, \"D2 collision tail\")"
+   .srcstep 536 536 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 536 536 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 536 536 0 "value" ""
+   seq r24,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 24 536 536 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 24 536 536 0 "condition" ""
+   .srcstep 541 541 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 24 541 541 0 "condition" ""
+   not r12,r24
+   .traceevent "P" 4 "R" "B" "r" 12 541 541 0 "" ""
+   brf l2786iffalse,r12
+   .srcstep 542 542 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 537 537 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2 collision tail"
+   .srcstep 540 540 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 538 538 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r25,1
+   .traceevent "L" 4 "R" "I" "r" 25 538 538 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 538 538 0 "return_value" ""
+   .srcstep 539 539 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 25 0 0 0 "return_value" ""
+   exit r25
+l2786iffalse:
+   .srcstep 544 544 17 "nr15_architecture_semantics.crexx" 126 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 544 544 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 544 544 0 "key" ""
+   .srcstep 545 545 17 "nr15_architecture_semantics.crexx" 127 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 546 546 17 "nr15_architecture_semantics.crexx" 128 3 59 "  call expect(result == \"chain-head\", \"D2 collision head\")"
+   .traceevent "V" 6 "R" "S" "r" 6 546 546 0 "result" ""
+   seq r27,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 27 546 546 0 "" ""
+   load r28,"D2 collision head"
+   .traceevent "L" 4 "R" "S" "r" 28 546 546 0 "" ""
+   settp r28,768
+   call2 r12,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 12 546 546 0 "expect" ""
+   .srcstep 547 547 17 "nr15_architecture_semantics.crexx" 130 3 19 "  left = \"account\""
+   .meta "nr15_architecture_semantics.test_d2.left"="b" ".string" r4
+   load r4,"account"
+   .traceevent "L" 4 "R" "S" "r" 4 547 547 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 547 547 0 "left" ""
+   .srcstep 548 548 17 "nr15_architecture_semantics.crexx" 131 3 30 "  right = \"κλειδί-🔥\""
+   .meta "nr15_architecture_semantics.test_d2.right"="b" ".string" r7
+   load r7,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 7 548 548 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 548 548 0 "right" ""
+   .srcstep 549 549 17 "nr15_architecture_semantics.crexx" 132 3 22 "  value = \"segmented\""
+   load r9,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 9 549 549 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 549 549 0 "value" ""
+   .srcstep 550 550 17 "nr15_architecture_semantics.crexx" 133 13 47 "  assembler nr15d2set2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set2 r8,r4,r7,r9
+   .srcstep 551 551 17 "nr15_architecture_semantics.crexx" 134 3 34 "  combined = left || \".\" || right"
+   .meta "nr15_architecture_semantics.test_d2.combined"="b" ".string" r0
+   .traceevent "V" 6 "R" "S" "r" 4 551 551 0 "left" ""
+   concat r28,r4,"."
+   .traceevent "O" 4 "R" "S" "r" 28 551 551 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 7 551 551 0 "right" ""
+   concat r0,r28,r7
+   .traceevent "O" 4 "R" "S" "r" 0 551 551 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 551 551 0 "combined" ""
+   .srcstep 552 552 17 "nr15_architecture_semantics.crexx" 135 13 45 "  assembler nr15d2get result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "combined" ""
+   nr15d2get r6,r8,r0
+   .srcstep 553 553 17 "nr15_architecture_semantics.crexx" 136 3 61 "  call expect(result == value, \"D2 segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 553 553 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 553 553 0 "value" ""
+   seq r27,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 27 553 553 0 "" ""
+   load r28,"D2 segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 28 553 553 0 "" ""
+   settp r28,768
+   call2 r29,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 29 553 553 0 "expect" ""
+   .srcstep 554 554 17 "nr15_architecture_semantics.crexx" 137 13 48 "  assembler nr15d2get2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   nr15d2get2 r6,r8,r4,r7
+   .srcstep 555 555 17 "nr15_architecture_semantics.crexx" 138 3 51 "  call expect(result == value, \"D2 segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 555 555 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 555 555 0 "value" ""
+   seq r27,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 27 555 555 0 "" ""
+   load r28,"D2 segmented get"
+   .traceevent "L" 4 "R" "S" "r" 28 555 555 0 "" ""
+   settp r28,768
+   call2 r30,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 30 555 555 0 "expect" ""
+   .srcstep 556 556 17 "nr15_architecture_semantics.crexx" 139 3 12 "  index = 1"
+   .meta "nr15_architecture_semantics.test_d2.index"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 556 556 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 556 556 0 "index" ""
+   .srcstep 557 557 17 "nr15_architecture_semantics.crexx" 140 13 44 "  assembler nr15d2keyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d2keyat r6,r8,r2
+   .srcstep 558 558 17 "nr15_architecture_semantics.crexx" 141 3 54 "  call expect(result == \"\", \"D2 insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 6 558 558 0 "result" ""
+   seq r27,r6,""
+   .traceevent "O" 4 "R" "B" "r" 27 558 558 0 "" ""
+   load r28,"D2 insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 28 558 558 0 "" ""
+   settp r28,768
+   call2 r31,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 31 558 558 0 "expect" ""
+   .srcstep 559 559 17 "nr15_architecture_semantics.crexx" 142 13 46 "  assembler nr15d2valueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d2valueat r6,r8,r2
+   .srcstep 560 560 17 "nr15_architecture_semantics.crexx" 143 3 75 "  call expect(result == \"assigned-default\", \"D2 generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 6 560 560 0 "result" ""
+   seq r27,r6,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 27 560 560 0 "" ""
+   load r28,"D2 generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 28 560 560 0 "" ""
+   settp r28,768
+   call2 r32,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 32 560 560 0 "expect" ""
+   .srcstep 561 561 17 "nr15_architecture_semantics.crexx" 145 3 16 "  copy = target"
+   .meta "nr15_architecture_semantics.test_d2.copy"="b" ".nr15panelstem" r1
+   .traceevent "V" 6 "R" "O" "r" 8 561 561 0 "target" ""
+   copy r1,r8
+   .traceevent "A" 6 "R" "O" "r" 1 561 561 0 "copy" ""
+   .srcstep 562 562 17 "nr15_architecture_semantics.crexx" 146 3 22 "  value = \"copy-only\""
+   load r9,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 9 562 562 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 562 562 0 "value" ""
+   .srcstep 563 563 17 "nr15_architecture_semantics.crexx" 147 13 37 "  assembler nr15d2set copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2set r1,r3,r9
+   .srcstep 564 564 17 "nr15_architecture_semantics.crexx" 148 13 40 "  assembler nr15d2get result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r8,r3
+   .srcstep 565 565 17 "nr15_architecture_semantics.crexx" 149 3 64 "  call expect(result == \"chain-head\", \"D2 deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 6 565 565 0 "result" ""
+   seq r27,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 27 565 565 0 "" ""
+   load r28,"D2 deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 28 565 565 0 "" ""
+   settp r28,768
+   call2 r33,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 33 565 565 0 "expect" ""
+   .srcstep 566 566 17 "nr15_architecture_semantics.crexx" 150 3 25 "  moved = .Nr15PanelStem()"
+   .meta "nr15_architecture_semantics.test_d2.moved"="b" ".nr15panelstem" r5
+   call r5,§nr15_architecture_semantics.nr15panelstem.§factory()
+   .traceevent "F" 4 "R" "O" "r" 5 566 566 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 566 566 0 "moved" ""
+   .srcstep 567 567 17 "nr15_architecture_semantics.crexx" 151 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   move r5,r1
+   .srcstep 568 568 17 "nr15_architecture_semantics.crexx" 152 13 39 "  assembler nr15d2get result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2get r6,r5,r3
+   .srcstep 569 569 17 "nr15_architecture_semantics.crexx" 153 3 57 "  call expect(result == \"copy-only\", \"D2 move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 6 569 569 0 "result" ""
+   seq r27,r6,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 27 569 569 0 "" ""
+   load r28,"D2 move transfer"
+   .traceevent "L" 4 "R" "S" "r" 28 569 569 0 "" ""
+   settp r28,768
+   call2 r34,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 34 569 569 0 "expect" ""
+   .srcstep 570 570 17 "nr15_architecture_semantics.crexx" 154 3 9 "  return"
+   ret
+   .meta "nr15_architecture_semantics.test_d2.combined"
+   .meta "nr15_architecture_semantics.test_d2.copy"
+   .meta "nr15_architecture_semantics.test_d2.index"
+   .meta "nr15_architecture_semantics.test_d2.key"
+   .meta "nr15_architecture_semantics.test_d2.left"
+   .meta "nr15_architecture_semantics.test_d2.moved"
+   .meta "nr15_architecture_semantics.test_d2.result"
+   .meta "nr15_architecture_semantics.test_d2.right"
+   .meta "nr15_architecture_semantics.test_d2.target"
+   .meta "nr15_architecture_semantics.test_d2.value"
+
+test_d2h() .locals=35
+   .meta "nr15_architecture_semantics.test_d2h"="b" ".void" test_d2h() ""
+   .srcstep 685 685 17 "nr15_architecture_semantics.crexx" 156 1 20 "test_d2h: procedure"
+   numsci 18,1,1
+   .meta "nr15_architecture_semantics.test_d2h.result"="b" ".string" r6
+   .srcstep 572 572 17 "nr15_architecture_semantics.crexx" 158 3 19 "  result = .string"
+   null r6
+   .srcstep 576 576 17 "nr15_architecture_semantics.crexx" 157 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 573 573 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setattrs r10,0
+   .srcstep 574 574 6 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setobjtype r10,"nr15_architecture_semantics.nr15panelstem"
+   .srcstep 575 575 33 "nr15_architecture_semantics.crexx" 234 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 10 575 575 0 "§factory" ""
+   copy r8,r10
+   .traceevent "A" 6 "R" "O" "r" 8 575 575 0 "target" ""
+   .srcstep 577 577 17 "nr15_architecture_semantics.crexx" 159 3 11 "  key = \"\""
+   .meta "nr15_architecture_semantics.test_d2h.key"="b" ".string" r3
+   .meta "nr15_architecture_semantics.test_d2h.target"="b" ".nr15panelstem" r8
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 577 577 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 577 577 0 "key" ""
+   .srcstep 578 578 17 "nr15_architecture_semantics.crexx" 160 3 22 "  value = \"empty-key\""
+   .meta "nr15_architecture_semantics.test_d2h.value"="b" ".string" r9
+   load r9,"empty-key"
+   .traceevent "L" 4 "R" "S" "r" 9 578 578 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 578 578 0 "value" ""
+   .srcstep 579 579 17 "nr15_architecture_semantics.crexx" 161 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r8,r3,r9
+   .srcstep 580 580 17 "nr15_architecture_semantics.crexx" 162 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 588 588 17 "nr15_architecture_semantics.crexx" 163 3 54 "  call expect(result == value, \"D2-hybrid empty key\")"
+   .srcstep 581 581 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 581 581 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 581 581 0 "value" ""
+   seq r11,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 11 581 581 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 11 581 581 0 "condition" ""
+   .srcstep 586 586 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 11 586 586 0 "condition" ""
+   not r12,r11
+   .traceevent "P" 4 "R" "B" "r" 12 586 586 0 "" ""
+   brf l1730iffalse,r12
+   .srcstep 587 587 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 582 582 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid empty key"
+   .srcstep 585 585 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 583 583 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 583 583 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 583 583 0 "return_value" ""
+   .srcstep 584 584 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "return_value" ""
+   exit r13
+l1730iffalse:
+   .srcstep 589 589 17 "nr15_architecture_semantics.crexx" 165 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 589 589 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 589 589 0 "key" ""
+   .srcstep 590 590 17 "nr15_architecture_semantics.crexx" 166 3 26 "  value = \"unicode-value\""
+   load r9,"unicode-value"
+   .traceevent "L" 4 "R" "S" "r" 9 590 590 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 590 590 0 "value" ""
+   .srcstep 591 591 17 "nr15_architecture_semantics.crexx" 167 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r8,r3,r9
+   .srcstep 592 592 17 "nr15_architecture_semantics.crexx" 168 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 600 600 17 "nr15_architecture_semantics.crexx" 169 3 52 "  call expect(result == value, \"D2-hybrid Unicode\")"
+   .srcstep 593 593 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 593 593 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 593 593 0 "value" ""
+   seq r14,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 14 593 593 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 14 593 593 0 "condition" ""
+   .srcstep 598 598 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 14 598 598 0 "condition" ""
+   not r12,r14
+   .traceevent "P" 4 "R" "B" "r" 12 598 598 0 "" ""
+   brf l2119iffalse,r12
+   .srcstep 599 599 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 594 594 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid Unicode"
+   .srcstep 597 597 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 595 595 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 595 595 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 595 595 0 "return_value" ""
+   .srcstep 596 596 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 15 0 0 0 "return_value" ""
+   exit r15
+l2119iffalse:
+   .srcstep 601 601 17 "nr15_architecture_semantics.crexx" 171 3 18 "  key = \"missing\""
+   load r3,"missing"
+   .traceevent "L" 4 "R" "S" "r" 3 601 601 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 601 601 0 "key" ""
+   .srcstep 602 602 17 "nr15_architecture_semantics.crexx" 172 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 610 610 17 "nr15_architecture_semantics.crexx" 173 3 54 "  call expect(result == \"\", \"D2-hybrid initial miss\")"
+   .srcstep 603 603 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 603 603 0 "result" ""
+   seq r16,r6,""
+   .traceevent "O" 4 "R" "B" "r" 16 603 603 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 16 603 603 0 "condition" ""
+   .srcstep 608 608 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 16 608 608 0 "condition" ""
+   not r12,r16
+   .traceevent "P" 4 "R" "B" "r" 12 608 608 0 "" ""
+   brf l2257iffalse,r12
+   .srcstep 609 609 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 604 604 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid initial miss"
+   .srcstep 607 607 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 605 605 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r17,1
+   .traceevent "L" 4 "R" "I" "r" 17 605 605 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 605 605 0 "return_value" ""
+   .srcstep 606 606 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "return_value" ""
+   exit r17
+l2257iffalse:
+   .srcstep 611 611 17 "nr15_architecture_semantics.crexx" 174 3 29 "  value = \"assigned-default\""
+   load r9,"assigned-default"
+   .traceevent "L" 4 "R" "S" "r" 9 611 611 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 611 611 0 "value" ""
+   .srcstep 612 612 17 "nr15_architecture_semantics.crexx" 175 13 38 "  assembler nr15d2hreset target,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hreset r8,r9
+   .srcstep 613 613 17 "nr15_architecture_semantics.crexx" 176 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 621 621 17 "nr15_architecture_semantics.crexx" 177 3 60 "  call expect(result == value, \"D2-hybrid missing default\")"
+   .srcstep 614 614 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 614 614 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 614 614 0 "value" ""
+   seq r18,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 18 614 614 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 18 614 614 0 "condition" ""
+   .srcstep 619 619 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 18 619 619 0 "condition" ""
+   not r12,r18
+   .traceevent "P" 4 "R" "B" "r" 12 619 619 0 "" ""
+   brf l2395iffalse,r12
+   .srcstep 620 620 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 615 615 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid missing default"
+   .srcstep 618 618 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 616 616 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 616 616 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 616 616 0 "return_value" ""
+   .srcstep 617 617 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "return_value" ""
+   exit r19
+l2395iffalse:
+   .srcstep 622 622 17 "nr15_architecture_semantics.crexx" 178 3 28 "  key = \"κλειδί-🔥\""
+   load r3,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 3 622 622 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 622 622 0 "key" ""
+   .srcstep 623 623 17 "nr15_architecture_semantics.crexx" 179 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 631 631 17 "nr15_architecture_semantics.crexx" 180 3 61 "  call expect(result == value, \"D2-hybrid generation reset\")"
+   .srcstep 624 624 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 624 624 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 624 624 0 "value" ""
+   seq r20,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 20 624 624 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 20 624 624 0 "condition" ""
+   .srcstep 629 629 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 20 629 629 0 "condition" ""
+   not r12,r20
+   .traceevent "P" 4 "R" "B" "r" 12 629 629 0 "" ""
+   brf l2533iffalse,r12
+   .srcstep 630 630 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 625 625 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid generation reset"
+   .srcstep 628 628 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 626 626 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 626 626 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 626 626 0 "return_value" ""
+   .srcstep 627 627 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "return_value" ""
+   exit r21
+l2533iffalse:
+   .srcstep 632 632 17 "nr15_architecture_semantics.crexx" 181 3 20 "  value = \"updated\""
+   load r9,"updated"
+   .traceevent "L" 4 "R" "S" "r" 9 632 632 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 632 632 0 "value" ""
+   .srcstep 633 633 17 "nr15_architecture_semantics.crexx" 182 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r8,r3,r9
+   .srcstep 634 634 17 "nr15_architecture_semantics.crexx" 183 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 642 642 17 "nr15_architecture_semantics.crexx" 184 3 63 "  call expect(result == value, \"D2-hybrid update after reset\")"
+   .srcstep 635 635 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 635 635 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 635 635 0 "value" ""
+   seq r22,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 22 635 635 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 22 635 635 0 "condition" ""
+   .srcstep 640 640 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 22 640 640 0 "condition" ""
+   not r12,r22
+   .traceevent "P" 4 "R" "B" "r" 12 640 640 0 "" ""
+   brf l2671iffalse,r12
+   .srcstep 641 641 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 636 636 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid update after reset"
+   .srcstep 639 639 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 637 637 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 637 637 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 637 637 0 "return_value" ""
+   .srcstep 638 638 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "return_value" ""
+   exit r23
+l2671iffalse:
+   .srcstep 643 643 17 "nr15_architecture_semantics.crexx" 186 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 643 643 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 643 643 0 "key" ""
+   .srcstep 644 644 17 "nr15_architecture_semantics.crexx" 187 3 23 "  value = \"chain-head\""
+   load r9,"chain-head"
+   .traceevent "L" 4 "R" "S" "r" 9 644 644 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 644 644 0 "value" ""
+   .srcstep 645 645 17 "nr15_architecture_semantics.crexx" 188 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r8,r3,r9
+   .srcstep 646 646 17 "nr15_architecture_semantics.crexx" 189 3 23 "  key = \"collision-60\""
+   load r3,"collision-60"
+   .traceevent "L" 4 "R" "S" "r" 3 646 646 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 646 646 0 "key" ""
+   .srcstep 647 647 17 "nr15_architecture_semantics.crexx" 190 3 23 "  value = \"chain-tail\""
+   load r9,"chain-tail"
+   .traceevent "L" 4 "R" "S" "r" 9 647 647 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 647 647 0 "value" ""
+   .srcstep 648 648 17 "nr15_architecture_semantics.crexx" 191 13 40 "  assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r8,r3,r9
+   .srcstep 649 649 17 "nr15_architecture_semantics.crexx" 192 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 657 657 17 "nr15_architecture_semantics.crexx" 193 3 59 "  call expect(result == value, \"D2-hybrid collision tail\")"
+   .srcstep 650 650 33 "nr15_architecture_semantics.crexx" 225 7 16 "  arg condition = .boolean, label = .string"
+   .traceevent "V" 6 "R" "S" "r" 6 650 650 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 650 650 0 "value" ""
+   seq r24,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 24 650 650 0 "" ""
+   .traceevent "A" 6 "R" "B" "r" 24 650 650 0 "condition" ""
+   .srcstep 655 655 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "r" 24 655 655 0 "condition" ""
+   not r12,r24
+   .traceevent "P" 4 "R" "B" "r" 12 655 655 0 "" ""
+   brf l2809iffalse,r12
+   .srcstep 656 656 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 651 651 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   say "FAIL: NR-15 architecture panel D2-hybrid collision tail"
+   .srcstep 654 654 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 652 652 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r25,1
+   .traceevent "L" 4 "R" "I" "r" 25 652 652 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 652 652 0 "return_value" ""
+   .srcstep 653 653 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 25 0 0 0 "return_value" ""
+   exit r25
+l2809iffalse:
+   .srcstep 658 658 17 "nr15_architecture_semantics.crexx" 194 3 23 "  key = \"collision-15\""
+   load r3,"collision-15"
+   .traceevent "L" 4 "R" "S" "r" 3 658 658 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 658 658 0 "key" ""
+   .srcstep 659 659 17 "nr15_architecture_semantics.crexx" 195 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 660 660 17 "nr15_architecture_semantics.crexx" 196 3 66 "  call expect(result == \"chain-head\", \"D2-hybrid collision head\")"
+   .traceevent "V" 6 "R" "S" "r" 6 660 660 0 "result" ""
+   seq r27,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 27 660 660 0 "" ""
+   load r28,"D2-hybrid collision head"
+   .traceevent "L" 4 "R" "S" "r" 28 660 660 0 "" ""
+   settp r28,768
+   call2 r12,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 12 660 660 0 "expect" ""
+   .srcstep 661 661 17 "nr15_architecture_semantics.crexx" 198 3 19 "  left = \"account\""
+   .meta "nr15_architecture_semantics.test_d2h.left"="b" ".string" r4
+   load r4,"account"
+   .traceevent "L" 4 "R" "S" "r" 4 661 661 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 661 661 0 "left" ""
+   .srcstep 662 662 17 "nr15_architecture_semantics.crexx" 199 3 30 "  right = \"κλειδί-🔥\""
+   .meta "nr15_architecture_semantics.test_d2h.right"="b" ".string" r7
+   load r7,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5"
+   .traceevent "L" 4 "R" "S" "r" 7 662 662 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 662 662 0 "right" ""
+   .srcstep 663 663 17 "nr15_architecture_semantics.crexx" 200 3 22 "  value = \"segmented\""
+   load r9,"segmented"
+   .traceevent "L" 4 "R" "S" "r" 9 663 663 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 663 663 0 "value" ""
+   .srcstep 664 664 17 "nr15_architecture_semantics.crexx" 201 13 48 "  assembler nr15d2hset2 target,left,right,value"
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset2 r8,r4,r7,r9
+   .srcstep 665 665 17 "nr15_architecture_semantics.crexx" 202 3 34 "  combined = left || \".\" || right"
+   .meta "nr15_architecture_semantics.test_d2h.combined"="b" ".string" r0
+   .traceevent "V" 6 "R" "S" "r" 4 665 665 0 "left" ""
+   concat r28,r4,"."
+   .traceevent "O" 4 "R" "S" "r" 28 665 665 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 7 665 665 0 "right" ""
+   concat r0,r28,r7
+   .traceevent "O" 4 "R" "S" "r" 0 665 665 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 665 665 0 "combined" ""
+   .srcstep 666 666 17 "nr15_architecture_semantics.crexx" 203 13 46 "  assembler nr15d2hget result,target,combined"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "combined" ""
+   nr15d2hget r6,r8,r0
+   .srcstep 667 667 17 "nr15_architecture_semantics.crexx" 204 3 68 "  call expect(result == value, \"D2-hybrid segmented set/plain get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 667 667 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 667 667 0 "value" ""
+   seq r27,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 27 667 667 0 "" ""
+   load r28,"D2-hybrid segmented set/plain get"
+   .traceevent "L" 4 "R" "S" "r" 28 667 667 0 "" ""
+   settp r28,768
+   call2 r29,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 29 667 667 0 "expect" ""
+   .srcstep 668 668 17 "nr15_architecture_semantics.crexx" 205 13 49 "  assembler nr15d2hget2 result,target,left,right"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "left" ""
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "right" ""
+   nr15d2hget2 r6,r8,r4,r7
+   .srcstep 669 669 17 "nr15_architecture_semantics.crexx" 206 3 58 "  call expect(result == value, \"D2-hybrid segmented get\")"
+   .traceevent "V" 6 "R" "S" "r" 6 669 669 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 9 669 669 0 "value" ""
+   seq r27,r6,r9
+   .traceevent "O" 4 "R" "B" "r" 27 669 669 0 "" ""
+   load r28,"D2-hybrid segmented get"
+   .traceevent "L" 4 "R" "S" "r" 28 669 669 0 "" ""
+   settp r28,768
+   call2 r30,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 30 669 669 0 "expect" ""
+   .srcstep 670 670 17 "nr15_architecture_semantics.crexx" 207 3 12 "  index = 1"
+   .meta "nr15_architecture_semantics.test_d2h.index"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 670 670 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 670 670 0 "index" ""
+   .srcstep 671 671 17 "nr15_architecture_semantics.crexx" 208 13 45 "  assembler nr15d2hkeyat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d2hkeyat r6,r8,r2
+   .srcstep 672 672 17 "nr15_architecture_semantics.crexx" 209 3 61 "  call expect(result == \"\", \"D2-hybrid insertion-order key\")"
+   .traceevent "V" 6 "R" "S" "r" 6 672 672 0 "result" ""
+   seq r27,r6,""
+   .traceevent "O" 4 "R" "B" "r" 27 672 672 0 "" ""
+   load r28,"D2-hybrid insertion-order key"
+   .traceevent "L" 4 "R" "S" "r" 28 672 672 0 "" ""
+   settp r28,768
+   call2 r31,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 31 672 672 0 "expect" ""
+   .srcstep 673 673 17 "nr15_architecture_semantics.crexx" 210 13 47 "  assembler nr15d2hvalueat result,target,index"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "index" ""
+   nr15d2hvalueat r6,r8,r2
+   .srcstep 674 674 17 "nr15_architecture_semantics.crexx" 211 3 82 "  call expect(result == \"assigned-default\", \"D2-hybrid generation-aware valueAt\")"
+   .traceevent "V" 6 "R" "S" "r" 6 674 674 0 "result" ""
+   seq r27,r6,"assigned-default"
+   .traceevent "O" 4 "R" "B" "r" 27 674 674 0 "" ""
+   load r28,"D2-hybrid generation-aware valueAt"
+   .traceevent "L" 4 "R" "S" "r" 28 674 674 0 "" ""
+   settp r28,768
+   call2 r32,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 32 674 674 0 "expect" ""
+   .srcstep 675 675 17 "nr15_architecture_semantics.crexx" 213 3 16 "  copy = target"
+   .meta "nr15_architecture_semantics.test_d2h.copy"="b" ".nr15panelstem" r1
+   .traceevent "V" 6 "R" "O" "r" 8 675 675 0 "target" ""
+   copy r1,r8
+   .traceevent "A" 6 "R" "O" "r" 1 675 675 0 "copy" ""
+   .srcstep 676 676 17 "nr15_architecture_semantics.crexx" 214 3 22 "  value = \"copy-only\""
+   load r9,"copy-only"
+   .traceevent "L" 4 "R" "S" "r" 9 676 676 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 676 676 0 "value" ""
+   .srcstep 677 677 17 "nr15_architecture_semantics.crexx" 215 13 38 "  assembler nr15d2hset copy,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "value" ""
+   nr15d2hset r1,r3,r9
+   .srcstep 678 678 17 "nr15_architecture_semantics.crexx" 216 13 41 "  assembler nr15d2hget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 8 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r8,r3
+   .srcstep 679 679 17 "nr15_architecture_semantics.crexx" 217 3 71 "  call expect(result == \"chain-head\", \"D2-hybrid deep-copy isolation\")"
+   .traceevent "V" 6 "R" "S" "r" 6 679 679 0 "result" ""
+   seq r27,r6,"chain-head"
+   .traceevent "O" 4 "R" "B" "r" 27 679 679 0 "" ""
+   load r28,"D2-hybrid deep-copy isolation"
+   .traceevent "L" 4 "R" "S" "r" 28 679 679 0 "" ""
+   settp r28,768
+   call2 r33,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 33 679 679 0 "expect" ""
+   .srcstep 680 680 17 "nr15_architecture_semantics.crexx" 218 3 25 "  moved = .Nr15PanelStem()"
+   .meta "nr15_architecture_semantics.test_d2h.moved"="b" ".nr15panelstem" r5
+   call r5,§nr15_architecture_semantics.nr15panelstem.§factory()
+   .traceevent "F" 4 "R" "O" "r" 5 680 680 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 5 680 680 0 "moved" ""
+   .srcstep 681 681 17 "nr15_architecture_semantics.crexx" 219 13 28 "  assembler move moved,copy"
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "copy" ""
+   move r5,r1
+   .srcstep 682 682 17 "nr15_architecture_semantics.crexx" 220 13 40 "  assembler nr15d2hget result,moved,key"
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "moved" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "key" ""
+   nr15d2hget r6,r5,r3
+   .srcstep 683 683 17 "nr15_architecture_semantics.crexx" 221 3 64 "  call expect(result == \"copy-only\", \"D2-hybrid move transfer\")"
+   .traceevent "V" 6 "R" "S" "r" 6 683 683 0 "result" ""
+   seq r27,r6,"copy-only"
+   .traceevent "O" 4 "R" "B" "r" 27 683 683 0 "" ""
+   load r28,"D2-hybrid move transfer"
+   .traceevent "L" 4 "R" "S" "r" 28 683 683 0 "" ""
+   settp r28,768
+   call2 r34,expect(),r27,r28
+   .traceevent "F" 4 "R" "V" "r" 34 683 683 0 "expect" ""
+   .srcstep 684 684 17 "nr15_architecture_semantics.crexx" 222 3 9 "  return"
+   ret
+   .meta "nr15_architecture_semantics.test_d2h.combined"
+   .meta "nr15_architecture_semantics.test_d2h.copy"
+   .meta "nr15_architecture_semantics.test_d2h.index"
+   .meta "nr15_architecture_semantics.test_d2h.key"
+   .meta "nr15_architecture_semantics.test_d2h.left"
+   .meta "nr15_architecture_semantics.test_d2h.moved"
+   .meta "nr15_architecture_semantics.test_d2h.result"
+   .meta "nr15_architecture_semantics.test_d2h.right"
+   .meta "nr15_architecture_semantics.test_d2h.target"
+   .meta "nr15_architecture_semantics.test_d2h.value"
+
+expect() .locals=5
+   .meta "nr15_architecture_semantics.expect"="b" ".void" expect() "condition=.boolean,label=.string"
+   .srcstep 695 695 17 "nr15_architecture_semantics.crexx" 224 1 18 "expect: procedure"
+   numsci 18,1,1
+   .srcstep 686 686 17 "nr15_architecture_semantics.crexx" 225 7 27 "  arg condition = .boolean, label = .string"
+   .meta "nr15_architecture_semantics.expect.condition"="b" ".boolean" a1
+   .srcstep 687 687 17 "nr15_architecture_semantics.crexx" 225 29 44 "  arg condition = .boolean, label = .string"
+   .meta "nr15_architecture_semantics.expect.label"="b" ".string" a2
+   .srcstep 692 692 17 "nr15_architecture_semantics.crexx" 226 3 16 "  if \\condition then do"
+   .traceevent "V" 6 "R" "B" "a" 1 692 692 0 "condition" ""
+   not r2,a1
+   .traceevent "P" 4 "R" "B" "r" 2 692 692 0 "" ""
+   brf l818iffalse,r2
+   .srcstep 693 693 17 "nr15_architecture_semantics.crexx" 226 17 21 "  if \\condition then do"
+   .srcstep 688 688 17 "nr15_architecture_semantics.crexx" 227 5 47 "    say \"FAIL: NR-15 architecture panel\" label"
+   .traceevent "V" 6 "R" "S" "a" 2 688 688 0 "label" ""
+   sconcat r3,"FAIL: NR-15 architecture panel",a2
+   .traceevent "O" 4 "R" "S" "r" 3 688 688 0 "" ""
+   say r3
+   .srcstep 691 691 17 "nr15_architecture_semantics.crexx" 228 5 11 "    exit 1"
+   .srcstep 689 689 33 "nr15_architecture_semantics.crexx" 228 11 11 "    exit 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 689 689 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 689 689 0 "return_value" ""
+   .srcstep 690 690 25 "_rxsystem.crexx" 39 15 32 "    assembler exit return_value /* Real Exit! */"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "return_value" ""
+   exit r4
+l818iffalse:
+   .srcstep 694 694 17 "nr15_architecture_semantics.crexx" 230 3 9 "  return"
+   ret
+   .meta "nr15_architecture_semantics.expect.condition"
+   .meta "nr15_architecture_semantics.expect.label"
+
+§nr15_architecture_semantics.nr15panelstem.§factory() .locals=1
+   .meta "nr15_architecture_semantics.nr15panelstem.§factory"="b" ".nr15_architecture_semantics..nr15panelstem" §nr15_architecture_semantics.nr15panelstem.§factory() ""
+   .srcstep 697 697 17 "nr15_architecture_semantics.crexx" 233 3 13 "  *: factory"
+   setattrs r0,0
+   setobjtype r0,"nr15_architecture_semantics.nr15panelstem"
+   numsci 18,1,1
+   .srcstep 696 696 17 "nr15_architecture_semantics.crexx" 234 5 11 "    return"
+   .meta "nr15_architecture_semantics.nr15panelstem.§factory.§factory"="b" ".nr15panelstem" r0
+   .traceevent "V" 6 "R" "O" "r" 0 696 696 0 "§factory" ""
+   ret r0
+   .meta "nr15_architecture_semantics.nr15panelstem.§factory.§factory"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""

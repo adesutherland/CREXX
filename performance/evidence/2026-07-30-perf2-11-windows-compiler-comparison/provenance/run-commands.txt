@@ -1,0 +1,21 @@
+# Paths are repository-relative unless an absolute runtime path is embedded in
+# a versioned manifest.
+
+# Tool qualification.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --self-test
+
+# Compiler comparison: 2 warmups plus 10 recorded runs per cell.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-gcc-clang-o3-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/timing --measurement timing --warmups 2 --runs 10
+
+# Governed append for the five initially flagged cells.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-gcc-clang-o3-noise-append-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/timing-noise-append --measurement timing --warmups 2 --runs 10
+
+# Direct two-file final summary after the merge fix.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --summary-only --measurement timing --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-gcc-clang-o3-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/timing-final-fixed --samples performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/timing/samples.csv --samples performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/timing-noise-append/samples.csv
+
+# Exact macOS/Linux Java 8 class on Windows, initial and governed append.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-netrexx-exact-class-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/netrexx-exact-class --measurement timing --warmups 2 --runs 10
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-netrexx-exact-class-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/netrexx-exact-class-append --measurement timing --warmups 2 --runs 10
+
+# Exact-class direct two-file final summary.
+cmake-build-release/bin/crexx.exe performance/tools/run_cross_runtime_matrix.crexx -nocolour -args --summary-only --measurement timing --manifest performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/manifests/windows-netrexx-exact-class-v1.txt --output-dir performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/netrexx-exact-class-final-fixed --samples performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/netrexx-exact-class/samples.csv --samples performance/evidence/2026-07-30-perf2-11-windows-compiler-comparison/netrexx-exact-class-append/samples.csv

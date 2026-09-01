@@ -1,0 +1,26 @@
+# Final accepted current-product Tier A steady-state baseline. Both VMs use the
+# same freshly rebuilt optimized split workload image plus library image, with
+# retained source/TRACE metadata.
+crexx-cross-runtime-matrix|1
+sieve-rxvm-final|Sieve|crexx|rxvm|nr16-nr17-final|A|no|no|5500|PASS: AWFY Sieve||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5500
+sieve-rxbvm-final|Sieve|crexx|rxbvm|nr16-nr17-final|A|no|no|5500|PASS: AWFY Sieve||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5500
+permute-rxvm-final|Permute|crexx|rxvm|nr16-nr17-final|A|no|no|5000|PASS: AWFY Permute||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+permute-rxbvm-final|Permute|crexx|rxbvm|nr16-nr17-final|A|no|no|5000|PASS: AWFY Permute||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+bounce-rxvm-final|Bounce|crexx|rxvm|nr16-nr17-final|A|no|no|2200|PASS: AWFY Bounce||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2200
+bounce-rxbvm-final|Bounce|crexx|rxbvm|nr16-nr17-final|A|no|no|2200|PASS: AWFY Bounce||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2200
+richards-rxvm-final|Richards|crexx|rxvm|nr16-nr17-final|A|no|no|20|PASS: AWFY Richards||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;20
+richards-rxbvm-final|Richards|crexx|rxbvm|nr16-nr17-final|A|no|no|20|PASS: AWFY Richards||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;20
+base64-rxvm-final|Base64|crexx|rxvm|nr16-nr17-final|A|no|no|2500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+base64-rxbvm-final|Base64|crexx|rxbvm|nr16-nr17-final|A|no|no|2500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+mandelbrot-rxvm-final|Mandelbrot|crexx|rxvm|nr16-nr17-final|A|no|no|500|PASS: AWFY Mandelbrot||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+mandelbrot-rxbvm-final|Mandelbrot|crexx|rxbvm|nr16-nr17-final|A|no|no|500|PASS: AWFY Mandelbrot||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+towers-rxvm-final|Towers|crexx|rxvm|nr16-nr17-final|A|no|no|10|PASS: AWFY Towers||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+towers-rxbvm-final|Towers|crexx|rxbvm|nr16-nr17-final|A|no|no|10|PASS: AWFY Towers||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+storage-rxvm-final|Storage|crexx|rxvm|nr16-nr17-final|A|no|no|10|PASS: AWFY Storage||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+storage-rxbvm-final|Storage|crexx|rxbvm|nr16-nr17-final|A|no|no|10|PASS: AWFY Storage||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+list-rxvm-final|List|crexx|rxvm|nr16-nr17-final|A|no|no|100|PASS: AWFY List||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_list_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;100
+list-rxbvm-final|List|crexx|rxbvm|nr16-nr17-final|A|no|no|100|PASS: AWFY List||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_list_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;100
+json-rxvm-final|JSON|crexx|rxvm|nr16-nr17-final|A|no|no|5000|PASS: JSON Parser||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+json-rxbvm-final|JSON|crexx|rxbvm|nr16-nr17-final|A|no|no|5000|PASS: JSON Parser||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+rexxcps-rxvm-final|RexxCPS|crexx|rxvm|nr16-nr17-final|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;cmake-build-release/bin/library.rxbin;-a
+rexxcps-rxbvm-final|RexxCPS|crexx|rxbvm|nr16-nr17-final|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;cmake-build-release/bin/library.rxbin;-a

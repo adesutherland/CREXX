@@ -1,0 +1,68 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifx2b expose rexxclassicbif_x2b
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Convert one Classic hexadecimal-string argument to binary digits.
+ *
+ * @bif X2B
+ * @signature X2B(hexadecimal)
+ * @checkargs rHEX
+ * @sandbox pure
+ * @return four binary digits per hexadecimal digit as a RexxValue
+ */
+rexxclassicbif_x2b: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rHEX") = 0 then return .RexxValue("")
+
+  hexadecimal = context.argumentText(1)
+  hexadecimal_length = .int
+  codepoint = .int
+  nibble = .int
+  table_offset = .int
+  table_end = .int
+  blank_character = 32
+  bit_table = "0000000100100011010001010110011110001001101010111100110111101111"
+  result = ""
+
+  assembler strlen hexadecimal_length,hexadecimal
+  do index = 0 to hexadecimal_length - 1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then iterate
+    if codepoint <= 57 then nibble = codepoint - 48
+    else if codepoint <= 70 then nibble = codepoint - 55
+    else nibble = codepoint - 87
+    table_offset = nibble * 4
+    table_end = table_offset + 3
+    do bit_index = table_offset to table_end
+      assembler concchar result,bit_table,bit_index
+    end
+  end
+  return .RexxValue(result)

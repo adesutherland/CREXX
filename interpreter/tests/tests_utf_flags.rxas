@@ -29,9 +29,8 @@ main() .locals=8
    brf fail_alias_concat_flags,r2
 
    load r5,1
-   setstrpos r4,r5
-   load r5,2
-   substr r6,r4,r5
+   load r2,2
+   substring r6,r4,r5,r2
    getandtp r1,r6,3
    ieq r2,r1,3
    brf fail_substr_flags,r2
@@ -53,6 +52,21 @@ public_branch:
    getandtp r1,r7,768
    ieq r2,r1,512
    brf fail_settp_public_replace,r2
+
+   getandtp r1,r7,15360
+   ieq r2,r1,15360
+   brf fail_ascii_certificates,r2
+
+   settp r0,1024
+   scopy r3,r0
+   getandtp r1,r3,15360
+   ieq r2,r1,1024
+   brf fail_scopy_certificates,r2
+
+   strlower r4,r3
+   getandtp r1,r4,15360
+   ieq r2,r1,0
+   brf fail_case_invalidation,r2
 
    say "PASS: UTF Flag Cache"
    ret 0
@@ -78,7 +92,7 @@ fail_alias_concat_flags:
    ret 1
 
 fail_substr_flags:
-   say "FAIL: SUBSTR did not preserve UTF flags"
+   say "FAIL: SUBSTRING did not preserve UTF flags"
    ret 1
 
 fail_loadsettp_flags:
@@ -95,4 +109,16 @@ fail_settp_preserve_flags:
 
 fail_settp_public_replace:
    say "FAIL: SETTP did not replace public flags"
+   ret 1
+
+fail_ascii_certificates:
+   say "FAIL: ASCII load did not certify every normalization form"
+   ret 1
+
+fail_scopy_certificates:
+   say "FAIL: SCOPY did not preserve normalization certificates"
+   ret 1
+
+fail_case_invalidation:
+   say "FAIL: in-place case conversion retained normalization certificates"
    ret 1

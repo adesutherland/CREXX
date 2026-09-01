@@ -25,11 +25,11 @@ pickSecond: procedure = .int
 
 hasSecond: procedure = .int
   arg expose ... = .int
-  return arg(2, "E")
+  return <argexists>(2)
 
 hasFifth: procedure = .int
   arg expose ... = .int
-  return arg(5, "E")
+  return <argexists>(5)
 
 bumpOne: procedure = .int
   arg expose value = .int

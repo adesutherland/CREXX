@@ -78,8 +78,8 @@ main()         .locals=2
                * Run Tests
                call test_appendchar()
                call test_strlen()
-               call test_getstrpos()
-               call test_setstrpos_strchar()
+               call test_substring()
+               call test_strchar()
 
                * Print Results
                iadd r0, g0, g1
@@ -155,71 +155,63 @@ test_strlen()  .locals=6
                call r0,expect_true(),r3
                ret
 
-* Test getstrpos
-test_getstrpos() .locals=6
+* Test explicit substring position
+test_substring() .locals=6
                load r3,1 * One argument when calling expect_true/false
-               say "Testing getstrpos ..."
+               say "Testing substring ..."
                load r1,"ΑΒΓΔΛ"
                load r2,3
-               setstrpos r1,r2
-               load r2,0 * Clear r2 (just in case)
-               getstrpos r2,r1
-               ieq r4,r2,3
+               load r5,1
+               substring r2,r1,r2,r5
+               seq r4,r2,"Δ"
                call r0,expect_true(),r3
                ret
 
-* Test strchar and setstrpos
-test_setstrpos_strchar() .locals=6
+* Test explicit indexed strchar
+test_strchar() .locals=6
                load r3,1 * One argument when calling expect_true/false
-               say "Testing strchar and setstrpos 1 ..."
+               say "Testing strchar 1 ..."
                load r1,"ΑΒΓΔΛ"
-               load r2,4
-               setstrpos r1,r2
-               strchar r2,r1
+               load r5,4
+               strchar r2,r1,r5
                ieq r4,r2,923 * Greek Capital Letter Lambda Λ
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 2 ..."
+               say "Testing strchar 2 ..."
                *        01234567891123456789212345678931234567894123456
                load r1,"-ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨ"
-               load r2,4
-               setstrpos r1,r2
-               strchar r2,r1
+               load r5,4
+               strchar r2,r1,r5
                ieq r4,r2,916 * Δ 916 0394 Greek uppercase DELTA
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 3 ..."
-               load r2,5
-               setstrpos r1,r2
-               strchar r2,r1
+               say "Testing strchar 3 ..."
+               load r5,5
+               strchar r2,r1,r5
                ieq r4,r2,917 * Ε 917 0395 Greek uppercase EPSILON
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 4 ..."
-               load r2,44
-               setstrpos r1,r2
-               strchar r2,r1
+               say "Testing strchar 4 ..."
+               load r5,44
+               strchar r2,r1,r5
                ieq r4,r2,934 * Φ 934 03A6 Greek uppercase letter PHI
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 5 ..."
-               load r2,41
-               setstrpos r1,r2
-               strchar r2,r1
+               say "Testing strchar 5 ..."
+               load r5,41
+               strchar r2,r1,r5
                ieq r4,r2,931 * Σ 931 03A3 Greek uppercase SIGMA
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 6 ..."
-               load r2,40
-               setstrpos r1,r2
-               strchar r2,r1
+               say "Testing strchar 6 ..."
+               load r5,40
+               strchar r2,r1,r5
                ieq r4,r2,929 * Ρ 929 03A1 RHO Greek capital letters
                call r0,expect_true(),r3
 
-               say "Testing strchar and setstrpos 7 ..."
-               load r2,1
-               setstrpos r1,r2
-               strchar r2,r1
+               say "Testing strchar 7 ..."
+               load r5,1
+               strchar r2,r1,r5
                ieq r4,r2,913 * Α 913 0391 Greek uppercase ALPHA
                call r0,expect_true(),r3
 

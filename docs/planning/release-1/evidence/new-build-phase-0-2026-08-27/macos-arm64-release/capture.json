@@ -1,0 +1,179 @@
+{
+  "commands": [
+    {
+      "command": [
+        "cmake",
+        "-S",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/source",
+        "-B",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "--trace-expand",
+        "--trace-format=json-v1",
+        "--trace-redirect=/private/tmp/crexx-phase0-macos.vFdBJA/macos-release/cmake-trace.jsonl"
+      ],
+      "exit_code": 0,
+      "finished_at": "2026-08-27T11:45:39+00:00",
+      "label": "configure",
+      "log": "configure.log.gz",
+      "metrics": {
+        "elapsed_seconds": 7.84,
+        "maximum_resident_set_bytes": 98975744,
+        "raw": "7.84 real         3.79 user         2.17 sys\n            98975744  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n              410682  page reclaims\n                8340  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                  45  messages sent\n                3113  messages received\n                  63  signals received\n                3392  voluntary context switches\n               19122  involuntary context switches\n         34767517393  instructions retired\n          8193308061  cycles elapsed\n            89162208  peak memory footprint",
+        "system_seconds": 2.17,
+        "user_seconds": 3.79
+      },
+      "started_at": "2026-08-27T11:45:31+00:00",
+      "time_file": "configure.time.txt"
+    },
+    {
+      "command": [
+        "cmake",
+        "--build",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "--parallel",
+        "30"
+      ],
+      "exit_code": 0,
+      "finished_at": "2026-08-27T11:48:46+00:00",
+      "label": "build",
+      "log": "build.log.gz",
+      "metrics": {
+        "elapsed_seconds": 187.84,
+        "maximum_resident_set_bytes": 681721856,
+        "raw": "187.84 real       853.71 user        75.23 sys\n           681721856  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n            15976951  page reclaims\n              114777  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                1555  signals received\n               11433  voluntary context switches\n             1341586  involuntary context switches\n            56094706  instructions retired\n            18546421  cycles elapsed\n             2539928  peak memory footprint",
+        "system_seconds": 75.23,
+        "user_seconds": 853.71
+      },
+      "started_at": "2026-08-27T11:45:39+00:00",
+      "time_file": "build.time.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "-t",
+        "targets",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-targets.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "-t",
+        "graph",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-graph.dot"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "-t",
+        "commands",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-commands.txt"
+    },
+    {
+      "command": [
+        "ninja",
+        "-C",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "-t",
+        "missingdeps",
+        "all"
+      ],
+      "exit_code": 0,
+      "label": "ninja-missingdeps.txt"
+    },
+    {
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/adrian/CLionProjects/CREXX/tools/newbuild/cmake_catalogue.py",
+        "export",
+        "--source",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/source",
+        "--build",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/release-build",
+        "--trace",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/macos-release/cmake-trace.jsonl",
+        "--ctest-json",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/macos-release/ctest.json",
+        "--source-commit",
+        "dc44d92909e706adc575932ba9ae72f2d6f05b7d",
+        "--output",
+        "/private/tmp/crexx-phase0-macos.vFdBJA/macos-release"
+      ],
+      "exit_code": 0,
+      "label": "catalogue-export"
+    }
+  ],
+  "configuration": "Release",
+  "host_after": {
+    "captured_at": "2026-08-27T11:48:48+00:00",
+    "cpu_count": 10,
+    "hw.logicalcpu": "10",
+    "hw.memsize": "25769803776",
+    "load_average_1_5_15": [
+      19.30224609375,
+      19.12451171875,
+      13.83642578125
+    ],
+    "machdep.cpu.brand_string": "Apple M5",
+    "machine": "arm64",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "power": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=35258467)\t80%; AC attached; not charging present: true",
+    "release": "25.5.0",
+    "system": "Darwin",
+    "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded"
+  },
+  "host_before": {
+    "captured_at": "2026-08-27T11:45:31+00:00",
+    "cpu_count": 10,
+    "hw.logicalcpu": "10",
+    "hw.memsize": "25769803776",
+    "load_average_1_5_15": [
+      11.24267578125,
+      18.0849609375,
+      12.2109375
+    ],
+    "machdep.cpu.brand_string": "Apple M5",
+    "machine": "arm64",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "power": "Now drawing from 'AC Power'\n -InternalBattery-0 (id=35258467)\t80%; AC attached; not charging present: true",
+    "release": "25.5.0",
+    "system": "Darwin",
+    "thermal": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded"
+  },
+  "jobs": 30,
+  "schema_version": "crexx.phase0-capture/v1",
+  "source": {
+    "clean": true,
+    "commit": "dc44d92909e706adc575932ba9ae72f2d6f05b7d",
+    "git_available": true
+  },
+  "status": "complete",
+  "timing_policy": {
+    "classification": "indicative-non-comparative",
+    "permitted_use": "gross build shape and resource-pressure observation only",
+    "prohibited_use": "performance baseline, regression verdict or product comparison",
+    "reason": "Other host and cluster activities were allowed during Phase 0 capture."
+  },
+  "tools": {
+    "cmake": "cmake version 4.3.2",
+    "ninja": "1.13.2",
+    "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]"
+  }
+}

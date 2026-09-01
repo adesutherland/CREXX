@@ -1,0 +1,44 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.1
+-- CREXX Version: crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260730T072715Z
+-- CREXX Build Commit: 0a0f87a86fac
+-- CMake Generator: Ninja
+-- Using local DSL-Syntax-Highlighter at C:/Users/adria/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags:  -D__USE_MINGW_ANSI_STDIO=1
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always  -D__USE_MINGW_ANSI_STDIO=1
+-- Linker flags for executables:
+-- Linker flags for shared libs:
+-- Release C compiler flags: -O3 -DNDEBUG
+-- Release C++ compiler flags: -O3 -DNDEBUG
+-- Release linker flags for executables:
+-- Release linker flags for shared libs:
+-- Fetching SQLite amalgamation 3530200 for native ADDRESS demo
+-- cREXX VM core socket TLS backend: SCHANNEL
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled, skipping subdirectory.
+-- Skipping INT_SIGNAL native signal test on Windows
+-- Smoke test 'INT_BYTECODE' is not present in this configuration; skipping
+-- Configuring done (1.7s)
+-- Generating done (3.6s)
+-- Build files have been written to: C:/Users/adria/CLionProjects/CREXX/cmake-build-clang-release-v2
+[0/4] Re-checking globbed directories...
+[1/19] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.obj
+[2/19] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.obj
+[3/19] Linking C static library bin\libavl_tree.a
+[4/19] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.obj
+[5/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.obj
+[6/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.obj
+[7/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.obj
+[8/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.obj
+[9/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.obj
+[10/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.obj
+[11/19] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.obj
+[12/19] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.obj
+[13/19] Linking C static library bin\librxpashim.a
+[14/19] Linking C static library bin\librxpa.a
+[15/19] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.obj
+[16/19] Linking C executable bin\rxbvm.exe

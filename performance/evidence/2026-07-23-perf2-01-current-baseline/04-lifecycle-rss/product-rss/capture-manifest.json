@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c 20260723",
+  "source_manifest": "performance/evidence/2026-07-23-perf2-01-current-baseline/02-product-timing/product-matrix-v1.txt",
+  "measurement": "rss",
+  "warmups": 0,
+  "recorded_runs": 3,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-23T18:04:27+0000",
+  "completed_utc": "2026-07-23T18:07:50+0000",
+  "result": "pass"
+}

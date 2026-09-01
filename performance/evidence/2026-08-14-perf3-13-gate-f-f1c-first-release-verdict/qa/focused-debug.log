@@ -1,0 +1,65 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/18 Test    #1: linked_opt_runtime_artifacts_build ...............   Passed  165.70 sec
+      Start  507: gate_f_levelb_contract
+      Start  736: gate_f_signal_names_run_noopt
+      Start  737: gate_f_signal_names_run_opt
+      Start  734: inline_test_binary_class_attr_assign_run_noopt
+      Start  735: inline_test_binary_class_attr_assign_run_opt
+      Start 1057: rxvmchannel_provider_registry
+      Start 1196: persistent_worker_executor-rxvml
+      Start  345: gate_f_channel_contract
+      Start 1140: gate_f_channel_local_rxbvm
+      Start 1141: gate_f_channel_local_rxtvm
+ 2/18 Test #1057: rxvmchannel_provider_registry ....................   Passed    0.01 sec
+      Start 1224: persistent_worker_executor-rxtvml
+ 3/18 Test #1140: gate_f_channel_local_rxbvm .......................   Passed    0.04 sec
+      Start 1210: persistent_worker_executor-rxbvml
+ 4/18 Test #1141: gate_f_channel_local_rxtvm .......................   Passed    0.04 sec
+      Start 1590: gate_f_levelb_bridge_inspection
+ 5/18 Test #1590: gate_f_levelb_bridge_inspection ..................   Passed    0.01 sec
+      Start 1486: ts_signal_noopt
+ 6/18 Test #1196: persistent_worker_executor-rxvml .................   Passed    0.22 sec
+      Start 1487: ts_signal_opt
+ 7/18 Test #1224: persistent_worker_executor-rxtvml ................   Passed    0.23 sec
+      Start 1628: testConcurrency_noopt
+ 8/18 Test #1210: persistent_worker_executor-rxbvml ................   Passed    0.23 sec
+      Start 1629: testConcurrency_opt
+ 9/18 Test #1486: ts_signal_noopt ..................................   Passed    0.42 sec
+10/18 Test  #345: gate_f_channel_contract ..........................   Passed    0.48 sec
+11/18 Test #1487: ts_signal_opt ....................................   Passed    0.32 sec
+12/18 Test #1629: testConcurrency_opt ..............................   Passed    1.42 sec
+13/18 Test  #507: gate_f_levelb_contract ...........................   Passed    2.00 sec
+14/18 Test  #735: inline_test_binary_class_attr_assign_run_opt .....   Passed    2.12 sec
+15/18 Test  #737: gate_f_signal_names_run_opt ......................   Passed    2.15 sec
+16/18 Test  #734: inline_test_binary_class_attr_assign_run_noopt ...   Passed    2.29 sec
+17/18 Test  #736: gate_f_signal_names_run_noopt ....................   Passed    2.30 sec
+18/18 Test #1628: testConcurrency_noopt ............................   Passed    3.51 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Label Time Summary:
+channels             =   0.56 sec*proc (4 tests)
+classlib             =   0.01 sec*proc (1 test)
+compiler             =   2.47 sec*proc (2 tests)
+concurrency          =   2.00 sec*proc (1 test)
+e5                   =   0.68 sec*proc (3 tests)
+f1c                  =   0.08 sec*proc (3 tests)
+gate-e               =   0.68 sec*proc (3 tests)
+gate-f               =   0.57 sec*proc (5 tests)
+gate_f               =   2.00 sec*proc (1 test)
+industrial           =   0.68 sec*proc (3 tests)
+inspection           =   0.01 sec*proc (1 test)
+interpreter          =   0.77 sec*proc (6 tests)
+levelb               =   2.00 sec*proc (1 test)
+lifecycle            =   0.08 sec*proc (2 tests)
+linked_opt           =   6.01 sec*proc (4 tests)
+macos                =   0.68 sec*proc (3 tests)
+perf3                =   0.77 sec*proc (6 tests)
+performance          =   0.48 sec*proc (1 test)
+private              =   0.68 sec*proc (3 tests)
+provider-registry    =   0.01 sec*proc (1 test)
+rxas                 =   0.48 sec*proc (1 test)
+rxbin                =   0.48 sec*proc (1 test)
+
+Total Test time (real) = 169.48 sec

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "rexxcps-opaque-heavy-stripped",
+  "pair": "rexxcps-opaque-heavy",
+  "workload": "RexxCPS opaque fixed 100",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-stripped.rxbin","sha256":"7661c128cbacc4c553166080cc86459e0e83efe600c2c3646c2b9d842fa1c88f"},
+  "modules": [],
+  "arguments": ["A","Off","100","1"],
+  "correctness_expectation": "PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic",
+  "source_trace_retention": "linked;source_TRACE=stripped;fixed_count=100;averaging=1",
+  "warmups": 3,
+  "recorded_runs": 9,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-stripped.rxbin","-a","A","Off","100","1"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/heavy-candidate-a/entries/rexxcps-opaque-heavy-stripped/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-stripped.rxbin","-a","A","Off","100","1"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 115048000
+}

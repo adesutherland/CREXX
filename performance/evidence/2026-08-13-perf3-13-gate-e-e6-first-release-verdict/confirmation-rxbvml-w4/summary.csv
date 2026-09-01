@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+churn-rxbvml-w4-c0-confirm,churn-rxbvml-w4,crexx,rxbvml,c0-owner-only,E6-C0,no,persistent-worker,256x8192,benchmark_rate,12,1157.119676,1206.985261,1231.072201,1284.186893,1355.300496,36.723912,2.983084,16.098229,yes
+churn-rxbvml-w4-c1-confirm,churn-rxbvml-w4,crexx,rxbvml,c1-idle-handback,E6-C1,no,persistent-worker,256x8192,benchmark_rate,12,1095.848191,1202.837232,1253.821868,1330.767662,1378.894299,70.641041,5.634057,22.574667,yes

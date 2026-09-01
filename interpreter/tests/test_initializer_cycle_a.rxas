@@ -1,0 +1,14 @@
+.globals=0
+
+boot() .locals=0
+   .meta "initcyclea.boot"="b" ".void" boot() ""
+   .meta "initcyclea.boot"=".initializer" ".void" boot() ""
+   call initcycleb.ping()
+   ret
+
+ping() .locals=0 .expose=initcyclea.ping
+   .meta "initcyclea.ping"="b" ".void" ping() ""
+   ret
+
+initcycleb.ping() .expose=initcycleb.ping
+   .meta "initcycleb.ping"="b" ".void" initcycleb.ping() ""

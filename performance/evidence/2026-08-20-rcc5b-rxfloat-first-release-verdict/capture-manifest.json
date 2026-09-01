@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g6a7960e8c1cc.dirty 20260819",
+  "source_manifest": "/tmp/crexx-rcc5-verdict-rerun.Ux9Xvy/manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-20T13:16:10+0000",
+  "completed_utc": "2026-08-20T13:20:34+0000",
+  "result": "pass"
+}

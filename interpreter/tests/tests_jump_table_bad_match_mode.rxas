@@ -1,0 +1,11 @@
+.globals=0
+main() .locals=2
+    .jtable words auto
+    br cases_end
+word: .jcase words "word"
+    ret 1
+cases_end:
+    load r0,"word"
+    jumps r0,words
+    jumpr r0,words
+    ret 0

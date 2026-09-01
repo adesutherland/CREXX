@@ -82,17 +82,19 @@ Assembler_Token* rxast_f(Assembler_Context* context, int type) {
     /* Now we work out the useful token value */
     char *buffer;
     char *c;
+    char *integer_end;
     switch (type) {
         case INT:
             /* Need to null terminate - sigh */
             buffer = malloc(token->length + 1);
             memcpy(buffer, token->token_source, token->length);
             buffer[token->length] = 0;
-#ifdef __32BIT__
-            token->token_value.integer = atol(buffer);
-#else
-            token->token_value.integer = atoll(buffer); // NOLINT
-#endif
+            integer_end = buffer;
+            if (rxinteger_parse(buffer, &integer_end, &token->token_value.integer) ||
+                *integer_end != 0) {
+                token->token_value.integer = 0;
+                rxaserat(context, token, "integer literal is outside the signed 64-bit range");
+            }
             free(buffer);
             break;
         case FLOAT:

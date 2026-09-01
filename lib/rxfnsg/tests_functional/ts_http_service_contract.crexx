@@ -1,0 +1,52 @@
+options levelg
+
+import rxfnsg
+import concurrency
+
+contractservice: class implements .httpservice .taskwork
+  _base = .int
+
+  *: factory
+    arg base = .int
+    _base = base
+    return
+
+  handle: method = .httpresponse
+    arg request = .httprequest, context = .taskcontext
+    if context.cancellation_requested() then return .httpresponse.text(500, "cancelled")
+    value = _base + request.body()
+    headers = .httpheaders.media_type("text/plain").add("X-Contract", request.verb())
+    return .httpresponse.text(201, value, headers)
+
+  run: method = .channelvalue
+    arg encoded = .channelvalue, context = .taskcontext
+    service = self as .httpservice
+    return service.dispatch(encoded, context)
+
+main: procedure = .int
+  pool = .taskpool.local(1, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  target = task .contractservice(40)
+  request = .httprequest.inbound("POST", "/contract", "Content-Type: text/plain" || "0d0a"x, "2" as .binary, "127.0.0.1:42")
+  child = scope.submit(target, request.to_channel())
+  completion = child.wait(-1)
+  if completion.succeeded() = 0 then do
+    say "FAIL: HTTP service adapter task failed" completion.error_code() completion.message()
+    call scope.abort(.channelvalue.string_value("contract failed"))
+    call pool.close()
+    return 1
+  end
+
+  response = .httpresponse.from_channel(completion.value())
+  call scope.finish()
+  call pool.close()
+
+  if response.status() <> 201 | response.body() <> "42" | response.header("X-Contract") <> "POST" then do
+    say "FAIL: HTTP service adapter returned" response.status() response.body() response.header("X-Contract")
+    return 1
+  end
+
+  say "PASS: Level G HTTP service interface supplies the canonical dispatch adapter"
+  return 0
+
+exit main()

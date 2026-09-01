@@ -1,0 +1,27 @@
+PERF3-02 clean-host timing revalidation final post-run record
+
+Execution ledger
+- Initial: 2026-07-31T15:39:55Z to 15:53:52Z; 156/156 executions.
+- Noise append: 2026-07-31T15:55:03Z to 16:03:58Z; 88/88 executions.
+- Guard append 01: 2026-07-31T16:06:28Z to 16:15:56Z; 104/104 executions.
+- Richards exact cap: 2026-07-31T16:17:08Z to 16:18:30Z; 12/12 executions.
+- Towers guard append 02: 2026-07-31T16:18:47Z to 16:21:53Z; 52/52 executions.
+- Total: 412/412 correct executions; 376 recorded samples and 36 warmups.
+- All five driver stderr files are empty; no sample was removed.
+
+Final host state at 2026-07-31T16:22:31Z / 17:22:31+0100
+- Load averages: 1.25 1.67 2.05.
+- AC Power; battery 80%; AC attached; not charging.
+- lowpowermode: 0.
+- No thermal warning level recorded.
+- No performance warning level recorded.
+- No CPU power status recorded.
+- Interactive sessions: adrian console only.
+- No overlapping cmake, ctest, ninja, make, rxc, rxas, rxlink, rxvm or rxbvm
+  process was found after the final block.
+
+Disposition
+- All target pairs are favorable and all target mean 95% intervals exclude zero.
+- All byte-identical guard intervals cross zero at the exact 36-pair cap.
+- Every guard mean-interval upper bound is below +3%; direction is
+  noisy/inconclusive but the workload-regression guard passes.

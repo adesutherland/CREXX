@@ -1,4 +1,4 @@
-# Graphical User Interfaces and Graphics
+# Graphical User Interfaces
 
 Release status: this page describes the optional GTK plugin area. It is useful
 as implementation reference material, but it is not part of the Release 1 beta

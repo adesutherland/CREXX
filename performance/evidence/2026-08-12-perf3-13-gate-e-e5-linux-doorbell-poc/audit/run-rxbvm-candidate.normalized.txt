@@ -1,0 +1,97 @@
+<run>:
+  endbr64
+  push   %r15
+  mov    %esi,%r15d
+  push   %r14
+  push   %r12
+  mov    %rdx,%r12
+  push   %rbp
+  push   %rbx
+  mov    %rdi,%rbx
+  sub    $0x10,%rsp
+  call   <rxvm_worker_begin_execution>
+  test   %eax,%eax
+  jne    <run+0xa0>
+  lea    0x390(%rbx),%rbp
+  mov    %rbp,%rdi
+  call   <rxpa_compatibility_execution_enter>
+  lea    0x348(%rbx),%rdi
+  mov    $0x1,%esi
+  call   <rxvmplugin_instance_set_prepare>
+  test   %eax,%eax
+  jne    <run+0x100>
+  mov    %rbx,%rdi
+  call   <rxvm_active_context_enter>
+  mov    %r12,%rdx
+  mov    %r15d,%esi
+  mov    %rbx,%rdi
+  mov    %rax,%r14
+  call   <rxvm_run_owned_core>
+  mov    %r14,%rdi
+  mov    %eax,0xc(%rsp)
+  call   <rxvm_active_context_leave>
+  mov    %rbp,%rdi
+  call   <rxpa_compatibility_execution_leave>
+  mov    %rbx,%rdi
+  call   <rxvm_worker_end_execution>
+  mov    0xc(%rsp),%edx
+  test   %eax,%eax
+  jne    <run+0x14c>
+  add    $0x10,%rsp
+  mov    %edx,%eax
+  pop    %rbx
+  pop    %rbp
+  pop    %r12
+  pop    %r14
+  pop    %r15
+  ret
+  nopw   0x0(%rax,%rax,1)
+  mov    %rbx,%rdi
+  mov    %eax,%ebp
+  call   <rxvm_worker_get_state>
+  mov    %eax,%edi
+  call   <rxvm_worker_state_name>
+  cmp    $0x1,%ebp
+  mov    $0x2,%esi
+  lea    REL(%rip),%rcx        # <REL>
+  mov    %rax,%r8
+  lea    REL(%rip),%rax        # <REL>
+  lea    REL(%rip),%rdx        # <REL>
+  cmove  %rax,%rcx
+  mov    REL(%rip),%rax        # <REL>
+  mov    (%rax),%rdi
+  xor    %eax,%eax
+  call   <__fprintf_chk@plt>
+  add    $0x10,%rsp
+  mov    $0x1,%edx
+  pop    %rbx
+  mov    %edx,%eax
+  pop    %rbp
+  pop    %r12
+  pop    %r14
+  pop    %r15
+  ret
+  nopw   0x0(%rax,%rax,1)
+  mov    REL(%rip),%rax        # <REL>
+  mov    $0x22,%edx
+  mov    $0x1,%esi
+  lea    REL(%rip),%rdi        # <REL>
+  mov    (%rax),%rcx
+  call   <fwrite@plt>
+  mov    %rbp,%rdi
+  call   <rxpa_compatibility_execution_leave>
+  mov    %rbx,%rdi
+  call   <rxvm_worker_end_execution>
+  test   %eax,%eax
+  jne    <run.cold>
+  add    $0x10,%rsp
+  mov    $0xff,%edx
+  pop    %rbx
+  mov    %edx,%eax
+  pop    %rbp
+  pop    %r12
+  pop    %r14
+  pop    %r15
+  ret
+  jmp    <run.cold>
+

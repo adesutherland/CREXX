@@ -1,0 +1,49 @@
+utc=2026-08-05T21:07:52Z
+{ 1.20 1.18 1.31 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+75590 /bin/zsh -lc (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/{samples.csv,summary.csv,capture-manifest.json}) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-post-state.txt 2>&1
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-driver.stdout.txt
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-driver.stderr.txt
+wc -l /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/{samples.csv,summary.csv,outputs.csv}
+sed -n '1,36p' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-post-state.txt
+75597 /bin/zsh -lc (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/{samples.csv,summary.csv,capture-manifest.json}) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-post-state.txt 2>&1
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-driver.stdout.txt
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-driver.stderr.txt
+wc -l /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/{samples.csv,summary.csv,outputs.csv}
+sed -n '1,36p' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-post-state.txt
+09b52e8048337eebfa9d469a4eabcd015b783a462c713c9b0557d02ce4b5791d  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/samples.csv
+6f27b965a2a3fd5e9ecacfb3db66d844128a4b3031dad0e62379fcdc32092a25  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/summary.csv
+1b7521e00c62ae38211d4112e8cd91b95045709f0a30498bd658985fc4292615  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-f1a0-balanced-timing/capture-manifest.json

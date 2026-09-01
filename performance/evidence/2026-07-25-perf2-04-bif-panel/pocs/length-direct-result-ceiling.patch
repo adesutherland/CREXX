@@ -1,0 +1,36 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..014ffac35 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -133,6 +133,8 @@ classic_one_point_one = "1.1" as .decimal
+ classic_two_point_two = "2.2" as .decimal
+ classic_five = "5" as .decimal
+ classic_ninety_nine_point_seven = "99.7" as .decimal
++__perf2_length_source = .string
++__perf2_length_result = .int
+ 
+ /* Calibrate for the empty do-loop. */
+ do i = 1 to averaging
+@@ -160,7 +162,9 @@ do trial = 1 to 2
+         if flag = acompound.key1.lvar then say "Failed1"
+         do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+           if j > (acompound.key1.lvar as .decimal) then say "Failed2"
+-          if 17 < length(j as .string) - 1 then say "Failed3"
++          __perf2_length_source = j as .string
++          assembler strlen __perf2_length_result,__perf2_length_source
++          if 17 < __perf2_length_result - 1 then say "Failed3"
+           if (j as .string) = "foobar" then say "Failed4"
+           if substr(1234, 1, 1) = "9" then say "Failed5"
+           if word(key1, 1) = "?" then say "Failed6"
+@@ -210,6 +214,11 @@ do trial = 1 to 2
+   calibrated = 1
+ end
+ 
++if __perf2_length_result <> 3 then
++  return fail("direct STRLEN result mismatch")
++if __perf2_length_source <> "2.2" then
++  return fail("direct STRLEN mutated or misordered its source")
++
+ /* Show the counts. */
+ say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+ say "REXXCPS-EFFECTIVE contract=" || contract ,

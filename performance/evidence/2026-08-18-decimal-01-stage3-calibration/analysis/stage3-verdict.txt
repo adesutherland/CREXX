@@ -1,0 +1,11 @@
+decision=DECIMAL-01 Stage 3 calibration
+d2_candidate_count=48
+d2_leader=D2-decNumber-p8-n18-b64
+d2_leader_common18_delta_percent=-0.228861
+d2_leader_classic9_delta_percent=-1.673373
+d2_leader_status=below-material-signal
+d3_adapter_common18_arithmetic_delta_percent=-44.395423
+d3_adapter_classic9_arithmetic_delta_percent=-64.759560
+d3_core_common18_delta_percent=-49.282877
+d3_core_classic9_delta_percent=-66.730632
+d3_progression=reject-arithmetic-regression

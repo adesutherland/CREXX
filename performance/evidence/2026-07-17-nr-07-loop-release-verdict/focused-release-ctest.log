@@ -1,0 +1,84 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start 366: repro_expand_until_run_opt
+      Start 386: basic_loops_run_opt
+      Start 122: err_loop_class_fail
+      Start 633: inline_test_loop_bound_expr_run_opt
+      Start 632: inline_test_loop_bound_expr_run_noopt
+      Start 385: basic_loops_run_noopt
+      Start 665: inline_test_vararg_dynamic_loop_run_opt
+      Start 630: inline_test_condition_contexts_run_noopt
+      Start 664: inline_test_vararg_dynamic_loop_run_noopt
+      Start 365: repro_expand_until_run_noopt
+ 1/35 Test #122: err_loop_class_fail ..........................   Passed    0.22 sec
+      Start 631: inline_test_condition_contexts_run_opt
+ 2/35 Test #664: inline_test_vararg_dynamic_loop_run_noopt ....   Passed    0.31 sec
+      Start 131: err_block_expr_no_leave_fail
+ 3/35 Test #665: inline_test_vararg_dynamic_loop_run_opt ......   Passed    0.31 sec
+ 4/35 Test #630: inline_test_condition_contexts_run_noopt .....   Passed    0.31 sec
+      Start 760: do_until_parse_parse
+      Start 257: inline_test_loop_bound_expr_opt
+ 5/35 Test #632: inline_test_loop_bound_expr_run_noopt ........   Passed    0.32 sec
+      Start 209: basic_loops_opt
+ 6/35 Test #385: basic_loops_run_noopt ........................   Passed    0.32 sec
+      Start 135: err_leave_with_not_in_block_fail
+ 7/35 Test #365: repro_expand_until_run_noopt .................   Passed    0.33 sec
+      Start 282: inline_test_vararg_dynamic_loop_noopt
+ 8/35 Test #633: inline_test_loop_bound_expr_run_opt ..........   Passed    0.35 sec
+      Start 132: err_block_expr_leave_plain_fail
+ 9/35 Test #366: repro_expand_until_run_opt ...................   Passed    0.36 sec
+      Start 255: inline_test_condition_contexts_opt
+10/35 Test #386: basic_loops_run_opt ..........................   Passed    0.36 sec
+      Start 256: inline_test_loop_bound_expr_noopt
+11/35 Test #760: do_until_parse_parse .........................   Passed    0.18 sec
+      Start 759: do_while_parse_parse
+12/35 Test #282: inline_test_vararg_dynamic_loop_noopt ........   Passed    0.20 sec
+      Start 254: inline_test_condition_contexts_noopt
+13/35 Test #131: err_block_expr_no_leave_fail .................   Passed    0.23 sec
+      Start 283: inline_test_vararg_dynamic_loop_opt
+14/35 Test #135: err_leave_with_not_in_block_fail .............   Passed    0.23 sec
+15/35 Test #257: inline_test_loop_bound_expr_opt ..............   Passed    0.24 sec
+      Start  60: 07_loops_opt
+      Start 194: repro_expand_until_noopt
+16/35 Test #631: inline_test_condition_contexts_run_opt .......   Passed    0.34 sec
+      Start 208: basic_loops_noopt
+17/35 Test #209: basic_loops_opt ..............................   Passed    0.24 sec
+      Start 195: repro_expand_until_opt
+18/35 Test #132: err_block_expr_leave_plain_fail ..............   Passed    0.25 sec
+      Start  59: 07_loops_noopt
+19/35 Test #256: inline_test_loop_bound_expr_noopt ............   Passed    0.24 sec
+      Start 184: loop_warn
+20/35 Test #255: inline_test_condition_contexts_opt ...........   Passed    0.25 sec
+      Start 801: syntaxhighlight_levelc_do_conditions_leave
+21/35 Test #759: do_while_parse_parse .........................   Passed    0.25 sec
+      Start 336: nr0607_codegen_contract
+22/35 Test  #60: 07_loops_opt .................................   Passed    0.21 sec
+      Start 423: nr07_specialist_loops_run_noopt
+23/35 Test #801: syntaxhighlight_levelc_do_conditions_leave ...   Passed    0.16 sec
+      Start 806: syntaxhighlight_levelc_iterate_bad_target
+24/35 Test #254: inline_test_condition_contexts_noopt .........   Passed    0.25 sec
+      Start 424: nr07_specialist_loops_run_opt
+25/35 Test #194: repro_expand_until_noopt .....................   Passed    0.23 sec
+26/35 Test #283: inline_test_vararg_dynamic_loop_opt ..........   Passed    0.25 sec
+27/35 Test #208: basic_loops_noopt ............................   Passed    0.24 sec
+28/35 Test #195: repro_expand_until_opt .......................   Passed    0.24 sec
+29/35 Test  #59: 07_loops_noopt ...............................   Passed    0.25 sec
+30/35 Test #184: loop_warn ....................................   Passed    0.24 sec
+31/35 Test #806: syntaxhighlight_levelc_iterate_bad_target ....   Passed    0.12 sec
+      Start 805: syntaxhighlight_levelc_leave_outside_loop
+32/35 Test #423: nr07_specialist_loops_run_noopt ..............   Passed    0.18 sec
+33/35 Test #424: nr07_specialist_loops_run_opt ................   Passed    0.19 sec
+34/35 Test #805: syntaxhighlight_levelc_leave_outside_loop ....   Passed    0.09 sec
+35/35 Test #336: nr0607_codegen_contract ......................   Passed    0.81 sec
+
+100% tests passed, 0 tests failed out of 35
+
+Label Time Summary:
+compiler               =   1.19 sec*proc (4 tests)
+levelc                 =   0.37 sec*proc (3 tests)
+linked_opt             =   1.90 sec*proc (6 tests)
+performance            =   0.81 sec*proc (1 test)
+smoke                  =   0.25 sec*proc (1 test)
+stage1                 =   0.37 sec*proc (3 tests)
+syntax_highlighting    =   0.37 sec*proc (3 tests)
+
+Total Test time (real) =   1.60 sec

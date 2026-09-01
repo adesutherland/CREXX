@@ -1,0 +1,49 @@
+collected_utc=2026-07-17T14:52:07Z
+repo_root=/Users/adrian/CLionProjects/CREXX
+branch=develop
+head=e23d44e58ce597720bb4437b1b2ee5aef6be4eee
+origin_develop=e23d44e58ce597720bb4437b1b2ee5aef6be4eee
+uname=Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+cpu=Apple M5
+logical_cpus=10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+cmake version 4.3.2
+ninja 1.13.2
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+dirty_worktree:
+ M lib/rxfnsb/rexx/CMakeLists.txt
+ M lib/rxfnsb/tests_functional/CMakeLists.txt
+ M performance/ROADMAP.md
+ M performance/tools/run_evidence_bundle.crexx
+ M tests/benchmarks/awfy_bounce.crexx
+?? lib/rxfnsb/rexx/_typedformat.crexx
+?? lib/rxfnsb/rexx/floatabs.crexx
+?? lib/rxfnsb/rexx/floatabs.md
+?? lib/rxfnsb/rexx/floatformat.crexx
+?? lib/rxfnsb/rexx/floatformat.md
+?? lib/rxfnsb/rexx/floatmax.crexx
+?? lib/rxfnsb/rexx/floatmax.md
+?? lib/rxfnsb/rexx/floatmin.crexx
+?? lib/rxfnsb/rexx/floatmin.md
+?? lib/rxfnsb/rexx/floatsign.crexx
+?? lib/rxfnsb/rexx/floatsign.md
+?? lib/rxfnsb/rexx/floattrunc.crexx
+?? lib/rxfnsb/rexx/floattrunc.md
+?? lib/rxfnsb/rexx/intabs.crexx
+?? lib/rxfnsb/rexx/intabs.md
+?? lib/rxfnsb/rexx/intformat.crexx
+?? lib/rxfnsb/rexx/intformat.md
+?? lib/rxfnsb/rexx/intmax.crexx
+?? lib/rxfnsb/rexx/intmax.md
+?? lib/rxfnsb/rexx/intmin.crexx
+?? lib/rxfnsb/rexx/intmin.md
+?? lib/rxfnsb/rexx/intsign.crexx
+?? lib/rxfnsb/rexx/intsign.md
+?? lib/rxfnsb/tests_functional/ts_typed_numeric.crexx
+?? performance/NUMERIC-01-WORKLIST.md
+?? performance/evidence/2026-07-17-numeric-01-first-release-verdict/

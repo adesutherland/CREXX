@@ -1,0 +1,65 @@
+/* Focused Level B ARRAYFIND tests. */
+options levelb
+import rxfnsb
+
+values = .string[]
+values[1] = "Alpha"
+values[2] = "beta value"
+values[3] = ""
+values[4] = "alphabet"
+values[5] = "αβγ"
+before = join(values)
+
+errors = 0
+errors = errors + check(1, arrayfind("pha", values), "first substring")
+errors = errors + check(2, arrayfind("value", values), "later substring")
+errors = errors + check(4, arrayfind("pha", values, 2), "start skips first")
+errors = errors + check(1, arrayfind("pha", values, 0), "low start clamps")
+errors = errors + check(0, arrayfind("pha", values, 6), "start above high-water")
+errors = errors + check(0, arrayfind("ALP", values), "case-sensitive miss")
+errors = errors + check(1, arrayfind("ALP", values, 1, 0), "case-insensitive first")
+errors = errors + check(4, arrayfind("BET", values, 3, 0), "case-insensitive from")
+errors = errors + check(5, arrayfind("βγ", values), "Unicode substring")
+errors = errors + check(0, arrayfind("", values), "empty needle")
+
+empty = .string[]
+errors = errors + check(0, arrayfind("a", empty), "empty array")
+errors = errors + check_string(before, join(values), "array is not mutated")
+
+invalid_caught = 0
+do
+  ignored = arrayfind("a", values, 1, -1)
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+do
+  ignored = .int
+  ignored = arrayfind("a", values, 1, 2)
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+errors = errors + check(2, invalid_caught, "invalid case flags signal")
+
+if errors = 0 then say "PASS: arrayfind"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYFIND" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYFIND" label "values differ"
+  return 1
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do index = 1 to array[0]
+    if index > 1 then result = result || "|"
+    result = result || array[index]
+  end
+  return result

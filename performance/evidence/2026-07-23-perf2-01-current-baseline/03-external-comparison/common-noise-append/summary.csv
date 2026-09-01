@@ -1,0 +1,4 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+richards-netrexx,Richards,netrexx,netrexx,decimal-rexx-port,A,yes,no,20,normalized_work_per_second,10,17.818578,18.130002,18.342971,18.896152,19.651327,0.285204,1.554840,9.991556,no
+base64-rxvm,Base64,crexx,rxvm,equivalent-port,A,yes,no,2500,normalized_work_per_second,10,1391.191311,1450.688328,1479.563853,1577.343208,1881.158914,62.338770,4.213321,33.115678,yes
+base64-rxbvm,Base64,crexx,rxbvm,equivalent-port,A,yes,no,2500,normalized_work_per_second,10,1432.675430,1559.528717,1623.882062,1682.775647,1744.176717,72.315911,4.453274,19.182507,yes

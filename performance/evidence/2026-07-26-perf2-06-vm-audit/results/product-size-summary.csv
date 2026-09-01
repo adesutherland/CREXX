@@ -1,0 +1,5 @@
+variant,vm,file_bytes,macho_text_bytes,run_bytes
+current,rxvm,998776,810700,543340
+current,rxbvm,982440,804704,536668
+cow,rxvm,998840,821520,554040
+cow,rxbvm,999016,811092,542936

@@ -1,0 +1,23 @@
+	Command being timed: "/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/crexx /tmp/crexx-perf2-linux-x64.d5f0827ca/source/performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest /home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-gcc-rss-noise-append-v1.txt --output-dir /home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/rss/gcc/noise-append --measurement rss --warmups 0 --runs 10"
+	User time (seconds): 241.18
+	System time (seconds): 7.53
+	Percent of CPU this job got: 130%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:10.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 446440
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 3266232
+	Voluntary context switches: 130774
+	Involuntary context switches: 2757
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 808
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

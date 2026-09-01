@@ -1,0 +1,8 @@
+# PERF2-04 P04-CEX1 first ordinary profiling-off Release verdict.
+# The exact frozen artifacts are retained in the verdict evidence; these
+# scratch paths identify the serial measured images used on 2026-07-25.
+crexx-cross-runtime-matrix|1
+p04-cex1-slc1-rxvm|PERF2-04 P04-CEX1 decisive|crexx|rxvm|accepted-SLC1|P|no|no|5000000-iterations|PASS: P04-CEX1||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/private/tmp/perf2-04-cex1-timing.5xiPgW/slc1/decisive.rxbin;-a;5000000
+p04-cex1-candidate-rxvm|PERF2-04 P04-CEX1 decisive|crexx|rxvm|P04-CEX1-candidate|P|no|no|5000000-iterations|PASS: P04-CEX1||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/private/tmp/perf2-04-cex1-timing.5xiPgW/cex1/decisive.rxbin;-a;5000000
+p04-cex1-slc1-rxbvm|PERF2-04 P04-CEX1 decisive|crexx|rxbvm|accepted-SLC1|P|no|no|5000000-iterations|PASS: P04-CEX1||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/private/tmp/perf2-04-cex1-timing.5xiPgW/slc1/decisive.rxbin;-a;5000000
+p04-cex1-candidate-rxbvm|PERF2-04 P04-CEX1 decisive|crexx|rxbvm|P04-CEX1-candidate|P|no|no|5000000-iterations|PASS: P04-CEX1||/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/private/tmp/perf2-04-cex1-timing.5xiPgW/cex1/decisive.rxbin;-a;5000000

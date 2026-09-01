@@ -1,0 +1,1 @@
+/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxbvm /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin -a 100 

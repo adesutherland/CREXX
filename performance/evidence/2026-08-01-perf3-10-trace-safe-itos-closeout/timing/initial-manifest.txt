@@ -1,0 +1,6 @@
+# PERF3-10 exact retained C0 versus trace-safe storage/component C1.
+crexx-cross-runtime-matrix|1
+rexxcps-c0-rxvm|RexxCPS|crexx|rxvm|C0-current|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/tmp/crexx-perf3-10-baseline.pkyQyD/rxvm;/tmp/crexx-perf3-10-baseline.pkyQyD/rexxcps.rxbin;/tmp/crexx-perf3-10-baseline.pkyQyD/library.rxbin;-a
+rexxcps-c1-rxvm|RexxCPS|crexx|rxvm|C1-storage-component|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a
+rexxcps-c0-rxbvm|RexxCPS|crexx|rxbvm|C0-current|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/tmp/crexx-perf3-10-baseline.pkyQyD/rxbvm;/tmp/crexx-perf3-10-baseline.pkyQyD/rexxcps.rxbin;/tmp/crexx-perf3-10-baseline.pkyQyD/library.rxbin;-a
+rexxcps-c1-rxbvm|RexxCPS|crexx|rxbvm|C1-storage-component|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin;-a

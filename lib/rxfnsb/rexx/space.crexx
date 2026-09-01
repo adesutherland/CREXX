@@ -22,36 +22,66 @@
  * SOFTWARE.
  */
 
-/* rexx space adds n padding chars between words */
+/**
+ * Level B SPACE implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/space.md
+ */
 options levelb
-
 namespace rxfnsb expose space
 
+/**
+ * Normalize Unicode-whitespace-delimited words with a fixed separator.
+ *
+ * @param string source text
+ * @param count optional non-negative number of pad codepoints between words
+ * @param pad exactly one separator codepoint
+ * @return source words joined by the requested separator
+ */
 space: procedure = .string
-  arg expose string = .string, spacenr = 1,  pad = " "
+  arg string = .string, count = 1, pad = " "
+  string_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  scan = 0
+  word_start = .int
+  word_end = .int
+  word_length = .int
+  have_word = 0
+  separator_ready = 0
+  separator = ""
+  segment = ""
+  result = ""
 
-wrds=words(string)
-if wrds<2 then return word(string,1)
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS","SPACE count must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","SPACE pad must contain exactly one character"
+  assembler strlen string_length,string
+  if string_length = 0 then return result
 
-padstr=""
-newstr=""
-offset=0
-cpad=""
-/* make sure just to take first char */
-assembler strchar cpad,pad,offset
-assembler load pad,""
-assembler appendchar pad,cpad
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then leave
+    assembler fndblnk word_end,string,word_start
+    if word_end < 0 then word_end = string_length
 
-/* create padding string */
-do i=1 to spacenr
-   padstr=padstr||pad
-end
+    if have_word & count > 0 then do
+      if \separator_ready then do
+        assembler strchar pad_character,pad,pad_index
+        assembler padstr separator,pad_character,count
+        separator_ready = 1
+      end
+      assembler append result,separator
+    end
 
-/* add padding string between words */
-do i=1 to wrds-1
-   newstr=newstr||word(string,i)||padstr
-end
-/* add last word */
-newstr=newstr||word(string,wrds)
-
-return newstr
+    word_length = word_end - word_start
+    assembler substring segment,string,word_start,word_length
+    assembler append result,segment
+    have_word = 1
+    scan = word_end
+  end
+  return result

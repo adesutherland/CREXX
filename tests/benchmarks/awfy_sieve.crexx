@@ -1,0 +1,44 @@
+/*
+ * Level B port of the Are We Fast Yet? Sieve benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * LICENSE-SOM-MIT.txt and README.md in this directory.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+result = 0
+do iteration = 1 to repetitions
+  result = sieve_once()
+  if result <> 669 then return fail("expected 669 primes, got " || result)
+end
+
+say "benchmark=awfy_sieve repetitions="repetitions "result="result
+say "PASS: AWFY Sieve"
+return 0
+
+sieve_once: procedure = .int
+  flags = .int[5000]
+  do i = 1 to 5000
+    flags[i] = 1
+  end
+
+  prime_count = 0
+  do i = .int(2) to 5000
+    if flags[i] then do
+      prime_count = prime_count + 1
+      do k = i + i to 5000 by i
+        flags[k] = 0
+      end
+    end
+  end
+  return prime_count
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

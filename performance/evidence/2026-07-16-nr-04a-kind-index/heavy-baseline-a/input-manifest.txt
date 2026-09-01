@@ -1,0 +1,7 @@
+crexx-nr04a-kind-index-manifest|1
+# Fixed-count, metadata-active RexxCPS A/B timing cell. The same exact retained
+# and stripped images are run with count=100 so VM differences are measured over
+# deterministic work rather than the canonical driver's time-based calibration.
+# Fields: id|pair|workload|variant|mode|image|modules|args|expectation|source_trace|warmups|runs|image_sha256|module_sha256s
+rexxcps-opaque-heavy-retained|rexxcps-opaque-heavy|RexxCPS opaque fixed 100|baseline|opt-retained|/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-retained.rxbin||A;Off;100;1|PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic|linked;source_TRACE=retained;fixed_count=100;averaging=1|3|9|7c20ec8ba3d00913ddc0cb51600dc0ebed5890f5d13c5c8544a4e3fe8757543d|
+rexxcps-opaque-heavy-stripped|rexxcps-opaque-heavy|RexxCPS opaque fixed 100|candidate|opt-stripped|/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-stripped.rxbin||A;Off;100;1|PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic|linked;source_TRACE=stripped;fixed_count=100;averaging=1|3|9|7661c128cbacc4c553166080cc86459e0e83efe600c2c3646c2b9d842fa1c88f|

@@ -22,40 +22,104 @@
  * SOFTWARE.
  */
 
-/*
- *.  ReRadix
- *   Converts Arg(1) from radix Arg(2) to radix Arg(3) 
- *   Radix range is 2-16.  Conversion is via decimal
- *   After Brian Marks' version 
- */ 
 options levelb numeric_classic
 
 namespace _rxsysb expose reradix
-import rxfnsb
 
+/**
+ * Convert an unsigned integer between radices 2 through 16.
+ *
+ * @param subject source digits, using ASCII 0-9 and A-F case-insensitively
+ * @param FromRadix source radix from 2 through 16
+ * @param ToRadix target radix from 2 through 16
+ * @return uppercase target digits
+ * @signal INVALID_ARGUMENTS invalid radix, empty input, or invalid digit
+ */
 reradix: procedure = .string
-arg subject = .string, FromRadix = .int, ToRadix = .int
+  arg subject = .string, FromRadix = .int, ToRadix = .int
+  subject_length = .int
+  codepoint = .int
+  digit = .int
+  input_digits = .int[]
+  table = "0123456789ABCDEF"
+  result = ""
 
-subject = upper(subject)
- integer=0
- do j=1 to length(subject)
-   /* Individual digits have already been checked for range. */
-   integer=integer*FromRadix+pos(substr(subject,j,1),'0123456789ABCDEF')-1
-   /* This test not for standard. */
-    if pos('E',integer)>0 then do
-      say "ReRadix unable"
-      return "?"
+  if FromRadix < 2 | FromRadix > 16 | ToRadix < 2 | ToRadix > 16 then
+    assembler signal "INVALID_ARGUMENTS", "RERADIX radices must be from 2 through 16"
+
+  assembler strlen subject_length,subject
+  if subject_length = 0 then
+    assembler signal "INVALID_ARGUMENTS", "RERADIX subject must contain at least one digit"
+
+  /* Decode and validate once. */
+  do index = 0 to subject_length - 1
+    assembler strchar codepoint,subject,index
+    if codepoint >= 48 & codepoint <= 57 then digit = codepoint - 48
+    else if codepoint >= 65 & codepoint <= 70 then digit = codepoint - 55
+    else if codepoint >= 97 & codepoint <= 102 then digit = codepoint - 87
+    else assembler signal "INVALID_ARGUMENTS", "RERADIX subject contains a non-digit"
+    if digit >= FromRadix then
+      assembler signal "INVALID_ARGUMENTS", "RERADIX digit is outside the source radix"
+    input_digits[index + 1] = digit
+  end
+
+  /* Preserve one hexadecimal digit per four supplied binary digits. */
+  if FromRadix = 2 & ToRadix = 16 then do
+    group_length = subject_length // 4
+    if group_length = 0 then group_length = 4
+    input_index = 1
+    do while input_index <= subject_length
+      digit = 0
+      do count = 1 to group_length
+        digit = digit * 2 + input_digits[input_index]
+        input_index = input_index + 1
+      end
+      assembler strchar codepoint,table,digit
+      assembler appendchar result,codepoint
+      group_length = 4
     end
- end
- r=''
- if integer=0 then r='0'
- do while integer>0
-    r=substr('0123456789ABCDEF',1+integer//ToRadix,1)||r
-   integer=integer%ToRadix
- end
- /* When between 2 and 16, there is no zero suppression. */
- if FromRadix=2 & ToRadix=16 then
-   r=right(r,(length(subject)+3)%4,'0')
- else if FromRadix=16 & ToRadix=2 then
-   r=right(r,length(subject)*4,'0')
- return r
+    return result
+  end
+
+  /* Preserve four binary digits for every supplied hexadecimal digit. */
+  if FromRadix = 16 & ToRadix = 2 then do
+    do input_index = .int(1) to subject_length
+      digit = input_digits[input_index]
+      bit_value = 8
+      do 4
+        if digit >= bit_value then do
+          codepoint = 49
+          digit = digit - bit_value
+        end
+        else codepoint = 48
+        assembler appendchar result,codepoint
+        assembler idiv bit_value,bit_value,2
+      end
+    end
+    return result
+  end
+
+  /* Little-endian target digits; every intermediate is below 256. */
+  output_digits = .int[]
+  output_count = 1
+  output_digits[1] = 0
+  do input_index = .int(1) to subject_length
+    carry = input_digits[input_index]
+    do output_index = 1 to output_count
+      combined = output_digits[output_index] * FromRadix + carry
+      output_digits[output_index] = combined // ToRadix
+      carry = combined % ToRadix
+    end
+    do while carry > 0
+      output_count = output_count + 1
+      output_digits[output_count] = carry // ToRadix
+      carry = carry % ToRadix
+    end
+  end
+
+  do output_index = .int(output_count) to 1 by -1
+    digit = output_digits[output_index]
+    assembler strchar codepoint,table,digit
+    assembler appendchar result,codepoint
+  end
+  return result

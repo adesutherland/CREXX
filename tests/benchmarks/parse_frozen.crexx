@@ -1,0 +1,110 @@
+/*
+ * Static/frozen PARSE workload for NR-14.
+ *
+ * The repeated kernel mirrors RexxCPS's two dominant immutable shapes: three
+ * blank-delimited targets and a fixed relative-position split. The checks
+ * outside the loop keep adjacent literal, unmatched, repeated-target,
+ * source/target-alias, TRIM, INTO and Unicode behavior visible without making
+ * those fallback cases dominate the timing result.
+ */
+options levelb comments_dash
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+words1 = "alpha beta gamma"
+words2 = "  delta   epsilon zeta"
+words3 = "eta theta iota"
+words4 = "kappa lambda mu"
+words5 = "nu xi omicron"
+words6 = "pi rho sigma"
+positioned = "Foo Bar"
+checksum = 0
+a1 = .string
+a2 = .string
+a3 = .string
+b1 = .string
+b2 = .string
+b3 = .string
+c1 = .string
+c2 = .string
+c3 = .string
+d1 = .string
+d2 = .string
+d3 = .string
+e1 = .string
+e2 = .string
+e3 = .string
+f1 = .string
+f2 = .string
+f3 = .string
+p1 = .string
+p2 = .string
+
+do iteration = 1 to repetitions
+  parse var words1 a1 a2 a3
+  parse var words2 b1 b2 b3
+  parse var words3 c1 c2 c3
+  parse var words4 d1 d2 d3
+  parse var words5 e1 e2 e3
+  parse var words6 f1 f2 f3
+  parse value positioned with p1 +5 p2 .
+
+  checksum = checksum + length(a1) + length(a2) + length(a3)
+  checksum = checksum + length(b1) + length(b2) + length(b3)
+  checksum = checksum + length(c1) + length(c2) + length(c3)
+  checksum = checksum + length(d1) + length(d2) + length(d3)
+  checksum = checksum + length(e1) + length(e2) + length(e3)
+  checksum = checksum + length(f1) + length(f2) + length(f3)
+  checksum = checksum + length(p1) + length(p2)
+end
+
+if checksum <> repetitions * 83 then
+  return fail("kernel checksum mismatch: " || checksum)
+if a1 <> "alpha" | a2 <> "beta" | a3 <> "gamma" then
+  return fail("three-word result mismatch")
+if b1 <> "delta" | b2 <> "epsilon" | b3 <> "zeta" then
+  return fail("blank normalization mismatch")
+if p1 <> "Foo B" | p2 <> "ar" then
+  return fail("relative-position result mismatch")
+
+parse value "left,,right" with literal1 ',' literal2 ',' literal3
+if literal1 <> "left" | literal2 <> "" | literal3 <> "right" then
+  return fail("literal or empty-field mismatch")
+
+parse value "tail" with unmatched1 '--' unmatched2
+if unmatched1 <> "tail" | unmatched2 <> "" then
+  return fail("unmatched-delimiter mismatch")
+
+parse value "first second third" with repeated repeated finalword
+if repeated <> "second" | finalword <> "third" then
+  return fail("repeated-target mismatch")
+
+aliased = "one two three"
+parse var aliased aliased alias2 alias3
+if aliased <> "one" | alias2 <> "two" | alias3 <> "three" then
+  return fail("source/target alias mismatch")
+
+parse trim value " left , right " with trimmed1 ',' trimmed2
+if trimmed1 <> "left" | trimmed2 <> "right" then
+  return fail("TRIM mismatch")
+
+into_result = .string[]
+parse into into_result value "red green blue" with into1 into2 into3
+if into_result[0] <> 3 | into1 <> "red" | into2 <> "green" | into3 <> "blue" then
+  return fail("INTO mismatch")
+
+parse value "elan 東京 omega" with unicode1 unicode2 unicode3
+if unicode1 <> "elan" | unicode2 <> "東京" | unicode3 <> "omega" then
+  return fail("Unicode mismatch")
+
+say "benchmark=parse_frozen repetitions="repetitions "checksum="checksum
+say "PASS: Frozen PARSE"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

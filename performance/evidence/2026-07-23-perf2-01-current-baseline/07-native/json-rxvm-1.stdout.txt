@@ -1,0 +1,2 @@
+benchmark=json_parser repetitions=60000 operations=8
+PASS: JSON Parser

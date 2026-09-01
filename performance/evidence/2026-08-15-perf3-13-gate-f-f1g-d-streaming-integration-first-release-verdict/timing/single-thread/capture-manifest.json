@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gcd2453e357a3.dirty 20260815",
+  "source_manifest": "performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-15T21:43:28+0000",
+  "completed_utc": "2026-08-15T21:45:36+0000",
+  "result": "pass"
+}

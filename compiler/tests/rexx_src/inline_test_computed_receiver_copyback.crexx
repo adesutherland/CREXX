@@ -1,0 +1,47 @@
+options levelb
+namespace inline_test_computed_receiver_copyback expose pick_count
+
+main: procedure = .int
+  items = .Box[2]
+  items[1] = .Box("one")
+  items[2] = .Box("two")
+
+  pick_count = .int
+  pick_count = 0
+  call items[pickIndex()].setName("called")
+  if pick_count <> 1 then return 1
+  if items[2].getName() <> "called" then return 1
+  call (items[1]).setName("parenthesized")
+  if items[1].getName() <> "parenthesized" then return 1
+  items[1] = .Box("one")
+
+  saved = items[pickIndex()].setAndReport("changed")
+  say saved
+  say items[1].getName()
+  say items[2].getName()
+  return 0
+
+pickIndex: procedure = .int
+  pick_count = pick_count + 1
+  return 2
+
+Box: class
+  name = .string
+
+  *: factory
+    arg initial = .string
+    name = initial
+    return
+
+  setAndReport: method = .string
+    arg next = .string
+    name = next
+    return name
+
+  setName: method = .void
+    arg next = .string
+    name = next
+    return
+
+  getName: method = .string
+    return name

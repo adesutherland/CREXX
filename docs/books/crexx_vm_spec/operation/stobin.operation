@@ -1,0 +1,2 @@
+`stobin rReg` copies the register's current string bytes exactly into its binary
+slot. It does not append a NUL terminator.

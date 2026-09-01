@@ -1,0 +1,5 @@
+options levelb
+import _rxsysb
+
+call _exit(7)
+return 99

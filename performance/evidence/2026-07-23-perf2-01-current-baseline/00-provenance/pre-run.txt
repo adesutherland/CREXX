@@ -1,0 +1,52 @@
+PERF2-01 governed session pre-run state
+utc=2026-07-23T17:25:07Z
+local=2026-07-23T18:25:07+0100 BST
+repository=/Users/adrian/CLionProjects/CREXX
+branch=develop
+head=d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+upstream=origin/develop
+upstream_head=d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6
+ahead=0
+behind=0
+formal_source_worktree=/private/tmp/crexx-perf2-01-product.dbLYqo
+formal_source_mode=detached-clean-exact-head
+formal_build=/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release
+formal_build_type=Release
+formal_generator=Ninja
+formal_build_testing=ON
+formal_vm_profiling=OFF
+diagnostic_source_worktree=/Users/adrian/CLionProjects/CREXX
+diagnostic_build=/private/tmp/crexx-perf2-01-profile-build
+diagnostic_build_type=Release
+diagnostic_vm_profiling=ON
+host_model=Mac17,3 Apple M5
+host_os=Darwin 25.5.0 macOS 26.5.2 build 25F84
+host_arch=arm64
+logical_cpus=10
+memory_bytes=25769803776
+power=AC attached
+battery=80 percent not charging
+low_power_mode=0
+memory_pressure_level=1
+load_average=1.48 1.55 1.70
+available_storage=638 GiB
+inhibitor=caffeinate -i for each formal capture
+cmake=4.3.2
+ninja=1.13.2
+compiler=Apple clang 21.0.0 clang-2100.1.1.101
+java=Eclipse Temurin OpenJDK 26.0.1+8 mixed mode
+oorexx=Open Object Rexx 5.1.0 r12973
+oorexx_path=/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx
+regina=Regina Rexx 3.9.7
+regina_path=/opt/homebrew/bin/regina
+netrexx=NetRexx 5.10-GA build 18-20260320-1410
+netrexx_path=/Users/adrian/.local/opt/netrexx/5.10-GA/bin/NetRexxC.sh
+native_sampler=/usr/bin/sample
+native_heap_tools=/usr/bin/heap,/usr/bin/leaks,/usr/bin/vmmap,/usr/bin/malloc_history
+xctrace=unavailable
+hardware_counters=unavailable on this host; cycles, native instructions, branch misses, i-cache and iTLB events cannot be captured
+
+Pre-existing main-worktree changes before PERF2-01 were limited to performance
+documentation/control-plane files. Product source was identical to HEAD. They
+are enumerated with starting hashes in `performance/PERF2-01-WORKLIST.md` and
+remain preserved. All product timing uses the clean detached worktree above.

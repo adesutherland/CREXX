@@ -1,0 +1,60 @@
+/* Level B whole-file binary I/O regression */
+options levelb
+import rxfnsb
+
+errors = 0
+arg test_args = .string[]
+
+if test_args.0 > 0 then suffix = test_args.1
+else suffix = "default"
+path = "ts_fileio_binary." || suffix || ".tmp"
+missing = "ts_fileio_binary_missing_dir_" || suffix || "/input.bin"
+
+empty = .binary
+errors = errors + check(writebinary(path,empty) = 0, "empty write count")
+roundtrip = readbinary(path)
+errors = errors + check(binlength(roundtrip) = 0, "empty round trip")
+
+irregular = "00FFC080FE0A0D41424300"x as .binary
+errors = errors + check(writebinary(path,irregular) = binlength(irregular), "irregular write count")
+roundtrip = readbinary(path)
+errors = errors + check(bincompare(roundtrip,irregular) = 0, "arbitrary bytes round trip")
+
+large_length = 65539
+large = .binary
+call binresize large,large_length
+call binfill large,165
+call binfillat large,0,1,17
+call binfillat large,32767,1,34
+call binfillat large,32768,1,51
+call binfillat large,65535,1,68
+call binfillat large,65538,1,85
+errors = errors + check(writebinary(path,large) = large_length, "multi-chunk write count")
+roundtrip = readbinary(path)
+errors = errors + check(binlength(roundtrip) = large_length, "multi-chunk length")
+errors = errors + check(bincompare(roundtrip,large) = 0, "multi-chunk round trip")
+
+replacement = "010203"x as .binary
+errors = errors + check(writebinary(path,replacement) = 3, "replacement write count")
+roundtrip = readbinary(path)
+errors = errors + check(bincompare(roundtrip,replacement) = 0, "replacement truncates old content")
+
+caught = 0
+do
+  ignored = readbinary(missing)
+on signal notready as problem
+  if problem.name() = "NOTREADY" & pos("READBINARY cannot open",problem.message()) > 0 then caught = 1
+end
+errors = errors + check(caught = 1, "missing input raises NOTREADY")
+
+call erasefile path
+if errors = 0 then say "PASS: Level B whole-file binary I/O"
+return errors <> 0
+
+check: procedure = .int
+  arg ok = .boolean, label = .string
+  if \ok then do
+    say "binary file BIF failed:" label
+    return 1
+  end
+  return 0

@@ -1,0 +1,5 @@
+/* Regression: eager RXPA scan must not re-enter a provider initializer. */
+options levelb
+
+main: procedure = .int
+  return 0

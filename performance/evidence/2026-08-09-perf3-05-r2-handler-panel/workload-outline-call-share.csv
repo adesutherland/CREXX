@@ -1,0 +1,15 @@
+engine,workload,total_instructions,outlined_instructions,outlined_fraction
+rxtvm,Sieve,7412275,0,0
+rxtvm,Permute,11898926,0,0
+rxtvm,Bounce,21139726,0,0
+rxtvm,Richards,8811126,0,0
+rxtvm,Base64,44837362,0,0
+rxtvm,Towers,6679246,0,0
+rxtvm,RexxCPS,23569107,8,0.0000003394273699
+rxbvm,Sieve,7412275,0,0
+rxbvm,Permute,11898926,0,0
+rxbvm,Bounce,21139726,0,0
+rxbvm,Richards,8811126,0,0
+rxbvm,Base64,44837362,0,0
+rxbvm,Towers,6679246,0,0
+rxbvm,RexxCPS,22947535,8,0.0000003486213225

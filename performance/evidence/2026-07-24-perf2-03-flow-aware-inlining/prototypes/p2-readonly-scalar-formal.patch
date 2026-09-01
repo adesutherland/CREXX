@@ -1,0 +1,60 @@
+diff --git a/compiler/rxcp_inline_bind.c b/compiler/rxcp_inline_bind.c
+index 645db59c0..a41ce179c 100644
+--- a/compiler/rxcp_inline_bind.c
++++ b/compiler/rxcp_inline_bind.c
+@@ -559,6 +559,30 @@ static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *pa
+     return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
+ }
+ 
++/* PERF2-03 P2 prototype: carry the existing semantic read-only-formal fact
++ * across the inline boundary for the smallest unambiguous scalar case.  The
++ * normal call path already permits an is_const_arg formal to share its input
++ * register.  A direct caller-local scalar can therefore be selected through
++ * the existing locator machinery instead of being copied into a cloned formal
++ * local.  Optional/default, aggregate, binary, reference, object, class-
++ * attribute and captured-expression cases remain on the established binding
++ * path. */
++static int inline_readonly_scalar_formal_can_share_actual(ASTNode *param_arg,
++                                                          ASTNode *formal_target,
++                                                          ASTNode *actual_arg,
++                                                          Symbol *captured_actual_symbol) {
++    int type;
++
++    if (!param_arg || !formal_target || !actual_arg || captured_actual_symbol) return 0;
++    if (param_arg->is_ref_arg || param_arg->is_opt_arg || !param_arg->is_const_arg) return 0;
++    if (inline_is_missing_actual(actual_arg) || !inline_is_direct_symbol_actual(actual_arg)) return 0;
++    if (inline_subtree_reads_class_attribute(actual_arg) || inline_node_has_array_shape(formal_target)) return 0;
++
++    type = formal_target->value_type;
++    return type == TP_BOOLEAN || type == TP_INTEGER ||
++           type == TP_FLOAT || type == TP_DECIMAL;
++}
++
+ static ASTNode *inline_materialize_capture_clone(Context *context,
+                                                  ASTNode *source_node,
+                                                  Scope *scope,
+@@ -2097,6 +2121,24 @@ static int inline_bind_call_arguments_impl(Context *context,
+             continue;
+         }
+ 
++        if (inline_readonly_scalar_formal_can_share_actual(param_arg,
++                                                           formal_target,
++                                                           actual_arg,
++                                                           captured_actual_symbol)) {
++            if (!inline_register_ref_actual(context,
++                                            instr_list,
++                                            inline_scope,
++                                            formal_target,
++                                            actual_arg,
++                                            clone_state)) {
++                INLINE_BIND_RETURN(0);
++            }
++            param_arg = param_arg->sibling;
++            actual_arg = actual_arg->sibling;
++            actual_index++;
++            continue;
++        }
++
+         bind_assign = rxcp_remap_create_assignment_node(context, inline_scope, formal_target, formal_target);
+         if (!bind_assign) INLINE_BIND_RETURN(0);
+ 

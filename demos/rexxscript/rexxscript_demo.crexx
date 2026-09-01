@@ -1,5 +1,5 @@
 options levelb
-import rxfnsb
+import rexxscript
 
 main: procedure
   out = .string[]

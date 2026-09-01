@@ -1,0 +1,12 @@
+options levelb
+namespace rxfnsb expose lower
+
+say lower("MiXeD ÄÖ")
+
+/* This deliberately has LOWER's exact callable summary but different
+ * semantics. Body-driven evaluation must execute this actual body. */
+lower: procedure = .string
+  arg string = .string
+  result = .string
+  assembler strupper result,string
+  return result

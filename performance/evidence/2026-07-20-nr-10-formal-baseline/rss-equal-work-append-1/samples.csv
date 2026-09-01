@@ -1,0 +1,11 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+rss-Base64-base64-netrexx-recorded-1,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,1,1,2500,1334897000,181272576,0,pass,,
+rss-Base64-base64-netrexx-recorded-2,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,2,1,2500,1368291000,181190656,0,pass,,
+rss-Base64-base64-netrexx-recorded-3,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,3,1,2500,1350560000,214204416,0,pass,,
+rss-Base64-base64-netrexx-recorded-4,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,4,1,2500,1347325000,214499328,0,pass,,
+rss-Base64-base64-netrexx-recorded-5,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,5,1,2500,1343277000,214368256,0,pass,,
+rss-Base64-base64-netrexx-recorded-6,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,6,1,2500,1364456000,181141504,0,pass,,
+rss-Base64-base64-netrexx-recorded-7,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,7,1,2500,1387240000,214204416,0,pass,,
+rss-Base64-base64-netrexx-recorded-8,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,8,1,2500,1416145000,223068160,0,pass,,
+rss-Base64-base64-netrexx-recorded-9,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,9,1,2500,1357514000,214220800,0,pass,,
+rss-Base64-base64-netrexx-recorded-10,rss,Base64,base64-netrexx,netrexx,netrexx,decimal-rexx-port,A,no,no,recorded,10,1,2500,1368745000,181272576,0,pass,,

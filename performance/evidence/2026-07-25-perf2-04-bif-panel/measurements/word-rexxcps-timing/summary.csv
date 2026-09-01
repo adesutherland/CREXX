@@ -1,0 +1,7 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+word-current-rxvm,PERF2-04 WORD RexxCPS,crexx,rxvm,WORD-C0-current,P,no,no,1000-clauses,benchmark_rate,7,28768231.000000,29143374.500000,29310271.000000,29424087.000000,29596336.000000,164844.000000,0.562410,2.825307,no
+word-current-rxbvm,PERF2-04 WORD RexxCPS,crexx,rxbvm,WORD-C0-current,P,no,no,1000-clauses,benchmark_rate,7,27563522.000000,27680068.000000,27801847.000000,27813743.500000,27880911.000000,71211.000000,0.256138,1.141611,no
+word-direct-rxvm,PERF2-04 WORD RexxCPS,crexx,rxvm,WORD-H1-direct-predicate,P,no,no,1000-clauses,benchmark_rate,7,29718035.000000,30085923.000000,30257667.000000,30309967.500000,30457487.000000,129986.000000,0.429597,2.443850,no
+word-direct-rxbvm,PERF2-04 WORD RexxCPS,crexx,rxbvm,WORD-H1-direct-predicate,P,no,no,1000-clauses,benchmark_rate,7,28223951.000000,28610289.000000,28724104.000000,28806045.000000,28985871.000000,130124.000000,0.453013,2.652546,no
+word-constant-rxvm,PERF2-04 WORD RexxCPS,crexx,rxvm,WORD-CF1-constant-false,P,no,no,1000-clauses,benchmark_rate,7,30772308.000000,31128953.500000,31277784.000000,31339084.500000,31396731.000000,96310.000000,0.307918,1.996379,no
+word-constant-rxbvm,PERF2-04 WORD RexxCPS,crexx,rxbvm,WORD-CF1-constant-false,P,no,no,1000-clauses,benchmark_rate,7,28847763.000000,29514026.000000,29696325.000000,29883172.500000,30055753.000000,310316.000000,1.044964,4.067810,no

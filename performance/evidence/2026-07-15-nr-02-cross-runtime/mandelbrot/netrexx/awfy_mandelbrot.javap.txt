@@ -1,0 +1,317 @@
+Compiled from "awfy_mandelbrot.java"
+public class awfy_mandelbrot {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: sipush        500
+         3: istore_1
+         4: aload_0
+         5: arraylength
+         6: iconst_1
+         7: if_icmplt     20
+        10: aload_0
+        11: iconst_0
+        12: aaload
+        13: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        16: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        19: istore_1
+        20: iload_1
+        21: iconst_1
+        22: if_icmpge     36
+        25: ldc           #11                 // String FAIL: size must be positive
+        27: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        30: pop
+        31: iconst_1
+        32: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        35: return
+        36: iload_1
+        37: invokestatic  #25                 // Method mandelbrot:(I)I
+        40: istore_2
+        41: iconst_m1
+        42: istore_3
+        43: iload_1
+        44: iconst_1
+        45: if_icmpne     52
+        48: sipush        128
+        51: istore_3
+        52: iload_1
+        53: sipush        500
+        56: if_icmpne     63
+        59: sipush        191
+        62: istore_3
+        63: iload_1
+        64: sipush        750
+        67: if_icmpne     73
+        70: bipush        50
+        72: istore_3
+        73: iload_3
+        74: iconst_m1
+        75: if_icmpne     106
+        78: new           #31                 // class java/lang/StringBuilder
+        81: dup
+        82: invokespecial #33                 // Method java/lang/StringBuilder."<init>":()V
+        85: ldc           #37                 // String FAIL: no reference checksum for size
+        87: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        90: iload_1
+        91: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        94: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        97: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       100: pop
+       101: iconst_1
+       102: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       105: return
+       106: iload_2
+       107: iload_3
+       108: if_icmpeq     148
+       111: new           #31                 // class java/lang/StringBuilder
+       114: dup
+       115: invokespecial #33                 // Method java/lang/StringBuilder."<init>":()V
+       118: ldc           #50                 // String FAIL: expected
+       120: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       123: iload_3
+       124: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       127: ldc           #52                 // String , got
+       129: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       132: iload_2
+       133: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       136: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       139: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       142: pop
+       143: iconst_1
+       144: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       147: return
+       148: new           #31                 // class java/lang/StringBuilder
+       151: dup
+       152: invokespecial #33                 // Method java/lang/StringBuilder."<init>":()V
+       155: ldc           #54                 // String benchmark=awfy_mandelbrot size=
+       157: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       160: iload_1
+       161: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       164: ldc           #56                 // String  result=
+       166: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       169: iload_2
+       170: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       173: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       176: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       179: pop
+       180: ldc           #58                 // String PASS: AWFY Mandelbrot NetRexx port
+       182: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       185: pop
+       186: return
+
+  public static int mandelbrot(int);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: dconst_0
+         4: dstore        5
+         6: iconst_0
+         7: istore        7
+         9: dconst_0
+        10: dstore        8
+        12: dconst_0
+        13: dstore        10
+        15: dconst_0
+        16: dstore        12
+        18: dconst_0
+        19: dstore        14
+        21: iconst_0
+        22: istore        16
+        24: iconst_0
+        25: istore        17
+        27: dconst_0
+        28: dstore        18
+        30: iconst_0
+        31: istore        20
+        33: iconst_0
+        34: istore_1
+        35: iconst_0
+        36: istore_2
+        37: iconst_0
+        38: istore_3
+        39: iload_0
+        40: iconst_1
+        41: isub
+        42: istore        21
+        44: iconst_0
+        45: istore        4
+        47: iload         4
+        49: iload         21
+        51: if_icmpgt     269
+        54: ldc2_w        #60                 // double 2.0d
+        57: iload         4
+        59: i2d
+        60: dmul
+        61: iload_0
+        62: i2d
+        63: ddiv
+        64: dconst_1
+        65: dsub
+        66: dstore        5
+        68: iload_0
+        69: iconst_1
+        70: isub
+        71: istore        22
+        73: iconst_0
+        74: istore        7
+        76: iload         7
+        78: iload         22
+        80: if_icmpgt     263
+        83: dconst_0
+        84: dstore        8
+        86: dconst_0
+        87: dstore        10
+        89: dconst_0
+        90: dstore        12
+        92: ldc2_w        #60                 // double 2.0d
+        95: iload         7
+        97: i2d
+        98: dmul
+        99: iload_0
+       100: i2d
+       101: ddiv
+       102: ldc2_w        #62                 // double 1.5d
+       105: dsub
+       106: dstore        14
+       108: iconst_0
+       109: istore        16
+       111: iconst_0
+       112: istore        17
+       114: iload         17
+       116: bipush        49
+       118: if_icmpgt     188
+       121: iload         16
+       123: ifeq          129
+       126: goto          188
+       129: dload         8
+       131: dload         12
+       133: dsub
+       134: dload         14
+       136: dadd
+       137: dstore        18
+       139: ldc2_w        #60                 // double 2.0d
+       142: dload         18
+       144: dmul
+       145: dload         10
+       147: dmul
+       148: dload         5
+       150: dadd
+       151: dstore        10
+       153: dload         18
+       155: dload         18
+       157: dmul
+       158: dstore        8
+       160: dload         10
+       162: dload         10
+       164: dmul
+       165: dstore        12
+       167: dload         8
+       169: dload         12
+       171: dadd
+       172: ldc2_w        #64                 // double 4.0d
+       175: dcmpl
+       176: ifle          182
+       179: iconst_1
+       180: istore        16
+       182: iinc          17, 1
+       185: goto          114
+       188: iload_2
+       189: iconst_2
+       190: imul
+       191: iload         16
+       193: iadd
+       194: istore_2
+       195: iinc          3, 1
+       198: iload_3
+       199: bipush        8
+       201: if_icmpne     217
+       204: iload_1
+       205: iload_2
+       206: invokestatic  #66                 // Method xorByte:(II)I
+       209: istore_1
+       210: iconst_0
+       211: istore_2
+       212: iconst_0
+       213: istore_3
+       214: goto          257
+       217: iload         7
+       219: iload_0
+       220: iconst_1
+       221: isub
+       222: if_icmpne     257
+       225: iload_3
+       226: iconst_1
+       227: iadd
+       228: istore        20
+       230: iload         20
+       232: bipush        8
+       234: if_icmpgt     247
+       237: iload_2
+       238: iconst_2
+       239: imul
+       240: istore_2
+       241: iinc          20, 1
+       244: goto          230
+       247: iload_1
+       248: iload_2
+       249: invokestatic  #66                 // Method xorByte:(II)I
+       252: istore_1
+       253: iconst_0
+       254: istore_2
+       255: iconst_0
+       256: istore_3
+       257: iinc          7, 1
+       260: goto          76
+       263: iinc          4, 1
+       266: goto          47
+       269: iload_1
+       270: ireturn
+
+  public static int xorByte(int, int);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: iconst_0
+         4: istore_2
+         5: iconst_1
+         6: istore_3
+         7: iconst_1
+         8: istore        4
+        10: iload         4
+        12: bipush        8
+        14: if_icmpgt     48
+        17: iload_0
+        18: iconst_2
+        19: irem
+        20: iload_1
+        21: iconst_2
+        22: irem
+        23: if_icmpeq     30
+        26: iload_2
+        27: iload_3
+        28: iadd
+        29: istore_2
+        30: iload_0
+        31: iconst_2
+        32: idiv
+        33: istore_0
+        34: iload_1
+        35: iconst_2
+        36: idiv
+        37: istore_1
+        38: iload_3
+        39: iconst_2
+        40: imul
+        41: istore_3
+        42: iinc          4, 1
+        45: goto          10
+        48: iload_2
+        49: ireturn
+
+  private awfy_mandelbrot();
+    Code:
+         0: aload_0
+         1: invokespecial #70                 // Method java/lang/Object."<init>":()V
+         4: return
+}

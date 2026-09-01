@@ -25,6 +25,7 @@
 options levelb comments_dash
 namespace data_KeyDB expose KeyDB
 import keyaccess
+import rxfnsb
 
 /**
  * Class KeyDB
@@ -76,6 +77,8 @@ KeyDB: class
 
   /**
    * Factory creates a closed keydb object.
+   *
+   * @return .KeyDB
    */
   *: factory
     handle = 0
@@ -83,12 +86,18 @@ KeyDB: class
 
   /**
    * Open or create a database.
-   * @parm .string filename
-   * @parm .string mode     "r", "w", or "w+"
-   * @return .int          handle or negative error code from plugin
+   *
+   * @param filename Database file path.
+   * @param mode Access mode: "r", "w", or "w+".
+   * @return .int Native handle or negative error code from the plugin.
    */
   open: method = .int
     arg filename = .string, mode = .string
+    /* Opening an already-open object closes the previous handle first. */
+    if handle <> 0 then do
+      rc = close()
+      if rc <> 0 then return rc
+    end
     handle = _openkey(filename, mode)
     return handle
 
@@ -104,6 +113,8 @@ KeyDB: class
 
   /**
    * Return 1 if this object currently has an open native handle, else 0.
+   *
+   * @return .int 1 if open, 0 otherwise.
    */
   isOpen: method = .int
     if handle <> 0 then return 1
@@ -132,10 +143,12 @@ KeyDB: class
 
   /**
    * Store a key/value pair.
+   *
    * Note: plugin requires an active transaction.
-   * @parm .string key
-   * @parm .string value
-   * @return .int status code
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int Status code.
    */
   put: method = .int
     arg key = .string, value = .string
@@ -143,9 +156,11 @@ KeyDB: class
 
   /**
    * Read a value by key.
+   *
    * Plugin returns a string value, "NOT_FOUND", or "ERROR".
-   * @parm .string key
-   * @return .string
+   *
+   * @param key Key to read.
+   * @return .string Stored value, "NOT_FOUND", or "ERROR".
    */
   get: method = .string
     arg key = .string
@@ -153,9 +168,11 @@ KeyDB: class
 
   /**
    * Delete a key.
+   *
    * Note: plugin requires an active transaction.
-   * @parm .string key
-   * @return .int status code
+   *
+   * @param key Key to delete.
+   * @return .int Status code.
    */
   remove: method = .int
     arg key = .string
@@ -169,6 +186,120 @@ KeyDB: class
     return _listkey(handle)
 
   /**
+   * Start sequential traversal and return the first active key.
+   * Returns "NOT_FOUND" when the database has no active keys.
+   * @return .string Key or "NOT_FOUND".
+   */
+  firstKey: method = .string
+    return _firstkey(handle)
+
+  /**
+   * Continue sequential traversal and return the next active key.
+   * Returns "NOT_FOUND" at end of traversal.
+   * @return .string Key or "NOT_FOUND".
+   */
+  nextKey: method = .string
+    return _nextkey(handle)
+
+ /**
+  * Return all active keys matching a key part.
+  *
+  * Search modes:
+  *
+  *   ONLY  The key must begin with keyPart.
+  *         This is the original prefix-search behaviour.
+  *
+  *   ANY   keyPart may occur anywhere in the key.
+  *
+  * The result follows index traversal order and is not sorted.
+  * An empty keyPart matches every active key.
+  *
+  * The scan uses the same explicit native traversal cursor as
+  * firstKey()/nextKey(); get() remains safe to use after this
+  * method returns.
+  *
+  * @param keyPart Key text to search for.
+  * @param searchMode "ONLY" for prefix matching, "ANY" for substring matching.
+  * @return .string[] Matching active keys, or an empty array if none match.
+  */
+ findkeys: method = .string[]
+   arg keyPart = .string, searchMode = .string
+
+   result = .string[]
+   key = .string
+   mode = .string
+
+   mode = upper(strip(searchMode))
+
+   /*
+    * Preserve the original prefix behaviour if no mode was supplied.
+    */
+   if mode = "" then mode = "ONLY"
+
+   /*
+    * Unknown search modes return an empty result.
+    */
+   if mode <> "ONLY" & mode <> "ANY" then return result
+
+   key = firstKey()
+
+   do while key <> "NOT_FOUND"
+      if key = "ERROR" then
+       return result
+      /*
+      * An empty search string matches every active key.
+      */
+     if length(keyPart) = 0 then do
+       call arrayappend result, key
+     end
+      /*
+      * ONLY means that keyPart must occur at the start of the key.
+      */
+     else if mode = "ONLY" then do
+        if left(key, length(keyPart)) = keyPart then
+         call arrayappend result, key
+      end
+      /*
+      * ANY means that keyPart may occur anywhere in the key.
+      */
+     else if mode = "ANY" then do
+        if pos(keyPart, key) > 0 then
+         call arrayappend result, key
+      end
+      key = nextKey()
+    end
+    return result
+  /**
+   * Remove all active keys in one transaction.
+   * @return .int Status code.
+   */
+  clear: method = .int
+    rc = begin()
+    if rc <> 0 then return rc
+    key = firstKey()
+    do while key <> "NOT_FOUND"
+      if key = "ERROR" then do
+        call rollback()
+        return -3
+      end
+      rc = remove(key)
+      if rc <> 0 then do
+        call rollback()
+        return rc
+      end
+      key = nextKey()
+    end
+    return commit()
+
+  /**
+   * Destructively empty the database by truncating its data and index files.
+   * This does not scan keys and cannot be rolled back.
+   * @return .int Status code.
+   */
+  reset: method = .int
+    return _reset(handle)
+
+  /**
    * Return formatted statistics text.
    * @return .string
    */
@@ -177,8 +308,9 @@ KeyDB: class
 
   /**
    * Back up the database.
-   * @parm .string path
-   * @return .int
+   *
+   * @param path Backup file path.
+   * @return .int Status code.
    */
   backup: method = .int
     arg path = .string
@@ -201,9 +333,11 @@ KeyDB: class
 
   /**
    * Convenience method: 1 if key exists, else 0.
+   *
    * This interprets the plugin's string return.
-   * @parm .string key
-   * @return .int
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
    */
   containsKey: method = .int
     arg key = .string
@@ -214,9 +348,10 @@ KeyDB: class
 
   /**
    * Convenience method: write a single key/value in its own transaction.
-   * @parm .string key
-   * @parm .string value
-   * @return .int
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int Status code.
    */
   putCommit: method = .int
     arg key = .string, value = .string
@@ -231,8 +366,9 @@ KeyDB: class
 
   /**
    * Convenience method: delete a single key in its own transaction.
-   * @parm .string key
-   * @return .int
+   *
+   * @param key Key to delete.
+   * @return .int Status code.
    */
   removeCommit: method = .int
     arg key = .string
@@ -254,6 +390,8 @@ KeyDB: class
 
   /**
    * Finalizer-style cleanup helper.
+   *
+   * @return .int Status code from close().
    */
   dispose: method = .int
     return close()

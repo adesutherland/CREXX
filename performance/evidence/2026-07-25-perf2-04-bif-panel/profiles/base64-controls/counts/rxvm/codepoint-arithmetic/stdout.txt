@@ -1,0 +1,2 @@
+PERF2-04-BASE64-CONTROL variant=codepoint-arithmetic repetitions=500 encoded_length=1368 checksum=130560 publication=attribution-only
+PASS: PERF2-04 Base64 control

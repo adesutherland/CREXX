@@ -1,0 +1,101 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifsymbol
+import rexxvalue
+import rexxpool
+
+errors = 0
+pool = .RexxVariablePool()
+
+call pool.setString("mary", "10")
+call pool.setString("if", "contextual keyword")
+call pool.setString("!bang", "1")
+call pool.setString("?query", "1")
+call pool.setString("_under", "1")
+call pool.setString("J", "3")
+call pool.setString("T", "x")
+call pool.setString(".RC", "0")
+call pool.setStemString("A.", "3", "three")
+call pool.setStemString("A.", "X", "ex")
+call pool.setStemString("A.", ".3", "dot-three")
+
+errors = errors + check_symbol(reference pool, "VAR", "MARY")
+errors = errors + check_symbol(reference pool, "VAR", "mary")
+errors = errors + check_symbol(reference pool, "VAR", "IF")
+errors = errors + check_symbol(reference pool, "LIT", "DO")
+errors = errors + check_symbol(reference pool, "VAR", "!bang")
+errors = errors + check_symbol(reference pool, "VAR", "?QUERY")
+errors = errors + check_symbol(reference pool, "VAR", "_under")
+errors = errors + check_symbol(reference pool, "VAR", "A.")
+errors = errors + check_symbol(reference pool, "VAR", "A.3")
+errors = errors + check_symbol(reference pool, "VAR", "A.J")
+errors = errors + check_symbol(reference pool, "VAR", "A.T")
+errors = errors + check_symbol(reference pool, "VAR", "A..J")
+errors = errors + check_symbol(reference pool, "LIT", "A.K")
+
+call pool.drop("mary")
+errors = errors + check_symbol(reference pool, "LIT", "MARY")
+errors = errors + check_symbol(reference pool, "VAR", ".RC")
+errors = errors + check_symbol(reference pool, "LIT", ".SIGL")
+errors = errors + check_symbol(reference pool, "LIT", "12ABC")
+errors = errors + check_symbol(reference pool, "LIT", "1E+3")
+errors = errors + check_symbol(reference pool, "LIT", ".5E-2")
+errors = errors + check_symbol(reference pool, "BAD", ".BAD")
+errors = errors + check_symbol(reference pool, "BAD", ".")
+errors = errors + check_symbol(reference pool, "BAD", ".1.2")
+errors = errors + check_symbol(reference pool, "BAD", "")
+errors = errors + check_symbol(reference pool, "BAD", "has blank")
+errors = errors + check_symbol(reference pool, "BAD", "A-B")
+errors = errors + check_symbol(reference pool, "BAD", "1E+X")
+errors = errors + check_symbol(reference pool, "BAD", "A*B")
+
+errors = errors + check_argument_error("RXC-LC-40.3", 0)
+errors = errors + check_argument_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_error()
+
+if errors = 0 then say "PASS: Level C SYMBOL BIF"
+return errors <> 0
+
+check_symbol: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, name = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(name)
+  exists[1] = 1
+  context = .RexxBifCallContext("SYMBOL")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_symbol(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: SYMBOL" name "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_argument_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("SYMBOL")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_symbol(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: SYMBOL expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  context = .RexxBifCallContext("SYMBOL")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_symbol(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: SYMBOL omitted argument got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

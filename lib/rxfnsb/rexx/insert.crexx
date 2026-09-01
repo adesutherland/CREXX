@@ -22,26 +22,92 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B INSERT implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/insert.md
+ */
 options levelb
-
 namespace rxfnsb expose insert
 
-/* insert(insstr,string,position,length,pad) inserts string into existing string at certain position and length */
+/**
+ * Insert a formatted string after a character position in a target.
+ *
+ * @param new_string text to insert
+ * @param target source text
+ * @param before optional non-negative character count before the insertion
+ * @param insert_length optional non-negative formatted insertion width
+ * @param pad exactly one padding codepoint
+ * @return target with the formatted insertion added
+ */
 insert: procedure = .string
-  arg insstr = .string, string = .string, position = -1, len = -1, pad = " "
-/* len=-1 or pos -1 mean, the parameters are not set in the function call */
-  slen=length(string)
-  if pad='' then pad=' '
+  arg new_string = .string, target = .string, before = 0, insert_length = 0, pad = " "
+  length_supplied = ?insert_length
+  new_length = .int
+  target_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  padding_needed = .int
+  tail_length = .int
+  cursor = 0
+  padding = ""
+  segment = ""
+  result = ""
 
-  if len>0 then insstr=substr(insstr,1,len,pad) /* was there an insert string length?      */
-                                                /* format insert string to requested length*/
-  else if len=0 then insstr=""
-  if position<=0 then return insstr||string
+  if before < 0 then
+    assembler signal "INVALID_ARGUMENTS","INSERT position must be non-negative"
+  if length_supplied & insert_length < 0 then
+    assembler signal "INVALID_ARGUMENTS","INSERT length must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","INSERT pad must contain exactly one character"
 
-  if position>slen then string=substr(string,1,position,pad)  /* is position>string length, extend string */
+  assembler strlen new_length,new_string
+  assembler strlen target_length,target
+  if \length_supplied then insert_length = new_length
+  if insert_length = 0 & before <= target_length then return target
 
-  str1=substr(string,1,position)             /* extract first part of string       */
-  if position>=slen then str2=''             /* nothing remains of string          */
-  else str2=substr(string,position+1)        /*    else create str2                */
- return str1||insstr||str2                   /* return newly constructed string    */
+  assembler strchar pad_character,pad,pad_index
+
+  /* LEFT(target, before, pad), without a helper call. */
+  if before > 0 then do
+    if before >= target_length then do
+      assembler scopy result,target
+      if before > target_length then do
+        padding_needed = before - target_length
+        padding = ""
+        assembler padstr padding,pad_character,padding_needed
+        assembler append result,padding
+      end
+    end
+    else do
+      assembler substring result,target,cursor,before
+    end
+  end
+
+  /* LEFT(new_string, insert_length, pad), appended directly. */
+  if insert_length > 0 then do
+    if insert_length >= new_length then do
+      if new_length > 0 then assembler append result,new_string
+      if insert_length > new_length then do
+        padding_needed = insert_length - new_length
+        padding = ""
+        assembler padstr padding,pad_character,padding_needed
+        assembler append result,padding
+      end
+    end
+    else do
+      assembler substring segment,new_string,cursor,insert_length
+      assembler append result,segment
+    end
+  end
+
+  /* SUBSTR(target, before + 1), when target text remains. */
+  if before < target_length then do
+    tail_length = target_length - before
+    assembler substring segment,target,before,tail_length
+    assembler append result,segment
+  end
+  return result

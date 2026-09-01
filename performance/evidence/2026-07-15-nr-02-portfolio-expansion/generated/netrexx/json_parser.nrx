@@ -1,0 +1,161 @@
+/*
+ * Deterministic JSON parser workload using a small NetRexx DOM parser backed
+ * by Java collections. The RAP-style payload matches the cREXX and ooRexx
+ * ports and demonstrates NetRexx's direct Java interoperability.
+ */
+options binary
+
+class json_parser
+  method main(args=String[]) static
+    repetitions=int 1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+    payload=String '{"head":{"requestCounter":4,"ok":true},"operations":[' || -
+      '["destroy","w54"],' || -
+      '["set","w2",{"activeControl":"w99"}],' || -
+      '["set","w21",{"customVariant":"variant_navigation"}],' || -
+      '["create","w95","rwt.widgets.Composite",{"parent":"w53","bounds":[0,0,1008,586],"children":["w96","w97"],"tabIndex":-1}],' || -
+      '["create","w96","rwt.widgets.Label",{"parent":"w95","bounds":[10,30,112,26],"text":"TableViewer"}],' || -
+      '["listen","w98",{"KeyDown":true,"Modify":true}],' || -
+      '["set","w99",{"itemCount":118,"headerVisible":true,"selection":["w108"]}],' || -
+      '["call","rwt.client.BrowserNavigation","addToHistory",{"entries":[["tableviewer","TableViewer"]]}]' || -
+      ']}'
+    result=int 0
+    loop iteration=1 to repetitions
+      document=java.util.Map JsonDomParser(payload).parse()
+      operations=java.util.List document.get('operations')
+      result=operations.size()
+      if result\=8 then do
+        say 'FAIL: expected 8 operations, got' result
+        exit 1
+      end
+    end
+    say 'benchmark=json_parser repetitions='repetitions 'operations='result
+    say 'PASS: JSON Parser NetRexx port'
+
+class JsonDomParser
+  properties private
+    text=String
+    position=int
+
+  method JsonDomParser(source=String)
+    text=source
+    position=0
+
+  method parse() binary returns Object
+    value=Object parseValue()
+    skipWhitespace()
+    if position\=text.length() then signal IllegalArgumentException('trailing JSON input')
+    return value
+
+  method parseValue() private binary returns Object
+    skipWhitespace()
+    if position>=text.length() then signal IllegalArgumentException('missing JSON value')
+    code=int text.codePointAt(position)
+    if code=123 then return parseObject()
+    if code=91 then return parseArray()
+    if code=34 then return parseString()
+    if code=116 then do
+      expectLiteral('true')
+      return java.lang.Boolean.TRUE
+    end
+    if code=102 then do
+      expectLiteral('false')
+      return java.lang.Boolean.FALSE
+    end
+    if code=110 then do
+      expectLiteral('null')
+      return null
+    end
+    return parseNumber()
+
+  method parseObject() private binary returns Object
+    result=java.util.LinkedHashMap()
+    position=position+1
+    skipWhitespace()
+    if position<text.length() & text.codePointAt(position)=125 then do
+      position=position+1
+      return result
+    end
+    loop forever
+      key=String parseString()
+      skipWhitespace()
+      expectCode(58)
+      result.put(key,parseValue())
+      skipWhitespace()
+      code=int text.codePointAt(position)
+      position=position+1
+      if code=125 then leave
+      if code\=44 then signal IllegalArgumentException('invalid JSON object')
+    end
+    return result
+
+  method parseArray() private binary returns Object
+    result=java.util.ArrayList()
+    position=position+1
+    skipWhitespace()
+    if position<text.length() & text.codePointAt(position)=93 then do
+      position=position+1
+      return result
+    end
+    loop forever
+      result.add(parseValue())
+      skipWhitespace()
+      code=int text.codePointAt(position)
+      position=position+1
+      if code=93 then leave
+      if code\=44 then signal IllegalArgumentException('invalid JSON array')
+    end
+    return result
+
+  method parseString() private binary returns Object
+    expectCode(34)
+    result=StringBuilder()
+    loop while position<text.length()
+      code=int text.codePointAt(position)
+      position=position+1
+      if code=34 then return result.toString()
+      if code=92 then do
+        escape=int text.codePointAt(position)
+        position=position+1
+        select
+          when escape=34 | escape=92 | escape=47 then result.append(java.lang.Character.toChars(escape))
+          when escape=98 then result.append(java.lang.Character.toChars(8))
+          when escape=102 then result.append(java.lang.Character.toChars(12))
+          when escape=110 then result.append(java.lang.Character.toChars(10))
+          when escape=114 then result.append(java.lang.Character.toChars(13))
+          when escape=116 then result.append(java.lang.Character.toChars(9))
+          otherwise signal IllegalArgumentException('unsupported JSON escape')
+        end
+      end
+      else result.append(java.lang.Character.toChars(code))
+    end
+    signal IllegalArgumentException('unterminated JSON string')
+
+  method parseNumber() private binary returns Object
+    start=int position
+    loop while position<text.length()
+      code=int text.codePointAt(position)
+      if (code>=48 & code<=57) | code=45 | code=43 | code=46 | code=69 | code=101 then position=position+1
+      else leave
+    end
+    if position=start then signal IllegalArgumentException('invalid JSON number')
+    return text.substring(start,position)
+
+  method expectLiteral(literal=String) private binary
+    if \text.startsWith(literal,position) then signal IllegalArgumentException('invalid JSON literal')
+    position=position+literal.length()
+
+  method expectCode(expected=int) private binary
+    if position>=text.length() | text.codePointAt(position)\=expected then signal IllegalArgumentException('invalid JSON punctuation')
+    position=position+1
+
+  method skipWhitespace() private binary
+    loop while position<text.length()
+      code=int text.codePointAt(position)
+      if code=32 | code=9 | code=10 | code=13 then position=position+1
+      else leave
+    end

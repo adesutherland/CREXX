@@ -22,66 +22,33 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Extract the first balanced, quote-aware delimiter pair. */
 options levelb
-
 namespace rxfnsb expose qextractpair
 
-qextractpair: procedure=.string
-   arg open=.string, close=.string, text=.string, start=1, mode='X'
+/**
+ * Extract the first top-level balanced pair at or after start.
+ *
+ * @param open non-empty opening delimiter
+ * @param close non-empty distinct closing delimiter
+ * @param text source text
+ * @param start optional positive one-based codepoint position
+ * @param mode X or E for contents, I or C to include delimiters
+ * @return the selected span, or empty when no opening delimiter is present
+ * @signal INVALID_ARGUMENTS invalid arguments or malformed quote/pair grammar
+ */
+qextractpair: procedure = .string
+  arg open = .string, close = .string, text = .string, start = 1, mode = 'X'
+  folded_mode = ''
+  assembler strupper folded_mode,mode
+  folded_mode = left(folded_mode,1)
+  if folded_mode = 'E' then folded_mode = 'X'
+  if folded_mode = 'C' then folded_mode = 'I'
+  if folded_mode <> 'X' & folded_mode <> 'I' then
+    assembler signal "INVALID_ARGUMENTS", "QEXTRACTPAIR mode must be X, E, I, or C"
 
-   mode = upper(left(mode,1))
-   if mode = 'E' then mode = 'X'
-   if mode \= 'I' & mode \= 'X' & mode \= 'C' then mode = 'X'
-
-   lenOpen  = length(open)
-   lenClose = length(close)
-
-   /* ------------------------------------------------------------
-    * Comment mode:
-    *   literal search only, no quote awareness, no nesting
-    *   intended for comment blocks
-    * ------------------------------------------------------------
-    */
-   if substr(open,1,2)='/*' then do
-      firstPos = pos(open, text, start)
-      if firstPos = 0 then return ''
-
-      nextClose = pos(close, text, firstPos + lenOpen)
-      if nextClose = 0 then return ''
-
-      if mode = 'X' then return substr(text, firstPos + lenOpen, nextClose - firstPos - lenOpen)
-      else return substr(text, firstPos, nextClose - firstPos + lenClose)
-   end
-
-   /* ------------------------------------------------------------
-    * Normal mode:
-    *   nested balanced delimiters
-    *   uses QPOS() so delimiters in quoted strings are ignored
-    * ------------------------------------------------------------ */
-   firstPos = qpos(open, text, start)
-   if firstPos = 0 then return ''
-
-   depth = 1
-   posn  = firstPos + lenOpen
-
-   do forever
-      nextOpen  = qpos(open,  text, posn)
-      nextClose = qpos(close, text, posn)
-
-      if nextOpen = 0 & nextClose = 0 then return ''
-
-      if nextClose = 0 | (nextOpen > 0 & nextOpen < nextClose) then do
-         depth = depth + 1
-         posn  = nextOpen + lenOpen
-      end
-      else do
-         depth = depth - 1
-         if depth = 0 then do
-            if mode = 'X' then return substr(text, firstPos + lenOpen, nextClose - firstPos - lenOpen)
-            else return substr(text, firstPos, nextClose - firstPos + lenClose)
-         end
-         posn = nextClose + lenClose
-      end
-   end
-return ''
+  spans = qscan_pair_spans(open,close,text,start)
+  if spans[0] = 0 then return ''
+  if folded_mode = 'I' then
+    return substr(text,spans[1] + 1,spans[4] - spans[1])
+  return substr(text,spans[2] + 1,spans[3] - spans[2])

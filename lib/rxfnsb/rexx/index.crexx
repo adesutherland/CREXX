@@ -22,16 +22,27 @@
  * SOFTWARE.
  */
 
-/*
- * crexx index
- * VM-TSO compatible implementation of pos()
- */
-
 options levelb
 
 namespace rxfnsb expose index
 
+/**
+ * Locate a substring using the VM/TSO INDEX argument order.
+ *
+ * @param haystack text to search
+ * @param needle text to find
+ * @param start optional positive one-based character position
+ * @return first matching character position, or zero
+ * @signal INVALID_ARGUMENTS start is not positive
+ */
 index: procedure = .int
-  arg expose haystack = .string, needle = .string, start = 1
+  arg haystack = .string, needle = .string, start = 1
+  found_position = .int
 
-return pos(needle,haystack,start)
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "INDEX start must be positive"
+  if needle == "" | haystack == "" then return 0
+
+  found_position = start
+  assembler strpos found_position,needle,haystack
+  return found_position

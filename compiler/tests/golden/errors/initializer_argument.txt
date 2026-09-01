@@ -1,0 +1,2 @@
+Error in initializer_argument.crexx @ 5:7 - #INITIALISER_TAKES_NO_ARGUMENTS, "value = .int"
+1 error(s) in source file

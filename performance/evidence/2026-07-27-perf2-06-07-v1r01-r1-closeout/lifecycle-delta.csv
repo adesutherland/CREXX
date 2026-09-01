@@ -1,0 +1,5 @@
+phase,current_median_ns,candidate_median_ns,delta_ns,delta_percent,guard
+compile,82114500,82083500,-31000,-0.037752,pass
+assemble,8171500,7992500,-179000,-2.190540,pass
+rxvm_load_first_result,3872000,3628000,-244000,-6.301653,pass
+rxbvm_load_first_result,3596000,3534500,-61500,-1.710234,pass

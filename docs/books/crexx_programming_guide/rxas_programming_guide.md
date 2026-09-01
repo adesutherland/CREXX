@@ -42,9 +42,7 @@ main() .locals=7
 date() .expose=rxfnsb.date
 ```
 
-<!--splice--rxas hellox2 >null -->
-
-<!--splice--rxvme hellox2 -->
+<!--splice--"rxas hellox2 && rxvme hellox2" -->
 
 We can see that the first component of the lines are the procedure names or the instruction mnemonics ; this program has no labels. 
 After the instructions, their parameters are placed.
@@ -67,7 +65,12 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 ## Optimizing actions of the `rxas` assembler
 
-`rxas` is an optimising assembler[^optim] which can rearrange instructions or eliminate them entirely. This optimisation can be switched off when in doubt. This will cause loss of performance, but will make debugging of the code more straightforward, because there is a more direct correspondence with the sourcelines and the generated assembly code.
+`rxas` is an optimising assembler[^optim] which can rearrange instructions or eliminate them entirely. This optimisation can be switched off when in doubt. This will cause loss of performance, but will make debugging of the code more straightforward, because there is a more direct correspondence between the sourcelines and the generated assembly code.
+
+TRACE output likewise describes the optimised executable: eliminated, fused,
+inlined or moved work may have fewer, combined or relocated trace events. Use
+an unoptimised compiler and assembler when source-correspondent tracing is more
+important than performance.
 
 
 [^label]: it will not hurt, however, if it does not start in column one. It must be the first word of the line, though.
@@ -75,9 +78,8 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 ## Embedded Rexx Assembler
 
-The `assembler` command enables the inclusion of arbitrary assembler instructions within a Rexx program. The compiler validates the instruction mnemonic and arguments, ensuring that variables are converted into the appropriate register number.
+The `assembler` command enables the inclusion of arbitrary assembler instructions within a Rexx program. The compiler validates the instruction mnemonic and the complete variable-length argument list against the opcode signature, ensuring that variables are converted into the appropriate register number. Inline assembly is therefore not limited to three operands.
 
 This example uses the `linkarg` assembler instruction with two variables and an integer constant.
 
 `assembler linkarg e,i,5`
-

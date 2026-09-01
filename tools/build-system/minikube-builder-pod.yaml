@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crexx-build-audit
+  labels:
+    app.kubernetes.io/name: crexx-build-audit
+    app.kubernetes.io/part-of: crexx-build-system
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 7200
+  containers:
+    - name: builder
+      image: ubuntu:24.04
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/bash
+        - -lc
+        - |
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            autoconf \
+            automake \
+            bison \
+            build-essential \
+            ca-certificates \
+            cmake \
+            curl \
+            flex \
+            gettext \
+            git \
+            libssl-dev \
+            libtool \
+            ninja-build \
+            pkg-config \
+            python3 \
+            time \
+            zlib1g-dev
+          mkdir -p /work/source /work/tools /work/build /work/evidence
+          touch /work/toolchain-ready
+          sleep infinity
+      resources:
+        requests:
+          cpu: "1"
+          memory: 2Gi
+          ephemeral-storage: 3Gi
+        limits:
+          cpu: 3500m
+          memory: 5Gi
+          ephemeral-storage: 5500Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+  terminationGracePeriodSeconds: 5

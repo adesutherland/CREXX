@@ -1,0 +1,562 @@
+module	callable	return_type	arguments	inline_payload
+_address	_rxsysb.addressdriverregistry.§factory	._rxsysb..addressdriverregistry		I6
+_address	_rxsysb.addressdriverregistry.add	.void	driver=.string,aliases=.string,prefixes=.string	none
+_address	_rxsysb.addressdriverregistry.lookup	.string	name=.string	none
+_address	_rxsysb.addressdriverregistry.drivers	.string		none
+_address	_rxsysb.standardaddressstem.§factory	._rxsysb..standardaddressstem		I6
+_address	_rxsysb.standardaddressstem.get	.string	name=.string	none
+_address	_rxsysb.standardaddressstem.set	.void	name=.string,value=.string	none
+_address	_rxsysb.standardaddressstem.drop	.void	name=.string	none
+_address	_rxsysb.standardaddressstem.exists	.int	name=.string	none
+_address	_rxsysb.standardaddressstem.next	.string	cursor=.int	none
+_address	_rxsysb.addressbinding.§factory	._rxsysb..addressbinding	\?kind=.string,\?internal_name=.string,\?external_alias=.string,\?value=.string,\?flags=.string	none
+_address	_rxsysb.addressbinding.get_kind	.string		I6
+_address	_rxsysb.addressbinding.get_internal_name	.string		I6
+_address	_rxsysb.addressbinding.get_external_alias	.string		I6
+_address	_rxsysb.addressbinding.get_value	.string		I6
+_address	_rxsysb.addressbinding.get_value_object	._rxsysb..addressstem		none
+_address	_rxsysb.addressbinding.get_stem_value	.string	name=.string	none
+_address	_rxsysb.addressbinding.set_stem_value	.void	name=.string,value=.string	none
+_address	_rxsysb.addressbinding.get_flags	.string		I6
+_address	_rxsysb.standardaddresssandbox.§factory	._rxsysb..standardaddresssandbox		I6
+_address	_rxsysb.standardaddresssandbox.get	.string	name=.string	none
+_address	_rxsysb.standardaddresssandbox.set	.void	name=.string,value=.string	none
+_address	_rxsysb.standardaddresssandbox.drop	.void	name=.string	none
+_address	_rxsysb.standardaddresssandbox.exists	.int	name=.string	none
+_address	_rxsysb.standardaddresssandbox.next	.string	cursor=.int	none
+_address	_rxsysb.addressrequest.§factory	._rxsysb..addressrequest	\?environment_name=.string,\?command=.string,stdin_endpoint=.binary,stdout_endpoint=.binary,stderr_endpoint=.binary,\?flags=.string	none
+_address	_rxsysb.addressrequest.get_environment_name	.string		I6
+_address	_rxsysb.addressrequest.set_environment_name	.void	environment_name=.string	I6
+_address	_rxsysb.addressrequest.get_command	.string		I6
+_address	_rxsysb.addressrequest.set_command	.void	command=.string	I6
+_address	_rxsysb.addressrequest.get_stdin_endpoint	.binary		none
+_address	_rxsysb.addressrequest.set_stdin_endpoint	.void	stdin_endpoint=.binary	none
+_address	_rxsysb.addressrequest.get_stdout_endpoint	.binary		none
+_address	_rxsysb.addressrequest.set_stdout_endpoint	.void	stdout_endpoint=.binary	none
+_address	_rxsysb.addressrequest.get_stderr_endpoint	.binary		none
+_address	_rxsysb.addressrequest.set_stderr_endpoint	.void	stderr_endpoint=.binary	none
+_address	_rxsysb.addressrequest.get_flags	.string		I6
+_address	_rxsysb.addressrequest.get_sandbox	._rxsysb..addresssandbox		none
+_address	_rxsysb.addressrequest.set_sandbox	.void	sandbox=.addresssandbox	none
+_address	_rxsysb.addressrequest.get_sandbox_value	.string	name=.string	none
+_address	_rxsysb.addressrequest.set_sandbox_value	.void	name=.string,value=.string	none
+_address	_rxsysb.addressrequest.add_binding	.void	\?kind=.string,internal_name=.string,external_alias=.string,value=.string,\?flags=.string	none
+_address	_rxsysb.addressrequest.add_stem_binding_plan	.void	internal_name=.string,external_alias=.string,stem=.addressstem	none
+_address	_rxsysb.addressrequest.add_binding_plan	.void	binding=.addressbinding	none
+_address	_rxsysb.addressrequest.get_binding_count	.int		I6
+_address	_rxsysb.addressrequest.get_binding	._rxsysb..addressbinding	index=.int	none
+_address	_rxsysb.addressrequest.get_binding_value	.string	name=.string	none
+_address	_rxsysb.addressrequest.get_binding_stem_value	.string	index=.int,name=.string	none
+_address	_rxsysb.addressrequest.set_binding_stem_value	.void	index=.int,name=.string,value=.string	none
+_address	_rxsysb.addressresponse.§factory	._rxsysb..addressresponse	\?rc=.int,\?condition_name=.string	I6
+_address	_rxsysb.addressresponse.get_rc	.int		I6
+_address	_rxsysb.addressresponse.set_rc	.void	rc=.int	I6
+_address	_rxsysb.addressresponse.get_condition_name	.string		I6
+_address	_rxsysb.addressresponse.set_condition_name	.void	condition_name=.string	I6
+_address	_rxsysb.addressresponse.add_diagnostic	.void	text=.string	none
+_address	_rxsysb.addressresponse.get_diagnostic_count	.int		I6
+_address	_rxsysb.addressresponse.get_diagnostic	.string	index=.int	none
+_address	_rxsysb.addressresponse.add_updated_binding	.void	\?kind=.string,internal_name=.string,external_alias=.string,value=.string,\?flags=.string	none
+_address	_rxsysb.addressresponse.add_updated_binding_plan	.void	binding=.addressbinding	none
+_address	_rxsysb.addressresponse.get_updated_binding_count	.int		I6
+_address	_rxsysb.addressresponse.get_updated_binding	._rxsysb..addressbinding	index=.int	none
+_address	_rxsysb.addressfunctionrequest.§factory	._rxsysb..addressfunctionrequest	environment_name=.string,function_name=.string,arguments=.string[*],sandbox=.addresssandbox,\?flags=.string	none
+_address	_rxsysb.addressfunctionrequest.get_environment_name	.string		I6
+_address	_rxsysb.addressfunctionrequest.get_function_name	.string		I6
+_address	_rxsysb.addressfunctionrequest.get_argument_count	.int		none
+_address	_rxsysb.addressfunctionrequest.get_argument	.string	index=.int	none
+_address	_rxsysb.addressfunctionrequest.get_sandbox	._rxsysb..addresssandbox		none
+_address	_rxsysb.addressfunctionrequest.get_flags	.string		I6
+_address	_rxsysb.addressfunctionresponse.§factory	._rxsysb..addressfunctionresponse	\?rc=.int,\?result=.string,\?condition_name=.string	I6
+_address	_rxsysb.addressfunctionresponse.get_rc	.int		I6
+_address	_rxsysb.addressfunctionresponse.set_rc	.void	rc=.int	I6
+_address	_rxsysb.addressfunctionresponse.get_result	.string		I6
+_address	_rxsysb.addressfunctionresponse.set_result	.void	result=.string	I6
+_address	_rxsysb.addressfunctionresponse.get_condition_name	.string		I6
+_address	_rxsysb.addressfunctionresponse.set_condition_name	.void	condition_name=.string	I6
+_address	_rxsysb.addressfunctionresponse.add_diagnostic	.void	text=.string	none
+_address	_rxsysb.addressfunctionresponse.get_diagnostic_count	.int		I6
+_address	_rxsysb.addressfunctionresponse.get_diagnostic	.string	index=.int	none
+_address	_rxsysb.crexxaddressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.crexxaddressenvironment.§factory	._rxsysb..crexxaddressenvironment	env_name=.string	I6
+_address	_rxsysb.crexxaddressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.crexxaddressenvironment.environment_name	.string		I6
+_address	_rxsysb.crexxaddressenvironment.environment_id	.string		I6
+_address	_rxsysb.crexxaddressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.crexxaddressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb.systemaddressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.systemaddressenvironment.§factory	._rxsysb..systemaddressenvironment	env_name=.string	I6
+_address	_rxsysb.systemaddressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.systemaddressenvironment.environment_name	.string		I6
+_address	_rxsysb.systemaddressenvironment.environment_id	.string		I6
+_address	_rxsysb.systemaddressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.systemaddressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb.shelladdressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.shelladdressenvironment.§factory	._rxsysb..shelladdressenvironment	env_name=.string	I6
+_address	_rxsysb.shelladdressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.shelladdressenvironment.environment_name	.string		I6
+_address	_rxsysb.shelladdressenvironment.environment_id	.string		I6
+_address	_rxsysb.shelladdressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.shelladdressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb.pathaddressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.pathaddressenvironment.§factory	._rxsysb..pathaddressenvironment	env_name=.string	I6
+_address	_rxsysb.pathaddressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.pathaddressenvironment.environment_name	.string		I6
+_address	_rxsysb.pathaddressenvironment.environment_id	.string		I6
+_address	_rxsysb.pathaddressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.pathaddressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb.unknownaddressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.unknownaddressenvironment.§factory	._rxsysb..unknownaddressenvironment	env_name=.string	I6
+_address	_rxsysb.unknownaddressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.unknownaddressenvironment.environment_name	.string		I6
+_address	_rxsysb.unknownaddressenvironment.environment_id	.string		I6
+_address	_rxsysb.unknownaddressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.unknownaddressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb.nativeaddressenvironment.§match	.int	env_name=.string	none
+_address	_rxsysb.nativeaddressenvironment.§factory	._rxsysb..nativeaddressenvironment	env_name=.string	I6
+_address	_rxsysb.nativeaddressenvironment.bind_environment	.void	env_name=.string,instance_id=.string	I6
+_address	_rxsysb.nativeaddressenvironment.environment_name	.string		I6
+_address	_rxsysb.nativeaddressenvironment.environment_id	.string		I6
+_address	_rxsysb.nativeaddressenvironment.execute	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb.nativeaddressenvironment.invoke	._rxsysb..addressfunctionresponse	request=.addressfunctionrequest	none
+_address	_rxsysb._address	.int	\?env=.string,\?command=.string,in=.binary,out=.binary,err=.binary,expose ...=.string	none
+_address	_rxsysb._address_with_sandbox	.int	\?env=.string,\?command=.string,in=.binary,out=.binary,err=.binary,expose sandbox=.addresssandbox,expose ...=.string	none
+_address	_rxsysb._address_new_request	._rxsysb..addressrequest	\?env=.string,\?command=.string,in=.binary,out=.binary,err=.binary	none
+_address	_rxsysb._address_dispatch_request	._rxsysb..addressresponse	request=.addressrequest	none
+_address	_rxsysb._address_link_request_sandbox	.void	request=.addressrequest,expose sandbox=.addresssandbox	none
+_address	_rxsysb._address_apply_response_var	.void	response=.addressresponse,internal_name=.string,expose target=.string	none
+_address	_rxsysb._address_apply_response_sandbox	.void	response=.addressresponse,expose sandbox=.addresssandbox	none
+_address	_rxsysb._address_apply_response_stem	.void	response=.addressresponse,internal_name=.string,stem=.addressstem	none
+_address	_rxsysb._address_apply_response_request_stem	.void	response=.addressresponse,request=.addressrequest,binding_index=.int,internal_name=.string	none
+_address	_rxsysb._address_environment	._rxsysb..addressenvironment	\?env_name=.string	none
+_address	_rxsysb._address_function	._rxsysb..addressfunctionresponse	\?env_name=.string,\?function_name=.string,arguments=.string[*]	none
+_address	_rxsysb._address_call_response	._rxsysb..addressfunctionresponse	\?env_name=.string,\?function_name=.string,...=.string	none
+_address	_rxsysb._address_call	.string	\?env_name=.string,\?function_name=.string,...=.string	none
+_address	_rxsysb.addressenv	._rxsysb..addressenvironment	\?env_name=.string	I6
+_address	_rxsysb.addresscall	.string	\?env_name=.string,\?function_name=.string,...=.string	none
+_address	_rxsysb._new_address_environment	._rxsysb..addressenvironment	env_name=.string	none
+_address	_rxsysb._ensure_address_environment	.int	env_name=.string	none
+_address	_rxsysb._register_address_environment	.int	env_name=.string,env_obj=.addressenvironment	none
+_address	_rxsysb._set_address_environment	.int	env_name=.string	none
+_address	_rxsysb._current_address_environment	.string		none
+_address	_rxsysb._reset_address_environments	.int		none
+_address	_rxsysb._enable_native_address_environment	.int		none
+_address	_rxsysb._address_execute_system_command	._rxsysb..addressresponse	source_request=.addressrequest,command=.string	none
+_address	_rxsysb._address_unknown_command_response	._rxsysb..addressresponse	env_name=.string,command=.string	none
+_address	_rxsysb._address_normalize_environment_name	.string	env_name=.string	none
+_address	_rxsysb._address_normalize_command	.string	command=.string	none
+_address	_rxsysb._address_first_chars	.string	text=.string,count=.int	none
+_address	_rxsysb._noredir	.binary		I6
+_address	_rxsysb._redir2array	.binary	expose arr=.string[*]	none
+_address	_rxsysb._redir2string	.binary	expose str=.string	I6
+_address	_rxsysb._array2redir	.binary	expose arr=.string[*]	none
+_address	_rxsysb._string2redir	.binary	expose str=.string	I6
+_rxsystem	_rxsysb._exit	.void	\?return_value=.int	I6
+_rxsystem	_rxsysb._open	.int	name=.string,mode=.string	none
+_rxsystem	_rxsysb._close	.void	name=.string,\?nomsg=.int	none
+_jdn	_rxsysb._jdn	.int	day=.int,month=.int,year=.int	none
+_jdn	_rxsysb._datevalid	.boolean	day=.int,month=.int,year=.int	none
+_jdn	_rxsysb._leapyear	.boolean	year=.int	I6
+_jdn	_rxsysb._daysinmonth	.int	month=.int,year=.int	none
+_jdn	_rxsysb._dateformat	.int	format=.string,output_format=.boolean	none
+_jdn	_rxsysb._datefromjdn	.void	jdn=.int,expose year=.int,expose month=.int,expose day=.int,expose day_of_year=.int,expose weekday=.int,expose base_day=.int	none
+_datei	_rxsysb._datei	.int	idate=.string,format=.string,\?isep=.string	none
+_dateo	_rxsysb._dateo	.string	jdn=.int,format=.string,\?osep=.string	none
+_ftrunc	_rxsysb._ftrunc	.string	number=.float	I6
+_itrunc	_rxsysb._itrunc	.string	number=.float	I6
+_typedformat	_rxsysb._typedformat	.string	number_text=.string,before=.int,before_exists=.boolean,after=.int,after_exists=.boolean,expp=.int,expp_exists=.boolean,expt=.int,expt_exists=.boolean	none
+abbrev	rxfnsb.abbrev	.int	string=.string,candidate=.string,\?minimum=.int	I6
+abs	rxfnsb.abs	.decimal	number=.decimal	I6
+intabs	rxfnsb.intabs	.int	number=.int	I6
+floatabs	rxfnsb.floatabs	.float	number=.float	I6
+b2x	rxfnsb.b2x	.string	binary=.string	none
+b2d	rxfnsb.b2d	.int	binary=.string	none
+binary	rxfnsb.binlength	.int	data=.binary	I6
+binary	rxfnsb.binbyte	.int	data=.binary,position=.int	I6
+binary	rxfnsb.binsetbyte	.binary	data=.binary,position=.int,byte=.int	I6
+binary	rxfnsb.binsubstr	.binary	data=.binary,start=.int,\?count=.int	I6
+binary	rxfnsb.binconcat	.binary	left=.binary,right=.binary	I6
+binary	rxfnsb.binoverlay	.binary	new=.binary,target=.binary,start=.int	I6
+binary	rxfnsb.bininsert	.binary	new=.binary,target=.binary,before=.int	I6
+binary	rxfnsb.bindelstr	.binary	target=.binary,start=.int,\?count=.int	I6
+binary	rxfnsb.binpos	.int	needle=.binary,haystack=.binary,\?start=.int	I6
+binary	rxfnsb.bincompare	.int	left=.binary,right=.binary	I6
+binary	rxfnsb.binresize	.int	expose data=.binary,length=.int	I6
+binary	rxfnsb.binclear	.int	expose data=.binary	I6
+binary	rxfnsb.binfill	.int	expose data=.binary,byte=.int	I6
+binary	rxfnsb.binfillat	.int	expose data=.binary,offset=.int,length=.int,byte=.int	I6
+binary	rxfnsb.bincopy	.int	expose dst=.binary,dst_offset=.int,src=.binary,src_offset=.int,length=.int	I6
+binary	rxfnsb.binmemmove	.int	expose data=.binary,dst_offset=.int,src_offset=.int,length=.int	I6
+binary	rxfnsb.binappend	.int	expose dst=.binary,src=.binary	I6
+binary	rxfnsb.binupdate	.int	expose dst=.binary,offset=.int,src=.binary	I6
+binary	rxfnsb.binmakegap	.int	expose data=.binary,offset=.int,length=.int	I6
+binary	rxfnsb.bindrop	.int	expose data=.binary,offset=.int,length=.int	I6
+binary	rxfnsb.bin2x	.string	data=.binary	I6
+binary	rxfnsb.x2bin	.binary	hex=.string	I6
+c2x	rxfnsb.c2x	.string	from=.string	I6
+c2d	rxfnsb.c2d	.int	from=.string	I6
+center	rxfnsb.center	.string	string=.string,width=.int,\?pad=.string	I6
+centre	rxfnsb.centre	.string	string=.string,width=.int,\?pad=.string	I6
+changestr	rxfnsb.changestr	.string	needle=.string,haystack=.string,replacement=.string	none
+compare	rxfnsb.compare	.int	left=.string,right=.string,\?pad=.string	I6
+copies	rxfnsb.copies	.string	string=.string,count=.int	I6
+countstr	rxfnsb.countstr	.int	needle=.string,haystack=.string	none
+d2b	rxfnsb.d2b	.string	decimal=.int	I6
+d2c	rxfnsb.d2c	.string	codepoint=.int,\?output_length=.int	I6
+d2x	rxfnsb.d2x	.string	number=.int,\?output_length=.int	I6
+date	rxfnsb.date	.string	\?oformat=.string,\?idate=.string,\?iformat=.string,\?osep=.string,\?isep=.string	I6
+delstr	rxfnsb.delstr	.string	string=.string,start=.int,\?delete_length=.int	I6
+delword	rxfnsb.delword	.string	string=.string,wnum=.int,\?wcount=.int	none
+fileio	rxfnsb.lineout	.int	\?fname=.string,\?line=.string	none
+fileio	rxfnsb.linein	.string	\?fname=.string	none
+fileio	rxfnsb.lines	.int	\?fname=.string	none
+fileio	rxfnsb.charin	.string	\?fname=.string,\?count=.int	none
+fileio	rxfnsb.charout	.int	\?fname=.string,\?text=.string	I6
+fileio	rxfnsb._execio	.int	mmax=.string,\?mode=.string,fname=.string,expose stem=.string[*]	none
+fileio	rxfnsb.readlines	.string[*]	fname=.string,\?from=.int,\?maxrec=.int,\?xerror=.string	none
+fileio	rxfnsb.loadtext	.string	fname=.string,\?delim=.string,\?xerror=.string	none
+fileio	rxfnsb.erasefile	.int	fname=.string	I6
+filter	rxfnsb.filter	.string	input_value=.string,filter=.string	I6
+format	rxfnsb.format	.string	number=.decimal,\?before=.int,\?after=.int,\?expp=.int,\?expt=.int	none
+intformat	rxfnsb.intformat	.string	number=.int,\?before=.int,\?after=.int,\?expp=.int,\?expt=.int	none
+floatformat	rxfnsb.floatformat	.string	number=.float,\?before=.int,\?after=.int,\?expp=.int,\?expt=.int	none
+fnv	rxfnsb.fnv	.int	input_value=.string	I6
+getenv	rxfnsb.getenv	.string	env_name=.string	I6
+insert	rxfnsb.insert	.string	new_string=.string,target=.string,\?before=.int,\?insert_length=.int,\?pad=.string	I6
+length	rxfnsb.length	.int	string=.string	I6
+linesize	rxfnsb.linesize	.int		I6
+loadmodule	rxfnsb.loadmodule	.int	module_name=.string	I6
+lower	rxfnsb.lower	.string	string=.string	I6
+max	rxfnsb.max	.decimal	first=.decimal,...=.decimal	none
+intmax	rxfnsb.intmax	.int	first=.int,...=.int	none
+floatmax	rxfnsb.floatmax	.float	first=.float,...=.float	none
+min	rxfnsb.min	.decimal	first=.decimal,...=.decimal	none
+intmin	rxfnsb.intmin	.int	first=.int,...=.int	none
+floatmin	rxfnsb.floatmin	.float	first=.float,...=.float	none
+numeric	rxfnsb.digits	.int		none
+numeric	rxfnsb.fuzz	.int		none
+numeric	rxfnsb.form	.string		none
+numeric	rxfnsb.numcase	.string		none
+numeric	rxfnsb.standard	.string		none
+overlay	rxfnsb.overlay	.string	new_string=.string,target=.string,\?start=.int,\?overlay_length=.int,\?pad=.string	I6
+pos	rxfnsb.pos	.int	needle=.string,haystack=.string,\?start=.int	I6
+qscan	rxfnsb.qscan_outside_matches	.int[*]	text=.string,needle=.string,start=.int	none
+qscan	rxfnsb.qscan_safe_matches	.int[*]	text=.string,separator=.string,start=.int,pairs=.string	none
+qscan	rxfnsb.qscan_pair_spans	.int[*]	open=.string,close=.string,text=.string,start=.int	none
+qscan	rxfnsb.qscan_line_comment_spans	.int[*]	marker=.string,text=.string	none
+qscan	rxfnsb.qscan_word_spans	.int[*]	text=.string	none
+qpos	rxfnsb.qpos	.int	needle=.string,text=.string,\?start=.int	I6
+qsplit	rxfnsb.qsplit	.string[*]	text=.string,sep=.string	none
+qsplitsafe	rxfnsb.qsplitsafe	.string[*]	text=.string,sep=.string,\?start=.int,\?pairs=.string	none
+qextractall	rxfnsb.qextractall	.string[*]	open=.string,close=.string,text=.string,\?start=.int,\?mode=.string	none
+qextractpair	rxfnsb.qextractpair	.string	open=.string,close=.string,text=.string,\?start=.int,\?mode=.string	none
+qstripcomment	rxfnsb.qstripcomment	.string	open=.string,\?close=.string,text=.string	none
+qremoveall	rxfnsb.qremoveall	.string	open=.string,close=.string,text=.string,\?mode=.string	none
+fsayfmt	rxfnsb.fsayfmt	.string	template=.string	none
+lastpos	rxfnsb.lastpos	.int	needle=.string,haystack=.string,\?search_end=.int	none
+left	rxfnsb.left	.string	string=.string,width=.int,\?pad=.string	I6
+right	rxfnsb.right	.string	string=.string,width=.int,\?pad=.string	I6
+raise	_rxsysb.raise	.int	type=.string,code=.string,parm1=.string	I6
+reverse	rxfnsb.reverse	.string	string=.string	I6
+signal	rxfnsb.standard_signal.§match	.int	name=.string,\?message=.string	none
+signal	rxfnsb.standard_signal.§factory	.rxfnsb..standard_signal	name=.string,\?message=.string	I6
+signal	rxfnsb.standard_signal.name	.string		I6
+signal	rxfnsb.standard_signal.code	.int		none
+signal	rxfnsb.standard_signal.module	.int		I6
+signal	rxfnsb.standard_signal.address	.int		I6
+signal	rxfnsb.standard_signal.message	.string		I6
+signal	rxfnsb.standard_signal.payload	.object		none
+signal	rxfnsb.standard_signal.file	.string		I6
+signal	rxfnsb.standard_signal.line	.int		I6
+signal	rxfnsb.standard_signal.column	.int		I6
+signal	rxfnsb.standard_signal.source	.string		I6
+signal	rxfnsb.runtime_signal_raw.name	.string		I6
+signal	rxfnsb.runtime_signal_raw.code	.int		I6
+signal	rxfnsb.runtime_signal_raw.module	.int		I6
+signal	rxfnsb.runtime_signal_raw.address	.int		I6
+signal	rxfnsb.runtime_signal_raw.message	.string		I6
+signal	rxfnsb.runtime_signal_raw.payload	.object		none
+signal	rxfnsb.runtime_signal.§factory	.rxfnsb..runtime_signal	name=.string,\?message=.string	I6
+signal	rxfnsb.runtime_signal.set_raw	.void	raw=.runtime_signal_raw	none
+signal	rxfnsb.runtime_signal.name	.string		none
+signal	rxfnsb.runtime_signal.code	.int		none
+signal	rxfnsb.runtime_signal.module	.int		none
+signal	rxfnsb.runtime_signal.address	.int		none
+signal	rxfnsb.runtime_signal.message	.string		none
+signal	rxfnsb.runtime_signal.payload	.object		none
+signal	rxfnsb.runtime_signal.file	.string		none
+signal	rxfnsb.runtime_signal.line	.int		none
+signal	rxfnsb.runtime_signal.column	.int		none
+signal	rxfnsb.runtime_signal.source	.string		none
+signal	rxfnsb.standard_signalaction.§factory.retry	.rxfnsb..standard_signalaction		I6
+signal	rxfnsb.standard_signalaction.§factory.skip	.rxfnsb..standard_signalaction		I6
+signal	rxfnsb.standard_signalaction.§factory.fail	.rxfnsb..standard_signalaction		I6
+signal	rxfnsb.standard_signalaction.kind	.string		I6
+trace	rxfnsb.trace_interrupt_raw.code	.int		I6
+trace	rxfnsb.trace_interrupt_raw.module	.int		I6
+trace	rxfnsb.trace_interrupt_raw.address	.int		I6
+trace	rxfnsb.trace_interrupt_raw.name	.string		I6
+trace	rxfnsb.tracecontext.§factory	.rxfnsb..tracecontext	module=.int,addr=.int,\?mode=.string,\?signal_code=.int,\?signal_name=.string	I6
+trace	rxfnsb.tracecontext.signal_code	.int		I6
+trace	rxfnsb.tracecontext.signal_name	.string		I6
+trace	rxfnsb.tracecontext.module	.int		I6
+trace	rxfnsb.tracecontext.address	.int		I6
+trace	rxfnsb.tracecontext.mode	.string		I6
+trace	rxfnsb.tracecontext.source_file	.string		none
+trace	rxfnsb.tracecontext.line	.int		none
+trace	rxfnsb.tracecontext.column	.int		none
+trace	rxfnsb.tracecontext.source	.string		none
+trace	rxfnsb.tracecontext.source_line	.string		none
+trace	rxfnsb.tracecontext.has_source	.int		none
+trace	rxfnsb.tracecontext.closest_source_line	.string		none
+trace	rxfnsb.tracecontext.asm_line	.string		none
+trace	rxfnsb.tracecontext.procedure	.string		none
+trace	rxfnsb.tracecontext.ensure_source	.void		none
+trace	rxfnsb.tracecontext.prepare_procedure	.void		none
+trace	rxfnsb.tracecontext.prepare_content	.void	mode=.string	none
+trace	rxfnsb.tracecontroller.§factory	.rxfnsb..tracecontroller		I6
+trace	rxfnsb.tracecontroller.mode	.string		I6
+trace	rxfnsb.tracecontroller.set_mode	.void	mode=.string	I6
+trace	rxfnsb.tracecontroller.toggle_mode	.string		I6
+trace	rxfnsb.tracecontroller.set_first_client_module	.void	module=.int	I6
+trace	rxfnsb.tracecontroller.first_client_module	.int		I6
+trace	rxfnsb.tracecontroller.set_latest_module_only	.void	\?enabled=.int	I6
+trace	rxfnsb.tracecontroller.latest_module_only	.int		I6
+trace	rxfnsb.tracecontroller.set_include_runtime	.void	\?enabled=.int	I6
+trace	rxfnsb.tracecontroller.include_runtime	.int		I6
+trace	rxfnsb.tracecontroller.reset_namespace_filters	.void		none
+trace	rxfnsb.tracecontroller.suppress_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.unsuppress_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.namespace_is_suppressed	.int	name=.string	none
+trace	rxfnsb.tracecontroller.clear_namespace_cache	.void		I6
+trace	rxfnsb.tracecontroller.add_suppressed_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.add_included_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.remove_suppressed_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.remove_included_namespace	.void	namespace_name=.string	none
+trace	rxfnsb.tracecontroller.namespace_list_contains	.int	namespaces=.string[*],count=.int,namespace_name=.string	I6
+trace	rxfnsb.tracecontroller.namespace_list_matches	.int	namespaces=.string[*],count=.int,name=.string	none
+trace	rxfnsb.tracecontroller.enable_breakpoints	.void		I6
+trace	rxfnsb.tracecontroller.disable_breakpoints	.void		I6
+trace	rxfnsb.tracecontroller.context	.rxfnsb..tracecontext	module=.int,addr=.int,mode=.string	none
+trace	rxfnsb.tracecontroller.context_from_interrupt	.rxfnsb..tracecontext	interrupt=.trace_interrupt_raw	none
+trace	rxfnsb.tracecontroller.should_trace	.int	event=.tracecontext	none
+trace	rxfnsb.tracecontroller.should_trace_module	.int	module=.int	none
+trace	rxfnsb.tracecontroller.exact_source_line	.string	module=.int,addr=.int	none
+trace	rxfnsb.tracecontroller.closest_source_line	.string	module=.int,addr=.int	none
+trace	rxfnsb.tracecontroller.asm_line	.string	module=.int,addr=.int	none
+trace	rxfnsb.tracecontroller.procedure_name	.string	module=.int,addr=.int	none
+trace	rxfnsb.tracecontroller.loaded_module_count	.int		I6
+trace	rxfnsb.tracecontroller.module_name	.string	module=.int	none
+trace	rxfnsb.tracecontroller.load_module	.int	module_name=.string	I6
+trace	rxfnsb.tracecontroller.load_library	.int	dir=.string	none
+trace	rxfnsb.tracecontroller.loaded_proc_count	.int	module_index=.int	I6
+trace	rxfnsb.tracecontroller.loaded_proc_name	.string	module_index=.int,proc_index=.int	none
+trace	rxfnsb.tracecontroller.loaded_proc_id	.int	module_index=.int,proc_index=.int	none
+trace	rxfnsb.tracecontroller.find_proc	.int	mod_num=.int,name=.string	none
+trace	rxfnsb.tracecontroller.clear_pending_result	.void		I6
+trace	rxfnsb.tracecontroller.capture_result_target	.void	module=.int,addr=.int	none
+trace	rxfnsb.tracecontroller.pending_result	.int		I6
+trace	rxfnsb.tracecontroller.pending_module	.int		I6
+trace	rxfnsb.tracecontroller.pending_prefix	.string		I6
+trace	rxfnsb.tracecontroller.pending_type	.string		I6
+trace	rxfnsb.tracecontroller.pending_register	.int		I6
+trace	rxfnsb.tracecontroller.pending_const	.string		I6
+trace	rxfnsb.tracecontroller.pending_has_const	.int		I6
+trace	rxfnsb.tracecontroller.supply_parent_value	.void	value=.string	I6
+trace	rxfnsb.tracecontroller.supplied_result	.int		I6
+trace	rxfnsb.tracecontroller.supplied_value	.string		I6
+trace	rxfnsb._trace_set	.void	mode=.string	none
+trace	rxfnsb._trace_set_off	.int		none
+trace	rxfnsb._trace_set_from_env	.void	allow_output=.int	none
+trace	rxfnsb._trace_set_format	.void	format=.string	none
+trace	rxfnsb._trace_set_output	.void	target=.string	none
+trace	rxfnsb._trace_suppress_namespace	.void	namespace_name=.string	none
+trace	rxfnsb._trace_unsuppress_namespace	.void	namespace_name=.string	none
+trace	rxfnsb._trace_reset_namespace_filters	.void		none
+trace	rxfnsb._trace_current_mode	.string		none
+trace	rxfnsb._trace_current_format	.string		none
+trace	rxfnsb._trace_context_from_raw	.rxfnsb..tracecontext	expose raw=.trace_interrupt_raw	none
+trace	rxfnsb._trace_should_trace_module	.int	module=.int	none
+trace	rxfnsb._trace_should_trace_context	.int	event=.tracecontext	none
+trace	rxfnsb._trace_should_emit_key	.int	key=.string	none
+trace	rxfnsb._trace_mode_from_option	.string	option=.string	none
+trace	rxfnsb._trace_needs_breakpoints	.int	mode=.string	none
+trace	rxfnsb._trace_command_before	.void	environment=.string,command=.string	none
+trace	rxfnsb._trace_command_after	.void	environment=.string,command=.string,rc=.int,condition=.string	none
+trace	rxfnsb._trace_capture_result_target	.void	module=.int,addr=.int	none
+trace	rxfnsb._trace_pending_result	.int		none
+trace	rxfnsb._trace_pending_module	.int		none
+trace	rxfnsb._trace_pending_prefix	.string		none
+trace	rxfnsb._trace_pending_has_const	.int		none
+trace	rxfnsb._trace_pending_const	.string		none
+trace	rxfnsb._trace_supplied_result	.int		none
+trace	rxfnsb._trace_supplied_value	.string		none
+trace	rxfnsb._trace_clear_pending_result	.void		none
+trace	rxfnsb._trace_pending_parent_register	.int	module=.int,expose type=.string,expose value=.string	none
+trace	rxfnsb._trace_supply_parent_value	.void	value=.string	none
+trace	rxfnsb._trace_escape_text	.string	text=.string	I6
+trace	rxfnsb._trace_write_line	.void	line=.string	none
+sign	rxfnsb.sign	.int	number=.decimal	I6
+intsign	rxfnsb.intsign	.int	number=.int	I6
+floatsign	rxfnsb.floatsign	.int	number=.float	I6
+space	rxfnsb.space	.string	string=.string,\?count=.int,\?pad=.string	none
+strip	rxfnsb.strip	.string	string=.string,\?option=.string,\?char=.string	none
+substr	rxfnsb.substr	.string	string=.string,start=.int,\?length=.int,\?pad=.string	I6
+substro	rxfnsb.substro	.string	string=.string,start=.int,\?length=.int,\?pad=.string	I6
+symbol	rxfnsb.symbol	.string	inputsymbol=.string	none
+time	rxfnsb.time	.string	\?option=.string	none
+translate	rxfnsb.translate	.string	source=.string,\?output_table=.string,\?input_table=.string,\?pad=.string	I6
+trunc	rxfnsb.trunc	.string	number=.decimal,\?fraction=.int	none
+floattrunc	rxfnsb.floattrunc	.string	number=.float,\?fraction=.int	none
+upper	rxfnsb.upper	.string	expose string=.string	I6
+value	rxfnsb.value	.string	inputstring=.string	none
+verify	rxfnsb.verify	.int	expose string=.string,expose refchars=.string,\?option=.string,\?start=.int	I6
+version	rxfnsb.version	.string		I6
+word	rxfnsb.word	.string	string=.string,wordnum=.int	I6
+words	rxfnsb.words	.int	string=.string	none
+wordindex	rxfnsb.wordindex	.int	string=.string,wordnum=.int	I6
+subword	rxfnsb.subword	.string	string=.string,wordnum=.int,\?wordcount=.int	none
+wordlength	rxfnsb.wordlength	.int	string=.string,wordnum=.int	I6
+wordpos	rxfnsb.wordpos	.int	search=.string,string=.string,\?start=.int	none
+qword	rxfnsb.qword	.string	line=.string,wanted=.int	none
+qwordlength	rxfnsb.qwordlength	.int	string=.string,wordnum=.int	I6
+qwords	rxfnsb.qwords	.int	line=.string	none
+qwordindex	rxfnsb.qwordindex	.int	line=.string,wanted=.int	I6
+qwordpos	rxfnsb.qwordpos	.int	search=.string,string=.string,\?start=.int	none
+qsubword	rxfnsb.qsubword	.string	string=.string,wordnum=.int,\?count=.int	none
+regex	rxfnsb.regexmatch	.int	\?s=.string,p=.string	none
+regex	rxfnsb.regexfind	.int	\?s=.string,p=.string,frompos=.int	none
+regex	rxfnsb.regexsplit	.string[*]	s=.string,pat=.string,\?opts=.string,\?limit=.int	none
+regex	rxfnsb.regexreplace	.string	s=.string,pat=.string,repl=.string	none
+regex	rxfnsb.regexreplace_limit	.string	s=.string,pat=.string,repl=.string,\?limit=.int	none
+regex	rxfnsb.regexfindall	.string[*]	s=.string,pat=.string,\?opts=.string,\?limit=.int	none
+regex	rxfnsb.regextest	.void	s=.string,p=.string	none
+regex	rxfnsb.regexdetails	.int[*]		none
+regex	rxfnsb.regexsubstr	.string	buffer=.string	none
+x2b	rxfnsb.x2b	.string	hexadecimal=.string	none
+x2c	rxfnsb.x2c	.string	hexadecimal=.string	none
+x2d	rxfnsb.x2d	.int	hexadecimal=.string,\?signed_length=.int	none
+random	rxfnsb.rexxrandomstate.§factory	.rxfnsb..rexxrandomstate		I6
+random	rxfnsb.rexxrandomstate.seed	.void	seed_value=.int	I6
+random	rxfnsb.rexxrandomstate.nextraw	.int		I6
+random	rxfnsb.rexxrandomstate.bounded	.int	span=.int	none
+random	rxfnsb.rexxrandomstate.seedfromclock	.void		I6
+random	rxfnsb.random	.int	\?minimum=.int,\?maximum=.int,\?seed=.int	none
+reradix	_rxsysb.reradix	.string	subject=.string,fromradix=.int,toradix=.int	none
+sequence	rxfnsb.sequence	.string	from=.string,tos=.string	I6
+find	rxfnsb.find	.int	needle=.string,haystack=.string,\?start=.int	I6
+index	rxfnsb.index	.int	haystack=.string,needle=.string,\?start=.int	I6
+xrange	rxfnsb.xrange	.string	from=.string,tos=.string	I6
+parsecompile	rxfnsb.parsecompile	.int	template=.string,expose token=.string[*],expose token_type=.int[*]	none
+parsestring	rxfnsb.parsestring	.void	parse_string=.string,tokenhi=.int,expose token=.string[*],expose token_type=.int[*],expose variable=.string[*],expose variable_content=.string[*],\?template=.string	none
+parse	rxfnsb.parse	.int	source=.string,template=.string,expose variable=.string[*],expose variable_content=.string[*],\?strip_option=.int,\?case_option=.int	none
+datatype	rxfnsb.datatype	.string	value=.string,\?type=.string	none
+arrayfind	rxfnsb.arrayfind	.int	needle=.string,array=.string[*],\?from=.int,\?case_sensitive=.int	I6
+splice	rxfnsb.splice	.string	needle=.string,haystack=.string,at=.int,remove_length=.int	I6
+arrayinsert	rxfnsb.arrayinsert	.int	expose array=.string[*],from=.int,count=.int,\?default=.string	none
+arraydelete	rxfnsb.arraydelete	.int	expose array=.string[*],from=.int,count=.int	none
+arrayappend	rxfnsb.arrayappend	.int	expose array=.string[*],value=.string,\?count=.int	none
+arrayprepend	rxfnsb.arrayprepend	.int	expose array=.string[*],value=.string,\?count=.int	none
+objectarrayinsert	rxfnsb.objectarrayinsert	.int	expose array=.object[*],from=.int,count=.int,value=.object	none
+objectarraydelete	rxfnsb.objectarraydelete	.int	expose array=.object[*],from=.int,count=.int	none
+objectarrayappend	rxfnsb.objectarrayappend	.int	expose array=.object[*],value=.object,\?count=.int	none
+objectarrayprepend	rxfnsb.objectarrayprepend	.int	expose array=.object[*],value=.object,\?count=.int	none
+objectarraydrop	rxfnsb.objectarraydrop	.int	expose array=.object[*]	none
+objectarraymove	rxfnsb.objectarraymove	.int	expose array=.object[*],from=.int,count=.int,tto=.int	none
+arraypop	rxfnsb.arraypop	.string	expose array=.string[*],\?default=.string	none
+arrayshift	rxfnsb.arrayshift	.string	expose array=.string[*],\?default=.string	none
+arrayget	rxfnsb.arrayget	.string	array=.string[*],index=.int,\?default=.string	I6
+arrayset	rxfnsb.arrayset	.int	expose array=.string[*],index=.int,value=.string,\?fill=.string	none
+arraycontains	rxfnsb.arraycontains	.int	expose array=.string[*],value=.string,\?case=.int	I6
+arrayindexof	rxfnsb.arrayindexof	.int	expose array=.string[*],value=.string,\?from=.int,\?case=.int	I6
+arrayreverse	rxfnsb.arrayreverse	.int	expose array=.string[*]	I6
+arrayjoin	rxfnsb.arrayjoin	.string	array=.string[*],\?separator=.string	I6
+arraysort	rxfnsb.arraysort	.int	expose a=.string[*],\?offset=.int,\?order=.string,\?debug=.int	none
+arraycopy	rxfnsb.arraycopy	.string[*]	expose array=.string[*],\?from=.int,\?count=.int	none
+arraydrop	rxfnsb.arraydrop	.int	expose array=.string[*]	none
+arrayhi	rxfnsb.arrayhi	.int	expose array=.string[*],\?mode=.string,\?newhi=.int	none
+arraymove	rxfnsb.arraymove	.int	expose array=.string[*],from=.int,count=.int,tto=.int	none
+fmtmask	rxfnsb.fmtmask	.string	mask=.string,a1=.string,\?a2=.string,\?a3=.string,\?a4=.string,\?a5=.string,\?a6=.string,\?a7=.string,\?a8=.string,\?a9=.string,\?a10=.string,\?a11=.string,\?a12=.string,\?a13=.string,\?a14=.string,\?a15=.string	none
+compilemask	rxfnsb.compilemask	.int	mask=.string,expose fmt_token=.string[*],\?debug=.int	none
+runmask	rxfnsb.runmask	.string	usetoken=.int,fmt_token=.string[*],a1=.string,\?a2=.string,\?a3=.string,\?a4=.string,\?a5=.string,\?a6=.string,\?a7=.string,\?a8=.string,\?a9=.string,\?a10=.string,\?a11=.string,\?a12=.string,\?a13=.string,\?a14=.string,\?a15=.string,\?a16=.string	none
+parseExec	rxfnsb.parseexec	.string[*]	src=.string,splan=.string,template=.string,\?debug=.int	none
+stem	rxfnsb.stem.§factory	.rxfnsb..stem		I6
+stem	rxfnsb.stem.hash	.int	key=.string	I6
+stem	rxfnsb.stem.get	.string	key=.string	none
+stem	rxfnsb.stem.set	.void	\?key=.string,value=.string	none
+stem	rxfnsb.stem.size	.int		none
+stem	rxfnsb.stem.key	.string	ix=.int	none
+stem	rxfnsb.stem.value	.string	kv=.int	none
+stem	rxfnsb.stem.valueat	.string	ix=.int	none
+stem	rxfnsb.stem.tails	.string[*]		none
+stem	rxfnsb.stem.values	.string[*]		none
+stem	rxfnsb.stem.iterator	.rxfnsb..stemiterator		none
+stem	rxfnsb.stem.snapshotiterator	.rxfnsb..stemiterator		none
+stem	rxfnsb.stemiterator.§factory	.rxfnsb..stemiterator	source=reference .stem,\?snapshot_flag=.int	none
+stem	rxfnsb.stemiterator.hasnext	.int		none
+stem	rxfnsb.stemiterator.next	.string		none
+stem	rxfnsb.stemiterator.value	.string		none
+stem	rxfnsb.stemiterator.index	.int		I6
+stem	rxfnsb.stemiterator.reset	.void		I6
+stem	rxfnsb.stemiterator.islive	.int		none
+rxjson	rxjson.jsonvalid	.int	json=.string	none
+rxjson	rxjson.jsontype	.string	json=.string,path=.string	none
+rxjson	rxjson.jsonget	.string	json=.string,path=.string	none
+rxjson	rxjson.jsoncount	.int	json=.string,path=.string	none
+rxjson	rxjson.jsonmembers	.int	json=.string,path=.string,expose names=.string[*]	none
+rxjson	rxjson.jsonquote	.string	text=.string	none
+rxjson	rxjson.jsonunquote	.string	json=.string	none
+rxjson	rxjson.jsonarray	.string	values=.string[*]	none
+rxjson	rxjson.jsonobject	.string	keys=.string[*],values=.string[*]	none
+rxsocket	rxsocket.socketcreate	.int		I6
+rxsocket	rxsocket.socketclose	.int	sock=.int	I6
+rxsocket	rxsocket.socketconnect	.int	sock=.int,host=.string,port=.int	I6
+rxsocket	rxsocket.socketconnecttls	.int	sock=.int,host=.string,port=.int	I6
+rxsocket	rxsocket.socketbind	.int	sock=.int,host=.string,port=.int	I6
+rxsocket	rxsocket.socketlisten	.int	sock=.int,backlog=.int	I6
+rxsocket	rxsocket.socketaccept	.int	sock=.int	I6
+rxsocket	rxsocket.socketshutdown	.int	sock=.int,how=.int	I6
+rxsocket	rxsocket.socketsend	.int	sock=.int,data=.string	I6
+rxsocket	rxsocket.socketsendb	.int	sock=.int,data=.binary	I6
+rxsocket	rxsocket.socketrecv	.string	sock=.int,maxbytes=.int	I6
+rxsocket	rxsocket.socketrecvb	.binary	sock=.int,maxbytes=.int	I6
+rxsocket	rxsocket.socketpending	.int	sock=.int	I6
+rxsocket	rxsocket.sockettimeout	.int	sock=.int,milliseconds=.int	I6
+rxsocket	rxsocket.socketblocking	.int	sock=.int,enabled=.int	I6
+rxsocket	rxsocket.socketnodelay	.int	sock=.int,enabled=.int	I6
+rxsocket	rxsocket.socketkeepalive	.int	sock=.int,enabled=.int	I6
+rxsocket	rxsocket.socketpeer	.string	sock=.int	I6
+rxsocket	rxsocket.socketlocal	.string	sock=.int	I6
+rxsocket	rxsocket.socketstatus	.int	sock=.int	I6
+rxsocket	rxsocket.socketerror	.string	sock=.int	I6
+rxhttp	rxhttp.http.§factory	.rxhttp..http	\?host=.string,\?port=.int,\?timeout=.int,\?tls=.int	I6
+rxhttp	rxhttp.http.send	.string	verb=.string,path=.string,\?body=.string,\?contenttype=.string	none
+rxhttp	rxhttp.http.sendwithheaders	.string	verb=.string,path=.string,\?body=.string,\?contenttype=.string,headers=.string[*]	none
+rxhttp	rxhttp.http.post	.string	path=.string,body=.string,\?contenttype=.string	none
+rxhttp	rxhttp.http.postwithheaders	.string	path=.string,body=.string,\?contenttype=.string,headers=.string[*]	none
+rxhttp	rxhttp.http.buildrequest	.string	verb=.string,path=.string,\?body=.string,\?contenttype=.string	none
+rxhttp	rxhttp.http.buildrequestwithheaders	.string	verb=.string,path=.string,\?body=.string,\?contenttype=.string,headers=.string[*]	none
+rxhttp	rxhttp.http.extractbody	.string	response=.string	none
+rxhttp	rxhttp.http.header	.string	name=.string	none
+rxhttp	rxhttp.http.status	.int		I6
+rxhttp	rxhttp.http.httpstatus	.int		I6
+rxhttp	rxhttp.http.error	.string		I6
+rxhttp	rxhttp.http.lasthttp	.string		I6
+rxhttp	rxhttp.http.lastbody	.string		I6
+rxhttp	rxhttp.http._send	.string	request=.string	none
+rxhttp	rxhttp.http._read_response	.string	sock=.int	none
+rxhttp	rxhttp.http._has_complete_body	.int	response=.string	none
+rxhttp	rxhttp.http._body_start	.int	response=.string	I6
+rxhttp	rxhttp.http._content_length	.int	header=.string	none
+rxhttp	rxhttp.http._is_chunked	.int	header=.string	none
+rxhttp	rxhttp.http._header_value	.string	header=.string,name=.string	none
+rxhttp	rxhttp.http._decode_chunked_body	.string	body=.string	none
+rxhttp	rxhttp.http._chunked_complete	.int	body=.string	none
+rxhttp	rxhttp.http._byte_length	.int	text=.string	none
+rxhttp	rxhttp.http._take_bytes	.string	text=.string,count=.int	none
+rxhttp	rxhttp.http._hex_to_int	.int	text=.string	none
+rxhttp	rxhttp.http._hex_digit_value	.int	c=.string	none
+rxhttp	rxhttp.http._parse_status	.int	response=.string	none
+rxhttp	rxhttp.http._set_error	.void	code=.int,message=.string	I6
+wordrep	rxfnsb.wordrep	.string	string=.string,wordnum=.int,newword=.string,\?mode=.string	none
+/Users/adrian/CLionProjects/CREXX/lib/rxfnsb/rxas/_elapsed	_rxsysb._elapsed	.int	value = .int	none

@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g5e5e3b397be8.dirty 20260717",
+  "workload": "AWFY Permute x50",
+  "runtime": "rxvm",
+  "variant": "baseline",
+  "lifecycle": "process",
+  "warmups": 2,
+  "recorded_runs": 9,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: AWFY Permute",
+  "metric_prefix": null,
+  "command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/tmp/crexx-nr06-verdict.jXcgjL/permute-baseline-linked.rxbin","-a","50"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-17T07:50:01+0000",
+  "completed_utc": "2026-07-17T07:50:02+0000",
+  "result": "pass"
+}

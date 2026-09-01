@@ -1,0 +1,46 @@
+/* SAN-003: repeated optimized inline attempts reuse a deterministic capture
+ * symbol for a class-attribute array passed by value to another method. */
+options levelb
+namespace san003_inline_scoped_array_actual
+
+main: procedure = .int
+  probe = .Probe()
+  if probe.shouldCheck("alpha") = 0 then do
+    say "FAIL: SAN-003 scoped array actual"
+    return 1
+  end
+  say "PASS: SAN-003 scoped array actual"
+  return 0
+
+Probe: class
+  _count = .int
+  _names = .string[]
+
+  *: factory
+    _count = 1
+    _names[1] = "alpha"
+    return
+
+  isListed: method = .int
+    arg needle = .string
+    result = 0
+    if contains(_names, _count, needle) <> 0 then result = 1
+    else result = contains(_names, _count, needle)
+    return result
+
+  shouldCheck: method = .int
+    arg needle = .string
+    if isListed(needle) = 0 then return 0
+    return 1
+
+  contains: method = .int
+    arg names = .string[], count = .int, needle = .string
+    if count < 1 then return 0
+    if needle = "" then return 0
+    if needle = "reserved-a" then return 0
+    if needle = "reserved-b" then return 0
+    if needle = "reserved-c" then return 0
+    do i = 1 to count
+      if names[i] = needle then return 1
+    end
+    return 0

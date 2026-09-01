@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test2.crexx
- * BUILT                  : 2026-06-12 20:25:44
  */
 
 .meta "inline_test2.myclass"="b" ".unknown" .class
@@ -9,11 +8,7 @@
 main() .locals=8
    .meta "inline_test2.main"="b" ".int" main() ""
    .srcstep 8 8 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test2.crexx" 4 3 49 "  say \"Testing ineligible inlining scenarios...\""
    say "Testing ineligible inlining scenarios..."
    .srcstep 2 2 17 "inline_test2.crexx" 7 3 51 "  say \"LargeProc result:\" largeProc(1, 2, 3, 4, 5)"
@@ -37,8 +32,7 @@ main() .locals=8
    .srcstep 3 3 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    load r7,10
    .traceevent "L" 4 "R" "I" "r" 7 3 3 0 "" ""
-   load r6,1
-   call r5,nestedCallProc(),r6
+   call1 r5,nestedCallProc(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "nestedcallproc" ""
    sconcat r7,"NestedCallProc result:",r5
@@ -46,19 +40,15 @@ main() .locals=8
    say r7
    .srcstep 4 4 17 "inline_test2.crexx" 13 3 15 "  o = .MyClass()"
    .meta "inline_test2.main.o"="b" ".myclass" r0
-   load r7,0
-   call r0,§inline_test2.myclass.§factory(),r7
+   call r0,§inline_test2.myclass.§factory()
    .traceevent "F" 4 "R" "O" "r" 0 4 4 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 4 4 0 "o" ""
    .srcstep 5 5 17 "inline_test2.crexx" 14 3 38 "  say \"Method result:\" o.myMethod(20)"
    .traceevent "V" 6 "R" "O" "r" 0 5 5 0 "o" ""
    load r7,20
    .traceevent "L" 4 "R" "I" "r" 7 5 5 0 "" ""
-   load r5,2
    settp r0,256
-   swap r6,r0
-   call r4,§inline_test2.myclass.mymethod(),r5
-   swap r0,r6
+   call2 r4,§inline_test2.myclass.mymethod(),r0,r7
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "mymethod" ""
    sconcat r7,"Method result:",r4
@@ -67,8 +57,7 @@ main() .locals=8
    .srcstep 6 6 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
    load r7,1
    .traceevent "L" 4 "R" "I" "r" 7 6 6 0 "" ""
-   load r6,1
-   call r5,multiReturn(),r6
+   call1 r5,multiReturn(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 6 6 0 "multireturn" ""
    sconcat r7,"MultiReturn result:",r5
@@ -81,11 +70,7 @@ main() .locals=8
 largeProc() .locals=6
    .meta "inline_test2.largeproc"="b" ".int" largeProc() "a=.int,b=.int,c=.int,d=.int,e=.int"
    .srcstep 25 25 17 "inline_test2.crexx" 22 1 28 "largeProc: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 9 9 17 "inline_test2.crexx" 23 7 13 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
    .meta "inline_test2.largeproc.a"="b" ".int" a1
    .srcstep 10 10 17 "inline_test2.crexx" 23 15 21 "  arg a=.int, b=.int, c=.int, d=.int, e=.int"
@@ -164,19 +149,12 @@ largeProc() .locals=6
 nestedCallProc() .locals=4
    .meta "inline_test2.nestedcallproc"="b" ".int" nestedCallProc() "val=.int"
    .srcstep 28 28 17 "inline_test2.crexx" 37 1 33 "nestedCallProc: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 26 26 17 "inline_test2.crexx" 38 7 17 "  arg val = .int"
    .meta "inline_test2.nestedcallproc.val"="b" ".int" a1
    .srcstep 27 27 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
    .traceevent "V" 6 "R" "I" "a" 1 27 27 0 "val" ""
-   load r1,1
-   swap r2,a1
-   call r3,helper(),r1
-   swap a1,r2
+   call1 r3,helper(),a1
    .traceevent "F" 4 "R" "I" "r" 3 27 27 0 "helper" ""
    ret r3
    .meta "inline_test2.nestedcallproc.val"
@@ -184,11 +162,7 @@ nestedCallProc() .locals=4
 helper() .locals=2
    .meta "inline_test2.helper"="b" ".int" helper() "v=.int"
    .srcstep 31 31 17 "inline_test2.crexx" 41 1 25 "helper: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 29 29 17 "inline_test2.crexx" 42 7 15 "  arg v = .int"
    .meta "inline_test2.helper.v"="b" ".int" a1
    .srcstep 30 30 17 "inline_test2.crexx" 43 3 15 "  return v + 1"
@@ -203,11 +177,7 @@ helper() .locals=2
    .srcstep 33 33 17 "inline_test2.crexx" 47 3 13 "  *: factory"
    setattrs r0,0
    setobjtype r0,"inline_test2.myclass"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 32 32 17 "inline_test2.crexx" 48 5 11 "    return"
    .meta "inline_test2.myclass.§factory.§factory"="b" ".myclass" r0
    .traceevent "V" 6 "R" "O" "r" 0 32 32 0 "§factory" ""
@@ -218,11 +188,7 @@ helper() .locals=2
    .meta "inline_test2.myclass.mymethod"="b" ".int" §inline_test2.myclass.mymethod() "v=.int"
    .srcstep 36 36 17 "inline_test2.crexx" 50 3 26 "  myMethod: method = .int"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 34 34 17 "inline_test2.crexx" 51 9 17 "    arg v = .int"
    .meta "inline_test2.myclass.mymethod.v"="b" ".int" a2
    .meta "inline_test2.myclass.mymethod.§this"="b" ".myclass" a1
@@ -237,11 +203,7 @@ helper() .locals=2
 multiReturn() .locals=2
    .meta "inline_test2.multireturn"="b" ".int" multiReturn() "v=.int"
    .srcstep 42 42 17 "inline_test2.crexx" 55 1 30 "multiReturn: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 37 37 17 "inline_test2.crexx" 56 7 15 "  arg v = .int"
    .meta "inline_test2.multireturn.v"="b" ".int" a1
    .srcstep 39 39 17 "inline_test2.crexx" 57 3 11 "  if v > 0 then return 1"

@@ -74,7 +74,7 @@ options levelb
 Use `comments_slash` to enable `//` comments and `comments_dash` to enable
 `--` comments.
 
-Block comments use the normal REXX `/* ... */` form.
+Block comments use the traditional REXX `/* ... */` form.
 
 ## Floating-Point Type
 
@@ -84,4 +84,9 @@ Level B can select how `.float` source values are treated:
 - `floats_decimal`: decimal floating point treatment where supported
 
 Use `.decimal` explicitly when decimal behaviour is part of a published
-signature or value contract.
+signature or value contract. With the default treatment, an otherwise ordinary
+dotted literal is nevertheless parsed directly from its source spelling when
+an enclosing decimal assignment, argument, return, cast, constructor, or
+expression supplies the expected `.decimal` type. `floats_binary` and an
+explicit `.float(...)` boundary force binary treatment; a `d` suffix explicitly
+selects decimal.

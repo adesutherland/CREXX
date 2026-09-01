@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270 20260728",
+  "result": "pass",
+  "started_utc": "2026-07-29T07:49:31+0000",
+  "completed_utc": "2026-07-29T07:51:26+0000",
+  "repository": {"branch":"unknown","commit":"d5f0827ca2708eae9d9be182c6d0d53bd6229b74","dirty_scope":[" M compiler/rxcp_opt.c"," M interpreter/rxvmintp.c"," M interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c"," M interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c"," M lemon/lemon.c"," M lib/plugins/llist/llist.c"," M lib/plugins/rxtcp/rxtcp.c"," M lib/rxfnsb/rexx/x2d.crexx"," M performance/tools/inventory_performance_artifacts.crexx"," M performance/tools/run_cross_runtime_matrix.crexx"," M performance/tools/run_lifecycle.crexx","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Linux 7.0.0-27-generic x86_64","cpu":"unknown"},
+  "driver_arguments": ["--manifest","/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-clang-schema5-focused-v1.txt","--release-build","/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release","--profile-build","/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-profile","--vm","rxvm","--profile-mode","counts","--output-dir","/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/profiles/clang/rxvm-counts-focused"],
+  "input_manifest": {"path":"/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-clang-schema5-focused-v1.txt","sha256":"cee17c6e566280fcdeeec53840052abccb7352336047f7ff1920ab6def31e9df"},
+  "ordinary_release": {"build":"/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxvm","vm_version":"crexx-1.0.0-beta.3+local.gd5f0827ca270 (Threaded Mode)","vm_sha256":"812117ce6d6c410ec19c30b5f3b77cc87a231f504a6e511533b10efe8e2a86c0"},
+  "profile_release": {"build":"/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.gd5f0827ca270.dirty (Threaded Mode)","vm_sha256":"902e95a148d5816c580c2be878082afeb0870656c17faa6449f22704faea2f9b","rxseq_sha256":"b809be3739edda1ce70b4e8c7e7ec78cd3dca1921926d92fbf08769b5ff12bcd"},
+  "toolchain": {"cmake":"cmake version 4.2.3","compiler_path":"/usr/bin/clang","compiler":"Ubuntu clang version 21.1.8 (6ubuntu1)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/profiles/clang/rxvm-counts-focused"
+}

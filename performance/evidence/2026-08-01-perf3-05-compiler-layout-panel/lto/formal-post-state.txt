@@ -1,0 +1,52 @@
+utc=2026-08-01T10:20:50Z
+{ 1.04 1.33 3.25 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+92070 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /tmp/crexx-perf3-05.9DY131/lto/formal-post-state.txt 2>&1
+wc -c /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stdout.txt /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/lto/timing/capture-manifest.json
+awk -F, 'NR>1 {count++; if($18!="pass" || $17!=0) bad++; if($11=="warmup") w++; else if($11=="recorded") r++} END {print "cells=" count ", warmups=" w ", recorded=" r ", bad=" (bad+0)}' /tmp/crexx-perf3-05.9DY131/lto/timing/samples.csv
+cat /tmp/crexx-perf3-05.9DY131/lto/timing/summary.csv
+cat /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stdout.txt
+cat /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stderr.txt
+sed -n '1,50p' /tmp/crexx-perf3-05.9DY131/lto/formal-post-state.txt
+92071 /bin/zsh -c (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g custom; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true) > /tmp/crexx-perf3-05.9DY131/lto/formal-post-state.txt 2>&1
+wc -c /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stdout.txt /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stderr.txt
+cat /tmp/crexx-perf3-05.9DY131/lto/timing/capture-manifest.json
+awk -F, 'NR>1 {count++; if($18!="pass" || $17!=0) bad++; if($11=="warmup") w++; else if($11=="recorded") r++} END {print "cells=" count ", warmups=" w ", recorded=" r ", bad=" (bad+0)}' /tmp/crexx-perf3-05.9DY131/lto/timing/samples.csv
+cat /tmp/crexx-perf3-05.9DY131/lto/timing/summary.csv
+cat /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stdout.txt
+cat /tmp/crexx-perf3-05.9DY131/lto/formal-driver.stderr.txt
+sed -n '1,50p' /tmp/crexx-perf3-05.9DY131/lto/formal-post-state.txt

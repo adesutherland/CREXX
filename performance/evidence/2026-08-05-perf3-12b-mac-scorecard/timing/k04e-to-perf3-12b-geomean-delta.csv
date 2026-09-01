@@ -1,0 +1,5 @@
+comparison,k04e_geomean,current_geomean,descriptive_percent
+rxvm/oorexx,2.465740,2.375939,-3.641949
+rxvm/netrexx,0.894608,0.852882,-4.664166
+rxbvm/oorexx,2.316900,2.376230,+2.560749
+rxbvm/netrexx,0.840606,0.852987,+1.472866

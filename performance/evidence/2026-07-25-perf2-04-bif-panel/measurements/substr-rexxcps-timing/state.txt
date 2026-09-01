@@ -1,0 +1,37 @@
+PERF2-04 SUBSTR RexxCPS profiling-off Release wall state
+
+Repository commit: 6567f0ba23f20623e01322f5a62323b2347ab09d
+Ordinary product: /private/tmp/crexx-perf2-04.3k3Dfw/build-release
+Configuration: Ninja Release, -O3 -DNDEBUG, CREXX_VM_PROFILING=OFF
+Host: Mac.lan, Darwin 25.5.0 arm64, 10 logical CPUs, 24 GiB
+Toolchain: Apple clang 21.0.0, CMake 4.3.2, Ninja 1.13.2
+Power: AC attached, battery 80%, not charging, low-power mode off
+
+Capture started UTC: 2026-07-25T16:20:09+0000
+Capture completed UTC: 2026-07-25T16:21:31+0000
+Pre-capture snapshot UTC: 2026-07-25T16:19:56+0000
+Pre-capture local: 2026-07-25T17:19:56+0100
+Pre-capture uptime: 11 days 10:27
+Pre-capture load: 1.75 1.91 1.84
+Pre-capture relevant benchmark processes: none
+Post-capture snapshot UTC: 2026-07-25T16:21:44+0000
+Post-capture local: 2026-07-25T17:21:44+0100
+Post-capture load: 3.26 2.40 2.03
+Post-capture relevant benchmark processes: none
+
+Control: serial rotated sampling, 2 warmups and 7 recorded samples per cell
+Cells: current, SLC-H1 direct composition and SLC-CF1 constant fold, each on rxvm and rxbvm
+Total invocations: 54 (12 warmups plus 42 recorded)
+Correctness: 54/54 exit 0 and canonical PASS, zero retained stderr
+Adaptive effective counts: 30 invocations at 300, 24 invocations at 400
+Capture result: pass
+
+Maintained runner source SHA-256: 77cfd1d1b4532b545d19f8313ac74567211834ca4fd7e2537a493c8f40bbceab
+Maintained runner RXBIN SHA-256: 21e8dd72abe2293b51e38a3242479b621ff07ed1fd9f975a078796f4e21297a8
+Control manifest SHA-256: 3152438513338837a92c71a871f3b2a1760ba5b5dbd2ad5d80c02e6385cf9494
+B0-R rxvm SHA-256: aab099d2f1e52f09976002935b21b189c104200f7a4b4155c65eef6eb21ac1d4
+B0-R rxbvm SHA-256: a4a61df9cceac8a0178ef5583835953f55f882f7b4bab29c754d3c41aed87b5f
+B0-R library.rxbin SHA-256: d4b35ddefa1b7d6711788b38dc33d0b66ff8a1af43690f2367c98a8ee5f7fcf1
+Current RexxCPS RXBIN SHA-256: 9b535403baddc5b7076d5eb23027a296d982660546bcecc74d3784bb2fa23741
+SLC-H1 RXBIN SHA-256: a6f9d6c9fe3092b57be22eb636f929b7e2298e1eff01fb116c92502314937fe6
+SLC-CF1 RXBIN SHA-256: fd214bb36d8964578822355ab046c6aadeb4eaa89f3bca2bc9a1dfe971fd1206

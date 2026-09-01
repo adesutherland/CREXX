@@ -1,0 +1,1 @@
+﻿started_utc=2026-07-29T19:39:47.9405498Z measurement=rss warmups=0 recorded_runs=3 serial=yes rss_tool=C:\msys64\usr\bin\time.exe classpath=C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\formal-netrexx;C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\runtimes\netrexx\runlib\NetRexxR.jar

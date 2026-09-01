@@ -1,0 +1,9 @@
+options levelb
+namespace do_forever_conditional_leave_fail
+
+missing_after_conditional_leave: procedure = .int
+  arg escape = .bool
+  do forever
+    if escape then leave
+    return 1
+  end

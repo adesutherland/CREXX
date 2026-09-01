@@ -1,0 +1,2 @@
+Error in binary_memory_blen_syntax.crexx @ 4:7 - #INVALID_BLEN_SYNTAX, "<"
+1 error(s) in source file

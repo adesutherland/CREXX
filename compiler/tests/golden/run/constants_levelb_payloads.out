@@ -1,0 +1,6 @@
+text=hello
+bytes-len=4
+big-bytes-len=256
+decimal=12.5
+float=3.25
+int=32

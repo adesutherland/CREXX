@@ -23,7 +23,7 @@ You need one of those and:
 |---|---|---|---|---|
 |git   | Source code versioning  |   |   |   |
 |CMake   |Build Tool   |   |   |   |
-|gcc[^clang]   |C compiler, install g++   |   |   |   |
+|gcc, clang or MSVC[^clang]   |C compiler   |   |   |   |
 |Make   |conventional build tool, or   |   |   |   |
 |Ninja   |fast build tool   |   |   |   |
 
@@ -37,13 +37,26 @@ On Linux and macOS, this instruction is identical. For macOS, Xcode
 batch tools need to be installed, which will provide you with git, make
 and the compiler. Brew will give easy access to Cmake and Ninja-build[^regina].
 
-[^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang.}
+[^regina]: For Linux, you will need to install git (which will be there on most distributions), cmake and gcc or clang. For installing the openssl development headers if needed: sudo apt update; sudo apt install libssl-dev pkg-config}
 
-On Windows, you will need a compatibility layer like
-\href{https://www.msys2.org}{msys} - installing this has the additional
-advantage of easy access to git, gcc, cmake and the rest of the
-necessary tools. On more modern Windows, the WSL\footnote{WSL: Windows
-  subsystem for Linux.} and Ubuntu is not a bad choice.
+On Windows, MSYS2 or WSL remain useful when a GNU-compatible environment is
+preferred. A native x64 build is also supported with the Visual Studio 2022 C
+toolchain. Run CMake from an x64 Visual Studio Developer Command Prompt (or
+after calling `VsDevCmd.bat`) so `cl.exe`, the Windows SDK and the linker are
+available:
+
+```bash
+cmake -S CREXX -B crexx-build-msvc -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release -DENABLE_PARSER_MODE=OFF
+cmake --build crexx-build-msvc --parallel 8
+```
+
+MSVC builds the portable switch-dispatch VM and copies `rxbvm.exe` to the
+stable `rxvm.exe` product path. The optional parser-mode/syntax-highlighting
+integration currently depends on POSIX DSLSH sources and is therefore disabled
+in the native MSVC command above. This does not disable normal `rxc` compiler
+operation. Run `crexx -native` from the same Developer Command Prompt; the
+driver uses the compiler family and runtime-library mode recorded by CMake.
 
 ## Process
 
@@ -55,29 +68,32 @@ source code. Note that the cRexx source is kept in a different directory
 on you system than where it is built in, or will run from. Now run this
 command:
 
-\begin{verbatim}
+```bash
 git clone https://github.com/adesutherland/CREXX.git
-\end{verbatim}
+```
 
 This will give you a CREXX subdirectory in the current directory,
 containing the source of cRexx and its dependencies. This is the
 `develop' branch, which is the one you would normally want to use. All
-of these are written in the C99 version of the C programming language,
-which should be widely supported by C compilers on most platforms.
+The sources use C90 or C99 where sufficient. The concurrency-enabled
+interpreter requires C11 atomics, which are supported by the documented GCC,
+Clang and Visual Studio 2022 toolchains.
 
 Make a new subdirectory in the current directory (not in CREXX, but in
 the one that contains it), like `crexx-build'.
 
-\begin{verbatim}
+```bash
 mkdir crexx-build
-\end{verbatim}
+```
 
 and cd into that directory. Now issue the following command (we assume
 that you installed ninja, otherwise substitute `make' for the two
 <!-- instances of `ninja'): -->
 
 ```bash <!--buildcommand.sh-->
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../CREXX && ninja && ctest
+cmake -S ../CREXX -B crexx-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build crexx-build --parallel 5
+cmake --build crexx-build --target qa-comprehensive
 ```
 
 This will do a lot of things. In fact, if all goes well, you will have a
@@ -112,19 +128,220 @@ everything in the `build.ninja` specification file. These are a lot of
 parts, and the good news is, when they are built once, only the changed
 source will be built, which will be fast.
 
-After this, the generated test suite is run with the `ctest' command.
+Ninja builds also use named resource pools for work whose memory pressure is
+not represented by the global `--parallel` value. Configure with
+`-DCREXX_BUILD_RESOURCE_PROFILE=developer-fast` on a capable development
+machine, `portable` on slower or unknown hosts, or `memory-constrained` when
+RAM is tight. `auto` is the default: it selects `developer-fast` on Apple ARM64
+and `portable` elsewhere. These profiles currently limit concurrent VM-core C
+compiles and native links while leaving independent graph work free to use the
+global job count. The limits can be overridden explicitly with
+`CREXX_VM_COMPILE_POOL_DEPTH` and `CREXX_NATIVE_LINK_POOL_DEPTH`; both must be
+positive integers.
+
+For example, Adrian's macOS development profile still permits 30 runnable
+graph actions while limiting the high-memory VM compile family separately:
+
+```sh
+cmake -S . -B cmake-build-debug -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCREXX_BUILD_RESOURCE_PROFILE=developer-fast
+cmake --build cmake-build-debug --parallel 30
+```
+
+On an unknown or smaller host, select `portable` and use five global jobs.
+Non-Ninja generators retain their own scheduling because CMake job pools are a
+Ninja facility.
+
+Production self-builds do not use the compiler's normal broad discovery
+defaults. CMake copies each action's declared RXBIN and RXPA metadata providers
+to a private import root and invokes `rxc --no-exe-import`. Where a source
+directory contains sibling modules or test fixtures, the primary source is
+also copied to an action-private source root. This is necessary because `rxc`
+normally considers sibling source before RXAS/RXBIN metadata and also appends
+its executable directory to the binary roots. Those defaults remain useful for
+interactive compilation, but would allow an older linked library or an
+unrelated test plugin to affect a clean or incremental self-build.
+
+The build declarations, rather than filesystem timestamps, therefore select
+the metadata route. When adding a production `rxc` action, name its exact
+provider files in `DEPENDS`, stage only those files with
+`crexx_add_import_root`, isolate the source when it has siblings, and keep the
+resolution report as an opt-in diagnostic rather than a routine side effect.
+
+After the product build, select a named QA target such as `qa-smoke` or
+`qa-comprehensive`. Each target first builds the generated artifacts for its
+own test tier and then starts CTest. CTest executes tests only; it does not
+start another build.
 This knows what to do, as the tests were defined in the Cmake recipes, and will show you successes and failures. If what
 you checked out if git is not a released version, there is a 
 change that some test cases fail, but generally these should indicate
 success.
 
-## Useful System Test Subsets
+### Running QA from CLion
 
-For routine system validation, run the full build and full test suite:
+Do not use CLion's automatically generated `All CTest` configuration for a
+normal CREXX check. It selects independently prepared correctness,
+qualification, stress and measurement tiers together.
+
+The simplest CLion workflow is to select the `Release` CMake profile and build
+one of the named `qa-*` CMake targets. Use the CMake target selector or the
+CMake tool window and choose Build (the hammer), not Run:
+
+- build `qa-smoke` for the normal quick development check;
+- build `qa-comprehensive` for the broad correctness check before submitting a
+  substantial change; or
+- build `qa-qualification`, `qa-optimizer-parity`, `qa-stress` or
+  `qa-measurement` only when that separate assurance lane is required.
+
+Each `qa-*` target first builds its matching `qa-prep-*` dependency closure and
+then invokes CTest with the right labels and parallelism. The results appear in
+CLion's Build panel. Moving from smoke to comprehensive may build additional
+test harnesses and generated fixtures the first time; unchanged dependencies
+are incremental and should subsequently be no-ops.
+
+To use CLion's structured Test Runner instead, keep preparation and execution
+as two explicit steps:
+
+1. Select the `Release` CMake profile.
+2. Build the matching `qa-prep-*` target from the CMake target selector or
+   CMake tool window.
+3. Open **Run | Edit Configurations**, add a local **CTest Application**, and
+   give it the tier name.
+4. Set its working directory by browsing to this project's
+   `cmake-build-release` directory. Do not depend on a shared or copied
+   machine-specific path.
+5. Remove or disable its **Build** before-launch task because preparation was
+   completed explicitly in step 2.
+6. Enter the matching CTest arguments from the table below, save the local
+   configuration, and choose Run.
+
+| Local CTest configuration | Preparation target | CTest arguments |
+| --- | --- | --- |
+| Essential | `qa-prep-essential` | `--parallel 30 --output-on-failure --label-regex ^essential$` |
+| Smoke | `qa-prep-smoke` | `--parallel 30 --output-on-failure --label-regex ^(essential\|smoke)$` |
+| Comprehensive | `qa-prep-comprehensive` | `--parallel 30 --output-on-failure --label-regex ^(essential\|smoke\|comprehensive)$` |
+| Qualification | `qa-prep-qualification` | `--parallel 30 --output-on-failure --label-regex ^qualification$` |
+| Optimizer parity | `qa-prep-optimizer-parity` | `--parallel 30 --output-on-failure --label-regex ^optimizer-parity$ --label-exclude ^performance-measurement$` |
+| Stress | `qa-prep-stress` | `--parallel 30 --output-on-failure --label-regex ^stress$` |
+| Measurement | `qa-prep-measurement` | `--parallel 1 --output-on-failure --label-regex ^performance-measurement$` |
+
+Run measurement only on a quiescent host. After changing source, build inputs,
+or test tier, repeat the matching preparation step before starting CTest. The
+equivalent commands can always be run in CLion's Terminal; for example:
 
 ```sh
-cmake --build cmake-build-debug
-ctest --test-dir cmake-build-debug --output-on-failure
+cmake --build cmake-build-release --target qa-prep-smoke --parallel 30
+ctest --test-dir cmake-build-release --parallel 30 --output-on-failure \
+  --label-regex '^(essential|smoke)$'
+```
+
+The default product build is deliberately offline. Parser mode uses a local
+sibling `DSL-Syntax-Highlighter` checkout when it exists; otherwise parser
+mode defaults off. To permit CMake to fetch the pinned parser dependency,
+configure with `-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`. An explicit
+`-DENABLE_PARSER_MODE=ON` without either a local checkout or that network
+permission is a configuration error. The native SQLite ADDRESS demo is also
+off by default and requires both `-DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON` and
+`-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`.
+
+Standalone examples and demonstrations are not members of the default product
+build. Request the documented auxiliary groups explicitly:
+
+```sh
+cmake --build crexx-build --target crexx-examples --parallel 5
+cmake --build crexx-build --target crexx-demos --parallel 5
+```
+
+Comprehensive QA still prepares the example and demonstration artifacts that
+its tests consume through `qa-prep-comprehensive`; some source examples are
+therefore also visible as QA fixture inputs. Measurement preparation is
+separate and does not execute a workload. Contributions and experiments are not currently
+configured as product targets. New ones should remain explicit opt-ins rather
+than joining the default product implicitly.
+
+## QA tiers and useful system test subsets
+
+Use the workflow that matches the work being changed:
+
+| Developer | Normal build and close-out route |
+| --- | --- |
+| REXX user | Install an optimized Release archive/package and run `crexx program`. |
+| REXX program/library developer | Use plain `crexx` for compile-and-run work, or installed Release `crexx --program` and `crexx --library` for maintained incremental products; prove clean, immediate no-op and changed-source behavior without requiring CMake. |
+| plugin developer | Use the installed Release SDK from an external CMake project; close with the dynamic-plugin consumer, install/autoload checks and relevant sanitizer scope. |
+| core developer | Configure a source Debug tree, build the affected target, run focused tests or `qa-smoke`, then run `qa-optimizer-parity` and `qa-comprehensive` when compiler/optimizer behavior is relevant. |
+| release/QA maintainer | Build a clean Release product, install/package it, and run comprehensive, qualification, separate stress, sanitizer, CodeQL and supported-platform gates for the exact SHA. |
+
+`CMAKE_BUILD_TYPE` controls native C/C++ optimization. The `rxc` optimizer is a
+separate axis: Release is the normal installed/user product, while core Debug
+work still proves optimized and non-optimized REXX equivalence. Debug sanitizer
+builds and MinSizeRel size experiments are assurance products, not substitutes
+for the optimized Release binary supplied for user testing.
+
+Every configured test has exactly one execution tier while retaining its
+topical labels. The named targets make the intended barriers visible:
+
+| Target | Purpose |
+| --- | --- |
+| `qa-essential` | Smallest correctness blockers |
+| `qa-smoke` | Essential plus quick representative coverage |
+| `qa-comprehensive` | Normal correctness sweep, excluding stress and measurement |
+| `qa-qualification` | Install, packaging, reproducibility and external-consumer proof |
+| `qa-stress` | Explicit high-load and race-oriented workloads |
+| `qa-measurement` | Performance measurement only, serially on a quiescent host |
+| `qa-optimizer-parity` | Focused optimized/non-optimized runtime matrices, excluding performance measurement |
+
+Each target depends on its matching `qa-prep-*` closure. Comprehensive
+preparation includes smoke and essential; qualification and stress remain
+independent. The compatibility `qa-prep` target combines all non-measurement
+closures for older scripts. `qa-measurement` uses `qa-prep-measurement` and
+always selects one CTest worker. Tests carrying the topical `performance`
+label are always normalized to this serial measurement tier, even if an older
+declaration also called them smoke. Do not combine performance measurement
+with a busy correctness or stress worker pool; timings from an active host are
+only indicative.
+
+The named correctness targets use 30 CTest workers by default on Apple ARM64
+and five elsewhere. Override that independently of build parallelism with
+`-DCREXX_QA_CTEST_JOBS=<positive-number>`.
+
+Hosted pull-request and `develop` builds use the optimized Release product
+path, run `qa-smoke`, then upload one archive per supported platform. The
+archive name and its `BUILDINFO` contain the exact PR-head or `develop` SHA.
+It is a user-test candidate, not a qualified or signed release.
+
+The other hosted lanes remain independent of artifact availability. Linux
+Debug optimizer parity runs for PRs and `develop`. After `develop` changes, the
+next scheduled deep QA run performs comprehensive and install/package
+qualification on every supported platform, builds the Release graph at jobs 1,
+5 and 30, compares RXBIN manifests, checks an immediate no-op and Ninja
+generated-file dependencies, and runs stress separately. The scheduled
+sanitizer workflow similarly runs Linux ASan/LSan and macOS ASan only when the
+current `develop` SHA has not already passed. Failed scheduled runs retry the
+same SHA on the next night; explicit dispatches and version-tag sanitizer runs
+are unconditional. GitHub starts schedules from the repository's default
+branch, so the scheduled workflows explicitly resolve and check out `develop`;
+changes to the schedule itself become active when that workflow revision
+reaches the default branch. CodeQL retains its own workflow. Performance
+measurement remains an explicit `qa-measurement` run on a quiescent host, not a
+hosted parallel timing claim.
+
+For routine system validation, run the product build and normal correctness
+suite:
+
+```sh
+cmake --build cmake-build-debug --parallel 5
+cmake --build cmake-build-debug --target qa-comprehensive --parallel 5
+```
+
+For a direct CTest invocation, prepare the same tier first and use its exact
+labels:
+
+```sh
+cmake --build cmake-build-debug --target qa-prep-comprehensive --parallel 5
+ctest --test-dir cmake-build-debug \
+  --label-regex '^(essential|smoke|comprehensive)$' \
+  --output-on-failure --parallel 5
 ```
 
 For standard-library and BIF work, useful focused checks are:
@@ -183,7 +400,7 @@ ctest --test-dir cmake-build-debug \
 
 The project version is read from the top-level `VERSION` file. To change
 the cREXX version number, edit that file and use a semantic version such
-as `1.0.0`, `1.0.0-beta.2`, or `1.0.0-beta.2+build.7`.
+as `1.0.0`, `1.0.0-beta.3`, or `1.0.0-beta.3+build.7`.
 
 Local, non-release builds also include build metadata in the displayed
 version: the build channel, the short Git commit id when Git is
@@ -200,9 +417,9 @@ not supplied, CMake creates a UTC timestamp during the first configure
 of a build directory and stores it in `CMakeCache.txt`. Release and CI
 builds should pass an explicit timestamp:
 
-\begin{verbatim}
+```sh
 cmake -DCREXX_BUILD_TIMESTAMP=20260527T120000Z -S ../CREXX -B .
-\end{verbatim}
+```
 
 ## Use of cRexx to build cRexx
 
@@ -226,14 +443,19 @@ we built cRexx on. These are
 | rxas    | cRexx assembler                                 |
 | rxlink  | cRexx linker                                    |
 | rxdas   | cRexx disassembler                              |
-| rxvm    | cRexx VM, threaded interpreter                  |
+| rxvm    | cRexx VM, compiler-selected product entry point |
 | rxpp    | cRexx macro preprocessor                        |
-| rxbvm   | cRexx VM, non-threaded conventional interpreter |
-| rxvme   | cRexx VM, with linked-in Rexx library           |
+| rxbvm   | cRexx VM, portable switch-dispatch interpreter  |
+| rxtvm   | cRexx VM, direct-threaded interpreter           |
+| rxvme   | compiler-selected VM with linked-in Rexx library |
 | rxdb    | cRexx debugger                                  |
 | rxcpack | cRexx C-generator for native executables        |
 
 Table: Delivered products. {#tbl:id}
+
+Clang and AppleClang make `rxvm` select `rxbvm`; GCC makes it select `rxtvm`.
+MSVC builds only the switch engine and supplies `rxvm.exe` as a copy of
+`rxbvm.exe`. The `rxtvm` executable is therefore not present in an MSVC build.
 
 cRexx can compile the Rexx script into an
 executable file, that can be run standalone, for example, on a computer

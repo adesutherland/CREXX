@@ -1,0 +1,85 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-181340-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260815-181340-build/build.log
+==> build passed
+[ 52%] Built target library-rxas
+[ 52%] Built target rxc
+[ 52%] Built target token_bin
+[ 84%] Built target library-rexx
+[ 84%] Built target exit_dummy_bin
+[ 88%] Built target library
+[ 88%] Built target exit_rxqueue_bin
+[ 88%] Built target exit_execio_bin
+[ 88%] Built target exit_add_bin
+[ 88%] Built target exit_sort_bin
+[ 88%] Built target exit_query_bin
+[ 88%] Built target exit_fsay_bin
+[ 88%] Built target exit_address_bin
+[ 88%] Built target exit_sortx_bin
+[ 92%] Built target exit_dump_bin
+[ 92%] Built target exit_msay_bin
+[ 92%] Built target exit_parse_bin
+[ 92%] Built target exit_signal_bin
+[ 92%] Built target exit_rexxscript_bin
+[ 92%] Built target exit_substr_bin
+[ 92%] Built target exit_trace_bin
+[ 92%] Built target compiler_exit_bin
+[100%] Built target classlib
+[100%] cREXX compile and assemble http ...
+[100%] cREXX Linked Level G Library Image ...
+[100%] Built target rxfnsg
+[  4%] Built target avl_tree
+[  4%] Built target platform
+[  8%] Built target rxbin
+[ 12%] Built target dslsyntax_parser
+[ 12%] Built target lemon
+[ 12%] Built target rxpa
+[ 16%] Built target re2c_objects_autogen_ver_to_vernum
+[ 16%] Built target rxvmmemory
+[ 20%] Built target rxbvm_core_objects
+[ 24%] Built target re2c_objects_autogen
+[ 24%] Built target rxlink
+[ 24%] Built target rxvm_platform_objects
+[ 24%] Built target decnumber
+[ 24%] Built target rxvmref
+[ 24%] Built target rxvmplugin
+[ 24%] Built target mc_decimal_manual
+[ 24%] Built target rxbvml
+[ 36%] Built target re2c
+[ 40%] Built target rxaslib
+[ 40%] Built target rxas
+[ 52%] Built target rxclib
+[ 52%] Built target library-rxas
+[ 52%] Built target rxc
+[ 52%] Built target token_bin
+[ 84%] Built target library-rexx
+[ 84%] Built target exit_dummy_bin
+[ 88%] Built target library
+[ 88%] Built target exit_rxqueue_bin
+[ 88%] Built target exit_msay_bin
+[ 88%] Built target exit_execio_bin
+[ 88%] Built target exit_address_bin
+[ 88%] Built target exit_fsay_bin
+[ 88%] Built target exit_query_bin
+[ 88%] Built target exit_sort_bin
+[ 88%] Built target exit_add_bin
+[ 88%] Built target exit_sortx_bin
+[ 92%] Built target exit_dump_bin
+[ 92%] Built target exit_rexxscript_bin
+[ 92%] Built target exit_signal_bin
+[ 92%] Built target exit_trace_bin
+[ 92%] Built target exit_parse_bin
+[ 92%] Built target exit_substr_bin
+[ 92%] Built target compiler_exit_bin
+[100%] Built target classlib
+[100%] Built target rxfnsg
+[100%] Generating ts_http_pooled_rxtvm_opt.rxbin
+[100%] Generating ts_http_pooled_rxbvm_opt.rxbin
+[100%] Generating ts_http_pooled_rxbvm_noopt.rxbin
+[100%] Generating ts_http_pooled_rxtvm_noopt.rxbin
+[100%] Built target ts_http_pooled_rxtvm_noopt_artifact
+[100%] Built target ts_http_pooled_rxbvm_noopt_artifact
+[100%] Built target ts_http_pooled_rxbvm_opt_artifact
+[100%] Built target ts_http_pooled_rxtvm_opt_artifact
+[100%] Built target ts_http_pooled
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-181340-build

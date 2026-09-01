@@ -1,0 +1,25 @@
+{
+  "command": [
+    "java",
+    "-cp",
+    "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-02-cross-runtime/mandelbrot/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar",
+    "awfy_mandelbrot",
+    "500"
+  ],
+  "completed_utc": "2026-07-15T15:37:39.000331+00:00",
+  "correctness_expectation": "PASS: AWFY Mandelbrot NetRexx port",
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "lifecycle": "process",
+  "metric_regex": null,
+  "python": "3.14.4",
+  "recorded_runs": 3,
+  "result": "pass",
+  "runtime": "netrexx",
+  "sampling": "serial",
+  "schema": 1,
+  "started_utc": "2026-07-15T15:37:38.704128+00:00",
+  "variant": "disclosed-xor-adaptation",
+  "warmups": 1,
+  "workload": "mandelbrot"
+}

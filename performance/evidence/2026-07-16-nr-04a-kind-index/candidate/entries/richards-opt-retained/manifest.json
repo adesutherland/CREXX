@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "richards-opt-retained",
+  "pair": "richards-opt-metadata",
+  "workload": "Richards",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-retained.rxbin","sha256":"40b64437d766f5f5f968116ff23d58b7a4b25ed1a260ec800e3ebe24f1939fab"},
+  "modules": [],
+  "arguments": ["1"],
+  "correctness_expectation": "PASS: AWFY Richards",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-retained.rxbin","-a","1"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/candidate/entries/richards-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-retained.rxbin","-a","1"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 710984000
+}

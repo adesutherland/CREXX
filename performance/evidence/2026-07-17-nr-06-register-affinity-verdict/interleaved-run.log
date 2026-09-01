@@ -1,0 +1,68 @@
+capture vm=rxvm round=01 position=1 variant=baseline warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-01-position-1-baseline
+capture vm=rxvm round=01 position=2 variant=candidate warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-01-position-2-candidate
+capture vm=rxbvm round=01 position=1 variant=candidate warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-01-position-1-candidate
+capture vm=rxbvm round=01 position=2 variant=baseline warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-01-position-2-baseline
+capture vm=rxvm round=02 position=1 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-02-position-1-candidate
+capture vm=rxvm round=02 position=2 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-02-position-2-baseline
+capture vm=rxbvm round=02 position=1 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-02-position-1-baseline
+capture vm=rxbvm round=02 position=2 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-02-position-2-candidate
+capture vm=rxvm round=03 position=1 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-03-position-1-baseline
+capture vm=rxvm round=03 position=2 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-03-position-2-candidate
+capture vm=rxbvm round=03 position=1 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-03-position-1-candidate
+capture vm=rxbvm round=03 position=2 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-03-position-2-baseline
+capture vm=rxvm round=04 position=1 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-04-position-1-candidate
+capture vm=rxvm round=04 position=2 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-04-position-2-baseline
+capture vm=rxbvm round=04 position=1 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-04-position-1-baseline
+capture vm=rxbvm round=04 position=2 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-04-position-2-candidate
+capture vm=rxvm round=05 position=1 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-05-position-1-baseline
+capture vm=rxvm round=05 position=2 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-05-position-2-candidate
+capture vm=rxbvm round=05 position=1 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-05-position-1-candidate
+capture vm=rxbvm round=05 position=2 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-05-position-2-baseline
+skip vm=rxvm round=01 position=1 variant=baseline (complete)
+skip vm=rxvm round=01 position=2 variant=candidate (complete)
+skip vm=rxbvm round=01 position=1 variant=candidate (complete)
+skip vm=rxbvm round=01 position=2 variant=baseline (complete)
+skip vm=rxvm round=02 position=1 variant=candidate (complete)
+skip vm=rxvm round=02 position=2 variant=baseline (complete)
+skip vm=rxbvm round=02 position=1 variant=baseline (complete)
+skip vm=rxbvm round=02 position=2 variant=candidate (complete)
+skip vm=rxvm round=03 position=1 variant=baseline (complete)
+skip vm=rxvm round=03 position=2 variant=candidate (complete)
+skip vm=rxbvm round=03 position=1 variant=candidate (complete)
+skip vm=rxbvm round=03 position=2 variant=baseline (complete)
+skip vm=rxvm round=04 position=1 variant=candidate (complete)
+skip vm=rxvm round=04 position=2 variant=baseline (complete)
+skip vm=rxbvm round=04 position=1 variant=baseline (complete)
+skip vm=rxbvm round=04 position=2 variant=candidate (complete)
+skip vm=rxvm round=05 position=1 variant=baseline (complete)
+skip vm=rxvm round=05 position=2 variant=candidate (complete)
+skip vm=rxbvm round=05 position=1 variant=candidate (complete)
+skip vm=rxbvm round=05 position=2 variant=baseline (complete)
+capture vm=rxvm round=06 position=1 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-06-position-1-candidate
+capture vm=rxvm round=06 position=2 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxvm/round-06-position-2-baseline
+capture vm=rxbvm round=06 position=1 variant=baseline warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-06-position-1-baseline
+capture vm=rxbvm round=06 position=2 variant=candidate warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-06-register-affinity-verdict/cells/rxbvm/round-06-position-2-candidate

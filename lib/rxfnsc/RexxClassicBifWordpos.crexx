@@ -1,0 +1,234 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifwordpos expose rexxclassicbif_wordpos
+import rexxclassicbifs
+import rexxclassiccharacterscan
+import rexxvalue
+
+/**
+ * Locate an exact Classic word sequence.
+ *
+ * @bif WORDPOS
+ * @signature WORDPOS(phrase, string [,start])
+ * @checkargs rANY rANY oWHOLE>0
+ * @sandbox pure
+ * @return first matching word number, or zero, as a RexxValue
+ */
+rexxclassicbif_wordpos: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
+
+  start = 1
+  if context.argumentExists(3) then start = context.argumentText(3) + 0
+
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    search_bytes = .binary
+    source_bytes = .binary
+    other_blanks = .binary
+    search_bytes = context.argument(1).asBinary()
+    source_bytes = context.argument(2).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    search_length = .int
+    source_length = .int
+    assembler blen search_length,search_bytes
+    assembler blen source_length,source_bytes
+    if source_length = 0 | search_length = 0 then return .RexxValue("0")
+
+    search_first = rexxclassic_find_byte_nonblank(search_bytes, 0, other_blanks)
+    if search_first < 0 then return .RexxValue("0")
+
+    scan = 0
+    candidate_start = 0
+    candidate_word = 0
+    do while candidate_word < start
+      candidate_start = rexxclassic_find_byte_nonblank(source_bytes, scan, other_blanks)
+      if candidate_start < 0 then return .RexxValue("0")
+      candidate_word = candidate_word + 1
+      if candidate_word = start then leave
+      scan = rexxclassic_find_byte_blank(source_bytes, candidate_start, other_blanks)
+      if scan < 0 then return .RexxValue("0")
+    end
+
+    search_word_start = 0
+    search_word_end = 0
+    search_word_length = 0
+    source_word_start = 0
+    source_word_end = 0
+    source_word_length = 0
+    next_search_word = 0
+    next_source_word = 0
+    candidate_end = 0
+
+    do while candidate_start >= 0
+      search_word_start = search_first
+      source_word_start = candidate_start
+      matched = 1
+
+      do while matched
+        search_word_end = rexxclassic_find_byte_blank(search_bytes, search_word_start, other_blanks)
+        if search_word_end < 0 then search_word_end = search_length
+        source_word_end = rexxclassic_find_byte_blank(source_bytes, source_word_start, other_blanks)
+        if source_word_end < 0 then source_word_end = source_length
+
+        search_word_length = search_word_end - search_word_start
+        source_word_length = source_word_end - source_word_start
+        if search_word_length <> source_word_length then do
+          matched = 0
+          leave
+        end
+        if \rexxclassic_byte_equal(search_bytes, search_word_start, source_bytes, source_word_start, search_word_length) then do
+          matched = 0
+          leave
+        end
+
+        next_search_word = rexxclassic_find_byte_nonblank(search_bytes, search_word_end, other_blanks)
+        if next_search_word < 0 then return .RexxValue(candidate_word || "")
+        next_source_word = rexxclassic_find_byte_nonblank(source_bytes, source_word_end, other_blanks)
+        if next_source_word < 0 then do
+          matched = 0
+          leave
+        end
+        search_word_start = next_search_word
+        source_word_start = next_source_word
+      end
+
+      candidate_end = rexxclassic_find_byte_blank(source_bytes, candidate_start, other_blanks)
+      if candidate_end < 0 then return .RexxValue("0")
+      candidate_start = rexxclassic_find_byte_nonblank(source_bytes, candidate_end, other_blanks)
+      if candidate_start < 0 then return .RexxValue("0")
+      candidate_word = candidate_word + 1
+    end
+    return .RexxValue("0")
+  end
+
+  search = context.argumentText(1)
+  string = context.argumentText(2)
+  text_other_blanks = config.textOtherBlanks()
+
+  string_length = .int
+  search_length = .int
+  assembler strlen string_length,string
+  assembler strlen search_length,search
+  if string_length = 0 | search_length = 0 then return .RexxValue("0")
+
+  search_first = .int
+  search_first = 0
+  search_first = rexxclassic_find_text_nonblank(search, search_first, text_other_blanks)
+  if search_first < 0 then return .RexxValue("0")
+
+  scan = .int
+  scan = 0
+  candidate_start = .int
+  candidate_start = 0
+  candidate_word = .int
+  candidate_word = 0
+  do while candidate_word < start
+    candidate_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
+    if candidate_start < 0 then return .RexxValue("0")
+    candidate_word = candidate_word + 1
+    if candidate_word = start then leave
+    scan = rexxclassic_find_text_blank(string, candidate_start, text_other_blanks)
+    if scan < 0 then return .RexxValue("0")
+  end
+
+  search_word_start = .int
+  search_word_start = 0
+  search_word_end = .int
+  search_word_end = 0
+  search_word_length = .int
+  search_word_length = 0
+  source_word_start = .int
+  source_word_start = 0
+  source_word_end = .int
+  source_word_end = 0
+  source_word_length = .int
+  source_word_length = 0
+  next_search_word = .int
+  next_search_word = 0
+  next_source_word = .int
+  next_source_word = 0
+  candidate_end = .int
+  candidate_end = 0
+  char_offset = 0
+  search_index = 0
+  source_index = 0
+  search_char = 0
+  source_char = 0
+
+  do while candidate_start >= 0
+    search_word_start = search_first
+    source_word_start = candidate_start
+    matched = .int
+    matched = 1
+
+    do while matched
+      search_word_end = rexxclassic_find_text_blank(search, search_word_start, text_other_blanks)
+      if search_word_end < 0 then search_word_end = search_length
+      source_word_end = rexxclassic_find_text_blank(string, source_word_start, text_other_blanks)
+      if source_word_end < 0 then source_word_end = string_length
+
+      search_word_length = search_word_end - search_word_start
+      source_word_length = source_word_end - source_word_start
+      if search_word_length <> source_word_length then do
+        matched = 0
+        leave
+      end
+
+      char_offset = 0
+      do while char_offset < search_word_length
+        search_index = search_word_start + char_offset
+        source_index = source_word_start + char_offset
+        assembler strchar search_char,search,search_index
+        assembler strchar source_char,string,source_index
+        if search_char <> source_char then do
+          matched = 0
+          leave
+        end
+        char_offset = char_offset + 1
+      end
+      if \matched then leave
+
+      next_search_word = rexxclassic_find_text_nonblank(search, search_word_end, text_other_blanks)
+      if next_search_word < 0 then return .RexxValue(candidate_word || "")
+      next_source_word = rexxclassic_find_text_nonblank(string, source_word_end, text_other_blanks)
+      if next_source_word < 0 then do
+        matched = 0
+        leave
+      end
+      search_word_start = next_search_word
+      source_word_start = next_source_word
+    end
+
+    candidate_end = rexxclassic_find_text_blank(string, candidate_start, text_other_blanks)
+    if candidate_end < 0 then return .RexxValue("0")
+    candidate_start = rexxclassic_find_text_nonblank(string, candidate_end, text_other_blanks)
+    if candidate_start < 0 then return .RexxValue("0")
+    candidate_word = candidate_word + 1
+  end
+  return .RexxValue("0")

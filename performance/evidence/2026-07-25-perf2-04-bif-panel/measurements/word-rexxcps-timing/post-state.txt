@@ -1,0 +1,52 @@
+utc=2026-07-25T16:27:58Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+65890 /bin/zsh -c set -e
+scratch=/private/tmp/crexx-perf2-04.3k3Dfw
+run_dir="$scratch/evidence/word-ceiling/release-timing"
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n hw.logicalcpu
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) > "$run_dir/post-state.txt" 2>&1
+test ! -s "$run_dir/driver.stderr.log"
+rg -q '^PASS: compact cross-runtime timing matrix retained under ' "$run_dir/driver.stdout.log"
+test -s "$run_dir/matrix/samples.csv"
+test -s "$run_dir/matrix/summary.csv"
+test -s "$run_dir/matrix/ratios.csv"
+printf 'driver: '; tail -n 1 "$run_dir/driver.stdout.log"
+printf 'samples='; awk -F, 'NR>1 {n++} END {print n}' "$run_dir/matrix/samples.csv"
+printf 'outputs='; awk -F, 'NR>1 {n++} END {print n}' "$run_dir/matrix/outputs.csv"
+sed -n '1,100p' "$run_dir/post-state.txt"
+sed -n '1,120p' "$run_dir/matrix/summary.csv"
+sed -n '1,120p' "$run_dir/matrix/ratios.csv"
+65891 /bin/zsh -c set -e
+scratch=/private/tmp/crexx-perf2-04.3k3Dfw
+run_dir="$scratch/evidence/word-ceiling/release-timing"
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n hw.logicalcpu
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) > "$run_dir/post-state.txt" 2>&1
+test ! -s "$run_dir/driver.stderr.log"
+rg -q '^PASS: compact cross-runtime timing matrix retained under ' "$run_dir/driver.stdout.log"
+test -s "$run_dir/matrix/samples.csv"
+test -s "$run_dir/matrix/summary.csv"
+test -s "$run_dir/matrix/ratios.csv"
+printf 'driver: '; tail -n 1 "$run_dir/driver.stdout.log"
+printf 'samples='; awk -F, 'NR>1 {n++} END {print n}' "$run_dir/matrix/samples.csv"
+printf 'outputs='; awk -F, 'NR>1 {n++} END {print n}' "$run_dir/matrix/outputs.csv"
+sed -n '1,100p' "$run_dir/post-state.txt"
+sed -n '1,120p' "$run_dir/matrix/summary.csv"
+sed -n '1,120p' "$run_dir/matrix/ratios.csv"

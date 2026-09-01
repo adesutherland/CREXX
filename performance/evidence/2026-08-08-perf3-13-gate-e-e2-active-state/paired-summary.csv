@@ -1,0 +1,4 @@
+workload,pairs,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,median_percent,favorable,interval_result,guard_hit
+Sieve,12,-0.012799,-0.332055,0.306456,0.099020,8,noisy_inconclusive,no
+RexxCPS,12,-1.206404,-1.760487,-0.652320,-1.497618,1,clear_adverse,no
+Pooled two workloads,24,-0.609602,-1.000309,-0.218894,-0.468653,9,clear_adverse,no

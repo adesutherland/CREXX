@@ -1,91 +1,65 @@
-/* test the datatype built-in function */
-options levelb
+options levelb numeric_classic
 import rxfnsb
 
-   failed=0
-   failed=failed+tstdtp('12.3','N',1    )
-   failed=failed+tstdtp('12.3','W',0    )
-   failed=failed+tstdtp('Fred','M',1    )
-   failed=failed+tstdtp('','M',0    )
-   failed=failed+tstdtp('Minx','L',0    )
-   ##   failed=failed+tstdtp('3d?','s',1     )
-   failed=failed+tstdtp('BCd3','X',1    )
-   failed=failed+tstdtp('BC d3','X',1   )
-   failed=failed+tstdtp("foobar","", "CHAR"            )
-   failed=failed+tstdtp("foo bar","", "CHAR"           )
-   failed=failed+tstdtp("123.456.789","", "CHAR"       )
-   failed=failed+tstdtp("123.456","", "NUM"            )
-   failed=failed+tstdtp("","", "CHAR"                  )
-   failed=failed+tstdtp("DeadBeef" , 'A', "1"       )
-   failed=failed+tstdtp("Dead Beef",'A', "0"        )
-   failed=failed+tstdtp("1234ABCD",'A', '1'         )
-   failed=failed+tstdtp("",'A', "0"                 )
-   failed=failed+tstdtp("foobar",'B', "0"           )
-   failed=failed+tstdtp("01001101",'B', "1"         )
-   failed=failed+tstdtp("0110 1101",'B', "1"        )
-   failed=failed+tstdtp("",'B', "1"                 )
-   failed=failed+tstdtp("foobar",'L', "1"           )
-   failed=failed+tstdtp("FooBar",'L', "0"           )
-   failed=failed+tstdtp("foo bar",'L', "0"          )
-   failed=failed+tstdtp("",'L', "0"                 )
-   failed=failed+tstdtp("foobar",'M', "1"           )
-   failed=failed+tstdtp("FooBar",'M', "1"           )
-   failed=failed+tstdtp("foo bar",'M', "0"          )
-   failed=failed+tstdtp("FOOBAR",'M', "1"           )
-   failed=failed+tstdtp("",'M', "0"                 )
-   failed=failed+tstdtp("foo bar",'N', "0"          )
-   failed=failed+tstdtp("1324.1234",'N', "1"        )
-   failed=failed+tstdtp("123.456.789",'N', "0"      )
-   failed=failed+tstdtp("",'N', "0"                 )
-   failed=failed+tstdtp("foo bar",'S', "0"          )
-   failed=failed+tstdtp("??@##_Foo$Bar!!!",'S', "1" )
-   failed=failed+tstdtp("",'S', "0"                 )
-   failed=failed+tstdtp("foo bar",'U', "0"          )
-   failed=failed+tstdtp("Foo Bar",'U', "0"          )
-   failed=failed+tstdtp("FOOBAR",'U', "1"           )
-   failed=failed+tstdtp("",'U', "0"                 )
-   failed=failed+tstdtp("Foobar",'W', "0"           )
-   failed=failed+tstdtp("123",'W', "1"              )
-   failed=failed+tstdtp("12.3",'W', "0"             )
-   failed=failed+tstdtp("",'W', "0"                 )
-   failed=failed+tstdtp('123.123','W', '0'          )
-   failed=failed+tstdtp('123.123E3','W', '1'        )
-   failed=failed+tstdtp('123.0000003','W', '1'      )
-   failed=failed+tstdtp('123.0000004','W', '1'      )
-   failed=failed+tstdtp('123.0000005','W', '0'      )
-   failed=failed+tstdtp('123.0000006','W', '0'      )
-   failed=failed+tstdtp(' 23','W', '1'              )
-   failed=failed+tstdtp(' 23 ','W', '1'             )
-   failed=failed+tstdtp('23 ','W', '1'              )
-   failed=failed+tstdtp('123.00','W', '1'           )
-   failed=failed+tstdtp('123000E-2','W', '1'        )
-   failed=failed+tstdtp('123000E+2','W', '1'        )
-   failed=failed+tstdtp("Foobar",'X', "0"           )
-   failed=failed+tstdtp("DeadBeef",'X', "1"         )
-   failed=failed+tstdtp("A B C",'X', "0"            )
-   failed=failed+tstdtp("A BC DF",'X', "1"          )
-   failed=failed+tstdtp("123ABC",'X', "1"           )
-   failed=failed+tstdtp("123AHC",'X', "0"           )
-   failed=failed+tstdtp("",'X', "1"                 )
-   failed=failed+tstdtp('0.000E-2','w', '1'         )
-   failed=failed+tstdtp('0.000E-1','w', '1'         )
-   failed=failed+tstdtp('0.000E0','w', '1'          )
-   failed=failed+tstdtp('0.000E1','w', '1'          )
-   failed=failed+tstdtp('0.000E2','w', '1'          )
-   failed=failed+tstdtp('0.000E3','w', '1'          )
-   failed=failed+tstdtp('0.000E4','w', '1'          )
-   failed=failed+tstdtp('0.000E5','w', '1'          )
-   failed=failed+tstdtp('0.000E6','w', '1'          )
-   failed=failed+tstdtp('0E-1','w', '1'             )
-   failed=failed+tstdtp('0E0','w', '1'              )
-   failed=failed+tstdtp('0E1','w', '1'              )
-   failed=failed+tstdtp('0E2','w', '1'              )
-   say 'tests failed 'failed
- exit 0
-tstdtp: procedure=.int
-   arg value=.string,type="",shouldbe=.string
-   result=datatype(value,type)
-   if result=shouldbe then say 'datatype('value','type') is 'result', test is ok'
-   else say 'datatype('value','type') is 'result' but should be 'shouldbe', test failed'
-   if result=shouldbe then return 0
-return 1
+errors = 0
+
+errors = errors + check("NUM",datatype("12.3"),"default decimal")
+errors = errors + check("NUM",datatype(" - 12.3E+2 "),"default signed exponent")
+errors = errors + check("CHAR",datatype(""),"default empty")
+errors = errors + check("CHAR",datatype("1.2.3"),"default malformed")
+
+errors = errors + check("1",datatype("DeadBeef","A"),"alphanumeric")
+errors = errors + check("0",datatype("Dead Beef","A"),"alphanumeric blank")
+errors = errors + check("1",datatype("01001101","B"),"binary")
+errors = errors + check("1",datatype("0110 1101","B"),"binary grouping")
+errors = errors + check("0",datatype("01 01","B"),"binary bad grouping")
+errors = errors + check("0",datatype(" 0101","B"),"binary leading blank")
+errors = errors + check("1",datatype("","B"),"binary empty")
+errors = errors + check("1",datatype("0123456789","D"),"digits extension")
+errors = errors + check("0",datatype("12.3","D"),"digits decimal")
+errors = errors + check("1",datatype("lower","L"),"lowercase")
+errors = errors + check("0",datatype("Lower","L"),"lowercase mixed")
+errors = errors + check("1",datatype("Mixed","M"),"mixed letters")
+errors = errors + check("0",datatype("Mixed3","M"),"mixed rejects digit")
+errors = errors + check("1",datatype("+.5e-2","N"),"number syntax")
+errors = errors + check("0",datatype("+","N"),"number sign only")
+errors = errors + check("1",datatype("name.1","S"),"symbol")
+errors = errors + check("0",datatype("3name","S"),"symbol leading digit")
+errors = errors + check("1",datatype("UPPER","U"),"uppercase")
+errors = errors + check("0",datatype("Upper","U"),"uppercase mixed")
+errors = errors + check("1",datatype("123.000","W"),"exact whole fraction")
+errors = errors + check("0",datatype("123.0000003","W"),"no whole tolerance")
+errors = errors + check("1",datatype("123000E-3","W"),"whole negative exponent")
+errors = errors + check("0",datatype("123001E-3","W"),"fractional negative exponent")
+errors = errors + check("1",datatype("0E-999999999999","W"),"zero huge exponent")
+errors = errors + check("1",datatype("123.0E+999999999999","W"),"positive huge exponent")
+errors = errors + check("1",datatype("DeadBeef","X"),"hexadecimal")
+errors = errors + check("1",datatype("A BC DF","X"),"hex grouping")
+errors = errors + check("0",datatype("A B C","X"),"hex bad grouping")
+errors = errors + check("0",datatype("ABC ","X"),"hex trailing blank")
+errors = errors + check("1",datatype("","X"),"hex empty")
+errors = errors + check("1",datatype("abc","alphabetic option tail"),"first option character")
+
+errors = errors + expect_option_signal("empty option","")
+errors = errors + expect_option_signal("unknown option","Q")
+
+if errors = 0 then say "PASS: datatype"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: DATATYPE" label "expected" expected "got" actual
+  return 1
+
+expect_option_signal: procedure = .int
+  arg label = .string, option = .string
+  caught = 0
+  do
+    ignored = datatype("abc",option)
+  on signal invalid_arguments
+    caught = 1
+  end
+  if caught then return 0
+  say "FAIL: DATATYPE" label "did not signal INVALID_ARGUMENTS"
+  return 1

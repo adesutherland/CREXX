@@ -1,0 +1,105 @@
+* PERF3-02-C2E2 diagnostic symbolic storage-identity proof cases.
+
+identity_straight() .locals=5
+    link r1,r0
+    swap r1,r2
+    link r3,r2
+    unlink r2
+    ret
+
+identity_join_agrees() .locals=4
+    brt identity_join_agrees_left,a0
+    link r1,r0
+    br identity_join_agrees_use
+identity_join_agrees_left:
+    link r1,r0
+identity_join_agrees_use:
+    link r2,r1
+    ret
+
+identity_join_disagrees() .locals=4
+    brt identity_join_disagrees_left,a0
+    link r1,r0
+    br identity_join_disagrees_use
+identity_join_disagrees_left:
+    load r3,1
+identity_join_disagrees_use:
+    link r2,r1
+    ret
+
+identity_loop_stable() .locals=3
+identity_loop_stable_head:
+    link r1,r0
+    unlink r1
+    brt identity_loop_stable_head,a0
+    link r2,r0
+    ret
+
+identity_attribute_loop() .locals=4
+    linkattr1 r1,r0,1
+identity_attribute_loop_head:
+    link r2,r1
+    brt identity_attribute_loop_head,a0
+    unlinkn r1,r2
+    ret
+
+identity_tainted_copy_base() .locals=4
+    link r1,r0
+    unlink r1
+    copy r1,r2
+    ret
+
+identity_alias_self_copy() .locals=3
+    link r1,r0
+    copy r1,r0
+    unlink r1
+    ret
+
+identity_cri13_shape() .locals=43
+    linkattr1 r39,a1,8
+    copy r31,r39
+    unlink r39
+    copy r40,r31
+    blen r41,r40
+    ret r41
+
+identity_signal_handler_unknown() .locals=4
+    sigbr identity_signal_handler_caught,"FAILURE"
+    link r1,r0
+    br identity_signal_handler_done
+identity_signal_handler_caught:
+    link r2,r1
+    ret
+identity_signal_handler_done:
+    ret
+
+identity_reference_unknown() .locals=3
+    linkref r1,r0
+    link r2,r1
+    unlink r1
+    ret
+
+identity_fused_partial_signal() .locals=6
+    link r5,r0
+    minlinkattr1 r1,r2,r3,0
+    link r4,r1
+    ret
+
+identity_lifetime_forgets_dynamic() .locals=5
+    linkarg r1,r0,0
+    link r2,r1
+    copy r3,r0
+    link r4,r1
+    ret
+
+identity_swap_roundtrip() .locals=5
+    swapn r0,r1,r2,r3
+    load r4,1
+    swapn r0,r1,r2,r3
+    ret
+
+identity_swap_observed() .locals=5
+    swapn r0,r1,r2,r3
+    load r0,1
+    swapn r0,r1,r2,r3
+    ret

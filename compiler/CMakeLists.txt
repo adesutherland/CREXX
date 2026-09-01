@@ -47,24 +47,32 @@ add_custom_command(
 )
 
 # Compiler Library - can be used to link plugins to make a extended compiler
+set_source_files_properties(
+        rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
+        PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
 add_library(rxclib STATIC
-        rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag_fallback.c
-        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h
+        rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag.c rxcp_diag.h rxcp_diag_fallback.c
+        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h rxcp_srcmap.c rxcp_srcmap.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcsym.c rxcpcsym.h rxcpcval.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_ast_rewrite.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c rxcp_ast_val.c
-        rxcp_inline.c
-        rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
-        ../platform/platform.h ../platform/platform.c
-        ../utf8/utf.h rxcpfunc.c rxcp_exit.c
+        rxcp_remap.c rxcp_remap.h rxcp_remap_build.c rxcp_remap_build.h rxcp_task_lower.c rxcp_task_lower.h rxcp_levelc_lower.c rxcp_levelc_lower.h rxcp_inline_internal.h rxcp_inline.c rxcp_inline_rules.c
+        rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
+        rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_super.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c rxcp_constant.h rxcp_partial_call.c rxcp_partial_call.h rxcp_flow.c rxcp_flow.h rxcp_dispatch.c rxcp_dispatch.h
+        ../binutils/include/rxsignature.h
+        ../platform/platform.h ../platform/platform.c ../platform/rxinteger.h ../platform/rxinteger.c
+        ../utf8/utf.h rxcpfunc.c rxcp_import_report.c rxcp_import_report.h
+        rxcp_import_publish.c rxcp_import_publish.h rxcp_exit.c
         rxcp_instr.c
 )
 
 add_dependencies(rxclib re2c lemon avl_tree platform rxaslib rxpa)
 
-target_link_libraries(rxclib rxaslib rxbvml)
+target_link_libraries(rxclib rxaslib rxbvml rxbin)
 
 target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree

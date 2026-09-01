@@ -1,0 +1,297 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbiftime expose rexxclassicbif_time
+import rexxclassicbifs
+import rexxpool
+import rexxvalue
+
+/**
+ * Classic Rexx TIME built-in function.
+ *
+ * This standalone direct Level C entry point uses the caller pool's frozen
+ * clause clock. Elapsed/reset state is retained by that same activation pool.
+ *
+ * @bif TIME
+ * @signature TIME([option [,time [,inoption]]])
+ * @checkargs oCEHLMNORS oANY oCHLMNS
+ * @return Classic formatted time
+ * @error 40.19 input does not match the declared input format
+ * @error 40.29 conversion to elapsed, reset, or offset is not allowed
+ */
+rexxclassicbif_time: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  pool_ref = reference .RexxVariablePool
+  pool = .RexxVariablePool
+  option = .string
+  input_option = .string
+  input_value = .string
+  microseconds = .int
+
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oCEHLMNORS oANY oCHLMNS") = 0 then return .RexxValue("")
+  if context.argumentExists(3) & \context.argumentExists(2) then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,"",context.argumentText(3))
+    return .RexxValue("")
+  end
+
+  pool_ref = context.callerPool()
+  pool = dereference pool_ref
+  call pool.ensureClauseTime()
+  option = "N"
+  if context.argumentExists(1) then option = context.argumentText(1)
+
+  if \context.argumentExists(2) then do
+    if option = "E" | option = "R" then
+      return .RexxValue(_lc_time_microseconds_text(pool.clauseElapsedMicroseconds(option = "R")))
+    if option = "O" then return .RexxValue(_lc_time_signed_text(pool.clauseOffsetMicroseconds()))
+    return .RexxValue(_lc_time_format(pool.clauseLocalMicroseconds(),option))
+  end
+
+  if option = "E" | option = "R" | option = "O" then do
+    call rexxclassicbif_set_error(context_ref,"40.29",1,option,"")
+    return .RexxValue("")
+  end
+
+  input_value = context.argumentText(2)
+  input_option = "N"
+  if context.argumentExists(3) then input_option = context.argumentText(3)
+  if \_lc_time_parse(input_value,input_option,microseconds) then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,input_value,input_option)
+    return .RexxValue("")
+  end
+  if _lc_time_format(microseconds,input_option) \== input_value then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,input_value,input_option)
+    return .RexxValue("")
+  end
+  return .RexxValue(_lc_time_format(microseconds,option))
+
+_lc_time_parse: procedure = .boolean
+  arg value = .string, input_option = .string, expose microseconds = .int
+  value_length = .int
+  hour = .int
+  minute = .int
+  second = .int
+  fraction = .int
+  total = .int
+  codepoint = .int
+  position = .int
+
+  assembler strlen value_length,value
+  if input_option = "H" | input_option = "M" | input_option = "S" then do
+    if \_lc_time_integer(value,total) then return 0
+    if input_option = "H" then do
+      if total < 0 | total > 23 then return 0
+      microseconds = total * 3600000000
+    end
+    else if input_option = "M" then do
+      if total < 0 | total > 1439 then return 0
+      microseconds = total * 60000000
+    end
+    else do
+      if total < 0 | total > 86399 then return 0
+      microseconds = total * 1000000
+    end
+    return 1
+  end
+
+  if input_option = "C" then do
+    if value_length = 6 then do
+      if \_lc_time_unsigned_span(value,0,1,hour) then return 0
+      position = 1
+      if \_lc_time_colon(value,position) then return 0
+      if \_lc_time_unsigned_span(value,2,2,minute) then return 0
+      position = 4
+    end
+    else if value_length = 7 then do
+      if \_lc_time_unsigned_span(value,0,2,hour) then return 0
+      position = 2
+      if \_lc_time_colon(value,position) then return 0
+      if \_lc_time_unsigned_span(value,3,2,minute) then return 0
+      position = 5
+    end
+    else return 0
+    if hour < 1 | hour > 12 | minute < 0 | minute > 59 then return 0
+    assembler strchar codepoint,value,position
+    if codepoint <> 97 & codepoint <> 112 then return 0
+    position = position + 1
+    assembler strchar codepoint,value,position
+    if codepoint <> 109 then return 0
+    if hour = 12 then hour = 0
+    position = position - 1
+    assembler strchar codepoint,value,position
+    if codepoint = 112 then hour = hour + 12
+    microseconds = (hour * 60 + minute) * 60000000
+    return 1
+  end
+
+  if input_option = "N" then do
+    if value_length <> 8 then return 0
+  end
+  else if input_option = "L" then do
+    if value_length <> 15 then return 0
+  end
+  else return 0
+
+  position = 2
+  if \_lc_time_colon(value,position) then return 0
+  position = 5
+  if \_lc_time_colon(value,position) then return 0
+  if \_lc_time_unsigned_span(value,0,2,hour) then return 0
+  if \_lc_time_unsigned_span(value,3,2,minute) then return 0
+  if \_lc_time_unsigned_span(value,6,2,second) then return 0
+  if hour > 23 | minute > 59 | second > 59 then return 0
+  if input_option = "L" then do
+    position = 8
+    assembler strchar codepoint,value,position
+    if codepoint <> 46 then return 0
+    if \_lc_time_unsigned_span(value,9,6,fraction) then return 0
+  end
+  microseconds = ((hour * 60 + minute) * 60 + second) * 1000000 + fraction
+  return 1
+
+_lc_time_format: procedure = .string
+  arg microseconds = .int, option = .string
+  hour = .int
+  minute = .int
+  second = .int
+  fraction = .int
+  hour12 = .int
+  suffix = .string
+  hour = microseconds % 3600000000
+  microseconds = microseconds // 3600000000
+  minute = microseconds % 60000000
+  microseconds = microseconds // 60000000
+  second = microseconds % 1000000
+  fraction = microseconds // 1000000
+
+  if option = "H" then return _lc_time_digits(hour,0)
+  if option = "M" then return _lc_time_digits(hour * 60 + minute,0)
+  if option = "S" then return _lc_time_digits(hour * 3600 + minute * 60 + second,0)
+  if option = "C" then do
+    suffix = "am"
+    if hour >= 12 then suffix = "pm"
+    hour12 = hour // 12
+    if hour12 = 0 then hour12 = 12
+    return _lc_time_digits(hour12,0) || ":" || _lc_time_digits(minute,2) || suffix
+  end
+  if option = "L" then
+    return _lc_time_digits(hour,2) || ":" || _lc_time_digits(minute,2) || ":" || _lc_time_digits(second,2) || "." || _lc_time_digits(fraction,6)
+  return _lc_time_digits(hour,2) || ":" || _lc_time_digits(minute,2) || ":" || _lc_time_digits(second,2)
+
+_lc_time_integer: procedure = .boolean
+  arg text = .string, expose value = .int
+  text_length = .int
+  position = .int
+  codepoint = .int
+  sign = .int
+  magnitude = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  sign = 1
+  assembler strchar codepoint,text,position
+  if codepoint = 43 | codepoint = 45 then do
+    if codepoint = 45 then sign = -1
+    position = 1
+    if position = text_length then return 0
+  end
+  if text_length - position > 12 then return 0
+  do while position < text_length
+    assembler strchar codepoint,text,position
+    if codepoint < 48 | codepoint > 57 then return 0
+    magnitude = magnitude * 10 + codepoint - 48
+    position = position + 1
+  end
+  value = magnitude * sign
+  return 1
+
+_lc_time_unsigned_span: procedure = .boolean
+  arg text = .string, start = .int, count = .int, expose value = .int
+  codepoint = .int
+  value = 0
+  do index = start to start + count - 1
+    assembler strchar codepoint,text,index
+    if codepoint < 48 | codepoint > 57 then return 0
+    value = value * 10 + codepoint - 48
+  end
+  return 1
+
+_lc_time_colon: procedure = .boolean
+  arg text = .string, position = .int
+  codepoint = .int
+  assembler strchar codepoint,text,position
+  return codepoint = 58
+
+_lc_time_digits: procedure = .string
+  arg value = .int, width = .int
+  divisor = .int
+  digit = .int
+  codepoint = .int
+  result = .string
+  divisor = 1
+  if width > 0 then do index = 2 to width
+    divisor = divisor * 10
+  end
+  else do while value % divisor >= 10
+    divisor = divisor * 10
+  end
+  do while divisor > 0
+    digit = value % divisor
+    codepoint = digit + 48
+    assembler appendchar result,codepoint
+    value = value // divisor
+    divisor = divisor % 10
+  end
+  return result
+
+_lc_time_signed_text: procedure = .string
+  arg value = .int
+  result = .string
+  minus = .int
+  if value < 0 then do
+    minus = 45
+    assembler appendchar result,minus
+    value = 0 - value
+  end
+  return result || _lc_time_digits(value,0)
+
+_lc_time_microseconds_text: procedure = .string
+  arg value = .int
+  result = .string
+  fraction_text = .string
+  fraction_length = .int
+  codepoint = .int
+  point = .int
+  minus = .int
+  whole = .int
+  fraction = .int
+  last_index = .int
+  if value < 0 then do
+    minus = 45
+    assembler appendchar result,minus
+    value = 0 - value
+  end
+  whole = value % 1000000
+  fraction = value // 1000000
+  result = result || _lc_time_digits(whole,0)
+  if fraction = 0 then return result
+  fraction_text = _lc_time_digits(fraction,6)
+  fraction_length = 6
+  do while fraction_length > 0
+    last_index = fraction_length - 1
+    assembler strchar codepoint,fraction_text,last_index
+    if codepoint <> 48 then leave
+    fraction_length = fraction_length - 1
+  end
+  point = 46
+  assembler appendchar result,point
+  do index = 0 to fraction_length - 1
+    assembler strchar codepoint,fraction_text,index
+    assembler appendchar result,codepoint
+  end
+  return result

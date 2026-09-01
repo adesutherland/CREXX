@@ -1,0 +1,21 @@
+DeltaBlue generated-code observation
+Date: 2026-08-17
+
+Source RXAS retained metadata:
+mode,bytes,instructions,procedures,locals_sum,max_locals,max_procedure,linkattr_text,minlinkattr_text,unlink_text,copy_text
+opt,1011990,6656,48,1227,206,projectionTest,1902,794,1353,639
+noopt,227542,1566,49,592,31,projectionTest,369,177,234,15
+
+Stripped linked image:
+mode,bytes,instructions,sha256
+opt,42894,6597,1e1410150ce13cd0eddfe71b7b20f2a1de4beaad452ef574e188222f42027a2c
+noopt,26194,1566,c2cf533b37d7fdf4ed07b6f0e214598a8d6e499ccc4d9742179e879ab01af015
+
+Interpretation:
+- optimized source instruction count is 4.250319x no-opt;
+- small indexed graph/accessor shapes expand into materially more linked
+  attribute and copy traffic;
+- the result is correctness-clean but performance-adverse in the bounded
+  process pilot;
+- retain this as evidence for generic scalar access and bounded late-inlining/
+  register-finalisation; do not alter the benchmark contract or aggregate it.

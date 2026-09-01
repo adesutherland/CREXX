@@ -1,0 +1,54 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start    2: rxgraph_unit
+ 1/16 Test    #2: rxgraph_unit ............................   Passed    0.00 sec
+      Start  508: gate_f_levelg_rxbvm_noopt
+ 2/16 Test  #508: gate_f_levelg_rxbvm_noopt ...............   Passed    4.93 sec
+      Start  509: gate_f_levelg_rxbvm_opt
+ 3/16 Test  #509: gate_f_levelg_rxbvm_opt .................   Passed    5.25 sec
+      Start  510: gate_f_levelg_rxtvm_noopt
+ 4/16 Test  #510: gate_f_levelg_rxtvm_noopt ...............   Passed    4.93 sec
+      Start  511: gate_f_levelg_rxtvm_opt
+ 5/16 Test  #511: gate_f_levelg_rxtvm_opt .................   Passed    5.25 sec
+      Start  512: gate_f_task_method_import_rxbvm_noopt
+ 6/16 Test  #512: gate_f_task_method_import_rxbvm_noopt ...   Passed    5.43 sec
+      Start  513: gate_f_task_method_import_rxbvm_opt
+ 7/16 Test  #513: gate_f_task_method_import_rxbvm_opt .....   Passed    5.54 sec
+      Start  514: gate_f_task_method_import_rxtvm_noopt
+ 8/16 Test  #514: gate_f_task_method_import_rxtvm_noopt ...   Passed    5.44 sec
+      Start  515: gate_f_task_method_import_rxtvm_opt
+ 9/16 Test  #515: gate_f_task_method_import_rxtvm_opt .....   Passed    5.52 sec
+      Start  516: gate_f_taskwork_import_rxbvm_noopt
+10/16 Test  #516: gate_f_taskwork_import_rxbvm_noopt ......   Passed    3.90 sec
+      Start  517: gate_f_taskwork_import_rxbvm_opt
+11/16 Test  #517: gate_f_taskwork_import_rxbvm_opt ........   Passed    3.93 sec
+      Start  518: gate_f_taskwork_import_rxtvm_noopt
+12/16 Test  #518: gate_f_taskwork_import_rxtvm_noopt ......   Passed    3.89 sec
+      Start  519: gate_f_taskwork_import_rxtvm_opt
+13/16 Test  #519: gate_f_taskwork_import_rxtvm_opt ........   Passed    3.92 sec
+      Start  537: gate_f_task_object_result_required
+14/16 Test  #537: gate_f_task_object_result_required ......   Passed    0.69 sec
+      Start  538: gate_f_task_interface_result
+15/16 Test  #538: gate_f_task_interface_result ............   Passed    0.69 sec
+      Start 1067: rxlink_format_check
+16/16 Test #1067: rxlink_format_check .....................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+compiler       =  59.29 sec*proc (14 tests)
+concurrency    =  59.29 sec*proc (14 tests)
+f1f            =  59.29 sec*proc (14 tests)
+gate_f         =  59.29 sec*proc (14 tests)
+import         =  37.56 sec*proc (8 tests)
+levelg         =  59.29 sec*proc (14 tests)
+linked         =  57.91 sec*proc (12 tests)
+method         =  21.92 sec*proc (4 tests)
+negative       =   1.37 sec*proc (2 tests)
+noopt          =  28.51 sec*proc (6 tests)
+opt            =  29.40 sec*proc (6 tests)
+rxbvm          =  28.97 sec*proc (6 tests)
+rxtvm          =  28.94 sec*proc (6 tests)
+smoke          =   0.00 sec*proc (1 test)
+taskwork       =  15.64 sec*proc (4 tests)
+
+Total Test time (real) =  59.32 sec

@@ -1,0 +1,24 @@
+* A write through the attribute path invalidates full-copy read reuse.
+
+main() .locals=7
+    setattrs r0,1
+    linkattr1 r5,r0,1
+    load r6,"first"
+    copy r5,r6
+    unlink r5
+
+    linkattr1 r1,r0,1
+    copy r2,r1
+    unlink r1
+
+    linkattr1 r5,r0,1
+    load r6,"second"
+    scopy r5,r6
+    unlink r5
+
+    linkattr1 r3,r0,1
+    copy r4,r3
+    unlink r3
+
+    say r4
+    ret

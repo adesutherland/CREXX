@@ -1,0 +1,11 @@
+options levelb
+namespace perf2_07_binary_byvalue_import_dep expose readOnly mutate
+
+readOnly: procedure = .int
+  arg data = .binary
+  return <at..u32>(0) data
+
+mutate: procedure = .int
+  arg data = .binary
+  <at..u8>(0) data = 17
+  return <at..u8>(0) data

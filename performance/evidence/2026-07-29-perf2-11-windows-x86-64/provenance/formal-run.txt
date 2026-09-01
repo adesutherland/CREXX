@@ -1,0 +1,2 @@
+﻿started_utc=2026-07-29T18:58:05.5998591Z measurement=timing warmups=2 recorded_runs=10 serial=yes classpath=C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\formal-netrexx;C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\runtimes\netrexx\runlib\NetRexxR.jar
+completed_utc=2026-07-29T20:24:03.1526487Z result=pass sample_rows=348

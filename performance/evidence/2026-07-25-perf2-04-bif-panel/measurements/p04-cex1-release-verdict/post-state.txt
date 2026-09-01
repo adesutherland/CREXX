@@ -1,0 +1,43 @@
+utc=2026-07-25T20:04:53Z
+{ 1.04 2.09 3.38 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+34019 /bin/zsh -c perf2_append=$(mktemp -d /private/tmp/perf2-04-cex1-verdict-append.XXXXXX)
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-cex1-release-verdict-matrix.txt --output-dir "$perf2_append" --measurement timing --warmups 0 --runs 10 >"$perf2_append/runner.stdout.txt" 2>"$perf2_append/runner.stderr.txt"
+append_rc=$?
+perf2_combined=$(mktemp -d /private/tmp/perf2-04-cex1-verdict-combined.XXXXXX)
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-cex1-release-verdict-matrix.txt --output-dir "$perf2_combined" --measurement timing --summary-only --samples /private/tmp/perf2-04-cex1-verdict-final.jTQWlT/samples.csv --samples "$perf2_append/samples.csv" >"$perf2_combined/runner.stdout.txt" 2>"$perf2_combined/runner.stderr.txt"
+combined_rc=$?
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) >"$perf2_append/post-state.txt" 2>&1
+echo "append_dir=$perf2_append rc=$append_rc"
+echo "combined_dir=$perf2_combined rc=$combined_rc"
+cat "$perf2_combined/summary.csv"
+if test -s "$perf2_append/runner.stderr.txt"; then cat "$perf2_append/runner.stderr.txt"; else echo 'append runner.stderr: empty'; fi
+if test -s "$perf2_combined/runner.stderr.txt"; then cat "$perf2_combined/runner.stderr.txt"; else echo 'combined runner.stderr: empty'; fi
+34075 /bin/zsh -c perf2_append=$(mktemp -d /private/tmp/perf2-04-cex1-verdict-append.XXXXXX)
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-cex1-release-verdict-matrix.txt --output-dir "$perf2_append" --measurement timing --warmups 0 --runs 10 >"$perf2_append/runner.stdout.txt" 2>"$perf2_append/runner.stderr.txt"
+append_rc=$?
+perf2_combined=$(mktemp -d /private/tmp/perf2-04-cex1-verdict-combined.XXXXXX)
+cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest performance/evidence/2026-07-25-perf2-04-bif-panel/controls/p04-cex1-release-verdict-matrix.txt --output-dir "$perf2_combined" --measurement timing --summary-only --samples /private/tmp/perf2-04-cex1-verdict-final.jTQWlT/samples.csv --samples "$perf2_append/samples.csv" >"$perf2_combined/runner.stdout.txt" 2>"$perf2_combined/runner.stderr.txt"
+combined_rc=$?
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+) >"$perf2_append/post-state.txt" 2>&1
+echo "append_dir=$perf2_append rc=$append_rc"
+echo "combined_dir=$perf2_combined rc=$combined_rc"
+cat "$perf2_combined/summary.csv"
+if test -s "$perf2_append/runner.stderr.txt"; then cat "$perf2_append/runner.stderr.txt"; else echo 'append runner.stderr: empty'; fi
+if test -s "$perf2_combined/runner.stderr.txt"; then cat "$perf2_combined/runner.stderr.txt"; else echo 'combined runner.stderr: empty'; fi

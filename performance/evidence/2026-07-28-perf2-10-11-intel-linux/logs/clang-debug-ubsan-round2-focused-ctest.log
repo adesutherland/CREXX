@@ -1,0 +1,20 @@
+Test project /tmp/crexx-perf2-linux-x64.d5f0827ca/clang-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/6 Test    #1: linked_opt_runtime_artifacts_build ...   Passed   11.52 sec
+    Start 1248: db_decimal_tests
+2/6 Test #1248: db_decimal_tests .....................   Passed    0.00 sec
+    Start 1368: ts_x2d_noopt
+3/6 Test #1368: ts_x2d_noopt .........................   Passed    0.33 sec
+    Start 1369: ts_x2d_opt
+4/6 Test #1369: ts_x2d_opt ...........................   Passed    0.13 sec
+    Start 1530: llist_test_noopt
+5/6 Test #1530: llist_test_noopt .....................   Passed    0.28 sec
+    Start 1531: llist_test_opt
+6/6 Test #1531: llist_test_opt .......................   Passed    0.17 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+linked_opt    =   0.30 sec*proc (2 tests)
+
+Total Test time (real) =  12.51 sec

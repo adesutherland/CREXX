@@ -22,16 +22,31 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B POS implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/pos.md
+ */
 options levelb
-
 namespace rxfnsb expose pos
 
-/* pos(sub-string in string beginning at) */
+/**
+ * Locate the first occurrence of a string at or after a character position.
+ *
+ * @param needle text to find
+ * @param haystack text to search
+ * @param start optional positive 1-based start position
+ * @return first matching character position, or zero
+ */
 pos: procedure = .int
-  arg needle = .string, haystack=.string, start=1
-  if length(needle) = 0 then return 0
-  if length(haystack) = 0 then return 0
-  foundpos=start   ## use return variable to input start position
-  assembler strpos foundpos,needle,haystack
-return foundpos
+  arg needle = .string, haystack = .string, start = 1
+  found_position = .int
+
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","POS start must be positive"
+  if needle == "" | haystack == "" then return 0
+
+  found_position = start
+  assembler strpos found_position,needle,haystack
+  return found_position

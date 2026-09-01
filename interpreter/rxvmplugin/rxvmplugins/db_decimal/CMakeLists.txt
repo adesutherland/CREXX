@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin/RxvmPluginFunction.cmake)
 
 # Add the dynamic plugin library
 add_dynamic_rxvmplugin_target(db_decimal_dynamic db_decimal.c)
+target_link_libraries(db_decimal_dynamic ${CREXX_MATH_LIBRARY})
 
 # Set the output name to db_decimal
 set_target_properties(db_decimal_dynamic PROPERTIES OUTPUT_NAME db_decimal)
@@ -26,7 +27,10 @@ set_target_properties(db_decimal_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CM
 target_compile_definitions(db_decimal_tests PRIVATE DYNAMIC)
 target_include_directories(db_decimal_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter)
 target_include_directories(db_decimal_tests PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin)
-target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual m)
+target_include_directories(db_decimal_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/platform
+        ${CMAKE_SOURCE_DIR}/binutils/include)
+target_link_libraries(db_decimal_tests rxvmplugin db_decimal_manual ${CREXX_MATH_LIBRARY})
 #add_dependencies(db_decimal_tests db_decimal_dynamic)
 #add_dependencies(db_decimal_tests db_decimal_manual)
 
@@ -35,3 +39,5 @@ enable_testing()
 
 add_test(NAME db_decimal_tests COMMAND db_decimal_tests)
 set_tests_properties(db_decimal_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+crexx_finalize_directory_qa_tiers()

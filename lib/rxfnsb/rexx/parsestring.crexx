@@ -22,254 +22,339 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Execute the legacy dynamic PARSE token-array representation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/parsestring.md
+ */
 options levelb
+namespace rxfnsb expose parsestring parsestring_values
 
-namespace rxfnsb expose parseString
-
-/* ----------------------------------------------------------------------
- * Parse the string, using the found tokens and types
- *   parse_string      – the source to parse
- *   token.            – compiled template tokens (literal content for type=2)
- *   token_type.       – 1=VAR, 2=LIT, 3=ABS POS, 4=REL POS, 5=UNQUOTED BLANK, 6=SEARCH (custom)
- * Outputs (aligned by variable index j):
- *   variable.         – variable names in template order (for type=1)
- *   variable_content. – matched field values aligned with variable.
- * Notes:
- *   - Assignments always go to the VAR that most recently opened a field.
- *   - token_lastpos.j records the absolute start of the slice used for variable j
- *     (0 if the remainder was dumped because no explicit locator was found).
- * ---------------------------------------------------------------------- */
+/**
+ * Execute a validated token plan against a source string.
+ *
+ * The token arrays are borrowed read-only through `expose`; only the two output
+ * arrays are changed. Validation completes before either output is cleared.
+ *
+ * @param parse_string source text
+ * @param tokenhi number of plan items to execute
+ * @param token exposed read-only token payloads
+ * @param token_type exposed read-only integer token kinds
+ * @param variable exposed output variable names
+ * @param variable_content exposed output field values
+ * @param template optional diagnostic copy of the source template
+ * @signal INVALID_ARGUMENTS malformed count, kind, or token payload
+ */
 parsestring: procedure
-  arg parse_string=.string, tokenhi=.int, token=.string[], token_type=.string[], ,
-      expose variable=.string[], expose variable_content=.string[], template="unknown"
+  arg parse_string = .string, tokenhi = .int, expose token = .string[], expose token_type = .int[], expose variable = .string[], expose variable_content = .string[], template = "unknown"
+  token_value = .string[]
+  call parsestring_values parse_string,tokenhi,token,token_type,variable,variable_content,template,token_value
+  return
 
-  /* treat these as whitespace for type=5 */
-  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'C2A0'x
+parsestring_values: procedure
+  arg parse_string = .string, tokenhi = .int, expose token = .string[], expose token_type = .int[], expose variable = .string[], expose variable_content = .string[], template = "unknown", token_value = .string[]
+  source_length = .int
+  pointer = .int
+  variable_count = .int
+  pending_variable = .int
+  pending_start = .int
+  new_position = .int
+  before_pointer = .int
+  final_after_one_blank = .int
+  kind = .int
+  position = .int
+  delimiter_length = .int
+  blank_position = .int
+  char_index = .int
+  code = .int
+  movement = .int
+  room = .int
+  prior_variable = .int
+  matched_variable = .int
+  delimiter = .string
 
-  L        = length(parse_string)
-  ii       = 0
-  pointer  = 1                   /* absolute read pointer (1-based)           */
-  j        = 0                   /* variable index                            */
+  call _validate_legacy_plan tokenhi,token,token_type
 
-  /* Ownership state for the currently open VAR */
-  pendingJ      = 0              /* variable index currently being filled     */
-  pendingK      = 0              /* token index of that VAR (debug/help)      */
-  pendingStart  = 0              /* absolute start of the current field       */
-  newpos        = 0
-  beforeptr     = 0
-  debug = 0       /* 11 detailed debug, 10 just variable setings */
+  /* Validation errors leave caller-owned outputs unchanged. */
+  assembler SETATTRS variable,0
+  assembler SETATTRS variable_content,0
 
-  /* Optional “allow one blank” start for final fallback */
-  finalAfterOneBlank = 0
+  assembler strlen source_length,parse_string
+  pointer = 1
+  variable_count = 0
+  pending_variable = 0
+  pending_start = 0
+  before_pointer = 0
+  final_after_one_blank = 0
 
-  /* diagnostics per variable */
-    if debug >= 10 then do
-       say copies('-',32)
-       say '++ String to Parse "'parse_string"'"
-       say '++ Template "'template"'"
+  do item = 1 to tokenhi
+    kind = token_type[item]
+
+    if kind = 1 then do
+      variable_count = variable_count + 1
+      variable[variable_count] = token[item]
+      pending_variable = variable_count
+      pending_start = pointer
+      iterate
     end
 
-   do zi = 1 to tokenhi
-      token_lastpos.zi = 0
-      if debug = 11 then say 'Tokens 'zi "'"token.zi"'" token_type.zi "'"parse_string"'"
-   end
+    if kind = 3 | kind = 4 then do
+      if before_pointer > 0 then do
+        pointer = before_pointer
+        pending_start = pointer
+        before_pointer = 0
+      end
 
-  /* ---------- main loop ---------- */
-  do k = 1 to tokenhi
-     type = token_type.k
-     if debug = 11 then say 'Fetch next token, Index 'k', Token "'token.k'" type 'type
-/* -------------------------------------------------------------------
- * VAR opens a new field
- * -------------------------------------------------------------------
- */
-     if type = 1 then do
-        if debug = 11 then say 'entering Type 'type 'Variable 'token.k 'Var-number 'j' Pointer 'pointer
-        j = j + 1
-        variable.j = token.k
-        pendingJ     = j
-        pendingK     = k
-        pendingStart = pointer
-        iterate
-     end
-/* -------------------------------------------------------------------
- * ABS/REL positions close the pending field
- * -------------------------------------------------------------------
- */
-     else if type = 3 | type = 4 then do
-       if beforeptr>0  then do
-          if debug = 11 then say '** entering Type 'type' Current Pointer 'pointer' has been reset to 'beforeptr
-          pointer=beforeptr
-          pendingStart=pointer
-          beforeptr=0
-        end
+      movement = token[item]
+      if kind = 3 then do
+        new_position = movement
+        if new_position < 1 then new_position = 1
+        if new_position > source_length + 1 then new_position = source_length + 1
+      end
+      else if movement >= 0 then do
+        room = source_length + 1 - pointer
+        if movement > room then new_position = source_length + 1
+        else new_position = pointer + movement
+      end
+      else do
+        if movement <= 0 - pointer then new_position = 1
+        else new_position = pointer + movement
+      end
 
-        newpos=0
-        newpos = token.k
-        if type = 4 then newpos = pointer + newpos
-        if newpos < 1 then newpos = 1
-        if newpos > L + 1 then newpos = L + 1
+      if pending_variable > 0 then do
+        if new_position <= pending_start then
+          variable_content[pending_variable] = _legacy_tail(parse_string,pending_start,source_length)
+        else
+          variable_content[pending_variable] = _legacy_span(parse_string,pending_start,new_position - pending_start)
+        pending_variable = 0
+        pending_start = 0
+        before_pointer = 0
+      end
+      pointer = new_position
+      iterate
+    end
 
-        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' set Pointer to 'token.k' new Pointer 'newpos
-        if pendingJ > 0 then do
-           token_lastpos.pendingJ   = pendingStart
-           if newpos <= pendingStart then do
-              variable_content.pendingJ=substr(parse_string, pendingStart)
-              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" (remainder from 'effStart' due to backward move)'
-           end
-           else do
-              variable_content.pendingJ = substr(parse_string, pendingStart, newpos - pendingStart)
-              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" [slice 'pendingStart'..'newpos-pendingStart']'
-           end
-           pendingJ = 0 ; pendingK = 0 ; pendingStart = 0; beforeptr=0
-        end
-        pointer = newpos
-        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
-        iterate
-     end
-/* -------------------------------------------------------------------
- * LIT delimiter closes the pending field
- * -------------------------------------------------------------------
- */
-     else if type = 2 then do
-        chunk = substr(parse_string, pointer)
-        p = pos(token.k, chunk)  /* position of delimiter relative to pointer */
-        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Search pattern "'token.k'" located at 'p
-        if p = 0 then do
-           /* not found: dump remainder to pending VAR */
-           if pendingJ > 0 then do
-              token_lastpos.pendingJ    = 0
-              variable_content.pendingJ = substr(parse_string, pendingStart)
-              if debug >= 10 then say '>> Variable Set Type 'type' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
-           end
-           pointer = L + 1
-        end
-        else do
-           if pendingJ > 0 then do
-              token_lastpos.pendingJ    = pendingStart
-              /* slice up to char before delimiter */
-              variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-              if debug >= 10 then say '>> Variable Set Type 'type' Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
-           end
-           beforeptr = pointer + p  -1   ## just keep beforeptr if there was a variable set
-           /* hop past the delimiter */
-           pointer = pointer + p - 1 + length(token.k)
-        end
-        if debug = 11 then do
-           say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
-           if beforeptr>0 then say '.... Alternatively New Pointer 'beforeptr' pointing at "'substr(parse_string,beforeptr)'"'
-        end
-        iterate
-     end
-/* -------------------------------------------------------------------
- * UNQUOTED BLANK closes the pending field
- * -------------------------------------------------------------------
- */
-     else if type = 5 then do
-     /* drop any leading blank */
-        do while pointer<=L
-           if pos(substr(parse_string,pointer, 1), WHITESPACE)=0 then leave
-           pointer=pointer+1
-        end
-        PendingStart=pointer
-        chunk = substr(parse_string, pointer)
-        lenC  = length(chunk)
-        /* find first whitespace from current pointer */
-        if debug = 11 then say 'entering Type 'type' Current Pointer 'pointer' Remaining String "'chunk'" Find first WS'
+    if kind = 2 then do
+      position = pointer
+      if token[item] = "" then position = pointer
+      else assembler strpos position,token[item],parse_string
 
-        p = 0
-        do xi = 1 to lenC
-           if pos(substr(chunk, xi, 1), WHITESPACE) > 0 then do
-              p = xi
-              leave
-           end
+      if token[item] <> "" & position = 0 then do
+        if pending_variable > 0 then do
+          variable_content[pending_variable] = _legacy_tail(parse_string,pending_start,source_length)
+          pending_variable = 0
+          pending_start = 0
+          before_pointer = 0
         end
-        if p = 0 then do
-           /* no whitespace: dump remainder to pending VAR */
-           if pendingJ > 0 then do
-              token_lastpos.pendingJ    = 0
-              variable_content.pendingJ = substr(parse_string, pendingStart)
-              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" Remaing'
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
-           end
-           pointer = L + 1
+        pointer = source_length + 1
+      end
+      else do
+        if pending_variable > 0 then do
+          variable_content[pending_variable] = _legacy_span(parse_string,pending_start,position - pending_start)
+          pending_variable = 0
+          pending_start = 0
+          before_pointer = 0
         end
-        else do
-           if pendingJ > 0 then do
-              token_lastpos.pendingJ    = pendingStart
-              variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-              if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'" from 'PendingStart' up to 'pointer + p - 1
-              pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
-           end
+        before_pointer = position
+        assembler strlen delimiter_length,token[item]
+        pointer = position + delimiter_length
+      end
+      iterate
+    end
 
-           /* record “allow one blank” position for final fallback (after first blank) */
-           finalAfterOneBlank = pointer + p
+    if kind = 5 then do
+      do while pointer <= source_length
+        char_index = pointer - 1
+        assembler strchar code,parse_string,char_index
+        if \_legacy_parse_blank(code) then leave
+        pointer = pointer + 1
+      end
+      pending_start = pointer
 
-           /* skip the entire whitespace run (treat as a single blank for parsing) */
-           runEnd = p
-           do while runEnd <= lenC & pos(substr(chunk, runEnd, 1), WHITESPACE) > 0
-              runEnd = runEnd + 1
-           end
-           pointer = pointer + runEnd - 1
+      blank_position = pointer
+      do while blank_position <= source_length
+        char_index = blank_position - 1
+        assembler strchar code,parse_string,char_index
+        if _legacy_parse_blank(code) then leave
+        blank_position = blank_position + 1
+      end
+
+      if blank_position > source_length then do
+        if pending_variable > 0 then do
+          variable_content[pending_variable] = _legacy_tail(parse_string,pending_start,source_length)
+          pending_variable = 0
+          pending_start = 0
         end
-        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
-        iterate
-     end
-/* -------------------------------------------------------------------
- * Variable search of already found token
- * -------------------------------------------------------------------
- */
-     else if type = 6 then do
-          if debug = 11 then say 'entering Type 'type' Search for already set Variable 'token.k
-          jj=0
-          do ii=1 to k-1
-             if token_type.ii\=1 then iterate
-             jj=jj+1
-             if token.ii=token.k then leave
-          end
-          if token.ii \= token.k then jj = 0
-          chunk = substr(parse_string, pointer)
-          if jj > 0 then delim = variable_content.jj
-                    else delim = token.k
-          p = pos(delim, chunk)  /* position of delimiter relative to pointer */
-          if p = 0 then do
-           /* not found: dump remainder to pending VAR */
-             if pendingJ > 0 then do
-                token_lastpos.pendingJ    = 0
-                variable_content.pendingJ = substr(parse_string, pendingStart)
-                if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-                pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
-             end
-             pointer = L + 1
-          end
-          else do
-             if pendingJ > 0 then do
-             /* slice up to char before delimiter */
-             variable_content.pendingJ = substr(parse_string, pendingStart, (pointer + p - 1) - pendingStart)
-             if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-             pendingJ = 0 ; pendingK = 0 ; pendingStart = 0 ; beforeptr=0
-          end
-          /* hop past the delimiter */
-           pointer = pointer + p - 1 + length(delim)
+        pointer = source_length + 1
+      end
+      else do
+        if pending_variable > 0 then do
+          variable_content[pending_variable] = _legacy_span(parse_string,pending_start,blank_position - pending_start)
+          pending_variable = 0
+          pending_start = 0
+          before_pointer = 0
         end
-        if debug = 11 then say 'Leaving Type 'type' New Pointer 'pointer' pointing at "'substr(parse_string,pointer)'"'
-        iterate
-       end
-  end  /* k loop */
+        final_after_one_blank = blank_position + 1
+        pointer = blank_position
+        do while pointer <= source_length
+          char_index = pointer - 1
+          assembler strchar code,parse_string,char_index
+          if \_legacy_parse_blank(code) then leave
+          pointer = pointer + 1
+        end
+      end
+      iterate
+    end
 
-  /* ---- Final fallback: if a VAR is still open, assign the tail ---- */
+    /* kind 6 searches for a prior variable value, or its literal payload. */
+    prior_variable = 0
+    matched_variable = 0
+    do prior_item = 1 to item - 1
+      if token_type[prior_item] <> 1 then iterate
+      prior_variable = prior_variable + 1
+      if token[prior_item] = token[item] then do
+        matched_variable = prior_variable
+        leave
+      end
+    end
+    if matched_variable > 0 then delimiter = variable_content[matched_variable]
+    else do
+      delimiter = token_value[item]
+      if delimiter = "" then delimiter = value(token[item])
+    end
 
-  if pendingJ > 0 then do
-     /* For your original “allow 1 blank” semantics, prefer the position just after the first blank
-        found by a prior type-5; otherwise use the current pointer. */
-     startPos = pointer
-     if finalAfterOneBlank > 0 then startPos = finalAfterOneBlank
-     if startPos <= L then variable_content.pendingJ = substr(parse_string, startPos)
-                      else variable_content.pendingJ = ''
-     token_lastpos.pendingJ = startPos
-     if debug >= 10 then say '>> Pending Variable 'variable.pendingJ'="'variable_content.pendingJ'"'
-     pendingJ = 0 ; pendingK = 0 ; pendingStart = 0
+    position = pointer
+    if delimiter = "" then position = pointer
+    else assembler strpos position,delimiter,parse_string
+    if delimiter <> "" & position = 0 then do
+      if pending_variable > 0 then do
+        variable_content[pending_variable] = _legacy_tail(parse_string,pending_start,source_length)
+        pending_variable = 0
+        pending_start = 0
+        before_pointer = 0
+      end
+      pointer = source_length + 1
+    end
+    else do
+      if pending_variable > 0 then do
+        variable_content[pending_variable] = _legacy_span(parse_string,pending_start,position - pending_start)
+        pending_variable = 0
+        pending_start = 0
+        before_pointer = 0
+      end
+      assembler strlen delimiter_length,delimiter
+      pointer = position + delimiter_length
+    end
   end
-return
+
+  if pending_variable > 0 then do
+    new_position = pointer
+    if final_after_one_blank > 0 then new_position = final_after_one_blank
+    variable_content[pending_variable] = _legacy_tail(parse_string,new_position,source_length)
+  end
+  return
+
+_validate_legacy_plan: procedure
+  arg tokenhi = .int, expose token = .string[], expose token_type = .int[]
+  kind = .int
+  payload_length = .int
+  code = .int
+  last_code = .int
+  char_index = .int
+
+  char_index = 0
+  if tokenhi < 0 | tokenhi > token[0] | tokenhi > token_type[0] then
+    assembler signal "INVALID_ARGUMENTS","PARSESTRING token count exceeds its plan arrays"
+
+  do item = 1 to tokenhi
+    kind = token_type[item]
+    if kind < 1 | kind > 6 then
+      assembler signal "INVALID_ARGUMENTS","PARSESTRING token kind must be between 1 and 6"
+    assembler strlen payload_length,token[item]
+    if kind = 1 & payload_length = 0 then
+      assembler signal "INVALID_ARGUMENTS","PARSESTRING variable token must be nonempty"
+    if kind = 3 then do
+      if \_legacy_plan_digits(token[item],0,payload_length) | \_legacy_plan_magnitude(token[item],0,payload_length) then
+        assembler signal "INVALID_ARGUMENTS","PARSESTRING absolute position is invalid"
+    end
+    if kind = 4 then do
+      if payload_length < 2 then
+        assembler signal "INVALID_ARGUMENTS","PARSESTRING relative position is invalid"
+      assembler strchar code,token[item],char_index
+      if code <> 43 & code <> 45 then
+        assembler signal "INVALID_ARGUMENTS","PARSESTRING relative position requires a sign"
+      if \_legacy_plan_digits(token[item],1,payload_length - 1) | \_legacy_plan_magnitude(token[item],1,payload_length - 1,code = 45) then
+        assembler signal "INVALID_ARGUMENTS","PARSESTRING relative position is invalid"
+    end
+    if kind = 5 then do
+      if payload_length = 0 then
+        assembler signal "INVALID_ARGUMENTS","PARSESTRING word separator must be nonempty"
+      do index = 0 to payload_length - 1
+        assembler strchar code,token[item],index
+        if \_legacy_parse_blank(code) then
+          assembler signal "INVALID_ARGUMENTS","PARSESTRING word separator contains a nonblank"
+      end
+    end
+    if kind = 6 & payload_length = 0 then
+      assembler signal "INVALID_ARGUMENTS","PARSESTRING search token must be nonempty"
+  end
+  return
+
+_legacy_plan_digits: procedure = .boolean
+  arg source = .string, start = .int, segment_length = .int
+  code = .int
+  if segment_length <= 0 then return 0
+  do index = start to start + segment_length - 1
+    assembler strchar code,source,index
+    if code < 48 | code > 57 then return 0
+  end
+  return 1
+
+_legacy_plan_magnitude: procedure = .boolean
+  arg source = .string, start = .int, segment_length = .int, allow_minimum = 0
+  first_nonzero = .int
+  significant = .int
+  code = .int
+  limit_code = .int
+  char_index = .int
+  limit_text = .string
+  constant NATIVE_LIMIT = "9223372036854775807"
+
+  limit_text = NATIVE_LIMIT
+  if allow_minimum then limit_text = "9223372036854775808"
+  first_nonzero = start
+  do while first_nonzero < start + segment_length
+    assembler strchar code,source,first_nonzero
+    if code <> 48 then leave
+    first_nonzero = first_nonzero + 1
+  end
+  significant = start + segment_length - first_nonzero
+  if significant < 19 then return 1
+  if significant > 19 then return 0
+  do index = 0 to 18
+    char_index = first_nonzero + index
+    assembler strchar code,source,char_index
+    assembler strchar limit_code,limit_text,index
+    if code < limit_code then return 1
+    if code > limit_code then return 0
+  end
+  return 1
+
+_legacy_parse_blank: procedure = .boolean
+  arg code = .int
+  return code = 32 | code = 9 | code = 13 | code = 10 | code = 11 | code = 12 | code = 160
+
+_legacy_span: procedure = .string
+  arg source = .string, start = .int, span_length = .int
+  result = ""
+  offset = .int
+  if span_length <= 0 then return result
+  offset = start - 1
+  assembler substring result,source,offset,span_length
+  return result
+
+_legacy_tail: procedure = .string
+  arg source = .string, start = .int, source_length = .int
+  if start > source_length then return ""
+  return _legacy_span(source,start,source_length - start + 1)

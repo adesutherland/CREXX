@@ -1,0 +1,9 @@
+# PERF3-01 Apple formal timing cells selected by the governed MAD/span rule.
+# No initial sample is removed. Aggregate is no in this capture-only manifest;
+# the authoritative merged summary uses perf3-01-current-mac-v1.txt.
+crexx-cross-runtime-matrix|1
+sieve-rxvm|Sieve|crexx|rxvm|equivalent-port|A|no|no|5500|PASS: AWFY Sieve||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxvm;/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin;-a;5500
+permute-netrexx|Permute|netrexx|netrexx|decimal-rexx-port|A|no|no|5000|PASS: AWFY Permute NetRexx decimal port||/usr/bin/java;-cp;/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-27-perf2-09-mac-closure/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_permute;5000
+richards-netrexx|Richards|netrexx|netrexx|decimal-rexx-port|A|no|no|20|PASS: AWFY Richards NetRexx decimal port||/usr/bin/java;-cp;/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-27-perf2-09-mac-closure/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_richards;20
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxvm;/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin;-a;2500
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/rxbvm;/private/tmp/crexx-perf3-01.jetu7C/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf3-01.jetu7C/build-release/bin/library.rxbin;-a;2500

@@ -1,0 +1,44 @@
+PERF3-13 Gate F F1e retained artifacts
+
+Final QA:
+- qa/debug-build.log
+- qa/focused-debug.log
+- qa/debug-stress-repeat100.log
+- qa/debug-process-sigpipe-repeat500.log
+- qa/debug-process-failfast-repeat100.log
+- qa/debug-ctest.log
+- qa/asan-build.log
+- qa/asan-ctest.log
+- qa/release-build.log
+- qa/focused-release.log
+
+Final performance evidence:
+- timing/initial/raw.log
+- timing/initial/samples.csv
+- timing/initial/summary.csv
+- timing/confirmation/raw.log
+- timing/confirmation/samples.csv
+- timing/confirmation/summary.csv
+- capture-channel-paired.zsh
+
+Diagnostic evidence retained from repaired forms:
+- qa/debug-stress-pre-archive-fix.log
+- qa/debug-ctest-pre-sigpipe-fix.log
+- qa/focused-release-pre-multigraph-fix.log
+- qa/focused-release-pre-archive-fix.log
+- qa/focused-release-pre-sigpipe-fix.log
+- timing/pre-archive-fix-initial/
+- timing/pre-archive-fix-confirmation/
+- timing/pre-sigpipe-fix-initial/
+- timing/pre-sigpipe-fix-confirmation/
+- timing/pre-failfast-initial/
+- timing/pre-failfast-confirmation/
+
+Control binaries were kept outside the repository under the temporary path
+recorded in VERDICT.txt. Their hashes and sizes are retained there; they are
+not committed artifacts. ASan runner-internal logs remain under the build tree
+at the paths recorded by qa/asan-build.log and qa/asan-ctest.log.
+The expected Apple leak-on build abort is retained separately at
+`cmake-build-debugasan/asan-logs/20260815-040328-build`; the final leak-off ASan
+build is `20260815-040349-build` and the final test run is
+`20260815-063302-ctest`.

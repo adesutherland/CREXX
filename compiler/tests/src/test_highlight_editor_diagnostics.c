@@ -198,13 +198,13 @@ static void test_editor_receives_warning_diagnostics(void) {
 
     memset(&tree_match, 0, sizeof(tree_match));
     tree_match.severity = CB_WARNING;
-    tree_match.message_substring = "original definition @ 4:5";
+    tree_match.message_substring = "NOT_IN_SAME_SCOPE line=\"4\" column=\"5\"";
     cb_walk_tree_top_down(cb->parse_tree, collect_tree_diagnostic_matches, &tree_match);
     expect_true(tree_match.count > 0, "warning document should keep explicit SYNTAX_ERROR warning nodes");
 
     memset(&buffer_match, 0, sizeof(buffer_match));
     buffer_match.severity = CB_WARNING;
-    buffer_match.message_substring = "original definition @ 4:5";
+    buffer_match.message_substring = "NOT_IN_SAME_SCOPE line=\"4\" column=\"5\"";
     expect_true(enter_codeblock_critical_section() == 0, "buffer scan should enter critical section");
     scan_buffer_for_leaf_diagnostics(cb, &buffer_match);
     expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");

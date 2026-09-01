@@ -53,7 +53,12 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_call_procedure(ctx, "address_cms_host.address_cms_host", 0, NULL, &host_result) != 0 || !host_result) {
+    if (rxvml_call_procedure_descriptor(
+            ctx,
+            "rxsig1|address_cms_host.address_cms_host|.int|",
+            0,
+            NULL,
+            &host_result) != 0 || !host_result) {
         print_last_error(ctx, "Failed to run CMS address host fixture");
         goto cleanup;
     }
@@ -84,7 +89,12 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_call_procedure(ctx, "_rxsysb._current_address_environment", 0, NULL, &current_env) != 0 || !current_env) {
+    if (rxvml_call_procedure_descriptor(
+            ctx,
+            "rxsig1|_rxsysb._current_address_environment|.string|",
+            0,
+            NULL,
+            &current_env) != 0 || !current_env) {
         print_last_error(ctx, "Failed to query current address environment");
         goto cleanup;
     }

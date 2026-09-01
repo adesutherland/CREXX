@@ -1,0 +1,7 @@
+benchmark=runtime_interface_lookup_compare
+registry_groups=24
+method_iterations=1000000
+factory_iterations=100000
+method_us=36223
+factory_us=7834
+PASS: runtime interface lookup compare

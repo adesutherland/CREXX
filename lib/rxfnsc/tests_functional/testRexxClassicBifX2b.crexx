@@ -1,0 +1,84 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifx2b
+import rexxvalue
+
+errors = 0
+errors = errors + check_value("11000011", "C3")
+errors = errors + check_value("0111", "7")
+errors = errors + check_value("000111000001", "1 C1")
+errors = errors + check_value("11011110101011011011111011101111", "DeadBeef")
+errors = errors + check_value("0000000000000001", "0001")
+errors = errors + check_value("00000000", "00")
+errors = errors + check_value("00010000001000000011", "1  02 03")
+errors = errors + check_value("00010000001000000011", "102 03")
+errors = errors + check_value("", "")
+
+large_hex = ""
+large_binary = ""
+do 64
+  large_hex = large_hex || "F"
+  large_binary = large_binary || "1111"
+end
+errors = errors + check_value(large_binary, large_hex)
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_required()
+errors = errors + check_hex_error(" A")
+errors = errors + check_hex_error("A ")
+errors = errors + check_hex_error("1 0")
+errors = errors + check_hex_error("0G")
+errors = errors + check_hex_error("0" || "09"x || "0")
+
+if errors = 0 then say "PASS: Level C X2B BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, hexadecimal = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(hexadecimal)
+  exists[1] = 1
+  context = .RexxBifCallContext("X2B")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifx2b..rexxclassicbif_x2b(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = hexadecimal then return 0
+  say "FAIL: X2B" hexadecimal "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_hex_error: procedure = .int
+  arg hexadecimal = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(hexadecimal)
+  exists[1] = 1
+  return run_error("RXC-LC-40.25", args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("X2B")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifx2b..rexxclassicbif_x2b(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: X2B expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

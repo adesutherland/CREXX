@@ -52,7 +52,7 @@ arg searches = .string[]
 
 if searches.0 < 1 then searches.1 = ".crexx"
 ordered_searches = .string[]
-address cmd "sort" input searches output ordered_searches
+address crexx "echo .crexx" output ordered_searches
 ```
 
 References:
@@ -121,11 +121,42 @@ Common examples in-tree:
 - `arg cmd_line = .string[]`
 - `arg expose tokens = .token[]`
 
+Use bare type expressions to declare a typed local before later assignment when
+that makes scope or intent clearer:
+
+```rexx
+slot = .int
+if map.containsKey(key) then slot = existingSlot(key)
+else slot = createSlot(key)
+```
+
+Prefer this to a dummy literal such as `slot = 0` when the value is not
+semantically a sentinel. This is especially useful when a local is assigned in
+both sides of a branch and then read after the branch.
+
 References:
+
 - `lib/rxfnsb/rexx/abs.crexx`
 - `debugger/rxdb.crexx`
 - `compiler/exits/ExitTestSupport.crexx`
 - `tests/levelbfunc.crexx`
+
+## Library Changes Are Whole-Toolchain Tests
+
+Treat every Level B library change as an opportunity to exercise the complete
+consumer path: compile with `rxc`, assemble with `rxas`, link with `rxlink`, and
+execute with `rxvm` (and both concrete VM dispatches when the behavior is VM
+sensitive). A direct compiler or library-unit check is not sufficient for a
+public library surface because imported metadata, optimized RXAS shape,
+link-time symbol resolution, or runtime behavior can fail independently.
+
+For optimizer-sensitive helpers, retain no-opt and optimized executions with
+the same expected result and inspect the optimized RXAS when the intended
+shape matters. Supported inlining shapes must be repaired when they miscompile;
+an implementation defect or awkward generated shape is not a reason to fail
+closed. Falling back to a real call is reserved for cases where ordinary-call
+equivalence is mathematically impossible or cannot be established from the
+language semantics and available facts.
 
 ### Namespace/import syntax is part of the real language surface
 
@@ -140,6 +171,7 @@ Important points:
 - the token to the left of `..` must be an imported namespace
 
 References:
+
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/books/crexx_programming_guide/intralanguage.md`
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
@@ -187,6 +219,137 @@ References:
 - `docs/books/crexx_programming_guide/global_variables.md`
 - `debugger/rxdb.crexx`
 
+### Module initializers are private lifecycle procedures
+
+Use a module initializer when module-global state must be constructed before
+`main`, an embedded public call, or a task-worker request can observe that
+module instance:
+
+```rexx
+options levelb
+namespace example expose value
+
+boot: initialiser expose value
+  value = 42
+
+read: procedure = .int expose value
+  return value
+```
+
+A module may declare zero or more initializers. They run once for each mutable
+module instance, in declaration order. Each initializer has an ordinary
+namespace-qualified name for metadata and diagnostics, but it is a private
+lifecycle entry point: source cannot call it, import it as a callable, or list
+it in the namespace `expose` clause. The `expose` after `initialiser` has the
+same module-variable binding purpose as procedure-level `expose`; it does not
+export the initializer.
+
+Initializers accept no `arg` declarations and have an implicit `.void` return.
+A bare `return` is valid; returning a value is a compile error. If an
+initializer calls an ordinary procedure in another unready module, the VM
+initializes that module first. There is no source `requires` list, and a cycle
+through cross-module initializer calls fails at runtime.
+
+Use this for module-owned singleton-like objects, tables, caches, and resource
+managers. The lifetime is one mutable module overlay, not one process-global
+instance. In particular, persistent task workers each initialize their own
+overlay once before accepting work.
+
+### Named constants are compile-time values
+
+Use `constant NAME = expression` inside an explicit procedure, method, or
+factory scope for Level B masks, flags, and shared literal payloads that must
+not allocate runtime storage:
+
+```rexx
+flags: procedure = .int
+  constant RV_FLAG_STRING = 0x00010000
+  constant SAMPLE_BYTES = "41424344"x as .binary
+  return RV_FLAG_STRING
+```
+
+Do not put `constant` declarations in the file body. That top-level form is a
+Release 1 design defect being removed because it can imply an implicit `main()`
+in a module that was meant to be a library.
+
+If a script needs a separate declaration procedure for shared constants, add an
+explicit `main: procedure` before the executable body. Procedure bodies continue
+until the next top-level callable boundary, so statements after a declaration
+procedure belong to that procedure unless a new boundary is present.
+
+The initializer must fold at compile time. Integer constants used as assembler
+immediates are emitted as literals. An exact `.binary` use of a named constant
+is emitted through one compiler-private, module-scoped RXAS `.const` alias, so
+large payload text appears once and every operand resolves to the same RXBIN
+constant-pool item. This is a read-only operand reference, not a hidden mutable
+register or runtime copy. Converted or completely folded uses follow their
+ordinary result lowering. String, decimal, and float constants retain their
+normal constant-pool machinery.
+
+Generated code that shares a family of constants inside one source module must
+list each name explicitly in the declaration procedure's `procedure expose`
+list. Release 1 does not import constants across source, RXAS, or RXBIN module
+boundaries. Cross-module constants and wildcard expose forms such as `TOKEN_*`
+are Release 2 ergonomics/design candidates, not Release 1 syntax commitments.
+
+### Choose encoded fields or host-native packed items deliberately
+
+Use the established `<at..type>(byte_offset)` surface for portable binary
+formats. Those integer and float fields have explicit widths and canonical
+little-endian encoding.
+
+Use `<packed..int>(item_index)` or `<packed..float>(item_index)` only for
+host-local numeric storage where the exact VM representations are required:
+
+```rexx
+values = .binary
+call binresize values, 3 * 8
+
+<packed..float>(0) values = 100.0
+<packed..float>(1) values = 125.5
+say <packed..float>(1) values
+```
+
+Packed indexes are zero-based item numbers. `.int` means the exact host
+`rxinteger` representation and `.float` means the exact host VM `double`
+representation. The buffer has no stored type tag: the same bytes can be read
+through either packed view. The buffer length and `binresize` remain byte based,
+and a packed store never resizes it. Packed access is therefore unsuitable for
+files, protocols, persistent cross-platform data, or data exchanged between
+hosts with different native representations.
+
+Only `.int` and `.float` are valid packed suffixes in Release 1. Ordinary binary
+allocation provides native alignment, readable binary constants are materialized
+into aligned runtime storage, and packed constants remain read-only. Invalid or
+overflowing indexes and partial trailing items raise `OUT_OF_RANGE` before any
+write occurs.
+
+### Explicit register views are system-programmer syntax
+
+Normal classes should use ordinary attributes. Runtime and VM-integration
+classes may map attributes to fixed register storage:
+
+```rexx
+  _string = .string with register.0.string
+  _flags = .int with register.0.flags.library
+```
+
+`register.0` is the containing value, not RXAS attribute zero. Duplicate typed
+views over the same physical `register.N` slot are complex attributes. The
+compiler copies only the selected typed payload view across the link boundary;
+library/user cache flags are explicit runtime code, not hidden compiler
+side effects. Flag views are direct status-word views: `.flags.vm`,
+`.flags.compiler`, `.flags.language`, and `.flags.readable` are read-only;
+`.flags.library`, `.flags.user`, and `.flags.public` are writable. Flag views
+must be `.int`.
+
+`.flags.language` contains protected, language-wide facts such as intrinsic
+`.string` normalization certificates. Ordinary Level B code may inspect this
+view but cannot assign it. A trusted low-level language implementation may use
+explicit RXAS `GETANDTP`/`SETORTP` operations to consume or publish a proven
+fact; doing so without proving the complete current string contents violates
+the runtime contract.
+
 ### Arrays are first-class Level B objects
 
 Do not reason about them as loose classic stem variables only.
@@ -213,16 +376,40 @@ call arrayappend items, "beta"
 say items[0]
 ```
 
+To clear an existing array object, use the standard in-place helpers:
+
+```rexx
+call arraydrop items
+call objectarraydrop objects
+```
+
+This is especially important for class attributes. Reassigning an attribute-like
+name to `.string[]` or `.object[]` inside a method is not the same documented
+operation as clearing the existing array object, and can run into current Level
+B scoping edge cases. The collection classes use `arraydrop` and
+`objectarraydrop` in their `clear`/`free` methods.
+
 When a test needs delete/insert semantics, prefer library helpers such as
 `arraydelete`, `arrayinsert`, and `arrayappend` over assembler unless the test
 is specifically about RXAS.
 
+The `array*` helper family is currently for `.string[]` arrays. Do not use it
+for `.int[]`, `.decimal[]`, or other typed numeric arrays; use direct indexing
+and explicit loops until the project adds a typed/generic helper surface.
+
 Use the `objectarray*` helper family for mutating `.object[]` arrays:
-`objectarrayinsert`, `objectarraydelete`, `objectarrayappend`,
-`objectarrayprepend`, `objectarraydrop`, and `objectarraymove`. Store concrete
-class instances with an explicit `as .object` upcast.
+
+- `objectarrayinsert`,
+- `objectarraydelete`,
+- `objectarrayappend`,
+- `objectarrayprepend`,
+- `objectarraydrop`, and
+- `objectarraymove`. 
+
+Store concrete class instances with an explicit `as .object` upcast.
 
 References:
+
 - `tests/demo/countlines.crexx`
 - `compiler/exits/ExitTestSupport.crexx`
 - `docs/books/crexx_language_reference/data_types.md`
@@ -262,29 +449,134 @@ car: class implements .vehicle
 Reference:
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 
-### `address command` is the standard shell-out pattern
+When consuming a class from an imported binary namespace, prefer the explicit
+qualified form if the object will be used for method calls in a tool or runner:
 
-When Level B code shells out, copy the repo pattern instead of inventing a new
-API shape:
+```rexx
+runner = .rexxscript..rexxscriptevaluator()
+```
+
+During the RexxScript runner work, the unqualified imported factory form was
+accepted but method typing on the result was not preserved in that context. If
+you see `#METHOD_NOT_FOUND` after an imported factory call that should be valid,
+try the qualified form and record the source-import/binary-import mismatch as a
+Level B follow-up rather than hiding it in application logic.
+
+### Call out suspected Level B gaps
+
+Level B is new enough that RexxScript and runtime-library work may uncover
+compiler or runtime gaps. Prefer documenting and surfacing these for resolution
+decisions over burying workarounds without explanation.
+
+Recent observations from the RexxScript evaluator refactor:
+
+- Assigning a new array object to a class attribute from inside a method, such
+  as `items = .string[]`, can shadow the attribute instead of resetting the
+  instance array. Reuse the instance array with an explicit count until the
+  intended attribute-reset pattern is settled.
+- A method-local first assigned only inside a nested `do` block is not visible
+  later in the outer method. Declare it before the block when the value is read
+  later. A later implicit assignment or taken-constant read with the same name
+  remains legal, but receives `#NOT_IN_SAME_SCOPE`; an explicit declaration of
+  the separate later variable suppresses that warning. The warning is lexical
+  and deliberately path-independent, so an early `return` or mutually
+  exclusive branch does not suppress it; use an explicit declaration when the
+  separate binding is intentional.
+- Passing an object to a helper after a mutating method call, or passing a
+  mutated-object method call inline as an argument, may expose stale state in
+  some Level B paths. Snapshot state inside the owning method when correctness
+  depends on the just-mutated object, and raise a focused language/runtime issue.
+- A mutating same-receiver helper can be called as a statement, such as
+  `call clear()`, when the return value is not needed. It can also return a
+  scalar for assignment into a receiver attribute, such as
+  `root = rebalance(root)`. The optimizer must preserve normal call ordering:
+  evaluate the callee return expression, copy the mutated receiver back, then
+  assign the returned value into the caller target. The regression test
+  `inline_test_mutating_method_scalar_attr_return` covers this order. If an
+  older beta 3 WIP build shows stale receiver copyback behavior, split through a
+  local as a temporary diagnostic workaround:
+
+```rexx
+  next_root = rebalance(root)
+  root = next_root
+```
+
+  When a helper naturally needs to update a caller-owned slot, prefer an
+  explicit reference output location such as `reference root` or
+  `reference left[parent]`, then dereference it inside the helper and assign the
+  linked local.
+
+### Keep hot Level B loops honest with RXAS
+
+Inlining correctness and inlining performance are separate questions. For
+performance-sensitive classlib code, inspect the generated optimized `.rxas`
+and, when relevant, `rxdas` output from the assembled `.rxbin` before assuming a
+private helper is free.
+
+The `StringTreeMap` AVL rewrite found that a private `_findNode()` helper was
+correctly inlined into `get()` and `containsKey()`, but still left
+block-expression scaffolding around the hot lookup loop. Rewriting those two
+methods as direct loops made Release lookup time for 2,500 entries drop from
+about 200 ms to about 2.3 ms in the local benchmark. Use helpers for clarity
+unless the code is a measured hot path; for hot paths, prefer direct loops when
+the RXAS shows avoidable call or block-expression structure.
+
+For array-backed data structures, expect ordinary indexed attribute access to
+lower through `linkattr1`, `minattrs`, typed copy, and `unlink` instructions.
+That is the current cost model. It is fine to use small inline assembler assists
+such as `SETATTRS array,0` for array clearing until the language has a typed
+array-clear surface, but record broader array-access needs as language/runtime
+backlog items instead of baking large hand-written RXAS into classlib code.
+
+### `address crexx` is the standard command-environment pattern
+
+When Level B code needs command-environment behavior, copy the repo pattern
+instead of inventing a new API shape:
 
 ```rexx
 out = .string[]
 err = .string[]
-address command "echo #42" output out error err
+address crexx "echo #42" output out error err
 if rc <> 0 then say "command failed"
 ```
 
-`address command` is argv-parsed by the built-in provider; it is not a full
-shell-quoting contract. For multi-line shell scripts or nested quoting, send
-the script to an explicit shell through an input array:
+`address crexx` uses the CREXX command environment. It is the default ADDRESS
+environment, owns cREXX-specific, OS-independent commands such as `echo`, `pwd`,
+`cd`, `pushd`, `popd`, `ls`, `mkdir`, `copy`, `cat`, `platform`, `pid`,
+`resolve`, `tcp`, and `batch`, and reports normal command failure through `rc`.
+It is not a shell: `;`, `&&`, `||`, pipes, shell redirects, and shell expansion
+are usage errors. Use repeated ADDRESS statements or `address crexx "batch"`
+with input lines for multiple commands.
+
+For CREXX commands, host-variable anchors can pass data without shell parsing:
+`:name` exposes a scalar as one command argument, while `:name[]` and `:name.`
+expose a stem/array as zero or more command arguments. Prefer `[]` in new code
+because it is visually unambiguous. For direct executable dispatch, build a
+`.string[]` argument vector and use `address crexx "run :argv[]"`; the `run`
+command launches from that argv vector rather than flattening and reparsing a
+command string.
+
+Use `address system`, `address command`, or `address cmd` only when the caller
+intentionally needs the platform command processor. On POSIX this is standard
+`sh -c` resolved from the system standard utility path, not the user's `SHELL`
+environment variable; on Windows it is `%COMSPEC% /D /S /C` with a `cmd.exe`
+fallback. Shell built-ins, pipes, redirects, and command chaining belong on
+this route.
+
+Use `address shell` only when the shell executable is deliberately configured
+through `CREXX_ADDRESS_SHELL` and optional `CREXX_ADDRESS_SHELL_ARGS`.
+
+Use `address path` only when the caller needs direct executable dispatch. That
+provider uses the platform process API without shell semantics. On POSIX it
+argv-parses the command and resolves the executable through process `PATH`; on
+Windows it uses direct `CreateProcessW` command-line dispatch:
 
 ```rexx
-script = .string[]
-script[1] = "printf '%s\n' alpha beta"
-address command "sh" input script output out error err
+address path "rxas -h" output out error err
 ```
 
 References:
+
 - `compiler/exits/address/test_address.crexx`
 - `bin/crexx.crexx`
 - `tests/demo/countlines.crexx`
@@ -312,6 +604,7 @@ If `as name` is omitted, the handler has no local signal object. That is fine
 for fixed cleanup/logging handlers.
 
 References:
+
 - `docs/books/crexx_language_reference/statements.md`
 - `docs/ai-context/LEVELB_SIGNALS_TRACE_WORKING.md`
 - `compiler/exits/signal/test_signal_block.crexx`
@@ -324,6 +617,7 @@ users, but repo code should usually stay explicit with `options levelb` and
 imports unless there is a strong reason not to.
 
 Reference:
+
 - `docs/books/crexx_language_reference/tools.md`
 - `docs/books/crexx_programming_guide/crexx.md`
 
@@ -347,6 +641,7 @@ Launcher-side guidance:
   invocation syntax
 
 References:
+
 - `docs/books/crexx_language_reference/arguments.md`
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `debugger/rxdb.crexx`

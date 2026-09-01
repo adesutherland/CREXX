@@ -29,6 +29,7 @@
 
 #include "platform.h"
 #include "rxbin.h"
+#include "rxsignature.h"
 
 typedef struct string_list {
     char **items;
@@ -69,11 +70,27 @@ typedef struct link_config {
     string_list omits;
     char *output_path;
     char *map_path;
+    char *provider_requirements_path;
     char *location;
     int strip_source_metadata;
     int strip_inline_metadata;
     int debug_mode;
 } link_config;
+
+typedef struct provider_requirement {
+    char *provider_id;
+    char *symbol;
+    char *type;
+    char *args;
+    char *module_name;
+    uint32_t flags;
+} provider_requirement;
+
+typedef struct provider_requirement_list {
+    provider_requirement *items;
+    size_t count;
+    size_t capacity;
+} provider_requirement_list;
 
 typedef struct const_map_entry {
     size_t old_offset;
@@ -82,6 +99,7 @@ typedef struct const_map_entry {
 
 typedef struct rxlink_output_module {
     module_file *module;
+    module_file *source_module;
     const_map_entry *maps;
     size_t map_count;
     size_t map_capacity;
@@ -172,6 +190,16 @@ static int string_list_append_unique(string_list *list, const char *value) {
     return string_list_append(list, value);
 }
 
+static int rxlink_symbol_equals(const char *left, const char *right) {
+    if (!left || !right) return 0;
+    while (*left && *right) {
+        if (tolower((unsigned char)*left) != tolower((unsigned char)*right)) return 0;
+        left++;
+        right++;
+    }
+    return *left == '\0' && *right == '\0';
+}
+
 static int module_list_append(module_list *list, link_module_info *item) {
     link_module_info *new_items;
     size_t new_capacity;
@@ -201,6 +229,200 @@ static const char *module_string_constant(module_file *module, size_t offset) {
     return value->string;
 }
 
+static void provider_requirement_list_free(provider_requirement_list *list) {
+    size_t i;
+
+    if (!list) return;
+    for (i = 0u; i < list->count; i++) {
+        free(list->items[i].provider_id);
+        free(list->items[i].symbol);
+        free(list->items[i].type);
+        free(list->items[i].args);
+        free(list->items[i].module_name);
+    }
+    free(list->items);
+    memset(list, 0, sizeof(*list));
+}
+
+static const meta_func_constant *module_function_metadata(
+        module_file *module, const char *symbol) {
+    int offset;
+
+    if (!module || !symbol) return 0;
+    offset = module->header.meta_head;
+    while (offset != -1) {
+        meta_entry *entry =
+            (meta_entry *)((unsigned char *)module->constant + (size_t)offset);
+        if (entry->base.type == META_FUNC) {
+            const meta_func_constant *function =
+                (const meta_func_constant *)entry;
+            const char *candidate =
+                module_string_constant(module, function->symbol);
+            if (candidate && rxlink_symbol_equals(candidate, symbol)) {
+                return function;
+            }
+        }
+        offset = entry->next;
+    }
+    return 0;
+}
+
+static int append_provider_requirement(provider_requirement_list *list,
+                                       const provider_requirement *requirement) {
+    provider_requirement *items;
+    size_t capacity;
+    provider_requirement copy;
+
+    if (list->count == list->capacity) {
+        capacity = list->capacity ? list->capacity * 2u : 8u;
+        items = (provider_requirement *)realloc(
+                list->items, capacity * sizeof(*items));
+        if (!items) {
+            RX_REPORT_OOM("grow rxlink provider requirements",
+                          capacity * sizeof(*items), requirement->provider_id);
+            return 0;
+        }
+        list->items = items;
+        list->capacity = capacity;
+    }
+    memset(&copy, 0, sizeof(copy));
+    copy.provider_id = strdup(requirement->provider_id);
+    copy.symbol = strdup(requirement->symbol);
+    copy.type = strdup(requirement->type);
+    copy.args = strdup(requirement->args);
+    copy.module_name = strdup(requirement->module_name);
+    copy.flags = requirement->flags;
+    if (!copy.provider_id || !copy.symbol || !copy.type || !copy.args ||
+        !copy.module_name) {
+        free(copy.provider_id);
+        free(copy.symbol);
+        free(copy.type);
+        free(copy.args);
+        free(copy.module_name);
+        RX_REPORT_OOM("copy rxlink provider requirement",
+                      RX_OOM_UNKNOWN_SIZE, requirement->provider_id);
+        return 0;
+    }
+    list->items[list->count++] = copy;
+    return 1;
+}
+
+static int rxlink_provider_id_valid(const char *provider_id) {
+    const unsigned char *cursor = (const unsigned char *)provider_id;
+    if (!provider_id ||
+        !( (*cursor >= 'A' && *cursor <= 'Z') ||
+           (*cursor >= 'a' && *cursor <= 'z') ||
+           (*cursor >= '0' && *cursor <= '9'))) return 0;
+    cursor++;
+    while (*cursor) {
+        if (!( (*cursor >= 'A' && *cursor <= 'Z') ||
+               (*cursor >= 'a' && *cursor <= 'z') ||
+               (*cursor >= '0' && *cursor <= '9') ||
+               *cursor == '.' || *cursor == '_' || *cursor == '-')) return 0;
+        cursor++;
+    }
+    return 1;
+}
+
+static int collect_provider_requirements(const module_list *modules,
+                                         provider_requirement_list *requirements) {
+    size_t module_index;
+
+    for (module_index = 0u; module_index < modules->count; module_index++) {
+        const link_module_info *info = &modules->items[module_index];
+        module_file *module;
+        int offset;
+
+        if (!info->selected || info->omitted) continue;
+        module = info->module;
+        offset = module->header.meta_head;
+        while (offset != -1) {
+            meta_entry *entry =
+                (meta_entry *)((unsigned char *)module->constant +
+                               (size_t)offset);
+            if (entry->base.type == META_PROVIDER) {
+                const meta_provider_constant *provider =
+                    (const meta_provider_constant *)entry;
+                const char *symbol =
+                    module_string_constant(module, provider->symbol);
+                const char *provider_id =
+                    module_string_constant(module, provider->provider);
+                const meta_func_constant *function =
+                    module_function_metadata(module, symbol);
+                provider_requirement requirement;
+                size_t prior;
+
+                if (!symbol || !*symbol ||
+                    !rxlink_provider_id_valid(provider_id) ||
+                    !function) {
+                    fprintf(stderr,
+                            "ERROR: module %s has provider metadata without matching callable signature\n",
+                            info->selector_name ? info->selector_name : "<unnamed>");
+                    return 0;
+                }
+                requirement.provider_id = (char *)provider_id;
+                requirement.symbol = (char *)symbol;
+                requirement.type = (char *)module_string_constant(
+                        module, function->type);
+                requirement.args = (char *)module_string_constant(
+                        module, function->args);
+                requirement.module_name = info->selector_name
+                        ? info->selector_name : "<unnamed>";
+                requirement.flags = provider->flags;
+                if (!requirement.type || !requirement.args) return 0;
+
+                for (prior = 0u; prior < requirements->count; prior++) {
+                    provider_requirement *existing =
+                        &requirements->items[prior];
+                    if (!rxlink_symbol_equals(existing->symbol, symbol)) continue;
+                    if (strcmp(existing->provider_id, provider_id) != 0 ||
+                        strcmp(existing->type, requirement.type) != 0 ||
+                        strcmp(existing->args, requirement.args) != 0) {
+                        fprintf(stderr,
+                                "ERROR: native callable %s has incompatible provider requirements: %s in %s versus %s in %s\n",
+                                symbol,
+                                existing->provider_id,
+                                existing->module_name,
+                                provider_id,
+                                requirement.module_name);
+                        return 0;
+                    }
+                    if (strcmp(existing->module_name,
+                               requirement.module_name) == 0) {
+                        /* Duplicate metadata in one module is redundant, but
+                         * required dominates optional independent of order. */
+                        existing->flags |= requirement.flags;
+                        goto next_metadata;
+                    }
+                }
+                if (!append_provider_requirement(requirements, &requirement)) {
+                    return 0;
+                }
+            }
+next_metadata:
+            offset = entry->next;
+        }
+    }
+    return 1;
+}
+
+static char *module_instruction_string(module_file *module,
+                                       int opcode,
+                                       unsigned int operand_index,
+                                       size_t value) {
+    const char *text;
+
+    if (module && module->graph_operands &&
+        rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
+        return rx_graph_operand_text(module->semantic_graph,
+                                     opcode,
+                                     operand_index,
+                                     (uint32_t)value);
+    }
+    text = module_string_constant(module, value);
+    return text ? strdup(text) : 0;
+}
+
 static int append_method_name_from_symbol(string_list *list, const char *symbol) {
     const char *last_dot;
     const char *method_name;
@@ -211,6 +433,329 @@ static int append_method_name_from_symbol(string_list *list, const char *symbol)
     method_name = last_dot + 1;
     if (strcmp(method_name, "\xC2\xA7" "factory") == 0) return 1;
     return string_list_append_unique(list, method_name);
+}
+
+static int rxlink_module_is_active(const link_module_info *module) {
+    return module && module->selected && !module->omitted;
+}
+
+static int rxlink_kind_is_method(const char *kind) {
+    return kind && strncmp(kind, "method", 6) == 0;
+}
+
+static int rxlink_kind_is_final_method(const char *kind) {
+    return rxlink_kind_is_method(kind) && strstr(kind, "final") != 0;
+}
+
+static int rxlink_kind_is_factory(const char *kind) {
+    return kind && strcmp(kind, "factory") == 0;
+}
+
+static char *rxlink_metadata_type_to_contract_name(const char *type_name) {
+    size_t in_index;
+    size_t out_index;
+    size_t length;
+    char *normalized;
+
+    if (!type_name || !*type_name || type_name[0] != '.') return 0;
+
+    length = strlen(type_name);
+    normalized = malloc(length + 1);
+    if (!normalized) return 0;
+
+    out_index = 0;
+    for (in_index = 1; in_index < length; in_index++) {
+        if (type_name[in_index] == '.' &&
+            in_index + 1 < length &&
+            type_name[in_index + 1] == '.') {
+            normalized[out_index++] = '.';
+            in_index++;
+        } else {
+            normalized[out_index++] = type_name[in_index];
+        }
+    }
+    normalized[out_index] = 0;
+
+    return normalized;
+}
+
+static int rxlink_type_assignable(void *userdata,
+                                  const char *actual_type,
+                                  const char *expected_type) {
+    const module_list *modules = (const module_list *)userdata;
+    char *actual_contract;
+    char *expected_contract;
+    size_t i;
+    int result = 0;
+
+    if (!modules) return 0;
+
+    actual_contract = rxlink_metadata_type_to_contract_name(actual_type);
+    expected_contract = rxlink_metadata_type_to_contract_name(expected_type);
+    if (!actual_contract || !expected_contract) {
+        if (actual_contract) free(actual_contract);
+        if (expected_contract) free(expected_contract);
+        return 0;
+    }
+
+    if (strcmp(actual_contract, expected_contract) == 0) {
+        result = 1;
+    }
+
+    for (i = 0; i < modules->count && !result; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+            if (entry->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl = (meta_implements_constant *)entry;
+                const char *class_name = module_string_constant(module, impl->symbol);
+                const char *interface_name = module_string_constant(module, impl->interface_symbol);
+                if (class_name && interface_name &&
+                    strcmp(class_name, actual_contract) == 0 &&
+                    strcmp(interface_name, expected_contract) == 0) {
+                    result = 1;
+                    break;
+                }
+            }
+            meta_ix = entry->next;
+        }
+    }
+
+    free(actual_contract);
+    free(expected_contract);
+    return result;
+}
+
+static char *rxlink_build_member_name(const char *owner, const char *member) {
+    size_t owner_length;
+    size_t member_length;
+    char *name;
+
+    if (!owner || !member) return 0;
+    owner_length = strlen(owner);
+    member_length = strlen(member);
+    name = malloc(owner_length + 1 + member_length + 1);
+    if (!name) return 0;
+    memcpy(name, owner, owner_length);
+    name[owner_length] = '.';
+    memcpy(name + owner_length + 1, member, member_length);
+    name[owner_length + 1 + member_length] = 0;
+    return name;
+}
+
+static char *rxlink_build_factory_proc_name(const char *owner, const char *factory) {
+    const char *prefix = "\xC2\xA7" "factory";
+    char *factory_member;
+    char *name;
+
+    if (!owner || !factory) return 0;
+    if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
+    factory_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    if (!factory_member) return 0;
+    sprintf(factory_member, "%s.%s", prefix, factory);
+    name = rxlink_build_member_name(owner, factory_member);
+    free(factory_member);
+    return name;
+}
+
+static char *rxlink_build_match_proc_name(const char *owner, const char *factory) {
+    const char *prefix = "\xC2\xA7" "match";
+    char *match_member;
+    char *name;
+
+    if (!owner || !factory) return 0;
+    if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
+    match_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    if (!match_member) return 0;
+    sprintf(match_member, "%s.%s", prefix, factory);
+    name = rxlink_build_member_name(owner, match_member);
+    free(match_member);
+    return name;
+}
+
+static meta_func_constant *rxlink_find_meta_func(const module_list *modules,
+                                                 const char *symbol,
+                                                 module_file **module_out) {
+    size_t i;
+
+    if (module_out) *module_out = 0;
+    if (!modules || !symbol) return 0;
+
+    for (i = 0; i < modules->count; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+            if (entry->base.type == META_FUNC) {
+                meta_func_constant *func = (meta_func_constant *)entry;
+                const char *func_symbol = module_string_constant(module, func->symbol);
+                if (func_symbol && rxlink_symbol_equals(func_symbol, symbol)) {
+                    if (module_out) *module_out = module;
+                    return func;
+                }
+            }
+            meta_ix = entry->next;
+        }
+    }
+
+    return 0;
+}
+
+static int rxlink_meta_func_matches_signature(const module_list *modules,
+                                              module_file *module,
+                                              meta_func_constant *func,
+                                              const rx_callable_signature *expected) {
+    const char *type;
+    const char *args;
+    rx_callable_signature actual;
+    rx_callable_compare_options options;
+    int matches;
+
+    if (!module || !func || !expected) return 0;
+
+    type = module_string_constant(module, func->type);
+    args = module_string_constant(module, func->args);
+    if (!type || !args) return 0;
+
+    if (!rx_sig_init_from_parts(&actual, expected->name ? expected->name : "", type, args)) {
+        return 0;
+    }
+    memset(&options, 0, sizeof(options));
+    options.allow_return_covariance = 1;
+    options.type_assignable = rxlink_type_assignable;
+    options.userdata = (void *)modules;
+
+    matches = rx_sig_matches_contract(expected, &actual, &options);
+    rx_sig_free(&actual);
+    return matches;
+}
+
+static int rxlink_validate_contracts(const module_list *modules) {
+    size_t i;
+
+    for (i = 0; i < modules->count; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+
+            if (entry->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl = (meta_implements_constant *)entry;
+                const char *class_name = module_string_constant(module, impl->symbol);
+                const char *interface_name = module_string_constant(module, impl->interface_symbol);
+                size_t j;
+
+                if (!class_name || !interface_name) return 0;
+
+                for (j = 0; j < modules->count; j++) {
+                    module_file *iface_module;
+                    int iface_meta_ix;
+
+                    if (!rxlink_module_is_active(&modules->items[j])) continue;
+                    iface_module = modules->items[j].module;
+                    iface_meta_ix = iface_module->header.meta_head;
+
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_entry = (meta_entry *)((unsigned char *)iface_module->constant + (size_t)iface_meta_ix);
+                        if (iface_entry->base.type == META_MEMBER) {
+                            meta_member_constant *member = (meta_member_constant *)iface_entry;
+                            const char *owner = module_string_constant(iface_module, member->owner);
+                            const char *kind = module_string_constant(iface_module, member->kind);
+                            const char *member_name = module_string_constant(iface_module, member->member);
+                            const char *type = module_string_constant(iface_module, member->type);
+                            const char *args = module_string_constant(iface_module, member->args);
+
+                            if (owner && kind && member_name && type && args &&
+                                strcmp(owner, interface_name) == 0) {
+                                if (rxlink_kind_is_method(kind)) {
+                                    char *proc_name = rxlink_build_member_name(class_name, member_name);
+                                    module_file *func_module = 0;
+                                    meta_func_constant *func = proc_name ? rxlink_find_meta_func(modules, proc_name, &func_module) : 0;
+                                    rx_callable_signature expected;
+                                    int ok;
+                                    int signature_ready;
+
+                                    if (!func && rxlink_kind_is_final_method(kind)) {
+                                        if (proc_name) free(proc_name);
+                                        proc_name = rxlink_build_member_name(interface_name, member_name);
+                                        func = proc_name ? rxlink_find_meta_func(modules, proc_name, &func_module) : 0;
+                                    }
+
+                                    rx_sig_init_empty(&expected);
+                                    signature_ready = func &&
+                                                      rx_sig_init_from_parts(&expected, member_name, type, args);
+                                    ok = signature_ready &&
+                                         rxlink_meta_func_matches_signature(modules, func_module, func, &expected);
+                                    rx_sig_free(&expected);
+                                    if (proc_name) free(proc_name);
+                                    if (!ok) {
+                                        fprintf(stderr,
+                                                "ERROR: class %s does not satisfy interface member %s.%s signature\n",
+                                                class_name, interface_name, member_name);
+                                        return 0;
+                                    }
+                                } else if (rxlink_kind_is_factory(kind)) {
+                                    char *factory_proc_name = rxlink_build_factory_proc_name(class_name, member_name);
+                                    char *match_proc_name = rxlink_build_match_proc_name(class_name, member_name);
+                                    module_file *factory_module = 0;
+                                    module_file *match_module = 0;
+                                    meta_func_constant *factory_func = factory_proc_name ? rxlink_find_meta_func(modules, factory_proc_name, &factory_module) : 0;
+                                    meta_func_constant *match_func = match_proc_name ? rxlink_find_meta_func(modules, match_proc_name, &match_module) : 0;
+                                    rx_callable_signature expected_factory;
+                                    rx_callable_signature expected_match;
+                                    int ok;
+                                    int factory_signature_ready;
+                                    int match_signature_ready;
+
+                                    rx_sig_init_empty(&expected_factory);
+                                    rx_sig_init_empty(&expected_match);
+                                    factory_signature_ready = factory_func &&
+                                                              rx_sig_init_from_parts(&expected_factory, member_name, type, args);
+                                    ok = factory_signature_ready &&
+                                         rxlink_meta_func_matches_signature(modules, factory_module, factory_func, &expected_factory);
+                                    if (ok && match_func) {
+                                        match_signature_ready = rx_sig_init_from_parts(&expected_match, "", ".int", args);
+                                        ok = match_signature_ready &&
+                                             rxlink_meta_func_matches_signature(modules, match_module, match_func, &expected_match);
+                                    }
+                                    rx_sig_free(&expected_factory);
+                                    rx_sig_free(&expected_match);
+
+                                    if (factory_proc_name) free(factory_proc_name);
+                                    if (match_proc_name) free(match_proc_name);
+                                    if (!ok) {
+                                        fprintf(stderr,
+                                                "ERROR: class %s does not satisfy interface factory %s.%s signature\n",
+                                                class_name, interface_name, member_name);
+                                        return 0;
+                                    }
+                                }
+                            }
+                        }
+                        iface_meta_ix = iface_entry->next;
+                    }
+                }
+            }
+
+            meta_ix = entry->next;
+        }
+    }
+
+    return 1;
 }
 
 static void module_list_free(module_list *list) {
@@ -335,6 +880,7 @@ static void init_link_config(link_config *config) {
     string_list_init(&config->omits);
     config->output_path = 0;
     config->map_path = 0;
+    config->provider_requirements_path = 0;
     config->location = 0;
     config->strip_source_metadata = 0;
     config->strip_inline_metadata = 1;
@@ -348,6 +894,7 @@ static void free_link_config(link_config *config) {
     string_list_free(&config->omits);
     free(config->output_path);
     free(config->map_path);
+    free(config->provider_requirements_path);
 }
 
 static int set_single_path(char **target, const char *value) {
@@ -408,6 +955,8 @@ static int parse_control_file(link_config *config, const char *path) {
             if (!set_single_path(&config->output_path, value)) goto oom;
         } else if (keyword_equals(keyword, "MAP")) {
             if (!set_single_path(&config->map_path, value)) goto oom;
+        } else if (keyword_equals(keyword, "PROVIDERS")) {
+            if (!set_single_path(&config->provider_requirements_path, value)) goto oom;
         } else if (keyword_equals(keyword, "STRIP")) {
             if (keyword_equals(value, "SOURCE")) {
                 config->strip_source_metadata = 1;
@@ -532,6 +1081,31 @@ static int load_module_metadata(link_module_info *info) {
                 }
                 break;
             }
+            case META_INITIALIZER: {
+                meta_initializer_constant *initializer =
+                    (meta_initializer_constant *)entry;
+                const char *symbol = module_string_constant(
+                        module, initializer->symbol);
+                const meta_func_constant *function =
+                    module_function_metadata(module, symbol);
+                const char *type = function
+                    ? module_string_constant(module, function->type) : 0;
+                const char *args = function
+                    ? module_string_constant(module, function->args) : 0;
+                if (!symbol || !function ||
+                    function->func != initializer->function ||
+                    !type || strcmp(type, ".void") != 0 ||
+                    !args || *args != 0 ||
+                    initializer->function >= module->header.constant_size ||
+                    ((chameleon_constant *)((unsigned char *)module->constant +
+                                             initializer->function))->type != PROC_CONST) {
+                    fprintf(stderr,
+                            "ERROR: module %s has invalid initializer metadata for %s\n",
+                            module->name, symbol ? symbol : "<unknown>");
+                    return 0;
+                }
+                break;
+            }
             default:
                 break;
         }
@@ -540,55 +1114,79 @@ static int load_module_metadata(link_module_info *info) {
 
     code_index = 0;
     while (code_index < module->header.instruction_size) {
-        OperandType types[3];
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
         int opcode;
 
         opcode = ((bin_code *)module->instructions)[code_index].instruction.opcode;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
-        if (opcode == OP_SRCFPROC_REG_STRING_REG) {
+        operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
+        if (opcode == OP_SRCFPROCSEL_REG_STRING_REG) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
-                if (types[operand_index] == OP_STRING) {
-                    size_t selector_offset;
-                    string_constant *selector;
+                if (rxop_format_operand_type(rxbin_opcode_format(opcode), operand_index) == OP_STRING) {
+                    size_t descriptor_offset;
+                    char *descriptor;
                     const char *separator;
                     size_t interface_length;
                     char *interface_name;
                     int ok;
+                    rx_callable_signature signature;
 
-                    selector_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    if (selector_offset >= module->header.constant_size) return 0;
-                    selector = (string_constant *)((unsigned char *)module->constant + selector_offset);
-                    if (selector->base.type != STRING_CONST) return 0;
+                    descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    descriptor = module_instruction_string(module,
+                                                           opcode,
+                                                           (unsigned int)operand_index,
+                                                           descriptor_offset);
+                    if (!descriptor) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor, &signature)) {
+                        free(descriptor);
+                        return 0;
+                    }
+                    free(descriptor);
 
-                    separator = strstr(selector->string, "..");
-                    interface_length = separator ? (size_t)(separator - selector->string) : strlen(selector->string);
-                    if (!interface_length) continue;
+                    separator = strstr(signature.name, "..");
+                    interface_length = separator ? (size_t)(separator - signature.name) : strlen(signature.name);
+                    if (!interface_length) {
+                        rx_sig_free(&signature);
+                        continue;
+                    }
 
                     interface_name = malloc(interface_length + 1);
                     if (!interface_name) {
                         RX_REPORT_OOM("malloc rxlink interface reference name",
                                       interface_length + 1, info->input_path);
+                        rx_sig_free(&signature);
                         return 0;
                     }
-                    memcpy(interface_name, selector->string, interface_length);
+                    memcpy(interface_name, signature.name, interface_length);
                     interface_name[interface_length] = '\0';
                     ok = string_list_append_unique(&info->referenced_interfaces, interface_name);
                     free(interface_name);
+                    rx_sig_free(&signature);
                     if (!ok) return 0;
                 }
             }
-        } else if (opcode == OP_SRCMETHOD_REG_REG_STRING) {
+        } else if (opcode == OP_SRCMETHODSEL_REG_REG_STRING) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
-                if (types[operand_index] == OP_STRING) {
-                    size_t member_offset;
-                    const char *member_name;
+                if (rxop_format_operand_type(rxbin_opcode_format(opcode), operand_index) == OP_STRING) {
+                    size_t descriptor_offset;
+                    char *descriptor;
+                    rx_callable_signature signature;
+                    int ok;
 
-                    member_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    member_name = module_string_constant(module, member_offset);
-                    if (member_name &&
-                        !string_list_append_unique(&info->referenced_methods, member_name)) {
+                    descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    descriptor = module_instruction_string(module,
+                                                           opcode,
+                                                           (unsigned int)operand_index,
+                                                           descriptor_offset);
+                    if (!descriptor) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor, &signature)) {
+                        free(descriptor);
+                        return 0;
+                    }
+                    free(descriptor);
+                    ok = string_list_append_unique(&info->referenced_methods, signature.name);
+                    rx_sig_free(&signature);
+                    if (!ok) {
                         return 0;
                     }
                 }
@@ -1223,6 +1821,10 @@ static int is_meta_constant_type(enum const_pool_type type) {
         case META_IMPLEMENTS:
         case META_MEMBER:
         case META_INLINE:
+        case META_TASK_TARGET:
+        case META_PROVIDER:
+        case META_INITIALIZER:
+        case META_AUTOLOAD:
             return 1;
         default:
             return 0;
@@ -1253,18 +1855,26 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
         }
         case META_TRACE_EVENT: {
             meta_trace_event_constant *source = (meta_trace_event_constant *)entry;
-            meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev_offset;
-            meta->base.next = next_offset;
+            size_t value_ref = source->value_ref;
+            size_t symbol = source->symbol;
+            size_t resolved_name = source->resolved_name;
             if (source->value_source == RXBIN_TRACE_VALUE_CONSTANT &&
                 source->value_ref != RXBIN_TRACE_REF_NONE) {
-                meta->value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
+                value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
             }
             if (source->symbol != RXBIN_TRACE_REF_NONE) {
-                meta->symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+                symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
             }
             if (source->resolved_name != RXBIN_TRACE_REF_NONE) {
-                meta->resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+                resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+            }
+            {
+                meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
+                meta->base.prev = prev_offset;
+                meta->base.next = next_offset;
+                meta->value_ref = value_ref;
+                meta->symbol = symbol;
+                meta->resolved_name = resolved_name;
             }
             return *ok;
         }
@@ -1399,6 +2009,67 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
             meta->base.next = next_offset;
             meta->symbol = symbol;
             meta->payload = payload;
+            return *ok;
+        }
+        case META_TASK_TARGET: {
+            meta_task_target_constant *source = (meta_task_target_constant *)entry;
+            size_t symbol = link_constant_offset(context, output_module, input_module,
+                                                 source->symbol, ok);
+            size_t binding = link_constant_offset(context, output_module, input_module,
+                                                  source->binding, ok);
+            meta_task_target_constant *meta =
+                (meta_task_target_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->binding = binding;
+            meta->kind = source->kind;
+            return *ok;
+        }
+        case META_PROVIDER: {
+            meta_provider_constant *source =
+                (meta_provider_constant *)entry;
+            size_t symbol = link_constant_offset(
+                    context, output_module, input_module, source->symbol, ok);
+            size_t provider = link_constant_offset(
+                    context, output_module, input_module, source->provider, ok);
+            meta_provider_constant *meta =
+                (meta_provider_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->provider = provider;
+            meta->flags = source->flags;
+            return *ok;
+        }
+        case META_INITIALIZER: {
+            meta_initializer_constant *source =
+                (meta_initializer_constant *)entry;
+            size_t symbol = link_constant_offset(
+                    context, output_module, input_module, source->symbol, ok);
+            size_t function = link_constant_offset(
+                    context, output_module, input_module, source->function, ok);
+            meta_initializer_constant *meta =
+                (meta_initializer_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->function = function;
+            return *ok;
+        }
+        case META_AUTOLOAD: {
+            meta_autoload_constant *source =
+                (meta_autoload_constant *)entry;
+            size_t symbol = link_constant_offset(
+                    context, output_module, input_module, source->symbol, ok);
+            size_t artifact = link_constant_offset(
+                    context, output_module, input_module, source->artifact, ok);
+            meta_autoload_constant *meta =
+                (meta_autoload_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            meta->symbol = symbol;
+            meta->artifact = artifact;
             return *ok;
         }
         default:
@@ -1554,7 +2225,11 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
         case META_INTERFACE:
         case META_IMPLEMENTS:
         case META_MEMBER:
-        case META_INLINE: {
+        case META_INLINE:
+        case META_TASK_TARGET:
+        case META_PROVIDER:
+        case META_INITIALIZER:
+        case META_AUTOLOAD: {
             meta_entry *meta = (meta_entry *)entry;
             int prev = link_constant_offset_int(context, output_module, input_module, meta->prev, ok);
             int next = link_constant_offset_int(context, output_module, input_module, meta->next, ok);
@@ -1585,6 +2260,10 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
         return 0;
     }
     init_module(output_module->module);
+    output_module->source_module = input;
+    output_module->module->graph_operands = 1u;
+    output_module->module->semantic_graph = input->semantic_graph;
+    rx_graph_retain(output_module->module->semantic_graph);
     output_module->module->fromfile = 1;
     output_module->module->header.record_type = RXBIN_RECORD_MODULE_SHARED;
     output_module->module->name = strdup(input->name ? input->name : "");
@@ -1640,15 +2319,20 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
     output_code = (bin_code *)output_module->module->instructions;
     index = 0;
     while (index < input->header.instruction_size) {
-        OperandType types[3];
-        int operand_count;
-        int operand_index;
+        OpFormat format;
+        size_t operand_count;
+        size_t operand_index;
         int ok = 1;
 
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(input_code[index].instruction.opcode), types);
+        format = rxbin_opcode_format(input_code[index].instruction.opcode);
+        operand_count = rxop_format_operand_count(format);
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             bin_code *operand = &output_code[index + (size_t)operand_index + 1];
-            switch (types[operand_index]) {
+            if (rx_graph_operand_kind(input_code[index].instruction.opcode,
+                                      (unsigned int)operand_index) != RX_GRAPH_OPERAND_NONE) {
+                continue;
+            }
+            switch (rxop_format_operand_type(format, operand_index)) {
                 case OP_FUNC:
                 case OP_FLOAT:
                 case OP_STRING:
@@ -1687,7 +2371,9 @@ static int build_linked_modules(rxlink_build_context *context, module_list *modu
     return 1;
 }
 
-static int write_map_file(const module_list *modules, const link_config *config) {
+static int write_map_file(const module_list *modules,
+                          const provider_requirement_list *requirements,
+                          const link_config *config) {
     FILE *fp;
     size_t i;
 
@@ -1712,50 +2398,193 @@ static int write_map_file(const module_list *modules, const link_config *config)
             }
         }
     }
-
-    fclose(fp);
-    return 1;
-}
-
-static int write_linked_image(const link_config *config, rxlink_build_context *context, rxlink_output_list *outputs) {
-    FILE *fp;
-    module_file shared_pool_record;
-    size_t i;
-    fp = openfile(config->output_path, "rxbin", config->location, "wb");
-    if (!fp) {
-        fprintf(stderr, "ERROR: opening output %s\n", config->output_path);
-        return 0;
-    }
-
-    init_module(&shared_pool_record);
-    shared_pool_record.header.record_type = RXBIN_RECORD_POOL_SHARED;
-    shared_pool_record.header.name_size = 0;
-    shared_pool_record.header.description_size = 0;
-    shared_pool_record.header.instruction_size = 0;
-    shared_pool_record.header.constant_size = context->shared_pool.size;
-    shared_pool_record.header.globals = 0;
-    shared_pool_record.header.proc_head = -1;
-    shared_pool_record.header.expose_head = -1;
-    shared_pool_record.header.meta_head = -1;
-    shared_pool_record.name = "";
-    shared_pool_record.description = "";
-    shared_pool_record.instructions = 0;
-    shared_pool_record.constant = context->shared_pool.data;
-
-    if (write_module(&shared_pool_record, fp) != 0) {
-        fclose(fp);
-        return 0;
-    }
-
-    for (i = 0; i < outputs->count; i++) {
-        if (write_module(outputs->items[i].module, fp) != 0) {
-            fclose(fp);
-            return 0;
+    if (requirements->count) {
+        fprintf(fp, "Native Providers:\n");
+        for (i = 0u; i < requirements->count; i++) {
+            const provider_requirement *requirement =
+                &requirements->items[i];
+            fprintf(fp, "  %s %s %s from %s\n",
+                    (requirement->flags & RXBIN_PROVIDER_REQUIRED)
+                        ? "required" : "optional",
+                    requirement->provider_id,
+                    requirement->symbol,
+                    requirement->module_name);
         }
     }
 
     fclose(fp);
     return 1;
+}
+
+static int write_provider_requirements_file(
+        const provider_requirement_list *requirements,
+        const link_config *config) {
+    FILE *fp;
+    size_t i;
+
+    if (!config->provider_requirements_path) return 1;
+    fp = openfile(config->provider_requirements_path, "",
+                  config->location, "w");
+    if (!fp) {
+        fprintf(stderr, "ERROR: opening provider requirements output %s\n",
+                config->provider_requirements_path);
+        return 0;
+    }
+    fprintf(fp, "CREXX-RXPA-REQUIREMENTS 1\n");
+    for (i = 0u; i < requirements->count; i++) {
+        const provider_requirement *requirement = &requirements->items[i];
+        fprintf(fp, "%s\t%s\t%s\t%s\t%s\t%s\n",
+                (requirement->flags & RXBIN_PROVIDER_REQUIRED)
+                    ? "required" : "optional",
+                requirement->provider_id,
+                requirement->symbol,
+                requirement->type,
+                requirement->args,
+                requirement->module_name);
+    }
+    fclose(fp);
+    return 1;
+}
+
+static void detach_linked_pool(rxlink_output_list *outputs) {
+    size_t i;
+    for (i = 0; i < outputs->count; i++) {
+        outputs->items[i].module->constant = 0;
+        outputs->items[i].module->header.constant_size = 0;
+        outputs->items[i].module->header.constant_stored_size = 0;
+    }
+}
+
+static RxGraph *prepare_linked_graph(rxlink_build_context *context,
+                                     rxlink_output_list *outputs) {
+    module_file **modules;
+    RxGraph *graph;
+    char *graph_error;
+    size_t i;
+
+    if (!outputs->count) return 0;
+    modules = (module_file **)calloc(outputs->count, sizeof(*modules));
+    if (!modules) return 0;
+    for (i = 0; i < outputs->count; i++) {
+        modules[i] = outputs->items[i].module;
+        modules[i]->constant = context->shared_pool.data;
+        modules[i]->header.constant_size = context->shared_pool.size;
+        modules[i]->header.constant_stored_size = context->shared_pool.size;
+    }
+    graph_error = 0;
+    graph = rx_graph_build_crexx(modules, outputs->count, &graph_error);
+    free(modules);
+    if (!graph) {
+        fprintf(stderr, "ERROR: rebuilding linked semantic graph: %s\n",
+                graph_error ? graph_error : "unknown graph error");
+        free(graph_error);
+        return 0;
+    }
+    free(graph_error);
+    for (i = 0; i < outputs->count; i++) {
+        module_file *source;
+        module_file *output;
+        bin_code *source_code;
+        bin_code *output_code;
+        size_t code_index;
+
+        source = outputs->items[i].source_module;
+        output = outputs->items[i].module;
+        source_code = (bin_code *)source->instructions;
+        output_code = (bin_code *)output->instructions;
+        code_index = 0u;
+        while (code_index < output->header.instruction_size) {
+            int opcode;
+            size_t operand_count;
+            size_t operand_index;
+
+            opcode = output_code[code_index].instruction.opcode;
+            operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                uint32_t graph_id;
+                char *text;
+                char *resolve_error;
+
+                if (rx_graph_operand_kind(opcode, (unsigned int)operand_index) ==
+                    RX_GRAPH_OPERAND_NONE) continue;
+                text = module_instruction_string(
+                    source,
+                    opcode,
+                    (unsigned int)operand_index,
+                    source_code[code_index + (size_t)operand_index + 1u].index);
+                if (!text) {
+                    fprintf(stderr,
+                            "ERROR: reading graph operand %d:%zu from module %s\n",
+                            opcode,
+                            operand_index,
+                            source->name ? source->name : "<unnamed>");
+                    rx_graph_release(&graph);
+                    return 0;
+                }
+                resolve_error = 0;
+                if (!rx_graph_resolve_operand(graph,
+                                              opcode,
+                                              (unsigned int)operand_index,
+                                              text,
+                                              &graph_id,
+                                              &resolve_error)) {
+                    fprintf(stderr,
+                            "ERROR: resolving linked graph operand %s: %s\n",
+                            text,
+                            resolve_error ? resolve_error : "unknown graph error");
+                    free(resolve_error);
+                    free(text);
+                    rx_graph_release(&graph);
+                    return 0;
+                }
+                free(resolve_error);
+                free(text);
+                output_code[code_index + (size_t)operand_index + 1u].index = graph_id;
+            }
+            code_index += (size_t)operand_count + 1u;
+        }
+        output->graph_operands = 1u;
+    }
+    return graph;
+}
+
+static int write_linked_image(const link_config *config, rxlink_build_context *context, rxlink_output_list *outputs) {
+    FILE *fp;
+    module_file **modules;
+    RxGraph *graph;
+    size_t i;
+    int ok;
+
+    graph = prepare_linked_graph(context, outputs);
+    if (!graph) {
+        detach_linked_pool(outputs);
+        return 0;
+    }
+    modules = (module_file **)calloc(outputs->count, sizeof(*modules));
+    if (!modules) {
+        rx_graph_release(&graph);
+        detach_linked_pool(outputs);
+        return 0;
+    }
+    for (i = 0; i < outputs->count; i++) modules[i] = outputs->items[i].module;
+    fp = openfile(config->output_path, "rxbin", config->location, "wb");
+    if (!fp) {
+        fprintf(stderr, "ERROR: opening output %s\n", config->output_path);
+        free(modules);
+        rx_graph_release(&graph);
+        detach_linked_pool(outputs);
+        return 0;
+    }
+    ok = write_modules(modules, outputs->count, graph, fp) == 0;
+    if (!ok) {
+        fprintf(stderr, "ERROR: writing linked RXBIN 007 image: %s\n",
+                rxbin_last_error() ? rxbin_last_error() : "unknown RXBIN error");
+    }
+    fclose(fp);
+    free(modules);
+    rx_graph_release(&graph);
+    detach_linked_pool(outputs);
+    return ok;
 }
 
 static void print_help(void) {
@@ -1766,6 +2595,7 @@ static void print_help(void) {
     printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP/STRIP\n");
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");
+    printf("  -p providers    Write native-provider requirements for packaging\n");
     printf("  -l location     Working location for input/output resolution\n");
     printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
@@ -1778,6 +2608,7 @@ int main(int argc, char *argv[]) {
     module_list modules;
     rxlink_build_context build_context;
     rxlink_output_list outputs;
+    provider_requirement_list provider_requirements;
     char *control_path = 0;
     int argi;
 
@@ -1785,6 +2616,7 @@ int main(int argc, char *argv[]) {
     memset(&modules, 0, sizeof(modules));
     build_context_init(&build_context);
     memset(&outputs, 0, sizeof(outputs));
+    memset(&provider_requirements, 0, sizeof(provider_requirements));
 
     for (argi = 1; argi < argc && argv[argi][0] == '-'; argi++) {
         if (strlen(argv[argi]) != 2) {
@@ -1804,6 +2636,11 @@ int main(int argc, char *argv[]) {
                 break;
             case 'M':
                 if (++argi >= argc || !set_single_path(&config.map_path, argv[argi])) goto fail;
+                break;
+            case 'P':
+                if (++argi >= argc ||
+                    !set_single_path(&config.provider_requirements_path,
+                                     argv[argi])) goto fail;
                 break;
             case 'S':
                 config.strip_source_metadata = 1;
@@ -1850,14 +2687,18 @@ int main(int argc, char *argv[]) {
 
     if (!load_input_modules(&modules, &config)) goto fail;
     if (!select_modules(&modules, &config)) goto fail;
+    if (!rxlink_validate_contracts(&modules)) goto fail;
+    if (!collect_provider_requirements(&modules, &provider_requirements)) goto fail;
     if (!build_linked_modules(&build_context, &modules, &outputs)) goto fail;
     if (!outputs.count) {
         fprintf(stderr, "ERROR: no modules selected for output\n");
         goto fail;
     }
     if (!write_linked_image(&config, &build_context, &outputs)) goto fail;
-    if (!write_map_file(&modules, &config)) goto fail;
+    if (!write_map_file(&modules, &provider_requirements, &config)) goto fail;
+    if (!write_provider_requirements_file(&provider_requirements, &config)) goto fail;
 
+    provider_requirement_list_free(&provider_requirements);
     output_list_free(&outputs);
     build_context_free(&build_context);
     module_list_free(&modules);
@@ -1865,6 +2706,7 @@ int main(int argc, char *argv[]) {
     return 0;
 
 fail:
+    provider_requirement_list_free(&provider_requirements);
     output_list_free(&outputs);
     build_context_free(&build_context);
     module_list_free(&modules);

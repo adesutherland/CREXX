@@ -1,0 +1,7 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-gcc-rxbvm,RexxCPS,crexx-gcc,rxbvm,mingw-gcc-15.2-o3,A,no,no,1000-clauses,benchmark_rate,20,5723745.000000,6232377.750000,7709113.500000,8990565.250000,9117765.000000,1295118.000000,16.799830,44.026074,yes
+rexxcps-clang-rxbvm,RexxCPS,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,1000-clauses,benchmark_rate,20,5876884.000000,6365465.000000,8033731.500000,9094510.750000,9326279.000000,1245911.000000,15.508497,42.936399,yes
+rexxcps-msvc-rxbvm,RexxCPS,crexx-msvc,rxbvm,msvc-19.44-o2,A,no,no,1000-clauses,benchmark_rate,20,6802087.000000,7198484.250000,9111285.000000,10310637.500000,10477496.000000,1287387.000000,14.129588,40.339085,yes
+rexxcps-oorexx,RexxCPS,oorexx,oorexx,canonical-2.2,A,no,no,1000-clauses,benchmark_rate,20,9551098.000000,10726922.750000,14116916.500000,15907752.000000,16103060.000000,1908724.500000,13.520832,46.412133,yes
+rexxcps-regina,RexxCPS,regina,regina,canonical-2.2,A,no,no,1000-clauses,benchmark_rate,20,9259259.000000,10641148.000000,13311375.000000,15452980.250000,15822785.000000,2253289.000000,16.927545,49.307649,yes
+rexxcps-netrexx-exact-class,RexxCPS,netrexx-exact-class,netrexx-exact-class,disclosed-2.2n-javac8-exact,A,no,no,1000-clauses,benchmark_rate,20,6965006.000000,8113347.750000,13561680.000000,18613853.000000,18964583.000000,5210766.000000,38.422718,88.481493,yes

@@ -1,26 +1,34 @@
-/* rexx test abbrev bif */
+/* Focused Level B ABBREV tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
 
-if abbrev('quicker','quick') <> 1 then do
-  errors=errors+1
-  say 'ABBREV failed in test 1'
-end
-if abbrev('quicker','q',2) <> 0 then do
-  errors=errors+1
-  say 'ABBREV failed in test 2'
-end
+errors = errors + check(abbrev("quicker", "quick") = 1, "prefix")
+errors = errors + check(abbrev("quicker", "q", 2) = 0, "below minimum")
+errors = errors + check(abbrev("quicker", "fast") = 0, "mismatch")
+errors = errors + check(abbrev("a", "ab") = 0, "source shorter than candidate")
+errors = errors + check(abbrev("PRINT", "PRI", 3) = 1, "exact minimum")
+errors = errors + check(abbrev("PRINT", "PRI", 4) = 0, "minimum too long")
+errors = errors + check(abbrev("PRINT", "Pri") = 0, "case sensitive")
+errors = errors + check(abbrev("PRINT", "") = 1, "empty default")
+errors = errors + check(abbrev("PRINT", "", 1) = 0, "empty below minimum")
+errors = errors + check(abbrev("caféine", "café") = 1, "Unicode codepoints")
+errors = errors + check(.rxfnsb..abbrev("quicker", "quick", 1) = 1, "qualified namespace")
 
-if abbrev('quicker','fast') <> 0 then do
-  errors=errors+1
-  say 'ABBREV failed in test 3'
+caught = 0
+do
+  ignored = abbrev("abc", "a", -1)
+on signal invalid_arguments
+  caught = 1
 end
+errors = errors + check(caught = 1, "negative minimum signal")
 
-if .rxfnsb..abbrev('quicker','quick',1) <> 1 then do
-  errors=errors+1
-  say 'ABBREV failed in qualified namespace test'
-end
+if errors = 0 then say "PASS: abbrev"
+return errors <> 0
 
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: ABBREV" label
+  return 1

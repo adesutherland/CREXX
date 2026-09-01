@@ -1,0 +1,33 @@
+/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxvm: OK
+/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxbvm: OK
+/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxvm: OK
+/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxbvm: OK
+/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin: OK
+performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-gcc-baseline-v1.txt: OK
+performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-clang-baseline-v1.txt: OK
+RUN gcc rexxcps-rxvm core
+RUN gcc rexxcps-rxvm topdown
+RUN gcc rexxcps-rxvm retired-l1i
+RUN gcc rexxcps-rxvm retired-itlb
+RUN gcc rexxcps-rxvm front-walk
+RUN gcc rexxcps-rxvm indirect
+RUN gcc rexxcps-rxvm host
+PASS gcc rexxcps-rxvm
+RUN gcc rexxcps-rxbvm core
+RUN gcc rexxcps-rxbvm topdown
+RUN gcc rexxcps-rxbvm retired-l1i
+RUN gcc rexxcps-rxbvm retired-itlb
+RUN gcc rexxcps-rxbvm front-walk
+RUN gcc rexxcps-rxbvm indirect
+RUN gcc rexxcps-rxbvm host
+PASS gcc rexxcps-rxbvm
+RUN clang rexxcps-rxvm core
+RUN clang rexxcps-rxvm topdown
+RUN clang rexxcps-rxvm front-walk
+RUN clang rexxcps-rxvm indirect
+PASS clang rexxcps-rxvm
+RUN clang rexxcps-rxbvm core
+RUN clang rexxcps-rxbvm topdown
+RUN clang rexxcps-rxbvm front-walk
+RUN clang rexxcps-rxbvm indirect
+PASS clang rexxcps-rxbvm

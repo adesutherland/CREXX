@@ -31,6 +31,15 @@
 
 #include "crexxpa.h"
 
+typedef struct rxpa_loaded_plugin {
+    void *handle;
+    void (*initializer)(rxpa_initctxptr context);
+    uint32_t capabilities;
+    const char *plugin_id;
+    int has_manifest_v2;
+    rxpa_plugin_manifest_v2 manifest_v2;
+} rxpa_loaded_plugin;
+
 // Function to load a plugin dynamically
 // - ctx is the context structure containing pointers to plugins helper functions
 // - file_name is the full file name of the plugin
@@ -38,5 +47,13 @@
 //               -1 Failed to load plugin
 //               -2 Failed to call _initfuncs
 int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name);
+
+/* Runtime-private ownership-aware loader surface. */
+int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin);
+int rxpa_initialize_plugin(rxpa_loaded_plugin *plugin, rxpa_initctxptr ctx);
+uint32_t rxpa_loaded_plugin_procedure_capabilities(
+        const rxpa_loaded_plugin *plugin, const char *procedure_name);
+void rxpa_close_plugin(rxpa_loaded_plugin *plugin);
+size_t rxpa_live_plugin_handle_count(void);
 
 #endif //CREXX_RXPA_H

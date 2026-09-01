@@ -1,0 +1,264 @@
+﻿diff --git a/bin/tests/CMakeLists.txt b/bin/tests/CMakeLists.txt
+index 58a7815ae..9d4d06064 100644
+--- a/bin/tests/CMakeLists.txt
++++ b/bin/tests/CMakeLists.txt
+@@ -471,7 +471,7 @@ crexx_label_smoke_tests(
+         crexx_native_default_link_strip
+ )
+ 
+-function(crexx_force_raw_diagnostics_for_bin_tests)
++function(crexx_isolate_bin_test_environment)
+     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
+     foreach(_crexx_test IN LISTS _crexx_tests)
+         get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
+@@ -479,8 +479,9 @@ function(crexx_force_raw_diagnostics_for_bin_tests)
+             set(_crexx_env)
+         endif()
+         list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
++        list(APPEND _crexx_env "CREXX_HOME=${CMAKE_BINARY_DIR}")
+         set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
+     endforeach()
+ endfunction()
+ 
+-crexx_force_raw_diagnostics_for_bin_tests()
++crexx_isolate_bin_test_environment()
+diff --git a/compiler/tests/CMakeLists.txt b/compiler/tests/CMakeLists.txt
+index 50272c043..021e125bd 100644
+--- a/compiler/tests/CMakeLists.txt
++++ b/compiler/tests/CMakeLists.txt
+@@ -4464,7 +4464,8 @@ endforeach()
+ add_test(NAME dynamic_interface_load_driver
+         COMMAND ${CMAKE_COMMAND} -P ${DYNAMIC_INTERFACE_DRIVER_SCRIPT})
+ set_tests_properties(dynamic_interface_load_driver PROPERTIES
+-        LABELS "compiler;stage3;driver;interfaces;late-load")
++        LABELS "compiler;stage3;driver;interfaces;late-load"
++        ENVIRONMENT "CREXX_HOME=${CMAKE_BINARY_DIR}")
+ add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
+ set_tests_properties(crexxsaa_variables PROPERTIES
+         LABELS "compiler;stage3"
+@@ -4602,6 +4603,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
+        "    OUTPUT_VARIABLE out\n"
+        "    ERROR_VARIABLE err\n"
+        "    RESULT_VARIABLE res\n"
++       "    ENCODING UTF-8\n"
+        "  )\n"
+        "  set(full_out \"\${out}\${err}\")\n"
+        "  if(NOT res EQUAL 0)\n"
+@@ -4627,6 +4629,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
+        "    OUTPUT_VARIABLE out\n"
+        "    ERROR_VARIABLE err\n"
+        "    RESULT_VARIABLE res\n"
++       "    ENCODING UTF-8\n"
+        "  )\n"
+        "  set(full_out \"\${out}\${err}\")\n"
+        "  if(res EQUAL 0)\n"
+diff --git a/compiler/tests/nr14_frozen_parse_contract.cmake b/compiler/tests/nr14_frozen_parse_contract.cmake
+index 36f618390..91b2268df 100644
+--- a/compiler/tests/nr14_frozen_parse_contract.cmake
++++ b/compiler/tests/nr14_frozen_parse_contract.cmake
+@@ -15,7 +15,8 @@ function(run_checked description)
+             COMMAND ${ARGN}
+             OUTPUT_VARIABLE out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE result)
++            RESULT_VARIABLE result
++            ENCODING UTF-8)
+     if(NOT result EQUAL 0)
+         message(FATAL_ERROR "${description} failed:\n${out}${err}")
+     endif()
+@@ -52,7 +53,8 @@ function(assert_runs image expected)
+                 COMMAND "${${runner}}" "${image}"
+                 OUTPUT_VARIABLE out
+                 ERROR_VARIABLE err
+-                RESULT_VARIABLE result)
++                RESULT_VARIABLE result
++                ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" out "${out}")
+         string(REPLACE "\r" "\n" out "${out}")
+         if(NOT result EQUAL 0 OR NOT out STREQUAL "${expected}")
+@@ -122,7 +124,8 @@ execute_process(
+         COMMAND "${RXDAS}" "${WORK_DIR}/missing_feature.rxbin"
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE result)
++        RESULT_VARIABLE result
++        ENCODING UTF-8)
+ if(result EQUAL 0 OR NOT err MATCHES "opcode 405 requires feature flag 0x00000002")
+     message(FATAL_ERROR "missing frozen-PARSE feature was not rejected precisely:\n${out}${err}")
+ endif()
+@@ -134,7 +137,8 @@ execute_process(
+         COMMAND "${RXDAS}" "${WORK_DIR}/unknown_feature.rxbin"
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE result)
++        RESULT_VARIABLE result
++        ENCODING UTF-8)
+ if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x00000008")
+     message(FATAL_ERROR "unknown RXBIN feature was not rejected precisely:\n${out}${err}")
+ endif()
+@@ -153,7 +157,8 @@ execute_process(
+         COMMAND "${RXDAS}" "${WORK_DIR}/invalid_parseplan_missing_feature.rxbin"
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE result)
++        RESULT_VARIABLE result
++        ENCODING UTF-8)
+ if(result EQUAL 0 OR NOT err MATCHES "opcode 410 requires feature flag 0x00000002")
+     message(FATAL_ERROR
+             "missing prepared-plan feature was not rejected precisely:\n${out}${err}")
+@@ -163,7 +168,8 @@ foreach(runner IN ITEMS RXVM RXBVM)
+             COMMAND "${${runner}}" "${WORK_DIR}/invalid_parseplan.rxbin"
+             OUTPUT_VARIABLE out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE result)
++            RESULT_VARIABLE result
++            ENCODING UTF-8)
+     if(result EQUAL 0 OR NOT "${out}${err}" MATCHES "INVALID_ARGUMENTS")
+         message(FATAL_ERROR
+                 "${runner} accepted an invalid prepared descriptor: rc=${result}\n${out}${err}")
+diff --git a/compiler/tests/perf2_04_certified_call.cmake b/compiler/tests/perf2_04_certified_call.cmake
+index fea5a5cc5..cacb34d37 100644
+--- a/compiler/tests/perf2_04_certified_call.cmake
++++ b/compiler/tests/perf2_04_certified_call.cmake
+@@ -10,7 +10,8 @@ function(run_checked label)
+         COMMAND ${ARGN}
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     if(NOT res EQUAL 0)
+         message(FATAL_ERROR "${label} failed: ${out}${err}")
+     endif()
+@@ -69,7 +70,8 @@ function(run_dual_vm label expected upper_rxbin lower_rxbin length_rxbin
+                     "${substr_rxbin}" "${word_rxbin}" "${main_rxbin}"
+             OUTPUT_VARIABLE run_out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE res)
++            RESULT_VARIABLE res
++            ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" run_out "${run_out}")
+         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
+             message(FATAL_ERROR "${label} ${vm} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")
+@@ -162,7 +164,8 @@ foreach(vm RXVM RXBVM)
+         COMMAND "${${vm}}" "${WORK_DIR}/spoof_upper.rxbin"
+         OUTPUT_VARIABLE run_out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     string(REPLACE "\r\n" "\n" run_out "${run_out}")
+     if(NOT res EQUAL 0 OR NOT run_out STREQUAL spoof_expected)
+         message(FATAL_ERROR "spoof provider ${vm} mismatch: expected [${spoof_expected}], got [${run_out}], stderr [${err}]")
+@@ -184,7 +187,8 @@ foreach(vm RXVM RXBVM)
+         COMMAND "${${vm}}" "${WORK_DIR}/spoof_word.rxbin"
+         OUTPUT_VARIABLE spoof_word_out
+         ERROR_VARIABLE spoof_word_err
+-        RESULT_VARIABLE spoof_word_res)
++        RESULT_VARIABLE spoof_word_res
++        ENCODING UTF-8)
+     string(REPLACE "\r\n" "\n" spoof_word_out "${spoof_word_out}")
+     if(NOT spoof_word_res EQUAL 0 OR NOT spoof_word_out STREQUAL "Alpha\n")
+         message(FATAL_ERROR "spoof word provider ${vm} mismatch: [${spoof_word_out}] [${spoof_word_err}]")
+@@ -204,7 +208,8 @@ foreach(vm RXVM RXBVM)
+         COMMAND "${${vm}}" "${WORK_DIR}/spoof_lower.rxbin"
+         OUTPUT_VARIABLE spoof_lower_out
+         ERROR_VARIABLE spoof_lower_err
+-        RESULT_VARIABLE spoof_lower_res)
++        RESULT_VARIABLE spoof_lower_res
++        ENCODING UTF-8)
+     string(REPLACE "\r\n" "\n" spoof_lower_out "${spoof_lower_out}")
+     if(NOT spoof_lower_res EQUAL 0 OR NOT spoof_lower_out STREQUAL "MIXED ÄÖ\n")
+         message(FATAL_ERROR "spoof lower provider ${vm} mismatch: [${spoof_lower_out}] [${spoof_lower_err}]")
+diff --git a/compiler/tests/perf2_04_inline_assembler_effects.cmake b/compiler/tests/perf2_04_inline_assembler_effects.cmake
+index 6b067a5da..367f99878 100644
+--- a/compiler/tests/perf2_04_inline_assembler_effects.cmake
++++ b/compiler/tests/perf2_04_inline_assembler_effects.cmake
+@@ -15,7 +15,8 @@ foreach(mode opt noopt)
+         WORKING_DIRECTORY "${WORK_DIR}"
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     if(NOT res EQUAL 0)
+         message(FATAL_ERROR "rxc ${mode} failed: ${out}${err}")
+     endif()
+@@ -51,7 +52,8 @@ foreach(mode opt noopt)
+         WORKING_DIRECTORY "${WORK_DIR}"
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     if(NOT res EQUAL 0)
+         message(FATAL_ERROR "rxas ${mode} failed: ${out}${err}")
+     endif()
+@@ -62,7 +64,8 @@ foreach(mode opt noopt)
+             WORKING_DIRECTORY "${WORK_DIR}"
+             OUTPUT_VARIABLE run_out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE res)
++            RESULT_VARIABLE res
++            ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" run_out "${run_out}")
+         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
+             message(FATAL_ERROR "${vm} ${mode} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")
+diff --git a/compiler/tests/perf2_04_inline_assembler_imports.cmake b/compiler/tests/perf2_04_inline_assembler_imports.cmake
+index fa0d5cc5a..5d1c805bc 100644
+--- a/compiler/tests/perf2_04_inline_assembler_imports.cmake
++++ b/compiler/tests/perf2_04_inline_assembler_imports.cmake
+@@ -8,7 +8,8 @@ function(run_checked label)
+         COMMAND ${ARGN}
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     if(NOT res EQUAL 0)
+         message(FATAL_ERROR "${label} failed: ${out}${err}")
+     endif()
+@@ -40,7 +41,8 @@ function(run_dual_vm label dep_rxbin main_rxbin)
+             COMMAND "${${vm}}" "${dep_rxbin}" "${main_rxbin}"
+             OUTPUT_VARIABLE run_out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE res)
++            RESULT_VARIABLE res
++            ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" run_out "${run_out}")
+         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
+             message(FATAL_ERROR "${label} ${vm} mismatch: expected [${expected}], got [${run_out}], stderr [${err}]")
+diff --git a/compiler/tests/perf2_05_partial_call.cmake b/compiler/tests/perf2_05_partial_call.cmake
+index 62b4ee547..41b7e1ebe 100644
+--- a/compiler/tests/perf2_05_partial_call.cmake
++++ b/compiler/tests/perf2_05_partial_call.cmake
+@@ -8,7 +8,8 @@ function(run_checked label)
+         COMMAND ${ARGN}
+         OUTPUT_VARIABLE out
+         ERROR_VARIABLE err
+-        RESULT_VARIABLE res)
++        RESULT_VARIABLE res
++        ENCODING UTF-8)
+     if(NOT res EQUAL 0)
+         message(FATAL_ERROR "${label} failed: ${out}${err}")
+     endif()
+@@ -20,7 +21,8 @@ function(run_dual_vm label rxbin)
+             COMMAND "${${vm}}" "${rxbin}"
+             OUTPUT_VARIABLE run_out
+             ERROR_VARIABLE err
+-            RESULT_VARIABLE res)
++            RESULT_VARIABLE res
++            ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" run_out "${run_out}")
+         if(NOT res EQUAL 0 OR NOT run_out STREQUAL expected)
+             message(FATAL_ERROR
+@@ -72,7 +74,8 @@ foreach(mode opt noopt)
+             COMMAND "${${vm}}" "${WORK_DIR}/array_${mode}.rxbin"
+             OUTPUT_VARIABLE array_out
+             ERROR_VARIABLE array_err
+-            RESULT_VARIABLE array_res)
++            RESULT_VARIABLE array_res
++            ENCODING UTF-8)
+         string(REPLACE "\r\n" "\n" array_out "${array_out}")
+         if(NOT array_res EQUAL 0 OR NOT array_out STREQUAL array_expected)
+             message(FATAL_ERROR

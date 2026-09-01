@@ -1,0 +1,8 @@
+benchmark=nr15_stem_primitive_control
+mode=get-hit
+family=long
+size=64
+iterations=5000
+elapsed_us=548
+checksum=14290
+PASS: NR-15 primitive control

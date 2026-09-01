@@ -1,0 +1,2 @@
+Error in array_mutation_bad_value.crexx @ 4:18 - #BAD_CONVERSION, "\"x\""
+1 error(s) in source file

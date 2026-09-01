@@ -1,0 +1,133 @@
+sample_id,stream,line_number,text
+timing-PERF2-04-UPPER-control-upper-current-rxvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-warmup-1,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-warmup-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-warmup-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-warmup-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-1,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-1,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-2,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-2,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-3,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-3,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-4,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-4,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-5,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-5,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-6,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-6,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-7,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-7,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-8,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-8,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=current-symbol iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-symbol-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=direct iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-direct-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-9,stdout,1,PERF2-04-UPPER-CONTROL variant=current-literal iterations=100000 checksum=3388895 publication=attribution-only
+timing-PERF2-04-UPPER-control-upper-current-rxbvm-recorded-9,stdout,2,PASS: PERF2-04 UPPER control

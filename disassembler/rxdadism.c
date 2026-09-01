@@ -28,75 +28,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <math.h>
 #include <ctype.h>
 #include "platform.h"
 #include "rxas.h"
 #include "rxdadism.h"
 #include "../binutils/include/rxdefs.h"
+#include "../binutils/include/rxjtable.h"
+#include "../binutils/include/rxnumparse.h"
 
 /* Max buffer size - todo change to a dynamic solution */
 #define MAX_LINE_SIZE 5000
 #include "../binutils/include/opdata.c"
-
-static size_t line_buffer_offset(size_t used) {
-    return used < MAX_LINE_SIZE ? used : MAX_LINE_SIZE - 1;
-}
-
-static size_t line_buffer_remaining(size_t used) {
-    return used < MAX_LINE_SIZE ? MAX_LINE_SIZE - used : 0;
-}
-
-static int get_operand_types(OpFormat format, OperandType *types) {
-    switch (format) {
-        case FMT_EMPTY: return 0;
-        case FMT_B: types[0] = OP_BINARY; return 1;
-        case FMT_C: types[0] = OP_CHAR; return 1;
-        case FMT_F: types[0] = OP_FLOAT; return 1;
-        case FMT_I: types[0] = OP_INT; return 1;
-        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
-        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
-        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L: types[0] = OP_ID; return 1;
-        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
-        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
-        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
-        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
-        case FMT_P: types[0] = OP_FUNC; return 1;
-        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
-        case FMT_R: types[0] = OP_REG; return 1;
-        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
-        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
-        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
-        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
-        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
-        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
-        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
-        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
-        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
-        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
-        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
-        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
-        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
-        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
-        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
-        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
-        case FMT_S: types[0] = OP_STRING; return 1;
-        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
-        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
-        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        default: return 0;
-    }
-}
 
 static void get_mnemonic(char *dest, const char *name) {
     int i = 0;
@@ -192,22 +137,32 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
 
 /* Encodes a binary array to a hex string buffer. Like snprintf() it returns the number of characters
  * that would have been written */
-static size_t encode_binary_to_hex(char* buffer, size_t buffer_len, char* binary, size_t length) {
+static size_t encode_binary_to_hex(char* buffer, size_t buffer_len, const char* binary, size_t length) {
+    static const char hex_digits[] = "0123456789abcdef";
     size_t out_len = 0;
 
-    out_len++; if (buffer_len) { *(buffer++) = '0'; buffer_len--; }
-    out_len++; if (buffer_len) { *(buffer++) = 'x'; buffer_len--; }
+#define ADD_HEX_CHAR_TO_BUFFER(ch) \
+    do { \
+        out_len++; \
+        if (buffer_len > 1u) { \
+            *(buffer++) = (ch); \
+            buffer_len--; \
+        } \
+    } while (0)
+
+    ADD_HEX_CHAR_TO_BUFFER('0');
+    ADD_HEX_CHAR_TO_BUFFER('x');
 
     while (length) {
-        snprintf(buffer, buffer_len, "%02x", (unsigned int)(unsigned char)*binary);
-        buffer += 2;
+        unsigned char byte = (unsigned char)*binary;
+        ADD_HEX_CHAR_TO_BUFFER(hex_digits[byte >> 4u]);
+        ADD_HEX_CHAR_TO_BUFFER(hex_digits[byte & 0x0fu]);
         binary++;
         length--;
-        out_len += 2;
-        buffer_len -= 2;
     }
     if (buffer_len) *buffer = 0;
     return out_len;
+#undef ADD_HEX_CHAR_TO_BUFFER
 }
 
 /* Get the constant string
@@ -273,6 +228,28 @@ static void output_meta_inline_line(FILE *stream, bin_space *pgm, meta_inline_co
     }
     if (symbol) free(symbol);
     if (payload) free(payload);
+}
+
+static void output_meta_task_target_line(FILE *stream,
+                                         bin_space *pgm,
+                                         meta_task_target_constant *mentry,
+                                         const char *indent) {
+    char symbol_buffer[MAX_LINE_SIZE];
+    char binding_buffer[MAX_LINE_SIZE];
+    string_constant *binding;
+
+    get_const_string(pgm, symbol_buffer, sizeof(symbol_buffer), mentry->symbol);
+    binding = (string_constant *)(pgm->const_pool + mentry->binding);
+    encode_binary_to_hex(binding_buffer,
+                         sizeof(binding_buffer),
+                         binding->string,
+                         binding->string_len);
+    fprintf(stream,
+            "%s.meta %s=\".task%u\" %s\n",
+            indent,
+            symbol_buffer,
+            mentry->kind,
+            binding_buffer);
 }
 
 static void output_meta_source_step_line(FILE *stream, bin_space *pgm, meta_source_step_constant *mentry, const char *indent) {
@@ -392,6 +369,115 @@ static void output_meta_inline_for_symbol(FILE *stream, module_file *module, bin
     }
 }
 
+static void output_meta_provider_line(FILE *stream,
+                                      bin_space *pgm,
+                                      const meta_provider_constant *provider,
+                                      const char *indent) {
+    char symbol[MAX_LINE_SIZE];
+    char provider_id[MAX_LINE_SIZE];
+    const char *option;
+
+    get_const_string(pgm, symbol, sizeof(symbol), provider->symbol);
+    get_const_string(pgm, provider_id, sizeof(provider_id), provider->provider);
+    option = (provider->flags & RXBIN_PROVIDER_REQUIRED)
+            ? ".provider" : ".provider.optional";
+    fprintf(stream, "%s.meta %s=\"%s\" %s\n",
+            indent ? indent : "", symbol, option, provider_id);
+}
+
+static void output_meta_provider_for_symbol(FILE *stream,
+                                            module_file *module,
+                                            bin_space *pgm,
+                                            const char *symbol,
+                                            const char *indent) {
+    int m;
+
+    if (!symbol) return;
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry =
+            (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_PROVIDER) {
+            meta_provider_constant *provider =
+                (meta_provider_constant *)(module->constant + m);
+            char *provider_symbol =
+                get_const_raw_string_alloc(pgm, provider->symbol);
+            if (provider_symbol && strcmp(provider_symbol, symbol) == 0) {
+                output_meta_provider_line(stream, pgm, provider, indent);
+            }
+            free(provider_symbol);
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
+static void output_meta_autoload_for_symbol(FILE *stream,
+                                            module_file *module,
+                                            bin_space *pgm,
+                                            const char *symbol,
+                                            const char *indent) {
+    int m;
+
+    if (!symbol) return;
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry =
+            (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_AUTOLOAD) {
+            meta_autoload_constant *autoload =
+                (meta_autoload_constant *)(module->constant + m);
+            char *autoload_symbol =
+                get_const_raw_string_alloc(pgm, autoload->symbol);
+            if (autoload_symbol && strcmp(autoload_symbol, symbol) == 0) {
+                char artifact[MAX_LINE_SIZE];
+                get_const_string(pgm, artifact, sizeof(artifact),
+                                 autoload->artifact);
+                fprintf(stream, "%s.meta \"%s\"=\".autoload\" %s\n",
+                        indent ? indent : "", symbol, artifact);
+            }
+            free(autoload_symbol);
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
+static size_t get_func_string(bin_space *pgm, char *buffer,
+                              size_t buffer_len, size_t index);
+
+static void output_meta_initializer_for_symbol(FILE *stream,
+                                               module_file *module,
+                                               bin_space *pgm,
+                                               const char *symbol,
+                                               const char *indent) {
+    int m;
+
+    if (!symbol) return;
+    m = module->header.meta_head;
+    while (m != -1) {
+        chameleon_constant *entry =
+            (chameleon_constant *)(module->constant + m);
+        if (entry->type == META_INITIALIZER) {
+            meta_initializer_constant *initializer =
+                (meta_initializer_constant *)(module->constant + m);
+            char *initializer_symbol =
+                get_const_raw_string_alloc(pgm, initializer->symbol);
+            if (initializer_symbol && strcmp(initializer_symbol, symbol) == 0) {
+                char symbol_buffer[MAX_LINE_SIZE];
+                char function_buffer[MAX_LINE_SIZE];
+                get_const_string(pgm, symbol_buffer, sizeof(symbol_buffer),
+                                 initializer->symbol);
+                get_func_string(pgm, function_buffer, sizeof(function_buffer),
+                                initializer->function);
+                fprintf(stream,
+                        "%s.meta %s=\".initializer\" \".void\" %s \"\"\n",
+                        indent ? indent : "", symbol_buffer, function_buffer);
+            }
+            free(initializer_symbol);
+        }
+        m = ((meta_entry *)(module->constant + m))->next;
+    }
+}
+
 /* Get the function name string
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
@@ -438,18 +524,75 @@ static size_t format_float_literal(char *buffer, size_t buffer_len, double value
     return snprintf(buffer, buffer_len, "%s", temp);
 }
 
+typedef struct rxda_binary_alias {
+    size_t pool_index;
+    struct rxda_binary_alias *next;
+} rxda_binary_alias;
+
+static const rxda_binary_alias *rxda_find_binary_alias(
+        const rxda_binary_alias *aliases, size_t pool_index) {
+    while (aliases) {
+        if (aliases->pool_index == pool_index) return aliases;
+        aliases = aliases->next;
+    }
+    return NULL;
+}
+
 /* Disassemble an operand
  *
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
-static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_len,
-                                  OperandType type, size_t index, int globals, int locals) {
+static size_t disassemble_operand(bin_space *pgm,
+                                  module_file *module,
+                                  int opcode,
+                                  unsigned int operand_index,
+                                  char* buffer,
+                                  size_t buffer_len,
+                                  OperandType type,
+                                  size_t index,
+                                  const rxda_binary_alias *binary_aliases,
+                                  int globals,
+                                  int locals) {
 
     size_t out_len;
     size_t ix;
     char *c;
     size_t sz;
     int r;
+
+    if (module && module->graph_operands &&
+        rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
+        char *text;
+        size_t encoded;
+
+        text = rx_graph_operand_text(module->semantic_graph,
+                                     opcode,
+                                     operand_index,
+                                     (uint32_t)pgm->binary[index].index);
+        if (!text) return (size_t)snprintf(buffer, buffer_len, "*INVALID_GRAPH_ID*");
+        out_len = 1u;
+        if (buffer_len) {
+            *buffer++ = '"';
+            buffer_len--;
+        }
+        encoded = encode_print(buffer, buffer_len, text, strlen(text));
+        out_len += encoded;
+        if (encoded < buffer_len) {
+            buffer += encoded;
+            buffer_len -= encoded;
+        } else {
+            buffer += buffer_len;
+            buffer_len = 0u;
+        }
+        out_len++;
+        if (buffer_len) {
+            *buffer++ = '"';
+            buffer_len--;
+            *buffer = 0;
+        }
+        free(text);
+        return out_len;
+    }
 
     switch(type) {
         case OP_ID:
@@ -464,11 +607,8 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
             out_len = get_func_string(pgm, buffer, buffer_len, ix);
             break;
         case OP_INT:
-#ifdef __32BIT__
-            out_len = snprintf(buffer, buffer_len, "%d", pgm->binary[index].iconst);
-#else
-            out_len = snprintf(buffer, buffer_len, "%lld", pgm->binary[index].iconst);
-#endif
+            out_len = snprintf(buffer, buffer_len, "%" RXINTEGER_PRI,
+                               pgm->binary[index].iconst);
             break;
         case OP_FLOAT:
             out_len = format_float_literal(buffer, buffer_len,
@@ -489,9 +629,16 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
             break;
         case OP_BINARY:
             ix = pgm->binary[index].index;
-            c = ((string_constant *)(pgm->const_pool + ix))->string;
-            sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
-            out_len = encode_binary_to_hex(buffer, buffer_len, c, sz);
+            if (rxda_find_binary_alias(binary_aliases, ix)) {
+                out_len = snprintf(buffer, buffer_len,
+                                   "\xC2\xA7" "rxdas.const.%lx",
+                                   (unsigned long)ix);
+            }
+            else {
+                c = ((string_constant *)(pgm->const_pool + ix))->string;
+                sz = ((string_constant *)(pgm->const_pool + ix))->string_len;
+                out_len = encode_binary_to_hex(buffer, buffer_len, c, sz);
+            }
             break;
         default:
             out_len = snprintf(buffer, buffer_len, "*INTERNAL_ERROR*");
@@ -509,6 +656,509 @@ typedef struct code_line {
     const OpInfo *op;
     const char *comment;
 } code_line;
+
+enum rxda_jtable_mode {
+    RXDA_JTABLE_STRING,
+    RXDA_JTABLE_PADDED,
+    RXDA_JTABLE_NUMERIC,
+    RXDA_JTABLE_BINARY,
+    RXDA_JTABLE_INTEGER
+};
+
+typedef struct rxda_jtable_case {
+    const unsigned char *key;
+    uint32_t key_length;
+    uint32_t target;
+    struct rxda_jtable_case *next;
+} rxda_jtable_case;
+
+typedef struct rxda_jtable {
+    size_t pool_index;
+    size_t procedure_start;
+    unsigned char algorithm;
+    enum rxda_jtable_mode mode;
+    int valid;
+    rxda_jtable_case *cases;
+    rxda_jtable_case *cases_tail;
+    struct rxda_jtable *next;
+} rxda_jtable;
+
+static uint16_t rxda_read_u16le(const unsigned char *bytes) {
+    return (uint16_t)((uint16_t)bytes[0] | ((uint16_t)bytes[1] << 8u));
+}
+
+static uint32_t rxda_read_u32le(const unsigned char *bytes) {
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8u) |
+           ((uint32_t)bytes[2] << 16u) |
+           ((uint32_t)bytes[3] << 24u);
+}
+
+static int rxda_range_valid(size_t total, size_t offset, size_t length) {
+    return offset <= total && length <= total - offset;
+}
+
+static int rxda_add_jtable_case(rxda_jtable *table, const unsigned char *payload,
+                                size_t payload_length, uint32_t key_offset,
+                                uint32_t key_length, uint32_t target,
+                                size_t instruction_count) {
+    rxda_jtable_case *entry;
+
+    if (!rxda_range_valid(payload_length, key_offset, key_length) ||
+        target >= instruction_count) return 0;
+    entry = calloc(1, sizeof(*entry));
+    if (!entry) return 0;
+    entry->key = payload + key_offset;
+    entry->key_length = key_length;
+    entry->target = target;
+    if (table->cases_tail) table->cases_tail->next = entry;
+    else table->cases = entry;
+    table->cases_tail = entry;
+    return 1;
+}
+
+static int rxda_decode_linear_jtable(rxda_jtable *table, const unsigned char *payload,
+                                     size_t payload_length, uint32_t case_count,
+                                     size_t instruction_count) {
+    size_t entries_length;
+    size_t i;
+
+    if ((size_t)case_count > SIZE_MAX / RX_JTABLE_LINEAR_ENTRY_SIZE) return 0;
+    entries_length = (size_t)case_count * RX_JTABLE_LINEAR_ENTRY_SIZE;
+    if (!rxda_range_valid(payload_length, RX_JTABLE_HEADER_SIZE, entries_length)) return 0;
+    for (i = 0; i < case_count; i++) {
+        size_t offset = RX_JTABLE_HEADER_SIZE + i * RX_JTABLE_LINEAR_ENTRY_SIZE;
+        if (!rxda_add_jtable_case(table, payload, payload_length,
+                                  rxda_read_u32le(payload + offset),
+                                  rxda_read_u32le(payload + offset + 4u),
+                                  rxda_read_u32le(payload + offset + 8u),
+                                  instruction_count)) return 0;
+    }
+    return 1;
+}
+
+static int rxda_decode_open_jtable(rxda_jtable *table, const unsigned char *payload,
+                                   size_t payload_length, uint32_t case_count,
+                                   size_t instruction_count) {
+    uint32_t slot_count;
+    size_t slots_length;
+    size_t i;
+    size_t found = 0;
+
+    if (!rxda_range_valid(payload_length, 0, RX_JTABLE_OPEN_HEADER_SIZE)) return 0;
+    slot_count = rxda_read_u32le(payload + 12u);
+    if (slot_count == 0 || (slot_count & (slot_count - 1u)) != 0 ||
+        (size_t)slot_count > SIZE_MAX / RX_JTABLE_OPEN_SLOT_SIZE) return 0;
+    slots_length = (size_t)slot_count * RX_JTABLE_OPEN_SLOT_SIZE;
+    if (!rxda_range_valid(payload_length, RX_JTABLE_OPEN_HEADER_SIZE, slots_length)) return 0;
+    for (i = 0; i < slot_count; i++) {
+        size_t offset = RX_JTABLE_OPEN_HEADER_SIZE + i * RX_JTABLE_OPEN_SLOT_SIZE;
+        uint32_t key_offset = rxda_read_u32le(payload + offset + 4u);
+        if (key_offset == RX_JTABLE_OPEN_EMPTY) continue;
+        if (!rxda_add_jtable_case(table, payload, payload_length, key_offset,
+                                  rxda_read_u32le(payload + offset + 8u),
+                                  rxda_read_u32le(payload + offset + 12u),
+                                  instruction_count)) return 0;
+        found++;
+    }
+    return found == case_count;
+}
+
+static int rxda_decode_acph_jtable(rxda_jtable *table, const unsigned char *payload,
+                                   size_t payload_length, uint32_t case_count,
+                                   size_t instruction_count) {
+    uint32_t *pending;
+    uint32_t *visited;
+    size_t pending_count = 0;
+    size_t visited_count = 0;
+    size_t found = 0;
+    size_t capacity = (size_t)case_count + 1u;
+    int ok = 1;
+
+    if (!rxda_range_valid(payload_length, 0, RX_JTABLE_ACPH_HEADER_SIZE) ||
+        capacity > SIZE_MAX / sizeof(*pending)) return 0;
+    pending = malloc(capacity * sizeof(*pending));
+    visited = malloc(capacity * sizeof(*visited));
+    if (!pending || !visited) {
+        free(pending);
+        free(visited);
+        return 0;
+    }
+    pending[pending_count++] = rxda_read_u32le(payload + 12u);
+    while (pending_count && ok) {
+        uint32_t node_offset = pending[--pending_count];
+        uint16_t slot_count;
+        size_t node_length;
+        size_t i;
+
+        for (i = 0; i < visited_count; i++) {
+            if (visited[i] == node_offset) {
+                ok = 0;
+                break;
+            }
+        }
+        if (!ok || visited_count >= capacity ||
+            !rxda_range_valid(payload_length, node_offset, RX_JTABLE_ACPH_NODE_SIZE)) {
+            ok = 0;
+            break;
+        }
+        visited[visited_count++] = node_offset;
+        slot_count = rxda_read_u16le(payload + node_offset + 4u);
+        if (slot_count == 0 || slot_count > RX_JTABLE_ACPH_SYMBOL_COUNT ||
+            (size_t)slot_count > (SIZE_MAX - RX_JTABLE_ACPH_NODE_SIZE) / RX_JTABLE_ACPH_SLOT_SIZE) {
+            ok = 0;
+            break;
+        }
+        node_length = RX_JTABLE_ACPH_NODE_SIZE + (size_t)slot_count * RX_JTABLE_ACPH_SLOT_SIZE;
+        if (!rxda_range_valid(payload_length, node_offset, node_length)) {
+            ok = 0;
+            break;
+        }
+        for (i = 0; i < slot_count; i++) {
+            size_t slot_offset = node_offset + RX_JTABLE_ACPH_NODE_SIZE +
+                                 i * RX_JTABLE_ACPH_SLOT_SIZE;
+            unsigned char kind = payload[slot_offset + 2u];
+            uint32_t value_offset = rxda_read_u32le(payload + slot_offset + 4u);
+            if (kind == RX_JTABLE_ACPH_SLOT_EMPTY) continue;
+            if (kind == RX_JTABLE_ACPH_SLOT_CHILD) {
+                if (pending_count >= capacity) {
+                    ok = 0;
+                    break;
+                }
+                pending[pending_count++] = value_offset;
+            }
+            else if (kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+                if (!rxda_range_valid(payload_length, value_offset, RX_JTABLE_ACPH_LEAF_SIZE) ||
+                    !rxda_add_jtable_case(table, payload, payload_length,
+                                          rxda_read_u32le(payload + value_offset),
+                                          rxda_read_u32le(payload + value_offset + 4u),
+                                          rxda_read_u32le(payload + value_offset + 8u),
+                                          instruction_count)) {
+                    ok = 0;
+                    break;
+                }
+                found++;
+            }
+            else {
+                ok = 0;
+                break;
+            }
+        }
+    }
+    free(pending);
+    free(visited);
+    return ok && found == case_count;
+}
+
+static int rxda_decode_jtable(bin_space *pgm, rxda_jtable *table) {
+    string_constant *constant;
+    const unsigned char *payload;
+    size_t payload_length;
+    uint16_t header_size;
+    uint32_t case_count;
+
+    if (table->pool_index >= pgm->const_size) return 0;
+    constant = (string_constant *)(pgm->const_pool + table->pool_index);
+    if (constant->base.type != BINARY_CONST) return 0;
+    payload = (const unsigned char *)constant->string;
+    payload_length = constant->string_len;
+    if (!rxda_range_valid(payload_length, 0, RX_JTABLE_HEADER_SIZE)) return 0;
+    table->algorithm = payload[0];
+    header_size = rxda_read_u16le(payload + 2u);
+    case_count = rxda_read_u32le(payload + 8u);
+    if (case_count == 0) return 0;
+    switch (table->algorithm) {
+        case RX_JTABLE_ALG_LINEAR:
+            if (header_size != RX_JTABLE_HEADER_SIZE) return 0;
+            return rxda_decode_linear_jtable(table, payload, payload_length,
+                                             case_count, pgm->inst_size);
+        case RX_JTABLE_ALG_OPENHASH:
+            if (header_size != RX_JTABLE_OPEN_HEADER_SIZE) return 0;
+            return rxda_decode_open_jtable(table, payload, payload_length,
+                                           case_count, pgm->inst_size);
+        case RX_JTABLE_ALG_ACPH:
+            if (header_size != RX_JTABLE_ACPH_HEADER_SIZE) return 0;
+            return rxda_decode_acph_jtable(table, payload, payload_length,
+                                           case_count, pgm->inst_size);
+        default:
+            return 0;
+    }
+}
+
+static int rxda_jump_info(const OpInfo *op, enum rxda_jtable_mode *mode,
+                          int *table_operand) {
+    if (strcmp(op->mnemonic, "JUMPS_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_STRING; *table_operand = 1; return 1;
+    }
+    if (strcmp(op->mnemonic, "JUMPR_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_PADDED; *table_operand = 1; return 1;
+    }
+    if (strcmp(op->mnemonic, "JUMPN_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_NUMERIC; *table_operand = 1; return 1;
+    }
+    if (strcmp(op->mnemonic, "JUMPB_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_BINARY; *table_operand = 1; return 1;
+    }
+    if (strcmp(op->mnemonic, "JUMPBS_REG_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_BINARY; *table_operand = 2; return 1;
+    }
+    if (strcmp(op->mnemonic, "JUMPI_REG_BINARY") == 0) {
+        *mode = RXDA_JTABLE_INTEGER; *table_operand = 1; return 1;
+    }
+    return 0;
+}
+
+static rxda_jtable *rxda_find_jtable(rxda_jtable *tables, size_t pool_index) {
+    while (tables) {
+        if (tables->pool_index == pool_index) return tables;
+        tables = tables->next;
+    }
+    return NULL;
+}
+
+static rxda_jtable *rxda_collect_jtables(bin_space *pgm, code_line *source) {
+    rxda_jtable *tables = NULL;
+    rxda_jtable *tail = NULL;
+    size_t procedure_start = SIZE_MAX;
+    size_t i = 0;
+
+    while (i < pgm->inst_size) {
+        size_t instruction = i;
+        const OpInfo *op = &op_table[pgm->binary[i++].instruction.opcode];
+        size_t operand_count = rxop_format_operand_count(op->format);
+        enum rxda_jtable_mode mode;
+        int table_operand;
+
+        if (source[instruction].flags == show_proc) procedure_start = instruction;
+        if (rxda_jump_info(op, &mode, &table_operand) && table_operand < operand_count) {
+            size_t pool_index = pgm->binary[instruction + 1u + (size_t)table_operand].index;
+            rxda_jtable *table = rxda_find_jtable(tables, pool_index);
+            if (!table) {
+                table = calloc(1, sizeof(*table));
+                if (!table) break;
+                table->pool_index = pool_index;
+                table->procedure_start = procedure_start;
+                table->mode = mode;
+                table->valid = procedure_start != SIZE_MAX && rxda_decode_jtable(pgm, table);
+                if (tail) tail->next = table;
+                else tables = table;
+                tail = table;
+            }
+            else if (table->procedure_start != procedure_start || table->mode != mode) {
+                table->valid = 0;
+            }
+        }
+        i = instruction + 1u + (size_t)operand_count;
+    }
+    return tables;
+}
+
+static int rxda_binary_needs_alias(bin_space *pgm, size_t pool_index) {
+    string_constant *constant;
+    size_t header_size = offsetof(string_constant, string);
+    size_t encoded_length;
+
+    if (pool_index > pgm->const_size ||
+        header_size > pgm->const_size - pool_index) return 0;
+    constant = (string_constant *)(pgm->const_pool + pool_index);
+    if (constant->base.type != BINARY_CONST ||
+        constant->base.size_in_pool < header_size ||
+        constant->base.size_in_pool > pgm->const_size - pool_index ||
+        constant->string_len > constant->base.size_in_pool - header_size) return 0;
+    if (constant->string_len > (SIZE_MAX - 2u) / 2u) return 1;
+    encoded_length = 2u + constant->string_len * 2u;
+    return encoded_length >= MAX_LINE_SIZE;
+}
+
+/* Oversized binary operands are emitted once as private .const aliases. This
+ * keeps ordinary rxdas output proportional to the constant-pool size while
+ * preserving exact assembler round-tripping. Valid jump tables already have
+ * their own symbolic .jtable representation and do not need another alias. */
+static rxda_binary_alias *rxda_collect_binary_aliases(bin_space *pgm,
+                                                      code_line *source,
+                                                      rxda_jtable *jump_tables) {
+    rxda_binary_alias *aliases = NULL;
+    rxda_binary_alias *tail = NULL;
+    size_t i = 0;
+
+    while (i < pgm->inst_size) {
+        size_t instruction = i;
+        const OpInfo *op = source[instruction].op;
+        size_t operand_count = rxop_format_operand_count(op->format);
+        enum rxda_jtable_mode jump_mode;
+        int table_operand = -1;
+        size_t k;
+
+        (void)rxda_jump_info(op, &jump_mode, &table_operand);
+        i++;
+        for (k = 0; k < operand_count; k++, i++) {
+            size_t pool_index;
+            rxda_jtable *table;
+
+            if (rxop_format_operand_type(op->format, k) != OP_BINARY) continue;
+            pool_index = pgm->binary[i].index;
+            table = k == (size_t)table_operand
+                    ? rxda_find_jtable(jump_tables, pool_index) : NULL;
+            if ((table && table->valid) ||
+                !rxda_binary_needs_alias(pgm, pool_index) ||
+                rxda_find_binary_alias(aliases, pool_index)) continue;
+            {
+                rxda_binary_alias *alias = calloc(1u, sizeof(*alias));
+                if (!alias) return aliases;
+                alias->pool_index = pool_index;
+                if (tail) tail->next = alias;
+                else aliases = alias;
+                tail = alias;
+            }
+        }
+    }
+    return aliases;
+}
+
+static void rxda_output_binary_hex(FILE *stream, const char *binary, size_t length) {
+    static const char hex_digits[] = "0123456789abcdef";
+
+    fputs("0x", stream);
+    while (length) {
+        unsigned char byte = (unsigned char)*binary++;
+        fputc(hex_digits[byte >> 4u], stream);
+        fputc(hex_digits[byte & 0x0fu], stream);
+        length--;
+    }
+}
+
+static void rxda_output_binary_aliases(FILE *stream, bin_space *pgm,
+                                       const rxda_binary_alias *aliases) {
+    while (aliases) {
+        size_t pool_index = aliases->pool_index;
+        string_constant *constant =
+                (string_constant *)(pgm->const_pool + pool_index);
+        fprintf(stream, ".const \xC2\xA7" "rxdas.const.%lx binary ",
+                (unsigned long)pool_index);
+        rxda_output_binary_hex(stream, constant->string, constant->string_len);
+        fputc('\n', stream);
+        aliases = aliases->next;
+    }
+}
+
+static void rxda_free_binary_aliases(rxda_binary_alias *aliases) {
+    while (aliases) {
+        rxda_binary_alias *next = aliases->next;
+        free(aliases);
+        aliases = next;
+    }
+}
+
+static const char *rxda_jtable_algorithm(unsigned char algorithm) {
+    switch (algorithm) {
+        case RX_JTABLE_ALG_LINEAR: return "linear";
+        case RX_JTABLE_ALG_OPENHASH: return "openhash";
+        case RX_JTABLE_ALG_ACPH: return "acph";
+        default: return "auto";
+    }
+}
+
+static void rxda_output_jtable_declarations(FILE *stream, rxda_jtable *tables,
+                                            size_t procedure_start) {
+    while (tables) {
+        if (tables->valid && tables->procedure_start == procedure_start) {
+            fprintf(stream, "                .jtable jtable_%lx %s\n",
+                    (unsigned long)tables->pool_index,
+                    rxda_jtable_algorithm(tables->algorithm));
+        }
+        tables = tables->next;
+    }
+}
+
+static int rxda_numeric_case_value(const rxda_jtable_case *entry, double *value) {
+    uint64_t bits = 0;
+    size_t i;
+
+    if (entry->key_length != RX_NUMERIC_KEY_SIZE) return 0;
+    for (i = 0; i < RX_NUMERIC_KEY_SIZE; i++) {
+        bits |= (uint64_t)entry->key[i] << (i * 8u);
+    }
+    memcpy(value, &bits, sizeof(bits));
+    return !isnan(*value);
+}
+
+static int rxda_output_jcase_literal(FILE *stream, enum rxda_jtable_mode mode,
+                                     const rxda_jtable_case *entry) {
+    size_t i;
+
+    if (mode == RXDA_JTABLE_BINARY) {
+        fprintf(stream, "0x");
+        for (i = 0; i < entry->key_length; i++) fprintf(stream, "%02x", entry->key[i]);
+        return 1;
+    }
+    if (mode == RXDA_JTABLE_INTEGER) {
+        uint64_t bits = 0;
+        int64_t value;
+        if (entry->key_length != sizeof(value)) return 0;
+        for (i = 0; i < sizeof(value); i++) bits |= (uint64_t)entry->key[i] << (i * 8u);
+        memcpy(&value, &bits, sizeof(value));
+        fprintf(stream, "%" PRId64, value);
+        return 1;
+    }
+    if (mode == RXDA_JTABLE_NUMERIC) {
+        char value_buffer[64];
+        double value;
+        if (!rxda_numeric_case_value(entry, &value)) return 0;
+        format_float_literal(value_buffer, sizeof(value_buffer), value);
+        fprintf(stream, "\"%s\"", value_buffer);
+        return 1;
+    }
+    fprintf(stream, "\"");
+    for (i = 0; i < entry->key_length; i++) {
+        char encoded[8];
+        size_t encoded_length = encode_print(encoded, sizeof(encoded),
+                                             (char *)entry->key + i, 1u);
+        fwrite(encoded, 1, encoded_length < sizeof(encoded) ? encoded_length : sizeof(encoded), stream);
+    }
+    fprintf(stream, "\"");
+    return 1;
+}
+
+static int rxda_is_visible_jcase(enum rxda_jtable_mode mode,
+                                 const rxda_jtable_case *entry) {
+    double value;
+    return mode != RXDA_JTABLE_NUMERIC || rxda_numeric_case_value(entry, &value);
+}
+
+static void rxda_output_jcases(FILE *stream, rxda_jtable *tables, size_t target) {
+    while (tables) {
+        if (tables->valid) {
+            rxda_jtable_case *entry = tables->cases;
+            size_t case_index = 0;
+            while (entry) {
+                if (entry->target == target && rxda_is_visible_jcase(tables->mode, entry)) {
+                    fprintf(stream, "jt_%lx_case_%lu: .jcase jtable_%lx ",
+                            (unsigned long)tables->pool_index,
+                            (unsigned long)case_index,
+                            (unsigned long)tables->pool_index);
+                    if (rxda_output_jcase_literal(stream, tables->mode, entry)) fprintf(stream, "\n");
+                }
+                case_index++;
+                entry = entry->next;
+            }
+        }
+        tables = tables->next;
+    }
+}
+
+static void rxda_free_jtables(rxda_jtable *tables) {
+    while (tables) {
+        rxda_jtable *next = tables->next;
+        rxda_jtable_case *entry = tables->cases;
+        while (entry) {
+            rxda_jtable_case *case_next = entry->next;
+            free(entry);
+            entry = case_next;
+        }
+        free(tables);
+        tables = next;
+    }
+}
 
 
 /* Disassembly is quite straightforward - just needs to look up the instructions
@@ -622,6 +1272,11 @@ static void output_imported_proc_meta(FILE *stream, module_file *module, bin_spa
                     get_const_string(pgm, line_buffer, MAX_LINE_SIZE, mentry->args);
                     fprintf(stream, " %s\n",line_buffer);
                     output_meta_inline_for_symbol(stream, module, pgm, raw_symbol, "");
+                    output_meta_provider_for_symbol(stream, module, pgm, raw_symbol, "");
+                    output_meta_autoload_for_symbol(stream, module, pgm,
+                                                    raw_symbol, "");
+                    output_meta_initializer_for_symbol(stream, module, pgm,
+                                                       raw_symbol, "");
                     if (raw_symbol) free(raw_symbol);
                 }
                 m = mentry->base.next;
@@ -798,6 +1453,13 @@ static void output_meta_post_proc(FILE *stream, module_file *module, bin_space *
             }
             break;
 
+            case META_TASK_TARGET: {
+                meta_task_target_constant *mentry =
+                    ((meta_task_target_constant *) (module->constant + m));
+                output_meta_task_target_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
             case META_CLASS: {
                 /* Emitted before the procedure header */
             }
@@ -912,6 +1574,13 @@ static void output_meta(FILE *stream, module_file *module, bin_space *pgm, size_
             }
             break;
 
+            case META_TASK_TARGET: {
+                meta_task_target_constant *mentry =
+                    ((meta_task_target_constant *) (module->constant + m));
+                output_meta_task_target_line(stream, pgm, mentry, "                ");
+            }
+            break;
+
             case META_CLASS: {
                 /* META class */
                 meta_class_constant *mentry = ((meta_class_constant *) (module->constant + m));
@@ -1022,7 +1691,9 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     proc_constant* pentry;
     expose_proc_constant* eentry;
     char line_buffer[MAX_LINE_SIZE];
-    size_t line_len;
+    size_t displayed_mnemonic_length;
+    rxda_jtable *jump_tables;
+    rxda_binary_alias *binary_aliases;
 
     /* Prepare to Print Code */
     i = 0;
@@ -1040,22 +1711,27 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         j = i;
         int opcode = pgm->binary[i++].instruction.opcode;
         const OpInfo *op = &op_table[opcode];
-        OperandType types[3];
-        int num_ops = get_operand_types(op->format, types);
-        int k;
+        size_t num_ops = rxop_format_operand_count(op->format);
+        size_t k;
 
         if (num_ops != pgm->binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
         }
 
         for (k = 0; k < num_ops; k++) {
-            if (types[k] == OP_ID) source[pgm->binary[i].index].flags = show_label;
+            if (rxop_format_operand_type(op->format, k) == OP_ID) {
+                source[pgm->binary[i].index].flags = show_label;
+            }
             i++;
         }
         source[j].op = op;
         source[j].comment = op->description;
         if (source[j].flags == operand) source[j].flags = normal;
     }
+
+    mark_module_procedure_sources(module, pgm, source);
+    jump_tables = rxda_collect_jtables(pgm, source);
+    binary_aliases = rxda_collect_binary_aliases(pgm, source, jump_tables);
 
     /* Pass 1b - Print Constant Pool and add Proc entry flags to the code listing */
     fprintf(stream, "* CONSTANT POOL - Size 0x%lx.  ", pgm->const_size);
@@ -1083,8 +1759,20 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 {
                     char* c = ((string_constant *)(pgm->const_pool + i))->string;
                     size_t sz = ((string_constant *)(pgm->const_pool + i))->string_len;
-                    encode_binary_to_hex(line_buffer, MAX_LINE_SIZE, c, sz);
-                    fprintf(stream, "* 0x%.6lx BINARY %s\n", i, line_buffer);
+                    size_t encoded_length = encode_binary_to_hex(
+                            line_buffer, MAX_LINE_SIZE, c, sz);
+                    char *encoded = line_buffer;
+                    if (encoded_length >= MAX_LINE_SIZE && encoded_length < SIZE_MAX) {
+                        encoded = malloc(encoded_length + 1u);
+                        if (encoded) {
+                            encode_binary_to_hex(encoded, encoded_length + 1u, c, sz);
+                        }
+                        else {
+                            encoded = line_buffer;
+                        }
+                    }
+                    fprintf(stream, "* 0x%.6lx BINARY %s\n", i, encoded);
+                    if (encoded != line_buffer) free(encoded);
                 }
                     break;
                 case PROC_CONST:
@@ -1280,6 +1968,80 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 }
                     break;
 
+                case META_TASK_TARGET:
+                {
+                    meta_task_target_constant *mentry =
+                        (meta_task_target_constant *)entry;
+                    char symbol_buffer[MAX_LINE_SIZE];
+                    char binding_buffer[MAX_LINE_SIZE];
+                    string_constant *binding =
+                        (string_constant *)(pgm->const_pool + mentry->binding);
+                    get_const_string(pgm,
+                                     symbol_buffer,
+                                     sizeof(symbol_buffer),
+                                     mentry->symbol);
+                    encode_binary_to_hex(binding_buffer,
+                                         sizeof(binding_buffer),
+                                         binding->string,
+                                         binding->string_len);
+                    fprintf(stream,
+                            "* 0x%.6lx META-TASK-TARGET @0x%.6lx %s kind=%u %s\n",
+                            i,
+                            mentry->base.address,
+                            symbol_buffer,
+                            mentry->kind,
+                            binding_buffer);
+                }
+                    break;
+
+                case META_PROVIDER:
+                {
+                    meta_provider_constant *mentry =
+                        (meta_provider_constant *)entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-PROVIDER @0x%.6lx flags=%u",
+                            i, mentry->base.address, mentry->flags);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->provider);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
+                case META_INITIALIZER:
+                {
+                    meta_initializer_constant *mentry =
+                        (meta_initializer_constant *)entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-INITIALIZER @0x%.6lx",
+                            i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_func_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                    mentry->function);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
+                case META_AUTOLOAD:
+                {
+                    meta_autoload_constant *mentry =
+                        (meta_autoload_constant *)entry;
+                    fprintf(stream,
+                            "* 0x%.6lx META-AUTOLOAD @0x%.6lx",
+                            i, mentry->base.address);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->symbol);
+                    fprintf(stream, " %s", line_buffer);
+                    get_const_string(pgm, line_buffer, MAX_LINE_SIZE,
+                                     mentry->artifact);
+                    fprintf(stream, " %s\n", line_buffer);
+                }
+                    break;
+
                 case META_REG:
                 {
                     meta_reg_constant *mentry = (meta_reg_constant *)entry;
@@ -1328,13 +2090,12 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         output_module_exposed_summary(stream, module, pgm);
     }
 
-    mark_module_procedure_sources(module, pgm, source);
-
     /* Pass 2a - Generate listing output - number of globals & header information */
     int globals = pgm->globals;
     int locals = 0;
     fprintf(stream, "\n* CODE SEGMENT - Size 0x%lx\n", pgm->inst_size);
     fprintf(stream, "\n.globals=%d\n", globals);
+    rxda_output_binary_aliases(stream, pgm, binary_aliases);
 
     /* Pass 2b - Exposed Registers and procedures exposed from external modules
      * Note that the compiler does not put all these at the top - but hey this is the easiest way for us */
@@ -1390,6 +2151,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                 line_buffer[0] = 0;
             }
             output_meta_post_proc(stream, module, pgm, i, globals, locals);
+            rxda_output_jtable_declarations(stream, jump_tables, i);
         }
         else if (source[i].flags == show_label) {
             snprintf(line_buffer, MAX_LINE_SIZE, "lb_%lx:", i);
@@ -1400,27 +2162,73 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
             output_meta(stream, module, pgm, i, globals, locals);
         }
 
+        rxda_output_jcases(stream, jump_tables, i);
+
         j = i++;
         fprintf(stream, "%-15s",line_buffer);
 
         {
             char mnemonic[MAX_LINE_SIZE];
             get_mnemonic(mnemonic, source[j].op->mnemonic);
-            line_len = snprintf(line_buffer, MAX_LINE_SIZE, " %s ", mnemonic);
+            displayed_mnemonic_length = strlen(mnemonic);
+            fprintf(stream, " %s ", mnemonic);
+            line_buffer[0] = 0;
         }
 
         {
-            OperandType types[3];
-            int num_ops = get_operand_types(source[j].op->format, types);
-            int k;
+            size_t num_ops = rxop_format_operand_count(source[j].op->format);
+            size_t instruction_width = 2 + displayed_mnemonic_length;
+            enum rxda_jtable_mode jump_mode;
+            int table_operand = -1;
+            size_t k;
+            (void)rxda_jump_info(source[j].op, &jump_mode, &table_operand);
             for (k = 0; k < num_ops; k++) {
+                size_t operand_cell;
+                size_t operand_length;
+                char *operand_text;
                 if (k > 0) {
-                    line_len += snprintf(line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), ",");
+                    fputc(',', stream);
+                    instruction_width++;
                 }
-                line_len += disassemble_operand(pgm, line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), types[k], i++, globals, locals);
+                if (k == table_operand) {
+                    size_t pool_index = pgm->binary[i].index;
+                    rxda_jtable *table = rxda_find_jtable(jump_tables, pool_index);
+                    if (table && table->valid) {
+                        size_t length = (size_t)snprintf(line_buffer, MAX_LINE_SIZE,
+                                                        "jtable_%lx", (unsigned long)pool_index);
+                        fputs(line_buffer, stream);
+                        instruction_width += length;
+                        i++;
+                        continue;
+                    }
+                }
+                operand_cell = i++;
+                operand_length = disassemble_operand(
+                        pgm, module, source[j].op->opcode, (unsigned int)k,
+                        line_buffer, MAX_LINE_SIZE,
+                        rxop_format_operand_type(source[j].op->format, k),
+                        operand_cell, binary_aliases, globals, locals);
+                instruction_width += operand_length;
+                operand_text = line_buffer;
+                if (operand_length >= MAX_LINE_SIZE && operand_length < SIZE_MAX) {
+                    operand_text = malloc(operand_length + 1u);
+                    if (operand_text) {
+                        disassemble_operand(
+                                pgm, module, source[j].op->opcode, (unsigned int)k,
+                                operand_text, operand_length + 1u,
+                                rxop_format_operand_type(source[j].op->format, k),
+                                operand_cell, binary_aliases, globals, locals);
+                    }
+                    else {
+                        operand_text = line_buffer;
+                    }
+                }
+                fputs(operand_text, stream);
+                if (operand_text != line_buffer) free(operand_text);
             }
+            while (instruction_width++ < 45) fputc(' ', stream);
         }
-        fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].op->opcode, source[j].comment);
+        fprintf(stream, " * 0x%.6lx:%.4x %s\n", j, source[j].op->opcode, source[j].comment);
     }
 
     /* Final Meta entries at the code address + 1 */
@@ -1429,5 +2237,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     fprintf(stream, "*******************************************************************************\n\n");
 
     /* Free memory */
+    rxda_free_binary_aliases(binary_aliases);
+    rxda_free_jtables(jump_tables);
     free(source);
 }

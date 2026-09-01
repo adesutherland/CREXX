@@ -1,0 +1,23 @@
+sample_id,stream,line_number,text
+timing-PERF2-04-Base64-native-control-base64-native-warmup-1,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-warmup-1,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-warmup-2,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-warmup-2,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-1,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-1,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-2,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-2,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-3,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-3,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-4,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-4,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-5,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-5,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-6,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-6,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-7,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-7,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-8,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-8,stdout,2,PASS: PERF2-04 Base64 native control
+timing-PERF2-04-Base64-native-control-base64-native-recorded-9,stdout,1,PERF2-04-BASE64-NATIVE-CONTROL repetitions=2500 encoded_length=1368 checksum=130560 publication=attribution-only
+timing-PERF2-04-Base64-native-control-base64-native-recorded-9,stdout,2,PASS: PERF2-04 Base64 native control

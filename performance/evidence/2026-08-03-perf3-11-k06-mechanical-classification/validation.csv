@@ -1,0 +1,10 @@
+gate,build,result,detail
+metadata_optimizer_panel,Debug,pass,"3/3"
+metadata_optimizer_panel,Release,pass,"3/3"
+original_focused_replay,Release,pass,"optimized and no-opt byte-identical; signature d132e98f"
+expanded_negative_floor,Debug_and_Release,pass,"different target; different source; executable gap preserved"
+canonical_exact_comparison,Release,pass,"3/3 byte-identical; zero K06 accepts"
+production_binary_identity,Debug_and_Release,pass,"rxas hashes unchanged"
+runtime_timing,not_run,not_warranted,"no production code or ordinary output change"
+broad_ctest,not_run,not_warranted,"test and documentation only"
+git_diff_check,worktree,pass,"no whitespace errors"

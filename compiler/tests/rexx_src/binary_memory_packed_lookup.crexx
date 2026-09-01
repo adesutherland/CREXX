@@ -1,0 +1,41 @@
+options levelb
+
+main: procedure = .int
+  constant TABLE = '030000000A0000000300616E7400140000000300626565001E000000040063726162'x as .binary
+  constant KEY_BEE = '626565'x as .binary
+  constant KEY_BEA = '626561'x as .binary
+  constant KEY_CRAB = '63726162'x as .binary
+  constant KEY_CRA = '637261'x as .binary
+
+  arena = TABLE
+
+  if find_row(arena, 20, KEY_BEE) <> 14 then return 1
+  if find_row(arena, 20, KEY_BEA) <> -1 then return 2
+  if find_row(arena, 30, KEY_CRAB) <> 24 then return 3
+  if find_row(arena, 30, KEY_CRA) <> -1 then return 4
+
+  say "ok"
+  return 0
+
+find_row: procedure = .int
+  arg table = .binary, wanted_hash = .int, wanted_key = .binary
+  constant HEADER_COUNT = 0
+  constant HEADER_ROWS = 4
+  constant ROW_HASH = 0
+  constant ROW_KEY_LEN = 4
+  constant ROW_KEY = 6
+  constant ROW_SIZE = 10
+
+  count = <at..u32>(HEADER_COUNT) table
+  wanted_len = <blen>(wanted_key)
+  do i = 0 to count - 1
+    row = HEADER_ROWS + i * ROW_SIZE
+    hash = <at..u32>(row + ROW_HASH) table
+    if hash = wanted_hash then do
+      key_len = <at..u16>(row + ROW_KEY_LEN) table
+      if key_len = wanted_len then do
+        if <compare..binary>(table, row + ROW_KEY, wanted_key) = 0 then return row
+      end
+    end
+  end
+  return -1

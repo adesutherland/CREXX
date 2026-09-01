@@ -1,0 +1,13 @@
+options levelb
+import rxfnsb
+
+out = .string[]
+err = .string[]
+
+address crexx "echo native address ok" output out error err
+if rc <> 0 then do
+  say "address crexx failed" rc
+  exit rc
+end
+
+say out[1]

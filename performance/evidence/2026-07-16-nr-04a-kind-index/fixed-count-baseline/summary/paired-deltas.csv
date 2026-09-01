@@ -1,0 +1,2 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+rexxcps-opaque-fixed,rexxcps-opaque-retained,rexxcps-opaque-stripped,opt-retained,opt-stripped,8349000,6351000,-1998000,-23.931

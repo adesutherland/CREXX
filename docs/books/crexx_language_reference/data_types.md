@@ -19,24 +19,27 @@ The built-in Level B value types are:
 | `.binary` | Binary byte sequence. |
 | `.object` | Object value. Interfaces and classes are object-shaped contracts. |
 
-The canonical integer spelling in source is `.int`.
+The canonical integer spelling in source is `.int`. In Release 1 it is a signed
+64-bit value on every supported desktop architecture, with the inclusive range
+`-9223372036854775808` through `9223372036854775807`. It is not sized from the
+host C `long`, pointer, or native word width.
 
 ## Constructors and Type Literals
 
 Type names can be used as constructors:
 
 ```rexx
-count = .int(0)
-name = .string("Ada")
-ok = .boolean(1)
-payload = .binary()
+count	= .int(0)
+name	= .string("Ada")
+ok		= .boolean(1)
+payload	= .binary()
 ```
 
 Class and interface names also use the dotted form. A factory call creates an
 object through the selected class or interface provider:
 
 ```rexx
-item = .cacheentry("abc")
+item  = .cacheentry("abc")
 asset = .asset("log.txt")
 ```
 
@@ -48,8 +51,8 @@ attribute access require an initialized instance and raise
 object is wanted:
 
 ```rexx
-pending = .cacheentry       /* typed, not initialized */
-ready = .cacheentry("abc")  /* initialized by the factory */
+pending	= .cacheentry       /* typed, not initialized */
+ready	= .cacheentry("abc")  /* initialized by the factory */
 say initialized(pending)    /* 0 */
 say initialized(ready)      /* 1 */
 ```
@@ -68,11 +71,11 @@ The left side of `namespace..symbol` must name an imported namespace.
 Arrays are declared from a base type:
 
 ```rexx
-words = .string[]
-numbers = .int[10]
-grid = .int[10, 10]
-window = .int[0 to 10]
-grow = .int[-2 to *]
+words	= .string[]
+numbers	= .int[10]
+grid	= .int[10, 10]
+window	= .int[0 to 10]
+grow	= .int[-2 to *]
 ```
 
 An array value carries its element type and dimensions. Procedure signatures can
@@ -88,7 +91,7 @@ notation:
 
 ```rexx
 items[1] = "alpha"
-items.2 = "beta"
+items.2	 = "beta"
 ```
 
 Simple growable arrays are often used with one-based element indexes, but Level
@@ -117,10 +120,10 @@ Use `reference target` to create a reference to aliasable storage,
 referenced target, and `snapshot ref` when an explicit deep copy is required:
 
 ```rexx
-count = 1
+count	  = 1
 count_ref = reference count
-linked = dereference count_ref
-copy = snapshot count_ref
+linked	  = dereference count_ref
+copy	  = snapshot count_ref
 ```
 
 `dereference` is only valid as the right side of an assignment to a local
@@ -134,11 +137,21 @@ Reference values are not assignment-compatible with their target type. Passing a
 where `.T` is expected is also an error; spell `reference target`,
 `local = dereference ref`, or `snapshot ref` at the boundary.
 
+Reference values do not define value equality or ordering. Applying an ordinary
+comparison operator such as `=` or `==` to a reference is a compile-time error
+rather than an implicit comparison of target values or storage identity. The
+explicit `left <refsame> right` operator accepts compatible reference types and
+tests whether both retain the same storage-identity cell without dereferencing
+them. Copied references therefore remain `<refsame>` after their common target
+expires; cleared or empty references compare false. Use `<refvalid>(ref)` to
+test live-target validity, and explicitly `dereference` or `snapshot` when the
+target value itself is to be compared.
+
 Nested reference containers, reference casts, reference type tests, and
 implicit member/index access through a reference are not part of the current
 Level B source surface. These are reserved for possible Level G convenience
 features. Level B code should keep reference boundaries explicit with
-`reference`, `dereference`, `snapshot`, and `refvalid`.
+`reference`, `dereference`, `snapshot`, `<refvalid>`, and `<refsame>`.
 
 ## Numeric Values
 
@@ -146,6 +159,12 @@ Level B supports integer, float, and decimal arithmetic. The file-level
 `options` instruction selects the parser's arithmetic standard, and a
 procedure-level `numeric` instruction can set numeric context such as digits,
 form, fuzz, case, and standard.
+
+Integer literals and conversions outside the signed 64-bit range are rejected.
+Runtime integer add, subtract, multiply, power, increment, decrement, negation,
+and the `INT64_MIN / -1` and `INT64_MIN % -1` edges raise
+`OVERFLOW_UNDERFLOW`; integer division or modulo by zero raises
+`DIVISION_BY_ZERO`.
 
 The compiler performs type validation before bytecode emission. Numeric
 conversions are explicit where precision or representation could otherwise be
@@ -157,13 +176,22 @@ f = .float(i)
 d = .decimal("42.50")
 ```
 
+An ordinary dotted literal remains binary `.float` when no surrounding type
+requires decimal. When a decimal assignment, argument, return, cast,
+constructor, or decimal expression establishes the expected type, the compiler
+parses the literal's original source spelling directly as `.decimal`; it does
+not round through binary64 first. For example, `d = 0.1` is exact when `d` is
+declared `.decimal`. An explicit `.float(...)` boundary and `options
+floats_binary` retain binary treatment. The `d` suffix is also an explicit
+decimal spelling, such as `0.1d`.
+
 The checked cast form can also be used for scalar conversions:
 
 ```rexx
-f = 1 as .float
-i = "42" as .int
-d = "42.50" as .decimal
-s = 42 as .string
+f  = 1 as .float
+i  = "42" as .int
+d  = "42.50" as .decimal
+s  = 42 as .string
 ok = "1" as .boolean
 ```
 
@@ -189,8 +217,8 @@ payload = "alpha" as .binary
 Converting `.binary` to `.string` validates the byte sequence as UTF-8:
 
 ```rexx
-payload = "ceb1"x as .binary
-text = payload as .string     /* "α" */
+payload	= "ceb1"x as .binary
+text	= payload as .string     /* "α" */
 ```
 
 An invalid binary-to-string conversion raises `UNICODE_ERROR` at runtime. If the
@@ -200,10 +228,10 @@ the program with `CANNOT_CAST_BINARY`.
 Invalid UTF-8 byte sequences are only valid in an explicit binary context:
 
 ```rexx
-payload = .binary
-payload = 'ffff'x
+payload	= .binary
+payload	= 'ffff'x
 
-other = 'ffff'x as .binary
+other	= 'ffff'x as .binary
 ```
 
 A first untyped assignment such as `payload = 'ffff'x` is treated as a text
@@ -221,13 +249,37 @@ prefix = "ff"x as .binary
 packet = prefix || "OK"      /* bytes ff 4f 4b */
 ```
 
+Runtime-owned `.binary` storage is aligned for the host's native `.int` and
+`.float` representations. Level B can use that guarantee through zero-based
+`<packed..int>(item)` and `<packed..float>(item)` reads and writes. These are
+explicit host-native views over bytes, not new value types and not portable
+encodings. See [Binary Memory](binary_memory.md#host-native-packed-numeric-items).
+Release 1 Level G provides explicit `.packedint` and `.packedfloat` owner
+classes in `rxfnsg`; those classes wrap this same representation and do not
+change ordinary arrays. Automatically packed ordinary `.int[]` and `.float[]`
+arrays remain a post-release Level G roadmap item.
+
+Level B string length, indexing, slicing, search, and reversal use Unicode
+codepoints. They do not use UTF-8 bytes and do not imply grapheme boundaries.
+Normalization and full case folding are explicit future Level G services; no
+string conversion or ordinary Level B operation normalizes implicitly.
+
+Level C direct BIFs retain the `.string`/`.binary` distinction but apply the
+character profile held by their call context. `BYTE` treats exact bytes as
+Classic character units; `UTF8` requires valid UTF-8 for text operations and
+uses codepoint units. A value's binary/text cache flags do not select that
+profile. See [Unicode](unicode.md).
+
 The `rxfnsb` library provides byte-oriented helpers for common binary work:
 `binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`,
 `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`.
+For packed binary layouts, use the binary-memory intrinsics and helpers in
+[Binary Memory](binary_memory.md); those use zero-based byte offsets and can
+operate directly on binary constants.
 
 The same boundary applies outside source literals. Native RXVML string setters,
-CREXXSAA ADDRESS variable setters, RXPA native return/argument trees,
-command-line arguments passed through RXVML, ADDRESS callback text, text file
+`CREXXSAA ADDRESS` variable setters, RXPA native return / argument trees,
+command-line arguments passed through RXVML, `ADDRESS` callback text, text file
 reads, socket text reads, and explicit binary-to-string casts validate UTF-8 in
 normal Level B builds. Invalid bytes should be read or carried as `.binary`
 first, then decoded to `.string` only when the program has a valid encoding.
@@ -274,3 +326,15 @@ label = "ready" /* .string */
 Use explicit constructors or declarations when the intended type is not obvious
 from the initializer, when a signature is being published, or when a value must
 be an object or array contract.
+
+A bare type expression can also declare a typed local before the value is known:
+
+```rexx
+slot = .int
+if found then slot = existing
+else slot = created
+```
+
+Use this form when the declaration is the important point. Use a literal
+initializer, such as `slot = 0`, only when that literal value is part of the
+program logic.

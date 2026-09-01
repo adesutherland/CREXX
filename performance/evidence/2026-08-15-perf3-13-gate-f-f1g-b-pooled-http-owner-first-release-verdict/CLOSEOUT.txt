@@ -1,0 +1,56 @@
+PERF3-13 Gate F F1g-B closeout
+Date: 2026-08-15
+
+Accepted production shape:
+- Level G `.httpclient.pooled` creates a bounded per-origin connection-owner
+  pool independently of the caller's task pool.
+- Each owner is long-lived `.taskwork` and retains sole ownership of one
+  reusable socket; socket integers never cross an execution.
+- Shared admission is a capacity-bounded type-4 byte endpoint using fixed
+  canonical 192-byte descriptors. Request and response bytes use per-request
+  bounded endpoints.
+- `.httpclient.post` is an imported task method and returns a reconstructed,
+  controller-owned concrete `.httpresponse`.
+- The synchronous Level B `rxhttp.httpclient` remains compatible; the existing
+  LLM module now names it explicitly to avoid the intentional short-name
+  overlap with `rxfnsg.httpclient`.
+
+Defects found and closed during toolchain QA:
+- Level G correctly rejected inline ASSEMBLER in the new library; binary and
+  signal operations were routed through existing Level B library functions.
+- The new encoded-reference factory initially used zero-based positions with
+  1-based `binsubstr`; the focused runtime fixture exposed and corrected both
+  the magic and reserved-field offsets.
+- Per-task HTTP proxies initially closed shared admission after one request,
+  cancelling the owner's next read. Shared admission is now closed only by the
+  controller-owned client's deterministic close path.
+- Adding `rxfnsg.httpclient` exposed unqualified legacy LLM types; those are
+  now explicitly `.rxhttp..httpclient`, with Debug/Release/ASan regression
+  coverage.
+- Chunked completion initially stopped at the zero-size chunk line, which
+  could leave its terminal CRLF or trailers queued on a reusable socket. The
+  decoder now waits for the complete terminal section before returning.
+
+QA:
+- focused Debug: 6/6 plus linked fixture
+- focused Release: 6/6 plus linked fixture
+- Release Gate F: 41/41 plus linked fixture
+- Release repeat stress: 100 passes in each of four VM/mode cells
+- full Debug: 2,155/2,155
+- focused Apple ASan: 146/146, leak detection disabled
+- final chunk-boundary correction: 4/4 HTTP cells in Debug, Release and
+  Apple ASan, plus 100 Release repetitions in every VM/optimizer cell
+
+The broad Debug and 146-test ASan sweeps preceded the narrow chunk-boundary
+correction. The final proportional reruns above cover the changed decoder path,
+including chunked decoding followed by another request on the same socket.
+
+Performance boundary:
+- no VM/compiler native source, opcode, RXBIN format or hot-loop shape changed;
+  accepted F1g-A/F3C1 core timing remains applicable
+- Release rxbvm/rxtvm sizes exactly match F1g-A
+- later F1g slices still owe policy/deadline/retry qualification, explicit
+  body streaming, compression handling and crexx-rag workload evidence
+
+Disposition: F1g-B accepted and ready for its local slice commit. Continue with
+F1g-C policy/deadline/retry/TLS qualification after the commit.

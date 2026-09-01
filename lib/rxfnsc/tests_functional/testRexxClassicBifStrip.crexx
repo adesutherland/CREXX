@@ -1,0 +1,179 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifstrip
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("ab c", "  ab c  ")
+errors = errors + check_option("ab c  ", "  ab c  ", "Leading")
+errors = errors + check_option("  ab c", "  ab c  ", "t")
+errors = errors + check_char("12.7", "12.7000", 0, "", "0")
+errors = errors + check_char("12.7", "0012.7000", 0, "", "0")
+errors = errors + check_char(" foo ba", " foo bar", 0, "", "r")
+errors = errors + check_default("ab c", "　ab c　")
+errors = errors + check_char("x　", " x　", 0, "", " ")
+errors = errors + check_char("x", "🙂🙂x🙂", 1, "B", "🙂")
+errors = errors + check_default("", "　　")
+errors = errors + check_char("", "....", 0, "", ".")
+errors = errors + check_default("", "")
+errors = errors + check_byte_profile()
+errors = errors + check_configured_byte_blank()
+
+edge = ""
+dot = "."
+do i = 1 to 1000
+  assembler append edge,dot
+end
+large = ""
+center = "center"
+assembler append large,edge
+assembler append large,center
+assembler append large,edge
+errors = errors + check_char(center, large, 0, "", ".")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_required()
+errors = errors + check_option_error("", "RXC-LC-40.21")
+errors = errors + check_option_error("X", "RXC-LC-40.28")
+errors = errors + check_char_error("")
+errors = errors + check_char_error("xy")
+
+if errors = 0 then say "PASS: Level C STRIP BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, string = .string
+  return run_check(expected, string, 0, "", 0, "")
+
+check_option: procedure = .int
+  arg expected = .string, string = .string, option = .string
+  return run_check(expected, string, 1, option, 0, "")
+
+check_char: procedure = .int
+  arg expected = .string, string = .string, option_exists = .boolean, option = .string, char = .string
+  return run_check(expected, string, option_exists, option, 1, char)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, option_exists = .boolean, option = .string, char_exists = .boolean, char = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  exists[1] = 1
+  if option_exists | char_exists then do
+    args[2] = .RexxValue(option)
+    exists[2] = option_exists
+  end
+  if char_exists then do
+    args[3] = .RexxValue(char)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("STRIP")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: STRIP expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = "　x　"
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if \context.hasError() & result.asString() == source then return 0
+  say "FAIL: STRIP BYTE removed UTF8-only whitespace",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_configured_byte_blank: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "FF78FF"x
+  blank = .binary
+  blank = "FF"x
+  args[1] = .RexxValue.fromBinary(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setByteOtherBlanks(blank)
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  actual = result.asBinary()
+  actual_length = .int
+  first = .int
+  first_index = 0
+  assembler blen actual_length,actual
+  assembler getbyte first,actual,first_index
+  if \context.hasError() & actual_length = 1 & first = 120 then return 0
+  say "FAIL: STRIP configured BYTE blank"
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: STRIP expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: STRIP omitted required got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_option_error: procedure = .int
+  arg option = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  args[2] = .RexxValue(option)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: STRIP option expected" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_char_error: procedure = .int
+  arg char = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  args[2] = .RexxValue("B")
+  args[3] = .RexxValue(char)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: STRIP char expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

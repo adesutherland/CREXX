@@ -73,6 +73,20 @@ static void valid_nested_argument_function(
     set_null_string(root->attributes[0], "valid text");
 }
 
+static void mutate_valid_non_ascii_argument_function(
+    rxinteger args,
+    rxpa_attribute_value* argv,
+    rxpa_attribute_value ret,
+    rxpa_attribute_value signal) {
+
+    value* text;
+    (void)ret;
+    (void)signal;
+    if (args < 1 || !argv || !argv[0]) return;
+    text = (value*)argv[0];
+    if (text->string_length > 0u) text->string_value[0] = 'E';
+}
+
 int main(void) {
     value ret;
     value signal;
@@ -103,6 +117,25 @@ int main(void) {
 
     rxvm_callfunc((void*)valid_nested_argument_function, 1, argv, &ret, &signal);
     failures += expect_signal("valid nested argument", &signal, SIGNAL_NONE);
+
+#ifndef NUTF8
+    value_zero(&ret);
+    value_zero(&signal);
+    value_zero(&arg);
+
+    set_string(&arg, "e\xcc\x81", 3u);
+    mark_string_normalization_certificates(
+        &arg, RXFLAG_LANG_NORMAL_FORM_MASK);
+    rxvm_callfunc((void*)mutate_valid_non_ascii_argument_function,
+                  1, argv, &ret, &signal);
+    failures += expect_signal("valid direct native mutation",
+                              &signal, SIGNAL_NONE);
+    if (arg.status.all_type_flags & RXFLAG_LANG_NORMAL_FORM_MASK) {
+        fprintf(stderr,
+                "valid direct native mutation retained normalization certificates\n");
+        failures++;
+    }
+#endif
 
     value_zero(&ret);
     value_zero(&signal);

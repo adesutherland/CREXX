@@ -1,0 +1,115 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifsubstr expose rexxclassicbif_substr
+import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxvalue
+
+/**
+ * Return a Classic character slice, optionally padded.
+ *
+ * @bif SUBSTR
+ * @signature SUBSTR(string, start [,length [,pad]])
+ * @checkargs rANY rWHOLE>0 oWHOLE>=0 oPAD
+ * @sandbox pure
+ * @return selected and optionally padded configured value as a RexxValue
+ */
+rexxclassicbif_substr: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
+
+  start = .int
+  start = context.argumentText(2) + 0
+  length_supplied = context.argumentExists(3)
+  length = 0
+  if length_supplied then length = context.argumentText(3) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(4) then pad_bytes = context.argument(4).asBinary()
+    else pad_bytes = " " as .binary
+    byte_length = .int
+    pad_byte = .int
+    pad_offset = 0
+    assembler blen byte_length,bytes
+    assembler getbyte pad_byte,pad_bytes,pad_offset
+    start_offset = start - 1
+    available = byte_length - start_offset
+    if available < 0 then available = 0
+    if \length_supplied then do
+      result_bytes = rexxclassic_byte_slice_pad(bytes,start_offset,available,available,pad_byte)
+      return .RexxValue.fromBinary(result_bytes)
+    end
+    if length = 0 then return .RexxValue.fromBinary("" as .binary)
+    copy_length = length
+    if available < copy_length then copy_length = available
+    result_bytes = rexxclassic_byte_slice_pad(bytes,start_offset,copy_length,length,pad_byte)
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  pad = " "
+  if context.argumentExists(4) then pad = context.argumentText(4)
+  string_length = .int
+  pad_character = .int
+  pad_index = 0
+  start_offset = .int
+  available = .int
+  copy_length = .int
+  padding_length = .int
+  result = ""
+
+  assembler strlen string_length,string
+  start_offset = start - 1
+  available = string_length - start_offset
+  if available < 0 then available = 0
+
+  if \length_supplied then do
+    if available = 0 then return .RexxValue(result)
+    if start_offset = 0 then return .RexxValue(string)
+    assembler substring result,string,start_offset,available
+    return .RexxValue(result)
+  end
+
+  if length = 0 then return .RexxValue(result)
+  copy_length = length
+  if available < copy_length then copy_length = available
+  if copy_length > 0 then do
+    if start_offset = 0 & copy_length = string_length & length = string_length then
+      return .RexxValue(string)
+    assembler substring result,string,start_offset,copy_length
+  end
+
+  padding_length = length - copy_length
+  if padding_length > 0 then do
+    assembler strchar pad_character,pad,pad_index
+    assembler padstr result,pad_character,padding_length
+  end
+  return .RexxValue(result)

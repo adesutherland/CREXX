@@ -6,9 +6,11 @@
 and target registers directly, and logical data flow is written from right to
 left in RXAS instruction forms.
 
-The threaded `rxvm` interpreter is the base VM executable. `rxbvm` provides the
-bytecode-dispatch variant. `rxvme` and `rxbvme` are extended interpreters that
-include the standard library image used by common Level B programs.
+`rxvm` is the stable product VM executable. It selects the switch-dispatch
+`rxbvm` under Clang/AppleClang and MSVC, and the direct-threaded `rxtvm` under
+GCC. GNU/Clang-family builds provide both concrete engines; MSVC provides only
+`rxbvm`. `rxvme` and `rxbvme` are extended interpreters that include the
+shipped core Level B, Level C, and Level G bytecode library images.
 
 ## Machine Interface
 
@@ -34,7 +36,8 @@ implementation detail, but the current model contains:
 - integer, floating-point, decimal, string, binary, and object storage
 - string and binary length/capacity fields
 - native payload hooks used by the plugin/runtime integration layer
-- object type-name and attribute storage used by the class/interface runtime
+- an immutable object type descriptor and attribute storage used by the
+  class/interface runtime
 
 The current implementation lives in `interpreter/rxvalue.h`. A simplified view
 is:
@@ -51,7 +54,7 @@ typedef struct value {
     char *binary_value;
     size_t binary_length;
     void *native_payload;
-    char *object_type_name;
+    const struct RxGraphTypeRef *object_type;
     struct value **attributes;
 } value;
 ```

@@ -1,0 +1,23 @@
+	Command being timed: "cmake --build /tmp/crexx-e4-linux-gcc-control-comparison-release --parallel 6 --target rxbvm rxtvm"
+	User time (seconds): 790.46
+	System time (seconds): 15.87
+	Percent of CPU this job got: 229%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 5:51.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 683840
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1062699
+	Voluntary context switches: 668
+	Involuntary context switches: 46117
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

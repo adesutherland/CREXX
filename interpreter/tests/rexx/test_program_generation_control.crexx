@@ -1,0 +1,11 @@
+options levelb
+
+namespace e4control expose set get
+
+set: procedure = .int expose state
+  arg new_state = .string
+  state = new_state + 0
+  return state
+
+get: procedure = .int expose state
+  return state

@@ -1,0 +1,100 @@
+utc=2026-07-26T08:54:51Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+{ 1.16 1.42 1.56 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+17469 /bin/zsh -c p05_verdict=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n machdep.cpu.brand_string
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(ninja|cmake|rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  rg -n '^CMAKE_BUILD_TYPE:|^CREXX_VM_PROFILING:' cmake-build-release/CMakeCache.txt
+  shasum -a 256 "$p05_verdict"/baseline-bin/{rxc,rxas,rxvm,rxbvm,library.rxbin,rxcexits.rxbin} cmake-build-release/bin/{rxc,rxas,rxvm,rxbvm,library.rxbin,rxcexits.rxbin} cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx "$p05_verdict"/cell/manifest.txt "$p05_verdict"/cell/{baseline,candidate}/generic_word.{rxas,rxbin}
+) >"$p05_verdict/pre-state.txt" 2>&1
+caffeinate -i cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest "$p05_verdict/cell/manifest.txt" --output-dir "$p05_verdict/timing" --measurement timing --warmups 1 --runs 12 >"$p05_verdict/runner.stdout.txt" 2>"$p05_verdict/runner.stderr.txt"
+p05_status=$?
+echo "runner_rc=$p05_status"
+cat "$p05_verdict/runner.stdout.txt"
+if [ -s "$p05_verdict/runner.stderr.txt" ]; then tail -80 "$p05_verdict/runner.stderr.txt"; else echo 'runner.stderr: empty'; fi
+exit $p05_status
+17470 /bin/zsh -c p05_verdict=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict
+(
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n machdep.cpu.brand_string
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(ninja|cmake|rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  rg -n '^CMAKE_BUILD_TYPE:|^CREXX_VM_PROFILING:' cmake-build-release/CMakeCache.txt
+  shasum -a 256 "$p05_verdict"/baseline-bin/{rxc,rxas,rxvm,rxbvm,library.rxbin,rxcexits.rxbin} cmake-build-release/bin/{rxc,rxas,rxvm,rxbvm,library.rxbin,rxcexits.rxbin} cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin performance/tools/run_cross_runtime_matrix.crexx "$p05_verdict"/cell/manifest.txt "$p05_verdict"/cell/{baseline,candidate}/generic_word.{rxas,rxbin}
+) >"$p05_verdict/pre-state.txt" 2>&1
+caffeinate -i cmake-build-release/bin/rxvm cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin cmake-build-release/bin/library.rxbin -a --manifest "$p05_verdict/cell/manifest.txt" --output-dir "$p05_verdict/timing" --measurement timing --warmups 1 --runs 12 >"$p05_verdict/runner.stdout.txt" 2>"$p05_verdict/runner.stderr.txt"
+p05_status=$?
+echo "runner_rc=$p05_status"
+cat "$p05_verdict/runner.stdout.txt"
+if [ -s "$p05_verdict/runner.stderr.txt" ]; then tail -80 "$p05_verdict/runner.stderr.txt"; else echo 'runner.stderr: empty'; fi
+exit $p05_status
+55:CMAKE_BUILD_TYPE:STRING=Release
+364:CREXX_VM_PROFILING:BOOL=OFF
+350b8d7d02b7b938a4d84fade97b9c3ccecd7cd80b6e0081b041022b9ca3eeaa  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/rxc
+6fdb7ba0b7979608a6faa20ae2ce8ebf5ba9bd66a24cacc1e654dd6515ac5aff  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/rxas
+225952dbd23a56baffd032461977d8a686866dfbef77613ac8bbd40ebe615815  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/rxvm
+0a880d163f0fb3fc653ce42adc48356e3390f12b36eeccb104b251865cf3b144  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/rxbvm
+221727fccba50f74a0da57a0ae0dcd94241f21bfe6d5cc60145a767a41f0aab4  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/library.rxbin
+3f0a72b993e6d351ceb25d82a6ad5a8ab5ce0150b5884c28de3b479ec95dcacf  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/baseline-bin/rxcexits.rxbin
+225cee9b4abadab338c22ad3a9b50d5f88210dfc53607ba70ecda738c26f5205  cmake-build-release/bin/rxc
+3574bafb2d95c0827604231c838b89366ea9abd515ec04f88cece3412d560d3d  cmake-build-release/bin/rxas
+5ec03673f9676942c04eb33449746b8184911026dbf805924a7784cdc10ca332  cmake-build-release/bin/rxvm
+53beb048ee635377bcc38264fea77c8360c2fc750240f99ae818cee0c63dda1b  cmake-build-release/bin/rxbvm
+221727fccba50f74a0da57a0ae0dcd94241f21bfe6d5cc60145a767a41f0aab4  cmake-build-release/bin/library.rxbin
+3f0a72b993e6d351ceb25d82a6ad5a8ab5ce0150b5884c28de3b479ec95dcacf  cmake-build-release/bin/rxcexits.rxbin
+fb6534bf21a13cd54050086d14bd92cb7c50b184b37b16f937fb5b85e3e89d03  cmake-build-release/tests/benchmarks/nr10_cross_runtime_matrix_selftest_opt.rxbin
+77cfd1d1b4532b545d19f8313ac74567211834ca4fd7e2537a493c8f40bbceab  performance/tools/run_cross_runtime_matrix.crexx
+fb85778e3a6fb05b60275d3351a39d2ac3366454153d79464833cfb812393334  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/cell/manifest.txt
+fe96277e4828d89a9b57e33cd46ce8b513a6acbcb4d53b9c87970955a0f25b87  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/cell/baseline/generic_word.rxas
+820737a8327995967113cae5ba6c31f18250f8893aee322168814e4bb5b17ba4  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/cell/baseline/generic_word.rxbin
+c42c40484c15677ae5d55d5972f44a55ac91f7f193012584764cc2fc76099cb1  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/cell/candidate/generic_word.rxas
+62fba975e002ed43d00784850994bea12ec784f9ee699142df727a96937a198d  /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-perf2-05.KM0ZeuBw5m/evidence/p05-cf1-release-verdict/cell/candidate/generic_word.rxbin

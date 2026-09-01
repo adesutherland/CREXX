@@ -22,19 +22,47 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Native byte-domain character range.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/xrange.md
+ */
 options levelb
-
 namespace rxfnsb expose xrange
 
-/*
- * XRANGE: deprecated
- * (XRANGE is limited to single byte characters 00-FF and wraps around) 
- */ 
+/**
+ * Return the inclusive U+0000..U+00FF range, wrapping at U+00FF.
+ *
+ * @param from one byte-domain Unicode character
+ * @param tos one byte-domain Unicode character
+ * @return inclusive range containing at most 256 characters
+ * @signal INVALID_ARGUMENTS an endpoint is not one character in the byte domain
+ * @deprecated use sequence for non-wrapping Unicode ranges
+ */
 xrange: procedure = .string
-arg from = .string, tos = .string
+  arg from = .string, tos = .string
+  from_length = .int
+  to_length = .int
+  from_codepoint = .int
+  to_codepoint = .int
+  result = ""
+  index = 0
 
-say 'xrange is deprecated; using sequence'
+  assembler strlen from_length,from
+  assembler strlen to_length,tos
+  if from_length <> 1 | to_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "XRANGE endpoints must each contain exactly one character"
+  assembler strchar from_codepoint,from,index
+  assembler strchar to_codepoint,tos,index
+  if from_codepoint > 255 | to_codepoint > 255 then
+    assembler signal "INVALID_ARGUMENTS", "XRANGE endpoints must be in the U+0000 through U+00FF byte domain"
 
-return sequence(from, tos)
-
+  current = from_codepoint
+  do 256
+    assembler appendchar result,current
+    if current = to_codepoint then return result
+    if current = 255 then current = 0
+    else assembler inc current
+  end
+  return result

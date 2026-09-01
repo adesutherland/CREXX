@@ -1,55 +1,87 @@
-/* rexx test abs bif */
+/* Complete format and conversion coverage for the extended Level B DATE BIF. */
 options levelb
 import rxfnsb
+import _rxsysb
 
-/* RXVM ts_date date _jdn _dateo _datei abbrev right word words wordindex wordpos pos substr length copies upper */
-/* TODO */
-say "test Date"
+errors = 0
+errors = errors + check(date() <> "","current date is nonempty")
+errors = errors + check(date("ST") <> "","current date STANDARD is nonempty")
 
-say "SEP "date('XGERMAN','31>12>2021','XEUROPEAN',"+$%",">")
+/* Every documented output family, using 1962-03-10 (a Saturday). */
+base = "716308"
+errors = errors + check(_datei("19620310","ST") = 2437734,"_datei optional separator")
+errors = errors + expect("19620310",_dateo(2437734,"ST"),"_dateo optional separator")
+errors = errors + expect("10 Mar 1962",date("N",base,"B"),"NORMAL")
+errors = errors + expect("10 March 1962",date("XN",base,"B"),"XNORMAL")
+errors = errors + expect("19620310",date("ST",base,"B"),"STANDARD")
+errors = errors + expect("62/03/10",date("O",base,"B"),"ORDERED")
+errors = errors + expect("1962/03/10",date("XO",base,"B"),"XORDERED")
+errors = errors + expect("10/03/62",date("E",base,"B"),"EUROPEAN")
+errors = errors + expect("10/03/1962",date("XE",base,"B"),"XEUROPEAN")
+errors = errors + expect("10.03.62",date("G",base,"B"),"GERMAN")
+errors = errors + expect("10.03.1962",date("XG",base,"B"),"XGERMAN")
+errors = errors + expect("03/10/62",date("U",base,"B"),"USA")
+errors = errors + expect("03/10/1962",date("XU",base,"B"),"XUSA")
+errors = errors + expect("1962-03-10",date("IN",base,"B"),"INTERNATIONAL")
+errors = errors + expect("Saturday, March 10, 1962",date("QU",base,"B"),"QUALIFIED")
+errors = errors + expect("1962069",date("J",base,"B"),"JULIAN")
+errors = errors + expect("716308",date("B",base,"B"),"BASE")
+errors = errors + expect("-2854",date("UN",base,"B"),"UNIX")
+errors = errors + expect("-246585600",date("EP",base,"B"),"EPOCH")
+errors = errors + expect("2437734",date("JDN",base,"B"),"JDN")
+errors = errors + expect("069",date("D",base,"B"),"DAYS")
+errors = errors + expect("Saturday",date("W",base,"B"),"WEEKDAY")
+errors = errors + expect("March",date("M",base,"B"),"MONTH")
+errors = errors + expect("22714",date("C",base,"B"),"CENTURY")
+errors = errors + expect("10-03-62",date("DEC",base,"B"),"DEC")
+errors = errors + expect("10-03-1962",date("XDEC",base,"B"),"XDEC")
+errors = errors + expect("19620310",date("S",base,"B"),"SORTED")
 
-say "date()" date()
-say "date('WEDNESDAY')" date('wednesday')
-say "date('USA')" date('USA')
-say "date('normal')" date('n')
-say "date('qualified')" date('QUALIFIED')
-say "date('European')" date('EUROPEAN')
-say "date('Epoch')" date('EPOCH')
-say "date('xGerman')" date('XGERMAN')
-say "date('Julian')" date('JULIAN')
-say "date('Ordered')" date('ORDERED')
-say "date('International')" date('INTERNATIONAL')
-say "date('Sorted')" date('SORTED')
+/* Every documented input family returns the same base day. */
+errors = errors + input("10 Mar 1962","N",base,"NORMAL input")
+errors = errors + input("10 March 1962","XN",base,"XNORMAL input")
+errors = errors + input("19620310","ST",base,"STANDARD input")
+errors = errors + input("62/03/10","O","752833","ORDERED input uses 2062")
+errors = errors + input("1962/03/10","XO",base,"XORDERED input")
+errors = errors + input("10/03/62","E","752833","EUROPEAN input uses 2062")
+errors = errors + input("10/03/1962","XE",base,"XEUROPEAN input")
+errors = errors + input("10.03.62","G","752833","GERMAN input uses 2062")
+errors = errors + input("10.03.1962","XG",base,"XGERMAN input")
+errors = errors + input("03/10/62","U","752833","USA input uses 2062")
+errors = errors + input("03/10/1962","XU",base,"XUSA input")
+errors = errors + input("1962-03-10","IN",base,"INTERNATIONAL input")
+errors = errors + input("Saturday, Mar 10, 1962","QU",base,"QUALIFIED input")
+errors = errors + input("1962069","J",base,"JULIAN input")
+errors = errors + input("716308","B",base,"BASE input")
+errors = errors + input("-2854","UN",base,"UNIX input")
+errors = errors + input("-246585600","EP",base,"EPOCH input")
+errors = errors + input("2437734","JDN",base,"JDN input")
 
-say date('USA','31/12/2021','XEUROPEAN')
-d1=date('EPOCH','31/12/2021','XEUROPEAN')
-say d1
-say date('XEU',d1,'EPOCH')
+/* Separator override is one Unicode codepoint and works in both directions. */
+errors = errors + expect("10•03•1962",date("XG","10•03•1962","XE","•","•"),"Unicode separators")
 
-say date('XDEC','31.12.21','xGerMAN')
-say date('WEEKDAY','31/12/21','euroPEAN')
-say date('QUALIFIED','31/12/21','EUROPEAN')
-say date('EUROPEAN','Friday, DECEMBER 31, 2021','QUALIFIED',"$")
+if errors = 0 then say "PASS: date"
+return errors <> 0
 
-say date('ORDERED','30.10.20','GERMAN')
-say date('XGERMAN','30.10.20','GERMAN')
-say date('SORTED','09/20/1988','XUSA')
+input: procedure = .int
+  arg value = .string, format = .string, expected = .string, label = .string
+  actual = .string
+  do
+    actual = date("B",value,format)
+  on signal invalid_arguments
+    say "FAIL: DATE" label "unexpected INVALID_ARGUMENTS"
+    return 1
+  end
+  return expect(expected,actual,label)
 
-say date('JULIAN','20/09/88','EUROPEAN')
-say date('JDN','10/30/21','EUROPEAN')
-say date('','10/30/21','USA')
-say date('USA','','XEUROPEAN')
-say date('GERMAN','','XEUROPEAN')
-say date('JULIAN','','XEUROPEAN')
-say date('ORDERED','','XEUROPEAN')
-return 0
+expect: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if actual = expected then return 0
+  say "FAIL: DATE" label "expected" expected "actual" actual
+  return 1
 
-/*
-say "Weekday "_dateo(iNorm,'WEEKDAY')
-say "Days in Century "_dateo(iNorm,'CENTURY')
-say "Long Date "_dateo(iNorm,'LONG')
-say "Ordered Date "_dateo(iNorm,'ORDERED')
-say "Default Format "_dateo(iNorm,"")
-say "Month "_dateo(iNorm,"MONTH")
-return /*_dateo(iNorm,oFormat) */
-*/
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: DATE" label
+  return 1

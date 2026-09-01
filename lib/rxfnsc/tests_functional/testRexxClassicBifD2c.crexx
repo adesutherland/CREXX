@@ -1,0 +1,80 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifd2c
+import rexxclassicencoding
+import rexxvalue
+
+numeric digits 40
+errors = 0
+errors = errors + check_value("00", "0", "", 0, "BYTE", 0)
+errors = errors + check_value("4D", "77", "", 0, "BYTE", 0)
+errors = errors + check_value("FF", "255", "", 0, "BYTE", 0)
+errors = errors + check_value("0100", "256", "", 0, "BYTE", 0)
+errors = errors + check_value("FF", "-1", "1", 1, "BYTE", 0)
+errors = errors + check_value("FF7F", "-129", "2", 1, "BYTE", 0)
+errors = errors + check_value("02", "258", "1", 1, "BYTE", 0)
+errors = errors + check_value("000001", "1", "3", 1, "BYTE", 0)
+errors = errors + check_value("", "1", "0", 1, "BYTE", 0)
+errors = errors + check_value("C3A9", "50089", "", 0, "UTF8", 1)
+errors = errors + check_value("FF", "255", "", 0, "UTF8", 0)
+errors = errors + check_count("RXC-LC-40.3", 0)
+errors = errors + check_count("RXC-LC-40.4", 3)
+errors = errors + check_number_error("RXC-LC-40.13", "-1", "", 0)
+errors = errors + check_number_error("RXC-LC-40.12", "1.5", "", 0)
+errors = errors + check_number_error("RXC-LC-40.13", "1", "-1", 1)
+
+if errors = 0 then say "PASS: Level C D2C BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_hex = .string, number = .string, length_text = .string, length_exists = .int, profile = .string, expected_text = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(length_text)
+  exists[2] = length_exists
+  context = .RexxBifCallContext("D2C")
+  if profile = "UTF8" then call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifd2c..rexxclassicbif_d2c(reference context)
+  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual_hex = expected_hex & result.hasText() = expected_text then return 0
+  say "FAIL: D2C" number length_text profile "expected" expected_hex expected_text,
+      "got" actual_hex result.hasText() context.errorCode() context.errorMessage()
+  return 1
+
+check_count: procedure = .int
+  numeric digits inherited
+  arg expected = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to count
+    args[index] = .RexxValue("1")
+    exists[index] = 1
+  end
+  return run_error(expected, args, exists)
+
+check_number_error: procedure = .int
+  numeric digits inherited
+  arg expected = .string, number = .string, length_text = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(length_text)
+  exists[2] = length_exists
+  return run_error(expected, args, exists)
+
+run_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("D2C")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifd2c..rexxclassicbif_d2c(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: D2C expected error" expected "got" context.errorCode() result.asString()
+  return 1

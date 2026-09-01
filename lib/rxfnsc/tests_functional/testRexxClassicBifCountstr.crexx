@@ -1,0 +1,97 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifcountstr
+import rexxvalue
+import rxfnsb
+
+errors = 0
+
+errors = errors + run_check("3", "bc", "abcabcabc")
+errors = errors + run_check("2", "aa", "aaaaa")
+errors = errors + run_check("0", "", "anything")
+errors = errors + run_check("0", "", "")
+errors = errors + run_check("0", "a", "")
+errors = errors + run_check("0", "abcdefg", "abcdef")
+errors = errors + run_check("0", "missing", "abcdef")
+errors = errors + run_check("1", "abc", "abcdef")
+errors = errors + run_check("1", "abc", "defabc")
+errors = errors + run_check("3", "é", "café été")
+errors = errors + run_check("1000", "ab", copies("ab", 1000))
+errors = errors + check_byte_profile()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+
+if errors = 0 then say "PASS: Level C COUNTSTR BIF"
+return errors <> 0
+
+run_check: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(needle)
+  args[2] = .RexxValue(haystack)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COUNTSTR")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_countstr(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: COUNTSTR expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  needle = .binary
+  haystack = .binary
+  needle = "A9"x
+  haystack = "A9A9"x
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(needle)
+  args[2] = .RexxValue.fromBinary(haystack)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COUNTSTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_countstr(reference context)
+  if \context.hasError() & result.asString() = "2" then return 0
+  say "FAIL: COUNTSTR BYTE expected 2 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("COUNTSTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_countstr(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: COUNTSTR expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("COUNTSTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_countstr(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: COUNTSTR omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

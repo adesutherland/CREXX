@@ -1,0 +1,61 @@
+collected_utc=2026-07-18T17:29:48Z
+branch=develop
+head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+source_sha256=2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6
+accepted_baseline_bundle=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict
+accepted_baseline_commit=847e62f04
+arbitrary_operand_prerequisite_commit=32bf7e76f
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+7d23d13913f03072f8d72620896731dd7a4c2005d23587546f8cf4182a987591  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxc
+0d145dc88b80d9a54b32f1d49ffbeb43e5bc8e1ba85db3d639a0584abc8e5ab6  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxas
+eefbec8a1956cfc503e8f6d2cc357566cf132eb7d3d57bc03f93511eef410c9c  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxlink
+1f929611364ae02b4d3b797f7f6cbcfdb12e7676d18a0a03ad6b001d530c03cb  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm
+4e5360b6b8e67822737b220559953190bc8ea9105d347e8192deff28b0fc4986  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm
+d1089745eb42a076e879f6c0a2e68e64865f5a801e9636e12fa27b68ce486846  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+373c33479086b4c9a8373f55a133052f5f9bbbc925cee867176400a254ccaa0b  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/candidate-rexxcps-opt.rxas
+65cbaf4adee8ec25a81d01a25a5cd886baff89fb62dd08362f57099ec32839a2  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/candidate-rexxcps-opt.rxbin
+dirty_worktree:
+ M assembler/rxas_opt.c
+ M binutils/include/rxopeffects.h
+ M binutils/include/rxops.h
+ M compiler/CMakeLists.txt
+ M compiler/docs/emitter_architecture.md
+ M compiler/rxcp_emit.h
+ M compiler/rxcp_emit_core.c
+ M compiler/rxcp_emit_expr.c
+ M compiler/rxcp_emit_flow.c
+ M compiler/rxcp_emit_proc.c
+ M compiler/rxcpemit.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/nr06_codegen_contract.cmake
+ M compiler/tests/nr09_numeric_context_contract.cmake
+ M docs/ai-context/RXAS_ASSEMBLER.md
+ M docs/instructions/insert_ins.sql
+ M docs/instructions/instructionbase.sqb
+ M docs/instructions/instructions.txt
+ M docs/reference/rxas/instruction-inventory.md
+ M docs/reference/rxas/instructions/03-integer-logical-and-boolean.md
+ M docs/reference/rxas/instructions/06-strings-and-characters.md
+ M docs/reference/rxas/instructions/README.md
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvmintp.c
+ M performance/NR-08-09-WORKLIST.md
+ M performance/NR-09-MAPPING-REGISTER.md
+ M tests/CMakeLists.txt
+ M tests/rxas_optimizer/check_optimizer.cmake
+ M tests/test_rxop_metadata.c
+?? compiler/rxcp_emit_super.c
+?? compiler/tests/nr09_codegen_contract.cmake
+?? compiler/tests/test_rxcp_super_combiner.c
+?? docs/books/crexx_vm_spec/examples/nr09_large_instructions.rxas
+?? docs/reference/rxas/instructions/12-large-instructions.md
+?? interpreter/tests/tests_nr09_superinstructions.rxas
+?? performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/
+?? tests/rxas_optimizer/nr09_class1.rxas
+?? tests/rxas_optimizer/nr09_class1_boundaries.rxas

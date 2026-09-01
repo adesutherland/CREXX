@@ -1,0 +1,6 @@
+[0/2] Re-checking globbed directories...
+[1/6] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprofile.c.o
+[2/6] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprofile.c.o
+[3/6] Linking C executable bin/rxbvm
+[4/6] Linking C executable bin/rxtvm
+[5/6] Creating rxvm symlink to rxbvm

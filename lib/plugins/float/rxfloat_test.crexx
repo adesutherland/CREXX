@@ -1,0 +1,165 @@
+/* Black-box contract suite for the public rxfloat contract. */
+options levelb floats_binary
+
+import numerictestsupport
+import rxfloat
+import rxmath
+
+test_trigonometric: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_float_close(rxfloat..sin(0.5235987755982989), 0.5, 0.000000000000002, 0.000000000000002, "sin pi/6")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..cos(1.0471975511965976), 0.5, 0.000000000000002, 0.000000000000002, "cos pi/3")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..tan(0.7853981633974483), 1.0, 0.000000000000002, 0.000000000000002, "tan pi/4")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..asin(0.5), 0.5235987755982989, 0.000000000000002, 0.000000000000002, "asin one half")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..acos(0.5), 1.0471975511965976, 0.000000000000002, 0.000000000000002, "acos one half")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan(1.0), 0.7853981633974483, 0.000000000000002, 0.000000000000002, "atan one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan2(1.0, -1.0), 2.356194490192345, 0.000000000000002, 0.000000000000002, "atan2 quadrant two")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan2(-1.0, -1.0), -2.356194490192345, 0.000000000000002, 0.000000000000002, "atan2 quadrant three")
+  return failures
+
+test_hyperbolic: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_float_close(rxfloat..sinh(1.0), 1.1752011936438014, 0.000000000000003, 0.000000000000002, "sinh one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..cosh(1.0), 1.5430806348152437, 0.000000000000003, 0.000000000000002, "cosh one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..tanh(1.0), 0.7615941559557649, 0.000000000000002, 0.000000000000002, "tanh one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..asinh(1.0), 0.8813735870195430, 0.000000000000002, 0.000000000000002, "asinh one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..acosh(2.0), 1.3169578969248166, 0.000000000000003, 0.000000000000002, "acosh two")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atanh(0.5), 0.5493061443340548, 0.000000000000002, 0.000000000000002, "atanh one half")
+  return failures
+
+test_exponential_and_logarithmic: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_float_close(rxfloat..exp(1.0), 2.7182818284590452, 0.000000000000004, 0.000000000000002, "exp one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..exp2(10.0), 1024.0, 0.0, 0.0, "exp2 ten")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..expm1(0.00000001), 0.00000001000000005, 0.000000000000000001, 0.000000000000002, "expm1 small")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..log(2.7182818284590452), 1.0, 0.000000000000002, 0.000000000000002, "log e")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..log2(8.0), 3.0, 0.000000000000002, 0.000000000000002, "log2 eight")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..log10(1000.0), 3.0, 0.000000000000002, 0.000000000000002, "log10 thousand")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..log1p(0.00000001), 0.00000000999999995, 0.000000000000000001, 0.000000000000002, "log1p small")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..pow(2.0, 10.0), 1024.0, 0.0, 0.0, "pow two ten")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..pow(-2.0, 3.0), -8.0, 0.0, 0.0, "pow signed base")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..pow10(3.0), 1000.0, 0.0, 0.0, "pow10 three")
+  return failures
+
+test_rounding_and_remainder: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_float_close(rxfloat..ceil(1.25), 2.0, 0.0, 0.0, "ceil positive")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..ceil(-1.25), -1.0, 0.0, 0.0, "ceil negative")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..floor(1.75), 1.0, 0.0, 0.0, "floor positive")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..floor(-1.25), -2.0, 0.0, 0.0, "floor negative")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..round(2.5), 3.0, 0.0, 0.0, "round positive half")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..round(-2.5), -3.0, 0.0, 0.0, "round negative half")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..trunc(1.75), 1.0, 0.0, 0.0, "trunc positive")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..trunc(-1.75), -1.0, 0.0, 0.0, "trunc negative")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..fmod(7.0, 4.0), 3.0, 0.0, 0.0, "fmod positive")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..fmod(-7.0, 4.0), -3.0, 0.0, 0.0, "fmod negative dividend")
+  return failures
+
+test_roots_and_special_functions: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_float_close(rxfloat..sqrt(2.0), 1.4142135623730951, 0.000000000000003, 0.000000000000002, "sqrt two")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..cbrt(-8.0), -2.0, 0.000000000000002, 0.000000000000002, "cbrt negative")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..hypot(3.0, 4.0), 5.0, 0.0, 0.0, "hypot uses both arguments")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..hypot(300000000000000000000.0, 400000000000000000000.0), 500000000000000000000.0, 1.0, 0.000000000000003, "hypot scaled")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..erf(1.0), 0.8427007929497149, 0.000000000000002, 0.000000000000002, "erf one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..erfc(1.0), 0.15729920705028513, 0.000000000000002, 0.000000000000002, "erfc one")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..tgamma(5.0), 24.0, 0.000000000000004, 0.000000000000002, "tgamma five")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..tgamma(0.5), 1.7724538509055160, 0.000000000000004, 0.000000000000002, "tgamma one half")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..lgamma(5.0), 3.1780538303479458, 0.000000000000004, 0.000000000000002, "lgamma five")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..fabs(-12.5), 12.5, 0.0, 0.0, "fabs negative")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..pi(), 3.1415926535897932, 0.000000000000004, 0.000000000000002, "pi constant")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..euler(), 2.7182818284590452, 0.000000000000004, 0.000000000000002, "euler constant")
+  return failures
+
+test_special_values: procedure = .int
+  arg test_args = .string[]
+  failures = 0
+  nan_value = dynamic_float("nan", test_args)
+  positive_infinity = dynamic_float("inf", test_args)
+  negative_infinity = dynamic_float("-inf", test_args)
+  positive_zero = 0.0
+  negative_zero = -1.0 / positive_infinity
+
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..sqrt(-1.0), "sqrt negative domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..asin(2.0), "asin domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..acos(2.0), "acos domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..acosh(0.5), "acosh domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..atanh(2.0), "atanh domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..log(-1.0), "log negative domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..log1p(-2.0), "log1p domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..pow(-1.0, 0.5), "pow domain")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..fmod(1.0, 0.0), "fmod zero divisor")
+  failures = failures + numerictestsupport..check_float_nan(rxfloat..sin(nan_value), "NaN propagation")
+  failures = failures + numerictestsupport..check_float_negative_infinity(rxfloat..log(0.0), negative_infinity, "log zero pole")
+  failures = failures + numerictestsupport..check_float_positive_infinity(rxfloat..exp(1000.0), positive_infinity, "exp overflow")
+  failures = failures + numerictestsupport..check_float_positive_infinity(rxfloat..atanh(1.0), positive_infinity, "atanh positive pole")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan(positive_infinity), 1.5707963267948966, 0.000000000000003, 0.000000000000002, "atan infinity")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..tanh(positive_infinity), 1.0, 0.0, 0.0, "tanh infinity")
+  failures = failures + numerictestsupport..check_float_positive_infinity(rxfloat..fabs(negative_infinity), positive_infinity, "fabs negative infinity")
+  failures = failures + numerictestsupport..check_float_negative_zero(rxfloat..sin(negative_zero), negative_infinity, "sin negative zero")
+  failures = failures + numerictestsupport..check_float_negative_zero(rxfloat..sqrt(negative_zero), negative_infinity, "sqrt negative zero")
+  failures = failures + numerictestsupport..check_float_positive_zero(rxfloat..fabs(negative_zero), positive_infinity, "fabs negative zero")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan2(negative_zero, -1.0), -3.1415926535897932, 0.000000000000004, 0.000000000000002, "atan2 negative zero")
+  failures = failures + numerictestsupport..check_float_close(rxfloat..atan2(positive_zero, -1.0), 3.1415926535897932, 0.000000000000004, 0.000000000000002, "atan2 positive zero")
+  return failures
+
+test_compatibility_aliases: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_bool(rxmath..acos(0.5) = rxfloat..acos(0.5), "rxmath acos alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..asin(0.5) = rxfloat..asin(0.5), "rxmath asin alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..atan(0.5) = rxfloat..atan(0.5), "rxmath atan alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..cos(0.5) = rxfloat..cos(0.5), "rxmath cos alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..cosh(0.5) = rxfloat..cosh(0.5), "rxmath cosh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..exp(0.5) = rxfloat..exp(0.5), "rxmath exp alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..exp2(0.5) = rxfloat..exp2(0.5), "rxmath exp2 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..expm1(0.5) = rxfloat..expm1(0.5), "rxmath expm1 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..log(2.0) = rxfloat..log(2.0), "rxmath log alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..log2(2.0) = rxfloat..log2(2.0), "rxmath log2 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..log10(10.0) = rxfloat..log10(10.0), "rxmath log10 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..log1p(0.5) = rxfloat..log1p(0.5), "rxmath log1p alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..ceil(1.25) = rxfloat..ceil(1.25), "rxmath ceil alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..floor(1.25) = rxfloat..floor(1.25), "rxmath floor alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..fabs(-1.25) = rxfloat..fabs(-1.25), "rxmath fabs alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..round(1.25) = rxfloat..round(1.25), "rxmath round alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..trunc(1.25) = rxfloat..trunc(1.25), "rxmath trunc alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..sin(0.5) = rxfloat..sin(0.5), "rxmath sin alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..sinh(0.5) = rxfloat..sinh(0.5), "rxmath sinh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..sqrt(2.0) = rxfloat..sqrt(2.0), "rxmath sqrt alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..cbrt(8.0) = rxfloat..cbrt(8.0), "rxmath cbrt alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..tan(0.5) = rxfloat..tan(0.5), "rxmath tan alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..tanh(0.5) = rxfloat..tanh(0.5), "rxmath tanh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..erf(0.5) = rxfloat..erf(0.5), "rxmath erf alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..erfc(0.5) = rxfloat..erfc(0.5), "rxmath erfc alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..tgamma(3.0) = rxfloat..tgamma(3.0), "rxmath tgamma alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..lgamma(3.0) = rxfloat..lgamma(3.0), "rxmath lgamma alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..asinh(1.0) = rxfloat..asinh(1.0), "rxmath asinh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..acosh(2.0) = rxfloat..acosh(2.0), "rxmath acosh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..atanh(0.5) = rxfloat..atanh(0.5), "rxmath atanh alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..pow(2.0, 3.0) = rxfloat..pow(2.0, 3.0), "rxmath pow alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..fmod(7.0, 4.0) = rxfloat..fmod(7.0, 4.0), "rxmath fmod alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..hypot(3.0, 4.0) = rxfloat..hypot(3.0, 4.0), "rxmath hypot alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..atan2(1.0, 2.0) = rxfloat..atan2(1.0, 2.0), "rxmath atan2 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..pow10(2.0) = rxfloat..pow10(2.0), "rxmath pow10 alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..pi() = rxfloat..pi(), "rxmath pi alias")
+  failures = failures + numerictestsupport..check_bool(rxmath..euler() = rxfloat..euler(), "rxmath euler alias")
+  return failures
+
+dynamic_float: procedure = .float
+  arg text = .string, test_args = .string[]
+  if test_args[0] > 1000 then text = test_args[1000]
+  return text
+
+main: procedure = .int
+  arg test_args = .string[]
+  failures = 0
+  failures = failures + test_trigonometric()
+  failures = failures + test_hyperbolic()
+  failures = failures + test_exponential_and_logarithmic()
+  failures = failures + test_rounding_and_remainder()
+  failures = failures + test_roots_and_special_functions()
+  failures = failures + test_special_values(test_args)
+  failures = failures + test_compatibility_aliases()
+
+  if failures > 0 then return 1
+  say "PASS: rxfloat mathematical contract and compatibility aliases"
+  return 0

@@ -27,12 +27,18 @@
 
 /* Forward declarations of VM implementation */
 void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args);
+void rxvm_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
+void rxvm_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest);
 void rxvm_addclass(char* name, char* option, char* type);
 void rxvm_addinterface(char* name, char* option, char* type);
 void rxvm_addimplements(char* name, char* interface_name);
 void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
-void rxvm_setstring(rxpa_attribute_value attributeValue, char* string);
+void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
 void rxvm_setfloat(rxpa_attribute_value attributeValue, double double_value);
@@ -41,6 +47,7 @@ int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
                           const rxpa_native_payload_ops *ops, unsigned int flags);
 void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
+int rxvm_isinitialized(rxpa_attribute_value attributeValue);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -53,6 +60,21 @@ void rxvm_resetsayexit();
 /* Shims */
 void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args) {
     rxvm_addfunc(func, name, option, type, args);
+}
+
+void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args) {
+    rxvm_addfunc_for_plugin(plugin_id, func, name, option, type, args);
+}
+
+void rxpa_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities) {
+    rxvm_register_static_plugin_capability(plugin_id, capabilities);
+}
+
+void rxpa_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest) {
+    rxvm_register_static_plugin_manifest_v2(manifest);
 }
 
 void rxpa_addclass(char* name, char* option, char* type) {
@@ -75,7 +97,7 @@ char* rxpa_getstring(rxpa_attribute_value attributeValue) {
     return rxvm_getstring(attributeValue);
 }
 
-void rxpa_setstring(rxpa_attribute_value attributeValue, char* string) {
+void rxpa_setstring(rxpa_attribute_value attributeValue, const char* string) {
     rxvm_setstring(attributeValue, string);
 }
 
@@ -103,6 +125,10 @@ int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags) {
     return rxvm_getnativepayload(attributeValue, out_length, out_ops, out_flags);
+}
+
+int rxpa_isinitialized(rxpa_attribute_value attributeValue) {
+    return rxvm_isinitialized(attributeValue);
 }
 
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {

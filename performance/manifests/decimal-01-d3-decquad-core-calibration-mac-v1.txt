@@ -1,0 +1,8 @@
+# DECIMAL-01 D3 direct-core attribution discovery, Apple M5, 2026-08-18.
+# One warmup and eight balanced/interleaved observations per cell. This is a
+# library-core attribution control, not a formal adapter verdict.
+crexx-cross-runtime-matrix|1
+d3-core-decnumber-common18|DECIMAL-D3-core-common18|c|direct-core|D0-decNumber-3.68|D|no|steady-core|5000000|DECIMAL-CORE provider=decnumber||/Users/adrian/CLionProjects/CREXX/cmake-build-release-decimal-stage3/bin/decquad_decimal_core_comparison;decnumber;common;5000000;18
+d3-core-decquad-common18|DECIMAL-D3-core-common18|c|direct-core|D3-decQuad-fixed34|D|no|steady-core|5000000|DECIMAL-CORE provider=decquad||/Users/adrian/CLionProjects/CREXX/cmake-build-release-decimal-stage3/bin/decquad_decimal_core_comparison;decquad;common;5000000;18
+d3-core-decnumber-classic9|DECIMAL-D3-core-classic9|c|direct-core|D0-decNumber-3.68|D|no|steady-core|5000000|DECIMAL-CORE provider=decnumber||/Users/adrian/CLionProjects/CREXX/cmake-build-release-decimal-stage3/bin/decquad_decimal_core_comparison;decnumber;classic;5000000;9
+d3-core-decquad-classic9|DECIMAL-D3-core-classic9|c|direct-core|D3-decQuad-fixed34|D|no|steady-core|5000000|DECIMAL-CORE provider=decquad||/Users/adrian/CLionProjects/CREXX/cmake-build-release-decimal-stage3/bin/decquad_decimal_core_comparison;decquad;classic;5000000;9

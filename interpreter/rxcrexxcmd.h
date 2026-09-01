@@ -1,0 +1,92 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+#ifndef CREXX_RXCREXXCMD_H
+#define CREXX_RXCREXXCMD_H
+
+#include <stddef.h>
+
+struct rxvm_context;
+
+typedef int (*rxcrexxcmd_write_fn)(void *userdata, const char *text, size_t length);
+typedef int (*rxcrexxcmd_read_all_fn)(void *userdata, char **out_text, size_t *out_length);
+typedef int (*rxcrexxcmd_run_path_fn)(
+    void *userdata,
+    const char *command,
+    char **out_text,
+    char **err_text,
+    int *command_rc,
+    char **error_text);
+typedef int (*rxcrexxcmd_run_argv_fn)(
+    void *userdata,
+    int argc,
+    const char *const *argv,
+    char **out_text,
+    char **err_text,
+    int *command_rc,
+    char **error_text);
+typedef int (*rxcrexxcmd_get_binding_fn)(
+    void *userdata,
+    const char *name,
+    char **out_value);
+typedef int (*rxcrexxcmd_get_stem_count_fn)(
+    void *userdata,
+    const char *name,
+    size_t *out_count);
+typedef int (*rxcrexxcmd_get_stem_value_fn)(
+    void *userdata,
+    const char *name,
+    size_t index,
+    char **out_value);
+
+typedef struct rxcrexxcmd_io {
+    rxcrexxcmd_write_fn write_output;
+    rxcrexxcmd_write_fn write_error;
+    rxcrexxcmd_read_all_fn read_input;
+    rxcrexxcmd_run_path_fn run_path;
+    rxcrexxcmd_run_argv_fn run_argv;
+    rxcrexxcmd_get_binding_fn get_binding;
+    rxcrexxcmd_get_stem_count_fn get_stem_count;
+    rxcrexxcmd_get_stem_value_fn get_stem_value;
+    void *userdata;
+} rxcrexxcmd_io;
+
+int rxcrexxcmd_execute(
+    const char *command,
+    const rxcrexxcmd_io *io,
+    int *rc,
+    char **error_text);
+
+void rxcrexxcmd_free(char *text);
+
+/* Worker-owned command state lifecycle and immutable child-launch snapshot. */
+void rxcrexxcmd_context_state_free(struct rxvm_context *context);
+const char *rxcrexxcmd_active_getenv(const char *name);
+const char *rxcrexxcmd_active_working_directory(void);
+int rxcrexxcmd_active_process_snapshot(char **working_directory,
+                                       char ***environment);
+void rxcrexxcmd_process_snapshot_free(char *working_directory,
+                                      char **environment);
+
+#endif

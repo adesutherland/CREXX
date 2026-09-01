@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+getpi-rxbvm-control,GetPI,crexx,rxbvm,e3b-p1-plugin-control,A,no,startup-included,Leibnitz+Monte-Carlo,elapsed_ns,12,26090000.000000,26180250.000000,26255500.000000,26370500.000000,28452000.000000,111000.000000,0.422769,8.996210,no
+getpi-rxbvm-candidate,GetPI,crexx,rxbvm,e3b-bundled-qualified,A,no,startup-included,Leibnitz+Monte-Carlo,elapsed_ns,12,19990000.000000,20130000.000000,20218500.000000,20286250.000000,20881000.000000,88000.000000,0.435245,4.406855,no
+getpi-rxtvm-control,GetPI,crexx,rxtvm,e3b-p1-plugin-control,A,no,startup-included,Leibnitz+Monte-Carlo,elapsed_ns,12,25971000.000000,26119250.000000,26179500.000000,26291250.000000,26769000.000000,98500.000000,0.376249,3.048187,no
+getpi-rxtvm-candidate,GetPI,crexx,rxtvm,e3b-bundled-qualified,A,no,startup-included,Leibnitz+Monte-Carlo,elapsed_ns,12,19943000.000000,20023250.000000,20122500.000000,20158750.000000,20261000.000000,86000.000000,0.427382,1.580321,no

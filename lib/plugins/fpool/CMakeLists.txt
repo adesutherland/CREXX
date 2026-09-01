@@ -29,6 +29,6 @@ enable_testing()
 
 # Basic test to run fpool_test.rxbin with the fpool plugin
 add_test(NAME fpool_test
-        COMMAND $<TARGET_FILE:rxvm> fpool_test rx_fpool ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND ${CREXX_RXVM_EXECUTABLE} fpool_test rx_fpool ${CMAKE_BINARY_DIR}/bin/library
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

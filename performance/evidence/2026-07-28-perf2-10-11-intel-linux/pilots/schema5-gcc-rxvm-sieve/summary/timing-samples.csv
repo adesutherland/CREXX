@@ -1,0 +1,3 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+sieve-noopt,sieve,Sieve,baseline,noopt,process,recorded,1,91192000,0,pass
+sieve-opt,sieve,Sieve,candidate,opt,process,recorded,1,84209000,0,pass

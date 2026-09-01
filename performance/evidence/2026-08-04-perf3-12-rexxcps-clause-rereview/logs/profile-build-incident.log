@@ -1,0 +1,61 @@
+[0/2] Re-checking globbed directories...
+[1/58] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[2/58] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[3/58] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[4/58] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[5/58] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[6/58] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[7/58] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[8/58] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[9/58] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[10/58] Linking C static library bin/librxvmref.a
+[11/58] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[12/58] Linking C static library bin/libplatform.a
+[13/58] Linking C static library bin/libavl_tree.a
+[14/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/interrupt.c.o
+[15/58] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[16/58] Linking C static library bin/librxvmplugin.a
+[17/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/exitfunc.c.o
+[18/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/include/opdata.c.o
+[19/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmload.c.o
+[20/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvml/rxvm_run.c.o
+[21/58] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[22/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxpafuncs.c.o
+[23/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[24/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxcrexxcmd.c.o
+[25/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxseqfile.c.o
+[26/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmsequence.c.o
+[27/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[28/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxspawn.c.o
+[29/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[30/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[31/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[32/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/include/opdata.c.o
+[33/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[34/58] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[35/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[36/58] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[37/58] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmprofile.c.o
+[38/58] Linking C static library bin/librxbin.a
+[39/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[40/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[41/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxseqfile.c.o
+[42/58] Linking C static library bin/libdecnumber.a
+[43/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmsequence.c.o
+[44/58] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[45/58] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[46/58] Linking C static library bin/librxpashim.a
+[47/58] Linking C static library bin/rxvm_mc_decimal_manual.a
+[48/58] Linking C static library bin/librxpa.a
+[49/58] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[50/58] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[51/58] Linking C executable bin/rxseq
+[52/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprofile.c.o
+[53/58] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[54/58] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[55/58] Linking C executable bin/rxbvm
+ninja: build stopped: interrupted by user.
+/5] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[2/5] Linking C executable bin/rxbvm
+ninja: build stopped: interrupted by user.
+ninja: build stopped: interrupted by user.

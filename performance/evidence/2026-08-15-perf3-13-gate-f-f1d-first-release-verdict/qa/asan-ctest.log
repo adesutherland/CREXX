@@ -1,0 +1,135 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-011806-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260815-011806-ctest/ctest.log
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260815-011806-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(gate_f_channel_contract\|gate_f_levelb_contract\|gate_f_levelb_bridge_inspection\|rxvmchannel_provider_registry\|rxvmbyteendpoint_substrate\|rxvmchannel_byte_provider\|gate_f_channel_local_\(rxbvm\|rxtvm\)\|retired_process_opcode_\(466\|467\|468\|469\|470\|471\)_\(rxbvm\|rxtvm\)\|inline_nested_binary_block_owner_\(shape_opt\|run_noopt\|run_opt\)\|testConcurrency_\(noopt\|opt\)\|address_crexx_flush_visible_run_\(noopt\|opt\)\|address_exit_extended_parse\|address_inline_then_parse\|address_bridge\|address_expose_\(noopt\|opt\)\|test_address_direct_\(noopt\|opt\)\|ts_address_\(protocol\|crexx\|capture\|argv\|array_lifecycle\|spawn_transfer\)_\(noopt\|opt\)\|ts_address_\(capture\|argv\|array_lifecycle\|spawn_transfer\)_rxbvm_\(noopt\|opt\)\|ts_address_spawn_transfer_rxtvm_\(noopt\|opt\)\|rxvmworker_lifecycle\|rxvmactive_isolation\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+==> ctest still running; tail -n 80 cmake-build-debugasan/asan-logs/20260815-011806-ctest/ctest.log
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(gate_f_channel_contract\|gate_f_levelb_contract\|gate_f_levelb_bridge_inspection\|rxvmchannel_provider_registry\|rxvmbyteendpoint_substrate\|rxvmchannel_byte_provider\|gate_f_channel_local_\(rxbvm\|rxtvm\)\|retired_process_opcode_\(466\|467\|468\|469\|470\|471\)_\(rxbvm\|rxtvm\)\|inline_nested_binary_block_owner_\(shape_opt\|run_noopt\|run_opt\)\|testConcurrency_\(noopt\|opt\)\|address_crexx_flush_visible_run_\(noopt\|opt\)\|address_exit_extended_parse\|address_inline_then_parse\|address_bridge\|address_expose_\(noopt\|opt\)\|test_address_direct_\(noopt\|opt\)\|ts_address_\(protocol\|crexx\|capture\|argv\|array_lifecycle\|spawn_transfer\)_\(noopt\|opt\)\|ts_address_\(capture\|argv\|array_lifecycle\|spawn_transfer\)_rxbvm_\(noopt\|opt\)\|ts_address_spawn_transfer_rxtvm_\(noopt\|opt\)\|rxvmworker_lifecycle\|rxvmactive_isolation\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/60 Test    #1: linked_opt_runtime_artifacts_build ...........   Passed   35.55 sec
+      Start   54: address_expose_noopt
+ 2/60 Test   #54: address_expose_noopt .........................   Passed    1.38 sec
+      Start   55: address_expose_opt
+ 3/60 Test   #55: address_expose_opt ...........................   Passed    1.36 sec
+      Start  345: gate_f_channel_contract
+ 4/60 Test  #345: gate_f_channel_contract ......................   Passed    0.85 sec
+      Start  445: address_crexx_flush_visible_run_noopt
+ 5/60 Test  #445: address_crexx_flush_visible_run_noopt ........   Passed    4.05 sec
+      Start  446: address_crexx_flush_visible_run_opt
+ 6/60 Test  #446: address_crexx_flush_visible_run_opt ..........   Passed    3.73 sec
+      Start  507: gate_f_levelb_contract
+ 7/60 Test  #507: gate_f_levelb_contract .......................   Passed    1.40 sec
+      Start  554: inline_nested_binary_block_owner_shape_opt
+ 8/60 Test  #554: inline_nested_binary_block_owner_shape_opt ...   Passed    1.33 sec
+      Start  623: inline_nested_binary_block_owner_run_noopt
+ 9/60 Test  #623: inline_nested_binary_block_owner_run_noopt ...   Passed    1.60 sec
+      Start  624: inline_nested_binary_block_owner_run_opt
+10/60 Test  #624: inline_nested_binary_block_owner_run_opt .....   Passed    1.53 sec
+      Start  781: address_exit_extended_parse
+11/60 Test  #781: address_exit_extended_parse ..................   Passed    1.41 sec
+      Start  782: address_inline_then_parse
+12/60 Test  #782: address_inline_then_parse ....................   Passed    1.36 sec
+      Start  892: address_bridge
+13/60 Test  #892: address_bridge ...............................   Passed    1.02 sec
+      Start  932: test_address_direct_bin_build
+14/60 Test  #932: test_address_direct_bin_build ................   Passed    1.10 sec
+      Start  930: test_address_direct_noopt
+15/60 Test  #930: test_address_direct_noopt ....................   Passed    0.44 sec
+      Start  931: test_address_direct_opt
+16/60 Test  #931: test_address_direct_opt ......................   Passed    0.43 sec
+      Start 1060: rxvmworker_lifecycle
+17/60 Test #1060: rxvmworker_lifecycle .........................   Passed    0.06 sec
+      Start 1061: rxvmchannel_provider_registry
+18/60 Test #1061: rxvmchannel_provider_registry ................   Passed    0.42 sec
+      Start 1062: rxvmbyteendpoint_substrate
+19/60 Test #1062: rxvmbyteendpoint_substrate ...................   Passed    0.35 sec
+      Start 1063: rxvmchannel_byte_provider
+==> ctest passed
+38/60 Test #1284: ts_address_crexx_noopt .......................   Passed    0.89 sec
+      Start 1285: ts_address_crexx_opt
+39/60 Test #1285: ts_address_crexx_opt .........................   Passed    0.93 sec
+      Start 1286: ts_address_capture_noopt
+40/60 Test #1286: ts_address_capture_noopt .....................   Passed    0.29 sec
+      Start 1287: ts_address_capture_opt
+41/60 Test #1287: ts_address_capture_opt .......................   Passed    0.33 sec
+      Start 1288: ts_address_argv_noopt
+42/60 Test #1288: ts_address_argv_noopt ........................   Passed    0.56 sec
+      Start 1289: ts_address_argv_opt
+43/60 Test #1289: ts_address_argv_opt ..........................   Passed    0.44 sec
+      Start 1290: ts_address_array_lifecycle_noopt
+44/60 Test #1290: ts_address_array_lifecycle_noopt .............   Passed    0.28 sec
+      Start 1291: ts_address_array_lifecycle_opt
+45/60 Test #1291: ts_address_array_lifecycle_opt ...............   Passed    0.33 sec
+      Start 1292: ts_address_spawn_transfer_noopt
+46/60 Test #1292: ts_address_spawn_transfer_noopt ..............   Passed    2.67 sec
+      Start 1293: ts_address_spawn_transfer_opt
+47/60 Test #1293: ts_address_spawn_transfer_opt ................   Passed    2.55 sec
+      Start 1536: ts_address_capture_rxbvm_noopt
+48/60 Test #1536: ts_address_capture_rxbvm_noopt ...............   Passed    0.29 sec
+      Start 1537: ts_address_capture_rxbvm_opt
+49/60 Test #1537: ts_address_capture_rxbvm_opt .................   Passed    0.33 sec
+      Start 1538: ts_address_argv_rxbvm_noopt
+50/60 Test #1538: ts_address_argv_rxbvm_noopt ..................   Passed    0.40 sec
+      Start 1539: ts_address_argv_rxbvm_opt
+51/60 Test #1539: ts_address_argv_rxbvm_opt ....................   Passed    0.44 sec
+      Start 1540: ts_address_array_lifecycle_rxbvm_noopt
+52/60 Test #1540: ts_address_array_lifecycle_rxbvm_noopt .......   Passed    0.28 sec
+      Start 1541: ts_address_array_lifecycle_rxbvm_opt
+53/60 Test #1541: ts_address_array_lifecycle_rxbvm_opt .........   Passed    0.33 sec
+      Start 1542: ts_address_spawn_transfer_rxbvm_noopt
+54/60 Test #1542: ts_address_spawn_transfer_rxbvm_noopt ........   Passed    2.61 sec
+      Start 1543: ts_address_spawn_transfer_rxbvm_opt
+55/60 Test #1543: ts_address_spawn_transfer_rxbvm_opt ..........   Passed    2.71 sec
+      Start 1544: ts_address_spawn_transfer_rxtvm_noopt
+56/60 Test #1544: ts_address_spawn_transfer_rxtvm_noopt ........   Passed    2.70 sec
+      Start 1545: ts_address_spawn_transfer_rxtvm_opt
+57/60 Test #1545: ts_address_spawn_transfer_rxtvm_opt ..........   Passed    2.73 sec
+      Start 1608: gate_f_levelb_bridge_inspection
+58/60 Test #1608: gate_f_levelb_bridge_inspection ..............   Passed    0.00 sec
+      Start 1646: testConcurrency_noopt
+59/60 Test #1646: testConcurrency_noopt ........................   Passed    3.01 sec
+      Start 1647: testConcurrency_opt
+60/60 Test #1647: testConcurrency_opt ..........................   Passed    1.08 sec
+
+100% tests passed, 0 tests failed out of 60
+
+Label Time Summary:
+assembler             =   1.33 sec*proc (1 test)
+binary                =   1.33 sec*proc (1 test)
+byte-endpoint         =   1.14 sec*proc (2 tests)
+channels              =   2.94 sec*proc (6 tests)
+classlib              =   0.00 sec*proc (1 test)
+compatibility         =   0.73 sec*proc (12 tests)
+compiler              =   4.60 sec*proc (4 tests)
+concurrency           =   1.40 sec*proc (1 test)
+f1c                   =   0.95 sec*proc (3 tests)
+f1d                   =   1.87 sec*proc (14 tests)
+gate-f                =   3.67 sec*proc (19 tests)
+gate_f                =   1.40 sec*proc (1 test)
+inlining              =   1.33 sec*proc (1 test)
+inspection            =   0.00 sec*proc (1 test)
+interpreter           =   3.29 sec*proc (19 tests)
+levelb                =   1.40 sec*proc (1 test)
+lifecycle             =   0.88 sec*proc (3 tests)
+linked_opt            =  17.80 sec*proc (14 tests)
+memory                =   0.06 sec*proc (1 test)
+perf3                 =   2.09 sec*proc (5 tests)
+performance           =   0.85 sec*proc (1 test)
+provider-reference    =   0.79 sec*proc (1 test)
+provider-registry     =   0.42 sec*proc (1 test)
+rxas                  =   1.57 sec*proc (13 tests)
+rxbin                 =   0.85 sec*proc (1 test)
+signals               =   0.42 sec*proc (1 test)
+smoke                 =   1.02 sec*proc (1 test)
+stage3                =   1.02 sec*proc (1 test)
+worker                =   0.48 sec*proc (2 tests)
+
+Total Test time (real) =  88.72 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-011806-ctest

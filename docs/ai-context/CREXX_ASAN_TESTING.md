@@ -3,6 +3,38 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+## Defect ownership and closure
+
+`docs/SANITIZER-WORKLIST.md` is the canonical live register for maintained
+sanitizer findings.  Every first-party finding receives a stable `SAN-nnn`
+entry as soon as it is observed, including defects exposed while testing an
+unrelated activity.  "Independent" and "pre-existing" are attribution labels,
+not dispositions.  Dated evidence may support an entry but may not replace it.
+
+An open `SAN-nnn` item blocks cross-platform sanitizer-clean and release
+completion claims. A bounded implementation phase may close only after Adrian
+explicitly assigns its outstanding platform proof to a named later release-QA
+gate. That handoff must name the live item, current repair evidence and the
+release-QA owner; it does not close or downgrade the item. The entry must retain
+the exact failing command and log, affected revision, smallest permanent
+reproducer, owner or next action, and closure checks.
+
+Closure requires all of the following:
+
+1. a permanent focused regression that fails for the original reason without
+   the repair;
+2. the same focused build/test shape passing in normal Debug and the maintained
+   sanitizer tree;
+3. the original broader trigger passing after a clean enough rebuild to avoid
+   stale generated artifacts; and
+4. the applicable full platform sanitizer gate passing.  Apple AddressSanitizer
+   does not supply LeakSanitizer, so leak closure additionally requires a
+   supported Linux ASan/LSan run.
+
+Do not suppress, exclude, or disable a supported sanitizer to obtain closure.
+An explicitly approved temporary exception stays open and release-blocking
+until the underlying defect is repaired and requalified.
+
 ## Runner
 
 The runner keeps every command in a timestamped log directory:
@@ -13,6 +45,12 @@ tools/asan-run.sh --phase full --test-jobs 8
 tools/asan-run.sh --phase build --build-target test_highlight_editor_diagnostics
 tools/asan-run.sh --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
 ```
+
+The hosted full sanitizer lanes exclude only the `performance-measurement`
+label. Those tests assert timing relationships that ASan instrumentation and a
+contended CTest pool deliberately invalidate; run them in the separate
+performance lane on an ordinary Release product. Correctness, smoke,
+conformance and sanitizer regressions remain in the full sanitizer gate.
 
 Default build directory is `cmake-build-debugasan`.
 The same runner can target the normal Debug tree with `--build-dir
@@ -69,7 +107,6 @@ That phase builds the needed targets with build leak detection on, then runs thi
 CTest surface with test leaks on and `--parallel 1`:
 
 ```text
-linked_opt_runtime_artifacts_build
 crexx_spaced_source_smoke
 inline_cross_file_.*
 source_import_.*
@@ -77,10 +114,26 @@ interface_.*import.*
 ```
 
 The focused phase intentionally builds `rxdas`, `crexx`,
-`linked_opt_runtime_artifacts`, and the static plugin archives used by native
-driver smoke coverage. Missing those build prerequisites can produce false
-focused failures from absent disassembly tools or native link inputs rather
-than ASan/LSan regressions.
+`qa-prep-linked-opt-runtime`, and the static plugin archives used by native
+driver smoke coverage before CTest starts. Missing those build prerequisites
+can produce false focused failures from absent disassembly tools or native link
+inputs rather than ASan/LSan regressions.
+
+### Apple dynamic-provider lifetime
+
+The Apple Clang ASan runtime does not support leak detection on the current
+macOS toolchain, so use `--build-leaks off` and `--leaks off` there for address
+sanitizer work. This is a platform limitation, not permission to disable leak
+checks on supported Linux sanitizer builds.
+
+The compiler may open, close, and later reopen the same RXPA provider while it
+resolves transitive imports. Apple's ASan runtime does not reliably unpoison
+an instrumented DSO's globals across `dlclose()` and reload. In Apple-ASan
+builds only, `rxpa_close_plugin()` therefore performs its normal logical close
+and handle-count update but leaves the OS DSO resident until process exit.
+Plugin initializers, procedures, and globals remain instrumented. Ordinary
+Debug, Release, Linux sanitizer, and Windows builds retain normal physical
+unload behavior.
 
 ## Full Workflow
 
@@ -90,10 +143,10 @@ For a proper full ASan/LSan check:
 tools/asan-run.sh --phase full --test-jobs 8
 ```
 
-This performs a full build first, then runs all CTests. The full build step is
-important because many tests consume generated `.rxbin` artifacts directly. A
-CTest-only run against a partially built tree can fail with missing module files
-and should not be treated as a code failure.
+This performs a full build, runs the explicit `qa-prep` build stage, then runs
+all CTests. Both build steps are important because many tests consume generated
+`.rxbin` artifacts directly. A CTest-only run against a partially prepared tree
+can fail with missing module files and should not be treated as a code failure.
 
 For a stepwise full leak-clean loop after the tree is already built:
 
@@ -108,16 +161,11 @@ generated `.rxbin` artifacts, prebuild those artifacts through the runner before
 resuming a leak-on CTest range:
 
 ```sh
-tools/asan-run.sh --phase build --build-target linked_opt_runtime_artifacts
+tools/asan-run.sh --phase build --build-target qa-prep-linked-opt-runtime
 ```
 
-For focused test regexes that normally require the linked-artifacts fixture,
-exclude the automatic setup fixture after the prebuild so CTest does not launch
-that build test under `detect_leaks=1`:
-
-```sh
-tools/asan-run.sh --phase ctest --regex '^testName$' --leaks on --fixture-exclude-setup linked_opt_runtime_artifacts
-```
+Once preparation succeeds, focused CTest commands run the requested tests
+directly; no linked-artifacts setup test is added to the selection.
 
 For long full runs, use CTest's index range through the runner to continue from
 a known point after a fixed first failure:
@@ -156,6 +204,54 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 `--phase build`; use `--phase full` when a complete rebuild is required.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
+
+## Mandatory CI gates
+
+`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs on
+pushes and pull requests to `develop` or `master`:
+
+* Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
+  and complete CTest phases.
+* macOS arm64 runs AddressSanitizer with leak detection disabled because the
+  Apple runtime does not provide supported LeakSanitizer coverage.
+
+Both jobs configure fresh Debug trees and invoke `tools/asan-run.sh --phase
+full`.  The instrumented build therefore executes generated-product tools such
+as `rxc`, `rxas`, and `rxlink` under the sanitizer before CTest starts.  Do not
+replace these jobs with a CTest-only step or mark either job
+`continue-on-error`.  Logs are uploaded even when a job fails so the first
+build-time or test-time report remains attributable.
+
+After the workflow is committed, configure its stable `Linux x64 ASan/LSan`
+and `macOS arm64 ASan` check names as required checks in the repository's
+branch protection or ruleset.  Workflow YAML cannot set that repository-level
+merge policy by itself.
+
+## Exploratory UBSan
+
+UBSan is an exploratory inventory rather than the supported maintained
+sanitizer workflow. Configure it in a separate tree, keep
+`UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1`, stop on the first report,
+and run the same focused normal-Debug control before accepting a correction.
+Do not reuse the ASan tree or treat instrumented elapsed time as performance
+evidence.
+
+The 2026-07-28 Intel Linux x86-64 inventory found and corrected:
+
+* Lemon null zero-element `qsort` and incompatible comparator calls;
+* compiler empty-string constant-fold null arguments to zero-length `memcpy`;
+* signed shift overflow in bundled decNumber bit scans;
+* NaN-to-integer conversion in diagnostic `db_decimal`;
+* an out-of-domain signed shift in Level B `x2d`;
+* an unaligned linked-list back-fence store; and
+* empty `bintos` validation passing `(NULL, 0)` to a non-null UTF helper.
+
+The final Clang UBSan tree passed 1,925/1,925 with immediate abort enabled in
+868.47 seconds. The matching final supported GCC ASan/LSan runner completed a
+leak-enabled full build and passed 1,925/1,925 in 1,301.74 seconds. Its first
+broad run had found a 10,000-byte successful-return leak in
+`rxtcp.tcpreceive`; the final run directory is retained under
+`performance/evidence/2026-07-28-perf2-10-11-intel-linux/logs/gcc-asan/`.
 
 ## Triage Rules
 
@@ -215,6 +311,30 @@ Validation on 2026-06-16:
 * Full CREXX ASan/LSan CTest passed: 1295/1295, log directory
   `cmake-build-debugasan/asan-logs/20260616-110335-full`.
 
+## 2026-07-11 Baseline Notes
+
+On the Ubuntu 26.04 Linux ARM64 VM at `654d42a83`, focused VM/RXAS coverage
+passed 213/213 and the documented focused ownership phase passed 28/28. The
+first broad run found a four-byte `keyaccess.readkey()` return-buffer leak. A
+second broad run exposed a parallel KeyDB test collision because opt/noopt used
+the same database files. The buffer ownership was fixed and the test race was
+removed with per-test database names rather than test serialization.
+
+Final validation passed 1580/1580 with build-time and test-time leak detection
+enabled, log directory
+`cmake-build-debugasan/asan-logs/20260711-164000-full`. The matching normal
+Debug suite passed 1580/1580. The complete machine, triage, and performance
+record is in
+`docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`.
+
+## Current VM object targets
+
+The portable interpreter translation unit compiles as `rxbvm_core_objects`.
+GNU/Clang-family builds also compile `rxtvm_core_objects`; MSVC builds only the
+portable object target. Product `rxvm` creates a symlink or copy of the
+compiler-selected concrete executable and does not compile `rxvmintp.c` a
+third time. Embedded and library products reuse the selected object target.
+
 ## 2026-06-17 Baseline Notes
 
 On the Linux ARM64 VM, both Debug ASan/LSan and ReleaseASAN completed full
@@ -227,8 +347,9 @@ build plus full CTest with leak detection enabled:
 * Full ReleaseASAN passed: 1295/1295, log directory
   `cmake-build-releaseasan/asan-logs/20260617-144706-full`.
 
-The ReleaseASAN build still spends a long time in the two concurrent
-`rxvmintp.c` compiles for `rxvm_core_objects` and `rxbvm_core_objects`. The
+At that baseline the ReleaseASAN build still spent a long time in the two
+concurrent `rxvmintp.c` compiles then named `rxvm_core_objects` and
+`rxbvm_core_objects`. The
 generated commands include `-O3 -O1`; GCC uses the later `-O1`, so this is the
 intended ASan-specific override for that translation unit, not a request to run
 both optimization levels.
@@ -262,10 +383,10 @@ generated ReleaseASAN compile commands were checked and include the extra `-O1`
 override. The full ReleaseASAN build and CTest should be rerun on a faster
 machine.
 
-Build-time review note: a no-op Release build reports `ninja: no work to do`,
+Historical build-time review note: a no-op Release build reported `ninja: no work to do`,
 so the current slowdown is not a perpetual rebuild loop. The expensive path is a
 clean build or any source change that touches `interpreter/rxvmintp.c`. CMake
-currently compiles that large translation unit separately for eight VM/test
+then compiled that large translation unit separately for eight VM/test
 targets (`rxvm`, `rxbvm`, `rxvme`, `rxbvme`, `rxvml`, `rxbvml`, `testvm`, and
 `funcvm`). The Release `.ninja_log` shows about 5957 seconds of aggregate latest
 `rxvmintp.c` compile time across those eight object files on this host. The

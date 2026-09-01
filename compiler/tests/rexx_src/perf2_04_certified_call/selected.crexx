@@ -1,0 +1,36 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  constant NAMED_TEXT = "named ä"
+
+  say upper("MiXeD äÖ")
+  say upper(NAMED_TEXT)
+  say substr(1234 "5678", 6, 2)
+  say substr(1234, 1, 1)
+  say substr("René日🙂", 5, 2)
+  say substr("abcd", 2, 2, "🙂")
+  say substr(upper("abCd"), 2, 2)
+  say upper(("610062"x as .binary) as .string) = (("410042"x as .binary) as .string)
+  say lower("MiXeD ÄÖ")
+  say length("")
+  say length("é日🙂")
+  say length(lower("É"))
+  say left("é日🙂", 2)
+  say right("é日🙂", 2)
+  say left("a", 3, "🙂")
+  say right("a", 3, "🙂")
+  say left("abc", 0, "🙂") = ""
+  say right("abc", 3, "🙂")
+  say word("", 1) = ""
+  say word("  Alpha Beta", 1)
+  say word("  Alpha Beta", 2)
+  say word(" é日　🙂", 1)
+  say word(" é日　🙂", 2)
+  say word(" é日　🙂", 3) = ""
+  say word("Key Bee", 1) = "?"
+  say word(" ? tail", 1) = "?"
+  say word("?x tail", 1) = "?"
+  say word("？ tail", 1) = "?"
+  say length(word(" é日　🙂", 1))
+  return 0

@@ -1,0 +1,88 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifreverse
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("cba", "abc")
+errors = errors + check_value("", "")
+errors = errors + check_value("x", "x")
+errors = errors + check_value("🙂日éa", "aé日🙂")
+errors = errors + check_byte_profile()
+large = ""
+large_expected = ""
+pair = "ab"
+reverse_pair = "ba"
+do i = 1 to 500
+  assembler append large,pair
+  assembler append large_expected,reverse_pair
+end
+errors = errors + check_value(large_expected, large)
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_error()
+
+if errors = 0 then say "PASS: Level C REVERSE BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, string = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  exists[1] = 1
+  context = .RexxBifCallContext("REVERSE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_reverse(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: REVERSE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "C3A978"x
+  args[1] = .RexxValue.fromBinary(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("REVERSE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_reverse(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "78A9C3" & \result.hasText() then return 0
+  say "FAIL: REVERSE BYTE expected 78A9C3 got" actual result.hasText(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("REVERSE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_reverse(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: REVERSE expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  context = .RexxBifCallContext("REVERSE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_reverse(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: REVERSE omitted argument got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

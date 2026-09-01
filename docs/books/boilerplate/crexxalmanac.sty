@@ -1,0 +1,255 @@
+%% crexxalmanac.sty -- cRexx Almanac inspired compact API reference layout
+%% 2026/08/07 v1.0.4
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{crexxalmanac}[2026/08/07 v1.0.6 Almanac-style API reference]
+
+\RequirePackage{xcolor}
+\RequirePackage{amssymb}
+\RequirePackage{xparse}
+\RequirePackage{tikz}
+\RequirePackage{changepage}
+\usetikzlibrary{calc}
+
+\definecolor{apiDark}{HTML}{424641}
+\definecolor{apiMid}{HTML}{777B76}
+\definecolor{apiLight}{HTML}{ECEDE9}
+\definecolor{apiRule}{HTML}{8C908B}
+\definecolor{apiText}{HTML}{343733}
+
+\newlength\APIHeadingHeight
+\newlength\APIHeadingSplit
+\newlength\APIHeadingInset
+\newlength\APIMarkerWidth
+\newlength\APISinceWidth
+\newlength\APITypeWidth
+\newlength\APINameWidth
+\newlength\APIDeclarationWidth
+\newlength\APITypeDeclarationGap
+\newlength\APIRowSkip
+\newlength\APIParameterIndent
+
+\setlength\APIHeadingHeight{7.8mm}
+\setlength\APIHeadingSplit{0.73\linewidth}
+\setlength\APIHeadingInset{2.2mm}
+\setlength\APIMarkerWidth{1.45em}
+\setlength\APISinceWidth{2.05em}
+\setlength\APITypeWidth{8.2em}
+\setlength\APINameWidth{8.8em}
+\setlength\APIDeclarationWidth{0.60\linewidth}
+\setlength\APITypeDeclarationGap{0.55em}
+\setlength\APIRowSkip{0.05ex}
+\setlength\APIParameterIndent{0.9em}
+
+\NewDocumentCommand{\APISetHeadingSplit}{m}{\setlength\APIHeadingSplit{#1}}
+\NewDocumentCommand{\APISetHeadingHeight}{m}{\setlength\APIHeadingHeight{#1}}
+\NewDocumentCommand{\APISetMarkerWidth}{m}{\setlength\APIMarkerWidth{#1}}
+\NewDocumentCommand{\APISetSinceWidth}{m}{\setlength\APISinceWidth{#1}}
+\NewDocumentCommand{\APISetTypeWidth}{m}{\setlength\APITypeWidth{#1}}
+\NewDocumentCommand{\APISetNameWidth}{m}{\setlength\APINameWidth{#1}}
+\NewDocumentCommand{\APISetDeclarationWidth}{m}{\setlength\APIDeclarationWidth{#1}}
+\NewDocumentCommand{\APISetTypeDeclarationGap}{m}{\setlength\APITypeDeclarationGap{#1}}
+\NewDocumentCommand{\APISetRowSkip}{m}{\setlength\APIRowSkip{#1}}
+\NewDocumentCommand{\APISetParameterIndent}{m}{\setlength\APIParameterIndent{#1}}
+
+\NewDocumentCommand{\APIClassHeading}{m m}{%
+  \par\noindent
+  \begin{tikzpicture}
+    \useasboundingbox (0,0) rectangle (\linewidth,\APIHeadingHeight);
+    \fill[apiDark] (0,0) rectangle (\APIHeadingSplit,\APIHeadingHeight);
+    \fill[apiLight] (\APIHeadingSplit,0) rectangle (\linewidth,\APIHeadingHeight);
+    \node[anchor=west,inner sep=0pt,text=white,font=\sffamily\bfseries\Large]
+      at (\APIHeadingInset,{0.5\APIHeadingHeight}) {#1};
+    \node[anchor=east,inner sep=0pt,text=apiText,font=\sffamily\large]
+      at ({\linewidth-\APIHeadingInset},{0.5\APIHeadingHeight}) {#2};
+  \end{tikzpicture}%
+  \par\vspace{2.5pt}%
+}
+
+\NewDocumentEnvironment{APIHierarchy}{}
+  {\begingroup\small\sffamily\color{apiText}\setlength{\parskip}{0pt}}
+  {\par\vspace{2pt}{\color{apiRule}\hrule height 0.3pt}\vspace{4pt}\endgroup}
+
+\NewDocumentCommand{\APIHierarchyLine}{O{} m m}{%
+  \noindent\makebox[1.45em][l]{\scriptsize #1}%
+  \hspace*{\dimexpr #2em\relax}#3\par
+}
+
+\NewDocumentCommand{\APIHierarchyBranch}{}{\ensuremath{\llcorner}}
+\NewDocumentCommand{\APINew}{}{\textasteriskcentered}
+\NewDocumentCommand{\APIChanged}{}{\ensuremath{\triangle}}
+\NewDocumentCommand{\APIField}{}{\ensuremath{\blacktriangle}}
+\NewDocumentCommand{\APIOpen}{}{\ensuremath{\circ}}
+
+\NewDocumentCommand{\APILeaderFill}{}{%
+  \nobreak\leaders
+    \hbox{\kern0.22em\raisebox{0.34ex}{\scriptsize.}\kern0.22em}%
+    \hfill
+  \kern0.35em
+}
+
+\makeatletter
+\newcommand{\API@ModifierWidth}{%
+  \dimexpr\linewidth-\APIMarkerWidth-\APISinceWidth-\APITypeWidth
+  -\APITypeDeclarationGap-\APIDeclarationWidth\relax
+}
+\newcommand{\API@ArgumentWidth}{%
+  \dimexpr\APIDeclarationWidth-\APINameWidth\relax
+}
+\newcommand{\API@MarkerBox}[1]{\hbox to \APIMarkerWidth{\hfil\scriptsize #1}}
+\newcommand{\API@SinceBox}[1]{\hbox to \APISinceWidth{\hfil\scriptsize #1}}
+\newcommand{\API@ModifierBox}[1]{%
+  \hbox to \API@ModifierWidth{\color{apiMid}#1\APILeaderFill}%
+}
+% A long return type is anchored at its right edge and may extend to the left;
+% it can therefore never overwrite the fixed method-name column.
+\newcommand{\API@TypeBox}[1]{%
+  \hbox to \APITypeWidth{\hfil\hbox to 0pt{\hss\bfseries #1}}%
+}
+\newcommand{\API@GapBox}{\hbox to \APITypeDeclarationGap{\hfil}}
+\newcommand{\API@NameBox}[1]{%
+  \hbox to \APINameWidth{\bfseries #1\hfil}%
+}
+\newcommand{\API@ArgumentsBox}[1]{%
+  \hbox to \API@ArgumentWidth{#1\hfil}%
+}
+\newcommand{\API@MethodRow}[8]{%
+  \par\noindent
+  \hbox to \linewidth{%
+    \API@MarkerBox{#1}%
+    \API@SinceBox{#2}%
+    \API@ModifierBox{#3}%
+    \API@TypeBox{#4}%
+    \API@GapBox
+    \API@NameBox{#5}%
+    \API@ArgumentsBox{#6\IfBlankF{#7}{\ {\color{apiMid}#7}}}%
+  }%
+  \par\vspace{-\APIRowSkip}%
+}
+\newcommand{\API@ValueRow}[6]{%
+  \par\noindent
+  \hbox to \linewidth{%
+    \API@MarkerBox{#1}%
+    \API@SinceBox{#2}%
+    \API@ModifierBox{#3}%
+    \API@TypeBox{#4}%
+    \API@GapBox
+    \API@NameBox{#5}%
+    \API@ArgumentsBox{\IfBlankF{#6}{{\color{apiMid}= #6}}}%
+  }%
+  \par\vspace{-\APIRowSkip}%
+}
+
+\NewDocumentEnvironment{APIMembers}{}
+  {\begingroup\small\sffamily\color{apiText}\parskip=0pt\relax}
+  {\par\endgroup}
+
+% marker, version, modifiers, return type, name, arguments, trailing clause
+\NewDocumentCommand{\APIMember}{m m m m m m m}{%
+  \API@MethodRow{#1}{#2}{#3}{#4}{#5}{#6}{#7}{}%
+}
+% marker, version, modifiers, factory name, arguments, trailing clause
+\NewDocumentCommand{\APIConstructor}{m m m m m m}{%
+  \API@MethodRow{#1}{#2}{#3}{}{#4}{#5}{#6}{}%
+}
+% marker, version, modifiers, type, name, value
+\NewDocumentCommand{\APIConstant}{m m m m m m}{%
+  \API@ValueRow{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+
+\newlength\APIChapterInnerExpansion
+\newlength\APIChapterOuterExpansion
+\setlength\APIChapterInnerExpansion{8mm}
+\setlength\APIChapterOuterExpansion{8mm}
+\NewDocumentCommand{\APISetChapterExpansion}{m m}{%
+  \setlength\APIChapterInnerExpansion{#1}%
+  \setlength\APIChapterOuterExpansion{#2}%
+}
+\NewDocumentEnvironment{APIWideChapter}{}
+  {\begin{adjustwidth*}{-\APIChapterInnerExpansion}{-\APIChapterOuterExpansion}}
+  {\end{adjustwidth*}}
+
+\NewDocumentEnvironment{APIClass}{m m}{\APIClassHeading{#1}{#2}}{\par}
+\NewDocumentEnvironment{CrexxClass}{m m}{\begin{APIClass}{#1}{#2}}{\end{APIClass}}
+\NewDocumentEnvironment{Hierarchy}{}{\begin{APIHierarchy}}{\end{APIHierarchy}}
+\NewDocumentEnvironment{Members}{}{\begin{APIMembers}}{\end{APIMembers}}
+\NewDocumentCommand{\HierarchyLine}{O{} m m}{\APIHierarchyLine[#1]{#2}{#3}}
+
+% cRexx parameter notation helpers.
+% \Param{name}{type} -> name=type
+% \DefaultParam{name}{type}{value} -> name=type=value
+\NewDocumentCommand{\Param}{m m}{#1=#2}
+\NewDocumentCommand{\DefaultParam}{m m m}{#1=#2=#3}
+
+% Multiline argument lists generated by rexxApiDoc.
+%
+% Example:
+%   \Params{
+%     \ParamLine{\Param{key}{.string}}
+%     \LastParamLine{\Param{value}{.string}}
+%   }
+%
+% renders as:
+%   (key=.string,
+%      value=.string)
+%
+% \vtop keeps the first parameter line on the same baseline as the method.
+\newif\ifAPI@FirstParameter
+\newif\ifAPI@FirstParameter
+\NewDocumentCommand{\Params}{m}{%
+  % Multiline parameters stay entirely inside the fixed argument column.
+  % The first parameter follows the opening parenthesis on the first line;
+  % continuation parameters are indented; the closing parenthesis follows
+  % the final parameter on its line.
+  \vtop{%
+    \hsize=\API@ArgumentWidth
+    \parindent=0pt
+    \parskip=0pt
+    \baselineskip=1.08\baselineskip
+    \API@FirstParametertrue
+    #1%
+  }%
+}
+\NewDocumentCommand{\ParamLine}{m}{%
+  \ifAPI@FirstParameter
+    \noindent(#1,\par
+    \API@FirstParameterfalse
+  \else
+    \noindent\hspace*{\APIParameterIndent}#1,\par
+  \fi
+}
+\NewDocumentCommand{\LastParamLine}{m}{%
+  \ifAPI@FirstParameter
+    \noindent(#1)\par
+    \API@FirstParameterfalse
+  \else
+    \noindent\hspace*{\APIParameterIndent}#1)\par
+  \fi
+}
+
+% Concise semantic interface. Markers are retained.
+\NewDocumentCommand{\Method}{O{} m m m m}{%
+  \APIMember{}{}{#2}{#3}{#4}{#5}{#1}%
+}
+\NewDocumentCommand{\ChangedMethod}{O{} m m m m}{%
+  \APIMember{\APIChanged}{}{#2}{#3}{#4}{#5}{#1}%
+}
+\NewDocumentCommand{\MethodMeta}{m m m m m m O{}}{%
+  \APIMember{#1}{#2}{#3}{#4}{#5}{#6}{#7}%
+}
+\NewDocumentCommand{\Factory}{O{} m m m}{%
+  \APIConstructor{\APINew}{}{#2}{#3}{#4}{#1}%
+}
+\NewDocumentCommand{\FactoryMeta}{m m m m m O{}}{%
+  \APIConstructor{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+\NewDocumentCommand{\Constant}{m m m m}{%
+  \APIConstant{\APIField}{}{#1}{#2}{#3}{#4}%
+}
+\NewDocumentCommand{\ConstantMeta}{m m m m m m}{%
+  \APIConstant{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+\NewDocumentCommand{\Field}{m m m}{%
+  \APIConstant{\APIField}{}{#1}{#2}{#3}{}%
+}
+\makeatother
+\endinput

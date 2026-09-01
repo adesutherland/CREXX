@@ -1,0 +1,163 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxvalue
+import rexxpool
+
+errors = 0
+
+errors = errors + check_bif("LENGTH", "3", "abc")
+errors = errors + check_bif("SUBSTR", "bc  ", "abc", "2", "4")
+errors = errors + check_bif("SUBSTR", "...", "abc", "5", "3", ".")
+errors = errors + check_bif("SUBWORD", "is the", "Now is the time", "2", "2")
+errors = errors + check_bif("LEFT", "abc..", "abc", "5", ".")
+errors = errors + check_bif("RIGHT", "007", "7", "3", "0")
+errors = errors + check_bif("STRIP", "12.7", "0012.700", "B", "0")
+errors = errors + check_bif("POS", "7", "foo", "a foo foo", "4")
+errors = errors + check_bif("WORD", "the", "Now is the time", "3")
+errors = errors + check_bif("WORDS", "4", "Now is the time")
+errors = errors + check_bif("SPACE", "Nowisthetime", "Now  is   the time", "0")
+errors = errors + check_bif("SPACE", "Now++is++the++time", "Now  is   the time", "2", "+")
+errors = errors + check_bif("ABBREV", "1", "PRINT", "PRI")
+errors = errors + check_bif("ABBREV", "0", "PRINT", "", "1")
+errors = errors + check_bif("BITAND", "@", "A", "B")
+errors = errors + check_bif("BITOR", "C", "A", "B")
+errors = errors + check_bif("BITXOR", "a", "A", " ")
+errors = errors + check_bif("COPIES", "abcabcabc", "abc", "3")
+errors = errors + check_bif("VERIFY", "2", "1Z3", "1234567890")
+errors = errors + check_bif("VERIFY", "3", "AB4T", "1234567890", "M")
+errors = errors + check_bif("DATATYPE", "NUM", "12.3")
+errors = errors + check_bif("DATATYPE", "1", "BCd3", "X")
+errors = errors + check_bif("DATATYPE", "0", "BCgd3", "X")
+errors = errors + check_bif("ABS", "12.5", "-12.5")
+errors = errors + check_bif("SIGN", "-1", "-0.307")
+errors = errors + check_bif("MIN", "-1", "4", "-1", "9")
+errors = errors + check_bif("MAX", "9", "4", "-1", "9")
+errors = errors + check_bif("UPPER", "MIXED", "Mixed")
+errors = errors + check_bif("LOWER", "mixed", "Mixed")
+errors = errors + check(rexxclassicbif_length(.RexxValue("abcdef")).asString() = "6", "direct length helper")
+
+errors = errors + check_error("LENGTH", "RXC-LC-40.3")
+errors = errors + check_error("LEFT", "RXC-LC-40.13", "abc", "-1")
+errors = errors + check_error("LEFT", "RXC-LC-40.23", "abc", "5", "..")
+errors = errors + check_error("DATATYPE", "RXC-LC-40.28", "abc", "Q")
+
+args = .RexxValue[]
+exists = .int[]
+args[1] = .RexxValue("abc")
+args[2] = .RexxValue("")
+args[3] = .RexxValue("2")
+exists[1] = 1
+exists[2] = 0
+exists[3] = 1
+ctx = .RexxBifCallContext("SUBSTR")
+call ctx.setArguments(args, exists)
+result = rexxclassicbif_substr(reference ctx)
+errors = errors + check(ctx.hasError() & ctx.errorCode() = "RXC-LC-40.5" & result.asString() = "", "omitted required argument")
+
+args = .RexxValue[]
+exists = .int[]
+args[1] = .RexxValue(" ")
+args[2] = .RexxValue("abc def ghi")
+args[3] = .RexxValue("5")
+exists[1] = 1
+exists[2] = 1
+exists[3] = 1
+ctx = .RexxBifCallContext("POS")
+call ctx.setArguments(args, exists)
+result = rexxclassicbif_pos(reference ctx)
+errors = errors + check(\ctx.hasError() & result.asString() = "8", "pos with blank needle and start")
+
+pool = .RexxVariablePool()
+call pool.setString("answer", "41")
+ctx = .RexxBifCallContext("LENGTH")
+call ctx.setCallerPool(reference pool)
+ctx_pool_ref = ctx.callerPool()
+ctx_pool = dereference ctx_pool_ref
+call ctx_pool.setString("answer", "42")
+errors = errors + check(pool.value("answer").asString() = "42", "context carries caller pool")
+
+compat_args = .RexxValue[]
+compat_exists = .int[]
+compat_args[1] = .RexxValue("abcdef")
+compat_args[2] = .RexxValue("2")
+compat_args[3] = .RexxValue("3")
+compat_exists[1] = 1
+compat_exists[2] = 1
+compat_exists[3] = 1
+compat_context = .RexxBifCallContext("SUBSTR")
+call compat_context.setArguments(compat_args, compat_exists)
+compat_result = rexxclassicbif_call(reference compat_context)
+errors = errors + check(\compat_context.hasError() & compat_result.asString() = "bcd", "deprecated dispatcher compatibility")
+
+if errors = 0 then say "ok"
+return errors
+
+check_bif: procedure = .int
+  arg name = .string, expected = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  ctx = .RexxBifCallContext(name)
+  call ctx.setArguments(args, exists)
+  result = invoke_direct(name, reference ctx)
+  if \ctx.hasError() & result.asString() = expected then return 0
+  say "FAIL" name "expected" expected "got" result.asString() ctx.errorCode() ctx.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg name = .string, expected_code = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  ctx = .RexxBifCallContext(name)
+  call ctx.setArguments(args, exists)
+  result = invoke_direct(name, reference ctx)
+  if ctx.hasError() & ctx.errorCode() = expected_code then return 0
+  say "FAIL" name "expected error" expected_code "got" result.asString() ctx.errorCode() ctx.errorMessage()
+  return 1
+
+invoke_direct: procedure = .RexxValue
+  arg name = .string, context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  select
+    when name = "ABBREV" then return rexxclassicbif_abbrev(context_ref)
+    when name = "ABS" then return rexxclassicbif_abs(context_ref)
+    when name = "BITAND" then return rexxclassicbif_bitand(context_ref)
+    when name = "BITOR" then return rexxclassicbif_bitor(context_ref)
+    when name = "BITXOR" then return rexxclassicbif_bitxor(context_ref)
+    when name = "COPIES" then return rexxclassicbif_copies(context_ref)
+    when name = "DATATYPE" then return rexxclassicbif_datatype(context_ref)
+    when name = "LEFT" then return rexxclassicbif_left(context_ref)
+    when name = "LENGTH" then do
+      call context.clearError()
+      if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
+      return rexxclassicbif_length(context.argument(1))
+    end
+    when name = "LOWER" then return rexxclassicbif_lower(context_ref)
+    when name = "MAX" then return rexxclassicbif_max(context_ref)
+    when name = "MIN" then return rexxclassicbif_min(context_ref)
+    when name = "POS" then return rexxclassicbif_pos(context_ref)
+    when name = "RIGHT" then return rexxclassicbif_right(context_ref)
+    when name = "SIGN" then return rexxclassicbif_sign(context_ref)
+    when name = "SPACE" then return rexxclassicbif_space(context_ref)
+    when name = "STRIP" then return rexxclassicbif_strip(context_ref)
+    when name = "SUBSTR" then return rexxclassicbif_substr(context_ref)
+    when name = "SUBWORD" then return rexxclassicbif_subword(context_ref)
+    when name = "UPPER" then return rexxclassicbif_upper(context_ref)
+    when name = "VERIFY" then return rexxclassicbif_verify(context_ref)
+    when name = "WORD" then return rexxclassicbif_word(context_ref)
+    when name = "WORDS" then return rexxclassicbif_words(context_ref)
+  end
+  return .RexxValue("")
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

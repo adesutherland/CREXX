@@ -1,0 +1,5 @@
+`bcmps rCmp,rSrc,rString` compares a zero-terminated UTF-8 field in binary
+memory with a string register or string constant. On entry, `rCmp` contains the
+byte offset into `rSrc`; on success it is overwritten with `-1`, `0`, or `1`.
+The source field is validated exactly as `bgets` would validate it, but no
+temporary string is allocated.

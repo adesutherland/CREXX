@@ -1,0 +1,1643 @@
+Compiled from "rexxcps_2_2n.java"
+public class rexxcps_2_2n {
+  private static final netrexx.lang.Rexx $01;
+
+  private static final netrexx.lang.Rexx $02;
+
+  private static final char[] $03;
+
+  private static final netrexx.lang.Rexx $04;
+
+  private static final char[] $05;
+
+  private static final netrexx.lang.Rexx $06;
+
+  private static final netrexx.lang.Rexx $07;
+
+  private static final netrexx.lang.Rexx $08;
+
+  private static final netrexx.lang.Rexx $09;
+
+  private static final netrexx.lang.Rexx $010;
+
+  private static final netrexx.lang.Rexx $011;
+
+  private static final netrexx.lang.Rexx $012;
+
+  private static final netrexx.lang.Rexx $013;
+
+  private static final netrexx.lang.Rexx $014;
+
+  private static final netrexx.lang.Rexx $015;
+
+  private static final netrexx.lang.Rexx $016;
+
+  private static final netrexx.lang.Rexx $017;
+
+  private static final netrexx.lang.Rexx $018;
+
+  private static final netrexx.lang.Rexx $019;
+
+  private static final netrexx.lang.Rexx $020;
+
+  private static final netrexx.lang.Rexx $021;
+
+  private static final netrexx.lang.Rexx $022;
+
+  private static final netrexx.lang.Rexx $023;
+
+  private static final netrexx.lang.Rexx $024;
+
+  private static final char[] $025;
+
+  private static final netrexx.lang.Rexx $026;
+
+  private static final netrexx.lang.Rexx $027;
+
+  private static final char[] $028;
+
+  private static final netrexx.lang.Rexx $029;
+
+  private static final netrexx.lang.Rexx $030;
+
+  private static final netrexx.lang.Rexx $031;
+
+  private static final netrexx.lang.Rexx $032;
+
+  private static final netrexx.lang.Rexx $033;
+
+  private static final netrexx.lang.Rexx $034;
+
+  private static final netrexx.lang.Rexx $035;
+
+  private static final netrexx.lang.Rexx $036;
+
+  private static final char[] $037;
+
+  private static final char[] $038;
+
+  private static final netrexx.lang.Rexx $039;
+
+  private static final char[] $040;
+
+  private static final java.lang.String $0;
+
+  private static final netrexx.lang.RexxSet $1;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: aconst_null
+         1: astore_1
+         2: aconst_null
+         3: astore_2
+         4: aconst_null
+         5: astore_3
+         6: lconst_0
+         7: lstore        10
+         9: aconst_null
+        10: astore        13
+        12: lconst_0
+        13: lstore        14
+        15: aconst_null
+        16: astore        16
+        18: aconst_null
+        19: astore        17
+        21: aconst_null
+        22: astore        18
+        24: aconst_null
+        25: astore        19
+        27: aconst_null
+        28: astore        20
+        30: aconst_null
+        31: astore        21
+        33: aconst_null
+        34: astore        22
+        36: aconst_null
+        37: astore        23
+        39: aconst_null
+        40: astore        24
+        42: aconst_null
+        43: astore        25
+        45: aconst_null
+        46: astore        26
+        48: aconst_null
+        49: astore        27
+        51: aconst_null
+        52: astore        28
+        54: aconst_null
+        55: astore        29
+        57: aconst_null
+        58: astore        30
+        60: aconst_null
+        61: astore        31
+        63: aconst_null
+        64: astore        32
+        66: aconst_null
+        67: astore        33
+        69: aconst_null
+        70: astore        34
+        72: aconst_null
+        73: astore        35
+        75: iconst_3
+        76: anewarray     #1                  // class netrexx/lang/Rexx
+        79: astore        39
+        81: getstatic     #3                  // Field $02:Lnetrexx/lang/Rexx;
+        84: getstatic     #9                  // Field $03:[C
+        87: aload         39
+        89: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+        92: aload         39
+        94: iconst_0
+        95: aaload
+        96: astore_1
+        97: aload         39
+        99: iconst_1
+       100: aaload
+       101: astore_2
+       102: aload_1
+       103: astore_1
+       104: iconst_1
+       105: anewarray     #1                  // class netrexx/lang/Rexx
+       108: astore        39
+       110: getstatic     #19                 // Field $04:Lnetrexx/lang/Rexx;
+       113: getstatic     #22                 // Field $05:[C
+       116: aload         39
+       118: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+       121: aload         39
+       123: iconst_0
+       124: aaload
+       125: astore_3
+       126: new           #1                  // class netrexx/lang/Rexx
+       129: dup
+       130: iconst_1
+       131: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       134: astore        4
+       136: new           #1                  // class netrexx/lang/Rexx
+       139: dup
+       140: bipush        100
+       142: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       145: astore        5
+       147: new           #1                  // class netrexx/lang/Rexx
+       150: dup
+       151: bipush        100
+       153: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       156: astore        6
+       158: ldc           #29                 // String 2.2n
+       160: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       163: astore        7
+       165: ldc           #35                 // String ----- REXXCPS
+       167: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       170: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       173: aload         7
+       175: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       178: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       181: ldc           #45                 // String -- Measuring NetRexx clauses/second -----
+       183: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       186: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       189: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+       192: pop
+       193: ldc           #53                 // String  NetRexx version is:
+       195: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       198: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       201: aload_3
+       202: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       205: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+       208: pop
+       209: ldc           #55                 // String           System is:
+       211: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       214: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       217: aload_2
+       218: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       221: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+       224: pop
+       225: new           #1                  // class netrexx/lang/Rexx
+       228: dup
+       229: iconst_0
+       230: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       233: invokevirtual #60                 // Method netrexx/lang/Rexx.tolong:()J
+       236: lstore        8
+       238: aload         6
+       240: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       243: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       246: invokevirtual #68                 // Method netrexx/lang/Rexx.toint:()I
+       249: istore        39
+       251: iload         39
+       253: ifle          336
+       256: invokestatic  #72                 // Method java/lang/System.nanoTime:()J
+       259: lstore        10
+       261: aload         5
+       263: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       266: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       269: invokevirtual #68                 // Method netrexx/lang/Rexx.toint:()I
+       272: istore        40
+       274: iload         40
+       276: ifle          285
+       279: iinc          40, -1
+       282: goto          274
+       285: new           #1                  // class netrexx/lang/Rexx
+       288: dup
+       289: lload         8
+       291: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+       294: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       297: new           #1                  // class netrexx/lang/Rexx
+       300: dup
+       301: invokestatic  #72                 // Method java/lang/System.nanoTime:()J
+       304: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+       307: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       310: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       313: new           #1                  // class netrexx/lang/Rexx
+       316: dup
+       317: lload         10
+       319: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+       322: invokevirtual #83                 // Method netrexx/lang/Rexx.OpSub:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       325: invokevirtual #60                 // Method netrexx/lang/Rexx.tolong:()J
+       328: lstore        8
+       330: iinc          39, -1
+       333: goto          251
+       336: new           #1                  // class netrexx/lang/Rexx
+       339: dup
+       340: lload         8
+       342: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+       345: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       348: aload         6
+       350: invokevirtual #86                 // Method netrexx/lang/Rexx.OpDiv:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       353: astore        12
+       355: new           #1                  // class netrexx/lang/Rexx
+       358: dup
+       359: iconst_1
+       360: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       363: astore        13
+       365: aload         13
+       367: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       370: getstatic     #89                 // Field $06:Lnetrexx/lang/Rexx;
+       373: invokevirtual #92                 // Method netrexx/lang/Rexx.OpLtEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       376: ifeq          1766
+       379: new           #1                  // class netrexx/lang/Rexx
+       382: dup
+       383: iconst_0
+       384: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       387: invokevirtual #60                 // Method netrexx/lang/Rexx.tolong:()J
+       390: lstore        14
+       392: aload         6
+       394: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       397: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       400: invokevirtual #68                 // Method netrexx/lang/Rexx.toint:()I
+       403: istore        39
+       405: iload         39
+       407: ifle          1636
+       410: invokestatic  #72                 // Method java/lang/System.nanoTime:()J
+       413: lstore        10
+       415: aload         5
+       417: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       420: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       423: invokevirtual #68                 // Method netrexx/lang/Rexx.toint:()I
+       426: istore        40
+       428: iload         40
+       430: ifle          1585
+       433: new           #1                  // class netrexx/lang/Rexx
+       436: dup
+       437: iconst_0
+       438: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       441: astore        16
+       443: new           #1                  // class netrexx/lang/Rexx
+       446: dup
+       447: bipush        98
+       449: invokespecial #96                 // Method netrexx/lang/Rexx."<init>":(C)V
+       452: astore        17
+       454: new           #1                  // class netrexx/lang/Rexx
+       457: dup
+       458: iconst_1
+       459: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       462: astore        18
+       464: aload         18
+       466: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       469: getstatic     #99                 // Field $07:Lnetrexx/lang/Rexx;
+       472: invokevirtual #92                 // Method netrexx/lang/Rexx.OpLtEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       475: ifeq          1579
+       478: ldc           #102                // String Key Bee
+       480: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       483: astore        19
+       485: ldc           #104                // String
+       487: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       490: astore        20
+       492: aload         20
+       494: aload         19
+       496: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       499: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       502: aload         18
+       504: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       507: getstatic     #115                // Field $08:Lnetrexx/lang/Rexx;
+       510: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       513: getstatic     #118                // Field $09:Lnetrexx/lang/Rexx;
+       516: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       519: new           #1                  // class netrexx/lang/Rexx
+       522: dup
+       523: bipush        6
+       525: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       528: new           #1                  // class netrexx/lang/Rexx
+       531: dup
+       532: iconst_2
+       533: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       536: invokevirtual #124                // Method netrexx/lang/Rexx.substr:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       539: putfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       542: aload         16
+       544: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       547: aload         20
+       549: aload         19
+       551: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       554: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       557: aload         18
+       559: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       562: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       565: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       568: ifeq          577
+       571: ldc           #131                // String Failed1
+       573: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       576: pop
+       577: getstatic     #136                // Field $010:Lnetrexx/lang/Rexx;
+       580: astore        41
+       582: getstatic     #136                // Field $010:Lnetrexx/lang/Rexx;
+       585: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       588: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       591: astore        21
+       593: aload         21
+       595: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       598: getstatic     #139                // Field $011:Lnetrexx/lang/Rexx;
+       601: invokevirtual #92                 // Method netrexx/lang/Rexx.OpLtEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       604: ifeq          855
+       607: aload         21
+       609: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       612: aload         20
+       614: aload         19
+       616: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       619: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       622: aload         18
+       624: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       627: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       630: invokevirtual #142                // Method netrexx/lang/Rexx.OpGt:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       633: ifeq          642
+       636: ldc           #145                // String Failed2
+       638: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       641: pop
+       642: getstatic     #147                // Field $013:Lnetrexx/lang/Rexx;
+       645: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       648: aload         19
+       650: invokevirtual #150                // Method netrexx/lang/Rexx.length:()Lnetrexx/lang/Rexx;
+       653: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       656: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+       659: invokevirtual #83                 // Method netrexx/lang/Rexx.OpSub:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       662: invokevirtual #157                // Method netrexx/lang/Rexx.OpLt:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       665: ifeq          674
+       668: ldc           #160                // String Failed3
+       670: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       673: pop
+       674: aload         21
+       676: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       679: getstatic     #162                // Field $014:Lnetrexx/lang/Rexx;
+       682: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       685: ifeq          694
+       688: ldc           #165                // String Failed4
+       690: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       693: pop
+       694: aload         19
+       696: new           #1                  // class netrexx/lang/Rexx
+       699: dup
+       700: iconst_1
+       701: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       704: new           #1                  // class netrexx/lang/Rexx
+       707: dup
+       708: iconst_1
+       709: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       712: invokevirtual #124                // Method netrexx/lang/Rexx.substr:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       715: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       718: getstatic     #167                // Field $015:Lnetrexx/lang/Rexx;
+       721: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       724: ifeq          733
+       727: ldc           #170                // String Failed5
+       729: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       732: pop
+       733: aload         19
+       735: new           #1                  // class netrexx/lang/Rexx
+       738: dup
+       739: iconst_1
+       740: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       743: invokevirtual #172                // Method netrexx/lang/Rexx.word:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       746: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       749: getstatic     #176                // Field $016:Lnetrexx/lang/Rexx;
+       752: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       755: ifeq          764
+       758: ldc           #179                // String Failed6
+       760: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       763: pop
+       764: aload         21
+       766: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       769: getstatic     #181                // Field $017:Lnetrexx/lang/Rexx;
+       772: invokevirtual #157                // Method netrexx/lang/Rexx.OpLt:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       775: ifeq          840
+       778: aload         20
+       780: aload         19
+       782: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       785: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       788: aload         18
+       790: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       793: aload         20
+       795: aload         19
+       797: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       800: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       803: aload         18
+       805: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       808: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       811: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       814: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+       817: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       820: putfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       823: aload         21
+       825: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       828: getstatic     #184                // Field $018:Lnetrexx/lang/Rexx;
+       831: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       834: ifeq          840
+       837: goto          855
+       840: aload         21
+       842: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       845: aload         41
+       847: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       850: astore        21
+       852: goto          593
+       855: getstatic     #187                // Field $019:Lnetrexx/lang/Rexx;
+       858: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       861: getstatic     #190                // Field $020:Lnetrexx/lang/Rexx;
+       864: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       867: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       870: aload         18
+       872: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       875: astore        22
+       877: aload         16
+       879: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       882: getstatic     #193                // Field $021:Lnetrexx/lang/Rexx;
+       885: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       888: ifeq          900
+       891: ldc           #196                // String FailedS1
+       893: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       896: pop
+       897: goto          1092
+       900: aload         22
+       902: aload         16
+       904: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       907: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       910: new           #1                  // class netrexx/lang/Rexx
+       913: dup
+       914: iconst_2
+       915: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       918: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       921: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+       924: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       927: getstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+       930: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       933: ifeq          945
+       936: ldc           #201                // String FailedS2
+       938: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       941: pop
+       942: goto          1092
+       945: aload         16
+       947: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       950: getstatic     #181                // Field $017:Lnetrexx/lang/Rexx;
+       953: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       956: getstatic     #203                // Field $023:Lnetrexx/lang/Rexx;
+       959: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       962: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+       965: ifeq          977
+       968: ldc           #206                // String FailedS3
+       970: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       973: pop
+       974: goto          1092
+       977: aload         16
+       979: invokevirtual #208                // Method netrexx/lang/Rexx.toboolean:()Z
+       982: ifeq          1057
+       985: aload         22
+       987: new           #1                  // class netrexx/lang/Rexx
+       990: dup
+       991: iconst_1
+       992: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       995: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+       998: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1001: new           #1                  // class netrexx/lang/Rexx
+      1004: dup
+      1005: iconst_2
+      1006: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1009: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1012: aload         22
+      1014: new           #1                  // class netrexx/lang/Rexx
+      1017: dup
+      1018: iconst_1
+      1019: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1022: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1025: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1028: new           #1                  // class netrexx/lang/Rexx
+      1031: dup
+      1032: iconst_2
+      1033: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1036: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1039: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1042: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1045: getstatic     #136                // Field $010:Lnetrexx/lang/Rexx;
+      1048: invokevirtual #212                // Method netrexx/lang/Rexx.OpMult:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1051: putfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1054: goto          1092
+      1057: aload         16
+      1059: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1062: getstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+      1065: invokevirtual #215                // Method netrexx/lang/Rexx.OpEqS:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1068: ifeq          1084
+      1071: new           #1                  // class netrexx/lang/Rexx
+      1074: dup
+      1075: iconst_0
+      1076: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1079: astore        16
+      1081: goto          1092
+      1084: new           #218                // class netrexx/lang/NoOtherwiseException
+      1087: dup
+      1088: invokespecial #220                // Method netrexx/lang/NoOtherwiseException."<init>":()V
+      1091: athrow
+      1092: new           #1                  // class netrexx/lang/Rexx
+      1095: dup
+      1096: iconst_1
+      1097: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1100: astore        16
+      1102: aload         16
+      1104: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1107: getstatic     #223                // Field $024:Lnetrexx/lang/Rexx;
+      1110: invokevirtual #215                // Method netrexx/lang/Rexx.OpEqS:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1113: ifeq          1125
+      1116: ldc           #226                // String FailedT1
+      1118: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      1121: pop
+      1122: goto          1285
+      1125: aload         22
+      1127: aload         16
+      1129: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1132: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1135: new           #1                  // class netrexx/lang/Rexx
+      1138: dup
+      1139: iconst_3
+      1140: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1143: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1146: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1149: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1152: getstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+      1155: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1158: ifeq          1170
+      1161: ldc           #228                // String FailedT2
+      1163: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      1166: pop
+      1167: goto          1285
+      1170: aload         16
+      1172: invokevirtual #208                // Method netrexx/lang/Rexx.toboolean:()Z
+      1175: ifeq          1250
+      1178: aload         22
+      1180: new           #1                  // class netrexx/lang/Rexx
+      1183: dup
+      1184: iconst_1
+      1185: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1188: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1191: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1194: new           #1                  // class netrexx/lang/Rexx
+      1197: dup
+      1198: iconst_2
+      1199: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1202: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1205: aload         22
+      1207: new           #1                  // class netrexx/lang/Rexx
+      1210: dup
+      1211: iconst_1
+      1212: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1215: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1218: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1221: new           #1                  // class netrexx/lang/Rexx
+      1224: dup
+      1225: iconst_2
+      1226: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1229: invokevirtual #106                // Method netrexx/lang/Rexx.getnode:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/RexxNode;
+      1232: getfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1235: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1238: getstatic     #136                // Field $010:Lnetrexx/lang/Rexx;
+      1241: invokevirtual #212                // Method netrexx/lang/Rexx.OpMult:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1244: putfield      #110                // Field netrexx/lang/RexxNode.leaf:Lnetrexx/lang/Rexx;
+      1247: goto          1285
+      1250: aload         16
+      1252: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1255: getstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+      1258: invokevirtual #215                // Method netrexx/lang/Rexx.OpEqS:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1261: ifeq          1277
+      1264: new           #1                  // class netrexx/lang/Rexx
+      1267: dup
+      1268: iconst_1
+      1269: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1272: astore        16
+      1274: goto          1285
+      1277: new           #218                // class netrexx/lang/NoOtherwiseException
+      1280: dup
+      1281: invokespecial #220                // Method netrexx/lang/NoOtherwiseException."<init>":()V
+      1284: athrow
+      1285: iconst_3
+      1286: anewarray     #1                  // class netrexx/lang/Rexx
+      1289: astore        41
+      1291: ldc           #230                // String Foo Bar
+      1293: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1296: getstatic     #232                // Field $025:[C
+      1299: aload         41
+      1301: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+      1304: aload         41
+      1306: iconst_0
+      1307: aaload
+      1308: astore        23
+      1310: aload         41
+      1312: iconst_1
+      1313: aaload
+      1314: astore        24
+      1316: new           #1                  // class netrexx/lang/Rexx
+      1319: dup
+      1320: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1323: getfield      #235                // Field netrexx/lang/RexxSet.digits:I
+      1326: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+      1329: astore        25
+      1331: aload         25
+      1333: astore        25
+      1335: getstatic     #241                // Field $026:Lnetrexx/lang/Rexx;
+      1338: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1341: getstatic     #184                // Field $018:Lnetrexx/lang/Rexx;
+      1344: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1347: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1350: getstatic     #244                // Field $027:Lnetrexx/lang/Rexx;
+      1353: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1356: ldc           #247                // String (This is the second)
+      1358: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1361: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1364: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      1367: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1370: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1373: getstatic     #190                // Field $020:Lnetrexx/lang/Rexx;
+      1376: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1379: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1382: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      1385: invokevirtual #121                // Method netrexx/lang/Rexx.OpCc:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1388: invokestatic  #249                // Method subroutine:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)V
+      1391: ldc           #253                // String This is an awfully boring program
+      1393: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1396: astore        26
+      1398: iconst_3
+      1399: anewarray     #1                  // class netrexx/lang/Rexx
+      1402: astore        41
+      1404: aload         41
+      1406: iconst_1
+      1407: aload         17
+      1409: aastore
+      1410: aload         26
+      1412: getstatic     #255                // Field $028:[C
+      1415: aload         41
+      1417: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+      1420: aload         41
+      1422: iconst_0
+      1423: aaload
+      1424: astore        27
+      1426: aload         41
+      1428: iconst_2
+      1429: aaload
+      1430: astore        28
+      1432: ldc_w         #258                // String is an awfully boring program This
+      1435: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1438: astore        26
+      1440: iconst_3
+      1441: anewarray     #1                  // class netrexx/lang/Rexx
+      1444: astore        41
+      1446: aload         41
+      1448: iconst_1
+      1449: aload         17
+      1451: aastore
+      1452: aload         26
+      1454: getstatic     #255                // Field $028:[C
+      1457: aload         41
+      1459: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+      1462: aload         41
+      1464: iconst_0
+      1465: aaload
+      1466: astore        29
+      1468: aload         41
+      1470: iconst_2
+      1471: aaload
+      1472: astore        30
+      1474: ldc_w         #260                // String an awfully boring program This is
+      1477: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1480: astore        26
+      1482: iconst_3
+      1483: anewarray     #1                  // class netrexx/lang/Rexx
+      1486: astore        41
+      1488: aload         41
+      1490: iconst_1
+      1491: aload         17
+      1493: aastore
+      1494: aload         26
+      1496: getstatic     #255                // Field $028:[C
+      1499: aload         41
+      1501: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+      1504: aload         41
+      1506: iconst_0
+      1507: aaload
+      1508: astore        31
+      1510: aload         41
+      1512: iconst_2
+      1513: aaload
+      1514: astore        32
+      1516: ldc_w         #262                // String awfully boring program This is an
+      1519: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1522: astore        26
+      1524: iconst_3
+      1525: anewarray     #1                  // class netrexx/lang/Rexx
+      1528: astore        41
+      1530: aload         41
+      1532: iconst_1
+      1533: aload         17
+      1535: aastore
+      1536: aload         26
+      1538: getstatic     #255                // Field $028:[C
+      1541: aload         41
+      1543: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+      1546: aload         41
+      1548: iconst_0
+      1549: aaload
+      1550: astore        33
+      1552: aload         41
+      1554: iconst_2
+      1555: aaload
+      1556: astore        34
+      1558: aload         18
+      1560: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1563: new           #1                  // class netrexx/lang/Rexx
+      1566: dup
+      1567: iconst_1
+      1568: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+      1571: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1574: astore        18
+      1576: goto          464
+      1579: iinc          40, -1
+      1582: goto          428
+      1585: new           #1                  // class netrexx/lang/Rexx
+      1588: dup
+      1589: lload         14
+      1591: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+      1594: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1597: new           #1                  // class netrexx/lang/Rexx
+      1600: dup
+      1601: invokestatic  #72                 // Method java/lang/System.nanoTime:()J
+      1604: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+      1607: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1610: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1613: new           #1                  // class netrexx/lang/Rexx
+      1616: dup
+      1617: lload         10
+      1619: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+      1622: invokevirtual #83                 // Method netrexx/lang/Rexx.OpSub:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1625: invokevirtual #60                 // Method netrexx/lang/Rexx.tolong:()J
+      1628: lstore        14
+      1630: iinc          39, -1
+      1633: goto          405
+      1636: new           #1                  // class netrexx/lang/Rexx
+      1639: dup
+      1640: lload         14
+      1642: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+      1645: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1648: getstatic     #264                // Field $029:Lnetrexx/lang/Rexx;
+      1651: invokevirtual #86                 // Method netrexx/lang/Rexx.OpDiv:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1654: astore        35
+      1656: aload         35
+      1658: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1661: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      1664: invokevirtual #142                // Method netrexx/lang/Rexx.OpGt:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1667: aload         13
+      1669: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1672: getstatic     #184                // Field $018:Lnetrexx/lang/Rexx;
+      1675: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1678: ior
+      1679: ifeq          1685
+      1682: goto          1766
+      1685: aload         35
+      1687: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1690: getstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+      1693: invokevirtual #128                // Method netrexx/lang/Rexx.OpEq:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Z
+      1696: ifeq          1715
+      1699: aload         5
+      1701: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1704: getstatic     #267                // Field $030:Lnetrexx/lang/Rexx;
+      1707: invokevirtual #212                // Method netrexx/lang/Rexx.OpMult:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1710: astore        5
+      1712: goto          1745
+      1715: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      1718: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1721: aload         35
+      1723: invokevirtual #270                // Method netrexx/lang/Rexx.OpDivI:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1726: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1729: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      1732: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1735: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1738: aload         5
+      1740: invokevirtual #212                // Method netrexx/lang/Rexx.OpMult:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1743: astore        5
+      1745: aload         13
+      1747: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1750: new           #1                  // class netrexx/lang/Rexx
+      1753: dup
+      1754: iconst_1
+      1755: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+      1758: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1761: astore        13
+      1763: goto          365
+      1766: new           #1                  // class netrexx/lang/Rexx
+      1769: dup
+      1770: lload         14
+      1772: invokespecial #77                 // Method netrexx/lang/Rexx."<init>":(J)V
+      1775: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1778: aload         6
+      1780: invokevirtual #86                 // Method netrexx/lang/Rexx.OpDiv:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1783: astore        36
+      1785: ldc_w         #273                // String           Averaging:
+      1788: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1791: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1794: aload         6
+      1796: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1799: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1802: ldc_w         #275                // String measures of
+      1805: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1808: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1811: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1814: aload         5
+      1816: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1819: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1822: getstatic     #277                // Field $031:Lnetrexx/lang/Rexx;
+      1825: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1828: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      1831: pop
+      1832: ldc_w         #280                // String                        of 1000 clauses (over
+      1835: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1838: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1841: aload         35
+      1843: aconst_null
+      1844: checkcast     #1                  // class netrexx/lang/Rexx
+      1847: aconst_null
+      1848: checkcast     #1                  // class netrexx/lang/Rexx
+      1851: new           #1                  // class netrexx/lang/Rexx
+      1854: dup
+      1855: iconst_1
+      1856: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      1859: invokevirtual #282                // Method netrexx/lang/Rexx.format:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1862: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1865: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1868: getstatic     #286                // Field $032:Lnetrexx/lang/Rexx;
+      1871: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1874: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      1877: pop
+      1878: aload         36
+      1880: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1883: aload         12
+      1885: invokevirtual #83                 // Method netrexx/lang/Rexx.OpSub:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1888: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1891: aload         5
+      1893: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1896: getstatic     #264                // Field $029:Lnetrexx/lang/Rexx;
+      1899: invokevirtual #212                // Method netrexx/lang/Rexx.OpMult:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1902: invokevirtual #86                 // Method netrexx/lang/Rexx.OpDiv:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1905: astore        37
+      1907: aload         4
+      1909: invokevirtual #208                // Method netrexx/lang/Rexx.toboolean:()Z
+      1912: ifeq          2018
+      1915: ldc           #104                // String
+      1917: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      1920: pop
+      1921: ldc_w         #289                // String Total (full DOs):
+      1924: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1927: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1930: aload         35
+      1932: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1935: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1938: ldc_w         #291                // String secs (average of
+      1941: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1944: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1947: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1950: aload         6
+      1952: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1955: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1958: ldc_w         #275                // String measures of
+      1961: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1964: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1967: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1970: aload         5
+      1972: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1975: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      1978: ldc_w         #293                // String iterations)
+      1981: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1984: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      1987: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      1990: pop
+      1991: ldc_w         #295                // String Time for one iteration (1000 clauses) was:
+      1994: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      1997: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2000: aload         37
+      2002: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2005: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2008: getstatic     #297                // Field $033:Lnetrexx/lang/Rexx;
+      2011: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2014: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      2017: pop
+      2018: getstatic     #300                // Field $034:Lnetrexx/lang/Rexx;
+      2021: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2024: aload         37
+      2026: invokevirtual #86                 // Method netrexx/lang/Rexx.OpDiv:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2029: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2032: getstatic     #303                // Field $035:Lnetrexx/lang/Rexx;
+      2035: invokevirtual #80                 // Method netrexx/lang/Rexx.OpAdd:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2038: astore        38
+      2040: aload         38
+      2042: new           #1                  // class netrexx/lang/Rexx
+      2045: dup
+      2046: iconst_1
+      2047: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      2050: aload         38
+      2052: new           #1                  // class netrexx/lang/Rexx
+      2055: dup
+      2056: bipush        46
+      2058: invokespecial #96                 // Method netrexx/lang/Rexx."<init>":(C)V
+      2061: invokevirtual #306                // Method netrexx/lang/Rexx.pos:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2064: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2067: getstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+      2070: invokevirtual #83                 // Method netrexx/lang/Rexx.OpSub:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2073: invokevirtual #124                // Method netrexx/lang/Rexx.substr:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2076: astore        38
+      2078: ldc           #104                // String
+      2080: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      2083: pop
+      2084: ldc_w         #309                // String      Performance:
+      2087: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      2090: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2093: aload         38
+      2095: invokestatic  #311                // Method formatThousands:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2098: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2101: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2104: ldc_w         #314                // String NetRexx clauses per second
+      2107: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      2110: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2113: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      2116: pop
+      2117: ldc_w         #316                // String                 (
+      2120: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+      2123: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2126: aload         38
+      2128: aconst_null
+      2129: checkcast     #1                  // class netrexx/lang/Rexx
+      2132: new           #1                  // class netrexx/lang/Rexx
+      2135: dup
+      2136: iconst_3
+      2137: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      2140: aconst_null
+      2141: checkcast     #1                  // class netrexx/lang/Rexx
+      2144: new           #1                  // class netrexx/lang/Rexx
+      2147: dup
+      2148: iconst_0
+      2149: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+      2152: new           #1                  // class netrexx/lang/Rexx
+      2155: dup
+      2156: bipush        101
+      2158: invokespecial #96                 // Method netrexx/lang/Rexx."<init>":(C)V
+      2161: invokevirtual #318                // Method netrexx/lang/Rexx.format:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2164: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2167: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+      2170: getstatic     #321                // Field $036:Lnetrexx/lang/Rexx;
+      2173: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+      2176: invokestatic  #47                 // Method netrexx/lang/RexxIO.Say:(Lnetrexx/lang/Rexx;)Z
+      2179: pop
+      2180: ldc           #104                // String
+      2182: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      2185: pop
+      2186: aload         27
+      2188: astore        27
+      2190: aload         29
+      2192: astore        29
+      2194: aload         31
+      2196: astore        31
+      2198: aload         33
+      2200: astore        33
+      2202: aload         28
+      2204: astore        28
+      2206: aload         30
+      2208: astore        30
+      2210: aload         32
+      2212: astore        32
+      2214: aload         34
+      2216: astore        34
+      2218: aload         23
+      2220: astore        23
+      2222: aload         24
+      2224: astore        24
+      2226: ldc_w         #324                // String PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+      2229: invokestatic  #133                // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+      2232: pop
+      2233: iconst_0
+      2234: invokestatic  #326                // Method java/lang/System.exit:(I)V
+      2237: return
+
+  public static final void subroutine(netrexx.lang.Rexx, netrexx.lang.Rexx);
+    Code:
+         0: aconst_null
+         1: astore_2
+         2: aconst_null
+         3: astore_3
+         4: aconst_null
+         5: astore        4
+         7: aconst_null
+         8: astore        5
+        10: aconst_null
+        11: astore        6
+        13: aconst_null
+        14: astore        7
+        16: aconst_null
+        17: astore        8
+        19: aconst_null
+        20: astore        9
+        22: aconst_null
+        23: astore        10
+        25: aconst_null
+        26: astore        11
+        28: aconst_null
+        29: astore        12
+        31: iconst_5
+        32: anewarray     #1                  // class netrexx/lang/Rexx
+        35: astore        13
+        37: aload_0
+        38: invokevirtual #329                // Method netrexx/lang/Rexx.upper:()Lnetrexx/lang/Rexx;
+        41: getstatic     #332                // Field $037:[C
+        44: aload         13
+        46: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+        49: aload         13
+        51: iconst_0
+        52: aaload
+        53: astore_2
+        54: aload         13
+        56: iconst_1
+        57: aaload
+        58: astore_3
+        59: aload         13
+        61: iconst_2
+        62: aaload
+        63: astore        4
+        65: aload         13
+        67: iconst_4
+        68: aaload
+        69: astore        5
+        71: iconst_4
+        72: anewarray     #1                  // class netrexx/lang/Rexx
+        75: astore        13
+        77: aload         4
+        79: getstatic     #335                // Field $038:[C
+        82: aload         13
+        84: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+        87: aload         13
+        89: iconst_0
+        90: aaload
+        91: astore        6
+        93: aload         13
+        95: iconst_1
+        96: aaload
+        97: astore        7
+        99: aload         13
+       101: iconst_2
+       102: aaload
+       103: astore        8
+       105: getstatic     #338                // Field $039:Lnetrexx/lang/Rexx;
+       108: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       111: invokevirtual #64                 // Method netrexx/lang/Rexx.OpPlus:(Lnetrexx/lang/RexxSet;)Lnetrexx/lang/Rexx;
+       114: invokevirtual #68                 // Method netrexx/lang/Rexx.toint:()I
+       117: istore        13
+       119: iload         13
+       121: ifle          182
+       124: aload_2
+       125: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       128: aload_3
+       129: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       132: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       135: aload         4
+       137: invokevirtual #41                 // Method netrexx/lang/Rexx.OpCcblank:(Lnetrexx/lang/RexxSet;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+       140: astore        9
+       142: iconst_3
+       143: anewarray     #1                  // class netrexx/lang/Rexx
+       146: astore        14
+       148: aload         9
+       150: getstatic     #341                // Field $040:[C
+       153: aload         14
+       155: invokestatic  #13                 // Method netrexx/lang/RexxParse.parse:(Lnetrexx/lang/Rexx;[C[Lnetrexx/lang/Rexx;)V
+       158: aload         14
+       160: iconst_0
+       161: aaload
+       162: astore        10
+       164: aload         14
+       166: iconst_1
+       167: aaload
+       168: astore        11
+       170: aload         14
+       172: iconst_2
+       173: aaload
+       174: astore        12
+       176: iinc          13, -1
+       179: goto          119
+       182: aload         6
+       184: astore        6
+       186: aload         7
+       188: astore        7
+       190: aload         8
+       192: astore        8
+       194: aload_2
+       195: astore_2
+       196: aload_3
+       197: astore_3
+       198: aload         4
+       200: astore        4
+       202: aload         5
+       204: astore        5
+       206: aload         10
+       208: astore        10
+       210: aload         11
+       212: astore        11
+       214: aload         12
+       216: astore        12
+       218: return
+
+  public static netrexx.lang.Rexx formatThousands(netrexx.lang.Rexx);
+    Code:
+         0: aload_0
+         1: invokevirtual #344                // Method netrexx/lang/Rexx.reverse:()Lnetrexx/lang/Rexx;
+         4: astore_1
+         5: ldc_w         #347                // String abc_def_ghi_jkl_mno_pqr_stu_vwx_yz1
+         8: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        11: aload_1
+        12: ldc_w         #349                // String abcdefghijklmnopqrstuvwxyz1
+        15: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        18: invokevirtual #351                // Method netrexx/lang/Rexx.translate:(Lnetrexx/lang/Rexx;Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+        21: astore_2
+        22: aload_2
+        23: invokevirtual #344                // Method netrexx/lang/Rexx.reverse:()Lnetrexx/lang/Rexx;
+        26: invokevirtual #354                // Method netrexx/lang/Rexx.strip:()Lnetrexx/lang/Rexx;
+        29: astore_3
+        30: aload_3
+        31: new           #1                  // class netrexx/lang/Rexx
+        34: dup
+        35: iconst_1
+        36: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+        39: invokevirtual #357                // Method netrexx/lang/Rexx.left:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+        42: new           #1                  // class netrexx/lang/Rexx
+        45: dup
+        46: bipush        100
+        48: invokespecial #96                 // Method netrexx/lang/Rexx."<init>":(C)V
+        51: invokevirtual #360                // Method netrexx/lang/Rexx.datatype:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+        54: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+        57: invokevirtual #363                // Method netrexx/lang/Rexx.OpNot:(Lnetrexx/lang/RexxSet;)Z
+        60: ifne          66
+        63: goto          82
+        66: aload_3
+        67: new           #1                  // class netrexx/lang/Rexx
+        70: dup
+        71: iconst_2
+        72: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+        75: invokevirtual #367                // Method netrexx/lang/Rexx.substr:(Lnetrexx/lang/Rexx;)Lnetrexx/lang/Rexx;
+        78: astore_3
+        79: goto          30
+        82: aload_3
+        83: areturn
+
+  private rexxcps_2_2n();
+    Code:
+         0: aload_0
+         1: invokespecial #369                // Method java/lang/Object."<init>":()V
+         4: return
+
+  static {};
+    Code:
+         0: new           #1                  // class netrexx/lang/Rexx
+         3: dup
+         4: bipush        20
+         6: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+         9: putstatic     #372                // Field $01:Lnetrexx/lang/Rexx;
+        12: new           #1                  // class netrexx/lang/Rexx
+        15: dup
+        16: ldc_w         #375                // String Java method rexxcps_2_2n.nrx
+        19: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+        22: putstatic     #3                  // Field $02:Lnetrexx/lang/Rexx;
+        25: bipush        12
+        27: newarray       char
+        29: dup
+        30: iconst_0
+        31: iconst_3
+        32: castore
+        33: dup
+        34: iconst_1
+        35: iconst_1
+        36: castore
+        37: dup
+        38: iconst_2
+        39: iconst_1
+        40: castore
+        41: dup
+        42: iconst_3
+        43: bipush        10
+        45: castore
+        46: dup
+        47: iconst_4
+        48: iconst_1
+        49: castore
+        50: dup
+        51: iconst_5
+        52: iconst_0
+        53: castore
+        54: dup
+        55: bipush        6
+        57: iconst_1
+        58: castore
+        59: dup
+        60: bipush        7
+        62: bipush        10
+        64: castore
+        65: dup
+        66: bipush        8
+        68: iconst_2
+        69: castore
+        70: dup
+        71: bipush        9
+        73: iconst_1
+        74: castore
+        75: dup
+        76: bipush        10
+        78: iconst_2
+        79: castore
+        80: dup
+        81: bipush        11
+        83: iconst_0
+        84: castore
+        85: putstatic     #9                  // Field $03:[C
+        88: new           #1                  // class netrexx/lang/Rexx
+        91: dup
+        92: ldc_w         #380                // String NetRexx 5.10 20 Mar 2026
+        95: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+        98: putstatic     #19                 // Field $04:Lnetrexx/lang/Rexx;
+       101: iconst_5
+       102: newarray       char
+       104: dup
+       105: iconst_0
+       106: iconst_1
+       107: castore
+       108: dup
+       109: iconst_1
+       110: bipush        10
+       112: castore
+       113: dup
+       114: iconst_2
+       115: iconst_1
+       116: castore
+       117: dup
+       118: iconst_3
+       119: iconst_0
+       120: castore
+       121: dup
+       122: iconst_4
+       123: iconst_0
+       124: castore
+       125: putstatic     #22                 // Field $05:[C
+       128: new           #1                  // class netrexx/lang/Rexx
+       131: dup
+       132: iconst_2
+       133: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       136: putstatic     #89                 // Field $06:Lnetrexx/lang/Rexx;
+       139: new           #1                  // class netrexx/lang/Rexx
+       142: dup
+       143: bipush        14
+       145: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       148: putstatic     #99                 // Field $07:Lnetrexx/lang/Rexx;
+       151: new           #1                  // class netrexx/lang/Rexx
+       154: dup
+       155: sipush        1234
+       158: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       161: putstatic     #115                // Field $08:Lnetrexx/lang/Rexx;
+       164: ldc_w         #382                // String 5678
+       167: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       170: putstatic     #118                // Field $09:Lnetrexx/lang/Rexx;
+       173: new           #1                  // class netrexx/lang/Rexx
+       176: dup
+       177: ldc_w         #384                // String 1.1
+       180: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       183: putstatic     #136                // Field $010:Lnetrexx/lang/Rexx;
+       186: new           #1                  // class netrexx/lang/Rexx
+       189: dup
+       190: ldc_w         #386                // String 2.2
+       193: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       196: putstatic     #139                // Field $011:Lnetrexx/lang/Rexx;
+       199: new           #1                  // class netrexx/lang/Rexx
+       202: dup
+       203: iconst_1
+       204: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       207: putstatic     #154                // Field $012:Lnetrexx/lang/Rexx;
+       210: new           #1                  // class netrexx/lang/Rexx
+       213: dup
+       214: bipush        17
+       216: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       219: putstatic     #147                // Field $013:Lnetrexx/lang/Rexx;
+       222: ldc_w         #388                // String foobar
+       225: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       228: putstatic     #162                // Field $014:Lnetrexx/lang/Rexx;
+       231: new           #1                  // class netrexx/lang/Rexx
+       234: dup
+       235: bipush        9
+       237: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       240: putstatic     #167                // Field $015:Lnetrexx/lang/Rexx;
+       243: new           #1                  // class netrexx/lang/Rexx
+       246: dup
+       247: bipush        63
+       249: invokespecial #96                 // Method netrexx/lang/Rexx."<init>":(C)V
+       252: putstatic     #176                // Field $016:Lnetrexx/lang/Rexx;
+       255: new           #1                  // class netrexx/lang/Rexx
+       258: dup
+       259: iconst_5
+       260: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       263: putstatic     #181                // Field $017:Lnetrexx/lang/Rexx;
+       266: new           #1                  // class netrexx/lang/Rexx
+       269: dup
+       270: iconst_2
+       271: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       274: putstatic     #184                // Field $018:Lnetrexx/lang/Rexx;
+       277: new           #1                  // class netrexx/lang/Rexx
+       280: dup
+       281: ldc_w         #390                // String 1.0
+       284: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       287: putstatic     #187                // Field $019:Lnetrexx/lang/Rexx;
+       290: ldc           #104                // String
+       292: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       295: putstatic     #190                // Field $020:Lnetrexx/lang/Rexx;
+       298: ldc_w         #392                // String string
+       301: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       304: putstatic     #193                // Field $021:Lnetrexx/lang/Rexx;
+       307: new           #1                  // class netrexx/lang/Rexx
+       310: dup
+       311: iconst_0
+       312: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       315: putstatic     #198                // Field $022:Lnetrexx/lang/Rexx;
+       318: new           #1                  // class netrexx/lang/Rexx
+       321: dup
+       322: ldc_w         #394                // String 99.7
+       325: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       328: putstatic     #203                // Field $023:Lnetrexx/lang/Rexx;
+       331: ldc_w         #396                // String ring
+       334: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       337: putstatic     #223                // Field $024:Lnetrexx/lang/Rexx;
+       340: bipush        12
+       342: newarray       char
+       344: dup
+       345: iconst_0
+       346: iconst_4
+       347: castore
+       348: dup
+       349: iconst_1
+       350: iconst_1
+       351: castore
+       352: dup
+       353: iconst_2
+       354: iconst_5
+       355: castore
+       356: dup
+       357: iconst_3
+       358: bipush        10
+       360: castore
+       361: dup
+       362: iconst_4
+       363: iconst_1
+       364: castore
+       365: dup
+       366: iconst_5
+       367: iconst_0
+       368: castore
+       369: dup
+       370: bipush        6
+       372: iconst_1
+       373: castore
+       374: dup
+       375: bipush        7
+       377: bipush        10
+       379: castore
+       380: dup
+       381: bipush        8
+       383: iconst_2
+       384: castore
+       385: dup
+       386: bipush        9
+       388: iconst_1
+       389: castore
+       390: dup
+       391: bipush        10
+       393: iconst_2
+       394: castore
+       395: dup
+       396: bipush        11
+       398: iconst_0
+       399: castore
+       400: putstatic     #232                // Field $025:[C
+       403: ldc_w         #398                // String with
+       406: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       409: putstatic     #241                // Field $026:Lnetrexx/lang/Rexx;
+       412: ldc_w         #400                // String args
+       415: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       418: putstatic     #244                // Field $027:Lnetrexx/lang/Rexx;
+       421: bipush        10
+       423: newarray       char
+       425: dup
+       426: iconst_0
+       427: bipush        6
+       429: castore
+       430: dup
+       431: iconst_1
+       432: iconst_1
+       433: castore
+       434: dup
+       435: iconst_2
+       436: bipush        10
+       438: castore
+       439: dup
+       440: iconst_3
+       441: iconst_1
+       442: castore
+       443: dup
+       444: iconst_4
+       445: iconst_0
+       446: castore
+       447: dup
+       448: iconst_5
+       449: iconst_1
+       450: castore
+       451: dup
+       452: bipush        6
+       454: bipush        10
+       456: castore
+       457: dup
+       458: bipush        7
+       460: iconst_1
+       461: castore
+       462: dup
+       463: bipush        8
+       465: iconst_2
+       466: castore
+       467: dup
+       468: bipush        9
+       470: iconst_0
+       471: castore
+       472: putstatic     #255                // Field $028:[C
+       475: new           #1                  // class netrexx/lang/Rexx
+       478: dup
+       479: ldc_w         #402                // String 1000000000
+       482: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       485: putstatic     #264                // Field $029:Lnetrexx/lang/Rexx;
+       488: new           #1                  // class netrexx/lang/Rexx
+       491: dup
+       492: bipush        100
+       494: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       497: putstatic     #267                // Field $030:Lnetrexx/lang/Rexx;
+       500: ldc_w         #404                // String iterations
+       503: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       506: putstatic     #277                // Field $031:Lnetrexx/lang/Rexx;
+       509: ldc_w         #406                // String s)
+       512: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       515: putstatic     #286                // Field $032:Lnetrexx/lang/Rexx;
+       518: ldc_w         #408                // String seconds
+       521: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       524: putstatic     #297                // Field $033:Lnetrexx/lang/Rexx;
+       527: new           #1                  // class netrexx/lang/Rexx
+       530: dup
+       531: sipush        1000
+       534: invokespecial #57                 // Method netrexx/lang/Rexx."<init>":(I)V
+       537: putstatic     #300                // Field $034:Lnetrexx/lang/Rexx;
+       540: new           #1                  // class netrexx/lang/Rexx
+       543: dup
+       544: ldc_w         #410                // String 0.5
+       547: invokespecial #377                // Method netrexx/lang/Rexx."<init>":(Ljava/lang/String;)V
+       550: putstatic     #303                // Field $035:Lnetrexx/lang/Rexx;
+       553: ldc_w         #412                // String cps)
+       556: invokestatic  #31                 // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+       559: putstatic     #321                // Field $036:Lnetrexx/lang/Rexx;
+       562: bipush        9
+       564: newarray       char
+       566: dup
+       567: iconst_0
+       568: iconst_1
+       569: castore
+       570: dup
+       571: iconst_1
+       572: bipush        10
+       574: castore
+       575: dup
+       576: iconst_2
+       577: iconst_5
+       578: castore
+       579: dup
+       580: iconst_3
+       581: iconst_0
+       582: castore
+       583: dup
+       584: iconst_4
+       585: iconst_1
+       586: castore
+       587: dup
+       588: iconst_5
+       589: iconst_2
+       590: castore
+       591: dup
+       592: bipush        6
+       594: iconst_3
+       595: castore
+       596: dup
+       597: bipush        7
+       599: iconst_4
+       600: castore
+       601: dup
+       602: bipush        8
+       604: iconst_0
+       605: castore
+       606: putstatic     #332                // Field $037:[C
+       609: bipush        8
+       611: newarray       char
+       613: dup
+       614: iconst_0
+       615: iconst_1
+       616: castore
+       617: dup
+       618: iconst_1
+       619: bipush        10
+       621: castore
+       622: dup
+       623: iconst_2
+       624: iconst_4
+       625: castore
+       626: dup
+       627: iconst_3
+       628: iconst_0
+       629: castore
+       630: dup
+       631: iconst_4
+       632: iconst_1
+       633: castore
+       634: dup
+       635: iconst_5
+       636: iconst_2
+       637: castore
+       638: dup
+       639: bipush        6
+       641: iconst_3
+       642: castore
+       643: dup
+       644: bipush        7
+       646: iconst_0
+       647: castore
+       648: putstatic     #335                // Field $038:[C
+       651: new           #1                  // class netrexx/lang/Rexx
+       654: dup
+       655: iconst_1
+       656: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(B)V
+       659: putstatic     #338                // Field $039:Lnetrexx/lang/Rexx;
+       662: bipush        7
+       664: newarray       char
+       666: dup
+       667: iconst_0
+       668: iconst_1
+       669: castore
+       670: dup
+       671: iconst_1
+       672: bipush        10
+       674: castore
+       675: dup
+       676: iconst_2
+       677: iconst_3
+       678: castore
+       679: dup
+       680: iconst_3
+       681: iconst_0
+       682: castore
+       683: dup
+       684: iconst_4
+       685: iconst_1
+       686: castore
+       687: dup
+       688: iconst_5
+       689: iconst_2
+       690: castore
+       691: dup
+       692: bipush        6
+       694: iconst_0
+       695: castore
+       696: putstatic     #341                // Field $040:[C
+       699: new           #236                // class netrexx/lang/RexxSet
+       702: dup
+       703: invokespecial #414                // Method netrexx/lang/RexxSet."<init>":()V
+       706: putstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       709: getstatic     #37                 // Field $1:Lnetrexx/lang/RexxSet;
+       712: getstatic     #372                // Field $01:Lnetrexx/lang/Rexx;
+       715: invokevirtual #415                // Method netrexx/lang/RexxSet.setDigits:(Lnetrexx/lang/Rexx;)V
+       718: return
+}

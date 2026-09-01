@@ -1,0 +1,4 @@
+crexx-cross-runtime-matrix|1
+# Diagnostic only: VM-C1b versus 48-byte helper-layout pad at Sieve work 500.
+sieve500-rxbvm-c1b|Sieve-work500|c1b|rxbvm|shared-cow-interrupt-policy|B|no|startup-included|500|PASS: AWFY Sieve||/private/tmp/crexx-perf2-06-c1b.gQ4Wvm/candidate-build/bin/rxbvm;/private/tmp/crexx-perf2-06.Pn88uJ/baseline-build/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;/private/tmp/crexx-perf2-06.Pn88uJ/baseline-build/bin/library.rxbin;-a;500
+sieve500-rxbvm-layout-pad|Sieve-work500|layout-pad|rxbvm|layout-pad-48|B|no|startup-included|500|PASS: AWFY Sieve||/private/tmp/crexx-perf2-06-c1b.gQ4Wvm/layout-pad-build/bin/rxbvm;/private/tmp/crexx-perf2-06.Pn88uJ/baseline-build/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;/private/tmp/crexx-perf2-06.Pn88uJ/baseline-build/bin/library.rxbin;-a;500

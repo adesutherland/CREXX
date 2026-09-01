@@ -1,0 +1,11 @@
+ooRexx 5.1.0-12973 Windows x86-64 portable:
+https://sourceforge.net/projects/oorexx/files/oorexx/5.1.0/portable/oorexx-5.1.0-12973.windows.x86_64-portable-release.zip/download
+
+Regina Rexx 3.9.7 Windows x86-64:
+https://sourceforge.net/projects/regina-rexx/files/regina-rexx/3.9.7/Regina397w64.zip/download
+
+NetRexx 5.10-GA:
+https://www.netrexx.org/files/NetRexx-5.10-GA.zip
+
+Eclipse Temurin OpenJDK 26.0.1+8 Windows x86-64:
+https://api.adoptium.net/v3/binary/version/jdk-26.0.1%2B8/windows/x64/jdk/hotspot/normal/eclipse?project=jdk

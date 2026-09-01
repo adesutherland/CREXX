@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve500-rxbvm-baseline,Sieve-work500,baseline,rxbvm,current-inline-interrupts,B,no,startup-included,500,elapsed_ns,12,128531000.000000,128878500.000000,129392000.000000,129637250.000000,130656000.000000,365500.000000,0.282475,1.642296,no
+sieve500-rxbvm-c1b,Sieve-work500,c1b,rxbvm,shared-cow-interrupt-policy,B,no,startup-included,500,elapsed_ns,12,138665000.000000,140016500.000000,141053000.000000,142355750.000000,160562000.000000,1040000.000000,0.737312,15.523952,yes

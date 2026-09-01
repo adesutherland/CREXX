@@ -1,0 +1,38 @@
+PERF3-02 clean-host timing revalidation pre-run record
+
+User gate
+- Adrian confirmed the remote terminal was off and the Mac was ready.
+- Confirmation received immediately before the 2026-07-31 16:35 BST preflight.
+
+Identity
+- UTC preflight: 2026-07-31T15:35:16Z through 2026-07-31T15:38:06Z
+- Local preflight: 2026-07-31T16:35:16+0100 through 2026-07-31T16:38:06+0100
+- Product commit: e38e514bf611ae3873513368c44742e2ae7332d1
+- macOS 26.5.2 build 25F84; Darwin 25.5.0 arm64
+- Host: Adrians-MacBook-Air.local; 10 logical CPUs
+
+Power and health
+- AC Power; battery 80%; AC attached; not charging
+- lowpowermode: 0
+- No thermal warning level recorded
+- No performance warning level recorded
+- No CPU power status recorded
+
+Idle-state observations
+- 2026-07-31T15:35:55Z: load averages 1.47 2.11 2.53
+- 2026-07-31T15:36:25Z: load averages 1.64 2.10 2.51
+- 2026-07-31T15:37:56Z: load averages 2.28 2.19 2.50
+- Interactive sessions: adrian console only
+- No overlapping cmake, ctest, ninja, make, rxc, rxas, rxlink, rxvm or rxbvm process was found.
+
+Evidence and input verification
+- Existing artifact ledger: 34/34 present and hash-matched before the two guard-image rows were added.
+- PERF3-01 recursive checksum replay: 101/101 passed.
+- Manifest unique inputs: 11/11 present; exact byte sizes and SHA-256 values are in input-hashes-v1.csv.
+- Manifest SHA-256: eebe01b656f2ba04dec799c8e984121d491a2ebb1714e6aa04094f4819e75c4c
+
+Protocol
+- 12 cells: C0, C1a-R2 and C1c-R1 across Richards/Towers and rxvm/rxbvm.
+- One warmup plus 12 recorded rounds, serial and rotated by workload.
+- No build, test, profiler or other benchmark will overlap the timing campaign.
+- All raw samples and outputs will be retained; standing noise/append rules apply.

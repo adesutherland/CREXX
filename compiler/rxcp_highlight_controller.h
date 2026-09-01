@@ -55,6 +55,10 @@ typedef struct RXCPHighlightCacheStats {
 } RXCPHighlightCacheStats;
 
 void rxc_highlight_controller_parse(CodeBuffer *cb);
+void rxc_highlight_controller_parse_mapped_source(CodeBuffer *cb,
+                                                  const char *source_code,
+                                                  const char *source_name,
+                                                  const char *mapped_file_name);
 void rxcp_highlight_controller_reset_cache(void);
 void rxcp_highlight_controller_get_cache_stats(RXCPHighlightCacheStats *stats);
 

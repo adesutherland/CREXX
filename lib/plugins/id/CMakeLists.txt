@@ -1,23 +1,37 @@
 cmake_minimum_required(VERSION 3.24)
-project(id_plugin C)
+project(rxid_plugin C)
 
 set(CMAKE_C_STANDARD 99)
-# -------------------------------------------------------------------------------------------
-# Set plugin_name and test_rexx to match the specific plugin and its corresponding test case.
-# -------------------------------------------------------------------------------------------
-set(plugin_name "id")       # add plugin name
-set(test_rexx "id_test")    # add rexx to test plugin
-set(use_precomp TRUE)            # TRUE pre compile needed, FALSE if not
 
-# ===========================================================================================
-# The following sequence is generic and does not require modification.
-#   plugin_template(${plugin_name} ${test_rexx} PRECOMP)
-# ===========================================================================================
-include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
-plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
+add_dynamic_plugin_target(id id.c)
+target_link_libraries(id PRIVATE Threads::Threads)
 
-enable_testing()
+add_static_plugin_target(id id.c)
+target_link_libraries(id_static PRIVATE Threads::Threads)
 
-# Create the static link module
-add_static_plugin_target(_id id.c)
+add_rxpa_provider_package(id)
+
+if(BUILD_TESTING)
+    add_custom_target(rxid_test ALL)
+    set(_rxid_runners rxbvm)
+    if(TARGET rxtvm)
+        list(APPEND _rxid_runners rxtvm)
+    endif()
+
+    foreach(_rxid_runner IN LISTS _rxid_runners)
+        crexx_add_rexx_opt_matrix(
+                NAME rxid_${_rxid_runner}
+                SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxid_test.crexx
+                TARGET_GROUP rxid_test
+                RUNNER ${_rxid_runner}
+                IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+                DEPENDS library id id_static
+                RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
+                TEST_LABELS "library;plugins;rxpa;id;optional"
+                REQUIRED_OUTPUT_REGEX "PASS: rxid public contract"
+                FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+    endforeach()
+endif()

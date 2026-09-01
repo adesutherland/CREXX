@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+permute-netrexx,Permute,netrexx,netrexx,decimal-rexx-port,A,yes,no,5000,max_rss_bytes,10,182562816.000000,216409088.000000,230846464.000000,407186432.000000,443879424.000000,48244736.000000,20.899058,113.199312,yes
+bounce-netrexx,Bounce,netrexx,netrexx,decimal-rexx-port,A,yes,no,4200,max_rss_bytes,10,174399488.000000,175229952.000000,263129088.000000,344820736.000000,434839552.000000,87891968.000000,33.402604,98.978059,yes
+base64-netrexx,Base64,netrexx,netrexx,decimal-rexx-port,A,yes,no,2500,max_rss_bytes,10,183463936.000000,184184832.000000,185903104.000000,219167744.000000,362504192.000000,2318336.000000,1.247067,96.308374,yes
+rexxcps-netrexx,RexxCPS,netrexx,netrexx,disclosed-2.2n,A,no,no,1000-clauses,max_rss_bytes,10,229748736.000000,257516544.000000,301467648.000000,450964480.000000,454971392.000000,69345280.000000,23.002561,74.708732,yes

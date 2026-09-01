@@ -37,7 +37,7 @@
  * Converts EXIT Instruction to _exit System Function
  */
 walker_result rewrite_exit_walker(walker_direction direction,
-                                            ASTNode* node, __attribute__((unused)) void *payload) {
+                                            ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 
@@ -79,7 +79,7 @@ walker_result rewrite_exit_walker(walker_direction direction,
  * Adds rxsysb if needed
  */
 walker_result add_rxsysb_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 
@@ -126,7 +126,7 @@ static const char *rxcp_get_node_text(ASTNode *node, size_t *len);
 static const char *rxcp_disabled_certified_exit_keyword(ASTNode *node);
 
 walker_result needs_rxsysb_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, RXCP_UNUSED void *payload) {
 
     Context *context = (Context*)payload;
 
@@ -140,7 +140,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                 certified_keyword = rxcp_disabled_certified_exit_keyword(node);
             }
             if (certified_keyword) {
-                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                mknd_err_unique1(node, "CERTIFIED_EXIT_DISABLED", "keyword", certified_keyword);
                 return result_normal;
             }
 
@@ -155,7 +155,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                 certified_keyword = rxcp_match_certified_exit_primary(node->token->token_string, node->token->length);
             }
             if (certified_keyword) {
-                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                mknd_err_unique1(node, "CERTIFIED_EXIT_DISABLED", "keyword", certified_keyword);
                 return result_normal;
             }
 
@@ -258,6 +258,42 @@ walker_result rewrite_implicit_cmd_walker(walker_direction direction,
             node->token_end = node->child->token_end;
         }
 
+    }
+    return result_normal;
+}
+
+/*
+ * Lowers Level G `<eq>` to the closed ObjectEquatable member-call contract
+ * before ordinary symbol and type resolution.
+ */
+walker_result rewrite_equivalence_walker(walker_direction direction,
+                                         ASTNode* node, void *payload) {
+    Context *context = (Context *) payload;
+
+    if (direction == out && node->node_type == OP_EQ) {
+        ASTNode *left = ast_chdn(node, 0);
+        ASTNode *right = ast_chdn(node, 1);
+
+        /* Preserve the operator contract on the lowered call so validation
+         * remains explicit even when object/import types settle on a later
+         * fixed-point iteration. */
+        if (left && right) {
+            ASTRewriteTemplate *call_tmpl = ast_rw_new(MEMBER_CALL, "equivalent");
+            ASTRewriteTemplate *cast_tmpl = ast_rw_new(OP_TYPE_CAST, "as");
+            ASTNode *rewritten;
+            ast_rw_add(call_tmpl, ast_rw_reuse(left));
+            ast_rw_add(cast_tmpl, ast_rw_reuse(right));
+            ast_rw_add(cast_tmpl, ast_rw_new(CLASS, ".object"));
+            ast_rw_add(call_tmpl, cast_tmpl);
+            rewritten = ast_execute_rewrite(context, node, call_tmpl);
+            if (rewritten) {
+                ASTNode *argument_cast = ast_chdn(rewritten, 1);
+                rewritten->is_equivalence_operator = 1;
+                if (argument_cast) argument_cast->is_compiler_added = 1;
+            }
+            context->changed_flags |= FLAG_VAL_TRANS;
+            return result_normal;
+        }
     }
     return result_normal;
 }
@@ -388,6 +424,8 @@ walker_result rewrite_constructor_walker(walker_direction direction,
 
                     if (val) {
                         /* x = .int(10) -> DEFINE x = .int ; ASSIGN x = 10 */
+                        char *target_str = rx_strndup(target->node_string,
+                                                     target->node_string_length);
                         ASTRewriteTemplate *define_tmpl = ast_rw_add(ast_rw_add(
                             ast_rw_new(DEFINE, "="),
                             ast_rw_reuse(target)),
@@ -396,9 +434,10 @@ walker_result rewrite_constructor_walker(walker_direction direction,
 
                         ASTRewriteTemplate *assign_tmpl = ast_rw_add(ast_rw_add(
                             ast_rw_new(ASSIGN, "="),
-                            ast_rw_new(VAR_TARGET, target->node_string)), /* Duplicate target */
+                            ast_rw_new(VAR_TARGET, target_str)), /* Duplicate target */
                             ast_rw_reuse(val)
                         );
+                        free(target_str);
 
                         ASTRewriteTemplate *wrapper = ast_rw_add(ast_rw_add(
                             ast_rw_children(),
@@ -844,6 +883,7 @@ walker_result control_flow_rewrite_walker(walker_direction direction,
 
                     ASTNode *new_block = ast_execute_rewrite(context, node, block_tmpl);
                     ast_mark_compiler_generated_block(new_block);
+                    new_block->is_select_dispatch = 1;
                     context->changed_flags |= FLAG_VAL_TRANS;
                     return result_normal;
                 }

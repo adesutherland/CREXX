@@ -1,0 +1,28 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #850: address_llm_provider
+  Test #1597: ts_http_service_contract_noopt
+  Test #1598: ts_http_service_contract_opt
+  Test #1599: ts_llm_ollama_noopt
+  Test #1600: ts_llm_ollama_opt
+  Test #1601: ts_llm_providers_noopt
+  Test #1602: ts_llm_providers_opt
+  Test #1603: ts_http_server_rxbvm_noopt
+  Test #1604: ts_http_server_rxbvm_opt
+  Test #1605: ts_http_server_failures_rxbvm_noopt
+  Test #1606: ts_http_server_failures_rxbvm_opt
+  Test #1607: ts_http_pooled_rxbvm_noopt
+  Test #1608: ts_http_pooled_rxbvm_opt
+  Test #1609: ts_http_streaming_rxbvm_noopt
+  Test #1610: ts_http_streaming_rxbvm_opt
+  Test #1611: ts_http_crexx_rag_rxbvm_noopt
+  Test #1612: ts_http_crexx_rag_rxbvm_opt
+  Test #1613: ts_http_tls_live_rxbvm_noopt
+  Test #1614: ts_http_tls_live_rxbvm_opt
+  Test #1615: ts_http_policy_rxbvm_noopt
+  Test #1616: ts_http_policy_rxbvm_opt
+  Test #1617: ts_http_codec_rxbvm_noopt
+  Test #1618: ts_http_codec_rxbvm_opt
+
+Total Tests: 24

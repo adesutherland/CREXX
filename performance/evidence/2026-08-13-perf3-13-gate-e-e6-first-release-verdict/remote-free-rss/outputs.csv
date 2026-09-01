@@ -1,0 +1,153 @@
+sample_id,stream,line_number,text
+rss-remote-free-remote-free-local-recorded-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=11088000 ns_per_free=11.088000000 maximum_queue_depth=0
+rss-remote-free-remote-free-local-recorded-1,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-remote-free-remote-free-local-recorded-1,stderr,2,            73793536  maximum resident set size
+rss-remote-free-remote-free-local-recorded-1,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-local-recorded-1,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-local-recorded-1,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-local-recorded-1,stderr,6,                4664  page reclaims
+rss-remote-free-remote-free-local-recorded-1,stderr,7,                   1  page faults
+rss-remote-free-remote-free-local-recorded-1,stderr,8,                   0  swaps
+rss-remote-free-remote-free-local-recorded-1,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-local-recorded-1,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-local-recorded-1,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-local-recorded-1,stderr,12,                   0  messages received
+rss-remote-free-remote-free-local-recorded-1,stderr,13,                   0  signals received
+rss-remote-free-remote-free-local-recorded-1,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-local-recorded-1,stderr,15,                   4  involuntary context switches
+rss-remote-free-remote-free-local-recorded-1,stderr,16,           295962287  instructions retired
+rss-remote-free-remote-free-local-recorded-1,stderr,17,            75576453  cycles elapsed
+rss-remote-free-remote-free-local-recorded-1,stderr,18,            73417112  peak memory footprint
+rss-remote-free-remote-free-queued-recorded-1,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42640000 ns_per_free=42.640000000 maximum_queue_depth=256
+rss-remote-free-remote-free-queued-recorded-1,stderr,1,        0.04 real         0.03 user         0.03 sys
+rss-remote-free-remote-free-queued-recorded-1,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-queued-recorded-1,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-queued-recorded-1,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-queued-recorded-1,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-queued-recorded-1,stderr,6,                4667  page reclaims
+rss-remote-free-remote-free-queued-recorded-1,stderr,7,                   1  page faults
+rss-remote-free-remote-free-queued-recorded-1,stderr,8,                   0  swaps
+rss-remote-free-remote-free-queued-recorded-1,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-queued-recorded-1,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-queued-recorded-1,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-queued-recorded-1,stderr,12,                   0  messages received
+rss-remote-free-remote-free-queued-recorded-1,stderr,13,                   0  signals received
+rss-remote-free-remote-free-queued-recorded-1,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-queued-recorded-1,stderr,15,               13935  involuntary context switches
+rss-remote-free-remote-free-queued-recorded-1,stderr,16,           854223919  instructions retired
+rss-remote-free-remote-free-queued-recorded-1,stderr,17,           284061604  cycles elapsed
+rss-remote-free-remote-free-queued-recorded-1,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-queued-recorded-2,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=43098000 ns_per_free=43.098000000 maximum_queue_depth=256
+rss-remote-free-remote-free-queued-recorded-2,stderr,1,        0.04 real         0.03 user         0.03 sys
+rss-remote-free-remote-free-queued-recorded-2,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-queued-recorded-2,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-queued-recorded-2,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-queued-recorded-2,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-queued-recorded-2,stderr,6,                4667  page reclaims
+rss-remote-free-remote-free-queued-recorded-2,stderr,7,                   1  page faults
+rss-remote-free-remote-free-queued-recorded-2,stderr,8,                   0  swaps
+rss-remote-free-remote-free-queued-recorded-2,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-queued-recorded-2,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-queued-recorded-2,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-queued-recorded-2,stderr,12,                   0  messages received
+rss-remote-free-remote-free-queued-recorded-2,stderr,13,                   0  signals received
+rss-remote-free-remote-free-queued-recorded-2,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-queued-recorded-2,stderr,15,               14274  involuntary context switches
+rss-remote-free-remote-free-queued-recorded-2,stderr,16,           860184132  instructions retired
+rss-remote-free-remote-free-queued-recorded-2,stderr,17,           293025873  cycles elapsed
+rss-remote-free-remote-free-queued-recorded-2,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-local-recorded-2,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10587000 ns_per_free=10.587000000 maximum_queue_depth=0
+rss-remote-free-remote-free-local-recorded-2,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-remote-free-remote-free-local-recorded-2,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-local-recorded-2,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-local-recorded-2,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-local-recorded-2,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-local-recorded-2,stderr,6,                4665  page reclaims
+rss-remote-free-remote-free-local-recorded-2,stderr,7,                   1  page faults
+rss-remote-free-remote-free-local-recorded-2,stderr,8,                   0  swaps
+rss-remote-free-remote-free-local-recorded-2,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-local-recorded-2,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-local-recorded-2,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-local-recorded-2,stderr,12,                   0  messages received
+rss-remote-free-remote-free-local-recorded-2,stderr,13,                   0  signals received
+rss-remote-free-remote-free-local-recorded-2,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-local-recorded-2,stderr,15,                   5  involuntary context switches
+rss-remote-free-remote-free-local-recorded-2,stderr,16,           295948416  instructions retired
+rss-remote-free-remote-free-local-recorded-2,stderr,17,            71786330  cycles elapsed
+rss-remote-free-remote-free-local-recorded-2,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-local-recorded-3,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10409000 ns_per_free=10.409000000 maximum_queue_depth=0
+rss-remote-free-remote-free-local-recorded-3,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-remote-free-remote-free-local-recorded-3,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-local-recorded-3,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-local-recorded-3,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-local-recorded-3,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-local-recorded-3,stderr,6,                4665  page reclaims
+rss-remote-free-remote-free-local-recorded-3,stderr,7,                   1  page faults
+rss-remote-free-remote-free-local-recorded-3,stderr,8,                   0  swaps
+rss-remote-free-remote-free-local-recorded-3,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-local-recorded-3,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-local-recorded-3,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-local-recorded-3,stderr,12,                   0  messages received
+rss-remote-free-remote-free-local-recorded-3,stderr,13,                   0  signals received
+rss-remote-free-remote-free-local-recorded-3,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-local-recorded-3,stderr,15,                   5  involuntary context switches
+rss-remote-free-remote-free-local-recorded-3,stderr,16,           295956052  instructions retired
+rss-remote-free-remote-free-local-recorded-3,stderr,17,            71152887  cycles elapsed
+rss-remote-free-remote-free-local-recorded-3,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-queued-recorded-3,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=42873000 ns_per_free=42.873000000 maximum_queue_depth=256
+rss-remote-free-remote-free-queued-recorded-3,stderr,1,        0.04 real         0.03 user         0.03 sys
+rss-remote-free-remote-free-queued-recorded-3,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-queued-recorded-3,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-queued-recorded-3,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-queued-recorded-3,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-queued-recorded-3,stderr,6,                4667  page reclaims
+rss-remote-free-remote-free-queued-recorded-3,stderr,7,                   1  page faults
+rss-remote-free-remote-free-queued-recorded-3,stderr,8,                   0  swaps
+rss-remote-free-remote-free-queued-recorded-3,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-queued-recorded-3,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-queued-recorded-3,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-queued-recorded-3,stderr,12,                   0  messages received
+rss-remote-free-remote-free-queued-recorded-3,stderr,13,                   0  signals received
+rss-remote-free-remote-free-queued-recorded-3,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-queued-recorded-3,stderr,15,               14095  involuntary context switches
+rss-remote-free-remote-free-queued-recorded-3,stderr,16,           858109385  instructions retired
+rss-remote-free-remote-free-queued-recorded-3,stderr,17,           288067214  cycles elapsed
+rss-remote-free-remote-free-queued-recorded-3,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-queued-recorded-4,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=remote count=1000000 elapsed_ns=43370000 ns_per_free=43.370000000 maximum_queue_depth=256
+rss-remote-free-remote-free-queued-recorded-4,stderr,1,        0.04 real         0.03 user         0.03 sys
+rss-remote-free-remote-free-queued-recorded-4,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-queued-recorded-4,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-queued-recorded-4,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-queued-recorded-4,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-queued-recorded-4,stderr,6,                4667  page reclaims
+rss-remote-free-remote-free-queued-recorded-4,stderr,7,                   1  page faults
+rss-remote-free-remote-free-queued-recorded-4,stderr,8,                   0  swaps
+rss-remote-free-remote-free-queued-recorded-4,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-queued-recorded-4,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-queued-recorded-4,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-queued-recorded-4,stderr,12,                   0  messages received
+rss-remote-free-remote-free-queued-recorded-4,stderr,13,                   0  signals received
+rss-remote-free-remote-free-queued-recorded-4,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-queued-recorded-4,stderr,15,               14140  involuntary context switches
+rss-remote-free-remote-free-queued-recorded-4,stderr,16,           859639969  instructions retired
+rss-remote-free-remote-free-queued-recorded-4,stderr,17,           288990001  cycles elapsed
+rss-remote-free-remote-free-queued-recorded-4,stderr,18,            73433496  peak memory footprint
+rss-remote-free-remote-free-local-recorded-4,stdout,1,E6_MEMORY_BENCHMARK result=PASS mode=local count=1000000 elapsed_ns=10981000 ns_per_free=10.981000000 maximum_queue_depth=0
+rss-remote-free-remote-free-local-recorded-4,stderr,1,        0.01 real         0.01 user         0.00 sys
+rss-remote-free-remote-free-local-recorded-4,stderr,2,            73809920  maximum resident set size
+rss-remote-free-remote-free-local-recorded-4,stderr,3,                   0  average shared memory size
+rss-remote-free-remote-free-local-recorded-4,stderr,4,                   0  average unshared data size
+rss-remote-free-remote-free-local-recorded-4,stderr,5,                   0  average unshared stack size
+rss-remote-free-remote-free-local-recorded-4,stderr,6,                4665  page reclaims
+rss-remote-free-remote-free-local-recorded-4,stderr,7,                   1  page faults
+rss-remote-free-remote-free-local-recorded-4,stderr,8,                   0  swaps
+rss-remote-free-remote-free-local-recorded-4,stderr,9,                   0  block input operations
+rss-remote-free-remote-free-local-recorded-4,stderr,10,                   0  block output operations
+rss-remote-free-remote-free-local-recorded-4,stderr,11,                   0  messages sent
+rss-remote-free-remote-free-local-recorded-4,stderr,12,                   0  messages received
+rss-remote-free-remote-free-local-recorded-4,stderr,13,                   0  signals received
+rss-remote-free-remote-free-local-recorded-4,stderr,14,                   0  voluntary context switches
+rss-remote-free-remote-free-local-recorded-4,stderr,15,                   6  involuntary context switches
+rss-remote-free-remote-free-local-recorded-4,stderr,16,           295901754  instructions retired
+rss-remote-free-remote-free-local-recorded-4,stderr,17,            73754470  cycles elapsed
+rss-remote-free-remote-free-local-recorded-4,stderr,18,            73433496  peak memory footprint

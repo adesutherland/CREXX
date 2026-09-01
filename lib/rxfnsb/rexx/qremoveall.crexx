@@ -22,43 +22,49 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Remove balanced quote-aware spans by source position. */
 options levelb
-
 namespace rxfnsb expose qremoveall
 
-/* ------------------------------------------------------------------
- *  Function:  QREMOVEALL
- *  Purpose:   Removes all delimited segments from a string,
- *             respecting quotes and nested pairs.
+/**
+ * Remove every balanced top-level pair in one positional reconstruction pass.
  *
- *  Usage:     clean = QREMOVEALL(open, close, text [, mode])
- *
- *  Arguments:
- *     open   - Opening delimiter (string, one or more characters)
- *     close  - Matching closing delimiter
- *     text   - Source string to clean
- *     mode   - (optional) 'exclusive' or 'inclusive'
- *              'inclusive' (default) removes including delimiters
- *              'exclusive' removes only the inner content
- *
- *  Returns:
- *     A copy of the text with all delimited blocks removed.
- *
- *  Notes:
- *     - Quote-safe and nesting-aware (via QEXTRACTALL)
- *     - Default behavior removes full matched segments
- *     - For exclusive mode, keeps delimiters but removes inner content
- *     - Multiple nested or sequential blocks supported
- *  ------------------------------------------------------------------
+ * @param open non-empty opening delimiter
+ * @param close non-empty distinct closing delimiter
+ * @param text source text
+ * @param mode I or C removes complete spans; X or E removes contents only
+ * @return reconstructed text
+ * @signal INVALID_ARGUMENTS invalid arguments or malformed quote/pair grammar
  */
-qremoveall: procedure=.string
-  arg open=.string, close=.string, text=.string, mode='I'
+qremoveall: procedure = .string
+  arg open = .string, close = .string, text = .string, mode = 'I'
+  folded_mode = ''
+  assembler strupper folded_mode,mode
+  folded_mode = left(folded_mode,1)
+  if folded_mode = 'C' then folded_mode = 'I'
+  if folded_mode = 'E' then folded_mode = 'X'
+  if folded_mode <> 'I' & folded_mode <> 'X' then
+    assembler signal "INVALID_ARGUMENTS", "QREMOVEALL mode must be I, C, X, or E"
 
-  out = text
-  blocks = qextractall(open, close, text, mode)
-
-  do i = 1 to blocks.0
-     out = changestr(blocks.i, out, '')
+  spans = qscan_pair_spans(open,close,text,1)
+  out = ''
+  cursor = .int
+  remove_start = .int
+  remove_end = .int
+  count = .int
+  assembler idiv count,spans[0],4
+  do index = 1 to count
+    base = (index - 1) * 4
+    if folded_mode = 'I' then do
+      remove_start = spans[base + 1]
+      remove_end = spans[base + 4]
+    end
+    else do
+      remove_start = spans[base + 2]
+      remove_end = spans[base + 3]
+    end
+    out = out || substr(text,cursor + 1,remove_start - cursor)
+    cursor = remove_end
   end
-return out
+  out = out || substr(text,cursor + 1)
+  return out

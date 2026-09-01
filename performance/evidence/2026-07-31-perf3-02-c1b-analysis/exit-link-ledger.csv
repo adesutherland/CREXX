@@ -1,0 +1,9 @@
+callee,source_return_line,predicate_shape,c1a_r1_rxas_range,outer_alias,nested_alias,cleanup_position,taken_return_alias_state,normal_path_disposition
+isWaitingWithPacket,169,indexed_boolean_equals_zero,2056-2070,r4,r3,"unlinkn r3,r4 before brf","balanced","already safe"
+isWaitingWithPacket,170,indexed_boolean_equals_zero,2073-2087,r5,r7,"unlinkn r7,r5 before brf","balanced","already safe"
+isWaitingWithPacket,171,direct_indexed_boolean,2090-2100,r5,r7,"unlinkn r7,r5 only at false label 2102","both live","unsafe; snapshot guard before IF"
+isWaitingWithPacket,172,constant_final_return,2103-2107,none,none,"prior false-edge cleanup complete","balanced","safe"
+isHoldingOrWaiting,162,direct_indexed_boolean,4827-4837,r5,r2,"unlinkn r2,r5 only at false label 4839","both live","unsafe; snapshot guard before IF"
+isHoldingOrWaiting,163,direct_indexed_boolean,4841-4851,r5,r7,"unlinkn r7,r5 only at false label 4853","both live","unsafe; snapshot guard before IF"
+isHoldingOrWaiting,164,direct_indexed_boolean,4855-4865,r5,r7,"unlinkn r7,r5 only at false label 4867","both live","unsafe; snapshot guard before IF"
+isHoldingOrWaiting,165,constant_final_return,4868-4872,none,none,"prior false-edge cleanup complete","balanced","safe"

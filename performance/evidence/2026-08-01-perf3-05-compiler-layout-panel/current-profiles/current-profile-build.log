@@ -1,0 +1,73 @@
+[0/2] Re-checking globbed directories...
+[1/55] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[2/55] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[3/55] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[4/55] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[5/55] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[6/55] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[7/55] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[8/55] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[9/55] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[10/55] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[11/55] Linking C static library bin/librxvmref.a
+[12/55] Linking C static library bin/libplatform.a
+[13/55] Linking C static library bin/libavl_tree.a
+[14/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/interrupt.c.o
+[15/55] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[16/55] Linking C static library bin/librxvmplugin.a
+[17/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/exitfunc.c.o
+[18/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/include/opdata.c.o
+[19/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmload.c.o
+[20/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvml/rxvm_run.c.o
+[21/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[22/55] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[23/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxpafuncs.c.o
+[24/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxseqfile.c.o
+[25/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmsequence.c.o
+[26/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxcrexxcmd.c.o
+[27/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxspawn.c.o
+[28/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[29/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[30/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[31/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/include/opdata.c.o
+[32/55] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[33/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[34/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[35/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[36/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/__/binutils/rxopmeta.c.o
+[37/55] Linking C static library bin/librxbin.a
+[38/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmprofile.c.o
+[39/55] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[40/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxseqfile.c.o
+[41/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmsequence.c.o
+[42/55] Linking C static library bin/libdecnumber.a
+[43/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[44/55] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[45/55] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[46/55] Linking C static library bin/librxpa.a
+[47/55] Linking C static library bin/librxpashim.a
+[48/55] Linking C static library bin/rxvm_mc_decimal_manual.a
+[49/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprofile.c.o
+[50/55] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[51/55] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[52/55] Linking C executable bin/rxbvm
+[53/55] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[54/55] Linking C executable bin/rxvm
+      128.95 real       192.19 user         1.59 sys
+          1906327552  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              540884  page reclaims
+                7919  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                  50  signals received
+                 239  voluntary context switches
+               14901  involuntary context switches
+            55124270  instructions retired
+            17558789  cycles elapsed
+             2572696  peak memory footprint

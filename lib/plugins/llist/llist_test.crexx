@@ -8,13 +8,14 @@ do i=1 to 10
 end
 call Listllist 0
 
-do i=1 to 5
+do i=.int(1) to 5
    say i pull(0)
 end
-do i=1 to 5
+do i=.int(1) to 5
    say i qpull(0)
 end
 
+call freellist 0
 exit
 
 push: procedure

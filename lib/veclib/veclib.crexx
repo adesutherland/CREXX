@@ -274,7 +274,7 @@ End
 
 Do Until h = 1
    h = h % 3
-   Do i=h+1 To max
+   Do i=.int(h+1) To max
       V = x[i]
       j = i
       jmh = j - h
@@ -288,7 +288,7 @@ Do Until h = 1
    End
 End
 
-do i=1 to max
+do i=.int(1) to max
    x[i]=x[i]+0
 end
 
@@ -328,15 +328,17 @@ if type="NUM" then vec = __numsort(s)
 ret=""
 
 if reverse="" then
-   do i = 1 to max
+   do i = .int(1) to max
       x = vec[i]
       p = __vecpos(x,s)
       if p>0 then vec[p] = "*"
       ret = ret p
    end
 else
-   do i = max to 1 by -1
+   do i = .int(max) to 1 by -1
+      x = .string
       x = vec[i]
+      p = .int
       p = __vecpos(x,s)
       if p>0 then vec[p] = "*"
       ret = ret p

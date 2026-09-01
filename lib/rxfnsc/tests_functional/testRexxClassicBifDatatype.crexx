@@ -1,0 +1,163 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifdatatype
+import rexxclassicconfig
+import rexxvalue
+
+errors = 0
+config = .RexxClassicConfig()
+
+errors = errors + check_classify(reference config,"NUM",.RexxValue("12.3"),"BYTE decimal")
+errors = errors + check_classify(reference config,"NUM",.RexxValue(" - 12.3E+2 "),"BYTE sign blanks")
+errors = errors + check_classify(reference config,"CHAR",.RexxValue("1.2.3"),"BYTE malformed")
+errors = errors + check_type(reference config,"1",.RexxValue("DeadBeef"),"A","alphanumeric")
+errors = errors + check_type(reference config,"1",.RexxValue("0110 1101"),"B","binary grouping")
+errors = errors + check_type(reference config,"0",.RexxValue("01 01"),"B","binary grouping rejected")
+errors = errors + check_type(reference config,"1",.RexxValue("lower"),"L","lowercase")
+errors = errors + check_type(reference config,"1",.RexxValue("Mixed"),"M","mixed letters")
+errors = errors + check_type(reference config,"1",.RexxValue("+.5E-2"),"N","number")
+errors = errors + check_type(reference config,"1",.RexxValue("name.1"),"S","symbol")
+errors = errors + check_type(reference config,"0",.RexxValue("3name"),"S","constant is not S")
+errors = errors + check_type(reference config,"1",.RexxValue("UPPER"),"U","uppercase")
+errors = errors + check_type(reference config,"1",.RexxValue("123.000"),"W","exact whole")
+errors = errors + check_type(reference config,"0",.RexxValue("123.0000003"),"W","no tolerance")
+errors = errors + check_type(reference config,"1",.RexxValue("A BC DF"),"X","hex grouping")
+errors = errors + check_type(reference config,"0",.RexxValue("A B C"),"X","hex bad grouping")
+errors = errors + check_type(reference config,"1",.RexxValue(""),"B","empty binary")
+errors = errors + check_type(reference config,"1",.RexxValue(""),"X","empty hex")
+
+tab = "09"x as .binary
+call config.setByteOtherBlanks(tab)
+binary_with_tab = "303130310930303131"x as .binary
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary(binary_with_tab),"B","configured byte blank")
+
+extra_lower = "e0"x as .binary
+extra_upper = "c0"x as .binary
+extra_digits = "80818283848586878889"x as .binary
+call config.setByteDatatypeLetters(extra_lower,extra_upper)
+call config.setByteDatatypeDigits(extra_digits)
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary("e0"x as .binary),"L","configured byte lower")
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary("c0e0"x as .binary),"M","configured byte letters")
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary("81822e80"x as .binary),"N","configured byte digits")
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary("8081"x as .binary),"B","configured binary digits")
+errors = errors + check_type(reference config,"1",.RexxValue.fromBinary("8182"x as .binary),"X","configured hex digits")
+errors = errors + check_type(reference config,"0",.RexxValue.fromBinary("ff"x as .binary),"A","arbitrary BYTE octet")
+
+call config.useUtf8Profile()
+call config.setTextDatatypeLetters("α","Α")
+call config.setTextDatatypeDigits("٠١٢٣٤٥٦٧٨٩")
+call config.setTextOtherBlanks("·")
+errors = errors + check_type(reference config,"1",.RexxValue("α"),"L","configured UTF8 lower")
+errors = errors + check_type(reference config,"1",.RexxValue("Αα"),"M","configured UTF8 letters")
+errors = errors + check_type(reference config,"1",.RexxValue("١٢.٠"),"N","configured UTF8 digits")
+errors = errors + check_type(reference config,"1",.RexxValue("٠٠٠٠·٠٠٠١"),"B","configured UTF8 blank and digits")
+errors = errors + check_type(reference config,"1",.RexxValue("α١"),"S","configured UTF8 symbol")
+
+call config.setExponentDigitLimit(2)
+errors = errors + check_type(reference config,"1",.RexxValue("1E12"),"N","exponent at limit")
+errors = errors + check_type(reference config,"0",.RexxValue("1E123"),"N","exponent over limit")
+errors = errors + check_rule(reference config,"NUM",.RexxValue("١٢.٠"),1,"","12.0")
+errors = errors + check_rule(reference config,"NUM",.RexxValue("1E123"),0,"RXC-LC-40.9","")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("١٢"),1,"","12")
+errors = errors + check_rule(reference config,"WHOLE",.RexxValue("١٢.٠"),0,"RXC-LC-40.12","")
+errors = errors + check_rule(reference config,"BIN",.RexxValue("٠٠٠٠·٠٠٠١"),1,"","")
+errors = errors + check_rule(reference config,"HEX",.RexxValue("١٢"),1,"","")
+errors = errors + check_rule(reference config,"SYM",.RexxValue("α١"),1,"","")
+
+invalid_utf8 = "ff"x as .binary
+errors = errors + check_type_error(reference config,.RexxValue.fromBinary(invalid_utf8),"A","RXC-LC-23.1","UTF8 invalid bytes")
+errors = errors + check_call_error(reference config,"RXC-LC-40.3",0,0,"","too few")
+errors = errors + check_call_error(reference config,"RXC-LC-40.4",3,0,"A","too many")
+errors = errors + check_call_error(reference config,"RXC-LC-40.5",1,1,"","omitted required")
+errors = errors + check_call_error(reference config,"RXC-LC-40.21",2,0,"","empty option")
+errors = errors + check_call_error(reference config,"RXC-LC-40.28",2,0,"D","D excluded from Level C")
+errors = errors + check_call_error(reference config,"RXC-LC-40.28",2,0,"Q","unknown option")
+
+if errors = 0 then say "PASS: Level C DATATYPE BIF"
+return errors <> 0
+
+check_classify: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, expected = .string, value = .RexxValue, label = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = value
+  exists[1] = 1
+  return invoke(config_ref,args,exists,expected,label)
+
+check_type: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, expected = .string, value = .RexxValue, option = .string, label = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = value
+  args[2] = .RexxValue(option)
+  exists[1] = 1
+  exists[2] = 1
+  return invoke(config_ref,args,exists,expected,label)
+
+invoke: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, args = .RexxValue[], exists = .int[], expected = .string, label = .string
+  context = .RexxBifCallContext("DATATYPE")
+  call context.setConfig(config_ref)
+  call context.setArguments(args,exists)
+  result = .rexxclassicbifdatatype..rexxclassicbif_datatype(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: DATATYPE" label "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_rule: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, rule = .string, value = .RexxValue, expected_valid = .boolean, expected_code = .string, expected_normalized = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = value
+  exists[1] = 1
+  context = .RexxBifCallContext("CHECK")
+  call context.setConfig(config_ref)
+  call context.setArguments(args,exists)
+  valid = rexxclassicbif_check_args(reference context,"r" || rule)
+  if expected_valid then do
+    if \context.hasError() & valid then do
+      if expected_normalized = "" | context.argumentText(1) = expected_normalized then return 0
+    end
+  end
+  else if \valid & context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: CheckArgs" rule "expected" expected_valid expected_code expected_normalized,
+      "got" valid context.argumentText(1) context.errorCode() context.errorMessage()
+  return 1
+
+check_type_error: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, value = .RexxValue, option = .string, expected_code = .string, label = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = value
+  args[2] = .RexxValue(option)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("DATATYPE")
+  call context.setConfig(config_ref)
+  call context.setArguments(args,exists)
+  result = .rexxclassicbifdatatype..rexxclassicbif_datatype(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: DATATYPE" label "expected error" expected_code "got",
+      result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_call_error: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, expected_code = .string, count = .int, omit_first = .boolean, option = .string, label = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to count
+    if index = 1 then args[index] = .RexxValue("abc")
+    else if index = 2 then args[index] = .RexxValue(option)
+    else args[index] = .RexxValue("extra")
+    exists[index] = 1
+  end
+  if omit_first & count > 0 then exists[1] = 0
+  context = .RexxBifCallContext("DATATYPE")
+  call context.setConfig(config_ref)
+  call context.setArguments(args,exists)
+  result = .rexxclassicbifdatatype..rexxclassicbif_datatype(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: DATATYPE" label "expected error" expected_code "got",
+      result.asString() context.errorCode() context.errorMessage()
+  return 1

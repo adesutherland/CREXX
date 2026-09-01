@@ -1,95 +1,232 @@
-/*
- * crexx RXPP
- * CREXX Pre Compiler
- */
+/* Assertion coverage for the legacy dynamic Level B PARSE helpers. */
 options levelb
 import rxfnsb
-  token.1=''          ## init token array
-  token_type.1=''     ## init types array
-  variable.1=''
-  variable_content.1=''
-## 1. Example
-## ----------
-  say '-------- 1. Example --------------'
-  template = "dsn'(' member "'")"mode'
-  string2Parse = "  ms.mspdm.slib(crexx) SHR"
-  say time('l')' Compile Template'
-  count=parseCompile(template,token,token_type)
-     call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, count, token, token_type,variable,variable_content
-     call variable_print string2Parse, variable,variable_content    ## print variables
-## 2. Example
-## ----------
-  say '-------- 2. Example --------------'
-  template = "name 10 job +8 surname 'is-a' skill"
-  string2Parse = "René     Captain Jansen is-a REXX wizard"
-  say time('l')' Compile Template'
-  count=parseCompile(template,token,token_type)
-    call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, count, token, token_type,variable,variable_content
-     call variable_print string2Parse, variable,variable_content   ## print variables
-## 3. Example
-## ----------
-  say '-------- 3. Example --------------'
-  template = "first','second','third','fourth','fifth"
-  string2Parse = "1. think,2. overthink,3. redesign,4. code in rexx and pray,5. blame the user"
-   say time('l')' Compile Template'
-  count=parseCompile(template,token,token_type)
-    call token_print template,token,token_type                     ## print tokens
-  call parseString string2Parse, count, token, token_type,variable,variable_content
-     call variable_print string2Parse, variable,variable_content   ## print variables
-## 4. Example
-## ----------
-  say '-------- 4. Example parse in one go --------------'
-  template = "dsn'(' member "'")"mode'
-  string2Parse = "  ms.mspdm.slib(crexx) SHR"
-  /* drop variable. */
-  say time('l')' Parse Template'
-    call parse string2Parse, template,variable,variable_content
-    call variable_print string2Parse, variable,variable_content    ## print variables
-## 5. Example
-## ----------
-  say '-------- 5. Example parse in one go --------------'
-  template = "name 10 job +8 surname 'is-a' skill"
-  string2Parse = "René     Captain Jansen is-a REXX wizard"
-  say time('l')' Parse Template'
-    call parse string2Parse, template,variable,variable_content
-    call variable_print string2Parse, variable,variable_content    ## print variables
-## 6. Example
-## ----------
-  say '-------- 6. Example parse in one go --------------'
-  template = "first','second','third','fourth','fifth"
-  say time('l')' Parse Template'
-    call parse string2Parse, template,variable,variable_content
-    call variable_print string2Parse, variable,variable_content    ## print variables
-exit
-/* ----------------------------------------------------------------------
- *  Print created tokens
- * ----------------------------------------------------------------------
- */
-token_print: procedure
-  arg template=.string,token=.string[],token_type=.string[]
-  say 'Template='template
-  say time('l')' Compile completed'
-  say 'Created Tokens, type=1: variable, 2=quoted-string, 3=column-set, 4=column-reposition'
-  do j = 1 to token.0
-     say "Token" j ": '"token.j"' Type:" token_type.j
+
+errors = 0
+errors = errors + test_compile_plans()
+errors = errors + test_direct_execution()
+errors = errors + test_wrapper_options()
+errors = errors + test_validation_signals()
+
+if errors = 0 then say "PASS: legacy parse helpers"
+return errors <> 0
+
+test_compile_plans: procedure = .int
+  errors = 0
+  token = .string[]
+  kind = .int[]
+
+  count = parsecompile("first','second third",token,kind)
+  errors = errors + check(count = 5,"compile item count")
+  errors = errors + check(token[1] = "first" & kind[1] = 1,"compile first variable")
+  errors = errors + check(token[2] = "," & kind[2] = 2,"compile literal")
+  errors = errors + check(token[3] = "second" & kind[3] = 1,"compile second variable")
+  errors = errors + check(token[4] = " " & kind[4] = 5,"compile implicit blank")
+  errors = errors + check(token[5] = "third" & kind[5] = 1,"compile third variable")
+
+  count = parsecompile("left ',' right",token,kind)
+  errors = errors + check(count = 3,"quote-adjacent whitespace suppressed")
+  errors = errors + check(token[1] = "left" & kind[1] = 1,"suppressed left")
+  errors = errors + check(token[2] = "," & kind[2] = 2,"suppressed literal")
+  errors = errors + check(token[3] = "right" & kind[3] = 1,"suppressed right")
+
+  count = parsecompile("name 10 job +8 surname (name)",token,kind)
+  errors = errors + check(count = 6,"position/search plan count")
+  errors = errors + check(kind[1] = 1 & kind[2] = 3 & kind[3] = 1,"absolute plan kinds")
+  errors = errors + check(token[2] = "10" & token[4] = "+8" & kind[4] = 4,"typed position payloads")
+  errors = errors + check(token[6] = "name" & kind[6] = 6,"prior-variable search")
+
+  count = parsecompile("a 'can''t' b",token,kind)
+  errors = errors + check(count = 3,"doubled quote plan count")
+  errors = errors + check(token[2] = "can''t" & kind[2] = 2,"doubled quote retained")
+
+  count = parsecompile('a "," b',token,kind)
+  errors = errors + check(count = 3 & token[2] = "," & kind[2] = 2,"double-quoted literal")
+
+  count = parsecompile("a -9223372036854775808 b",token,kind)
+  errors = errors + check(count = 3 & token[2] = "-9223372036854775808" & kind[2] = 4,"minimum relative position")
+
+  count = parsecompile("a b",token,kind)
+  errors = errors + check(count = 3,"NBSP word plan count")
+  errors = errors + check(token[2] = " " & kind[2] = 5,"NBSP word delimiter")
+  return errors
+
+test_direct_execution: procedure = .int
+  errors = 0
+  token = .string[]
+  kind = .int[]
+  variable = .string[]
+  value = .string[]
+
+  count = parsecompile("a b c",token,kind)
+  source = "one  two three"
+  call parsestring source,count,token,kind,variable,value,"a b c"
+  errors = errors + check(variable[0] = 3 & value[0] = 3,"word output counts")
+  errors = errors + check(variable[1] = "a" & value[1] = "one","word first")
+  errors = errors + check(variable[2] = "b" & value[2] = "two","word second")
+  errors = errors + check(variable[3] = "c" & value[3] = "three","word third")
+
+  count = parsecompile("a','b','c",token,kind)
+  source = "left,middle,right"
+  call parsestring source,count,token,kind,variable,value
+  errors = errors + check(value[1] = "left" & value[2] = "middle" & value[3] = "right","literal fields")
+
+  count = parsecompile("a','b (a) c",token,kind)
+  source = "xx,yyxxzz"
+  call parsestring source,count,token,kind,variable,value
+  errors = errors + check(value[1] = "xx" & value[2] = "yy" & value[3] = "zz","prior-variable delimiter")
+  errors = errors + check(source = "xx,yyxxzz","source nonmutation")
+  errors = errors + check(token[1] = "a" & kind[1] = 1,"plan nonmutation")
+
+  count = parsecompile("a 4 b +2 c -3 d",token,kind)
+  call parsestring "abcdefghij",count,token,kind,variable,value
+  errors = errors + check(value[1] = "abc" & value[2] = "de","absolute and forward positions")
+  errors = errors + check(value[3] = "fghij" & value[4] = "cdefghij","backward position and final tail")
+
+  count = parsecompile("a':'b",token,kind)
+  call parsestring "no delimiter",count,token,kind,variable,value
+  errors = errors + check(value[1] = "no delimiter" & value[2] = "","missing literal fallback")
+
+  count = parsecompile("a -9223372036854775808 b",token,kind)
+  call parsestring "abc",count,token,kind,variable,value
+  errors = errors + check(value[1] = "abc" & value[2] = "abc","minimum relative execution")
+  return errors
+
+test_wrapper_options: procedure = .int
+  errors = 0
+  variable = .string[]
+  value = .string[]
+
+  count = parse("  One , TWO  ","left','right",variable,value,1,2)
+  errors = errors + check(count = 2 & variable[0] = 2 & value[0] = 2,"wrapper output count")
+  errors = errors + check(value[1] = "one" & value[2] = "two","strip and lowercase")
+
+  count = parse("one,two","left','right",variable,value,0,1)
+  errors = errors + check(value[1] = "ONE" & value[2] = "TWO","uppercase option")
+
+  count = parse("ignored","",variable,value)
+  errors = errors + check(count = 0 & variable[0] = 0 & value[0] = 0,"empty template clears outputs")
+  return errors
+
+test_validation_signals: procedure = .int
+  errors = 0
+  caught = 0
+  token = .string[]
+  kind = .int[]
+  variable = .string[]
+  value = .string[]
+  token[1] = "sentinel"
+  kind[1] = 1
+  variable[1] = "old-name"
+  value[1] = "old-value"
+
+  do
+    ignored = parsecompile("a'unclosed",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+    errors = errors + check(token[1] = "sentinel" & kind[1] = 1,"compile signal preserves outputs")
   end
-  say time('l')' Parse String using compiled Template'
-return
-/* ----------------------------------------------------------------------
- * Output results, there is no variable assignment yet, just where it
- *        should go. Maybe I'll knock something up in the pre-compiler
- * ----------------------------------------------------------------------
- */
-variable_print: procedure
-   arg string2parse=.string,variable=.string[],variable_content=.string[]
-   say time('l')' Parse completed'
-   say "Template="template
-   say "         1...5....0....5....0....5....0....5....0"
-   say "Parse    "string2parse
-   say "Extracted variables"
-   do i = 1 to variable.0
-      say left(variable.i,8) " = '"variable_content.i"'"
-   end
-return
+  do
+    ignored = .int
+    ignored = parsecompile("a +x b",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parsecompile("a () b",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parsecompile("a (name b",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parsecompile("a 9223372036854775808 b",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parsecompile("a +9223372036854775808 b",token,kind)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    call parsestring "abc",2,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+    errors = errors + check(variable[1] = "old-name" & value[1] = "old-value","count signal preserves outputs")
+  end
+  do
+    token[1] = "a"
+    kind[1] = 9
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    call parsestring "abc",-1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    token[1] = ""
+    kind[1] = 1
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    token[1] = "x"
+    kind[1] = 3
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    token[1] = "+x"
+    kind[1] = 4
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    token[1] = "x"
+    kind[1] = 5
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    token[1] = ""
+    kind[1] = 6
+    call parsestring "abc",1,token,kind,variable,value
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parse("abc","a",variable,value,2,0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = parse("abc","a",variable,value,0,3)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  errors = errors + check(caught = 16,"all legacy validation signals caught")
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: legacy parse" label
+  return 1

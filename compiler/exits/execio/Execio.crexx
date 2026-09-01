@@ -44,6 +44,8 @@ execioexit: class
     pre_process: method = .exitplan
         arg tokens = .token[]
         compile_plan = .exitplan
+        i = .int
+        p = .int
         compile_plan = .exitplan("READY")
 
         do i = 2 to tokens.0
@@ -61,6 +63,26 @@ execioexit: class
         arg tokens = .token[]
 
         result = .exitresult("EMPTY")
+        i = .int
+        p = .int
+        opPos = .int
+        parenDepth = .int
+        is_stem = .int
+        stemPresent = .int
+        ti = .token
+        fnameTok = .token
+        vtok = .token
+        allowed = .string
+        t_type = .string
+        ops = .string
+        txt = .string
+        up = .string
+        countExpr = .string
+        countEmit = .string
+        opEmit = .string
+        fnameEmit = .string
+        stemEmit = .string
+        replacement = .string
 
         if tokens.0 < 4 then do
             call result.set_status("REJECT")
@@ -150,7 +172,7 @@ execioexit: class
             end
         end
 
-        replacement = "__rc=_execio(" || countEmit || ",'" || opEmit || "'," || fnameEmit
+        replacement = "__rc=.int; __rc=_execio(" || countEmit || ",'" || opEmit || "'," || fnameEmit
         if stemPresent then replacement = replacement || ", " || stemEmit
         replacement = replacement || ")"
 

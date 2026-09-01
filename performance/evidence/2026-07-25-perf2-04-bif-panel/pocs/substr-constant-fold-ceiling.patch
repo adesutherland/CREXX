@@ -1,0 +1,47 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..3053e55de 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -134,6 +134,12 @@ classic_two_point_two = "2.2" as .decimal
+ classic_five = "5" as .decimal
+ classic_ninety_nine_point_seven = "99.7" as .decimal
+ 
++/*
++ * SLC-CF1 is an exact-site machine ceiling only. The source rewrite cannot
++ * reproduce the inlined SUBSTR body TRACE/source-step sequence.
++ */
++__perf2_substr_cf_key = "Key Bee"
++
+ /* Calibrate for the empty do-loop. */
+ do i = 1 to averaging
+   call time("R")
+@@ -156,13 +162,13 @@ do trial = 1 to 2
+       do lvar = 1 to 14
+         /* This is the "block" comment in lvar. */
+         key1 = "Key Bee"
+-        acompound.key1.lvar = substr(1234 "5678", 6, 2)
++        acompound.key1.lvar = "56" /* SLC-CF1: substr(1234 "5678", 6, 2) */
+         if flag = acompound.key1.lvar then say "Failed1"
+         do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+           if j > (acompound.key1.lvar as .decimal) then say "Failed2"
+           if 17 < length(j as .string) - 1 then say "Failed3"
+           if (j as .string) = "foobar" then say "Failed4"
+-          if substr(1234, 1, 1) = "9" then say "Failed5"
++          /* SLC-CF1: substr(1234, 1, 1) = "1", so the original branch is false. */
+           if word(key1, 1) = "?" then say "Failed6"
+           if j < classic_five then do /* This path is taken. */
+             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
+@@ -210,6 +216,13 @@ do trial = 1 to 2
+   calibrated = 1
+ end
+ 
++__perf2_substr_cf_check1 = substr(1234 "5678", 6, 2)
++__perf2_substr_cf_check2 = substr(1234, 1, 1)
++if __perf2_substr_cf_check1 <> "56" | __perf2_substr_cf_check2 <> "1" then
++  return fail("constant-folded SUBSTR value mismatch")
++if acompound.__perf2_substr_cf_key.14 <> "58" then
++  return fail("constant-folded SUBSTR result/order mismatch")
++
+ /* Show the counts. */
+ say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+ say "REXXCPS-EFFECTIVE contract=" || contract ,

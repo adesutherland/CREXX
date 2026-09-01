@@ -30,12 +30,13 @@ import rxfnsb
 | BINSUBSTR       | BINSUBSTR(binary, start, length)             |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
-| D2C             | D2C(n)                                       |
-| D2X             | D2X(n)                                       |
+| D2C             | D2C(number [,length])                        |
+| D2X             | D2X(number [,length])                        |
 | X2B             | X2B(x)                                       |
 | X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
-| X2D             | X2D(x)                                       |
+| X2D             | X2D(hexadecimal [,length])                   |
+| XRANGE          | XRANGE([start [,end]])                       |
 | CENTER          | CENTER(s, n, pad)                            |
 | CENTRE          | CENTRE(s, n, pad)                            |
 | CHARIN          | CHARIN(name, count)                          |
@@ -105,9 +106,14 @@ normal Level B UTF-8 contract. They are not byte-oriented binary I/O BIFs.
 | `CHARIN(name [, count])` | `.string` | Read up to `count` UTF codepoints from the named text stream; the default count is `1`. |
 | `CHAROUT(name [, string])` | `.int` | With `string`, write text without appending a newline. Without `string`, close the named stream. |
 | `LINES(name)` | `.int` | Return `1` when more text can be read from the stream, otherwise `0`. |
+| `READBINARY(path)` | `.binary` | Read the complete file as exact bytes. I/O failure raises `NOTREADY`. |
+| `WRITEBINARY(path, data)` | `.int` | Replace the file with the `.binary` data and return its byte count. I/O failure raises `NOTREADY`. |
 
-Future binary file BIFs should use `.binary` values and the VM byte I/O path.
-Do not use these text BIFs for arbitrary byte payloads.
+`READBINARY` and `WRITEBINARY` use binary file modes and the VM byte I/O path.
+They preserve embedded NUL and invalid UTF-8 bytes without newline translation.
+They are whole-file conveniences rather than an incremental stream interface;
+the caller is responsible for the memory cost. Do not use the text BIFs for
+arbitrary byte payloads.
 
 ## Array helpers
 
@@ -117,14 +123,24 @@ in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
 They are the supported array surface for new code. The older native arrays
 plugin is deprecated.
 
+These helpers operate on `.string[]` arrays. They are not generic array helpers
+and are not the supported surface for typed numeric arrays such as `.int[]`;
+use direct indexing for those arrays until typed helpers are added.
+
 | Function | Result | Notes |
 |----------|--------|-------|
 | `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
 | `ARRAYDROP(array)` | `.int` | Clear the array in place and return `0`. |
-| `ARRAYINSERT(array, from, count, default)` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `ARRAYINSERT(array, from, count [,default])` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `OBJECTARRAYINSERT(array, from, count, value)` | `.int` | Open an object-array gap and fill it with object-value copies. |
+| `OBJECTARRAYDELETE(array, from, count)` | `.int` | Delete an object-array range and return the new high-water mark. |
+| `OBJECTARRAYAPPEND(array, value [,count])` | `.int` | Append object-value copies and return the new high-water mark. |
+| `OBJECTARRAYPREPEND(array, value [,count])` | `.int` | Prepend object-value copies and return the new high-water mark. |
+| `OBJECTARRAYDROP(array)` | `.int` | Clear an object array in place and return zero. |
+| `OBJECTARRAYMOVE(array, from, count, to)` | `.int` | Move an object-array block and preserve its high-water mark. |
 | `ARRAYDELETE(array, from, count)` | `.int` | Delete a range and return the new high-water mark. |
-| `ARRAYAPPEND(array, value, count)` | `.int` | Append `value` `count` times. |
-| `ARRAYPREPEND(array, value, count)` | `.int` | Prepend `value` `count` times. |
+| `ARRAYAPPEND(array, value [,count])` | `.int` | Append `value` `count` times. |
+| `ARRAYPREPEND(array, value [,count])` | `.int` | Prepend `value` `count` times. |
 | `ARRAYPOP(array, default)` | `.string` | Remove and return the last element, or `default` when empty. |
 | `ARRAYSHIFT(array, default)` | `.string` | Remove and return the first element, or `default` when empty. |
 | `ARRAYSET(array, index, value, fill)` | `.int` | Set an element; growing gaps are initialised with `fill`. |
@@ -133,12 +149,10 @@ plugin is deprecated.
 | `ARRAYMOVE(array, from, count, to)` | `.int` | Move a range within the same array. |
 | `ARRAYREVERSE(array)` | `.int` | Reverse the array in place. |
 | `ARRAYSORT(array, offset, order, debug)` | `.int` | Sort strings by a substring key. |
-| `ARRAYFIND(find, array, from, case)` | `.int` | Find the first element containing a substring. |
+| `ARRAYFIND(needle, array [,from [,case_sensitive]])` | `.int` | Find the first element containing a substring. |
 | `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
 | `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
 | `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |
-| `ARRAYFORMAT(array, from, to, flags, hdr, prefix)` | `.string[]` | Return a formatted dump as an array. |
-| `ARRAYDUMP(array, from, to, flags, hdr, prefix)` | `.int` | Print a formatted dump and return the printed count. |
 
 Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
 the VM array attribute instructions, so the pointer array can be adjusted

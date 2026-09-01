@@ -1,0 +1,6 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+bounce-gcc-rxvm,Bounce,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,4200,elapsed_ns,10,2349257000.000000,2364583750.000000,2393816500.000000,2407036000.000000,2629435000.000000,27957000.000000,1.167884,11.704239,yes
+towers-gcc-rxvm,Towers,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,100,elapsed_ns,10,8217595000.000000,8238271500.000000,8278018500.000000,8326887500.000000,8488480000.000000,45534500.000000,0.550065,3.272341,no
+rexxcps-clang-rxbvm,RexxCPS,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,1000-clauses,benchmark_rate,10,8665391.000000,8930713.250000,9033640.000000,9062992.750000,9189969.000000,87740.000000,0.971259,5.806939,no
+rexxcps-netrexx-ecj,RexxCPS,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,1000-clauses,benchmark_rate,10,9672503.000000,16782329.000000,18116413.000000,18185792.250000,18274876.000000,119298.500000,0.658511,47.483864,yes
+rexxcps-netrexx-javac,RexxCPS,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,1000-clauses,benchmark_rate,10,16668757.000000,17780727.500000,18158135.500000,18444420.500000,18542957.000000,337757.000000,1.860086,10.321544,yes

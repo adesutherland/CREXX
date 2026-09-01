@@ -1,0 +1,34 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(testConcurrency_\(noopt\|opt\)\|ts_http_streaming_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\)\$ --parallel 6
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start    1: linked_opt_runtime_artifacts_build
+1/7 Test    #1: linked_opt_runtime_artifacts_build ...   Passed  205.02 sec
+    Start 1698: ts_http_streaming_rxbvm_opt
+    Start 1697: ts_http_streaming_rxbvm_noopt
+    Start 1700: ts_http_streaming_rxtvm_opt
+    Start 1699: ts_http_streaming_rxtvm_noopt
+    Start 1680: testConcurrency_noopt
+    Start 1681: testConcurrency_opt
+2/7 Test #1681: testConcurrency_opt ..................   Passed    2.07 sec
+3/7 Test #1697: ts_http_streaming_rxbvm_noopt ........   Passed    2.27 sec
+4/7 Test #1699: ts_http_streaming_rxtvm_noopt ........   Passed    2.27 sec
+5/7 Test #1700: ts_http_streaming_rxtvm_opt ..........   Passed    2.29 sec
+6/7 Test #1698: ts_http_streaming_rxbvm_opt ..........   Passed    2.31 sec
+7/7 Test #1680: testConcurrency_noopt ................   Passed    5.16 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+f1g           =   9.15 sec*proc (4 tests)
+gate_f        =   9.15 sec*proc (4 tests)
+http          =   9.15 sec*proc (4 tests)
+levelg        =   9.15 sec*proc (4 tests)
+library       =   9.15 sec*proc (4 tests)
+linked        =   4.55 sec*proc (2 tests)
+linked_opt    =   6.67 sec*proc (3 tests)
+rxbvm         =   4.59 sec*proc (2 tests)
+rxtvm         =   4.57 sec*proc (2 tests)
+streaming     =   9.15 sec*proc (4 tests)
+
+Total Test time (real) = 210.22 sec

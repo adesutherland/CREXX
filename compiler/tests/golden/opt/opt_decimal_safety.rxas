@@ -1,29 +1,21 @@
 /*
  * SOURCE                 : opt_decimal_safety.crexx
- * BUILT                  : 2026-06-12 15:50:25
  */
 
 .globals=0
 
-main() .locals=4
+main() .locals=2
    .meta "opt_decimal_safety.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "opt_decimal_safety.crexx" 4 1 11 "call Case1"
-   load r0,0
-   call r1,Case1(),r0
+   call r1,Case1()
    .traceevent "F" 4 "R" "V" "r" 1 1 1 0 "case1" ""
    .srcstep 2 2 17 "opt_decimal_safety.crexx" 5 1 11 "call Case2"
-   load r0,0
-   call r2,Case2(),r0
-   .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "case2" ""
+   call r0,Case2()
+   .traceevent "F" 4 "R" "V" "r" 0 2 2 0 "case2" ""
    .srcstep 3 3 17 "opt_decimal_safety.crexx" 6 1 11 "call Case3"
-   load r0,0
-   call r3,Case3(),r0
-   .traceevent "F" 4 "R" "V" "r" 3 3 3 0 "case3" ""
+   call r0,Case3()
+   .traceevent "F" 4 "R" "V" "r" 0 3 3 0 "case3" ""
    .srcstep 5 5 17 "opt_decimal_safety.crexx" 7 1 19 "call TestInherited"
    .srcstep 4 4 17 "opt_decimal_safety.crexx" 30 5 15 "    say 1.0d/3"
    say "0.333333333333333333"
@@ -33,11 +25,7 @@ main() .locals=4
 Case1() .locals=1
    .meta "opt_decimal_safety.case1"="b" ".void" Case1() ""
    .srcstep 9 9 17 "opt_decimal_safety.crexx" 10 1 17 "Case1: procedure"
-   setnumdgts 5
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 5,1,1
    .srcstep 7 7 17 "opt_decimal_safety.crexx" 12 5 15 "    say 1.0d/3"
    say "0.33333"
    .srcstep 8 8 17 "opt_decimal_safety.crexx" 13 5 11 "    return"
@@ -46,11 +34,7 @@ Case1() .locals=1
 Case2() .locals=1
    .meta "opt_decimal_safety.case2"="b" ".void" Case2() ""
    .srcstep 12 12 17 "opt_decimal_safety.crexx" 15 1 17 "Case2: procedure"
-   setnumdgts 9
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 9,1,1
    .srcstep 10 10 17 "opt_decimal_safety.crexx" 17 5 15 "    say 1.0d/3"
    say "0.333333333"
    .srcstep 11 11 17 "opt_decimal_safety.crexx" 18 5 11 "    return"

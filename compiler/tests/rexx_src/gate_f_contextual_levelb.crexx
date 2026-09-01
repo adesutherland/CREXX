@@ -1,0 +1,15 @@
+options levelb
+namespace gate_f_contextual_levelb
+
+task: procedure = .int
+  return 40
+
+parallel: procedure = .int
+  return 2
+
+main: procedure = .int
+  task = task()
+  parallel = parallel()
+  using = task + parallel
+  if using <> 42 then return 1
+  return 0

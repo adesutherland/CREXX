@@ -1,0 +1,78 @@
+options levelb
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 | argv[1] <> "2.2" then return fail("test input")
+  decimal_source = argv[1] as .decimal
+  length_result = .int
+
+  /* Distinguishing regression: an explicitly empty destination has a trusted
+   * zero codepoint count before dcopy/dtos replaces its string bytes. */
+  empty_destination = ""
+  empty_destination = decimal_source as .string
+  assembler strlen length_result,empty_destination
+  if empty_destination <> "2.2" then return fail("empty destination bytes")
+  if length_result <> 3 then return fail("empty destination codepoint length")
+
+  /* A previous non-ASCII representation must not donate its cached count. */
+  unicode_destination = "é🙂"
+  unicode_destination = decimal_source as .string
+  assembler strlen length_result,unicode_destination
+  if unicode_destination <> "2.2" then return fail("Unicode destination bytes")
+  if length_result <> 3 then return fail("Unicode destination codepoint length")
+
+  /* A typed-null destination is a control: it has no trusted old string count. */
+  null_destination = .string
+  null_destination = decimal_source as .string
+  assembler strlen length_result,null_destination
+  if null_destination <> "2.2" then return fail("typed-null destination bytes")
+  if length_result <> 3 then return fail("typed-null destination codepoint length")
+
+  /* Conversion writes through the storage location without detaching a live
+   * reference identity for that location. */
+  aliased_destination = "é"
+  destination_ref = reference .string
+  destination_ref = reference aliased_destination
+  aliased_destination = decimal_source as .string
+  assembler strlen length_result,aliased_destination
+  if <refvalid>(destination_ref) = 0 then return fail("destination reference invalidated")
+  if snapshot destination_ref <> "2.2" then return fail("destination reference bytes")
+  if length_result <> 3 then return fail("destination reference codepoint length")
+
+  /* Sibling in-place numeric string producers are controls for the same cache
+   * contract. */
+  integer_source = 123
+  integer_destination = "é"
+  integer_destination = integer_source as .string
+  assembler strlen length_result,integer_destination
+  if integer_destination <> "123" | length_result <> 3 then return fail("integer conversion")
+
+  float_source = 1.5
+  float_destination = "é🙂"
+  float_destination = float_source as .string
+  assembler strlen length_result,float_destination
+  if float_destination <> "1.5" | length_result <> 3 then return fail("float conversion")
+
+  boolean_source = 1 as .boolean
+  boolean_destination = "é🙂"
+  boolean_destination = boolean_source as .string
+  assembler strlen length_result,boolean_destination
+  if boolean_destination <> "1" | length_result <> 1 then return fail("boolean conversion")
+
+  /* DEXTR writes a coefficient into an independently initialized destination. */
+  coefficient = "é🙂"
+  exponent = .int
+  extract_source = "1234.5" as .decimal
+  assembler dextr coefficient,exponent,extract_source
+  assembler strlen length_result,coefficient
+  if coefficient <> "1.2345" then return fail("decimal extract bytes")
+  if exponent <> 3 then return fail("decimal extract exponent")
+  if length_result <> 6 then return fail("decimal extract codepoint length")
+
+  say "PASS: PERF2-07 V3 representation validity"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

@@ -1,0 +1,166 @@
+name: Sanitizer QA
+
+on:
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    - cron: '47 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  assurance-gate:
+    name: Check for an unqualified develop change
+    runs-on: ubuntu-24.04
+    outputs:
+      should_run: ${{ steps.decision.outputs.should_run }}
+      target_sha: ${{ steps.target.outputs.target_sha }}
+
+    steps:
+      - name: Resolve the commit to qualify
+        id: target
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          target_sha="${GITHUB_SHA}"
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            target_sha="$(
+              gh api --method GET \
+                "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" \
+                --jq '.object.sha'
+            )"
+          fi
+          echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Look for successful sanitizer assurance of this develop commit
+        id: qualified
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-assurance/sanitizer-qualified-sha
+          key: crexx-sanitizer-qualified-${{ steps.target.outputs.target_sha }}
+          lookup-only: true
+
+      - name: Decide whether sanitizer assurance is required
+        id: decision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Manual and version-tag sanitizer runs are unconditional." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.qualified.outputs.cache-hit }}" = "true" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping sanitizer QA: develop ${{ steps.target.outputs.target_sha }} already passed the scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Running sanitizer QA: develop ${{ steps.target.outputs.target_sha }} has not passed a scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  sanitizer:
+    name: ${{ matrix.name }}
+    needs: assurance-gate
+    if: needs.assurance-gate.outputs.should_run == 'true'
+    runs-on: ${{ matrix.os }}
+    # Full Linux ASan/LSan now needs about 102 minutes with Unicode conformance.
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64 ASan/LSan
+            os: ubuntu-24.04
+            platform: linux
+            cmake_args: ""
+          - name: macOS arm64 ASan
+            os: macos-15
+            platform: macos
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.assurance-gate.outputs.target_sha }}
+
+      - name: Configure instrumented Debug build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            ${{ matrix.cmake_args }}
+
+      - name: Full instrumented build and CTest
+        shell: bash
+        run: |
+          set -euo pipefail
+          sanitizer_args=(
+            --build-dir "${RUNNER_TEMP}/debugasan"
+            --phase full
+            --build-jobs 4
+            --test-jobs 8
+            --exclude-label '^performance-measurement$'
+            --no-live-tail
+          )
+
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            sanitizer_args+=(--build-leaks off --leaks off)
+          else
+            sanitizer_args+=(--build-leaks on --leaks on)
+          fi
+
+          tools/asan-run.sh "${sanitizer_args[@]}"
+
+      - name: Upload sanitizer logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-logs-${{ matrix.platform }}
+          path: ${{ runner.temp }}/debugasan/asan-logs
+          if-no-files-found: error
+          retention-days: 14
+
+  record-assurance:
+    name: Record qualified develop commit
+    needs:
+      - assurance-gate
+      - sanitizer
+    if: >-
+      always() &&
+      github.event_name == 'schedule' &&
+      needs.assurance-gate.outputs.should_run == 'true' &&
+      needs.sanitizer.result == 'success'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Write assurance marker
+        shell: bash
+        run: |
+          mkdir -p .ci-assurance
+          echo "${{ needs.assurance-gate.outputs.target_sha }}" \
+            > .ci-assurance/sanitizer-qualified-sha
+
+      - name: Retain assurance marker
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-assurance/sanitizer-qualified-sha
+          key: crexx-sanitizer-qualified-${{ needs.assurance-gate.outputs.target_sha }}

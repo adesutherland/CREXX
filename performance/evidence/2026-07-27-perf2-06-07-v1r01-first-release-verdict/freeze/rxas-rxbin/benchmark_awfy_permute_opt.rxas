@@ -1,0 +1,633 @@
+/*
+ * SOURCE                 : awfy_permute.crexx
+ */
+
+.meta "awfy_permute.permutebenchmark"="b" ".unknown" .class
+.meta "awfy_permute.permutebenchmark.count"="b" ".int" .attr 1
+.meta "awfy_permute.permutebenchmark.values"="b" ".int[0 to 5]" .attr 2
+.globals=0
+
+main() .locals=26
+   .meta "awfy_permute.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_permute.crexx" 8 5 19 "arg argv = .string[]"
+   .meta "awfy_permute.main.argv"="b" ".string[*]" r0
+   brtpandt l4c,a1,512
+   copy r0,a1
+   br l4d
+l4c:
+   swap r0,a1
+l4d:
+   .srcstep 2 2 17 "awfy_permute.crexx" 10 1 16 "repetitions = 1"
+   .meta "awfy_permute.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_permute.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   igte r4,r4,1
+   .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+   brf l23iffalse,r4
+   .srcstep 5 5 17 "awfy_permute.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_permute.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minlinkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   igetunlink r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+l23iffalse:
+   .srcstep 10 10 17 "awfy_permute.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+   ilt r5,r1,1
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l30iffalse,r5
+   .srcstep 11 11 17 "awfy_permute.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "awfy_permute.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 8 8 17 "awfy_permute.crexx" 12 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_permute.crexx" 27 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 7 7 17 "awfy_permute.crexx" 28 3 11 "  return 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r3,r4
+   br l205bexprend
+l205bexprend:
+   ret r3
+l30iffalse:
+   .srcstep 12 12 17 "awfy_permute.crexx" 14 1 11 "result = 0"
+   .meta "awfy_permute.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+   .srcstep 59 59 17 "awfy_permute.crexx" 15 1 3 "do iteration = 1 to repetitions"
+   .srcstep 13 13 17 "awfy_permute.crexx" 15 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_permute.main.iteration"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+   .srcstep 14 14 17 "awfy_permute.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l34dostart:
+   .srcstep 14 14 17 "awfy_permute.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   igt r3,r4,r1
+   brt l34doend,r3
+   .srcstep 20 20 17 "awfy_permute.crexx" 16 3 32 "  benchmark = .PermuteBenchmark()"
+   .srcstep 16 16 6 "awfy_permute.crexx" 34 3 13 "  *: factory"
+   setattrs r6,3
+   .srcstep 17 17 6 "awfy_permute.crexx" 34 3 13 "  *: factory"
+   setobjtype r6,"awfy_permute.permutebenchmark"
+   .srcstep 18 18 17 "awfy_permute.crexx" 35 5 14 "    count = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+   isetattr1 r6,1,r8
+   .srcstep 19 19 33 "awfy_permute.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 19 19 0 "§factory" ""
+   copy r5,r6
+   .traceevent "A" 6 "R" "O" "r" 5 19 19 0 "benchmark" ""
+   .srcstep 51 51 17 "awfy_permute.crexx" 17 3 25 "  result = benchmark.run()"
+   .srcstep 21 21 33 "awfy_permute.crexx" 17 12 21 "  result = benchmark.run()"
+   .traceevent "V" 6 "R" "O" "r" 5 21 21 0 "benchmark" ""
+   copy r10,r5
+   .traceevent "A" 6 "R" "O" "r" 10 21 21 0 "§this" ""
+   .srcstep 22 22 17 "awfy_permute.crexx" 39 5 14 "    count = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 22 22 0 "" ""
+   isetattr1 r10,1,r7
+   .srcstep 47 47 17 "awfy_permute.crexx" 40 5 20 "    call permute(6)"
+   .srcstep 23 23 33 "awfy_permute.crexx" 40 10 17 "    call permute(6)"
+   .traceevent "V" 6 "R" "O" "r" 10 23 23 0 "§this" ""
+   copy r11,r10
+   .traceevent "A" 6 "R" "O" "r" 11 23 23 0 "§this" ""
+   .srcstep 24 24 17 "awfy_permute.crexx" 45 5 22 "    count = count + 1"
+   linkattr1 r7,r11,1
+   .traceevent "V" 6 "R" "I" "r" 7 24 24 0 "count" ""
+   iadd r12,r7,1
+   unlink r7
+   .traceevent "O" 4 "R" "I" "r" 12 24 24 0 "" ""
+   isetattr1 r11,1,r12
+   .srcstep 25 25 17 "awfy_permute.crexx" 48 7 23 "      call permute(n1)"
+   .traceevent "V" 6 "R" "O" "r" 11 25 25 0 "§this" ""
+   load r14,5
+   .traceevent "L" 4 "R" "I" "r" 14 25 25 0 "" ""
+   settp r11,256
+   call2 r8,§awfy_permute.permutebenchmark.permute(),r11,r14
+   .traceevent "F" 4 "R" "V" "r" 8 25 25 0 "permute" ""
+   .srcstep 44 44 17 "awfy_permute.crexx" 49 7 9 "      do i = n1 to 0 by -1"
+   .srcstep 26 26 17 "awfy_permute.crexx" 49 10 16 "      do i = n1 to 0 by -1"
+   load r14,5
+   .traceevent "L" 4 "R" "I" "r" 14 26 26 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 26 26 0 "i" ""
+   .srcstep 27 27 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 0 0 0 "" ""
+   .srcstep 28 28 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+   load r7,-1
+   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+l345dostart:
+   .srcstep 27 27 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   ilt r12,r14,r13
+   brt l345doend,r12
+   .srcstep 35 35 17 "awfy_permute.crexx" 50 9 25 "        call swap(n1, i)"
+   .srcstep 29 29 33 "awfy_permute.crexx" 50 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 11 29 29 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 11 29 29 0 "§this" ""
+   .srcstep 30 30 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 14 30 30 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 14 30 30 0 "j" ""
+   .srcstep 31 31 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linkattr1 r17,r11,2
+   setattrs r17,6
+   linkattr1 r16,r17,6
+   .traceevent "V" 6 "R" "I" "r" 16 31 31 0 "values" ""
+   igetunlink r15,r16
+   .traceevent "A" 6 "R" "I" "r" 15 31 31 0 "temporary" ""
+   unlink r17
+   .srcstep 32 32 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linkattr1 r16,r11,2
+   setattrs r16,6
+   linkattr1 r17,r16,6
+   linksetattrslinkadd r19,r11,2,6,r18,r14,1
+   .traceevent "V" 6 "R" "I" "r" 14 32 32 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 14 32 32 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 18 32 32 0 "values" ""
+   igetunlink r17,r18
+   .traceevent "A" 6 "R" "I" "r" 17 32 32 0 "values" ""
+   unlinkn r19,r17
+   unlink r16
+   .srcstep 33 33 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r18,r11,2,6,r20,r14,1
+   .traceevent "V" 6 "R" "I" "r" 14 33 33 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 14 33 33 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 15 33 33 0 "temporary" ""
+   isetunlinkn r20,r15,r18
+   .traceevent "A" 6 "R" "I" "r" 15 33 33 0 "values" ""
+   .srcstep 34 34 6 "awfy_permute.crexx" 50 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+   .srcstep 36 36 17 "awfy_permute.crexx" 51 9 25 "        call permute(n1)"
+   .traceevent "V" 6 "R" "O" "r" 11 36 36 0 "§this" ""
+   load r20,5
+   .traceevent "L" 4 "R" "I" "r" 20 36 36 0 "" ""
+   settp r11,256
+   call2 r17,§awfy_permute.permutebenchmark.permute(),r11,r20
+   .traceevent "F" 4 "R" "V" "r" 17 36 36 0 "permute" ""
+   .srcstep 43 43 17 "awfy_permute.crexx" 52 9 25 "        call swap(n1, i)"
+   .srcstep 37 37 33 "awfy_permute.crexx" 52 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 11 37 37 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 11 37 37 0 "§this" ""
+   .srcstep 38 38 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 14 38 38 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 14 38 38 0 "j" ""
+   .srcstep 39 39 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linkattr1 r19,r11,2
+   setattrs r19,6
+   linkattr1 r20,r19,6
+   .traceevent "V" 6 "R" "I" "r" 20 39 39 0 "values" ""
+   igetunlink r21,r20
+   .traceevent "A" 6 "R" "I" "r" 21 39 39 0 "temporary" ""
+   unlink r19
+   .srcstep 40 40 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linkattr1 r19,r11,2
+   setattrs r19,6
+   linkattr1 r20,r19,6
+   linksetattrslinkadd r22,r11,2,6,r18,r14,1
+   .traceevent "V" 6 "R" "I" "r" 14 40 40 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 14 40 40 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 18 40 40 0 "values" ""
+   igetunlink r20,r18
+   .traceevent "A" 6 "R" "I" "r" 20 40 40 0 "values" ""
+   unlinkn r22,r20
+   unlink r19
+   .srcstep 41 41 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r24,r11,2,6,r23,r14,1
+   .traceevent "V" 6 "R" "I" "r" 14 41 41 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 14 41 41 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 21 41 41 0 "temporary" ""
+   isetunlinkn r23,r21,r24
+   .traceevent "A" 6 "R" "I" "r" 21 41 41 0 "values" ""
+   .srcstep 42 42 6 "awfy_permute.crexx" 52 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+l345doinc:
+   .srcstep 28 28 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+ iadd r14,r7,r14
+   .srcstep 45 45 17 "awfy_permute.crexx" 53 7 10 "      end"
+   br l345dostart
+l345doend:
+   .srcstep 46 46 6 "awfy_permute.crexx" 40 10 20 "    call permute(6)"
+   .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+   copy r10,r11
+   .srcstep 48 48 33 "awfy_permute.crexx" 41 12 17 "    return count"
+   linkattr1 r25,r10,1
+   .traceevent "V" 6 "R" "I" "r" 25 48 48 0 "count" ""
+   igetunlink r9,r25
+   .traceevent "A" 6 "R" "I" "r" 9 48 48 0 "__inline_ret_109_110" ""
+   .srcstep 49 49 6 "awfy_permute.crexx" 17 12 25 "  result = benchmark.run()"
+   .traceevent "V" 6 "R" "O" "r" 10 0 0 0 "§this" ""
+   copy r5,r10
+   .srcstep 50 50 33 "awfy_permute.crexx" 41 5 11 "    return count"
+   .traceevent "V" 6 "R" "I" "r" 9 50 50 0 "__inline_ret_109_110" ""
+   copy r2,r9
+   .traceevent "A" 6 "R" "I" "r" 2 50 50 0 "result" ""
+   .srcstep 57 57 17 "awfy_permute.crexx" 18 3 20 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 9 57 57 0 "result" ""
+   ine r25,r9,8660
+   .traceevent "O" 4 "R" "B" "r" 25 57 57 0 "" ""
+   brf l60iffalse,r25
+   .srcstep 58 58 17 "awfy_permute.crexx" 18 21 25 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+   .srcstep 56 56 17 "awfy_permute.crexx" 18 26 76 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+   .meta "awfy_permute.main.benchmark"="b" ".permutebenchmark" r5
+   .srcstep 55 55 17 "awfy_permute.crexx" 18 33 37 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+   .srcstep 52 52 33 "awfy_permute.crexx" 26 7 14 "  arg message = .string"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 52 52 0 "result" ""
+   concat r24,"expected 8660 calls, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 24 52 52 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 24 52 52 0 "message" ""
+   .srcstep 53 53 17 "awfy_permute.crexx" 27 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 24 53 53 0 "message" ""
+   sconcat r23,"FAIL:",r24
+   .traceevent "O" 4 "R" "S" "r" 23 53 53 0 "" ""
+   say r23
+   .srcstep 54 54 17 "awfy_permute.crexx" 28 3 11 "  return 1"
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 56 56 0 "" ""
+   icopy r22,r23
+   br l467bexprend
+l467bexprend:
+   ret r22
+l60iffalse:
+l34doinc:
+   .srcstep 15 15 17 "awfy_permute.crexx" 15 4 13 "do iteration = 1 to repetitions"
+   inc r4
+   .srcstep 60 60 17 "awfy_permute.crexx" 19 1 4 "end"
+   br l34dostart
+l34doend:
+   endlife r5
+   .meta "awfy_permute.main.benchmark"
+   .meta "awfy_permute.main.iteration"
+   .srcstep 61 61 17 "awfy_permute.crexx" 21 1 69 "say \"benchmark=awfy_permute repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 61 61 0 "repetitions" ""
+   concat r25,"benchmark=awfy_permute repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 25 61 61 0 "" ""
+   sconcat r25,r25,"result="
+   .traceevent "O" 4 "R" "S" "r" 25 61 61 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 61 61 0 "result" ""
+   concat r25,r25,r2
+   .traceevent "O" 4 "R" "S" "r" 25 61 61 0 "" ""
+   say r25
+   .srcstep 62 62 17 "awfy_permute.crexx" 22 1 25 "say \"PASS: AWFY Permute\""
+   say "PASS: AWFY Permute"
+   .srcstep 63 63 17 "awfy_permute.crexx" 23 1 9 "return 0"
+   ret 0
+   .meta "awfy_permute.main.argv"
+   .meta "awfy_permute.main.repetitions"
+   .meta "awfy_permute.main.result"
+
+§awfy_permute.permutebenchmark.§factory() .locals=3
+   .meta "awfy_permute.permutebenchmark.§factory"="b" ".awfy_permute..permutebenchmark" §awfy_permute.permutebenchmark.§factory() ""
+   .srcstep 69 69 17 "awfy_permute.crexx" 34 3 13 "  *: factory"
+   setattrs r0,3
+   setobjtype r0,"awfy_permute.permutebenchmark"
+   numsci 18,1,1
+   .srcstep 67 67 17 "awfy_permute.crexx" 35 5 14 "    count = 0"
+   .meta "awfy_permute.permutebenchmark.§factory.§factory"="b" ".permutebenchmark" r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 67 67 0 "" ""
+   isetattr1 r0,1,r2
+   .srcstep 68 68 17 "awfy_permute.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 68 68 0 "§factory" ""
+   ret r0
+   .meta "awfy_permute.permutebenchmark.§factory.§factory"
+
+§awfy_permute.permutebenchmark.run() .locals=18
+   .meta "awfy_permute.permutebenchmark.run"="b" ".int" §awfy_permute.permutebenchmark.run() ""
+   .srcstep 97 97 17 "awfy_permute.crexx" 38 3 21 "  run: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 70 70 17 "awfy_permute.crexx" 39 5 14 "    count = 0"
+   .meta "awfy_permute.permutebenchmark.run.§this"="b" ".permutebenchmark" a1
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 70 70 0 "" ""
+   isetattr1 a1,1,r2
+   .srcstep 95 95 17 "awfy_permute.crexx" 40 5 20 "    call permute(6)"
+   .srcstep 71 71 33 "awfy_permute.crexx" 40 10 17 "    call permute(6)"
+   .traceevent "V" 6 "R" "O" "a" 1 71 71 0 "§this" ""
+   copy r3,a1
+   .traceevent "A" 6 "R" "O" "r" 3 71 71 0 "§this" ""
+   .srcstep 72 72 17 "awfy_permute.crexx" 45 5 22 "    count = count + 1"
+   linkattr1 r1,r3,1
+   .traceevent "V" 6 "R" "I" "r" 1 72 72 0 "count" ""
+   iadd r4,r1,1
+   unlink r1
+   .traceevent "O" 4 "R" "I" "r" 4 72 72 0 "" ""
+   isetattr1 r3,1,r4
+   .srcstep 73 73 17 "awfy_permute.crexx" 48 7 23 "      call permute(n1)"
+   .traceevent "V" 6 "R" "O" "r" 3 73 73 0 "§this" ""
+   load r4,5
+   .traceevent "L" 4 "R" "I" "r" 4 73 73 0 "" ""
+   settp r3,256
+   call2 r1,§awfy_permute.permutebenchmark.permute(),r3,r4
+   .traceevent "F" 4 "R" "V" "r" 1 73 73 0 "permute" ""
+   .srcstep 92 92 17 "awfy_permute.crexx" 49 7 9 "      do i = n1 to 0 by -1"
+   .srcstep 74 74 17 "awfy_permute.crexx" 49 10 16 "      do i = n1 to 0 by -1"
+   load r4,5
+   .traceevent "L" 4 "R" "I" "r" 4 74 74 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 74 74 0 "i" ""
+   .srcstep 75 75 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+   .srcstep 76 76 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+   load r6,-1
+   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+l255dostart:
+   .srcstep 75 75 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   ilt r5,r4,r2
+   brt l255doend,r5
+   .srcstep 83 83 17 "awfy_permute.crexx" 50 9 25 "        call swap(n1, i)"
+   .srcstep 77 77 33 "awfy_permute.crexx" 50 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 3 77 77 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 3 77 77 0 "§this" ""
+   .srcstep 78 78 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 4 78 78 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 4 78 78 0 "j" ""
+   .srcstep 79 79 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linkattr1 r9,r3,2
+   setattrs r9,6
+   linkattr1 r8,r9,6
+   .traceevent "V" 6 "R" "I" "r" 8 79 79 0 "values" ""
+   igetunlink r7,r8
+   .traceevent "A" 6 "R" "I" "r" 7 79 79 0 "temporary" ""
+   unlink r9
+   .srcstep 80 80 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linkattr1 r8,r3,2
+   setattrs r8,6
+   linkattr1 r9,r8,6
+   linksetattrslinkadd r11,r3,2,6,r10,r4,1
+   .traceevent "V" 6 "R" "I" "r" 4 80 80 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 4 80 80 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 10 80 80 0 "values" ""
+   igetunlink r9,r10
+   .traceevent "A" 6 "R" "I" "r" 9 80 80 0 "values" ""
+   unlinkn r11,r9
+   unlink r8
+   .srcstep 81 81 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r10,r3,2,6,r12,r4,1
+   .traceevent "V" 6 "R" "I" "r" 4 81 81 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 4 81 81 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 7 81 81 0 "temporary" ""
+   isetunlinkn r12,r7,r10
+   .traceevent "A" 6 "R" "I" "r" 7 81 81 0 "values" ""
+   .srcstep 82 82 6 "awfy_permute.crexx" 50 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
+   .srcstep 84 84 17 "awfy_permute.crexx" 51 9 25 "        call permute(n1)"
+   .traceevent "V" 6 "R" "O" "r" 3 84 84 0 "§this" ""
+   load r12,5
+   .traceevent "L" 4 "R" "I" "r" 12 84 84 0 "" ""
+   settp r3,256
+   call2 r9,§awfy_permute.permutebenchmark.permute(),r3,r12
+   .traceevent "F" 4 "R" "V" "r" 9 84 84 0 "permute" ""
+   .srcstep 91 91 17 "awfy_permute.crexx" 52 9 25 "        call swap(n1, i)"
+   .srcstep 85 85 33 "awfy_permute.crexx" 52 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 3 85 85 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "r" 3 85 85 0 "§this" ""
+   .srcstep 86 86 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 4 86 86 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 4 86 86 0 "j" ""
+   .srcstep 87 87 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linkattr1 r11,r3,2
+   setattrs r11,6
+   linkattr1 r12,r11,6
+   .traceevent "V" 6 "R" "I" "r" 12 87 87 0 "values" ""
+   igetunlink r13,r12
+   .traceevent "A" 6 "R" "I" "r" 13 87 87 0 "temporary" ""
+   unlink r11
+   .srcstep 88 88 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linkattr1 r11,r3,2
+   setattrs r11,6
+   linkattr1 r12,r11,6
+   linksetattrslinkadd r14,r3,2,6,r10,r4,1
+   .traceevent "V" 6 "R" "I" "r" 4 88 88 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 4 88 88 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 10 88 88 0 "values" ""
+   igetunlink r12,r10
+   .traceevent "A" 6 "R" "I" "r" 12 88 88 0 "values" ""
+   unlinkn r14,r12
+   unlink r11
+   .srcstep 89 89 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r16,r3,2,6,r15,r4,1
+   .traceevent "V" 6 "R" "I" "r" 4 89 89 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 4 89 89 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 13 89 89 0 "temporary" ""
+   isetunlinkn r15,r13,r16
+   .traceevent "A" 6 "R" "I" "r" 13 89 89 0 "values" ""
+   .srcstep 90 90 6 "awfy_permute.crexx" 52 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
+l255doinc:
+   .srcstep 76 76 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+ iadd r4,r6,r4
+   .srcstep 93 93 17 "awfy_permute.crexx" 53 7 10 "      end"
+   br l255dostart
+l255doend:
+   .srcstep 94 94 6 "awfy_permute.crexx" 40 10 20 "    call permute(6)"
+   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
+   copy a1,r3
+   .srcstep 96 96 17 "awfy_permute.crexx" 41 5 17 "    return count"
+   linkattr1 r17,a1,1
+   .traceevent "V" 6 "R" "I" "r" 17 96 96 0 "count" ""
+   ret r17
+   .meta "awfy_permute.permutebenchmark.run.§this"
+
+§awfy_permute.permutebenchmark.permute() .locals=21
+   .meta "awfy_permute.permutebenchmark.permute"="b" ".void" §awfy_permute.permutebenchmark.permute() "n=.int"
+   .srcstep 127 127 17 "awfy_permute.crexx" 43 3 26 "  permute: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 98 98 17 "awfy_permute.crexx" 44 9 17 "    arg n = .int"
+   .meta "awfy_permute.permutebenchmark.permute.n"="b" ".int" a2
+   .meta "awfy_permute.permutebenchmark.permute.§this"="b" ".permutebenchmark" a1
+   .srcstep 99 99 17 "awfy_permute.crexx" 45 5 22 "    count = count + 1"
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "I" "r" 3 99 99 0 "count" ""
+   iadd r4,r3,1
+   unlink r3
+   .traceevent "O" 4 "R" "I" "r" 4 99 99 0 "" ""
+   isetattr1 a1,1,r4
+   .srcstep 124 124 17 "awfy_permute.crexx" 46 5 14 "    if n <> 0 then do"
+   .traceevent "V" 6 "R" "I" "a" 2 124 124 0 "n" ""
+   ine r4,a2,0
+   .traceevent "O" 4 "R" "B" "r" 4 124 124 0 "" ""
+   brf l156iffalse,r4
+   .srcstep 125 125 17 "awfy_permute.crexx" 46 15 19 "    if n <> 0 then do"
+   .srcstep 100 100 17 "awfy_permute.crexx" 47 7 17 "      n1 = n - 1"
+   .meta "awfy_permute.permutebenchmark.permute.n1"="b" ".int" r3
+   .traceevent "V" 6 "R" "I" "a" 2 100 100 0 "n" ""
+   isub r3,a2,1
+   .traceevent "O" 4 "R" "I" "r" 3 100 100 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 100 100 0 "n1" ""
+   .srcstep 101 101 17 "awfy_permute.crexx" 48 7 23 "      call permute(n1)"
+   .traceevent "V" 6 "R" "O" "a" 1 101 101 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "r" 3 101 101 0 "n1" ""
+   settp a1,256
+   call2 r2,§awfy_permute.permutebenchmark.permute(),a1,r3
+   .traceevent "F" 4 "R" "V" "r" 2 101 101 0 "permute" ""
+   .srcstep 122 122 17 "awfy_permute.crexx" 49 7 9 "      do i = n1 to 0 by -1"
+   .srcstep 102 102 17 "awfy_permute.crexx" 49 10 16 "      do i = n1 to 0 by -1"
+   .meta "awfy_permute.permutebenchmark.permute.i"="b" ".int" r7
+   .traceevent "V" 6 "R" "I" "r" 3 102 102 0 "n1" ""
+   icopy r7,r3
+   .traceevent "A" 6 "R" "I" "r" 7 102 102 0 "i" ""
+   .srcstep 103 103 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+   .srcstep 104 104 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+   load r8,-1
+   .traceevent "L" 4 "R" "I" "r" 8 0 0 0 "" ""
+l134dostart:
+   .srcstep 103 103 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+   ilt r5,r7,r6
+   brt l134doend,r5
+   .srcstep 112 112 17 "awfy_permute.crexx" 50 9 25 "        call swap(n1, i)"
+   .srcstep 105 105 33 "awfy_permute.crexx" 50 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "a" 1 105 105 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "a" 1 105 105 0 "§this" ""
+   .srcstep 106 106 33 "awfy_permute.crexx" 58 9 10 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 3 106 106 0 "n1" ""
+   .traceevent "A" 6 "R" "I" "r" 3 106 106 0 "i" ""
+   .srcstep 107 107 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 7 107 107 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 7 107 107 0 "j" ""
+   .srcstep 108 108 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linksetattrslinkadd r11,a1,2,6,r10,r3,1
+   .traceevent "V" 6 "R" "I" "r" 3 108 108 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 108 108 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 10 108 108 0 "values" ""
+   igetunlink r9,r10
+   .traceevent "A" 6 "R" "I" "r" 9 108 108 0 "temporary" ""
+   unlink r11
+   .srcstep 109 109 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linksetattrslinkadd r10,a1,2,6,r12,r3,1
+   .traceevent "V" 6 "R" "I" "r" 3 109 109 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 109 109 0 "values" ""
+   linksetattrslinkadd r14,a1,2,6,r13,r7,1
+   .traceevent "V" 6 "R" "I" "r" 7 109 109 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 7 109 109 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 13 109 109 0 "values" ""
+   igetunlink r12,r13
+   .traceevent "A" 6 "R" "I" "r" 12 109 109 0 "values" ""
+   unlinkn r14,r12
+   unlink r10
+   .srcstep 110 110 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r13,a1,2,6,r15,r7,1
+   .traceevent "V" 6 "R" "I" "r" 7 110 110 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 7 110 110 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 9 110 110 0 "temporary" ""
+   isetunlinkn r15,r9,r13
+   .traceevent "A" 6 "R" "I" "r" 9 110 110 0 "values" ""
+   .srcstep 111 111 6 "awfy_permute.crexx" 50 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "a" 1 0 0 0 "§this" ""
+   .srcstep 113 113 17 "awfy_permute.crexx" 51 9 25 "        call permute(n1)"
+   .traceevent "V" 6 "R" "O" "a" 1 113 113 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "r" 3 113 113 0 "n1" ""
+   settp a1,256
+   call2 r12,§awfy_permute.permutebenchmark.permute(),a1,r3
+   .traceevent "F" 4 "R" "V" "r" 12 113 113 0 "permute" ""
+   .srcstep 121 121 17 "awfy_permute.crexx" 52 9 25 "        call swap(n1, i)"
+   .srcstep 114 114 33 "awfy_permute.crexx" 52 14 18 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "a" 1 114 114 0 "§this" ""
+   .traceevent "A" 6 "R" "O" "a" 1 114 114 0 "§this" ""
+   .srcstep 115 115 33 "awfy_permute.crexx" 58 9 10 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 3 115 115 0 "n1" ""
+   .traceevent "A" 6 "R" "I" "r" 3 115 115 0 "i" ""
+   .srcstep 116 116 33 "awfy_permute.crexx" 58 19 20 "    arg i = .int, j = .int"
+   .traceevent "V" 6 "R" "I" "r" 7 116 116 0 "i" ""
+   .traceevent "A" 6 "R" "I" "r" 7 116 116 0 "j" ""
+   .srcstep 117 117 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   linksetattrslinkadd r13,a1,2,6,r15,r3,1
+   .traceevent "V" 6 "R" "I" "r" 3 117 117 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 117 117 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 15 117 117 0 "values" ""
+   igetunlink r16,r15
+   .traceevent "A" 6 "R" "I" "r" 16 117 117 0 "temporary" ""
+   unlink r13
+   .srcstep 118 118 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linksetattrslinkadd r13,a1,2,6,r15,r3,1
+   .traceevent "V" 6 "R" "I" "r" 3 118 118 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 118 118 0 "values" ""
+   linksetattrslinkadd r17,a1,2,6,r11,r7,1
+   .traceevent "V" 6 "R" "I" "r" 7 118 118 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 7 118 118 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 11 118 118 0 "values" ""
+   igetunlink r15,r11
+   .traceevent "A" 6 "R" "I" "r" 15 118 118 0 "values" ""
+   unlinkn r17,r15
+   unlink r13
+   .srcstep 119 119 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r19,a1,2,6,r18,r7,1
+   .traceevent "V" 6 "R" "I" "r" 7 119 119 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 7 119 119 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 16 119 119 0 "temporary" ""
+   isetunlinkn r18,r16,r19
+   .traceevent "A" 6 "R" "I" "r" 16 119 119 0 "values" ""
+   .srcstep 120 120 6 "awfy_permute.crexx" 52 14 25 "        call swap(n1, i)"
+   .traceevent "V" 6 "R" "O" "a" 1 0 0 0 "§this" ""
+l134doinc:
+   .srcstep 104 104 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+ iadd r7,r8,r7
+   .srcstep 123 123 17 "awfy_permute.crexx" 53 7 10 "      end"
+   br l134dostart
+l134doend:
+   .meta "awfy_permute.permutebenchmark.permute.i"
+   .meta "awfy_permute.permutebenchmark.permute.n1"
+l156iffalse:
+   .srcstep 126 126 17 "awfy_permute.crexx" 55 5 11 "    return"
+   ret
+   .meta "awfy_permute.permutebenchmark.permute.n"
+   .meta "awfy_permute.permutebenchmark.permute.§this"
+
+§awfy_permute.permutebenchmark.swap() .locals=10
+   .meta "awfy_permute.permutebenchmark.swap"="b" ".void" §awfy_permute.permutebenchmark.swap() "i=.int,j=.int"
+   .srcstep 134 134 17 "awfy_permute.crexx" 57 3 23 "  swap: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 128 128 17 "awfy_permute.crexx" 58 9 17 "    arg i = .int, j = .int"
+   .meta "awfy_permute.permutebenchmark.swap.i"="b" ".int" a2
+   .meta "awfy_permute.permutebenchmark.swap.§this"="b" ".permutebenchmark" a1
+   .srcstep 129 129 17 "awfy_permute.crexx" 58 19 27 "    arg i = .int, j = .int"
+   .meta "awfy_permute.permutebenchmark.swap.j"="b" ".int" a3
+   .srcstep 130 130 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+   .meta "awfy_permute.permutebenchmark.swap.temporary"="b" ".int" r2
+   linksetattrslinkadd r5,a1,2,6,r4,a2,1
+   .traceevent "V" 6 "R" "I" "a" 2 130 130 0 "i" ""
+   .traceevent "C" 4 "R" "I" "a" 2 130 130 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 4 130 130 0 "values" ""
+   igetunlink r2,r4
+   .traceevent "A" 6 "R" "I" "r" 2 130 130 0 "temporary" ""
+   unlink r5
+   .srcstep 131 131 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+   linksetattrslinkadd r4,a1,2,6,r6,a2,1
+   .traceevent "V" 6 "R" "I" "a" 2 131 131 0 "i" ""
+   .traceevent "C" 4 "R" "I" "a" 2 131 131 0 "values" ""
+   linksetattrslinkadd r8,a1,2,6,r7,a3,1
+   .traceevent "V" 6 "R" "I" "a" 3 131 131 0 "j" ""
+   .traceevent "C" 4 "R" "I" "a" 3 131 131 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 7 131 131 0 "values" ""
+   igetunlink r6,r7
+   .traceevent "A" 6 "R" "I" "r" 6 131 131 0 "values" ""
+   unlinkn r8,r6
+   unlink r4
+   .srcstep 132 132 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+   linksetattrslinkadd r7,a1,2,6,r9,a3,1
+   .traceevent "V" 6 "R" "I" "a" 3 132 132 0 "j" ""
+   .traceevent "C" 4 "R" "I" "a" 3 132 132 0 "values" ""
+   .traceevent "V" 6 "R" "I" "r" 2 132 132 0 "temporary" ""
+   isetunlinkn r9,r2,r7
+   .traceevent "A" 6 "R" "I" "r" 2 132 132 0 "values" ""
+   .srcstep 133 133 17 "awfy_permute.crexx" 62 5 11 "    return"
+   ret
+   .meta "awfy_permute.permutebenchmark.swap.i"
+   .meta "awfy_permute.permutebenchmark.swap.j"
+   .meta "awfy_permute.permutebenchmark.swap.temporary"
+   .meta "awfy_permute.permutebenchmark.swap.§this"

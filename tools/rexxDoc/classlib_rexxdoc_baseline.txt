@@ -1,0 +1,35 @@
+# Minimum RexxDoc marker lines by classlib source file.
+# Marker lines include /**, @param, @parm, @return, and @author.
+classlib/Concurrency.crexx 283
+classlib/Id.crexx 10
+classlib/KeyDB.crexx 51
+classlib/ObjectArrayList.crexx 35
+classlib/ObjectArrayListIterator.crexx 1
+classlib/ObjectIterable.crexx 1
+classlib/ObjectIterator.crexx 1
+classlib/ObjectLinkedList.crexx 1
+classlib/ObjectStack.crexx 1
+classlib/Os.crexx 27
+classlib/Qfind.crexx 1
+classlib/Rexx.crexx 172
+classlib/Scanlex.crexx 9
+classlib/StringArrayList.crexx 24
+classlib/StringArrayListIterator.crexx 11
+classlib/StringHashMap.crexx 33
+classlib/StringHashMapIterator.crexx 15
+classlib/StringHashSet.crexx 26
+classlib/StringHashSetIterator.crexx 10
+classlib/StringIterable.crexx 1
+classlib/StringIterator.crexx 1
+classlib/StringLinkedList.crexx 50
+classlib/StringObjectHashMap.crexx 31
+classlib/StringObjectHashMapIterator.crexx 17
+classlib/StringObjectTreeMap.crexx 32
+classlib/StringObjectTreeMapIterator.crexx 17
+classlib/StringOldTreeMap.crexx 36
+classlib/StringStack.crexx 15
+classlib/StringTreeMap.crexx 36
+classlib/StringTreeMapIterator.crexx 10
+classlib/StringTreeSet.crexx 29
+classlib/StringTreeSetIterator.crexx 10
+rxfnsg/rexx/http.crexx 179

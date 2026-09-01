@@ -27,7 +27,13 @@ options levelb
 
 namespace rxfnsb expose arraypop
 
-/* Remove and return the last element of ARRAY, or DEFAULT when empty. */
+/**
+ * Remove and return the last array element.
+ *
+ * @param array exposed one-based string array to mutate
+ * @param default optional value returned when array is empty
+ * @return removed value, or default
+ */
 arraypop: procedure=.string
   arg expose array=.string[], default=""
 
@@ -36,4 +42,4 @@ arraypop: procedure=.string
 
   item = array[hi]
   assembler DELATTRS1 array,hi,1
-return item
+  return item

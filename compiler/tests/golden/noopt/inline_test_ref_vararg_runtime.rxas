@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_ref_vararg_runtime.crexx
- * BUILT                  : 2026-05-27 17:53:37
  */
 
 .globals=0
@@ -8,11 +7,7 @@
 main() .locals=9
    .meta "inline_test_ref_vararg_runtime.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test_ref_vararg_runtime.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_vararg_runtime.crexx" 4 3 13 "  first = 10"
    .meta "inline_test_ref_vararg_runtime.main.first"="b" ".int" r0
    load r0,10
@@ -32,14 +27,7 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 1 4 4 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 2 4 4 0 "third" ""
-   load r3,3
-   swap r4,r0
-   swap r5,r1
-   swap r6,r2
-   call r7,countTail(),r3
-   swap r0,r4
-   swap r1,r5
-   swap r2,r6
+   call3 r7,countTail(),r0,r1,r2
    itos r7
    .traceevent "F" 4 "R" "S" "r" 7 4 4 0 "counttail" ""
    say r7
@@ -49,14 +37,7 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 2 5 5 0 "third" ""
-   load r3,4
-   swap r5,r0
-   swap r6,r1
-   swap r7,r2
-   call r8,readTail(),r3
-   swap r0,r5
-   swap r1,r6
-   swap r2,r7
+   call4 r8,readTail(),r4,r0,r1,r2
    itos r8
    .traceevent "F" 4 "R" "S" "r" 8 5 5 0 "readtail" ""
    say r8
@@ -66,14 +47,7 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,hasTail(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
+   call4 r3,hasTail(),r5,r0,r1,r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "hastail" ""
    say r3
@@ -83,14 +57,7 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,hasTail(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
+   call4 r3,hasTail(),r5,r0,r1,r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "hastail" ""
    say r3
@@ -100,14 +67,7 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 2 8 8 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,mutateTailIndirect(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
+   call4 r3,mutateTailIndirect(),r5,r0,r1,r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 8 8 0 "mutatetailindirect" ""
    say r3
@@ -132,11 +92,7 @@ main() .locals=9
 countTail() .locals=1
    .meta "inline_test_ref_vararg_runtime.counttail"="b" ".int" countTail() "expose ...=.int"
    .srcstep 16 16 17 "inline_test_ref_vararg_runtime.crexx" 18 1 28 "countTail: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_ref_vararg_runtime.crexx" 19 14 24 "  arg expose ... = .int"
    .srcstep 15 15 17 "inline_test_ref_vararg_runtime.crexx" 20 3 13 "  return arg[]"
    icopy r0,a0
@@ -146,11 +102,7 @@ countTail() .locals=1
 readTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.readtail"="b" ".int" readTail() "which=.int,expose ...=.int"
    .srcstep 20 20 17 "inline_test_ref_vararg_runtime.crexx" 22 1 27 "readTail: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 17 17 17 "inline_test_ref_vararg_runtime.crexx" 23 7 19 "  arg which = .int, expose ... = .int"
    .meta "inline_test_ref_vararg_runtime.readtail.which"="b" ".int" a1
    .srcstep 18 18 17 "inline_test_ref_vararg_runtime.crexx" 23 28 38 "  arg which = .int, expose ... = .int"
@@ -165,15 +117,11 @@ readTail() .locals=2
 hasTail() .locals=2
    .meta "inline_test_ref_vararg_runtime.hastail"="b" ".int" hasTail() "which=.int,expose ...=.int"
    .srcstep 24 24 17 "inline_test_ref_vararg_runtime.crexx" 26 1 26 "hasTail: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 21 21 17 "inline_test_ref_vararg_runtime.crexx" 27 7 19 "  arg which = .int, expose ... = .int"
    .meta "inline_test_ref_vararg_runtime.hastail.which"="b" ".int" a1
    .srcstep 22 22 17 "inline_test_ref_vararg_runtime.crexx" 27 28 38 "  arg which = .int, expose ... = .int"
-   .srcstep 23 23 17 "inline_test_ref_vararg_runtime.crexx" 28 3 19 "  return arg(which, \"E\")"
+   .srcstep 23 23 17 "inline_test_ref_vararg_runtime.crexx" 28 3 28 "  return <argexists>(which)"
    ilt r1,a1,1
    signalt "OUT_OF_RANGE",r1
    icopy r1,a0
@@ -186,11 +134,7 @@ hasTail() .locals=2
 bumpOne() .locals=1
    .meta "inline_test_ref_vararg_runtime.bumpone"="b" ".int" bumpOne() "expose value=.int"
    .srcstep 28 28 17 "inline_test_ref_vararg_runtime.crexx" 30 1 26 "bumpOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 25 25 17 "inline_test_ref_vararg_runtime.crexx" 31 7 26 "  arg expose value = .int"
    .meta "inline_test_ref_vararg_runtime.bumpone.value"="b" ".int" a1
    .srcstep 26 26 17 "inline_test_ref_vararg_runtime.crexx" 32 3 20 "  value = value + 7"
@@ -206,11 +150,7 @@ bumpOne() .locals=1
 mutateTailIndirect() .locals=5
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect"="b" ".int" mutateTailIndirect() "which=.int,expose ...=.int"
    .srcstep 32 32 17 "inline_test_ref_vararg_runtime.crexx" 35 1 37 "mutateTailIndirect: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 29 29 17 "inline_test_ref_vararg_runtime.crexx" 36 7 19 "  arg which = .int, expose ... = .int"
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"="b" ".int" a1
    .srcstep 30 30 17 "inline_test_ref_vararg_runtime.crexx" 36 28 38 "  arg which = .int, expose ... = .int"
@@ -219,10 +159,7 @@ mutateTailIndirect() .locals=5
    isub r3,r3,1
    ichkrng a1,1,r3
    linkarg r3,a1,1
-   load r1,1
-   swap r2,r3
-   call r4,bumpOne(),r1
-   swap r3,r2
+   call1 r4,bumpOne(),r3
    unlink r3
    .traceevent "F" 4 "R" "I" "r" 4 31 31 0 "bumpone" ""
    ret r4

@@ -1,0 +1,14 @@
+utc=2026-08-21T13:31:05Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+hw_model=Mac17,3
+cpu=Apple M5
+logical_cpus=10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+14:31  up 38 days,  7:39, 1 user, load averages: 2.52 2.14 2.24

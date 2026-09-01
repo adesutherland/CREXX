@@ -1,0 +1,30 @@
+options levelb
+
+exit run()
+
+run: procedure = .int
+  if forever_return() <> 11 then return 1
+  if nested_inner_leave() <> 22 then return 2
+  if leave_then_return() <> 33 then return 3
+  say "DO_FOREVER_RETURN_OK"
+  return 0
+
+forever_return: procedure = .int
+  do forever
+    return 11
+  end
+  say "unreachable after terminal loop"
+
+nested_inner_leave: procedure = .int
+  do forever
+    do forever
+      leave
+    end
+    return 22
+  end
+
+leave_then_return: procedure = .int
+  do forever
+    leave
+  end
+  return 33

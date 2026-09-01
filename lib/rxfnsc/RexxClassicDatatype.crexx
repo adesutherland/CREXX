@@ -1,0 +1,637 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicdatatype expose rexxclassic_datatype_classify rexxclassic_datatype_test rexxclassic_datatype_normalize_number rexxclassic_datatype_normalize_whole rexxclassic_datatype_binary rexxclassic_datatype_hex rexxclassic_datatype_symbol_kind
+import rexxclassicconfig
+import rexxvalue
+
+/** Return NUM or CHAR using the configured Classic numeric alphabet. */
+rexxclassic_datatype_classify: procedure = .string
+  arg value = .RexxValue, config = .RexxClassicConfig
+  state = 0
+  normalized = rexxclassic_datatype_normalize_number(value,config,state)
+  if state = 1 then return "NUM"
+  return "CHAR"
+
+/** Test one already-validated standard Classic DATATYPE option. */
+rexxclassic_datatype_test: procedure = .boolean
+  arg value = .RexxValue, option = .string, config = .RexxClassicConfig
+  if option = "B" then return rexxclassic_datatype_binary(value,config)
+  if option = "X" then return rexxclassic_datatype_hex(value,config)
+  if option = "S" then return rexxclassic_datatype_symbol_kind(value,config) = 1
+  if option = "N" then do
+    state = 0
+    normalized = rexxclassic_datatype_normalize_number(value,config,state)
+    return state = 1
+  end
+  if option = "W" then do
+    state = .int
+    state = 0
+    normalized = .string
+    normalized = rexxclassic_datatype_normalize_number(value,config,state)
+    if state <> 1 then return 0
+    return _normalized_whole(normalized)
+  end
+  if config.isByteProfile() then return _byte_character_class(value.asBinary(),option,config)
+  return _text_character_class(value.asString(),option,config)
+
+/**
+ * Normalize configured digits to ASCII and validate Classic number syntax.
+ *
+ * State is 0 for invalid syntax, 1 for valid, and 2 when only the configured
+ * exponent-digit limit is exceeded.
+ */
+rexxclassic_datatype_normalize_number: procedure = .string
+  arg value = .RexxValue, config = .RexxClassicConfig, expose state = .int
+  if config.isByteProfile() then
+    return _normalize_byte_number(value.asBinary(),config.byteDatatypeDigits(),config.exponentDigitLimit(),state)
+  return _normalize_text_number(value.asString(),config.textDatatypeDigits(),config.exponentDigitLimit(),state)
+
+/** Normalize a strict CheckArgs WHOLE spelling to signed ASCII digits. */
+rexxclassic_datatype_normalize_whole: procedure = .string
+  arg value = .RexxValue, config = .RexxClassicConfig, expose valid = .int
+  state = 0
+  normalized = rexxclassic_datatype_normalize_number(value,config,state)
+  valid = state = 1 & _normalized_integer_syntax(normalized)
+  if valid then return normalized
+  return ""
+
+/** Validate configured binary digits and blank grouping from the right. */
+rexxclassic_datatype_binary: procedure = .boolean
+  arg value = .RexxValue, config = .RexxClassicConfig
+  if config.isByteProfile() then do
+    bytes = value.asBinary()
+    blanks = config.byteOtherBlanks()
+    digits = config.byteDatatypeDigits()
+    return _grouped_bytes(bytes,4,1,blanks,digits)
+  end
+  text = value.asString()
+  text_blanks = config.textOtherBlanks()
+  text_digits = config.textDatatypeDigits()
+  return _grouped_text(text,4,1,text_blanks,text_digits)
+
+/** Validate configured hexadecimal digits and blank grouping from the right. */
+rexxclassic_datatype_hex: procedure = .boolean
+  arg value = .RexxValue, config = .RexxClassicConfig
+  if config.isByteProfile() then do
+    bytes = value.asBinary()
+    blanks = config.byteOtherBlanks()
+    digits = config.byteDatatypeDigits()
+    return _grouped_bytes(bytes,2,0,blanks,digits)
+  end
+  text = value.asString()
+  text_blanks = config.textOtherBlanks()
+  text_digits = config.textDatatypeDigits()
+  return _grouped_text(text,2,0,text_blanks,text_digits)
+
+/** Return 0 invalid, 1 variable/non-numeric symbol, or 2 constant symbol. */
+rexxclassic_datatype_symbol_kind: procedure = .int
+  arg value = .RexxValue, config = .RexxClassicConfig
+  state = 0
+  normalized = rexxclassic_datatype_normalize_number(value,config,state)
+  if state = 1 then return 2
+  if config.isByteProfile() then return _byte_symbol_kind(value.asBinary(),config)
+  return _text_symbol_kind(value.asString(),config)
+
+_byte_character_class: procedure = .boolean
+  arg bytes = .binary, option = .string, config = .RexxClassicConfig
+  byte_length = .int
+  byte = .int
+  assembler blen byte_length,bytes
+  if byte_length = 0 then return 0
+  lower = config.byteDatatypeLowercase()
+  upper = config.byteDatatypeUppercase()
+  digits = config.byteDatatypeDigits()
+  do index = 0 to byte_length - 1
+    assembler getbyte byte,bytes,index
+    is_digit = _byte_digit(byte,digits) >= 0
+    is_lower = (byte >= 97 & byte <= 122) | _byte_position(byte,lower) >= 0
+    is_upper = (byte >= 65 & byte <= 90) | _byte_position(byte,upper) >= 0
+    if option = "A" then valid = is_digit | is_lower | is_upper
+    else if option = "L" then valid = is_lower
+    else if option = "M" then valid = is_lower | is_upper
+    else valid = is_upper
+    if \valid then return 0
+  end
+  return 1
+
+_text_character_class: procedure = .boolean
+  arg text = .string, option = .string, config = .RexxClassicConfig
+  text_length = .int
+  codepoint = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  lower = config.textDatatypeLowercase()
+  upper = config.textDatatypeUppercase()
+  digits = config.textDatatypeDigits()
+  do index = 0 to text_length - 1
+    assembler strchar codepoint,text,index
+    is_digit = _text_digit(codepoint,digits) >= 0
+    is_lower = (codepoint >= 97 & codepoint <= 122) | _text_position(codepoint,lower) >= 0
+    is_upper = (codepoint >= 65 & codepoint <= 90) | _text_position(codepoint,upper) >= 0
+    if option = "A" then valid = is_digit | is_lower | is_upper
+    else if option = "L" then valid = is_lower
+    else if option = "M" then valid = is_lower | is_upper
+    else valid = is_upper
+    if \valid then return 0
+  end
+  return 1
+
+_grouped_bytes: procedure = .boolean
+  arg bytes = .binary, group_size = .int, binary_only = .boolean, blanks = .binary, digits = .binary
+  byte_length = .int
+  byte = .int
+  remainder = .int
+  assembler blen byte_length,bytes
+  if byte_length = 0 then return 1
+  first = 0
+  assembler getbyte byte,bytes,first
+  if _byte_blank(byte,blanks) then return 0
+  last = byte_length - 1
+  assembler getbyte byte,bytes,last
+  if _byte_blank(byte,blanks) then return 0
+  digit_count = 0
+  do index = byte_length - 1 to 0 by -1
+    assembler getbyte byte,bytes,index
+    if _byte_blank(byte,blanks) then do
+      assembler imod remainder,digit_count,group_size
+      if remainder <> 0 then return 0
+      iterate
+    end
+    digit = _byte_digit(byte,digits)
+    if digit >= 0 then do
+      if binary_only & digit > 1 then return 0
+    end
+    else if binary_only then return 0
+    else if \((byte >= 65 & byte <= 70) | (byte >= 97 & byte <= 102)) then return 0
+    digit_count = digit_count + 1
+  end
+  return 1
+
+_grouped_text: procedure = .boolean
+  arg text = .string, group_size = .int, binary_only = .boolean, blanks = .string, digits = .string
+  text_length = .int
+  codepoint = .int
+  remainder = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 1
+  first = 0
+  assembler strchar codepoint,text,first
+  if _text_blank(codepoint,blanks) then return 0
+  last = text_length - 1
+  assembler strchar codepoint,text,last
+  if _text_blank(codepoint,blanks) then return 0
+  digit_count = 0
+  do index = text_length - 1 to 0 by -1
+    assembler strchar codepoint,text,index
+    if _text_blank(codepoint,blanks) then do
+      assembler imod remainder,digit_count,group_size
+      if remainder <> 0 then return 0
+      iterate
+    end
+    digit = _text_digit(codepoint,digits)
+    if digit >= 0 then do
+      if binary_only & digit > 1 then return 0
+    end
+    else if binary_only then return 0
+    else if \((codepoint >= 65 & codepoint <= 70) |,
+              (codepoint >= 97 & codepoint <= 102)) then return 0
+    digit_count = digit_count + 1
+  end
+  return 1
+
+_normalize_byte_number: procedure = .string
+  arg bytes = .binary, digits = .binary, exponent_limit = .int, expose state = .int
+  byte_length = .int
+  byte = .int
+  assembler blen byte_length,bytes
+  start = 0
+  do while start < byte_length
+    assembler getbyte byte,bytes,start
+    if byte <> 32 then leave
+    start = start + 1
+  end
+  finish = byte_length
+  do while finish > start
+    index = finish - 1
+    assembler getbyte byte,bytes,index
+    if byte <> 32 then leave
+    finish = finish - 1
+  end
+  if start >= finish then do
+    state = 0
+    return ""
+  end
+  return _normalize_byte_span(bytes,start,finish,digits,exponent_limit,state)
+
+_normalize_byte_span: procedure = .string
+  arg bytes = .binary, start = .int, finish = .int, digits = .binary, exponent_limit = .int, expose state = .int
+  normalized = ""
+  byte = .int
+  index = start
+  assembler getbyte byte,bytes,index
+  if byte = 43 | byte = 45 then do
+    assembler appendchar normalized,byte
+    index = index + 1
+    do while index < finish
+      assembler getbyte byte,bytes,index
+      if byte <> 32 then leave
+      index = index + 1
+    end
+  end
+  digit_count = 0
+  saw_point = 0
+  do while index < finish
+    assembler getbyte byte,bytes,index
+    digit = _byte_digit(byte,digits)
+    if digit >= 0 then do
+      codepoint = digit + 48
+      assembler appendchar normalized,codepoint
+      digit_count = digit_count + 1
+      index = index + 1
+      iterate
+    end
+    if byte = 46 & \saw_point then do
+      saw_point = 1
+      assembler appendchar normalized,byte
+      index = index + 1
+      iterate
+    end
+    leave
+  end
+  return _normalize_byte_exponent(bytes,index,finish,digits,exponent_limit,digit_count,normalized,state)
+
+_normalize_byte_exponent: procedure = .string
+  arg bytes = .binary, index = .int, finish = .int, digits = .binary, exponent_limit = .int, digit_count = .int, normalized = .string, expose state = .int
+  byte = .int
+  if digit_count = 0 then do
+    state = 0
+    return ""
+  end
+  if index >= finish then do
+    state = 1
+    return normalized
+  end
+  assembler getbyte byte,bytes,index
+  if byte <> 69 & byte <> 101 then do
+    state = 0
+    return ""
+  end
+  upper_e = 69
+  assembler appendchar normalized,upper_e
+  index = index + 1
+  if index < finish then do
+    assembler getbyte byte,bytes,index
+    if byte = 43 | byte = 45 then do
+      assembler appendchar normalized,byte
+      index = index + 1
+    end
+  end
+  exponent_digits = 0
+  do while index < finish
+    assembler getbyte byte,bytes,index
+    digit = _byte_digit(byte,digits)
+    if digit < 0 then do
+      state = 0
+      return ""
+    end
+    codepoint = digit + 48
+    assembler appendchar normalized,codepoint
+    exponent_digits = exponent_digits + 1
+    index = index + 1
+  end
+  if exponent_digits = 0 then state = 0
+  else if exponent_digits > exponent_limit then state = 2
+  else state = 1
+  if state = 1 then return normalized
+  return ""
+
+_normalize_text_number: procedure = .string
+  arg text = .string, digits = .string, exponent_limit = .int, expose state = .int
+  text_length = .int
+  codepoint = .int
+  assembler strlen text_length,text
+  start = 0
+  do while start < text_length
+    assembler strchar codepoint,text,start
+    if codepoint <> 32 then leave
+    start = start + 1
+  end
+  finish = text_length
+  do while finish > start
+    index = finish - 1
+    assembler strchar codepoint,text,index
+    if codepoint <> 32 then leave
+    finish = finish - 1
+  end
+  if start >= finish then do
+    state = 0
+    return ""
+  end
+
+  normalized = ""
+  index = .int
+  index = start
+  assembler strchar codepoint,text,index
+  if codepoint = 43 | codepoint = 45 then do
+    assembler appendchar normalized,codepoint
+    index = index + 1
+    do while index < finish
+      assembler strchar codepoint,text,index
+      if codepoint <> 32 then leave
+      index = index + 1
+    end
+  end
+  digit_count = 0
+  saw_point = 0
+  do while index < finish
+    assembler strchar codepoint,text,index
+    digit = _text_digit(codepoint,digits)
+    if digit >= 0 then do
+      output = digit + 48
+      assembler appendchar normalized,output
+      digit_count = digit_count + 1
+      index = index + 1
+      iterate
+    end
+    if codepoint = 46 & \saw_point then do
+      saw_point = 1
+      assembler appendchar normalized,codepoint
+      index = index + 1
+      iterate
+    end
+    leave
+  end
+  if digit_count = 0 then do
+    state = 0
+    return ""
+  end
+  if index >= finish then do
+    state = 1
+    return normalized
+  end
+  assembler strchar codepoint,text,index
+  if codepoint <> 69 & codepoint <> 101 then do
+    state = 0
+    return ""
+  end
+  upper_e = 69
+  assembler appendchar normalized,upper_e
+  index = index + 1
+  if index < finish then do
+    assembler strchar codepoint,text,index
+    if codepoint = 43 | codepoint = 45 then do
+      assembler appendchar normalized,codepoint
+      index = index + 1
+    end
+  end
+  exponent_digits = 0
+  do while index < finish
+    assembler strchar codepoint,text,index
+    digit = .int
+    digit = _text_digit(codepoint,digits)
+    if digit < 0 then do
+      state = 0
+      return ""
+    end
+    output = .int
+    output = digit + 48
+    assembler appendchar normalized,output
+    exponent_digits = exponent_digits + 1
+    index = index + 1
+  end
+  if exponent_digits = 0 then state = 0
+  else if exponent_digits > exponent_limit then state = 2
+  else state = 1
+  if state = 1 then return normalized
+  return ""
+
+_normalized_integer_syntax: procedure = .boolean
+  arg normalized = .string
+  normalized_length = .int
+  codepoint = .int
+  assembler strlen normalized_length,normalized
+  if normalized_length = 0 then return 0
+  index = 0
+  assembler strchar codepoint,normalized,index
+  if codepoint = 43 | codepoint = 45 then index = index + 1
+  if index >= normalized_length then return 0
+  do while index < normalized_length
+    assembler strchar codepoint,normalized,index
+    if codepoint < 48 | codepoint > 57 then return 0
+    index = index + 1
+  end
+  return 1
+
+_normalized_whole: procedure = .boolean
+  arg normalized = .string
+  normalized_length = .int
+  codepoint = .int
+  assembler strlen normalized_length,normalized
+  index = 0
+  assembler strchar codepoint,normalized,index
+  if codepoint = 43 | codepoint = 45 then index = index + 1
+  digit_count = 0
+  fractional_digits = 0
+  last_nonzero = 0
+  saw_point = 0
+  do while index < normalized_length
+    assembler strchar codepoint,normalized,index
+    if codepoint >= 48 & codepoint <= 57 then do
+      digit_count = digit_count + 1
+      if saw_point then fractional_digits = fractional_digits + 1
+      if codepoint <> 48 then last_nonzero = digit_count
+      index = index + 1
+      iterate
+    end
+    if codepoint = 46 then do
+      saw_point = 1
+      index = index + 1
+      iterate
+    end
+    leave
+  end
+  if last_nonzero = 0 then return 1
+  exponent = 0
+  negative_exponent = 0
+  if index < normalized_length then do
+    index = index + 1
+    assembler strchar codepoint,normalized,index
+    if codepoint = 43 | codepoint = 45 then do
+      negative_exponent = codepoint = 45
+      index = index + 1
+    end
+    do while index < normalized_length
+      assembler strchar codepoint,normalized,index
+      if exponent <= normalized_length then exponent = exponent * 10 + codepoint - 48
+      if exponent > normalized_length then exponent = normalized_length + 1
+      index = index + 1
+    end
+  end
+  if negative_exponent then exponent = 0 - exponent
+  decimal_position = digit_count - fractional_digits + exponent
+  if decimal_position <= 0 then return 0
+  if decimal_position >= digit_count then return 1
+  return last_nonzero <= decimal_position
+
+_byte_symbol_kind: procedure = .int
+  arg bytes = .binary, config = .RexxClassicConfig
+  byte_length = .int
+  byte = .int
+  assembler blen byte_length,bytes
+  if byte_length = 0 then return 0
+  lower = config.byteDatatypeLowercase()
+  upper = config.byteDatatypeUppercase()
+  digits = config.byteDatatypeDigits()
+  first = 0
+  assembler getbyte byte,bytes,first
+  first_digit = _byte_digit(byte,digits) >= 0
+  first_general = (byte >= 65 & byte <= 90) | (byte >= 97 & byte <= 122) |,
+                  _byte_position(byte,lower) >= 0 | _byte_position(byte,upper) >= 0 |,
+                  byte = 33 | byte = 63 | byte = 95 | byte = 64 | byte = 35 | byte = 36
+  if \first_digit & \first_general & byte <> 46 then return 0
+  do index = 1 to byte_length - 1
+    assembler getbyte byte,bytes,index
+    if (byte >= 65 & byte <= 90) | (byte >= 97 & byte <= 122) |,
+       _byte_digit(byte,digits) >= 0 | _byte_position(byte,lower) >= 0 |,
+       _byte_position(byte,upper) >= 0 | byte = 33 | byte = 63 |,
+       byte = 95 | byte = 64 | byte = 35 | byte = 36 | byte = 46 then iterate
+    return 0
+  end
+  if first_general then return 1
+  if first_digit then return 2
+  if _byte_reserved_symbol(bytes) then return 1
+  return 0
+
+_text_symbol_kind: procedure = .int
+  arg text = .string, config = .RexxClassicConfig
+  text_length = .int
+  codepoint = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  lower = config.textDatatypeLowercase()
+  upper = config.textDatatypeUppercase()
+  digits = config.textDatatypeDigits()
+  first = 0
+  assembler strchar codepoint,text,first
+  first_digit = _text_digit(codepoint,digits) >= 0
+  first_general = (codepoint >= 65 & codepoint <= 90) |,
+                  (codepoint >= 97 & codepoint <= 122) |,
+                  _text_position(codepoint,lower) >= 0 | _text_position(codepoint,upper) >= 0 |,
+                  codepoint = 33 | codepoint = 63 | codepoint = 95 |,
+                  codepoint = 64 | codepoint = 35 | codepoint = 36
+  if \first_digit & \first_general & codepoint <> 46 then return 0
+  do index = 1 to text_length - 1
+    assembler strchar codepoint,text,index
+    if (codepoint >= 65 & codepoint <= 90) |,
+       (codepoint >= 97 & codepoint <= 122) |,
+       _text_digit(codepoint,digits) >= 0 | _text_position(codepoint,lower) >= 0 |,
+       _text_position(codepoint,upper) >= 0 | codepoint = 33 | codepoint = 63 |,
+       codepoint = 95 | codepoint = 64 | codepoint = 35 | codepoint = 36 |,
+       codepoint = 46 then iterate
+    return 0
+  end
+  if first_general then return 1
+  if first_digit then return 2
+  normalized = .string
+  assembler strupper normalized,text
+  if normalized = ".MN" | normalized = ".RESULT" | normalized = ".RC" |,
+     normalized = ".RS" | normalized = ".SIGL" then return 1
+  return 0
+
+_byte_reserved_symbol: procedure = .boolean
+  arg bytes = .binary
+  byte_length = .int
+  byte = .int
+  normalized = ""
+  assembler blen byte_length,bytes
+  do index = 0 to byte_length - 1
+    assembler getbyte byte,bytes,index
+    if byte > 127 then return 0
+    if byte >= 97 & byte <= 122 then byte = byte - 32
+    assembler appendchar normalized,byte
+  end
+  return normalized = ".MN" | normalized = ".RESULT" | normalized = ".RC" |,
+         normalized = ".RS" | normalized = ".SIGL"
+
+_byte_digit: procedure = .int
+  arg byte = .int, digits = .binary
+  if byte >= 48 & byte <= 57 then return byte - 48
+  digit_length = .int
+  current = .int
+  assembler blen digit_length,digits
+  do position = 0 to digit_length - 1
+    assembler getbyte current,digits,position
+    if current = byte then return position // 10
+  end
+  return -1
+
+_text_digit: procedure = .int
+  arg codepoint = .int, digits = .string
+  if codepoint >= 48 & codepoint <= 57 then return codepoint - 48
+  position = -1
+  assembler poschar position,digits,codepoint
+  if position < 0 then return -1
+  return position // 10
+
+_byte_position: procedure = .int
+  arg needle = .int, bytes = .binary
+  byte_length = .int
+  current = .int
+  assembler blen byte_length,bytes
+  do index = 0 to byte_length - 1
+    assembler getbyte current,bytes,index
+    if current = needle then return index
+  end
+  return -1
+
+_text_position: procedure = .int
+  arg needle = .int, text = .string
+  position = -1
+  assembler poschar position,text,needle
+  return position
+
+_byte_blank: procedure = .boolean
+  arg byte = .int, blanks = .binary
+  if byte = 32 then return 1
+  blank_length = .int
+  current = .int
+  assembler blen blank_length,blanks
+  do index = 0 to blank_length - 1
+    assembler getbyte current,blanks,index
+    if current = byte then return 1
+  end
+  return 0
+
+_text_blank: procedure = .boolean
+  arg codepoint = .int, blanks = .string
+  is_blank = (codepoint >= 9 & codepoint <= 13) | codepoint = 32 | codepoint = 133 |,
+             codepoint = 160 | codepoint = 5760 | (codepoint >= 8192 & codepoint <= 8202) |,
+             codepoint = 8232 | codepoint = 8233 | codepoint = 8239 | codepoint = 8287 |,
+             codepoint = 12288
+  if is_blank then return 1
+  configured_position = -1
+  assembler poschar configured_position,blanks,codepoint
+  return configured_position >= 0

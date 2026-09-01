@@ -1,0 +1,328 @@
+diff --git a/interpreter/rxseqmain.c b/interpreter/rxseqmain.c
+index 9dffcc9e8e308d24ead72de080474cc964dff0aa..ccb8ec89e8daf5afa2bd502734a69515c8fd9ee5 100644
+--- a/interpreter/rxseqmain.c
++++ b/interpreter/rxseqmain.c
+@@ -69,7 +69,7 @@ static const OpInfo rxseq_ops[OP_MAX_INSTRUCTIONS] = {
+ static void rxseq_usage(FILE *out) {
+     fprintf(out,
+             "Usage: rxseq profile.rxseq module.rxbin [module2.rxbin ...] "
+-            "[--output candidates.csv]\n"
++            "[--output candidates.csv] [--sites-output sites.csv]\n"
+             "\n"
+             "Reads a binary RXSEQ profile, verifies the exact modules, normalises register/constant "
+             "reuse,\nclusters dynamic instruction sequences, and reports counts.\n");
+@@ -606,6 +606,7 @@ static void rxseq_free_all(rxseq_profile *profile,
+ int main(int argc, char **argv) {
+     const char *profile_path = 0;
+     const char *output_path = 0;
++    const char *sites_output_path = 0;
+     const char **module_paths;
+     size_t module_path_count = 0;
+     rxseq_profile profile;
+@@ -613,6 +614,7 @@ int main(int argc, char **argv) {
+     rxseq_candidate *candidates = 0;
+     size_t candidate_count = 0, candidate_capacity = 0;
+     FILE *out = stdout;
++    FILE *sites_out = 0;
+     int rc = 0;
+     int i;
+     memset(&profile, 0, sizeof(profile));
+@@ -636,6 +638,18 @@ int main(int argc, char **argv) {
+                 return rxseq_fail("missing filename after --output=", 0);
+             }
+             output_path = argv[i] + 9;
++        } else if (strcmp(argv[i], "--sites-output") == 0) {
++            if (++i >= argc || !argv[i][0]) {
++                free(module_paths);
++                return rxseq_fail("missing filename after --sites-output", 0);
++            }
++            sites_output_path = argv[i];
++        } else if (strncmp(argv[i], "--sites-output=", 15) == 0) {
++            if (!argv[i][15]) {
++                free(module_paths);
++                return rxseq_fail("missing filename after --sites-output=", 0);
++            }
++            sites_output_path = argv[i] + 15;
+         } else if (argv[i][0] == '-') {
+             free(module_paths);
+             return rxseq_fail("unknown option", argv[i]);
+@@ -654,6 +668,11 @@ int main(int argc, char **argv) {
+     for (i = 0; !rc && (size_t)i < module_path_count; i++)
+         rc = rxseq_load_file(module_paths[i], &loaded);
+     if (!rc) rc = rxseq_match_modules(&profile, &loaded);
++    if (!rc && sites_output_path) {
++        sites_out = fopen(sites_output_path, "w");
++        if (!sites_out) rc = rxseq_fail("cannot open site output", sites_output_path);
++        else fprintf(sites_out, "module_id,module,start,count,pattern,mapping\n");
++    }
+     if (!rc) {
+         size_t site_index;
+         for (site_index = 0; site_index < profile.site_count; site_index++) {
+@@ -666,6 +685,18 @@ int main(int argc, char **argv) {
+                                 profile.modules[site->module_id - 1].name);
+                 break;
+             }
++            if (sites_out) {
++                fprintf(sites_out, "%" PRIu64 ",",
++                        (uint64_t)site->module_id);
++                rxseq_csv_text(sites_out,
++                        profile.modules[site->module_id - 1].name);
++                fprintf(sites_out, ",%zu,%" PRIu64 ",",
++                        site->start, site->count);
++                rxseq_csv_text(sites_out, pattern);
++                fputc(',', sites_out);
++                rxseq_csv_text(sites_out, mapping);
++                fputc('\n', sites_out);
++            }
+             if (!rxseq_add_candidate(&candidates, &candidate_count,
+                     &candidate_capacity, &profile, site, pattern, mapping,
+                     symbols)) {
+@@ -678,6 +709,8 @@ int main(int argc, char **argv) {
+             free(mapping);
+         }
+     }
++    if (sites_out && fclose(sites_out) != 0 && !rc)
++        rc = rxseq_fail("failed while closing site output", sites_output_path);
+     if (!rc) {
+         qsort(candidates, candidate_count, sizeof(*candidates),
+               rxseq_candidate_compare);
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da52495c0e508bf728583c00d896c6bb88a3..cc5274d62ae385f69753f0dae19ff02d034e8f2f 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -9746,7 +9746,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+  */
+         START_INSTRUCTION(COPY_REG_REG) VM_ADVANCE(2);
+             DEBUG("TRACE - COPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
++#ifdef CREXX_VM_PROFILING
++            rxvm_profile_full_copy_begin(&vm_profile, op2R);
++#endif
+             copy_value(op1R, op2R);
++#ifdef CREXX_VM_PROFILING
++            rxvm_profile_full_copy_end(&vm_profile);
++#endif
+             DISPATCH;
+ 
+ /* ------------------------------------------------------------------------------------
+diff --git a/interpreter/rxvmprofile.c b/interpreter/rxvmprofile.c
+index 755ff55b247d0253b04096ca590de65e9c367f9b..5a5f3972c8525cac25754f2862b7e2866da28805 100644
+--- a/interpreter/rxvmprofile.c
++++ b/interpreter/rxvmprofile.c
+@@ -216,6 +216,85 @@ void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
+             (size_t)bytes);
+ }
+ 
++static rxvm_profile_full_copy_row *rxvm_profile_full_copy_row_for_active(
++        rxvm_profile_state *state) {
++    size_t i;
++    rxvm_profile_full_copy_row *rows;
++    size_t capacity;
++    for (i = 0; i < state->full_copy_row_count; i++) {
++        rxvm_profile_full_copy_row *row = &state->full_copy_rows[i];
++        if (row->module_id == state->active_module_id &&
++                row->instruction_index == state->active_instruction_index)
++            return row;
++    }
++    if (state->full_copy_row_count == state->full_copy_row_capacity) {
++        capacity = state->full_copy_row_capacity
++                ? state->full_copy_row_capacity * 2 : 64;
++        if (capacity < state->full_copy_row_capacity ||
++                capacity > SIZE_MAX / sizeof(*rows)) {
++            state->full_copy_tracking_unavailable = 1;
++            return 0;
++        }
++        rows = (rxvm_profile_full_copy_row *)realloc(
++                state->full_copy_rows, capacity * sizeof(*rows));
++        if (!rows) {
++            state->full_copy_tracking_unavailable = 1;
++            return 0;
++        }
++        state->full_copy_rows = rows;
++        state->full_copy_row_capacity = capacity;
++    }
++    rows = &state->full_copy_rows[state->full_copy_row_count++];
++    memset(rows, 0, sizeof(*rows));
++    rows->module_id = state->active_module_id;
++    rows->instruction_index = state->active_instruction_index;
++    return rows;
++}
++
++void rxvm_profile_full_copy_begin(rxvm_profile_state *state,
++                                  const value *source) {
++    size_t shape;
++    if (!state || !state->enabled) return;
++    state->full_copy_active = 1;
++    state->full_copy_top_shape = rxvm_profile_value_payload_shape(source);
++    state->full_copy_top_bytes = rxvm_profile_value_payload_bytes(source);
++    for (shape = 0; shape < RXVM_PROFILE_VALUE_SHAPE_COUNT; shape++) {
++        state->full_copy_before_count[shape] =
++                state->value_operations[RXVM_PROFILE_VALUE_COPY][shape].count;
++        state->full_copy_before_bytes[shape] =
++                state->value_operations[RXVM_PROFILE_VALUE_COPY][shape].bytes;
++    }
++}
++
++void rxvm_profile_full_copy_end(rxvm_profile_state *state) {
++    rxvm_profile_full_copy_row *row;
++    size_t shape;
++    if (!state || !state->enabled || !state->full_copy_active) return;
++    state->full_copy_active = 0;
++    row = rxvm_profile_full_copy_row_for_active(state);
++    if (!row) return;
++    rxvm_profile_increment(state, &row->executions);
++    rxvm_profile_increment(
++            state, &row->top[state->full_copy_top_shape].count);
++    rxvm_profile_add_total(
++            state, &row->top[state->full_copy_top_shape].bytes,
++            state->full_copy_top_bytes);
++    if (state->full_copy_top_bytes >
++            row->top[state->full_copy_top_shape].max_bytes)
++        row->top[state->full_copy_top_shape].max_bytes =
++                state->full_copy_top_bytes;
++    for (shape = 0; shape < RXVM_PROFILE_VALUE_SHAPE_COUNT; shape++) {
++        const rxvm_profile_allocation_counter *current =
++                &state->value_operations[RXVM_PROFILE_VALUE_COPY][shape];
++        uint64_t count = current->count - state->full_copy_before_count[shape];
++        uint64_t bytes = current->bytes - state->full_copy_before_bytes[shape];
++        rxvm_profile_add_total(state, &row->recursive[shape].count, count);
++        rxvm_profile_add_total(state, &row->recursive[shape].bytes, bytes);
++        if (bytes > row->recursive[shape].max_bytes)
++            row->recursive[shape].max_bytes = bytes;
++    }
++}
++
+ uint64_t rxvm_profile_frame_phase_begin(void) {
+     rxvm_profile_state *state = rxvm_active_allocation_profile;
+     return state && state->enabled && state->timing_enabled
+@@ -1156,10 +1235,12 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
+     free(state->activations);
+     free(state->call_rows);
+     free(state->branch_rows);
++    free(state->full_copy_rows);
+     state->procedures = 0;
+     state->activations = 0;
+     state->call_rows = 0;
+     state->branch_rows = 0;
++    state->full_copy_rows = 0;
+     state->procedure_count = 0;
+     state->procedure_capacity = 0;
+     state->activation_count = 0;
+@@ -1168,6 +1249,8 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
+     state->call_row_capacity = 0;
+     state->branch_row_count = 0;
+     state->branch_row_capacity = 0;
++    state->full_copy_row_count = 0;
++    state->full_copy_row_capacity = 0;
+     if (rxvm_active_allocation_profile == state)
+         rxvm_active_allocation_profile = state->previous_allocation_profile;
+     state->previous_allocation_profile = 0;
+@@ -2219,6 +2302,49 @@ static void rxvm_profile_write_table(FILE *out,
+     }
+ }
+ 
++static void rxvm_profile_write_full_copy_sites(
++        const rxvm_profile_state *state) {
++    const char *path = getenv("CREXX_FULL_COPY_SITES_OUTPUT");
++    FILE *out;
++    size_t row_index;
++    if (!path || !*path) return;
++    out = fopen(path, "w");
++    if (!out) {
++        fprintf(stderr, "ERROR: unable to open full-copy site output '%s'\n",
++                path);
++        return;
++    }
++    fprintf(out, "module_id,module,instruction_index,executions,shape,"
++                 "top_count,top_bytes,top_max_bytes,recursive_count,"
++                 "recursive_bytes,recursive_max_bytes,status\n");
++    for (row_index = 0; row_index < state->full_copy_row_count; row_index++) {
++        const rxvm_profile_full_copy_row *row =
++                &state->full_copy_rows[row_index];
++        size_t shape;
++        for (shape = 0; shape < RXVM_PROFILE_VALUE_SHAPE_COUNT; shape++) {
++            fprintf(out, "%zu,", row->module_id);
++            rxvm_profile_csv_string(out,
++                    rxvm_profile_module_name(state, row->module_id));
++            fprintf(out, ",%zu,%" PRIu64 ",",
++                    row->instruction_index, row->executions);
++            rxvm_profile_csv_string(out,
++                    rxvm_profile_value_shape_names[shape]);
++            fprintf(out, ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
++                         ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%s\n",
++                    row->top[shape].count, row->top[shape].bytes,
++                    row->top[shape].max_bytes,
++                    row->recursive[shape].count,
++                    row->recursive[shape].bytes,
++                    row->recursive[shape].max_bytes,
++                    state->full_copy_tracking_unavailable
++                        ? "degraded" : "complete");
++        }
++    }
++    if (fclose(out) != 0)
++        fprintf(stderr, "ERROR: failed while closing full-copy site output '%s'\n",
++                path);
++}
++
+ void rxvm_profile_report(const rxvm_profile_state *state,
+                          const char *output_path,
+                          const char *vm_mode,
+@@ -2248,5 +2374,7 @@ void rxvm_profile_report(const rxvm_profile_state *state,
+                                  signal_name);
+     }
+ 
++    rxvm_profile_write_full_copy_sites(state);
++
+     if (close_output) fclose(out);
+ }
+diff --git a/interpreter/rxvmprofile.h b/interpreter/rxvmprofile.h
+index cb5da275e6da1e0c3e5da0656c51a7c779abcb27..45a18bab86dfcc1300f1cfe5fa3d29da7fbba0f3 100644
+--- a/interpreter/rxvmprofile.h
++++ b/interpreter/rxvmprofile.h
+@@ -249,6 +249,14 @@ typedef struct rxvm_profile_branch_row {
+     uint64_t cross_module;
+ } rxvm_profile_branch_row;
+ 
++typedef struct rxvm_profile_full_copy_row {
++    size_t module_id;
++    size_t instruction_index;
++    uint64_t executions;
++    rxvm_profile_allocation_counter top[RXVM_PROFILE_VALUE_SHAPE_COUNT];
++    rxvm_profile_allocation_counter recursive[RXVM_PROFILE_VALUE_SHAPE_COUNT];
++} rxvm_profile_full_copy_row;
++
+ typedef struct rxvm_profile_state {
+     int enabled;
+     int timing_enabled;
+@@ -256,6 +264,7 @@ typedef struct rxvm_profile_state {
+     int procedure_tracking_unavailable;
+     int census_tracking_unavailable;
+     int branch_tracking_unavailable;
++    int full_copy_tracking_unavailable;
+     uint64_t invalid_events;
+     uint64_t timer_read_min_ns;
+     uint64_t timer_zero_deltas;
+@@ -317,6 +326,14 @@ typedef struct rxvm_profile_state {
+     rxvm_profile_branch_row *branch_rows;
+     size_t branch_row_count;
+     size_t branch_row_capacity;
++    rxvm_profile_full_copy_row *full_copy_rows;
++    size_t full_copy_row_count;
++    size_t full_copy_row_capacity;
++    int full_copy_active;
++    rxvm_profile_value_shape full_copy_top_shape;
++    uint64_t full_copy_top_bytes;
++    uint64_t full_copy_before_count[RXVM_PROFILE_VALUE_SHAPE_COUNT];
++    uint64_t full_copy_before_bytes[RXVM_PROFILE_VALUE_SHAPE_COUNT];
+ 
+     struct rxvm_context *context;
+     rxvm_profile_call_row *call_rows;
+@@ -373,6 +390,9 @@ void rxvm_profile_record_value_operation(rxvm_profile_value_operation operation,
+ void rxvm_profile_record_value_typed(rxvm_profile_value_operation operation,
+                                     rxvm_profile_value_shape shape,
+                                     size_t bytes);
++void rxvm_profile_full_copy_begin(rxvm_profile_state *state,
++                                  const value *source);
++void rxvm_profile_full_copy_end(rxvm_profile_state *state);
+ uint64_t rxvm_profile_frame_phase_begin(void);
+ void rxvm_profile_record_frame_phase(rxvm_profile_frame_phase phase,
+                                      int reused, uint64_t start_ns,

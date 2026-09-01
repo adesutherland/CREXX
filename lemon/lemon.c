@@ -592,9 +592,11 @@ static struct action *Action_new(void){
 ** the first
 */
 static int actioncmp(
-  struct action *ap1,
-  struct action *ap2
+  const char *a,
+  const char *b
 ){
+  const struct action *ap1 = (const struct action *)a;
+  const struct action *ap2 = (const struct action *)b;
   int rc;
   rc = ap1->sp->index - ap2->sp->index;
   if( rc==0 ){
@@ -613,8 +615,7 @@ static int actioncmp(
 static struct action *Action_sort(
   struct action *ap
 ){
-  ap = (struct action *)msort((char *)ap,(char **)&ap->next,
-                              (int(*)(const char*,const char*))actioncmp);
+  ap = (struct action *)msort((char *)ap,(char **)&ap->next,actioncmp);
   return ap;
 }
 
@@ -1792,7 +1793,9 @@ int main(int argc, char **argv){
   }
   memset(&lem, 0, sizeof(lem));
   lem.errorcnt = 0;
-  qsort(azDefine, nDefine, sizeof(azDefine[0]), defineCmp);
+  if( nDefine>1 ){
+    qsort(azDefine, nDefine, sizeof(azDefine[0]), defineCmp);
+  }
 
   /* Initialize the machine */
   Strsafe_init();

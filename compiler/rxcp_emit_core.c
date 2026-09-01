@@ -669,11 +669,76 @@ void output_prepend_text(char* before, OutputFragment* after) {
     }
 }
 
-void print_output(FILE* file, OutputFragment* existing) {
-    while (existing) {
-        if (existing->output) fputs(existing->output, file);
-        existing = existing->after;
+int output_replace_text_once(OutputFragment* output,
+                             const char* old_text,
+                             const char* new_text) {
+    OutputFragment *fragment;
+    size_t old_length;
+    size_t new_length;
+
+    if (!output || !old_text || !old_text[0] || !new_text) return 0;
+    old_length = strlen(old_text);
+    new_length = strlen(new_text);
+
+    fragment = output;
+    while (fragment->before) fragment = fragment->before;
+    while (fragment) {
+        char *match;
+        if (!fragment->output) {
+            fragment = fragment->after;
+            continue;
+        }
+        match = strstr(fragment->output, old_text);
+        if (match) {
+            size_t prefix_length = (size_t)(match - fragment->output);
+            size_t suffix_length = strlen(match + old_length);
+            char *replacement = malloc(prefix_length + new_length + suffix_length + 1);
+            if (!replacement) {
+                RX_PANIC_OOM("malloc compiler output replacement",
+                             prefix_length + new_length + suffix_length + 1,
+                             0);
+            }
+            memcpy(replacement, fragment->output, prefix_length);
+            memcpy(replacement + prefix_length, new_text, new_length);
+            memcpy(replacement + prefix_length + new_length,
+                   match + old_length,
+                   suffix_length + 1);
+            free(fragment->output);
+            fragment->output = replacement;
+            return 1;
+        }
+        fragment = fragment->after;
     }
+    return 0;
+}
+
+void print_output(FILE* file, OutputFragment* existing) {
+    OutputFragment *fragment;
+    char *flat;
+    char *combined;
+    size_t length;
+
+    if (!existing) return;
+    while (existing->before) existing = existing->before;
+    length = 0;
+    fragment = existing;
+    while (fragment) {
+        if (fragment->output) length += strlen(fragment->output);
+        fragment = fragment->after;
+    }
+    flat = malloc(length + 1);
+    if (!flat) RX_PANIC_OOM("malloc compiler flattened output", length + 1, 0);
+    flat[0] = 0;
+    fragment = existing;
+    while (fragment) {
+        if (fragment->output) strcat(flat, fragment->output);
+        fragment = fragment->after;
+    }
+    combined = rxcp_combine_superinstructions(flat);
+    free(flat);
+    if (!combined) return;
+    fputs(combined, file);
+    free(combined);
 }
 
 static char *get_source_node_metaline(SourceNode *node) {
@@ -681,6 +746,7 @@ static char *get_source_node_metaline(SourceNode *node) {
     int column;
     char *source_start;
     char *source_end;
+    int allow_token_fallback;
 
     line = -1;
     column = -1;
@@ -695,8 +761,9 @@ static char *get_source_node_metaline(SourceNode *node) {
     column = node->column;
     source_start = node->source_start;
     source_end = node->source_end;
+    allow_token_fallback = source_start || !node->context || !node->context->srcmap || line < 0;
 
-    if (node->token) {
+    if (node->token && allow_token_fallback) {
         if (line == -1) line = node->token->line;
         if (column == -1) column = node->token->column;
         if (!source_start) source_start = node->token->token_string;
@@ -758,6 +825,9 @@ char* get_reporting_metalines(ASTNode *node) {
 char* get_metaline(ASTNode *node) {
     int line, column;
     char *source_start, *source_end;
+    char *file_name;
+    int allow_token_fallback;
+    int use_source_node_location;
 
     if (node->is_compiler_added &&
         node->source_provenance == AST_SOURCE_SYNTHETIC &&
@@ -769,9 +839,20 @@ char* get_metaline(ASTNode *node) {
     column = node->column;
     source_start = node->source_start;
     source_end = node->source_end;
+    file_name = node->file_name;
+
+    use_source_node_location = node->context && node->context->srcmap && node->source_node;
+    if (use_source_node_location) {
+        line = node->source_node->line;
+        column = node->source_node->column;
+        source_start = node->source_node->source_start;
+        source_end = node->source_node->source_end;
+        file_name = node->source_node->file_name;
+    }
+    allow_token_fallback = source_start || !node->context || !node->context->srcmap || line < 0;
 
     /* Try and set error position if not already set */
-    if (node->token) {
+    if (node->token && allow_token_fallback) {
         if (line == -1) line = node->token->line;
         if (column == -1) column = node->token->column;
         if (!source_start) source_start = node->token->token_string;
@@ -780,7 +861,7 @@ char* get_metaline(ASTNode *node) {
 
     return source_step_metaline(node->context,
                                 node->source_node,
-                                node->file_name,
+                                file_name,
                                 line,
                                 column,
                                 source_start,
@@ -1068,6 +1149,18 @@ char* format_constant(ValueType type, ASTNode* node) {
     int flag;
     size_t i;
 
+    if (node && node->symbolNode && node->symbolNode->symbol &&
+        node->symbolNode->symbol->constant_alias) {
+        ConstantAlias *alias = node->symbolNode->symbol->constant_alias;
+        if (alias->type == type && node->value_type == type &&
+            node->node_string_length == alias->value_length &&
+            (node->node_string == alias->value ||
+             memcmp(node->node_string, alias->value, alias->value_length) == 0)) {
+            alias->used = 1;
+            return strdup(alias->name);
+        }
+    }
+
     if (type == TP_STRING) {
         buffer = mprintf("\"%.*s\"",
                          printf_string_precision(node->node_string_length),
@@ -1128,7 +1221,7 @@ char* type_to_prefix(ValueType value_type) {
         case TP_DECIMAL:
             return "d";
         case TP_BINARY:
-            return "";
+            return "b";
         default:
             return "";
     }

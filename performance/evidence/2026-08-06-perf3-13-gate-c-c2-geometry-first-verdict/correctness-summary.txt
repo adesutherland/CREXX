@@ -1,0 +1,6 @@
+timing_rows=140
+timing_bad=0
+rss_rows=112
+rss_bad=0
+telemetry_pass_stdout=28
+telemetry_clean_stats=28

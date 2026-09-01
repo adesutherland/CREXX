@@ -4,7 +4,7 @@ node [shape=plain]
 Foo [label=<
 <table border="0" cellborder="1" cellspacing="0">
 <tr><td> Name </td> <td> OP1 </td> </tr>
-<tr><td> BPON </td><td> no operand </td> </tr>
 <tr><td> BPON </td><td> FUNC </td> </tr>
+<tr><td> BPON </td><td> no operand </td> </tr>
 </table>>];
 }

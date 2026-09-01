@@ -1,0 +1,245 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Owned Level G views over the Level B host-native packed numeric surface.
+ *
+ * Each object stores its bytes directly in `register.0.binary`. Native
+ * providers can therefore consume the object payload without an intermediate
+ * Rexx binary copy. The representation remains host-local and is not a file,
+ * wire, persistence, or cross-host interchange format.
+ *
+ * @docType runtime-module
+ */
+options levelg
+
+namespace rxfnsg expose packedfloat packedint
+import rxfnsb
+import _rxsysb
+
+_packed_numeric_range_error: procedure
+  arg type_name = .string, count = .int
+  call raise "OUT_OF_RANGE", type_name || " size is outside the supported native binary range: " || count, ""
+  return
+
+_packed_numeric_format_error: procedure
+  arg type_name = .string, byte_length = .int, item_width = .int
+  call raise "INVALID_ARGUMENTS", type_name || " binary length " || byte_length || " is not a multiple of native item width " || item_width, ""
+  return
+
+/** Owned contiguous host-native VM float values. */
+packedfloat: class
+  _data = .binary with register.0.binary
+
+  /**
+   * Allocate a zero-filled packed float object.
+   *
+   * @param size non-negative item count
+   * @signal OUT_OF_RANGE the item count cannot be represented as a binary size
+   */
+  *: factory
+    arg size = .int
+    item_width = <sizeof..float>
+    maximum_size = 9223372036854775807 / item_width
+    if size < 0 | size > maximum_size then call _packed_numeric_range_error "PACKEDFLOAT", size
+    data = .binary
+    call binresize data, size * item_width
+    _data = data
+    return
+
+  /**
+   * Construct an owned packed float copy from exact host-native bytes.
+   *
+   * @param data host-native packed float bytes
+   * @signal INVALID_ARGUMENTS the byte length is not a whole number of items
+   */
+  fromBinary: factory
+    arg data = .binary
+    byte_length = binlength(data)
+    item_width = <sizeof..float>
+    if byte_length % item_width <> 0 then call _packed_numeric_format_error "PACKEDFLOAT", byte_length, item_width
+    _data = data
+    return
+
+  /** @return number of packed float items */
+  size: method = .int
+    item_width = <sizeof..float>
+    return binlength(_data) / item_width
+
+  /**
+   * Read one packed float item.
+   *
+   * @param index zero-based item index
+   * @return exact native VM float value
+   * @signal OUT_OF_RANGE the complete item is outside the object
+   */
+  get: method = .float
+    arg index = .int
+    return <packed..float>(index) _data
+
+  /**
+   * Replace one packed float item without resizing.
+   *
+   * @param index zero-based item index
+   * @param value exact native VM float value
+   * @signal OUT_OF_RANGE the complete item is outside the object
+   */
+  set: method = .void
+    arg index = .int, value = .float
+    <packed..float>(index) _data = value
+    return
+
+  /**
+   * Resize while preserving retained items and zero-filling growth.
+   *
+   * @param size non-negative item count
+   * @signal OUT_OF_RANGE the item count cannot be represented as a binary size
+   */
+  resize: method = .void
+    arg size = .int
+    item_width = <sizeof..float>
+    maximum_size = 9223372036854775807 / item_width
+    if size < 0 | size > maximum_size then call _packed_numeric_range_error "PACKEDFLOAT", size
+    data = _data
+    call binresize data, size * item_width
+    _data = data
+    return
+
+  /** Fill every item with one native float value. */
+  fill: method = .void
+    arg value = .float
+    do index = 0 to size() - 1
+      <packed..float>(index) _data = value
+    end
+    return
+
+  /**
+   * Borrow the mutable host-native packed bytes.
+   *
+   * The returned reference is weak: this packedfloat object must remain alive
+   * while it is used. Assign `dereference binary_reference` to a scoped local
+   * for zero-copy access, or use `snapshot binary_reference` for an owned copy.
+   *
+   * @return weak mutable reference to the receiver's binary payload
+   */
+  binary: method = reference .binary
+    return reference _data
+
+/** Owned contiguous host-native rxinteger values. */
+packedint: class
+  _data = .binary with register.0.binary
+
+  /**
+   * Allocate a zero-filled packed integer object.
+   *
+   * @param size non-negative item count
+   * @signal OUT_OF_RANGE the item count cannot be represented as a binary size
+   */
+  *: factory
+    arg size = .int
+    item_width = <sizeof..int>
+    maximum_size = 9223372036854775807 / item_width
+    if size < 0 | size > maximum_size then call _packed_numeric_range_error "PACKEDINT", size
+    data = .binary
+    call binresize data, size * item_width
+    _data = data
+    return
+
+  /**
+   * Construct an owned packed integer copy from exact host-native bytes.
+   *
+   * @param data host-native packed integer bytes
+   * @signal INVALID_ARGUMENTS the byte length is not a whole number of items
+   */
+  fromBinary: factory
+    arg data = .binary
+    byte_length = binlength(data)
+    item_width = <sizeof..int>
+    if byte_length % item_width <> 0 then call _packed_numeric_format_error "PACKEDINT", byte_length, item_width
+    _data = data
+    return
+
+  /** @return number of packed integer items */
+  size: method = .int
+    item_width = <sizeof..int>
+    return binlength(_data) / item_width
+
+  /**
+   * Read one packed integer item.
+   *
+   * @param index zero-based item index
+   * @return exact native rxinteger value
+   * @signal OUT_OF_RANGE the complete item is outside the object
+   */
+  get: method = .int
+    arg index = .int
+    return <packed..int>(index) _data
+
+  /**
+   * Replace one packed integer item without resizing.
+   *
+   * @param index zero-based item index
+   * @param value exact native rxinteger value
+   * @signal OUT_OF_RANGE the complete item is outside the object
+   */
+  set: method = .void
+    arg index = .int, value = .int
+    <packed..int>(index) _data = value
+    return
+
+  /**
+   * Resize while preserving retained items and zero-filling growth.
+   *
+   * @param size non-negative item count
+   * @signal OUT_OF_RANGE the item count cannot be represented as a binary size
+   */
+  resize: method = .void
+    arg size = .int
+    item_width = <sizeof..int>
+    maximum_size = 9223372036854775807 / item_width
+    if size < 0 | size > maximum_size then call _packed_numeric_range_error "PACKEDINT", size
+    data = _data
+    call binresize data, size * item_width
+    _data = data
+    return
+
+  /** Fill every item with one native integer value. */
+  fill: method = .void
+    arg value = .int
+    do index = 0 to size() - 1
+      <packed..int>(index) _data = value
+    end
+    return
+
+  /**
+   * Borrow the mutable host-native packed bytes.
+   *
+   * The returned reference is weak: this packedint object must remain alive
+   * while it is used. Assign `dereference binary_reference` to a scoped local
+   * for zero-copy access, or use `snapshot binary_reference` for an owned copy.
+   *
+   * @return weak mutable reference to the receiver's binary payload
+   */
+  binary: method = reference .binary
+    return reference _data

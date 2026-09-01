@@ -1,0 +1,81 @@
+PERF3-13 Gate E E6 frozen first-verdict candidate
+
+Source base HEAD:
+  fd135cc9f32d
+
+Production/interpreter diff SHA-256:
+  f5b4468e8429f4d26adaeebc0d98e5104037a6ad58d5625ca81d3c076d9f3c92
+
+Build configuration:
+  CMAKE_BUILD_TYPE=Release
+  CREXX_VM_PROFILING=OFF
+  CREXX_VM_HANDLER_PANEL=profile-20
+
+Candidate executable/RXBIN SHA-256:
+  13bdfda41e207ebdc65be322a7abb458407da8df9e575f4991c0e6bda3a715da  persistent_worker_executor-rxbvml
+  02055039317c8653b26427976bbeabc712765dbc98de27259f219d726db0861c  persistent_worker_executor-rxtvml
+  e105d4025b4f1aec6c8b2da40def12327d2607933f4c276843b174c5a6f4c571  test_persistent_worker_executor.rxbin
+  e7b32ecf43c93afdf6c2b1dfb2a1d8dc67ef03a4a9504740f289b87de9124391  test_rxvmmemory_remote_free
+
+Build directory:
+  /private/tmp/crexx-e6-candidate-release
+
+Formal C0/C1 timing capture SHA-256:
+  b21fe1ba498dacef71da947e04d3f24734163409315be6f04152d4af9fd28791  timing/samples.csv
+  de9562d2c06408933a3bb8c53948aceefe08ee178f15f7706f3fa5477eb96ab0  timing/outputs.csv
+  df52fb9ea70643a3f47ed04d6e0695d6eca54e74a923b5a4b7f4a349ac4fa9bf  timing/summary.csv
+  f73565ab147c2efc540431e6c1f8ab7ea198440a5fd8572e6a2826a879cb5b3e  timing/capture-manifest.json
+  eaadb083496262d14bcca5842834c1f3a8fc4e58064193debc74c5487a1f5a67  selection-summary.csv
+
+Isolated rxbvml four-worker confirmation SHA-256:
+  85246b5d224792456f145b89ee8245b14b6f522753686d81ba35c2e9675d953f  confirmation-rxbvml-w4/samples.csv
+  53a659d7feee4a7e60f9446fb8e1f23f3b214a34b389f6a72e12e6df24616b47  confirmation-rxbvml-w4/outputs.csv
+  38dfa70f554a83050bb222585dab2217aa3a2b8ab0517560f3e917c33a2d55d8  confirmation-rxbvml-w4/capture-manifest.json
+  23b2e868970f6cdeff289152e3affd1ff2eb5b63ee35fd9de219b75efb507c76  confirmation-rxbvml-w4-summary.csv
+
+Remaining C2 and external RSS panel SHA-256:
+  3a07c58b840cc19d41b5950d28b10dc73ab80cfe987ba45f1947e9a1cf984adb  remote-free-timing/samples.csv
+  58bac746cc4131fe9f1d77f0f104b854a6df4c095f2e763ea8ca3de6d019548c  remote-free-timing/outputs.csv
+  2398df0febfdcf7a5b01d4f9984749e638a7a883f411a2cc997482115b9b3545  remote-free-timing/capture-manifest.json
+  7eeb1e5f88d4d3d34f8e6cf0de1b4f6a5b50a620a1f26839693ccc80c22a13e6  remote-free-rss/samples.csv
+  3cacea40338cb39e280355417088bff3eb1653da2b430ca4362cb8d20f921d0e  remote-free-rss/capture-manifest.json
+  627271a6cffd4e182cef04077cbf3dbd9b1e7c26c10f93f4d4822c5e2119ba47  rss/samples.csv
+  f00d7e71dbfeea51d53f82109a2feac1280580c2a0a9f9ad3e25c1e2f7b8267a  rss/capture-manifest.json
+  0086b6b0102dc34dbcaab9882e59ac5421a0d726a439d3f649230e0decc7ad3b  remote-free-summary.csv
+  639fa7f9fa3d79dbe438356d379525c3014856804f395be5646619456c3bb157  peak-rss-summary.csv
+
+Accepted cleaned C0 closeout (2026-08-14):
+
+  Source base HEAD:
+    fd135cc9f32d15be28173a3ad3c04e491bba8a2f
+
+  Final interpreter diff SHA-256:
+    00d4a89c3b22e05bdfc0390eb3483aa2212f94f71e653c6e720a2aeb8c698584
+
+  Release configuration:
+    CMAKE_BUILD_TYPE=Release
+    CREXX_VM_PROFILING=OFF
+    CREXX_VM_HANDLER_PANEL=profile-20
+
+  Final Release executable/RXBIN SHA-256:
+    7cf494632e3432607642278998c971416b5879209e7e770aaadcdc03a4c53d00  rxbvm
+    da1e1534b51fd57d549e81f1adb9d61214e90a0b3290728a9f1ab4d620fbe669  rxtvm
+    7cf494632e3432607642278998c971416b5879209e7e770aaadcdc03a4c53d00  rxvm
+    ae07d56b7a23831dce3b206e64fd145898768e45160baebc44a8514e5fc4e51c  persistent_worker_executor-rxvml
+    4cf1dc4dfe38f56332d6d1f7c77899f37b456b90c0682a957b4607355a1a936d  persistent_worker_executor-rxbvml
+    8a8099b08151fae1644fe9164869d61f1fc4e0653d8c459724a7afbf3263977b  persistent_worker_executor-rxtvml
+    e105d4025b4f1aec6c8b2da40def12327d2607933f4c276843b174c5a6f4c571  test_persistent_worker_executor.rxbin
+
+  Closeout build directories:
+    /private/tmp/crexx-e6-c0-closeout-debug
+    /private/tmp/crexx-e6-c0-closeout-release
+    /private/tmp/crexx-e6-c0-closeout-asan
+
+  Final ASan runner directories:
+    /private/tmp/crexx-e6-c0-closeout-asan/asan-logs/20260814-083543-build
+    /private/tmp/crexx-e6-c0-closeout-asan/asan-logs/20260814-083858-ctest
+
+  Closeout record SHA-256:
+    6b0d57eb7ea185e52f07bdc2841840c5056b26a0af56a514b29dad4b8af5acf9  C0-CLOSEOUT.txt
+    517bc10a4a0ff57b83ec9c05d942bc56a99c46f0199990f48612fe644fc2e6d0  SELECTION-REPORT.txt
+    4d26d68e66db831304cb5a402b7d1cfc03c9d76b6bcb3e6565e69216b3cc2b36  COMMANDS.md

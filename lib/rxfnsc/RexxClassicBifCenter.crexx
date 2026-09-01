@@ -1,0 +1,130 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifcenter expose rexxclassicbif_center rexxclassicbif_centre
+import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
+import rexxvalue
+
+/**
+ * Center or centrally truncate one Classic string.
+ *
+ * @bif CENTER
+ * @signature CENTER(string, length [,pad])
+ * @checkargs rANY rWHOLE>=0 oPAD
+ * @sandbox pure
+ * @return exact-width centered string as a RexxValue
+ */
+rexxclassicbif_center: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return .RexxValue("")
+
+  width = .int
+  width = context.argumentText(2) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(3) then pad_bytes = context.argument(3).asBinary()
+    else pad_bytes = " " as .binary
+    byte_length = .int
+    difference = .int
+    half = .int
+    start = .int
+    pad_byte = .int
+    pad_index = 0
+    assembler blen byte_length,bytes
+    assembler getbyte pad_byte,pad_bytes,pad_index
+    if width = byte_length then return .RexxValue.fromBinary(bytes)
+    if width < byte_length then do
+      difference = byte_length - width
+      start = difference
+      assembler idiv start,start,2
+      result_bytes = rexxclassic_byte_slice(bytes,start,width)
+      return .RexxValue.fromBinary(result_bytes)
+    end
+    difference = width - byte_length
+    half = difference
+    assembler idiv half,half,2
+    result_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,half,pad_byte)
+    assembler bappend result_bytes,bytes
+    right_padding = difference - half
+    padding_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,right_padding,pad_byte)
+    assembler bappend result_bytes,padding_bytes
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  pad = " "
+  if context.argumentExists(3) then pad = context.argumentText(3)
+
+  string_length = .int
+  difference = .int
+  half = .int
+  start = .int
+  pad_character = .int
+  pad_index = .int
+  pad_index = 0
+  padding = ""
+  result = ""
+
+  assembler strlen string_length,string
+  if width = string_length then return .RexxValue(string)
+
+  if width < string_length then do
+    difference = string_length - width
+    start = difference
+    assembler idiv start,start,2
+    assembler substring result,string,start,width
+    return .RexxValue(result)
+  end
+
+  difference = width - string_length
+  half = difference
+  assembler idiv half,half,2
+  assembler strchar pad_character,pad,pad_index
+  assembler padstr padding,pad_character,half
+  assembler scopy result,padding
+  assembler append result,string
+  assembler append result,padding
+  if difference - half > half then assembler appendchar result,pad_character
+  return .RexxValue(result)
+
+/**
+ * British-spelling direct alias for the Classic CENTER BIF.
+ *
+ * @bif CENTRE
+ * @signature CENTRE(string, length [,pad])
+ * @checkargs rANY rWHOLE>=0 oPAD
+ * @sandbox pure
+ * @return the exact-width result from the shared CENTER implementation
+ */
+rexxclassicbif_centre: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  return rexxclassicbif_center(context_ref)

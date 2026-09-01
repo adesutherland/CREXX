@@ -1,0 +1,11 @@
+benchmark_rxbin_sha256=208874392B8F4B41B5627F7E6DDB97A5D79AD6C586D4AB1B8A0D3B3BD6A136C2
+gcc_rxbvm_sha256=4C010B82E8A0DE8A79260FD5DFB891432B0D64AD3511A8F32079250A08C90DF9
+gcc_rxbvm_bytes=3609163
+gcc_rxbvm_text_bytes=3332656
+clang_rxbvm_sha256=C88E156AA595B1AF6B2A20CE289FD45FCD80C6F2B4C1DBCBC4DC496FF0A644F6
+clang_rxbvm_bytes=1204224
+clang_rxbvm_text_bytes=1012800
+msvc_rxbvm_sha256=CDF0571666B9778E435D4F1C68EEE78005BE9985B4422FD2AEF7527DD1B6E413
+msvc_rxbvm_bytes=669696
+msvc_rxbvm_text_bytes=560348
+msvc_imports=WS2_32.dll;Secur32.dll;CRYPT32.dll;KERNEL32.dll;VCRUNTIME140.dll;api-ms-win-crt-stdio-l1-1-0.dll;api-ms-win-crt-heap-l1-1-0.dll;api-ms-win-crt-runtime-l1-1-0.dll;api-ms-win-crt-string-l1-1-0.dll;api-ms-win-crt-utility-l1-1-0.dll;api-ms-win-crt-convert-l1-1-0.dll;api-ms-win-crt-time-l1-1-0.dll;api-ms-win-crt-math-l1-1-0.dll;api-ms-win-crt-environment-l1-1-0.dll;api-ms-win-crt-filesystem-l1-1-0.dll;api-ms-win-crt-locale-l1-1-0.dll

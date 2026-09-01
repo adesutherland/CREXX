@@ -1,0 +1,7 @@
+workload,unique_values,frame_values,global_values,attribute_values,standalone_values,scratch_values,api_values,string_values_ever,decimal_values_ever,binary_values_ever,object_values_ever,compound_values,peak_string_capacity_bytes,peak_decimal_capacity_bytes,peak_binary_capacity_bytes,peak_attribute_capacity_slots,peak_reclaimable_string_bytes,peak_reclaimable_binary_bytes,peak_reclaimable_attribute_slots,string_reuses,binary_reuses,attribute_reuses
+sieve,8295,17,30,8208,0,39,1,5,0,0,3,0,64,0,0,8208,0,0,8192,0,0,5499
+richards,1324,198,30,1056,0,39,1,6,0,0,111,0,128,0,0,1056,0,0,136,0,0,437
+base64,159,81,30,8,0,39,1,25,0,9,1,2,14560,0,9280,8,10304,2048,0,4279994,2499,0
+json,1627,1469,30,88,0,39,1,30,0,10,10,4,4448,0,3296,88,0,96,72,0,4999,39992
+towers,4343,465,30,3808,0,39,1,5,0,0,534,0,64,0,0,3640,0,0,1248,0,0,3118058
+rexxcps,663,413,33,176,1,39,1,224,9,2,12,9,3520,308,4096,176,256,0,16,559996,0,14

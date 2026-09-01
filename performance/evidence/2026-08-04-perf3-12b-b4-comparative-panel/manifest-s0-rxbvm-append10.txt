@@ -1,0 +1,4 @@
+# PERF3-12B B4 governance-triggered serial append for the S0/rxbvm cell.
+# Retains the original 12 observations; appends 10 under unchanged AC conditions.
+crexx-cross-runtime-matrix|1
+rexxcps-s0-rxbvm|RexxCPS|crexx-s0|rxbvm|common-f1-control|A|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm;/tmp/perf3-12b-b4.zzOY6L/s0/rexxcps.rxbin;/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin

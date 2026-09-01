@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+permute,oorexx,procedural-equivalent-port,process,warmup,1,182262792,0,pass,,
+permute,oorexx,procedural-equivalent-port,process,recorded,1,193434208,0,pass,,
+permute,oorexx,procedural-equivalent-port,process,recorded,2,203307916,0,pass,,
+permute,oorexx,procedural-equivalent-port,process,recorded,3,283832333,0,pass,,

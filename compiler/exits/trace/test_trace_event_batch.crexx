@@ -1,0 +1,12 @@
+options levelb
+
+main: procedure
+  trace results
+  i = random(41, 41)
+  result = increment(i)
+  say "TRACE EVENT BATCH DONE" result
+  return
+
+increment: procedure = .int
+  arg value = .int
+  return value + 1

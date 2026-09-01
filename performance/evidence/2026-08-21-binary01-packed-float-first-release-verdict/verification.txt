@@ -1,0 +1,26 @@
+recorded_rows=96
+warmup_rows=8
+output_files=104
+pass_outputs=104
+failure_markers=0
+rxbvm,read,encoded-read,rows=12,positions= 2 7 2 7 2 7 2 7 2 7 2 7
+rxbvm,read,packed-read,rows=12,positions= 1 8 1 8 1 8 1 8 1 8 1 8
+rxbvm,write,encoded-write,rows=12,positions= 4 5 4 5 4 5 4 5 4 5 4 5
+rxbvm,write,packed-write,rows=12,positions= 3 6 3 6 3 6 3 6 3 6 3 6
+rxtvm,read,encoded-read,rows=12,positions= 6 3 6 3 6 3 6 3 6 3 6 3
+rxtvm,read,packed-read,rows=12,positions= 5 4 5 4 5 4 5 4 5 4 5 4
+rxtvm,write,encoded-write,rows=12,positions= 8 1 8 1 8 1 8 1 8 1 8 1
+rxtvm,write,packed-write,rows=12,positions= 7 2 7 2 7 2 7 2 7 2 7 2
+rxbvm,read,encoded-read,1000000,rows=12
+rxbvm,read,packed-read,1000000,rows=12
+rxbvm,write,encoded-write,200019,rows=12
+rxbvm,write,packed-write,200019,rows=12
+rxtvm,read,encoded-read,1000000,rows=12
+rxtvm,read,packed-read,1000000,rows=12
+rxtvm,write,encoded-write,200019,rows=12
+rxtvm,write,packed-write,200019,rows=12
+e294ccc12bb4af230a5d2428e4c6cc8dc91f3e4334c172bc2ffd620c305fce78  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/raw/warmups.csv
+3dff1c92b88720723f1c28064b3576d700fb8b4b1e2ec0bcbdafac7872f2412f  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/raw/samples.csv
+d35234d58448dd3eb0f3aeddc09a8e17fc65abc30682e7d14234a258a0c439be  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/summary.csv
+c6eed8caad4d54b37aee2167be83aa6a4133b9c946ddcc91b63d365cfc83ddb8  performance/evidence/2026-08-21-binary01-packed-float-first-release-verdict/provenance/binary_packed_float_compare_linked.rxbin
+79f813e69d72881a866e4abf4295b207e0bcdf903cd82acebae7fbc49b24f6aa  tests/performance/binary_packed_float_compare.crexx

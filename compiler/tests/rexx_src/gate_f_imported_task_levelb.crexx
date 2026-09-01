@@ -1,0 +1,8 @@
+options levelb
+import gate_f_task_method_lib
+namespace gate_f_imported_task_levelb
+
+main: procedure = .int
+  worker = .workbox(40)
+  answer = worker.increment(2)
+  return answer

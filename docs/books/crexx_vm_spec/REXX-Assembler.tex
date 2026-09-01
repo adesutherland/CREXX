@@ -339,16 +339,24 @@ register status flags:
 
 \begin{verbatim}
 gettp - gets the readable register status flags (op1 = op2.flags)
-settp - sets externally writable register status flags, preserving VM-private flags
-setortp - or externally writable register status flags (op1.flags = op1.flags | op2)
-brtpt - if op2 has externally writable status flags then goto op1
+settp - sets trusted-RXAS-writable register status flags, preserving VM-private flags
+setortp - or trusted-RXAS-writable register status flags (op1.flags = op1.flags | op2)
+brtpt - if op2 has compiler-ABI, library, or user status flags then goto op1
 brtpandt - if op2 readable status flags & op3 true then goto op1
 \end{verbatim}
 
-The status flag word is 32-bit storage: the low byte is VM-private/read-only
-outside the VM, the next byte is compiler call ABI state, and higher bands are
-reserved for library/runtime and user contracts
+The status flag word is 32-bit storage:
+\texttt{0x000000FF} is VM-private/read-only outside the VM,
+\texttt{0x00000300} is compiler call-ABI state,
+\texttt{0x0000FC00} is protected language metadata,
+\texttt{0x00FF0000} is library/runtime state, and
+\texttt{0x7F000000} is user state. The sign bit is reserved
 \protect\hyperlink{crexx-calling-convention}{see cREXX Calling Convention}.
+The language band currently assigns \texttt{0x00003C00} to positive NFC, NFD,
+NFKC, and NFKD certificates and reserves \texttt{0x0000C000}. Trusted
+generated RXAS may assert a proved language fact; Level B flag-view assignment
+cannot write that band. The VM preserves proved whole-string facts on exact
+copies and clears them on content mutation.
 The RXAS integer operand format is wider on 64-bit builds, but status flag
 instructions apply masks to the low 32 bits of the register status word.
 
@@ -634,8 +642,12 @@ In most cases it is for the compiler to decide what values to use, and
 how/if to set the compiler status flags. Only a few dynamic scenarios will need
 some extended functions (see following). The low status byte is VM-private and
 must not be written by RXAS code; compiler call flags begin at
-\texttt{0x00000100}. RXAS instructions set public flag bands explicitly; this is
-not an automatic runtime type-validation mechanism. VM-private cache flags are
+\texttt{0x00000100}. The protected language band begins at
+\texttt{0x00000400}; it carries VM-stored, language-owned content facts and is
+not an extension of the compiler call ABI. Trusted RXAS instructions can assert
+such a proved fact, while source-level flag views can write only library and
+user bands. This is not an automatic runtime type-validation mechanism.
+VM-private cache flags and protected normalization-certificate invalidation are
 maintained by VM-owned content operations.
 
 An Object has an pointer to its static ptable entry in the constant pool

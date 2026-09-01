@@ -1,0 +1,15 @@
+release_build=PASS
+release_ctest=2002/2002
+release_ctest_seconds=64.38
+debug_build=PASS
+debug_ctest=2002/2002
+debug_ctest_seconds=306.05
+profile_default=profile-20
+profile_focused_ctest=6/6
+profile_focused_ctest_seconds=1.10
+rxtvm_profile_call_func_placement=outline
+rxbvm_profile_call_func_placement=outline
+documentation_test=PASS
+initial_profile_target_setup=FAILED before build because tests_procedure_profile is a generated file, not a target
+corrected_profile_target=run_tests_procedure_profile
+product_failure=no

@@ -1,0 +1,833 @@
+sample_id,stream,line_number,text
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,6,elapsed_us=1254109
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,6,elapsed_us=1197430
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,6,elapsed_us=1534455
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,6,elapsed_us=1474792
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,6,elapsed_us=1160220
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,6,elapsed_us=1163718
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,6,elapsed_us=1490757
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,6,elapsed_us=1443804
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,6,elapsed_us=1185307
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,6,elapsed_us=1526111
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,6,elapsed_us=1465226
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,6,elapsed_us=1146754
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,6,elapsed_us=1479860
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,6,elapsed_us=1443609
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,6,elapsed_us=1140046
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,6,elapsed_us=1188724
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,6,elapsed_us=1465384
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,6,elapsed_us=1166593
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,6,elapsed_us=1151560
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,6,elapsed_us=1477482
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,6,elapsed_us=1176853
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,6,elapsed_us=1165311
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,6,elapsed_us=1491600
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,6,elapsed_us=1454460
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,6,elapsed_us=1334902
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,6,elapsed_us=1477456
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,6,elapsed_us=1463384
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,6,elapsed_us=1161889
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,6,elapsed_us=1469551
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-accepted-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,6,elapsed_us=1475264
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxbvm-final-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,6,elapsed_us=1160035
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-accepted-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,5,iterations=60000000
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,6,elapsed_us=1185021
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,7,checksum=171562500
+timing-nr15-post-fix-get-hit-get-hit-rxvm-final-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,8,     Performance: 6112092 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,8,     Performance: 6258042 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,8,     Performance: 5485993 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,8,     Performance: 5683455 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,8,     Performance: 6122863 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,8,     Performance: 6176572 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,8,     Performance: 5544015 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,8,     Performance: 5498085 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,8,     Performance: 6149192 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,8,     Performance: 5624373 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,8,     Performance: 5591299 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,8,     Performance: 6127466 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,8,     Performance: 5613452 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,8,     Performance: 5687635 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,8,     Performance: 6219536 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,8,     Performance: 6268586 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.7 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,8,     Performance: 5732617 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,8,     Performance: 6221780 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,8,     Performance: 6088603 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,8,     Performance: 5526077 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,8,     Performance: 6147075 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,8,     Performance: 6186029 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.7 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,8,     Performance: 5721747 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,8,     Performance: 5620658 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,8,     Performance: 6168811 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,8,     Performance: 5531818 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,8,     Performance: 5591878 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.7 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,8,     Performance: 6055681 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,8,     Performance: 5436582 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-accepted-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,8,     Performance: 5619866 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxbvm-final-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,8,     Performance: 6095502 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-accepted-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,3,       System is: macOS
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,7,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,8,     Performance: 6158007 cREXX clauses per second
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,9,
+timing-nr15-post-fix-rexxcps-rexxcps-rxvm-final-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,6,elapsed_us=227
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,6,elapsed_us=189
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,6,elapsed_us=200
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,6,elapsed_us=184
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-warmup-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,6,elapsed_us=165
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,6,elapsed_us=187
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,6,elapsed_us=187
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,6,elapsed_us=184
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-1,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,6,elapsed_us=174
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,6,elapsed_us=168
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,6,elapsed_us=172
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-2,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,6,elapsed_us=169
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,6,elapsed_us=180
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,6,elapsed_us=165
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,6,elapsed_us=175
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-3,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,6,elapsed_us=185
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,6,elapsed_us=175
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,6,elapsed_us=172
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-4,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,6,elapsed_us=180
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,6,elapsed_us=172
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-5,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,6,elapsed_us=172
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,6,elapsed_us=172
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,6,elapsed_us=169
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-6,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,6,elapsed_us=171
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-accepted-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,6,elapsed_us=162
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxbvm-final-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,6,elapsed_us=168
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-accepted-recorded-7,stdout,8,PASS: NR-15 stem access compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,1,benchmark=nr15_stem_access_compare
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,2,mode=get-hit
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,3,family=ascii
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,4,size=64
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,5,iterations=1
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,6,elapsed_us=168
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,7,checksum=2
+timing-nr15-post-fix-lifecycle-lifecycle-rxvm-final-recorded-7,stdout,8,PASS: NR-15 stem access compare

@@ -22,14 +22,18 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Count Unicode quote-aware words in one scan. */
 options levelb
-
 namespace rxfnsb expose qwords
 
-qwords: procedure=.int
-  arg line=.string
-  do i=1 to 99999999
-     if qword(line,i)='' then return i-1
-  end
-return 0
+/**
+ * @param line source text
+ * @return number of quote-aware words
+ * @signal INVALID_ARGUMENTS unmatched quote
+ */
+qwords: procedure = .int
+  arg line = .string
+  spans = qscan_word_spans(line)
+  count = .int
+  assembler idiv count,spans[0],2
+  return count

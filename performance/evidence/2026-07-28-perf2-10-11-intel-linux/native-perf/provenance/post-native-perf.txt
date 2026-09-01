@@ -1,0 +1,13 @@
+2026-07-29T09:47:43+01:00
+Linux adrian-linux 7.0.0-27-generic #27-Ubuntu SMP PREEMPT_DYNAMIC Thu Jun 18 19:13:49 UTC 2026 x86_64 GNU/Linux
+ 09:47:43 up 1 day,  1:35,  1 user,  load average: 1.25, 1.54, 1.76
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       4.4Gi        12Gi       385Mi       2.6Gi        14Gi
+Swap:          8.0Gi       5.2Gi       2.8Gi
+perf_event_paranoid=-1
+kptr_restrict=1
+nmi_watchdog=1
+pmu_name=icelake
+perf_version=perf version 7.0.12
+
+active build/test/profile processes:

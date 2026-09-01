@@ -1,0 +1,3638 @@
+/*
+ * SOURCE                 : summarize_paired.crexx
+ */
+
+.globals=0
+
+main() .locals=63
+   .meta "summarize_paired.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "summarize_paired.main.after_counts"="b" ".int[*]" r3
+   .srcstep 1 1 17 "summarize_paired.crexx" 18 1 20 "after_counts = .int[]"
+   null r3
+   .meta "summarize_paired.main.after_values"="b" ".float[*]" r4
+   .srcstep 2 2 17 "summarize_paired.crexx" 16 1 22 "after_values = .float[]"
+   null r4
+   .meta "summarize_paired.main.before_counts"="b" ".int[*]" r6
+   .srcstep 3 3 17 "summarize_paired.crexx" 17 1 21 "before_counts = .int[]"
+   null r6
+   .meta "summarize_paired.main.before_values"="b" ".float[*]" r7
+   .srcstep 4 4 17 "summarize_paired.crexx" 15 1 23 "before_values = .float[]"
+   null r7
+   .meta "summarize_paired.main.group_keys"="b" ".string[*]" r9
+   .srcstep 5 5 17 "summarize_paired.crexx" 12 1 21 "group_keys = .string[]"
+   null r9
+   .meta "summarize_paired.main.group_vms"="b" ".string[*]" r10
+   .srcstep 6 6 17 "summarize_paired.crexx" 14 1 20 "group_vms = .string[]"
+   null r10
+   .meta "summarize_paired.main.group_workloads"="b" ".string[*]" r11
+   .srcstep 7 7 17 "summarize_paired.crexx" 13 1 26 "group_workloads = .string[]"
+   null r11
+   .srcstep 8 8 17 "summarize_paired.crexx" 5 5 19 "arg argv = .string[]"
+   .meta "summarize_paired.main.argv"="b" ".string[*]" a1
+   .srcstep 11 11 17 "summarize_paired.crexx" 6 1 15 "if argv[0] < 2 then do"
+   .traceevent "C" 4 "R" "V" "r" 2 11 11 0 "argv" ""
+   getattrs r0,a1,0
+   .traceevent "V" 6 "R" "I" "r" 0 11 11 0 "argv" ""
+   ilt r0,r0,2
+   .traceevent "O" 4 "R" "B" "r" 0 11 11 0 "" ""
+   brf l23iffalse,r0
+   .srcstep 12 12 17 "summarize_paired.crexx" 6 16 20 "if argv[0] < 2 then do"
+   .srcstep 9 9 17 "summarize_paired.crexx" 7 3 69 "  say \"Usage: summarize_paired OUTPUT_SUMMARY SAMPLES [SAMPLES ...]\""
+   say "Usage: summarize_paired OUTPUT_SUMMARY SAMPLES [SAMPLES ...]"
+   .srcstep 10 10 17 "summarize_paired.crexx" 8 3 11 "  return 2"
+   ret 2
+l23iffalse:
+   .srcstep 13 13 17 "summarize_paired.crexx" 11 1 21 "output_path = argv[1]"
+   .meta "summarize_paired.main.output_path"="b" ".string" r1
+   minlinkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "argv" ""
+   scopy r1,r2
+   .traceevent "A" 6 "R" "S" "r" 1 13 13 0 "output_path" ""
+   unlink r2
+   .srcstep 14 14 17 "summarize_paired.crexx" 19 1 16 "group_count = 0"
+   .meta "summarize_paired.main.group_count"="b" ".int" r8
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 14 14 0 "group_count" ""
+   .srcstep 178 178 17 "summarize_paired.crexx" 21 1 3 "do input_number = 2 to argv[0]"
+   .srcstep 15 15 17 "summarize_paired.crexx" 21 4 20 "do input_number = 2 to argv[0]"
+   .meta "summarize_paired.main.input_number"="b" ".int" r2
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 15 15 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 15 15 0 "input_number" ""
+   .srcstep 16 16 17 "summarize_paired.crexx" 21 21 30 "do input_number = 2 to argv[0]"
+   .traceevent "C" 4 "R" "V" "r" 13 0 0 0 "argv" ""
+   getattrs r14,a1,0
+   .traceevent "V" 6 "R" "I" "r" 14 0 0 0 "argv" ""
+l73dostart:
+   .srcstep 16 16 17 "summarize_paired.crexx" 21 21 30 "do input_number = 2 to argv[0]"
+   igt r15,r2,r14
+   brt l73doend,r15
+   .srcstep 18 18 17 "summarize_paired.crexx" 22 3 33 "  input_path = argv[input_number]"
+   .meta "summarize_paired.main.input_path"="b" ".string" r0
+   .traceevent "V" 6 "R" "I" "r" 2 18 18 0 "input_number" ""
+   .traceevent "C" 4 "R" "I" "r" 2 18 18 0 "argv" ""
+   minlinkattr1 r16,a1,r2,0
+   .traceevent "V" 6 "R" "S" "r" 16 18 18 0 "argv" ""
+   scopy r0,r16
+   .traceevent "A" 6 "R" "S" "r" 0 18 18 0 "input_path" ""
+   unlink r16
+   .srcstep 19 19 17 "summarize_paired.crexx" 23 3 18 "  line_number = 0"
+   .meta "summarize_paired.main.line_number"="b" ".int" r12
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 19 19 0 "line_number" ""
+   .srcstep 175 175 17 "summarize_paired.crexx" 24 3 5 "  do while lines(input_path)"
+l89dostart:
+   .srcstep 20 20 17 "summarize_paired.crexx" 24 6 29 "  do while lines(input_path)"
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "input_path" ""
+   load r19,1
+   settpswapcall r21,rxfnsb.lines(),r19,r0,256,r20
+   swap r0,r20
+   .traceevent "F" 4 "R" "B" "r" 21 0 0 0 "lines" ""
+   brf l89doend,r21
+   .meta "summarize_paired.main.fields"="b" ".string[*]" r16
+   .srcstep 21 21 17 "summarize_paired.crexx" 28 5 40 "    fields = split_delimited(line, \",\")"
+   null r16
+   .srcstep 22 22 17 "summarize_paired.crexx" 25 5 30 "    line = linein(input_path)"
+   .meta "summarize_paired.main.line"="b" ".string" r18
+   .traceevent "V" 6 "R" "S" "r" 0 22 22 0 "input_path" ""
+   load r19,1
+   settpswapcall r18,rxfnsb.linein(),r19,r0,256,r20
+   swap r0,r20
+   .traceevent "F" 4 "R" "S" "r" 18 22 22 0 "linein" ""
+   .traceevent "A" 6 "R" "S" "r" 18 22 22 0 "line" ""
+   .srcstep 23 23 17 "summarize_paired.crexx" 26 5 34 "    line_number = line_number + 1"
+   .traceevent "V" 6 "R" "I" "r" 12 23 23 0 "line_number" ""
+   iadd r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 23 23 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 23 23 0 "line_number" ""
+   .srcstep 25 25 17 "summarize_paired.crexx" 27 5 23 "    if line_number = 1 then iterate"
+   .traceevent "V" 6 "R" "I" "r" 12 25 25 0 "line_number" ""
+   ieq r20,r12,1
+   .traceevent "O" 4 "R" "B" "r" 20 25 25 0 "" ""
+   brf l107iffalse,r20
+   .srcstep 26 26 17 "summarize_paired.crexx" 27 24 28 "    if line_number = 1 then iterate"
+   .srcstep 24 24 17 "summarize_paired.crexx" 27 29 36 "    if line_number = 1 then iterate"
+   br l89doinc
+l107iffalse:
+   .srcstep 123 123 17 "summarize_paired.crexx" 28 5 40 "    fields = split_delimited(line, \",\")"
+   .srcstep 122 122 17 "summarize_paired.crexx" 28 14 29 "    fields = split_delimited(line, \",\")"
+   .meta "summarize_paired.main.fields"="b" ".string[*]" r20
+   .srcstep 27 27 17 "summarize_paired.crexx" 138 3 19 "  fields = .string[]"
+   null r20
+   .srcstep 28 28 33 "summarize_paired.crexx" 137 7 11 "  arg text = .string, delimiter = .string"
+   .traceevent "V" 6 "R" "S" "r" 18 28 28 0 "line" ""
+   scopy r22,r18
+   .traceevent "A" 6 "R" "S" "r" 22 28 28 0 "text" ""
+   .srcstep 29 29 17 "summarize_paired.crexx" 139 3 12 "  start = 1"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 29 29 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 29 29 0 "start" ""
+   .srcstep 119 119 17 "summarize_paired.crexx" 140 3 5 "  do forever"
+l2365dostart:
+   .srcstep 40 40 17 "summarize_paired.crexx" 141 5 47 "    delimiter_at = pos(delimiter, text, start)"
+   .srcstep 39 39 17 "summarize_paired.crexx" 141 20 23 "    delimiter_at = pos(delimiter, text, start)"
+   .meta "summarize_paired.main.found_position"="b" ".int" r24
+   .srcstep 30 30 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r24
+   .srcstep 31 31 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   load r26,","
+   .traceevent "L" 4 "R" "S" "r" 26 31 31 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 26 31 31 0 "needle" ""
+   .srcstep 32 32 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   .traceevent "V" 6 "R" "S" "r" 22 32 32 0 "text" ""
+   scopy r25,r22
+   .traceevent "A" 6 "R" "S" "r" 25 32 32 0 "haystack" ""
+   .srcstep 33 33 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   .traceevent "V" 6 "R" "I" "r" 19 33 33 0 "start" ""
+   icopy r27,r19
+   .traceevent "A" 6 "R" "I" "r" 27 33 33 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 27 40 40 0 "start" ""
+   ilt r28,r27,1
+   .traceevent "O" 4 "R" "B" "r" 28 40 40 0 "" ""
+   brf l3042iffalse,r28
+   .srcstep 34 34 25 "pos.crexx" 47 15 70 "    assembler signal \"INVALID_ARGUMENTS\",\"POS start must be positive\""
+   signal "INVALID_ARGUMENTS","POS start must be positive"
+l3042iffalse:
+   .traceevent "V" 6 "R" "S" "r" 26 40 40 0 "needle" ""
+   seq r28,r26,""
+   .traceevent "O" 4 "R" "B" "r" 28 40 40 0 "" ""
+   brt l3050orend,r28
+   .traceevent "V" 6 "R" "S" "r" 25 40 40 0 "haystack" ""
+   seq r28,r25,""
+   .traceevent "O" 4 "R" "B" "r" 28 40 40 0 "" ""
+l3050orend:
+   .traceevent "O" 4 "R" "B" "r" 28 40 40 0 "" ""
+   brf l3049iffalse,r28
+   .srcstep 35 35 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r29,0
+   .traceevent "L" 4 "R" "I" "r" 29 40 40 0 "" ""
+   br l3028bexprend
+l3049iffalse:
+   .srcstep 36 36 25 "pos.crexx" 50 3 25 "  found_position = start"
+   .traceevent "V" 6 "R" "I" "r" 27 36 36 0 "start" ""
+   icopy r24,r27
+   .traceevent "A" 6 "R" "I" "r" 24 36 36 0 "found_position" ""
+   .srcstep 37 37 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 24 40 40 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 26 40 40 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 25 40 40 0 "haystack" ""
+   strpos r24,r26,r25
+   .srcstep 38 38 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 24 40 40 0 "found_position" ""
+   icopy r29,r24
+   br l3028bexprend
+l3028bexprend:
+   .meta "summarize_paired.main.found_position"
+   icopy r23,r29
+   .traceevent "A" 6 "R" "I" "r" 23 40 40 0 "delimiter_at" ""
+   .srcstep 78 78 17 "summarize_paired.crexx" 142 5 24 "    if delimiter_at = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 23 78 78 0 "delimiter_at" ""
+   ieq r29,r23,0
+   .traceevent "O" 4 "R" "B" "r" 29 78 78 0 "" ""
+   brf l2374iffalse,r29
+   .srcstep 79 79 17 "summarize_paired.crexx" 142 25 29 "    if delimiter_at = 0 then do"
+   .srcstep 76 76 17 "summarize_paired.crexx" 143 7 50 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "C" 4 "R" "V" "r" 28 76 76 0 "fields" ""
+   getattrs r27,r20,0
+   .traceevent "V" 6 "R" "I" "r" 27 76 76 0 "fields" ""
+   iadd r27,r27,1
+   .traceevent "O" 4 "R" "I" "r" 27 76 76 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 27 76 76 0 "fields" ""
+   minlinkattr1 r26,r20,r27,0
+   .srcstep 75 75 17 "summarize_paired.crexx" 143 31 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .meta "summarize_paired.main.available"="b" ".int" r25
+   .srcstep 41 41 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r25
+   .meta "summarize_paired.main.copy_length"="b" ".int" r24
+   .srcstep 42 42 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r24
+   .meta "summarize_paired.main.pad_character"="b" ".int" r31
+   .srcstep 43 43 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r31
+   .meta "summarize_paired.main.pad_length"="b" ".int" r33
+   .srcstep 44 44 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r33
+   .meta "summarize_paired.main.padding_length"="b" ".int" r34
+   .srcstep 45 45 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r34
+   .meta "summarize_paired.main.start_offset"="b" ".int" r36
+   .srcstep 46 46 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r36
+   .meta "summarize_paired.main.string_length"="b" ".int" r38
+   .srcstep 47 47 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r38
+   .srcstep 48 48 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "V" 6 "R" "S" "r" 22 48 48 0 "text" ""
+   scopy r37,r22
+   .traceevent "A" 6 "R" "S" "r" 37 48 48 0 "string" ""
+   .srcstep 49 49 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "V" 6 "R" "I" "r" 19 49 49 0 "start" ""
+   .traceevent "A" 6 "R" "I" "r" 19 49 49 0 "start" ""
+   .srcstep 50 50 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   load r30," "
+   .traceevent "L" 4 "R" "S" "r" 30 50 50 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 30 50 50 0 "pad" ""
+   .srcstep 51 51 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r32,0
+   .traceevent "L" 4 "R" "I" "r" 32 51 51 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 51 51 0 "pad_index" ""
+   .srcstep 52 52 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r35,""
+   .traceevent "L" 4 "R" "S" "r" 35 52 52 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 52 52 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 19 76 76 0 "start" ""
+   ilt r28,r19,1
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3112iffalse,r28
+   .srcstep 53 53 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3112iffalse:
+   .srcstep 54 54 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 33 76 76 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 30 76 76 0 "pad" ""
+   strlen r33,r30
+   .traceevent "V" 6 "R" "I" "r" 33 76 76 0 "pad_length" ""
+   ine r28,r33,1
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3131iffalse,r28
+   .srcstep 55 55 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3131iffalse:
+   .srcstep 56 56 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 38 76 76 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   strlen r38,r37
+   .srcstep 57 57 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 19 57 57 0 "start" ""
+   isub r36,r19,1
+   .traceevent "O" 4 "R" "I" "r" 36 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 57 57 0 "start_offset" ""
+   .srcstep 58 58 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 38 58 58 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 36 58 58 0 "start_offset" ""
+   isub r25,r38,r36
+   .traceevent "O" 4 "R" "I" "r" 25 58 58 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 58 58 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 25 76 76 0 "available" ""
+   ilt r28,r25,0
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3151iffalse,r28
+   .srcstep 59 59 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r25,0
+   .traceevent "L" 4 "R" "I" "r" 25 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 59 59 0 "available" ""
+l3151iffalse:
+   .traceevent "V" 6 "R" "I" "r" 25 76 76 0 "available" ""
+   ieq r28,r25,0
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3162iffalse,r28
+   .srcstep 60 60 25 "substr.crexx" 70 27 40 "    if available = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   scopy r39,r35
+   br l3068bexprend
+l3162iffalse:
+   .traceevent "V" 6 "R" "I" "r" 36 76 76 0 "start_offset" ""
+   ieq r28,r36,0
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3168iffalse,r28
+   .srcstep 61 61 25 "substr.crexx" 71 30 43 "    if start_offset = 0 then return string"
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   scopy r39,r37
+   br l3068bexprend
+l3168iffalse:
+   .srcstep 62 62 25 "substr.crexx" 72 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 36 76 76 0 "start_offset" ""
+   setstrpos r37,r36
+   .srcstep 63 63 25 "substr.crexx" 73 15 48 "    assembler substring result,string,available"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 25 76 76 0 "available" ""
+   substring r35,r37,r25
+   .srcstep 64 64 25 "substr.crexx" 74 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   scopy r39,r35
+   br l3068bexprend
+   .srcstep 65 65 25 "substr.crexx" 77 22 35 "  if length = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   scopy r39,r35
+   br l3068bexprend
+   .srcstep 66 66 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r24,0
+   .traceevent "L" 4 "R" "I" "r" 24 66 66 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 24 66 66 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 25 76 76 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 24 76 76 0 "copy_length" ""
+   ilt r28,r25,r24
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3192iffalse,r28
+   .srcstep 67 67 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 25 67 67 0 "available" ""
+   icopy r24,r25
+   .traceevent "A" 6 "R" "I" "r" 24 67 67 0 "copy_length" ""
+l3192iffalse:
+   .traceevent "V" 6 "R" "I" "r" 24 76 76 0 "copy_length" ""
+   igt r28,r24,0
+   .traceevent "O" 4 "R" "B" "r" 28 76 76 0 "" ""
+   brf l3199iffalse,r28
+   .traceevent "V" 6 "R" "I" "r" 36 76 76 0 "start_offset" ""
+   ieq r27,r36,0
+   .traceevent "O" 4 "R" "B" "r" 27 76 76 0 "" ""
+   brf l3206andend,r27
+   .traceevent "V" 6 "R" "I" "r" 24 76 76 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 38 76 76 0 "string_length" ""
+   ieq r27,r24,r38
+   .traceevent "O" 4 "R" "B" "r" 27 76 76 0 "" ""
+l3206andend:
+   .traceevent "O" 4 "R" "B" "r" 27 76 76 0 "" ""
+   brf l3205andfalse,r27
+   .traceevent "V" 6 "R" "I" "r" 38 76 76 0 "string_length" ""
+   ieq r39,r38,0
+   .traceevent "O" 4 "R" "B" "r" 39 76 76 0 "" ""
+   br l3205andend
+l3205andfalse:
+   load r39,0
+l3205andend:
+   .traceevent "O" 4 "R" "B" "r" 39 76 76 0 "" ""
+   brf l3204iffalse,r39
+   .srcstep 68 68 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   scopy r39,r37
+   br l3068bexprend
+l3204iffalse:
+   .srcstep 69 69 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 36 76 76 0 "start_offset" ""
+   setstrpos r37,r36
+   .srcstep 70 70 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 37 76 76 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 24 76 76 0 "copy_length" ""
+   substring r35,r37,r24
+l3199iffalse:
+   .srcstep 71 71 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 24 71 71 0 "copy_length" ""
+   isub r34,0,r24
+   .traceevent "O" 4 "R" "I" "r" 34 71 71 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 71 71 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 34 76 76 0 "padding_length" ""
+   igt r39,r34,0
+   .traceevent "O" 4 "R" "B" "r" 39 76 76 0 "" ""
+   brf l3230iffalse,r39
+   .srcstep 72 72 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 31 76 76 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 30 76 76 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 32 76 76 0 "pad_index" ""
+   strchar r31,r30,r32
+   .srcstep 73 73 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 31 76 76 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 34 76 76 0 "padding_length" ""
+   padstr r35,r31,r34
+l3230iffalse:
+   .srcstep 74 74 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 35 76 76 0 "result" ""
+   scopy r39,r35
+   br l3068bexprend
+l3068bexprend:
+   .meta "summarize_paired.main.available"
+   .meta "summarize_paired.main.copy_length"
+   .meta "summarize_paired.main.pad_character"
+   .meta "summarize_paired.main.pad_length"
+   .meta "summarize_paired.main.padding_length"
+   .meta "summarize_paired.main.start_offset"
+   .meta "summarize_paired.main.string_length"
+   scopy r26,r39
+   .traceevent "A" 6 "R" "S" "r" 26 76 76 0 "fields" ""
+   unlink r26
+   .srcstep 77 77 17 "summarize_paired.crexx" 144 7 12 "      leave"
+   br l2365doend
+l2374iffalse:
+   .srcstep 112 112 17 "summarize_paired.crexx" 146 5 70 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "C" 4 "R" "V" "r" 39 112 112 0 "fields" ""
+   getattrs r38,r20,0
+   .traceevent "V" 6 "R" "I" "r" 38 112 112 0 "fields" ""
+   iadd r38,r38,1
+   .traceevent "O" 4 "R" "I" "r" 38 112 112 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 38 112 112 0 "fields" ""
+   minlinkattr1 r37,r20,r38,0
+   .srcstep 111 111 17 "summarize_paired.crexx" 146 29 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .meta "summarize_paired.main.available"="b" ".int" r36
+   .srcstep 80 80 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r36
+   .meta "summarize_paired.main.copy_length"="b" ".int" r35
+   .srcstep 81 81 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r35
+   .meta "summarize_paired.main.pad_character"="b" ".int" r32
+   .srcstep 82 82 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r32
+   .meta "summarize_paired.main.pad_length"="b" ".int" r30
+   .srcstep 83 83 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r30
+   .meta "summarize_paired.main.padding_length"="b" ".int" r29
+   .srcstep 84 84 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r29
+   .meta "summarize_paired.main.start_offset"="b" ".int" r26
+   .srcstep 85 85 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r26
+   .meta "summarize_paired.main.string_length"="b" ".int" r24
+   .srcstep 86 86 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r24
+   .srcstep 87 87 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "S" "r" 22 87 87 0 "text" ""
+   scopy r25,r22
+   .traceevent "A" 6 "R" "S" "r" 25 87 87 0 "string" ""
+   .srcstep 88 88 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "I" "r" 19 88 88 0 "start" ""
+   .traceevent "A" 6 "R" "I" "r" 19 88 88 0 "start" ""
+   .srcstep 89 89 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "I" "r" 23 89 89 0 "delimiter_at" ""
+   .traceevent "V" 6 "R" "I" "r" 19 89 89 0 "start" ""
+   isub r34,r23,r19
+   .traceevent "O" 4 "R" "I" "r" 34 89 89 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 89 89 0 "length" ""
+   .srcstep 90 90 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   load r33," "
+   .traceevent "L" 4 "R" "S" "r" 33 90 90 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 33 90 90 0 "pad" ""
+   .srcstep 91 91 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 91 91 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 31 91 91 0 "pad_index" ""
+   .srcstep 92 92 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r28,""
+   .traceevent "L" 4 "R" "S" "r" 28 92 92 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 28 92 92 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 19 112 112 0 "start" ""
+   ilt r39,r19,1
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3291iffalse,r39
+   .srcstep 93 93 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3291iffalse:
+   .traceevent "V" 6 "R" "I" "r" 34 112 112 0 "length" ""
+   ilt r39,r34,0
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3298iffalse,r39
+   .srcstep 94 94 25 "substr.crexx" 59 15 78 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR length must be non-negative\""
+   signal "INVALID_ARGUMENTS","SUBSTR length must be non-negative"
+l3298iffalse:
+   .srcstep 95 95 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 30 112 112 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 33 112 112 0 "pad" ""
+   strlen r30,r33
+   .traceevent "V" 6 "R" "I" "r" 30 112 112 0 "pad_length" ""
+   ine r39,r30,1
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3310iffalse,r39
+   .srcstep 96 96 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3310iffalse:
+   .srcstep 97 97 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 24 112 112 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 25 112 112 0 "string" ""
+   strlen r24,r25
+   .srcstep 98 98 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 19 98 98 0 "start" ""
+   isub r26,r19,1
+   .traceevent "O" 4 "R" "I" "r" 26 98 98 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 98 98 0 "start_offset" ""
+   .srcstep 99 99 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 24 99 99 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 26 99 99 0 "start_offset" ""
+   isub r36,r24,r26
+   .traceevent "O" 4 "R" "I" "r" 36 99 99 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 99 99 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 36 112 112 0 "available" ""
+   ilt r39,r36,0
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3330iffalse,r39
+   .srcstep 100 100 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r36,0
+   .traceevent "L" 4 "R" "I" "r" 36 100 100 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 100 100 0 "available" ""
+l3330iffalse:
+   .traceevent "V" 6 "R" "I" "r" 34 112 112 0 "length" ""
+   ieq r39,r34,0
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3362iffalse,r39
+   .srcstep 101 101 25 "substr.crexx" 77 22 35 "  if length = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 28 112 112 0 "result" ""
+   scopy r40,r28
+   br l3245bexprend
+l3362iffalse:
+   .srcstep 102 102 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   .traceevent "V" 6 "R" "I" "r" 34 102 102 0 "length" ""
+   icopy r35,r34
+   .traceevent "A" 6 "R" "I" "r" 35 102 102 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 36 112 112 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 35 112 112 0 "copy_length" ""
+   ilt r39,r36,r35
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3371iffalse,r39
+   .srcstep 103 103 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 36 103 103 0 "available" ""
+   icopy r35,r36
+   .traceevent "A" 6 "R" "I" "r" 35 103 103 0 "copy_length" ""
+l3371iffalse:
+   .traceevent "V" 6 "R" "I" "r" 35 112 112 0 "copy_length" ""
+   igt r39,r35,0
+   .traceevent "O" 4 "R" "B" "r" 39 112 112 0 "" ""
+   brf l3378iffalse,r39
+   .traceevent "V" 6 "R" "I" "r" 26 112 112 0 "start_offset" ""
+   ieq r38,r26,0
+   .traceevent "O" 4 "R" "B" "r" 38 112 112 0 "" ""
+   brf l3385andend,r38
+   .traceevent "V" 6 "R" "I" "r" 35 112 112 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 24 112 112 0 "string_length" ""
+   ieq r38,r35,r24
+   .traceevent "O" 4 "R" "B" "r" 38 112 112 0 "" ""
+l3385andend:
+   .traceevent "O" 4 "R" "B" "r" 38 112 112 0 "" ""
+   brf l3384andfalse,r38
+   .traceevent "V" 6 "R" "I" "r" 34 112 112 0 "length" ""
+   .traceevent "V" 6 "R" "I" "r" 24 112 112 0 "string_length" ""
+   ieq r40,r34,r24
+   .traceevent "O" 4 "R" "B" "r" 40 112 112 0 "" ""
+   br l3384andend
+l3384andfalse:
+   load r40,0
+l3384andend:
+   .traceevent "O" 4 "R" "B" "r" 40 112 112 0 "" ""
+   brf l3383iffalse,r40
+   .srcstep 104 104 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 25 112 112 0 "string" ""
+   scopy r40,r25
+   br l3245bexprend
+l3383iffalse:
+   .srcstep 105 105 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 25 112 112 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 26 112 112 0 "start_offset" ""
+   setstrpos r25,r26
+   .srcstep 106 106 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 28 112 112 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 25 112 112 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 35 112 112 0 "copy_length" ""
+   substring r28,r25,r35
+l3378iffalse:
+   .srcstep 107 107 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 34 107 107 0 "length" ""
+   .traceevent "V" 6 "R" "I" "r" 35 107 107 0 "copy_length" ""
+   isub r29,r34,r35
+   .traceevent "O" 4 "R" "I" "r" 29 107 107 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 107 107 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 29 112 112 0 "padding_length" ""
+   igt r40,r29,0
+   .traceevent "O" 4 "R" "B" "r" 40 112 112 0 "" ""
+   brf l3409iffalse,r40
+   .srcstep 108 108 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 32 112 112 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 33 112 112 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 31 112 112 0 "pad_index" ""
+   strchar r32,r33,r31
+   .srcstep 109 109 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 28 112 112 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 32 112 112 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 29 112 112 0 "padding_length" ""
+   padstr r28,r32,r29
+l3409iffalse:
+   .srcstep 110 110 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 28 112 112 0 "result" ""
+   scopy r40,r28
+   br l3245bexprend
+l3245bexprend:
+   .meta "summarize_paired.main.available"
+   .meta "summarize_paired.main.copy_length"
+   .meta "summarize_paired.main.pad_character"
+   .meta "summarize_paired.main.pad_length"
+   .meta "summarize_paired.main.padding_length"
+   .meta "summarize_paired.main.start_offset"
+   .meta "summarize_paired.main.string_length"
+   scopy r37,r40
+   .traceevent "A" 6 "R" "S" "r" 37 112 112 0 "fields" ""
+   unlink r37
+   .srcstep 118 118 17 "summarize_paired.crexx" 147 5 45 "    start = delimiter_at + length(delimiter)"
+   .traceevent "V" 6 "R" "I" "r" 23 118 118 0 "delimiter_at" ""
+   .srcstep 117 117 17 "summarize_paired.crexx" 147 28 34 "    start = delimiter_at + length(delimiter)"
+   .srcstep 113 113 33 "summarize_paired.crexx" 147 34 34 "    start = delimiter_at + length(delimiter)"
+   load r39,","
+   .traceevent "L" 4 "R" "S" "r" 39 113 113 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 39 113 113 0 "string" ""
+   .srcstep 114 114 25 "length.crexx" 42 3 13 "  result = 0"
+   load r40,0
+   .traceevent "L" 4 "R" "I" "r" 40 114 114 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 40 114 114 0 "result" ""
+   .srcstep 115 115 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 40 118 118 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 39 118 118 0 "string" ""
+   strlen r40,r39
+   .srcstep 116 116 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 40 118 118 0 "result" ""
+   br l3424bexprend
+l3424bexprend:
+   iadd r19,r23,r40
+   .traceevent "O" 4 "R" "I" "r" 19 118 118 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 118 118 0 "start" ""
+l2365doinc:
+   .srcstep 120 120 17 "summarize_paired.crexx" 148 3 6 "  end"
+   br l2365dostart
+l2365doend:
+   .srcstep 121 121 17 "summarize_paired.crexx" 149 3 16 "  return fields"
+   .traceevent "V" 6 "R" "S" "r" 20 123 123 0 "fields" ""
+   copy r40,r20
+   br l2348bexprend
+l2348bexprend:
+   endlife r20
+   .meta "summarize_paired.main.fields"
+   copy r16,r40
+   .traceevent "A" 6 "R" "S" "r" 16 123 123 0 "fields" ""
+   .srcstep 128 128 17 "summarize_paired.crexx" 29 5 23 "    if fields[0] <> 20 then return fail(\"unexpected sample row width\")"
+   .traceevent "C" 4 "R" "V" "r" 40 128 128 0 "fields" ""
+   getattrs r39,r16,0
+   .traceevent "V" 6 "R" "I" "r" 39 128 128 0 "fields" ""
+   ine r39,r39,20
+   .traceevent "O" 4 "R" "B" "r" 39 128 128 0 "" ""
+   brf l120iffalse,r39
+   .srcstep 129 129 17 "summarize_paired.crexx" 29 24 28 "    if fields[0] <> 20 then return fail(\"unexpected sample row width\")"
+   .srcstep 127 127 17 "summarize_paired.crexx" 29 29 71 "    if fields[0] <> 20 then return fail(\"unexpected sample row width\")"
+   .srcstep 126 126 17 "summarize_paired.crexx" 29 36 40 "    if fields[0] <> 20 then return fail(\"unexpected sample row width\")"
+   .srcstep 124 124 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: unexpected sample row width"
+   .srcstep 125 125 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r40,1
+   .traceevent "L" 4 "R" "I" "r" 40 127 127 0 "" ""
+   icopy r37,r40
+   br l2412bexprend
+l2412bexprend:
+   ret r37
+l120iffalse:
+   .srcstep 131 131 17 "summarize_paired.crexx" 30 5 32 "    if fields[11] <> \"recorded\" then iterate"
+   minlinkattr1 r40,r16,11
+   .traceevent "V" 6 "R" "S" "r" 40 131 131 0 "fields" ""
+   rne r39,r40,"recorded"
+   unlink r40
+   .traceevent "O" 4 "R" "B" "r" 39 131 131 0 "" ""
+   brf l126iffalse,r39
+   .srcstep 132 132 17 "summarize_paired.crexx" 30 33 37 "    if fields[11] <> \"recorded\" then iterate"
+   .srcstep 130 130 17 "summarize_paired.crexx" 30 38 45 "    if fields[11] <> \"recorded\" then iterate"
+   br l89doinc
+l126iffalse:
+   .srcstep 137 137 17 "summarize_paired.crexx" 31 5 28 "    if fields[18] <> \"pass\" then return fail(\"non-passing recorded sample\")"
+   minlinkattr1 r40,r16,18
+   .traceevent "V" 6 "R" "S" "r" 40 137 137 0 "fields" ""
+   rne r39,r40,"pass"
+   unlink r40
+   .traceevent "O" 4 "R" "B" "r" 39 137 137 0 "" ""
+   brf l134iffalse,r39
+   .srcstep 138 138 17 "summarize_paired.crexx" 31 29 33 "    if fields[18] <> \"pass\" then return fail(\"non-passing recorded sample\")"
+   .srcstep 136 136 17 "summarize_paired.crexx" 31 34 76 "    if fields[18] <> \"pass\" then return fail(\"non-passing recorded sample\")"
+   .srcstep 135 135 17 "summarize_paired.crexx" 31 41 45 "    if fields[18] <> \"pass\" then return fail(\"non-passing recorded sample\")"
+   .srcstep 133 133 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: non-passing recorded sample"
+   .srcstep 134 134 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r40,1
+   .traceevent "L" 4 "R" "I" "r" 40 136 136 0 "" ""
+   icopy r37,r40
+   br l2423bexprend
+l2423bexprend:
+   ret r37
+l134iffalse:
+   .srcstep 139 139 17 "summarize_paired.crexx" 33 5 39 "    key = fields[3] || \"/\" || fields[6]"
+   .meta "summarize_paired.main.key"="b" ".string" r17
+   minlinkattr1 r40,r16,3
+   .traceevent "V" 6 "R" "S" "r" 40 139 139 0 "fields" ""
+   concat r39,r40,"/"
+   unlink r40
+   .traceevent "O" 4 "R" "S" "r" 39 139 139 0 "" ""
+   minlinkattr1 r37,r16,6
+   .traceevent "V" 6 "R" "S" "r" 37 139 139 0 "fields" ""
+   concat r39,r39,r37
+   unlink r37
+   .traceevent "O" 4 "R" "S" "r" 39 139 139 0 "" ""
+   scopy r17,r39
+   .traceevent "A" 6 "R" "S" "r" 17 139 139 0 "key" ""
+   .srcstep 153 153 17 "summarize_paired.crexx" 34 5 53 "    group = find_group(group_keys, group_count, key)"
+   .meta "summarize_paired.main.group"="b" ".int" r13
+   .srcstep 152 152 17 "summarize_paired.crexx" 34 13 23 "    group = find_group(group_keys, group_count, key)"
+   .srcstep 140 140 6 "summarize_paired.crexx" 123 7 11 "  arg keys = .string[], group_count = .int, key = .string"
+   .traceevent "V" 6 "R" "S" "r" 9 153 153 0 "group_keys" ""
+   copy r39,r9
+   .srcstep 141 141 33 "summarize_paired.crexx" 123 25 36 "  arg keys = .string[], group_count = .int, key = .string"
+   .traceevent "V" 6 "R" "I" "r" 8 141 141 0 "group_count" ""
+   .traceevent "A" 6 "R" "I" "r" 8 141 141 0 "group_count" ""
+   .srcstep 142 142 33 "summarize_paired.crexx" 123 45 48 "  arg keys = .string[], group_count = .int, key = .string"
+   .traceevent "V" 6 "R" "S" "r" 17 142 142 0 "key" ""
+   scopy r40,r17
+   .traceevent "A" 6 "R" "S" "r" 40 142 142 0 "key" ""
+   .srcstep 149 149 17 "summarize_paired.crexx" 124 3 5 "  do group = 1 to group_count"
+   .srcstep 143 143 17 "summarize_paired.crexx" 124 6 15 "  do group = 1 to group_count"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 143 143 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 143 143 0 "group" ""
+   .srcstep 144 144 17 "summarize_paired.crexx" 124 16 30 "  do group = 1 to group_count"
+   .traceevent "V" 6 "R" "I" "r" 8 153 153 0 "group_count" ""
+l2448dostart:
+   .srcstep 144 144 17 "summarize_paired.crexx" 124 16 30 "  do group = 1 to group_count"
+   igt r36,r37,r8
+   brt l2448doend,r36
+   .srcstep 147 147 17 "summarize_paired.crexx" 125 5 25 "    if keys[group] = key then return group"
+   .traceevent "V" 6 "R" "I" "r" 37 147 147 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 37 147 147 0 "keys" ""
+   minlinkattr1 r35,r39,r37,0
+   .traceevent "V" 6 "R" "S" "r" 35 147 147 0 "keys" ""
+   .traceevent "V" 6 "R" "S" "r" 40 147 147 0 "key" ""
+   req r34,r35,r40
+   unlink r35
+   .traceevent "O" 4 "R" "B" "r" 34 147 147 0 "" ""
+   brf l2457iffalse,r34
+   .srcstep 148 148 17 "summarize_paired.crexx" 125 26 30 "    if keys[group] = key then return group"
+   .srcstep 146 146 17 "summarize_paired.crexx" 125 31 43 "    if keys[group] = key then return group"
+   .traceevent "V" 6 "R" "I" "r" 37 153 153 0 "group" ""
+   icopy r13,r37
+   br l2434bexprend
+l2457iffalse:
+l2448doinc:
+   .srcstep 145 145 17 "summarize_paired.crexx" 124 6 11 "  do group = 1 to group_count"
+   inc r37
+   .srcstep 150 150 17 "summarize_paired.crexx" 126 3 6 "  end"
+   br l2448dostart
+l2448doend:
+   .srcstep 151 151 17 "summarize_paired.crexx" 127 3 11 "  return 0"
+   load r37,0
+   .traceevent "L" 4 "R" "I" "r" 37 153 153 0 "" ""
+   icopy r13,r37
+   br l2434bexprend
+l2434bexprend:
+   endlife r39
+   .traceevent "A" 6 "R" "I" "r" 13 153 153 0 "group" ""
+   .srcstep 159 159 17 "summarize_paired.crexx" 35 5 17 "    if group = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 13 159 159 0 "group" ""
+   ieq r40,r13,0
+   .traceevent "O" 4 "R" "B" "r" 40 159 159 0 "" ""
+   brf l176iffalse,r40
+   .srcstep 160 160 17 "summarize_paired.crexx" 35 18 22 "    if group = 0 then do"
+   .srcstep 154 154 17 "summarize_paired.crexx" 36 7 36 "      group_count = group_count + 1"
+   .traceevent "V" 6 "R" "I" "r" 8 154 154 0 "group_count" ""
+   iadd r8,r8,1
+   .traceevent "O" 4 "R" "I" "r" 8 154 154 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 154 154 0 "group_count" ""
+   .srcstep 155 155 17 "summarize_paired.crexx" 37 7 26 "      group = group_count"
+   .traceevent "V" 6 "R" "I" "r" 8 155 155 0 "group_count" ""
+   icopy r13,r8
+   .traceevent "A" 6 "R" "I" "r" 13 155 155 0 "group" ""
+   .srcstep 156 156 17 "summarize_paired.crexx" 38 7 30 "      group_keys[group] = key"
+   .traceevent "V" 6 "R" "I" "r" 8 156 156 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 8 156 156 0 "group_keys" ""
+   minlinkattr1 r39,r9,r8,0
+   .traceevent "V" 6 "R" "S" "r" 17 156 156 0 "key" ""
+   scopy r39,r17
+   .traceevent "A" 6 "R" "S" "r" 39 156 156 0 "group_keys" ""
+   unlink r39
+   .srcstep 157 157 17 "summarize_paired.crexx" 39 7 40 "      group_workloads[group] = fields[3]"
+   .traceevent "V" 6 "R" "I" "r" 8 157 157 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 8 157 157 0 "group_workloads" ""
+   minlinkattr1 r39,r11,r8,0
+   minlinkattr1 r37,r16,3
+   .traceevent "V" 6 "R" "S" "r" 37 157 157 0 "fields" ""
+   scopy r39,r37
+   .traceevent "A" 6 "R" "S" "r" 39 157 157 0 "group_workloads" ""
+   unlinkn r37,r39
+   .srcstep 158 158 17 "summarize_paired.crexx" 40 7 34 "      group_vms[group] = fields[6]"
+   .traceevent "V" 6 "R" "I" "r" 8 158 158 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 8 158 158 0 "group_vms" ""
+   minlinkattr1 r39,r10,r8,0
+   minlinkattr1 r37,r16,6
+   .traceevent "V" 6 "R" "S" "r" 37 158 158 0 "fields" ""
+   scopy r39,r37
+   .traceevent "A" 6 "R" "S" "r" 39 158 158 0 "group_vms" ""
+   unlinkn r37,r39
+l176iffalse:
+   .srcstep 172 172 17 "summarize_paired.crexx" 43 5 47 "    if fields[7] = \"current-inline-interrupts\" then do"
+   minlinkattr1 r40,r16,7
+   .traceevent "V" 6 "R" "S" "r" 40 172 172 0 "fields" ""
+   req r39,r40,"current-inline-interrupts"
+   unlink r40
+   .traceevent "O" 4 "R" "B" "r" 39 172 172 0 "" ""
+   brf l225iffalse,r39
+   .srcstep 173 173 17 "summarize_paired.crexx" 43 48 52 "    if fields[7] = \"current-inline-interrupts\" then do"
+   .srcstep 161 161 17 "summarize_paired.crexx" 44 7 54 "      before_counts[group] = before_counts[group] + 1"
+   .traceevent "V" 6 "R" "I" "r" 13 161 161 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 161 161 0 "before_counts" ""
+   minlinkattr1 r37,r6,r13,0
+   .traceevent "V" 6 "R" "I" "r" 13 161 161 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 161 161 0 "before_counts" ""
+   minlinkattr1 r36,r6,r13,0
+   .traceevent "V" 6 "R" "I" "r" 36 161 161 0 "before_counts" ""
+   iadd r35,r36,1
+   unlink r36
+   .traceevent "O" 4 "R" "I" "r" 35 161 161 0 "" ""
+   isetunlink r37,r35
+   .traceevent "A" 6 "R" "I" "r" 35 161 161 0 "before_counts" ""
+   .srcstep 162 162 17 "summarize_paired.crexx" 45 7 68 "      before_values[group * 100 + before_counts[group]] = fields[15]"
+   .traceevent "V" 6 "R" "I" "r" 13 162 162 0 "group" ""
+   imult r40,r13,100
+   .traceevent "O" 4 "R" "I" "r" 40 162 162 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 13 162 162 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 162 162 0 "before_counts" ""
+   minlinkattr1 r37,r6,r13,0
+   .traceevent "V" 6 "R" "I" "r" 37 162 162 0 "before_counts" ""
+   iadd r40,r40,r37
+   unlink r37
+   .traceevent "O" 4 "R" "I" "r" 40 162 162 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 40 162 162 0 "before_values" ""
+   minlinkattr1 r36,r7,r40,0
+   minlinkattr1 r35,r16,15
+   stof r35
+   .traceevent "V" 6 "R" "F" "r" 35 162 162 0 "fields" ""
+   fcopy r36,r35
+   .traceevent "A" 6 "R" "F" "r" 36 162 162 0 "before_values" ""
+   unlinkn r35,r36
+   br l225ifend
+   .srcstep 174 174 17 "summarize_paired.crexx" 45 68 69 "      before_values[group * 100 + before_counts[group]] = fields[15]"
+l225iffalse:
+   .srcstep 169 169 17 "summarize_paired.crexx" 47 10 46 "    else if fields[7] = \"cow-interrupt-table\" then do"
+   minlinkattr1 r40,r16,7
+   .traceevent "V" 6 "R" "S" "r" 40 169 169 0 "fields" ""
+   req r37,r40,"cow-interrupt-table"
+   unlink r40
+   .traceevent "O" 4 "R" "B" "r" 37 169 169 0 "" ""
+   brf l224iffalse,r37
+   .srcstep 170 170 17 "summarize_paired.crexx" 47 47 51 "    else if fields[7] = \"cow-interrupt-table\" then do"
+   .srcstep 163 163 17 "summarize_paired.crexx" 48 7 52 "      after_counts[group] = after_counts[group] + 1"
+   .traceevent "V" 6 "R" "I" "r" 13 163 163 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 163 163 0 "after_counts" ""
+   minlinkattr1 r36,r3,r13,0
+   .traceevent "V" 6 "R" "I" "r" 13 163 163 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 163 163 0 "after_counts" ""
+   minlinkattr1 r35,r3,r13,0
+   .traceevent "V" 6 "R" "I" "r" 35 163 163 0 "after_counts" ""
+   iadd r34,r35,1
+   unlink r35
+   .traceevent "O" 4 "R" "I" "r" 34 163 163 0 "" ""
+   isetunlink r36,r34
+   .traceevent "A" 6 "R" "I" "r" 34 163 163 0 "after_counts" ""
+   .srcstep 164 164 17 "summarize_paired.crexx" 49 7 66 "      after_values[group * 100 + after_counts[group]] = fields[15]"
+   .traceevent "V" 6 "R" "I" "r" 13 164 164 0 "group" ""
+   imult r40,r13,100
+   .traceevent "O" 4 "R" "I" "r" 40 164 164 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 13 164 164 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 13 164 164 0 "after_counts" ""
+   minlinkattr1 r36,r3,r13,0
+   .traceevent "V" 6 "R" "I" "r" 36 164 164 0 "after_counts" ""
+   iadd r40,r40,r36
+   unlink r36
+   .traceevent "O" 4 "R" "I" "r" 40 164 164 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 40 164 164 0 "after_values" ""
+   minlinkattr1 r35,r4,r40,0
+   minlinkattr1 r34,r16,15
+   stof r34
+   .traceevent "V" 6 "R" "F" "r" 34 164 164 0 "fields" ""
+   fcopy r35,r34
+   .traceevent "A" 6 "R" "F" "r" 35 164 164 0 "after_values" ""
+   unlinkn r34,r35
+   br l224ifend
+   .srcstep 171 171 17 "summarize_paired.crexx" 49 66 67 "      after_values[group * 100 + after_counts[group]] = fields[15]"
+l224iffalse:
+   .srcstep 168 168 17 "summarize_paired.crexx" 51 10 43 "    else return fail(\"unexpected variant\")"
+   .srcstep 167 167 17 "summarize_paired.crexx" 51 17 21 "    else return fail(\"unexpected variant\")"
+   .srcstep 165 165 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: unexpected variant"
+   .srcstep 166 166 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r40,1
+   .traceevent "L" 4 "R" "I" "r" 40 168 168 0 "" ""
+   icopy r36,r40
+   br l2466bexprend
+l2466bexprend:
+   ret r36
+l224ifend:
+l225ifend:
+l89doinc:
+   .srcstep 176 176 17 "summarize_paired.crexx" 52 3 6 "  end"
+   br l89dostart
+l89doend:
+   endlife r16
+   .meta "summarize_paired.main.fields"
+   .meta "summarize_paired.main.group"
+   .meta "summarize_paired.main.key"
+   .meta "summarize_paired.main.line"
+   .srcstep 177 177 17 "summarize_paired.crexx" 53 3 25 "  call linein input_path"
+   .traceevent "V" 6 "R" "S" "r" 0 177 177 0 "input_path" ""
+   load r39,1
+   settpswapcall r37,rxfnsb.linein(),r39,r0,256,r40
+   swap r0,r40
+   .traceevent "F" 4 "R" "S" "r" 37 177 177 0 "linein" ""
+l73doinc:
+   .srcstep 17 17 17 "summarize_paired.crexx" 21 4 16 "do input_number = 2 to argv[0]"
+   inc r2
+   .srcstep 179 179 17 "summarize_paired.crexx" 54 1 4 "end"
+   br l73dostart
+l73doend:
+   .meta "summarize_paired.main.input_number"
+   .meta "summarize_paired.main.input_path"
+   .meta "summarize_paired.main.line_number"
+   .srcstep 194 194 17 "summarize_paired.crexx" 56 1 31 "call remove_output output_path"
+   .meta "summarize_paired.main.rc"="b" ".int" r42
+   .srcstep 180 180 6 "summarize_paired.crexx" 133 3 62 "  address crexx \"rm :path\" output remove_out error remove_err"
+   .meta "summarize_paired.main.remove_err"="b" ".string[*]" r43
+   .srcstep 181 181 17 "summarize_paired.crexx" 132 3 23 "  remove_err = .string[]"
+   null r43
+   .meta "summarize_paired.main.remove_out"="b" ".string[*]" r44
+   .srcstep 182 182 17 "summarize_paired.crexx" 131 3 23 "  remove_out = .string[]"
+   null r44
+   .srcstep 183 183 33 "summarize_paired.crexx" 130 7 11 "  arg path = .string"
+   .traceevent "V" 6 "R" "S" "r" 1 183 183 0 "output_path" ""
+   scopy r41,r1
+   .traceevent "A" 6 "R" "S" "r" 41 183 183 0 "path" ""
+   .srcstep 187 187 33 "exit_fragment" 2 1 119 "__rxaddr_request=_address_new_request('crexx',\"rm :path\",_noredir(),_redir2array(remove_out),_redir2array(remove_err))"
+   load r49,"crexx"
+   .traceevent "L" 4 "R" "S" "r" 49 187 187 0 "" ""
+   load r50,"rm :path"
+   .traceevent "L" 4 "R" "S" "r" 50 187 187 0 "" ""
+   .srcstep 186 186 33 "exit_fragment" 2 1 9 "_noredir"
+   .meta "summarize_paired.main.handle"="b" ".binary" r40
+   .srcstep 184 184 25 "_address.crexx" 1682 5 21 "    handle = .binary"
+   null r40
+   .srcstep 185 185 25 "_address.crexx" 1683 5 18 "    return handle"
+   .traceevent "V" 6 "R" "X" "r" 40 187 187 0 "handle" ""
+   bcopy r39,r40
+   br l3437bexprend
+l3437bexprend:
+   endlife r40
+   .meta "summarize_paired.main.handle"
+   .traceevent "V" 6 "R" "S" "r" 44 187 187 0 "remove_out" ""
+   load r54,1
+   swapcall r52,_rxsysb._redir2array(),r54,r44,r55
+   swap r44,r55
+   .traceevent "F" 4 "R" "X" "r" 52 187 187 0 "_redir2array" ""
+   .traceevent "V" 6 "R" "S" "r" 43 187 187 0 "remove_err" ""
+   load r54,1
+   swapcall r53,_rxsysb._redir2array(),r54,r43,r55
+   swap r43,r55
+   .traceevent "F" 4 "R" "X" "r" 53 187 187 0 "_redir2array" ""
+   load r48,5
+   settp r49,768
+   settp r50,768
+   settp r39,768
+   swap r51,r39
+   settp r52,256
+   settpcall r46,_rxsysb._address_new_request(),r48,r53,256
+   swap r39,r51
+   .traceevent "F" 4 "R" "O" "r" 46 187 187 0 "_address_new_request" ""
+   .traceevent "A" 6 "R" "O" "r" 46 187 187 0 "__rxaddr_request" ""
+   .srcstep 188 188 33 "exit_fragment" 3 1 63 "__rxaddr_binding_1=.addressbinding('var','path','path',path,''"
+   load r51,"var"
+   .traceevent "L" 4 "R" "S" "r" 51 188 188 0 "" ""
+   load r52,"path"
+   .traceevent "L" 4 "R" "S" "r" 52 188 188 0 "" ""
+   load r53,"path"
+   .traceevent "L" 4 "R" "S" "r" 53 188 188 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 41 188 188 0 "path" ""
+   load r55,""
+   .traceevent "L" 4 "R" "S" "r" 55 188 188 0 "" ""
+   load r50,5
+   settp r51,768
+   settp r52,768
+   settp r53,768
+   settp r41,256
+   swap r54,r41
+   settpcall r45,§_rxsysb.addressbinding.§factory(),r50,r55,768
+   swap r41,r54
+   .traceevent "F" 4 "R" "O" "r" 45 188 188 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 45 188 188 0 "__rxaddr_binding_1" ""
+   .srcstep 189 189 33 "exit_fragment" 4 1 59 "call __rxaddr_request.add_binding_plan(__rxaddr_binding_1)"
+   .traceevent "V" 6 "R" "O" "r" 46 189 189 0 "__rxaddr_request" ""
+   .traceevent "V" 6 "R" "O" "r" 45 189 189 0 "__rxaddr_binding_1" ""
+   load r53,2
+   settp r46,256
+   swap r54,r46
+   settpswapcall r52,§_rxsysb.addressrequest.add_binding_plan(),r53,r45,256,r55
+   swap r46,r54
+   swap r45,r55
+   .traceevent "F" 4 "R" "V" "r" 52 189 189 0 "add_binding_plan" ""
+   .srcstep 190 190 33 "exit_fragment" 5 1 62 "__rxaddr_response=_address_dispatch_request(__rxaddr_request)"
+   .traceevent "V" 6 "R" "O" "r" 46 190 190 0 "__rxaddr_request" ""
+   load r54,1
+   settpswapcall r47,_rxsysb._address_dispatch_request(),r54,r46,256,r55
+   swap r46,r55
+   .traceevent "F" 4 "R" "O" "r" 47 190 190 0 "_address_dispatch_request" ""
+   .traceevent "A" 6 "R" "O" "r" 47 190 190 0 "__rxaddr_response" ""
+   .srcstep 191 191 33 "exit_fragment" 6 1 64 "call _address_apply_response_var(__rxaddr_response,'path',path)"
+   .traceevent "V" 6 "R" "O" "r" 47 191 191 0 "__rxaddr_response" ""
+   load r55,"path"
+   .traceevent "L" 4 "R" "S" "r" 55 191 191 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 41 191 191 0 "path" ""
+   load r53,3
+   settp r47,256
+   swap r54,r47
+   settp r55,768
+   swapcall r51,_rxsysb._address_apply_response_var(),r53,r41,r56
+   swap r47,r54
+   swap r41,r56
+   .traceevent "F" 4 "R" "V" "r" 51 191 191 0 "_address_apply_response_var" ""
+   .srcstep 193 193 17 "summarize_paired.crexx" 133 3 62 "  address crexx \"rm :path\" output remove_out error remove_err"
+   .srcstep 192 192 33 "summarize_paired.crexx" 7 1 18 "__rxaddr_response"
+   .traceevent "V" 6 "R" "O" "r" 47 192 192 0 "__rxaddr_response" ""
+   .traceevent "A" 6 "R" "O" "r" 47 192 192 0 "§this" ""
+   linkattr1 r56,r47,4
+   .traceevent "V" 6 "R" "I" "r" 56 0 0 0 "_rc" ""
+   .traceevent "A" 6 "R" "I" "r" 56 0 0 0 "rc" ""
+   unlink r56
+   .srcstep 199 199 17 "summarize_paired.crexx" 61 1 37 "if lineout(output_path, header) <> 0 then return fail(\"could not create paired summary\")"
+   .meta "summarize_paired.main.header"="b" ".string" "workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total"
+   .traceevent "V" 6 "R" "S" "r" 1 199 199 0 "output_path" ""
+   load r2,"workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total"
+   .traceevent "L" 4 "R" "S" "r" 2 199 199 0 "" ""
+   load r0,2
+   settp r1,256
+   settpcall r56,rxfnsb.lineout(),r0,r2,256
+   .traceevent "F" 4 "R" "I" "r" 56 199 199 0 "lineout" ""
+   ine r56,r56,0
+   .traceevent "O" 4 "R" "B" "r" 56 199 199 0 "" ""
+   brf l250iffalse,r56
+   .srcstep 200 200 17 "summarize_paired.crexx" 61 38 42 "if lineout(output_path, header) <> 0 then return fail(\"could not create paired summary\")"
+   .srcstep 198 198 17 "summarize_paired.crexx" 61 43 89 "if lineout(output_path, header) <> 0 then return fail(\"could not create paired summary\")"
+   .srcstep 197 197 17 "summarize_paired.crexx" 61 50 54 "if lineout(output_path, header) <> 0 then return fail(\"could not create paired summary\")"
+   .srcstep 195 195 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: could not create paired summary"
+   .srcstep 196 196 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r55,1
+   .traceevent "L" 4 "R" "I" "r" 55 198 198 0 "" ""
+   icopy r54,r55
+   br l3451bexprend
+l3451bexprend:
+   ret r54
+l250iffalse:
+   .srcstep 229 229 17 "summarize_paired.crexx" 63 1 3 "do group = 1 to group_count"
+   .srcstep 201 201 17 "summarize_paired.crexx" 63 4 13 "do group = 1 to group_count"
+   .meta "summarize_paired.main.group"="b" ".int" r53
+   load r53,1
+   .traceevent "L" 4 "R" "I" "r" 53 201 201 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 53 201 201 0 "group" ""
+   .srcstep 202 202 17 "summarize_paired.crexx" 63 14 28 "do group = 1 to group_count"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "group_count" ""
+l251dostart:
+   .srcstep 202 202 17 "summarize_paired.crexx" 63 14 28 "do group = 1 to group_count"
+   igt r50,r53,r8
+   brt l251doend,r50
+   .meta "summarize_paired.main.after"="b" ".float[*]" r56
+   .srcstep 204 204 17 "summarize_paired.crexx" 68 3 17 "  after = .float[]"
+   null r56
+   .meta "summarize_paired.main.before"="b" ".float[*]" r55
+   .srcstep 205 205 17 "summarize_paired.crexx" 67 3 18 "  before = .float[]"
+   null r55
+   .srcstep 210 210 17 "summarize_paired.crexx" 64 3 48 "  if before_counts[group] <> after_counts[group] then return fail(\"incomplete pair set\")"
+   .traceevent "V" 6 "R" "I" "r" 53 210 210 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 53 210 210 0 "before_counts" ""
+   minlinkattr1 r49,r6,r53,0
+   .traceevent "V" 6 "R" "I" "r" 49 210 210 0 "before_counts" ""
+   .traceevent "V" 6 "R" "I" "r" 53 210 210 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 53 210 210 0 "after_counts" ""
+   minlinkattr1 r48,r3,r53,0
+   .traceevent "V" 6 "R" "I" "r" 48 210 210 0 "after_counts" ""
+   ine r40,r49,r48
+   unlinkn r48,r49
+   .traceevent "O" 4 "R" "B" "r" 40 210 210 0 "" ""
+   brf l266iffalse,r40
+   .srcstep 211 211 17 "summarize_paired.crexx" 64 48 49 "  if before_counts[group] <> after_counts[group] then return fail(\"incomplete pair set\")"
+   .srcstep 209 209 17 "summarize_paired.crexx" 64 55 89 "  if before_counts[group] <> after_counts[group] then return fail(\"incomplete pair set\")"
+   .srcstep 208 208 17 "summarize_paired.crexx" 64 62 66 "  if before_counts[group] <> after_counts[group] then return fail(\"incomplete pair set\")"
+   .srcstep 206 206 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: incomplete pair set"
+   .srcstep 207 207 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r49,1
+   .traceevent "L" 4 "R" "I" "r" 49 209 209 0 "" ""
+   icopy r48,r49
+   br l3462bexprend
+l3462bexprend:
+   ret r48
+l266iffalse:
+   .srcstep 212 212 17 "summarize_paired.crexx" 65 3 30 "  count = before_counts[group]"
+   .meta "summarize_paired.main.count"="b" ".int" r54
+   .traceevent "V" 6 "R" "I" "r" 53 212 212 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 53 212 212 0 "before_counts" ""
+   minlinkattr1 r49,r6,r53,0
+   .traceevent "V" 6 "R" "I" "r" 49 212 212 0 "before_counts" ""
+   igetunlink r54,r49
+   .traceevent "A" 6 "R" "I" "r" 54 212 212 0 "count" ""
+   .srcstep 217 217 17 "summarize_paired.crexx" 66 3 28 "  if count < 2 | count > 36 then return fail(\"paired count is outside 2..36\")"
+   .traceevent "V" 6 "R" "I" "r" 54 217 217 0 "count" ""
+   ilt r49,r54,2
+   .traceevent "O" 4 "R" "B" "r" 49 217 217 0 "" ""
+   brt l278orend,r49
+   .traceevent "V" 6 "R" "I" "r" 54 217 217 0 "count" ""
+   igt r49,r54,36
+   .traceevent "O" 4 "R" "B" "r" 49 217 217 0 "" ""
+l278orend:
+   .traceevent "O" 4 "R" "B" "r" 49 217 217 0 "" ""
+   brf l282iffalse,r49
+   .srcstep 218 218 17 "summarize_paired.crexx" 66 29 33 "  if count < 2 | count > 36 then return fail(\"paired count is outside 2..36\")"
+   .srcstep 216 216 17 "summarize_paired.crexx" 66 34 78 "  if count < 2 | count > 36 then return fail(\"paired count is outside 2..36\")"
+   .srcstep 215 215 17 "summarize_paired.crexx" 66 41 45 "  if count < 2 | count > 36 then return fail(\"paired count is outside 2..36\")"
+   .srcstep 213 213 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: paired count is outside 2..36"
+   .srcstep 214 214 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r48,1
+   .traceevent "L" 4 "R" "I" "r" 48 216 216 0 "" ""
+   icopy r40,r48
+   br l3473bexprend
+l3473bexprend:
+   ret r40
+l282iffalse:
+   .srcstep 224 224 17 "summarize_paired.crexx" 69 3 5 "  do pair = 1 to count"
+   .srcstep 219 219 17 "summarize_paired.crexx" 69 6 14 "  do pair = 1 to count"
+   .meta "summarize_paired.main.pair"="b" ".int" r49
+   load r49,1
+   .traceevent "L" 4 "R" "I" "r" 49 219 219 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 49 219 219 0 "pair" ""
+   .srcstep 220 220 17 "summarize_paired.crexx" 69 15 23 "  do pair = 1 to count"
+   .traceevent "V" 6 "R" "I" "r" 54 0 0 0 "count" ""
+l295dostart:
+   .srcstep 220 220 17 "summarize_paired.crexx" 69 15 23 "  do pair = 1 to count"
+   igt r48,r49,r54
+   brt l295doend,r48
+   .srcstep 222 222 17 "summarize_paired.crexx" 70 5 52 "    before[pair] = before_values[group * 100 + pair]"
+   .traceevent "V" 6 "R" "I" "r" 49 222 222 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 49 222 222 0 "before" ""
+   minlinkattr1 r40,r55,r49,0
+   .traceevent "V" 6 "R" "I" "r" 53 222 222 0 "group" ""
+   imult r39,r53,100
+   .traceevent "O" 4 "R" "I" "r" 39 222 222 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 49 222 222 0 "pair" ""
+   iadd r39,r39,r49
+   .traceevent "O" 4 "R" "I" "r" 39 222 222 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 39 222 222 0 "before_values" ""
+   minlinkattr1 r36,r7,r39,0
+   .traceevent "V" 6 "R" "F" "r" 36 222 222 0 "before_values" ""
+   fcopy r40,r36
+   .traceevent "A" 6 "R" "F" "r" 40 222 222 0 "before" ""
+   unlinkn r36,r40
+   .srcstep 223 223 17 "summarize_paired.crexx" 71 5 50 "    after[pair] = after_values[group * 100 + pair]"
+   .traceevent "V" 6 "R" "I" "r" 49 223 223 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 49 223 223 0 "after" ""
+   minlinkattr1 r40,r56,r49,0
+   .traceevent "V" 6 "R" "I" "r" 53 223 223 0 "group" ""
+   imult r39,r53,100
+   .traceevent "O" 4 "R" "I" "r" 39 223 223 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 49 223 223 0 "pair" ""
+   iadd r39,r39,r49
+   .traceevent "O" 4 "R" "I" "r" 39 223 223 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 39 223 223 0 "after_values" ""
+   minlinkattr1 r36,r4,r39,0
+   .traceevent "V" 6 "R" "F" "r" 36 223 223 0 "after_values" ""
+   fcopy r40,r36
+   .traceevent "A" 6 "R" "F" "r" 40 223 223 0 "after" ""
+   unlinkn r36,r40
+l295doinc:
+   .srcstep 221 221 17 "summarize_paired.crexx" 69 6 10 "  do pair = 1 to count"
+   inc r49
+   .srcstep 225 225 17 "summarize_paired.crexx" 71 50 51 "    after[pair] = after_values[group * 100 + pair]"
+   br l295dostart
+l295doend:
+   .meta "summarize_paired.main.pair"
+   .srcstep 227 227 17 "summarize_paired.crexx" 73 3 94 "  if write_summary(output_path, group_workloads[group], group_vms[group], before, after) <> 0 then return 1"
+   .traceevent "V" 6 "R" "S" "r" 1 227 227 0 "output_path" ""
+   .traceevent "V" 6 "R" "I" "r" 53 227 227 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 53 227 227 0 "group_workloads" ""
+   minlinkattr1 r49,r11,r53,0
+   .traceevent "V" 6 "R" "S" "r" 49 227 227 0 "group_workloads" ""
+   .traceevent "V" 6 "R" "I" "r" 53 227 227 0 "group" ""
+   .traceevent "C" 4 "R" "I" "r" 53 227 227 0 "group_vms" ""
+   minlinkattr1 r48,r10,r53,0
+   .traceevent "V" 6 "R" "S" "r" 48 227 227 0 "group_vms" ""
+   .traceevent "V" 6 "R" "F" "r" 55 227 227 0 "before" ""
+   .traceevent "V" 6 "R" "F" "r" 56 227 227 0 "after" ""
+   load r57,5
+   settp r1,256
+   swap r58,r1
+   settp r49,256
+   swap r59,r49
+   settp r48,256
+   swap r60,r48
+   settp r55,256
+   swap r61,r55
+   settpswapcall r40,write_summary(),r57,r56,256,r62
+   swap r1,r58
+   swap r49,r59
+   unlink r49
+   swap r48,r60
+   unlink r48
+   swap r55,r61
+   swap r56,r62
+   .traceevent "F" 4 "R" "I" "r" 40 227 227 0 "write_summary" ""
+   ine r62,r40,0
+   .traceevent "O" 4 "R" "B" "r" 62 227 227 0 "" ""
+   brf l333iffalse,r62
+   .srcstep 228 228 17 "summarize_paired.crexx" 73 95 99 "  if write_summary(output_path, group_workloads[group], group_vms[group], before, after) <> 0 then return 1"
+   .srcstep 226 226 17 "summarize_paired.crexx" 73 100 108 "  if write_summary(output_path, group_workloads[group], group_vms[group], before, after) <> 0 then return 1"
+   ret 1
+l333iffalse:
+l251doinc:
+   .srcstep 203 203 17 "summarize_paired.crexx" 63 4 9 "do group = 1 to group_count"
+   inc r53
+   .srcstep 230 230 17 "summarize_paired.crexx" 74 1 4 "end"
+   br l251dostart
+l251doend:
+   endlife r56
+   endlife r55
+   .meta "summarize_paired.main.after"
+   .meta "summarize_paired.main.before"
+   .meta "summarize_paired.main.count"
+   .meta "summarize_paired.main.group"
+   .srcstep 231 231 17 "summarize_paired.crexx" 75 1 25 "call lineout output_path"
+   .traceevent "V" 6 "R" "S" "r" 1 231 231 0 "output_path" ""
+   load r0,2
+   settp r1,256
+   settpcall r62,rxfnsb.lineout(),r0,r2,512
+   .traceevent "F" 4 "R" "I" "r" 62 231 231 0 "lineout" ""
+   .srcstep 232 232 17 "summarize_paired.crexx" 77 1 60 "say \"PASS: PERF2-06 paired summary retained at\" output_path"
+   .traceevent "V" 6 "R" "S" "r" 1 232 232 0 "output_path" ""
+   sconcat r61,"PASS: PERF2-06 paired summary retained at",r1
+   .traceevent "O" 4 "R" "S" "r" 61 232 232 0 "" ""
+   say r61
+   .srcstep 233 233 17 "summarize_paired.crexx" 78 1 9 "return 0"
+   ret 0
+   .meta "summarize_paired.main.after_counts"
+   .meta "summarize_paired.main.after_values"
+   .meta "summarize_paired.main.argv"
+   .meta "summarize_paired.main.before_counts"
+   .meta "summarize_paired.main.before_values"
+   .meta "summarize_paired.main.group_count"
+   .meta "summarize_paired.main.group_keys"
+   .meta "summarize_paired.main.group_vms"
+   .meta "summarize_paired.main.group_workloads"
+   .meta "summarize_paired.main.header"
+   .meta "summarize_paired.main.output_path"
+
+write_summary() .locals=60
+   .meta "summarize_paired.write_summary"="b" ".int" write_summary() "output_path=.string,workload=.string,vm=.string,before=.float[*],after=.float[*]"
+   .srcstep 563 563 17 "summarize_paired.crexx" 80 1 32 "write_summary: procedure = .int"
+   numsci 18,1,1
+   .srcstep 234 234 17 "summarize_paired.crexx" 81 7 28 "  arg output_path = .string, workload = .string, vm = .string, ,"
+   .meta "summarize_paired.write_summary.output_path"="b" ".string" a1
+   .srcstep 235 235 17 "summarize_paired.crexx" 81 30 48 "  arg output_path = .string, workload = .string, vm = .string, ,"
+   .meta "summarize_paired.write_summary.workload"="b" ".string" a2
+   .srcstep 236 236 17 "summarize_paired.crexx" 81 50 62 "  arg output_path = .string, workload = .string, vm = .string, ,"
+   .meta "summarize_paired.write_summary.vm"="b" ".string" a3
+   .srcstep 237 237 17 "summarize_paired.crexx" 82 7 22 "      before = .float[], after = .float[]"
+   .meta "summarize_paired.write_summary.before"="b" ".float[*]" r4
+   brtpandt l355c,a4,512
+   copy r4,a4
+   br l355d
+l355c:
+   swap r4,a4
+l355d:
+   .srcstep 238 238 17 "summarize_paired.crexx" 82 26 40 "      before = .float[], after = .float[]"
+   .meta "summarize_paired.write_summary.after"="b" ".float[*]" r3
+   brtpandt l361c,a5,512
+   copy r3,a5
+   br l361d
+l361c:
+   swap r3,a5
+l361d:
+   .meta "summarize_paired.write_summary.deltas"="b" ".float[*]" r6
+   .srcstep 239 239 17 "summarize_paired.crexx" 84 3 18 "  deltas = .float[]"
+   null r6
+   .srcstep 240 240 17 "summarize_paired.crexx" 83 3 19 "  count = before[0]"
+   .meta "summarize_paired.write_summary.count"="b" ".int" r5
+   .traceevent "C" 4 "R" "V" "r" 0 240 240 0 "before" ""
+   getattrs r18,r4,0
+   .traceevent "V" 6 "R" "I" "r" 18 240 240 0 "before" ""
+   icopy r5,r18
+   .traceevent "A" 6 "R" "I" "r" 5 240 240 0 "count" ""
+   .srcstep 241 241 17 "summarize_paired.crexx" 85 3 16 "  favorable = 0"
+   .meta "summarize_paired.write_summary.favorable"="b" ".int" r7
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 241 241 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 241 241 0 "favorable" ""
+   .srcstep 242 242 17 "summarize_paired.crexx" 86 3 12 "  sum = 0.0"
+   .meta "summarize_paired.write_summary.sum"="b" ".float" r14
+   load r14,0.0
+   .traceevent "L" 4 "R" "F" "r" 14 242 242 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 14 242 242 0 "sum" ""
+   .srcstep 252 252 17 "summarize_paired.crexx" 87 3 5 "  do pair = 1 to count"
+   .srcstep 243 243 17 "summarize_paired.crexx" 87 6 14 "  do pair = 1 to count"
+   .meta "summarize_paired.write_summary.pair"="b" ".int" r0
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 243 243 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 243 243 0 "pair" ""
+   .srcstep 244 244 17 "summarize_paired.crexx" 87 15 23 "  do pair = 1 to count"
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "count" ""
+l383dostart:
+   .srcstep 244 244 17 "summarize_paired.crexx" 87 15 23 "  do pair = 1 to count"
+   igt r19,r0,r5
+   brt l383doend,r19
+   .srcstep 246 246 17 "summarize_paired.crexx" 88 5 65 "    delta = ((after[pair] - before[pair]) * 100.0) / before[pair]"
+   .meta "summarize_paired.write_summary.delta"="b" ".float" r18
+   .traceevent "V" 6 "R" "I" "r" 0 246 246 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 0 246 246 0 "after" ""
+   minlinkattr1 r20,r3,r0,0
+   .traceevent "V" 6 "R" "F" "r" 20 246 246 0 "after" ""
+   .traceevent "V" 6 "R" "I" "r" 0 246 246 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 0 246 246 0 "before" ""
+   minlinkattr1 r21,r4,r0,0
+   .traceevent "V" 6 "R" "F" "r" 21 246 246 0 "before" ""
+   fsub r22,r20,r21
+   unlinkn r21,r20
+   .traceevent "O" 4 "R" "F" "r" 22 246 246 0 "" ""
+   fmult r22,r22,100.0
+   .traceevent "O" 4 "R" "F" "r" 22 246 246 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 0 246 246 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 0 246 246 0 "before" ""
+   minlinkattr1 r23,r4,r0,0
+   .traceevent "V" 6 "R" "F" "r" 23 246 246 0 "before" ""
+   fdiv r22,r22,r23
+   unlink r23
+   .traceevent "O" 4 "R" "F" "r" 22 246 246 0 "" ""
+   fcopy r18,r22
+   .traceevent "A" 6 "R" "F" "r" 18 246 246 0 "delta" ""
+   .srcstep 247 247 17 "summarize_paired.crexx" 89 5 25 "    deltas[pair] = delta"
+   .traceevent "V" 6 "R" "I" "r" 0 247 247 0 "pair" ""
+   .traceevent "C" 4 "R" "I" "r" 0 247 247 0 "deltas" ""
+   minlinkattr1 r23,r6,r0,0
+   .traceevent "V" 6 "R" "F" "r" 18 247 247 0 "delta" ""
+   fcopy r23,r18
+   .traceevent "A" 6 "R" "F" "r" 23 247 247 0 "deltas" ""
+   unlink r23
+   .srcstep 248 248 17 "summarize_paired.crexx" 90 5 22 "    sum = sum + delta"
+   .traceevent "V" 6 "R" "F" "r" 14 248 248 0 "sum" ""
+   .traceevent "V" 6 "R" "F" "r" 18 248 248 0 "delta" ""
+   fadd r14,r14,r18
+   .traceevent "O" 4 "R" "F" "r" 14 248 248 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 14 248 248 0 "sum" ""
+   .srcstep 250 250 17 "summarize_paired.crexx" 91 5 19 "    if delta < 0.0 then favorable = favorable + 1"
+   .traceevent "V" 6 "R" "F" "r" 18 250 250 0 "delta" ""
+   flt r23,r18,0.0
+   .traceevent "O" 4 "R" "B" "r" 23 250 250 0 "" ""
+   brf l420iffalse,r23
+   .srcstep 251 251 17 "summarize_paired.crexx" 91 20 24 "    if delta < 0.0 then favorable = favorable + 1"
+   .srcstep 249 249 17 "summarize_paired.crexx" 91 25 50 "    if delta < 0.0 then favorable = favorable + 1"
+   .traceevent "V" 6 "R" "I" "r" 7 249 249 0 "favorable" ""
+   iadd r7,r7,1
+   .traceevent "O" 4 "R" "I" "r" 7 249 249 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 249 249 0 "favorable" ""
+l420iffalse:
+l383doinc:
+   .srcstep 245 245 17 "summarize_paired.crexx" 87 6 10 "  do pair = 1 to count"
+   inc r0
+   .srcstep 253 253 17 "summarize_paired.crexx" 92 3 6 "  end"
+   br l383dostart
+l383doend:
+   .meta "summarize_paired.write_summary.delta"
+   .meta "summarize_paired.write_summary.pair"
+   .srcstep 267 267 17 "summarize_paired.crexx" 94 3 26 "  call sort_floats before"
+   .srcstep 265 265 17 "summarize_paired.crexx" 153 3 5 "  do i = 2 to values[0]"
+   .srcstep 254 254 17 "summarize_paired.crexx" 153 6 11 "  do i = 2 to values[0]"
+   load r23,2
+   .traceevent "L" 4 "R" "I" "r" 23 254 254 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 254 254 0 "i" ""
+   .srcstep 255 255 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   .traceevent "C" 4 "R" "V" "r" 20 0 0 0 "before" ""
+   getattrs r19,r4,0
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "before" ""
+l2533dostart:
+   .srcstep 255 255 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   igt r18,r23,r19
+   brt l2533doend,r18
+   .srcstep 257 257 17 "summarize_paired.crexx" 154 5 20 "    item = values[i]"
+   .traceevent "V" 6 "R" "I" "r" 23 257 257 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 23 257 257 0 "before" ""
+   minlinkattr1 r0,r4,r23,0
+   .traceevent "V" 6 "R" "F" "r" 0 257 257 0 "before" ""
+   fcopy r22,r0
+   .traceevent "A" 6 "R" "F" "r" 22 257 257 0 "item" ""
+   unlink r0
+   .srcstep 258 258 17 "summarize_paired.crexx" 155 5 14 "    j = i - 1"
+   .traceevent "V" 6 "R" "I" "r" 23 258 258 0 "i" ""
+   isub r21,r23,1
+   .traceevent "O" 4 "R" "I" "r" 21 258 258 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 258 258 0 "j" ""
+   .srcstep 262 262 17 "summarize_paired.crexx" 156 5 7 "    do while j >= 1 & values[j] > item"
+l2552dostart:
+   .srcstep 259 259 17 "summarize_paired.crexx" 156 8 39 "    do while j >= 1 & values[j] > item"
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "j" ""
+   igte r25,r21,1
+   .traceevent "O" 4 "R" "B" "r" 25 0 0 0 "" ""
+   brf l2555andend,r25
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 21 0 0 0 "before" ""
+   minlinkattr1 r20,r4,r21,0
+   .traceevent "V" 6 "R" "F" "r" 20 0 0 0 "before" ""
+   .traceevent "V" 6 "R" "F" "r" 22 0 0 0 "item" ""
+   fgt r0,r20,r22
+   unlink r20
+   .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "" ""
+   icopy r25,r0
+l2555andend:
+   .traceevent "O" 4 "R" "B" "r" 25 0 0 0 "" ""
+   brf l2552doend,r25
+   .srcstep 260 260 17 "summarize_paired.crexx" 157 7 31 "      values[j + 1] = values[j]"
+   .traceevent "V" 6 "R" "I" "r" 21 260 260 0 "j" ""
+   iadd r26,r21,1
+   .traceevent "O" 4 "R" "I" "r" 26 260 260 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 26 260 260 0 "before" ""
+   minlinkattr1 r27,r4,r26,0
+   .traceevent "V" 6 "R" "I" "r" 21 260 260 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 21 260 260 0 "before" ""
+   minlinkattr1 r28,r4,r21,0
+   .traceevent "V" 6 "R" "F" "r" 28 260 260 0 "before" ""
+   fcopy r27,r28
+   .traceevent "A" 6 "R" "F" "r" 27 260 260 0 "before" ""
+   unlinkn r28,r27
+   .srcstep 261 261 17 "summarize_paired.crexx" 158 7 16 "      j = j - 1"
+   .traceevent "V" 6 "R" "I" "r" 21 261 261 0 "j" ""
+   isub r21,r21,1
+   .traceevent "O" 4 "R" "I" "r" 21 261 261 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 261 261 0 "j" ""
+l2552doinc:
+   .srcstep 263 263 17 "summarize_paired.crexx" 159 5 8 "    end"
+   br l2552dostart
+l2552doend:
+   .srcstep 264 264 17 "summarize_paired.crexx" 160 5 25 "    values[j + 1] = item"
+   .traceevent "V" 6 "R" "I" "r" 21 264 264 0 "j" ""
+   iadd r28,r21,1
+   .traceevent "O" 4 "R" "I" "r" 28 264 264 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 28 264 264 0 "before" ""
+   minlinkattr1 r27,r4,r28,0
+   .traceevent "V" 6 "R" "F" "r" 22 264 264 0 "item" ""
+   fcopy r27,r22
+   .traceevent "A" 6 "R" "F" "r" 27 264 264 0 "before" ""
+   unlink r27
+l2533doinc:
+   .srcstep 256 256 17 "summarize_paired.crexx" 153 6 7 "  do i = 2 to values[0]"
+   inc r23
+   .srcstep 266 266 17 "summarize_paired.crexx" 161 3 6 "  end"
+   br l2533dostart
+l2533doend:
+   .srcstep 281 281 17 "summarize_paired.crexx" 95 3 25 "  call sort_floats after"
+   .srcstep 279 279 17 "summarize_paired.crexx" 153 3 5 "  do i = 2 to values[0]"
+   .srcstep 268 268 17 "summarize_paired.crexx" 153 6 11 "  do i = 2 to values[0]"
+   load r28,2
+   .traceevent "L" 4 "R" "I" "r" 28 268 268 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 268 268 0 "i" ""
+   .srcstep 269 269 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   .traceevent "C" 4 "R" "V" "r" 25 0 0 0 "after" ""
+   getattrs r23,r3,0
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "after" ""
+l3485dostart:
+   .srcstep 269 269 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   igt r22,r28,r23
+   brt l3485doend,r22
+   .srcstep 271 271 17 "summarize_paired.crexx" 154 5 20 "    item = values[i]"
+   .traceevent "V" 6 "R" "I" "r" 28 271 271 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 28 271 271 0 "after" ""
+   minlinkattr1 r21,r3,r28,0
+   .traceevent "V" 6 "R" "F" "r" 21 271 271 0 "after" ""
+   fcopy r27,r21
+   .traceevent "A" 6 "R" "F" "r" 27 271 271 0 "item" ""
+   unlink r21
+   .srcstep 272 272 17 "summarize_paired.crexx" 155 5 14 "    j = i - 1"
+   .traceevent "V" 6 "R" "I" "r" 28 272 272 0 "i" ""
+   isub r26,r28,1
+   .traceevent "O" 4 "R" "I" "r" 26 272 272 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 272 272 0 "j" ""
+   .srcstep 276 276 17 "summarize_paired.crexx" 156 5 7 "    do while j >= 1 & values[j] > item"
+l3504dostart:
+   .srcstep 273 273 17 "summarize_paired.crexx" 156 8 39 "    do while j >= 1 & values[j] > item"
+   .traceevent "V" 6 "R" "I" "r" 26 0 0 0 "j" ""
+   igte r20,r26,1
+   .traceevent "O" 4 "R" "B" "r" 20 0 0 0 "" ""
+   brf l3507andend,r20
+   .traceevent "V" 6 "R" "I" "r" 26 0 0 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 26 0 0 0 "after" ""
+   minlinkattr1 r25,r3,r26,0
+   .traceevent "V" 6 "R" "F" "r" 25 0 0 0 "after" ""
+   .traceevent "V" 6 "R" "F" "r" 27 0 0 0 "item" ""
+   fgt r21,r25,r27
+   unlink r25
+   .traceevent "O" 4 "R" "B" "r" 21 0 0 0 "" ""
+   icopy r20,r21
+l3507andend:
+   .traceevent "O" 4 "R" "B" "r" 20 0 0 0 "" ""
+   brf l3504doend,r20
+   .srcstep 274 274 17 "summarize_paired.crexx" 157 7 31 "      values[j + 1] = values[j]"
+   .traceevent "V" 6 "R" "I" "r" 26 274 274 0 "j" ""
+   iadd r19,r26,1
+   .traceevent "O" 4 "R" "I" "r" 19 274 274 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 274 274 0 "after" ""
+   minlinkattr1 r18,r3,r19,0
+   .traceevent "V" 6 "R" "I" "r" 26 274 274 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 26 274 274 0 "after" ""
+   minlinkattr1 r30,r3,r26,0
+   .traceevent "V" 6 "R" "F" "r" 30 274 274 0 "after" ""
+   fcopy r18,r30
+   .traceevent "A" 6 "R" "F" "r" 18 274 274 0 "after" ""
+   unlinkn r30,r18
+   .srcstep 275 275 17 "summarize_paired.crexx" 158 7 16 "      j = j - 1"
+   .traceevent "V" 6 "R" "I" "r" 26 275 275 0 "j" ""
+   isub r26,r26,1
+   .traceevent "O" 4 "R" "I" "r" 26 275 275 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 275 275 0 "j" ""
+l3504doinc:
+   .srcstep 277 277 17 "summarize_paired.crexx" 159 5 8 "    end"
+   br l3504dostart
+l3504doend:
+   .srcstep 278 278 17 "summarize_paired.crexx" 160 5 25 "    values[j + 1] = item"
+   .traceevent "V" 6 "R" "I" "r" 26 278 278 0 "j" ""
+   iadd r30,r26,1
+   .traceevent "O" 4 "R" "I" "r" 30 278 278 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 30 278 278 0 "after" ""
+   minlinkattr1 r25,r3,r30,0
+   .traceevent "V" 6 "R" "F" "r" 27 278 278 0 "item" ""
+   fcopy r25,r27
+   .traceevent "A" 6 "R" "F" "r" 25 278 278 0 "after" ""
+   unlink r25
+l3485doinc:
+   .srcstep 270 270 17 "summarize_paired.crexx" 153 6 7 "  do i = 2 to values[0]"
+   inc r28
+   .srcstep 280 280 17 "summarize_paired.crexx" 161 3 6 "  end"
+   br l3485dostart
+l3485doend:
+   .srcstep 295 295 17 "summarize_paired.crexx" 96 3 26 "  call sort_floats deltas"
+   .srcstep 293 293 17 "summarize_paired.crexx" 153 3 5 "  do i = 2 to values[0]"
+   .srcstep 282 282 17 "summarize_paired.crexx" 153 6 11 "  do i = 2 to values[0]"
+   load r30,2
+   .traceevent "L" 4 "R" "I" "r" 30 282 282 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 282 282 0 "i" ""
+   .srcstep 283 283 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   .traceevent "C" 4 "R" "V" "r" 26 0 0 0 "deltas" ""
+   getattrs r25,r6,0
+   .traceevent "V" 6 "R" "I" "r" 25 0 0 0 "deltas" ""
+l3535dostart:
+   .srcstep 283 283 17 "summarize_paired.crexx" 153 12 23 "  do i = 2 to values[0]"
+   igt r23,r30,r25
+   brt l3535doend,r23
+   .srcstep 285 285 17 "summarize_paired.crexx" 154 5 20 "    item = values[i]"
+   .traceevent "V" 6 "R" "I" "r" 30 285 285 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 30 285 285 0 "deltas" ""
+   minlinkattr1 r22,r6,r30,0
+   .traceevent "V" 6 "R" "F" "r" 22 285 285 0 "deltas" ""
+   fcopy r28,r22
+   .traceevent "A" 6 "R" "F" "r" 28 285 285 0 "item" ""
+   unlink r22
+   .srcstep 286 286 17 "summarize_paired.crexx" 155 5 14 "    j = i - 1"
+   .traceevent "V" 6 "R" "I" "r" 30 286 286 0 "i" ""
+   isub r27,r30,1
+   .traceevent "O" 4 "R" "I" "r" 27 286 286 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 27 286 286 0 "j" ""
+   .srcstep 290 290 17 "summarize_paired.crexx" 156 5 7 "    do while j >= 1 & values[j] > item"
+l3554dostart:
+   .srcstep 287 287 17 "summarize_paired.crexx" 156 8 39 "    do while j >= 1 & values[j] > item"
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "j" ""
+   igte r20,r27,1
+   .traceevent "O" 4 "R" "B" "r" 20 0 0 0 "" ""
+   brf l3557andend,r20
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 27 0 0 0 "deltas" ""
+   minlinkattr1 r26,r6,r27,0
+   .traceevent "V" 6 "R" "F" "r" 26 0 0 0 "deltas" ""
+   .traceevent "V" 6 "R" "F" "r" 28 0 0 0 "item" ""
+   fgt r22,r26,r28
+   unlink r26
+   .traceevent "O" 4 "R" "B" "r" 22 0 0 0 "" ""
+   icopy r20,r22
+l3557andend:
+   .traceevent "O" 4 "R" "B" "r" 20 0 0 0 "" ""
+   brf l3554doend,r20
+   .srcstep 288 288 17 "summarize_paired.crexx" 157 7 31 "      values[j + 1] = values[j]"
+   .traceevent "V" 6 "R" "I" "r" 27 288 288 0 "j" ""
+   iadd r19,r27,1
+   .traceevent "O" 4 "R" "I" "r" 19 288 288 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 288 288 0 "deltas" ""
+   minlinkattr1 r18,r6,r19,0
+   .traceevent "V" 6 "R" "I" "r" 27 288 288 0 "j" ""
+   .traceevent "C" 4 "R" "I" "r" 27 288 288 0 "deltas" ""
+   minlinkattr1 r32,r6,r27,0
+   .traceevent "V" 6 "R" "F" "r" 32 288 288 0 "deltas" ""
+   fcopy r18,r32
+   .traceevent "A" 6 "R" "F" "r" 18 288 288 0 "deltas" ""
+   unlinkn r32,r18
+   .srcstep 289 289 17 "summarize_paired.crexx" 158 7 16 "      j = j - 1"
+   .traceevent "V" 6 "R" "I" "r" 27 289 289 0 "j" ""
+   isub r27,r27,1
+   .traceevent "O" 4 "R" "I" "r" 27 289 289 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 27 289 289 0 "j" ""
+l3554doinc:
+   .srcstep 291 291 17 "summarize_paired.crexx" 159 5 8 "    end"
+   br l3554dostart
+l3554doend:
+   .srcstep 292 292 17 "summarize_paired.crexx" 160 5 25 "    values[j + 1] = item"
+   .traceevent "V" 6 "R" "I" "r" 27 292 292 0 "j" ""
+   iadd r32,r27,1
+   .traceevent "O" 4 "R" "I" "r" 32 292 292 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 32 292 292 0 "deltas" ""
+   minlinkattr1 r26,r6,r32,0
+   .traceevent "V" 6 "R" "F" "r" 28 292 292 0 "item" ""
+   fcopy r26,r28
+   .traceevent "A" 6 "R" "F" "r" 26 292 292 0 "deltas" ""
+   unlink r26
+l3535doinc:
+   .srcstep 284 284 17 "summarize_paired.crexx" 153 6 7 "  do i = 2 to values[0]"
+   inc r30
+   .srcstep 294 294 17 "summarize_paired.crexx" 161 3 6 "  end"
+   br l3535dostart
+l3535doend:
+   .srcstep 296 296 17 "summarize_paired.crexx" 97 3 33 "  mean = sum / (count as .float)"
+   .meta "summarize_paired.write_summary.mean"="b" ".float" r12
+   .traceevent "V" 6 "R" "F" "r" 14 296 296 0 "sum" ""
+   .traceevent "V" 6 "R" "I" "r" 5 296 296 0 "count" ""
+   itof r32,r5
+   fdiv r12,r14,r32
+   .traceevent "O" 4 "R" "F" "r" 12 296 296 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 12 296 296 0 "mean" ""
+   .srcstep 297 297 17 "summarize_paired.crexx" 98 3 20 "  sum_squares = 0.0"
+   .meta "summarize_paired.write_summary.sum_squares"="b" ".float" r15
+   load r15,0.0
+   .traceevent "L" 4 "R" "F" "r" 15 297 297 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 15 297 297 0 "sum_squares" ""
+   .srcstep 303 303 17 "summarize_paired.crexx" 99 3 5 "  do i = 1 to count"
+   .srcstep 298 298 17 "summarize_paired.crexx" 99 6 11 "  do i = 1 to count"
+   .meta "summarize_paired.write_summary.i"="b" ".int" r30
+   load r30,1
+   .traceevent "L" 4 "R" "I" "r" 30 298 298 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 298 298 0 "i" ""
+   .srcstep 299 299 17 "summarize_paired.crexx" 99 12 20 "  do i = 1 to count"
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "count" ""
+l440dostart:
+   .srcstep 299 299 17 "summarize_paired.crexx" 99 12 20 "  do i = 1 to count"
+   igt r28,r30,r5
+   brt l440doend,r28
+   .srcstep 301 301 17 "summarize_paired.crexx" 100 5 34 "    difference = deltas[i] - mean"
+   .meta "summarize_paired.write_summary.difference"="b" ".float" r32
+   .traceevent "V" 6 "R" "I" "r" 30 301 301 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 30 301 301 0 "deltas" ""
+   minlinkattr1 r27,r6,r30,0
+   .traceevent "V" 6 "R" "F" "r" 27 301 301 0 "deltas" ""
+   .traceevent "V" 6 "R" "F" "r" 12 301 301 0 "mean" ""
+   fsub r26,r27,r12
+   unlink r27
+   .traceevent "O" 4 "R" "F" "r" 26 301 301 0 "" ""
+   fcopy r32,r26
+   .traceevent "A" 6 "R" "F" "r" 32 301 301 0 "difference" ""
+   .srcstep 302 302 17 "summarize_paired.crexx" 101 5 56 "    sum_squares = sum_squares + difference * difference"
+   .traceevent "V" 6 "R" "F" "r" 15 302 302 0 "sum_squares" ""
+   .traceevent "V" 6 "R" "F" "r" 32 302 302 0 "difference" ""
+   .traceevent "V" 6 "R" "F" "r" 32 302 302 0 "difference" ""
+   fmult r27,r32,r32
+   .traceevent "O" 4 "R" "F" "r" 27 302 302 0 "" ""
+   fadd r15,r15,r27
+   .traceevent "O" 4 "R" "F" "r" 15 302 302 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 15 302 302 0 "sum_squares" ""
+l440doinc:
+   .srcstep 300 300 17 "summarize_paired.crexx" 99 6 7 "  do i = 1 to count"
+   inc r30
+   .srcstep 304 304 17 "summarize_paired.crexx" 102 3 6 "  end"
+   br l440dostart
+l440doend:
+   .meta "summarize_paired.write_summary.difference"
+   .meta "summarize_paired.write_summary.i"
+   .srcstep 330 330 17 "summarize_paired.crexx" 103 3 72 "  sample_deviation = square_root(sum_squares / ((count - 1) as .float))"
+   .meta "summarize_paired.write_summary.sample_deviation"="b" ".float" r13
+   .srcstep 329 329 17 "summarize_paired.crexx" 103 22 33 "  sample_deviation = square_root(sum_squares / ((count - 1) as .float))"
+   .srcstep 305 305 33 "summarize_paired.crexx" 175 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "F" "r" 15 305 305 0 "sum_squares" ""
+   .traceevent "V" 6 "R" "I" "r" 5 305 305 0 "count" ""
+   isub r28,r5,1
+   .traceevent "O" 4 "R" "I" "r" 28 305 305 0 "" ""
+   itof r27,r28
+   fdiv r30,r15,r27
+   .traceevent "O" 4 "R" "F" "r" 30 305 305 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 30 305 305 0 "value" ""
+   .srcstep 307 307 17 "summarize_paired.crexx" 176 3 18 "  if value <= 0.0 then return 0.0"
+   .traceevent "V" 6 "R" "F" "r" 30 307 307 0 "value" ""
+   flte r28,r30,0.0
+   .traceevent "O" 4 "R" "B" "r" 28 307 307 0 "" ""
+   brf l3595iffalse,r28
+   .srcstep 308 308 17 "summarize_paired.crexx" 176 19 23 "  if value <= 0.0 then return 0.0"
+   .srcstep 306 306 17 "summarize_paired.crexx" 176 24 34 "  if value <= 0.0 then return 0.0"
+   load r27,0.0
+   .traceevent "L" 4 "R" "F" "r" 27 330 330 0 "" ""
+   fcopy r28,r27
+   br l3584bexprend
+l3595iffalse:
+   .srcstep 309 309 17 "summarize_paired.crexx" 177 3 16 "  guess = value"
+   .traceevent "V" 6 "R" "F" "r" 30 309 309 0 "value" ""
+   fcopy r32,r30
+   .traceevent "A" 6 "R" "F" "r" 32 309 309 0 "guess" ""
+   .srcstep 311 311 17 "summarize_paired.crexx" 178 3 17 "  if guess < 1.0 then guess = 1.0"
+   .traceevent "V" 6 "R" "F" "r" 32 311 311 0 "guess" ""
+   flt r28,r32,1.0
+   .traceevent "O" 4 "R" "B" "r" 28 311 311 0 "" ""
+   brf l3604iffalse,r28
+   .srcstep 312 312 17 "summarize_paired.crexx" 178 18 22 "  if guess < 1.0 then guess = 1.0"
+   .srcstep 310 310 17 "summarize_paired.crexx" 178 23 34 "  if guess < 1.0 then guess = 1.0"
+   load r32,1.0
+   .traceevent "L" 4 "R" "F" "r" 32 310 310 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 32 310 310 0 "guess" ""
+l3604iffalse:
+   .srcstep 326 326 17 "summarize_paired.crexx" 179 3 5 "  do iteration = 1 to 80"
+   .srcstep 313 313 17 "summarize_paired.crexx" 179 6 19 "  do iteration = 1 to 80"
+   load r28,1
+   .traceevent "L" 4 "R" "I" "r" 28 313 313 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 313 313 0 "iteration" ""
+   .srcstep 314 314 17 "summarize_paired.crexx" 179 20 25 "  do iteration = 1 to 80"
+   load r26,80
+   .traceevent "L" 4 "R" "I" "r" 26 330 330 0 "" ""
+l3611dostart:
+   .srcstep 314 314 17 "summarize_paired.crexx" 179 20 25 "  do iteration = 1 to 80"
+   igt r25,r28,r26
+   brt l3611doend,r25
+   .srcstep 316 316 17 "summarize_paired.crexx" 180 5 47 "    next_guess = (guess + value / guess) / 2.0"
+   .traceevent "V" 6 "R" "F" "r" 32 316 316 0 "guess" ""
+   .traceevent "V" 6 "R" "F" "r" 30 316 316 0 "value" ""
+   .traceevent "V" 6 "R" "F" "r" 32 316 316 0 "guess" ""
+   fdiv r23,r30,r32
+   .traceevent "O" 4 "R" "F" "r" 23 316 316 0 "" ""
+   fadd r23,r32,r23
+   .traceevent "O" 4 "R" "F" "r" 23 316 316 0 "" ""
+   fdiv r27,r23,2.0
+   .traceevent "O" 4 "R" "F" "r" 27 316 316 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 27 316 316 0 "next_guess" ""
+   .srcstep 323 323 17 "summarize_paired.crexx" 181 5 53 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 321 321 17 "summarize_paired.crexx" 181 8 16 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 317 317 33 "summarize_paired.crexx" 181 16 16 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 317 317 0 "next_guess" ""
+   .traceevent "V" 6 "R" "F" "r" 32 317 317 0 "guess" ""
+   fsub r23,r27,r32
+   .traceevent "O" 4 "R" "F" "r" 23 317 317 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 23 317 317 0 "number" ""
+   .traceevent "V" 6 "R" "F" "r" 23 323 323 0 "number" ""
+   feq r20,r23,0.0
+   .traceevent "O" 4 "R" "B" "r" 20 323 323 0 "" ""
+   brf l3638iffalse,r20
+   .srcstep 318 318 25 "floatabs.crexx" 42 24 34 "  if number = 0.0 then return 0.0"
+   load r19,0.0
+   .traceevent "L" 4 "R" "F" "r" 19 323 323 0 "" ""
+   fcopy r20,r19
+   br l3631bexprend
+l3638iffalse:
+   .traceevent "V" 6 "R" "F" "r" 23 323 323 0 "number" ""
+   flt r20,r23,0.0
+   .traceevent "O" 4 "R" "B" "r" 20 323 323 0 "" ""
+   brf l3644iffalse,r20
+   .srcstep 319 319 25 "floatabs.crexx" 43 24 43 "  if number < 0.0 then return 0.0 - number"
+   .traceevent "V" 6 "R" "F" "r" 23 323 323 0 "number" ""
+   fsub r19,0.0,r23
+   .traceevent "O" 4 "R" "F" "r" 19 323 323 0 "" ""
+   fcopy r20,r19
+   br l3631bexprend
+l3644iffalse:
+   .srcstep 320 320 25 "floatabs.crexx" 44 3 16 "  return number"
+   .traceevent "V" 6 "R" "F" "r" 23 323 323 0 "number" ""
+   fcopy r20,r23
+   br l3631bexprend
+l3631bexprend:
+   flt r23,r20,1e-12
+   .traceevent "O" 4 "R" "B" "r" 23 323 323 0 "" ""
+   brf l3629iffalse,r23
+   .srcstep 324 324 17 "summarize_paired.crexx" 181 54 58 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 322 322 17 "summarize_paired.crexx" 181 59 76 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 330 330 0 "next_guess" ""
+   fcopy r28,r27
+   br l3584bexprend
+l3629iffalse:
+   .srcstep 325 325 17 "summarize_paired.crexx" 182 5 23 "    guess = next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 325 325 0 "next_guess" ""
+   fcopy r32,r27
+   .traceevent "A" 6 "R" "F" "r" 32 325 325 0 "guess" ""
+l3611doinc:
+   .srcstep 315 315 17 "summarize_paired.crexx" 179 6 15 "  do iteration = 1 to 80"
+   inc r28
+   .srcstep 327 327 17 "summarize_paired.crexx" 183 3 6 "  end"
+   br l3611dostart
+l3611doend:
+   .srcstep 328 328 17 "summarize_paired.crexx" 184 3 15 "  return guess"
+   .traceevent "V" 6 "R" "F" "r" 32 330 330 0 "guess" ""
+   fcopy r28,r32
+   br l3584bexprend
+l3584bexprend:
+   fcopy r13,r28
+   .traceevent "A" 6 "R" "F" "r" 13 330 330 0 "sample_deviation" ""
+   .srcstep 434 434 17 "summarize_paired.crexx" 104 3 86 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .meta "summarize_paired.write_summary.margin"="b" ".float" r11
+   .srcstep 433 433 17 "summarize_paired.crexx" 104 12 25 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .srcstep 406 406 33 "summarize_paired.crexx" 104 37 38 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .srcstep 405 405 17 "summarize_paired.crexx" 104 12 25 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .srcstep 331 331 33 "summarize_paired.crexx" 187 7 14 "  arg degrees = .int"
+   .traceevent "V" 6 "R" "I" "r" 5 331 331 0 "count" ""
+   isub r32,r5,1
+   .traceevent "O" 4 "R" "I" "r" 32 331 331 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 331 331 0 "degrees" ""
+   .srcstep 333 333 17 "summarize_paired.crexx" 188 3 19 "  if degrees <= 11 then return 2.200985"
+   .traceevent "V" 6 "R" "I" "r" 32 333 333 0 "degrees" ""
+   ilte r30,r32,11
+   .traceevent "O" 4 "R" "B" "r" 30 333 333 0 "" ""
+   brf l3825iffalse,r30
+   .srcstep 334 334 17 "summarize_paired.crexx" 188 20 24 "  if degrees <= 11 then return 2.200985"
+   .srcstep 332 332 17 "summarize_paired.crexx" 188 25 40 "  if degrees <= 11 then return 2.200985"
+   load r28,2.200985
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3825iffalse:
+   .srcstep 336 336 17 "summarize_paired.crexx" 189 3 18 "  if degrees = 12 then return 2.178813"
+   .traceevent "V" 6 "R" "I" "r" 32 336 336 0 "degrees" ""
+   ieq r30,r32,12
+   .traceevent "O" 4 "R" "B" "r" 30 336 336 0 "" ""
+   brf l3831iffalse,r30
+   .srcstep 337 337 17 "summarize_paired.crexx" 189 19 23 "  if degrees = 12 then return 2.178813"
+   .srcstep 335 335 17 "summarize_paired.crexx" 189 24 39 "  if degrees = 12 then return 2.178813"
+   load r28,2.178813
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3831iffalse:
+   .srcstep 339 339 17 "summarize_paired.crexx" 190 3 18 "  if degrees = 13 then return 2.160369"
+   .traceevent "V" 6 "R" "I" "r" 32 339 339 0 "degrees" ""
+   ieq r30,r32,13
+   .traceevent "O" 4 "R" "B" "r" 30 339 339 0 "" ""
+   brf l3837iffalse,r30
+   .srcstep 340 340 17 "summarize_paired.crexx" 190 19 23 "  if degrees = 13 then return 2.160369"
+   .srcstep 338 338 17 "summarize_paired.crexx" 190 24 39 "  if degrees = 13 then return 2.160369"
+   load r28,2.160369
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3837iffalse:
+   .srcstep 342 342 17 "summarize_paired.crexx" 191 3 18 "  if degrees = 14 then return 2.144787"
+   .traceevent "V" 6 "R" "I" "r" 32 342 342 0 "degrees" ""
+   ieq r30,r32,14
+   .traceevent "O" 4 "R" "B" "r" 30 342 342 0 "" ""
+   brf l3843iffalse,r30
+   .srcstep 343 343 17 "summarize_paired.crexx" 191 19 23 "  if degrees = 14 then return 2.144787"
+   .srcstep 341 341 17 "summarize_paired.crexx" 191 24 39 "  if degrees = 14 then return 2.144787"
+   load r28,2.144787
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3843iffalse:
+   .srcstep 345 345 17 "summarize_paired.crexx" 192 3 18 "  if degrees = 15 then return 2.131450"
+   .traceevent "V" 6 "R" "I" "r" 32 345 345 0 "degrees" ""
+   ieq r30,r32,15
+   .traceevent "O" 4 "R" "B" "r" 30 345 345 0 "" ""
+   brf l3849iffalse,r30
+   .srcstep 346 346 17 "summarize_paired.crexx" 192 19 23 "  if degrees = 15 then return 2.131450"
+   .srcstep 344 344 17 "summarize_paired.crexx" 192 24 39 "  if degrees = 15 then return 2.131450"
+   load r28,2.13145
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3849iffalse:
+   .srcstep 348 348 17 "summarize_paired.crexx" 193 3 18 "  if degrees = 16 then return 2.119905"
+   .traceevent "V" 6 "R" "I" "r" 32 348 348 0 "degrees" ""
+   ieq r30,r32,16
+   .traceevent "O" 4 "R" "B" "r" 30 348 348 0 "" ""
+   brf l3855iffalse,r30
+   .srcstep 349 349 17 "summarize_paired.crexx" 193 19 23 "  if degrees = 16 then return 2.119905"
+   .srcstep 347 347 17 "summarize_paired.crexx" 193 24 39 "  if degrees = 16 then return 2.119905"
+   load r28,2.119905
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3855iffalse:
+   .srcstep 351 351 17 "summarize_paired.crexx" 194 3 18 "  if degrees = 17 then return 2.109816"
+   .traceevent "V" 6 "R" "I" "r" 32 351 351 0 "degrees" ""
+   ieq r30,r32,17
+   .traceevent "O" 4 "R" "B" "r" 30 351 351 0 "" ""
+   brf l3861iffalse,r30
+   .srcstep 352 352 17 "summarize_paired.crexx" 194 19 23 "  if degrees = 17 then return 2.109816"
+   .srcstep 350 350 17 "summarize_paired.crexx" 194 24 39 "  if degrees = 17 then return 2.109816"
+   load r28,2.109816
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3861iffalse:
+   .srcstep 354 354 17 "summarize_paired.crexx" 195 3 18 "  if degrees = 18 then return 2.100922"
+   .traceevent "V" 6 "R" "I" "r" 32 354 354 0 "degrees" ""
+   ieq r30,r32,18
+   .traceevent "O" 4 "R" "B" "r" 30 354 354 0 "" ""
+   brf l3867iffalse,r30
+   .srcstep 355 355 17 "summarize_paired.crexx" 195 19 23 "  if degrees = 18 then return 2.100922"
+   .srcstep 353 353 17 "summarize_paired.crexx" 195 24 39 "  if degrees = 18 then return 2.100922"
+   load r28,2.100922
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3867iffalse:
+   .srcstep 357 357 17 "summarize_paired.crexx" 196 3 18 "  if degrees = 19 then return 2.093024"
+   .traceevent "V" 6 "R" "I" "r" 32 357 357 0 "degrees" ""
+   ieq r30,r32,19
+   .traceevent "O" 4 "R" "B" "r" 30 357 357 0 "" ""
+   brf l3873iffalse,r30
+   .srcstep 358 358 17 "summarize_paired.crexx" 196 19 23 "  if degrees = 19 then return 2.093024"
+   .srcstep 356 356 17 "summarize_paired.crexx" 196 24 39 "  if degrees = 19 then return 2.093024"
+   load r28,2.093024
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3873iffalse:
+   .srcstep 360 360 17 "summarize_paired.crexx" 197 3 18 "  if degrees = 20 then return 2.085963"
+   .traceevent "V" 6 "R" "I" "r" 32 360 360 0 "degrees" ""
+   ieq r30,r32,20
+   .traceevent "O" 4 "R" "B" "r" 30 360 360 0 "" ""
+   brf l3879iffalse,r30
+   .srcstep 361 361 17 "summarize_paired.crexx" 197 19 23 "  if degrees = 20 then return 2.085963"
+   .srcstep 359 359 17 "summarize_paired.crexx" 197 24 39 "  if degrees = 20 then return 2.085963"
+   load r28,2.085963
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3879iffalse:
+   .srcstep 363 363 17 "summarize_paired.crexx" 198 3 18 "  if degrees = 21 then return 2.079614"
+   .traceevent "V" 6 "R" "I" "r" 32 363 363 0 "degrees" ""
+   ieq r30,r32,21
+   .traceevent "O" 4 "R" "B" "r" 30 363 363 0 "" ""
+   brf l3885iffalse,r30
+   .srcstep 364 364 17 "summarize_paired.crexx" 198 19 23 "  if degrees = 21 then return 2.079614"
+   .srcstep 362 362 17 "summarize_paired.crexx" 198 24 39 "  if degrees = 21 then return 2.079614"
+   load r28,2.079614
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3885iffalse:
+   .srcstep 366 366 17 "summarize_paired.crexx" 199 3 18 "  if degrees = 22 then return 2.073873"
+   .traceevent "V" 6 "R" "I" "r" 32 366 366 0 "degrees" ""
+   ieq r30,r32,22
+   .traceevent "O" 4 "R" "B" "r" 30 366 366 0 "" ""
+   brf l3891iffalse,r30
+   .srcstep 367 367 17 "summarize_paired.crexx" 199 19 23 "  if degrees = 22 then return 2.073873"
+   .srcstep 365 365 17 "summarize_paired.crexx" 199 24 39 "  if degrees = 22 then return 2.073873"
+   load r28,2.073873
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3891iffalse:
+   .srcstep 369 369 17 "summarize_paired.crexx" 200 3 18 "  if degrees = 23 then return 2.068658"
+   .traceevent "V" 6 "R" "I" "r" 32 369 369 0 "degrees" ""
+   ieq r30,r32,23
+   .traceevent "O" 4 "R" "B" "r" 30 369 369 0 "" ""
+   brf l3897iffalse,r30
+   .srcstep 370 370 17 "summarize_paired.crexx" 200 19 23 "  if degrees = 23 then return 2.068658"
+   .srcstep 368 368 17 "summarize_paired.crexx" 200 24 39 "  if degrees = 23 then return 2.068658"
+   load r28,2.068658
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3897iffalse:
+   .srcstep 372 372 17 "summarize_paired.crexx" 201 3 18 "  if degrees = 24 then return 2.063899"
+   .traceevent "V" 6 "R" "I" "r" 32 372 372 0 "degrees" ""
+   ieq r30,r32,24
+   .traceevent "O" 4 "R" "B" "r" 30 372 372 0 "" ""
+   brf l3903iffalse,r30
+   .srcstep 373 373 17 "summarize_paired.crexx" 201 19 23 "  if degrees = 24 then return 2.063899"
+   .srcstep 371 371 17 "summarize_paired.crexx" 201 24 39 "  if degrees = 24 then return 2.063899"
+   load r28,2.063899
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3903iffalse:
+   .srcstep 375 375 17 "summarize_paired.crexx" 202 3 18 "  if degrees = 25 then return 2.059539"
+   .traceevent "V" 6 "R" "I" "r" 32 375 375 0 "degrees" ""
+   ieq r30,r32,25
+   .traceevent "O" 4 "R" "B" "r" 30 375 375 0 "" ""
+   brf l3909iffalse,r30
+   .srcstep 376 376 17 "summarize_paired.crexx" 202 19 23 "  if degrees = 25 then return 2.059539"
+   .srcstep 374 374 17 "summarize_paired.crexx" 202 24 39 "  if degrees = 25 then return 2.059539"
+   load r28,2.059539
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3909iffalse:
+   .srcstep 378 378 17 "summarize_paired.crexx" 203 3 18 "  if degrees = 26 then return 2.055529"
+   .traceevent "V" 6 "R" "I" "r" 32 378 378 0 "degrees" ""
+   ieq r30,r32,26
+   .traceevent "O" 4 "R" "B" "r" 30 378 378 0 "" ""
+   brf l3915iffalse,r30
+   .srcstep 379 379 17 "summarize_paired.crexx" 203 19 23 "  if degrees = 26 then return 2.055529"
+   .srcstep 377 377 17 "summarize_paired.crexx" 203 24 39 "  if degrees = 26 then return 2.055529"
+   load r28,2.055529
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3915iffalse:
+   .srcstep 381 381 17 "summarize_paired.crexx" 204 3 18 "  if degrees = 27 then return 2.051831"
+   .traceevent "V" 6 "R" "I" "r" 32 381 381 0 "degrees" ""
+   ieq r30,r32,27
+   .traceevent "O" 4 "R" "B" "r" 30 381 381 0 "" ""
+   brf l3921iffalse,r30
+   .srcstep 382 382 17 "summarize_paired.crexx" 204 19 23 "  if degrees = 27 then return 2.051831"
+   .srcstep 380 380 17 "summarize_paired.crexx" 204 24 39 "  if degrees = 27 then return 2.051831"
+   load r28,2.051831
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3921iffalse:
+   .srcstep 384 384 17 "summarize_paired.crexx" 205 3 18 "  if degrees = 28 then return 2.048407"
+   .traceevent "V" 6 "R" "I" "r" 32 384 384 0 "degrees" ""
+   ieq r30,r32,28
+   .traceevent "O" 4 "R" "B" "r" 30 384 384 0 "" ""
+   brf l3927iffalse,r30
+   .srcstep 385 385 17 "summarize_paired.crexx" 205 19 23 "  if degrees = 28 then return 2.048407"
+   .srcstep 383 383 17 "summarize_paired.crexx" 205 24 39 "  if degrees = 28 then return 2.048407"
+   load r28,2.048407
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3927iffalse:
+   .srcstep 387 387 17 "summarize_paired.crexx" 206 3 18 "  if degrees = 29 then return 2.045230"
+   .traceevent "V" 6 "R" "I" "r" 32 387 387 0 "degrees" ""
+   ieq r30,r32,29
+   .traceevent "O" 4 "R" "B" "r" 30 387 387 0 "" ""
+   brf l3933iffalse,r30
+   .srcstep 388 388 17 "summarize_paired.crexx" 206 19 23 "  if degrees = 29 then return 2.045230"
+   .srcstep 386 386 17 "summarize_paired.crexx" 206 24 39 "  if degrees = 29 then return 2.045230"
+   load r28,2.04523
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3933iffalse:
+   .srcstep 390 390 17 "summarize_paired.crexx" 207 3 18 "  if degrees = 30 then return 2.042272"
+   .traceevent "V" 6 "R" "I" "r" 32 390 390 0 "degrees" ""
+   ieq r30,r32,30
+   .traceevent "O" 4 "R" "B" "r" 30 390 390 0 "" ""
+   brf l3939iffalse,r30
+   .srcstep 391 391 17 "summarize_paired.crexx" 207 19 23 "  if degrees = 30 then return 2.042272"
+   .srcstep 389 389 17 "summarize_paired.crexx" 207 24 39 "  if degrees = 30 then return 2.042272"
+   load r28,2.042272
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3939iffalse:
+   .srcstep 393 393 17 "summarize_paired.crexx" 208 3 18 "  if degrees = 31 then return 2.039513"
+   .traceevent "V" 6 "R" "I" "r" 32 393 393 0 "degrees" ""
+   ieq r30,r32,31
+   .traceevent "O" 4 "R" "B" "r" 30 393 393 0 "" ""
+   brf l3945iffalse,r30
+   .srcstep 394 394 17 "summarize_paired.crexx" 208 19 23 "  if degrees = 31 then return 2.039513"
+   .srcstep 392 392 17 "summarize_paired.crexx" 208 24 39 "  if degrees = 31 then return 2.039513"
+   load r28,2.039513
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3945iffalse:
+   .srcstep 396 396 17 "summarize_paired.crexx" 209 3 18 "  if degrees = 32 then return 2.036933"
+   .traceevent "V" 6 "R" "I" "r" 32 396 396 0 "degrees" ""
+   ieq r30,r32,32
+   .traceevent "O" 4 "R" "B" "r" 30 396 396 0 "" ""
+   brf l3951iffalse,r30
+   .srcstep 397 397 17 "summarize_paired.crexx" 209 19 23 "  if degrees = 32 then return 2.036933"
+   .srcstep 395 395 17 "summarize_paired.crexx" 209 24 39 "  if degrees = 32 then return 2.036933"
+   load r28,2.036933
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3951iffalse:
+   .srcstep 399 399 17 "summarize_paired.crexx" 210 3 18 "  if degrees = 33 then return 2.034515"
+   .traceevent "V" 6 "R" "I" "r" 32 399 399 0 "degrees" ""
+   ieq r30,r32,33
+   .traceevent "O" 4 "R" "B" "r" 30 399 399 0 "" ""
+   brf l3957iffalse,r30
+   .srcstep 400 400 17 "summarize_paired.crexx" 210 19 23 "  if degrees = 33 then return 2.034515"
+   .srcstep 398 398 17 "summarize_paired.crexx" 210 24 39 "  if degrees = 33 then return 2.034515"
+   load r28,2.034515
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3957iffalse:
+   .srcstep 402 402 17 "summarize_paired.crexx" 211 3 18 "  if degrees = 34 then return 2.032245"
+   .traceevent "V" 6 "R" "I" "r" 32 402 402 0 "degrees" ""
+   ieq r30,r32,34
+   .traceevent "O" 4 "R" "B" "r" 30 402 402 0 "" ""
+   brf l3963iffalse,r30
+   .srcstep 403 403 17 "summarize_paired.crexx" 211 19 23 "  if degrees = 34 then return 2.032245"
+   .srcstep 401 401 17 "summarize_paired.crexx" 211 24 39 "  if degrees = 34 then return 2.032245"
+   load r28,2.032245
+   .traceevent "L" 4 "R" "F" "r" 28 406 406 0 "" ""
+   br l3818bexprend
+l3963iffalse:
+   .srcstep 404 404 17 "summarize_paired.crexx" 212 3 18 "  return 2.030108"
+   load r30,2.030108
+   .traceevent "L" 4 "R" "F" "r" 30 406 406 0 "" ""
+   fcopy r28,r30
+   br l3818bexprend
+l3818bexprend:
+   .traceevent "V" 6 "R" "F" "r" 13 406 406 0 "sample_deviation" ""
+   fmult r33,r28,r13
+   .traceevent "O" 4 "R" "F" "r" 33 406 406 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 33 406 406 0 "__inline_lhs_477_482" ""
+   .srcstep 432 432 33 "summarize_paired.crexx" 104 56 57 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .traceevent "V" 6 "R" "F" "r" 33 434 434 0 "__inline_lhs_477_482" ""
+   .srcstep 431 431 17 "summarize_paired.crexx" 104 58 69 "  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)"
+   .srcstep 407 407 33 "summarize_paired.crexx" 175 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "I" "r" 5 407 407 0 "count" ""
+   itof r30,r5
+   .traceevent "A" 6 "R" "F" "r" 30 407 407 0 "value" ""
+   .srcstep 409 409 17 "summarize_paired.crexx" 176 3 18 "  if value <= 0.0 then return 0.0"
+   .traceevent "V" 6 "R" "F" "r" 30 409 409 0 "value" ""
+   flte r28,r30,0.0
+   .traceevent "O" 4 "R" "B" "r" 28 409 409 0 "" ""
+   brf l7120iffalse,r28
+   .srcstep 410 410 17 "summarize_paired.crexx" 176 19 23 "  if value <= 0.0 then return 0.0"
+   .srcstep 408 408 17 "summarize_paired.crexx" 176 24 34 "  if value <= 0.0 then return 0.0"
+   load r27,0.0
+   .traceevent "L" 4 "R" "F" "r" 27 434 434 0 "" ""
+   fcopy r28,r27
+   br l7113bexprend
+l7120iffalse:
+   .srcstep 411 411 17 "summarize_paired.crexx" 177 3 16 "  guess = value"
+   .traceevent "V" 6 "R" "F" "r" 30 411 411 0 "value" ""
+   fcopy r32,r30
+   .traceevent "A" 6 "R" "F" "r" 32 411 411 0 "guess" ""
+   .srcstep 413 413 17 "summarize_paired.crexx" 178 3 17 "  if guess < 1.0 then guess = 1.0"
+   .traceevent "V" 6 "R" "F" "r" 32 413 413 0 "guess" ""
+   flt r28,r32,1.0
+   .traceevent "O" 4 "R" "B" "r" 28 413 413 0 "" ""
+   brf l7129iffalse,r28
+   .srcstep 414 414 17 "summarize_paired.crexx" 178 18 22 "  if guess < 1.0 then guess = 1.0"
+   .srcstep 412 412 17 "summarize_paired.crexx" 178 23 34 "  if guess < 1.0 then guess = 1.0"
+   load r32,1.0
+   .traceevent "L" 4 "R" "F" "r" 32 412 412 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 32 412 412 0 "guess" ""
+l7129iffalse:
+   .srcstep 428 428 17 "summarize_paired.crexx" 179 3 5 "  do iteration = 1 to 80"
+   .srcstep 415 415 17 "summarize_paired.crexx" 179 6 19 "  do iteration = 1 to 80"
+   load r28,1
+   .traceevent "L" 4 "R" "I" "r" 28 415 415 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 415 415 0 "iteration" ""
+   .srcstep 416 416 17 "summarize_paired.crexx" 179 20 25 "  do iteration = 1 to 80"
+   load r26,80
+   .traceevent "L" 4 "R" "I" "r" 26 434 434 0 "" ""
+l7136dostart:
+   .srcstep 416 416 17 "summarize_paired.crexx" 179 20 25 "  do iteration = 1 to 80"
+   igt r25,r28,r26
+   brt l7136doend,r25
+   .srcstep 418 418 17 "summarize_paired.crexx" 180 5 47 "    next_guess = (guess + value / guess) / 2.0"
+   .traceevent "V" 6 "R" "F" "r" 32 418 418 0 "guess" ""
+   .traceevent "V" 6 "R" "F" "r" 30 418 418 0 "value" ""
+   .traceevent "V" 6 "R" "F" "r" 32 418 418 0 "guess" ""
+   fdiv r23,r30,r32
+   .traceevent "O" 4 "R" "F" "r" 23 418 418 0 "" ""
+   fadd r23,r32,r23
+   .traceevent "O" 4 "R" "F" "r" 23 418 418 0 "" ""
+   fdiv r27,r23,2.0
+   .traceevent "O" 4 "R" "F" "r" 27 418 418 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 27 418 418 0 "next_guess" ""
+   .srcstep 425 425 17 "summarize_paired.crexx" 181 5 53 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 423 423 17 "summarize_paired.crexx" 181 8 16 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 419 419 33 "summarize_paired.crexx" 181 16 16 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 419 419 0 "next_guess" ""
+   .traceevent "V" 6 "R" "F" "r" 32 419 419 0 "guess" ""
+   fsub r23,r27,r32
+   .traceevent "O" 4 "R" "F" "r" 23 419 419 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 23 419 419 0 "number" ""
+   .traceevent "V" 6 "R" "F" "r" 23 425 425 0 "number" ""
+   feq r20,r23,0.0
+   .traceevent "O" 4 "R" "B" "r" 20 425 425 0 "" ""
+   brf l7163iffalse,r20
+   .srcstep 420 420 25 "floatabs.crexx" 42 24 34 "  if number = 0.0 then return 0.0"
+   load r19,0.0
+   .traceevent "L" 4 "R" "F" "r" 19 425 425 0 "" ""
+   fcopy r20,r19
+   br l7156bexprend
+l7163iffalse:
+   .traceevent "V" 6 "R" "F" "r" 23 425 425 0 "number" ""
+   flt r20,r23,0.0
+   .traceevent "O" 4 "R" "B" "r" 20 425 425 0 "" ""
+   brf l7169iffalse,r20
+   .srcstep 421 421 25 "floatabs.crexx" 43 24 43 "  if number < 0.0 then return 0.0 - number"
+   .traceevent "V" 6 "R" "F" "r" 23 425 425 0 "number" ""
+   fsub r19,0.0,r23
+   .traceevent "O" 4 "R" "F" "r" 19 425 425 0 "" ""
+   fcopy r20,r19
+   br l7156bexprend
+l7169iffalse:
+   .srcstep 422 422 25 "floatabs.crexx" 44 3 16 "  return number"
+   .traceevent "V" 6 "R" "F" "r" 23 425 425 0 "number" ""
+   fcopy r20,r23
+   br l7156bexprend
+l7156bexprend:
+   flt r23,r20,1e-12
+   .traceevent "O" 4 "R" "B" "r" 23 425 425 0 "" ""
+   brf l7154iffalse,r23
+   .srcstep 426 426 17 "summarize_paired.crexx" 181 54 58 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .srcstep 424 424 17 "summarize_paired.crexx" 181 59 76 "    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 434 434 0 "next_guess" ""
+   fcopy r28,r27
+   br l7113bexprend
+l7154iffalse:
+   .srcstep 427 427 17 "summarize_paired.crexx" 182 5 23 "    guess = next_guess"
+   .traceevent "V" 6 "R" "F" "r" 27 427 427 0 "next_guess" ""
+   fcopy r32,r27
+   .traceevent "A" 6 "R" "F" "r" 32 427 427 0 "guess" ""
+l7136doinc:
+   .srcstep 417 417 17 "summarize_paired.crexx" 179 6 15 "  do iteration = 1 to 80"
+   inc r28
+   .srcstep 429 429 17 "summarize_paired.crexx" 183 3 6 "  end"
+   br l7136dostart
+l7136doend:
+   .srcstep 430 430 17 "summarize_paired.crexx" 184 3 15 "  return guess"
+   .traceevent "V" 6 "R" "F" "r" 32 434 434 0 "guess" ""
+   fcopy r28,r32
+   br l7113bexprend
+l7113bexprend:
+   fdiv r32,r33,r28
+   .traceevent "O" 4 "R" "F" "r" 32 434 434 0 "" ""
+   fcopy r30,r32
+   br l3815bexprend
+l3815bexprend:
+   fcopy r11,r30
+   .traceevent "A" 6 "R" "F" "r" 11 434 434 0 "margin" ""
+   .srcstep 435 435 17 "summarize_paired.crexx" 105 3 31 "  interval_low = mean - margin"
+   .meta "summarize_paired.write_summary.interval_low"="b" ".float" r9
+   .traceevent "V" 6 "R" "F" "r" 12 435 435 0 "mean" ""
+   .traceevent "V" 6 "R" "F" "r" 11 435 435 0 "margin" ""
+   fsub r9,r12,r11
+   .traceevent "O" 4 "R" "F" "r" 9 435 435 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 9 435 435 0 "interval_low" ""
+   .srcstep 436 436 17 "summarize_paired.crexx" 106 3 32 "  interval_high = mean + margin"
+   .meta "summarize_paired.write_summary.interval_high"="b" ".float" r8
+   .traceevent "V" 6 "R" "F" "r" 12 436 436 0 "mean" ""
+   .traceevent "V" 6 "R" "F" "r" 11 436 436 0 "margin" ""
+   fadd r8,r12,r11
+   .traceevent "O" 4 "R" "F" "r" 8 436 436 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 8 436 436 0 "interval_high" ""
+   .srcstep 437 437 17 "summarize_paired.crexx" 107 3 41 "  interval_result = \"noisy_inconclusive\""
+   .meta "summarize_paired.write_summary.interval_result"="b" ".string" r10
+   load r10,"noisy_inconclusive"
+   .traceevent "L" 4 "R" "S" "r" 10 437 437 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 437 437 0 "interval_result" ""
+   .srcstep 442 442 17 "summarize_paired.crexx" 108 3 25 "  if interval_high < 0.0 then interval_result = \"clear_favorable\""
+   .traceevent "V" 6 "R" "F" "r" 8 442 442 0 "interval_high" ""
+   flt r32,r8,0.0
+   .traceevent "O" 4 "R" "B" "r" 32 442 442 0 "" ""
+   brf l510iffalse,r32
+   .srcstep 443 443 17 "summarize_paired.crexx" 108 26 30 "  if interval_high < 0.0 then interval_result = \"clear_favorable\""
+   .srcstep 438 438 17 "summarize_paired.crexx" 108 31 66 "  if interval_high < 0.0 then interval_result = \"clear_favorable\""
+   load r10,"clear_favorable"
+   .traceevent "L" 4 "R" "S" "r" 10 438 438 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 438 438 0 "interval_result" ""
+   br l510ifend
+   .srcstep 444 444 17 "summarize_paired.crexx" 109 3 7 "  else if interval_low > 0.0 then interval_result = \"clear_adverse\""
+l510iffalse:
+   .srcstep 440 440 17 "summarize_paired.crexx" 109 8 29 "  else if interval_low > 0.0 then interval_result = \"clear_adverse\""
+   .traceevent "V" 6 "R" "F" "r" 9 440 440 0 "interval_low" ""
+   fgt r30,r9,0.0
+   .traceevent "O" 4 "R" "B" "r" 30 440 440 0 "" ""
+   brf l509iffalse,r30
+   .srcstep 441 441 17 "summarize_paired.crexx" 109 30 34 "  else if interval_low > 0.0 then interval_result = \"clear_adverse\""
+   .srcstep 439 439 17 "summarize_paired.crexx" 109 35 68 "  else if interval_low > 0.0 then interval_result = \"clear_adverse\""
+   load r10,"clear_adverse"
+   .traceevent "L" 4 "R" "S" "r" 10 439 439 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 439 439 0 "interval_result" ""
+l509iffalse:
+l510ifend:
+   .srcstep 555 555 17 "summarize_paired.crexx" 110 3 69 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .meta "summarize_paired.write_summary.row"="b" ".string" r2
+   .srcstep 554 554 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 549 549 33 "summarize_paired.crexx" 117 32 34 "      float_text(interval_low) || \",\" || float_text(interval_high) || \",\" || ,"
+   .srcstep 548 548 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 543 543 33 "summarize_paired.crexx" 116 60 62 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .srcstep 542 542 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 537 537 33 "summarize_paired.crexx" 116 33 35 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .srcstep 536 536 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 531 531 33 "summarize_paired.crexx" 115 49 51 "      float_text(sample_quantile(deltas, 3, 4)) || \",\" || ,"
+   .srcstep 530 530 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 515 515 33 "summarize_paired.crexx" 114 49 51 "      float_text(sample_quantile(deltas, 1, 2)) || \",\" || ,"
+   .srcstep 514 514 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 499 499 33 "summarize_paired.crexx" 113 56 58 "      \",\" || float_text(sample_quantile(deltas, 1, 4)) || \",\" || ,"
+   .srcstep 498 498 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 483 483 33 "summarize_paired.crexx" 112 80 82 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .srcstep 482 482 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 477 477 33 "summarize_paired.crexx" 112 48 50 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .srcstep 476 476 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 461 461 33 "summarize_paired.crexx" 111 49 51 "      float_text(sample_quantile(before, 1, 2)) || \",\" || ,"
+   .srcstep 460 460 17 "summarize_paired.crexx" 110 9 17 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .srcstep 445 445 33 "summarize_paired.crexx" 110 58 60 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "a" 2 445 445 0 "workload" ""
+   concat r32,a2,","
+   .traceevent "O" 4 "R" "S" "r" 32 445 445 0 "" ""
+   .traceevent "V" 6 "R" "S" "a" 3 445 445 0 "vm" ""
+   concat r32,r32,a3
+   .traceevent "O" 4 "R" "S" "r" 32 445 445 0 "" ""
+   concat r32,r32,",elapsed_ns,"
+   .traceevent "O" 4 "R" "S" "r" 32 445 445 0 "" ""
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 445 445 0 "count" ""
+   concat r32,r32,r5
+   .traceevent "O" 4 "R" "S" "r" 32 445 445 0 "" ""
+   concat r43,r32,","
+   .traceevent "O" 4 "R" "S" "r" 43 445 445 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 445 445 0 "__inline_lhs_522_528" ""
+   .srcstep 459 459 33 "summarize_paired.crexx" 110 65 67 "  row = workload || \",\" || vm || \",elapsed_ns,\" || count || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 43 461 461 0 "__inline_lhs_522_528" ""
+   .srcstep 458 458 17 "summarize_paired.crexx" 111 7 17 "      float_text(sample_quantile(before, 1, 2)) || \",\" || ,"
+   .srcstep 456 456 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .srcstep 455 455 17 "summarize_paired.crexx" 111 18 33 "      float_text(sample_quantile(before, 1, 2)) || \",\" || ,"
+   .srcstep 446 446 6 "summarize_paired.crexx" 165 7 13 "  arg values = .float[], numerator = .int, denominator = .int"
+   .traceevent "V" 6 "R" "F" "r" 4 456 456 0 "before" ""
+   copy r25,r4
+   .srcstep 447 447 17 "summarize_paired.crexx" 166 3 39 "  scaled = (values[0] - 1) * numerator"
+   .traceevent "C" 4 "R" "V" "r" 23 447 447 0 "values" ""
+   getattrs r20,r25,0
+   .traceevent "V" 6 "R" "I" "r" 20 447 447 0 "values" ""
+   isub r20,r20,1
+   .traceevent "O" 4 "R" "I" "r" 20 447 447 0 "" ""
+   imult r26,r20,1
+   .traceevent "O" 4 "R" "I" "r" 26 447 447 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 447 447 0 "scaled" ""
+   .srcstep 448 448 17 "summarize_paired.crexx" 167 3 47 "  lower_zero_index = scaled <idiv> denominator"
+   .traceevent "V" 6 "R" "I" "r" 26 448 448 0 "scaled" ""
+   idiv r28,r26,2
+   .traceevent "O" 4 "R" "I" "r" 28 448 448 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 448 448 0 "lower_zero_index" ""
+   .srcstep 449 449 17 "summarize_paired.crexx" 168 3 39 "  remainder = scaled <mod> denominator"
+   .traceevent "V" 6 "R" "I" "r" 26 449 449 0 "scaled" ""
+   imod r27,r26,2
+   .traceevent "O" 4 "R" "I" "r" 27 449 449 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 27 449 449 0 "remainder" ""
+   .srcstep 450 450 17 "summarize_paired.crexx" 169 3 44 "  lower_value = values[lower_zero_index + 1]"
+   .traceevent "V" 6 "R" "I" "r" 28 450 450 0 "lower_zero_index" ""
+   iadd r23,r28,1
+   .traceevent "O" 4 "R" "I" "r" 23 450 450 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 23 450 450 0 "values" ""
+   minlinkattr1 r20,r25,r23,0
+   .traceevent "V" 6 "R" "F" "r" 20 450 450 0 "values" ""
+   fcopy r30,r20
+   .traceevent "A" 6 "R" "F" "r" 30 450 450 0 "lower_value" ""
+   unlink r20
+   .srcstep 452 452 17 "summarize_paired.crexx" 170 3 19 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "I" "r" 27 452 452 0 "remainder" ""
+   ieq r23,r27,0
+   .traceevent "O" 4 "R" "B" "r" 23 452 452 0 "" ""
+   brf l7226iffalse,r23
+   .srcstep 453 453 17 "summarize_paired.crexx" 170 20 24 "  if remainder = 0 then return lower_value"
+   .srcstep 451 451 17 "summarize_paired.crexx" 170 25 43 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "F" "r" 30 456 456 0 "lower_value" ""
+   fcopy r18,r30
+   br l7191bexprend
+l7226iffalse:
+   .srcstep 454 454 17 "summarize_paired.crexx" 171 3 72 "  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,"
+   .traceevent "V" 6 "R" "F" "r" 30 456 456 0 "lower_value" ""
+   .traceevent "V" 6 "R" "I" "r" 28 456 456 0 "lower_zero_index" ""
+   iadd r23,r28,2
+   .traceevent "O" 4 "R" "I" "r" 23 456 456 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 23 456 456 0 "values" ""
+   minlinkattr1 r20,r25,r23,0
+   .traceevent "V" 6 "R" "F" "r" 20 456 456 0 "values" ""
+   .traceevent "V" 6 "R" "F" "r" 30 456 456 0 "lower_value" ""
+   fsub r19,r20,r30
+   unlink r20
+   .traceevent "O" 4 "R" "F" "r" 19 456 456 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 27 456 456 0 "remainder" ""
+   itof r18,r27
+   fdiv r18,r18,2.0
+   .traceevent "O" 4 "R" "F" "r" 18 456 456 0 "" ""
+   fmult r19,r19,r18
+   .traceevent "O" 4 "R" "F" "r" 19 456 456 0 "" ""
+   fadd r19,r30,r19
+   .traceevent "O" 4 "R" "F" "r" 19 456 456 0 "" ""
+   fcopy r18,r19
+   br l7191bexprend
+l7191bexprend:
+   endlife r25
+   fcopy r32,r18
+   .traceevent "A" 6 "R" "F" "r" 32 456 456 0 "value" ""
+   .srcstep 457 457 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 32 461 461 0 "value" ""
+   load r51,6
+   .traceevent "L" 4 "R" "I" "r" 51 461 461 0 "" ""
+   load r48,5
+   swap r49,r32
+   settp r50,0
+   settp r51,256
+   settp r52,0
+   settpcall r45,rxfnsb.floatformat(),r48,r53,0
+   swap r32,r49
+   .traceevent "F" 4 "R" "S" "r" 45 461 461 0 "floatformat" ""
+   load r44,3
+   settp r45,256
+   settp r46,512
+   settpcall r53,rxfnsb.strip(),r44,r47,512
+   .traceevent "F" 4 "R" "S" "r" 53 461 461 0 "strip" ""
+   scopy r52,r53
+   br l7187bexprend
+l7187bexprend:
+   concat r52,r43,r52
+   .traceevent "O" 4 "R" "S" "r" 52 461 461 0 "" ""
+   scopy r51,r52
+   br l6739bexprend
+l6739bexprend:
+   concat r42,r51,","
+   .traceevent "O" 4 "R" "S" "r" 42 461 461 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 42 461 461 0 "__inline_lhs_530_536" ""
+   .srcstep 475 475 33 "summarize_paired.crexx" 111 56 58 "      float_text(sample_quantile(before, 1, 2)) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 42 477 477 0 "__inline_lhs_530_536" ""
+   .srcstep 474 474 17 "summarize_paired.crexx" 112 7 17 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .srcstep 472 472 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .srcstep 471 471 17 "summarize_paired.crexx" 112 18 33 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .srcstep 462 462 6 "summarize_paired.crexx" 165 7 13 "  arg values = .float[], numerator = .int, denominator = .int"
+   .traceevent "V" 6 "R" "F" "r" 3 472 472 0 "after" ""
+   copy r48,r3
+   .srcstep 463 463 17 "summarize_paired.crexx" 166 3 39 "  scaled = (values[0] - 1) * numerator"
+   .traceevent "C" 4 "R" "V" "r" 47 463 463 0 "values" ""
+   getattrs r46,r48,0
+   .traceevent "V" 6 "R" "I" "r" 46 463 463 0 "values" ""
+   isub r46,r46,1
+   .traceevent "O" 4 "R" "I" "r" 46 463 463 0 "" ""
+   imult r49,r46,1
+   .traceevent "O" 4 "R" "I" "r" 49 463 463 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 49 463 463 0 "scaled" ""
+   .srcstep 464 464 17 "summarize_paired.crexx" 167 3 47 "  lower_zero_index = scaled <idiv> denominator"
+   .traceevent "V" 6 "R" "I" "r" 49 464 464 0 "scaled" ""
+   idiv r51,r49,2
+   .traceevent "O" 4 "R" "I" "r" 51 464 464 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 51 464 464 0 "lower_zero_index" ""
+   .srcstep 465 465 17 "summarize_paired.crexx" 168 3 39 "  remainder = scaled <mod> denominator"
+   .traceevent "V" 6 "R" "I" "r" 49 465 465 0 "scaled" ""
+   imod r50,r49,2
+   .traceevent "O" 4 "R" "I" "r" 50 465 465 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 50 465 465 0 "remainder" ""
+   .srcstep 466 466 17 "summarize_paired.crexx" 169 3 44 "  lower_value = values[lower_zero_index + 1]"
+   .traceevent "V" 6 "R" "I" "r" 51 466 466 0 "lower_zero_index" ""
+   iadd r47,r51,1
+   .traceevent "O" 4 "R" "I" "r" 47 466 466 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 47 466 466 0 "values" ""
+   minlinkattr1 r46,r48,r47,0
+   .traceevent "V" 6 "R" "F" "r" 46 466 466 0 "values" ""
+   fcopy r52,r46
+   .traceevent "A" 6 "R" "F" "r" 52 466 466 0 "lower_value" ""
+   unlink r46
+   .srcstep 468 468 17 "summarize_paired.crexx" 170 3 19 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "I" "r" 50 468 468 0 "remainder" ""
+   ieq r47,r50,0
+   .traceevent "O" 4 "R" "B" "r" 47 468 468 0 "" ""
+   brf l7298iffalse,r47
+   .srcstep 469 469 17 "summarize_paired.crexx" 170 20 24 "  if remainder = 0 then return lower_value"
+   .srcstep 467 467 17 "summarize_paired.crexx" 170 25 43 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "F" "r" 52 472 472 0 "lower_value" ""
+   fcopy r44,r52
+   br l7263bexprend
+l7298iffalse:
+   .srcstep 470 470 17 "summarize_paired.crexx" 171 3 72 "  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,"
+   .traceevent "V" 6 "R" "F" "r" 52 472 472 0 "lower_value" ""
+   .traceevent "V" 6 "R" "I" "r" 51 472 472 0 "lower_zero_index" ""
+   iadd r47,r51,2
+   .traceevent "O" 4 "R" "I" "r" 47 472 472 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 47 472 472 0 "values" ""
+   minlinkattr1 r46,r48,r47,0
+   .traceevent "V" 6 "R" "F" "r" 46 472 472 0 "values" ""
+   .traceevent "V" 6 "R" "F" "r" 52 472 472 0 "lower_value" ""
+   fsub r45,r46,r52
+   unlink r46
+   .traceevent "O" 4 "R" "F" "r" 45 472 472 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 50 472 472 0 "remainder" ""
+   itof r44,r50
+   fdiv r44,r44,2.0
+   .traceevent "O" 4 "R" "F" "r" 44 472 472 0 "" ""
+   fmult r45,r45,r44
+   .traceevent "O" 4 "R" "F" "r" 45 472 472 0 "" ""
+   fadd r45,r52,r45
+   .traceevent "O" 4 "R" "F" "r" 45 472 472 0 "" ""
+   fcopy r44,r45
+   br l7263bexprend
+l7263bexprend:
+   endlife r48
+   fcopy r53,r44
+   .traceevent "A" 6 "R" "F" "r" 53 472 472 0 "value" ""
+   .srcstep 473 473 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 53 477 477 0 "value" ""
+   load r57,6
+   .traceevent "L" 4 "R" "I" "r" 57 477 477 0 "" ""
+   load r54,5
+   swap r55,r53
+   settp r56,0
+   settp r57,256
+   settp r58,0
+   settpcall r50,rxfnsb.floatformat(),r54,r59,0
+   swap r53,r55
+   .traceevent "F" 4 "R" "S" "r" 50 477 477 0 "floatformat" ""
+   load r49,3
+   settp r50,256
+   settp r51,512
+   settpcall r59,rxfnsb.strip(),r49,r52,512
+   .traceevent "F" 4 "R" "S" "r" 59 477 477 0 "strip" ""
+   scopy r58,r59
+   br l7259bexprend
+l7259bexprend:
+   concat r58,r42,r58
+   .traceevent "O" 4 "R" "S" "r" 58 477 477 0 "" ""
+   scopy r57,r58
+   br l6734bexprend
+l6734bexprend:
+   concat r41,r57,","
+   .traceevent "O" 4 "R" "S" "r" 41 477 477 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 41 477 477 0 "__inline_lhs_538_542" ""
+   .srcstep 481 481 33 "summarize_paired.crexx" 112 55 57 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .traceevent "V" 6 "R" "S" "r" 41 483 483 0 "__inline_lhs_538_542" ""
+   .srcstep 480 480 17 "summarize_paired.crexx" 112 58 68 "      float_text(sample_quantile(after, 1, 2)) || \",\" || float_text(deltas[1]) || ,"
+   .srcstep 478 478 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   minlinkattr1 r58,r6,1
+   .traceevent "V" 6 "R" "F" "r" 58 478 478 0 "deltas" ""
+   fcopy r59,r58
+   .traceevent "A" 6 "R" "F" "r" 59 478 478 0 "value" ""
+   unlink r58
+   .srcstep 479 479 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 59 483 483 0 "value" ""
+   load r52,6
+   .traceevent "L" 4 "R" "I" "r" 52 483 483 0 "" ""
+   load r49,5
+   swap r50,r59
+   settp r51,0
+   settp r52,256
+   settp r53,0
+   settpcall r56,rxfnsb.floatformat(),r49,r54,0
+   swap r59,r50
+   .traceevent "F" 4 "R" "S" "r" 56 483 483 0 "floatformat" ""
+   load r55,3
+   settp r56,256
+   settp r57,512
+   settpcall r54,rxfnsb.strip(),r55,r58,512
+   .traceevent "F" 4 "R" "S" "r" 54 483 483 0 "strip" ""
+   scopy r58,r54
+   br l7331bexprend
+l7331bexprend:
+   concat r59,r41,r58
+   .traceevent "O" 4 "R" "S" "r" 59 483 483 0 "" ""
+   scopy r58,r59
+   br l6729bexprend
+l6729bexprend:
+   concat r40,r58,","
+   .traceevent "O" 4 "R" "S" "r" 40 483 483 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 40 483 483 0 "__inline_lhs_544_550" ""
+   .srcstep 497 497 33 "summarize_paired.crexx" 113 11 13 "      \",\" || float_text(sample_quantile(deltas, 1, 4)) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 40 499 499 0 "__inline_lhs_544_550" ""
+   .srcstep 496 496 17 "summarize_paired.crexx" 113 14 24 "      \",\" || float_text(sample_quantile(deltas, 1, 4)) || \",\" || ,"
+   .srcstep 494 494 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .srcstep 493 493 17 "summarize_paired.crexx" 113 25 40 "      \",\" || float_text(sample_quantile(deltas, 1, 4)) || \",\" || ,"
+   .srcstep 484 484 6 "summarize_paired.crexx" 165 7 13 "  arg values = .float[], numerator = .int, denominator = .int"
+   .traceevent "V" 6 "R" "F" "r" 6 494 494 0 "deltas" ""
+   copy r54,r6
+   .srcstep 485 485 17 "summarize_paired.crexx" 166 3 39 "  scaled = (values[0] - 1) * numerator"
+   .traceevent "C" 4 "R" "V" "r" 53 485 485 0 "values" ""
+   getattrs r52,r54,0
+   .traceevent "V" 6 "R" "I" "r" 52 485 485 0 "values" ""
+   isub r52,r52,1
+   .traceevent "O" 4 "R" "I" "r" 52 485 485 0 "" ""
+   imult r55,r52,1
+   .traceevent "O" 4 "R" "I" "r" 55 485 485 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 55 485 485 0 "scaled" ""
+   .srcstep 486 486 17 "summarize_paired.crexx" 167 3 47 "  lower_zero_index = scaled <idiv> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 486 486 0 "scaled" ""
+   idiv r57,r55,4
+   .traceevent "O" 4 "R" "I" "r" 57 486 486 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 57 486 486 0 "lower_zero_index" ""
+   .srcstep 487 487 17 "summarize_paired.crexx" 168 3 39 "  remainder = scaled <mod> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 487 487 0 "scaled" ""
+   imod r56,r55,4
+   .traceevent "O" 4 "R" "I" "r" 56 487 487 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 56 487 487 0 "remainder" ""
+   .srcstep 488 488 17 "summarize_paired.crexx" 169 3 44 "  lower_value = values[lower_zero_index + 1]"
+   .traceevent "V" 6 "R" "I" "r" 57 488 488 0 "lower_zero_index" ""
+   iadd r53,r57,1
+   .traceevent "O" 4 "R" "I" "r" 53 488 488 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 488 488 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 488 488 0 "values" ""
+   fcopy r58,r52
+   .traceevent "A" 6 "R" "F" "r" 58 488 488 0 "lower_value" ""
+   unlink r52
+   .srcstep 490 490 17 "summarize_paired.crexx" 170 3 19 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "I" "r" 56 490 490 0 "remainder" ""
+   ieq r53,r56,0
+   .traceevent "O" 4 "R" "B" "r" 53 490 490 0 "" ""
+   brf l7386iffalse,r53
+   .srcstep 491 491 17 "summarize_paired.crexx" 170 20 24 "  if remainder = 0 then return lower_value"
+   .srcstep 489 489 17 "summarize_paired.crexx" 170 25 43 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "F" "r" 58 494 494 0 "lower_value" ""
+   fcopy r50,r58
+   br l7351bexprend
+l7386iffalse:
+   .srcstep 492 492 17 "summarize_paired.crexx" 171 3 72 "  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,"
+   .traceevent "V" 6 "R" "F" "r" 58 494 494 0 "lower_value" ""
+   .traceevent "V" 6 "R" "I" "r" 57 494 494 0 "lower_zero_index" ""
+   iadd r53,r57,2
+   .traceevent "O" 4 "R" "I" "r" 53 494 494 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 494 494 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 494 494 0 "values" ""
+   .traceevent "V" 6 "R" "F" "r" 58 494 494 0 "lower_value" ""
+   fsub r51,r52,r58
+   unlink r52
+   .traceevent "O" 4 "R" "F" "r" 51 494 494 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 56 494 494 0 "remainder" ""
+   itof r50,r56
+   fdiv r50,r50,4.0
+   .traceevent "O" 4 "R" "F" "r" 50 494 494 0 "" ""
+   fmult r51,r51,r50
+   .traceevent "O" 4 "R" "F" "r" 51 494 494 0 "" ""
+   fadd r51,r58,r51
+   .traceevent "O" 4 "R" "F" "r" 51 494 494 0 "" ""
+   fcopy r50,r51
+   br l7351bexprend
+l7351bexprend:
+   endlife r54
+   fcopy r59,r50
+   .traceevent "A" 6 "R" "F" "r" 59 494 494 0 "value" ""
+   .srcstep 495 495 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 59 499 499 0 "value" ""
+   load r52,6
+   .traceevent "L" 4 "R" "I" "r" 52 499 499 0 "" ""
+   load r49,5
+   swap r50,r59
+   settp r51,0
+   settp r52,256
+   settp r53,0
+   settpcall r56,rxfnsb.floatformat(),r49,r54,0
+   swap r59,r50
+   .traceevent "F" 4 "R" "S" "r" 56 499 499 0 "floatformat" ""
+   load r55,3
+   settp r56,256
+   settp r57,512
+   settpcall r54,rxfnsb.strip(),r55,r58,512
+   .traceevent "F" 4 "R" "S" "r" 54 499 499 0 "strip" ""
+   scopy r58,r54
+   br l7347bexprend
+l7347bexprend:
+   concat r59,r40,r58
+   .traceevent "O" 4 "R" "S" "r" 59 499 499 0 "" ""
+   scopy r58,r59
+   br l6724bexprend
+l6724bexprend:
+   concat r39,r58,","
+   .traceevent "O" 4 "R" "S" "r" 39 499 499 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 39 499 499 0 "__inline_lhs_552_558" ""
+   .srcstep 513 513 33 "summarize_paired.crexx" 113 63 65 "      \",\" || float_text(sample_quantile(deltas, 1, 4)) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 39 515 515 0 "__inline_lhs_552_558" ""
+   .srcstep 512 512 17 "summarize_paired.crexx" 114 7 17 "      float_text(sample_quantile(deltas, 1, 2)) || \",\" || ,"
+   .srcstep 510 510 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .srcstep 509 509 17 "summarize_paired.crexx" 114 18 33 "      float_text(sample_quantile(deltas, 1, 2)) || \",\" || ,"
+   .srcstep 500 500 6 "summarize_paired.crexx" 165 7 13 "  arg values = .float[], numerator = .int, denominator = .int"
+   .traceevent "V" 6 "R" "F" "r" 6 510 510 0 "deltas" ""
+   copy r54,r6
+   .srcstep 501 501 17 "summarize_paired.crexx" 166 3 39 "  scaled = (values[0] - 1) * numerator"
+   .traceevent "C" 4 "R" "V" "r" 53 501 501 0 "values" ""
+   getattrs r52,r54,0
+   .traceevent "V" 6 "R" "I" "r" 52 501 501 0 "values" ""
+   isub r52,r52,1
+   .traceevent "O" 4 "R" "I" "r" 52 501 501 0 "" ""
+   imult r55,r52,1
+   .traceevent "O" 4 "R" "I" "r" 55 501 501 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 55 501 501 0 "scaled" ""
+   .srcstep 502 502 17 "summarize_paired.crexx" 167 3 47 "  lower_zero_index = scaled <idiv> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 502 502 0 "scaled" ""
+   idiv r57,r55,2
+   .traceevent "O" 4 "R" "I" "r" 57 502 502 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 57 502 502 0 "lower_zero_index" ""
+   .srcstep 503 503 17 "summarize_paired.crexx" 168 3 39 "  remainder = scaled <mod> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 503 503 0 "scaled" ""
+   imod r56,r55,2
+   .traceevent "O" 4 "R" "I" "r" 56 503 503 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 56 503 503 0 "remainder" ""
+   .srcstep 504 504 17 "summarize_paired.crexx" 169 3 44 "  lower_value = values[lower_zero_index + 1]"
+   .traceevent "V" 6 "R" "I" "r" 57 504 504 0 "lower_zero_index" ""
+   iadd r53,r57,1
+   .traceevent "O" 4 "R" "I" "r" 53 504 504 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 504 504 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 504 504 0 "values" ""
+   fcopy r58,r52
+   .traceevent "A" 6 "R" "F" "r" 58 504 504 0 "lower_value" ""
+   unlink r52
+   .srcstep 506 506 17 "summarize_paired.crexx" 170 3 19 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "I" "r" 56 506 506 0 "remainder" ""
+   ieq r53,r56,0
+   .traceevent "O" 4 "R" "B" "r" 53 506 506 0 "" ""
+   brf l7458iffalse,r53
+   .srcstep 507 507 17 "summarize_paired.crexx" 170 20 24 "  if remainder = 0 then return lower_value"
+   .srcstep 505 505 17 "summarize_paired.crexx" 170 25 43 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "F" "r" 58 510 510 0 "lower_value" ""
+   fcopy r50,r58
+   br l7423bexprend
+l7458iffalse:
+   .srcstep 508 508 17 "summarize_paired.crexx" 171 3 72 "  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,"
+   .traceevent "V" 6 "R" "F" "r" 58 510 510 0 "lower_value" ""
+   .traceevent "V" 6 "R" "I" "r" 57 510 510 0 "lower_zero_index" ""
+   iadd r53,r57,2
+   .traceevent "O" 4 "R" "I" "r" 53 510 510 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 510 510 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 510 510 0 "values" ""
+   .traceevent "V" 6 "R" "F" "r" 58 510 510 0 "lower_value" ""
+   fsub r51,r52,r58
+   unlink r52
+   .traceevent "O" 4 "R" "F" "r" 51 510 510 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 56 510 510 0 "remainder" ""
+   itof r50,r56
+   fdiv r50,r50,2.0
+   .traceevent "O" 4 "R" "F" "r" 50 510 510 0 "" ""
+   fmult r51,r51,r50
+   .traceevent "O" 4 "R" "F" "r" 51 510 510 0 "" ""
+   fadd r51,r58,r51
+   .traceevent "O" 4 "R" "F" "r" 51 510 510 0 "" ""
+   fcopy r50,r51
+   br l7423bexprend
+l7423bexprend:
+   endlife r54
+   fcopy r59,r50
+   .traceevent "A" 6 "R" "F" "r" 59 510 510 0 "value" ""
+   .srcstep 511 511 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 59 515 515 0 "value" ""
+   load r52,6
+   .traceevent "L" 4 "R" "I" "r" 52 515 515 0 "" ""
+   load r49,5
+   swap r50,r59
+   settp r51,0
+   settp r52,256
+   settp r53,0
+   settpcall r56,rxfnsb.floatformat(),r49,r54,0
+   swap r59,r50
+   .traceevent "F" 4 "R" "S" "r" 56 515 515 0 "floatformat" ""
+   load r55,3
+   settp r56,256
+   settp r57,512
+   settpcall r54,rxfnsb.strip(),r55,r58,512
+   .traceevent "F" 4 "R" "S" "r" 54 515 515 0 "strip" ""
+   scopy r58,r54
+   br l7419bexprend
+l7419bexprend:
+   concat r59,r39,r58
+   .traceevent "O" 4 "R" "S" "r" 59 515 515 0 "" ""
+   scopy r58,r59
+   br l6719bexprend
+l6719bexprend:
+   concat r38,r58,","
+   .traceevent "O" 4 "R" "S" "r" 38 515 515 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 515 515 0 "__inline_lhs_560_566" ""
+   .srcstep 529 529 33 "summarize_paired.crexx" 114 56 58 "      float_text(sample_quantile(deltas, 1, 2)) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 38 531 531 0 "__inline_lhs_560_566" ""
+   .srcstep 528 528 17 "summarize_paired.crexx" 115 7 17 "      float_text(sample_quantile(deltas, 3, 4)) || \",\" || ,"
+   .srcstep 526 526 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .srcstep 525 525 17 "summarize_paired.crexx" 115 18 33 "      float_text(sample_quantile(deltas, 3, 4)) || \",\" || ,"
+   .srcstep 516 516 6 "summarize_paired.crexx" 165 7 13 "  arg values = .float[], numerator = .int, denominator = .int"
+   .traceevent "V" 6 "R" "F" "r" 6 526 526 0 "deltas" ""
+   copy r54,r6
+   .srcstep 517 517 17 "summarize_paired.crexx" 166 3 39 "  scaled = (values[0] - 1) * numerator"
+   .traceevent "C" 4 "R" "V" "r" 53 517 517 0 "values" ""
+   getattrs r52,r54,0
+   .traceevent "V" 6 "R" "I" "r" 52 517 517 0 "values" ""
+   isub r52,r52,1
+   .traceevent "O" 4 "R" "I" "r" 52 517 517 0 "" ""
+   imult r55,r52,3
+   .traceevent "O" 4 "R" "I" "r" 55 517 517 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 55 517 517 0 "scaled" ""
+   .srcstep 518 518 17 "summarize_paired.crexx" 167 3 47 "  lower_zero_index = scaled <idiv> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 518 518 0 "scaled" ""
+   idiv r57,r55,4
+   .traceevent "O" 4 "R" "I" "r" 57 518 518 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 57 518 518 0 "lower_zero_index" ""
+   .srcstep 519 519 17 "summarize_paired.crexx" 168 3 39 "  remainder = scaled <mod> denominator"
+   .traceevent "V" 6 "R" "I" "r" 55 519 519 0 "scaled" ""
+   imod r56,r55,4
+   .traceevent "O" 4 "R" "I" "r" 56 519 519 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 56 519 519 0 "remainder" ""
+   .srcstep 520 520 17 "summarize_paired.crexx" 169 3 44 "  lower_value = values[lower_zero_index + 1]"
+   .traceevent "V" 6 "R" "I" "r" 57 520 520 0 "lower_zero_index" ""
+   iadd r53,r57,1
+   .traceevent "O" 4 "R" "I" "r" 53 520 520 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 520 520 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 520 520 0 "values" ""
+   fcopy r58,r52
+   .traceevent "A" 6 "R" "F" "r" 58 520 520 0 "lower_value" ""
+   unlink r52
+   .srcstep 522 522 17 "summarize_paired.crexx" 170 3 19 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "I" "r" 56 522 522 0 "remainder" ""
+   ieq r53,r56,0
+   .traceevent "O" 4 "R" "B" "r" 53 522 522 0 "" ""
+   brf l7530iffalse,r53
+   .srcstep 523 523 17 "summarize_paired.crexx" 170 20 24 "  if remainder = 0 then return lower_value"
+   .srcstep 521 521 17 "summarize_paired.crexx" 170 25 43 "  if remainder = 0 then return lower_value"
+   .traceevent "V" 6 "R" "F" "r" 58 526 526 0 "lower_value" ""
+   fcopy r50,r58
+   br l7495bexprend
+l7530iffalse:
+   .srcstep 524 524 17 "summarize_paired.crexx" 171 3 72 "  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,"
+   .traceevent "V" 6 "R" "F" "r" 58 526 526 0 "lower_value" ""
+   .traceevent "V" 6 "R" "I" "r" 57 526 526 0 "lower_zero_index" ""
+   iadd r53,r57,2
+   .traceevent "O" 4 "R" "I" "r" 53 526 526 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 53 526 526 0 "values" ""
+   minlinkattr1 r52,r54,r53,0
+   .traceevent "V" 6 "R" "F" "r" 52 526 526 0 "values" ""
+   .traceevent "V" 6 "R" "F" "r" 58 526 526 0 "lower_value" ""
+   fsub r51,r52,r58
+   unlink r52
+   .traceevent "O" 4 "R" "F" "r" 51 526 526 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 56 526 526 0 "remainder" ""
+   itof r50,r56
+   fdiv r50,r50,4.0
+   .traceevent "O" 4 "R" "F" "r" 50 526 526 0 "" ""
+   fmult r51,r51,r50
+   .traceevent "O" 4 "R" "F" "r" 51 526 526 0 "" ""
+   fadd r51,r58,r51
+   .traceevent "O" 4 "R" "F" "r" 51 526 526 0 "" ""
+   fcopy r50,r51
+   br l7495bexprend
+l7495bexprend:
+   endlife r54
+   fcopy r59,r50
+   .traceevent "A" 6 "R" "F" "r" 59 526 526 0 "value" ""
+   .srcstep 527 527 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 59 531 531 0 "value" ""
+   load r52,6
+   .traceevent "L" 4 "R" "I" "r" 52 531 531 0 "" ""
+   load r49,5
+   swap r50,r59
+   settp r51,0
+   settp r52,256
+   settp r53,0
+   settpcall r56,rxfnsb.floatformat(),r49,r54,0
+   swap r59,r50
+   .traceevent "F" 4 "R" "S" "r" 56 531 531 0 "floatformat" ""
+   load r55,3
+   settp r56,256
+   settp r57,512
+   settpcall r54,rxfnsb.strip(),r55,r58,512
+   .traceevent "F" 4 "R" "S" "r" 54 531 531 0 "strip" ""
+   scopy r58,r54
+   br l7491bexprend
+l7491bexprend:
+   concat r59,r38,r58
+   .traceevent "O" 4 "R" "S" "r" 59 531 531 0 "" ""
+   scopy r58,r59
+   br l6714bexprend
+l6714bexprend:
+   concat r37,r58,","
+   .traceevent "O" 4 "R" "S" "r" 37 531 531 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 37 531 531 0 "__inline_lhs_568_572" ""
+   .srcstep 535 535 33 "summarize_paired.crexx" 115 56 58 "      float_text(sample_quantile(deltas, 3, 4)) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 37 537 537 0 "__inline_lhs_568_572" ""
+   .srcstep 534 534 17 "summarize_paired.crexx" 116 7 17 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .srcstep 532 532 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "I" "r" 5 532 532 0 "count" ""
+   .traceevent "C" 4 "R" "I" "r" 5 532 532 0 "deltas" ""
+   minlinkattr1 r58,r6,r5,0
+   .traceevent "V" 6 "R" "F" "r" 58 532 532 0 "deltas" ""
+   fcopy r59,r58
+   .traceevent "A" 6 "R" "F" "r" 59 532 532 0 "value" ""
+   unlink r58
+   .srcstep 533 533 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 59 537 537 0 "value" ""
+   load r52,6
+   .traceevent "L" 4 "R" "I" "r" 52 537 537 0 "" ""
+   load r49,5
+   swap r50,r59
+   settp r51,0
+   settp r52,256
+   settp r53,0
+   settpcall r56,rxfnsb.floatformat(),r49,r54,0
+   swap r59,r50
+   .traceevent "F" 4 "R" "S" "r" 56 537 537 0 "floatformat" ""
+   load r55,3
+   settp r56,256
+   settp r57,512
+   settpcall r54,rxfnsb.strip(),r55,r58,512
+   .traceevent "F" 4 "R" "S" "r" 54 537 537 0 "strip" ""
+   scopy r58,r54
+   br l7563bexprend
+l7563bexprend:
+   concat r59,r37,r58
+   .traceevent "O" 4 "R" "S" "r" 59 537 537 0 "" ""
+   scopy r58,r59
+   br l6709bexprend
+l6709bexprend:
+   concat r36,r58,","
+   .traceevent "O" 4 "R" "S" "r" 36 537 537 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 36 537 537 0 "__inline_lhs_574_577" ""
+   .srcstep 541 541 33 "summarize_paired.crexx" 116 40 42 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 36 543 543 0 "__inline_lhs_574_577" ""
+   .srcstep 540 540 17 "summarize_paired.crexx" 116 43 53 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .srcstep 538 538 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "F" "r" 12 538 538 0 "mean" ""
+   .traceevent "A" 6 "R" "F" "r" 12 538 538 0 "value" ""
+   .srcstep 539 539 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 12 543 543 0 "value" ""
+   load r53,6
+   .traceevent "L" 4 "R" "I" "r" 53 543 543 0 "" ""
+   load r50,5
+   swap r51,r12
+   settp r52,0
+   settp r53,256
+   settp r54,0
+   settpcall r57,rxfnsb.floatformat(),r50,r55,0
+   swap r12,r51
+   .traceevent "F" 4 "R" "S" "r" 57 543 543 0 "floatformat" ""
+   load r56,3
+   settp r57,256
+   settp r58,512
+   settpcall r55,rxfnsb.strip(),r56,r59,512
+   .traceevent "F" 4 "R" "S" "r" 55 543 543 0 "strip" ""
+   scopy r59,r55
+   br l7579bexprend
+l7579bexprend:
+   concat r59,r36,r59
+   .traceevent "O" 4 "R" "S" "r" 59 543 543 0 "" ""
+   scopy r58,r59
+   br l6704bexprend
+l6704bexprend:
+   concat r35,r58,","
+   .traceevent "O" 4 "R" "S" "r" 35 543 543 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 543 543 0 "__inline_lhs_579_582" ""
+   .srcstep 547 547 33 "summarize_paired.crexx" 116 67 69 "      float_text(deltas[count]) || \",\" || float_text(mean) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 35 549 549 0 "__inline_lhs_579_582" ""
+   .srcstep 546 546 17 "summarize_paired.crexx" 117 7 17 "      float_text(interval_low) || \",\" || float_text(interval_high) || \",\" || ,"
+   .srcstep 544 544 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "F" "r" 9 544 544 0 "interval_low" ""
+   .traceevent "A" 6 "R" "F" "r" 9 544 544 0 "value" ""
+   .srcstep 545 545 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 9 549 549 0 "value" ""
+   load r53,6
+   .traceevent "L" 4 "R" "I" "r" 53 549 549 0 "" ""
+   load r50,5
+   swap r51,r9
+   settp r52,0
+   settp r53,256
+   settp r54,0
+   settpcall r57,rxfnsb.floatformat(),r50,r55,0
+   swap r9,r51
+   .traceevent "F" 4 "R" "S" "r" 57 549 549 0 "floatformat" ""
+   load r56,3
+   settp r57,256
+   settp r58,512
+   settpcall r55,rxfnsb.strip(),r56,r59,512
+   .traceevent "F" 4 "R" "S" "r" 55 549 549 0 "strip" ""
+   scopy r59,r55
+   br l7594bexprend
+l7594bexprend:
+   concat r59,r35,r59
+   .traceevent "O" 4 "R" "S" "r" 59 549 549 0 "" ""
+   scopy r58,r59
+   br l6699bexprend
+l6699bexprend:
+   concat r34,r58,","
+   .traceevent "O" 4 "R" "S" "r" 34 549 549 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 34 549 549 0 "__inline_lhs_584_587" ""
+   .srcstep 553 553 33 "summarize_paired.crexx" 117 39 41 "      float_text(interval_low) || \",\" || float_text(interval_high) || \",\" || ,"
+   .traceevent "V" 6 "R" "S" "r" 34 555 555 0 "__inline_lhs_584_587" ""
+   .srcstep 552 552 17 "summarize_paired.crexx" 117 42 52 "      float_text(interval_low) || \",\" || float_text(interval_high) || \",\" || ,"
+   .srcstep 550 550 33 "summarize_paired.crexx" 215 7 12 "  arg value = .float"
+   .traceevent "V" 6 "R" "F" "r" 8 550 550 0 "interval_high" ""
+   .traceevent "A" 6 "R" "F" "r" 8 550 550 0 "value" ""
+   .srcstep 551 551 17 "summarize_paired.crexx" 216 3 40 "  return strip(floatformat(value, , 6))"
+   .traceevent "V" 6 "R" "F" "r" 8 555 555 0 "value" ""
+   load r53,6
+   .traceevent "L" 4 "R" "I" "r" 53 555 555 0 "" ""
+   load r50,5
+   swap r51,r8
+   settp r52,0
+   settp r53,256
+   settp r54,0
+   settpcall r57,rxfnsb.floatformat(),r50,r55,0
+   swap r8,r51
+   .traceevent "F" 4 "R" "S" "r" 57 555 555 0 "floatformat" ""
+   load r56,3
+   settp r57,256
+   settp r58,512
+   settpcall r55,rxfnsb.strip(),r56,r59,512
+   .traceevent "F" 4 "R" "S" "r" 55 555 555 0 "strip" ""
+   scopy r59,r55
+   br l7609bexprend
+l7609bexprend:
+   concat r59,r34,r59
+   .traceevent "O" 4 "R" "S" "r" 59 555 555 0 "" ""
+   scopy r58,r59
+   br l6696bexprend
+l6696bexprend:
+   concat r58,r58,","
+   .traceevent "O" 4 "R" "S" "r" 58 555 555 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 10 555 555 0 "interval_result" ""
+   concat r58,r58,r10
+   .traceevent "O" 4 "R" "S" "r" 58 555 555 0 "" ""
+   concat r58,r58,","
+   .traceevent "O" 4 "R" "S" "r" 58 555 555 0 "" ""
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 555 555 0 "favorable" ""
+   concat r58,r58,r7
+   .traceevent "O" 4 "R" "S" "r" 58 555 555 0 "" ""
+   concat r58,r58,","
+   .traceevent "O" 4 "R" "S" "r" 58 555 555 0 "" ""
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 555 555 0 "count" ""
+   concat r2,r58,r5
+   .traceevent "O" 4 "R" "S" "r" 2 555 555 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 555 555 0 "row" ""
+   .srcstep 560 560 17 "summarize_paired.crexx" 119 3 36 "  if lineout(output_path, row) <> 0 then return fail(\"could not append paired row\")"
+   .traceevent "V" 6 "R" "S" "a" 1 560 560 0 "output_path" ""
+   .traceevent "V" 6 "R" "S" "r" 2 560 560 0 "row" ""
+   load r57,2
+   settp a1,256
+   swap r58,a1
+   settpswapcall r56,rxfnsb.lineout(),r57,r2,256,r59
+   swap a1,r58
+   swap r2,r59
+   .traceevent "F" 4 "R" "I" "r" 56 560 560 0 "lineout" ""
+   ine r59,r56,0
+   .traceevent "O" 4 "R" "B" "r" 59 560 560 0 "" ""
+   brf l609iffalse,r59
+   .srcstep 561 561 17 "summarize_paired.crexx" 119 37 41 "  if lineout(output_path, row) <> 0 then return fail(\"could not append paired row\")"
+   .srcstep 559 559 17 "summarize_paired.crexx" 119 42 84 "  if lineout(output_path, row) <> 0 then return fail(\"could not append paired row\")"
+   .srcstep 558 558 17 "summarize_paired.crexx" 119 49 53 "  if lineout(output_path, row) <> 0 then return fail(\"could not append paired row\")"
+   .srcstep 556 556 17 "summarize_paired.crexx" 220 3 23 "  say \"ERROR:\" message"
+   say "ERROR: could not append paired row"
+   .srcstep 557 557 17 "summarize_paired.crexx" 221 3 11 "  return 1"
+   load r58,1
+   .traceevent "L" 4 "R" "I" "r" 58 559 559 0 "" ""
+   icopy r57,r58
+   br l7102bexprend
+l7102bexprend:
+   ret r57
+l609iffalse:
+   .srcstep 562 562 17 "summarize_paired.crexx" 120 3 11 "  return 0"
+   ret 0
+   .meta "summarize_paired.write_summary.after"
+   .meta "summarize_paired.write_summary.before"
+   .meta "summarize_paired.write_summary.count"
+   .meta "summarize_paired.write_summary.deltas"
+   .meta "summarize_paired.write_summary.favorable"
+   .meta "summarize_paired.write_summary.interval_high"
+   .meta "summarize_paired.write_summary.interval_low"
+   .meta "summarize_paired.write_summary.interval_result"
+   .meta "summarize_paired.write_summary.margin"
+   .meta "summarize_paired.write_summary.mean"
+   .meta "summarize_paired.write_summary.output_path"
+   .meta "summarize_paired.write_summary.row"
+   .meta "summarize_paired.write_summary.sample_deviation"
+   .meta "summarize_paired.write_summary.sum"
+   .meta "summarize_paired.write_summary.sum_squares"
+   .meta "summarize_paired.write_summary.vm"
+   .meta "summarize_paired.write_summary.workload"
+
+split_delimited() .locals=22
+   .meta "summarize_paired.split_delimited"="b" ".string[*]" split_delimited() "text=.string,delimiter=.string"
+   .srcstep 687 687 17 "summarize_paired.crexx" 136 1 39 "split_delimited: procedure = .string[]"
+   numsci 18,1,1
+   .srcstep 591 591 17 "summarize_paired.crexx" 137 7 21 "  arg text = .string, delimiter = .string"
+   .meta "summarize_paired.split_delimited.text"="b" ".string" a1
+   .srcstep 592 592 17 "summarize_paired.crexx" 137 23 42 "  arg text = .string, delimiter = .string"
+   .meta "summarize_paired.split_delimited.delimiter"="b" ".string" a2
+   .meta "summarize_paired.split_delimited.fields"="b" ".string[*]" r1
+   .srcstep 593 593 17 "summarize_paired.crexx" 138 3 19 "  fields = .string[]"
+   null r1
+   .srcstep 594 594 17 "summarize_paired.crexx" 139 3 12 "  start = 1"
+   .meta "summarize_paired.split_delimited.start"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 594 594 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 594 594 0 "start" ""
+   .srcstep 684 684 17 "summarize_paired.crexx" 140 3 5 "  do forever"
+l691dostart:
+   .srcstep 605 605 17 "summarize_paired.crexx" 141 5 47 "    delimiter_at = pos(delimiter, text, start)"
+   .meta "summarize_paired.split_delimited.delimiter_at"="b" ".int" r4
+   .srcstep 604 604 17 "summarize_paired.crexx" 141 20 23 "    delimiter_at = pos(delimiter, text, start)"
+   .meta "summarize_paired.split_delimited.found_position"="b" ".int" r5
+   .srcstep 595 595 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r5
+   .srcstep 596 596 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   .traceevent "V" 6 "R" "S" "a" 2 596 596 0 "delimiter" ""
+   scopy r7,a2
+   .traceevent "A" 6 "R" "S" "r" 7 596 596 0 "needle" ""
+   .srcstep 597 597 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   .traceevent "V" 6 "R" "S" "a" 1 597 597 0 "text" ""
+   scopy r6,a1
+   .traceevent "A" 6 "R" "S" "r" 6 597 597 0 "haystack" ""
+   .srcstep 598 598 33 "summarize_paired.crexx" 141 23 23 "    delimiter_at = pos(delimiter, text, start)"
+   .traceevent "V" 6 "R" "I" "r" 2 598 598 0 "start" ""
+   icopy r8,r2
+   .traceevent "A" 6 "R" "I" "r" 8 598 598 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 8 605 605 0 "start" ""
+   ilt r9,r8,1
+   .traceevent "O" 4 "R" "B" "r" 9 605 605 0 "" ""
+   brf l2610iffalse,r9
+   .srcstep 599 599 25 "pos.crexx" 47 15 70 "    assembler signal \"INVALID_ARGUMENTS\",\"POS start must be positive\""
+   signal "INVALID_ARGUMENTS","POS start must be positive"
+l2610iffalse:
+   .traceevent "V" 6 "R" "S" "r" 7 605 605 0 "needle" ""
+   seq r9,r7,""
+   .traceevent "O" 4 "R" "B" "r" 9 605 605 0 "" ""
+   brt l2618orend,r9
+   .traceevent "V" 6 "R" "S" "r" 6 605 605 0 "haystack" ""
+   seq r9,r6,""
+   .traceevent "O" 4 "R" "B" "r" 9 605 605 0 "" ""
+l2618orend:
+   .traceevent "O" 4 "R" "B" "r" 9 605 605 0 "" ""
+   brf l2617iffalse,r9
+   .srcstep 600 600 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 605 605 0 "" ""
+   br l2596bexprend
+l2617iffalse:
+   .srcstep 601 601 25 "pos.crexx" 50 3 25 "  found_position = start"
+   .traceevent "V" 6 "R" "I" "r" 8 601 601 0 "start" ""
+   icopy r5,r8
+   .traceevent "A" 6 "R" "I" "r" 5 601 601 0 "found_position" ""
+   .srcstep 602 602 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 5 605 605 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 7 605 605 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 6 605 605 0 "haystack" ""
+   strpos r5,r7,r6
+   .srcstep 603 603 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 5 605 605 0 "found_position" ""
+   icopy r10,r5
+   br l2596bexprend
+l2596bexprend:
+   .meta "summarize_paired.split_delimited.found_position"
+   icopy r4,r10
+   .traceevent "A" 6 "R" "I" "r" 4 605 605 0 "delimiter_at" ""
+   .srcstep 643 643 17 "summarize_paired.crexx" 142 5 24 "    if delimiter_at = 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 4 643 643 0 "delimiter_at" ""
+   ieq r10,r4,0
+   .traceevent "O" 4 "R" "B" "r" 10 643 643 0 "" ""
+   brf l714iffalse,r10
+   .srcstep 644 644 17 "summarize_paired.crexx" 142 25 29 "    if delimiter_at = 0 then do"
+   .srcstep 641 641 17 "summarize_paired.crexx" 143 7 50 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "C" 4 "R" "V" "r" 9 641 641 0 "fields" ""
+   getattrs r8,r1,0
+   .traceevent "V" 6 "R" "I" "r" 8 641 641 0 "fields" ""
+   iadd r8,r8,1
+   .traceevent "O" 4 "R" "I" "r" 8 641 641 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 8 641 641 0 "fields" ""
+   minlinkattr1 r7,r1,r8,0
+   .srcstep 640 640 17 "summarize_paired.crexx" 143 31 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .meta "summarize_paired.split_delimited.available"="b" ".int" r6
+   .srcstep 606 606 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r6
+   .meta "summarize_paired.split_delimited.copy_length"="b" ".int" r5
+   .srcstep 607 607 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r5
+   .meta "summarize_paired.split_delimited.pad_character"="b" ".int" r12
+   .srcstep 608 608 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r12
+   .meta "summarize_paired.split_delimited.pad_length"="b" ".int" r14
+   .srcstep 609 609 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r14
+   .meta "summarize_paired.split_delimited.padding_length"="b" ".int" r15
+   .srcstep 610 610 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r15
+   .meta "summarize_paired.split_delimited.start_offset"="b" ".int" r17
+   .srcstep 611 611 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r17
+   .meta "summarize_paired.split_delimited.string_length"="b" ".int" r19
+   .srcstep 612 612 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r19
+   .srcstep 613 613 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "V" 6 "R" "S" "a" 1 613 613 0 "text" ""
+   scopy r18,a1
+   .traceevent "A" 6 "R" "S" "r" 18 613 613 0 "string" ""
+   .srcstep 614 614 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   .traceevent "V" 6 "R" "I" "r" 2 614 614 0 "start" ""
+   .traceevent "A" 6 "R" "I" "r" 2 614 614 0 "start" ""
+   .srcstep 615 615 33 "summarize_paired.crexx" 143 37 37 "      fields[fields[0] + 1] = substr(text, start)"
+   load r11," "
+   .traceevent "L" 4 "R" "S" "r" 11 615 615 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 615 615 0 "pad" ""
+   .srcstep 616 616 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 616 616 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 616 616 0 "pad_index" ""
+   .srcstep 617 617 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 617 617 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 617 617 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 2 641 641 0 "start" ""
+   ilt r9,r2,1
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2680iffalse,r9
+   .srcstep 618 618 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2680iffalse:
+   .srcstep 619 619 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 14 641 641 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 11 641 641 0 "pad" ""
+   strlen r14,r11
+   .traceevent "V" 6 "R" "I" "r" 14 641 641 0 "pad_length" ""
+   ine r9,r14,1
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2699iffalse,r9
+   .srcstep 620 620 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2699iffalse:
+   .srcstep 621 621 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 19 641 641 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   strlen r19,r18
+   .srcstep 622 622 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 2 622 622 0 "start" ""
+   isub r17,r2,1
+   .traceevent "O" 4 "R" "I" "r" 17 622 622 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 622 622 0 "start_offset" ""
+   .srcstep 623 623 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 19 623 623 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 17 623 623 0 "start_offset" ""
+   isub r6,r19,r17
+   .traceevent "O" 4 "R" "I" "r" 6 623 623 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 623 623 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 6 641 641 0 "available" ""
+   ilt r9,r6,0
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2719iffalse,r9
+   .srcstep 624 624 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 624 624 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 624 624 0 "available" ""
+l2719iffalse:
+   .traceevent "V" 6 "R" "I" "r" 6 641 641 0 "available" ""
+   ieq r9,r6,0
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2730iffalse,r9
+   .srcstep 625 625 25 "substr.crexx" 70 27 40 "    if available = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   scopy r20,r16
+   br l2636bexprend
+l2730iffalse:
+   .traceevent "V" 6 "R" "I" "r" 17 641 641 0 "start_offset" ""
+   ieq r9,r17,0
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2736iffalse,r9
+   .srcstep 626 626 25 "substr.crexx" 71 30 43 "    if start_offset = 0 then return string"
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   scopy r20,r18
+   br l2636bexprend
+l2736iffalse:
+   .srcstep 627 627 25 "substr.crexx" 72 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 17 641 641 0 "start_offset" ""
+   setstrpos r18,r17
+   .srcstep 628 628 25 "substr.crexx" 73 15 48 "    assembler substring result,string,available"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 6 641 641 0 "available" ""
+   substring r16,r18,r6
+   .srcstep 629 629 25 "substr.crexx" 74 5 18 "    return result"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   scopy r20,r16
+   br l2636bexprend
+   .srcstep 630 630 25 "substr.crexx" 77 22 35 "  if length = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   scopy r20,r16
+   br l2636bexprend
+   .srcstep 631 631 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 631 631 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 631 631 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 6 641 641 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 5 641 641 0 "copy_length" ""
+   ilt r9,r6,r5
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2760iffalse,r9
+   .srcstep 632 632 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 6 632 632 0 "available" ""
+   icopy r5,r6
+   .traceevent "A" 6 "R" "I" "r" 5 632 632 0 "copy_length" ""
+l2760iffalse:
+   .traceevent "V" 6 "R" "I" "r" 5 641 641 0 "copy_length" ""
+   igt r9,r5,0
+   .traceevent "O" 4 "R" "B" "r" 9 641 641 0 "" ""
+   brf l2767iffalse,r9
+   .traceevent "V" 6 "R" "I" "r" 17 641 641 0 "start_offset" ""
+   ieq r8,r17,0
+   .traceevent "O" 4 "R" "B" "r" 8 641 641 0 "" ""
+   brf l2774andend,r8
+   .traceevent "V" 6 "R" "I" "r" 5 641 641 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 19 641 641 0 "string_length" ""
+   ieq r8,r5,r19
+   .traceevent "O" 4 "R" "B" "r" 8 641 641 0 "" ""
+l2774andend:
+   .traceevent "O" 4 "R" "B" "r" 8 641 641 0 "" ""
+   brf l2773andfalse,r8
+   .traceevent "V" 6 "R" "I" "r" 19 641 641 0 "string_length" ""
+   ieq r20,r19,0
+   .traceevent "O" 4 "R" "B" "r" 20 641 641 0 "" ""
+   br l2773andend
+l2773andfalse:
+   load r20,0
+l2773andend:
+   .traceevent "O" 4 "R" "B" "r" 20 641 641 0 "" ""
+   brf l2772iffalse,r20
+   .srcstep 633 633 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   scopy r20,r18
+   br l2636bexprend
+l2772iffalse:
+   .srcstep 634 634 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 17 641 641 0 "start_offset" ""
+   setstrpos r18,r17
+   .srcstep 635 635 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 18 641 641 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 5 641 641 0 "copy_length" ""
+   substring r16,r18,r5
+l2767iffalse:
+   .srcstep 636 636 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 5 636 636 0 "copy_length" ""
+   isub r15,0,r5
+   .traceevent "O" 4 "R" "I" "r" 15 636 636 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 636 636 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 641 641 0 "padding_length" ""
+   igt r20,r15,0
+   .traceevent "O" 4 "R" "B" "r" 20 641 641 0 "" ""
+   brf l2798iffalse,r20
+   .srcstep 637 637 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 12 641 641 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 11 641 641 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 13 641 641 0 "pad_index" ""
+   strchar r12,r11,r13
+   .srcstep 638 638 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 12 641 641 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 15 641 641 0 "padding_length" ""
+   padstr r16,r12,r15
+l2798iffalse:
+   .srcstep 639 639 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 16 641 641 0 "result" ""
+   scopy r20,r16
+   br l2636bexprend
+l2636bexprend:
+   .meta "summarize_paired.split_delimited.available"
+   .meta "summarize_paired.split_delimited.copy_length"
+   .meta "summarize_paired.split_delimited.pad_character"
+   .meta "summarize_paired.split_delimited.pad_length"
+   .meta "summarize_paired.split_delimited.padding_length"
+   .meta "summarize_paired.split_delimited.start_offset"
+   .meta "summarize_paired.split_delimited.string_length"
+   scopy r7,r20
+   .traceevent "A" 6 "R" "S" "r" 7 641 641 0 "fields" ""
+   unlink r7
+   .srcstep 642 642 17 "summarize_paired.crexx" 144 7 12 "      leave"
+   br l691doend
+l714iffalse:
+   .srcstep 677 677 17 "summarize_paired.crexx" 146 5 70 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "C" 4 "R" "V" "r" 20 677 677 0 "fields" ""
+   getattrs r19,r1,0
+   .traceevent "V" 6 "R" "I" "r" 19 677 677 0 "fields" ""
+   iadd r19,r19,1
+   .traceevent "O" 4 "R" "I" "r" 19 677 677 0 "" ""
+   .traceevent "C" 4 "R" "I" "r" 19 677 677 0 "fields" ""
+   minlinkattr1 r18,r1,r19,0
+   .srcstep 676 676 17 "summarize_paired.crexx" 146 29 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .meta "summarize_paired.split_delimited.available"="b" ".int" r17
+   .srcstep 645 645 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r17
+   .meta "summarize_paired.split_delimited.copy_length"="b" ".int" r16
+   .srcstep 646 646 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r16
+   .meta "summarize_paired.split_delimited.pad_character"="b" ".int" r13
+   .srcstep 647 647 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r13
+   .meta "summarize_paired.split_delimited.pad_length"="b" ".int" r11
+   .srcstep 648 648 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r11
+   .meta "summarize_paired.split_delimited.padding_length"="b" ".int" r10
+   .srcstep 649 649 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r10
+   .meta "summarize_paired.split_delimited.start_offset"="b" ".int" r7
+   .srcstep 650 650 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r7
+   .meta "summarize_paired.split_delimited.string_length"="b" ".int" r5
+   .srcstep 651 651 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r5
+   .srcstep 652 652 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "S" "a" 1 652 652 0 "text" ""
+   scopy r6,a1
+   .traceevent "A" 6 "R" "S" "r" 6 652 652 0 "string" ""
+   .srcstep 653 653 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "I" "r" 2 653 653 0 "start" ""
+   .traceevent "A" 6 "R" "I" "r" 2 653 653 0 "start" ""
+   .srcstep 654 654 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   .traceevent "V" 6 "R" "I" "r" 4 654 654 0 "delimiter_at" ""
+   .traceevent "V" 6 "R" "I" "r" 2 654 654 0 "start" ""
+   isub r15,r4,r2
+   .traceevent "O" 4 "R" "I" "r" 15 654 654 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 654 654 0 "length" ""
+   .srcstep 655 655 33 "summarize_paired.crexx" 146 35 35 "    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)"
+   load r14," "
+   .traceevent "L" 4 "R" "S" "r" 14 655 655 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 14 655 655 0 "pad" ""
+   .srcstep 656 656 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 656 656 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 656 656 0 "pad_index" ""
+   .srcstep 657 657 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r9,""
+   .traceevent "L" 4 "R" "S" "r" 9 657 657 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 657 657 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 2 677 677 0 "start" ""
+   ilt r20,r2,1
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2859iffalse,r20
+   .srcstep 658 658 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2859iffalse:
+   .traceevent "V" 6 "R" "I" "r" 15 677 677 0 "length" ""
+   ilt r20,r15,0
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2866iffalse,r20
+   .srcstep 659 659 25 "substr.crexx" 59 15 78 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR length must be non-negative\""
+   signal "INVALID_ARGUMENTS","SUBSTR length must be non-negative"
+l2866iffalse:
+   .srcstep 660 660 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 11 677 677 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 14 677 677 0 "pad" ""
+   strlen r11,r14
+   .traceevent "V" 6 "R" "I" "r" 11 677 677 0 "pad_length" ""
+   ine r20,r11,1
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2878iffalse,r20
+   .srcstep 661 661 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2878iffalse:
+   .srcstep 662 662 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 5 677 677 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 6 677 677 0 "string" ""
+   strlen r5,r6
+   .srcstep 663 663 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 2 663 663 0 "start" ""
+   isub r7,r2,1
+   .traceevent "O" 4 "R" "I" "r" 7 663 663 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 663 663 0 "start_offset" ""
+   .srcstep 664 664 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 5 664 664 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 7 664 664 0 "start_offset" ""
+   isub r17,r5,r7
+   .traceevent "O" 4 "R" "I" "r" 17 664 664 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 664 664 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 17 677 677 0 "available" ""
+   ilt r20,r17,0
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2898iffalse,r20
+   .srcstep 665 665 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 665 665 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 665 665 0 "available" ""
+l2898iffalse:
+   .traceevent "V" 6 "R" "I" "r" 15 677 677 0 "length" ""
+   ieq r20,r15,0
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2930iffalse,r20
+   .srcstep 666 666 25 "substr.crexx" 77 22 35 "  if length = 0 then return result"
+   .traceevent "V" 6 "R" "S" "r" 9 677 677 0 "result" ""
+   scopy r21,r9
+   br l2813bexprend
+l2930iffalse:
+   .srcstep 667 667 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   .traceevent "V" 6 "R" "I" "r" 15 667 667 0 "length" ""
+   icopy r16,r15
+   .traceevent "A" 6 "R" "I" "r" 16 667 667 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 17 677 677 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 16 677 677 0 "copy_length" ""
+   ilt r20,r17,r16
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2939iffalse,r20
+   .srcstep 668 668 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 17 668 668 0 "available" ""
+   icopy r16,r17
+   .traceevent "A" 6 "R" "I" "r" 16 668 668 0 "copy_length" ""
+l2939iffalse:
+   .traceevent "V" 6 "R" "I" "r" 16 677 677 0 "copy_length" ""
+   igt r20,r16,0
+   .traceevent "O" 4 "R" "B" "r" 20 677 677 0 "" ""
+   brf l2946iffalse,r20
+   .traceevent "V" 6 "R" "I" "r" 7 677 677 0 "start_offset" ""
+   ieq r19,r7,0
+   .traceevent "O" 4 "R" "B" "r" 19 677 677 0 "" ""
+   brf l2953andend,r19
+   .traceevent "V" 6 "R" "I" "r" 16 677 677 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 5 677 677 0 "string_length" ""
+   ieq r19,r16,r5
+   .traceevent "O" 4 "R" "B" "r" 19 677 677 0 "" ""
+l2953andend:
+   .traceevent "O" 4 "R" "B" "r" 19 677 677 0 "" ""
+   brf l2952andfalse,r19
+   .traceevent "V" 6 "R" "I" "r" 15 677 677 0 "length" ""
+   .traceevent "V" 6 "R" "I" "r" 5 677 677 0 "string_length" ""
+   ieq r21,r15,r5
+   .traceevent "O" 4 "R" "B" "r" 21 677 677 0 "" ""
+   br l2952andend
+l2952andfalse:
+   load r21,0
+l2952andend:
+   .traceevent "O" 4 "R" "B" "r" 21 677 677 0 "" ""
+   brf l2951iffalse,r21
+   .srcstep 669 669 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 6 677 677 0 "string" ""
+   scopy r21,r6
+   br l2813bexprend
+l2951iffalse:
+   .srcstep 670 670 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 6 677 677 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 7 677 677 0 "start_offset" ""
+   setstrpos r6,r7
+   .srcstep 671 671 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 9 677 677 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 6 677 677 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 16 677 677 0 "copy_length" ""
+   substring r9,r6,r16
+l2946iffalse:
+   .srcstep 672 672 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 15 672 672 0 "length" ""
+   .traceevent "V" 6 "R" "I" "r" 16 672 672 0 "copy_length" ""
+   isub r10,r15,r16
+   .traceevent "O" 4 "R" "I" "r" 10 672 672 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 672 672 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 10 677 677 0 "padding_length" ""
+   igt r21,r10,0
+   .traceevent "O" 4 "R" "B" "r" 21 677 677 0 "" ""
+   brf l2977iffalse,r21
+   .srcstep 673 673 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 13 677 677 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 14 677 677 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 12 677 677 0 "pad_index" ""
+   strchar r13,r14,r12
+   .srcstep 674 674 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 9 677 677 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 13 677 677 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 10 677 677 0 "padding_length" ""
+   padstr r9,r13,r10
+l2977iffalse:
+   .srcstep 675 675 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 9 677 677 0 "result" ""
+   scopy r21,r9
+   br l2813bexprend
+l2813bexprend:
+   .meta "summarize_paired.split_delimited.available"
+   .meta "summarize_paired.split_delimited.copy_length"
+   .meta "summarize_paired.split_delimited.pad_character"
+   .meta "summarize_paired.split_delimited.pad_length"
+   .meta "summarize_paired.split_delimited.padding_length"
+   .meta "summarize_paired.split_delimited.start_offset"
+   .meta "summarize_paired.split_delimited.string_length"
+   scopy r18,r21
+   .traceevent "A" 6 "R" "S" "r" 18 677 677 0 "fields" ""
+   unlink r18
+   .srcstep 683 683 17 "summarize_paired.crexx" 147 5 45 "    start = delimiter_at + length(delimiter)"
+   .traceevent "V" 6 "R" "I" "r" 4 683 683 0 "delimiter_at" ""
+   .srcstep 682 682 17 "summarize_paired.crexx" 147 28 34 "    start = delimiter_at + length(delimiter)"
+   .srcstep 678 678 33 "summarize_paired.crexx" 147 34 34 "    start = delimiter_at + length(delimiter)"
+   .traceevent "V" 6 "R" "S" "a" 2 678 678 0 "delimiter" ""
+   scopy r20,a2
+   .traceevent "A" 6 "R" "S" "r" 20 678 678 0 "string" ""
+   .srcstep 679 679 25 "length.crexx" 42 3 13 "  result = 0"
+   load r21,0
+   .traceevent "L" 4 "R" "I" "r" 21 679 679 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 679 679 0 "result" ""
+   .srcstep 680 680 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 21 683 683 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 20 683 683 0 "string" ""
+   strlen r21,r20
+   .srcstep 681 681 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 21 683 683 0 "result" ""
+   br l2992bexprend
+l2992bexprend:
+   iadd r2,r4,r21
+   .traceevent "O" 4 "R" "I" "r" 2 683 683 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 683 683 0 "start" ""
+l691doinc:
+   .srcstep 685 685 17 "summarize_paired.crexx" 148 3 6 "  end"
+   br l691dostart
+l691doend:
+   .meta "summarize_paired.split_delimited.delimiter_at"
+   .srcstep 686 686 17 "summarize_paired.crexx" 149 3 16 "  return fields"
+   .traceevent "V" 6 "R" "S" "r" 1 686 686 0 "fields" ""
+   ret r1
+   .meta "summarize_paired.split_delimited.delimiter"
+   .meta "summarize_paired.split_delimited.fields"
+   .meta "summarize_paired.split_delimited.start"
+   .meta "summarize_paired.split_delimited.text"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.lines() .expose=rxfnsb.lines
+   .meta "rxfnsb.lines"="b" ".int" rxfnsb.lines() "?fname=.string"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.linein() .expose=rxfnsb.linein
+   .meta "rxfnsb.linein"="b" ".string" rxfnsb.linein() "?fname=.string"
+
+/* Imported Declaration from file: fileio@library.rxbin */
+
+rxfnsb.lineout() .expose=rxfnsb.lineout
+   .meta "rxfnsb.lineout"="b" ".int" rxfnsb.lineout() "?fname=.string,?line=.string"
+
+/* Imported Declaration from file: floatformat@library.rxbin */
+
+rxfnsb.floatformat() .expose=rxfnsb.floatformat
+   .meta "rxfnsb.floatformat"="b" ".string" rxfnsb.floatformat() "number=.float,?before=.int,?after=.int,?expp=.int,?expt=.int"
+
+/* Imported Declaration from file: strip@library.rxbin */
+
+rxfnsb.strip() .expose=rxfnsb.strip
+   .meta "rxfnsb.strip"="b" ".string" rxfnsb.strip() "string=.string,?option=.string,?char=.string"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._redir2array() .expose=_rxsysb._redir2array
+   .meta "_rxsysb._redir2array"="b" ".binary" _rxsysb._redir2array() "expose arr=.string[*]"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_new_request() .expose=_rxsysb._address_new_request
+   .meta "_rxsysb._address_new_request"="b" "._rxsysb..addressrequest" _rxsysb._address_new_request() "?env=.string,?command=.string,in=.binary,out=.binary,err=.binary"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_dispatch_request() .expose=_rxsysb._address_dispatch_request
+   .meta "_rxsysb._address_dispatch_request"="b" "._rxsysb..addressresponse" _rxsysb._address_dispatch_request() "request=.addressrequest"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+_rxsysb._address_apply_response_var() .expose=_rxsysb._address_apply_response_var
+   .meta "_rxsysb._address_apply_response_var"="b" ".void" _rxsysb._address_apply_response_var() "response=.addressresponse,internal_name=.string,expose target=.string"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+§_rxsysb.addressrequest.add_binding_plan() .expose=_rxsysb.addressrequest.add_binding_plan
+   .meta "_rxsysb.addressrequest.add_binding_plan"="b" ".void" §_rxsysb.addressrequest.add_binding_plan() "binding=.addressbinding"
+
+/* Imported Declaration from file: _address@library.rxbin */
+
+§_rxsysb.addressbinding.§factory() .expose=_rxsysb.addressbinding.§factory
+   .meta "_rxsysb.addressbinding.§factory"="b" "._rxsysb..addressbinding" §_rxsysb.addressbinding.§factory() "?kind=.string,?internal_name=.string,?external_alias=.string,?value=.string,?flags=.string"

@@ -29,76 +29,13 @@
 #include "platform.h"
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
+#include "../binutils/include/rxjtable.h"
+#include "../binutils/include/rxnumparse.h"
+#include "../binutils/include/rxgraph.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
+#include <limits.h>
 
-static int get_operand_types(OpFormat format, OperandType *types) {
-    switch (format) {
-        case FMT_EMPTY: return 0;
-        case FMT_B: types[0] = OP_BINARY; return 1;
-        case FMT_C: types[0] = OP_CHAR; return 1;
-        case FMT_F: types[0] = OP_FLOAT; return 1;
-        case FMT_I: types[0] = OP_INT; return 1;
-        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
-        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
-        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L: types[0] = OP_ID; return 1;
-        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
-        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
-        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
-        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
-        case FMT_P: types[0] = OP_FUNC; return 1;
-        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
-        case FMT_R: types[0] = OP_REG; return 1;
-        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
-        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
-        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
-        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
-        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
-        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
-        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
-        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
-        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
-        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
-        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
-        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
-        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
-        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
-        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
-        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
-        case FMT_S: types[0] = OP_STRING; return 1;
-        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
-        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
-        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        default: return 0;
-    }
-}
-
-static int match_format(OpFormat format, OperandType t1, OperandType t2, OperandType t3) {
-    OperandType types[3];
-    int num_ops = get_operand_types(format, types);
-    int expected_num_ops = 0;
-    if (t1 != OP_NONE) expected_num_ops = 1;
-    if (t2 != OP_NONE) expected_num_ops = 2;
-    if (t3 != OP_NONE) expected_num_ops = 3;
-
-    if (num_ops != expected_num_ops) return 0;
-    if (num_ops >= 1 && types[0] != t1) return 0;
-    if (num_ops >= 2 && types[1] != t2) return 0;
-    if (num_ops >= 3 && types[2] != t3) return 0;
-    return 1;
-}
 
 static int mnemonic_matches(const char *mnemonic, const char *table_name) {
     int i = 0;
@@ -110,17 +47,32 @@ static int mnemonic_matches(const char *mnemonic, const char *table_name) {
     return 0;
 }
 
-static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandType t2, OperandType t3) {
+static const OpInfo *find_opcodev(const char *mnemonic,
+                                  const OperandType *operands,
+                                  size_t operand_count) {
     int i;
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
-        if (match_format(op_table[i].format, t1, t2, t3)) {
+        if (rxop_format_matches(op_table[i].format, operands, operand_count)) {
             if (mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
                 return &op_table[i];
             }
         }
     }
     return NULL;
+}
+
+static const OpInfo *find_opcode(const char *mnemonic,
+                                 OperandType t1,
+                                 OperandType t2,
+                                 OperandType t3) {
+    OperandType operands[3];
+    size_t operand_count = 0;
+
+    if (t1 != OP_NONE) operands[operand_count++] = t1;
+    if (t2 != OP_NONE) operands[operand_count++] = t2;
+    if (t3 != OP_NONE) operands[operand_count++] = t3;
+    return find_opcodev(mnemonic, operands, operand_count);
 }
 
 #include "rxastree.h"
@@ -239,15 +191,139 @@ struct backpatching_references {
     struct backpatching_references *link;
 };
 
+typedef struct rxas_constant_alias {
+    OperandType operand_type;
+    size_t pool_index;
+} rxas_constant_alias;
+
+#define RXAS_JTABLE_ALG_AUTO 0
+#define RXAS_JTABLE_ALG_LINEAR 1
+#define RXAS_JTABLE_ALG_OPENHASH 2
+#define RXAS_JTABLE_ALG_ACPH 3
+
+#define RXAS_JTABLE_KEY_NONE 0
+#define RXAS_JTABLE_KEY_STRING 1
+#define RXAS_JTABLE_KEY_BINARY 2
+#define RXAS_JTABLE_KEY_INT 3
+
+#define RXAS_JTABLE_MATCH_EXACT 0
+#define RXAS_JTABLE_MATCH_PADDED 1
+#define RXAS_JTABLE_MATCH_NUMERIC 2
+
+struct rxas_jtable_case {
+    Assembler_Token *label_token;
+    Assembler_Token *value_token;
+    unsigned char *key;
+    size_t key_length;
+    uint32_t target;
+    struct rxas_jtable_case *next;
+};
+
+struct rxas_acph_node;
+
+struct rxas_acph_slot {
+    uint16_t symbol;
+    unsigned char kind;
+    struct rxas_jtable_case *leaf;
+    struct rxas_acph_node *child;
+    uint32_t packed_value_offset;
+};
+
+struct rxas_acph_node {
+    uint32_t column;
+    uint16_t slot_count;
+    unsigned char prime;
+    uint32_t packed_offset;
+    struct rxas_acph_slot *slots;
+    struct rxas_acph_node *next_all;
+};
+
+struct rxas_jtable_ref {
+    size_t operand_index;
+    Assembler_Token *token;
+    struct rxas_jtable_ref *next;
+};
+
+struct rxas_jump_table {
+    char *name;
+    char *proc_name;
+    int declared;
+    int algorithm;
+    int key_kind;
+    int match_mode;
+    int match_mode_set;
+    int used_by_jumpbs;
+    Assembler_Token *decl_token;
+    struct rxas_jtable_case *cases;
+    struct rxas_jtable_case *cases_tail;
+    struct rxas_jtable_ref *refs;
+    struct rxas_jump_table *next;
+};
+
+static char *rxas_strdup(Assembler_Context *context, const char *value) {
+    char *copy;
+    size_t length;
+
+    if (!value) value = "";
+    length = strlen(value);
+    copy = malloc(length + 1);
+    if (!copy) {
+        RXAS_PANIC_OOM(context, "malloc rxas string copy", length + 1, 0);
+    }
+    memcpy(copy, value, length + 1);
+    return copy;
+}
+
+static void free_jump_tables(Assembler_Context *context) {
+    struct rxas_jump_table *table, *next_table;
+    struct rxas_jtable_case *entry, *next_entry;
+    struct rxas_jtable_ref *ref, *next_ref;
+
+    table = context->jump_tables;
+    while (table) {
+        next_table = table->next;
+        entry = table->cases;
+        while (entry) {
+            next_entry = entry->next;
+            free(entry->key);
+            free(entry);
+            entry = next_entry;
+        }
+        ref = table->refs;
+        while (ref) {
+            next_ref = ref->next;
+            free(ref);
+            ref = next_ref;
+        }
+        free(table->name);
+        free(table->proc_name);
+        free(table);
+        table = next_table;
+    }
+    context->jump_tables = 0;
+}
+
+static void free_constant_alias_tree(struct avl_tree_node **root) {
+    struct string_wrapper *i;
+
+    avl_tree_for_each_in_postorder(i, *root, struct string_wrapper, index_node) {
+        free((void *)i->value);
+        free(i);
+    }
+    *root = 0;
+}
+
 /* Frees Assembler Work Data */
 void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
     if (context->float_constants_tree) free_float_tree(&context->float_constants_tree);
     if (context->binary_constants_tree) free_tree(&context->binary_constants_tree);
+    if (context->constant_aliases_tree) free_constant_alias_tree(&context->constant_aliases_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
     if (context->extern_constants_tree) free_tree(&context->extern_constants_tree);
+    if (context->jump_tables) free_jump_tables(context);
     if (context->extern_regs) free(context->extern_regs);
 }
 
@@ -369,10 +445,13 @@ static void backpatch_labels(Assembler_Context *context) {
     }
 }
 
+static void backpatch_jump_tables(Assembler_Context *context);
+
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context) {
     if (context->optimise) optimise_labels(context);
     backpatch_procedures(context);
+    backpatch_jump_tables(context);
     backpatch_labels(context);
 }
 
@@ -789,6 +868,1125 @@ static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
     return entry_index;
 }
 
+static size_t add_raw_binary_to_pool(Assembler_Context *context, const unsigned char *data, size_t length) {
+    string_constant *sentry;
+    size_t entry_index;
+    size_t entry_size;
+
+    entry_size = sizeof(string_constant) + length;
+    entry_index = reserve_in_const_pool(context, entry_size, BINARY_CONST);
+    sentry = (string_constant *) (context->binary.const_pool + entry_index);
+    sentry->string_len = length;
+    if (length) memcpy(sentry->string, data, length);
+    sentry->string[length] = 0;
+#ifndef NUTF8
+    sentry->string_chars = length;
+#endif
+    return entry_index;
+}
+
+static void rxas_write_u16le(unsigned char *target, uint16_t value) {
+    target[0] = (unsigned char)(value & 0xffu);
+    target[1] = (unsigned char)((value >> 8) & 0xffu);
+}
+
+static void rxas_write_u32le(unsigned char *target, uint32_t value) {
+    target[0] = (unsigned char)(value & 0xffu);
+    target[1] = (unsigned char)((value >> 8) & 0xffu);
+    target[2] = (unsigned char)((value >> 16) & 0xffu);
+    target[3] = (unsigned char)((value >> 24) & 0xffu);
+}
+
+static struct rxas_jump_table *find_jump_table(Assembler_Context *context, const char *name, const char *proc_name) {
+    struct rxas_jump_table *table;
+
+    if (!context || !name || !proc_name) return 0;
+    table = context->jump_tables;
+    while (table) {
+        if (strcmp(table->name, name) == 0 && strcmp(table->proc_name, proc_name) == 0) return table;
+        table = table->next;
+    }
+    return 0;
+}
+
+int rxas_jump_table_case_count(Assembler_Context *context,
+                               Assembler_Token *tableToken,
+                               size_t *count_out) {
+    struct rxas_jump_table *table;
+    struct rxas_jtable_case *entry;
+    size_t count;
+
+    if (count_out) *count_out = 0;
+    if (!context || !context->current_proc_name || !tableToken ||
+        tableToken->token_type != ID || !count_out)
+        return 0;
+    table = find_jump_table(context,
+                            (const char *)tableToken->token_value.string,
+                            context->current_proc_name);
+    if (!table || !table->declared) return 0;
+    count = 0;
+    for (entry = table->cases; entry; entry = entry->next) count++;
+    *count_out = count;
+    return 1;
+}
+
+Assembler_Token *rxas_jump_table_case_label(Assembler_Context *context,
+                                             Assembler_Token *tableToken,
+                                             size_t case_index) {
+    struct rxas_jump_table *table;
+    struct rxas_jtable_case *entry;
+    size_t index;
+
+    if (!context || !context->current_proc_name || !tableToken ||
+        tableToken->token_type != ID)
+        return 0;
+    table = find_jump_table(context,
+                            (const char *)tableToken->token_value.string,
+                            context->current_proc_name);
+    if (!table || !table->declared) return 0;
+    index = 0;
+    for (entry = table->cases; entry; entry = entry->next) {
+        if (index == case_index) return entry->label_token;
+        index++;
+    }
+    return 0;
+}
+
+static struct rxas_jump_table *get_or_create_jump_table(Assembler_Context *context, Assembler_Token *nameToken) {
+    struct rxas_jump_table *table;
+
+    if (!context->current_proc_name) {
+        rxaserat(context, nameToken, "jump table must be declared or used inside a procedure");
+        return 0;
+    }
+
+    table = find_jump_table(context, (char *)nameToken->token_value.string, context->current_proc_name);
+    if (table) return table;
+
+    table = calloc(1, sizeof(*table));
+    if (!table) {
+        RXAS_PANIC_OOM(context, "calloc rxas jump table", sizeof(*table), 0);
+    }
+    table->name = rxas_strdup(context, (char *)nameToken->token_value.string);
+    table->proc_name = rxas_strdup(context, context->current_proc_name);
+    table->algorithm = RXAS_JTABLE_ALG_AUTO;
+    table->next = context->jump_tables;
+    context->jump_tables = table;
+    return table;
+}
+
+static int parse_jump_table_algorithm(Assembler_Context *context, Assembler_Token *algorithmToken) {
+    char *name;
+
+    if (!algorithmToken) return RXAS_JTABLE_ALG_AUTO;
+    name = (char *)algorithmToken->token_value.string;
+    if (mnemonic_matches(name, "AUTO")) return RXAS_JTABLE_ALG_AUTO;
+    if (mnemonic_matches(name, "LINEAR")) return RXAS_JTABLE_ALG_LINEAR;
+    if (mnemonic_matches(name, "OPENHASH") || mnemonic_matches(name, "OPEN-HASH")) {
+        return RXAS_JTABLE_ALG_OPENHASH;
+    }
+    if (mnemonic_matches(name, "ACPH")) return RXAS_JTABLE_ALG_ACPH;
+    rxaserat(context, algorithmToken, "jump table algorithm must be auto, linear, openhash, or acph");
+    return -1;
+}
+
+static const char *jump_table_key_kind_name(int kind) {
+    switch (kind) {
+        case RXAS_JTABLE_KEY_STRING: return "string";
+        case RXAS_JTABLE_KEY_BINARY: return "binary";
+        case RXAS_JTABLE_KEY_INT: return "integer";
+        default: return "unknown";
+    }
+}
+
+static int jump_table_key_kind_from_token(Assembler_Token *valueToken) {
+    if (!valueToken) return RXAS_JTABLE_KEY_NONE;
+    switch (valueToken->token_type) {
+        case STRING: return RXAS_JTABLE_KEY_STRING;
+        case HEX: return RXAS_JTABLE_KEY_BINARY;
+        case INT: return RXAS_JTABLE_KEY_INT;
+        default: return RXAS_JTABLE_KEY_NONE;
+    }
+}
+
+static void mark_jump_table_key_kind(Assembler_Context *context, struct rxas_jump_table *table,
+                                     int key_kind, Assembler_Token *token) {
+    char errorBuffer[MAX_ERROR_LENGTH];
+
+    if (!table || key_kind == RXAS_JTABLE_KEY_NONE) return;
+    if (table->key_kind == RXAS_JTABLE_KEY_NONE) {
+        table->key_kind = key_kind;
+        return;
+    }
+    if (table->key_kind != key_kind) {
+        snprintf(errorBuffer, sizeof(errorBuffer),
+                 "jump table key type mismatch; table already uses %s keys",
+                 jump_table_key_kind_name(table->key_kind));
+        rxaserat(context, token, errorBuffer);
+    }
+}
+
+static unsigned char *hex_token_to_bytes(Assembler_Context *context, Assembler_Token *token, size_t *length_out) {
+    char *hex;
+    unsigned char *bytes;
+    unsigned char *b;
+    size_t hex_len;
+    size_t byte_len;
+
+    hex = (char *)token->token_value.string + 2;
+    hex_len = strlen(hex);
+    byte_len = hex_len / 2;
+    bytes = malloc(byte_len ? byte_len : 1);
+    if (!bytes) {
+        RXAS_PANIC_OOM(context, "malloc rxas jump table binary key", byte_len ? byte_len : 1, 0);
+    }
+    b = bytes;
+    while (*hex) {
+        int high = hexchar2int(*hex++);
+        int low = hexchar2int(*hex++);
+        if (high < 0 || low < 0) {
+            free(bytes);
+            rxaserat(context, token, "invalid hex byte in jump table key");
+            return 0;
+        }
+        *b++ = (unsigned char)((high << 4) | low);
+    }
+    *length_out = byte_len;
+    return bytes;
+}
+
+static unsigned char *string_token_to_key(Assembler_Context *context, Assembler_Token *token, size_t *length_out) {
+    char *raw;
+    unsigned char *key;
+    size_t raw_length;
+    size_t key_length;
+
+    raw = (char *)token->token_value.string;
+    raw_length = strlen(raw);
+    key = malloc(raw_length + 1);
+    if (!key) {
+        RXAS_PANIC_OOM(context, "malloc rxas jump table string key", raw_length + 1, 0);
+    }
+    key_length = unescape_string((char *)key, raw);
+#ifndef NUTF8
+    {
+        size_t chars;
+        void *invalid = utf8nvalid_count((char *)key, key_length, &chars);
+        if (invalid) {
+            char errorBuffer[MAX_ERROR_LENGTH];
+            snprintf(errorBuffer, sizeof(errorBuffer),
+                     "jump table string key is not valid UTF-8 at byte %lu",
+                     (unsigned long)((char *)invalid - (char *)key));
+            rxaserat(context, token, errorBuffer);
+            free(key);
+            return 0;
+        }
+    }
+#endif
+    *length_out = key_length;
+    return key;
+}
+
+static unsigned char *int_token_to_key(Assembler_Context *context, Assembler_Token *token, size_t *length_out) {
+    unsigned char *key;
+    uint64_t value;
+    int i;
+
+    key = malloc(8);
+    if (!key) {
+        RXAS_PANIC_OOM(context, "malloc rxas jump table integer key", 8, 0);
+    }
+    value = (uint64_t)(int64_t)token->token_value.integer;
+    for (i = 0; i < 8; i++) {
+        key[i] = (unsigned char)((value >> (i * 8)) & 0xffu);
+    }
+    *length_out = 8;
+    return key;
+}
+
+static unsigned char *jump_table_key_from_token(Assembler_Context *context, Assembler_Token *token,
+                                                int *kind_out, size_t *length_out) {
+    *kind_out = jump_table_key_kind_from_token(token);
+    switch (*kind_out) {
+        case RXAS_JTABLE_KEY_STRING:
+            return string_token_to_key(context, token, length_out);
+        case RXAS_JTABLE_KEY_BINARY:
+            return hex_token_to_bytes(context, token, length_out);
+        case RXAS_JTABLE_KEY_INT:
+            return int_token_to_key(context, token, length_out);
+        default:
+            rxaserat(context, token, "jump table case key must be a string, binary, or integer literal");
+            return 0;
+    }
+}
+
+static void append_jump_table_case(Assembler_Context *context, struct rxas_jump_table *table,
+                                   struct rxas_jtable_case *entry) {
+    (void)context;
+    if (!table->cases) {
+        table->cases = entry;
+    } else table->cases_tail->next = entry;
+    table->cases_tail = entry;
+}
+
+static void add_jump_table_ref(Assembler_Context *context, struct rxas_jump_table *table,
+                               Assembler_Token *token, size_t operand_index) {
+    struct rxas_jtable_ref *ref;
+
+    ref = malloc(sizeof(*ref));
+    if (!ref) {
+        RXAS_PANIC_OOM(context, "malloc rxas jump table reference", sizeof(*ref), 0);
+    }
+    ref->operand_index = operand_index;
+    ref->token = token;
+    ref->next = table->refs;
+    table->refs = ref;
+}
+
+static int jump_instruction_table_operand(Assembler_Token *instrToken, Assembler_Token *operand2Token,
+                                          Assembler_Token *operand3Token, Assembler_Token **tableToken,
+                                          int *key_kind, int *match_mode, int *is_jumpbs) {
+    char *mnemonic;
+
+    if (!instrToken || instrToken->token_type != ID) return 0;
+    mnemonic = (char *)instrToken->token_value.string;
+    *is_jumpbs = 0;
+    *match_mode = RXAS_JTABLE_MATCH_EXACT;
+    if (mnemonic_matches(mnemonic, "JUMPS")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_STRING;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPB")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_BINARY;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPBS")) {
+        *tableToken = operand3Token;
+        *key_kind = RXAS_JTABLE_KEY_BINARY;
+        *is_jumpbs = 1;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPI")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_INT;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPR")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_STRING;
+        *match_mode = RXAS_JTABLE_MATCH_PADDED;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPN")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_STRING;
+        *match_mode = RXAS_JTABLE_MATCH_NUMERIC;
+        return 1;
+    }
+    return 0;
+}
+
+static void prepare_jump_table_instruction(Assembler_Context *context, Assembler_Token *instrToken,
+                                           Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+    Assembler_Token *tableToken;
+    struct rxas_jump_table *table;
+    int key_kind;
+    int match_mode;
+    int is_jumpbs;
+
+    if (!jump_instruction_table_operand(instrToken, operand2Token, operand3Token,
+                                        &tableToken, &key_kind, &match_mode, &is_jumpbs)) return;
+    if (!tableToken || tableToken->token_type != ID) {
+        rxaserat(context, instrToken, "jump table instruction requires a .jtable name operand");
+        return;
+    }
+    table = get_or_create_jump_table(context, tableToken);
+    if (!table) return;
+    mark_jump_table_key_kind(context, table, key_kind, tableToken);
+    if (table->match_mode_set && table->match_mode != match_mode) {
+        rxaserat(context, tableToken, "jump table cannot mix exact, padded, and numeric lookup instructions");
+    } else {
+        table->match_mode = match_mode;
+        table->match_mode_set = 1;
+    }
+    if (is_jumpbs) table->used_by_jumpbs = 1;
+}
+
+void rxasjtab(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *algorithmToken) {
+    struct rxas_jump_table *table;
+    int algorithm;
+
+    table = get_or_create_jump_table(context, nameToken);
+    if (!table) return;
+    if (table->declared) {
+        rxaserat(context, nameToken, "duplicate jump table declaration");
+        return;
+    }
+
+    algorithm = parse_jump_table_algorithm(context, algorithmToken);
+    if (algorithm < 0) return;
+    table->declared = 1;
+    table->decl_token = nameToken;
+    table->algorithm = algorithm;
+}
+
+static void add_jump_table_case_for_label(Assembler_Context *context, Assembler_Token *labelToken,
+                                          Assembler_Token *tableToken, Assembler_Token *valueToken) {
+    struct rxas_jump_table *table;
+    struct rxas_jtable_case *entry;
+    int key_kind;
+    size_t key_length;
+    unsigned char *key;
+
+    table = get_or_create_jump_table(context, tableToken);
+    if (!table) return;
+
+    key = jump_table_key_from_token(context, valueToken, &key_kind, &key_length);
+    if (!key) return;
+    mark_jump_table_key_kind(context, table, key_kind, valueToken);
+
+    entry = calloc(1, sizeof(*entry));
+    if (!entry) {
+        free(key);
+        RXAS_PANIC_OOM(context, "calloc rxas jump table case", sizeof(*entry), 0);
+    }
+    entry->label_token = labelToken;
+    entry->value_token = valueToken;
+    entry->key = key;
+    entry->key_length = key_length;
+    append_jump_table_case(context, table, entry);
+}
+
+void rxasjcase(Assembler_Context *context, Assembler_Token *labelToken, Assembler_Token *tableToken,
+               Assembler_Token *valueToken) {
+    rxasqlbl(context, labelToken);
+    context->last_label_token = labelToken;
+    add_jump_table_case_for_label(context, labelToken, tableToken, valueToken);
+}
+
+void rxasjcase_after_label(Assembler_Context *context, Assembler_Token *jcaseToken,
+                           Assembler_Token *tableToken, Assembler_Token *valueToken) {
+    if (!context->last_label_token || context->last_label_token->line != jcaseToken->line) {
+        rxaserat(context, jcaseToken, ".jcase must decorate a same-line label");
+        return;
+    }
+    add_jump_table_case_for_label(context, context->last_label_token, tableToken, valueToken);
+}
+
+struct rxas_jtable_info {
+    size_t case_count;
+    size_t key_blob_length;
+    size_t fixed_key_length;
+};
+
+struct rxas_jtable_key_view {
+    struct rxas_jtable_case *entry;
+};
+
+static int rxas_jtable_key_view_compare(const void *left, const void *right) {
+    const struct rxas_jtable_key_view *left_view = left;
+    const struct rxas_jtable_key_view *right_view = right;
+    size_t left_length = left_view->entry->key_length;
+    size_t right_length = right_view->entry->key_length;
+    size_t common = left_length < right_length ? left_length : right_length;
+    int comparison = memcmp(left_view->entry->key, right_view->entry->key, common);
+
+    if (comparison) return comparison;
+    if (left_length < right_length) return -1;
+    if (left_length > right_length) return 1;
+    return 0;
+}
+
+static int normalize_jump_table_keys(Assembler_Context *context, struct rxas_jump_table *table) {
+    struct rxas_jtable_case *entry;
+    struct rxas_jtable_key_view *views;
+    size_t count = 0;
+    size_t index;
+
+    if (table->key_kind == RXAS_JTABLE_KEY_STRING &&
+        table->match_mode != RXAS_JTABLE_MATCH_EXACT) {
+        for (entry = table->cases; entry; entry = entry->next) {
+            count++;
+            if (table->match_mode == RXAS_JTABLE_MATCH_PADDED) {
+                while (entry->key_length > 0 && entry->key[entry->key_length - 1] == ' ') {
+                    entry->key_length--;
+                }
+            } else {
+                unsigned char numeric_key[RX_NUMERIC_KEY_SIZE];
+                unsigned char *replacement;
+                int is_nan = 0;
+
+                if (!rx_numeric_key_from_text(numeric_key,
+                                              (const char *)entry->key,
+                                              entry->key_length,
+                                              &is_nan) || is_nan) {
+                    rxaserat(context, entry->value_token,
+                             "jumpn case key must be a non-NaN numeric string");
+                    return 0;
+                }
+                replacement = malloc(sizeof(numeric_key));
+                if (!replacement) {
+                    RXAS_PANIC_OOM(context, "malloc numeric jump table key", sizeof(numeric_key), 0);
+                }
+                memcpy(replacement, numeric_key, sizeof(numeric_key));
+                free(entry->key);
+                entry->key = replacement;
+                entry->key_length = sizeof(numeric_key);
+            }
+        }
+    } else {
+        for (entry = table->cases; entry; entry = entry->next) count++;
+    }
+
+    if (count > SIZE_MAX / sizeof(*views)) return 0;
+    views = malloc((count ? count : 1) * sizeof(*views));
+    if (!views) {
+        RXAS_PANIC_OOM(context, "malloc jump table duplicate views",
+                       (count ? count : 1) * sizeof(*views), 0);
+    }
+    index = 0;
+    for (entry = table->cases; entry; entry = entry->next) views[index++].entry = entry;
+    qsort(views, count, sizeof(*views), rxas_jtable_key_view_compare);
+    for (index = 1; index < count; index++) {
+        if (rxas_jtable_key_view_compare(&views[index - 1], &views[index]) == 0) {
+            char *message = table->match_mode == RXAS_JTABLE_MATCH_EXACT ?
+                            "duplicate jump table case key" :
+                            "duplicate jump table case key after canonicalization";
+            rxaserat(context, views[index].entry->value_token, message);
+            free(views);
+            return 0;
+        }
+    }
+    free(views);
+
+    if (table->match_mode == RXAS_JTABLE_MATCH_NUMERIC && table->cases) {
+        struct rxas_jtable_case *alias = calloc(1, sizeof(*alias));
+        unsigned char *key = malloc(RX_NUMERIC_KEY_SIZE);
+        double nan_value = NAN;
+
+        if (!alias || !key) {
+            free(alias);
+            free(key);
+            RXAS_PANIC_OOM(context, "allocate numeric jump table NaN alias",
+                           sizeof(*alias) + RX_NUMERIC_KEY_SIZE, 0);
+        }
+        rx_double_to_numeric_key(nan_value, key);
+        alias->label_token = table->cases->label_token;
+        alias->value_token = table->cases->value_token;
+        alias->key = key;
+        alias->key_length = RX_NUMERIC_KEY_SIZE;
+        table->cases_tail->next = alias;
+        table->cases_tail = alias;
+    }
+    return 1;
+}
+
+static int prepare_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                              struct rxas_jtable_info *info) {
+    struct rxas_jtable_case *entry;
+    struct rxas_jtable_ref *ref;
+    int variable_length;
+
+    memset(info, 0, sizeof(*info));
+    if (!normalize_jump_table_keys(context, table)) return 0;
+    variable_length = 0;
+    entry = table->cases;
+    while (entry) {
+        size_t tree_index;
+        struct backpatching *label_patch;
+
+        if (entry->key_length > UINT32_MAX) {
+            rxaserat(context, entry->value_token, "jump table key length is too large");
+            return 0;
+        }
+        if (info->case_count == 0) info->fixed_key_length = entry->key_length;
+        else if (entry->key_length != info->fixed_key_length) variable_length = 1;
+        if (SIZE_MAX - info->key_blob_length < entry->key_length) {
+            rxaserat(context, entry->value_token, "jump table key data is too large");
+            return 0;
+        }
+        info->key_blob_length += entry->key_length;
+        info->case_count++;
+
+        if (!src_node(context->label_constants_tree, (char *)entry->label_token->token_value.string, &tree_index)) {
+            rxaserat(context, entry->label_token, "unknown jump table case label");
+            return 0;
+        }
+        label_patch = (struct backpatching *)tree_index;
+        if (!label_patch->defined) {
+            rxaserat(context, entry->label_token, "unknown jump table case label");
+            return 0;
+        }
+        if (label_patch->index > UINT32_MAX) {
+            rxaserat(context, entry->label_token, "jump table target address is too large");
+            return 0;
+        }
+        entry->target = (uint32_t)label_patch->index;
+        entry = entry->next;
+    }
+
+    if (info->case_count == 0) {
+        rxaserat(context, table->decl_token, "jump table has no cases");
+        return 0;
+    }
+    if (info->case_count > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table has too many cases");
+        return 0;
+    }
+    if (info->key_blob_length > UINT32_MAX - RX_JTABLE_HEADER_SIZE) {
+        rxaserat(context, table->decl_token, "jump table key data is too large");
+        return 0;
+    }
+    if (variable_length) info->fixed_key_length = 0;
+    if (info->fixed_key_length > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table key length is too large");
+        return 0;
+    }
+    if (table->used_by_jumpbs && info->fixed_key_length == 0) {
+        ref = table->refs;
+        while (ref && !ref->token) ref = ref->next;
+        rxaserat(context, ref ? ref->token : table->decl_token,
+                 "jumpbs requires fixed-length non-empty binary keys");
+        return 0;
+    }
+    return 1;
+}
+
+static unsigned char *build_linear_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                              const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_jtable_case *entry;
+    unsigned char *payload;
+    size_t entries_length;
+    size_t total_length;
+    size_t entry_offset;
+    size_t key_offset;
+
+    if (info->case_count > SIZE_MAX / RX_JTABLE_LINEAR_ENTRY_SIZE) {
+        rxaserat(context, table->decl_token, "jump table entries are too large");
+        return NULL;
+    }
+    entries_length = info->case_count * RX_JTABLE_LINEAR_ENTRY_SIZE;
+    if (SIZE_MAX - RX_JTABLE_HEADER_SIZE < entries_length ||
+        SIZE_MAX - RX_JTABLE_HEADER_SIZE - entries_length < info->key_blob_length) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    total_length = RX_JTABLE_HEADER_SIZE + entries_length + info->key_blob_length;
+    if (total_length > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    payload = calloc(total_length ? total_length : 1, 1);
+    if (!payload) {
+        RXAS_PANIC_OOM(context, "calloc rxas jump table payload", total_length ? total_length : 1, 0);
+    }
+
+    payload[0] = RX_JTABLE_ALG_LINEAR;
+    payload[1] = 0;
+    rxas_write_u16le(payload + 2, RX_JTABLE_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
+
+    entry_offset = RX_JTABLE_HEADER_SIZE;
+    key_offset = RX_JTABLE_HEADER_SIZE + entries_length;
+    entry = table->cases;
+    while (entry) {
+        rxas_write_u32le(payload + entry_offset, (uint32_t)key_offset);
+        rxas_write_u32le(payload + entry_offset + 4, (uint32_t)entry->key_length);
+        rxas_write_u32le(payload + entry_offset + 8, entry->target);
+        if (entry->key_length) memcpy(payload + key_offset, entry->key, entry->key_length);
+        key_offset += entry->key_length;
+        entry_offset += RX_JTABLE_LINEAR_ENTRY_SIZE;
+        entry = entry->next;
+    }
+
+    *length_out = total_length;
+    return payload;
+}
+
+static unsigned char *build_openhash_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                                const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_jtable_case *entry;
+    unsigned char *payload;
+    size_t desired_slots;
+    size_t slot_count;
+    size_t slots_length;
+    size_t total_length;
+    size_t key_offset;
+    size_t i;
+
+    if (info->case_count > SIZE_MAX / 2u) {
+        rxaserat(context, table->decl_token, "jump table has too many cases");
+        return NULL;
+    }
+    desired_slots = info->case_count * 2u;
+    slot_count = 1u;
+    while (slot_count < desired_slots) {
+        if (slot_count > UINT32_MAX / 2u) {
+            rxaserat(context, table->decl_token, "jump table has too many cases");
+            return NULL;
+        }
+        slot_count *= 2u;
+    }
+    if (slot_count > SIZE_MAX / RX_JTABLE_OPEN_SLOT_SIZE) {
+        rxaserat(context, table->decl_token, "jump table entries are too large");
+        return NULL;
+    }
+    slots_length = slot_count * RX_JTABLE_OPEN_SLOT_SIZE;
+    if (SIZE_MAX - RX_JTABLE_OPEN_HEADER_SIZE < slots_length ||
+        SIZE_MAX - RX_JTABLE_OPEN_HEADER_SIZE - slots_length < info->key_blob_length) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    total_length = RX_JTABLE_OPEN_HEADER_SIZE + slots_length + info->key_blob_length;
+    if (total_length >= UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    payload = calloc(total_length, 1);
+    if (!payload) RXAS_PANIC_OOM(context, "calloc open-hash jump table", total_length, 0);
+
+    payload[0] = RX_JTABLE_ALG_OPENHASH;
+    rxas_write_u16le(payload + 2, RX_JTABLE_OPEN_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
+    rxas_write_u32le(payload + 12, (uint32_t)slot_count);
+    for (i = 0; i < slot_count; i++) {
+        rxas_write_u32le(payload + RX_JTABLE_OPEN_HEADER_SIZE + i * RX_JTABLE_OPEN_SLOT_SIZE + 4,
+                         RX_JTABLE_OPEN_EMPTY);
+    }
+
+    key_offset = RX_JTABLE_OPEN_HEADER_SIZE + slots_length;
+    entry = table->cases;
+    while (entry) {
+        uint32_t hash = rx_jtable_hash_bytes(entry->key, entry->key_length);
+        size_t slot = hash & (slot_count - 1u);
+        size_t slot_offset;
+
+        while ((uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 4] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 5] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 6] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 7] != 0xffu) {
+            slot = (slot + 1u) & (slot_count - 1u);
+        }
+        slot_offset = RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE;
+        rxas_write_u32le(payload + slot_offset, hash);
+        rxas_write_u32le(payload + slot_offset + 4, (uint32_t)key_offset);
+        rxas_write_u32le(payload + slot_offset + 8, (uint32_t)entry->key_length);
+        rxas_write_u32le(payload + slot_offset + 12, entry->target);
+        if (entry->key_length) memcpy(payload + key_offset, entry->key, entry->key_length);
+        key_offset += entry->key_length;
+        entry = entry->next;
+    }
+
+    *length_out = total_length;
+    return payload;
+}
+
+struct rxas_acph_job {
+    struct rxas_acph_node **destination;
+    struct rxas_jtable_case **cases;
+    size_t case_count;
+    struct rxas_acph_job *next;
+};
+
+static uint16_t acph_symbol_at(const struct rxas_jtable_case *entry, size_t column) {
+    return column < entry->key_length ? entry->key[column] : RX_JTABLE_ACPH_END_SYMBOL;
+}
+
+static int acph_select_hash(struct rxas_jtable_case **cases, size_t case_count,
+                            uint32_t *column_out, uint16_t *slot_count_out,
+                            unsigned char *prime_out) {
+    static const unsigned char primes[] = {
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
+        59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 113, 127,
+        131, 137, 149, 151, 157, 163, 167, 173, 211, 223, 227, 229,
+        233, 239, 241, 251
+    };
+    size_t best_column = 0;
+    size_t best_max_group = case_count + 1u;
+    size_t best_unique = 0;
+    unsigned char best_present[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+    size_t max_length = 0;
+    size_t column;
+    size_t i;
+
+    for (i = 0; i < case_count; i++) {
+        if (cases[i]->key_length > max_length) max_length = cases[i]->key_length;
+    }
+    if (max_length > UINT32_MAX) return 0;
+
+    for (column = 0; column <= max_length; column++) {
+        size_t counts[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t max_group = 0;
+        size_t unique = 0;
+
+        for (i = 0; i < case_count; i++) {
+            uint16_t symbol = acph_symbol_at(cases[i], column);
+            counts[symbol]++;
+            if (counts[symbol] == 1u) unique++;
+            if (counts[symbol] > max_group) max_group = counts[symbol];
+        }
+        if (max_group < best_max_group) {
+            size_t symbol;
+            best_column = column;
+            best_max_group = max_group;
+            best_unique = unique;
+            for (symbol = 0; symbol < RX_JTABLE_ACPH_SYMBOL_COUNT; symbol++) {
+                best_present[symbol] = counts[symbol] != 0;
+            }
+        }
+    }
+    if (case_count > 1u && best_unique < 2u) return 0;
+
+    for (i = best_unique ? best_unique : 1u; i <= RX_JTABLE_ACPH_SYMBOL_COUNT; i++) {
+        size_t prime_index;
+
+        if (i == RX_JTABLE_ACPH_SYMBOL_COUNT) {
+            *column_out = (uint32_t)best_column;
+            *slot_count_out = (uint16_t)i;
+            *prime_out = 1u;
+            return 1;
+        }
+        for (prime_index = 0; prime_index < sizeof(primes); prime_index++) {
+            uint16_t used[RX_JTABLE_ACPH_SYMBOL_COUNT];
+            size_t symbol;
+            int collision = 0;
+
+            for (symbol = 0; symbol < i; symbol++) used[symbol] = UINT16_MAX;
+            for (symbol = 0; symbol < RX_JTABLE_ACPH_SYMBOL_COUNT; symbol++) {
+                size_t slot;
+
+                if (!best_present[symbol]) continue;
+                slot = rx_jtable_acph_hash((uint16_t)symbol, primes[prime_index], (uint16_t)i);
+                if (used[slot] != UINT16_MAX && used[slot] != symbol) {
+                    collision = 1;
+                    break;
+                }
+                used[slot] = (uint16_t)symbol;
+            }
+            if (!collision) {
+                *column_out = (uint32_t)best_column;
+                *slot_count_out = (uint16_t)i;
+                *prime_out = primes[prime_index];
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static void free_acph_nodes(struct rxas_acph_node *nodes) {
+    while (nodes) {
+        struct rxas_acph_node *next = nodes->next_all;
+        free(nodes->slots);
+        free(nodes);
+        nodes = next;
+    }
+}
+
+static void free_acph_jobs(struct rxas_acph_job *jobs) {
+    while (jobs) {
+        struct rxas_acph_job *next = jobs->next;
+        free(jobs->cases);
+        free(jobs);
+        jobs = next;
+    }
+}
+
+static int build_acph_nodes(Assembler_Context *context, struct rxas_jump_table *table,
+                            const struct rxas_jtable_info *info, struct rxas_acph_node **root_out,
+                            struct rxas_acph_node **nodes_out) {
+    struct rxas_acph_job *jobs;
+    struct rxas_acph_node *all_nodes = NULL;
+    struct rxas_acph_node *all_tail = NULL;
+    struct rxas_jtable_case *entry;
+    size_t i;
+
+    jobs = calloc(1, sizeof(*jobs));
+    if (!jobs) RXAS_PANIC_OOM(context, "calloc ACPH build job", sizeof(*jobs), 0);
+    jobs->cases = malloc(info->case_count * sizeof(*jobs->cases));
+    if (!jobs->cases) RXAS_PANIC_OOM(context, "malloc ACPH root cases", info->case_count * sizeof(*jobs->cases), 0);
+    jobs->case_count = info->case_count;
+    jobs->destination = root_out;
+    entry = table->cases;
+    for (i = 0; i < info->case_count; i++) {
+        jobs->cases[i] = entry;
+        entry = entry->next;
+    }
+
+    while (jobs) {
+        struct rxas_acph_job *job = jobs;
+        struct rxas_acph_node *node;
+        struct rxas_jtable_case **grouped;
+        size_t counts[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t offsets[RX_JTABLE_ACPH_SYMBOL_COUNT];
+        size_t placed[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t next_offset = 0;
+
+        jobs = job->next;
+        node = calloc(1, sizeof(*node));
+        if (!node) RXAS_PANIC_OOM(context, "calloc ACPH node", sizeof(*node), 0);
+        if (!acph_select_hash(job->cases, job->case_count, &node->column,
+                              &node->slot_count, &node->prime)) {
+            rxaserat(context, table->decl_token, "could not construct ACPH jump table");
+            free(node);
+            free(job->cases);
+            free(job);
+            free_acph_jobs(jobs);
+            free_acph_nodes(all_nodes);
+            return 0;
+        }
+        node->slots = calloc(node->slot_count, sizeof(*node->slots));
+        if (!node->slots) RXAS_PANIC_OOM(context, "calloc ACPH slots", node->slot_count * sizeof(*node->slots), 0);
+        *job->destination = node;
+        if (all_tail) all_tail->next_all = node;
+        else all_nodes = node;
+        all_tail = node;
+
+        for (i = 0; i < job->case_count; i++) {
+            uint16_t symbol = acph_symbol_at(job->cases[i], node->column);
+            size_t slot = rx_jtable_acph_hash(symbol, node->prime, node->slot_count);
+            counts[slot]++;
+            node->slots[slot].symbol = symbol;
+        }
+        for (i = 0; i < node->slot_count; i++) {
+            offsets[i] = next_offset;
+            next_offset += counts[i];
+        }
+        grouped = malloc(job->case_count * sizeof(*grouped));
+        if (!grouped) RXAS_PANIC_OOM(context, "malloc ACPH grouped cases", job->case_count * sizeof(*grouped), 0);
+        for (i = 0; i < job->case_count; i++) {
+            uint16_t symbol = acph_symbol_at(job->cases[i], node->column);
+            size_t slot = rx_jtable_acph_hash(symbol, node->prime, node->slot_count);
+            grouped[offsets[slot] + placed[slot]++] = job->cases[i];
+        }
+        for (i = node->slot_count; i-- > 0;) {
+            if (counts[i] == 1u) {
+                node->slots[i].kind = RX_JTABLE_ACPH_SLOT_LEAF;
+                node->slots[i].leaf = grouped[offsets[i]];
+            }
+            else if (counts[i] > 1u) {
+                struct rxas_acph_job *child_job = calloc(1, sizeof(*child_job));
+                if (!child_job) RXAS_PANIC_OOM(context, "calloc ACPH child job", sizeof(*child_job), 0);
+                child_job->cases = malloc(counts[i] * sizeof(*child_job->cases));
+                if (!child_job->cases) RXAS_PANIC_OOM(context, "malloc ACPH child cases", counts[i] * sizeof(*child_job->cases), 0);
+                memcpy(child_job->cases, grouped + offsets[i], counts[i] * sizeof(*child_job->cases));
+                child_job->case_count = counts[i];
+                child_job->destination = &node->slots[i].child;
+                child_job->next = jobs;
+                jobs = child_job;
+                node->slots[i].kind = RX_JTABLE_ACPH_SLOT_CHILD;
+            }
+        }
+        free(grouped);
+        free(job->cases);
+        free(job);
+    }
+
+    *nodes_out = all_nodes;
+    return 1;
+}
+
+static unsigned char *build_acph_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                            const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_acph_node *root = NULL;
+    struct rxas_acph_node *nodes = NULL;
+    struct rxas_acph_node *node;
+    unsigned char *payload;
+    size_t offset;
+    size_t leaf_offset;
+    size_t key_offset;
+    size_t total_length;
+    size_t i;
+
+    if (!build_acph_nodes(context, table, info, &root, &nodes)) return NULL;
+    offset = RX_JTABLE_ACPH_HEADER_SIZE;
+    for (node = nodes; node; node = node->next_all) {
+        size_t node_length = RX_JTABLE_ACPH_NODE_SIZE + (size_t)node->slot_count * RX_JTABLE_ACPH_SLOT_SIZE;
+        if (SIZE_MAX - offset < node_length || offset + node_length > UINT32_MAX) {
+            rxaserat(context, table->decl_token, "ACPH jump table nodes are too large");
+            free_acph_nodes(nodes);
+            return NULL;
+        }
+        node->packed_offset = (uint32_t)offset;
+        offset += node_length;
+    }
+    if (info->case_count > (SIZE_MAX - offset) / RX_JTABLE_ACPH_LEAF_SIZE) {
+        rxaserat(context, table->decl_token, "ACPH jump table leaves are too large");
+        free_acph_nodes(nodes);
+        return NULL;
+    }
+    leaf_offset = offset;
+    offset += info->case_count * RX_JTABLE_ACPH_LEAF_SIZE;
+    key_offset = offset;
+    if (SIZE_MAX - key_offset < info->key_blob_length || key_offset + info->key_blob_length > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "ACPH jump table payload is too large");
+        free_acph_nodes(nodes);
+        return NULL;
+    }
+    total_length = key_offset + info->key_blob_length;
+
+    for (node = nodes; node; node = node->next_all) {
+        for (i = 0; i < node->slot_count; i++) {
+            if (node->slots[i].kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+                node->slots[i].packed_value_offset = (uint32_t)leaf_offset;
+                leaf_offset += RX_JTABLE_ACPH_LEAF_SIZE;
+            }
+        }
+    }
+
+    payload = calloc(total_length, 1);
+    if (!payload) RXAS_PANIC_OOM(context, "calloc ACPH jump table", total_length, 0);
+    payload[0] = RX_JTABLE_ALG_ACPH;
+    rxas_write_u16le(payload + 2, RX_JTABLE_ACPH_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
+    rxas_write_u32le(payload + 12, root->packed_offset);
+
+    for (node = nodes; node; node = node->next_all) {
+        size_t node_offset = node->packed_offset;
+        rxas_write_u32le(payload + node_offset, node->column);
+        rxas_write_u16le(payload + node_offset + 4, node->slot_count);
+        payload[node_offset + 6] = node->prime;
+        for (i = 0; i < node->slot_count; i++) {
+            struct rxas_acph_slot *slot = &node->slots[i];
+            size_t slot_offset = node_offset + RX_JTABLE_ACPH_NODE_SIZE + i * RX_JTABLE_ACPH_SLOT_SIZE;
+            rxas_write_u16le(payload + slot_offset, slot->symbol);
+            payload[slot_offset + 2] = slot->kind;
+            if (slot->kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+                struct rxas_jtable_case *leaf = slot->leaf;
+                rxas_write_u32le(payload + slot_offset + 4, slot->packed_value_offset);
+                rxas_write_u32le(payload + slot->packed_value_offset, (uint32_t)key_offset);
+                rxas_write_u32le(payload + slot->packed_value_offset + 4, (uint32_t)leaf->key_length);
+                rxas_write_u32le(payload + slot->packed_value_offset + 8, leaf->target);
+                if (leaf->key_length) memcpy(payload + key_offset, leaf->key, leaf->key_length);
+                key_offset += leaf->key_length;
+            }
+            else if (slot->kind == RX_JTABLE_ACPH_SLOT_CHILD) {
+                rxas_write_u32le(payload + slot_offset + 4, slot->child->packed_offset);
+            }
+        }
+    }
+    free_acph_nodes(nodes);
+    *length_out = total_length;
+    return payload;
+}
+
+static int build_one_jump_table(Assembler_Context *context, struct rxas_jump_table *table) {
+    struct rxas_jtable_ref *ref;
+    struct rxas_jtable_info info;
+    unsigned char *payload;
+    size_t total_length;
+    size_t pool_index;
+    int algorithm;
+
+    if (!table->declared) {
+        if (table->refs) rxaserat(context, table->refs->token, "unknown jump table");
+        else if (table->cases) rxaserat(context, table->cases->value_token, "unknown jump table");
+        return 0;
+    }
+    if (!prepare_jump_table(context, table, &info)) return 0;
+
+    algorithm = table->algorithm == RXAS_JTABLE_ALG_AUTO
+                ? rx_jtable_select_auto(info.case_count, info.key_blob_length)
+                : table->algorithm;
+    switch (algorithm) {
+        case RXAS_JTABLE_ALG_LINEAR:
+            payload = build_linear_jump_table(context, table, &info, &total_length);
+            break;
+        case RXAS_JTABLE_ALG_OPENHASH:
+            payload = build_openhash_jump_table(context, table, &info, &total_length);
+            break;
+        case RXAS_JTABLE_ALG_ACPH:
+            payload = build_acph_jump_table(context, table, &info, &total_length);
+            break;
+        default:
+            payload = NULL;
+            rxaserat(context, table->decl_token, "unknown jump table algorithm");
+            break;
+    }
+    if (!payload) return 0;
+
+    pool_index = add_raw_binary_to_pool(context, payload, total_length);
+    free(payload);
+
+    ref = table->refs;
+    while (ref) {
+        context->binary.binary[ref->operand_index].index = pool_index;
+        ref = ref->next;
+    }
+
+    return 1;
+}
+
+static void backpatch_jump_tables(Assembler_Context *context) {
+    struct rxas_jump_table *table;
+
+    table = context->jump_tables;
+    while (table) {
+        build_one_jump_table(context, table);
+        table = table->next;
+    }
+}
+
+static rxas_constant_alias *find_constant_alias(Assembler_Context *context, Assembler_Token *token) {
+    size_t value;
+
+    if (!context || !token || token->token_type != ID) return 0;
+    if (!src_node(context->constant_aliases_tree, (char *)token->token_value.string, &value)) return 0;
+    return (rxas_constant_alias *)value;
+}
+
+void rxasconst(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *kindToken,
+               Assembler_Token *valueToken) {
+    rxas_constant_alias *alias;
+    size_t existing_alias;
+    size_t pool_index;
+    OperandType operand_type;
+    const char *kind = (const char *)kindToken->token_value.string;
+
+    if (src_node(context->constant_aliases_tree, (char *)nameToken->token_value.string, &existing_alias)) {
+        rxaserat(context, nameToken, "duplicate constant alias");
+        return;
+    }
+
+    if (strcmp(kind, "binary") == 0) {
+        if (valueToken->token_type != HEX) {
+            rxaserat(context, valueToken, "binary constant alias requires a hex literal");
+            return;
+        }
+        pool_index = add_binary_to_pool(context, (char *)valueToken->token_value.string);
+        operand_type = OP_BINARY;
+    }
+    else if (strcmp(kind, "string") == 0) {
+        if (valueToken->token_type != STRING) {
+            rxaserat(context, valueToken, "string constant alias requires a string literal");
+            return;
+        }
+        pool_index = add_string_to_pool(context, valueToken, (char *)valueToken->token_value.string);
+        if (pool_index == SIZE_MAX) return;
+        operand_type = OP_STRING;
+    }
+    else {
+        rxaserat(context, kindToken, "constant alias kind must be binary or string");
+        return;
+    }
+
+    alias = malloc(sizeof(*alias));
+    if (!alias) {
+        RXAS_PANIC_OOM(context, "malloc rxas constant alias", sizeof(*alias), 0);
+    }
+    alias->operand_type = operand_type;
+    alias->pool_index = pool_index;
+    if (add_node(&context->constant_aliases_tree, (char *)nameToken->token_value.string, (size_t)alias)) {
+        free(alias);
+        rxaserat(context, nameToken, "duplicate constant alias");
+    }
+}
+
 static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* token) {
     size_t entry_index;
     size_t entry_size;
@@ -893,6 +2091,22 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
     switch(operandToken->token_type) {
         case ID:
+            {
+                rxas_constant_alias *alias = find_constant_alias(context, operandToken);
+                if (alias) {
+                    context->binary.binary[context->binary.inst_size++].index = alias->pool_index;
+                    return;
+                }
+            }
+            {
+                struct rxas_jump_table *jump_table = find_jump_table(context, (char *)operandToken->token_value.string,
+                                                                     context->current_proc_name);
+                if (jump_table) {
+                    add_jump_table_ref(context, jump_table, operandToken, context->binary.inst_size);
+                    context->binary.binary[context->binary.inst_size++].index = 0;
+                    return;
+                }
+            }
             /* Have we come across this symbol yet? */
             if (src_node(context->label_constants_tree,
                          (char*)operandToken->token_value.string,
@@ -973,8 +2187,18 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
 }
 
-static OperandType token_to_operand_type(int token_type) {
-    switch(token_type) {
+static OperandType token_to_operand_type(Assembler_Context *context, Assembler_Token *token) {
+    if (!token) return OP_NONE;
+    if (token->token_type == ID) {
+        rxas_constant_alias *alias = find_constant_alias(context, token);
+        if (alias) return alias->operand_type;
+        if (context && context->current_proc_name &&
+            find_jump_table(context, (char *)token->token_value.string, context->current_proc_name)) {
+            return OP_BINARY;
+        }
+    }
+
+    switch(token->token_type) {
         case ID: return OP_ID;
         case RREG:
         case GREG:
@@ -997,74 +2221,64 @@ static void convert_float_to_decimal(Assembler_Token *token) {
     token->token_value.string[token->length] = 0;
 }
 
-/* Convert FLOAT tokens to DECIMAL tokens as defined by the instruction types */
-void promote_floats_to_decimals(Assembler_Token *instrToken,
-                                Assembler_Token *operand1Token, Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+/* Convert FLOAT tokens to DECIMAL where a matching decimal overload requires it. */
+void promote_floats_to_decimalsv(Assembler_Token *instrToken,
+                                 Assembler_Token *const *operandTokens,
+                                 size_t operandCount) {
+    const char *mnemonic = (const char *)instrToken->token_value.string;
+    OperandType *actual;
+    size_t i;
+    int candidate;
 
-    OperandType t1, t2, t3;
-    char* inst = (char*)instrToken->token_value.string;
+    if (!operandCount) return;
+    actual = malloc(operandCount * sizeof(*actual));
+    if (!actual) RXAS_PANIC_OOM(0, "malloc rxas operand types", operandCount * sizeof(*actual), 0);
 
-    t1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
-    t2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
-    t3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+    for (i = 0; i < operandCount; i++) actual[i] = token_to_operand_type(0, operandTokens[i]);
+    if (find_opcodev(mnemonic, actual, operandCount)) {
+        free(actual);
+        return;
+    }
 
-    /* If none of the operands are FLOATs, then we can't promote them */
-    if (t1 != OP_FLOAT && t2 != OP_FLOAT && t3 != OP_FLOAT) return;
+    for (candidate = 0; op_table[candidate].mnemonic != NULL; candidate++) {
+        int matches = mnemonic_matches(mnemonic, op_table[candidate].mnemonic) &&
+                      rxop_format_operand_count(op_table[candidate].format) == operandCount;
+        int promotes = 0;
 
-    /* If the instruction is valid, there is no need to promote the operands */
-    if (find_opcode(inst, t1, t2, t3)) return;
-
-    /* Need to loop through all the operand combinations trying to find a valid instruction by promoting OP_FLOATs to OP_DECIMALs */
-    int i;
-    for (i = 1; i < 8; i++) {
-        int try = 0;
-        if (i & 1) {
-            if (t1 == OP_FLOAT) {
-                t1 = OP_DECIMAL;
-                try = 1;
+        if (!rxop_is_source_mnemonic(op_table[candidate].mnemonic)) continue;
+        for (i = 0; matches && i < operandCount; i++) {
+            OperandType expected = rxop_format_operand_type(op_table[candidate].format, i);
+            if (actual[i] == expected) continue;
+            if (actual[i] == OP_FLOAT && expected == OP_DECIMAL) {
+                promotes = 1;
+                continue;
             }
+            matches = 0;
         }
-        if (i & 2) {
-            if (t2 == OP_FLOAT) {
-                t2 = OP_DECIMAL;
-                try = 1;
+        if (matches && promotes) {
+            for (i = 0; i < operandCount; i++) {
+                if (actual[i] == OP_FLOAT &&
+                    rxop_format_operand_type(op_table[candidate].format, i) == OP_DECIMAL) {
+                    convert_float_to_decimal(operandTokens[i]);
+                }
             }
-        }
-        if (i & 4) {
-            if (t3 == OP_FLOAT) {
-                t3 = OP_DECIMAL;
-                try = 1;
-            }
-        }
-
-        if (try) {
-            if (find_opcode(inst, t1, t2, t3)) {
-                /* Found a valid instruction - promote the operands */
-                if (t1 == OP_DECIMAL) convert_float_to_decimal(operand1Token);
-                if (t2 == OP_DECIMAL) convert_float_to_decimal(operand2Token);
-                if (t3 == OP_DECIMAL) convert_float_to_decimal(operand3Token);
-                return;
-            }
-            /* Reset the types for the next try */
-            if (t1 == OP_DECIMAL) t1 = OP_FLOAT;
-            if (t2 == OP_DECIMAL) t2 = OP_FLOAT;
-            if (t3 == OP_DECIMAL) t3 = OP_FLOAT;
-            try = 0;
+            free(actual);
+            return;
         }
     }
+    free(actual);
 }
 
 static void append_format_description(OpFormat format, char *buffer, size_t buffer_len) {
-    OperandType types[3];
-    int num_ops = get_operand_types(format, types);
-    int i;
+    size_t num_ops = rxop_format_operand_count(format);
+    size_t i;
     if (num_ops == 0) {
         strncat(buffer, "no operands", buffer_len - strlen(buffer) - 1);
         return;
     }
     for (i = 0; i < num_ops; i++) {
         if (i > 0) strncat(buffer, ", ", buffer_len - strlen(buffer) - 1);
-        switch (types[i]) {
+        switch (rxop_format_operand_type(format, i)) {
             case OP_REG: strncat(buffer, "register", buffer_len - strlen(buffer) - 1); break;
             case OP_INT: strncat(buffer, "integer", buffer_len - strlen(buffer) - 1); break;
             case OP_FLOAT: strncat(buffer, "float", buffer_len - strlen(buffer) - 1); break;
@@ -1080,15 +2294,14 @@ static void append_format_description(OpFormat format, char *buffer, size_t buff
 }
 
 static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_Token *instrToken,
-                                         OperandType type1,
-                                         OperandType type2,
-                                         OperandType type3 ) {
+                                         const OperandType *operandTypes,
+                                         size_t operandCount) {
     char errorBuffer[MAX_ERROR_LENGTH];
     size_t i_len;
     int j;
     int first = 1;
     const char *mnemonic = (char*)instrToken->token_value.string;
-    const OpInfo *inst = find_opcode(mnemonic, type1, type2, type3);
+    const OpInfo *inst = find_opcodev(mnemonic, operandTypes, operandCount);
 
     if (inst) return inst;
 
@@ -1116,106 +2329,96 @@ static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_
     return 0;
 }
 
+static int channel_instruction_has_two_outputs(int opcode) {
+    return opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
+           opcode == OP_CHANSTART_REG_REG_REG_REG_REG ||
+           opcode == OP_CHANWAIT_REG_REG_REG_REG;
+}
+
+static int same_register_operand(const Assembler_Token *left,
+                                 const Assembler_Token *right) {
+    return left && right && left->token_type == right->token_type &&
+           left->token_value.integer == right->token_value.integer;
+}
+
 /** Generate code for an instruction with no operands */
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken) {
-    rxasgen(context, instrToken, 0, 0, 0);
+    rxasgenv(context, instrToken, 0, 0);
 }
 
 /** Generate code for an instruction with one operand */
 void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
-    rxasgen(context, instrToken, operand1Token, 0, 0);
+    Assembler_Token *operands[] = {operand1Token};
+    rxasgenv(context, instrToken, operands, 1);
 }
 
 /** Generate code for an instruction with two operand */
 void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token) {
-    rxasgen(context, instrToken, operand1Token, operand2Token, 0);
+    Assembler_Token *operands[] = {operand1Token, operand2Token};
+    rxasgenv(context, instrToken, operands, 2);
 }
 
 /** Generate code for an instruction with three operands */
 void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
-    rxasgen(context, instrToken, operand1Token, operand2Token, operand3Token);
+    Assembler_Token *operands[] = {operand1Token, operand2Token, operand3Token};
+    rxasgenv(context, instrToken, operands, 3);
 }
 
-/** Generate code for an instruction with up to three operands
- *  NULLS in the operandToken's are used to detect the number of operands */
+/** Compatibility wrapper for instruction producers that emit up to three operands. */
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+    Assembler_Token *operands[3];
+    size_t operandCount = 0;
 
-    OperandType type1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
-    OperandType type2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
-    OperandType type3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+    if (operand1Token) operands[operandCount++] = operand1Token;
+    if (operand2Token) operands[operandCount++] = operand2Token;
+    if (operand3Token) operands[operandCount++] = operand3Token;
+    rxasgenv(context, instrToken, operands, operandCount);
+}
 
-    const OpInfo *inst = validate_instruction(context, instrToken, type1, type2, type3);
+/** Generate code for an instruction with an arbitrary number of operands. */
+void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount) {
+    OperandType *operandTypes = 0;
+    const OpInfo *inst;
+    size_t i;
 
-    if (inst) {
-        OperandType types[3];
-        int num_ops = get_operand_types(inst->format, types);
-        gen_instr(context, inst->opcode, num_ops);
-        switch (inst->format) {
-            case FMT_EMPTY:
-                break;
+    if (operandCount > INT_MAX) {
+        rxaseaft(context, instrToken, "instruction has too many operands");
+        return;
+    }
 
-            case FMT_C:
-            case FMT_F:
-            case FMT_I:
-            case FMT_L:
-            case FMT_P:
-            case FMT_R:
-            case FMT_B:
-            case FMT_S:
-                gen_operand(context, operand1Token);
-                break;
+    prepare_jump_table_instruction(context, instrToken,
+                                   operandCount > 1 ? operandTokens[1] : 0,
+                                   operandCount > 2 ? operandTokens[2] : 0);
 
-            case FMT_I_I:
-            case FMT_I_R:
-            case FMT_L_R:
-            case FMT_L_S:
-            case FMT_P_S:
-            case FMT_R_C:
-            case FMT_R_B:
-            case FMT_R_D:
-            case FMT_R_F:
-            case FMT_R_I:
-            case FMT_R_P:
-            case FMT_R_R:
-            case FMT_R_S:
-            case FMT_S_R:
-            case FMT_S_S:
-                gen_operand(context, operand1Token);
-                gen_operand(context, operand2Token);
-                break;
-
-            case FMT_I_I_I:
-            case FMT_I_I_R:
-            case FMT_I_R_R:
-            case FMT_L_L_R:
-            case FMT_L_P_S:
-            case FMT_L_R_I:
-            case FMT_L_R_R:
-            case FMT_L_R_S:
-            case FMT_R_D_R:
-            case FMT_R_F_I:
-            case FMT_R_F_R:
-            case FMT_R_I_I:
-            case FMT_R_I_R:
-            case FMT_R_P_R:
-            case FMT_R_R_D:
-            case FMT_R_R_F:
-            case FMT_R_R_I:
-            case FMT_R_R_R:
-            case FMT_R_R_S:
-            case FMT_R_S_I:
-            case FMT_R_S_R:
-            case FMT_R_S_S:
-            case FMT_S_S_R:
-                gen_operand(context, operand1Token);
-                gen_operand(context, operand2Token);
-                gen_operand(context, operand3Token);
-                break;
+    if (operandCount) {
+        operandTypes = malloc(operandCount * sizeof(*operandTypes));
+        if (!operandTypes) {
+            RXAS_PANIC_OOM(context, "malloc rxas operand types",
+                           operandCount * sizeof(*operandTypes), 0);
+        }
+        for (i = 0; i < operandCount; i++) {
+            operandTypes[i] = token_to_operand_type(context, operandTokens[i]);
         }
     }
+
+    inst = validate_instruction(context, instrToken, operandTypes, operandCount);
+
+    if (inst) {
+        if (channel_instruction_has_two_outputs(inst->opcode) &&
+            same_register_operand(operandTokens[0], operandTokens[1])) {
+            rxaseaft(context, operandTokens[1],
+                     "channel instruction output registers must be distinct");
+            free(operandTypes);
+            return;
+        }
+        gen_instr(context, inst->opcode, (int)operandCount);
+        for (i = 0; i < operandCount; i++) gen_operand(context, operandTokens[i]);
+    }
+    free(operandTypes);
 }
 
 static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken) {
@@ -1302,6 +2505,7 @@ void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
+    context->current_proc_name = (char *)funcToken->token_value.string;
 }
 
 /* Label Definition */
@@ -1374,6 +2578,7 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 
     /* Store the current number of locals */
     context->current_locals = (int)localsToken->token_value.integer;
+    context->current_proc_name = (char *)funcToken->token_value.string;
 
     /* Duplicate extern index check */
     add_extern_index(context, exposeToken);
@@ -1411,6 +2616,7 @@ void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken,
 
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
+    context->current_proc_name = 0;
 
     /* Create Procedure Entry */
     pentry_index = define_proc(context, funcToken);
@@ -1521,8 +2727,31 @@ void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token
 
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args) {
-    size_t entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
+    size_t entry;
     size_t sentry;
+
+    if (strcmp((const char *)option->token_value.string, ".initializer") == 0) {
+        meta_initializer_constant *initializer;
+        size_t function;
+
+        if (strcmp((const char *)type->token_value.string, ".void") != 0 ||
+            ((const char *)args->token_value.string)[0] != 0) {
+            rxaserat(context, option,
+                     "Initializer metadata requires a no-argument .void callable");
+            return;
+        }
+        entry = add_meta_entry(
+                context, sizeof(meta_initializer_constant), META_INITIALIZER);
+        sentry = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        function = add_func_to_pool(context, func);
+        initializer = (meta_initializer_constant *)(context->binary.const_pool + entry);
+        initializer->symbol = sentry;
+        initializer->function = function;
+        return;
+    }
+
+    entry = add_meta_entry(context,sizeof(meta_func_constant),META_FUNC);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
@@ -1663,9 +2892,117 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     size_t s_sym;
     size_t s_payload;
     meta_inline_constant *mentry;
+    const char *option_text;
 
-    if (strcmp((char*)option->token_value.string, ".inline") != 0) {
-        rxaserat(context, option, "Expecting .inline metadata option");
+    option_text = (const char *)option->token_value.string;
+    if (strcmp(option_text, ".autoload") == 0) {
+        meta_autoload_constant *autoload;
+        const unsigned char *p;
+        size_t s_artifact;
+
+        if (payload->token_type != STRING) {
+            rxaserat(context, payload, "Autoload metadata requires a string RXBIN artifact stem");
+            return;
+        }
+        p = (const unsigned char *)payload->token_value.string;
+        if (!*p || !((*p >= 'A' && *p <= 'Z') ||
+                     (*p >= 'a' && *p <= 'z') ||
+                     (*p >= '0' && *p <= '9'))) {
+            rxaserat(context, payload, "Autoload artifact stem must start with an ASCII letter or digit");
+            return;
+        }
+        for (; *p; p++) {
+            if (!((*p >= 'A' && *p <= 'Z') ||
+                  (*p >= 'a' && *p <= 'z') ||
+                  (*p >= '0' && *p <= '9') ||
+                  *p == '.' || *p == '_' || *p == '-')) {
+                rxaserat(context, payload, "Autoload artifact stem may contain only ASCII letters, digits, '.', '_' and '-'");
+                return;
+            }
+        }
+        entry = add_meta_entry(context, sizeof(meta_autoload_constant), META_AUTOLOAD);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        s_artifact = add_string_to_pool(
+                context, payload, (char *)payload->token_value.string);
+        autoload = (meta_autoload_constant *)(context->binary.const_pool + entry);
+        autoload->symbol = s_sym;
+        autoload->artifact = s_artifact;
+        return;
+    }
+    if (strcmp(option_text, ".provider") == 0 ||
+        strcmp(option_text, ".provider.required") == 0 ||
+        strcmp(option_text, ".provider.optional") == 0) {
+        meta_provider_constant *provider;
+        const unsigned char *p;
+        size_t s_provider;
+
+        if (payload->token_type != STRING) {
+            rxaserat(context, payload, "Provider metadata requires a string provider ID");
+            return;
+        }
+        p = (const unsigned char *)payload->token_value.string;
+        if (!*p || !((*p >= 'A' && *p <= 'Z') ||
+                     (*p >= 'a' && *p <= 'z') ||
+                     (*p >= '0' && *p <= '9'))) {
+            rxaserat(context, payload, "Provider ID must start with an ASCII letter or digit");
+            return;
+        }
+        for (; *p; p++) {
+            if (!((*p >= 'A' && *p <= 'Z') ||
+                  (*p >= 'a' && *p <= 'z') ||
+                  (*p >= '0' && *p <= '9') ||
+                  *p == '.' || *p == '_' || *p == '-')) {
+                rxaserat(context, payload, "Provider ID may contain only ASCII letters, digits, '.', '_' and '-'");
+                return;
+            }
+        }
+        entry = add_meta_entry(context, sizeof(meta_provider_constant), META_PROVIDER);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        s_provider = add_string_to_pool(
+                context, payload, (char *)payload->token_value.string);
+        provider = (meta_provider_constant *)(context->binary.const_pool + entry);
+        provider->symbol = s_sym;
+        provider->provider = s_provider;
+        provider->flags = strcmp(option_text, ".provider.optional") == 0
+                ? 0u : RXBIN_PROVIDER_REQUIRED;
+        return;
+    }
+    if (strcmp(option_text, ".task1") == 0 ||
+        strcmp(option_text, ".task2") == 0 ||
+        strcmp(option_text, ".task3") == 0) {
+        meta_task_target_constant *target;
+        size_t binding;
+
+        if (payload->token_type != HEX) {
+            rxaserat(context, payload, "Task-target metadata requires an 80-byte hex binding placeholder");
+            return;
+        }
+        if (strlen((const char *)payload->token_value.string) !=
+            2u + RX_GRAPH_TASK_BINDING_SIZE * 2u) {
+            rxaserat(context, payload, "Task-target metadata requires an 80-byte hex binding placeholder");
+            return;
+        }
+        binding = add_binary_to_pool(
+                context, (char *)payload->token_value.string);
+        entry = add_meta_entry(
+                context, sizeof(meta_task_target_constant), META_TASK_TARGET);
+        s_sym = add_string_to_pool(
+                context, symbol, (char *)symbol->token_value.string);
+        target = (meta_task_target_constant *)(context->binary.const_pool + entry);
+        target->symbol = s_sym;
+        target->binding = binding;
+        target->kind = (uint32_t)(option_text[5] - '0');
+        return;
+    }
+
+    if (strcmp(option_text, ".inline") != 0) {
+        rxaserat(context, option, "Expecting .autoload, .inline, .provider[.required|.optional] or .task1/.task2/.task3 metadata option");
+        return;
+    }
+    if (payload->token_type != STRING) {
+        rxaserat(context, payload, "Inline metadata requires a string payload");
         return;
     }
 

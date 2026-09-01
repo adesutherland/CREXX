@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+d3-core-decnumber-common18,DECIMAL-D3-core-common18,c,direct-core,D0-decNumber-3.68,D,no,steady-core,5000000,elapsed_ns,8,246369000.000000,247773000.000000,249069000.000000,250229500.000000,251650000.000000,1496000.000000,0.600637,2.120296,no
+d3-core-decquad-common18,DECIMAL-D3-core-common18,c,direct-core,D3-decQuad-fixed34,D,no,steady-core,5000000,elapsed_ns,8,478316000.000000,486493000.000000,491094500.000000,497172750.000000,518246000.000000,6980000.000000,1.421315,8.130818,no
+d3-core-decnumber-classic9,DECIMAL-D3-core-classic9,c,direct-core,D0-decNumber-3.68,D,no,steady-core,5000000,elapsed_ns,8,299876000.000000,308057250.000000,311807000.000000,315365500.000000,316571000.000000,3564000.000000,1.143015,5.354274,no
+d3-core-decquad-classic9,DECIMAL-D3-core-classic9,c,direct-core,D3-decQuad-fixed34,D,no,steady-core,5000000,elapsed_ns,8,929652000.000000,932643250.000000,937219500.000000,951841250.000000,974290000.000000,6259000.000000,0.667826,4.762812,no

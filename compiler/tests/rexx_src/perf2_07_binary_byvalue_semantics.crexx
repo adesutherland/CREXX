@@ -1,0 +1,60 @@
+options levelb
+namespace perf2_07_binary_byvalue_semantics expose readByte readPair overwriteLocal rebindLocal
+
+import rxfnsb
+
+readByte: procedure = .int
+  arg data = .binary, offset = .int
+  return <at..u8>(offset) data
+
+readPair: procedure = .int
+  arg left = .binary, right = .binary
+  return <at..u8>(0) left + <at..u8>(5) right
+
+overwriteLocal: procedure = .int
+  arg data = .binary
+  <at..u8>(0) data = 17
+  return <at..u8>(0) data
+
+rebindLocal: procedure = .int
+  arg data = .binary
+  data = "AA"x as .binary
+  return <at..u8>(0) data
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+main: procedure = .int
+  payload = "00FF41C3A9FE"x as .binary
+  if readByte(payload, 0) <> 0 then return fail("arbitrary first byte")
+  if readByte(payload, 5) <> 254 then return fail("arbitrary last byte")
+  if readPair(payload, payload) <> 254 then return fail("repeated actual")
+
+  changed = overwriteLocal(payload)
+  if changed <> 17 then return fail("writable local result")
+  if <at..u8>(0) payload <> 0 then return fail("writable formal leaked")
+
+  rebound = rebindLocal(payload)
+  if rebound <> 170 then return fail("rebound local result")
+  if <at..u8>(0) payload <> 0 then return fail("rebound formal leaked")
+
+  payload_ref = reference payload
+  linked = dereference payload_ref
+  if readByte(linked, 1) <> 255 then return fail("dereference read")
+  <at..u8>(1) linked = 238
+  if readByte(payload, 1) <> 238 then return fail("live alias update")
+
+  empty = .binary
+  if binlength(empty) <> 0 then return fail("empty binary")
+
+  large = .binary
+  call binresize large, 8192
+  <at..u8>(0) large = 1
+  <at..u8>(8191) large = 255
+  if readByte(large, 0) <> 1 then return fail("large first byte")
+  if readByte(large, 8191) <> 255 then return fail("large last byte")
+
+  say "PASS: PERF2-07 binary by-value semantics"
+  return 0

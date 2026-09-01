@@ -1,0 +1,9 @@
+collected_utc=2026-07-19T15:07:09Z
+repo_head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+host=Darwin 25.5.0 arm64
+release_rxas_sha256=0d145dc88b80d9a54b32f1d49ffbeb43e5bc8e1ba85db3d639a0584abc8e5ab6
+release_rxvm_sha256=517eab7b2051c69fcc7aec991062061df0dc0a6b30e0bef9155a32f8b4639756
+release_rxbvm_sha256=48264b9ac91560c08d2d007a3a939116c80eb4567ddcb1c1e75d975be9bab07e
+build_boundary=ordinary profiling-off Release product
+measurement_boundary=16 eight-byte alternative-procedure offsets; 3 processes per offset/VM; 5 alternating pairs per process; first pair warm-up; 12 recorded
+assembly_boundary=rxas -n preserves both explicitly selected paths

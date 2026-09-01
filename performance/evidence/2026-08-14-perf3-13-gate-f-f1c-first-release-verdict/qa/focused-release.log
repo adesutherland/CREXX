@@ -1,0 +1,72 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/20 Test    #1: linked_opt_runtime_artifacts_build ...............   Passed    0.99 sec
+      Start  338: inline_test_block_expr_live_sibling_opt
+      Start  212: object_reference_regression_opt
+      Start  507: gate_f_levelb_contract
+      Start 1058: rxvmchannel_provider_registry
+      Start  345: gate_f_channel_contract
+ 2/20 Test #1058: rxvmchannel_provider_registry ....................   Passed    0.00 sec
+      Start  738: gate_f_signal_names_run_opt
+ 3/20 Test  #345: gate_f_channel_contract ..........................   Passed    0.02 sec
+      Start  735: inline_test_binary_class_attr_assign_run_opt
+ 4/20 Test  #507: gate_f_levelb_contract ...........................   Passed    0.20 sec
+      Start  737: gate_f_signal_names_run_noopt
+ 5/20 Test  #738: gate_f_signal_names_run_opt ......................   Passed    0.22 sec
+      Start  734: inline_test_binary_class_attr_assign_run_noopt
+ 6/20 Test  #735: inline_test_binary_class_attr_assign_run_opt .....   Passed    0.21 sec
+      Start 1630: testConcurrency_opt
+ 7/20 Test  #212: object_reference_regression_opt ..................   Passed    0.34 sec
+      Start 1629: testConcurrency_noopt
+ 8/20 Test  #338: inline_test_block_expr_live_sibling_opt ..........   Passed    0.35 sec
+      Start 1225: persistent_worker_executor-rxtvml
+ 9/20 Test #1225: persistent_worker_executor-rxtvml ................   Passed    0.05 sec
+      Start 1211: persistent_worker_executor-rxbvml
+10/20 Test  #737: gate_f_signal_names_run_noopt ....................   Passed    0.23 sec
+      Start 1141: gate_f_channel_local_rxbvm
+11/20 Test  #734: inline_test_binary_class_attr_assign_run_noopt ...   Passed    0.21 sec
+      Start 1142: gate_f_channel_local_rxtvm
+12/20 Test #1211: persistent_worker_executor-rxbvml ................   Passed    0.05 sec
+      Start 1488: ts_signal_opt
+13/20 Test #1141: gate_f_channel_local_rxbvm .......................   Passed    0.03 sec
+      Start 1487: ts_signal_noopt
+14/20 Test #1630: testConcurrency_opt ..............................   Passed    0.24 sec
+      Start 1591: gate_f_levelb_bridge_inspection
+15/20 Test #1142: gate_f_channel_local_rxtvm .......................   Passed    0.03 sec
+      Start  736: inline_test_binary_class_attr_assign_shape
+16/20 Test #1591: gate_f_levelb_bridge_inspection ..................   Passed    0.01 sec
+17/20 Test #1487: ts_signal_noopt ..................................   Passed    0.02 sec
+18/20 Test #1488: ts_signal_opt ....................................   Passed    0.04 sec
+19/20 Test #1629: testConcurrency_noopt ............................   Passed    0.19 sec
+20/20 Test  #736: inline_test_binary_class_attr_assign_shape .......   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Label Time Summary:
+binary               =   0.18 sec*proc (1 test)
+channels             =   0.09 sec*proc (4 tests)
+classlib             =   0.01 sec*proc (1 test)
+compiler             =   0.40 sec*proc (3 tests)
+concurrency          =   0.20 sec*proc (1 test)
+e5                   =   0.10 sec*proc (2 tests)
+f1c                  =   0.07 sec*proc (3 tests)
+gate-e               =   0.10 sec*proc (2 tests)
+gate-f               =   0.10 sec*proc (5 tests)
+gate_f               =   0.20 sec*proc (1 test)
+industrial           =   0.10 sec*proc (2 tests)
+inlining             =   0.18 sec*proc (1 test)
+inspection           =   0.01 sec*proc (1 test)
+interpreter          =   0.17 sec*proc (5 tests)
+levelb               =   0.20 sec*proc (1 test)
+lifecycle            =   0.07 sec*proc (2 tests)
+linked_opt           =   0.71 sec*proc (4 tests)
+macos                =   0.10 sec*proc (2 tests)
+perf3                =   0.17 sec*proc (5 tests)
+performance          =   0.02 sec*proc (1 test)
+private              =   0.10 sec*proc (2 tests)
+provider-registry    =   0.00 sec*proc (1 test)
+regression           =   0.18 sec*proc (1 test)
+rxas                 =   0.02 sec*proc (1 test)
+rxbin                =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   1.68 sec

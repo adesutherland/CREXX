@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_condition_contexts.crexx
- * BUILT                  : 2026-05-27 17:53:29
  */
 
 .globals=0
@@ -8,18 +7,13 @@
 main() .locals=5
    .meta "inline_test_condition_contexts.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_condition_contexts.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_condition_contexts.crexx" 4 3 50 "  say \"Starting condition context inline test...\""
    say "Starting condition context inline test..."
    .srcstep 4 4 17 "inline_test_condition_contexts.crexx" 6 3 14 "  if isOne(1) then say \"if-yes\""
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
-   load r2,1
-   call r4,isOne(),r2
+   call1 r4,isOne(),r3
    .traceevent "F" 4 "R" "B" "r" 4 4 4 0 "isone" ""
    brf l14iffalse,r4
    .srcstep 5 5 17 "inline_test_condition_contexts.crexx" 6 15 19 "  if isOne(1) then say \"if-yes\""
@@ -34,8 +28,7 @@ l14ifend:
    .srcstep 9 9 17 "inline_test_condition_contexts.crexx" 9 3 14 "  if isOne(2) then say \"bad-if-no\""
    load r4,2
    .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
-   load r3,1
-   call r2,isOne(),r3
+   call1 r2,isOne(),r4
    .traceevent "F" 4 "R" "B" "r" 2 9 9 0 "isone" ""
    brf l21iffalse,r2
    .srcstep 10 10 17 "inline_test_condition_contexts.crexx" 9 15 19 "  if isOne(2) then say \"bad-if-no\""
@@ -56,10 +49,7 @@ l21ifend:
 l25dostart:
    .srcstep 13 13 17 "inline_test_condition_contexts.crexx" 13 6 23 "  do while belowTwo(i)"
    .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "i" ""
-   load r3,1
-   swap r4,r0
-   call r2,belowTwo(),r3
-   swap r0,r4
+   call1 r2,belowTwo(),r0
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "belowtwo" ""
    brf l25doend,r2
    .srcstep 14 14 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
@@ -98,10 +88,7 @@ l43dostart:
 l43doinc:
    .srcstep 19 19 17 "inline_test_condition_contexts.crexx" 19 6 25 "  do until atLeastTwo(j)"
    .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "j" ""
-   load r3,1
-   swap r4,r1
-   call r2,atLeastTwo(),r3
-   swap r1,r4
+   call1 r2,atLeastTwo(),r1
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "atleasttwo" ""
    brt l43doend,r2
    .srcstep 23 23 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"
@@ -117,11 +104,7 @@ l43doend:
 isOne() .locals=2
    .meta "inline_test_condition_contexts.isone"="b" ".int" isOne() "value=.int"
    .srcstep 29 29 17 "inline_test_condition_contexts.crexx" 27 1 24 "isOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 27 27 17 "inline_test_condition_contexts.crexx" 28 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.isone.value"="b" ".int" a1
    .srcstep 28 28 17 "inline_test_condition_contexts.crexx" 29 3 19 "  return value = 1"
@@ -135,11 +118,7 @@ isOne() .locals=2
 belowTwo() .locals=2
    .meta "inline_test_condition_contexts.belowtwo"="b" ".int" belowTwo() "value=.int"
    .srcstep 32 32 17 "inline_test_condition_contexts.crexx" 31 1 27 "belowTwo: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 30 30 17 "inline_test_condition_contexts.crexx" 32 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.belowtwo.value"="b" ".int" a1
    .srcstep 31 31 17 "inline_test_condition_contexts.crexx" 33 3 19 "  return value < 2"
@@ -153,11 +132,7 @@ belowTwo() .locals=2
 atLeastTwo() .locals=2
    .meta "inline_test_condition_contexts.atleasttwo"="b" ".int" atLeastTwo() "value=.int"
    .srcstep 35 35 17 "inline_test_condition_contexts.crexx" 35 1 29 "atLeastTwo: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 33 33 17 "inline_test_condition_contexts.crexx" 36 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.atleasttwo.value"="b" ".int" a1
    .srcstep 34 34 17 "inline_test_condition_contexts.crexx" 37 3 20 "  return value >= 2"

@@ -48,13 +48,29 @@ static uintptr_t *Messages = 0;
   typedef SOCKET socket_t;
   #define socket_invalid(s)   ((s) == INVALID_SOCKET)
   #define socket_err()        ((int)WSAGetLastError())
+  /* Keep Winsock initialized until every created or accepted socket is closed. */
+  static int socket_runtime_ready = 0;
+  static unsigned long socket_live_count = 0;
   static int socket_init(void) {
       WSADATA wsaData;
-      int r = WSAStartup(MAKEWORD(2,2), &wsaData);
+      int r;
+      if (socket_runtime_ready) return 0;
+      r = WSAStartup(MAKEWORD(2,2), &wsaData);
+      if (r == 0) socket_runtime_ready = 1;
       return (r == 0) ? 0 : -1;
   }
-  static void socket_cleanup(void) { WSACleanup(); }
-  static void socket_close(socket_t s) { closesocket(s); }
+  static void socket_track_open(void) { socket_live_count++; }
+  static void socket_cleanup(void) {
+      if (socket_runtime_ready && socket_live_count == 0) {
+          WSACleanup();
+          socket_runtime_ready = 0;
+      }
+  }
+  static void socket_close(socket_t s) {
+      int r = closesocket(s);
+      if (r == 0 && socket_live_count > 0) socket_live_count--;
+      socket_cleanup();
+  }
   static void sleep_ms(int ms) { Sleep((DWORD)ms); }
   static int socket_bytes_available(socket_t s, unsigned long *n) {
       return ioctlsocket(s, FIONREAD, n);
@@ -83,6 +99,7 @@ static uintptr_t *Messages = 0;
   #define socket_invalid(s)   ((s) < 0)
   #define socket_err()        (errno)
   static int socket_init(void) { return 0; }
+  static void socket_track_open(void) { }
   static void socket_cleanup(void) { }
   static void socket_close(socket_t s) { close(s); }
   static void sleep_ms(int ms) { usleep((useconds_t)ms * 1000u); }
@@ -168,6 +185,7 @@ PROCEDURE(tcpopen) {
         socket_cleanup();
         RETURNINTX(-socket_err());
     }
+    socket_track_open();
 
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
@@ -177,7 +195,6 @@ PROCEDURE(tcpopen) {
     if (inet_pton(AF_INET, ipaddr, &server_addr.sin_addr) != 1) {
         debug("Invalid IPv4 address");
         socket_close(sockfd);
-        socket_cleanup();
         RETURNINTX(-3);
     }
 
@@ -185,7 +202,6 @@ PROCEDURE(tcpopen) {
         int e = socket_err();
         debugi("Connect failed", e);
         socket_close(sockfd);
-        socket_cleanup();
         RETURNINTX(-e);
     }
 
@@ -269,7 +285,9 @@ PROCEDURE(tcpreceive) {
     }
 
     buffer[total_received] = '\0';
-    RETURNSTRX(buffer);
+    SETSTRING(RETURN, buffer);
+    free(buffer);
+    PROCRETURN
     ENDPROC
 }
 
@@ -293,6 +311,7 @@ PROCEDURE(tcpserver) {
         socket_cleanup();
         RETURNINTX(-2);
     }
+    socket_track_open();
 
     // allow quick restart
     int opt = 1;
@@ -308,7 +327,6 @@ PROCEDURE(tcpserver) {
         int e = socket_err();
         debugi("Bind failed", e);
         socket_close(server);
-        socket_cleanup();
         RETURNINTX(-3);
     }
 
@@ -316,7 +334,6 @@ PROCEDURE(tcpserver) {
         int e = socket_err();
         debugi("Listen failed", e);
         socket_close(server);
-        socket_cleanup();
         RETURNINTX(-8);
     }
 
@@ -408,6 +425,7 @@ PROCEDURE(tcpwait) {
         debugi("Accept failed", socket_err());
         RETURNINTX(-socket_err());
     }
+    socket_track_open();
 
     char ipdetails[128];
     const char *cip = inet_ntoa(client.sin_addr);
@@ -433,7 +451,6 @@ PROCEDURE(tcpclose) {
     if (socket_invalid(sockfd)) RETURNINTX(-64);
 
     socket_close(sockfd);
-    socket_cleanup();
 
     debug("Socket closed");
     RETURNINTX(0);

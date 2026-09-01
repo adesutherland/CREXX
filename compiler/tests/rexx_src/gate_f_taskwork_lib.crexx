@@ -1,0 +1,18 @@
+options levelb
+import concurrency
+import rxfnsb
+
+namespace gate_f_taskwork_lib expose imagework
+
+imagework: class implements .taskwork
+  _delta = .int
+
+  *: factory
+    arg delta = .int
+    _delta = delta
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.null_value()
+    return .channelvalue.integer_value(request.as_integer() + _delta)

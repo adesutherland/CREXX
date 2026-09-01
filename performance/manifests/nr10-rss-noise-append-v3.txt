@@ -1,0 +1,4 @@
+# Corrected equal-work decimal-NetRexx campaign: RSS cell selected by the
+# approved MAD/span rule. No initial sample is removed.
+crexx-cross-runtime-matrix|1
+base64-netrexx|Base64|netrexx|netrexx|decimal-rexx-port|A|no|no|2500|PASS: Base64 Roundtrip NetRexx decimal port||/usr/bin/java;-cp;performance/evidence/2026-07-20-nr-10-formal-baseline/netrexx-decimal:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;base64_roundtrip;2500

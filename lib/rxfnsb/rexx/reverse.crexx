@@ -22,19 +22,33 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B REVERSE implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/reverse.md
+ */
 options levelb
-
 namespace rxfnsb expose reverse
 
+/**
+ * Reverse the Unicode codepoint sequence in a string.
+ *
+ * @param string source text
+ * @return source codepoints in reverse order
+ */
+reverse: procedure = .string
+  arg string = .string
+  string_length = .int
+  index = .int
+  codepoint = .int
+  result = ""
 
-reverse: procedure=.string
-  arg str=.string
-  len = length(str)
-  rev = ''
-
-  do i = len to 1 by -1
-    rev = rev || substr(str, i, 1)
+  assembler strlen string_length,string
+  index = string_length - 1
+  do while index >= 0
+    assembler strchar codepoint,string,index
+    assembler appendchar result,codepoint
+    index = index - 1
   end
-
-return rev
+  return result

@@ -29,6 +29,9 @@
 #ifndef RXSIGNAL_H
 #define RXSIGNAL_H
 
+#include <limits.h>
+#include <signal.h>
+
 /* Interrupt / Signal Codes */
 #define RXSIGNAL_NONE                 0  /* No Signal */
 #define RXSIGNAL_KILL                 1  /* Unmaskable Kill */
@@ -49,6 +52,8 @@
 
 #define RXSIGNAL_NOTREADY             15 /* Input/output error, e.g., file not ready (POSIX SIGPIPE) */
 #define RXSIGNAL_OBJECT_NOT_INITIALIZED 16 /* Object value has a compatible type but no initialized instance */
+#define RXSIGNAL_RXBIN_CORRUPTION     17 /* Runtime bytecode or packed constant table is malformed */
+#define RXSIGNAL_CANCEL               18 /* Cooperative request cancellation */
 
 #define RXSIGNAL_QUIT                 19 /* Request to halt execution (POSIX SIGQUIT / Windows SIGBREAK) */
 #define RXSIGNAL_TERM                 20 /* Request to halt execution (POSIX SIGTERM) */
@@ -57,9 +62,38 @@
 #define RXSIGNAL_POSIX_USR1           23 /* POSIX SIGUSR1 (user-defined signal 1) */
 #define RXSIGNAL_POSIX_USR2           24 /* POSIX SIGUSR2 (user-defined signal 2) */
 #define RXSIGNAL_POSIX_CHLD           25 /* POSIX SIGCHLD (child process terminated) */
+#define RXSIGNAL_CHANNEL_ERROR        26 /* Gate F channel lifecycle or operation failure */
+#define RXSIGNAL_TASK_FAILURE         27 /* Gate F typed task result demand failure */
 
 #define RXSIGNAL_OTHER                30 /* Other Interrupt */
 #define RXSIGNAL_BREAKPOINT           31 /* Breakpoint (called after each instruction if enabled) */
 #define RXSIGNAL_MAX                  32 /* Maximum Interrupt Code - this is not a valid signal code */
+
+#if defined(__cplusplus) && __cplusplus >= 201103L
+static_assert(RXSIGNAL_MAX <= (int)(sizeof(sig_atomic_t) * CHAR_BIT),
+              "VM signal mask must fit in sig_atomic_t");
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+_Static_assert(RXSIGNAL_MAX <= (int)(sizeof(sig_atomic_t) * CHAR_BIT),
+               "VM signal mask must fit in sig_atomic_t");
+#else
+typedef char crexx_signal_mask_must_fit_sig_atomic_t[
+        (RXSIGNAL_MAX <= (int)(sizeof(sig_atomic_t) * CHAR_BIT)) ? 1 : -1];
+#endif
+
+#if defined(_MSC_VER)
+#define RXSIGNAL_INLINE static __inline
+#elif defined(__GNUC__) || defined(__clang__)
+#define RXSIGNAL_INLINE static __inline__
+#else
+#define RXSIGNAL_INLINE static
+#endif
+
+/* Valid signal codes 1..31 occupy the non-sign bits 0..30. */
+RXSIGNAL_INLINE sig_atomic_t rxsignal_mask(int signal_code) {
+    if (signal_code <= RXSIGNAL_NONE || signal_code >= RXSIGNAL_MAX) return 0;
+    return (sig_atomic_t)((sig_atomic_t)1 << (signal_code - 1));
+}
+
+#undef RXSIGNAL_INLINE
 
 #endif //RXSIGNAL_H

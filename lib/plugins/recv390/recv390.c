@@ -2264,7 +2264,9 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
         //-----------------------------------------------------------------------
 
         if (showsnapaddr)
-            x = sprintf(prtbuf, "%.8lX %.4x  ", (unsigned long)(intptr_t) (ptr+ i), i + offset);
+            x = sprintf(prtbuf, "%.8lX %.4x  ",
+                        (unsigned long)(intptr_t)((unsigned char *)ptr + i),
+                        i + offset);
         else
             x = sprintf(prtbuf, "%.4x  ", i + offset);
         for (j = 0; j < 16; j = j + 4) {

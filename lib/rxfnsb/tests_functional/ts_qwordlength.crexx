@@ -1,0 +1,43 @@
+options levelb
+import rxfnsb
+
+errors = 0
+source = 'alpha pre"two three"post ' || "'four''five'"
+errors = errors + check(5,qwordlength(source,1),"plain")
+errors = errors + check(18,qwordlength(source,2),"embedded quote")
+errors = errors + check(12,qwordlength(source,3),"doubled quote")
+errors = errors + check(0,qwordlength(source,4),"missing")
+errors = errors + check(2,qwordlength("α　βγ",2),"Unicode whitespace and codepoints")
+errors = errors + check_string('alpha pre"two three"post ' || "'four''five'",source,"source unchanged")
+
+caught = 0
+do
+  ignored = qwordlength(source,0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"invalid word number signal")
+
+caught = 0
+do
+  ignored = .int
+  ignored = qwordlength("one 'two",1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"unmatched quote signal")
+
+if errors = 0 then say "PASS: qwordlength"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: QWORDLENGTH" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: QWORDLENGTH" label "expected ["expected"] got ["actual"]"
+  return 1

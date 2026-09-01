@@ -1,7 +1,5 @@
-count=2
 count-bracket=2
 count-zero=2
-count-dot=2
-first-call=alpha
 first-bracket=alpha
-first-dot=alpha
+exists-intrinsic=1
+missing-intrinsic=0

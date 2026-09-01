@@ -1,0 +1,29 @@
+options levelb
+namespace inline_receiver_reference_alias
+
+main: procedure = .int
+  sample = .Box("alpha")
+  live = sample.selfRef()
+  call sample.set("beta")
+  observed = snapshot live
+  say observed.get()
+  return 0
+
+Box: class
+  value = .string
+
+  *: factory
+    arg initial = .string
+    value = initial
+    return
+
+  selfRef: method = reference .Box
+    return reference self
+
+  get: method = .string
+    return value
+
+  set: method = .void
+    arg next = .string
+    value = next
+    return

@@ -1,0 +1,27 @@
+hashes
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm
+c5b1a09d37258e7e1b3fb9ebaa9c09008c88a949509055617d631ad75b75470f  /tmp/crexx-perf3-05.9DY131/build-drift/bin/rxvm
+7190a983a073c85a16115c665f2f1b433f28c97a7f64dce5f614e59549915c87  /tmp/crexx-perf3-05.9DY131/build-drift/bin/rxbvm
+sizes
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 998840
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 999016
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxvm 998840
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxbvm 999016
+text
+	Section __text: 809228
+	Section __text: 808244
+	Section __text: 809228
+	Section __text: 808244
+runs
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 0000000100004f78 (__TEXT,__text) external _run
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxvm 0000000100088fd0 (__TEXT,__text) non-external _copy_value
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 0000000100004f78 (__TEXT,__text) external _run
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/rxbvm 0000000100088954 (__TEXT,__text) non-external _copy_value
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxvm 0000000100004f78 (__TEXT,__text) external _run
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxvm 0000000100088fd0 (__TEXT,__text) non-external _copy_value
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxbvm 0000000100004f78 (__TEXT,__text) external _run
+/tmp/crexx-perf3-05.9DY131/build-drift/bin/rxbvm 0000000100088954 (__TEXT,__text) non-external _copy_value
+compile
+233	33371	1785582021120141609	interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o	9aca67a093a39d44
+135	35366	1785582021022562275	interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o	f754c2d8ee7fd90a

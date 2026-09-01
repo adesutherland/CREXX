@@ -1,0 +1,16 @@
+options levelb
+
+main: procedure = .int
+  msg = "hello"
+  say probe(msg)
+  say probe("literal")
+  say probe(msg || "")
+  say probe()
+  return 0
+
+probe: procedure = .string
+  arg value = ""
+  present = ?value
+  value = value || ":local"
+  if present then return "present=" || value
+  return "omitted=" || value

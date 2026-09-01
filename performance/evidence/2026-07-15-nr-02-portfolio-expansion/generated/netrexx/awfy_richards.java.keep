@@ -1,0 +1,257 @@
+/* Generated from 'awfy_richards.nrx' 15 Jul 2026 20:09:35 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_richards{private static final java.lang.String $0="awfy_richards.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;int queueCount;int holdCount;int iteration=0;RichardsScheduler scheduler=null;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+queueCount=0;
+holdCount=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+scheduler=new RichardsScheduler();
+if ((!(scheduler.run()))) {
+netrexx.lang.RexxIO.Say("FAIL: expected queue/hold counts 23246/9297, got"+" "+(scheduler.queueCount())+"/"+(scheduler.holdCount()));
+{System.exit(1);return;}
+}
+queueCount=scheduler.queueCount();
+holdCount=scheduler.holdCount();
+}}/*iteration*/
+netrexx.lang.RexxIO.Say("benchmark=awfy_richards repetitions="+repetitions+" "+"queue_packets="+queueCount+" "+"holds="+holdCount);
+netrexx.lang.RexxIO.Say("PASS: AWFY Richards NetRexx port");return;}
+
+private awfy_richards(){return;}}class RichardsScheduler{private static final java.lang.String $0="awfy_richards.nrx";
+/* properties private */
+private int taskLink[]=new int[6];
+private int taskPriority[]=new int[6];
+private int taskInput[]=new int[6];
+private boolean taskPending[]=new boolean[6];
+private boolean taskWaiting[]=new boolean[6];
+private boolean taskHolding[]=new boolean[6];
+private int handlerWork[]=new int[6];
+private int handlerDevice[]=new int[6];
+private int devicePending[]=new int[6];
+private int packetLink[]=new int[16];
+private int packetIdentity[]=new int[16];
+private int packetKind[]=new int[16];
+private int packetDatum[]=new int[16];
+private int packetData0[]=new int[16];
+private int packetData1[]=new int[16];
+private int packetData2[]=new int[16];
+private int packetData3[]=new int[16];
+private int taskList=-1;
+private int currentTask=-1;
+private int currentIdentity=0;
+private int packetCount=0;
+private int queuePacketCount=0;
+private int holds=0;
+private int idleControl=1;
+private int idleCount=10000;
+private int workerDestination=2;
+private int workerCount=0;
+
+@SuppressWarnings("unchecked") public boolean run(){int workQueue;
+createTask(0,0,0,false,false,false);
+workQueue=createPacket(0,1,1);
+workQueue=createPacket(workQueue,1,1);
+createTask(1,1000,workQueue,true,true,false);
+workQueue=createPacket(0,4,0);
+workQueue=createPacket(workQueue,4,0);
+workQueue=createPacket(workQueue,4,0);
+createTask(2,2000,workQueue,true,true,false);
+workQueue=createPacket(0,5,0);
+workQueue=createPacket(workQueue,5,0);
+workQueue=createPacket(workQueue,5,0);
+createTask(3,3000,workQueue,true,true,false);
+createTask(4,4000,0,false,true,false);
+createTask(5,5000,0,false,true,false);
+schedule();
+return (queuePacketCount==23246)&(holds==9297);}
+
+@SuppressWarnings("unchecked") public int queueCount(){
+return queuePacketCount;}
+
+@SuppressWarnings("unchecked") public int holdCount(){
+return holds;}
+
+@SuppressWarnings("unchecked") private void createTask(int identity,int priority,int input,boolean pending,boolean waiting,boolean holding){
+taskLink[identity]=taskList;
+taskPriority[identity]=priority;
+taskInput[identity]=input;
+taskPending[identity]=pending;
+taskWaiting[identity]=waiting;
+taskHolding[identity]=holding;
+taskList=identity;return;}
+
+@SuppressWarnings("unchecked") private int createPacket(int link,int identity,int kind){
+packetCount++;
+packetLink[packetCount]=link;
+packetIdentity[packetCount]=identity;
+packetKind[packetCount]=kind;
+packetDatum[packetCount]=0;
+packetData0[packetCount]=0;
+packetData1[packetCount]=0;
+packetData2[packetCount]=0;
+packetData3[packetCount]=0;
+return packetCount;}
+
+@SuppressWarnings("unchecked") private int appendPacket(int packet,int queueHead){int mouse;int link;
+packetLink[packet]=0;
+if (queueHead==0) return packet;
+mouse=queueHead;
+link=packetLink[mouse];
+{for(;;){if(!(link!=0))break;
+mouse=link;
+link=packetLink[mouse];
+}}
+packetLink[mouse]=packet;
+return queueHead;}
+
+@SuppressWarnings("unchecked") private void setRunning(int identity){
+taskPending[identity]=false;
+taskWaiting[identity]=false;
+taskHolding[identity]=false;return;}
+
+@SuppressWarnings("unchecked") private void setPacketPending(int identity){
+taskPending[identity]=true;
+taskWaiting[identity]=false;
+taskHolding[identity]=false;return;}
+
+@SuppressWarnings("unchecked") private boolean isHoldingOrWaiting(int identity){
+return taskHolding[identity]|((((!taskPending[identity]))&taskWaiting[identity]));}
+
+@SuppressWarnings("unchecked") private boolean isWaitingWithPacket(int identity){
+return (taskPending[identity]&taskWaiting[identity])&((!taskHolding[identity]));}
+
+@SuppressWarnings("unchecked") private int addInput(int identity,int packet,int oldTask){
+if (taskInput[identity]==0) {
+taskInput[identity]=packet;
+taskPending[identity]=true;
+if (taskPriority[identity]>taskPriority[oldTask]) return identity;
+}
+else taskInput[identity]=appendPacket(packet,taskInput[identity]);
+return oldTask;}
+
+@SuppressWarnings("unchecked") private int holdSelf(){
+holds++;
+taskHolding[currentTask]=true;
+return taskLink[currentTask];}
+
+@SuppressWarnings("unchecked") private int markWaiting(){
+taskWaiting[currentTask]=true;
+return currentTask;}
+
+@SuppressWarnings("unchecked") private int release(int identity){
+taskHolding[identity]=false;
+if (taskPriority[identity]>taskPriority[currentTask]) return identity;
+return currentTask;}
+
+@SuppressWarnings("unchecked") private int queuePacket(int packet){int task;
+task=packetIdentity[packet];
+queuePacketCount++;
+packetLink[packet]=0;
+packetIdentity[packet]=currentIdentity;
+return addInput(task,packet,currentTask);}
+
+@SuppressWarnings("unchecked") private int runTask(int identity){int message;
+message=0;
+if (isWaitingWithPacket(identity)) {
+message=taskInput[identity];
+taskInput[identity]=packetLink[message];
+if (taskInput[identity]==0) setRunning(identity);
+else setPacketPending(identity);
+}
+{/*select*/
+if (identity==0)return runIdler();
+else if (identity==1)return runWorker(message);
+else if ((identity==2)|(identity==3))return runHandler(identity,message);
+else if ((identity==4)|(identity==5))return runDevice(identity,message);
+else{return -1;}
+}}
+
+@SuppressWarnings("unchecked") private int runIdler(){
+idleCount--;
+if (idleCount==0) return holdSelf();
+if ((idleControl%2)==0) {
+idleControl=idleControl/2;
+return release(4);
+}
+idleControl=xorInt(idleControl/2,53256);
+return release(5);}
+
+@SuppressWarnings("unchecked") private static int xorInt(int left,int right){int result;int place;int i=0;
+result=0;
+place=1;
+{i=1;i:for(;i<=16;i++){
+if ((left%2)!=(right%2)) result=result+place;
+left=left/2;
+right=right/2;
+place=place*2;
+}}/*i*/
+return result;}
+
+@SuppressWarnings("unchecked") private int runWorker(int work){int i=0;int value=0;
+if (work==0) return markWaiting();
+if (workerDestination==2) workerDestination=3;
+else workerDestination=2;
+packetIdentity[work]=workerDestination;
+packetDatum[work]=0;
+{i=0;i:for(;i<=3;i++){
+workerCount++;
+if (workerCount>26) workerCount=1;
+value=(65+workerCount)-1;
+if (i==0) packetData0[work]=value;
+else if (i==1) packetData1[work]=value;
+else if (i==2) packetData2[work]=value;
+else packetData3[work]=value;
+}}/*i*/
+return queuePacket(work);}
+
+@SuppressWarnings("unchecked") private int runHandler(int identity,int work){int workPacket;int count;int devicePacket;
+if (work!=0) {
+if (packetKind[work]==1) handlerWork[identity]=appendPacket(work,handlerWork[identity]);
+else handlerDevice[identity]=appendPacket(work,handlerDevice[identity]);
+}
+workPacket=handlerWork[identity];
+if (workPacket==0) return markWaiting();
+count=packetDatum[workPacket];
+if (count>=4) {
+handlerWork[identity]=packetLink[workPacket];
+return queuePacket(workPacket);
+}
+devicePacket=handlerDevice[identity];
+if (devicePacket==0) return markWaiting();
+handlerDevice[identity]=packetLink[devicePacket];
+if (count==0) packetDatum[devicePacket]=packetData0[workPacket];
+else if (count==1) packetDatum[devicePacket]=packetData1[workPacket];
+else if (count==2) packetDatum[devicePacket]=packetData2[workPacket];
+else packetDatum[devicePacket]=packetData3[workPacket];
+packetDatum[workPacket]=count+1;
+return queuePacket(devicePacket);}
+
+@SuppressWarnings("unchecked") private int runDevice(int identity,int work){int pending=0;
+if (work==0) {
+pending=devicePending[identity];
+if (pending==0) return markWaiting();
+devicePending[identity]=0;
+return queuePacket(pending);
+}
+devicePending[identity]=work;
+return holdSelf();}
+
+@SuppressWarnings("unchecked") private void schedule(){
+currentTask=taskList;
+{for(;;){if(!(currentTask>=0))break;
+if (isHoldingOrWaiting(currentTask)) currentTask=taskLink[currentTask];
+else {
+currentIdentity=currentTask;
+currentTask=runTask(currentTask);
+}
+}}return;}public RichardsScheduler(){return;}}

@@ -27,12 +27,18 @@ options levelb
 
 namespace rxfnsb expose arrayreverse
 
-/* Reverse ARRAY in place. Returns the current array high water mark. */
+/**
+ * Reverse an array in place.
+ *
+ * @param array exposed one-based string array to mutate
+ * @return unchanged array high-water mark
+ */
 arrayreverse: procedure=.int
   arg expose array=.string[]
 
+  high = array[0]
   left = 1
-  right = array[0]
+  right = high
   do while left < right
     tmp = array[left]
     array[left] = array[right]
@@ -40,4 +46,4 @@ arrayreverse: procedure=.int
     left = left + 1
     right = right - 1
   end
-return array[0]
+  return high

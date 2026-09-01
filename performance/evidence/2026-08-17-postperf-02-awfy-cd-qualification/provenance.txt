@@ -1,0 +1,24 @@
+POSTPERF-02 AWFY CD qualification provenance
+Date: 2026-08-17
+
+Repository:
+branch=develop
+base_head=31de35745a918bbd360e8acb140878843d736929
+scope=uncommitted CD benchmark, CMake, maintained runner, docs and evidence only
+upstream=smarr/are-we-fast-yet@74306fec151070fd07157cefeacf19e7e0bcdc89
+
+Host:
+os=Darwin 25.5.0 arm64
+cpu=Apple M5
+logical_cpu=10
+power=AC attached; battery 80 percent; not charging
+
+Build:
+CMAKE_BUILD_TYPE=Release
+CMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG
+CREXX_VM_PROFILING=OFF
+
+The runner CSV's embedded crexx_version reports the Release build tree's
+configured base identity (`g31de35745a91.dirty`). The full base head above and
+artifact SHA-256 values are the qualification identity. Timing is bounded
+orientation only.

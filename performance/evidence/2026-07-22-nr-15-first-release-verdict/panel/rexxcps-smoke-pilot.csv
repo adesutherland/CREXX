@@ -1,0 +1,5 @@
+candidate,vm,cps,effective_count,elapsed_real_s,pass
+a256,rxvm,5658302,55,0.99,1
+a256,rxbvm,5316321,54,1.04,1
+a1024,rxvm,5369059,55,1.05,1
+a1024,rxbvm,5303670,53,1.02,1

@@ -1,0 +1,15 @@
+.globals=0
+
+main() .locals=9
+    load r0,0
+    load r1,1
+    load r2,2
+    load r3,3
+    load r4,4
+    load r5,5
+    load r6,6
+    load r7,7
+    load r8,8
+    cnop r0,r1,r2,r3,r4,r5,r6,r7,r8
+    say "wide cnop accepted"
+    ret 0

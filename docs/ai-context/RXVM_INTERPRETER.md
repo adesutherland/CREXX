@@ -1,23 +1,109 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. As of `rxbin` format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports portable switch dispatch and, on GNU/Clang-family compilers, direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
-2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `003` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
-3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
-4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
-5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
+2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
+3. **Dependency resolution and linking**: `rxvm_link()` first resolves declared
+   `META_PROVIDER` dependencies, then traverses newly loaded modules to resolve
+   exports and external imports into a unified memory map. After that ordinary
+   link pass, unresolved callable imports with `META_AUTOLOAD` hints may load
+   their exact packaged RXBIN stems. Linking and hint resolution repeat to a
+   fixed point. The call is dirty-checked, so repeated bridge/runtime entry
+   points become fast no-ops when no module state changed.
+4. **Preparation**: `rxvm_prepare()` builds an owned per-module
+   `execution_image` for both VM modes. Operand cells are copied and direct
+   function operands are rebound to process-local `proc_runtime *` values.
+   Computed-goto `rxtvm` stores process-local handler pointers in instruction
+   cells; switch-dispatch `rxbvm` keeps copied opcodes there and may install
+   process-private opcode forms. Canonical `segment.binary` remains immutable
+   and is still the serialization, reflection, source/profile and debug
+   identity.
+5. **Module initialization**: `rxvm_initialize()` runs every declared
+   `META_INITIALIZER` once for its mutable module instance. Initializers run
+   after provider resolution/linking and preparation, but before the instance
+   can be entered by `main`, an embedded public call, or a persistent worker
+   request.
+6. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure
+   (typically `main`) and launch the main interpreter loop.
+
+Each module overlay carries an initializer state of `UNINITIALIZED`,
+`INITIALIZING`, `READY`, or `FAILED`. Multiple initializer records in one
+module execute in metadata/source declaration order. A failure poisons that
+module instance and is not retried automatically. Initializer procedures have
+ordinary namespace-qualified diagnostic identities but are not exposed as
+public call targets.
+
+Unrelated modules begin in stable loaded-module order. During initialization,
+a bytecode call into another unready module first initializes the callee's
+module. Calling back into an `INITIALIZING` module detects a cycle and fails the
+involved initialization rather than observing partial state. Once the complete
+module set is ready, ordinary calls pay only the fast published-module-count
+comparison and do not invoke the slow initialization helper.
+
+`initialized_module_count` is the published ready prefix. A successful
+initialization pass advances it to `num_modules`. If initialization of a
+late-loaded suffix fails, previously published modules remain callable while
+the failed/unpublished modules remain inaccessible. A fresh context whose
+initial module set fails has an empty published prefix and cannot enter
+`main` or a public bytecode procedure.
 
 Runtime code can explicitly late-load another `.rxbin` or `.rxplugin` through
 the debugger-style `METALOADMODULE` instruction. The public rxfnsb wrapper is
 `loadmodule(path) -> .int`; it returns the last loaded module number, or a
 non-positive value on failure. A successful `METALOADMODULE` immediately calls
-`rxvm_link()` so existing unresolved imports can bind to procedures/classes in
-the newly loaded file. There is intentionally no automatic directory sweep:
-callers are responsible for loading the provider artifact they want.
+`rxvm_link()` and prepares the execution image so existing unresolved imports
+can bind to procedures/classes in the newly loaded file. The new module remains
+pending until the next execution boundary initializes the unpublished suffix.
+Undeclared late loading remains explicit; there is no
+generic native-library directory sweep. A declared native callable is
+different: `META_PROVIDER` causes provider-stem resolution before procedure
+linking.
+
+Packaged bytecode autoload is a narrower, default-on convenience. A consumer
+compiled against `some-library.rxbin` may carry `META_AUTOLOAD` records naming
+the exact stem `some-library`. The VM first gives explicitly loaded, linked and
+embedded modules the opportunity to satisfy each callable. Only a callable
+that is still unresolved can trigger a search for `some-library.rxbin` in the
+ordinary module roots (`-l`, or the current directory when no location is
+set). Newly loaded packages are linked and their own unresolved hints are
+processed to a fixed point. There is no namespace scan, wildcard search,
+source lookup or path in the metadata.
+
+`--autoload` states the default explicitly; `--no-autoload` retains fully
+explicit loading for diagnostics, packaging checks and compatibility.
+Embedders can make the same choice with `rxvm_set_autoload()`.
+
+The extended `rxvme` and `rxbvme` products embed the shipped core bytecode
+images: the Level B library, class library and native-provider declarations,
+the Level C compatibility library, the Level G library, and RexxScript. This
+embedded bundle is independent of metadata-driven native-provider discovery.
+Application bytecode libraries can be supplied explicitly, linked into the
+image, or found by an exact packaged-stem autoload hint. They are never found
+by sweeping compiler import roots or by guessing a filename from a namespace.
+
+The static catalogue is checked first. Dynamic fallback opens only
+`<provider-id>.rxplugin` in, in order, the application-local `providers`
+directory, `--provider-path`, `CREXX_PROVIDER_PATH`, and the installed
+`bin/providers` beside `rxvm`. The embedding API can use
+`rxvm_set_provider_path()`; `rxvml_create(location, ...)` treats its explicit
+location list as trusted provider directories as well as module roots.
+
+The metadata provider ID is the canonical artifact stem. Before `_initfuncs`
+is called, the loader verifies that the RXPA binary manifest publishes that
+same stable provider ID. The native module then publishes `META_FUNC` and
+`META_PROVIDER` records for every registered function, allowing the resolver to
+verify provider, callable, language option, return type, and arguments before
+normal linking. Signature comparison canonicalizes RXPA's source-like lexical
+spelling (`[]`/`[*]`, insignificant whitespace around punctuation) to the RXAS
+form; provider ID, callable and actual type shape remain exact contracts. A
+required provider-resolution failure stops `rxvm_run()`
+before `main`. An optional record permits provider discovery to miss, but does
+not suppress the ordinary unresolved-procedure checks if the callable is
+actually required by the program.
 
 ## 2. Core Internal Structs
 
@@ -26,6 +112,8 @@ The root state of the VM environment. It houses the loaded modules, global confi
 ```c
 typedef struct rxvm_context {
     char *location;
+    char *provider_location;
+    unsigned char autoload_enabled;
     size_t num_modules;
     module **modules;
     struct avl_tree_node *exposed_proc_tree;
@@ -46,6 +134,18 @@ repeated `rxvm_link()` calls cheap while still supporting late module loading.
 Because linked images may share one constant pool across multiple modules,
 module-local runtime walkers now follow `proc_head`, `expose_head`, and
 `meta_head` chains instead of sweeping the entire pool.
+
+Under RXBIN 007 the loader validates and retains the materialized sealed-image
+semantic graph. During linking it builds one process-local graph binding with a
+dense callable-ID-to-`proc_runtime *` array and bound factory/provider rows.
+Numeric type/member/factory operands and graph indexes avoid rediscovering
+those relationships by scanning canonical metadata. Modules also own compact
+side tables for dynamic method/factory instruction sites; their entries are
+guarded by the context semantic generation. Generic, source/debug, RXVML, and
+cross-image/native compatibility paths continue to traverse the canonical
+module-local `meta_head` chain where needed. The T6 append-only overlay remains
+future work; current late linking rebuilds the complete bindings and advances
+the generation coherently.
 
 `socket_registry` is the context-owned table for core TCP sockets. Rexx and
 RXAS code see small positive integer handles, not native descriptors. The
@@ -86,7 +186,9 @@ struct stack_frame {
     size_t nominal_number_locals;    /* Procedure-declared local count */
     size_t number_args;              /* Argument count for the frame */
     unsigned char is_interrupt;      /* Signal currently being handled, or zero */
-    interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Signal / Exception handlers */
+    uint32_t caller_arg_base;         /* First caller call-window argument */
+    interrupt_entry *interrupt_table; /* Shared or frame-owned signal policy */
+    unsigned char interrupt_table_owned; /* Frame owns and must free the table */
     interrupt_saved_entry *interrupt_stack; /* Block-scoped signal handler saves */
     numeric_context num_context;     /* Numeric context for the procedure */
     struct decplugin *decimal;       /* Decimal plugin context */
@@ -100,7 +202,11 @@ struct stack_frame {
 
 Frame recycling is a performance feature, not a semantic shortcut. When a
 frame is reused, the VM relinks local register pointers back to their base
-storage, relinks globals, and resets the argument-count register. Ordinary
+storage, relinks globals, and resets the argument-count register. Incoming
+arguments do not own value storage, but their entry pointers are recorded in
+both `baselocals` and the active `locals` map. This makes `UNLINK` well-defined
+for argument registers and preserves the frame-entry mapping needed when a
+nested call uses `a1...` as its call window. Ordinary
 return places the frame on the procedure recycler; full value teardown happens
 when recycled frames are drained. Because references are rare, frames carry a
 small flag that is set on the frame that owns referenced storage. A helper may
@@ -108,23 +214,72 @@ execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
 the owner frame rather than assuming the current frame owns the target. Only
 flagged frames run the reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
-reusable buffers.
+reusable buffers. Lexical scopes that own local storage emit `endlife` for each
+storage-owning local before block metadata is closed and, when eligible, before
+the compiler returns those registers to the reuse pool. Register reuse is more
+conservative than lexical cleanup: arguments, `.ref` arguments,
+receiver/factory pseudo-locals, exposed symbols, reference-targeted storage,
+and compiler-generated inline scaffolding are not packed into the scoped reuse
+pool. Generated trace-helper locals are not a normal-program hot path; they may
+still receive ordinary block `endlife` / metadata closeout inside the generated
+TRACE helper, but they are excluded from scoped reuse allocation. This is the
+same lifetime invalidation operation as frame cleanup, but scoped to the
+storage whose block lifetime has ended.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
-cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
+cleanup, releases any frame-owned private interrupt table, and performs any VM
+plugin instance cleanup when a frame is finally destroyed. Signal-stack
+cleanup never allocates while unwinding or destroying a frame.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
 locals on reuse.
 
+Counted argument-bearing bytecode calls record the first register in the
+caller's contiguous call window. Normal return still executes the
+compiler-emitted reverse swaps and pays no restoration scan. If a branch-style
+signal handler discards the callee before those instructions run, the unwind
+path uses that one index plus `number_args` to restore the caller's active
+pointer permutation. It finds each displaced call-slot base pointer in the
+caller's active map and performs the inverse pointer swap, preserving mutations
+and pre-call links instead of resetting values. The base pointer may be
+frame-owned local storage or an incoming argument's recorded entry pointer;
+neither case copies the value.
+
+`CALL1` through `CALL4` are direct-bytecode alternatives for the common fixed
+arities. They capture their explicitly named caller value pointers before
+frame activation and bind them as the callee's ordinary `a1...aN` entries. No
+caller pointer permutation exists, so their child frame deliberately has no
+`caller_arg_base` restoration work; the callee cannot distinguish the call
+form. Argument status is still established by the caller before entry. These
+forms require `RXBIN007_FEATURE_FIXED_CALLS` and do not target native
+procedures; compiler-generated imported/native, dynamic and higher-arity calls
+retain the counted path.
+
+Native calls have no child frame; their cold branch path recovers the counted
+window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`, or
+`SETTPCALL` instruction. All five forms carry the argument-count register at
+operand position three, so the fixed runtime image supplies the window base
+without a generic operand scan. Any future call-bearing fused opcode must be
+added to this cold decoder as part of its signal/unwind contract.
+
 ### Signal / Interrupt Handling
-The VM signal model is implemented directly in the interpreter loop. Each
-`stack_frame` owns an `interrupt_table[RXSIGNAL_MAX]` and an `is_interrupt`
-marker. `frame_f()` copies the caller's table into a newly entered child frame,
-so handlers installed by a caller are visible to procedures it calls later, but
-changes made in a child frame do not mutate the caller's table. Returning from a
-procedure restores the caller's signal state by returning to the caller frame.
+The VM signal model is implemented directly in the interpreter loop. A root
+frame owns an initialized `interrupt_table[RXSIGNAL_MAX]`; a child frame starts
+by sharing its parent's table pointer. This makes the common procedure-entry
+path pointer inheritance rather than a 1,280-byte policy copy. Before the first
+frame-local mutation, the child makes a private copy and marks it owned, so
+handlers installed by a caller are visible to later callees while child changes
+still cannot mutate the caller's policy. The LIFO call-frame lifetime keeps a
+shared parent table live until its children return. Returning restores the
+caller's signal state by returning to the caller frame, and a recycled child
+releases any private table before it is reused.
+
 Each frame also owns an `interrupt_stack` used by block-scoped handlers. The
 `sigpush` and `sigpop` instructions save and restore individual handler entries
-on that stack. Frame cleanup clears any remaining pushed entries, which gives
-block-scoped handling a safety net for frame exit and frame recycling.
+on that stack. Any instruction that must change the frame's handler policy
+first uses the common copy-on-write helper; allocation failure follows the
+normal signal/OOM path. Frame cleanup clears any remaining pushed entries and
+discards their saved table values without forcing a private copy, which gives
+block-scoped handling a safety net for frame exit and frame recycling without
+allocating during cleanup.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
 `IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
@@ -136,9 +291,15 @@ error condition.
 `REFERENCE_INVALID` is the dedicated signal for a reference value whose target
 storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
-`refvalid` instruction. Raising operations include `deref`, `linkref`, and
+`refvalid` instruction. RXAS `refsame` is also non-raising: it compares the
+retained reference-identity cells without dereferencing, so copied references
+remain identical after target expiry while empty references compare false.
+Raising operations include `deref`, `linkref`, and
 `setref`; using a non-reference value with those operations is treated as an
-invalid reference.
+invalid reference. `endlife rLocal` is the RXAS storage-lifetime primitive used
+by compiler-generated scope cleanup. It invalidates references to `rLocal` and
+nested attribute storage, and releases any reference payload held by that
+register, but it does not clear ordinary register contents.
 
 `OBJECT_NOT_INITIALIZED` is the dedicated signal for a typed object value that
 has not completed factory initialization. It defaults to halt and participates
@@ -151,19 +312,25 @@ five-attribute interrupt object as `sigcall`, but the handler's return string
 is interpreted as a VM action marker:
 
 - `__rxsignal_skip`: resume after the signal point
-- `__rxsignal_retry`: resume at the recorded interrupted address
 - `__rxsignal_fail` or any missing/unknown action: fall through to the default
   panic path, including the closest preceding source location
 
 The Level B `SIGNAL` compiler exit hides those internal marker strings behind
-`.signalaction.skip()`, `.signalaction.retry()`, and `.signalaction.fail()`.
+`.signalaction.skip()` and `.signalaction.fail()`. Instruction-level retry was
+retired on 2026-08-03: it is not a standard REXX trap continuation, had no
+production users, and cannot safely repeat instructions with partial writes or
+external side effects. A legacy `__rxsignal_retry` return is unknown and
+therefore follows the fail path. Source code that needs retry uses an explicit
+loop or wrapper procedure.
 
-Pending signals are held in the global `interrupts` bitset. `DISPATCH` checks
-that bitset after each instruction when the current frame is not already inside
-an interrupt handler. The VM scans signal codes in numeric order, clears ignored
-signals during the scan, and clears the selected non-breakpoint signal before
-handling it. `BREAKPOINT` remains pending until `bpoff`, which lets the
-debugger/trace path keep stepping.
+Pending signals are held in one worker-VM-owned execution-local
+`pending_interrupts` word. The active context publishes that word's address to
+native raisers only while the execution is live. `DISPATCH` checks the direct
+local word after each instruction when the current frame is not already inside
+an interrupt handler. The VM scans signal codes in
+numeric order, clears ignored signals during the scan, and clears the selected
+non-breakpoint signal before handling it. `BREAKPOINT` remains pending until
+`bpoff`, which lets the debugger/trace path keep stepping.
 
 For `CALL` and `CALL_BRANCH` handlers the VM passes a raw object-like argument
 with five attributes:
@@ -209,6 +376,22 @@ payload. TRACE handlers map them to presentation prefixes later and may read
 frame-local registers only when `value_source` names a register and `value_ref`
 is non-negative.
 
+Several ordered trace events may share one executable address after compiler
+or assembler optimization. When that address is reached, the trace controller
+collects every visible result event at that exact boundary into an ordered
+pending batch. The generated TRACE exit drains the complete batch before
+execution continues, preserving event count, metadata order and the component
+value named by each record. Delivery does not scan an address range and does
+not infer that skipped, branched-over or signal-bypassed instructions ran.
+Consequently an executable `cnop` or conversion is not required merely to keep
+two metadata events at distinct addresses.
+
+This guarantee applies to the events retained in the optimised image; it does
+not require the optimiser to preserve an event for an operation or value that
+it removes or moves. Optimised TRACE may therefore differ from the no-opt
+event stream, while every retained event must remain safe and ordered. Use
+compiler and assembler no-opt mode for source-correspondent tracing.
+
 Unstripped images may expose trace-event metadata. `metaloaddata` treats
 optional trace-event strings such as `symbol` and `resolved_name` defensively:
 absent or invalid references are reported as empty strings rather than causing
@@ -217,38 +400,485 @@ carry `META_SOURCE_STEP` or `META_TRACE_EVENT`; they are not source-level TRACE
 or RXDB debug artifacts.
 
 ### `value` (Dynamic Typing Representation)
-Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 
+Classic REXX is dynamically typed, but the VM keeps frequently used native
+representations direct. The selected Release 1 register layout is
+`RXVM_VALUE_LAYOUT_NAME == "L32SDH"` with
+`RXVM_VALUE_ABI_VERSION == 2`. It is 176 bytes in the normal 64-bit UTF-8
+product and 168 bytes in a 64-bit `NUTF8` build. Compile-time assertions in
+`interpreter/rxvalue.h` enforce those sizes.
 
-To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENGTH` (32 bytes) are stored directly inside the struct via `small_string_buffer` rather than forcing a heap allocation.
+The selected shape has no inline string. Its direct fields are:
 
-```c
-struct value {
-    value_type status;               /* Partitioned status/cache flags */
-    rxinteger int_value;             /* 64-bit/32-bit native integer */
-    double float_value;              /* Native floating point */
-    
-    void *decimal_value;             /* Pointer for arbitrary precision math */
-    size_t decimal_value_length;
-    
-    char *string_value;              /* String payload pointer */
-    size_t string_length;
-    
-    char *binary_value;
-    size_t binary_length;
+- the partitioned 32-bit status word, signed 64-bit integer and binary64 float;
+- a direct decimal payload pointer;
+- a direct string pointer and raw `size_t` allocation capacity, followed by
+  32-bit logical byte length, character count and private UTF-8 cache positions;
+- a direct binary pointer with raw `size_t` actual length and capacity;
+- direct native-payload operations and flags;
+- direct reference identity and reference payload cells;
+- the direct immutable object-type descriptor; and
+- direct live/unlinked attribute maps, backing-block list, native-width
+  capacity/count metadata and active attribute count.
 
-    const rxvm_native_payload_ops *native_payload_ops;
-    unsigned int native_payload_flags;
+Only string logical metrics are narrowed to 32 bits. Untrusted or growing
+string ingress is checked once before mutation; invariant-preserving hot stores
+are direct. Allocation capacities, allocation arithmetic, binary actual length,
+decimal sizes and attribute counts remain `size_t`. They are not encoded,
+shifted or decoded on access.
 
-    const char *object_type_name;    /* Runtime concrete class name */
-    size_t object_type_name_length;
-    
-    value **attributes;              /* For associative arrays/objects */
-    size_t num_attributes;
+String, decimal, binary and attribute storage are side allocations owned by the
+same worker allocator as the containing register. String storage begins in the
+32-byte capacity class and grows through power-of-two classes. Decimal storage
+keeps the engine's payload address direct in `value`; a fixed 16-byte
+`rxvm_decimal_metadata` header containing raw `size_t` length and capacity is
+immediately before that payload. Header and payload are one allocation, so
+decimal growth does not require a separate descriptor allocation or a second
+hot pointer indirection. Binary and attribute storage retain their direct
+metadata because moving those families behind descriptors did not earn their
+lifecycle and code-size cost.
 
-    /* Inline memory buffer to save mallocs on small strings */
-    char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH]; 
-};
-```
+Logical reset is deliberately sticky. `value_zero()` clears observable state
+but retains ordinary string, decimal, binary and attribute capacity for the
+same register's later reuse. Physical destruction (`clear_value()` /
+`destroy_value_storage()`) runs native finalizers, destroys nested values and
+returns every owned side allocation. There is no automatic pressure or
+per-reset reclamation check in this baseline. `rxvm_memory_trim()` is an
+explicit quiescent operation that releases only the central depot's empty
+reserve; a later reclamation design requires its own evidence and approval.
+
+The register structure is an internal, rebuild-together VM ABI, not an RXBIN
+format or transport envelope. The compiler, RXVM/RXVML, RXPA, bundled decimal
+plugins and any native consumer including `rxvalue.h` must be rebuilt together
+when `RXVM_VALUE_ABI_VERSION` changes. A `value` pointer must never be serialized
+or sent to another process or host.
+
+### Worker Slab and Sidecar Allocation
+
+One `rxvm_memory_context` owns a synchronized central depot; each
+`rxvm_memory_worker` owns its local slabs, extents and statistics. The selected
+S0 geometry is fixed at 64 KiB aligned slabs with a 64-byte header:
+
+- byte classes are powers of two from 16 bytes through 16 KiB;
+- typed value-array classes cover 1, 2, 4, 8, 16, 32 and 64 values without
+  rounding each value to a generic byte class;
+- reference cells have their own typed class; and
+- larger byte requests and value arrays use exactly tracked, 16-byte-aligned
+  oversized extents.
+
+Within a slab, allocation first pops a worker-local returned-slot list. If that
+list is empty it advances the slab's bump area: the contiguous sequence of
+slots that has never yet been handed out. This is just pointer arithmetic plus
+one counter, not a search or system allocation. The central lock is used only
+when a worker acquires or returns a whole slab. One empty slab per worker/class
+is kept local; additional empty slabs return to the depot, which retains at
+most two per class and 32 overall before returning excess to the system.
+
+`rxvm_memory_enter()` binds the active worker in thread-local storage so value
+helpers can use the correct arena without threading an allocator parameter
+through every opcode. Ownership is recovered from the aligned slab or extent
+header. A release under a different active worker is rejected and counted as a
+wrong-owner free; allocator families are never guessed. Each registered arena
+also records the OS thread that created it. Entering or destroying that arena
+from a different thread is rejected before its thread-local binding or local
+slab lists can be changed.
+
+A worker arena is single-thread-owned execution state, not a lockable heap
+handle. It must never be entered concurrently by two OS threads. Every thread
+that allocates VM-managed storage needs its own registered worker arena. An I/O
+helper may instead use a deliberately independent non-VM allocation domain and
+transfer its result after synchronization. The central depot is the
+synchronization boundary for whole slabs; adding a lock around ordinary
+allocation would hide an ownership error and defeat the local fast path.
+Managed-only metadata services such as `rxvm_memory_capacity()` must likewise
+receive a pointer from this allocator family. Injected or foreign allocators
+retain an explicit requested-capacity contract instead of being probed for
+slab metadata.
+
+Structured child-process redirection uses that independent-domain option. A
+redirect reader or writer receives a private libc-owned single-shot completion, not an RXVM
+worker, register or `value *`. String and line-array input is flattened into an
+immutable byte snapshot before its writer starts. stdout and stderr readers
+grow separate byte buffers, publish exactly one terminal state, and may finish
+in either order without sharing mutable state. Joining the helper is the
+publication/acquire boundary. Only then does the receiver thread append bytes
+or construct lines in its own destination register under its currently entered
+worker. Broken pipe, child/launch/thread failure, partial output and abandoned
+request paths use the same join-before-destruction contract. POSIX uses
+close-on-exec completion descriptors and Windows uses private non-inheritable
+handle duplicates; neither platform hands a parent worker to an I/O thread.
+
+`rxvm_runtime` owns the memory context and central whole-slab depot. Each
+`rxvm_context` embeds one `rxvm_worker`, which owns its allocator arena, thread
+identity and lifecycle. The compatibility CLI and ordinary RXVML paths create
+one runtime/worker pair. Channel providers create additional isolated contexts
+over a shared sealed program generation; they do not share registers, globals
+or other writable execution state.
+
+The worker lifecycle is idle, running, draining and stopped. Only the owning
+thread may start/end execution or begin teardown. Nested RXVML calls on that
+same thread are depth-counted and retain the running state until the outermost
+call returns; a foreign thread is rejected without changing the lifecycle.
+Teardown is permitted only from idle, moves through draining, destroys the
+worker arena, unregisters it from the runtime and then destroys the now-empty
+runtime domain. Debug teardown continues to abort on any live allocation.
+
+The worker-owned active-state record in `rxvm_context` preserves the offsets of
+earlier context members. This is not a guarantee that the C compiler will
+retain an identical flattened-core stack/register layout; the direct execution
+slot is deliberately local to `run()`. A checked thread-local
+locator identifies the owning context during execution and native load
+callbacks, but the mutable RXVML/RXPA binding, RXPA copy-out pool, SAY route and
+CREXX command state live in the context. Its active interrupt field points to
+the sole execution-local pending word while the VM is running and is null at
+teardown. Nested same-worker execution transfers pending bits to its direct
+slot and restores them to the suspended slot on return. The standalone product
+designates its main VM context as the sole OS-addressable interrupt target.
+POSIX signal and Windows console callbacks map the event and set a bit in that
+context's own pending word; they do not create a second queue or make every
+worker poll process-global state. Other contexts retain only their local word.
+Propagation to multiple workers uses explicit channel communication outside
+the raw OS callback.
+
+Every concurrently executing worker has its own stack/register set, frame
+recycler, module globals, native/plugin instances, reference/socket registries
+and procedure-affine state.
+`move_value()` is currently an owner-local operation:
+moving its pointers into another worker would leave them owned by the source
+arena and later fail the ownership check. Cross-worker communication must
+therefore copy into receiver-owned storage, use an explicitly transferable
+immutable buffer, or transfer ownership of a whole suitably isolated block at
+a defined safe point. Process and cross-host channels must use a versioned
+serialized envelope. None may expose a raw `value` or silently mutate a
+register owned by another worker. The Rexx-visible envelope
+is register-centric: one logical typed scalar or binary register image may
+contain ordered child-register images. That `ChannelValue` is a transport
+description, never the internal `value`; the receiver materializes it into its
+own register tree. Large binary content may later select immutable chunks or a
+bounded stream capability beneath the same logical surface.
+
+The channel contract keeps mechanism below messaging policy. The VM provides
+bounded submission/completion queues, wait/wakeup, cancellation, terminal
+status and receiver-owned `ChannelValue` materialization. Event buses,
+publish/subscribe topics, routing, fan-out, replay, retained delivery and
+acknowledgement belong to Rexx worker classes or RXAS libraries built on that
+substrate; they are not VM instructions or VM-owned global state.
+
+Any future cross-host channel must use an open, versioned wire protocol that a
+non-Rexx actor can implement without CREXX headers or RXVM knowledge. Its eventual
+specification must cover framing and types, capability negotiation, endpoint
+and correlation identity, ordering/delivery guarantees, deadlines and
+cancellation, terminal errors, streaming/chunking, flow control, extensibility
+and security hooks. No raw `value`, `proc_runtime *`, native pointer or
+process-local opcode/handler identity may cross that boundary. The encoding and
+network transport remain future design and publication work; provider type `3`
+does not currently advertise such a transport.
+
+The RXPA runtime makes the existing surface safe for multiple live VM contexts
+without changing its initializer or procedure signature. Static constructor
+registrations are retained as an owned, synchronized process catalogue and are
+replayed into a distinct native module for every VM; the first VM no longer
+consumes the list. A dynamic load returns an explicit DSO reference. Each VM
+retains its references until its procedure frame caches, module globals,
+reference values, native payloads, modules and provider instances have been
+destroyed, so no reachable function or payload-operation pointer outlives its
+code.
+
+Every native `proc_runtime` carries an internal capability word in the 64-bit
+alignment slot after `locals` and a load-selected invoker. A procedure from a
+plugin with a valid version-1 `PROCESS_REENTRANT` manifest binds permanently to
+the direct adapter. An unmarked procedure also binds direct while exactly one
+legacy-capable VM is live. Registering a second legacy-capable VM quiesces
+direct legacy execution, rebinds all live legacy invoker slots to the recursive
+locked adapter and makes that mode sticky for the process lifetime. A
+reentrant-only VM is not registered with this legacy coordinator and cannot
+cause the transition.
+
+`run()` announces and leaves the VM execution boundary to the cold coordinator;
+load and teardown register or remove owned invoker slots. Ordinary native calls
+load the already-selected invoker and contain no capability branch, catalogue
+lock or coordinator lock. Plugin initialization remains serialized because
+legacy dynamic plugins copy the helper table into the DSO-static
+`_rxpa_context`; repeated `dlopen`/`LoadLibrary` calls do not imply private DSO
+statics.
+
+Native-payload `copy` and `finalize` operations remain serialized even when the
+originating procedure plugin is process-reentrant. The runtime also provides a
+separate optional versioned query for per-procedure policy and per-VM sessions while
+leaving the installed initializer and call ABI unchanged. Procedure invokers
+remain load-bound; session-affine calls enter the VM-owned session selected at
+load, and old hosts continue through the plugin's default session. The public
+author contract and opt-in macros are documented in
+`docs/ai-context/CREXX_LIBS.md`.
+
+### Sealed Program Generations
+
+Correctness tests retain two fully independent loads of the same RXBIN as the
+control for shared program storage. The focused internal
+control runs against the compiler-selected `rxvml`, explicit switch-dispatch
+`rxbvml` and, where supported, a test-only direct-threaded RXVML executable. It
+proves byte-equivalent but pointer-distinct canonical instruction cells and
+constant pools, independent
+allocator workers, modules, globals, procedure runtimes, execution images,
+bindings and caches. Mutating a module global in one VM is invisible in the
+other. Late-loading another RXBIN advances only the receiving context's module
+table and semantic generation; the second context changes only when it loads
+the same image itself. Both contexts then execute equivalent procedures and
+tear down without live allocation diagnostics.
+
+The audit classifies the current storage as follows:
+
+- expanded canonical RXBIN instruction cells, constant/metadata pools,
+  semantic graphs, module directory data, names and descriptions are immutable
+  candidates once a complete generation has been validated and sealed;
+- `module` and `bin_space` cannot be shared unchanged because they mix those
+  pointers with a worker allocator, a local module back-pointer, lifecycle and
+  link state;
+- globals and their ownership maps, `proc_runtime` records and frame recyclers,
+  execution images, exposed-symbol registries, graph callable/factory bindings,
+  interface registries, dynamic-site caches, semantic-generation counters and
+  dirty flags remain worker-owned overlays;
+- prepared execution images remain local because they contain direct
+  `proc_runtime *` operands and either process-local handler addresses or
+  VM-private opcodes;
+- native modules remain outside the first sharing slice. The process catalogue
+  and DSO/factory metadata can be retained by a runtime, but per-VM procedure
+  policy, sessions, payload lifetime and plugin/module overlays stay local.
+
+The internal bytecode-only API implements that model. An `rxvm_runtime` may own
+one synchronized program catalogue containing
+reference-counted, append-only `rxvm_program_generation` records. Sealing
+adopts the complete validated bytecode prefix from one worker VM. Attaching
+another worker VM materializes new local `module` overlays over the same
+generation-owned `module_file` images. The generation therefore owns canonical
+instructions, constant/metadata pools, semantic graphs, names and descriptions;
+the worker still owns globals, `proc_runtime` and frame recyclers, execution
+images, graph/interface bindings and dynamic caches.
+
+Late loading appends a derived sealed generation. Its prefix retains the same
+immutable image objects, and advancing a worker appends only new overlays, so
+existing module, procedure and global addresses remain stable for active
+frames. A worker pins its current generation until it advances or tears down.
+Superseded generations are reclaimed when they are no longer current and no
+worker pins them; shared image storage remains until every generation that
+contains it is gone. Catalogue and reference-count synchronization is confined
+to cold lifecycle operations. No instruction handler or dispatch iteration
+acquires a generation lock.
+
+Native/plugin modules are rejected by the seal operation and continue to use
+the process catalogue, DSO, procedure-policy and per-VM session lifetimes.
+Ordinary public `rxvm_create()` contexts still create their own one-worker
+runtime. The shared-runtime context factory and generation operations remain
+internal and are used by core providers rather than exposed as a public worker
+API. They add no RXPA threading ABI or canonical-image change. Sharing the
+current `module` or prepared image behind locks, mutating a published generation in place, and
+treating a raw file mapping as the complete solution remain rejected.
+
+### Native Doorbell and Sparse Interrupt Fallback
+
+The macOS implementation provides prompt foreign-thread cancellation without
+adding a poll, worker-count test, targetability branch, atomic read or loop
+selector to the ordinary dispatch edge. A persistent executor gives each
+worker its own context and sealed-generation overlay. A producer publishes
+the request state under the request mutex and uses `pthread_kill()` with private
+`SIGURG` to ring the selected worker. The signal handler performs only a
+bounded lookup of a pre-registered worker stack range and ORs `RXSIGNAL_CANCEL`
+into that worker's existing execution-local `sig_atomic_t` interrupt word. The
+next ordinary dispatch check enters the existing cold interrupt route.
+
+The executor blocks the private signal while a worker is idle, while
+`rxvm_signal_enter_execution()` publishes its current stack-local interrupt
+word, while `rxvm_signal_leave_execution()` restores a nested predecessor and
+during teardown. A late pending doorbell is drained while the request mutex is
+still the arm/disarm authority, preventing it from cancelling the next request
+on the persistent VM. Apple Clang TLS is deliberately absent from the handler:
+the rejected TLS form emitted a Mach-O TLV resolver call. The retained fixed
+64-slot stack-range scan has no handler call, allocation, log, lock or runtime
+graph traversal.
+
+This physical-delivery mechanism is internal, not a public worker API. A
+provider first publishes a correlated request and generation, then uses one
+internal doorbell bit to enter the cold route, validate the active request,
+drain published work and preserve `KILL`/shutdown priority.
+
+The portable owner model distinguishes targetability from native-delivery
+capability. Non-targetable/local contexts always use the direct owner.
+Targetable workers use that same owner when POSIX thread signals or Windows
+special APCs provide prompt native delivery. Only a targetable worker without
+native delivery selects a second owner, immutably and before its execution
+image is prepared; an executing worker never changes owners.
+
+That compatibility owner is sparse, not an every-instruction polling switch.
+It acquire-loads the stable external event word at request entry, taken
+backedges (including resolved indirect/table backedges), bytecode call and
+return boundaries, and after a native/plugin call returns to bytecode. These
+points cover loops and recursion while leaving forward finite instruction runs
+unpolled. An uncooperative native/plugin call remains uninterruptible while it
+is executing. The original sparse experiment was functionally effective, but
+its source and exact opcode ledger were not retained. The current semantic
+classification and provenance are recorded in
+`performance/PERF3-13-E5-NATIVE-DOORBELL-DESIGN.md` and must be kept aligned
+with `rxops.h` and private execution-image rewrites.
+
+Windows 11 qualification covers this owner under MinGW GCC, MSVC and Clang
+with the MSVC ABI. The exact sparse fixture covers conditional, counted and
+indirect backedges plus every bytecode return form; the persistent-worker
+fixture covers unconditional-loop and recursive-call cancellation, worker
+reuse, stress and teardown. The forced-fallback latency floor is 2.9-3.0 us
+median over 1,000 samples per concrete engine on the qualification host.
+The four core products build in each compiler configuration. The MSVC and
+Clang/MSVC-ABI builds disable the optional parser-mode dependency because its
+sibling project remains POSIX-only; that does not change VM qualification.
+
+`rxinimod_common()` must initialize `active.compatibility_interrupts` to NULL.
+Callers are not required to zero stack or malloc-backed `rxvm_context` storage,
+and an indeterminate value selects the sparse owner and is dereferenced on
+request entry. `test_rxvmactive` deliberately poisons the context before
+initialization to enforce this invariant.
+
+### Allocator Ownership and Scale Qualification
+
+Every allocation owned by an `rxvm_memory_worker` is confined to the thread
+that created that worker. Standard-slab, oversized-extent, value-array and
+reference-cell allocation, resize and release all consult the worker's recorded
+owner-thread token before mutating owner-local lists or statistics. Passing an
+explicit worker from a foreign thread is rejected even when that thread has no
+entered allocator TLS. Overflow handling follows the same rule and cannot use
+a foreign request to increment owner-local failure telemetry.
+
+Wrong-owner allocation, resize and free counts are cold diagnostic state in
+the shared memory context and are updated under its mutex. This synchronization
+is confined to rejected operations. Successful owner-local allocation and free
+remain lock-free, retain one empty slab per active class locally and return
+additional empty slabs through the existing synchronized depot policy.
+
+The strict owner-local policy was selected after measuring and rejecting
+automatic owner-idle slab reclaim and a test-only owner-drained remote-free queue. Live VM
+values and worker storage still never cross workers; normal transfer must
+materialize receiver-owned data or use a separately owned immutable/moved
+buffer. The executor qualification covers compute and allocation
+churn at one, two, four and eight workers on each available concrete VM and
+asserts that the requested maximum concurrency is reached. This allocator
+policy adds no public worker/channel API, plugin ABI or scheduling contract.
+
+### Channel, Level B and Level G Task Substrate
+
+The public RXAS channel boundary is implemented without exposing a
+public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
+`chanstart`, `chanwait`, `chancancel` and `chanclose` in the shared VM core, so
+`rxbvm` and `rxtvm` execute the same logical behavior. They require RXBIN 007
+feature bit `1 << 3`, return operation statuses rather than VM signals, remain
+opaque optimizer barriers and are outlined/cold under profile-20.
+
+Each `rxvm_context` owns a generation-checked table of channel and ticket
+capabilities. Handles encode their execution owner, kind, slot and generation;
+wrong-owner, wrong-kind and stale uses are rejected. They are local authority,
+not transferable `ChannelValue`. Context teardown cancel-closes every live
+channel, joins its workers and releases all tickets/requests before the runtime
+provider state and sealed generation are destroyed.
+
+The runtime-owned provider registry validates complete private descriptors,
+rejects duplicate names/codes atomically, pins provider/module lifetime and is
+seeded with the core type `1` local-thread descriptor. An internal fake
+extension fixture proves register/open/operate/close/unload sequencing without
+publishing a plugin ABI. `chanopen` validates its canonical RXCV pool
+configuration, required capabilities and the controller's sealed bytecode-only
+program generation, then creates an attached executor over that same
+generation. A program containing native/plugin modules may still execute
+normally, but local `chanopen` reports provider unavailability when the image
+cannot be sealed for attached workers. This avoids making ordinary native
+program startup depend on channel eligibility.
+
+The core type `1` provider advertises bounded admission, cancellation,
+provider-owned deadlines and completion-order observation. Task envelopes name
+a semantic-graph callable ID and carry typed copied register images; they never
+carry a procedure-name string, live `value`, reference, frame, native payload
+or worker pointer. Completion is encoded into receiver-owned canonical RXCV binary and is
+marked observed only after controller-worker-owned storage has been allocated
+and populated. Encoding or allocation failure therefore leaves the terminal
+completion available for a later wait. Queue-full/backpressure,
+finite/nonblocking waits, queued/running cancellation, fail-fast/collect-all
+scopes, terminal observation, drain/cancel close and deterministic teardown are
+implemented. RXCV validation and encoding cover null/boolean, integer, float,
+decimal, string, binary, ordered arrays and schema-tagged records with
+canonical limits/order/flags/NaN.
+
+`lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
+task, target, context, completion, channel, value/codec, endpoint,
+service-reference and transfer-buffer surface. Inspection proves its runtime
+bridge is only the five channel instructions.
+
+Core provider type `4` implements bounded C-owned byte endpoints and
+type `5` as structured child-process execution. Endpoint storage owns copied
+bytes, backpressure, cancellation, EOF and half-close state; background I/O
+never retains a live Rexx register/value. Execution-local CSPRNG references
+carry validated direction rights and resolve through the type `4` registry,
+not through native payloads or transferable OS handles. The child provider
+snapshots command/arguments, logical working directory, merged environment,
+CREXX bindings and three optional endpoint references before launch. Ordinary
+synchronous POSIX children inherit the caller's process group. A
+cancellable/deadline-controlled POSIX child receives a provider-owned process
+group only when its terminal-facing streams are redirected or headless. A
+controlled child that inherits a real terminal stream remains in the caller's
+terminal job so foreground ownership is preserved; cancellation then targets
+the direct child rather than an unowned group. The equivalent controlled
+Windows children receive a provider-owned job. Group/job ownership is recorded
+explicitly and is used for bounded tree termination. A controlled POSIX child
+that stops unexpectedly is terminated with a diagnostic instead of leaving a
+wait loop stalled. Controller-mode CREXX execution remains synchronous where
+it must preserve command-environment state.
+
+The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
+redirects onto these two providers and apply captured output only on the
+controlling execution. The retired source mnemonics `spawn`, `redir2str`,
+`redir2arr`, `str2redir`, `arr2redir` and `nullredir` are rejected; numeric
+slots `466..471` are reserved handlers that halt stale RXBIN with
+`UNKNOWN_INSTRUCTION`.
+
+Provider type `2`, `crexx.core.isolated-process`, uses capability mask
+`0x010f`. Opening a process pool writes the controller's sealed bytecode-only
+generation to a provider-owned temporary RXBIN archive. Each distinct semantic
+graph remains its own concatenated 007 container, with modules from that graph
+written together, so numeric callable/member identities are preserved. Native
+modules make the generation ineligible rather than being exposed through a
+new process ABI.
+
+The provider owns a bounded set of warm child VMs and a bounded admitted
+request count. Its private version-1 protocol uses
+`READY`/`INVOKE`/`STARTED`/`RESULT`/`CANCEL`/`SHUTDOWN` frames carrying the same
+canonical RXCV task/completion documents as the local provider. A worker
+process may be reused, but every request creates a fresh executor and context;
+module globals and other live VM state therefore do not spill between tasks.
+Cancellation/deadline first interrupts cooperatively and then may terminate
+only the isolated process after a 250 ms grace. Pre-`STARTED` loss is
+`TRANSPORT_LOST`, post-`STARTED` loss is `UNKNOWN_OUTCOME`, terminal publication
+is exactly once and a dead worker is replaced. Private POSIX protocol writes
+contain `SIGPIPE` locally instead of changing the host's process-wide signal
+disposition. Pool teardown joins all provider threads/processes and removes
+the temporary snapshot.
+
+Local and process dispatch validate an 80-byte sealed binding.
+Kind `1` identifies a task procedure, kind `2` reconstructs a transferable
+receiver through its sealed `from_channel` factory, and kind `3` constructs a
+receiver-side `.taskwork` factory target and invokes its sealed `run` method.
+The binding cache keeps that first-use check and caches only successful
+resolution within the validating executor worker. The worker graph binding lazily retains the
+immutable graph digest, and a fixed four-set, two-way cache uses the complete
+binding plus requested result mode to retain worker-local procedure/adapter
+pointers. A miss follows the unchanged validator; failures are never cached,
+collisions only evict, and worker/context teardown invalidates every entry.
+Task arguments/results and factory arguments remain receiver-materialized
+RXCV; no live VM value crosses. For a typed object result, the executor invokes
+the sealed result class's `to_channel()` method, canonicalizes the returned
+`.channelvalue`, and publishes that document. The controller-side compiler
+lowering reconstructs a new object with the same class's `from_channel`
+factory. Level G task/parallel syntax lowers through the
+Level B classes and is accepted only under `OPTIONS LEVELG`. Concurrent HTTP is
+implemented as a Level G Rexx library above the same channel and endpoint
+substrate. Unsupported Level B operations report status `19` rather than
+simulating success. A public provider-plugin ABI and provider type `3` remain
+reserved. The exact current/future boundary is recorded in the
+[concurrency implementation status matrix](../../concurrency/IMPLEMENTATION-STATUS.md).
+
 Variables (`locals` arrays) consist of arrays of `value*` pointers managed
 strictly by the VM frames. There is no automated background Garbage Collector
 (GC). Frame-bound variables are either recycled for later calls or
@@ -276,19 +906,41 @@ clearing an externally linked register when a logical attribute slot is deleted.
 compiler-emitted RXAS and VM code agree:
 
 - `0x000000FF`: VM-private/read-only outside the VM
-- `0x0000FF00`: compiler call ABI flags
+- `0x00000300`: compiler call ABI flags
+- `0x0000FC00`: protected language metadata (`0x00003C00` is the four
+  normalization certificates and `0x0000C000` is reserved)
 - `0x00FF0000`: stable library/runtime ABI flags
 - `0x7F000000`: user/experimental flags
 - `0x80000000`: reserved
 
-The first VM-private allocations are reserved for UTF-8 validity,
-codepoint-count validity, and known Unicode normalization forms. `SETTP`,
-`SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
-VM-private band except through VM-owned content setters. `GETTP` and
-`GETANDTP` return readable flags, while unmasked `BRTPT` only tests public
-flag bands so private cache bits do not change legacy branch behavior.
+The VM-private allocations cover UTF-8 validity, codepoint-count validity and
+object lifecycle. `SETTP`, `SETORTP`, and `LOADSETTP` cannot write that band.
+Trusted RXAS can explicitly assert language-owned normalization certificates;
+compiler ABI writes preserve them, and `SETTP reg,0` clears ordinary public
+flags while retaining protected language facts. `GETTP` and `GETANDTP` return
+readable flags. Unmasked `BRTPT` excludes VM-private and language metadata so
+neither cache changes legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
+
+Level B register flag views expose masked status-word partitions for
+system-programmer classes. VM-private, compiler call-ABI, protected-language,
+and all-readable views are read-only at source level. Library and user views are writable; a public
+write view covers library and user flags only, not compiler flags. Source-level
+flag-view writes replace only the selected masked band and must preserve all
+other status bits. The compiler emits `settpmask target,value,mask` for these
+writes; the VM applies `(old & ~mask) | (value & mask)` after restricting the
+mask to source-writable library/user bands. `.flags.language` observes the
+protected language band without granting ordinary source writes.
+
+Normalization certificates are independent positive bits for NFC, NFD, NFKC
+and NFKD. Shared logical string-length publication clears them, as do the
+same-length in-place writers. Exact string/value/stem copies and owner-local
+moves preserve them. Empty and known-ASCII strings set all four. NFKD implies
+NFD and NFKC implies NFC when a normalization algorithm publishes a result or
+a successful predicate certifies its exposed source. RXPA validation clears
+opaque non-ASCII native state before revalidating, and non-ASCII channel
+materialization starts unknown.
 
 In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 `RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed
@@ -304,9 +956,22 @@ cache for internal materialization, but arbitrary bytes belong on the `.binary`
 path. `CREXX_RXPA_DISABLE_UTF8_CHECKS=1` disables the RXPA post-call check for
 developer migration/debugging; normal builds should leave it enabled.
 
-The two `object_type_name` fields are the current Level B hook for interface
-dispatch. Class factories stamp object values with `setobjtype`, and later VM
-lookups use that concrete class identity when resolving interface member calls.
+UTF instruction loops must use the matching metric: byte-span scans use
+`string_length`, while character-index iteration and cache seeks use
+`string_chars`. In particular, `POSCHAR` iterates over `string_chars` in a UTF
+build; using byte length as its character bound can seek beyond the last
+codepoint and turn a stale decoded value into a false match. `NUTF8` keeps the
+single byte-count model.
+
+The `object_type` descriptor pointer is the Level B hook for object identity,
+type tests and interface dispatch. Graph-backed descriptors are materialized by
+`rxbin` when a checked graph is built or loaded; they contain canonical
+name/length plus graph/ID identity and reach precomputed assignability and
+dispatch views. VM-only synthetic types use immutable static descriptors.
+Class factories stamp object values with `setobjtype`, and later VM lookups use
+that concrete descriptor when resolving interface member calls. Copy, move and
+zero operations therefore transfer or clear one pointer rather than duplicating
+name, length, graph and ID fields on every value.
 Bare object class defaults are represented as ordinary object type metadata plus
 the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
 that state, while `setobjtype` clears it when a factory has produced an
@@ -314,8 +979,32 @@ initialized object. The VM-private flag partition keeps this lifecycle marker
 out of public register flag writes such as `settp`.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
-keep both in sync and reset `string_pos` / `string_char_pos` to the start of
-the new value.
+keep both in sync and reset the VM-private UTF lookup cache to the start of the
+new value. The cache is acceleration state only: RXAS cannot observe it, value
+copies do not preserve it, and optimizer metadata must not model it as a
+logical read or write.
+
+In-place string-byte writers use the private completion helpers rather than
+assigning `string_length` alone. `finish_string_write()` resets the lookup cache,
+validates/recounts an arbitrary UTF-8 byte span and replaces only the
+VM-private UTF validity bits. `finish_ascii_string_write()` records the exact
+byte/codepoint count for known ASCII output. Both preserve compiler/public
+type flags, other scalar/decimal/binary/object representations, buffer
+capacity and reference identity. This contract applies even when conversion
+materializes a string through a linked value: the referenced storage remains
+the owner, but stale codepoint validity from the previous byte span must never
+survive. The PERF2-07 V3 regression covers `DCOPY; DTOS; STRLEN`, Unicode and
+typed-null destinations, a live reference alias and sibling numeric writers
+on both VMs and both optimization modes.
+
+`DCOPY` treats decimal absence as a total copy of decimal absence: it clears
+the destination's logical decimal length, preserves reusable backing storage
+and unrelated value components, and does not signal. `DTOS` is likewise total:
+decimal absence formats as `nan`, plugin diagnostics are cleared at the
+conversion boundary, and the completed ASCII write refreshes string length/count
+and validity metadata. Checked `INC`/`DEC` forms and both `SETNUMFUZ` forms
+validate into temporary state and signal before mutating the observed integer
+or numeric context.
 
 The `xtos` family of scalar-to-string conversions is allowed to mutate the
 destination value to materialize its string representation. This is acceptable
@@ -325,10 +1014,31 @@ maintain a validity flag for a cached string representation, so repeated
 conversions still perform the conversion work and the compiler does not rely on
 string-form reuse.
 
+### Loose String Comparison Numeric Prefilter
+
+Loose string comparison first attempts binary64 conversion of both operands;
+when either conversion fails, it performs the existing blank-padded byte
+comparison. `rxvm_loose_string2float()` avoids calling the copied `strtod()`
+path only for an empty span or a leading byte that cannot begin a numeric
+subject. Digits, signs, whitespace, common radix bytes, `inf`/`nan` initials,
+high bytes and the active locale radix initial all fall through to the exact
+existing `string2float()` converter. The helper therefore changes conversion
+ownership and cost, not comparison grammar or results.
+
+Keep the helper private and out of line so `rxvm_loose_compare_text()` remains
+inlineable. The no-inline spelling must cover GCC/Clang and MSVC. Do not extend
+this optimization into a public opcode, serialized RXBIN form, JSON-specific
+path or value cache without a separate design and invalidation/lifecycle proof.
+The selected implementation and governed contract/performance evidence are in
+`performance/PERF3-03-WORKLIST.md`.
+
 ### Decimal Plugin Runtime
 
-`.decimal` values are stored in the `value` decimal slot as plugin-owned byte
-content. The VM loads the default decimal plugin before executing the first
+`.decimal` values are stored in the co-allocated worker-owned header/payload
+sidecar described above. The payload bytes contain the selected plugin's
+decimal representation; the plugin must obtain or grow that storage through
+the host `reserve_decimal` service and must not call `free(decimal_value)`.
+The VM loads the default decimal plugin before executing the first
 frame, attaches it to the frame numeric context, and syncs that plugin whenever
 a child frame inherits a copied numeric context. A frame that loads its own
 decimal plugin marks `decimal_loaded_here`, so cleanup can free it when that
@@ -341,21 +1051,32 @@ double values, coefficient/exponent extraction, arithmetic operations
 (`add`, `sub`, `mul`, `div`, `pow`, `neg`), comparisons, zero testing,
 truncate, and round. Decimal instructions in `rxvm` should go through that API
 rather than depending on one decimal backend's internal representation.
+Both decimal backends map a failed text parse to `CONVERSION_ERROR`; the decNumber
+backend maps conversion-syntax and invalid-operation status bits explicitly,
+while the long-double backend maps its invalid parsed value. Decimal conversion
+instructions then raise that through the ordinary catchable VM signal path.
+The decimal-plugin interface and `value` layout are one tightly coupled
+internal contract: bundled/static/dynamic plugins and their host must be
+rebuilt together for ABI version 2. This does not change RXBIN decimal
+semantics or create a stable third-party wire ABI.
 
 ### Copy, Move, and Native Payloads
 
 Rexx objects are not user-visible native pointers. A Rexx object value is still
-a VM `value`: it may have attributes, a concrete `object_type_name`, scalar
-storage, and an optional binary payload. Class/interface dispatch is based on
-the stamped object type plus metadata, not on exposing a C pointer to Rexx code.
+a VM `value`: it may have attributes, a concrete `object_type` descriptor,
+scalar storage, and an optional binary payload. Class/interface dispatch is
+based on the stamped object type plus the semantic graph, not on exposing a C
+pointer to Rexx code.
 
 The VM has two distinct value-transfer paths:
 
 - `copy_value(dest, source)` preserves the source and duplicates the current
   value state into `dest`. Strings, decimals, ordinary binaries, and attributes
   are copied into destination-owned storage.
-- `move_value(dest, source)` transfers ownership of malloced buffers and
-  attribute arrays into `dest`, then reinitializes `source`. This is used for
+- `move_value(dest, source)` transfers ownership of allocated buffers and
+  attribute arrays into `dest`, then reinitializes `source`. Here "ownership"
+  means owner-local value ownership; it does not retag worker slabs or authorize
+  a cross-worker move. This is used for
   returning true local values from a Rexx procedure and is the efficient path
   for unique ownership.
 - Rexx `RET_REG` moves only when returning a real local register. Returning an
@@ -377,16 +1098,55 @@ Ordinary `.binary` payloads should be built through the shared helpers in
 `slice_binary()`. These helpers keep `binary_length` and
 `binary_buffer_length` consistent, reuse existing capacity where possible, and
 clear native payload finalizers before replacing a native-backed object with an
-ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
-used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
+ordinary byte sequence. Binary values carry no logical cursor.
 
 RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
-loads a `BINARY_CONST` from `0x...` RXAS syntax. `GETBYTE` reads zero-based
-binary offsets and returns `-1` for out-of-range reads. `SETBYTE` and
-`BUPDATE` are strict and raise `OUT_OF_RANGE` for invalid byte indexes or
-fixed-size overlay writes past the destination length. `BCONCAT`, `BAPPEND`,
-and `BSLICE` build ordinary byte buffers without UTF-8 validation and clear
-VM-private UTF cache flags on the destination.
+loads a `BINARY_CONST` from `0x...` RXAS syntax. `BCOPY_REG_REG` copies only
+the binary payload; it deliberately does not copy
+public/compiler/library status flags. `GETBYTE` reads zero-based binary
+offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
+strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
+writes past the destination length. `BCONCAT` and `BAPPEND` build ordinary byte
+buffers. `BSLICE_REG_REG_REG_REG` takes explicit destination, source, start,
+and length registers and clips the requested byte range to the source length.
+These operations do not perform UTF-8 validation and clear VM-private UTF
+cache flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
+length without mutating either register; negative values and ranges that do not
+fit inside the current logical binary length raise `OUT_OF_RANGE`.
+
+Typed binary memory opcodes are strict fixed-width views over the same binary
+slot. `BGETU8`, `BGETI8`, `BGETU16`, `BGETI16`, `BGETU32`, `BGETI32`,
+`BGETI64`, `BGETF32`, and `BGETF64` read from zero-based byte offsets, with
+register and binary-constant source forms where the source is read-only.
+`BSETU8`, `BSETI8`, `BSETU16`, `BSETI16`, `BSETU32`, `BSETI32`, `BSETI64`,
+`BSETF32`, and `BSETF64` write to zero-based byte offsets. These opcodes use
+canonical little-endian storage order and do not use host-native struct layout,
+alignment, or padding. Invalid ranges, negative offsets, and integer values
+outside the target storage type raise `OUT_OF_RANGE`. `BRESIZE` preserves
+existing bytes, zero-fills growth, sets only the logical byte length, and may
+reuse/grow the private physical binary capacity in blocks. It raises
+`OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary length
+to zero. `BFILL`
+fills the current logical byte range and requires a byte value in `0..255`.
+
+The packed numeric opcodes are a separate host-native view over ordinary binary
+storage. `PGETI`/`PSETI` access exact `rxinteger` items and `PGETF`/`PSETF`
+access exact VM `double` items. Their integer operand is a zero-based item index,
+not a byte offset. The VM checks negative indexes, checked multiplication by the
+host item width, and the entire item range against the logical binary length
+before reading or writing. It transfers each item with `memcpy`, so the access
+is strict-aliasing safe even though ordinary binary allocation supplies the
+required host alignment. These opcodes do not tag the binary or change RXBIN
+metadata: a caller selects the interpretation on each access. Binary constants
+are readable only after compiler materialization into ordinary aligned runtime
+binary storage; no packed setter accepts a constant destination.
+
+The Release 1 binary-memory VM surface also includes target-sized copy from a
+byte offset (`BCOPY`), zero-terminated UTF-8 text fields (`BGETS`/`BSETS`),
+string-constant extraction (`SGET`), different-register and same-register
+memory moves (`BMOVE`/`BMEMMOVE`), and zero-copy compares
+(`BCMPB`/`BCMPS`). `BCMPB` and `BCMPS` use the compare register as an input
+source offset and overwrite it with `-1`, `0`, or `1`.
 
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
@@ -402,10 +1162,12 @@ When `native_payload_ops` is set:
   `.binary` values and copies the ops pointer as-is. A copy hook is responsible
   for installing the destination payload, normally by calling
   `SETNATIVEPAYLOAD()` or the corresponding internal helper.
-- The VM must own every `binary_value` buffer. Copy hooks should never install
+- The VM must own every `binary_value` buffer through its allocator family.
+  Copy hooks should never install
   externally allocated memory directly into `binary_value`; they should call
   `SETNATIVEPAYLOAD()` / `rxvml_set_native_payload()` with the bytes to store.
-  The helper mallocs the destination buffer, copies those bytes, and records
+  The helper allocates receiver-owned destination storage, copies those bytes,
+  and records
   the shared ops pointer.
 - Scalar/string setters clear an attached native payload before replacing the
   visible value, so stale native resources are not accidentally copied after a
@@ -480,11 +1242,16 @@ the public framework API does not upgrade an existing BSD socket in place.
 
 ### Nested rxvml Calls
 
-The public `rxvml_call_procedure()` and `rxvml_call_method()` entry points run
-Rexx procedures by installing a temporary external-call trampoline
+The public `rxvml_call_procedure_descriptor()`,
+`rxvml_call_factory_descriptor()`, and `rxvml_call_method_descriptor()` entry
+points run Rexx callables by installing a temporary external-call trampoline
 (`ext_proc`, `ext_argc`, `ext_args`, and `ext_ret`) and then entering `run()`.
-These calls are allowed from native callbacks, including ADDRESS environment
-callbacks, while another `run()` invocation is already active.
+The descriptor form is mandatory as of `RXVML_ABI_VERSION` 8. Descriptors use
+`rxsig1|name|return_type|args`; for example,
+`rxsig1|pkg.proc|.int|name=.string`. The runtime resolves the name and checks
+the return/argument signature against metadata before invoking. These calls are
+allowed from native callbacks, including ADDRESS environment callbacks, while
+another `run()` invocation is already active.
 
 Nested `rxvml` calls must save and restore both the external-call trampoline
 and the active `rxvml_context`. Without that preservation, a callback that calls
@@ -535,32 +1302,95 @@ updates, and stem updates before copying them into VM strings. Invalid bytes
 should be passed through `.binary` or native payload APIs rather than through
 text callbacks.
 
+Windows does not change that internal contract. cREXX command lines,
+environment names/values and logical paths remain UTF-8; the platform adapter
+converts them to UTF-16 for `CreateProcessW` and other Win32 `W` APIs, then
+converts returned UTF-16 text to UTF-8. It must not change a process-global
+console code page or C locale to simulate worker-local UTF-8. Child standard
+streams remain byte streams: a provider must apply an explicit encoding
+converter when a child does not speak UTF-8, and the later channel envelope may
+carry that encoding metadata without changing its binary payload.
+
 As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
 `stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native
 providers should use `rxvml_address_emit_output(ctx, request, text)` and
 `rxvml_address_emit_error(ctx, request, text)` rather than reaching into those
-opaque redirect values. These helpers write to `ADDRESS ... output/error`
-redirects and finalize them so Rexx array/string captures are readable when
-the callback returns; without a redirect they write to the normal VM
-stdout/stderr path.
+redirect values. These helpers write to `ADDRESS ... output/error` redirects and
+finalize them so Rexx array/string captures are readable when the callback
+returns; without a redirect they write to the normal VM stdout/stderr path.
+
+ADDRESS redirect endpoint values are native payloads with the internal type name
+`rxsysb.redirect_endpoint`. The payload stores a refcounted native endpoint cell,
+so ordinary VM value copies retain the cell instead of byte-copying raw OS handle
+values. Its private completion contains the endpoint handle, independently
+allocated bytes, diagnostics and one terminal state; it contains no worker or
+VM value pointer. Input endpoints snapshot their source before thread creation.
+Output endpoints are consumed only after join, when the receiver worker copies
+the bytes into the Rexx string or array. The last finalizer closes native
+handles, joins any owned redirect worker thread and discards an unconsumed
+completion. `SPAWN` resolves these native endpoint payloads before dispatching
+to `rxspawn.c`; it does not accept plain raw `REDIRECT` binary buffers. Existing
+bytecode remains compatible because redirect values are created by runtime
+instructions, not stored as durable `REDIRECT` struct bytes in `.rxbin` files.
+New runtime code should not inspect `binary_value` directly for redirect
+endpoints; use the redirect helper path or the public RXVML emit helpers.
 
 ADDRESS command text may contain host-variable anchors whose meaning belongs to
 the selected environment handler. The compiler auto-exposes visible Rexx scalar
 variables named by `:name` inside string-literal command text, and by `${name}`
-inside command text that reaches the ADDRESS exit. The command string itself is
-not interpolated by the VM. Rexx providers read the exposed values from
-`addressrequest.get_binding_value(name)`; native providers can use
-`rxvml_address_binding_get(request, name, out, out_len)`. Handlers that write a
-host variable return a normal `var` updated binding, so the existing ADDRESS
-write-back path handles both explicit `EXPOSE` variables and auto-exposed
-anchors.
+inside command text that reaches the ADDRESS exit. The scanner also exposes
+stems for `:name[]`, `:name.`, `${name[]}`, and `${name.}`. The command string
+itself is not interpolated by the VM. Rexx providers read exposed scalar values
+from `addressrequest.get_binding_value(name)` and stem values from
+`get_binding_stem_value`; native providers can use
+`rxvml_address_binding_get(request, name, out, out_len)` for scalar bindings.
+Handlers that write a host variable return a normal updated binding, so the
+existing ADDRESS write-back path handles both explicit `EXPOSE` variables and
+auto-exposed anchors.
 
-The built-in system-like environments (`COMMAND`, `CMD`, `SYSTEM`, `SHELL`,
-and `PATH`) route through the VM spawn helper, which parses the command into an
-argv vector before executing the program. This is not a full shell-quoting
-contract. For nested shell quoting, here-doc-like content, or multiple shell
-statements, invoke an explicit shell such as `address command "sh" input lines`
-and pass the script through the ADDRESS input redirect.
+The built-in command environments split into four spawn modes:
+
+- `CREXX` is the default command environment. `_address.crexx` routes it to
+  `SHELLSPAWN_MODE_CREXX`, implemented by `interpreter/rxcrexxcmd.c`. This is a
+  cREXX-defined command set with stable behavior across supported operating
+  systems, not a shell. It owns worker-local persistent
+  `cd`/`pushd`/`popd` and environment overrides,
+  file/text/process/time/network commands, `batch`, and `run` for direct
+  executable dispatch. Without an output or error redirect, both built-in
+  command text and a nested `run` child's corresponding stream inherit the
+  normal VM stdout or stderr stream and are flushed immediately rather than
+  being held until child or task completion. An explicitly redirected stream
+  retains the requested string/array capture semantics. CREXX expands
+  host-variable scalar anchors
+  to one command argument and stem anchors to zero or more command arguments
+  after its own command parsing; `run :argv[]` therefore launches the child
+  through an argv vector rather than by flattening the array to a command
+  string. Relative file commands use the worker's logical directory. Child
+  launch receives immutable merged working-directory/environment snapshots;
+  the parent process directory and environment are never temporarily changed.
+- `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
+  command processor so shell built-ins and command syntax work consistently.
+  On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
+  (the C interface for the standard utility path that `getconf PATH` exposes),
+  then falls back to `/bin/sh` and finally ordinary `PATH`. Do not use the
+  user's `SHELL` environment variable here; that names an interactive login
+  preference, not the standard command processor. On Windows, the VM invokes
+  `%COMSPEC% /D /S /C`, falling back to `cmd.exe` if `COMSPEC` is unset.
+- `PATH` is the direct executable environment. On POSIX it parses the command
+  into an argv vector, resolves the executable through the process `PATH`, and
+  calls it directly; on Windows it uses direct `CreateProcessW` command-line
+  dispatch. This route intentionally does not provide shell built-ins, pipes,
+  redirects, or shell expansion.
+- `SHELL` is configured shell dispatch. The VM reads `CREXX_ADDRESS_SHELL` for
+  the shell executable and `CREXX_ADDRESS_SHELL_ARGS` for the arguments placed
+  before the command text. If unset, it falls back to the same command-processor
+  defaults as `SYSTEM`.
+
+`CREXX` multiple-command handling is intentionally explicit: command text is a
+single CREXX command and shell operators such as `;`, `&&`, `||`, and pipes are
+usage errors. Use repeated `ADDRESS` statements or `ADDRESS CREXX "batch"` with
+input lines. `batch` skips blank lines and `--` comments and stops at the first
+non-zero return code.
 
 `demos/native/sqlite/` shows the database-oriented form of the native provider
 model. The provider routes by the ADDRESS environment name carried in the
@@ -589,40 +1419,607 @@ provider-neutral: Rexx and native ADDRESS environments see the same
 
 The core execution engine lives in `run()` within `interpreter/rxvmintp.c`. 
 
-### Threaded vs Bytecode Dispatch
-The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (Default/Fast Mode)**: During the "Preparation" phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the exact `&&label` implementing each opcode. The instruction dispatch reduces to an incredibly fast computed goto: `goto *next_inst;`.
-2. **Standard Bytecode Mode (`NTHREADED`)**: Operates via a massive standard C `switch(opcode)` statement wrapped in a while loop.
+### Product and concrete dispatch executables
 
-### Dispatch Macros
-Instructions are executed via macro-driven blocks. For example, moving to the next instruction looks like:
+The build has one stable product entry point and up to two concrete engines:
+
+- `rxbvm` is the portable `switch(opcode)` engine and is always built;
+- `rxtvm` is the direct-threaded computed-goto engine and is built only by
+  GNU/Clang-family compilers; and
+- `rxvm` is the compiler-selected product entry point. It is a relative
+  symlink on Unix-like systems and a copied executable on Windows.
+
+Clang and AppleClang select `rxbvm`; GCC selects `rxtvm`; MSVC builds only the
+switch engine and copies `rxbvm.exe` to `rxvm.exe`. The broad correctness and
+smoke suites execute `rxvm`. A small explicit dispatch-contract test runs each
+concrete engine that exists, so the non-default engine does not become an
+unbuildable blind spot.
+
+`rxvme` and the `rxvml` embedding library follow the same compiler-selected
+engine. `rxbvme` and `rxbvml` remain explicit switch-dispatch forms.
+
+### Threaded vs switch dispatch
+The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
+1. **Direct Threading (`rxtvm`)**: During the preparation phase,
+   `rxvm_prepare()` copies each module's canonical instruction slots into an
+   owned runtime image. Operand cells remain unchanged and each instruction
+   cell stores the C `void*` for its `&&label`. Target selection loads
+   `next_pc->handler`, and dispatch uses `goto *next_inst;`. The runtime image
+   is process-local, is never serialized or exposed through reflection, and is
+   refreshed safely after a late link.
+2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Executes the owned
+   `execution_image` through a C `switch(opcode)` statement. Public instruction
+   cells initially contain copied canonical opcodes; preparation may replace a
+   selected cell with a process-private opcode while leaving
+   `segment.binary` unchanged. Operands, calls, branches and active-frame
+   transitions use the same owned-image contract as `rxtvm`.
+
+Neither source form is assumed to be universally faster. Generated performance
+depends on compiler transformations, architecture, branch prediction, code
+layout, and the cost of locating the next handler. The current Release 1
+investigation is tracked in
+`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
+
+### Active-frame and dispatch contracts
+
+Every frame change passes through `VM_ACTIVATE_FRAME` (or its nullable
+counterpart). That boundary refreshes the active frame, binary space, module,
+execution base, canonical base, constant pool, and locals as one coherent
+state change. Debug builds assert that all cached pointers agree with the
+active frame. Operand and branch macros consume only that coherent state.
+
+Instructions select their next target through intent macros. Sequential flow
+uses `VM_ADVANCE`, canonical indices use `VM_SELECT_INDEX`, and already
+resolved execution pointers use `VM_SELECT_POINTER`. Computed-goto and switch
+differences stay inside these macros, and handler resolution still happens
+before the current handler body completes. For example:
 
 ```c
-#define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
-#define DISPATCH         { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
+#define VM_ADVANCE(n) do { next_pc = pc + (size_t)(n) + 1; VM_RESOLVE_SELECTED(); } while (0)
+#define DISPATCH do { pc = next_pc; if (pending_interrupts && !current_frame->is_interrupt) goto INTERRUPT; VM_DISPATCH_TARGET(); } while (0)
 ```
-`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
+`DISPATCH` actively checks the current VM's sole direct pending-interrupt word to
+immediately branch into signal exception handling if an error occurred
+natively. Internal signal-raising macros stamp `interrupted_pc` with the
+faulting instruction before dispatch advances `pc`; breakpoint and
+asynchronous interrupts leave it unset so their handlers continue to receive
+the next instruction/resume address. The default fallback panic report uses
+the stamped address when present to print the module/address and, when
+`META_SOURCE_STEP` metadata is present, the closest preceding REXX source line.
+Linked images built with source stripping have only the module/address for this
+fallback context.
+
+VM signal codes 1 through 31 map to the non-sign `sig_atomic_t` mask bits 0
+through 30. `RXSIGNAL_MAX` is a sentinel and has no mask bit. All producers and
+consumers use the validated `rxsignal_mask()` helper, and the interrupt scan
+stops before the sentinel bit; this keeps invalid codes from shifting by a
+negative count or into the signed high bit.
 
 `INTERRUPT` is the internal dispatch target used by this macro, not a source
 instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
 `UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source
-mnemonics. Opcode slots 514 and 515 are reserved after removal of the legacy DLL
-loader instructions, preserving later opcode numbers.
+mnemonics. Opcode slot 514 is now `ENDLIFE_REG`; the later opcode numbers are
+preserved.
+
+### Handler definitions and placement policy
+
+Every public opcode handler, both runtime sentinels and both private
+execution-image handlers have one semantic definition behind
+`RXVM_HANDLER(...)` or `RXVM_PRIVATE_HANDLER(...)`. The definitions are split
+by concern across `rxvmhandlers_core.inc`, `rxvmhandlers_control.inc`,
+`rxvmhandlers_numeric.inc`, `rxvmhandlers_string.inc`, and
+`rxvmhandlers_system.inc`; `run()` no longer owns a second copy of any handler
+body. A definition keeps the instruction-entry/debug code and its
+implementation together.
+
+The definition files are expanded twice. At file scope they produce
+force-noinline `rxvm_handler_NAME(rxvm_handler_state *)` functions. Inside the
+dispatch owner, handlers selected inline by `rxvmhandlerpolicy.h` expand the
+same implementation body directly. The internal lowering of outlined handlers
+is compiler-specific because Clang and GCC generated materially different hot
+dispatch from the same source:
+
+- Clang emits only the selected inline switch cases or computed-goto labels.
+  All outlined public identities share one cold owner entry and function table.
+  That edge snapshots scalar values into `rxvm_handler_state`, invokes the
+  selected handler through a cold no-inline trampoline, and commits the result.
+- Real GCC retains the R2 per-identity label/case and direct outlined call with
+  the pointer facade. GCC optimizes that shape better than the shared-cold form;
+  using the Clang repair under GCC reverses the measured benefit.
+
+Both forms return the same small `rxvm_handler_result`: normal dispatch,
+interrupt dispatch, interrupted-instruction resume, interrupt-table OOM, or
+terminal cleanup. The Clang snapshot is deliberately value-based because the
+earlier pointer-rich facade made owner locals addressable whenever any outlined
+handler was reachable, changing Clang register allocation and stack shape even
+when no outlined handler ran. The all-inline panel preserves the exact R2
+pointer-facade source shape so compiler heuristics and generated owner layout do
+not move merely because dead facade scaffolding was deleted; the optimizer
+eliminates that facade and no shared function table or trampoline is emitted.
+
+In the Clang shared-cold form, threaded dispatch obtains an outlined public
+opcode from the immutable canonical image because its execution-image
+instruction cell contains a handler address; switch dispatch reads the numeric
+execution-image opcode. Label ownership, interrupt polling and final dispatch
+remain in `run()` in every lowering.
+
+The CMake cache setting `CREXX_VM_HANDLER_PANEL` selects the internal build
+shape:
+
+- `profile-20` (the provisional product default) expands the frozen 20%
+  prefix while honoring the never-inline ledger;
+- `all-inline` expands every handler inside `run()` and remains the literal
+  source-shape/performance control;
+- `all-outline` calls every handler, providing the minimum-owner/maximum-call
+  control;
+- `profile-5`, `profile-10`, `profile-15`, `profile-20` and `profile-30`
+  expand successive prefixes of the frozen Apple public-handler heat ranking;
+  and
+- `max-eligible` expands every normal eligible handler while keeping the
+  reviewed host-bound, reserved and sentinel classes callable.
+
+Every handler has one central tier rather than one definition per panel. Both
+private fused handlers enter at the 5% tier. The current 55-handler
+`NEVER` class covers provider channels, sockets, console I/O,
+clocks/environment access, file I/O and dynamic module loading. It is a reviewed code-
+placement attribute: literal `all-inline` deliberately ignores it to remain
+the exact equivalence control, while every profile and `max-eligible` honors
+it. A later profile can justify an explicit tier change, but a percentage
+threshold cannot silently override it.
+
+The current table has 584 source-visible public handlers, two private fused
+handlers, 68 reserved opcode handlers, two reserved sentinels and the
+owner-internal `INTERRUPT` target. The candidate totals remain 31, 61, 90, 120
+and 175 for the nominal 5%, 10%, 15%, 20% and 30% panels; three top-176 host
+operations remain callable. `max-eligible` is 531/586 (90.61%) across the
+normal public-plus-private handlers. `INTERRUPT` has an explicit owner-only,
+always-inline tier.
+
+The panel setting changes no RXAS/RXBIN encoding or public/plugin ABI. Adrian
+selected common `profile-20` as the provisional product default after the R5
+Apple comparison and explicitly accepted the measured 10.072% GCC `rxtvm`
+Bounce regression. On this Apple host, Clang's absolute profile-20 throughput
+was also directionally faster than GCC's in every governed workload/engine
+cell, although the compiler runs were not a paired compiler-selection trial.
+
+The exact 20% membership is not a permanent tuning claim. Release-finalisation
+work must rebuild the panel from a wider current benchmark portfolio, include
+private/fused dispatch and newly added instructions, audit the never-inline
+ledger, and retain panel-membership diffs over time. Intel Linux is the next
+platform validation. `all-inline` remains available as the invariant control,
+and explicit `-DCREXX_VM_HANDLER_PANEL=...` selections remain supported for
+diagnosis and cross-platform comparison. Existing CMake build directories keep
+their cached panel; use a fresh build tree or set the option explicitly when
+validating the new default.
+
+The complete sequence of accepted and rejected source shapes, the Clang/GCC
+code-generation differences, and the current rules for preserving maximum
+observed C optimisation are recorded in the
+[VM and C Compiler Optimisation Report](../planning/release-1/vm-c-compiler-optimisation-report-2026-08-09.md).
+
+### Process-private fused execution handlers
+
+Preparation performs two structural, process-private fusions in each module's
+owned execution image. This is immutable load-time quickening, not adaptive
+runtime rewriting: canonical RXBIN and `segment.binary` remain unchanged, and
+the prepared site is not subsequently rewritten or dequickened.
+
+- `PRIVATE_R1_RELINK` recognizes `unlink destination; linkref destination,
+  source_reference` when source and destination differ. It performs the fast
+  relink when the runtime reference target is valid, otherwise resumes the
+  canonical `linkref` path. Debug mode or a pending breakpoint also uses the
+  canonical observable path.
+- `PRIVATE_R2_COPYATTR1` recognizes `linkattr1 temporary, object, immediate;
+  copy destination, temporary; unlink temporary` with the required distinct
+  registers. It uses the fused reference-descriptor path only when the runtime
+  payload permits it; range errors, generic values, debug mode and pending
+  breakpoints retain the canonical instruction-by-instruction behaviour.
+
+`rxtvm` writes the corresponding private label address into its execution
+image; `rxbvm` writes a numeric opcode above the public opcode range. Both map
+instrumentation back to the first canonical public opcode so public semantic
+profiles remain comparable. Placement/heat profiling must additionally count
+the private dispatch identity: attributing it only to `UNLINK` or `LINKATTR1`
+can incorrectly classify a frequently executed private handler as cold.
+
+The shared inventory and gap report between RXAS static fusion and these VM
+load-time fusions is a separate roadmap item, `PERF3-05-R4`. Making a private
+fusion a normal serialized instruction, or adding adaptive runtime quickening,
+requires its own RXAS/RXBIN compatibility and architecture decision.
 
 ### Instruction Flow Example
-Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
+The assembler passes operands inline sequentially in the binary array. A
+handler definition is written once and the placement policy supplies its
+dispatch label/case:
 ```c
-        START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3)
-            DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
-                  REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI + op3RI)
-            DISPATCH
+RXVM_HANDLER(IADD_REG_REG_REG,
+    VM_ADVANCE(3)
+    DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
+          REG_IDX(2), REG_IDX(3));
+    REG_RETURN_INT(op2RI + op3RI)
+    DISPATCH
+)
 ```
 In this example:
-- `CALC_DISPATCH(3)` specifies that this instruction consumes 3 operand blocks.
+- `VM_ADVANCE(3)` specifies that this instruction consumes 3 operand blocks.
 - `op2RI` grabs the integer struct value mapped to Operand 2.
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
+
+`VM_ADVANCE(n)` and `REG_OP(n)` accept any operand position represented by the
+opcode signature; handlers are not restricted to the traditional three named
+operand aliases. `CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG` is the focused
+nine-operand execution and tooling regression.
+
+### Opcode effects inventory
+
+The VM handlers are also the semantic evidence for the machine-readable opcode
+effects inventory consumed by RXAS and future data-flow work. The canonical
+structural inventory remains `binutils/include/rxops.h`; the complete ordered
+semantic sidecar is `binutils/include/rxopeffects.h`; and
+`rxop_effects()` in `binutils/rxopmeta.c` exposes their consolidated C API.
+Effects cover explicit and implicit register access, proven overwrites,
+branch-target operands, calls/returns, aliases, references and storage
+lifetimes, possible exceptional transfer, indirect effects and conservative
+barriers.
+
+The inventory is an audited contract, not a parser for arbitrary handler C.
+Handler-sensitive classifications are checked against the implementations in
+this instruction region and representative semantic tests. Every opcode slot
+must have an entry. Reserved/internal slots, explicitly conservative entries,
+and unknown/out-of-range API queries fail closed: they remain barriers and
+offer no kill proof. NR-04 does not change VM execution or serialized RXBIN and
+does not enable a new optimizer transformation.
+
+### Private native stem representation
+
+NR-15's `stem*` handlers share `interpreter/rxvmstem.h` in both dispatch modes.
+The D2-hybrid representation uses the receiver's ordinary binary buffer for a
+versioned little-endian header, 256 bucket heads, and 16-byte
+hash/next/generation entries. Ordinary VM attributes own the keys, values, and
+default string, so normal deep copy, move, reference lifetime, and destruction
+continue to own all string storage. Bucket and next indexes are one-based; zero
+is the chain sentinel. Entries stay in insertion order.
+
+The layout is private process-local state, not public ABI and not serialized
+into RXBIN. `RXBIN007_FEATURE_NATIVE_STEM` gates the nine instruction forms,
+while each runtime receiver is validated for magic, version, exact size,
+capacity/count consistency, attribute coverage, and bounded chain traversal.
+Allocation-reporting paths commit logical insertion, update, reset, or output
+replacement only after their required storage succeeds; reserved private
+capacity may remain reusable after a failed insertion. Generation overflow,
+capacity overflow, invalid extraction indexes, and corrupt metadata are
+translated to VM signals by the shared handler macro.
+
+`stemget2` and `stemset2` hash and compare two string registers with one `.`
+separator without constructing a hit/miss key. `stemset2` constructs the
+canonical joined key once, and only after absence is proved. Compiler direct
+lowering is intentionally limited to proved simple-storage concrete
+`rxfnsb.stem` receivers; complex or reference-sensitive receiver shapes keep
+the normal method path, whose library body invokes the same native operations.
+
+`interpreter/rxvminstrument.h` is the compile-time instrumentation contract for
+both VM modes. A backend can observe VM begin/end, instruction begin plus
+retire or terminal, frame activation, call/return transitions, and interrupt
+selection/entry/resume/terminal paths using canonical module/instruction
+coordinates. The contract also exposes native-call boundaries and module-set
+changes needed by callable profiling. With no backend selected, every hook
+preprocesses to a no-op and does not evaluate its arguments, branch, access
+state, or call a function.
+
+### Timing/count profiling
+
+`CREXX_VM_PROFILING` selects the timing/count instrumentation backend for a
+dedicated VM build. The option is off by default, so ordinary builds retain the
+fully preprocessed no-op hook contract. Configure a Release profiling build
+with:
+
+```sh
+cmake -S . -B cmake-build-profile \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCREXX_VM_PROFILING=ON
+cmake --build cmake-build-profile --config Release \
+  --target rxvm rxbvm rxtvm rxvme rxbvme rxseq
+```
+
+Omit `rxtvm` when the configured compiler does not support GNU-style
+labels-as-values (notably MSVC).
+
+The command-line surface is compiled into compiler-selected `rxvm`, concrete
+`rxbvm`, optional concrete `rxtvm`, and the embedded-standard-library variants
+`rxvme` and `rxbvme`. Timing profiling remains off at
+runtime until `--profile`, `--profile=timing`, or `--profile-output` is passed.
+`--profile=counts` selects the same diagnostic census with clock reads disabled
+and all timing fields zero, so repeated counts-only reports are deterministic.
+By default the report is written as a human-readable table to standard error.
+Use `--profile-output file` or `--profile-output=file` to write it to a file.
+An output filename ending in `.csv`, case-insensitively, selects CSV; every
+other filename selects the table format. The output option also enables
+profiling.
+Profiling options are parsed before the first RXBIN filename; ordinary program
+arguments continue to follow `-a`.
+
+```sh
+rxvm --profile program.rxbin
+rxvm --profile-output profile.txt program.rxbin
+rxbvm --profile-output profile.csv program.rxbin
+rxvm --profile=counts --profile-output counts.csv program.rxbin
+```
+
+The instruction table measures monotonic wall time from instruction entry to
+retire or terminal. The transition table measures retire to the next
+instruction entry and distinguishes same-frame sequential/branch transitions,
+call frame entry, return frame exit, interrupt entry/resume, external entry,
+and termination.
+
+Each instruction row also reports the effective handler placement as
+`inline`, `outline`, or `mixed`. Profiling records placement at the actual
+handler-entry boundary while retaining canonical public-opcode timing/count
+attribution, so a private fused handler cannot silently inherit an incorrect
+label from its serialized opcode. `mixed` means the same canonical opcode was
+observed through both placements. CSV schema 5 writes this in the existing
+`value` column; ordinary profiling-off builds still preprocess the added hook
+argument away without evaluating it.
+
+The same report contains procedure/method and call-mechanics tables. Callable
+names, return types, and argument signatures come from `META_FUNC`; a
+module/procedure fallback is used for older binaries without that record. The
+procedure table classifies runtime rows as procedure, method, factory, or
+native and reports calls, normally completed calls, calls discarded by an
+exceptional unwind, elapsed call time, inclusive body time, and self time.
+Rows are sorted by elapsed time (native total for native rows). Inclusive body
+time includes nested bytecode calls, so rows overlap; self time does not.
+Each bytecode row also reports `native_child`, the observed native-call time
+removed from self time. It is already inside inclusive body time and must not
+be added to elapsed time.
+Inlined calls have no runtime frame and therefore remain attributed to their
+containing procedure rather than appearing as separate rows.
+
+For bytecode calls, the normal-return boundaries are:
+
+```text
+caller call-instruction entry
+    -> callee first-instruction entry       entry overhead
+    -> callee return-instruction entry      inclusive body
+    -> caller next-instruction entry        exit overhead
+```
+
+Elapsed time covers the whole outer span. These are observed VM call-mechanics
+spans, not an estimate of the speed-up from inlining. External entry and
+terminal return are measured against their nearest available VM boundary.
+Dynamic calls are attributed to the concrete runtime procedure.
+
+The same profiling-only backend also records the NR-05 dynamic call census at
+authoritative VM boundaries. It distinguishes direct/dynamic bytecode and
+native calls, external/root entry, signal-handler entry, failed/unresolved
+attempts, exact actual arity, callable metadata kind, and fresh/reused/no-child
+frame disposition. `RET_REG` records its actual true-local move or
+non-local copy branch; void, ignored, immediate, terminal, and unwind domains
+remain distinct. `SRCMETHODSEL` and `SRCFPROCSEL` record
+attempt/success/failure separately from the later `DCALL`.
+
+Call-window attribution uses a dynamic backward slice of the executed
+straight-line trace, not source names or adjacency. The NR-04
+`rxop_effects()` kill/flow facts stop the slice at proven
+definitions. Reached `SWAP_REG_REG` operations are setup swaps and
+reached whole-value `COPY_REG_REG` definitions are defensive
+argument copies. For normal return, the profiler reconstructs the pointer
+permutation made by those setup swaps and buffers subsequent swaps until their
+combined effect recovers the pre-call mapping; only that completed restoration
+sequence receives credit. A setup whose mapping is deliberately carried into
+another call or to frame completion has no completed normal restoration, but
+does not by itself imply lost profiling data. All remaining executed
+swaps/copies stay unclassified. The cold signal paths report discarded frames, restored
+bytecode/native call windows, actual inverse pointer swaps, and restoration
+failures without changing the existing restoration algorithm.
+
+Native plugin calls are listed with call count and total time around
+`rxvm_callfunc`. Body/self and entry/exit breakdowns are intentionally omitted
+because the VM cannot observe the native implementation's internal phases.
+Native time remains part of its calling instruction's instruction timing, but
+is removed from the bytecode caller's self time to avoid double attribution in
+the procedure view. The instruction, transition, and procedure sections are
+overlapping views and must not be summed together.
+
+Every retired hot-loop instruction also increments the interrupt-poll count.
+Taken interrupt scans and the mechanics from selection to the first handler
+instruction, resume, or terminal outcome are reported as sub-phases. These
+sub-phases overlap the complete interrupt transition time and must not be added
+to it. The no-pending poll itself remains inside ordinary transition time; the
+profiler intentionally does not add another pair of timer reads around that
+check.
+
+CSV output retains the original columns in their original order and identifies
+the format as schema version 5. Schema 5 preserves the same 24-column header:
+
+```text
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
+```
+
+Procedure rows use `value` to distinguish `elapsed`, `inclusive_body`, `self`,
+`native_child`, `entry_overhead`, `exit_overhead`, and `native_total` metrics.
+There are multiple metric rows per bytecode callable rather than one
+denormalized row.
+
+Schema 5 retains all schema-4 rows and adds explicit per-domain `status` rows,
+`value_operation` rows for whole-value/typed transfer and teardown helpers,
+`frame_entry` rows split by fresh/reused frame source, and canonical `branch`
+site rows. For a branch row, `selected`, `entries`, `resumes`, and `terminals`
+carry taken, fall-through, same-module backward-target, and cross-module-target
+counts. For a frame-entry row, `id` carries phase units. Schema-5-aware readers
+must continue to accept schema 4 and treat these new domains as unavailable
+rather than fabricating zeroes.
+
+Schema 4 retained the schema-3 `allocation` rows and added
+`census` aggregates, exact `call` rows,
+`return` placement, `dynamic` selection,
+`mechanics` attribution, and `unwind` restoration rows.
+For `call` rows only, the existing `bytes`,
+`max_bytes`, and `high_water` columns carry setup swaps,
+normal restoration swaps, and defensive argument copies. Summary and row
+status expose overflow or degraded tracking; zero-count categories are
+retained.
+
+The allocation counters are private profiling instrumentation, active only
+between profile begin/end, and count successful requests rather than live
+heap:
+
+- `frame_blocks` counts fresh combined frame/pointer/local-value blocks;
+  `frame_activations` counts fresh plus recycled activations, records maximum
+  simultaneous active frames in `high_water`, and `frame_reuses` identifies
+  recycler hits;
+- `standalone_values` counts successful `value_f()` allocations;
+  `attribute_value_blocks` and `attribute_pointer_storage` cover VM-managed
+  object-attribute capacity;
+- `string_buffers` and `binary_buffers` cover VM value-buffer allocations and
+  capacity changes, with successful reallocations charged at their requested
+  new capacity;
+- `value_slots` totals counted standalone, frame-local/a0, and attribute
+  `value` structs. Its byte fields overlap their containing allocation rows by
+  design.
+
+The allocation scope excludes loader state, profiler/RXSEQ bookkeeping,
+plugin-private/native-payload ownership, reference-lifetime payloads, OS/TLS,
+and temporary native conversion storage. Allocation rows carry `complete`,
+`overflowed`, or `degraded`; summary rows retain counter overflow plus
+procedure/allocation tracking availability. A non-zero active-frame balance
+degrades the frame-activation row.
+
+Timing values are raw instrumented wall times. The report includes the minimum
+positive adjacent clock-read interval and zero-delta calibration count, but
+does not subtract them from short instructions. Compare instruction shares
+within equivalent profiled runs rather than treating the values as the
+uninstrumented VM's absolute cost. Instruction and transition counters use
+fixed per-run arrays; the common hot path performs no allocation, locking,
+callbacks, sorting, or output formatting. Allocation accounting itself is
+fixed-state TLS-local addition at the existing allocation/frame boundaries.
+The procedure activation array is
+allocated once per run and grows only if call depth exceeds its current
+capacity. Bytecode procedure timing reuses the existing instruction
+timestamps; only native calls add a dedicated timer pair, and exceptional
+stack unwinds add a timestamp outside the ordinary path.
+
+Do not use an inactive profiling build as the uninstrumented performance
+baseline: the enabled backend still contains inexpensive runtime guards. Only
+a build configured without `CREXX_VM_PROFILING` has the compile-time no-op
+shape.
+
+### Dynamic instruction-sequence profiles
+
+The same `CREXX_VM_PROFILING` build can extract executed windows of two,
+three, or four instructions. This is a separate run mode from timing profiling
+and must be given an `.rxseq` output file:
+
+```sh
+cmake --build cmake-build-profile --target rxvm rxbvm rxtvm rxseq
+
+rxvm --sequence-count=2 --sequence-output run.rxseq program.rxbin
+rxbvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
+rxtvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
+```
+
+`--profile` and `--sequence-count` are intentionally mutually exclusive.
+Ordinary builds configured without `CREXX_VM_PROFILING` contain neither
+runtime surface.
+
+The VM records dynamic execution counts against `(module, canonical starting
+instruction slot, window length)`. At run start it allocates one 64-bit counter
+per expanded instruction slot in every loaded module; the on-disk result is
+sparse. A window continues only across actual sequential fall-through
+transitions in the same module and frame. Taken branches, bytecode-frame calls
+and returns, interrupt entry/resume, external frame entry, and termination
+break it. A native call that returns normally remains within its CALL
+instruction and can participate in a sequential window. A branch may be the
+last instruction in a window, but a window never crosses the branch when it is
+taken. Loop iterations increase the recorded site count.
+
+The extractor writes a versioned binary instruction-sequence execution profile.
+It starts with the eight-byte `RXSEQBIN` magic. Its fixed 48-byte header uses
+little-endian integers and records the format version, header size, sequence
+length, VM result, flags, module count, and sparse site count. Each module
+record contains a variable-length ID, fixed little-endian 64-bit
+expanded-content hash, variable-length instruction size, and a length-prefixed
+UTF-8 name. Each site stores `(module ID, start slot, count)` as canonical
+unsigned LEB128 values, so common records take only three to five bytes. The
+format contains no process-sized integers, native structure padding, or
+host-endian fields.
+
+The VM deliberately does not decode or normalise operands in the interpreter
+hot loop. It writes only non-zero aggregated sites, so repeated loop executions
+increase a 64-bit count rather than increasing the file length.
+
+Run the offline second stage with the same RXBIN module set:
+
+```sh
+rxseq run.rxseq program.rxbin library.rxbin
+rxseq run.rxseq program.rxbin library.rxbin --output candidates.csv
+```
+
+Module argument order does not matter, but every profiled module must be
+present with the exact content used by the run, and no additional module may
+be supplied. `rxseq` fails on a missing module, content-hash mismatch, or
+instruction-size mismatch. The profile records all loaded modules, even those
+with no non-zero site. Consequently, a capture made with `rxvme` or `rxbvme`
+also requires the exact RXBIN image corresponding to its embedded standard
+library. Prefer `rxvm`/`rxbvm` with explicit inputs or a single linked image
+when a self-contained sequence-analysis workflow is needed.
+
+For each site, `rxseq` decodes the emitted RXBIN instructions and
+alpha-renames operands by first occurrence across the whole window. Registers
+use `r1`, `r2`, and so on; every other encoded operand (literal, pool
+constant, label, or procedure reference) uses `c1`, `c2`, and so on.
+Reuse is retained:
+
+```text
+IADD_REG_REG_REG(R17,R5,R9) | COPY_REG_REG(R5,R22)
+    -> IADD_REG_REG_REG(r1,r2,r3) | COPY_REG_REG(r2,r4)
+```
+
+Sites with the same normalised pattern are clustered, and their dynamic counts
+are summed. The report includes execution count, static site count, module
+count, one concrete mapping/example, and `candidate` status. Operand
+normalisation and mapping text are dynamically sized, so candidates are no
+longer screened out merely for having more than three distinct symbols. This is only candidate
+extraction: control-flow, liveness, aliasing, exceptions, interrupt behaviour,
+and other transformation safety must be reviewed separately before defining a
+combined opcode or optimiser rule. The table heading also reports the window
+length, cluster/site counts, and counter-overflow status. An output name ending
+in `.csv`, case-insensitively, selects CSV; otherwise `rxseq` writes the
+human-readable report format. Candidate CSV uses:
+
+```text
+rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start
+```
+
+### Frozen PARSE execution
+
+NR-14 adds four canonical RXBIN 007 instructions behind
+`RXBIN007_FEATURE_FROZEN_PARSE`. `parsewords3`, `parsepos2`, and
+`parsewords3d` implement exact common plans with direct register results; their
+handlers preserve source/output aliasing by snapshotting source bytes before
+the first write. `parsewords3` is also a chain primitive for eligible longer
+implicit-word templates.
+
+`parseplan` executes a compact descriptor from a string constant into a reusable
+result vector. Version 1 stores frozen item kinds, store/drop flags, literal
+bytes plus character lengths, fixed-width numeric movement, and the declared
+item/result counts. Version 2 additionally stores indexed dynamic delimiter and
+position references. A reference selects either an earlier completed capture
+or an external operand that compiler-generated code placed temporarily after
+the public result slots. The handler consumes those values without textual
+plan decoding and shrinks the vector to its public result count on success.
+
+The handler bounds-checks the header, reference indexes, and every item; rejects
+trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
+`CONVERSION_ERROR` for an invalid dynamic numeric position. It uses Unicode
+code-point positions in UTF builds and has no load-time cache or private
+prepared representation.
+
+Compiler eligibility remains fail-closed: exact common forms use the direct
+instructions and every remaining supported exit form uses `parseplan`, including
+logging/TRACE and explicit `INTO`. Ordered source-level assignments remain
+outside the VM primitive, preserving repeated targets, source aliases, trimming,
+and TRACE source metadata. There is no runtime textual PARSE executor.
 
 ### Pooled float operands
 
@@ -633,65 +2030,65 @@ operand slot now contains an index into a `FLOAT_CONST` record in
 `const_pool`, and the interpreter resolves that record when a float operand is
 read.
 
-As of the current `003` layout, the loader is also responsible for undoing the
-two stage-2 section codecs before execution begins:
-
-- the instruction section may arrive as a packed logical token stream with
-  operand counts reconstructed from the opcode table
-- the constant pool may arrive as a compressed LZSS blob
-
-Neither codec is visible inside the execution loop. By the time `run()` starts,
-the module again looks like a normal `bin_code[]` plus raw constant-pool
-buffer.
+In RXBIN 007 the loader decodes the canonical variable-integer instruction
+section and portable constant/metadata records before execution. The base
+format deliberately does not compress sections. By the time `run()` starts,
+the module again presents a normal `bin_code[]` plus native constant-pool
+buffer, while graph-bearing operands remain dense graph IDs.
 
 ## 4. Current Interface Dispatch in the VM
 
-The current Level B interface runtime slice adds three VM-facing pieces on top
+The current Level B interface runtime slice adds these VM-facing pieces on top
 of the older object model:
 
-- `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
-- `SRCMETHOD_REG_REG_STRING` resolves the effective method procedure from
-  `object_type_name + member_name`
-- `SRCFPROC_REG_STRING_REG` resolves an interface factory provider for either
-  `interface_name` or `interface_name..factory_name`
+- `SETOBJTYPE_REG_STRING` uses its serialized type ID to store one immutable
+  `RxGraphTypeRef *` on an object value
+- `SRCMETHODSEL_REG_REG_STRING` uses its member ID, the receiver descriptor's
+  dense dispatch row, the graph's bound callable array and a two-way
+  generation-guarded instruction-site cache
+- `SRCFPROCSEL_REG_STRING_REG` uses its factory-bucket ID and a cached bound
+  provider range; a single-provider/no-match bucket has a direct-target path
 - `TYPEOF_REG_REG` returns the canonical source type name of an object value
 - `ISTYPE_REG_REG_STRING` tests an object value against an interface, class,
   or `.object`
 - `ASSERTTYPE_REG_STRING` raises `CONVERSION_ERROR` on a failed object cast
 
-`srcmethod` and `srcfproc` both return a `proc_runtime *` in a normal
-register, and the existing `dcall` path performs the actual invocation.
+`srcmethodsel` and `srcfprocsel` both return a `proc_runtime *` in a normal
+register, and the existing `dcall` path performs the actual invocation. Human
+RXAS/RXDAS uses callable descriptors (`rxsig1|name|return_type|args`), but a
+linked 007 instruction carries a numeric graph member/factory ID. Signatures
+are validated while the graph and bindings are built, not reparsed on the
+sealed success path.
 
-### Current `srcmethod` semantics
+### Current `srcmethodsel` semantics
 
-The current implementation is now:
+The current graph fast path is:
 
-- it rebuilds an interface-method registry only when newly loaded modules
-  invalidate that cache
-- registry rows are keyed by fully qualified concrete class name plus member
-  name
-- for each `class implements interface` link, the VM resolves the effective
-  procedure for each interface member during link
+- every graph callable is resolved to `proc_runtime *` once during a semantic-
+  generation binding rebuild
+- the receiver descriptor provides a dense member-to-callable row, and the
+  callable ID indexes the bound target array
+- a two-way site cache is keyed by receiver descriptor and semantic generation
 - if a concrete `class.member` procedure exists, that wins
 - otherwise, if the interface member kind is `method final`, the VM binds the
   interface's emitted default-body procedure instead
-- if no registry row exists, `srcmethod` still falls back to a direct
-  `class.member` lookup before raising `FUNCTION_NOT_FOUND`
+- cross-graph/native compatibility may still use the legacy sorted registry,
+  but the sealed numeric path does not
 
-### Current `srcfproc` semantics
+### Current `srcfprocsel` semantics
 
-The current implementation is now:
+The current graph fast path is:
 
 - it handles both the default `*` interface factory surface and named factory
   selectors
-- it rebuilds a factory-provider registry only when newly loaded modules
-  invalidate that cache
-- registry rows are keyed by interface FQN plus factory member name
-- for each candidate class, it resolves the concrete `§factory` or
-  `§factory.member` procedure through the existing metadata/procedure tables
-- each candidate row may also carry an optional resolved `§match` or
-  `§match.member` procedure
-- `srcfproc` calls the effective `match` on every candidate with the same
+- each factory ID indexes a prebound provider range; every row contains the
+  concrete class name, factory target, optional match target and match-required
+  flag
+- the instruction-site cache retains that binding across calls and is cleared
+  by semantic-generation mismatch
+- a one-provider bucket with no explicit `match` returns its direct target
+  without running the general scoring loop
+- `srcfprocsel` calls the effective `match` on every candidate with the same
   argument list that will later be passed to the selected factory, even when
   only one candidate exists
 - if a candidate has no explicit `match`, the VM behaves as if it had an
@@ -701,7 +2098,19 @@ The current implementation is now:
 - ties are broken alphabetically by fully qualified concrete class name
 - if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
 
+Graph construction matches source-short and canonical class-type spellings in
+factory signatures. This prevents a valid source descriptor from creating a
+duplicate providerless factory bucket during RXAS/RXLINK remapping. The
+standalone graph harness audits the numeric IDs embedded in executable
+instructions in addition to measuring a known-valid bucket.
+
 Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty and immediately calls `rxvm_link()` after a successful
-load, so later `srcfproc`, `srcmethod`, and direct imported calls can see
-the new provider without an automatic filesystem sweep.
+load, so later `srcfprocsel`, `srcmethodsel`, and direct imported calls can
+see the new provider without an automatic filesystem sweep.
+
+The `crexx` driver keeps bare `-l` names as packaged libraries below
+`CREXX_HOME/bin`, but any `-l` value containing `/` or `\\` is an exact path.
+Late-loading applications should pass the intended `.rxbin` filename to
+`loadmodule()` explicitly; neither the driver regression nor the VM late-load
+path searches user-controlled directories for a provider.

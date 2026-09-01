@@ -1,0 +1,9 @@
+options levelb
+namespace nr14_invalid_parseplan
+
+main: procedure = .int
+  fields = .string[]
+  source = "alpha beta"
+  assembler parseplan fields,source,"bad"
+  say "UNREACHABLE"
+  return 0

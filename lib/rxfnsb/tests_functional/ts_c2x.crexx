@@ -1,32 +1,31 @@
-/* C2X */
+/* Focused Level B C2X tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-/* EBCDIC
-if c2x('72s') \= 'F7F2A2' then say 'failed in test */
-if c2x('0123'x) \= '0123' then do
-  errors=errors+1
-  say 'failed in test 1: c2x('0123'x) =' c2x('0123'x)
-end
-/* These from Mark Hessling. */
-/* if c2x( 'foobar') \= '666F6F626172' then say 'failed in test 3 ' EBCDIC */
-if c2x( '' )\= '' then do
-  errors=errors+1
-  say 'failed in test 2: c2x( '' )= ' c2x( '' )
-end
+errors = 0
+source = "Hello"
+errors = errors + check("", c2x(""), "empty string")
+errors = errors + check("4D", c2x("M"), "documented single character")
+errors = errors + check("373273", c2x("72s"), "documented multi-character string")
+errors = errors + check("0123", c2x("0123"x), "control bytes keep leading zeroes")
+errors = errors + check("0101", c2x("101"x), "each character has two digits")
+errors = errors + check("48656C6C6F", c2x(source), "ASCII word")
+errors = errors + check("E9", c2x("é"), "established Unicode low-byte behavior")
+errors = errors + check("Hello", source, "source is not mutated")
 
-if c2x( '101'x )\= '0101' then do
-  errors=errors+1
-  say 'failed in test 3: c2x( '101'x )= ' c2x( '101'x )
+large = ""
+expected = ""
+do 128
+  large = large || "A"
+  expected = expected || "41"
 end
+errors = errors + check(expected, c2x(large), "long input")
 
-if c2x( '48656c6c6f'x )\= '48656C6C6F' then do
-  errors=errors+1
-  say 'failed in test 4: c2x( '48656c6c6f'x ) = ' c2x( '48656c6c6f'x )
-end
+if errors = 0 then say "PASS: c2x"
+return errors <> 0
 
-/* Raw non-UTF byte cases such as 'ffff'x now belong to .binary coverage. */
-
-return errors<>0
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: C2X" label "expected" expected "got" actual
+  return 1

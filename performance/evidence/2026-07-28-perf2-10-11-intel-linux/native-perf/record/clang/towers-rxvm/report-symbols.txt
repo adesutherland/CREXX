@@ -1,0 +1,32 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cycles:u'
+# Event count (approx.): 28180016175
+#
+# Overhead;Command;Shared Object;Symbol                                     ;IPC   [IPC Coverage]
+ 46.50% ;rxvm   ;rxvm         ;[.] copy_value                             ;-      -            
+ 17.85% ;rxvm   ;rxvm         ;[.] clear_value_contents                   ;-      -            
+ 8.89%  ;rxvm   ;rxvm         ;[.] reset_value_storage_for_reuse          ;-      -            
+ 6.51%  ;rxvm   ;rxvm         ;[.] run                                    ;-      -            
+ 5.61%  ;rxvm   ;rxvm         ;[.] maybe_trim_attribute_storage           ;-      -            
+ 3.25%  ;rxvm   ;libc.so.6    ;[.] malloc                                 ;-      -            
+ 3.16%  ;rxvm   ;libc.so.6    ;[.] _int_malloc                            ;-      -            
+ 2.02%  ;rxvm   ;libc.so.6    ;[.] _int_free_merge_chunk                  ;-      -            
+ 1.78%  ;rxvm   ;rxvm         ;[.] release_value_reference_lifetime       ;-      -            
+ 1.40%  ;rxvm   ;libc.so.6    ;[.] cfree@GLIBC_2.2.5                      ;-      -            
+ 0.59%  ;rxvm   ;libc.so.6    ;[.] _int_free_chunk                        ;-      -            
+ 0.47%  ;rxvm   ;libc.so.6    ;[.] __libc_malloc2                         ;-      -            
+ 0.38%  ;rxvm   ;libc.so.6    ;[.] unlink_chunk.isra.0                    ;-      -            
+ 0.36%  ;rxvm   ;libc.so.6    ;[.] _int_free_maybe_trim                   ;-      -            
+ 0.30%  ;rxvm   ;rxvm         ;[.] free@plt                               ;-      -            
+ 0.27%  ;rxvm   ;rxvm         ;[.] malloc@plt                             ;-      -            
+ 0.13%  ;rxvm   ;rxvm         ;[.] rx_graph_type_ref                      ;-      -            
+ 0.13%  ;rxvm   ;rxvm         ;[.] syncNumericContext                     ;-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

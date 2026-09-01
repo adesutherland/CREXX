@@ -1,0 +1,67 @@
+* PERF3-11 M02 component/value-proved redundant scalar constants.
+
+old_integer_floor() .locals=10
+    load r0,3
+    brt old_integer_left,a0
+    br old_integer_join
+old_integer_left:
+    load r9,1
+old_integer_join:
+    load r0,3
+    ret r0
+
+same_constant_phi() .locals=10
+    brt same_constant_left,a0
+    load r1,7
+    br same_constant_join
+same_constant_left:
+    load r1,7
+same_constant_join:
+    load r1,7
+    ret r1
+
+different_constant_phi() .locals=10
+    brt different_constant_left,a0
+    load r2,7
+    br different_constant_join
+different_constant_left:
+    load r2,8
+different_constant_join:
+    load r2,7
+    ret r2
+
+repeated_float_bits() .locals=10
+    load r3,1.5
+    load r3,1.5
+    ret r3
+
+different_zero_bits() .locals=10
+    load r4,-0.0
+    load r4,0.0
+    ret r4
+
+linked_constant_storage() .locals=10
+    load r5,11
+    link r6,r5
+    load r6,11
+    unlink r6
+    ret r5
+
+trace_equivalent_constant() .locals=10
+    load r7,12
+    .traceevent "V" 6 "R" "I" "r" 7 1 1 0 "first-integer" ""
+    load r7,12
+    .traceevent "A" 6 "R" "I" "r" 7 1 1 0 "second-integer" ""
+    ret r7
+
+reference_cleanup_required() .locals=10
+    load r8,0
+    mkref r8,r9
+    load r8,0
+    ret r8
+
+native_cleanup_required() .locals=11
+    load r9,0
+    bcopy r9,r10
+    load r9,0
+    ret r9

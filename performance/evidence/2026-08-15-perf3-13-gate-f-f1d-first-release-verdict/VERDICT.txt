@@ -1,0 +1,60 @@
+PERF3-13 Gate F F1d first ordinary-Release verdict
+
+Scope
+  Reusable bounded byte endpoints, structured child-process provider,
+  ADDRESS migration to the common channel operations, retirement of the six
+  pre-release spawn/redirect RXAS forms, and the nested-inline shape repair
+  discovered while compiling the Level B library.
+
+Identity and host
+  Base develop HEAD before F1d: 905855aacb4290aabd693b99117fcb889bc7a915
+  Exact accepted F1c control VMs:
+    rxbvm 7062a3a82816394203b66531c8b14efa471f080f00c7079a2c8f5eb7f7d379d8
+    rxtvm d19917b825de463f6420d37663263337edcfd1690d62be058b7e8bf9fc0267c1
+  F1d candidate VMs:
+    rxbvm 89ceb62d300541f32a417874f233e41457be249dbed0fd9ee5aeded4547eef4e
+    rxtvm 735b36a2e1bcf357ee56d52b9e1f0394b517ce62cc578abe8e74fbbd640b5828
+  Host: Darwin 25.5.0 arm64, 10 logical CPUs
+  Power: AC attached, battery 80 percent
+  pmset: no thermal or performance warning recorded
+  Product: ordinary profiling-off Release rxbvml and rxtvml
+
+Method
+  One warmup plus twelve balanced recorded pairs per cell. The unchanged
+  confirmation repeated the complete panel. Each run covers the retained
+  persistent executor at one and four workers and the local-channel latency
+  and throughput guards under both concrete VMs. Higher rates are favorable.
+
+Initial paired result (12 pairs per cell, mean and 95 percent interval)
+  executor rxbvml spin-w1       +0.381588% [-2.519597%, +3.282773%]
+  executor rxbvml spin-w4       +1.605258% [-3.322697%, +6.533213%]
+  channel  rxbvml latency       +2.600899% [-0.495361%, +5.697160%]
+  channel  rxbvml throughput    +1.977056% [-2.384720%, +6.338832%]
+  executor rxtvml spin-w1       +0.955473% [-2.472799%, +4.383746%]
+  executor rxtvml spin-w4       +1.348271% [-0.400624%, +3.097166%]
+  channel  rxtvml latency       +2.517069% [-0.175243%, +5.209382%]
+  channel  rxtvml throughput    -2.116141% [-5.519872%, +1.287591%]
+
+Unchanged confirmation (12 pairs per cell, mean and 95 percent interval)
+  executor rxbvml spin-w1       -0.445577% [-3.468691%,  +2.577538%]
+  executor rxbvml spin-w4       +3.434130% [-1.585465%,  +8.453726%]
+  channel  rxbvml latency       +5.576465% [-4.291317%, +15.444247%]
+  channel  rxbvml throughput    +3.017843% [-1.153351%,  +7.189038%]
+  executor rxtvml spin-w1       +0.130930% [-4.031279%,  +4.293139%]
+  executor rxtvml spin-w4       -0.052051% [-1.579119%,  +1.475017%]
+  channel  rxtvml latency      +19.108760% [-31.318806%, +69.536325%]
+  channel  rxtvml throughput    -0.229273% [-3.540798%,  +3.082252%]
+
+Interpretation
+  Neither run has a three-percent adverse-mean guard hit or a clearly adverse
+  confidence interval. The persistent-executor controls agree that F1d has no
+  confirmed throughput regression relative to the exact accepted F1c
+  binaries. The channel microbenchmarks are noisy; the confirmation includes
+  a large rxtvml latency outlier, so no improvement claim is made.
+
+Disposition
+  The first verdict was noisy/inconclusive and was therefore repeated
+  unchanged under Adrian's overnight instruction. The confirmation is also
+  non-adverse. F1d proceeds to closeout with the conservative conclusion
+  "no confirmed F1d regression". The previously accepted F1c computed-goto
+  slowdown remains separately recorded for F3 hot-loop hardening.

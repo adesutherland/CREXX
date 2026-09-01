@@ -1,0 +1,83 @@
+utc=2026-08-10T08:05:38Z
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+{ 1.49 1.30 1.32 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+62835 /bin/zsh -lc set -e
+r5_root=/private/tmp/crexx-perf3-05-r5.9gYg9z
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true
+  shasum -a 256 /private/tmp/crexx-perf3-05-r3.IvLL06/r3-gcc-inline/bin/{rxtvm,rxbvm} "$r5_root/gcc-profile-20/bin/"{rxtvm,rxbvm} "$r5_root/gcc-profile20-formal-manifest.txt" performance/tools/run_cross_runtime_matrix.crexx
+} > "$r5_root/gcc-profile20-formal-post-state.txt" 2>&1
+ruby -rcsv <<'RUBY'
+path='/private/tmp/crexx-perf3-05-r5.9gYg9z/gcc-profile20-formal-timing/summary.csv'
+rows=CSV.read(path,headers:true)
+engines=%w[rxtvm rxbvm];workloads=%w[Sieve Permute Bounce Richards Base64 Towers RexxCPS]
+values={}
+rows.each do |row|
+ engine=row['vm'].start_with?('rxtvm') ? 'rxtvm' : 'rxbvm'
+ panel=row['vm'].sub(/^#{engine}-gcc-r5-/,'')
+ values[[row['workload'],engine,panel]]=row['median'].to_f
+end
+puts 'engine,all7_pct,without_base64_pct,common5_pct,worst_workload,worst_pct,guard_cells'
+engines.each do |engine|
+ ratios={};deltas={}
+ workloads.each do |workload|
+  ratio=values[[workload,engine,'all-inline']]/values[[workload,engine,'profile-20']]
+  ratios[workload]=ratio;deltas[workload]=(ratio-1)*100
+ end
+ gm=lambda{|set|Math.exp(set.sum{|w|Math.log(ratios[w])}/set.size)-1}
+ worst=deltas.min_by{|_,v|v};guards=deltas.select{|_,v|v < -3}.keys
+ guards << 'COMMON_GM' if gm.call(%w[Sieve Permute Bounce Richards Base64])*100 < -1
+ printf "%s,%+.3f,%+.3f,%+.3f,%s,%+.3f,%s\n",engine,gm.call(workloads)*100,gm.call(workloads-[%q{Base64}])*100,gm.call(%w[Sieve Permute Bounce Richards Base64])*100,worst[0],worst[1],guards.join('+')
+ deltas.each{|w,v|printf "  %s,%+.3f\n",w,v}
+end
+RUBY
+pre_hashes=$(rg '^[0-9a-f]{64} ' "$r5_root/gcc-profile20-formal-pre-state.txt")
+post_hashes=$(rg '^[0-9a-f]{64} ' "$r5_root/gcc-profile20-formal-post-state.txt")
+if [ "$pre_hashes" = "$post_hashes" ]; then echo 'pre_post_hashes=identical'; else echo 'pre_post_hashes=DIFFER'; fi
+rg -n 'No thermal warning|CPU_Speed_Limit' "$r5_root/gcc-profile20-formal-pre-state.txt" "$r5_root/gcc-profile20-formal-post-state.txt" || true
+bb7a8f4eb13b57b304dbb7dced1cf4def7afc0b08cc04d7f065919730513e7a9  /private/tmp/crexx-perf3-05-r3.IvLL06/r3-gcc-inline/bin/rxtvm
+6228d3373f89c9685cc9a10bf11ae41e3a36d99a0db14a5d367297d5d0789892  /private/tmp/crexx-perf3-05-r3.IvLL06/r3-gcc-inline/bin/rxbvm
+fdc04ab9f324eefb76be8c0fcdddf7a53410decf036a4097ceded2a7820e3de3  /private/tmp/crexx-perf3-05-r5.9gYg9z/gcc-profile-20/bin/rxtvm
+c6219e56e9d4eca1e2d5dab3f668bbe5b150333297c4520f5c4278d0329e7c48  /private/tmp/crexx-perf3-05-r5.9gYg9z/gcc-profile-20/bin/rxbvm
+8628753419e5763bc1df76d8442a57676a1c93a559436016f6a25acbce89aa16  /private/tmp/crexx-perf3-05-r5.9gYg9z/gcc-profile20-formal-manifest.txt
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx

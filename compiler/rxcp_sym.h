@@ -31,6 +31,55 @@
 
 #include "rxcp_types.h"
 
+#define RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA 1u
+
+#define RXCP_INLINE_FORMAL_BY_REF       1u
+#define RXCP_INLINE_FORMAL_OPTIONAL     2u
+#define RXCP_INLINE_FORMAL_HAS_DEFAULT  4u
+#define RXCP_INLINE_FORMAL_VARG         8u
+#define RXCP_INLINE_FORMAL_READ_ONLY   16u
+#define RXCP_INLINE_FORMAL_WRITTEN     32u
+#define RXCP_INLINE_FORMAL_ESCAPES     64u
+#define RXCP_INLINE_FORMAL_EXACT_SHAPE 128u
+#define RXCP_INLINE_FORMAL_READ        256u
+
+#define RXCP_INLINE_RESULT_FALLTHROUGH  1u
+#define RXCP_INLINE_RESULT_MULTIPLE     2u
+#define RXCP_INLINE_RESULT_EXACT_SCALAR 4u
+#define RXCP_INLINE_RESULT_AGGREGATE    8u
+#define RXCP_INLINE_RESULT_REFERENCE   16u
+
+#define RXCP_INLINE_CONTEXT_SOURCE_IDENTITY 1u
+#define RXCP_INLINE_CONTEXT_TRACE_IDENTITY  2u
+#define RXCP_INLINE_CONTEXT_NUMERIC         4u
+
+/* Body-reconstructed method-receiver facts.  Absence means that receiver
+ * placement has no proof, so older I6 summaries retain the materialized path. */
+#define RXCP_INLINE_CONTROL_METHOD_RECEIVER          1u
+#define RXCP_INLINE_CONTROL_RECEIVER_ATTRIBUTE_WRITE  8u
+
+typedef struct {
+    ValueType type;
+    size_t dims;
+    unsigned int flags;
+} InlineFormalSummary;
+
+typedef struct {
+    unsigned int schema_version;
+    size_t formal_count;
+    InlineFormalSummary *formals;
+    ValueType result_type;
+    size_t result_dims;
+    unsigned int result_flags;
+    unsigned int control_flags;
+    unsigned int context_flags;
+    size_t structural_nodes;
+    size_t assignments;
+    size_t branches;
+    size_t calls;
+    size_t inline_temp_definitions;
+} InlineCallableSummary;
+
 /* Scope and Symbols */
 struct Scope {
     ASTNode *defining_node;
@@ -55,6 +104,23 @@ struct SymbolNode {
     unsigned int readUsage : 1;
     unsigned int writeUsage : 1;
 };
+
+/*
+ * Shared emitter representation for an explicit binary language constant.
+ *
+ * Constant propagation can attach the same large payload to many AST uses.
+ * Keeping one reference-counted copy here lets those nodes borrow the value
+ * and lets the RXAS emitter name it once with a module-scoped `.const` alias.
+ */
+typedef struct ConstantAlias {
+    char *name;
+    ValueType type;
+    char *value;
+    size_t value_length;
+    size_t reference_count;
+    char used;
+    char emitted;
+} ConstantAlias;
 
 struct Symbol {
     char *name;
@@ -84,6 +150,7 @@ struct Symbol {
     char is_opt_arg;   /* Is an optional arg */
     char is_const_arg; /* Is a constant arg */
     char meta_emitted; /* Has the emitter output the symbol's metadata */
+    char suppress_metadata; /* Compiler-internal binding: omit public variable metadata */
     char init_emitted; /* Has the emitter output the symbol's default inititator */
     char is_main;      /* Is the main procedure */
     char is_implicit_main; /* Is the compiler-generated implicit main procedure */
@@ -94,8 +161,14 @@ struct Symbol {
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
     char has_reference_target; /* Storage was the target of a reference expression */
+    char flow_skip_default_initiation; /* NR-26: every first read is preceded by a safe source write */
+    char inline_skip_default_initiation; /* PERF2-04/F03: candidate-local owned result is safely defined before return */
+    struct Symbol *inline_value_alias; /* PERF2-03: read-only inline formal shares caller storage */
+    char inline_borrowed_receiver; /* Inlined method receiver is a live link, not owned object storage */
+    InlineCallableSummary *inline_summary; /* PERF2-03: versioned immutable callable facts */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
+    ConstantAlias *constant_alias; /* Shared explicit binary constant payload */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
     ASTNode *creation_node; /* The node that first created this symbol */
 };
@@ -111,10 +184,17 @@ void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
                             const int *dim_base, const int *dim_elements,
                             const char *class_name);
 void sym_copy_reference_type(Symbol *dest, const Symbol *src);
+void sym_clear_inline_summary(Symbol *symbol);
+int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary);
+void sym_clear_constant_alias(Symbol *symbol);
+int sym_set_constant_alias(Symbol *symbol, const char *name, ValueType type,
+                           const char *value, size_t value_length);
+void sym_copy_constant_alias(Symbol *dest, const Symbol *src);
 
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);
 int scp_track_detached(Context *context, Scope *scope);
+int scp_abandon(Context *context, Scope *scope);
 void scp_free_detached(Context *context);
 
 /* Calls the handler for each symbol in scope */
@@ -146,14 +226,21 @@ int get_reg(Scope *scope);
 /* Get a permanent register from scope (not reused) */
 int get_reg_perm(Scope *scope);
 
+/* Reserve one specific register only if it is currently free (or is the next
+ * unused register). Returns non-zero on success. */
+int take_reg_exact(Scope *scope, int reg);
+
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg);
 
 /* Return a linked register later (end of statement) */
 void ret_reg_later(Scope *scope, int reg);
 
-/* Return all deferred registers */
-void ret_reg_all_deferred(Scope *scope);
+/* Mark the current deferred-register boundary and return only registers added
+ * after that boundary. Nested statements use this to retain enclosing cleanup
+ * temporaries until the enclosing statement finishes. */
+size_t deferred_reg_mark(Scope *scope);
+void ret_reg_deferred_since(Scope *scope, size_t mark);
 
 /* Get number of free register from scope - returns the start of a sequence
  * n, n+1, n+2, ... n+number */

@@ -1,0 +1,102 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(13_stems_\(noopt\|opt\)\|repro_multi_tail_stems_\(noopt\|opt\)\|13_stems_run_\(noopt\|opt\)\|repro_multi_tail_stems_run_\(noopt\|opt\)\|trace_stem_sugar\|rxvmstem_storage\|ts_regvalue_tester\|rxasreference\(catch\)\?tests\(-rxbvm\)\?\|nr21_fixed_call_contract\|nr14_frozen_parse_contract\|nr15_native_stem_contract\|ts_stem\(_errors\)\?_\(noopt\|opt\)\|nr15_stem_\(semantics\|access\)_\(rxvm\|rxbvm\)_\(noopt\|opt\)\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/31 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    1.84 sec
+      Start   90: 13_stems_noopt
+ 2/31 Test   #90: 13_stems_noopt .......................   Passed    1.15 sec
+      Start   91: 13_stems_opt
+ 3/31 Test   #91: 13_stems_opt .........................   Passed    1.07 sec
+      Start   92: repro_multi_tail_stems_noopt
+ 4/31 Test   #92: repro_multi_tail_stems_noopt .........   Passed    1.04 sec
+      Start   93: repro_multi_tail_stems_opt
+ 5/31 Test   #93: repro_multi_tail_stems_opt ...........   Passed    1.04 sec
+      Start  338: nr21_fixed_call_contract
+ 6/31 Test  #338: nr21_fixed_call_contract .............   Passed    3.07 sec
+      Start  339: nr14_frozen_parse_contract
+ 7/31 Test  #339: nr14_frozen_parse_contract ...........   Passed    5.54 sec
+      Start  340: nr15_native_stem_contract
+ 8/31 Test  #340: nr15_native_stem_contract ............   Passed    0.74 sec
+      Start  428: 13_stems_run_noopt
+ 9/31 Test  #428: 13_stems_run_noopt ...................   Passed    1.33 sec
+      Start  429: 13_stems_run_opt
+10/31 Test  #429: 13_stems_run_opt .....................   Passed    1.28 sec
+      Start  430: repro_multi_tail_stems_run_noopt
+11/31 Test  #430: repro_multi_tail_stems_run_noopt .....   Passed    1.27 sec
+      Start  431: repro_multi_tail_stems_run_opt
+12/31 Test  #431: repro_multi_tail_stems_run_opt .......   Passed    1.22 sec
+      Start  885: trace_stem_sugar
+13/31 Test  #885: trace_stem_sugar .....................   Passed    2.81 sec
+      Start 1030: rxvmstem_storage
+14/31 Test #1030: rxvmstem_storage .....................   Passed    0.06 sec
+      Start 1034: ts_regvalue_tester
+15/31 Test #1034: ts_regvalue_tester ...................   Passed    0.05 sec
+      Start 1059: rxasreferencetests
+16/31 Test #1059: rxasreferencetests ...................   Passed    0.06 sec
+      Start 1060: rxasreferencetests-rxbvm
+17/31 Test #1060: rxasreferencetests-rxbvm .............   Passed    0.05 sec
+      Start 1061: rxasreferencecatchtests
+18/31 Test #1061: rxasreferencecatchtests ..............   Passed    0.05 sec
+      Start 1062: rxasreferencecatchtests-rxbvm
+19/31 Test #1062: rxasreferencecatchtests-rxbvm ........   Passed    0.05 sec
+      Start 1468: ts_stem_noopt
+20/31 Test #1468: ts_stem_noopt ........................   Passed    0.25 sec
+      Start 1469: ts_stem_opt
+21/31 Test #1469: ts_stem_opt ..........................   Passed    0.20 sec
+      Start 1480: ts_stem_errors_noopt
+22/31 Test #1480: ts_stem_errors_noopt .................   Passed    0.24 sec
+      Start 1481: ts_stem_errors_opt
+23/31 Test #1481: ts_stem_errors_opt ...................   Passed    0.20 sec
+      Start 1817: nr15_stem_semantics_rxvm_noopt
+24/31 Test #1817: nr15_stem_semantics_rxvm_noopt .......***Failed  Required regular expression not found. Regex=[PASS: NR-15 stem semantic matrix
+]  0.05 sec
+ERROR reading module file nr15_stem_semantics_rxvm_noopt
+
+      Start 1818: nr15_stem_semantics_rxvm_opt
+25/31 Test #1818: nr15_stem_semantics_rxvm_opt .........   Passed    0.20 sec
+      Start 1819: nr15_stem_access_rxvm_noopt
+26/31 Test #1819: nr15_stem_access_rxvm_noopt ..........***Failed  Required regular expression not found. Regex=[PASS: NR-15 stem access compare
+]  0.05 sec
+ERROR reading module file nr15_stem_access_rxvm_noopt
+
+      Start 1820: nr15_stem_access_rxvm_opt
+27/31 Test #1820: nr15_stem_access_rxvm_opt ............   Passed    0.21 sec
+      Start 1821: nr15_stem_semantics_rxbvm_noopt
+28/31 Test #1821: nr15_stem_semantics_rxbvm_noopt ......***Failed  Required regular expression not found. Regex=[PASS: NR-15 stem semantic matrix
+]  0.05 sec
+ERROR reading module file nr15_stem_semantics_rxbvm_noopt
+
+      Start 1822: nr15_stem_semantics_rxbvm_opt
+29/31 Test #1822: nr15_stem_semantics_rxbvm_opt ........   Passed    0.21 sec
+      Start 1823: nr15_stem_access_rxbvm_noopt
+30/31 Test #1823: nr15_stem_access_rxbvm_noopt .........***Failed  Required regular expression not found. Regex=[PASS: NR-15 stem access compare
+]  0.05 sec
+ERROR reading module file nr15_stem_access_rxbvm_noopt
+
+      Start 1824: nr15_stem_access_rxbvm_opt
+31/31 Test #1824: nr15_stem_access_rxbvm_opt ...........   Passed    0.22 sec
+
+87% tests passed, 4 tests failed out of 31
+
+Label Time Summary:
+compiler       =  12.16 sec*proc (4 tests)
+interpreter    =   0.06 sec*proc (1 test)
+linked_opt     =   3.75 sec*proc (8 tests)
+nr15           =   1.85 sec*proc (10 tests)
+parse          =   5.54 sec*proc (1 test)
+performance    =  10.40 sec*proc (11 tests)
+rxbin          =   9.35 sec*proc (3 tests)
+semantics      =   0.51 sec*proc (4 tests)
+smoke          =   4.50 sec*proc (5 tests)
+stage4         =   2.81 sec*proc (1 test)
+stem           =   1.85 sec*proc (10 tests)
+
+Total Test time (real) =  25.70 sec
+
+The following tests FAILED:
+	1817 - nr15_stem_semantics_rxvm_noopt (Failed)           nr15 performance semantics stem
+	1819 - nr15_stem_access_rxvm_noopt (Failed)              nr15 performance stem
+	1821 - nr15_stem_semantics_rxbvm_noopt (Failed)          nr15 performance semantics stem
+	1823 - nr15_stem_access_rxbvm_noopt (Failed)             nr15 performance stem
+Errors while running CTest

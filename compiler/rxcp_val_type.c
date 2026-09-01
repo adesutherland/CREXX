@@ -35,8 +35,17 @@
 #undef mknd_err_unique
 #undef mknd_war
 #define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err1)((n), __VA_ARGS__) : (n))
+#define mknd_err2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err2)((n), __VA_ARGS__) : (n))
+#define mknd_err3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err3)((n), __VA_ARGS__) : (n))
+#define mknd_err5(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err5)((n), __VA_ARGS__) : (n))
 #define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique1)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique2)((n), __VA_ARGS__) : (n))
 #define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+#define mknd_war1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war1)((n), __VA_ARGS__) : (n))
+#define mknd_war2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war2)((n), __VA_ARGS__) : (n))
+#define mknd_war3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war3)((n), __VA_ARGS__) : (n))
 #include "rxcp_util.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxvmvars.h"
@@ -96,6 +105,7 @@ static int origin_subtree_has_error(ASTNode *node) {
         switch (current->node_type) {
             case ASSIGN:
             case DEFINE:
+            case CONSTANT_DEF:
             case REPEAT:
             case DO:
             case SAY:
@@ -205,16 +215,318 @@ static void set_node_target_type(Context* context, ASTNode* node, ValueType targ
     validate_node_promotion(context, node);
 }
 
+static int binary_memory_base_is_binary_scalar(ASTNode *base) {
+    if (!base) return 0;
+    if (base->value_type == TP_BINARY && base->value_dims == 0) return 1;
+    if (base->symbolNode && base->symbolNode->symbol) {
+        return base->symbolNode->symbol->type == TP_BINARY &&
+               base->symbolNode->symbol->value_dims == 0;
+    }
+    return 0;
+}
+
+static int binary_memory_node_is_scalar_type(ASTNode *node, ValueType type) {
+    if (!node) return 0;
+    if (node->value_type == type && node->value_dims == 0) return 1;
+    if (node->symbolNode && node->symbolNode->symbol) {
+        return node->symbolNode->symbol->type == type &&
+               node->symbolNode->symbol->value_dims == 0;
+    }
+    return 0;
+}
+
+static void validate_binary_memory_operand(Context *context, ASTNode *node, ASTNode *owner) {
+    if (!node || node->node_type == NOVAL) {
+        mknd_err(owner ? owner : node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+        return;
+    }
+
+    ast_set_target_type(0, node, TP_BINARY, 0, 0, 0, 0);
+    if (node->value_type != TP_UNKNOWN) {
+        validate_node_promotion(context, node);
+        if (!binary_memory_base_is_binary_scalar(node)) {
+            mknd_err(node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+        }
+    }
+}
+
+static void validate_binary_memory_exact_value(Context *context,
+                                               ASTNode *node,
+                                               ValueType type,
+                                               const char *diagnostic,
+                                               ASTNode *owner) {
+    if (!node || node->node_type == NOVAL) {
+        mknd_err(owner ? owner : node, diagnostic);
+        return;
+    }
+    if (node->value_type == TP_UNKNOWN) {
+        set_node_target_type(context, node, type);
+    } else if (!binary_memory_node_is_scalar_type(node, type)) {
+        mknd_err(node, diagnostic);
+    }
+}
+
+static int binary_memory_storage_info(Context *context, ASTNode *node, RxcpBinaryStorageInfo *info) {
+    ASTNode *type_node = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, 0, 0) ||
+        !(node->node_type == OP_PACKED_AT
+              ? rxcp_packed_storage_info(type_node, info)
+              : rxcp_binary_storage_info(type_node, info))) {
+        mknd_err(type_node ? type_node : node,
+                 node->node_type == OP_PACKED_AT
+                     ? "PACKED_INVALID_STORAGE_TYPE"
+                     : "BINARY_MEMORY_INVALID_STORAGE_TYPE");
+        return 0;
+    }
+    return 1;
+}
+
+static void validate_binary_memory_at(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = 0;
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, &base, &offset)) return;
+    if (!binary_memory_storage_info(context, node, &info)) return;
+
+    if (!base) {
+        mknd_err(node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+    } else {
+        validate_binary_memory_operand(context, base, node);
+    }
+
+    if (!offset) {
+        mknd_err(node, "BINARY_MEMORY_OFFSET_REQUIRED");
+    } else {
+        set_node_target_type(context, offset, TP_INTEGER);
+    }
+
+    if (!info.is_fixed &&
+        info.value_type != TP_STRING &&
+        info.value_type != TP_DECIMAL &&
+        (!node->parent || node->parent->node_type != OP_BINARY_FOR)) {
+        mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
+    }
+}
+
+static void validate_binary_memory_for(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = 0;
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+    ASTNode *length = ast_chdn(node, 1);
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, &base, &offset)) {
+        mknd_err(node, "BINARY_MEMORY_AT_REQUIRED");
+        return;
+    }
+    validate_binary_memory_at(context, ast_chdn(node, 0));
+    if (!binary_memory_storage_info(context, node, &info)) return;
+    if (info.is_fixed) mknd_err(node, "BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED");
+    else if (info.value_type == TP_DECIMAL) mknd_err(node, "BINARY_MEMORY_LENGTH_NOT_ALLOWED");
+    if (length) set_node_target_type(context, length, TP_INTEGER);
+    else mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
+}
+
+static void validate_binary_memory_length(Context *context, ASTNode *node) {
+    ASTNode *memory = ast_chdn(node, 0);
+
+    validate_binary_memory_operand(context, memory, node);
+    set_node_type(node, TP_INTEGER);
+}
+
+static int binary_memory_compare_arg_count(ASTNode *node) {
+    ASTNode *first;
+    int count;
+
+    count = ast_nchd(node) - 1;
+    first = ast_chdn(node, 1);
+    if (count == 1 && first && first->node_type == NOVAL) return 0;
+    return count;
+}
+
+static void validate_binary_memory_compare(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = ast_chdn(node, 0);
+    ASTNode *memory = ast_chdn(node, 1);
+    ASTNode *offset = ast_chdn(node, 2);
+    ASTNode *needle = 0;
+    int argc = binary_memory_compare_arg_count(node);
+
+    if (!rxcp_binary_storage_info(type_node, &info)) {
+        mknd_err(type_node ? type_node : node, "BINARY_MEMORY_COMPARE_TYPE");
+        set_node_type(node, TP_INTEGER);
+        return;
+    }
+
+    validate_binary_memory_operand(context, memory, node);
+    if (offset && offset->node_type != NOVAL) {
+        set_node_target_type(context, offset, TP_INTEGER);
+    }
+
+    if (info.value_type == TP_BINARY && !info.is_fixed) {
+        if (argc == 3) {
+            needle = ast_chdn(node, 3);
+        } else {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        }
+        if (argc == 3) {
+            validate_binary_memory_exact_value(context, needle, TP_BINARY, "BINARY_MEMORY_COMPARE_NEEDLE_TYPE", node);
+        }
+    } else if (info.value_type == TP_STRING && !info.is_fixed) {
+        if (argc != 3) {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        } else {
+            needle = ast_chdn(node, 3);
+            validate_binary_memory_exact_value(context, needle, TP_STRING, "BINARY_MEMORY_COMPARE_NEEDLE_TYPE", node);
+        }
+    } else if (info.is_fixed) {
+        if (argc != 3) {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        } else {
+            needle = ast_chdn(node, 3);
+            if (needle && needle->node_type != NOVAL) {
+                set_node_target_type(context, needle, info.value_type);
+            } else {
+                mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+            }
+        }
+    } else {
+        mknd_err(type_node ? type_node : node, "BINARY_MEMORY_COMPARE_TYPE");
+    }
+
+    if (!offset || offset->node_type == NOVAL) {
+        mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+    }
+    set_node_type(node, TP_INTEGER);
+}
+
+static int symbol_is_class_attribute_typecheck(Symbol *symbol);
+
+static int raw_dynamic_array_statement_target(Context *context, ASTNode *statement, ASTNode *target, int validate) {
+    Symbol *symbol;
+
+    if (!target) return 0;
+
+    if (!target->symbolNode || !target->symbolNode->symbol) {
+        if (validate) mknd_err(statement, "UNKNOWN_TYPE");
+        return 0;
+    }
+
+    symbol = target->symbolNode->symbol;
+    ast_svtp(target, symbol);
+
+    if (ast_nchd(target)) {
+        if (validate) mknd_err(ast_chdn(target, 0), "INVALID_LHS_ARRAY");
+        return 0;
+    }
+
+    if (symbol->type == TP_UNKNOWN || target->value_type == TP_UNKNOWN) {
+        if (validate) mknd_err(statement, "UNKNOWN_TYPE");
+        return 0;
+    }
+
+    if (!symbol->value_dims) {
+        if (validate) mknd_err(target, "NOT_AN_ARRAY");
+        return 0;
+    }
+
+    if (symbol->value_dims != 1 ||
+        !symbol->dim_base ||
+        !symbol->dim_elements ||
+        symbol->dim_base[0] != 1 ||
+        symbol->dim_elements[0] != 0 ||
+        symbol_is_class_attribute_typecheck(symbol)) {
+        if (validate) mknd_err(statement, "ARRAY_DIMS_MISMATCH");
+        return 0;
+    }
+
+    set_node_type(statement, TP_VOID);
+    return 1;
+}
+
+static void prepare_array_statement_types(Context *context, ASTNode *node, int validate) {
+    ASTNode *target;
+    ASTNode *value;
+    ASTNode *index;
+    ASTNode *count_or_last;
+    int target_ok;
+
+    set_node_type(node, TP_VOID);
+
+    target = ast_chdn(node, 0);
+    value = ast_chdn(node, 1);
+    index = ast_chdn(node, 2);
+    target_ok = raw_dynamic_array_statement_target(context, node, target, validate);
+
+    switch (node->node_type) {
+        case ARRAY_APPEND:
+            if (value && value->value_type == TP_VOID) {
+                if (validate) mknd_err(value, "RETURNS_VOID");
+            } else if (target_ok && value) {
+                ast_set_target_type(0, value, target->value_type, 0, 0, 0, target->value_class);
+                if (validate) validate_node_promotion(context, value);
+            }
+            break;
+
+        case ARRAY_INSERT:
+            if (value && value->value_type == TP_VOID) {
+                if (validate) mknd_err(value, "RETURNS_VOID");
+            } else if (target_ok && value) {
+                ast_set_target_type(0, value, target->value_type, 0, 0, 0, target->value_class);
+                if (validate) validate_node_promotion(context, value);
+            }
+            if (index) {
+                ast_set_target_type(0, index, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, index);
+            }
+            break;
+
+        case ARRAY_REMOVE:
+            if (value) {
+                ast_set_target_type(0, value, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, value);
+            }
+            count_or_last = index;
+            if (count_or_last) {
+                ast_set_target_type(0, count_or_last, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, count_or_last);
+            }
+            break;
+
+        case ARRAY_REMOVE_RANGE:
+            if (value) {
+                ast_set_target_type(0, value, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, value);
+            }
+            count_or_last = index;
+            if (count_or_last) {
+                ast_set_target_type(0, count_or_last, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, count_or_last);
+            }
+            break;
+
+        case ARRAY_CLEAR:
+            break;
+
+        default:
+            break;
+    }
+}
+
 static ASTNode *find_enclosing_block_expr(ASTNode *node) {
     if (node) node = node->parent;
     while (node) {
-        if (node->node_type == BLOCK_EXPR) return node;
+        if (node->node_type == BLOCK_EXPR ||
+            node->node_type == PARALLEL_BLOCK_EXPR) return node;
         node = node->parent;
     }
     return 0;
 }
 
-static void copy_value_type(__attribute__((unused)) Context *context, ASTNode *dest, ASTNode *src) {
+static void copy_value_type(RXCP_UNUSED Context *context, ASTNode *dest, ASTNode *src) {
     ast_set_value_type(0, dest, src->value_type, src->value_dims,
                        src->value_dim_base, src->value_dim_elements, src->value_class);
     ast_set_target_type(0, dest, src->value_type, src->value_dims,
@@ -475,6 +787,22 @@ static int same_contract_return_signature(Context *context, ASTNode *iface_membe
     return same;
 }
 
+static int contract_arg_is_vararg(ASTNode *arg) {
+    if (!arg) return 0;
+    if (arg->is_varg) return 1;
+    return arg->child &&
+           (arg->child->node_type == VARG ||
+            arg->child->node_type == VARG_REFERENCE);
+}
+
+static int same_contract_arg_mode(ASTNode *left_arg, ASTNode *right_arg) {
+    if (!left_arg || !right_arg) return 0;
+    if (left_arg->is_opt_arg != right_arg->is_opt_arg) return 0;
+    if (left_arg->is_ref_arg != right_arg->is_ref_arg) return 0;
+    if (contract_arg_is_vararg(left_arg) != contract_arg_is_vararg(right_arg)) return 0;
+    return 1;
+}
+
 static int type_node_is_runtime_type_target(ASTNode *type_node) {
     if (!type_node) return 0;
     if (type_node->target_dims != 0) return 0;
@@ -609,6 +937,7 @@ static int same_contract_signature(Context *context, ASTNode *iface_member, ASTN
         ASTNode *class_target = class_arg->child ? class_arg->child->sibling : 0;
 
         if (!iface_target || !class_target) return 0;
+        if (!same_contract_arg_mode(iface_arg, class_arg)) return 0;
         if (!same_contract_type_node(context, iface_target, class_target)) return 0;
 
         iface_arg = iface_arg->sibling;
@@ -634,6 +963,7 @@ static int same_contract_argument_signature(Context *context, ASTNode *left_memb
         ASTNode *right_target = right_arg->child ? right_arg->child->sibling : 0;
 
         if (!left_target || !right_target) return 0;
+        if (!same_contract_arg_mode(left_arg, right_arg)) return 0;
         if (!same_contract_type_node(context, left_target, right_target)) return 0;
 
         left_arg = left_arg->sibling;
@@ -754,7 +1084,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
                 iface_name = sym_frnm(iface_symbol);
                 if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                     if (factory_lookup_name) free(factory_lookup_name);
                     if (match_lookup_name) free(match_lookup_name);
                     if (member_name) free(member_name);
@@ -764,7 +1096,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
                 class_member_node = sym_trnd(class_member_symbol, 0)->node;
                 if (!same_contract_signature(context, iface_member, class_member_node)) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                 }
 
                 if (class_match_symbol && class_match_symbol->symbol_type == FUNCTION_SYMBOL) {
@@ -780,7 +1114,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
                         !same_contract_argument_signature(context, iface_member, class_match_node) ||
                         match_ret_type != TP_INTEGER ||
                         match_dims != 0 || match_class != 0) {
-                        mknd_err(class_node, "INTERFACE_MATCH_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                        mknd_err2(class_node, "INTERFACE_MATCH_SIGNATURE_MISMATCH",
+                                  "interface", iface_name ? iface_name : "",
+                                  "member", member_name ? member_name : "");
                     }
 
                     if (match_base) free(match_base);
@@ -805,7 +1141,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
             iface_name = sym_frnm(iface_symbol);
             if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
                 if (!interface_member_has_default_body(iface_member)) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                 }
                 if (member_name) free(member_name);
                 if (iface_name) free(iface_name);
@@ -814,10 +1152,14 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
             class_member_node = sym_trnd(class_member_symbol, 0)->node;
             if (interface_member_has_default_body(iface_member)) {
-                mknd_err(class_node, "INTERFACE_DEFAULT_METHOD_REDEFINED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                mknd_err2(class_node, "INTERFACE_DEFAULT_METHOD_REDEFINED",
+                          "interface", iface_name ? iface_name : "",
+                          "member", member_name ? member_name : "");
             }
             else if (!same_contract_signature(context, iface_member, class_member_node)) {
-                mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                mknd_err2(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH",
+                          "interface", iface_name ? iface_name : "",
+                          "member", member_name ? member_name : "");
             }
 
             if (member_name) free(member_name);
@@ -932,7 +1274,7 @@ static int resolve_factory_call_as_qualified_function(Context *context, ASTNode 
 /* Reset node types at the start of each validation pass so they can be re-evaluated on a clean slate */
 walker_result clear_node_types_walker(walker_direction direction,
                                              ASTNode* node,
-                                             __attribute__((unused)) void *payload) {
+                                             RXCP_UNUSED void *payload) {
     if (direction == in) {
         if (node->node_type != INTEGER && node->node_type != FLOAT &&
             node->node_type != STRING && node->node_type != DECIMAL &&
@@ -997,8 +1339,22 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_COMPARE_S_LTE:
             case OP_ARG_EXISTS:
             case OP_ARG_IX_EXISTS:
+            case OP_FLAG_HAS:
+            case OP_REFSAME:
+            case OP_EQ:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_BOOLEAN);
+                }
+                break;
+
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_NOT:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_INTEGER);
                 }
                 break;
 
@@ -1054,6 +1410,25 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_NOT:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_BOOLEAN);
+                }
+                break;
+
+            case OP_SIZEOF:
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_COMPARE:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_INTEGER);
+                }
+                break;
+
+            case OP_BINARY_AT:
+            case OP_BINARY_FOR:
+            case OP_PACKED_AT:
+                if (node->value_type == TP_UNKNOWN) {
+                    RxcpBinaryStorageInfo info;
+                    if (binary_memory_storage_info(context, node, &info)) {
+                        set_node_type(node, info.value_type);
+                    }
                 }
                 break;
 
@@ -1206,7 +1581,11 @@ walker_result set_node_types_walker(walker_direction direction,
                                 context->changed_flags |= FLAG_VAL_TYPE; return result_normal;
                             }
 
-                            if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
+                            if (node->is_equivalence_operator) {
+                                /* The closed `<eq>` diagnostic is emitted by
+                                 * type_safety_walker instead of a generic
+                                 * missing-method diagnostic. */
+                            } else if (class_sym && class_sym->symbol_type == CLASS_SYMBOL) {
                                 if (context->after_rewrite) {
                                     if (node->node_string && (strcmp(node->node_string, "get") == 0 || strcmp(node->node_string, "set") == 0)) {
                                         mknd_err(node, "INVALID_PUBLIC_ATTRIBUTE");
@@ -1228,7 +1607,8 @@ walker_result set_node_types_walker(walker_direction direction,
                                 }
                             }
                         }
-                    } else if (instance->value_type != TP_UNKNOWN) {
+                    } else if (instance->value_type != TP_UNKNOWN &&
+                               !node->is_equivalence_operator) {
                         mknd_err(node, "NOT_AN_OBJECT");
                     }
                 }
@@ -1428,6 +1808,15 @@ walker_result set_node_types_walker(walker_direction direction,
                     set_node_type(node, TP_VOID);
 
                 }
+                if (rxcp_binary_memory_is_access(child1)) {
+                    if (child1->value_type == TP_UNKNOWN) {
+                        RxcpBinaryStorageInfo info;
+                        if (binary_memory_storage_info(context, child1, &info)) {
+                            set_node_type(child1, info.value_type);
+                        }
+                    }
+                    break;
+                }
                 if (child2->node_type == BINARY &&
                     target_is_first_untyped_symbol_assignment(child1)) {
                     infer_text_type_for_binary_literal(child1->symbolNode->symbol);
@@ -1467,6 +1856,14 @@ walker_result set_node_types_walker(walker_direction direction,
                         }
                     }
                 }
+                break;
+
+            case ARRAY_APPEND:
+            case ARRAY_INSERT:
+            case ARRAY_REMOVE:
+            case ARRAY_REMOVE_RANGE:
+            case ARRAY_CLEAR:
+                prepare_array_statement_types(context, node, 0);
                 break;
 
             case CONST_SYMBOL:
@@ -1530,7 +1927,9 @@ walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case TYPE_REFERENCE:
-                if (node->value_type == TP_UNKNOWN) {
+                if (node->value_type == TP_UNKNOWN ||
+                    node->value_reference_type == TP_UNKNOWN ||
+                    node->target_reference_type == TP_UNKNOWN) {
                     size_t dims = 0;
                     int *dim_base = 0;
                     int *dim_elements = 0;
@@ -1561,6 +1960,24 @@ walker_result set_node_types_walker(walker_direction direction,
                     rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
                     if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
                         /* context->changed_flags |= FLAG_VAL_TYPE; */ ast_svtp(child1, child1->symbolNode->symbol);
+                    }
+                }
+                break;
+
+            case CONSTANT_DEF:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
+                }
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    child1->symbolNode->symbol->type =
+                            node_to_type(context, child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                        ast_svtp(child1, child1->symbolNode->symbol);
                     }
                 }
                 break;
@@ -1721,6 +2138,28 @@ walker_result type_safety_walker(walker_direction direction,
         child2 = ast_chdn(node, 1);
 
         switch (node->node_type) {
+            case MEMBER_CALL:
+                if (node->is_equivalence_operator) {
+                    ASTNode *equivalence_right = child2;
+                    if (equivalence_right &&
+                        equivalence_right->node_type == OP_TYPE_CAST &&
+                        equivalence_right->is_compiler_added) {
+                        equivalence_right = ast_chdn(equivalence_right, 0);
+                    }
+                    if (context->level != LEVELG) {
+                        mknd_err_unique(node, "EQ_ONLY_LEVELG");
+                    } else if (!child1 || !equivalence_right ||
+                               child1->value_type != TP_OBJECT ||
+                               equivalence_right->value_type != TP_OBJECT ||
+                               !child1->value_class ||
+                               !symbol_name_assignable_to(context,
+                                                          child1->value_class,
+                                                          "data.ObjectEquatable")) {
+                        mknd_err_unique(node, "EQ_REQUIRES_OBJECT_EQUATABLE");
+                    }
+                }
+                break;
+
             case PROCEDURE:
                 if (node->symbolNode && node->symbolNode->symbol && node->symbolNode->symbol->is_main) {
                     /* Validate main() return values */
@@ -1740,14 +2179,33 @@ walker_result type_safety_walker(walker_direction direction,
                 set_node_target_type(context, child2, TP_BOOLEAN);
                 break;
 
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
+                set_node_target_type(context, child1, TP_INTEGER);
+                set_node_target_type(context, child2, TP_INTEGER);
+                break;
+
+            case OP_BIT_NOT:
+                set_node_target_type(context, child1, TP_INTEGER);
+                break;
+
             case OP_COMPARE_EQUAL:
             case OP_COMPARE_NEQ:
             case OP_COMPARE_GT:
             case OP_COMPARE_LT:
             case OP_COMPARE_GTE:
             case OP_COMPARE_LTE:
-                set_node_target_type(context, child1, max_type(node));
-                set_node_target_type(context, child2, max_type(node));
+                if ((child1 && child1->value_type == TP_REFERENCE) ||
+                    (child2 && child2->value_type == TP_REFERENCE)) {
+                    mknd_err(node, "REFERENCE_COMPARISON_UNSUPPORTED");
+                } else {
+                    set_node_target_type(context, child1, max_type(node));
+                    set_node_target_type(context, child2, max_type(node));
+                }
                 break;
 
             case OP_COMPARE_S_EQ:
@@ -1756,8 +2214,13 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
-                set_node_target_type(context, child1, TP_STRING);
-                set_node_target_type(context, child2, TP_STRING);
+                if ((child1 && child1->value_type == TP_REFERENCE) ||
+                    (child2 && child2->value_type == TP_REFERENCE)) {
+                    mknd_err(node, "REFERENCE_COMPARISON_UNSUPPORTED");
+                } else {
+                    set_node_target_type(context, child1, TP_STRING);
+                    set_node_target_type(context, child2, TP_STRING);
+                }
                 break;
 
             case TYPE_REFERENCE:
@@ -1798,11 +2261,35 @@ walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_REFSAME:
+                if (!child1 || !child2 ||
+                    child1->value_type != TP_REFERENCE ||
+                    child2->value_type != TP_REFERENCE) {
+                    mknd_err(node, "REFSAME_REQUIRES_REFERENCES");
+                } else if (!rxcp_same_reference_value_type(child1, child2)) {
+                    mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+                }
+                break;
+
+            case OP_EQ:
+                if (context->level != LEVELG) {
+                    mknd_err_unique(node, "EQ_ONLY_LEVELG");
+                } else if (!child1 || !child2 ||
+                           child1->value_type != TP_OBJECT ||
+                           child2->value_type != TP_OBJECT ||
+                           !child1->value_class ||
+                           !symbol_name_assignable_to(context,
+                                                      child1->value_class,
+                                                      "data.ObjectEquatable")) {
+                    mknd_err_unique(node, "EQ_REQUIRES_OBJECT_EQUATABLE");
+                }
+                break;
+
             case OP_INITIALIZED:
                 if (!child1 || child1->node_type == NOVAL) {
-                    mknd_err(node, "ARGUMENT_REQUIRED, 1, \"value\"");
+                    mknd_err2(node, "ARGUMENT_REQUIRED", "position", "1", "name", "value");
                 } else if (child1->sibling) {
-                    mknd_err(child1->sibling, "UNEXPECTED_ARGUMENT, 2");
+                    mknd_err1(child1->sibling, "UNEXPECTED_ARGUMENT", "position", "2");
                 }
                 break;
 
@@ -1812,7 +2299,43 @@ walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_SIZEOF: {
+                RxcpBinaryStorageInfo info;
+                if (!rxcp_binary_storage_info(child1, &info) || !info.is_fixed) {
+                    mknd_err(child1 ? child1 : node, "BINARY_MEMORY_INVALID_STORAGE_TYPE");
+                }
+                set_node_type(node, TP_INTEGER);
+                break;
+            }
+
+            case OP_BINARY_LENGTH:
+                validate_binary_memory_length(context, node);
+                break;
+
+            case OP_BINARY_COMPARE:
+                validate_binary_memory_compare(context, node);
+                break;
+
+            case OP_BINARY_AT:
+                validate_binary_memory_at(context, node);
+                break;
+
+            case OP_PACKED_AT:
+                validate_binary_memory_at(context, node);
+                break;
+
+            case OP_BINARY_FOR:
+                validate_binary_memory_for(context, node);
+                break;
+
             case OP_TYPE_CAST:
+                if (node->is_compiler_added && node->parent &&
+                    node->parent->is_equivalence_operator) {
+                    break;
+                }
+                if (child2 && child2->target_type == TP_DECIMAL) {
+                    rxcp_contextualize_exact_decimal_literals(context, child1);
+                }
                 if (!type_node_is_runtime_type_target(child2) || child1->value_dims != 0) {
                     mknd_err(node, "TYPE_MISMATCH");
                 } else if (child2->target_type == TP_OBJECT && child1->value_type != TP_OBJECT) {
@@ -1858,7 +2381,9 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->parent->node_type != NODE_REGISTER && node->parent->node_type != DEFINE) {
+                if (node->parent->node_type != NODE_REGISTER &&
+                    node->parent->node_type != DEFINE &&
+                    node->parent->node_type != CONSTANT_DEF) {
                     int skip_svtp = 0;
                     if (node->symbolNode && node->symbolNode->symbol) {
                         if (node->value_type == TP_UNKNOWN) {
@@ -2036,6 +2561,20 @@ walker_result type_safety_walker(walker_direction direction,
                     }
                 }
 
+                /* Source-import parsing can establish the outer reference
+                 * type before the referent child has converged.  Complete the
+                 * symbol's reference shape monotonically once that child is
+                 * known; otherwise ast_sttn() would keep copying an unknown
+                 * referent back onto the validated TYPE_REFERENCE node. */
+                if (child1->symbolNode->symbol->type == TP_REFERENCE &&
+                    child1->symbolNode->symbol->reference_type == TP_UNKNOWN &&
+                    child2->value_type == TP_REFERENCE &&
+                    child2->value_reference_type != TP_UNKNOWN) {
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    ast_svtp(child1, child1->symbolNode->symbol);
+                    context->changed_flags |= FLAG_VAL_TYPE;
+                }
+
                 if (ast_nchd(child1)) {
                     /* We have unexpected array parameters */
                     mknd_err(ast_chdn(child1,0), "INVALID_LHS_ARRAY");
@@ -2047,9 +2586,67 @@ walker_result type_safety_walker(walker_direction direction,
                 ast_rttp(node);
                 break;
 
+            case CONSTANT_DEF:
+                if (child2->value_type == TP_VOID) {
+                    mknd_err(child2, "RETURNS_VOID");
+                }
+                else {
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        child1->symbolNode->symbol->type =
+                                node_to_type(context, child2,
+                                             &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base),
+                                             &(child1->symbolNode->symbol->dim_elements),
+                                             &(child1->symbolNode->symbol->value_class));
+                        rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    }
+                    ast_svtp(child1, child1->symbolNode->symbol);
+
+                    if (ast_nchd(child1)) {
+                        mknd_err(ast_chdn(child1,0), "INVALID_LHS_ARRAY");
+                    }
+
+                    ast_sttn(child2, child1);
+                    validate_node_promotion(context, child2);
+                    ast_svtn(node, child1);
+                    ast_rttp(node);
+                }
+                break;
+
             case ASSIGN:
                 if (child2->value_type == TP_VOID) {
                     mknd_err(child2, "RETURNS_VOID");
+                }
+                else if (rxcp_binary_memory_is_access(child1)) {
+                    RxcpBinaryStorageInfo info;
+                    if (binary_memory_storage_info(context, child1, &info)) {
+                        ASTNode *base = 0;
+
+                        /* A typed binary-memory store mutates its base even
+                         * though the syntactic LHS is the <at..T> access node.
+                         * Keep that write visible to argument-isolation and
+                         * inline-summary analysis. */
+                        if (rxcp_binary_memory_at_parts(child1, 0, &base, 0) &&
+                            base && base->symbolNode) {
+                            base->symbolNode->writeUsage = 1;
+                        }
+                        if (rxcp_binary_memory_base_is_readonly(child1)) {
+                            mknd_err(child1, "BINARY_MEMORY_READ_ONLY");
+                        }
+                        if ((info.value_type == TP_STRING || info.value_type == TP_DECIMAL) &&
+                            child1->node_type == OP_BINARY_AT) {
+                            ast_sttn(child2, child1);
+                            validate_node_promotion(context, child2);
+                        }
+                        else if (child1->node_type == OP_BINARY_FOR && !info.is_fixed) {
+                            mknd_err(child1, "BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED");
+                        }
+                        else if (info.is_fixed) {
+                            ast_sttn(child2, child1);
+                            validate_node_promotion(context, child2);
+                        }
+                    }
+                    ast_svtn(node, child1);
                 }
                 else {
                     if (child2->node_type == BINARY &&
@@ -2171,6 +2768,14 @@ walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+            case ARRAY_APPEND:
+            case ARRAY_INSERT:
+            case ARRAY_REMOVE:
+            case ARRAY_REMOVE_RANGE:
+            case ARRAY_CLEAR:
+                prepare_array_statement_types(context, node, 1);
+                break;
+
             case ARGS:
                 n1 = ast_proc(node);
                 if (n1 && n1->symbolNode && n1->symbolNode->symbol && n1->symbolNode->symbol->is_main) {
@@ -2237,7 +2842,8 @@ walker_result type_safety_walker(walker_direction direction,
                 if (child1) set_node_target_type(context, child1, TP_STRING);
                 break;
 
-            case BLOCK_EXPR: {
+            case BLOCK_EXPR:
+            case PARALLEL_BLOCK_EXPR: {
                 ASTNode *n = node->child;
                 ASTNode *matched_leave = 0;
                 ASTNode *first_typed_leave = 0;
@@ -2254,7 +2860,8 @@ walker_result type_safety_walker(walker_direction direction,
                         }
                     }
 
-                    if (n->child && n->node_type != BLOCK_EXPR) {
+                    if (n->child && n->node_type != BLOCK_EXPR &&
+                        n->node_type != PARALLEL_BLOCK_EXPR) {
                         n = n->child;
                     } else if (n == node) {
                         break;
@@ -2444,7 +3051,11 @@ walker_result func_type_safety_walker(walker_direction direction,
                             break;
                         }
                         /* Its not an error for the first NOVAL argument */
-                        if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
+                        if (arg_num > 1 || n1->node_type != NOVAL) {
+                            char *arg_text = rxcp_diag_int_string(arg_num);
+                            mknd_err1(n1, "UNEXPECTED_ARGUMENT", "position", arg_text);
+                            free(arg_text);
+                        }
                         else if (n1->node_type == NOVAL) {
                             /* Prune the unwanted NOVAL - the parser grammar just added it */
                             ASTNode *to_del = n1;
@@ -2463,7 +3074,9 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             if (n1->sibling) {
                                 /* If n1 is not the last argument then it can't be NOVAL */
-                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"...\"", arg_num);
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text, "name", "...");
+                                free(arg_text);
                             }
                             else {
                                 /* Prune the unwanted NOVAL - the parser grammar just added it */
@@ -2494,8 +3107,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             ast_svtn(n1, n2);
                             if (!n1->is_opt_arg) {
-                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num,
-                                         required_argument_name(n2));
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                          "name", required_argument_name(n2));
+                                free(arg_text);
                             }
                         } else {
                             ast_sttn(n1, n2);
@@ -2533,7 +3148,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         n1->is_ref_arg = n2->is_ref_arg;
                         n1->is_const_arg = n2->is_const_arg;
                         if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, required_argument_name(n2));
+                            char *arg_text = rxcp_diag_int_string(arg_num);
+                            mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                      "name", required_argument_name(n2));
+                            free(arg_text);
                         }
                         n2 = n2->sibling;
                     }

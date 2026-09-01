@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g3aee597382c9.dirty 20260715",
+  "workload": "base64",
+  "runtime": "oorexx",
+  "variant": "byte-string-port",
+  "lifecycle": "process",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: Base64 Roundtrip",
+  "metric_prefix": null,
+  "command": ["/Users/adrian/.local/opt/oorexx/5.1.0-12973/rxenv.sh","rexx","tests/benchmarks/cross-runtime/oorexx/base64_roundtrip.rex","500"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-15T19:27:47+0000",
+  "completed_utc": "2026-07-15T19:27:48+0000",
+  "result": "pass"
+}

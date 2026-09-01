@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+sha256-64,direct-c,ceiling,process,warmup,1,13550000,0,pass,5688,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,direct-c,ceiling,process,recorded,1,13194000,0,pass,5745,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,direct-c,ceiling,process,recorded,2,13251000,0,pass,5763,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD
+sha256-64,direct-c,ceiling,process,recorded,3,13201000,0,pass,5727,digest=C6AB9724ADE5B6A7A1EDFFFB12F3AA9181351355AF8FD08C919952AD211339DD

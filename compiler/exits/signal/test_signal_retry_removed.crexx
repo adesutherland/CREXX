@@ -1,0 +1,5 @@
+options levelb
+
+action = .signalaction.retry()
+say action.kind()
+return 0

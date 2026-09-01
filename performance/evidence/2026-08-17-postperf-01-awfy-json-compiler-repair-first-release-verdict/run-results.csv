@@ -1,0 +1,3 @@
+workload,role,compile_rc,assemble_rc,link_rc,run_rc,result
+awfy_json,control,0,0,0,1,FAIL expected 25820-byte fixture got 0
+awfy_json,candidate,0,0,0,0,PASS 25820 bytes 156 operations 3392 indexed nodes

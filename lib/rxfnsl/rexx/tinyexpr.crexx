@@ -1,0 +1,352 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levell
+
+namespace rxfnsl expose tinyexpr_lex tinyexpr_eval tinyexpr_status tinyexpr_error_offset tinyexpr_error_message tinyexpr_token_count tinyexpr_token_kind tinyexpr_token_start tinyexpr_token_length tinyexpr_token_value tinyexpr_token_is tinyexpr_token_name
+import rxfnsb
+
+tinyexpr_constants: procedure expose TINY_CLASS_SPACE TINY_CLASS_DIGIT TINY_CLASS_IDENT TINY_CLASS_PLUS TINY_CLASS_MINUS TINY_CLASS_STAR TINY_CLASS_SLASH TINY_CLASS_LPAREN TINY_CLASS_RPAREN TINY_TOK_EOF TINY_TOK_NUMBER TINY_TOK_IDENT TINY_TOK_PLUS TINY_TOK_MINUS TINY_TOK_STAR TINY_TOK_SLASH TINY_TOK_LPAREN TINY_TOK_RPAREN TINY_TOKEN_KIND TINY_TOKEN_START TINY_TOKEN_LENGTH TINY_TOKEN_VALUE TINY_TOKEN_SIZE TINY_ASCII_CLASS
+  constant TINY_CLASS_SPACE = 1
+  constant TINY_CLASS_DIGIT = 2
+  constant TINY_CLASS_IDENT = 3
+  constant TINY_CLASS_PLUS = 4
+  constant TINY_CLASS_MINUS = 5
+  constant TINY_CLASS_STAR = 6
+  constant TINY_CLASS_SLASH = 7
+  constant TINY_CLASS_LPAREN = 8
+  constant TINY_CLASS_RPAREN = 9
+
+  constant TINY_TOK_EOF = 0
+  constant TINY_TOK_NUMBER = 1
+  constant TINY_TOK_IDENT = 2
+  constant TINY_TOK_PLUS = 3
+  constant TINY_TOK_MINUS = 4
+  constant TINY_TOK_STAR = 5
+  constant TINY_TOK_SLASH = 6
+  constant TINY_TOK_LPAREN = 7
+  constant TINY_TOK_RPAREN = 8
+
+  constant TINY_TOKEN_KIND = 0
+  constant TINY_TOKEN_START = 2
+  constant TINY_TOKEN_LENGTH = 6
+  constant TINY_TOKEN_VALUE = 8
+  constant TINY_TOKEN_SIZE = 16
+
+  constant TINY_ASCII_CLASS = '0000000000000000000101000001000000000000000000000000000000000000'
+                              '0100000000000000080906040005000702020202020202020202000000000000'
+                              '0003030303030303030303030303030303030303030303030303030000000003'
+                              '0003030303030303030303030303030303030303030303030303030000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000000000'
+                              '0000000000000000000000000000000000000000000000000000000000'x as .binary
+  return
+
+tinyexpr_lex: procedure = .binary expose _tiny_ready _tiny_status _tiny_error_offset
+  arg source = .string
+
+  call tinyexpr_reset
+
+  source_bytes = source as .binary
+  source_len = <blen>(source_bytes)
+  tokens = .binary
+  count = 0
+  pos = 0
+
+  do while pos < source_len
+    byte = <at..u8>(pos) source_bytes
+    cls = <at..u8>(byte) TINY_ASCII_CLASS
+
+    select cls
+      when TINY_CLASS_SPACE then pos = pos + 1
+      when TINY_CLASS_DIGIT then do
+        start = pos
+        value = 0
+        do while pos < source_len
+          byte = <at..u8>(pos) source_bytes
+          cls = <at..u8>(byte) TINY_ASCII_CLASS
+          if cls \= TINY_CLASS_DIGIT then leave
+          value = value * 10 + byte - 48
+          pos = pos + 1
+        end
+        call tinyexpr_emit tokens, count, TINY_TOK_NUMBER, start, pos - start, value
+      end
+      when TINY_CLASS_IDENT then do
+        start = pos
+        do while pos < source_len
+          byte = <at..u8>(pos) source_bytes
+          cls = <at..u8>(byte) TINY_ASCII_CLASS
+          if cls \= TINY_CLASS_IDENT & cls \= TINY_CLASS_DIGIT then leave
+          pos = pos + 1
+        end
+        call tinyexpr_emit tokens, count, TINY_TOK_IDENT, start, pos - start, 0
+      end
+      when TINY_CLASS_PLUS then do
+        call tinyexpr_emit tokens, count, TINY_TOK_PLUS, pos, 1, 0
+        pos = pos + 1
+      end
+      when TINY_CLASS_MINUS then do
+        call tinyexpr_emit tokens, count, TINY_TOK_MINUS, pos, 1, 0
+        pos = pos + 1
+      end
+      when TINY_CLASS_STAR then do
+        call tinyexpr_emit tokens, count, TINY_TOK_STAR, pos, 1, 0
+        pos = pos + 1
+      end
+      when TINY_CLASS_SLASH then do
+        call tinyexpr_emit tokens, count, TINY_TOK_SLASH, pos, 1, 0
+        pos = pos + 1
+      end
+      when TINY_CLASS_LPAREN then do
+        call tinyexpr_emit tokens, count, TINY_TOK_LPAREN, pos, 1, 0
+        pos = pos + 1
+      end
+      when TINY_CLASS_RPAREN then do
+        call tinyexpr_emit tokens, count, TINY_TOK_RPAREN, pos, 1, 0
+        pos = pos + 1
+      end
+      otherwise do
+        call tinyexpr_set_error 1, pos
+        return tokens
+      end
+    end
+  end
+
+  call tinyexpr_emit tokens, count, TINY_TOK_EOF, source_len, 0, 0
+  return tokens
+
+tinyexpr_eval: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  arg source = .string
+
+  tokens = tinyexpr_lex(source)
+  if _tiny_status \= 0 then return 0
+
+  _tiny_cursor = 0
+  value = tinyexpr_parse_expression(tokens, 1)
+  if _tiny_status \= 0 then return 0
+
+  if tinyexpr_current_kind(tokens) \= TINY_TOK_EOF then do
+    call tinyexpr_set_error_at_current tokens, 5
+    return 0
+  end
+
+  return value
+
+tinyexpr_status: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset
+  call tinyexpr_ensure_runtime
+  return _tiny_status
+
+tinyexpr_error_offset: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset
+  call tinyexpr_ensure_runtime
+  return _tiny_error_offset
+
+tinyexpr_error_message: procedure = .string expose _tiny_ready _tiny_status _tiny_error_offset
+  call tinyexpr_ensure_runtime
+  select _tiny_status
+    when 0 then return ""
+    when 1 then return "invalid input byte"
+    when 2 then return "expected number or parenthesized expression"
+    when 3 then return "expected right parenthesis"
+    when 4 then return "division by zero"
+    when 5 then return "unexpected trailing token"
+    otherwise return "unknown tinyexpr error"
+  end
+  return "unknown tinyexpr error"
+
+tinyexpr_token_count: procedure = .int
+  arg tokens = .binary
+  bytes = <blen>(tokens)
+  return bytes / TINY_TOKEN_SIZE
+
+tinyexpr_token_kind: procedure = .int
+  arg tokens = .binary, index = .int
+  return <at..u16>(tinyexpr_token_offset(index) + TINY_TOKEN_KIND) tokens
+
+tinyexpr_token_start: procedure = .int
+  arg tokens = .binary, index = .int
+  return <at..u32>(tinyexpr_token_offset(index) + TINY_TOKEN_START) tokens
+
+tinyexpr_token_length: procedure = .int
+  arg tokens = .binary, index = .int
+  return <at..u16>(tinyexpr_token_offset(index) + TINY_TOKEN_LENGTH) tokens
+
+tinyexpr_token_value: procedure = .int
+  arg tokens = .binary, index = .int
+  return <at..int>(tinyexpr_token_offset(index) + TINY_TOKEN_VALUE) tokens
+
+tinyexpr_token_is: procedure = .int
+  arg source = .string, tokens = .binary, index = .int, needle = .binary
+  start = tinyexpr_token_start(tokens, index)
+  token_len = tinyexpr_token_length(tokens, index)
+  if token_len \= <blen>(needle) then return 0
+  source_bytes = source as .binary
+  if <compare..binary>(source_bytes, start, needle) = 0 then return 1
+  return 0
+
+tinyexpr_token_name: procedure = .string
+  arg kind = .int
+
+  select kind
+    when TINY_TOK_EOF then return "eof"
+    when TINY_TOK_NUMBER then return "number"
+    when TINY_TOK_IDENT then return "ident"
+    when TINY_TOK_PLUS then return "plus"
+    when TINY_TOK_MINUS then return "minus"
+    when TINY_TOK_STAR then return "star"
+    when TINY_TOK_SLASH then return "slash"
+    when TINY_TOK_LPAREN then return "lparen"
+    when TINY_TOK_RPAREN then return "rparen"
+    otherwise return "unknown"
+  end
+  return "unknown"
+
+tinyexpr_emit: procedure = .int
+  arg expose tokens = .binary, expose count = .int, kind = .int, start = .int, length = .int, value = .int
+
+  offset = count * TINY_TOKEN_SIZE
+  call binresize tokens, offset + TINY_TOKEN_SIZE
+  <at..u16>(offset + TINY_TOKEN_KIND) tokens = kind
+  <at..u32>(offset + TINY_TOKEN_START) tokens = start
+  <at..u16>(offset + TINY_TOKEN_LENGTH) tokens = length
+  <at..int>(offset + TINY_TOKEN_VALUE) tokens = value
+  count = count + 1
+  return count
+
+tinyexpr_parse_expression: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  arg tokens = .binary, min_prec = .int
+
+  left = tinyexpr_parse_primary(tokens)
+  if _tiny_status \= 0 then return 0
+
+  do while _tiny_status = 0
+    kind = tinyexpr_current_kind(tokens)
+    prec = tinyexpr_operator_precedence(kind)
+    if prec < min_prec then leave
+
+    op_start = tinyexpr_token_start(tokens, _tiny_cursor)
+    _tiny_cursor = _tiny_cursor + 1
+    right = tinyexpr_parse_expression(tokens, prec + 1)
+    if _tiny_status \= 0 then return 0
+
+    select kind
+      when TINY_TOK_PLUS then left = left + right
+      when TINY_TOK_MINUS then left = left - right
+      when TINY_TOK_STAR then left = left * right
+      when TINY_TOK_SLASH then do
+        if right = 0 then do
+          call tinyexpr_set_error 4, op_start
+          return 0
+        end
+        left = left / right
+      end
+      otherwise do
+        call tinyexpr_set_error_at_current tokens, 5
+        return 0
+      end
+    end
+  end
+
+  return left
+
+tinyexpr_parse_primary: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  arg tokens = .binary
+
+  kind = tinyexpr_current_kind(tokens)
+
+  select kind
+    when TINY_TOK_NUMBER then do
+      value = tinyexpr_token_value(tokens, _tiny_cursor)
+      _tiny_cursor = _tiny_cursor + 1
+      return value
+    end
+    when TINY_TOK_MINUS then do
+      _tiny_cursor = _tiny_cursor + 1
+      return -tinyexpr_parse_primary(tokens)
+    end
+    when TINY_TOK_LPAREN then do
+      _tiny_cursor = _tiny_cursor + 1
+      value = tinyexpr_parse_expression(tokens, 1)
+      if _tiny_status \= 0 then return 0
+      if tinyexpr_current_kind(tokens) \= TINY_TOK_RPAREN then do
+        call tinyexpr_set_error_at_current tokens, 3
+        return 0
+      end
+      _tiny_cursor = _tiny_cursor + 1
+      return value
+    end
+    otherwise do
+      call tinyexpr_set_error_at_current tokens, 2
+      return 0
+    end
+  end
+  return 0
+
+tinyexpr_current_kind: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  arg tokens = .binary
+  if _tiny_cursor < 0 | _tiny_cursor >= tinyexpr_token_count(tokens) then return 0
+  return tinyexpr_token_kind(tokens, _tiny_cursor)
+
+tinyexpr_operator_precedence: procedure = .int
+  arg kind = .int
+  select kind
+    when TINY_TOK_PLUS then return 1
+    when TINY_TOK_MINUS then return 1
+    when TINY_TOK_STAR then return 2
+    when TINY_TOK_SLASH then return 2
+    otherwise return 0
+  end
+  return 0
+
+tinyexpr_token_offset: procedure = .int
+  arg index = .int
+  return index * TINY_TOKEN_SIZE
+
+tinyexpr_set_error_at_current: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  arg tokens = .binary, status = .int
+  offset = 0
+  if _tiny_cursor >= 0 & _tiny_cursor < tinyexpr_token_count(tokens) then offset = tinyexpr_token_start(tokens, _tiny_cursor)
+  call tinyexpr_set_error status, offset
+  return status
+
+tinyexpr_set_error: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset
+  arg status = .int, offset = .int
+  call tinyexpr_ensure_runtime
+  if _tiny_status = 0 then do
+    _tiny_status = status
+    _tiny_error_offset = offset
+  end
+  return _tiny_status
+
+tinyexpr_reset: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  _tiny_ready = 1
+  _tiny_status = 0
+  _tiny_error_offset = 0
+  _tiny_cursor = 0
+  return 0
+
+tinyexpr_ensure_runtime: procedure = .int expose _tiny_ready _tiny_status _tiny_error_offset _tiny_cursor
+  if _tiny_ready = 1 then return 0
+  call tinyexpr_reset
+  return 0

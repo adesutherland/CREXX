@@ -1,0 +1,56 @@
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + check("'Hello '||name",fsayfmt("Hello {name}"),"plain placeholder")
+errors = errors + check("'Hello '||name",fsayfmt('"Hello {name}"'),"compiler source literal")
+errors = errors + check("name",fsayfmt("{name}"),"placeholder only")
+errors = errors + check("''",fsayfmt(""),"empty template")
+errors = errors + check("'plain text'",fsayfmt("plain text"),"literal only")
+errors = errors + check("'It''s '||name",fsayfmt("It's {name}"),"canonical apostrophe escape")
+errors = errors + check("'He said ""hello"" to '||name",fsayfmt('"He said ""hello"" to {name}"'),"source quote decode")
+errors = errors + check("'{name} and }'",fsayfmt("{{name}} and }}"),"doubled braces")
+errors = errors + check("name.i",fsayfmt("{name.i}"),"compound variable")
+errors = errors + check("left(name,10)",fsayfmt("{name:10}"),"default left width")
+errors = errors + check("left(name,10)",fsayfmt("{name <10}"),"space separator")
+errors = errors + check("right(name,10)",fsayfmt("{name:>10}"),"right width")
+errors = errors + check("center(name,10)",fsayfmt("{name:^10}"),"centre width")
+errors = errors + check("format(price,8,2)",fsayfmt("{price:8.2}"),"default numeric right")
+errors = errors + check("left(format(price,,2),8)",fsayfmt("{price:<8.2}"),"left numeric")
+errors = errors + check("center(format(price,,2),8)",fsayfmt("{price:^8.2}"),"centre numeric")
+errors = errors + check("format(price,,2)",fsayfmt("{price:.2}"),"precision without width")
+errors = errors + check("'α'' || ''β'",fsayfmt("α' || 'β"),"Unicode literal text")
+
+errors = errors + expect_signal("unclosed","hello {name")
+errors = errors + expect_signal("unmatched closer","hello } name")
+errors = errors + expect_signal("nested opener","hello {na{me}")
+errors = errors + expect_signal("empty placeholder","{}")
+errors = errors + expect_signal("expression rejected","{name+1}")
+errors = errors + expect_signal("array expression rejected","{name[i]}")
+errors = errors + expect_signal("empty format","{name:}")
+errors = errors + expect_signal("negative width","{name:-1}")
+errors = errors + expect_signal("alignment without width","{price:<.2}")
+errors = errors + expect_signal("invalid decimals","{price:8.x}")
+errors = errors + expect_signal("extra field","{name 10 more}")
+errors = errors + expect_signal("mismatched source quote",'"hello')
+
+if errors = 0 then say "PASS: fsayfmt"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: FSAYFMT" label "expected <" || expected || "> got <" || actual || ">"
+  return 1
+
+expect_signal: procedure = .int
+  arg label = .string, template = .string
+  caught = 0
+  do
+    ignored = fsayfmt(template)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  if caught = 1 then return 0
+  say "FAIL: FSAYFMT" label "did not signal INVALID_ARGUMENTS"
+  return 1

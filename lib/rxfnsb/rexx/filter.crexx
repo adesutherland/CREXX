@@ -27,11 +27,20 @@ options levelb
 
 namespace rxfnsb expose filter
 
+/**
+ * Remove every character present in a removal set.
+ *
+ * Characters are compared as Unicode code points. Repeated characters in the
+ * removal set have no additional effect.
+ *
+ * @param input_value source string
+ * @param filter characters to remove
+ * @return source characters not present in filter, in their original order
+ */
 filter: procedure = .string
-arg input_value = .string, filter = .string
+  arg input_value = .string, filter = .string
 
-strout=""
+  strout = ""
+  assembler dropchar strout,input_value,filter
 
-assembler dropchar strout,input_value,filter
-
-return strout
+  return strout

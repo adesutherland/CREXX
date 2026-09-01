@@ -1,0 +1,7 @@
+227f9acfd9fc0c96baa558975e62c0a0398f7f5063af2e1a75ca75b39dd5d960  ./README.md
+b91edc30b8558d055cca41ff7405c25d1edc380335e7087f450b6ab23dc9eda6  ./artifacts.csv
+5a8f5aad634741ab90054fe2177820237bb10779ea346b24bcfc15fd617b3da1  ./logs/broad-debug-ctest.log
+26de4db18d70387f53bb7867b6273d5626f52c71969746fdb69eac0a8091de47  ./logs/debug-build.log
+410ae97340a1e15e47daf4aa7793bd9cb90b1f4e7961b00bbf5b730e4cc506d0  ./logs/focused-ctest.log
+26de4db18d70387f53bb7867b6273d5626f52c71969746fdb69eac0a8091de47  ./logs/release-build.log
+29e73b8eb0304450b5218fae4c42a5ee7f0be4b792a01d2b0018b8fa8ea3c76e  ./source.diff

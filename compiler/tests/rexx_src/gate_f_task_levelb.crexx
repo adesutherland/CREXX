@@ -1,0 +1,5 @@
+options levelb
+namespace gate_f_task_levelb
+
+work: task = .int
+  return 1

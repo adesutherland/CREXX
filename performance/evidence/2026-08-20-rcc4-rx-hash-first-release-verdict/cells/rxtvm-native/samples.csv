@@ -1,0 +1,7 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,warmup,1,109403000,0,pass,95955,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,recorded,1,107234000,0,pass,94462,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,recorded,2,139038000,0,pass,116029,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,recorded,3,130717000,0,pass,106963,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,recorded,4,111680000,0,pass,93577,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E
+crexxrag_sha256_4096x10000,rxtvm,native,steady-state-kernel,recorded,5,108868000,0,pass,93555,digest=D41D438C379110C7F7B2C561B1F04F26C1B4549110791F8E022F48974280C13E

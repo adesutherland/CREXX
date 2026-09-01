@@ -1,0 +1,99 @@
+/* Functional contract for CRI-10 ADDRESS output and error capture. */
+options levelb
+import rxfnsb
+
+failures = 0
+newline = "0a"x
+
+batch = .string[]
+batch[1] = "echo FIRST"
+batch[2] = "echo SECOND"
+
+output_text = .string
+error_text = .string
+address crexx "batch" input batch output output_text error error_text
+failures = failures + check_int("scalar multiline rc", rc, 0)
+failures = failures + check_str("scalar multiline output", output_text, "FIRST" || newline || "SECOND" || newline)
+failures = failures + check_str("scalar empty stderr", error_text, "")
+
+output_lines = .string[]
+error_lines = .string[]
+address crexx "batch" input batch output output_lines error error_lines
+failures = failures + check_int("array multiline rc", rc, 0)
+failures = failures + check_int("array multiline count", output_lines.0, 2)
+failures = failures + check_str("array first line", output_lines[1], "FIRST")
+failures = failures + check_str("array second line", output_lines[2], "SECOND")
+failures = failures + check_int("array empty stderr", error_lines.0, 0)
+
+payload = 'Gràdh 中 😀 | ; && [] {} "quoted"'
+payload_lines = .string[]
+payload_errors = .string[]
+address crexx "echo :payload" output payload_lines error payload_errors
+failures = failures + check_int("Unicode and delimiters rc", rc, 0)
+failures = failures + check_int("Unicode and delimiters count", payload_lines.0, 1)
+failures = failures + check_str("Unicode and delimiters preserved", payload_lines[1], payload)
+
+pid_lines = .string[]
+address crexx "pid" output pid_lines error payload_errors
+workdir = "__crexx_cri10_capture_" || pid_lines[1]
+setup_out = .string[]
+setup_err = .string[]
+address crexx "mkdir -p :workdir" output setup_out error setup_err
+failures = failures + check_int("fixture setup", rc, 0)
+
+missing = .string[]
+missing[1] = workdir || "/missing one"
+missing[2] = workdir || "/missing two"
+failure_out = .string[]
+failure_err = .string[]
+address crexx "rm :missing[]" output failure_out error failure_err
+failures = failures + check_int("failure rc", rc, 8)
+failures = failures + check_int("failure stdout empty", failure_out.0, 0)
+failures = failures + check_int("multiline stderr count", failure_err.0, 2)
+failures = failures + check_true("stderr first delimiter path", pos(missing[1], failure_err[1]) > 0)
+failures = failures + check_true("stderr second delimiter path", pos(missing[2], failure_err[2]) > 0)
+
+failure_text = .string
+failure_output_text = .string
+address crexx "rm :missing[]" output failure_output_text error failure_text
+failures = failures + check_int("scalar failure rc", rc, 8)
+failures = failures + check_str("scalar failure stdout empty", failure_output_text, "")
+failures = failures + check_true("scalar stderr first path", pos(missing[1], failure_text) > 0)
+failures = failures + check_true("scalar stderr second path", pos(missing[2], failure_text) > 0)
+failures = failures + check_int("scalar stderr line delimiters", countstr(newline, failure_text), 2)
+
+empty_out = .string[]
+empty_err = .string[]
+address crexx "cd ." output empty_out error empty_err
+failures = failures + check_int("empty command rc", rc, 0)
+failures = failures + check_int("empty stdout", empty_out.0, 0)
+failures = failures + check_int("empty stderr", empty_err.0, 0)
+
+address crexx "rmdir :workdir" output setup_out error setup_err
+failures = failures + check_int("fixture cleanup", rc, 0)
+
+if failures <> 0 then do
+  say "ADDRESS capture failures:" failures
+  return 1
+end
+
+say "PASS: ADDRESS capture contract"
+return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say label || ": expected " || expected || " got " || actual
+  return 1
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say label || ": expected [" || expected || "] got [" || actual || "]"
+  return 1
+
+check_true: procedure = .int
+  arg label = .string, actual = .int
+  if actual then return 0
+  say label || ": expected true"
+  return 1

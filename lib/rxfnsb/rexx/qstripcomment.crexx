@@ -22,60 +22,51 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Remove line or balanced block comments outside quotes. */
 options levelb
-
 namespace rxfnsb expose qstripcomment
 
-/* ------------------------------------------------------------------
- *   Function:  QCOMMENT
- *  Purpose:   Remove comment segments from a string.
+/**
+ * Remove comments by position while preserving all original line endings.
+ * An omitted or empty close selects line-comment mode.
  *
- *  Usage:     clean = QSTRIPCOMMENT(open, close, text)
- *
- *  Arguments:
- *     open   - Opening delimiter (e.g. '/*' or '--')
- *     close  - (optional) Closing delimiter (e.g. '*/')
- *              If omitted or empty, the comment ends at line end.
- *     text   - Input string to clean.
- *
- *  Returns:
- *     The input text with all comment segments removed.
- *
- *  Notes:
- *     - Quote-safe: ignores comment markers inside quoted strings.
- *     - Handles multiple comments per line.
- *     - Handles unterminated block comments gracefully.
- *  ------------------------------------------------------------------
+ * @param open non-empty comment opener
+ * @param close optional block-comment closer
+ * @param text source text
+ * @return source with comments removed and CRLF, LF, or CR retained
+ * @signal INVALID_ARGUMENTS invalid delimiters or malformed quote/pair grammar
  */
-qstripcomment: procedure=.string
-  arg open=.string, close='', text=.string
-  if close = '' then xclose = 0          /* 0 means line comment mode */
-  else xclose=1
+qstripcomment: procedure = .string
+  arg open = .string, close = '', text = .string
+  if close = '' then spans = qscan_line_comment_spans(open,text)
+  else spans = qscan_pair_spans(open,close,text,1)
 
   out = ''
-  pos = 1
-  len = length(text)
-
-  do while pos <= len
-     cpos = qpos(open, text, pos)
-     if cpos = 0 then do
-        out = out || substr(text, pos)
-        leave
-     end
-
-    /* copy everything before the comment */
-    out = out || substr(text, pos, cpos - pos)
-
-    if xclose = 0 then do      /* line comment: skip to end of line */
-       epos = pos('0D0A'x, text, cpos)
-       if epos = 0 then epos = len + 1
-       pos = epos
-    end
-    else do    /* block comment: extract whole segment (inclusive) */
-       seg = qextractpair(open, close, text, cpos, 'inclusive')
-       if seg = '' then leave   /* no closing delimiter → cut rest */
-       pos = cpos + length(seg)
+  cursor = 0
+  if close = '' then do
+    count = .int
+    assembler idiv count,spans[0],2
+    do index = 1 to count
+      base = (index - 1) * 2
+      remove_start = spans[base + 1]
+      remove_end = spans[base + 2]
+      out = out || substr(text,cursor + 1,remove_start - cursor)
+      cursor = remove_end
     end
   end
-return out
+  else do
+    count = .int
+    assembler idiv count,spans[0],4
+    do index = .int(1) to count
+      base = .int
+      base = (index - 1) * 4
+      remove_start = .int
+      remove_start = spans[base + 1]
+      remove_end = .int
+      remove_end = spans[base + 4]
+      out = out || substr(text,cursor + 1,remove_start - cursor)
+      cursor = remove_end
+    end
+  end
+  out = out || substr(text,cursor + 1)
+  return out

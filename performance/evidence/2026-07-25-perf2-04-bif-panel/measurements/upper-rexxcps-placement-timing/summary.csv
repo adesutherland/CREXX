@@ -1,0 +1,7 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+upper-baseline-rxvm,PERF2-04 UPPER RexxCPS,crexx,rxvm,UPR-C0-current,P,no,no,1000-clauses,benchmark_rate,7,27818088.000000,28909593.500000,29340829.000000,29420968.000000,29660418.000000,213824.000000,0.728759,6.279066,no
+upper-baseline-rxbvm,PERF2-04 UPPER RexxCPS,crexx,rxbvm,UPR-C0-current,P,no,no,1000-clauses,benchmark_rate,7,27385281.000000,27484600.000000,27588110.000000,27826748.000000,28069808.000000,187296.000000,0.678901,2.481239,no
+upper-symbol-poc-rxvm,PERF2-04 UPPER RexxCPS,crexx,rxvm,UPR-L0-current-symbol,P,no,no,1000-clauses,benchmark_rate,7,29975727.000000,30082585.500000,30792918.000000,31117988.500000,31758483.000000,623593.000000,2.025118,5.789500,no
+upper-symbol-poc-rxbvm,PERF2-04 UPPER RexxCPS,crexx,rxbvm,UPR-L0-current-symbol,P,no,no,1000-clauses,benchmark_rate,7,27473006.000000,29028865.000000,29319896.000000,29441898.500000,29785633.000000,220805.000000,0.753089,7.887569,no
+upper-direct-poc-rxvm,PERF2-04 UPPER RexxCPS,crexx,rxvm,UPR-H1-direct-result,P,no,no,1000-clauses,benchmark_rate,7,31406246.000000,31477933.500000,31672757.000000,31758480.500000,31872815.000000,188470.000000,0.595054,1.473092,no
+upper-direct-poc-rxbvm,PERF2-04 UPPER RexxCPS,crexx,rxbvm,UPR-H1-direct-result,P,no,no,1000-clauses,benchmark_rate,7,28321070.000000,28884277.500000,29561281.000000,29883290.000000,30046903.000000,450243.000000,1.523084,5.838154,no

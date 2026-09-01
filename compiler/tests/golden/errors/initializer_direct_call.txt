@@ -1,0 +1,2 @@
+Error in initializer_direct_call.crexx @ 8:8 - #INITIALISER_NOT_CALLABLE, "boot"
+1 error(s) in source file

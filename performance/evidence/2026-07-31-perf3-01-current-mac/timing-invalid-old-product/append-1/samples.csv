@@ -1,0 +1,41 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Permute-permute-rxvm-recorded-1,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,1,1,5000,1933748000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-2,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,2,1,5000,1915535000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-3,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,3,1,5000,1935135000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-4,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,4,1,5000,1941400000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-5,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,5,1,5000,1929871000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-6,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,6,1,5000,1926766000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-7,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,7,1,5000,1906228000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-8,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,8,1,5000,1952001000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-9,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,9,1,5000,1899327000,,0,pass,,
+timing-Permute-permute-rxvm-recorded-10,timing,Permute,permute-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,10,1,5000,2057270000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-1,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,1,1,2500,1546440000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-1,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,1,2,2500,1676120000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-2,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,2,1,2500,1649781000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-2,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,2,2,2500,1556914000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-3,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,3,1,2500,1542327000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-3,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,3,2,2500,1655483000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-4,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,4,1,2500,1771081000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-4,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,4,2,2500,1377956000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-5,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,5,1,2500,1544353000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-5,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,5,2,2500,1676994000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-6,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,6,1,2500,1791133000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-6,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,6,2,2500,1640573000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-7,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,7,1,2500,1448871000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-7,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,7,2,2500,1661249000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-8,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,8,1,2500,1462960000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-8,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,8,2,2500,1540045000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-9,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,9,1,2500,1507604000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-9,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,9,2,2500,1711460000,,0,pass,,
+timing-Base64-base64-rxbvm-recorded-10,timing,Base64,base64-rxbvm,crexx,rxbvm,equivalent-port,A,no,no,recorded,10,1,2500,1593118000,,0,pass,,
+timing-Base64-base64-rxvm-recorded-10,timing,Base64,base64-rxvm,crexx,rxvm,equivalent-port,A,no,no,recorded,10,2,2500,1608922000,,0,pass,,
+timing-RexxCPS-rexxcps-rxvm-recorded-1,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,1,1,1000-clauses,1328680000,,0,pass,38356721,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-2,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,2,1,1000-clauses,1332133000,,0,pass,38369341,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-3,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,3,1,1000-clauses,1345808000,,0,pass,38255035,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-4,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,4,1,1000-clauses,1330008000,,0,pass,38320416,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-5,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,5,1,1000-clauses,1335847000,,0,pass,38176900,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-6,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,6,1,1000-clauses,1327663000,,0,pass,38387605,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-7,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,7,1,1000-clauses,1307111000,,0,pass,38947218,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-8,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,8,1,1000-clauses,1333845000,,0,pass,38225642,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-9,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,9,1,1000-clauses,1337008000,,0,pass,38123922,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-recorded-10,timing,RexxCPS,rexxcps-rxvm,crexx,rxvm,disclosed-2.2d,A,no,no,recorded,10,1,1000-clauses,1345734000,,0,pass,37988003,cREXX clauses per second

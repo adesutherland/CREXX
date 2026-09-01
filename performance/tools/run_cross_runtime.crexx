@@ -1,0 +1,378 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+/* Capture one NR-02 workload/runtime cell without hiding raw output. */
+main: procedure = .int
+  arg args = .string[]
+
+  workload = ""
+  runtime = ""
+  variant = "canonical"
+  lifecycle = "process"
+  warmups = 1
+  runs = 1
+  expectation = ""
+  metric_prefix = ""
+  output_dir = ""
+  command = .string[]
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--workload" then do
+      if i = args[0] then return argument_error("missing value after --workload")
+      i = i + 1
+      workload = args[i]
+    end
+    else if option = "--runtime" then do
+      if i = args[0] then return argument_error("missing value after --runtime")
+      i = i + 1
+      runtime = args[i]
+    end
+    else if option = "--variant" then do
+      if i = args[0] then return argument_error("missing value after --variant")
+      i = i + 1
+      variant = args[i]
+    end
+    else if option = "--lifecycle" then do
+      if i = args[0] then return argument_error("missing value after --lifecycle")
+      i = i + 1
+      lifecycle = args[i]
+    end
+    else if option = "--warmups" then do
+      if i = args[0] then return argument_error("missing value after --warmups")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--warmups must be a non-negative integer")
+      warmups = args[i]
+    end
+    else if option = "--runs" then do
+      if i = args[0] then return argument_error("missing value after --runs")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--runs must be a positive integer")
+      runs = args[i]
+    end
+    else if option = "--expect" then do
+      if i = args[0] then return argument_error("missing value after --expect")
+      i = i + 1
+      expectation = args[i]
+    end
+    else if option = "--metric-prefix" then do
+      if i = args[0] then return argument_error("missing value after --metric-prefix")
+      i = i + 1
+      metric_prefix = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else if option = "--" then do
+      i = i + 1
+      do while i <= args[0]
+        command[command[0] + 1] = args[i]
+        i = i + 1
+      end
+      leave
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if workload = "" then return argument_error("--workload is required")
+  if runtime = "" then return argument_error("--runtime is required")
+  if expectation = "" then return argument_error("--expect is required")
+  if output_dir = "" then return argument_error("--output-dir is required")
+  if runs < 1 then return argument_error("--runs must be a positive integer")
+  if command[0] = 0 then return argument_error("a command is required after --")
+
+  raw_dir = output_dir || "/raw"
+  manifest_path = output_dir || "/manifest.json"
+  samples_path = output_dir || "/samples.csv"
+
+  discard_out = .string[]
+  discard_err = .string[]
+  address crexx "rm -r :raw_dir" output discard_out error discard_err
+  address crexx "mkdir -p :raw_dir" output discard_out error discard_err
+  if rc <> 0 then do
+    say "ERROR: could not create output directory:" raw_dir
+    return 1
+  end
+
+  cwd = current_directory()
+  host = platform_description()
+  started = timestamp_utc()
+  if write_manifest(manifest_path, workload, runtime, variant, lifecycle, warmups, runs, ,
+      expectation, metric_prefix, command, cwd, host, started, "", "") <> 0 then return 1
+
+  rows = .string[]
+  rows[1] = "workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit"
+  failed = 0
+
+  do sequence = 1 to warmups while failed = 0
+    elapsed_ns = 0
+    child_rc = 0
+    correctness = "fail"
+    metric_value = ""
+    metric_unit = ""
+    capture_rc = capture_sample(command, expectation, metric_prefix, "warmup", sequence, raw_dir, ,
+        elapsed_ns, child_rc, correctness, metric_value, metric_unit)
+    if capture_rc <> 0 then return 1
+    rows[rows[0] + 1] = sample_csv_row(workload, runtime, variant, lifecycle, "warmup", ,
+        sequence, elapsed_ns, child_rc, correctness, metric_value, metric_unit)
+    if correctness <> "pass" then failed = 1
+  end
+
+  do sequence = 1 to runs while failed = 0
+    elapsed_ns = 0
+    child_rc = 0
+    correctness = "fail"
+    metric_value = ""
+    metric_unit = ""
+    capture_rc = capture_sample(command, expectation, metric_prefix, "recorded", sequence, raw_dir, ,
+        elapsed_ns, child_rc, correctness, metric_value, metric_unit)
+    if capture_rc <> 0 then return 1
+    rows[rows[0] + 1] = sample_csv_row(workload, runtime, variant, lifecycle, "recorded", ,
+        sequence, elapsed_ns, child_rc, correctness, metric_value, metric_unit)
+    if correctness <> "pass" then failed = 1
+  end
+
+  if write_lines(samples_path, rows) <> 0 then return 1
+  completed = timestamp_utc()
+  result = "pass"
+  if failed then result = "fail"
+  if write_manifest(manifest_path, workload, runtime, variant, lifecycle, warmups, runs, ,
+      expectation, metric_prefix, command, cwd, host, started, completed, result) <> 0 then return 1
+
+  if failed then do
+    say "FAIL: retained failing sample under" output_dir
+    return 1
+  end
+  say "PASS: retained" rows[0] - 1 "serial samples under" output_dir
+  return 0
+
+usage: procedure = .void
+  say "Usage: run_cross_runtime [options] -- command [args...]"
+  say ""
+  say "Options:"
+  say "  --workload NAME       Evidence workload name"
+  say "  --runtime NAME        Runtime/platform name"
+  say "  --variant NAME        Variant label (default: canonical)"
+  say "  --lifecycle NAME      Lifecycle label (default: process)"
+  say "  --warmups N           Serial warmups (default: 1)"
+  say "  --runs N              Serial recorded samples (default: 1)"
+  say "  --expect TEXT         Required correctness text"
+  say "  --metric-prefix TEXT  Optional prefix before a numeric native metric"
+  say "  --output-dir PATH     Evidence cell directory"
+  say "  -h, --help            Show this help"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+capture_sample: procedure = .int
+  arg command = .string[], expectation = .string, metric_prefix = .string, ,
+      phase = .string, sequence = .int, raw_dir = .string, ,
+      expose elapsed_ns = .int, expose child_rc = .int, expose correctness = .string, ,
+      expose metric_value = .string, expose metric_unit = .string
+
+  child_output = .string[]
+  child_error = .string[]
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+  elapsed_us = ended_us - started_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  elapsed_ns = elapsed_us * 1000
+
+  sample_id = sample_label(phase, sequence)
+  stdout_path = raw_dir || "/" || sample_id || ".stdout.txt"
+  stderr_path = raw_dir || "/" || sample_id || ".stderr.txt"
+  if write_lines(stdout_path, child_output) <> 0 then return 1
+  if write_lines(stderr_path, child_error) <> 0 then return 1
+
+  correctness = "fail"
+  if child_rc = 0 & (has_text(child_output, expectation) | has_text(child_error, expectation)) then
+    correctness = "pass"
+
+  metric_value = ""
+  metric_unit = ""
+  if metric_prefix <> "" then do
+    metric_found = extract_metric(child_output, metric_prefix, metric_value, metric_unit)
+    if \metric_found then call extract_metric child_error, metric_prefix, metric_value, metric_unit
+  end
+  return 0
+
+has_text: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+extract_metric: procedure = .int
+  arg lines = .string[], prefix = .string, expose metric_value = .string, expose metric_unit = .string
+  do i = 1 to lines[0]
+    prefix_at = pos(prefix, lines[i])
+    if prefix_at > 0 then do
+      tail = strip(substr(lines[i], prefix_at + length(prefix)))
+      if tail = "" then return 0
+      metric_value = changestr(",", word(tail, 1), "")
+      metric_value = changestr("_", metric_value, "")
+      metric_unit = subword(tail, 2)
+      return 1
+    end
+  end
+  return 0
+
+sample_label: procedure = .string
+  arg phase = .string, sequence = .int
+  sequence_text = sequence
+  if sequence < 10 then sequence_text = "0" || sequence
+  return safe_component(phase) || "-" || sequence_text
+
+safe_component: procedure = .string
+  arg value = .string
+  result = ""
+  allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-"
+  do i = 1 to length(value)
+    character = substr(value, i, 1)
+    if pos(character, allowed) > 0 then result = result || character
+    else result = result || "-"
+  end
+  result = strip(result, "B", "-")
+  if result = "" then return "sample"
+  return result
+
+sample_csv_row: procedure = .string
+  arg workload = .string, runtime = .string, variant = .string, lifecycle = .string, ,
+      phase = .string, sequence = .int, elapsed_ns = .int, child_rc = .int, ,
+      correctness = .string, metric_value = .string, metric_unit = .string
+  return csv_field(workload) || "," || csv_field(runtime) || "," || csv_field(variant) || ,
+      "," || csv_field(lifecycle) || "," || csv_field(phase) || "," || sequence || ,
+      "," || elapsed_ns || "," || child_rc || "," || csv_field(correctness) || "," || ,
+      csv_field(metric_value) || "," || csv_field(metric_unit)
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+write_manifest: procedure = .int
+  arg path = .string, workload = .string, runtime = .string, variant = .string, ,
+      lifecycle = .string, warmups = .int, runs = .int, expectation = .string, ,
+      metric_prefix = .string, command = .string[], cwd = .string, host = .string, ,
+      started = .string, completed = .string, result = .string
+
+  command_values = .string[]
+  do i = 1 to command[0]
+    command_values[i] = jsonquote(command[i])
+  end
+
+  lines = .string[]
+  lines[lines[0] + 1] = "{"
+  lines[lines[0] + 1] = '  "schema": 2,'
+  lines[lines[0] + 1] = '  "capture_tool": "run_cross_runtime.crexx",'
+  lines[lines[0] + 1] = '  "crexx_version": ' || jsonquote(version()) || ","
+  lines[lines[0] + 1] = '  "workload": ' || jsonquote(workload) || ","
+  lines[lines[0] + 1] = '  "runtime": ' || jsonquote(runtime) || ","
+  lines[lines[0] + 1] = '  "variant": ' || jsonquote(variant) || ","
+  lines[lines[0] + 1] = '  "lifecycle": ' || jsonquote(lifecycle) || ","
+  lines[lines[0] + 1] = '  "warmups": ' || warmups || ","
+  lines[lines[0] + 1] = '  "recorded_runs": ' || runs || ","
+  lines[lines[0] + 1] = '  "sampling": "serial",'
+  lines[lines[0] + 1] = '  "correctness_expectation": ' || jsonquote(expectation) || ","
+  if metric_prefix = "" then lines[lines[0] + 1] = '  "metric_prefix": null,'
+  else lines[lines[0] + 1] = '  "metric_prefix": ' || jsonquote(metric_prefix) || ","
+  lines[lines[0] + 1] = '  "command": ' || jsonarray(command_values) || ","
+  lines[lines[0] + 1] = '  "cwd": ' || jsonquote(cwd) || ","
+  lines[lines[0] + 1] = '  "host": ' || jsonquote(host) || ","
+  lines[lines[0] + 1] = '  "started_utc": ' || jsonquote(started)
+  if completed <> "" then do
+    lines[lines[0]] = lines[lines[0]] || ","
+    lines[lines[0] + 1] = '  "completed_utc": ' || jsonquote(completed) || ","
+    lines[lines[0] + 1] = '  "result": ' || jsonquote(result)
+  end
+  lines[lines[0] + 1] = "}"
+  return write_lines(path, lines)
+
+write_lines: procedure = .int
+  arg path = .string, lines = .string[]
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "rm :path" output command_out error command_err
+  if lines[0] = 0 then do
+    address crexx "touch :path" output command_out error command_err
+    if rc <> 0 then do
+      say "ERROR: could not create output file:" path
+      return 1
+    end
+    return 0
+  end
+  do i = 1 to lines[0]
+    if lineout(path, lines[i]) <> 0 then do
+      call lineout path
+      say "ERROR: could not write output file:" path
+      return 1
+    end
+  end
+  call lineout path
+  return 0
+
+timestamp_utc: procedure = .string
+  timestamp_out = .string[]
+  timestamp_err = .string[]
+  address crexx "now utc" output timestamp_out error timestamp_err
+  if rc = 0 & timestamp_out[0] > 0 then return timestamp_out[1]
+  return date("S") || "T" || time("L")
+
+current_directory: procedure = .string
+  cwd_out = .string[]
+  cwd_err = .string[]
+  address crexx "pwd" output cwd_out error cwd_err
+  if rc = 0 & cwd_out[0] > 0 then return cwd_out[1]
+  return "unknown"
+
+platform_description: procedure = .string
+  platform_out = .string[]
+  platform_err = .string[]
+  address crexx "platform" output platform_out error platform_err
+  if rc = 0 & platform_out[0] > 0 then return platform_out[1]
+  return "unknown"

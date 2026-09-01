@@ -1,0 +1,34 @@
+PERF3-01 corrected current-product Apple evidence post-run environment
+captured_utc=2026-07-31T13:54:09Z
+repository_branch=develop
+repository_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_status=0 rows
+upstream=21fdcf529d0e51ea264bf0c92ccfbdc06dea8200
+prior_timing_disposition=invalid old-product block retained under timing-invalid-old-product; excluded from every current claim
+power_source='AC Power'
+battery= -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+low_power_mode=0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+load_averages={ 1.27 1.32 1.34 }
+formal_timing_initial=348/348 passed
+formal_timing_append=50/50 passed
+formal_timing_samples_removed=0
+formal_timing_initial_policy_triggers=sieve-rxvm;permute-netrexx;richards-netrexx;base64-rxvm;base64-rxbvm
+formal_timing_still_noisy=sieve-rxvm;permute-netrexx;richards-netrexx;base64-rxvm;base64-rxbvm; no second append permitted
+common_geomean_oorexx_rxvm_rxbvm=2.139811;1.818954
+common_geomean_netrexx_rxvm_rxbvm=0.779920;0.662974
+schema5_profiles=10/10 passed; 70/70 domain rows complete
+focused_correctness=linked-opt CTest 8/8 including fixture; rxbvm exact-argument smoke 7/7
+matrix_selftest=pass
+profile_summarizer_selftest=pass
+artifact_inventory_selftest=pass; 95/95 rows written
+samples_removed=0
+production_changes=none
+remote_platform_runs=none
+commit_or_push_after_activity=none
+active_build_test_vm_processes_after_run:
+active_process_name_count=0
+interpretation=PERF3-01 evidence/ranking stop; awaiting Adrian acceptance

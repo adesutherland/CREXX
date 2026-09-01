@@ -1,4 +1,5 @@
 # Interlanguage calls
+
 A cRexx program is able to call programs written in the Rexx
 language, but also programs native to the platform, using a number of
 calling conventions:
@@ -6,17 +7,17 @@ calling conventions:
 ## Current Mechanisms
 
 Address
-: the \code{address} statement can use the shell and
+: the `address` statement can use the shell and
     I/O indirection to start native executables and provide input, and
     retrieve the output.
 
 Plugins
  : the plugin system that is available to the cRexx environment.
 
-crexxsaa
-: the host integration facade for C applications that want to embed CREXX,
+Crexxsaa
+: the host integration facade for C applications that want to embed cRexx,
     register ADDRESS environments, and run `.rxbin` or source files through
-    the CREXX toolchain and runtime.
+    the cRexx toolchain and runtime.
 
 <!-- ## Future Mechanisms -->
 

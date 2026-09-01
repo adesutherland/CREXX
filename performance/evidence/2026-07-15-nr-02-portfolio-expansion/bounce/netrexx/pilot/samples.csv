@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+bounce,netrexx,object-port,process,warmup,1,33276000,0,pass,,
+bounce,netrexx,object-port,process,recorded,1,32189000,0,pass,,
+bounce,netrexx,object-port,process,recorded,2,32404000,0,pass,,
+bounce,netrexx,object-port,process,recorded,3,32941000,0,pass,,

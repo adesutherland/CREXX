@@ -1,0 +1,15 @@
+compiler,engine,panel,workload,metric,candidate_cell,control_cell,candidate_median,control_median,throughput_ratio,throughput_delta_percent,guard_3pct
+gcc,rxtvm,profile-20,Sieve,elapsed_ns,sieve-rxtvm-gcc-r5-profile-20,sieve-rxtvm-gcc-r5-all-inline,1053320500.000000,1246600000.000000,1.183495431827,18.349543,no
+gcc,rxtvm,profile-20,Permute,elapsed_ns,permute-rxtvm-gcc-r5-profile-20,permute-rxtvm-gcc-r5-all-inline,2208544500.000000,2289345000.000000,1.036585407267,3.658541,no
+gcc,rxtvm,profile-20,Bounce,elapsed_ns,bounce-rxtvm-gcc-r5-profile-20,bounce-rxtvm-gcc-r5-all-inline,1395708500.000000,1255139000.000000,0.899284485263,-10.071551,yes
+gcc,rxtvm,profile-20,Richards,elapsed_ns,richards-rxtvm-gcc-r5-profile-20,richards-rxtvm-gcc-r5-all-inline,2163096500.000000,2133942000.000000,0.986521868072,-1.347813,no
+gcc,rxtvm,profile-20,Base64,elapsed_ns,base64-rxtvm-gcc-r5-profile-20,base64-rxtvm-gcc-r5-all-inline,2970547500.000000,3316472000.000000,1.116451428567,11.645143,no
+gcc,rxtvm,profile-20,Towers,elapsed_ns,towers-rxtvm-gcc-r5-profile-20,towers-rxtvm-gcc-r5-all-inline,2137626000.000000,2136845000.000000,0.999634641420,-0.036536,no
+gcc,rxtvm,profile-20,RexxCPS,benchmark_rate,rexxcps-rxtvm-gcc-r5-profile-20,rexxcps-rxtvm-gcc-r5-all-inline,44400865.500000,43334025.000000,1.024619003197,2.461900,no
+gcc,rxbvm,profile-20,Sieve,elapsed_ns,sieve-rxbvm-gcc-r5-profile-20,sieve-rxbvm-gcc-r5-all-inline,1449086000.000000,1987916000.000000,1.371841284782,37.184128,no
+gcc,rxbvm,profile-20,Permute,elapsed_ns,permute-rxbvm-gcc-r5-profile-20,permute-rxbvm-gcc-r5-all-inline,2749136500.000000,3079685500.000000,1.120237390904,12.023739,no
+gcc,rxbvm,profile-20,Bounce,elapsed_ns,bounce-rxbvm-gcc-r5-profile-20,bounce-rxbvm-gcc-r5-all-inline,1915855500.000000,1982625500.000000,1.034851271403,3.485127,no
+gcc,rxbvm,profile-20,Richards,elapsed_ns,richards-rxbvm-gcc-r5-profile-20,richards-rxbvm-gcc-r5-all-inline,2275512000.000000,2296606500.000000,1.009270221383,0.927022,no
+gcc,rxbvm,profile-20,Base64,elapsed_ns,base64-rxbvm-gcc-r5-profile-20,base64-rxbvm-gcc-r5-all-inline,3131324000.000000,3509927000.000000,1.120908280331,12.090828,no
+gcc,rxbvm,profile-20,Towers,elapsed_ns,towers-rxbvm-gcc-r5-profile-20,towers-rxbvm-gcc-r5-all-inline,2195226000.000000,2185831000.000000,0.995720258415,-0.427974,no
+gcc,rxbvm,profile-20,RexxCPS,benchmark_rate,rexxcps-rxbvm-gcc-r5-profile-20,rexxcps-rxbvm-gcc-r5-all-inline,38954520.500000,36627811.500000,1.063523014472,6.352301,no

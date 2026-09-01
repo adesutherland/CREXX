@@ -11,8 +11,68 @@
 #include <math.h>
 
 #include "rxvmplugin_framework.h"
+#include "platform.h"
+#include "rxbin.h"
+#include "rxvmvars.h"
 
 decplugin *plugin;
+
+static int test_decimalToString_total_contract(void) {
+    value number;
+    char *output;
+    int errors = 0;
+
+    value_init(&number);
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "nan") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    plugin->decimalFromString(plugin, &number, "1.25");
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "1.25") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    rxvm_value_set_decimal_length(&number, 0u);
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "nan") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    free(output);
+    clear_value(&number);
+    return errors;
+}
+
+static int test_decimalFromInt_total_contract(void) {
+    value number;
+    char *output;
+    int errors = 0;
+
+    value_init(&number);
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
+    plugin->base.signal_number = 999;
+    plugin->base.signal_string = "stale";
+    plugin->decimalFromInt(plugin, &number, 42);
+    if (plugin->base.signal_number != 0 || plugin->base.signal_string != NULL)
+        errors++;
+    plugin->decimalToString(plugin, &number, output);
+    if (strcmp(output, "42") != 0 || plugin->base.signal_number != 0 ||
+        plugin->base.signal_string != NULL)
+        errors++;
+
+    free(output);
+    clear_value(&number);
+    return errors;
+}
 
 // Do test
 int aTestFromToInt(char* expected, int64_t int_input) {
@@ -21,10 +81,10 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     value a;
     int errors = 0;
 
-    a.decimal_value = NULL;
+    value_init(&a);
 
     /* Make a string buffer to hold the result as a string */
-    output = malloc(plugin->getRequiredStringSize(plugin));
+    output = malloc(plugin->getRequiredStringSize(plugin, NULL));
 
     printf("\nTesting with %s\n", expected);
     plugin->decimalFromInt(plugin, &a, int_input);
@@ -44,7 +104,7 @@ int aTestFromToInt(char* expected, int64_t int_input) {
     printf("expected %lld got %lld for to int\n", (long long)int_input, (long long)int_output);
 
     free(output);
-    if (a.decimal_value) free(a.decimal_value);
+    clear_value(&a);
 
     return errors;
 }
@@ -55,7 +115,7 @@ int aTestBeyondLimits(char* input) {
     value a;
     int errors = 0;
 
-    a.decimal_value = NULL;
+    value_init(&a);
 
     printf("\nTesting beyond limits with %s\n", input);
     plugin->decimalFromString(plugin, &a, input);
@@ -66,7 +126,7 @@ int aTestBeyondLimits(char* input) {
     }
     else printf("OK - ");
     printf("expected signal and got - %d \"%s\"\n", plugin->base.signal_number, plugin->base.signal_string);
-    if (a.decimal_value) free(a.decimal_value);
+    clear_value(&a);
 
     return errors;
 }
@@ -196,7 +256,7 @@ int test_decimalFromDouble() {
     double inputs[] = { NAN, INFINITY, -INFINITY, 0.0, -0.0, 1.23456789, -1.23456789 };
     const char *descriptions[] = { "nan", "inf", "-inf", "0", "-0", "1.23456789", "-1.23456789" };
     int i;
-    result.decimal_value = NULL;
+    value_init(&result);
 
     printf("\nTesting decimalFromDouble()\n");
 
@@ -211,7 +271,7 @@ int test_decimalFromDouble() {
         else printf("OK - ");
         printf("Input: %s, decNumber: %s\n", descriptions[i], buffer);
     }
-        if (result.decimal_value) free(result.decimal_value);
+        clear_value(&result);
     return errors;
 }
 
@@ -221,7 +281,7 @@ int test_decimalToDouble() {
     double result;
     char buffer[32];
     int errors = 0;
-    input.decimal_value = NULL;
+    value_init(&input);
 
     printf("\nTesting decimalToDouble()\n");
 
@@ -291,7 +351,7 @@ int test_decimalToDouble() {
     else printf("OK - ");
     printf("decNumber: 1.23456789, Result: %s\n", buffer);
 
-        if (input.decimal_value) free(input.decimal_value);
+        clear_value(&input);
     return errors;
 }
 
@@ -300,7 +360,7 @@ int test_decimalToString_decimalFromString() {
     value input;
     char buffer[32];
     int errors = 0;
-    input.decimal_value = NULL;
+    value_init(&input);
 
     printf("\nTesting decimalToString() and decimalFromString()\n");
 
@@ -404,7 +464,7 @@ int test_decimalToString_decimalFromString() {
     else printf("OK - ");
     printf("decNumber: 123456789000000000000000000000 -> 1.23456789e+29, Result: %s\n", buffer);
 
-        if (input.decimal_value) free(input.decimal_value);
+        clear_value(&input);
     return errors;
 }
 
@@ -413,7 +473,7 @@ int test_moreDecimalToInteger() {
     value input;
     int64_t result;
     int errors = 0;
-    input.decimal_value = NULL;
+    value_init(&input);
 
     printf("\nTesting decimalToInteger()\n");
 
@@ -486,7 +546,7 @@ int test_moreDecimalToInteger() {
     else printf("OK - ");
     printf("decNumber: 1234567890123456789, Result: %lld\n", (long long)result);
 
-        if (input.decimal_value) free(input.decimal_value);
+        clear_value(&input);
     return errors;
 }
 
@@ -495,9 +555,9 @@ int test_basic_decimal_functions() {
     value a, b, result;
     int errors = 0;
     char buffer[32];
-    a.decimal_value = NULL;
-    b.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&a);
+    value_init(&b);
+    value_init(&result);
 
     printf("\nTesting basic decimal functions\n");
 
@@ -549,9 +609,9 @@ int test_basic_decimal_functions() {
     else printf("OK - ");
     printf("4 / 2 = %s\n", buffer);
 
-        if (a.decimal_value) free(a.decimal_value);
-    if (b.decimal_value) free(b.decimal_value);
-    if (result.decimal_value) free(result.decimal_value);
+        clear_value(&a);
+    clear_value(&b);
+    clear_value(&result);
     return errors;
 }
 
@@ -560,8 +620,8 @@ int test_decimalCompare() {
     value a, b;
     int result;
     int errors = 0;
-    a.decimal_value = NULL;
-    b.decimal_value = NULL;
+    value_init(&a);
+    value_init(&b);
 
     printf("\nTesting decimalCompare()\n");
 
@@ -627,8 +687,8 @@ int test_decimalCompare() {
     else printf("OK - ");
     printf("inf > 1\n");
 
-        if (a.decimal_value) free(a.decimal_value);
-    if (b.decimal_value) free(b.decimal_value);
+        clear_value(&a);
+    clear_value(&b);
     return errors;
 }
 
@@ -637,8 +697,8 @@ int test_decimalNeg() {
     value a, result;
     int errors = 0;
     char buffer[32];
-    a.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&a);
+    value_init(&result);
 
     printf("\nTesting decimalNeg()\n");
 
@@ -686,8 +746,8 @@ int test_decimalNeg() {
     else printf("OK - ");
     printf("1 -> %s (inplace)\n", buffer);
 
-        if (a.decimal_value) free(a.decimal_value);
-    if (result.decimal_value) free(result.decimal_value);
+        clear_value(&a);
+    clear_value(&result);
     return errors;
 }
 
@@ -696,9 +756,9 @@ int test_decimalPow() {
     value a, b, result;
     int errors = 0;
     char buffer[32];
-    a.decimal_value = NULL;
-    b.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&a);
+    value_init(&b);
+    value_init(&result);
 
     printf("\nTesting decimalPow()\n");
 
@@ -750,9 +810,9 @@ int test_decimalPow() {
     else printf("OK - ");
     printf("2^-1 = %s\n", buffer);
 
-        if (a.decimal_value) free(a.decimal_value);
-    if (b.decimal_value) free(b.decimal_value);
-    if (result.decimal_value) free(result.decimal_value);
+        clear_value(&a);
+    clear_value(&b);
+    clear_value(&result);
     return errors;
 }
 
@@ -761,7 +821,7 @@ int test_decimalCompareString() {
     value a;
     int result;
     int errors = 0;
-    a.decimal_value = NULL;
+    value_init(&a);
 
     printf("\nTesting decimalCompareString()\n");
 
@@ -822,7 +882,7 @@ int test_decimalCompareString() {
     else printf("OK - ");
     printf("inf > 1\n");
 
-        if (a.decimal_value) free(a.decimal_value);
+        clear_value(&a);
     return errors;
 }
 
@@ -837,7 +897,7 @@ int testDecimalExtract(char* input, char* expected_coefficient, int64_t expected
     value a;
     int64_t exponent;
     char *coefficient = malloc(plugin->getDigits(plugin) + 14);
-    a.decimal_value = NULL;
+    value_init(&a);
     int errors = 0;
 
     plugin->decimalFromString(plugin, &a, input);
@@ -850,7 +910,7 @@ int testDecimalExtract(char* input, char* expected_coefficient, int64_t expected
     if (exponent) printf("%s -> %se%lld\n", input, coefficient, (long long)exponent);
     else printf("%s -> %s\n", input, coefficient);
 
-    free(a.decimal_value);
+    clear_value(&a);
     free(coefficient);
     return errors;
 }
@@ -941,6 +1001,36 @@ int test_decimalExtract() {
         "1.23456789012345678901234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789001234567890012345678900123456789",
         -150);
 
+    /* A stored decimal can cross into a narrower numeric context without
+     * losing its existing coefficient. Buffer sizing must account for the
+     * value as well as the active context. */
+    {
+        value wide;
+        rxinteger exponent;
+        char *coefficient;
+        size_t required;
+
+        value_init(&wide);
+        plugin->num_context->digits = 50;
+        plugin->syncNumericContext(plugin);
+        plugin->decimalFromString(
+                plugin, &wide, "123456789012345678901234567890");
+        plugin->num_context->digits = 18;
+        plugin->syncNumericContext(plugin);
+        required = plugin->getRequiredStringSize(plugin, &wide);
+        coefficient = malloc(required);
+        plugin->decimalExtract(plugin, coefficient, &exponent, &wide);
+        if (strcmp(coefficient, "1.2345678901234567890123456789") != 0 ||
+            exponent != 29 || required < strlen(coefficient) + 1u) {
+            printf("Error - value-aware decimal extraction buffer sizing\n");
+            errors++;
+        }
+        free(coefficient);
+        clear_value(&wide);
+        plugin->num_context->digits = 200;
+        plugin->syncNumericContext(plugin);
+    }
+
     return errors;
 }
 
@@ -949,7 +1039,7 @@ int test_isZero() {
     value input;
     int result;
     int errors = 0;
-    input.decimal_value = NULL;
+    value_init(&input);
 
     printf("\nTesting isZero()\n");
 
@@ -1003,7 +1093,7 @@ int test_isZero() {
     else printf("OK - ");
     printf("decNumber: 1e-10 -> isZero: %d\n", result);
 
-        if (input.decimal_value) free(input.decimal_value);
+        clear_value(&input);
     return errors;
 }
 
@@ -1012,8 +1102,8 @@ int test_decimalTruncate() {
     value input, result;
     int errors = 0;
     char buffer[32];
-    input.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&input);
+    value_init(&result);
 
     printf("\nTesting decimalTruncate()\n");
 
@@ -1061,8 +1151,8 @@ int test_decimalTruncate() {
     else printf("OK - ");
     printf("1234567890123456789.987654321e2 -> %s\n", buffer);
 
-        if (input.decimal_value) free(input.decimal_value);
-    if (result.decimal_value) free(result.decimal_value);
+        clear_value(&input);
+    clear_value(&result);
     return errors;
 }
 
@@ -1071,8 +1161,8 @@ int test_decimalRound() {
     value input, result;
     int errors = 0;
     char buffer[32];
-    input.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&input);
+    value_init(&result);
 
     printf("\nTesting decimalRound()\n");
 
@@ -1120,18 +1210,20 @@ int test_decimalRound() {
     else printf("OK - ");
     printf("1234567890123456789.987654321e2 -> %s\n", buffer);
 
-        if (input.decimal_value) free(input.decimal_value);
-    if (result.decimal_value) free(result.decimal_value);
+        clear_value(&input);
+    clear_value(&result);
     return errors;
 }
 
 // Main function
 int main(int argc, char *argv[]) {
     int errors = 0;
+    const char *provider_name = argc > 1 ? argv[1] : "rxvm_mc_decimal";
 
     // Load the plugin
-    printf("mc_decimal_test2 - Loading Dynamic Plugin\n");
-    if (load_rxvmplugin(".", "rxvm_mc_decimal") != 0) {
+    printf("decimal contract tests - Loading Dynamic Plugin %s\n",
+           provider_name);
+    if (load_rxvmplugin(".", (char *)provider_name) != 0) {
         printf("Unable to load the rxvmplugin plugin\n");
         return 1;
     }
@@ -1157,6 +1249,8 @@ int main(int argc, char *argv[]) {
     errors += test_decimalFromDouble();
     errors += test_decimalToDouble();
     errors += test_decimalToString_decimalFromString();
+    errors += test_decimalToString_total_contract();
+    errors += test_decimalFromInt_total_contract();
     errors += test_basic_decimal_functions();
     errors += test_decimalCompare();
     errors += test_decimalCompareString();

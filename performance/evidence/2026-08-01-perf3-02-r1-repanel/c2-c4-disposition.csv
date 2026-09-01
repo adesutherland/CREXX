@@ -1,0 +1,7 @@
+option,workload,new_infrastructure_observation,remaining_obligation,build_timing_disposition
+C2-P2,Richards,C1ab-leaves-59-full-copies-with-exact-base-storage,independent-value-availability-destination-ownership-destruction-source-lifetime-TRACE-and-every-continuation,analysis-only-deferred-no-safe-rewrite
+C2-P2,Towers,C1c-leaves-18-full-copies-with-exact-base-storage,independent-value-availability-destination-ownership-destruction-source-lifetime-TRACE-and-every-continuation,analysis-only-deferred-no-safe-rewrite
+C2-alias-self-copy,Richards-and-Towers,zero-alias-self-copy-or-swap-roundtrip-success-paths,material-current-product-site,zero-eligible-no-build-no-timing
+C3-R1,Richards-and-Towers,retained-scalar-residual-32557-operations-and-zero-logical-bytes-is-unchanged-by-object-only-C1-union,material-payload-or-cross-workload-count,immaterial-no-build-no-timing
+C4-R1,Richards,C1a-C1b-and-C1ab-have-zero-full-receiver-copy-work-at-their-proved-sites,none-for-exact-sites,ceiling-measured-by-C1a-C1b-C1ab
+C4-R1,Towers,C1c-has-zero-full-receiver-copy-work-at-three-proved-sites,none-for-exact-sites,ceiling-measured-by-C1c

@@ -1,0 +1,21 @@
+* Attribute paths follow owner StorageIds through register aliases.
+
+main() .locals=8
+    setattrs r0,1
+    linkattr1 r5,r0,1
+    load r6,"payload"
+    scopy r5,r6
+    unlink r5
+    link r7,r0
+
+    linkattr1 r1,r0,1
+    scopy r2,r1
+    unlink r1
+
+    linkattr1 r3,r7,1
+    scopy r4,r3
+    unlink r3
+
+    unlink r7
+    say r4
+    ret

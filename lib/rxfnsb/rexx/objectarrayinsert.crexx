@@ -22,25 +22,41 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place object-array insertion.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/objectarrayinsert.md
+ */
 options levelb
-
 namespace rxfnsb expose objectarrayinsert
 
-/* Opens a gap in an object array and fills it with DEFAULT. */
-objectarrayinsert: procedure=.int
-  arg expose array=.object[], from=1, count=0, default=.object
+/**
+ * Open a gap and fill it by copying one object value.
+ *
+ * @param array exposed object array using array[0] as its high-water mark
+ * @param from positive insertion position; beyond the end clamps to append
+ * @param count non-negative number of slots to insert
+ * @param value object value copied into every inserted slot
+ * @return the new array high-water mark
+ * @signal INVALID_ARGUMENTS invalid position or count
+ */
+objectarrayinsert: procedure = .int
+  arg expose array = .object[], from = .int, count = .int, value = .object
 
   hi = array[0]
-  if count < 1 then return hi
-  if from < 1 then return hi
+  if from < 1 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYINSERT position must be positive"
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYINSERT count must be non-negative"
+  if count = 0 then return hi
 
   if from > hi + 1 then from = hi + 1
-
   assembler INSATTRS1 array,from,count
 
-  do i = from to from + count - 1
-    array[i] = default
+  i = from
+  do count
+    array[i] = value
+    i = i + 1
   end
-
-return array[0]
+  return array[0]

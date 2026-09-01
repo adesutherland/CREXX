@@ -1,0 +1,28 @@
+Test project C:/crexx-qa/windows-clang-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test  #442: test_address_redirect_run_noopt
+  Test  #443: test_address_redirect_run_opt
+  Test #1096: rxvmchannel_provider_registry
+  Test #1097: rxvmbyteendpoint_substrate
+  Test #1098: rxvmchannel_byte_provider
+  Test #1181: gate_f_channel_local_rxbvm
+  Test #1182: gate_f_channel_local_rxtvm
+  Test #1183: rxvmchannel_process_crash_replacement
+  Test #1184: gate_f_channel_process_rxbvm
+  Test #1185: gate_f_channel_process_rxtvm
+  Test #1343: ts_address_array_lifecycle_noopt
+  Test #1344: ts_address_array_lifecycle_opt
+  Test #1345: ts_address_spawn_transfer_noopt
+  Test #1346: ts_address_spawn_transfer_opt
+  Test #1593: ts_address_array_lifecycle_rxbvm_noopt
+  Test #1594: ts_address_array_lifecycle_rxbvm_opt
+  Test #1595: ts_address_spawn_transfer_rxbvm_noopt
+  Test #1596: ts_address_spawn_transfer_rxbvm_opt
+  Test #1597: ts_address_spawn_transfer_rxtvm_noopt
+  Test #1598: ts_address_spawn_transfer_rxtvm_opt
+  Test #1720: testTaskContextEndpoint_rxbvm_noopt
+  Test #1721: testTaskContextEndpoint_rxbvm_opt
+  Test #1722: testTaskContextEndpoint_rxtvm_noopt
+  Test #1723: testTaskContextEndpoint_rxtvm_opt
+
+Total Tests: 25

@@ -1,0 +1,1111 @@
+sample_id,stream,line_number,text
+rss-Permute-permute-netrexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-1,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-1,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-1,stderr,2,	User time (seconds): 3.76
+rss-Permute-permute-netrexx-recorded-1,stderr,3,	System time (seconds): 0.18
+rss-Permute-permute-netrexx-recorded-1,stderr,4,	Percent of CPU this job got: 111%
+rss-Permute-permute-netrexx-recorded-1,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.54
+rss-Permute-permute-netrexx-recorded-1,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-1,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-1,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-1,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-1,stderr,10,	Maximum resident set size (kbytes): 399656
+rss-Permute-permute-netrexx-recorded-1,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-1,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,13,	Minor (reclaiming a frame) page faults: 97620
+rss-Permute-permute-netrexx-recorded-1,stderr,14,	Voluntary context switches: 2452
+rss-Permute-permute-netrexx-recorded-1,stderr,15,	Involuntary context switches: 102
+rss-Permute-permute-netrexx-recorded-1,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-1,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-1,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-2,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-2,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-2,stderr,2,	User time (seconds): 4.54
+rss-Permute-permute-netrexx-recorded-2,stderr,3,	System time (seconds): 0.18
+rss-Permute-permute-netrexx-recorded-2,stderr,4,	Percent of CPU this job got: 108%
+rss-Permute-permute-netrexx-recorded-2,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.36
+rss-Permute-permute-netrexx-recorded-2,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-2,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-2,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-2,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-2,stderr,10,	Maximum resident set size (kbytes): 433200
+rss-Permute-permute-netrexx-recorded-2,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-2,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,13,	Minor (reclaiming a frame) page faults: 104884
+rss-Permute-permute-netrexx-recorded-2,stderr,14,	Voluntary context switches: 2208
+rss-Permute-permute-netrexx-recorded-2,stderr,15,	Involuntary context switches: 124
+rss-Permute-permute-netrexx-recorded-2,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-2,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-2,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-3,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-3,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-3,stderr,2,	User time (seconds): 3.89
+rss-Permute-permute-netrexx-recorded-3,stderr,3,	System time (seconds): 0.11
+rss-Permute-permute-netrexx-recorded-3,stderr,4,	Percent of CPU this job got: 111%
+rss-Permute-permute-netrexx-recorded-3,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.58
+rss-Permute-permute-netrexx-recorded-3,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-3,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-3,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-3,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-3,stderr,10,	Maximum resident set size (kbytes): 178284
+rss-Permute-permute-netrexx-recorded-3,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-3,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,13,	Minor (reclaiming a frame) page faults: 38968
+rss-Permute-permute-netrexx-recorded-3,stderr,14,	Voluntary context switches: 3012
+rss-Permute-permute-netrexx-recorded-3,stderr,15,	Involuntary context switches: 42
+rss-Permute-permute-netrexx-recorded-3,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-3,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-3,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-4,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-4,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-4,stderr,2,	User time (seconds): 3.87
+rss-Permute-permute-netrexx-recorded-4,stderr,3,	System time (seconds): 0.11
+rss-Permute-permute-netrexx-recorded-4,stderr,4,	Percent of CPU this job got: 110%
+rss-Permute-permute-netrexx-recorded-4,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.59
+rss-Permute-permute-netrexx-recorded-4,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-4,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-4,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-4,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-4,stderr,10,	Maximum resident set size (kbytes): 211328
+rss-Permute-permute-netrexx-recorded-4,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-4,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,13,	Minor (reclaiming a frame) page faults: 47205
+rss-Permute-permute-netrexx-recorded-4,stderr,14,	Voluntary context switches: 3097
+rss-Permute-permute-netrexx-recorded-4,stderr,15,	Involuntary context switches: 40
+rss-Permute-permute-netrexx-recorded-4,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-4,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-4,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-5,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-5,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-5,stderr,2,	User time (seconds): 3.80
+rss-Permute-permute-netrexx-recorded-5,stderr,3,	System time (seconds): 0.09
+rss-Permute-permute-netrexx-recorded-5,stderr,4,	Percent of CPU this job got: 110%
+rss-Permute-permute-netrexx-recorded-5,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.52
+rss-Permute-permute-netrexx-recorded-5,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-5,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-5,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-5,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-5,stderr,10,	Maximum resident set size (kbytes): 178360
+rss-Permute-permute-netrexx-recorded-5,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-5,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,13,	Minor (reclaiming a frame) page faults: 38998
+rss-Permute-permute-netrexx-recorded-5,stderr,14,	Voluntary context switches: 3051
+rss-Permute-permute-netrexx-recorded-5,stderr,15,	Involuntary context switches: 37
+rss-Permute-permute-netrexx-recorded-5,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-5,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-5,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-6,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-6,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-6,stderr,2,	User time (seconds): 3.79
+rss-Permute-permute-netrexx-recorded-6,stderr,3,	System time (seconds): 0.14
+rss-Permute-permute-netrexx-recorded-6,stderr,4,	Percent of CPU this job got: 113%
+rss-Permute-permute-netrexx-recorded-6,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.47
+rss-Permute-permute-netrexx-recorded-6,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-6,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-6,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-6,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-6,stderr,10,	Maximum resident set size (kbytes): 235808
+rss-Permute-permute-netrexx-recorded-6,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-6,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,13,	Minor (reclaiming a frame) page faults: 53443
+rss-Permute-permute-netrexx-recorded-6,stderr,14,	Voluntary context switches: 2701
+rss-Permute-permute-netrexx-recorded-6,stderr,15,	Involuntary context switches: 40
+rss-Permute-permute-netrexx-recorded-6,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-6,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-6,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-7,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-7,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-7,stderr,2,	User time (seconds): 3.76
+rss-Permute-permute-netrexx-recorded-7,stderr,3,	System time (seconds): 0.10
+rss-Permute-permute-netrexx-recorded-7,stderr,4,	Percent of CPU this job got: 110%
+rss-Permute-permute-netrexx-recorded-7,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.49
+rss-Permute-permute-netrexx-recorded-7,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-7,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-7,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-7,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-7,stderr,10,	Maximum resident set size (kbytes): 211364
+rss-Permute-permute-netrexx-recorded-7,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-7,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,13,	Minor (reclaiming a frame) page faults: 47241
+rss-Permute-permute-netrexx-recorded-7,stderr,14,	Voluntary context switches: 2957
+rss-Permute-permute-netrexx-recorded-7,stderr,15,	Involuntary context switches: 33
+rss-Permute-permute-netrexx-recorded-7,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-7,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-7,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-8,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-8,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-8,stderr,2,	User time (seconds): 3.75
+rss-Permute-permute-netrexx-recorded-8,stderr,3,	System time (seconds): 0.09
+rss-Permute-permute-netrexx-recorded-8,stderr,4,	Percent of CPU this job got: 111%
+rss-Permute-permute-netrexx-recorded-8,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.46
+rss-Permute-permute-netrexx-recorded-8,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-8,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-8,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-8,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-8,stderr,10,	Maximum resident set size (kbytes): 215064
+rss-Permute-permute-netrexx-recorded-8,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-8,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,13,	Minor (reclaiming a frame) page faults: 48214
+rss-Permute-permute-netrexx-recorded-8,stderr,14,	Voluntary context switches: 2818
+rss-Permute-permute-netrexx-recorded-8,stderr,15,	Involuntary context switches: 46
+rss-Permute-permute-netrexx-recorded-8,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-8,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-8,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-9,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-9,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-9,stderr,2,	User time (seconds): 3.68
+rss-Permute-permute-netrexx-recorded-9,stderr,3,	System time (seconds): 0.18
+rss-Permute-permute-netrexx-recorded-9,stderr,4,	Percent of CPU this job got: 110%
+rss-Permute-permute-netrexx-recorded-9,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.49
+rss-Permute-permute-netrexx-recorded-9,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-9,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-9,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-9,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-9,stderr,10,	Maximum resident set size (kbytes): 433476
+rss-Permute-permute-netrexx-recorded-9,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-9,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,13,	Minor (reclaiming a frame) page faults: 105982
+rss-Permute-permute-netrexx-recorded-9,stderr,14,	Voluntary context switches: 2173
+rss-Permute-permute-netrexx-recorded-9,stderr,15,	Involuntary context switches: 74
+rss-Permute-permute-netrexx-recorded-9,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-9,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-9,stderr,23,	Exit status: 0
+rss-Permute-permute-netrexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+rss-Permute-permute-netrexx-recorded-10,stdout,2,PASS: AWFY Permute NetRexx decimal port
+rss-Permute-permute-netrexx-recorded-10,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_permute 5000"""
+rss-Permute-permute-netrexx-recorded-10,stderr,2,	User time (seconds): 3.78
+rss-Permute-permute-netrexx-recorded-10,stderr,3,	System time (seconds): 0.19
+rss-Permute-permute-netrexx-recorded-10,stderr,4,	Percent of CPU this job got: 110%
+rss-Permute-permute-netrexx-recorded-10,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.58
+rss-Permute-permute-netrexx-recorded-10,stderr,6,	Average shared text size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-10,stderr,7,	Average unshared data size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-10,stderr,8,	Average stack size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-10,stderr,9,	Average total size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-10,stderr,10,	Maximum resident set size (kbytes): 391604
+rss-Permute-permute-netrexx-recorded-10,stderr,11,	Average resident set size (kbytes): 0
+rss-Permute-permute-netrexx-recorded-10,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,13,	Minor (reclaiming a frame) page faults: 93541
+rss-Permute-permute-netrexx-recorded-10,stderr,14,	Voluntary context switches: 2452
+rss-Permute-permute-netrexx-recorded-10,stderr,15,	Involuntary context switches: 70
+rss-Permute-permute-netrexx-recorded-10,stderr,16,	Swaps: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,17,	File system inputs: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,18,	File system outputs: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,19,	Socket messages sent: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,20,	Socket messages received: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,21,	Signals delivered: 0
+rss-Permute-permute-netrexx-recorded-10,stderr,22,	Page size (bytes): 4096
+rss-Permute-permute-netrexx-recorded-10,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-1,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-1,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-1,stderr,2,	User time (seconds): 6.45
+rss-Bounce-bounce-netrexx-recorded-1,stderr,3,	System time (seconds): 0.10
+rss-Bounce-bounce-netrexx-recorded-1,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-1,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.06
+rss-Bounce-bounce-netrexx-recorded-1,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,10,	Maximum resident set size (kbytes): 171116
+rss-Bounce-bounce-netrexx-recorded-1,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,12,	Major (requiring I/O) page faults: 1
+rss-Bounce-bounce-netrexx-recorded-1,stderr,13,	Minor (reclaiming a frame) page faults: 37115
+rss-Bounce-bounce-netrexx-recorded-1,stderr,14,	Voluntary context switches: 4666
+rss-Bounce-bounce-netrexx-recorded-1,stderr,15,	Involuntary context switches: 79
+rss-Bounce-bounce-netrexx-recorded-1,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-1,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-1,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-2,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-2,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-2,stderr,2,	User time (seconds): 6.41
+rss-Bounce-bounce-netrexx-recorded-2,stderr,3,	System time (seconds): 0.10
+rss-Bounce-bounce-netrexx-recorded-2,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-2,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.99
+rss-Bounce-bounce-netrexx-recorded-2,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,10,	Maximum resident set size (kbytes): 170812
+rss-Bounce-bounce-netrexx-recorded-2,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,13,	Minor (reclaiming a frame) page faults: 37062
+rss-Bounce-bounce-netrexx-recorded-2,stderr,14,	Voluntary context switches: 4535
+rss-Bounce-bounce-netrexx-recorded-2,stderr,15,	Involuntary context switches: 62
+rss-Bounce-bounce-netrexx-recorded-2,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-2,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-2,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-3,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-3,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-3,stderr,2,	User time (seconds): 6.76
+rss-Bounce-bounce-netrexx-recorded-3,stderr,3,	System time (seconds): 0.16
+rss-Bounce-bounce-netrexx-recorded-3,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-3,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.38
+rss-Bounce-bounce-netrexx-recorded-3,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,10,	Maximum resident set size (kbytes): 342852
+rss-Bounce-bounce-netrexx-recorded-3,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,13,	Minor (reclaiming a frame) page faults: 80291
+rss-Bounce-bounce-netrexx-recorded-3,stderr,14,	Voluntary context switches: 3801
+rss-Bounce-bounce-netrexx-recorded-3,stderr,15,	Involuntary context switches: 98
+rss-Bounce-bounce-netrexx-recorded-3,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-3,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-3,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-4,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-4,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-4,stderr,2,	User time (seconds): 6.42
+rss-Bounce-bounce-netrexx-recorded-4,stderr,3,	System time (seconds): 0.09
+rss-Bounce-bounce-netrexx-recorded-4,stderr,4,	Percent of CPU this job got: 107%
+rss-Bounce-bounce-netrexx-recorded-4,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.05
+rss-Bounce-bounce-netrexx-recorded-4,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,10,	Maximum resident set size (kbytes): 170312
+rss-Bounce-bounce-netrexx-recorded-4,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,13,	Minor (reclaiming a frame) page faults: 36999
+rss-Bounce-bounce-netrexx-recorded-4,stderr,14,	Voluntary context switches: 4706
+rss-Bounce-bounce-netrexx-recorded-4,stderr,15,	Involuntary context switches: 73
+rss-Bounce-bounce-netrexx-recorded-4,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-4,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-4,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-5,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-5,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-5,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-5,stderr,2,	User time (seconds): 6.60
+rss-Bounce-bounce-netrexx-recorded-5,stderr,3,	System time (seconds): 0.09
+rss-Bounce-bounce-netrexx-recorded-5,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-5,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.17
+rss-Bounce-bounce-netrexx-recorded-5,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,10,	Maximum resident set size (kbytes): 171144
+rss-Bounce-bounce-netrexx-recorded-5,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,13,	Minor (reclaiming a frame) page faults: 37165
+rss-Bounce-bounce-netrexx-recorded-5,stderr,14,	Voluntary context switches: 4575
+rss-Bounce-bounce-netrexx-recorded-5,stderr,15,	Involuntary context switches: 73
+rss-Bounce-bounce-netrexx-recorded-5,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-5,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-5,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-6,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-6,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-6,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-6,stderr,2,	User time (seconds): 6.50
+rss-Bounce-bounce-netrexx-recorded-6,stderr,3,	System time (seconds): 0.15
+rss-Bounce-bounce-netrexx-recorded-6,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-6,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.14
+rss-Bounce-bounce-netrexx-recorded-6,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,10,	Maximum resident set size (kbytes): 306248
+rss-Bounce-bounce-netrexx-recorded-6,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,13,	Minor (reclaiming a frame) page faults: 71049
+rss-Bounce-bounce-netrexx-recorded-6,stderr,14,	Voluntary context switches: 3937
+rss-Bounce-bounce-netrexx-recorded-6,stderr,15,	Involuntary context switches: 68
+rss-Bounce-bounce-netrexx-recorded-6,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-6,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-6,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-7,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-7,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-7,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-7,stderr,2,	User time (seconds): 6.55
+rss-Bounce-bounce-netrexx-recorded-7,stderr,3,	System time (seconds): 0.10
+rss-Bounce-bounce-netrexx-recorded-7,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-7,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.15
+rss-Bounce-bounce-netrexx-recorded-7,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,10,	Maximum resident set size (kbytes): 207676
+rss-Bounce-bounce-netrexx-recorded-7,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,13,	Minor (reclaiming a frame) page faults: 46313
+rss-Bounce-bounce-netrexx-recorded-7,stderr,14,	Voluntary context switches: 4351
+rss-Bounce-bounce-netrexx-recorded-7,stderr,15,	Involuntary context switches: 71
+rss-Bounce-bounce-netrexx-recorded-7,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-7,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-7,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-8,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-8,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-8,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-8,stderr,2,	User time (seconds): 6.60
+rss-Bounce-bounce-netrexx-recorded-8,stderr,3,	System time (seconds): 0.16
+rss-Bounce-bounce-netrexx-recorded-8,stderr,4,	Percent of CPU this job got: 109%
+rss-Bounce-bounce-netrexx-recorded-8,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.21
+rss-Bounce-bounce-netrexx-recorded-8,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,10,	Maximum resident set size (kbytes): 335308
+rss-Bounce-bounce-netrexx-recorded-8,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,13,	Minor (reclaiming a frame) page faults: 78410
+rss-Bounce-bounce-netrexx-recorded-8,stderr,14,	Voluntary context switches: 3878
+rss-Bounce-bounce-netrexx-recorded-8,stderr,15,	Involuntary context switches: 87
+rss-Bounce-bounce-netrexx-recorded-8,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-8,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-8,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-9,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-9,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-9,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-9,stderr,2,	User time (seconds): 6.41
+rss-Bounce-bounce-netrexx-recorded-9,stderr,3,	System time (seconds): 0.15
+rss-Bounce-bounce-netrexx-recorded-9,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-9,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.05
+rss-Bounce-bounce-netrexx-recorded-9,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,10,	Maximum resident set size (kbytes): 337216
+rss-Bounce-bounce-netrexx-recorded-9,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,13,	Minor (reclaiming a frame) page faults: 78848
+rss-Bounce-bounce-netrexx-recorded-9,stderr,14,	Voluntary context switches: 3823
+rss-Bounce-bounce-netrexx-recorded-9,stderr,15,	Involuntary context switches: 73
+rss-Bounce-bounce-netrexx-recorded-9,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-9,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-9,stderr,23,	Exit status: 0
+rss-Bounce-bounce-netrexx-recorded-10,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+rss-Bounce-bounce-netrexx-recorded-10,stdout,2,PASS: AWFY Bounce NetRexx decimal port
+rss-Bounce-bounce-netrexx-recorded-10,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar awfy_bounce 4200"""
+rss-Bounce-bounce-netrexx-recorded-10,stderr,2,	User time (seconds): 6.62
+rss-Bounce-bounce-netrexx-recorded-10,stderr,3,	System time (seconds): 0.20
+rss-Bounce-bounce-netrexx-recorded-10,stderr,4,	Percent of CPU this job got: 108%
+rss-Bounce-bounce-netrexx-recorded-10,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.27
+rss-Bounce-bounce-netrexx-recorded-10,stderr,6,	Average shared text size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,7,	Average unshared data size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,8,	Average stack size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,9,	Average total size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,10,	Maximum resident set size (kbytes): 424648
+rss-Bounce-bounce-netrexx-recorded-10,stderr,11,	Average resident set size (kbytes): 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,13,	Minor (reclaiming a frame) page faults: 105858
+rss-Bounce-bounce-netrexx-recorded-10,stderr,14,	Voluntary context switches: 3293
+rss-Bounce-bounce-netrexx-recorded-10,stderr,15,	Involuntary context switches: 101
+rss-Bounce-bounce-netrexx-recorded-10,stderr,16,	Swaps: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,17,	File system inputs: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,18,	File system outputs: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,19,	Socket messages sent: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,20,	Socket messages received: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,21,	Signals delivered: 0
+rss-Bounce-bounce-netrexx-recorded-10,stderr,22,	Page size (bytes): 4096
+rss-Bounce-bounce-netrexx-recorded-10,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-1,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-1,stderr,2,	User time (seconds): 5.00
+rss-Base64-base64-netrexx-recorded-1,stderr,3,	System time (seconds): 0.09
+rss-Base64-base64-netrexx-recorded-1,stderr,4,	Percent of CPU this job got: 136%
+rss-Base64-base64-netrexx-recorded-1,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.74
+rss-Base64-base64-netrexx-recorded-1,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-1,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-1,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-1,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-1,stderr,10,	Maximum resident set size (kbytes): 181568
+rss-Base64-base64-netrexx-recorded-1,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-1,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,13,	Minor (reclaiming a frame) page faults: 39984
+rss-Base64-base64-netrexx-recorded-1,stderr,14,	Voluntary context switches: 2774
+rss-Base64-base64-netrexx-recorded-1,stderr,15,	Involuntary context switches: 46
+rss-Base64-base64-netrexx-recorded-1,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-1,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-1,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-2,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-2,stderr,2,	User time (seconds): 4.84
+rss-Base64-base64-netrexx-recorded-2,stderr,3,	System time (seconds): 0.11
+rss-Base64-base64-netrexx-recorded-2,stderr,4,	Percent of CPU this job got: 136%
+rss-Base64-base64-netrexx-recorded-2,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.61
+rss-Base64-base64-netrexx-recorded-2,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-2,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-2,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-2,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-2,stderr,10,	Maximum resident set size (kbytes): 214512
+rss-Base64-base64-netrexx-recorded-2,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-2,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,13,	Minor (reclaiming a frame) page faults: 48126
+rss-Base64-base64-netrexx-recorded-2,stderr,14,	Voluntary context switches: 2831
+rss-Base64-base64-netrexx-recorded-2,stderr,15,	Involuntary context switches: 48
+rss-Base64-base64-netrexx-recorded-2,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-2,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-2,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-3,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-3,stderr,2,	User time (seconds): 4.98
+rss-Base64-base64-netrexx-recorded-3,stderr,3,	System time (seconds): 0.09
+rss-Base64-base64-netrexx-recorded-3,stderr,4,	Percent of CPU this job got: 137%
+rss-Base64-base64-netrexx-recorded-3,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.69
+rss-Base64-base64-netrexx-recorded-3,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-3,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-3,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-3,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-3,stderr,10,	Maximum resident set size (kbytes): 179164
+rss-Base64-base64-netrexx-recorded-3,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-3,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,13,	Minor (reclaiming a frame) page faults: 39327
+rss-Base64-base64-netrexx-recorded-3,stderr,14,	Voluntary context switches: 2901
+rss-Base64-base64-netrexx-recorded-3,stderr,15,	Involuntary context switches: 38
+rss-Base64-base64-netrexx-recorded-3,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-3,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-3,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-4,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-4,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-4,stderr,2,	User time (seconds): 4.98
+rss-Base64-base64-netrexx-recorded-4,stderr,3,	System time (seconds): 0.09
+rss-Base64-base64-netrexx-recorded-4,stderr,4,	Percent of CPU this job got: 136%
+rss-Base64-base64-netrexx-recorded-4,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.72
+rss-Base64-base64-netrexx-recorded-4,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-4,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-4,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-4,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-4,stderr,10,	Maximum resident set size (kbytes): 180024
+rss-Base64-base64-netrexx-recorded-4,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-4,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,13,	Minor (reclaiming a frame) page faults: 39505
+rss-Base64-base64-netrexx-recorded-4,stderr,14,	Voluntary context switches: 2888
+rss-Base64-base64-netrexx-recorded-4,stderr,15,	Involuntary context switches: 50
+rss-Base64-base64-netrexx-recorded-4,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-4,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-4,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-5,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-5,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-5,stderr,2,	User time (seconds): 5.10
+rss-Base64-base64-netrexx-recorded-5,stderr,3,	System time (seconds): 0.08
+rss-Base64-base64-netrexx-recorded-5,stderr,4,	Percent of CPU this job got: 138%
+rss-Base64-base64-netrexx-recorded-5,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.75
+rss-Base64-base64-netrexx-recorded-5,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-5,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-5,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-5,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-5,stderr,10,	Maximum resident set size (kbytes): 179400
+rss-Base64-base64-netrexx-recorded-5,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-5,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,13,	Minor (reclaiming a frame) page faults: 39439
+rss-Base64-base64-netrexx-recorded-5,stderr,14,	Voluntary context switches: 2922
+rss-Base64-base64-netrexx-recorded-5,stderr,15,	Involuntary context switches: 55
+rss-Base64-base64-netrexx-recorded-5,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-5,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-5,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-6,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-6,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-6,stderr,2,	User time (seconds): 4.94
+rss-Base64-base64-netrexx-recorded-6,stderr,3,	System time (seconds): 0.09
+rss-Base64-base64-netrexx-recorded-6,stderr,4,	Percent of CPU this job got: 134%
+rss-Base64-base64-netrexx-recorded-6,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.75
+rss-Base64-base64-netrexx-recorded-6,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-6,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-6,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-6,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-6,stderr,10,	Maximum resident set size (kbytes): 217480
+rss-Base64-base64-netrexx-recorded-6,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-6,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,13,	Minor (reclaiming a frame) page faults: 49047
+rss-Base64-base64-netrexx-recorded-6,stderr,14,	Voluntary context switches: 2733
+rss-Base64-base64-netrexx-recorded-6,stderr,15,	Involuntary context switches: 41
+rss-Base64-base64-netrexx-recorded-6,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-6,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-6,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-7,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-7,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-7,stderr,2,	User time (seconds): 4.86
+rss-Base64-base64-netrexx-recorded-7,stderr,3,	System time (seconds): 0.17
+rss-Base64-base64-netrexx-recorded-7,stderr,4,	Percent of CPU this job got: 135%
+rss-Base64-base64-netrexx-recorded-7,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.72
+rss-Base64-base64-netrexx-recorded-7,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-7,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-7,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-7,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-7,stderr,10,	Maximum resident set size (kbytes): 354008
+rss-Base64-base64-netrexx-recorded-7,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-7,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,13,	Minor (reclaiming a frame) page faults: 83163
+rss-Base64-base64-netrexx-recorded-7,stderr,14,	Voluntary context switches: 2384
+rss-Base64-base64-netrexx-recorded-7,stderr,15,	Involuntary context switches: 73
+rss-Base64-base64-netrexx-recorded-7,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-7,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-7,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-8,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-8,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-8,stderr,2,	User time (seconds): 4.96
+rss-Base64-base64-netrexx-recorded-8,stderr,3,	System time (seconds): 0.11
+rss-Base64-base64-netrexx-recorded-8,stderr,4,	Percent of CPU this job got: 136%
+rss-Base64-base64-netrexx-recorded-8,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.72
+rss-Base64-base64-netrexx-recorded-8,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-8,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-8,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-8,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-8,stderr,10,	Maximum resident set size (kbytes): 212588
+rss-Base64-base64-netrexx-recorded-8,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-8,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,13,	Minor (reclaiming a frame) page faults: 47627
+rss-Base64-base64-netrexx-recorded-8,stderr,14,	Voluntary context switches: 2835
+rss-Base64-base64-netrexx-recorded-8,stderr,15,	Involuntary context switches: 42
+rss-Base64-base64-netrexx-recorded-8,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-8,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-8,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-9,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-9,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-9,stderr,2,	User time (seconds): 4.84
+rss-Base64-base64-netrexx-recorded-9,stderr,3,	System time (seconds): 0.09
+rss-Base64-base64-netrexx-recorded-9,stderr,4,	Percent of CPU this job got: 135%
+rss-Base64-base64-netrexx-recorded-9,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.64
+rss-Base64-base64-netrexx-recorded-9,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-9,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-9,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-9,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-9,stderr,10,	Maximum resident set size (kbytes): 181524
+rss-Base64-base64-netrexx-recorded-9,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-9,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,13,	Minor (reclaiming a frame) page faults: 39889
+rss-Base64-base64-netrexx-recorded-9,stderr,14,	Voluntary context switches: 2803
+rss-Base64-base64-netrexx-recorded-9,stderr,15,	Involuntary context switches: 56
+rss-Base64-base64-netrexx-recorded-9,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-9,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-9,stderr,23,	Exit status: 0
+rss-Base64-base64-netrexx-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-10,stdout,2,PASS: Base64 Roundtrip NetRexx decimal port
+rss-Base64-base64-netrexx-recorded-10,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar base64_roundtrip 2500"""
+rss-Base64-base64-netrexx-recorded-10,stderr,2,	User time (seconds): 4.86
+rss-Base64-base64-netrexx-recorded-10,stderr,3,	System time (seconds): 0.07
+rss-Base64-base64-netrexx-recorded-10,stderr,4,	Percent of CPU this job got: 135%
+rss-Base64-base64-netrexx-recorded-10,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.63
+rss-Base64-base64-netrexx-recorded-10,stderr,6,	Average shared text size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-10,stderr,7,	Average unshared data size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-10,stderr,8,	Average stack size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-10,stderr,9,	Average total size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-10,stderr,10,	Maximum resident set size (kbytes): 179816
+rss-Base64-base64-netrexx-recorded-10,stderr,11,	Average resident set size (kbytes): 0
+rss-Base64-base64-netrexx-recorded-10,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,13,	Minor (reclaiming a frame) page faults: 39459
+rss-Base64-base64-netrexx-recorded-10,stderr,14,	Voluntary context switches: 2848
+rss-Base64-base64-netrexx-recorded-10,stderr,15,	Involuntary context switches: 47
+rss-Base64-base64-netrexx-recorded-10,stderr,16,	Swaps: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,17,	File system inputs: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,18,	File system outputs: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,19,	Socket messages sent: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,20,	Socket messages received: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,21,	Signals delivered: 0
+rss-Base64-base64-netrexx-recorded-10,stderr,22,	Page size (bytes): 4096
+rss-Base64-base64-netrexx-recorded-10,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,5,                       of 1000 clauses (over 1.22471642    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,7,Total (full DOs): 1.22471642 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.0001224308115 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,10,     Performance: 8_167_879 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,11,                ( 8.168E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,2,	User time (seconds): 2.58
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,3,	System time (seconds): 0.16
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,4,	Percent of CPU this job got: 211%
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.30
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,10,	Maximum resident set size (kbytes): 326368
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,12,	Major (requiring I/O) page faults: 1
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,13,	Minor (reclaiming a frame) page faults: 75959
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,14,	Voluntary context switches: 1118
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,15,	Involuntary context switches: 23
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,5,                       of 1000 clauses (over 1.267421848    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,7,Total (full DOs): 1.267421848 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.0001266966458 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,10,     Performance: 7_892_869 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,11,                ( 7.893E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,2,	User time (seconds): 2.93
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,3,	System time (seconds): 0.13
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,4,	Percent of CPU this job got: 228%
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.34
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,10,	Maximum resident set size (kbytes): 250852
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,12,	Major (requiring I/O) page faults: 1
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,13,	Minor (reclaiming a frame) page faults: 57125
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,14,	Voluntary context switches: 1170
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,15,	Involuntary context switches: 32
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,5,                       of 1000 clauses (over 1.287685059    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,7,Total (full DOs): 1.287685059 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.000128726988 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,10,     Performance: 7_768_379 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,11,                ( 7.768E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,2,	User time (seconds): 2.89
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,3,	System time (seconds): 0.15
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,4,	Percent of CPU this job got: 224%
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.35
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,10,	Maximum resident set size (kbytes): 253368
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,13,	Minor (reclaiming a frame) page faults: 57743
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,14,	Voluntary context switches: 1171
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,15,	Involuntary context switches: 33
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,5,                       of 1000 clauses (over 1.262919118    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,7,Total (full DOs): 1.262919118 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,8,Time for one iteration (1000 clauses) was: 0.0001262163633 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,10,     Performance: 7_922_903 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,11,                ( 7.923E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,2,	User time (seconds): 2.59
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,3,	System time (seconds): 0.21
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,4,	Percent of CPU this job got: 209%
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.34
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,10,	Maximum resident set size (kbytes): 440380
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,13,	Minor (reclaiming a frame) page faults: 104414
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,14,	Voluntary context switches: 1061
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,15,	Involuntary context switches: 29
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,5,                       of 1000 clauses (over 1.347201498    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,7,Total (full DOs): 1.347201498 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,8,Time for one iteration (1000 clauses) was: 0.0001346772957 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,10,     Performance: 7_425_157 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,11,                ( 7.425E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,2,	User time (seconds): 3.32
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,3,	System time (seconds): 0.10
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,4,	Percent of CPU this job got: 234%
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.46
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,10,	Maximum resident set size (kbytes): 229000
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,13,	Minor (reclaiming a frame) page faults: 51645
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,14,	Voluntary context switches: 1211
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,15,	Involuntary context switches: 29
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,5,                       of 1000 clauses (over 1.387654077    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,7,Total (full DOs): 1.387654077 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,8,Time for one iteration (1000 clauses) was: 0.000138724316 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,10,     Performance: 7_208_542 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,11,                ( 7.209E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,2,	User time (seconds): 2.97
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,3,	System time (seconds): 0.21
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,4,	Percent of CPU this job got: 216%
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.46
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,10,	Maximum resident set size (kbytes): 441400
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,12,	Major (requiring I/O) page faults: 1
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,13,	Minor (reclaiming a frame) page faults: 104737
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,14,	Voluntary context switches: 1036
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,15,	Involuntary context switches: 108
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,5,                       of 1000 clauses (over 1.291876906    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,7,Total (full DOs): 1.291876906 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,8,Time for one iteration (1000 clauses) was: 0.0001291494109 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,10,     Performance: 7_742_970 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,11,                ( 7.743E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,2,	User time (seconds): 2.85
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,3,	System time (seconds): 0.21
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,4,	Percent of CPU this job got: 224%
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.36
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,10,	Maximum resident set size (kbytes): 444308
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,13,	Minor (reclaiming a frame) page faults: 105512
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,14,	Voluntary context switches: 1082
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,15,	Involuntary context switches: 30
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,5,                       of 1000 clauses (over 1.223281115    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,7,Total (full DOs): 1.223281115 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,8,Time for one iteration (1000 clauses) was: 0.0001222861589 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,10,     Performance: 8_177_540 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,11,                ( 8.178E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,2,	User time (seconds): 2.63
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,3,	System time (seconds): 0.13
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,4,	Percent of CPU this job got: 213%
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.29
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,10,	Maximum resident set size (kbytes): 262436
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,12,	Major (requiring I/O) page faults: 1
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,13,	Minor (reclaiming a frame) page faults: 59951
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,14,	Voluntary context switches: 1147
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,15,	Involuntary context switches: 26
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,5,                       of 1000 clauses (over 1.256549597    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,7,Total (full DOs): 1.256549597 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,8,Time for one iteration (1000 clauses) was: 0.0001256001801 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,10,     Performance: 7_961_772 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,11,                ( 7.962E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,2,	User time (seconds): 2.91
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,3,	System time (seconds): 0.11
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,4,	Percent of CPU this job got: 229%
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.31
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,10,	Maximum resident set size (kbytes): 224364
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,13,	Minor (reclaiming a frame) page faults: 50546
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,14,	Voluntary context switches: 1144
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,15,	Involuntary context switches: 27
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,23,	Exit status: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,4,          Averaging: 100 measures of 100 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,5,                       of 1000 clauses (over 1.286743135    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,7,Total (full DOs): 1.286743135 secs (average of 100 measures of 100 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,8,Time for one iteration (1000 clauses) was: 0.0001286343614 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,10,     Performance: 7_773_973 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,11,                ( 7.774E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,1,"	Command being timed: ""/home/adrian/.local/opt/temurin/26.0.1+8/bin/java -cp /tmp/crexx-perf2-linux-x64.d5f0827ca/formal-netrexx:/home/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar rexxcps_2_2n"""
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,2,	User time (seconds): 2.69
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,3,	System time (seconds): 0.19
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,4,	Percent of CPU this job got: 211%
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.36
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,6,	Average shared text size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,7,	Average unshared data size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,8,	Average stack size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,9,	Average total size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,10,	Maximum resident set size (kbytes): 440400
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,11,	Average resident set size (kbytes): 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,12,	Major (requiring I/O) page faults: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,13,	Minor (reclaiming a frame) page faults: 104524
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,14,	Voluntary context switches: 1040
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,15,	Involuntary context switches: 34
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,16,	Swaps: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,17,	File system inputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,18,	File system outputs: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,19,	Socket messages sent: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,20,	Socket messages received: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,21,	Signals delivered: 0
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,22,	Page size (bytes): 4096
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,23,	Exit status: 0

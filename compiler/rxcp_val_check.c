@@ -31,16 +31,212 @@
 #include <ctype.h>
 #include "rxcp_val.h"
 
-/* Get the assembler operandtype from the astnode type for the ASSEMBLER instruction */
-static OperandType nodetype_to_operandtype(NodeType ntype) {
-    switch (ntype) {
+static int node_text_equals_ci(ASTNode *node, const char *value) {
+    size_t i;
+    size_t length;
+
+    if (!node || !node->node_string || !value) return 0;
+    length = strlen(value);
+    if (node->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)node->node_string[i]) !=
+            tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int register_attr_is_flag_view(ASTNode *attr) {
+    return attr &&
+           attr->node_type == VAR_SYMBOL &&
+           attr->node_string &&
+           attr->node_string_length > 6 &&
+           strncasecmp(attr->node_string, "flags.", 6) == 0;
+}
+
+static int register_flag_partition_is_valid(ASTNode *attr) {
+    return node_text_equals_ci(attr, "flags.vm") ||
+           node_text_equals_ci(attr, "flags.compiler") ||
+           node_text_equals_ci(attr, "flags.language") ||
+           node_text_equals_ci(attr, "flags.library") ||
+           node_text_equals_ci(attr, "flags.user") ||
+           node_text_equals_ci(attr, "flags.public") ||
+           node_text_equals_ci(attr, "flags.readable");
+}
+
+static int register_flag_view_type_is_int(ASTNode *node) {
+    ASTNode *type;
+
+    if (!node || !node->parent || node->parent->node_type != DEFINE) return 1;
+    type = node->parent->child ? node->parent->child->sibling : 0;
+    return type && type->node_type == CLASS && nodeis(type, ".int");
+}
+
+static int register_attr_is_value_view(ASTNode *attr) {
+    return nodeis(attr, "int") ||
+           nodeis(attr, "string") ||
+           nodeis(attr, "object") ||
+           nodeis(attr, "decimal") ||
+           nodeis(attr, "binary") ||
+           nodeis(attr, "float");
+}
+
+static void validate_register_attribute(ASTNode *node, ASTNode *attr) {
+    if (!attr || attr->node_type != VAR_SYMBOL) return;
+
+    if (register_attr_is_flag_view(attr)) {
+        if (!register_flag_partition_is_valid(attr)) {
+            mknd_err(attr, "INVALID_REGISTER_FLAG_VIEW");
+        } else if (!register_flag_view_type_is_int(node)) {
+            mknd_err(attr, "REGISTER_FLAG_VIEW_REQUIRES_INT");
+        }
+    } else if (!register_attr_is_value_view(attr)) {
+        mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+    }
+}
+
+/* Get the assembler operandtype from the AST node for the ASSEMBLER instruction */
+static OperandType node_to_assembler_operandtype(ASTNode *node) {
+    if (!node) return OP_NONE;
+
+    switch (node->node_type) {
         case INTEGER: return OP_INT;
         case FLOAT: return OP_FLOAT;
         case DECIMAL:  return OP_DECIMAL;
         case STRING: return OP_STRING;
+        case BINARY: return OP_BINARY;
         case FUNC_SYMBOL: return OP_FUNC;
-        default: return OP_REG;
+
+        case CONSTANT:
+            switch (node->target_type != TP_UNKNOWN ? node->target_type : node->value_type) {
+                case TP_BOOLEAN:
+                case TP_INTEGER:
+                    return OP_INT;
+
+                case TP_FLOAT:
+                    return OP_FLOAT;
+
+                case TP_DECIMAL:
+                    return OP_DECIMAL;
+
+                case TP_STRING:
+                    return OP_STRING;
+
+                case TP_BINARY:
+                    return OP_BINARY;
+
+                default:
+                    return OP_REG;
+            }
+
+        default:
+            return OP_REG;
     }
+}
+
+static int assembler_has_unresolved_symbol_operand(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->node_type == VAR_SYMBOL || child->node_type == VAR_TARGET) return 1;
+    }
+    return 0;
+}
+
+/* Refine the conservative symbol links created before assembler validation.
+ * The shared RXAS table is the authority for operand reads and writes. Keep
+ * the old read/write assumption whenever the opcode is not fully classified
+ * or has implicit/alias/reference/opaque effects that cannot be represented
+ * by one explicit operand mask. */
+static void apply_assembler_operand_effects(ASTNode *node,
+                                            const OpInfo *instruction) {
+    RxOpEffects effects;
+    ASTNode *child;
+    size_t operand_index;
+
+    if (!node || !instruction) return;
+    effects = rxop_effects(instruction->opcode);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED ||
+        effects.implicit != RXOP_IMPLICIT_NONE ||
+        effects.semantics != RXOP_SEM_NONE) {
+        return;
+    }
+
+    operand_index = 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->symbolNode) {
+            child->symbolNode->readUsage =
+                (unsigned int)rxop_effect_reads_operand(&effects, operand_index);
+            child->symbolNode->writeUsage =
+                (unsigned int)rxop_effect_writes_operand(&effects, operand_index);
+        }
+        operand_index++;
+    }
+}
+
+static int assembler_is_from_certified_exit(ASTNode *node) {
+    ASTNode *ancestor;
+
+    for (ancestor = node ? node->parent : 0; ancestor; ancestor = ancestor->parent) {
+        if (ancestor->is_compiler_added &&
+            ancestor->skip_exit_dispatch &&
+            ast_semantic_context_kind(ancestor) ==
+                AST_SEMANTIC_CONTEXT_CERTIFIED_EXIT) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void validate_assembler_node(Context *context, ASTNode *node) {
+    ASTNode *child;
+    OperandType *types = 0;
+    size_t operand_count = 0;
+    size_t operand_index = 0;
+    const OpInfo *instruction;
+    char *buffer;
+    char *c;
+
+    if (context->level != LEVELB && !node->is_compiler_added &&
+        !assembler_is_from_certified_exit(node)) {
+        /* ASSEMBLER is only valid in level b */
+        mknd_err_unique(node, "ASSEMBLER_ONLY_LEVELB");
+        return;
+    }
+
+    for (child = node->child; child; child = child->sibling) operand_count++;
+    if (operand_count) {
+        types = malloc(operand_count * sizeof(*types));
+        if (!types) {
+            mknd_err_unique(node, "OUT_OF_MEMORY");
+            return;
+        }
+        for (child = node->child; child; child = child->sibling) {
+            types[operand_index++] = node_to_assembler_operandtype(child);
+        }
+    }
+
+    /* We need to copy it to a null terminated buffer and lowercase it! */
+    buffer = malloc(node->node_string_length + 1);
+    memcpy(buffer, node->node_string, node->node_string_length);
+    buffer[node->node_string_length] = 0;
+    for (c = buffer; *c; ++c) *c = (char) tolower(*c);
+
+    instruction = (const OpInfo *)src_instv(buffer, types, operand_count);
+    if (!instruction) {
+        if (!context->is_final_pass && assembler_has_unresolved_symbol_operand(node)) {
+            free(types);
+            free(buffer);
+            return;
+        }
+        mknd_err_unique(node, "INVALID_ASSEMBLER");
+    } else {
+        apply_assembler_operand_effects(node, instruction);
+    }
+    free(types);
+    free(buffer);
 }
 
 static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
@@ -93,9 +289,10 @@ static int validation_signal_known(const char *name) {
     static const char *known[] = {
             "KILL", "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
             "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
-            "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+            "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
             "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
-            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER",
+            "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD",
+            "CHANNEL_ERROR", "TASK_FAILURE", "OTHER",
             "BREAKPOINT", 0
     };
     const char **candidate;
@@ -152,12 +349,207 @@ static void update_interface_member_body_flag(ASTNode *node) {
     );
 }
 
+static void validate_task_callable_signature(ASTNode *node);
+
+static void validate_initializer_signature(ASTNode *node) {
+    ASTNode *args;
+
+    if (!node || !node->is_initializer) return;
+    args = ast_chld(node, ARGS, 0);
+    if (!args) {
+        for (args = node->sibling; args; args = args->sibling) {
+            if (args->node_type == ARGS) break;
+            if (args->node_type == PROCEDURE || args->node_type == TASK_DECL ||
+                args->node_type == CLASS_DEF || args->node_type == INTERFACE_DEF ||
+                args->node_type == METHOD || args->node_type == FACTORY) {
+                args = 0;
+                break;
+            }
+        }
+    }
+    if (args && args->child) {
+        mknd_err_unique(args, "INITIALISER_TAKES_NO_ARGUMENTS");
+    }
+}
+
+static void validate_levelg_concurrency_surface(Context *context,
+                                                ASTNode *node) {
+    if (!context || !node || context->level == LEVELG) return;
+
+    if (node->node_type == TASK_TARGET) {
+        mknd_err_unique(node, "TASK_TARGET_ONLY_LEVELG");
+    } else if (node->node_type == PARALLEL_DO ||
+               node->node_type == PARALLEL_BLOCK_EXPR) {
+        mknd_err_unique(node, "PARALLEL_ONLY_LEVELG");
+    }
+}
+
+static void normalize_task_callable(Context *context, ASTNode *node) {
+    if (!node || node->node_type != TASK_DECL) return;
+
+    node->is_task_callable = 1;
+    validate_task_callable_signature(node);
+    if (context && context->level != LEVELG) mknd_err(node, "TASK_ONLY_LEVELG");
+    if (node->parent &&
+        (node->parent->node_type == CLASS_DEF ||
+         node->parent->node_type == INTERFACE_DEF)) {
+        node->node_type = METHOD;
+    } else {
+        node->node_type = PROCEDURE;
+    }
+}
+
+static void validate_task_callable_signature(ASTNode *node) {
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!node || !node->is_task_callable) return;
+    if (node->child && node->child->node_type == TYPE_REFERENCE &&
+        !ast_chld(node->child, ERROR, 0)) {
+        mknd_err(node->child, "TASK_REFERENCE_TYPE");
+    }
+    args = ast_chld(node, ARGS, 0);
+    if (!args) {
+        for (args = node->sibling; args; args = args->sibling) {
+            if (args->node_type == ARGS) break;
+            if (args->node_type == PROCEDURE || args->node_type == TASK_DECL ||
+                args->node_type == CLASS_DEF || args->node_type == INTERFACE_DEF ||
+                args->node_type == METHOD || args->node_type == FACTORY) {
+                args = 0;
+                break;
+            }
+        }
+    }
+    for (arg = args ? args->child : 0; arg; arg = arg->sibling) {
+        ASTNode *formal = arg->child;
+        ASTNode *type = formal ? formal->sibling : 0;
+
+        if (arg->is_ref_arg && !ast_chld(arg, ERROR, 0)) {
+            mknd_err(arg, "TASK_EXPOSED_ARGUMENT");
+        } else if (type && type->node_type == TYPE_REFERENCE &&
+                   !ast_chld(arg, ERROR, 0)) {
+            mknd_err(arg, "TASK_REFERENCE_TYPE");
+        }
+    }
+}
+
+static int task_member_label_is(ASTNode *node, const char *name) {
+    size_t length;
+
+    if (!node || !name || !node->node_string) return 0;
+    length = node->node_string_length;
+    if (length && node->node_string[length - 1u] == ':') length--;
+    return strlen(name) == length &&
+           strncasecmp(node->node_string, name, length) == 0;
+}
+
+static int task_type_is_channelvalue(ASTNode *type_node) {
+    char *type;
+    int matches;
+
+    if (!type_node) return 0;
+    if (type_node->node_string &&
+        ((type_node->node_string_length == strlen(".channelvalue") &&
+          strncasecmp(type_node->node_string, ".channelvalue",
+                      type_node->node_string_length) == 0) ||
+         (type_node->node_string_length == strlen(".concurrency..channelvalue") &&
+          strncasecmp(type_node->node_string,
+                      ".concurrency..channelvalue",
+                      type_node->node_string_length) == 0))) {
+        return 1;
+    }
+    type = ast_n2tp(type_node);
+    if (!type) return 0;
+    matches = strcasecmp(type, ".channelvalue") == 0 ||
+              strcasecmp(type, ".concurrency..channelvalue") == 0;
+    free(type);
+    return matches;
+}
+
+static int task_transfer_contract_node_valid(ASTNode *contract) {
+    ASTNode *member;
+    ASTNode *from_channel = 0;
+    ASTNode *to_channel = 0;
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!contract || (contract->node_type != CLASS_DEF &&
+                      contract->node_type != INTERFACE_DEF)) return 0;
+    for (member = contract->child; member; member = member->sibling) {
+        if (member->node_type == FACTORY &&
+            task_member_label_is(member, "from_channel")) {
+            from_channel = member;
+        } else if (member->node_type == METHOD &&
+                   task_member_label_is(member, "to_channel")) {
+            to_channel = member;
+        }
+    }
+    if (!from_channel || !to_channel ||
+        !task_type_is_channelvalue(ast_type_child(to_channel))) return 0;
+
+    args = ast_chld(to_channel, ARGS, 0);
+    if (args && args->child) return 0;
+    args = ast_chld(from_channel, ARGS, 0);
+    arg = args ? args->child : 0;
+    if (!arg || arg->sibling || arg->is_ref_arg || arg->is_varg) return 0;
+    return task_type_is_channelvalue(arg->child ? arg->child->sibling : 0);
+}
+
+static int task_receiver_contract_valid(ASTNode *node) {
+    return node && node->node_type == METHOD &&
+           task_transfer_contract_node_valid(node->parent);
+}
+
+int rxcp_task_result_contract_valid(Context *context, Scope *scope,
+                                    const char *class_name) {
+    Symbol *symbol;
+    Scope *namespace_scope;
+    const char *lookup_name;
+    char *qualified_name = 0;
+    ASTNode *contract;
+
+    if (!context || !context->ast || !class_name || !*class_name) return 0;
+    lookup_name = class_name;
+    while (*lookup_name == '.') lookup_name++;
+    symbol = strchr(lookup_name, '.')
+            ? sym_rfqv(context->ast, lookup_name)
+            : sym_rvfn(context->ast, (char *)lookup_name);
+    if (!symbol && !strchr(lookup_name, '.')) {
+        namespace_scope = scope;
+        while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+            namespace_scope = namespace_scope->parent;
+        }
+        if (namespace_scope && namespace_scope->name && *namespace_scope->name) {
+            qualified_name = mprintf("%s.%s", namespace_scope->name,
+                                     lookup_name);
+            if (qualified_name) symbol = sym_rfqv(context->ast, qualified_name);
+        }
+    }
+    if (!symbol) {
+        ensure_class_imported(context, class_name, strlen(class_name));
+        symbol = qualified_name
+                ? sym_rfqv(context->ast, qualified_name)
+                : (strchr(lookup_name, '.')
+                   ? sym_rfqv(context->ast, lookup_name)
+                   : sym_rvfn(context->ast, (char *)lookup_name));
+    }
+    free(qualified_name);
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL ||
+        sym_is_interface_symbol(symbol) || !symbol->defines_scope) return 0;
+    contract = symbol->defines_scope->defining_node;
+    return contract && contract->node_type == CLASS_DEF &&
+           task_transfer_contract_node_valid(contract);
+}
+
 walker_result ast_structure_fixup_walker(walker_direction direction,
-                                         ASTNode* node, __attribute__((unused)) void *payload) {
+                                         ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *new_child, *next, *last, *n;
     Context *context = (Context*)payload;
 
     if (direction == in) {
+
+        normalize_task_callable(context, node);
+        validate_levelg_concurrency_surface(context, node);
 
         if (node->node_type == PROGRAM_FILE) {
 
@@ -175,32 +567,36 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
             }
             else return result_normal; /* No instructions at all! */
 
-            if (node->child->sibling && node->child->sibling->node_type != PROCEDURE && node->child->sibling->node_type != CLASS_DEF) {
+            last = node->child;
+            child = node->child->sibling;
+            if (child && child->node_type != PROCEDURE && child->node_type != TASK_DECL &&
+                child->node_type != CLASS_DEF &&
+                child->node_type != INTERFACE_DEF) {
                 /* If the first instruction is not a PROCEDURE or CLASS, then we need to
-                * add an implicit "main" PROCEDURE */
-                child = ast_ftt(context, PROCEDURE, "main:");
-                child->is_implicit_main = 1;
-                child->parent = node;
-                child->sibling = node->child->sibling;
-                node->child->sibling = child;
+                * add an implicit "main" PROCEDURE after any file-scope declarations. */
+                new_child = ast_ftt(context, PROCEDURE, "main:");
+                new_child->is_implicit_main = 1;
+                new_child->parent = node;
+                new_child->sibling = child;
+                last->sibling = new_child;
 
                 /* Add a function return type */
                 /* To work out the return type we walk the tree from here until we find the first return, a procedure or a class */
-                n = child->sibling;
+                n = new_child->sibling;
                 while (1) {
                     if (!n) {
                         /* No return statement so must be returning null */
-                        add_ast(child,ast_ft(context, VOID));
+                        add_ast(new_child,ast_ft(context, VOID));
                         break;
                     }
-                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) {
+                    if (n->node_type == PROCEDURE || n->node_type == TASK_DECL || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) {
                         /* No return statement so must be returning null */
-                        add_ast(child,ast_ft(context, VOID));
+                        add_ast(new_child,ast_ft(context, VOID));
                         break;
                     }
                     if (n->node_type == RETURN) {
-                        if (n->child) add_ast(child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
-                        else add_ast(child,ast_ft(context, VOID)); /* No return value - returning void */
+                        if (n->child) add_ast(new_child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
+                        else add_ast(new_child,ast_ft(context, VOID)); /* No return value - returning void */
                         break;
                     }
 
@@ -210,7 +606,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                     else {
                         n = n->parent;
                         while (n) {
-                            if (n == child->sibling->parent) n = 0; /* end of sub-tree */
+                            if (n == new_child->sibling->parent) n = 0; /* end of sub-tree */
                             else if (n->sibling) {
                                 n = n->sibling;
                                 break;
@@ -251,14 +647,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
             }
             ASTNode *attr = index ? index->sibling : NULL;
-            if (attr && attr->node_type == VAR_SYMBOL) {
-                if (!nodeis(attr, "int") &&
-                    !nodeis(attr, "string") &&
-                    !nodeis(attr, "object") &&
-                    !nodeis(attr, "float")) {
-                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-                }
-            }
+            validate_register_attribute(node, attr);
         }
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
@@ -288,7 +677,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 char first_instruction = 1;
                 next = node->sibling;
                 ASTNode *prev = node;
-                while (next && next->node_type != PROCEDURE && next->node_type != CLASS_DEF &&
+                while (next && next->node_type != PROCEDURE && next->node_type != TASK_DECL && next->node_type != CLASS_DEF &&
                        next->node_type != INTERFACE_DEF &&
                        next->node_type != METHOD && next->node_type != FACTORY &&
                        next->node_type != MATCH) {
@@ -381,6 +770,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                     new_child = ast_ft(context,ARGS);
                     add_ast(node,new_child);
                 }
+                validate_task_callable_signature(node);
+                validate_initializer_signature(node);
 
                 /* Make the new INSTRUCTIONS child */
                 new_child = ast_ft(context,INSTRUCTIONS);
@@ -389,7 +780,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 last = NULL;
 
                 /* For each sibling until the next block */
-                while ( ((next = node->sibling)) && next->node_type != PROCEDURE &&
+                while ( ((next = node->sibling)) && next->node_type != PROCEDURE && next->node_type != TASK_DECL &&
                         next->node_type != CLASS_DEF && next->node_type != INTERFACE_DEF &&
                         next->node_type != METHOD && next->node_type != FACTORY) {
                     last = next; /* To check that there is a return */
@@ -424,7 +815,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 
 static int is_callable_boundary(ASTNode *node) {
     if (!node) return 0;
-    return node->node_type == PROCEDURE || node->node_type == CLASS_DEF ||
+    return node->node_type == PROCEDURE || node->node_type == TASK_DECL || node->node_type == CLASS_DEF ||
            node->node_type == INTERFACE_DEF || node->node_type == METHOD ||
            node->node_type == FACTORY || node->node_type == MATCH;
 }
@@ -479,7 +870,7 @@ static ASTNode *infer_main_return_type(Context *context, ASTNode *first_node) {
     n = first_node;
     while (1) {
         if (!n) return ast_ft(context, VOID);
-        if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
+        if (n->node_type == PROCEDURE || n->node_type == TASK_DECL || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) return ast_ft(context, VOID);
         if (n->node_type == RETURN) {
             if (n->child) return ast_ftt(context, CLASS, ".int");
             return ast_ft(context, VOID);
@@ -578,6 +969,134 @@ static ASTNode *ensure_args_child(Context *context,
     return args_node;
 }
 
+typedef struct TerminalLoopFlow {
+    int may_fall_through;
+    int exits_target_loop;
+} TerminalLoopFlow;
+
+static int terminal_do_is_unconditional_forever(ASTNode *node) {
+    ASTNode *child;
+    int has_forever = 0;
+
+    if (!node || node->node_type != DO) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->node_type == REPEAT && nodeis(child, "forever")) {
+            has_forever = 1;
+        } else if (child->node_type == WHILE || child->node_type == UNTIL ||
+                   child->node_type == FOR || child->node_type == TO ||
+                   child->node_type == BY) {
+            return 0;
+        }
+    }
+    return has_forever;
+}
+
+static int terminal_do_is_loop(ASTNode *node) {
+    ASTNode *child;
+
+    for (child = node ? node->child : 0; child; child = child->sibling) {
+        if (child->node_type == REPEAT || child->node_type == WHILE ||
+            child->node_type == UNTIL || child->node_type == FOR ||
+            child->node_type == TO || child->node_type == BY) return 1;
+    }
+    return 0;
+}
+
+static TerminalLoopFlow summarize_terminal_loop_statement(ASTNode *node,
+                                                           ASTNode *target_loop,
+                                                           ASTNode *current_loop);
+
+static TerminalLoopFlow summarize_terminal_loop_sequence(ASTNode *first,
+                                                          ASTNode *target_loop,
+                                                          ASTNode *current_loop) {
+    TerminalLoopFlow result = {1, 0};
+    ASTNode *node;
+
+    for (node = first; node && result.may_fall_through; node = node->sibling) {
+        TerminalLoopFlow statement =
+            summarize_terminal_loop_statement(node, target_loop, current_loop);
+        if (statement.exits_target_loop) result.exits_target_loop = 1;
+        result.may_fall_through = statement.may_fall_through;
+    }
+    return result;
+}
+
+static TerminalLoopFlow summarize_terminal_loop_statement(ASTNode *node,
+                                                           ASTNode *target_loop,
+                                                           ASTNode *current_loop) {
+    TerminalLoopFlow result = {1, 0};
+    ASTNode *condition;
+    ASTNode *yes;
+    ASTNode *no;
+    ASTNode *body;
+
+    if (!node) return result;
+    switch (node->node_type) {
+        case RETURN:
+        case EXIT:
+        case ITERATE:
+            result.may_fall_through = 0;
+            return result;
+
+        case LEAVE:
+            result.may_fall_through = 0;
+            result.exits_target_loop =
+                target_loop && current_loop == target_loop;
+            return result;
+
+        case INSTRUCTIONS:
+            return summarize_terminal_loop_sequence(node->child,
+                                                    target_loop,
+                                                    current_loop);
+
+        case IF: {
+            TerminalLoopFlow yes_flow;
+            TerminalLoopFlow no_flow = {1, 0};
+
+            condition = node->child;
+            yes = condition ? condition->sibling : 0;
+            no = yes ? yes->sibling : 0;
+            yes_flow = summarize_terminal_loop_statement(yes,
+                                                         target_loop,
+                                                         current_loop);
+            if (no) {
+                no_flow = summarize_terminal_loop_statement(no,
+                                                            target_loop,
+                                                            current_loop);
+            }
+            result.may_fall_through =
+                yes_flow.may_fall_through || no_flow.may_fall_through;
+            result.exits_target_loop =
+                yes_flow.exits_target_loop || no_flow.exits_target_loop;
+            return result;
+        }
+
+        case DO: {
+            TerminalLoopFlow body_flow;
+
+            body = find_child_of_type(node, INSTRUCTIONS);
+            body_flow = summarize_terminal_loop_sequence(body ? body->child : 0,
+                                                         node,
+                                                         node);
+            if (!terminal_do_is_loop(node)) {
+                result.may_fall_through = body_flow.may_fall_through;
+            } else if (terminal_do_is_unconditional_forever(node)) {
+                result.may_fall_through = body_flow.exits_target_loop;
+            } else {
+                result.may_fall_through = 1;
+            }
+            /* An unqualified LEAVE inside a nested loop belongs to that loop,
+             * not to the terminal outer loop. A FOREVER loop has no control
+             * variable that a qualified LEAVE could name. */
+            result.exits_target_loop = 0;
+            return result;
+        }
+
+        default:
+            return result;
+    }
+}
+
 static void structure_callable_body(Context *context,
                                     ASTNode *node,
                                     int add_empty_args,
@@ -594,6 +1113,7 @@ static void structure_callable_body(Context *context,
     char done_case;
     char done_standard;
     char first_instruction;
+    TerminalLoopFlow body_flow;
 
     if (!node) return;
 
@@ -688,6 +1208,7 @@ static void structure_callable_body(Context *context,
     }
 
     args_node = ensure_args_child(context, node, add_empty_args);
+    validate_initializer_signature(node);
 
     instructions = ensure_instructions_child(context, node);
     last = 0;
@@ -704,7 +1225,10 @@ static void structure_callable_body(Context *context,
 
     if (!last) last = existing_last;
 
-    if (last && add_implicit_return && last->node_type != RETURN && !context->in_exit_bridge) {
+    body_flow = summarize_terminal_loop_sequence(instructions->child, 0, 0);
+    if (last && add_implicit_return && last->node_type != RETURN &&
+        body_flow.may_fall_through &&
+        !context->in_exit_bridge) {
         add_ast(last->parent, ast_ft(context, RETURN));
     }
 }
@@ -719,6 +1243,7 @@ static int is_program_header_node(ASTNode *node) {
 static int is_top_level_callable_boundary(ASTNode *node) {
     return node &&
            (node->node_type == PROCEDURE ||
+            node->node_type == TASK_DECL ||
             node->node_type == CLASS_DEF ||
             node->node_type == INTERFACE_DEF);
 }
@@ -763,6 +1288,34 @@ static void wrap_program_file_main(Context *context, ASTNode *node) {
     }
 }
 
+static int constant_def_has_explicit_routine_scope(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    while (parent) {
+        switch (parent->node_type) {
+            case PROCEDURE:
+            case METHOD:
+            case FACTORY:
+            case MATCH:
+                return !parent->is_implicit_main;
+
+            case PROGRAM_FILE:
+            case CLASS_DEF:
+            case INTERFACE_DEF:
+                return 0;
+
+            default:
+                parent = parent->parent;
+                break;
+        }
+    }
+
+    return 0;
+}
+
 walker_result ast_source_structure_walker(walker_direction direction,
                                           ASTNode* node,
                                           void *payload) {
@@ -773,6 +1326,9 @@ walker_result ast_source_structure_walker(walker_direction direction,
     context = (Context *)payload;
 
     if (direction != in) return result_normal;
+
+    normalize_task_callable(context, node);
+    validate_levelg_concurrency_surface(context, node);
 
     if (node->node_type == PROGRAM_FILE) {
         promote_program_file_children(node);
@@ -802,14 +1358,7 @@ walker_result ast_source_structure_walker(walker_direction direction,
             if (idx < 0) mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
         }
         attr = index ? index->sibling : 0;
-        if (attr && attr->node_type == VAR_SYMBOL) {
-            if (!nodeis(attr, "int") &&
-                !nodeis(attr, "string") &&
-                !nodeis(attr, "object") &&
-                !nodeis(attr, "float")) {
-                mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-            }
-        }
+        validate_register_attribute(node, attr);
     }
     else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
         structure_callable_body(context, node, 0, 0);
@@ -860,7 +1409,7 @@ walker_result ast_work_structure_walker(walker_direction direction,
  * - Sets the token and source start / finish position for each node
  */
 walker_result source_location_walker(walker_direction direction,
-                                     ASTNode* node, __attribute__((unused)) void *payload) {
+                                     ASTNode* node, RXCP_UNUSED void *payload) {
     ASTNode *child, *n;
     Token *left, *right;
     
@@ -952,7 +1501,14 @@ walker_result source_location_walker(walker_direction direction,
             /* This is a leaf without a token - so need to estimate a position */
             ASTNode *older = 0;
 
-            if (node->node_type == ERROR || node->node_type == WARNING) {
+            if (!node->parent) {
+                /* A tokenless root is valid for an empty or comment-only file. */
+                node->source_start = 0;
+                node->source_end = 0;
+                node->line = -1;
+                node->column = -1;
+            }
+            else if (node->node_type == ERROR || node->node_type == WARNING) {
                 node->line = node->parent->line;
                 node->column = node->parent->column;
                 node->source_start = node->parent->source_start;
@@ -1009,10 +1565,9 @@ walker_result source_location_walker(walker_direction direction,
  * - Fixes SCONCAT to CONCAT, removes NOPs, options, etc.
  */
 walker_result syntax_validation_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, void *payload) {
     ASTNode *child, *next_child;
     int has_to = 0, has_for = 0, has_by = 0, has_assign = 0;
-    char *buffer, *c;
     Context *context = (Context*)payload;
 
     if (direction == out) {
@@ -1140,6 +1695,11 @@ walker_result syntax_validation_walker(walker_direction direction,
                 mknd_err(node, "CANT_ASSIGN_IN_INTERFACE_DEF");
             }
         }
+        else if (node->node_type == CONSTANT_DEF) {
+            if (!constant_def_has_explicit_routine_scope(node)) {
+                mknd_err(node, "CONSTANT_OUTSIDE_ROUTINE");
+            }
+        }
         else if (node->node_type == REPEAT) {
             /* Validate Sub-commands - Error 27.1 */
             has_to = 0;
@@ -1171,9 +1731,17 @@ walker_result syntax_validation_walker(walker_direction direction,
             }
         }
 
+        else if ((node->node_type == METHOD || node->node_type == PROCEDURE) &&
+                 node->is_task_callable) {
+            if (node->node_type == METHOD && !task_receiver_contract_valid(node)) {
+                mknd_err_unique(node, "TASK_NONTRANSFERABLE_RECEIVER");
+            }
+        }
+
         else if (node->node_type == SIGNAL_BLOCK) {
-            if (context->level != LEVELB) {
-                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB");
+            if (context->level != LEVELB && context->level != LEVELG &&
+                !node->is_compiler_added) {
+                mknd_err(node, "SIGNAL_BLOCK_ONLY_LEVELB_OR_LEVELG");
             }
         }
 
@@ -1207,52 +1775,7 @@ walker_result syntax_validation_walker(walker_direction direction,
         }
 
         else if (node->node_type == ASSEMBLER) {
-            /* ASSEMBLER operand types */
-            OperandType type1, type2, type3;
-
-            if (context->level != LEVELB) {
-                /* ASSEMBLER is only valid in level b */
-                mknd_err(node, "ASSEMBLER_ONLY_LEVELB");
-            }
-
-            else {
-
-                child = node->child;
-                if (child) {
-                    type1 = nodetype_to_operandtype(child->node_type);
-                    child = child->sibling;
-                    if (child) {
-                        type2 = nodetype_to_operandtype(child->node_type);
-                        child = child->sibling;
-                        if (child) type3 = nodetype_to_operandtype(child->node_type);
-                        else type3 = OP_NONE;
-                    }
-                    else {
-                        type2 = OP_NONE;
-                        type3 = OP_NONE;
-                    }
-                }
-                else {
-                    type1 = OP_NONE;
-                    type2 = OP_NONE;
-                    type3 = OP_NONE;
-                }
-
-                /* Lookup Instruction */
-
-                /* We need to copy it to a null terminated buffer and lowercase it! */
-                buffer = malloc(node->node_string_length + 1);
-                memcpy(buffer, node->node_string, node->node_string_length);
-                buffer[node->node_string_length] = 0;
-                for (c = buffer; *c; ++c) *c = (char) tolower(*c);
-
-                /* Lookup */
-                if (!src_inst(buffer, type1, type2, type3)) {
-                    /* Invalid Instruction */
-                    mknd_err(node, "INVALID_ASSEMBLER");
-                }
-                free(buffer);
-            }
+            validate_assembler_node(context, node);
         }
 
         /* OP_ARG_VALUE to OP_ARGS Rewrites */
@@ -1263,6 +1786,15 @@ walker_result syntax_validation_walker(walker_direction direction,
                 node->node_type = OP_ARGS;
             }
         }
+    }
+    return result_normal;
+}
+
+walker_result assembler_validation_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
+    if (direction == out && node->node_type == ASSEMBLER) {
+        validate_assembler_node((Context*)payload, node);
     }
     return result_normal;
 }

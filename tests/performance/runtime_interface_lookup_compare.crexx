@@ -1,0 +1,259 @@
+/* Observational benchmark for VM interface method and factory registries. */
+options levelb
+namespace runtime_interface_lookup_compare
+import rxfnsb
+
+arg argv = .string[]
+
+iterations = 50000
+factory_iterations = 5000
+if argv[0] >= 1 then iterations = argv[1]
+if argv[0] >= 2 then factory_iterations = argv[2]
+
+target = .lookup24()
+
+start = time("us")
+checksum = 0
+do i = 1 to iterations
+  checksum = checksum + target.value()
+end
+method_elapsed = time("us") - start
+
+start = time("us")
+do i = .int(1) to factory_iterations
+  target = .lookup24()
+  checksum = checksum + target.value()
+end
+factory_elapsed = time("us") - start
+
+if checksum \= (iterations + factory_iterations) * 24 then return fail("checksum")
+
+say "benchmark=runtime_interface_lookup_compare"
+say "registry_groups=24"
+say "method_iterations="iterations
+say "factory_iterations="factory_iterations
+say "method_us="method_elapsed
+say "factory_us="factory_elapsed
+say "PASS: runtime interface lookup compare"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+lookup01: interface
+  *: factory
+  value: method = .int
+lookup01impl: class implements .lookup01
+  *: factory
+    return
+  value: method = .int
+    return 1
+
+lookup02: interface
+  *: factory
+  value: method = .int
+lookup02impl: class implements .lookup02
+  *: factory
+    return
+  value: method = .int
+    return 2
+
+lookup03: interface
+  *: factory
+  value: method = .int
+lookup03impl: class implements .lookup03
+  *: factory
+    return
+  value: method = .int
+    return 3
+
+lookup04: interface
+  *: factory
+  value: method = .int
+lookup04impl: class implements .lookup04
+  *: factory
+    return
+  value: method = .int
+    return 4
+
+lookup05: interface
+  *: factory
+  value: method = .int
+lookup05impl: class implements .lookup05
+  *: factory
+    return
+  value: method = .int
+    return 5
+
+lookup06: interface
+  *: factory
+  value: method = .int
+lookup06impl: class implements .lookup06
+  *: factory
+    return
+  value: method = .int
+    return 6
+
+lookup07: interface
+  *: factory
+  value: method = .int
+lookup07impl: class implements .lookup07
+  *: factory
+    return
+  value: method = .int
+    return 7
+
+lookup08: interface
+  *: factory
+  value: method = .int
+lookup08impl: class implements .lookup08
+  *: factory
+    return
+  value: method = .int
+    return 8
+
+lookup09: interface
+  *: factory
+  value: method = .int
+lookup09impl: class implements .lookup09
+  *: factory
+    return
+  value: method = .int
+    return 9
+
+lookup10: interface
+  *: factory
+  value: method = .int
+lookup10impl: class implements .lookup10
+  *: factory
+    return
+  value: method = .int
+    return 10
+
+lookup11: interface
+  *: factory
+  value: method = .int
+lookup11impl: class implements .lookup11
+  *: factory
+    return
+  value: method = .int
+    return 11
+
+lookup12: interface
+  *: factory
+  value: method = .int
+lookup12impl: class implements .lookup12
+  *: factory
+    return
+  value: method = .int
+    return 12
+
+lookup13: interface
+  *: factory
+  value: method = .int
+lookup13impl: class implements .lookup13
+  *: factory
+    return
+  value: method = .int
+    return 13
+
+lookup14: interface
+  *: factory
+  value: method = .int
+lookup14impl: class implements .lookup14
+  *: factory
+    return
+  value: method = .int
+    return 14
+
+lookup15: interface
+  *: factory
+  value: method = .int
+lookup15impl: class implements .lookup15
+  *: factory
+    return
+  value: method = .int
+    return 15
+
+lookup16: interface
+  *: factory
+  value: method = .int
+lookup16impl: class implements .lookup16
+  *: factory
+    return
+  value: method = .int
+    return 16
+
+lookup17: interface
+  *: factory
+  value: method = .int
+lookup17impl: class implements .lookup17
+  *: factory
+    return
+  value: method = .int
+    return 17
+
+lookup18: interface
+  *: factory
+  value: method = .int
+lookup18impl: class implements .lookup18
+  *: factory
+    return
+  value: method = .int
+    return 18
+
+lookup19: interface
+  *: factory
+  value: method = .int
+lookup19impl: class implements .lookup19
+  *: factory
+    return
+  value: method = .int
+    return 19
+
+lookup20: interface
+  *: factory
+  value: method = .int
+lookup20impl: class implements .lookup20
+  *: factory
+    return
+  value: method = .int
+    return 20
+
+lookup21: interface
+  *: factory
+  value: method = .int
+lookup21impl: class implements .lookup21
+  *: factory
+    return
+  value: method = .int
+    return 21
+
+lookup22: interface
+  *: factory
+  value: method = .int
+lookup22impl: class implements .lookup22
+  *: factory
+    return
+  value: method = .int
+    return 22
+
+lookup23: interface
+  *: factory
+  value: method = .int
+lookup23impl: class implements .lookup23
+  *: factory
+    return
+  value: method = .int
+    return 23
+
+lookup24: interface
+  *: factory
+  value: method = .int
+lookup24impl: class implements .lookup24
+  *: factory
+    return
+  value: method = .int
+    return 24

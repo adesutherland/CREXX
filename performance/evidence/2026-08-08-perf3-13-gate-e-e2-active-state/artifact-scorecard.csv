@@ -1,0 +1,4 @@
+artifact,variant,bytes,text_bytes,sha256,delta_bytes_vs_control,delta_percent_vs_control
+rxbvm,published-e1-p1-control,1002392,819072,cc9eb05c6b232ed7fb42f52b95b6ca067b61d214e45342cca90cf441fb870996,0,0.000000
+rxbvm,e2-direct-slot,1020712,824628,132aa8a69a1ad9e250dfce8a4ac03905daade9f5e5300f27692c9f179255c841,18320,1.827628
+rxtvm,e2-direct-slot,1020536,,929ef159afc77f2e1af714474f05966304ddabd677827c6dfa761f24b6b87ee1,,

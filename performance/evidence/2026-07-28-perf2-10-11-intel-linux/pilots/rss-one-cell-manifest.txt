@@ -1,0 +1,2 @@
+crexx-cross-runtime-matrix|1
+sieve-rxvm|Sieve|crexx|rxvm|equivalent-port|A|yes|no|5500|PASS: AWFY Sieve||/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxvm;/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin;-a;5500

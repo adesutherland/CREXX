@@ -1,0 +1,1903 @@
+/*
+ * SOURCE                 : awfy_towers.crexx
+ */
+
+.meta "awfy_towers.towersbenchmark"="b" ".unknown" .class
+.meta "awfy_towers.towersbenchmark.moves_done"="b" ".int" .attr 1
+.meta "awfy_towers.towersbenchmark.pile0"="b" ".towersdisk" .attr 2
+.meta "awfy_towers.towersbenchmark.pile0_present"="b" ".int" .attr 3
+.meta "awfy_towers.towersbenchmark.pile1"="b" ".towersdisk" .attr 4
+.meta "awfy_towers.towersbenchmark.pile1_present"="b" ".int" .attr 5
+.meta "awfy_towers.towersbenchmark.pile2"="b" ".towersdisk" .attr 6
+.meta "awfy_towers.towersbenchmark.pile2_present"="b" ".int" .attr 7
+.meta "awfy_towers.towersdisk"="b" ".unknown" .class
+.meta "awfy_towers.towersdisk.disk_size"="b" ".int" .attr 1
+.meta "awfy_towers.towersdisk.has_next"="b" ".int" .attr 2
+.meta "awfy_towers.towersdisk.next_disk"="b" ".object" .attr 3
+.globals=0
+
+main() .locals=40
+   .meta "awfy_towers.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "awfy_towers.crexx" 8 5 19 "arg argv = .string[]"
+   .meta "awfy_towers.main.argv"="b" ".string[*]" r0
+   brtpandt l4c,a1,512
+   copy r0,a1
+   br l4d
+l4c:
+   swap r0,a1
+l4d:
+   .srcstep 2 2 17 "awfy_towers.crexx" 10 1 16 "repetitions = 1"
+   .meta "awfy_towers.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_towers.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   blt l23iffalse,r4,1
+   .srcstep 5 5 17 "awfy_towers.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_towers.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minattrs r0,1
+   linkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   icopy r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+   unlink r5
+l23iffalse:
+   .srcstep 10 10 17 "awfy_towers.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+   bge l30iffalse,r1,1
+   .srcstep 11 11 17 "awfy_towers.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "awfy_towers.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 8 8 17 "awfy_towers.crexx" 12 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_towers.crexx" 27 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 7 7 17 "awfy_towers.crexx" 28 3 11 "  return 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r3,r4
+   br l519bexprend
+l519bexprend:
+   ret r3
+l30iffalse:
+   .srcstep 12 12 17 "awfy_towers.crexx" 14 1 11 "result = 0"
+   .meta "awfy_towers.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+   .srcstep 81 81 17 "awfy_towers.crexx" 15 1 3 "do iteration = 1 to repetitions"
+   .srcstep 13 13 17 "awfy_towers.crexx" 15 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_towers.main.iteration"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+   .srcstep 14 14 17 "awfy_towers.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l34dostart:
+   .srcstep 14 14 17 "awfy_towers.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   igt r3,r4,r1
+   brt l34doend,r3
+   .srcstep 23 23 17 "awfy_towers.crexx" 16 3 31 "  benchmark = .TowersBenchmark()"
+   .srcstep 16 16 6 "awfy_towers.crexx" 65 3 13 "  *: factory"
+   setattrs r6,8
+   .srcstep 17 17 6 "awfy_towers.crexx" 65 3 13 "  *: factory"
+   setobjtype r6,"awfy_towers.towersbenchmark"
+   .srcstep 18 18 17 "awfy_towers.crexx" 66 5 22 "    pile0_present = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+   linkattr1 r7,r6,3
+   icopy r7,r8
+   unlink r7
+   .srcstep 19 19 17 "awfy_towers.crexx" 67 5 22 "    pile1_present = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 19 19 0 "" ""
+   linkattr1 r8,r6,5
+   icopy r8,r7
+   unlink r8
+   .srcstep 20 20 17 "awfy_towers.crexx" 68 5 22 "    pile2_present = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
+   linkattr1 r8,r6,7
+   icopy r8,r7
+   unlink r8
+   .srcstep 21 21 17 "awfy_towers.crexx" 69 5 19 "    moves_done = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 21 21 0 "" ""
+   linkattr1 r8,r6,1
+   icopy r8,r7
+   unlink r8
+   .srcstep 22 22 33 "awfy_towers.crexx" 70 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 22 22 0 "§factory" ""
+   copy r5,r6
+   .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "benchmark" ""
+   .srcstep 73 73 17 "awfy_towers.crexx" 17 3 25 "  result = benchmark.run()"
+   .srcstep 24 24 33 "awfy_towers.crexx" 17 12 21 "  result = benchmark.run()"
+   .traceevent "V" 6 "R" "O" "r" 5 24 24 0 "benchmark" ""
+   copy r10,r5
+   .traceevent "A" 6 "R" "O" "r" 10 24 24 0 "§this" ""
+   .srcstep 40 40 17 "awfy_towers.crexx" 73 5 29 "    call buildTowerAt(0, 13)"
+   .srcstep 25 25 33 "awfy_towers.crexx" 73 10 22 "    call buildTowerAt(0, 13)"
+   .traceevent "V" 6 "R" "O" "r" 10 25 25 0 "§this" ""
+   copy r11,r10
+   .traceevent "A" 6 "R" "O" "r" 11 25 25 0 "§this" ""
+   .srcstep 37 37 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+   .srcstep 26 26 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+   load r7,13
+   .traceevent "L" 4 "R" "I" "r" 7 26 26 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 26 26 0 "i" ""
+   .srcstep 27 27 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 0 0 0 "" ""
+   .srcstep 28 28 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+   load r14,-1
+   .traceevent "L" 4 "R" "I" "r" 14 0 0 0 "" ""
+l862dostart:
+   .srcstep 27 27 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   ilt r13,r7,r12
+   brt l862doend,r13
+   .srcstep 35 35 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+   .srcstep 29 29 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setattrs r16,4
+   .srcstep 30 30 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setobjtype r16,"awfy_towers.towersdisk"
+   .srcstep 31 31 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+   .traceevent "V" 6 "R" "I" "r" 7 31 31 0 "i" ""
+   icopy r15,r7
+   .traceevent "A" 6 "R" "I" "r" 15 31 31 0 "size" ""
+   .srcstep 32 32 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+   .traceevent "V" 6 "R" "I" "r" 15 32 32 0 "size" ""
+   linkattr1 r17,r16,1
+   icopy r17,r15
+   unlink r17
+   .srcstep 33 33 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 33 33 0 "" ""
+   linkattr1 r17,r16,2
+   icopy r17,r18
+   unlink r17
+   .srcstep 34 34 33 "awfy_towers.crexx" 39 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 16 34 34 0 "§factory" ""
+   copy r8,r16
+   .traceevent "A" 6 "R" "O" "r" 8 34 34 0 "disk" ""
+   .srcstep 36 36 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+   .traceevent "V" 6 "R" "O" "r" 11 36 36 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 8 36 36 0 "disk" ""
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 36 36 0 "" ""
+   load r17,3
+   settp r11,256
+   swap r18,r11
+   settp r8,256
+   swap r19,r8
+   call r21,§awfy_towers.towersbenchmark.pushdisk(),r17
+   swap r11,r18
+   swap r8,r19
+   .traceevent "F" 4 "R" "V" "r" 21 36 36 0 "pushdisk" ""
+l862doinc:
+   .srcstep 28 28 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+ iadd r7,r14,r7
+   .srcstep 38 38 17 "awfy_towers.crexx" 143 5 8 "    end"
+   br l862dostart
+l862doend:
+   endlife r8
+   endlife r7
+   .srcstep 39 39 6 "awfy_towers.crexx" 73 10 29 "    call buildTowerAt(0, 13)"
+   .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+   copy r10,r11
+   .srcstep 41 41 17 "awfy_towers.crexx" 74 5 19 "    moves_done = 0"
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 41 41 0 "" ""
+   linkattr1 r20,r10,1
+   icopy r20,r19
+   unlink r20
+   .srcstep 69 69 17 "awfy_towers.crexx" 75 5 29 "    call moveDisks(13, 0, 1)"
+   .srcstep 42 42 33 "awfy_towers.crexx" 75 10 19 "    call moveDisks(13, 0, 1)"
+   .traceevent "V" 6 "R" "O" "r" 10 42 42 0 "§this" ""
+   copy r22,r10
+   .traceevent "A" 6 "R" "O" "r" 22 42 42 0 "§this" ""
+   .srcstep 43 43 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+   .traceevent "V" 6 "R" "O" "r" 22 43 43 0 "§this" ""
+   load r25,12
+   .traceevent "L" 4 "R" "I" "r" 25 43 43 0 "" ""
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 43 43 0 "" ""
+   load r27,2
+   .traceevent "L" 4 "R" "I" "r" 27 43 43 0 "" ""
+   load r23,4
+   settp r22,256
+   swap r24,r22
+   call r20,§awfy_towers.towersbenchmark.movedisks(),r23
+   swap r22,r24
+   .traceevent "F" 4 "R" "V" "r" 20 43 43 0 "movedisks" ""
+   .srcstep 66 66 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+   .srcstep 44 44 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 22 44 44 0 "§this" ""
+   copy r29,r22
+   .traceevent "A" 6 "R" "O" "r" 29 44 44 0 "§this" ""
+   .srcstep 62 62 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+   .meta "awfy_towers.main.top"="b" ".towersdisk" r31
+   .srcstep 45 45 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r31
+   .srcstep 46 46 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 29 46 46 0 "§this" ""
+   copy r32,r29
+   .traceevent "A" 6 "R" "O" "r" 32 46 46 0 "§this" ""
+   setobjuninit r31,"towersdisk"
+   .srcstep 47 47 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r27,r32,2
+   .traceevent "V" 6 "R" "O" "r" 27 47 47 0 "pile0" ""
+   copy r31,r27
+   .traceevent "A" 6 "R" "O" "r" 31 47 47 0 "top" ""
+   unlink r27
+   .srcstep 56 56 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 50 50 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 48 48 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 31 48 48 0 "top" ""
+   copy r33,r31
+   .traceevent "A" 6 "R" "O" "r" 33 48 48 0 "§this" ""
+   .srcstep 49 49 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r27,r33,2
+   .traceevent "V" 6 "R" "I" "r" 27 56 56 0 "has_next" ""
+   icopy r26,r27
+   unlink r27
+   br l1432bexprend
+l1432bexprend:
+   brf l1431iffalse,r26
+   .srcstep 57 57 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 53 53 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 51 51 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 31 51 51 0 "top" ""
+   copy r34,r31
+   .traceevent "A" 6 "R" "O" "r" 34 51 51 0 "§this" ""
+   .srcstep 52 52 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r27,r34,3
+   .traceevent "V" 6 "R" "O" "r" 27 52 52 0 "next_disk" ""
+   copy r25,r27
+   asserttype r25,"awfy_towers.towersdisk"
+   unlink r27
+   .traceevent "A" 6 "R" "O" "r" 25 52 52 0 "next_disk" ""
+   .srcstep 54 54 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 25 54 54 0 "next_disk" ""
+   linkattr1 r27,r32,2
+   copy r27,r25
+   unlink r27
+   endlife r25
+   br l1431ifend
+   .srcstep 58 58 17 "awfy_towers.crexx" 123 5 8 "    end"
+l1431iffalse:
+   .srcstep 55 55 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r25,0
+   .traceevent "L" 4 "R" "I" "r" 25 55 55 0 "" ""
+   linkattr1 r27,r32,3
+   icopy r27,r25
+   unlink r27
+l1431ifend:
+   .srcstep 59 59 33 "awfy_towers.crexx" 129 12 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 31 59 59 0 "top" ""
+   copy r30,r31
+   .traceevent "A" 6 "R" "O" "r" 30 59 59 0 "__inline_ret_362_363" ""
+   .srcstep 60 60 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 32 0 0 0 "§this" ""
+   copy r29,r32
+   .srcstep 61 61 33 "awfy_towers.crexx" 129 5 11 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 30 61 61 0 "__inline_ret_362_363" ""
+   copy r28,r30
+   .traceevent "A" 6 "R" "O" "r" 28 61 61 0 "disk" ""
+   .srcstep 63 63 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 29 63 63 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 28 63 63 0 "disk" ""
+   load r27,1
+   .traceevent "L" 4 "R" "I" "r" 27 63 63 0 "" ""
+   load r24,3
+   settp r29,256
+   swap r25,r29
+   settp r28,256
+   swap r26,r28
+   call r23,§awfy_towers.towersbenchmark.pushdisk(),r24
+   swap r29,r25
+   swap r28,r26
+   .traceevent "F" 4 "R" "V" "r" 23 63 63 0 "pushdisk" ""
+   .srcstep 64 64 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+   linkattr1 r26,r29,1
+   .traceevent "V" 6 "R" "I" "r" 26 64 64 0 "moves_done" ""
+   iadd r25,r26,1
+   unlink r26
+   .traceevent "O" 4 "R" "I" "r" 25 64 64 0 "" ""
+   linkattr1 r27,r29,1
+   icopy r27,r25
+   unlink r27
+   .srcstep 65 65 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 29 0 0 0 "§this" ""
+   copy r22,r29
+   .srcstep 67 67 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 22 67 67 0 "§this" ""
+   load r37,12
+   .traceevent "L" 4 "R" "I" "r" 37 67 67 0 "" ""
+   load r38,2
+   .traceevent "L" 4 "R" "I" "r" 38 67 67 0 "" ""
+   load r39,1
+   .traceevent "L" 4 "R" "I" "r" 39 67 67 0 "" ""
+   load r35,4
+   settp r22,256
+   swap r36,r22
+   call r27,§awfy_towers.towersbenchmark.movedisks(),r35
+   swap r22,r36
+   .traceevent "F" 4 "R" "V" "r" 27 67 67 0 "movedisks" ""
+   .srcstep 68 68 6 "awfy_towers.crexx" 75 10 29 "    call moveDisks(13, 0, 1)"
+   .traceevent "V" 6 "R" "O" "r" 22 0 0 0 "§this" ""
+   copy r10,r22
+   .srcstep 70 70 33 "awfy_towers.crexx" 76 12 22 "    return moves_done"
+   linkattr1 r39,r10,1
+   .traceevent "V" 6 "R" "I" "r" 39 70 70 0 "moves_done" ""
+   icopy r9,r39
+   .traceevent "A" 6 "R" "I" "r" 9 70 70 0 "__inline_ret_188_189" ""
+   unlink r39
+   .srcstep 71 71 6 "awfy_towers.crexx" 17 12 25 "  result = benchmark.run()"
+   .traceevent "V" 6 "R" "O" "r" 10 0 0 0 "§this" ""
+   copy r5,r10
+   .srcstep 72 72 33 "awfy_towers.crexx" 76 5 11 "    return moves_done"
+   .traceevent "V" 6 "R" "I" "r" 9 72 72 0 "__inline_ret_188_189" ""
+   copy r2,r9
+   .traceevent "A" 6 "R" "I" "r" 2 72 72 0 "result" ""
+   .srcstep 79 79 17 "awfy_towers.crexx" 18 3 20 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 79 79 0 "result" ""
+   beq l60iffalse,r2,8191
+   .srcstep 80 80 17 "awfy_towers.crexx" 18 21 25 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+   .srcstep 78 78 17 "awfy_towers.crexx" 18 26 76 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+   .meta "awfy_towers.main.benchmark"="b" ".towersbenchmark" r5
+   .srcstep 77 77 17 "awfy_towers.crexx" 18 33 37 "  if result <> 8191 then return fail(\"expected 8191 moves, got \" || result)"
+   .srcstep 74 74 33 "awfy_towers.crexx" 26 7 14 "  arg message = .string"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 74 74 0 "result" ""
+   concat r38,"expected 8191 moves, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 38 74 74 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 74 74 0 "message" ""
+   .srcstep 75 75 17 "awfy_towers.crexx" 27 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 38 75 75 0 "message" ""
+   sconcat r37,"FAIL:",r38
+   .traceevent "O" 4 "R" "S" "r" 37 75 75 0 "" ""
+   say r37
+   .srcstep 76 76 17 "awfy_towers.crexx" 28 3 11 "  return 1"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 78 78 0 "" ""
+   icopy r36,r37
+   br l1519bexprend
+l1519bexprend:
+   endlife r38
+   ret r36
+l60iffalse:
+l34doinc:
+   .srcstep 15 15 17 "awfy_towers.crexx" 15 4 13 "do iteration = 1 to repetitions"
+   inc r4
+   .srcstep 82 82 17 "awfy_towers.crexx" 19 1 4 "end"
+   br l34dostart
+l34doend:
+   endlife r5
+   endlife r4
+   .meta "awfy_towers.main.benchmark"
+   .meta "awfy_towers.main.iteration"
+   .srcstep 83 83 17 "awfy_towers.crexx" 21 1 68 "say \"benchmark=awfy_towers repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 83 83 0 "repetitions" ""
+   concat r39,"benchmark=awfy_towers repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+   sconcat r39,r39,"result="
+   .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 83 83 0 "result" ""
+   concat r39,r39,r2
+   .traceevent "O" 4 "R" "S" "r" 39 83 83 0 "" ""
+   say r39
+   .srcstep 84 84 17 "awfy_towers.crexx" 22 1 24 "say \"PASS: AWFY Towers\""
+   say "PASS: AWFY Towers"
+   .srcstep 85 85 17 "awfy_towers.crexx" 23 1 9 "return 0"
+   ret 0
+   .meta "awfy_towers.main.argv"
+   .meta "awfy_towers.main.repetitions"
+   .meta "awfy_towers.main.result"
+
+§awfy_towers.towersdisk.§factory() .locals=4
+   .meta "awfy_towers.towersdisk.§factory"="b" ".awfy_towers..towersdisk" §awfy_towers.towersdisk.§factory() "size=.int"
+   .srcstep 93 93 17 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setattrs r1,4
+   setobjtype r1,"awfy_towers.towersdisk"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 89 89 17 "awfy_towers.crexx" 36 9 20 "    arg size = .int"
+   .meta "awfy_towers.towersdisk.§factory.size"="b" ".int" a1
+   .meta "awfy_towers.towersdisk.§factory.§factory"="b" ".towersdisk" r1
+   .srcstep 90 90 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+   .traceevent "V" 6 "R" "I" "a" 1 90 90 0 "size" ""
+   linkattr1 r2,r1,1
+   icopy r2,a1
+   unlink r2
+   .srcstep 91 91 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 91 91 0 "" ""
+   linkattr1 r2,r1,2
+   icopy r2,r3
+   unlink r2
+   .srcstep 92 92 17 "awfy_towers.crexx" 39 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 92 92 0 "§factory" ""
+   ret r1
+   .meta "awfy_towers.towersdisk.§factory.size"
+   .meta "awfy_towers.towersdisk.§factory.§factory"
+
+§awfy_towers.towersdisk.size() .locals=2
+   .meta "awfy_towers.towersdisk.size"="b" ".int" §awfy_towers.towersdisk.size() ""
+   .srcstep 95 95 17 "awfy_towers.crexx" 41 3 22 "  size: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 94 94 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+   .meta "awfy_towers.towersdisk.size.§this"="b" ".towersdisk" a1
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "I" "r" 1 94 94 0 "disk_size" ""
+   ret r1
+   .meta "awfy_towers.towersdisk.size.§this"
+
+§awfy_towers.towersdisk.next() .locals=3
+   .meta "awfy_towers.towersdisk.next"="b" ".awfy_towers..towersdisk" §awfy_towers.towersdisk.next() ""
+   .srcstep 97 97 17 "awfy_towers.crexx" 44 3 29 "  next: method = .TowersDisk"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 96 96 17 "awfy_towers.crexx" 45 5 36 "    return next_disk as .TowersDisk"
+   .meta "awfy_towers.towersdisk.next.§this"="b" ".towersdisk" a1
+   linkattr1 r1,a1,3
+   .traceevent "V" 6 "R" "O" "r" 1 96 96 0 "next_disk" ""
+   copy r2,r1
+   asserttype r2,"awfy_towers.towersdisk"
+   unlink r1
+   ret r2
+   .meta "awfy_towers.towersdisk.next.§this"
+
+§awfy_towers.towersdisk.hasnext() .locals=2
+   .meta "awfy_towers.towersdisk.hasnext"="b" ".int" §awfy_towers.towersdisk.hasnext() ""
+   .srcstep 99 99 17 "awfy_towers.crexx" 47 3 25 "  hasNext: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 98 98 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   .meta "awfy_towers.towersdisk.hasnext.§this"="b" ".towersdisk" a1
+   linkattr1 r1,a1,2
+   .traceevent "V" 6 "R" "I" "r" 1 98 98 0 "has_next" ""
+   ret r1
+   .meta "awfy_towers.towersdisk.hasnext.§this"
+
+§awfy_towers.towersdisk.setnext() .locals=4
+   .meta "awfy_towers.towersdisk.setnext"="b" ".void" §awfy_towers.towersdisk.setnext() "value=.towersdisk"
+   .srcstep 104 104 17 "awfy_towers.crexx" 50 3 26 "  setNext: method = .void"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 100 100 17 "awfy_towers.crexx" 51 9 28 "    arg value = .TowersDisk"
+   .meta "awfy_towers.towersdisk.setnext.value"="b" ".towersdisk" a2
+   .meta "awfy_towers.towersdisk.setnext.§this"="b" ".towersdisk" a1
+   .srcstep 101 101 17 "awfy_towers.crexx" 52 5 33 "    next_disk = value as .object"
+   .traceevent "V" 6 "R" "O" "a" 2 101 101 0 "value" ""
+   copy r3,a2
+   linkattr1 r2,a1,3
+   copy r2,r3
+   unlink r2
+   .srcstep 102 102 17 "awfy_towers.crexx" 53 5 17 "    has_next = 1"
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 102 102 0 "" ""
+   linkattr1 r3,a1,2
+   icopy r3,r2
+   unlink r3
+   .srcstep 103 103 17 "awfy_towers.crexx" 54 5 11 "    return"
+   ret
+   .meta "awfy_towers.towersdisk.setnext.value"
+   .meta "awfy_towers.towersdisk.setnext.§this"
+
+§awfy_towers.towersbenchmark.§factory() .locals=3
+   .meta "awfy_towers.towersbenchmark.§factory"="b" ".awfy_towers..towersbenchmark" §awfy_towers.towersbenchmark.§factory() ""
+   .srcstep 110 110 17 "awfy_towers.crexx" 65 3 13 "  *: factory"
+   setattrs r0,8
+   setobjtype r0,"awfy_towers.towersbenchmark"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 105 105 17 "awfy_towers.crexx" 66 5 22 "    pile0_present = 0"
+   .meta "awfy_towers.towersbenchmark.§factory.§factory"="b" ".towersbenchmark" r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 105 105 0 "" ""
+   linkattr1 r1,r0,3
+   icopy r1,r2
+   unlink r1
+   .srcstep 106 106 17 "awfy_towers.crexx" 67 5 22 "    pile1_present = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 106 106 0 "" ""
+   linkattr1 r2,r0,5
+   icopy r2,r1
+   unlink r2
+   .srcstep 107 107 17 "awfy_towers.crexx" 68 5 22 "    pile2_present = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 107 107 0 "" ""
+   linkattr1 r2,r0,7
+   icopy r2,r1
+   unlink r2
+   .srcstep 108 108 17 "awfy_towers.crexx" 69 5 19 "    moves_done = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 108 108 0 "" ""
+   linkattr1 r2,r0,1
+   icopy r2,r1
+   unlink r2
+   .srcstep 109 109 17 "awfy_towers.crexx" 70 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 109 109 0 "§factory" ""
+   ret r0
+   .meta "awfy_towers.towersbenchmark.§factory.§factory"
+
+§awfy_towers.towersbenchmark.run() .locals=32
+   .meta "awfy_towers.towersbenchmark.run"="b" ".int" §awfy_towers.towersbenchmark.run() ""
+   .srcstep 157 157 17 "awfy_towers.crexx" 72 3 21 "  run: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 126 126 17 "awfy_towers.crexx" 73 5 29 "    call buildTowerAt(0, 13)"
+   .srcstep 111 111 33 "awfy_towers.crexx" 73 10 22 "    call buildTowerAt(0, 13)"
+   .traceevent "V" 6 "R" "O" "a" 1 111 111 0 "§this" ""
+   copy r1,a1
+   .traceevent "A" 6 "R" "O" "r" 1 111 111 0 "§this" ""
+   .srcstep 123 123 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+   .srcstep 112 112 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+   load r3,13
+   .traceevent "L" 4 "R" "I" "r" 3 112 112 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 112 112 0 "i" ""
+   .srcstep 113 113 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+   .srcstep 114 114 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+   load r6,-1
+   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+l562dostart:
+   .srcstep 113 113 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   ilt r5,r3,r4
+   brt l562doend,r5
+   .srcstep 121 121 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+   .srcstep 115 115 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setattrs r8,4
+   .srcstep 116 116 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setobjtype r8,"awfy_towers.towersdisk"
+   .srcstep 117 117 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+   .traceevent "V" 6 "R" "I" "r" 3 117 117 0 "i" ""
+   icopy r7,r3
+   .traceevent "A" 6 "R" "I" "r" 7 117 117 0 "size" ""
+   .srcstep 118 118 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+   .traceevent "V" 6 "R" "I" "r" 7 118 118 0 "size" ""
+   linkattr1 r9,r8,1
+   icopy r9,r7
+   unlink r9
+   .srcstep 119 119 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 119 119 0 "" ""
+   linkattr1 r9,r8,2
+   icopy r9,r10
+   unlink r9
+   .srcstep 120 120 33 "awfy_towers.crexx" 39 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 8 120 120 0 "§factory" ""
+   copy r2,r8
+   .traceevent "A" 6 "R" "O" "r" 2 120 120 0 "disk" ""
+   .srcstep 122 122 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+   .traceevent "V" 6 "R" "O" "r" 1 122 122 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 2 122 122 0 "disk" ""
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 122 122 0 "" ""
+   load r9,3
+   settp r1,256
+   swap r10,r1
+   settp r2,256
+   swap r11,r2
+   call r13,§awfy_towers.towersbenchmark.pushdisk(),r9
+   swap r1,r10
+   swap r2,r11
+   .traceevent "F" 4 "R" "V" "r" 13 122 122 0 "pushdisk" ""
+l562doinc:
+   .srcstep 114 114 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+ iadd r3,r6,r3
+   .srcstep 124 124 17 "awfy_towers.crexx" 143 5 8 "    end"
+   br l562dostart
+l562doend:
+   endlife r2
+   endlife r3
+   .srcstep 125 125 6 "awfy_towers.crexx" 73 10 29 "    call buildTowerAt(0, 13)"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§this" ""
+   copy a1,r1
+   .srcstep 127 127 17 "awfy_towers.crexx" 74 5 19 "    moves_done = 0"
+   .meta "awfy_towers.towersbenchmark.run.§this"="b" ".towersbenchmark" a1
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 127 127 0 "" ""
+   linkattr1 r12,a1,1
+   icopy r12,r11
+   unlink r12
+   .srcstep 155 155 17 "awfy_towers.crexx" 75 5 29 "    call moveDisks(13, 0, 1)"
+   .srcstep 128 128 33 "awfy_towers.crexx" 75 10 19 "    call moveDisks(13, 0, 1)"
+   .traceevent "V" 6 "R" "O" "a" 1 128 128 0 "§this" ""
+   copy r14,a1
+   .traceevent "A" 6 "R" "O" "r" 14 128 128 0 "§this" ""
+   .srcstep 129 129 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+   .traceevent "V" 6 "R" "O" "r" 14 129 129 0 "§this" ""
+   load r17,12
+   .traceevent "L" 4 "R" "I" "r" 17 129 129 0 "" ""
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 129 129 0 "" ""
+   load r19,2
+   .traceevent "L" 4 "R" "I" "r" 19 129 129 0 "" ""
+   load r15,4
+   settp r14,256
+   swap r16,r14
+   call r12,§awfy_towers.towersbenchmark.movedisks(),r15
+   swap r14,r16
+   .traceevent "F" 4 "R" "V" "r" 12 129 129 0 "movedisks" ""
+   .srcstep 152 152 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+   .srcstep 130 130 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 14 130 130 0 "§this" ""
+   copy r21,r14
+   .traceevent "A" 6 "R" "O" "r" 21 130 130 0 "§this" ""
+   .srcstep 148 148 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+   .meta "awfy_towers.towersbenchmark.run.top"="b" ".towersdisk" r23
+   .srcstep 131 131 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r23
+   .srcstep 132 132 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 21 132 132 0 "§this" ""
+   copy r24,r21
+   .traceevent "A" 6 "R" "O" "r" 24 132 132 0 "§this" ""
+   setobjuninit r23,"towersdisk"
+   .srcstep 133 133 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r19,r24,2
+   .traceevent "V" 6 "R" "O" "r" 19 133 133 0 "pile0" ""
+   copy r23,r19
+   .traceevent "A" 6 "R" "O" "r" 23 133 133 0 "top" ""
+   unlink r19
+   .srcstep 142 142 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 136 136 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 134 134 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 23 134 134 0 "top" ""
+   copy r25,r23
+   .traceevent "A" 6 "R" "O" "r" 25 134 134 0 "§this" ""
+   .srcstep 135 135 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r19,r25,2
+   .traceevent "V" 6 "R" "I" "r" 19 142 142 0 "has_next" ""
+   icopy r18,r19
+   unlink r19
+   br l1579bexprend
+l1579bexprend:
+   brf l1578iffalse,r18
+   .srcstep 143 143 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 139 139 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 137 137 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 23 137 137 0 "top" ""
+   copy r26,r23
+   .traceevent "A" 6 "R" "O" "r" 26 137 137 0 "§this" ""
+   .srcstep 138 138 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r19,r26,3
+   .traceevent "V" 6 "R" "O" "r" 19 138 138 0 "next_disk" ""
+   copy r17,r19
+   asserttype r17,"awfy_towers.towersdisk"
+   unlink r19
+   .traceevent "A" 6 "R" "O" "r" 17 138 138 0 "next_disk" ""
+   .srcstep 140 140 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 17 140 140 0 "next_disk" ""
+   linkattr1 r19,r24,2
+   copy r19,r17
+   unlink r19
+   endlife r17
+   br l1578ifend
+   .srcstep 144 144 17 "awfy_towers.crexx" 123 5 8 "    end"
+l1578iffalse:
+   .srcstep 141 141 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 141 141 0 "" ""
+   linkattr1 r19,r24,3
+   icopy r19,r17
+   unlink r19
+l1578ifend:
+   .srcstep 145 145 33 "awfy_towers.crexx" 129 12 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 23 145 145 0 "top" ""
+   copy r22,r23
+   .traceevent "A" 6 "R" "O" "r" 22 145 145 0 "__inline_ret_362_363" ""
+   .srcstep 146 146 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 24 0 0 0 "§this" ""
+   copy r21,r24
+   .srcstep 147 147 33 "awfy_towers.crexx" 129 5 11 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 22 147 147 0 "__inline_ret_362_363" ""
+   copy r20,r22
+   .traceevent "A" 6 "R" "O" "r" 20 147 147 0 "disk" ""
+   .srcstep 149 149 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 21 149 149 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 20 149 149 0 "disk" ""
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 149 149 0 "" ""
+   load r16,3
+   settp r21,256
+   swap r17,r21
+   settp r20,256
+   swap r18,r20
+   call r15,§awfy_towers.towersbenchmark.pushdisk(),r16
+   swap r21,r17
+   swap r20,r18
+   .traceevent "F" 4 "R" "V" "r" 15 149 149 0 "pushdisk" ""
+   .srcstep 150 150 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+   linkattr1 r18,r21,1
+   .traceevent "V" 6 "R" "I" "r" 18 150 150 0 "moves_done" ""
+   iadd r17,r18,1
+   unlink r18
+   .traceevent "O" 4 "R" "I" "r" 17 150 150 0 "" ""
+   linkattr1 r19,r21,1
+   icopy r19,r17
+   unlink r19
+   .srcstep 151 151 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 21 0 0 0 "§this" ""
+   copy r14,r21
+   .srcstep 153 153 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 14 153 153 0 "§this" ""
+   load r29,12
+   .traceevent "L" 4 "R" "I" "r" 29 153 153 0 "" ""
+   load r30,2
+   .traceevent "L" 4 "R" "I" "r" 30 153 153 0 "" ""
+   load r31,1
+   .traceevent "L" 4 "R" "I" "r" 31 153 153 0 "" ""
+   load r27,4
+   settp r14,256
+   swap r28,r14
+   call r19,§awfy_towers.towersbenchmark.movedisks(),r27
+   swap r14,r28
+   .traceevent "F" 4 "R" "V" "r" 19 153 153 0 "movedisks" ""
+   .srcstep 154 154 6 "awfy_towers.crexx" 75 10 29 "    call moveDisks(13, 0, 1)"
+   .traceevent "V" 6 "R" "O" "r" 14 0 0 0 "§this" ""
+   copy a1,r14
+   .srcstep 156 156 17 "awfy_towers.crexx" 76 5 22 "    return moves_done"
+   linkattr1 r31,a1,1
+   .traceevent "V" 6 "R" "I" "r" 31 156 156 0 "moves_done" ""
+   ret r31
+   .meta "awfy_towers.towersbenchmark.run.§this"
+
+§awfy_towers.towersbenchmark.pushdisk() .locals=14
+   .meta "awfy_towers.towersbenchmark.pushdisk"="b" ".void" §awfy_towers.towersbenchmark.pushdisk() "disk=.towersdisk,pile=.int"
+   .srcstep 212 212 17 "awfy_towers.crexx" 78 3 27 "  pushDisk: method = .void"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 158 158 17 "awfy_towers.crexx" 79 9 27 "    arg disk = .TowersDisk, pile = .int"
+   .meta "awfy_towers.towersbenchmark.pushdisk.disk"="b" ".towersdisk" a2
+   .meta "awfy_towers.towersbenchmark.pushdisk.§this"="b" ".towersbenchmark" a1
+   .srcstep 159 159 17 "awfy_towers.crexx" 79 29 40 "    arg disk = .TowersDisk, pile = .int"
+   .meta "awfy_towers.towersbenchmark.pushdisk.pile"="b" ".int" a3
+   .meta "awfy_towers.towersbenchmark.pushdisk.top"="b" ".towersdisk" r3
+   .srcstep 160 160 17 "awfy_towers.crexx" 80 5 22 "    top = .TowersDisk"
+   null r3
+   setobjuninit r3,"towersdisk"
+   .srcstep 161 161 17 "awfy_towers.crexx" 81 5 16 "    has_top = 0"
+   .meta "awfy_towers.towersbenchmark.pushdisk.has_top"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 161 161 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 161 161 0 "has_top" ""
+   .srcstep 177 177 17 "awfy_towers.crexx" 82 5 16 "    if pile = 0 then do"
+   .traceevent "V" 6 "R" "I" "a" 3 177 177 0 "pile" ""
+   bne l239iffalse,a3,0
+   .srcstep 178 178 17 "awfy_towers.crexx" 82 17 21 "    if pile = 0 then do"
+   .srcstep 162 162 17 "awfy_towers.crexx" 83 7 30 "      has_top = pile0_present"
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 162 162 0 "pile0_present" ""
+   icopy r1,r6
+   .traceevent "A" 6 "R" "I" "r" 1 162 162 0 "has_top" ""
+   unlink r6
+   .srcstep 164 164 17 "awfy_towers.crexx" 84 7 17 "      if has_top then top = pile0"
+   .traceevent "V" 6 "R" "B" "r" 1 164 164 0 "has_top" ""
+   brf l216iffalse,r1
+   .srcstep 165 165 17 "awfy_towers.crexx" 84 18 22 "      if has_top then top = pile0"
+   .srcstep 163 163 17 "awfy_towers.crexx" 84 23 34 "      if has_top then top = pile0"
+   linkattr1 r6,a1,2
+   .traceevent "V" 6 "R" "O" "r" 6 163 163 0 "pile0" ""
+   copy r3,r6
+   .traceevent "A" 6 "R" "O" "r" 3 163 163 0 "top" ""
+   unlink r6
+l216iffalse:
+   br l239ifend
+   .srcstep 179 179 17 "awfy_towers.crexx" 85 5 8 "    end"
+l239iffalse:
+   .srcstep 174 174 17 "awfy_towers.crexx" 86 10 21 "    else if pile = 1 then do"
+   .traceevent "V" 6 "R" "I" "a" 3 174 174 0 "pile" ""
+   bne l238iffalse,a3,1
+   .srcstep 175 175 17 "awfy_towers.crexx" 86 22 26 "    else if pile = 1 then do"
+   .srcstep 166 166 17 "awfy_towers.crexx" 87 7 30 "      has_top = pile1_present"
+   linkattr1 r7,a1,5
+   .traceevent "V" 6 "R" "I" "r" 7 166 166 0 "pile1_present" ""
+   icopy r1,r7
+   .traceevent "A" 6 "R" "I" "r" 1 166 166 0 "has_top" ""
+   unlink r7
+   .srcstep 168 168 17 "awfy_towers.crexx" 88 7 17 "      if has_top then top = pile1"
+   .traceevent "V" 6 "R" "B" "r" 1 168 168 0 "has_top" ""
+   brf l228iffalse,r1
+   .srcstep 169 169 17 "awfy_towers.crexx" 88 18 22 "      if has_top then top = pile1"
+   .srcstep 167 167 17 "awfy_towers.crexx" 88 23 34 "      if has_top then top = pile1"
+   linkattr1 r7,a1,4
+   .traceevent "V" 6 "R" "O" "r" 7 167 167 0 "pile1" ""
+   copy r3,r7
+   .traceevent "A" 6 "R" "O" "r" 3 167 167 0 "top" ""
+   unlink r7
+l228iffalse:
+   br l238ifend
+   .srcstep 176 176 17 "awfy_towers.crexx" 89 5 8 "    end"
+l238iffalse:
+   .srcstep 170 170 17 "awfy_towers.crexx" 91 7 30 "      has_top = pile2_present"
+   linkattr1 r7,a1,7
+   .traceevent "V" 6 "R" "I" "r" 7 170 170 0 "pile2_present" ""
+   icopy r1,r7
+   .traceevent "A" 6 "R" "I" "r" 1 170 170 0 "has_top" ""
+   unlink r7
+   .srcstep 172 172 17 "awfy_towers.crexx" 92 7 17 "      if has_top then top = pile2"
+   .traceevent "V" 6 "R" "B" "r" 1 172 172 0 "has_top" ""
+   brf l237iffalse,r1
+   .srcstep 173 173 17 "awfy_towers.crexx" 92 18 22 "      if has_top then top = pile2"
+   .srcstep 171 171 17 "awfy_towers.crexx" 92 23 34 "      if has_top then top = pile2"
+   linkattr1 r7,a1,6
+   .traceevent "V" 6 "R" "O" "r" 7 171 171 0 "pile2" ""
+   copy r3,r7
+   .traceevent "A" 6 "R" "O" "r" 3 171 171 0 "top" ""
+   unlink r7
+l237iffalse:
+l238ifend:
+l239ifend:
+   .srcstep 197 197 17 "awfy_towers.crexx" 94 5 15 "    if has_top then do"
+   .traceevent "V" 6 "R" "B" "r" 1 197 197 0 "has_top" ""
+   brf l258iffalse,r1
+   .srcstep 198 198 17 "awfy_towers.crexx" 94 16 20 "    if has_top then do"
+   .srcstep 190 190 17 "awfy_towers.crexx" 95 7 33 "      if disk.size() >= top.size() then return"
+   .srcstep 188 188 17 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+   .srcstep 183 183 33 "awfy_towers.crexx" 95 15 19 "      if disk.size() >= top.size() then return"
+   .srcstep 182 182 17 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+   .srcstep 180 180 33 "awfy_towers.crexx" 95 10 14 "      if disk.size() >= top.size() then return"
+   .traceevent "V" 6 "R" "O" "a" 2 180 180 0 "disk" ""
+   copy r9,a2
+   .traceevent "A" 6 "R" "O" "r" 9 180 180 0 "§this" ""
+   .srcstep 181 181 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+   linkattr1 r7,r9,1
+   .traceevent "V" 6 "R" "I" "r" 7 183 183 0 "disk_size" ""
+   icopy r6,r7
+   unlink r7
+   br l596bexprend
+l596bexprend:
+   icopy r8,r6
+   .traceevent "A" 6 "R" "I" "r" 8 183 183 0 "__inline_lhs_587_249" ""
+   .srcstep 187 187 33 "awfy_towers.crexx" 95 22 24 "      if disk.size() >= top.size() then return"
+   .traceevent "V" 6 "R" "I" "r" 8 190 190 0 "__inline_lhs_587_249" ""
+   .srcstep 186 186 17 "awfy_towers.crexx" 95 25 28 "      if disk.size() >= top.size() then return"
+   .srcstep 184 184 33 "awfy_towers.crexx" 95 25 28 "      if disk.size() >= top.size() then return"
+   .traceevent "V" 6 "R" "O" "r" 3 184 184 0 "top" ""
+   copy r10,r3
+   .traceevent "A" 6 "R" "O" "r" 10 184 184 0 "§this" ""
+   .srcstep 185 185 17 "awfy_towers.crexx" 42 5 21 "    return disk_size"
+   linkattr1 r7,r10,1
+   .traceevent "V" 6 "R" "I" "r" 7 190 190 0 "disk_size" ""
+   icopy r6,r7
+   unlink r7
+   br l1082bexprend
+l1082bexprend:
+   igte r6,r8,r6
+   .traceevent "O" 4 "R" "B" "r" 6 190 190 0 "" ""
+   icopy r5,r6
+   br l594bexprend
+l594bexprend:
+   brf l251iffalse,r5
+   .srcstep 191 191 17 "awfy_towers.crexx" 95 33 34 "      if disk.size() >= top.size() then return"
+   .srcstep 189 189 17 "awfy_towers.crexx" 95 41 47 "      if disk.size() >= top.size() then return"
+   ret
+l251iffalse:
+   .srcstep 196 196 17 "awfy_towers.crexx" 96 7 29 "      call disk.setNext(top)"
+   .srcstep 192 192 33 "awfy_towers.crexx" 96 12 16 "      call disk.setNext(top)"
+   .traceevent "V" 6 "R" "O" "a" 2 192 192 0 "disk" ""
+   copy r12,a2
+   .traceevent "A" 6 "R" "O" "r" 12 192 192 0 "§this" ""
+   .srcstep 193 193 17 "awfy_towers.crexx" 52 5 33 "    next_disk = value as .object"
+   .traceevent "V" 6 "R" "O" "r" 3 193 193 0 "top" ""
+   copy r6,r3
+   linkattr1 r7,r12,3
+   copy r7,r6
+   unlink r7
+   .srcstep 194 194 17 "awfy_towers.crexx" 53 5 17 "    has_next = 1"
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 194 194 0 "" ""
+   linkattr1 r7,r12,2
+   icopy r7,r6
+   unlink r7
+   .srcstep 195 195 6 "awfy_towers.crexx" 96 12 29 "      call disk.setNext(top)"
+   .traceevent "V" 6 "R" "O" "r" 12 0 0 0 "§this" ""
+   copy a2,r12
+l258iffalse:
+   .srcstep 208 208 17 "awfy_towers.crexx" 98 5 16 "    if pile = 0 then do"
+   .traceevent "V" 6 "R" "I" "a" 3 208 208 0 "pile" ""
+   bne l287iffalse,a3,0
+   .srcstep 209 209 17 "awfy_towers.crexx" 98 17 21 "    if pile = 0 then do"
+   .srcstep 199 199 17 "awfy_towers.crexx" 99 7 19 "      pile0 = disk"
+   .traceevent "V" 6 "R" "O" "a" 2 199 199 0 "disk" ""
+   linkattr1 r6,a1,2
+   copy r6,a2
+   unlink r6
+   .srcstep 200 200 17 "awfy_towers.crexx" 100 7 24 "      pile0_present = 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 200 200 0 "" ""
+   linkattr1 r6,a1,3
+   icopy r6,r5
+   unlink r6
+   br l287ifend
+   .srcstep 210 210 17 "awfy_towers.crexx" 101 5 8 "    end"
+l287iffalse:
+   .srcstep 205 205 17 "awfy_towers.crexx" 102 10 21 "    else if pile = 1 then do"
+   .traceevent "V" 6 "R" "I" "a" 3 205 205 0 "pile" ""
+   bne l286iffalse,a3,1
+   .srcstep 206 206 17 "awfy_towers.crexx" 102 22 26 "    else if pile = 1 then do"
+   .srcstep 201 201 17 "awfy_towers.crexx" 103 7 19 "      pile1 = disk"
+   .traceevent "V" 6 "R" "O" "a" 2 201 201 0 "disk" ""
+   linkattr1 r5,a1,4
+   copy r5,a2
+   unlink r5
+   .srcstep 202 202 17 "awfy_towers.crexx" 104 7 24 "      pile1_present = 1"
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 202 202 0 "" ""
+   linkattr1 r5,a1,5
+   icopy r5,r13
+   unlink r5
+   br l286ifend
+   .srcstep 207 207 17 "awfy_towers.crexx" 105 5 8 "    end"
+l286iffalse:
+   .srcstep 203 203 17 "awfy_towers.crexx" 107 7 19 "      pile2 = disk"
+   .traceevent "V" 6 "R" "O" "a" 2 203 203 0 "disk" ""
+   linkattr1 r13,a1,6
+   copy r13,a2
+   unlink r13
+   .srcstep 204 204 17 "awfy_towers.crexx" 108 7 24 "      pile2_present = 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 204 204 0 "" ""
+   linkattr1 r13,a1,7
+   icopy r13,r5
+   unlink r13
+l286ifend:
+l287ifend:
+   .srcstep 211 211 17 "awfy_towers.crexx" 110 5 11 "    return"
+   ret
+   .meta "awfy_towers.towersbenchmark.pushdisk.disk"
+   .meta "awfy_towers.towersbenchmark.pushdisk.has_top"
+   .meta "awfy_towers.towersbenchmark.pushdisk.pile"
+   .meta "awfy_towers.towersbenchmark.pushdisk.top"
+   .meta "awfy_towers.towersbenchmark.pushdisk.§this"
+
+§awfy_towers.towersbenchmark.popdiskfrom() .locals=14
+   .meta "awfy_towers.towersbenchmark.popdiskfrom"="b" ".awfy_towers..towersdisk" §awfy_towers.towersbenchmark.popdiskfrom() "pile=.int"
+   .srcstep 252 252 17 "awfy_towers.crexx" 112 3 36 "  popDiskFrom: method = .TowersDisk"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 213 213 17 "awfy_towers.crexx" 113 9 20 "    arg pile = .int"
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.pile"="b" ".int" a2
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.§this"="b" ".towersbenchmark" a1
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.top"="b" ".towersdisk" r1
+   .srcstep 214 214 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r1
+   setobjuninit r1,"towersdisk"
+   .srcstep 221 221 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+   .traceevent "V" 6 "R" "I" "a" 2 221 221 0 "pile" ""
+   bne l314iffalse,a2,0
+   .srcstep 222 222 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+   .srcstep 215 215 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r4,a1,2
+   .traceevent "V" 6 "R" "O" "r" 4 215 215 0 "pile0" ""
+   copy r1,r4
+   .traceevent "A" 6 "R" "O" "r" 1 215 215 0 "top" ""
+   unlink r4
+   br l314ifend
+   .srcstep 223 223 17 "awfy_towers.crexx" 116 5 9 "    else if pile = 1 then top = pile1"
+l314iffalse:
+   .srcstep 218 218 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+   .traceevent "V" 6 "R" "I" "a" 2 218 218 0 "pile" ""
+   bne l313iffalse,a2,1
+   .srcstep 219 219 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+   .srcstep 216 216 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+   linkattr1 r6,a1,4
+   .traceevent "V" 6 "R" "O" "r" 6 216 216 0 "pile1" ""
+   copy r1,r6
+   .traceevent "A" 6 "R" "O" "r" 1 216 216 0 "top" ""
+   unlink r6
+   br l313ifend
+   .srcstep 220 220 17 "awfy_towers.crexx" 117 5 9 "    else top = pile2"
+l313iffalse:
+   .srcstep 217 217 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+   linkattr1 r7,a1,6
+   .traceevent "V" 6 "R" "O" "r" 7 217 217 0 "pile2" ""
+   copy r1,r7
+   .traceevent "A" 6 "R" "O" "r" 1 217 217 0 "top" ""
+   unlink r7
+l313ifend:
+l314ifend:
+   .srcstep 248 248 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 226 226 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 224 224 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 1 224 224 0 "top" ""
+   copy r8,r1
+   .traceevent "A" 6 "R" "O" "r" 8 224 224 0 "§this" ""
+   .srcstep 225 225 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r7,r8,2
+   .traceevent "V" 6 "R" "I" "r" 7 248 248 0 "has_next" ""
+   icopy r6,r7
+   unlink r7
+   br l627bexprend
+l627bexprend:
+   brf l361iffalse,r6
+   .srcstep 249 249 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 229 229 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 227 227 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 1 227 227 0 "top" ""
+   copy r9,r1
+   .traceevent "A" 6 "R" "O" "r" 9 227 227 0 "§this" ""
+   .srcstep 228 228 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r7,r9,3
+   .traceevent "V" 6 "R" "O" "r" 7 228 228 0 "next_disk" ""
+   copy r5,r7
+   asserttype r5,"awfy_towers.towersdisk"
+   unlink r7
+   .traceevent "A" 6 "R" "O" "r" 5 228 228 0 "next_disk" ""
+   .srcstep 236 236 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "I" "a" 2 236 236 0 "pile" ""
+   bne l342iffalse,a2,0
+   .srcstep 237 237 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+   .srcstep 230 230 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.next_disk"="b" ".towersdisk" r5
+   .traceevent "V" 6 "R" "O" "r" 5 230 230 0 "next_disk" ""
+   linkattr1 r4,a1,2
+   copy r4,r5
+   unlink r4
+   br l342ifend
+   .srcstep 238 238 17 "awfy_towers.crexx" 121 7 11 "      else if pile = 1 then pile1 = next_disk"
+l342iffalse:
+   .srcstep 233 233 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "I" "a" 2 233 233 0 "pile" ""
+   bne l341iffalse,a2,1
+   .srcstep 234 234 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+   .srcstep 231 231 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 5 231 231 0 "next_disk" ""
+   linkattr1 r10,a1,4
+   copy r10,r5
+   unlink r10
+   br l341ifend
+   .srcstep 235 235 17 "awfy_towers.crexx" 122 7 11 "      else pile2 = next_disk"
+l341iffalse:
+   .srcstep 232 232 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 5 232 232 0 "next_disk" ""
+   linkattr1 r11,a1,6
+   copy r11,r5
+   unlink r11
+l341ifend:
+l342ifend:
+   endlife r5
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.next_disk"
+   br l361ifend
+   .srcstep 250 250 17 "awfy_towers.crexx" 123 5 8 "    end"
+l361iffalse:
+   .srcstep 245 245 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+   .traceevent "V" 6 "R" "I" "a" 2 245 245 0 "pile" ""
+   bne l359iffalse,a2,0
+   .srcstep 246 246 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+   .srcstep 239 239 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 239 239 0 "" ""
+   linkattr1 r10,a1,3
+   icopy r10,r7
+   unlink r10
+   br l359ifend
+   .srcstep 247 247 17 "awfy_towers.crexx" 126 7 11 "      else if pile = 1 then pile1_present = 0"
+l359iffalse:
+   .srcstep 242 242 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+   .traceevent "V" 6 "R" "I" "a" 2 242 242 0 "pile" ""
+   bne l358iffalse,a2,1
+   .srcstep 243 243 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+   .srcstep 240 240 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 240 240 0 "" ""
+   linkattr1 r4,a1,5
+   icopy r4,r3
+   unlink r4
+   br l358ifend
+   .srcstep 244 244 17 "awfy_towers.crexx" 127 7 11 "      else pile2_present = 0"
+l358iffalse:
+   .srcstep 241 241 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 241 241 0 "" ""
+   linkattr1 r12,a1,7
+   icopy r12,r13
+   unlink r12
+l358ifend:
+l359ifend:
+l361ifend:
+   .srcstep 251 251 17 "awfy_towers.crexx" 129 5 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 1 251 251 0 "top" ""
+   ret r1
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.pile"
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.top"
+   .meta "awfy_towers.towersbenchmark.popdiskfrom.§this"
+
+§awfy_towers.towersbenchmark.movetopdisk() .locals=19
+   .meta "awfy_towers.towersbenchmark.movetopdisk"="b" ".void" §awfy_towers.towersbenchmark.movetopdisk() "from_pile=.int,to_pile=.int"
+   .srcstep 301 301 17 "awfy_towers.crexx" 131 3 30 "  moveTopDisk: method = .void"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 253 253 17 "awfy_towers.crexx" 132 9 25 "    arg from_pile = .int, to_pile = .int"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.from_pile"="b" ".int" a2
+   .meta "awfy_towers.towersbenchmark.movetopdisk.§this"="b" ".towersbenchmark" a1
+   .srcstep 254 254 17 "awfy_towers.crexx" 132 27 41 "    arg from_pile = .int, to_pile = .int"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.to_pile"="b" ".int" a3
+   .srcstep 297 297 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.top"="b" ".towersdisk" r8
+   .srcstep 255 255 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r8
+   .srcstep 256 256 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "a" 1 256 256 0 "§this" ""
+   copy r9,a1
+   .traceevent "A" 6 "R" "O" "r" 9 256 256 0 "§this" ""
+   .srcstep 257 257 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+   .traceevent "V" 6 "R" "I" "a" 2 257 257 0 "from_pile" ""
+   icopy r7,a2
+   .traceevent "A" 6 "R" "I" "r" 7 257 257 0 "pile" ""
+   setobjuninit r8,"towersdisk"
+   .srcstep 264 264 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+   .traceevent "V" 6 "R" "I" "r" 7 264 264 0 "pile" ""
+   bne l644iffalse,r7,0
+   .srcstep 265 265 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+   .srcstep 258 258 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r0,r9,2
+   .traceevent "V" 6 "R" "O" "r" 0 258 258 0 "pile0" ""
+   copy r8,r0
+   .traceevent "A" 6 "R" "O" "r" 8 258 258 0 "top" ""
+   unlink r0
+   br l644ifend
+   .srcstep 266 266 17 "awfy_towers.crexx" 116 5 9 "    else if pile = 1 then top = pile1"
+l644iffalse:
+   .srcstep 261 261 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+   .traceevent "V" 6 "R" "I" "r" 7 261 261 0 "pile" ""
+   bne l651iffalse,r7,1
+   .srcstep 262 262 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+   .srcstep 259 259 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+   linkattr1 r11,r9,4
+   .traceevent "V" 6 "R" "O" "r" 11 259 259 0 "pile1" ""
+   copy r8,r11
+   .traceevent "A" 6 "R" "O" "r" 8 259 259 0 "top" ""
+   unlink r11
+   br l651ifend
+   .srcstep 263 263 17 "awfy_towers.crexx" 117 5 9 "    else top = pile2"
+l651iffalse:
+   .srcstep 260 260 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+   linkattr1 r12,r9,6
+   .traceevent "V" 6 "R" "O" "r" 12 260 260 0 "pile2" ""
+   copy r8,r12
+   .traceevent "A" 6 "R" "O" "r" 8 260 260 0 "top" ""
+   unlink r12
+l651ifend:
+l644ifend:
+   .srcstep 291 291 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 269 269 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 267 267 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 8 267 267 0 "top" ""
+   copy r13,r8
+   .traceevent "A" 6 "R" "O" "r" 13 267 267 0 "§this" ""
+   .srcstep 268 268 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r12,r13,2
+   .traceevent "V" 6 "R" "I" "r" 12 291 291 0 "has_next" ""
+   icopy r11,r12
+   unlink r12
+   br l662bexprend
+l662bexprend:
+   brf l661iffalse,r11
+   .srcstep 292 292 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 272 272 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 270 270 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 8 270 270 0 "top" ""
+   copy r14,r8
+   .traceevent "A" 6 "R" "O" "r" 14 270 270 0 "§this" ""
+   .srcstep 271 271 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r12,r14,3
+   .traceevent "V" 6 "R" "O" "r" 12 271 271 0 "next_disk" ""
+   copy r10,r12
+   asserttype r10,"awfy_towers.towersdisk"
+   unlink r12
+   .traceevent "A" 6 "R" "O" "r" 10 271 271 0 "next_disk" ""
+   .srcstep 279 279 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 7 279 279 0 "pile" ""
+   bne l674iffalse,r7,0
+   .srcstep 280 280 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+   .srcstep 273 273 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 10 273 273 0 "next_disk" ""
+   linkattr1 r1,r9,2
+   copy r1,r10
+   unlink r1
+   br l674ifend
+   .srcstep 281 281 17 "awfy_towers.crexx" 121 7 11 "      else if pile = 1 then pile1 = next_disk"
+l674iffalse:
+   .srcstep 276 276 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 7 276 276 0 "pile" ""
+   bne l681iffalse,r7,1
+   .srcstep 277 277 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+   .srcstep 274 274 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 10 274 274 0 "next_disk" ""
+   linkattr1 r15,r9,4
+   copy r15,r10
+   unlink r15
+   br l681ifend
+   .srcstep 278 278 17 "awfy_towers.crexx" 122 7 11 "      else pile2 = next_disk"
+l681iffalse:
+   .srcstep 275 275 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 10 275 275 0 "next_disk" ""
+   linkattr1 r16,r9,6
+   copy r16,r10
+   unlink r16
+l681ifend:
+l674ifend:
+   endlife r10
+   br l661ifend
+   .srcstep 293 293 17 "awfy_towers.crexx" 123 5 8 "    end"
+l661iffalse:
+   .srcstep 288 288 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 7 288 288 0 "pile" ""
+   bne l692iffalse,r7,0
+   .srcstep 289 289 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+   .srcstep 282 282 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 282 282 0 "" ""
+   linkattr1 r15,r9,3
+   icopy r15,r12
+   unlink r15
+   br l692ifend
+   .srcstep 290 290 17 "awfy_towers.crexx" 126 7 11 "      else if pile = 1 then pile1_present = 0"
+l692iffalse:
+   .srcstep 285 285 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 7 285 285 0 "pile" ""
+   bne l699iffalse,r7,1
+   .srcstep 286 286 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+   .srcstep 283 283 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 283 283 0 "" ""
+   linkattr1 r1,r9,5
+   icopy r1,r0
+   unlink r1
+   br l699ifend
+   .srcstep 287 287 17 "awfy_towers.crexx" 127 7 11 "      else pile2_present = 0"
+l699iffalse:
+   .srcstep 284 284 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 284 284 0 "" ""
+   linkattr1 r17,r9,7
+   icopy r17,r18
+   unlink r17
+l699ifend:
+l692ifend:
+l661ifend:
+   .srcstep 294 294 33 "awfy_towers.crexx" 129 12 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 8 294 294 0 "top" ""
+   copy r6,r8
+   .traceevent "A" 6 "R" "O" "r" 6 294 294 0 "__inline_ret_362_363" ""
+   .srcstep 295 295 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 9 0 0 0 "§this" ""
+   copy a1,r9
+   .srcstep 296 296 33 "awfy_towers.crexx" 129 5 11 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 6 296 296 0 "__inline_ret_362_363" ""
+   copy r2,r6
+   .traceevent "A" 6 "R" "O" "r" 2 296 296 0 "disk" ""
+   .srcstep 298 298 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.disk"="b" ".towersdisk" r2
+   .traceevent "V" 6 "R" "O" "a" 1 298 298 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 2 298 298 0 "disk" ""
+   .traceevent "V" 6 "R" "I" "a" 3 298 298 0 "to_pile" ""
+   load r15,3
+   settp a1,256
+   swap r16,a1
+   settp r2,256
+   swap r17,r2
+   swap r18,a3
+   call r12,§awfy_towers.towersbenchmark.pushdisk(),r15
+   swap a1,r16
+   swap r2,r17
+   swap a3,r18
+   .traceevent "F" 4 "R" "V" "r" 12 298 298 0 "pushdisk" ""
+   .srcstep 299 299 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+   linkattr1 r17,a1,1
+   .traceevent "V" 6 "R" "I" "r" 17 299 299 0 "moves_done" ""
+   iadd r16,r17,1
+   unlink r17
+   .traceevent "O" 4 "R" "I" "r" 16 299 299 0 "" ""
+   linkattr1 r18,a1,1
+   icopy r18,r16
+   unlink r18
+   .srcstep 300 300 17 "awfy_towers.crexx" 136 5 11 "    return"
+   ret
+   .meta "awfy_towers.towersbenchmark.movetopdisk.disk"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.from_pile"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.to_pile"
+   .meta "awfy_towers.towersbenchmark.movetopdisk.§this"
+
+§awfy_towers.towersbenchmark.buildtowerat() .locals=15
+   .meta "awfy_towers.towersbenchmark.buildtowerat"="b" ".void" §awfy_towers.towersbenchmark.buildtowerat() "pile=.int,disks=.int"
+   .srcstep 318 318 17 "awfy_towers.crexx" 138 3 31 "  buildTowerAt: method = .void"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 302 302 17 "awfy_towers.crexx" 139 9 20 "    arg pile = .int, disks = .int"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.pile"="b" ".int" a2
+   .meta "awfy_towers.towersbenchmark.buildtowerat.§this"="b" ".towersbenchmark" a1
+   .srcstep 303 303 17 "awfy_towers.crexx" 139 22 34 "    arg pile = .int, disks = .int"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.disks"="b" ".int" a3
+   .srcstep 315 315 17 "awfy_towers.crexx" 140 5 7 "    do i = disks to 0 by -1"
+   .srcstep 304 304 17 "awfy_towers.crexx" 140 8 17 "    do i = disks to 0 by -1"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.i"="b" ".int" r1
+   .traceevent "V" 6 "R" "I" "a" 3 304 304 0 "disks" ""
+   icopy r1,a3
+   .traceevent "A" 6 "R" "I" "r" 1 304 304 0 "i" ""
+   .srcstep 305 305 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 0 0 0 "" ""
+   .srcstep 306 306 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+   load r7,-1
+   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+l396dostart:
+   .srcstep 305 305 17 "awfy_towers.crexx" 140 18 22 "    do i = disks to 0 by -1"
+   ilt r6,r1,r0
+   brt l396doend,r6
+   .srcstep 313 313 17 "awfy_towers.crexx" 141 7 28 "      disk = .TowersDisk(i)"
+   .srcstep 307 307 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setattrs r9,4
+   .srcstep 308 308 6 "awfy_towers.crexx" 35 3 13 "  *: factory"
+   setobjtype r9,"awfy_towers.towersdisk"
+   .srcstep 309 309 33 "awfy_towers.crexx" 36 9 13 "    arg size = .int"
+   .traceevent "V" 6 "R" "I" "r" 1 309 309 0 "i" ""
+   icopy r8,r1
+   .traceevent "A" 6 "R" "I" "r" 8 309 309 0 "size" ""
+   .srcstep 310 310 17 "awfy_towers.crexx" 37 5 21 "    disk_size = size"
+   .traceevent "V" 6 "R" "I" "r" 8 310 310 0 "size" ""
+   linkattr1 r10,r9,1
+   icopy r10,r8
+   unlink r10
+   .srcstep 311 311 17 "awfy_towers.crexx" 38 5 17 "    has_next = 0"
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 311 311 0 "" ""
+   linkattr1 r10,r9,2
+   icopy r10,r11
+   unlink r10
+   .srcstep 312 312 33 "awfy_towers.crexx" 39 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 9 312 312 0 "§factory" ""
+   copy r2,r9
+   .traceevent "A" 6 "R" "O" "r" 2 312 312 0 "disk" ""
+   .srcstep 314 314 17 "awfy_towers.crexx" 142 7 32 "      call pushDisk(disk, pile)"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.disk"="b" ".towersdisk" r2
+   .traceevent "V" 6 "R" "O" "a" 1 314 314 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 2 314 314 0 "disk" ""
+   .traceevent "V" 6 "R" "I" "a" 2 314 314 0 "pile" ""
+   load r10,3
+   settp a1,256
+   swap r11,a1
+   settp r2,256
+   swap r12,r2
+   swap r13,a2
+   call r14,§awfy_towers.towersbenchmark.pushdisk(),r10
+   swap a1,r11
+   swap r2,r12
+   swap a2,r13
+   .traceevent "F" 4 "R" "V" "r" 14 314 314 0 "pushdisk" ""
+l396doinc:
+   .srcstep 306 306 17 "awfy_towers.crexx" 140 23 28 "    do i = disks to 0 by -1"
+ iadd r1,r7,r1
+   .srcstep 316 316 17 "awfy_towers.crexx" 143 5 8 "    end"
+   br l396dostart
+l396doend:
+   endlife r2
+   endlife r1
+   .meta "awfy_towers.towersbenchmark.buildtowerat.disk"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.i"
+   .srcstep 317 317 17 "awfy_towers.crexx" 144 5 11 "    return"
+   ret
+   .meta "awfy_towers.towersbenchmark.buildtowerat.disks"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.pile"
+   .meta "awfy_towers.towersbenchmark.buildtowerat.§this"
+
+§awfy_towers.towersbenchmark.movedisks() .locals=46
+   .meta "awfy_towers.towersbenchmark.movedisks"="b" ".void" §awfy_towers.towersbenchmark.movedisks() "disks=.int,from_pile=.int,to_pile=.int"
+   .srcstep 429 429 17 "awfy_towers.crexx" 146 3 28 "  moveDisks: method = .void"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 319 319 17 "awfy_towers.crexx" 147 9 21 "    arg disks = .int, from_pile = .int, to_pile = .int"
+   .meta "awfy_towers.towersbenchmark.movedisks.disks"="b" ".int" a2
+   .meta "awfy_towers.towersbenchmark.movedisks.§this"="b" ".towersbenchmark" a1
+   .srcstep 320 320 17 "awfy_towers.crexx" 147 23 39 "    arg disks = .int, from_pile = .int, to_pile = .int"
+   .meta "awfy_towers.towersbenchmark.movedisks.from_pile"="b" ".int" a3
+   .srcstep 321 321 17 "awfy_towers.crexx" 147 41 55 "    arg disks = .int, from_pile = .int, to_pile = .int"
+   .meta "awfy_towers.towersbenchmark.movedisks.to_pile"="b" ".int" a4
+   .srcstep 425 425 17 "awfy_towers.crexx" 148 5 17 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "I" "a" 2 425 425 0 "disks" ""
+   bne l461iffalse,a2,1
+   .srcstep 426 426 17 "awfy_towers.crexx" 148 18 22 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+   .srcstep 371 371 17 "awfy_towers.crexx" 148 23 59 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+   .srcstep 322 322 33 "awfy_towers.crexx" 148 28 39 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "a" 1 322 322 0 "§this" ""
+   copy r15,a1
+   .traceevent "A" 6 "R" "O" "r" 15 322 322 0 "§this" ""
+   .srcstep 323 323 33 "awfy_towers.crexx" 132 9 18 "    arg from_pile = .int, to_pile = .int"
+   .traceevent "V" 6 "R" "I" "a" 3 323 323 0 "from_pile" ""
+   icopy r13,a3
+   .traceevent "A" 6 "R" "I" "r" 13 323 323 0 "from_pile" ""
+   .srcstep 324 324 33 "awfy_towers.crexx" 132 27 34 "    arg from_pile = .int, to_pile = .int"
+   .traceevent "V" 6 "R" "I" "a" 4 324 324 0 "to_pile" ""
+   icopy r14,a4
+   .traceevent "A" 6 "R" "I" "r" 14 324 324 0 "to_pile" ""
+   .srcstep 367 367 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+   .meta "awfy_towers.towersbenchmark.movedisks.top"="b" ".towersdisk" r18
+   .srcstep 325 325 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r18
+   .srcstep 326 326 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 15 326 326 0 "§this" ""
+   copy r19,r15
+   .traceevent "A" 6 "R" "O" "r" 19 326 326 0 "§this" ""
+   .srcstep 327 327 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+   .traceevent "V" 6 "R" "I" "r" 13 327 327 0 "from_pile" ""
+   icopy r17,r13
+   .traceevent "A" 6 "R" "I" "r" 17 327 327 0 "pile" ""
+   setobjuninit r18,"towersdisk"
+   .srcstep 334 334 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+   .traceevent "V" 6 "R" "I" "r" 17 334 334 0 "pile" ""
+   bne l759iffalse,r17,0
+   .srcstep 335 335 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+   .srcstep 328 328 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r6,r19,2
+   .traceevent "V" 6 "R" "O" "r" 6 328 328 0 "pile0" ""
+   copy r18,r6
+   .traceevent "A" 6 "R" "O" "r" 18 328 328 0 "top" ""
+   unlink r6
+   br l759ifend
+   .srcstep 336 336 17 "awfy_towers.crexx" 116 5 9 "    else if pile = 1 then top = pile1"
+l759iffalse:
+   .srcstep 331 331 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+   .traceevent "V" 6 "R" "I" "r" 17 331 331 0 "pile" ""
+   bne l766iffalse,r17,1
+   .srcstep 332 332 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+   .srcstep 329 329 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+   linkattr1 r4,r19,4
+   .traceevent "V" 6 "R" "O" "r" 4 329 329 0 "pile1" ""
+   copy r18,r4
+   .traceevent "A" 6 "R" "O" "r" 18 329 329 0 "top" ""
+   unlink r4
+   br l766ifend
+   .srcstep 333 333 17 "awfy_towers.crexx" 117 5 9 "    else top = pile2"
+l766iffalse:
+   .srcstep 330 330 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+   linkattr1 r2,r19,6
+   .traceevent "V" 6 "R" "O" "r" 2 330 330 0 "pile2" ""
+   copy r18,r2
+   .traceevent "A" 6 "R" "O" "r" 18 330 330 0 "top" ""
+   unlink r2
+l766ifend:
+l759ifend:
+   .srcstep 361 361 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 339 339 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 337 337 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 18 337 337 0 "top" ""
+   copy r20,r18
+   .traceevent "A" 6 "R" "O" "r" 20 337 337 0 "§this" ""
+   .srcstep 338 338 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r7,r20,2
+   .traceevent "V" 6 "R" "I" "r" 7 361 361 0 "has_next" ""
+   icopy r6,r7
+   unlink r7
+   br l777bexprend
+l777bexprend:
+   brf l776iffalse,r6
+   .srcstep 362 362 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 342 342 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 340 340 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 18 340 340 0 "top" ""
+   copy r21,r18
+   .traceevent "A" 6 "R" "O" "r" 21 340 340 0 "§this" ""
+   .srcstep 341 341 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r7,r21,3
+   .traceevent "V" 6 "R" "O" "r" 7 341 341 0 "next_disk" ""
+   copy r5,r7
+   asserttype r5,"awfy_towers.towersdisk"
+   unlink r7
+   .traceevent "A" 6 "R" "O" "r" 5 341 341 0 "next_disk" ""
+   .srcstep 349 349 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 17 349 349 0 "pile" ""
+   bne l789iffalse,r17,0
+   .srcstep 350 350 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+   .srcstep 343 343 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 5 343 343 0 "next_disk" ""
+   linkattr1 r4,r19,2
+   copy r4,r5
+   unlink r4
+   br l789ifend
+   .srcstep 351 351 17 "awfy_towers.crexx" 121 7 11 "      else if pile = 1 then pile1 = next_disk"
+l789iffalse:
+   .srcstep 346 346 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 17 346 346 0 "pile" ""
+   bne l796iffalse,r17,1
+   .srcstep 347 347 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+   .srcstep 344 344 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 5 344 344 0 "next_disk" ""
+   linkattr1 r1,r19,4
+   copy r1,r5
+   unlink r1
+   br l796ifend
+   .srcstep 348 348 17 "awfy_towers.crexx" 122 7 11 "      else pile2 = next_disk"
+l796iffalse:
+   .srcstep 345 345 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 5 345 345 0 "next_disk" ""
+   linkattr1 r0,r19,6
+   copy r0,r5
+   unlink r0
+l796ifend:
+l789ifend:
+   endlife r5
+   br l776ifend
+   .srcstep 363 363 17 "awfy_towers.crexx" 123 5 8 "    end"
+l776iffalse:
+   .srcstep 358 358 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 17 358 358 0 "pile" ""
+   bne l807iffalse,r17,0
+   .srcstep 359 359 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+   .srcstep 352 352 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 352 352 0 "" ""
+   linkattr1 r5,r19,3
+   icopy r5,r4
+   unlink r5
+   br l807ifend
+   .srcstep 360 360 17 "awfy_towers.crexx" 126 7 11 "      else if pile = 1 then pile1_present = 0"
+l807iffalse:
+   .srcstep 355 355 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 17 355 355 0 "pile" ""
+   bne l814iffalse,r17,1
+   .srcstep 356 356 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+   .srcstep 353 353 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 353 353 0 "" ""
+   linkattr1 r1,r19,5
+   icopy r1,r0
+   unlink r1
+   br l814ifend
+   .srcstep 357 357 17 "awfy_towers.crexx" 127 7 11 "      else pile2_present = 0"
+l814iffalse:
+   .srcstep 354 354 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 354 354 0 "" ""
+   linkattr1 r22,r19,7
+   icopy r22,r23
+   unlink r22
+l814ifend:
+l807ifend:
+l776ifend:
+   .srcstep 364 364 33 "awfy_towers.crexx" 129 12 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 18 364 364 0 "top" ""
+   copy r16,r18
+   .traceevent "A" 6 "R" "O" "r" 16 364 364 0 "__inline_ret_362_363" ""
+   .srcstep 365 365 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 19 0 0 0 "§this" ""
+   copy r15,r19
+   .srcstep 366 366 33 "awfy_towers.crexx" 129 5 11 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 16 366 366 0 "__inline_ret_362_363" ""
+   copy r12,r16
+   .traceevent "A" 6 "R" "O" "r" 12 366 366 0 "disk" ""
+   .srcstep 368 368 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 15 368 368 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 12 368 368 0 "disk" ""
+   .traceevent "V" 6 "R" "I" "r" 14 368 368 0 "to_pile" ""
+   load r22,3
+   settp r15,256
+   swap r23,r15
+   settp r12,256
+   swap r24,r12
+   swap r25,r14
+   call r7,§awfy_towers.towersbenchmark.pushdisk(),r22
+   swap r15,r23
+   swap r12,r24
+   swap r14,r25
+   .traceevent "F" 4 "R" "V" "r" 7 368 368 0 "pushdisk" ""
+   .srcstep 369 369 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+   linkattr1 r24,r15,1
+   .traceevent "V" 6 "R" "I" "r" 24 369 369 0 "moves_done" ""
+   iadd r23,r24,1
+   unlink r24
+   .traceevent "O" 4 "R" "I" "r" 23 369 369 0 "" ""
+   linkattr1 r25,r15,1
+   icopy r25,r23
+   unlink r25
+   .srcstep 370 370 6 "awfy_towers.crexx" 148 28 59 "    if disks = 1 then call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 15 0 0 0 "§this" ""
+   copy a1,r15
+   br l461ifend
+   .srcstep 427 427 6 "awfy_towers.crexx" 149 5 9 "    else do"
+l461iffalse:
+   .srcstep 372 372 17 "awfy_towers.crexx" 150 7 45 "      other_pile = (3 - from_pile) - to_pile"
+   .meta "awfy_towers.towersbenchmark.movedisks.other_pile"="b" ".int" r25
+   .traceevent "V" 6 "R" "I" "a" 3 372 372 0 "from_pile" ""
+   isub r24,3,a3
+   .traceevent "O" 4 "R" "I" "r" 24 372 372 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 4 372 372 0 "to_pile" ""
+   isub r25,r24,a4
+   .traceevent "O" 4 "R" "I" "r" 25 372 372 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 372 372 0 "other_pile" ""
+   .srcstep 373 373 17 "awfy_towers.crexx" 151 7 55 "      call moveDisks(disks - 1, from_pile, other_pile)"
+   .traceevent "V" 6 "R" "O" "a" 1 373 373 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "a" 2 373 373 0 "disks" ""
+   isub r28,a2,1
+   .traceevent "O" 4 "R" "I" "r" 28 373 373 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 3 373 373 0 "from_pile" ""
+   .traceevent "V" 6 "R" "I" "r" 25 373 373 0 "other_pile" ""
+   load r26,4
+   settp a1,256
+   swap r27,a1
+   swap r29,a3
+   swap r30,r25
+   call r24,§awfy_towers.towersbenchmark.movedisks(),r26
+   swap a1,r27
+   swap a3,r29
+   swap r25,r30
+   .traceevent "F" 4 "R" "V" "r" 24 373 373 0 "movedisks" ""
+   .srcstep 423 423 17 "awfy_towers.crexx" 152 7 43 "      call moveTopDisk(from_pile, to_pile)"
+   .srcstep 374 374 33 "awfy_towers.crexx" 152 12 23 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "a" 1 374 374 0 "§this" ""
+   copy r34,a1
+   .traceevent "A" 6 "R" "O" "r" 34 374 374 0 "§this" ""
+   .srcstep 375 375 33 "awfy_towers.crexx" 132 9 18 "    arg from_pile = .int, to_pile = .int"
+   .traceevent "V" 6 "R" "I" "a" 3 375 375 0 "from_pile" ""
+   icopy r32,a3
+   .traceevent "A" 6 "R" "I" "r" 32 375 375 0 "from_pile" ""
+   .srcstep 376 376 33 "awfy_towers.crexx" 132 27 34 "    arg from_pile = .int, to_pile = .int"
+   .traceevent "V" 6 "R" "I" "a" 4 376 376 0 "to_pile" ""
+   icopy r33,a4
+   .traceevent "A" 6 "R" "I" "r" 33 376 376 0 "to_pile" ""
+   .srcstep 419 419 17 "awfy_towers.crexx" 133 5 34 "    disk = popDiskFrom(from_pile)"
+   .meta "awfy_towers.towersbenchmark.movedisks.top"="b" ".towersdisk" r37
+   .srcstep 377 377 17 "awfy_towers.crexx" 114 5 22 "    top = .TowersDisk"
+   null r37
+   .srcstep 378 378 33 "awfy_towers.crexx" 133 12 23 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 34 378 378 0 "§this" ""
+   copy r38,r34
+   .traceevent "A" 6 "R" "O" "r" 38 378 378 0 "§this" ""
+   .srcstep 379 379 33 "awfy_towers.crexx" 113 9 13 "    arg pile = .int"
+   .traceevent "V" 6 "R" "I" "r" 32 379 379 0 "from_pile" ""
+   icopy r36,r32
+   .traceevent "A" 6 "R" "I" "r" 36 379 379 0 "pile" ""
+   setobjuninit r37,"towersdisk"
+   .srcstep 386 386 17 "awfy_towers.crexx" 115 5 16 "    if pile = 0 then top = pile0"
+   .traceevent "V" 6 "R" "I" "r" 36 386 386 0 "pile" ""
+   bne l1136iffalse,r36,0
+   .srcstep 387 387 17 "awfy_towers.crexx" 115 17 21 "    if pile = 0 then top = pile0"
+   .srcstep 380 380 17 "awfy_towers.crexx" 115 22 33 "    if pile = 0 then top = pile0"
+   linkattr1 r29,r38,2
+   .traceevent "V" 6 "R" "O" "r" 29 380 380 0 "pile0" ""
+   copy r37,r29
+   .traceevent "A" 6 "R" "O" "r" 37 380 380 0 "top" ""
+   unlink r29
+   br l1136ifend
+   .srcstep 388 388 17 "awfy_towers.crexx" 116 5 9 "    else if pile = 1 then top = pile1"
+l1136iffalse:
+   .srcstep 383 383 17 "awfy_towers.crexx" 116 10 21 "    else if pile = 1 then top = pile1"
+   .traceevent "V" 6 "R" "I" "r" 36 383 383 0 "pile" ""
+   bne l1143iffalse,r36,1
+   .srcstep 384 384 17 "awfy_towers.crexx" 116 22 26 "    else if pile = 1 then top = pile1"
+   .srcstep 381 381 17 "awfy_towers.crexx" 116 27 38 "    else if pile = 1 then top = pile1"
+   linkattr1 r27,r38,4
+   .traceevent "V" 6 "R" "O" "r" 27 381 381 0 "pile1" ""
+   copy r37,r27
+   .traceevent "A" 6 "R" "O" "r" 37 381 381 0 "top" ""
+   unlink r27
+   br l1143ifend
+   .srcstep 385 385 17 "awfy_towers.crexx" 117 5 9 "    else top = pile2"
+l1143iffalse:
+   .srcstep 382 382 17 "awfy_towers.crexx" 117 10 21 "    else top = pile2"
+   linkattr1 r26,r38,6
+   .traceevent "V" 6 "R" "O" "r" 26 382 382 0 "pile2" ""
+   copy r37,r26
+   .traceevent "A" 6 "R" "O" "r" 37 382 382 0 "top" ""
+   unlink r26
+l1143ifend:
+l1136ifend:
+   .srcstep 413 413 17 "awfy_towers.crexx" 118 5 19 "    if top.hasNext() then do"
+   .srcstep 391 391 17 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .srcstep 389 389 33 "awfy_towers.crexx" 118 8 11 "    if top.hasNext() then do"
+   .traceevent "V" 6 "R" "O" "r" 37 389 389 0 "top" ""
+   copy r39,r37
+   .traceevent "A" 6 "R" "O" "r" 39 389 389 0 "§this" ""
+   .srcstep 390 390 17 "awfy_towers.crexx" 48 5 20 "    return has_next"
+   linkattr1 r30,r39,2
+   .traceevent "V" 6 "R" "I" "r" 30 413 413 0 "has_next" ""
+   icopy r29,r30
+   unlink r30
+   br l1154bexprend
+l1154bexprend:
+   brf l1153iffalse,r29
+   .srcstep 414 414 17 "awfy_towers.crexx" 118 19 20 "    if top.hasNext() then do"
+   .srcstep 394 394 17 "awfy_towers.crexx" 119 7 27 "      next_disk = top.next()"
+   .srcstep 392 392 33 "awfy_towers.crexx" 119 19 22 "      next_disk = top.next()"
+   .traceevent "V" 6 "R" "O" "r" 37 392 392 0 "top" ""
+   copy r40,r37
+   .traceevent "A" 6 "R" "O" "r" 40 392 392 0 "§this" ""
+   .srcstep 393 393 33 "awfy_towers.crexx" 45 5 11 "    return next_disk as .TowersDisk"
+   linkattr1 r30,r40,3
+   .traceevent "V" 6 "R" "O" "r" 30 393 393 0 "next_disk" ""
+   copy r28,r30
+   asserttype r28,"awfy_towers.towersdisk"
+   unlink r30
+   .traceevent "A" 6 "R" "O" "r" 28 393 393 0 "next_disk" ""
+   .srcstep 401 401 17 "awfy_towers.crexx" 120 7 18 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 36 401 401 0 "pile" ""
+   bne l1171iffalse,r36,0
+   .srcstep 402 402 17 "awfy_towers.crexx" 120 19 23 "      if pile = 0 then pile0 = next_disk"
+   .srcstep 395 395 17 "awfy_towers.crexx" 120 24 41 "      if pile = 0 then pile0 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 28 395 395 0 "next_disk" ""
+   linkattr1 r27,r38,2
+   copy r27,r28
+   unlink r27
+   br l1171ifend
+   .srcstep 403 403 17 "awfy_towers.crexx" 121 7 11 "      else if pile = 1 then pile1 = next_disk"
+l1171iffalse:
+   .srcstep 398 398 17 "awfy_towers.crexx" 121 12 23 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "I" "r" 36 398 398 0 "pile" ""
+   bne l1178iffalse,r36,1
+   .srcstep 399 399 17 "awfy_towers.crexx" 121 24 28 "      else if pile = 1 then pile1 = next_disk"
+   .srcstep 396 396 17 "awfy_towers.crexx" 121 29 46 "      else if pile = 1 then pile1 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 28 396 396 0 "next_disk" ""
+   linkattr1 r23,r38,4
+   copy r23,r28
+   unlink r23
+   br l1178ifend
+   .srcstep 400 400 17 "awfy_towers.crexx" 122 7 11 "      else pile2 = next_disk"
+l1178iffalse:
+   .srcstep 397 397 17 "awfy_towers.crexx" 122 12 29 "      else pile2 = next_disk"
+   .traceevent "V" 6 "R" "O" "r" 28 397 397 0 "next_disk" ""
+   linkattr1 r22,r38,6
+   copy r22,r28
+   unlink r22
+l1178ifend:
+l1171ifend:
+   endlife r28
+   br l1153ifend
+   .srcstep 415 415 17 "awfy_towers.crexx" 123 5 8 "    end"
+l1153iffalse:
+   .srcstep 410 410 17 "awfy_towers.crexx" 125 7 18 "      if pile = 0 then pile0_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 36 410 410 0 "pile" ""
+   bne l1189iffalse,r36,0
+   .srcstep 411 411 17 "awfy_towers.crexx" 125 19 23 "      if pile = 0 then pile0_present = 0"
+   .srcstep 404 404 17 "awfy_towers.crexx" 125 24 41 "      if pile = 0 then pile0_present = 0"
+   load r27,0
+   .traceevent "L" 4 "R" "I" "r" 27 404 404 0 "" ""
+   linkattr1 r28,r38,3
+   icopy r28,r27
+   unlink r28
+   br l1189ifend
+   .srcstep 412 412 17 "awfy_towers.crexx" 126 7 11 "      else if pile = 1 then pile1_present = 0"
+l1189iffalse:
+   .srcstep 407 407 17 "awfy_towers.crexx" 126 12 23 "      else if pile = 1 then pile1_present = 0"
+   .traceevent "V" 6 "R" "I" "r" 36 407 407 0 "pile" ""
+   bne l1196iffalse,r36,1
+   .srcstep 408 408 17 "awfy_towers.crexx" 126 24 28 "      else if pile = 1 then pile1_present = 0"
+   .srcstep 405 405 17 "awfy_towers.crexx" 126 29 46 "      else if pile = 1 then pile1_present = 0"
+   load r22,0
+   .traceevent "L" 4 "R" "I" "r" 22 405 405 0 "" ""
+   linkattr1 r23,r38,5
+   icopy r23,r22
+   unlink r23
+   br l1196ifend
+   .srcstep 409 409 17 "awfy_towers.crexx" 127 7 11 "      else pile2_present = 0"
+l1196iffalse:
+   .srcstep 406 406 17 "awfy_towers.crexx" 127 12 29 "      else pile2_present = 0"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 406 406 0 "" ""
+   linkattr1 r6,r38,7
+   icopy r6,r5
+   unlink r6
+l1196ifend:
+l1189ifend:
+l1153ifend:
+   .srcstep 416 416 33 "awfy_towers.crexx" 129 12 15 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 37 416 416 0 "top" ""
+   copy r35,r37
+   .traceevent "A" 6 "R" "O" "r" 35 416 416 0 "__inline_ret_362_363" ""
+   .srcstep 417 417 6 "awfy_towers.crexx" 133 12 34 "    disk = popDiskFrom(from_pile)"
+   .traceevent "V" 6 "R" "O" "r" 38 0 0 0 "§this" ""
+   copy r34,r38
+   .srcstep 418 418 33 "awfy_towers.crexx" 129 5 11 "    return top"
+   .traceevent "V" 6 "R" "O" "r" 35 418 418 0 "__inline_ret_362_363" ""
+   copy r31,r35
+   .traceevent "A" 6 "R" "O" "r" 31 418 418 0 "disk" ""
+   .srcstep 420 420 17 "awfy_towers.crexx" 134 5 33 "    call pushDisk(disk, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 34 420 420 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 31 420 420 0 "disk" ""
+   .traceevent "V" 6 "R" "I" "r" 33 420 420 0 "to_pile" ""
+   load r27,3
+   settp r34,256
+   swap r28,r34
+   settp r31,256
+   swap r29,r31
+   swap r30,r33
+   call r26,§awfy_towers.towersbenchmark.pushdisk(),r27
+   swap r34,r28
+   swap r31,r29
+   swap r33,r30
+   .traceevent "F" 4 "R" "V" "r" 26 420 420 0 "pushdisk" ""
+   .srcstep 421 421 17 "awfy_towers.crexx" 135 5 32 "    moves_done = moves_done + 1"
+   linkattr1 r29,r34,1
+   .traceevent "V" 6 "R" "I" "r" 29 421 421 0 "moves_done" ""
+   iadd r28,r29,1
+   unlink r29
+   .traceevent "O" 4 "R" "I" "r" 28 421 421 0 "" ""
+   linkattr1 r30,r34,1
+   icopy r30,r28
+   unlink r30
+   .srcstep 422 422 6 "awfy_towers.crexx" 152 12 43 "      call moveTopDisk(from_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "r" 34 0 0 0 "§this" ""
+   copy a1,r34
+   .srcstep 424 424 17 "awfy_towers.crexx" 153 7 53 "      call moveDisks(disks - 1, other_pile, to_pile)"
+   .traceevent "V" 6 "R" "O" "a" 1 424 424 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "a" 2 424 424 0 "disks" ""
+   isub r43,a2,1
+   .traceevent "O" 4 "R" "I" "r" 43 424 424 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 25 424 424 0 "other_pile" ""
+   .traceevent "V" 6 "R" "I" "a" 4 424 424 0 "to_pile" ""
+   load r41,4
+   settp a1,256
+   swap r42,a1
+   swap r44,r25
+   swap r45,a4
+   call r30,§awfy_towers.towersbenchmark.movedisks(),r41
+   swap a1,r42
+   swap r25,r44
+   swap a4,r45
+   .traceevent "F" 4 "R" "V" "r" 30 424 424 0 "movedisks" ""
+   endlife r25
+   .meta "awfy_towers.towersbenchmark.movedisks.other_pile"
+l461ifend:
+   .srcstep 428 428 17 "awfy_towers.crexx" 155 5 11 "    return"
+   ret
+   .meta "awfy_towers.towersbenchmark.movedisks.disks"
+   .meta "awfy_towers.towersbenchmark.movedisks.from_pile"
+   .meta "awfy_towers.towersbenchmark.movedisks.to_pile"
+   .meta "awfy_towers.towersbenchmark.movedisks.§this"

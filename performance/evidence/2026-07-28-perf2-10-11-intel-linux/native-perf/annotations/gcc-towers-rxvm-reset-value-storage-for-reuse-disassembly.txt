@@ -1,0 +1,653 @@
+
+/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxvm:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.got:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .text:
+
+0000000000013300 <reset_value_storage_for_reuse>:
+   13300:	48 85 ff             	test   rdi,rdi
+   13303:	0f 84 e3 0a 00 00    	je     13dec <reset_value_storage_for_reuse+0xaec>
+   13309:	41 57                	push   r15
+   1330b:	41 56                	push   r14
+   1330d:	49 89 fe             	mov    r14,rdi
+   13310:	41 55                	push   r13
+   13312:	41 54                	push   r12
+   13314:	55                   	push   rbp
+   13315:	53                   	push   rbx
+   13316:	48 83 ec 68          	sub    rsp,0x68
+   1331a:	48 8b bf 90 00 00 00 	mov    rdi,QWORD PTR [rdi+0x90]
+   13321:	48 85 ff             	test   rdi,rdi
+   13324:	74 1f                	je     13345 <reset_value_storage_for_reuse+0x45>
+   13326:	49 c7 86 90 00 00 00 	mov    QWORD PTR [r14+0x90],0x0
+   1332d:	00 00 00 00 
+   13331:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   13338:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   1333f:	00 
+   13340:	e8 db 71 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13345:	49 8b be 98 00 00 00 	mov    rdi,QWORD PTR [r14+0x98]
+   1334c:	48 85 ff             	test   rdi,rdi
+   1334f:	74 10                	je     13361 <reset_value_storage_for_reuse+0x61>
+   13351:	49 c7 86 98 00 00 00 	mov    QWORD PTR [r14+0x98],0x0
+   13358:	00 00 00 00 
+   1335c:	e8 bf 71 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13361:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   13368:	48 85 c9             	test   rcx,rcx
+   1336b:	0f 84 01 08 00 00    	je     13b72 <reset_value_storage_for_reuse+0x872>
+   13371:	45 31 ff             	xor    r15d,r15d
+   13374:	31 db                	xor    ebx,ebx
+   13376:	66 2e 0f 1f 84 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+   1337d:	00 00 00 
+   13380:	49 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [r14+0xb0]
+   13387:	48 85 c0             	test   rax,rax
+   1338a:	0f 84 18 0a 00 00    	je     13da8 <reset_value_storage_for_reuse+0xaa8>
+   13390:	4a 8b 2c 38          	mov    rbp,QWORD PTR [rax+r15*1]
+   13394:	48 85 ed             	test   rbp,rbp
+   13397:	0f 84 f3 09 00 00    	je     13d90 <reset_value_storage_for_reuse+0xa90>
+   1339d:	48 8b bd 90 00 00 00 	mov    rdi,QWORD PTR [rbp+0x90]
+   133a4:	48 85 ff             	test   rdi,rdi
+   133a7:	74 1f                	je     133c8 <reset_value_storage_for_reuse+0xc8>
+   133a9:	48 c7 85 90 00 00 00 	mov    QWORD PTR [rbp+0x90],0x0
+   133b0:	00 00 00 00 
+   133b4:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   133bb:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   133c2:	00 
+   133c3:	e8 58 71 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   133c8:	48 8b bd 98 00 00 00 	mov    rdi,QWORD PTR [rbp+0x98]
+   133cf:	48 85 ff             	test   rdi,rdi
+   133d2:	74 10                	je     133e4 <reset_value_storage_for_reuse+0xe4>
+   133d4:	48 c7 85 98 00 00 00 	mov    QWORD PTR [rbp+0x98],0x0
+   133db:	00 00 00 00 
+   133df:	e8 3c 71 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   133e4:	48 8b 8d c8 00 00 00 	mov    rcx,QWORD PTR [rbp+0xc8]
+   133eb:	48 85 c9             	test   rcx,rcx
+   133ee:	0f 84 a4 06 00 00    	je     13a98 <reset_value_storage_for_reuse+0x798>
+   133f4:	48 89 5c 24 48       	mov    QWORD PTR [rsp+0x48],rbx
+   133f9:	45 31 ed             	xor    r13d,r13d
+   133fc:	45 31 e4             	xor    r12d,r12d
+   133ff:	4c 89 7c 24 50       	mov    QWORD PTR [rsp+0x50],r15
+   13404:	4c 89 74 24 58       	mov    QWORD PTR [rsp+0x58],r14
+   13409:	49 89 ee             	mov    r14,rbp
+   1340c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13410:	49 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [r14+0xb0]
+   13417:	48 85 c0             	test   rax,rax
+   1341a:	0f 84 38 09 00 00    	je     13d58 <reset_value_storage_for_reuse+0xa58>
+   13420:	4a 8b 1c 28          	mov    rbx,QWORD PTR [rax+r13*1]
+   13424:	48 85 db             	test   rbx,rbx
+   13427:	0f 84 13 09 00 00    	je     13d40 <reset_value_storage_for_reuse+0xa40>
+   1342d:	48 8b bb 90 00 00 00 	mov    rdi,QWORD PTR [rbx+0x90]
+   13434:	48 85 ff             	test   rdi,rdi
+   13437:	74 1f                	je     13458 <reset_value_storage_for_reuse+0x158>
+   13439:	48 c7 83 90 00 00 00 	mov    QWORD PTR [rbx+0x90],0x0
+   13440:	00 00 00 00 
+   13444:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   1344b:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   13452:	00 
+   13453:	e8 c8 70 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13458:	48 8b bb 98 00 00 00 	mov    rdi,QWORD PTR [rbx+0x98]
+   1345f:	48 85 ff             	test   rdi,rdi
+   13462:	74 10                	je     13474 <reset_value_storage_for_reuse+0x174>
+   13464:	48 c7 83 98 00 00 00 	mov    QWORD PTR [rbx+0x98],0x0
+   1346b:	00 00 00 00 
+   1346f:	e8 ac 70 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13474:	48 8b 8b c8 00 00 00 	mov    rcx,QWORD PTR [rbx+0xc8]
+   1347b:	48 85 c9             	test   rcx,rcx
+   1347e:	0f 84 29 05 00 00    	je     139ad <reset_value_storage_for_reuse+0x6ad>
+   13484:	4c 89 74 24 30       	mov    QWORD PTR [rsp+0x30],r14
+   13489:	31 ed                	xor    ebp,ebp
+   1348b:	45 31 ff             	xor    r15d,r15d
+   1348e:	4c 89 64 24 38       	mov    QWORD PTR [rsp+0x38],r12
+   13493:	4c 89 6c 24 40       	mov    QWORD PTR [rsp+0x40],r13
+   13498:	49 89 dd             	mov    r13,rbx
+   1349b:	48 89 eb             	mov    rbx,rbp
+   1349e:	66 90                	xchg   ax,ax
+   134a0:	49 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [r13+0xb0]
+   134a7:	48 85 c0             	test   rax,rax
+   134aa:	0f 84 58 08 00 00    	je     13d08 <reset_value_storage_for_reuse+0xa08>
+   134b0:	4e 8b 34 38          	mov    r14,QWORD PTR [rax+r15*1]
+   134b4:	4d 85 f6             	test   r14,r14
+   134b7:	0f 84 33 08 00 00    	je     13cf0 <reset_value_storage_for_reuse+0x9f0>
+   134bd:	49 8b be 90 00 00 00 	mov    rdi,QWORD PTR [r14+0x90]
+   134c4:	48 85 ff             	test   rdi,rdi
+   134c7:	74 1f                	je     134e8 <reset_value_storage_for_reuse+0x1e8>
+   134c9:	49 c7 86 90 00 00 00 	mov    QWORD PTR [r14+0x90],0x0
+   134d0:	00 00 00 00 
+   134d4:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   134db:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   134e2:	00 
+   134e3:	e8 38 70 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   134e8:	49 8b be 98 00 00 00 	mov    rdi,QWORD PTR [r14+0x98]
+   134ef:	48 85 ff             	test   rdi,rdi
+   134f2:	74 10                	je     13504 <reset_value_storage_for_reuse+0x204>
+   134f4:	49 c7 86 98 00 00 00 	mov    QWORD PTR [r14+0x98],0x0
+   134fb:	00 00 00 00 
+   134ff:	e8 1c 70 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13504:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   1350b:	48 85 c9             	test   rcx,rcx
+   1350e:	0f 84 aa 03 00 00    	je     138be <reset_value_storage_for_reuse+0x5be>
+   13514:	4c 89 6c 24 18       	mov    QWORD PTR [rsp+0x18],r13
+   13519:	31 ed                	xor    ebp,ebp
+   1351b:	4c 89 f6             	mov    rsi,r14
+   1351e:	48 89 5c 24 20       	mov    QWORD PTR [rsp+0x20],rbx
+   13523:	49 89 ee             	mov    r14,rbp
+   13526:	4c 89 7c 24 28       	mov    QWORD PTR [rsp+0x28],r15
+   1352b:	0f 1f 44 00 00       	nop    DWORD PTR [rax+rax*1+0x0]
+   13530:	48 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [rsi+0xb0]
+   13537:	48 85 c0             	test   rax,rax
+   1353a:	0f 84 78 07 00 00    	je     13cb8 <reset_value_storage_for_reuse+0x9b8>
+   13540:	4e 8b 24 30          	mov    r12,QWORD PTR [rax+r14*1]
+   13544:	4d 85 e4             	test   r12,r12
+   13547:	0f 84 53 07 00 00    	je     13ca0 <reset_value_storage_for_reuse+0x9a0>
+   1354d:	49 8b bc 24 90 00 00 	mov    rdi,QWORD PTR [r12+0x90]
+   13554:	00 
+   13555:	48 85 ff             	test   rdi,rdi
+   13558:	74 28                	je     13582 <reset_value_storage_for_reuse+0x282>
+   1355a:	49 c7 84 24 90 00 00 	mov    QWORD PTR [r12+0x90],0x0
+   13561:	00 00 00 00 00 
+   13566:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   1356d:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   13574:	00 
+   13575:	48 89 34 24          	mov    QWORD PTR [rsp],rsi
+   13579:	e8 a2 6f 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   1357e:	48 8b 34 24          	mov    rsi,QWORD PTR [rsp]
+   13582:	49 8b bc 24 98 00 00 	mov    rdi,QWORD PTR [r12+0x98]
+   13589:	00 
+   1358a:	48 85 ff             	test   rdi,rdi
+   1358d:	74 19                	je     135a8 <reset_value_storage_for_reuse+0x2a8>
+   1358f:	49 c7 84 24 98 00 00 	mov    QWORD PTR [r12+0x98],0x0
+   13596:	00 00 00 00 00 
+   1359b:	48 89 34 24          	mov    QWORD PTR [rsp],rsi
+   1359f:	e8 7c 6f 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   135a4:	48 8b 34 24          	mov    rsi,QWORD PTR [rsp]
+   135a8:	4d 8b 84 24 c8 00 00 	mov    r8,QWORD PTR [r12+0xc8]
+   135af:	00 
+   135b0:	4d 85 c0             	test   r8,r8
+   135b3:	0f 84 f6 01 00 00    	je     137af <reset_value_storage_for_reuse+0x4af>
+   135b9:	48 89 34 24          	mov    QWORD PTR [rsp],rsi
+   135bd:	31 db                	xor    ebx,ebx
+   135bf:	48 89 6c 24 08       	mov    QWORD PTR [rsp+0x8],rbp
+   135c4:	4c 89 e5             	mov    rbp,r12
+   135c7:	4c 89 74 24 10       	mov    QWORD PTR [rsp+0x10],r14
+   135cc:	45 31 f6             	xor    r14d,r14d
+   135cf:	90                   	nop
+   135d0:	48 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [rbp+0xb0]
+   135d7:	48 85 c0             	test   rax,rax
+   135da:	0f 84 88 06 00 00    	je     13c68 <reset_value_storage_for_reuse+0x968>
+   135e0:	4c 8b 2c 18          	mov    r13,QWORD PTR [rax+rbx*1]
+   135e4:	4d 85 ed             	test   r13,r13
+   135e7:	0f 84 63 06 00 00    	je     13c50 <reset_value_storage_for_reuse+0x950>
+   135ed:	49 8b bd 90 00 00 00 	mov    rdi,QWORD PTR [r13+0x90]
+   135f4:	48 85 ff             	test   rdi,rdi
+   135f7:	74 1f                	je     13618 <reset_value_storage_for_reuse+0x318>
+   135f9:	49 c7 85 90 00 00 00 	mov    QWORD PTR [r13+0x90],0x0
+   13600:	00 00 00 00 
+   13604:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   1360b:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   13612:	00 
+   13613:	e8 08 6f 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13618:	49 8b bd 98 00 00 00 	mov    rdi,QWORD PTR [r13+0x98]
+   1361f:	48 85 ff             	test   rdi,rdi
+   13622:	74 10                	je     13634 <reset_value_storage_for_reuse+0x334>
+   13624:	49 c7 85 98 00 00 00 	mov    QWORD PTR [r13+0x98],0x0
+   1362b:	00 00 00 00 
+   1362f:	e8 ec 6e 2f 00       	call   30a520 <rxvm_reference_cell_release_slow>
+   13634:	4d 8b 85 c8 00 00 00 	mov    r8,QWORD PTR [r13+0xc8]
+   1363b:	4d 85 c0             	test   r8,r8
+   1363e:	0f 84 7c 00 00 00    	je     136c0 <reset_value_storage_for_reuse+0x3c0>
+   13644:	45 31 e4             	xor    r12d,r12d
+   13647:	45 31 ff             	xor    r15d,r15d
+   1364a:	eb 41                	jmp    1368d <reset_value_storage_for_reuse+0x38d>
+   1364c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13650:	e8 ab fc ff ff       	call   13300 <reset_value_storage_for_reuse>
+   13655:	49 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [r13+0xa8]
+   1365c:	48 85 d2             	test   rdx,rdx
+   1365f:	0f 84 2b 06 00 00    	je     13c90 <reset_value_storage_for_reuse+0x990>
+   13665:	49 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [r13+0xb0]
+   1366c:	4d 8b 85 c8 00 00 00 	mov    r8,QWORD PTR [r13+0xc8]
+   13673:	48 85 c0             	test   rax,rax
+   13676:	74 08                	je     13680 <reset_value_storage_for_reuse+0x380>
+   13678:	4a 8b 04 20          	mov    rax,QWORD PTR [rax+r12*1]
+   1367c:	4a 89 04 22          	mov    QWORD PTR [rdx+r12*1],rax
+   13680:	49 83 c7 01          	add    r15,0x1
+   13684:	49 83 c4 08          	add    r12,0x8
+   13688:	4d 39 c7             	cmp    r15,r8
+   1368b:	73 33                	jae    136c0 <reset_value_storage_for_reuse+0x3c0>
+   1368d:	49 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [r13+0xb0]
+   13694:	48 85 c0             	test   rax,rax
+   13697:	0f 84 8b 05 00 00    	je     13c28 <reset_value_storage_for_reuse+0x928>
+   1369d:	4a 8b 3c 20          	mov    rdi,QWORD PTR [rax+r12*1]
+   136a1:	48 85 ff             	test   rdi,rdi
+   136a4:	75 aa                	jne    13650 <reset_value_storage_for_reuse+0x350>
+   136a6:	49 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [r13+0xa8]
+   136ad:	48 85 d2             	test   rdx,rdx
+   136b0:	75 c6                	jne    13678 <reset_value_storage_for_reuse+0x378>
+   136b2:	49 83 c7 01          	add    r15,0x1
+   136b6:	49 83 c4 08          	add    r12,0x8
+   136ba:	4d 39 c7             	cmp    r15,r8
+   136bd:	72 ce                	jb     1368d <reset_value_storage_for_reuse+0x38d>
+   136bf:	90                   	nop
+   136c0:	49 8b 85 80 00 00 00 	mov    rax,QWORD PTR [r13+0x80]
+   136c7:	48 85 c0             	test   rax,rax
+   136ca:	74 42                	je     1370e <reset_value_storage_for_reuse+0x40e>
+   136cc:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   136d0:	48 85 c0             	test   rax,rax
+   136d3:	74 05                	je     136da <reset_value_storage_for_reuse+0x3da>
+   136d5:	4c 89 ef             	mov    rdi,r13
+   136d8:	ff d0                	call   rax
+   136da:	49 8b 7d 60          	mov    rdi,QWORD PTR [r13+0x60]
+   136de:	48 85 ff             	test   rdi,rdi
+   136e1:	74 05                	je     136e8 <reset_value_storage_for_reuse+0x3e8>
+   136e3:	e8 28 da ff ff       	call   11110 <free@plt>
+   136e8:	49 c7 45 60 00 00 00 	mov    QWORD PTR [r13+0x60],0x0
+   136ef:	00 
+   136f0:	49 c7 45 78 00 00 00 	mov    QWORD PTR [r13+0x78],0x0
+   136f7:	00 
+   136f8:	49 c7 85 80 00 00 00 	mov    QWORD PTR [r13+0x80],0x0
+   136ff:	00 00 00 00 
+   13703:	41 c7 85 88 00 00 00 	mov    DWORD PTR [r13+0x88],0x0
+   1370a:	00 00 00 00 
+   1370e:	48 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [rbp+0xa8]
+   13715:	66 0f ef c9          	pxor   xmm1,xmm1
+   13719:	41 c7 45 00 00 00 00 	mov    DWORD PTR [r13+0x0],0x0
+   13720:	00 
+   13721:	49 c7 45 08 00 00 00 	mov    QWORD PTR [r13+0x8],0x0
+   13728:	00 
+   13729:	49 c7 45 10 00 00 00 	mov    QWORD PTR [r13+0x10],0x0
+   13730:	00 
+   13731:	49 c7 85 a0 00 00 00 	mov    QWORD PTR [r13+0xa0],0x0
+   13738:	00 00 00 00 
+   1373c:	49 c7 45 38 00 00 00 	mov    QWORD PTR [r13+0x38],0x0
+   13743:	00 
+   13744:	49 c7 45 58 00 00 00 	mov    QWORD PTR [r13+0x58],0x0
+   1374b:	00 
+   1374c:	49 c7 85 c8 00 00 00 	mov    QWORD PTR [r13+0xc8],0x0
+   13753:	00 00 00 00 
+   13757:	49 c7 45 20 00 00 00 	mov    QWORD PTR [r13+0x20],0x0
+   1375e:	00 
+   1375f:	41 0f 11 4d 48       	movups XMMWORD PTR [r13+0x48],xmm1
+   13764:	41 0f 11 4d 68       	movups XMMWORD PTR [r13+0x68],xmm1
+   13769:	48 85 d2             	test   rdx,rdx
+   1376c:	0f 84 6e 05 00 00    	je     13ce0 <reset_value_storage_for_reuse+0x9e0>
+   13772:	48 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [rbp+0xb0]
+   13779:	4c 8b 85 c8 00 00 00 	mov    r8,QWORD PTR [rbp+0xc8]
+   13780:	48 85 c0             	test   rax,rax
+   13783:	74 08                	je     1378d <reset_value_storage_for_reuse+0x48d>
+   13785:	48 8b 04 18          	mov    rax,QWORD PTR [rax+rbx*1]
+   13789:	48 89 04 1a          	mov    QWORD PTR [rdx+rbx*1],rax
+   1378d:	49 83 c6 01          	add    r14,0x1
+   13791:	48 83 c3 08          	add    rbx,0x8
+   13795:	4d 39 c6             	cmp    r14,r8
+   13798:	0f 82 32 fe ff ff    	jb     135d0 <reset_value_storage_for_reuse+0x2d0>
+   1379e:	49 89 ec             	mov    r12,rbp
+   137a1:	48 8b 34 24          	mov    rsi,QWORD PTR [rsp]
+   137a5:	48 8b 6c 24 08       	mov    rbp,QWORD PTR [rsp+0x8]
+   137aa:	4c 8b 74 24 10       	mov    r14,QWORD PTR [rsp+0x10]
+   137af:	49 8b 84 24 80 00 00 	mov    rax,QWORD PTR [r12+0x80]
+   137b6:	00 
+   137b7:	48 85 c0             	test   rax,rax
+   137ba:	74 57                	je     13813 <reset_value_storage_for_reuse+0x513>
+   137bc:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   137c0:	48 85 c0             	test   rax,rax
+   137c3:	74 0d                	je     137d2 <reset_value_storage_for_reuse+0x4d2>
+   137c5:	48 89 34 24          	mov    QWORD PTR [rsp],rsi
+   137c9:	4c 89 e7             	mov    rdi,r12
+   137cc:	ff d0                	call   rax
+   137ce:	48 8b 34 24          	mov    rsi,QWORD PTR [rsp]
+   137d2:	49 8b 7c 24 60       	mov    rdi,QWORD PTR [r12+0x60]
+   137d7:	48 85 ff             	test   rdi,rdi
+   137da:	74 0d                	je     137e9 <reset_value_storage_for_reuse+0x4e9>
+   137dc:	48 89 34 24          	mov    QWORD PTR [rsp],rsi
+   137e0:	e8 2b d9 ff ff       	call   11110 <free@plt>
+   137e5:	48 8b 34 24          	mov    rsi,QWORD PTR [rsp]
+   137e9:	49 c7 44 24 60 00 00 	mov    QWORD PTR [r12+0x60],0x0
+   137f0:	00 00 
+   137f2:	49 c7 44 24 78 00 00 	mov    QWORD PTR [r12+0x78],0x0
+   137f9:	00 00 
+   137fb:	49 c7 84 24 80 00 00 	mov    QWORD PTR [r12+0x80],0x0
+   13802:	00 00 00 00 00 
+   13807:	41 c7 84 24 88 00 00 	mov    DWORD PTR [r12+0x88],0x0
+   1380e:	00 00 00 00 00 
+   13813:	48 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [rsi+0xa8]
+   1381a:	66 0f ef d2          	pxor   xmm2,xmm2
+   1381e:	41 c7 04 24 00 00 00 	mov    DWORD PTR [r12],0x0
+   13825:	00 
+   13826:	49 c7 44 24 08 00 00 	mov    QWORD PTR [r12+0x8],0x0
+   1382d:	00 00 
+   1382f:	49 c7 44 24 10 00 00 	mov    QWORD PTR [r12+0x10],0x0
+   13836:	00 00 
+   13838:	49 c7 84 24 a0 00 00 	mov    QWORD PTR [r12+0xa0],0x0
+   1383f:	00 00 00 00 00 
+   13844:	49 c7 44 24 38 00 00 	mov    QWORD PTR [r12+0x38],0x0
+   1384b:	00 00 
+   1384d:	49 c7 44 24 58 00 00 	mov    QWORD PTR [r12+0x58],0x0
+   13854:	00 00 
+   13856:	49 c7 84 24 c8 00 00 	mov    QWORD PTR [r12+0xc8],0x0
+   1385d:	00 00 00 00 00 
+   13862:	49 c7 44 24 20 00 00 	mov    QWORD PTR [r12+0x20],0x0
+   13869:	00 00 
+   1386b:	41 0f 11 54 24 48    	movups XMMWORD PTR [r12+0x48],xmm2
+   13871:	41 0f 11 54 24 68    	movups XMMWORD PTR [r12+0x68],xmm2
+   13877:	48 85 d2             	test   rdx,rdx
+   1387a:	0f 84 b0 04 00 00    	je     13d30 <reset_value_storage_for_reuse+0xa30>
+   13880:	48 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [rsi+0xb0]
+   13887:	48 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [rsi+0xc8]
+   1388e:	48 85 c0             	test   rax,rax
+   13891:	74 08                	je     1389b <reset_value_storage_for_reuse+0x59b>
+   13893:	4a 8b 04 30          	mov    rax,QWORD PTR [rax+r14*1]
+   13897:	4a 89 04 32          	mov    QWORD PTR [rdx+r14*1],rax
+   1389b:	48 83 c5 01          	add    rbp,0x1
+   1389f:	49 83 c6 08          	add    r14,0x8
+   138a3:	48 39 cd             	cmp    rbp,rcx
+   138a6:	0f 82 84 fc ff ff    	jb     13530 <reset_value_storage_for_reuse+0x230>
+   138ac:	4c 8b 6c 24 18       	mov    r13,QWORD PTR [rsp+0x18]
+   138b1:	48 8b 5c 24 20       	mov    rbx,QWORD PTR [rsp+0x20]
+   138b6:	49 89 f6             	mov    r14,rsi
+   138b9:	4c 8b 7c 24 28       	mov    r15,QWORD PTR [rsp+0x28]
+   138be:	49 8b 86 80 00 00 00 	mov    rax,QWORD PTR [r14+0x80]
+   138c5:	48 85 c0             	test   rax,rax
+   138c8:	74 42                	je     1390c <reset_value_storage_for_reuse+0x60c>
+   138ca:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   138ce:	48 85 c0             	test   rax,rax
+   138d1:	74 05                	je     138d8 <reset_value_storage_for_reuse+0x5d8>
+   138d3:	4c 89 f7             	mov    rdi,r14
+   138d6:	ff d0                	call   rax
+   138d8:	49 8b 7e 60          	mov    rdi,QWORD PTR [r14+0x60]
+   138dc:	48 85 ff             	test   rdi,rdi
+   138df:	74 05                	je     138e6 <reset_value_storage_for_reuse+0x5e6>
+   138e1:	e8 2a d8 ff ff       	call   11110 <free@plt>
+   138e6:	49 c7 46 60 00 00 00 	mov    QWORD PTR [r14+0x60],0x0
+   138ed:	00 
+   138ee:	49 c7 46 78 00 00 00 	mov    QWORD PTR [r14+0x78],0x0
+   138f5:	00 
+   138f6:	49 c7 86 80 00 00 00 	mov    QWORD PTR [r14+0x80],0x0
+   138fd:	00 00 00 00 
+   13901:	41 c7 86 88 00 00 00 	mov    DWORD PTR [r14+0x88],0x0
+   13908:	00 00 00 00 
+   1390c:	49 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [r13+0xa8]
+   13913:	66 0f ef db          	pxor   xmm3,xmm3
+   13917:	41 c7 06 00 00 00 00 	mov    DWORD PTR [r14],0x0
+   1391e:	49 c7 46 08 00 00 00 	mov    QWORD PTR [r14+0x8],0x0
+   13925:	00 
+   13926:	49 c7 46 10 00 00 00 	mov    QWORD PTR [r14+0x10],0x0
+   1392d:	00 
+   1392e:	49 c7 86 a0 00 00 00 	mov    QWORD PTR [r14+0xa0],0x0
+   13935:	00 00 00 00 
+   13939:	49 c7 46 38 00 00 00 	mov    QWORD PTR [r14+0x38],0x0
+   13940:	00 
+   13941:	49 c7 46 58 00 00 00 	mov    QWORD PTR [r14+0x58],0x0
+   13948:	00 
+   13949:	49 c7 86 c8 00 00 00 	mov    QWORD PTR [r14+0xc8],0x0
+   13950:	00 00 00 00 
+   13954:	49 c7 46 20 00 00 00 	mov    QWORD PTR [r14+0x20],0x0
+   1395b:	00 
+   1395c:	41 0f 11 5e 48       	movups XMMWORD PTR [r14+0x48],xmm3
+   13961:	41 0f 11 5e 68       	movups XMMWORD PTR [r14+0x68],xmm3
+   13966:	48 85 d2             	test   rdx,rdx
+   13969:	0f 84 11 04 00 00    	je     13d80 <reset_value_storage_for_reuse+0xa80>
+   1396f:	49 8b 85 b0 00 00 00 	mov    rax,QWORD PTR [r13+0xb0]
+   13976:	49 8b 8d c8 00 00 00 	mov    rcx,QWORD PTR [r13+0xc8]
+   1397d:	48 85 c0             	test   rax,rax
+   13980:	74 08                	je     1398a <reset_value_storage_for_reuse+0x68a>
+   13982:	4a 8b 04 38          	mov    rax,QWORD PTR [rax+r15*1]
+   13986:	4a 89 04 3a          	mov    QWORD PTR [rdx+r15*1],rax
+   1398a:	48 83 c3 01          	add    rbx,0x1
+   1398e:	49 83 c7 08          	add    r15,0x8
+   13992:	48 39 cb             	cmp    rbx,rcx
+   13995:	0f 82 05 fb ff ff    	jb     134a0 <reset_value_storage_for_reuse+0x1a0>
+   1399b:	4c 89 eb             	mov    rbx,r13
+   1399e:	4c 8b 74 24 30       	mov    r14,QWORD PTR [rsp+0x30]
+   139a3:	4c 8b 64 24 38       	mov    r12,QWORD PTR [rsp+0x38]
+   139a8:	4c 8b 6c 24 40       	mov    r13,QWORD PTR [rsp+0x40]
+   139ad:	48 8b 83 80 00 00 00 	mov    rax,QWORD PTR [rbx+0x80]
+   139b4:	48 85 c0             	test   rax,rax
+   139b7:	74 41                	je     139fa <reset_value_storage_for_reuse+0x6fa>
+   139b9:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   139bd:	48 85 c0             	test   rax,rax
+   139c0:	74 05                	je     139c7 <reset_value_storage_for_reuse+0x6c7>
+   139c2:	48 89 df             	mov    rdi,rbx
+   139c5:	ff d0                	call   rax
+   139c7:	48 8b 7b 60          	mov    rdi,QWORD PTR [rbx+0x60]
+   139cb:	48 85 ff             	test   rdi,rdi
+   139ce:	74 05                	je     139d5 <reset_value_storage_for_reuse+0x6d5>
+   139d0:	e8 3b d7 ff ff       	call   11110 <free@plt>
+   139d5:	48 c7 43 60 00 00 00 	mov    QWORD PTR [rbx+0x60],0x0
+   139dc:	00 
+   139dd:	48 c7 43 78 00 00 00 	mov    QWORD PTR [rbx+0x78],0x0
+   139e4:	00 
+   139e5:	48 c7 83 80 00 00 00 	mov    QWORD PTR [rbx+0x80],0x0
+   139ec:	00 00 00 00 
+   139f0:	c7 83 88 00 00 00 00 	mov    DWORD PTR [rbx+0x88],0x0
+   139f7:	00 00 00 
+   139fa:	49 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [r14+0xa8]
+   13a01:	66 0f ef e4          	pxor   xmm4,xmm4
+   13a05:	c7 03 00 00 00 00    	mov    DWORD PTR [rbx],0x0
+   13a0b:	48 c7 43 08 00 00 00 	mov    QWORD PTR [rbx+0x8],0x0
+   13a12:	00 
+   13a13:	48 c7 43 10 00 00 00 	mov    QWORD PTR [rbx+0x10],0x0
+   13a1a:	00 
+   13a1b:	48 c7 83 a0 00 00 00 	mov    QWORD PTR [rbx+0xa0],0x0
+   13a22:	00 00 00 00 
+   13a26:	48 c7 43 38 00 00 00 	mov    QWORD PTR [rbx+0x38],0x0
+   13a2d:	00 
+   13a2e:	48 c7 43 58 00 00 00 	mov    QWORD PTR [rbx+0x58],0x0
+   13a35:	00 
+   13a36:	48 c7 83 c8 00 00 00 	mov    QWORD PTR [rbx+0xc8],0x0
+   13a3d:	00 00 00 00 
+   13a41:	48 c7 43 20 00 00 00 	mov    QWORD PTR [rbx+0x20],0x0
+   13a48:	00 
+   13a49:	0f 11 63 48          	movups XMMWORD PTR [rbx+0x48],xmm4
+   13a4d:	0f 11 63 68          	movups XMMWORD PTR [rbx+0x68],xmm4
+   13a51:	48 85 d2             	test   rdx,rdx
+   13a54:	0f 84 76 03 00 00    	je     13dd0 <reset_value_storage_for_reuse+0xad0>
+   13a5a:	49 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [r14+0xb0]
+   13a61:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   13a68:	48 85 c0             	test   rax,rax
+   13a6b:	74 08                	je     13a75 <reset_value_storage_for_reuse+0x775>
+   13a6d:	4a 8b 04 28          	mov    rax,QWORD PTR [rax+r13*1]
+   13a71:	4a 89 04 2a          	mov    QWORD PTR [rdx+r13*1],rax
+   13a75:	49 83 c4 01          	add    r12,0x1
+   13a79:	49 83 c5 08          	add    r13,0x8
+   13a7d:	49 39 cc             	cmp    r12,rcx
+   13a80:	0f 82 8a f9 ff ff    	jb     13410 <reset_value_storage_for_reuse+0x110>
+   13a86:	4c 89 f5             	mov    rbp,r14
+   13a89:	48 8b 5c 24 48       	mov    rbx,QWORD PTR [rsp+0x48]
+   13a8e:	4c 8b 7c 24 50       	mov    r15,QWORD PTR [rsp+0x50]
+   13a93:	4c 8b 74 24 58       	mov    r14,QWORD PTR [rsp+0x58]
+   13a98:	48 8b 85 80 00 00 00 	mov    rax,QWORD PTR [rbp+0x80]
+   13a9f:	48 85 c0             	test   rax,rax
+   13aa2:	74 41                	je     13ae5 <reset_value_storage_for_reuse+0x7e5>
+   13aa4:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   13aa8:	48 85 c0             	test   rax,rax
+   13aab:	74 05                	je     13ab2 <reset_value_storage_for_reuse+0x7b2>
+   13aad:	48 89 ef             	mov    rdi,rbp
+   13ab0:	ff d0                	call   rax
+   13ab2:	48 8b 7d 60          	mov    rdi,QWORD PTR [rbp+0x60]
+   13ab6:	48 85 ff             	test   rdi,rdi
+   13ab9:	74 05                	je     13ac0 <reset_value_storage_for_reuse+0x7c0>
+   13abb:	e8 50 d6 ff ff       	call   11110 <free@plt>
+   13ac0:	48 c7 45 60 00 00 00 	mov    QWORD PTR [rbp+0x60],0x0
+   13ac7:	00 
+   13ac8:	48 c7 45 78 00 00 00 	mov    QWORD PTR [rbp+0x78],0x0
+   13acf:	00 
+   13ad0:	48 c7 85 80 00 00 00 	mov    QWORD PTR [rbp+0x80],0x0
+   13ad7:	00 00 00 00 
+   13adb:	c7 85 88 00 00 00 00 	mov    DWORD PTR [rbp+0x88],0x0
+   13ae2:	00 00 00 
+   13ae5:	49 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [r14+0xa8]
+   13aec:	66 0f ef ed          	pxor   xmm5,xmm5
+   13af0:	c7 45 00 00 00 00 00 	mov    DWORD PTR [rbp+0x0],0x0
+   13af7:	48 c7 45 08 00 00 00 	mov    QWORD PTR [rbp+0x8],0x0
+   13afe:	00 
+   13aff:	48 c7 45 10 00 00 00 	mov    QWORD PTR [rbp+0x10],0x0
+   13b06:	00 
+   13b07:	48 c7 85 a0 00 00 00 	mov    QWORD PTR [rbp+0xa0],0x0
+   13b0e:	00 00 00 00 
+   13b12:	48 c7 45 38 00 00 00 	mov    QWORD PTR [rbp+0x38],0x0
+   13b19:	00 
+   13b1a:	48 c7 45 58 00 00 00 	mov    QWORD PTR [rbp+0x58],0x0
+   13b21:	00 
+   13b22:	48 c7 85 c8 00 00 00 	mov    QWORD PTR [rbp+0xc8],0x0
+   13b29:	00 00 00 00 
+   13b2d:	48 c7 45 20 00 00 00 	mov    QWORD PTR [rbp+0x20],0x0
+   13b34:	00 
+   13b35:	0f 11 6d 48          	movups XMMWORD PTR [rbp+0x48],xmm5
+   13b39:	0f 11 6d 68          	movups XMMWORD PTR [rbp+0x68],xmm5
+   13b3d:	48 85 d2             	test   rdx,rdx
+   13b40:	0f 84 9a 02 00 00    	je     13de0 <reset_value_storage_for_reuse+0xae0>
+   13b46:	49 8b 86 b0 00 00 00 	mov    rax,QWORD PTR [r14+0xb0]
+   13b4d:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   13b54:	48 85 c0             	test   rax,rax
+   13b57:	74 08                	je     13b61 <reset_value_storage_for_reuse+0x861>
+   13b59:	4a 8b 04 38          	mov    rax,QWORD PTR [rax+r15*1]
+   13b5d:	4a 89 04 3a          	mov    QWORD PTR [rdx+r15*1],rax
+   13b61:	48 83 c3 01          	add    rbx,0x1
+   13b65:	49 83 c7 08          	add    r15,0x8
+   13b69:	48 39 cb             	cmp    rbx,rcx
+   13b6c:	0f 82 0e f8 ff ff    	jb     13380 <reset_value_storage_for_reuse+0x80>
+   13b72:	49 8b 86 80 00 00 00 	mov    rax,QWORD PTR [r14+0x80]
+   13b79:	48 85 c0             	test   rax,rax
+   13b7c:	74 42                	je     13bc0 <reset_value_storage_for_reuse+0x8c0>
+   13b7e:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   13b82:	48 85 c0             	test   rax,rax
+   13b85:	74 05                	je     13b8c <reset_value_storage_for_reuse+0x88c>
+   13b87:	4c 89 f7             	mov    rdi,r14
+   13b8a:	ff d0                	call   rax
+   13b8c:	49 8b 7e 60          	mov    rdi,QWORD PTR [r14+0x60]
+   13b90:	48 85 ff             	test   rdi,rdi
+   13b93:	74 05                	je     13b9a <reset_value_storage_for_reuse+0x89a>
+   13b95:	e8 76 d5 ff ff       	call   11110 <free@plt>
+   13b9a:	49 c7 46 60 00 00 00 	mov    QWORD PTR [r14+0x60],0x0
+   13ba1:	00 
+   13ba2:	49 c7 46 78 00 00 00 	mov    QWORD PTR [r14+0x78],0x0
+   13ba9:	00 
+   13baa:	49 c7 86 80 00 00 00 	mov    QWORD PTR [r14+0x80],0x0
+   13bb1:	00 00 00 00 
+   13bb5:	41 c7 86 88 00 00 00 	mov    DWORD PTR [r14+0x88],0x0
+   13bbc:	00 00 00 00 
+   13bc0:	66 0f ef c0          	pxor   xmm0,xmm0
+   13bc4:	41 c7 06 00 00 00 00 	mov    DWORD PTR [r14],0x0
+   13bcb:	49 c7 46 08 00 00 00 	mov    QWORD PTR [r14+0x8],0x0
+   13bd2:	00 
+   13bd3:	49 c7 46 10 00 00 00 	mov    QWORD PTR [r14+0x10],0x0
+   13bda:	00 
+   13bdb:	49 c7 86 a0 00 00 00 	mov    QWORD PTR [r14+0xa0],0x0
+   13be2:	00 00 00 00 
+   13be6:	49 c7 46 38 00 00 00 	mov    QWORD PTR [r14+0x38],0x0
+   13bed:	00 
+   13bee:	49 c7 46 58 00 00 00 	mov    QWORD PTR [r14+0x58],0x0
+   13bf5:	00 
+   13bf6:	49 c7 86 c8 00 00 00 	mov    QWORD PTR [r14+0xc8],0x0
+   13bfd:	00 00 00 00 
+   13c01:	49 c7 46 20 00 00 00 	mov    QWORD PTR [r14+0x20],0x0
+   13c08:	00 
+   13c09:	41 0f 11 46 48       	movups XMMWORD PTR [r14+0x48],xmm0
+   13c0e:	41 0f 11 46 68       	movups XMMWORD PTR [r14+0x68],xmm0
+   13c13:	48 83 c4 68          	add    rsp,0x68
+   13c17:	5b                   	pop    rbx
+   13c18:	5d                   	pop    rbp
+   13c19:	41 5c                	pop    r12
+   13c1b:	41 5d                	pop    r13
+   13c1d:	41 5e                	pop    r14
+   13c1f:	41 5f                	pop    r15
+   13c21:	c3                   	ret
+   13c22:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13c28:	49 8b 85 a8 00 00 00 	mov    rax,QWORD PTR [r13+0xa8]
+   13c2f:	48 85 c0             	test   rax,rax
+   13c32:	0f 84 48 fa ff ff    	je     13680 <reset_value_storage_for_reuse+0x380>
+   13c38:	4a 8b 3c 20          	mov    rdi,QWORD PTR [rax+r12*1]
+   13c3c:	48 85 ff             	test   rdi,rdi
+   13c3f:	0f 85 0b fa ff ff    	jne    13650 <reset_value_storage_for_reuse+0x350>
+   13c45:	e9 36 fa ff ff       	jmp    13680 <reset_value_storage_for_reuse+0x380>
+   13c4a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13c50:	48 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [rbp+0xa8]
+   13c57:	48 85 d2             	test   rdx,rdx
+   13c5a:	0f 85 25 fb ff ff    	jne    13785 <reset_value_storage_for_reuse+0x485>
+   13c60:	e9 28 fb ff ff       	jmp    1378d <reset_value_storage_for_reuse+0x48d>
+   13c65:	0f 1f 00             	nop    DWORD PTR [rax]
+   13c68:	48 8b 85 a8 00 00 00 	mov    rax,QWORD PTR [rbp+0xa8]
+   13c6f:	48 85 c0             	test   rax,rax
+   13c72:	0f 84 15 fb ff ff    	je     1378d <reset_value_storage_for_reuse+0x48d>
+   13c78:	4c 8b 2c 18          	mov    r13,QWORD PTR [rax+rbx*1]
+   13c7c:	4d 85 ed             	test   r13,r13
+   13c7f:	0f 85 68 f9 ff ff    	jne    135ed <reset_value_storage_for_reuse+0x2ed>
+   13c85:	e9 03 fb ff ff       	jmp    1378d <reset_value_storage_for_reuse+0x48d>
+   13c8a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13c90:	4d 8b 85 c8 00 00 00 	mov    r8,QWORD PTR [r13+0xc8]
+   13c97:	e9 e4 f9 ff ff       	jmp    13680 <reset_value_storage_for_reuse+0x380>
+   13c9c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13ca0:	48 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [rsi+0xa8]
+   13ca7:	48 85 d2             	test   rdx,rdx
+   13caa:	0f 85 e3 fb ff ff    	jne    13893 <reset_value_storage_for_reuse+0x593>
+   13cb0:	e9 e6 fb ff ff       	jmp    1389b <reset_value_storage_for_reuse+0x59b>
+   13cb5:	0f 1f 00             	nop    DWORD PTR [rax]
+   13cb8:	48 8b 86 a8 00 00 00 	mov    rax,QWORD PTR [rsi+0xa8]
+   13cbf:	48 85 c0             	test   rax,rax
+   13cc2:	0f 84 d3 fb ff ff    	je     1389b <reset_value_storage_for_reuse+0x59b>
+   13cc8:	4e 8b 24 30          	mov    r12,QWORD PTR [rax+r14*1]
+   13ccc:	4d 85 e4             	test   r12,r12
+   13ccf:	0f 85 78 f8 ff ff    	jne    1354d <reset_value_storage_for_reuse+0x24d>
+   13cd5:	e9 c1 fb ff ff       	jmp    1389b <reset_value_storage_for_reuse+0x59b>
+   13cda:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13ce0:	4c 8b 85 c8 00 00 00 	mov    r8,QWORD PTR [rbp+0xc8]
+   13ce7:	e9 a1 fa ff ff       	jmp    1378d <reset_value_storage_for_reuse+0x48d>
+   13cec:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13cf0:	49 8b 95 a8 00 00 00 	mov    rdx,QWORD PTR [r13+0xa8]
+   13cf7:	48 85 d2             	test   rdx,rdx
+   13cfa:	0f 85 82 fc ff ff    	jne    13982 <reset_value_storage_for_reuse+0x682>
+   13d00:	e9 85 fc ff ff       	jmp    1398a <reset_value_storage_for_reuse+0x68a>
+   13d05:	0f 1f 00             	nop    DWORD PTR [rax]
+   13d08:	49 8b 85 a8 00 00 00 	mov    rax,QWORD PTR [r13+0xa8]
+   13d0f:	48 85 c0             	test   rax,rax
+   13d12:	0f 84 72 fc ff ff    	je     1398a <reset_value_storage_for_reuse+0x68a>
+   13d18:	4e 8b 34 38          	mov    r14,QWORD PTR [rax+r15*1]
+   13d1c:	4d 85 f6             	test   r14,r14
+   13d1f:	0f 85 98 f7 ff ff    	jne    134bd <reset_value_storage_for_reuse+0x1bd>
+   13d25:	e9 60 fc ff ff       	jmp    1398a <reset_value_storage_for_reuse+0x68a>
+   13d2a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13d30:	48 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [rsi+0xc8]
+   13d37:	e9 5f fb ff ff       	jmp    1389b <reset_value_storage_for_reuse+0x59b>
+   13d3c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13d40:	49 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [r14+0xa8]
+   13d47:	48 85 d2             	test   rdx,rdx
+   13d4a:	0f 85 1d fd ff ff    	jne    13a6d <reset_value_storage_for_reuse+0x76d>
+   13d50:	e9 20 fd ff ff       	jmp    13a75 <reset_value_storage_for_reuse+0x775>
+   13d55:	0f 1f 00             	nop    DWORD PTR [rax]
+   13d58:	49 8b 86 a8 00 00 00 	mov    rax,QWORD PTR [r14+0xa8]
+   13d5f:	48 85 c0             	test   rax,rax
+   13d62:	0f 84 0d fd ff ff    	je     13a75 <reset_value_storage_for_reuse+0x775>
+   13d68:	4a 8b 1c 28          	mov    rbx,QWORD PTR [rax+r13*1]
+   13d6c:	48 85 db             	test   rbx,rbx
+   13d6f:	0f 85 b8 f6 ff ff    	jne    1342d <reset_value_storage_for_reuse+0x12d>
+   13d75:	e9 fb fc ff ff       	jmp    13a75 <reset_value_storage_for_reuse+0x775>
+   13d7a:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13d80:	49 8b 8d c8 00 00 00 	mov    rcx,QWORD PTR [r13+0xc8]
+   13d87:	e9 fe fb ff ff       	jmp    1398a <reset_value_storage_for_reuse+0x68a>
+   13d8c:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13d90:	49 8b 96 a8 00 00 00 	mov    rdx,QWORD PTR [r14+0xa8]
+   13d97:	48 85 d2             	test   rdx,rdx
+   13d9a:	0f 85 b9 fd ff ff    	jne    13b59 <reset_value_storage_for_reuse+0x859>
+   13da0:	e9 bc fd ff ff       	jmp    13b61 <reset_value_storage_for_reuse+0x861>
+   13da5:	0f 1f 00             	nop    DWORD PTR [rax]
+   13da8:	49 8b 86 a8 00 00 00 	mov    rax,QWORD PTR [r14+0xa8]
+   13daf:	48 85 c0             	test   rax,rax
+   13db2:	0f 84 a9 fd ff ff    	je     13b61 <reset_value_storage_for_reuse+0x861>
+   13db8:	4a 8b 2c 38          	mov    rbp,QWORD PTR [rax+r15*1]
+   13dbc:	48 85 ed             	test   rbp,rbp
+   13dbf:	0f 85 d8 f5 ff ff    	jne    1339d <reset_value_storage_for_reuse+0x9d>
+   13dc5:	e9 97 fd ff ff       	jmp    13b61 <reset_value_storage_for_reuse+0x861>
+   13dca:	66 0f 1f 44 00 00    	nop    WORD PTR [rax+rax*1+0x0]
+   13dd0:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   13dd7:	e9 99 fc ff ff       	jmp    13a75 <reset_value_storage_for_reuse+0x775>
+   13ddc:	0f 1f 40 00          	nop    DWORD PTR [rax+0x0]
+   13de0:	49 8b 8e c8 00 00 00 	mov    rcx,QWORD PTR [r14+0xc8]
+   13de7:	e9 75 fd ff ff       	jmp    13b61 <reset_value_storage_for_reuse+0x861>
+   13dec:	c3                   	ret
+
+Disassembly of section .fini:

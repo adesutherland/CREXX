@@ -1,0 +1,8 @@
+options levelb
+namespace gate_f_parallel_expr_levelb
+
+main: procedure = .int
+  value = do parallel
+    leave with 1
+  end
+  return value

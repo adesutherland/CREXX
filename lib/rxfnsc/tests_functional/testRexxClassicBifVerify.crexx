@@ -1,0 +1,159 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifverify
+import rexxvalue
+
+errors = 0
+
+errors = errors + check2("0", "123", "1234567890")
+errors = errors + check2("2", "1Z3", "1234567890")
+errors = errors + check3("3", "AB4T", "1234567890", "M")
+errors = errors + check4("4", "1P3Q4", "1234567890", 0, "", "3")
+errors = errors + check4("3", "ABCDE", "", 1, "n", "3")
+errors = errors + check4("6", "AB3CD5", "1234567890", 1, "match", "4")
+errors = errors + check2("0", "", "123")
+errors = errors + check3("0", "abc", "", "M")
+errors = errors + check4("0", "abc", "abc", 1, "N", "4")
+errors = errors + check3("2", "é🙂x", "🙂", "M")
+errors = errors + check3("3", "é🙂x", "é🙂", "N")
+nul = "00"x
+errors = errors + check2("0", nul, nul)
+errors = errors + check2("1", nul, "")
+errors = errors + check_byte_profile()
+
+large = ""
+a_code = 97
+z_code = 90
+do i = 1 to 1000
+  assembler appendchar large,a_code
+end
+assembler appendchar large,z_code
+errors = errors + check2("1001", large, "a")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 5)
+errors = errors + check_omitted_required(1)
+errors = errors + check_omitted_required(2)
+errors = errors + check_option_error("", "RXC-LC-40.21")
+errors = errors + check_option_error("X", "RXC-LC-40.28")
+errors = errors + check_start_error("one", "RXC-LC-40.12")
+errors = errors + check_start_error("0", "RXC-LC-40.14")
+errors = errors + check_start_error("-1", "RXC-LC-40.14")
+
+if errors = 0 then say "PASS: Level C VERIFY BIF"
+return errors <> 0
+
+check2: procedure = .int
+  arg expected = .string, string = .string, refchars = .string
+  return run_check(expected, string, refchars, 0, "", 0, "")
+
+check3: procedure = .int
+  arg expected = .string, string = .string, refchars = .string, option = .string
+  return run_check(expected, string, refchars, 1, option, 0, "")
+
+check4: procedure = .int
+  arg expected = .string, string = .string, refchars = .string, option_exists = .boolean, option = .string, start = .string
+  return run_check(expected, string, refchars, option_exists, option, 1, start)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, refchars = .string, option_exists = .boolean, option = .string, start_exists = .boolean, start = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(refchars)
+  exists[1] = 1
+  exists[2] = 1
+  if option_exists | start_exists then do
+    args[3] = .RexxValue(option)
+    exists[3] = option_exists
+  end
+  if start_exists then do
+    args[4] = .RexxValue(start)
+    exists[4] = 1
+  end
+  context = .RexxBifCallContext("VERIFY")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifverify..rexxclassicbif_verify(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string & args[2].asString() = refchars then return 0
+  say "FAIL: VERIFY expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  source = .binary
+  reference_bytes = .binary
+  source = "C3A978"x
+  reference_bytes = "A9"x
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(source)
+  args[2] = .RexxValue.fromBinary(reference_bytes)
+  args[3] = .RexxValue("M")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("VERIFY")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifverify..rexxclassicbif_verify(reference context)
+  if \context.hasError() & result.asString() = "2" then return 0
+  say "FAIL: VERIFY BYTE expected 2 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("abc")
+  exists[1] = omitted <> 1
+  exists[2] = omitted <> 2
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_option_error: procedure = .int
+  arg option = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("abc")
+  args[3] = .RexxValue(option)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  return run_error(expected_code, args, exists)
+
+check_start_error: procedure = .int
+  arg start = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("abc")
+  args[3] = .RexxValue("N")
+  args[4] = .RexxValue(start)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  exists[4] = 1
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("VERIFY")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifverify..rexxclassicbif_verify(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: VERIFY expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

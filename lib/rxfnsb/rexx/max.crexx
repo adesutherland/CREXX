@@ -22,14 +22,27 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb
+/**
+ * Level B MAX implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/max.md
+ */
+options levelb numeric_classic
 
 namespace rxfnsb expose max
 
-max: procedure = .float
-    arg m = .float, ... = .float
-    do i = 1 to arg.0
-        if arg.i > m then m = arg.i
-    end
-    return m
+/**
+ * Return the greatest decimal argument.
+ *
+ * @param first first and initially selected decimal
+ * @param ... remaining decimal arguments
+ * @return greatest decimal; the first value wins a tie
+ * @signal CONVERSION_ERROR an argument cannot be converted to decimal
+ */
+max: procedure = .decimal
+  arg first = .decimal, ... = .decimal
+  do i = 1 to arg[0]
+    if arg[i] > first then first = arg[i]
+  end
+  return first

@@ -34,6 +34,7 @@
 #include "platform.h"
 #include "rxvmintp.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmprocessworker.h"
 #include "rxvm.h"
 
 /* Library Buffer */
@@ -55,9 +56,24 @@ static void help() {
             "Options :\n"
             "  -h              Prints help message\n"
             "  -p plugin       Load VM Plugin*\n"
+            "  --provider-path directories\n"
+            "                  Trusted ';'-separated RXPA provider directories\n"
+            "  --autoload      Load hinted packaged RXBIN dependencies (default)\n"
+            "  --no-autoload   Do not load hinted packaged RXBIN dependencies\n"
             "  -c              Prints Copyright & License Details\n"
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
+#endif
+#ifdef CREXX_VM_PROFILING
+            "  --profile       Print VM instruction/transition timing profile\n"
+            "  --profile=counts\n"
+            "                  Print deterministic counts with timing fields zero\n"
+            "  --profile-output file\n"
+            "                  Write profile to file (.csv selects CSV format)\n"
+            "  --sequence-count N\n"
+            "                  Extract executed sequential windows (N is 2, 3, or 4)\n"
+            "  --sequence-output file.rxseq\n"
+            "                  Write the instruction-sequence execution profile\n"
 #endif
             "  -l location     Working Location (directory)\n"
             "  -v              Prints Version\n"
@@ -67,6 +83,54 @@ static void help() {
             "    *** Defining plugin location to be improved in release version ***\n"; // todo
 
     printf("%s",helpMessage);
+}
+
+static char *provider_application_directory(const char *module_path) {
+    const char *slash;
+    size_t prefix_length;
+    char *result;
+
+    if (!module_path || !*module_path) return 0;
+    slash = strrchr(module_path, '/');
+#ifdef _WIN32
+    {
+        const char *backslash = strrchr(module_path, '\\');
+        if (!slash || (backslash && backslash > slash)) slash = backslash;
+    }
+#endif
+    prefix_length = slash ? (size_t)(slash - module_path + 1) : 0u;
+    result = malloc(prefix_length + strlen("providers") + 1u);
+    if (!result) return 0;
+    if (prefix_length) memcpy(result, module_path, prefix_length);
+    strcpy(result + prefix_length, "providers");
+    return result;
+}
+
+static char *provider_search_path(const char *application,
+                                  const char *configured,
+                                  const char *environment,
+                                  const char *executable) {
+    const char *parts[4];
+    size_t index;
+    size_t length = 1u;
+    char *result;
+
+    parts[0] = application;
+    parts[1] = configured;
+    parts[2] = environment;
+    parts[3] = executable;
+    for (index = 0u; index < 4u; index++) {
+        if (parts[index] && *parts[index]) length += strlen(parts[index]) + 1u;
+    }
+    result = malloc(length);
+    if (!result) return 0;
+    result[0] = 0;
+    for (index = 0u; index < 4u; index++) {
+        if (!parts[index] || !*parts[index]) continue;
+        if (*result) strcat(result, ";");
+        strcat(result, parts[index]);
+    }
+    return result;
 }
 
 static void error_and_exit(char* message) {
@@ -85,12 +149,21 @@ int main(int argc, char *argv[]) {
     char *file_name;
     char *combined_location = 0;
     char *exe_path = 0;
+    char *application_provider_path = 0;
+    char *installed_provider_path = 0;
+    const char *configured_provider_path = 0;
     int i, j;
     int rc;
     rxvm_context context;
     size_t num_modules;
 
     platform_install_signal_handlers();
+
+    /* Private, rebuild-together process-provider worker mode. It is kept out
+     * of public help and executes only the versioned framed task protocol. */
+    if (argc == 3 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+        return rxvm_process_worker_main(argv[2]);
+    }
 
 #ifdef _WIN32
     /* Enable UTF-8 Processes */
@@ -109,6 +182,11 @@ int main(int argc, char *argv[]) {
 
     /* Init Context */
     rxinimod(&context);
+    if (rxvm_signal_bind_process_main(&context) != 0) {
+        fprintf(stderr, "ERROR: process-main VM interrupt target is already bound\n");
+        rxfremod(&context);
+        return 2;
+    }
 
     /*
      * Load VM RXAS Plugin(s)
@@ -126,6 +204,91 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strcmp(argv[i], "--autoload") == 0) {
+            context.autoload_enabled = 1u;
+            continue;
+        }
+        if (strcmp(argv[i], "--no-autoload") == 0) {
+            context.autoload_enabled = 0u;
+            continue;
+        }
+        if (strcmp(argv[i], "--provider-path") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing directories after --provider-path");
+            configured_provider_path = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--provider-path=", 16) == 0) {
+            if (!argv[i][16])
+                error_and_exit("Missing directories after --provider-path=");
+            configured_provider_path = argv[i] + 16;
+            continue;
+        }
+#ifdef CREXX_VM_PROFILING
+        if (strcmp(argv[i], "--sequence-count") == 0) {
+            char *end = 0;
+            unsigned long value;
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing value after --sequence-count");
+            value = strtoul(argv[i], &end, 10);
+            if (*end || value < 2 || value > 4)
+                error_and_exit("Invalid sequence count (expected 2, 3, or 4)");
+            context.sequence_count = (unsigned int)value;
+            continue;
+        }
+        if (strncmp(argv[i], "--sequence-count=", 17) == 0) {
+            char *end = 0;
+            unsigned long value = strtoul(argv[i] + 17, &end, 10);
+            if (!argv[i][17] || *end || value < 2 || value > 4)
+                error_and_exit("Invalid sequence count (expected 2, 3, or 4)");
+            context.sequence_count = (unsigned int)value;
+            continue;
+        }
+        if (strcmp(argv[i], "--sequence-output") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing filename after --sequence-output");
+            context.sequence_output = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--sequence-output=", 18) == 0) {
+            if (!argv[i][18])
+                error_and_exit("Missing filename after --sequence-output=");
+            context.sequence_output = argv[i] + 18;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile") == 0 ||
+                strcmp(argv[i], "--profile=timing") == 0) {
+            context.profile_mode = 1;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile=counts") == 0) {
+            context.profile_mode = 2;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile-output") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0]) {
+                error_and_exit("Missing filename after --profile-output");
+            }
+            if (!context.profile_mode) context.profile_mode = 1;
+            context.profile_output = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--profile-output=", 17) == 0) {
+            if (!argv[i][17]) {
+                error_and_exit("Missing filename after --profile-output=");
+            }
+            if (!context.profile_mode) context.profile_mode = 1;
+            context.profile_output = argv[i] + 17;
+            continue;
+        }
+        if (strncmp(argv[i], "--profile=", 10) == 0) {
+            error_and_exit("Invalid profile mode (expected timing or counts)");
+        }
+#endif
         if (strlen(argv[i]) > 2) {
             error_and_exit("Invalid argument");
         }
@@ -179,13 +342,43 @@ int main(int argc, char *argv[]) {
                 error_and_exit("Invalid argument");
         }
     }
+#ifdef CREXX_VM_PROFILING
+    if (context.sequence_count && !context.sequence_output)
+        error_and_exit("--sequence-count requires --sequence-output");
+    if (context.sequence_output && !context.sequence_count)
+        error_and_exit("--sequence-output requires --sequence-count");
+    if (context.profile_mode && context.sequence_count)
+        error_and_exit("--profile and --sequence-count are separate run modes");
+#endif
     num_modules = argc - i;
     if (!num_modules) {
         error_and_exit("No input files");
     }
 
-    /* Add current and executable path to location */
+    /* Configure trusted provider discovery separately from the legacy module
+     * path.  In particular, the implicit current-directory module lookup is
+     * never promoted into an unrestricted native-library search. */
     exe_path = exepath();
+    application_provider_path = provider_application_directory(argv[i]);
+    if (exe_path && *exe_path) {
+        installed_provider_path = malloc(strlen(exe_path) +
+                                         strlen("/providers") + 1u);
+        if (installed_provider_path)
+            sprintf(installed_provider_path, "%s/providers", exe_path);
+    }
+    if (!application_provider_path ||
+        ((exe_path && *exe_path) && !installed_provider_path)) {
+        error_and_exit("Unable to allocate provider search path");
+    }
+    context.provider_location = provider_search_path(
+            application_provider_path, configured_provider_path,
+            getenv("CREXX_PROVIDER_PATH"), installed_provider_path);
+    free(application_provider_path);
+    free(installed_provider_path);
+    if (!context.provider_location)
+        error_and_exit("Unable to allocate provider search path");
+
+    /* Add current and executable path to legacy module location. */
     if (context.location) {
         combined_location = malloc(strlen(context.location) + strlen(exe_path) + 5);
         sprintf(combined_location, ".;%s;%s", context.location, exe_path);
@@ -232,6 +425,19 @@ int main(int argc, char *argv[]) {
 #endif
 
     /* Load plugins statically linked from linked buffer */
+    {
+        const rxvm_program_generation *generation = 0;
+        rxvm_program_result generation_result =
+                rxvm_program_generation_seal(&context, &generation);
+
+        if (generation_result != RXVM_PROGRAM_OK) {
+            fprintf(stderr, "ERROR sealing executable program generation\n");
+            rxfremod(&context);
+            clear_rxvmplugin_factories();
+            return -1;
+        }
+    }
+
     if (rxldmodp(&context) == -1) {
         fprintf(stderr, "ERROR reading linked plugins\n");
         exit(-1);

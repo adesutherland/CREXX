@@ -1,0 +1,560 @@
+Compiled from "base64_roundtrip.java"
+public class base64_roundtrip {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: iconst_0
+         3: istore        4
+         5: aconst_null
+         6: astore        6
+         8: iconst_0
+         9: istore        7
+        11: iconst_0
+        12: istore        9
+        14: iconst_1
+        15: istore_1
+        16: aload_0
+        17: arraylength
+        18: iconst_1
+        19: if_icmplt     32
+        22: aload_0
+        23: iconst_0
+        24: aaload
+        25: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        28: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        31: istore_1
+        32: iload_1
+        33: iconst_1
+        34: if_icmpge     48
+        37: ldc           #11                 // String FAIL: repetitions must be positive
+        39: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        42: pop
+        43: iconst_1
+        44: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        47: return
+        48: sipush        1024
+        51: newarray       byte
+        53: astore_2
+        54: iconst_0
+        55: istore_3
+        56: iload_3
+        57: sipush        1023
+        60: if_icmpgt     112
+        63: iload_3
+        64: bipush        31
+        66: imul
+        67: bipush        7
+        69: iadd
+        70: sipush        256
+        73: irem
+        74: istore        4
+        76: iload         4
+        78: bipush        127
+        80: if_icmple     91
+        83: iload         4
+        85: sipush        256
+        88: isub
+        89: istore        4
+        91: aload_2
+        92: iload_3
+        93: new           #2                  // class netrexx/lang/Rexx
+        96: dup
+        97: iload         4
+        99: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(I)V
+       102: invokevirtual #28                 // Method netrexx/lang/Rexx.tobyte:()B
+       105: bastore
+       106: iinc          3, 1
+       109: goto          56
+       112: ldc           #32                 // String
+       114: astore        5
+       116: iload_1
+       117: istore        10
+       119: iconst_1
+       120: istore        7
+       122: iload         7
+       124: iload         10
+       126: if_icmpgt     148
+       129: aload_2
+       130: invokestatic  #34                 // Method encode:([B)Ljava/lang/String;
+       133: astore        5
+       135: aload         5
+       137: invokestatic  #40                 // Method decode:(Ljava/lang/String;)[B
+       140: astore        6
+       142: iinc          7, 1
+       145: goto          122
+       148: aload         5
+       150: invokevirtual #44                 // Method java/lang/String.length:()I
+       153: sipush        1368
+       156: if_icmpeq     191
+       159: new           #49                 // class java/lang/StringBuilder
+       162: dup
+       163: invokespecial #51                 // Method java/lang/StringBuilder."<init>":()V
+       166: ldc           #54                 // String FAIL: expected encoded length 1368, got
+       168: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       171: aload         5
+       173: invokevirtual #44                 // Method java/lang/String.length:()I
+       176: invokevirtual #60                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       179: invokevirtual #63                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       182: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       185: pop
+       186: iconst_1
+       187: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       190: return
+       191: aload_2
+       192: aload         6
+       194: invokestatic  #67                 // Method java/util/Arrays.equals:([B[B)Z
+       197: ifne          211
+       200: ldc           #73                 // String FAIL: decoded bytes differ from input
+       202: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       205: pop
+       206: iconst_1
+       207: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       210: return
+       211: iconst_0
+       212: istore        8
+       214: iconst_0
+       215: istore        10
+       217: aload         6
+       219: arraylength
+       220: newarray       byte
+       222: astore        11
+       224: aload         6
+       226: dup
+       227: astore        12
+       229: monitorenter
+       230: iload         10
+       232: aload         11
+       234: arraylength
+       235: if_icmpne     241
+       238: goto          263
+       241: aload         11
+       243: iload         10
+       245: aload         6
+       247: aload         6
+       249: arraylength
+       250: iconst_1
+       251: isub
+       252: iload         10
+       254: isub
+       255: baload
+       256: bastore
+       257: iinc          10, 1
+       260: goto          230
+       263: aload         12
+       265: monitorexit
+       266: goto          277
+       269: astore        13
+       271: aload         12
+       273: monitorexit
+       274: aload         13
+       276: athrow
+       277: iinc          10, -1
+       280: iload         10
+       282: ifge          288
+       285: goto          308
+       288: aload         11
+       290: iload         10
+       292: baload
+       293: istore        9
+       295: iload         8
+       297: iload         9
+       299: invokestatic  #75                 // Method java/lang/Byte.toUnsignedInt:(B)I
+       302: iadd
+       303: istore        8
+       305: goto          277
+       308: iload         8
+       310: ldc           #81                 // int 130560
+       312: if_icmpeq     344
+       315: new           #49                 // class java/lang/StringBuilder
+       318: dup
+       319: invokespecial #51                 // Method java/lang/StringBuilder."<init>":()V
+       322: ldc           #82                 // String FAIL: expected checksum 130560, got
+       324: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       327: iload         8
+       329: invokevirtual #60                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       332: invokevirtual #63                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       335: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       338: pop
+       339: iconst_1
+       340: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       343: return
+       344: new           #49                 // class java/lang/StringBuilder
+       347: dup
+       348: invokespecial #51                 // Method java/lang/StringBuilder."<init>":()V
+       351: ldc           #84                 // String benchmark=base64_roundtrip repetitions=
+       353: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       356: iload_1
+       357: invokevirtual #60                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       360: ldc           #86                 // String  encoded_length=
+       362: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       365: aload         5
+       367: invokevirtual #44                 // Method java/lang/String.length:()I
+       370: invokevirtual #60                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       373: ldc           #88                 // String  checksum=
+       375: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       378: iload         8
+       380: invokevirtual #60                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       383: invokevirtual #63                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       386: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       389: pop
+       390: ldc           #90                 // String PASS: Base64 Roundtrip NetRexx port
+       392: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       395: pop
+       396: return
+      Exception table:
+         from    to  target type
+           230   266   269   any
+           269   274   269   any
+
+  public static java.lang.String encode(byte[]);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: iconst_0
+         4: istore        5
+         6: iconst_0
+         7: istore        6
+         9: iconst_0
+        10: istore        7
+        12: iconst_0
+        13: istore        8
+        15: iconst_0
+        16: istore        9
+        18: iconst_0
+        19: istore        10
+        21: iconst_0
+        22: istore        11
+        24: ldc           #92                 // String ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/
+        26: astore_1
+        27: new           #49                 // class java/lang/StringBuilder
+        30: dup
+        31: invokespecial #51                 // Method java/lang/StringBuilder."<init>":()V
+        34: astore_2
+        35: iconst_0
+        36: istore_3
+        37: iload_3
+        38: aload_0
+        39: arraylength
+        40: if_icmplt     46
+        43: goto          240
+        46: aload_0
+        47: arraylength
+        48: iload_3
+        49: isub
+        50: istore        4
+        52: aload_0
+        53: iload_3
+        54: baload
+        55: invokestatic  #75                 // Method java/lang/Byte.toUnsignedInt:(B)I
+        58: istore        5
+        60: iconst_0
+        61: istore        6
+        63: iconst_0
+        64: istore        7
+        66: iload         4
+        68: iconst_1
+        69: if_icmple     82
+        72: aload_0
+        73: iload_3
+        74: iconst_1
+        75: iadd
+        76: baload
+        77: invokestatic  #75                 // Method java/lang/Byte.toUnsignedInt:(B)I
+        80: istore        6
+        82: iload         4
+        84: iconst_2
+        85: if_icmple     98
+        88: aload_0
+        89: iload_3
+        90: iconst_2
+        91: iadd
+        92: baload
+        93: invokestatic  #75                 // Method java/lang/Byte.toUnsignedInt:(B)I
+        96: istore        7
+        98: iload         5
+       100: iconst_4
+       101: idiv
+       102: istore        8
+       104: iload         5
+       106: iconst_4
+       107: irem
+       108: bipush        16
+       110: imul
+       111: iload         6
+       113: bipush        16
+       115: idiv
+       116: iadd
+       117: istore        9
+       119: iload         6
+       121: bipush        16
+       123: irem
+       124: iconst_4
+       125: imul
+       126: iload         7
+       128: bipush        64
+       130: idiv
+       131: iadd
+       132: istore        10
+       134: iload         7
+       136: bipush        64
+       138: irem
+       139: istore        11
+       141: aload_2
+       142: aload_1
+       143: iload         8
+       145: iload         8
+       147: iconst_1
+       148: iadd
+       149: invokevirtual #94                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+       152: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       155: pop
+       156: aload_2
+       157: aload_1
+       158: iload         9
+       160: iload         9
+       162: iconst_1
+       163: iadd
+       164: invokevirtual #94                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+       167: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       170: pop
+       171: iload         4
+       173: iconst_1
+       174: if_icmple     195
+       177: aload_2
+       178: aload_1
+       179: iload         10
+       181: iload         10
+       183: iconst_1
+       184: iadd
+       185: invokevirtual #94                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+       188: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       191: pop
+       192: goto          202
+       195: aload_2
+       196: bipush        61
+       198: invokevirtual #98                 // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       201: pop
+       202: iload         4
+       204: iconst_2
+       205: if_icmple     226
+       208: aload_2
+       209: aload_1
+       210: iload         11
+       212: iload         11
+       214: iconst_1
+       215: iadd
+       216: invokevirtual #94                 // Method java/lang/String.substring:(II)Ljava/lang/String;
+       219: invokevirtual #56                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       222: pop
+       223: goto          233
+       226: aload_2
+       227: bipush        61
+       229: invokevirtual #98                 // Method java/lang/StringBuilder.append:(C)Ljava/lang/StringBuilder;
+       232: pop
+       233: iload_3
+       234: iconst_3
+       235: iadd
+       236: istore_3
+       237: goto          37
+       240: aload_2
+       241: invokevirtual #63                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       244: areturn
+
+  public static byte[] decode(java.lang.String);
+    Code:
+         0: iconst_0
+         1: istore        6
+         3: iconst_0
+         4: istore        7
+         6: iconst_0
+         7: istore        8
+         9: iconst_0
+        10: istore        9
+        12: iconst_0
+        13: istore        10
+        15: iconst_0
+        16: istore        11
+        18: iconst_0
+        19: istore        12
+        21: ldc           #92                 // String ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/
+        23: astore_1
+        24: iconst_0
+        25: istore_2
+        26: aload_0
+        27: aload_0
+        28: invokevirtual #44                 // Method java/lang/String.length:()I
+        31: iconst_1
+        32: isub
+        33: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+        36: bipush        61
+        38: if_icmpne     44
+        41: iinc          2, 1
+        44: aload_0
+        45: aload_0
+        46: invokevirtual #44                 // Method java/lang/String.length:()I
+        49: iconst_2
+        50: isub
+        51: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+        54: bipush        61
+        56: if_icmpne     62
+        59: iinc          2, 1
+        62: aload_0
+        63: invokevirtual #44                 // Method java/lang/String.length:()I
+        66: iconst_4
+        67: idiv
+        68: iconst_3
+        69: imul
+        70: iload_2
+        71: isub
+        72: newarray       byte
+        74: astore_3
+        75: iconst_0
+        76: istore        4
+        78: iconst_0
+        79: istore        5
+        81: iload         4
+        83: aload_0
+        84: invokevirtual #44                 // Method java/lang/String.length:()I
+        87: if_icmplt     93
+        90: goto          339
+        93: aload_1
+        94: aload_0
+        95: iload         4
+        97: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+       100: invokevirtual #105                // Method java/lang/String.indexOf:(I)I
+       103: istore        6
+       105: aload_1
+       106: aload_0
+       107: iload         4
+       109: iconst_1
+       110: iadd
+       111: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+       114: invokevirtual #105                // Method java/lang/String.indexOf:(I)I
+       117: istore        7
+       119: aload_0
+       120: iload         4
+       122: iconst_2
+       123: iadd
+       124: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+       127: istore        8
+       129: aload_0
+       130: iload         4
+       132: iconst_3
+       133: iadd
+       134: invokevirtual #101                // Method java/lang/String.codePointAt:(I)I
+       137: istore        9
+       139: iconst_0
+       140: istore        10
+       142: iconst_0
+       143: istore        11
+       145: iload         8
+       147: bipush        61
+       149: if_icmpeq     160
+       152: aload_1
+       153: iload         8
+       155: invokevirtual #105                // Method java/lang/String.indexOf:(I)I
+       158: istore        10
+       160: iload         9
+       162: bipush        61
+       164: if_icmpeq     175
+       167: aload_1
+       168: iload         9
+       170: invokevirtual #105                // Method java/lang/String.indexOf:(I)I
+       173: istore        11
+       175: iload         6
+       177: iconst_4
+       178: imul
+       179: iload         7
+       181: bipush        16
+       183: idiv
+       184: iadd
+       185: istore        12
+       187: iload         12
+       189: bipush        127
+       191: if_icmple     202
+       194: iload         12
+       196: sipush        256
+       199: isub
+       200: istore        12
+       202: aload_3
+       203: iload         5
+       205: new           #2                  // class netrexx/lang/Rexx
+       208: dup
+       209: iload         12
+       211: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(I)V
+       214: invokevirtual #28                 // Method netrexx/lang/Rexx.tobyte:()B
+       217: bastore
+       218: iinc          5, 1
+       221: iload         8
+       223: bipush        61
+       225: if_icmpeq     277
+       228: iload         7
+       230: bipush        16
+       232: irem
+       233: bipush        16
+       235: imul
+       236: iload         10
+       238: iconst_4
+       239: idiv
+       240: iadd
+       241: istore        12
+       243: iload         12
+       245: bipush        127
+       247: if_icmple     258
+       250: iload         12
+       252: sipush        256
+       255: isub
+       256: istore        12
+       258: aload_3
+       259: iload         5
+       261: new           #2                  // class netrexx/lang/Rexx
+       264: dup
+       265: iload         12
+       267: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(I)V
+       270: invokevirtual #28                 // Method netrexx/lang/Rexx.tobyte:()B
+       273: bastore
+       274: iinc          5, 1
+       277: iload         9
+       279: bipush        61
+       281: if_icmpeq     330
+       284: iload         10
+       286: iconst_4
+       287: irem
+       288: bipush        64
+       290: imul
+       291: iload         11
+       293: iadd
+       294: istore        12
+       296: iload         12
+       298: bipush        127
+       300: if_icmple     311
+       303: iload         12
+       305: sipush        256
+       308: isub
+       309: istore        12
+       311: aload_3
+       312: iload         5
+       314: new           #2                  // class netrexx/lang/Rexx
+       317: dup
+       318: iload         12
+       320: invokespecial #25                 // Method netrexx/lang/Rexx."<init>":(I)V
+       323: invokevirtual #28                 // Method netrexx/lang/Rexx.tobyte:()B
+       326: bastore
+       327: iinc          5, 1
+       330: iload         4
+       332: iconst_4
+       333: iadd
+       334: istore        4
+       336: goto          81
+       339: aload_3
+       340: areturn
+
+  private base64_roundtrip();
+    Code:
+         0: aload_0
+         1: invokespecial #108                // Method java/lang/Object."<init>":()V
+         4: return
+}

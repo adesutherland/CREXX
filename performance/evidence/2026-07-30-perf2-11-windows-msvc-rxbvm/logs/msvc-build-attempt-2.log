@@ -1,0 +1,41 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+cl : command line  warning D9002: ignoring unknown option '-O3' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  rxvmintp.c
+cl : command line  warning D9002: ignoring unknown option '-O3' [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.vcxproj]
+  rxvmsock.c
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(3862,12): error C2099: initializer is not a constant [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,90): error C2065: 'tzname': undeclared identifier [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,96): error C2109: subscript requires array or pointer type [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,100): error C2065: 'tzname': undeclared identifier [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,106): error C2109: subscript requires array or pointer type [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,82): warning C4473: 'snprintf' : not enough arguments passed for format string [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+      C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,82):
+      placeholders and their parameters expect 2 variadic arguments, but 0 were provided
+      C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmintp.c(9004,82):
+      the missing variadic argument 1 is required by format string '%s'
+
+  rxvm_platform_objects.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.dir\Release\rxvm_platform_objects.lib
+  rxvmload.c
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(942,55): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(948,74): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(975,74): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(989,66): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(992,63): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1015,74): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1028,78): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1040,79): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1054,75): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1071,70): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1082,85): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+C:\Users\adria\CLionProjects\CREXX\interpreter\rxvmload.c(1093,70): error C2036: 'void *': unknown size [C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.vcxproj]
+  interrupt.c
+  rxspawn.c
+  exitfunc.c
+  rxpafuncs.c
+  rxvm_run.c
+  Generating Code...

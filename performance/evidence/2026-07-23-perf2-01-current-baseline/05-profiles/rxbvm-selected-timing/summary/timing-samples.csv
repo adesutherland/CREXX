@@ -1,0 +1,11 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+sieve-noopt,sieve,Sieve,baseline,noopt,process,recorded,1,27179000,0,pass
+sieve-opt,sieve,Sieve,candidate,opt,process,recorded,1,27014000,0,pass
+bounce-noopt,bounce,Bounce,baseline,noopt,process,recorded,1,326394000,0,pass
+bounce-opt,bounce,Bounce,candidate,opt,process,recorded,1,350048000,0,pass
+richards-noopt,richards,Richards,baseline,noopt,process,recorded,1,49742000,0,pass
+richards-opt,richards,Richards,candidate,opt,process,recorded,1,605704000,0,pass
+base64-noopt,base64,Base64,baseline,noopt,process,recorded,1,503966000,0,pass
+base64-opt,base64,Base64,candidate,opt,process,recorded,1,331970000,0,pass
+rexxcps-noopt,rexxcps,RexxCPS,baseline,noopt,process,recorded,1,969797000,0,pass
+rexxcps-opt,rexxcps,RexxCPS,candidate,opt,process,recorded,1,1032992000,0,pass

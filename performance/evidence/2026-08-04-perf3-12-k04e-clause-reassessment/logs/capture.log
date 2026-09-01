@@ -1,0 +1,6 @@
+rxvm: PASS rexxcps-noopt and rexxcps-opt; profile and RXSEQ N=2/3/4 retained
+rxvm stderr bytes: 0
+rxbvm: PASS rexxcps-noopt and rexxcps-opt; profile and RXSEQ N=2/3/4 retained
+rxbvm stderr bytes: 0
+nested rxvm checksums: all OK
+nested rxbvm checksums: all OK

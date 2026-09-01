@@ -1,0 +1,74 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifabs
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("12.3", "12.3")
+errors = errors + check_value("0.307", " -0.307")
+errors = errors + check_value("12345678", " - 12345678        ")
+errors = errors + check_value("1234567.7654321", "- 1234567.7654321")
+errors = errors + check_value("1.2345E+18", "123.45E+16")
+errors = errors + check_value("1", "+1")
+errors = errors + check_value("0", "-0")
+errors = errors + check_value("0", "0")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_required()
+errors = errors + check_value_error("", "RXC-LC-40.11")
+errors = errors + check_value_error("not-a-number", "RXC-LC-40.11")
+errors = errors + check_value_error("1 2", "RXC-LC-40.11")
+
+if errors = 0 then say "PASS: Level C ABS BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, input = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(input)
+  exists[1] = 1
+  context = .RexxBifCallContext("ABS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabs..rexxclassicbif_abs(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = input then return 0
+  say "FAIL: ABS input" input "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_value_error: procedure = .int
+  arg input = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(input)
+  exists[1] = 1
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("ABS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabs..rexxclassicbif_abs(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: ABS expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

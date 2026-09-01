@@ -1,4 +1,5 @@
-\documentclass[10pt]{book}
+\documentclass[10pt,twoside,openright,paperwidth=193mm,paperheight=260mm]{book}
+\linespread{1.03}
 \usepackage[FINAL]{../../../boilerplate/rexx} 
 \usepackage{hyperref}
 \usepackage{graphics}
@@ -7,10 +8,13 @@
 \usepackage{etoolbox}
 \usepackage{fontspec}
 \usepackage{tocloft}
-\usepackage{titlesec}
-%\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
+\usepackage{xstring}
+\usepackage[explicit]{titlesec}
 \setmainfont[Mapping=tex-text]{Minion Pro}
-\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
+\setmonofont[
+  Scale=0.75,
+  Ligatures=NoCommon
+]{IBM Plex Mono}
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{makeidx}
@@ -18,6 +22,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{mdframed}
+\usepackage{amssymb}
 
 %fancyhdr for page headers, footers, numbers
 \usepackage{fancyhdr}
@@ -32,11 +37,12 @@
 \fancyhead[RO]{\normalfont \nouppercase{\rightmark}}  % Chapter title on right pages, aligned right
 \fancyhead[LE]{\normalfont \nouppercase{\leftmark}}   % Section title on left pages, aligned right
 
-% Ensure chapter and section marks update correctly
-%% \renewcommand{\chaptermark}[1]{\markright{#1}\normalfont \thechapter.\ #1}
-%% \renewcommand{\sectionmark}[1]{\markleft{#1}\normalfont \thesection.\ #1}
+%% \fancyfoot[C]{\thepage}
 
-\fancyfoot[C]{\thepage}
+% Page numbers on the outside
+\fancyfoot[LE]{\thepage}   % Left on Even pages
+\fancyfoot[RO]{\thepage}   % Right on Odd pages
+
 
 % avoid headers on empty pages
 \usepackage{emptypage}
@@ -60,9 +66,6 @@
 \definecolor{nrorange}{RGB}{203 ,75,22}
 \definecolor{nrgrey}{RGB}{101,123,131}
 \usepackage{alltt}
-%% \DeclareCaptionFont{white}{\color{white}}
-%% \DeclareCaptionFormat{listing}{\colorbox{gray}{\parbox{\textwidth}{#1#2#3}}}
-%% \captionsetup[lstlisting]{format=listing,labelfont=white,textfont=white}
 \usepackage[official]{eurosym}
 %% \makeatletter
 %% \@empty\z@\@empty
@@ -72,7 +75,13 @@
 \input{../../../boilerplate/netrexxformat}
 \input{../../../boilerplate/assemblerformat}
 \input{../../../boilerplate/rxasformat}
-%% \input{../../../boilerplate/jclformat}
+\input{../../../boilerplate/ebnf}
+
+%% this for the api doc style
+\usepackage{microtype}
+\usepackage{../../../boilerplate/crexxalmanac}
+\usepackage{../../../boilerplate/chaptertab}
+
 \usepackage{pst-barcode,pstricks-add}
 \usepackage{bashful}
 \usepackage{metalogo}
@@ -86,7 +95,7 @@
 \setlength{\parindent}{0pt}
 \usepackage{enumitem}
 \usepackage{underscore}
-\usepackage{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{array}
 % \usepackage{tabularx}
@@ -103,19 +112,32 @@
 \usepackage{wrapfig}
 \usepackage{multicol}
 \usepackage[CJK]{ucharclasses}
-\usepackage[comma]{natbib}           % CSLI Pubs favored bibliography package.
-%% \bibliographystyle{cslipubs-natbib}  % CSLI Pubs bibliography format.
-\bibliographystyle{plainnat}  % CSLI Pubs bibliography format.
+
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  maxbibnames=99,
+  giveninits=true,
+  doi=false,
+  isbn=true,
+  url=false,
+  eprint=false
+]{biblatex}
+
+\addbibresource{../../../boilerplate/bibliography.bib}
+
+\renewcommand*{\mkbibnamefamily}[1]{\textsc{#1}}
+
+%% \usepackage[comma]{natbib}
+%% \bibliographystyle{abbrvnat}
+
+
 % defines for consistent use
 \newcommand{\crexx}{\textsc{crexx}}
 \newcommand{\rexx}{R\textsc{exx}}
 \newcommand{\nr}{Net\textsc{rexx}}
-%% \newcommand{\nrpackagename}{\splice{java GetPackageName}}
-%% \newcommand{\minimalJVMversion}{8}
-%% \newcommand{\maximalJVMversion}{19ea}
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
-%% \newcommand{\thisyear}{\splice{java TexYear}}
 \newcommand{\tightlist}{}
 \newcommand{\Shaded}{\shaded}
 \newcommand{\msd}[1]{\msdhelper#1\relax}
@@ -123,14 +145,10 @@
   {\ifx\relax#1\else
     \ifx-#1--{}\else#1\fi
     \expandafter\msdhelper\fi}
-  \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
-  \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
-
-\newcommand{\simularelease}{12.00, date of release  9 aug 1985}
+\newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
+\newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
 
 %% the font used for tables
-%%\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono
-%%Pro}\small}
 \AtBeginEnvironment{longtable}{\fontspec{Avenir Next}\small}
 
 %% \setlength{\labelsep}{2em} % Distance between label and text
@@ -139,17 +157,62 @@
 \setlist[description]{font=\normalfont}
 
 \usepackage{sectsty}
-%% \partfont{\color{nrgreen}}
-\chapterfont{\fontspec{Avenir Light}}
-\sectionfont{\fontspec{Avenir Light}}
-\subsectionfont{\fontspec{Avenir Light}}
-\subsubsectionfont{\fontspec{Avenir Light}}
 
-\usepackage[Sonny]{fncychap}
+\chapterfont{\fontspec{Avenir Next}}
+\sectionfont{\fontspec{Avenir Next}}
+\subsectionfont{\fontspec{Avenir Next}}
+\subsubsectionfont{\fontspec{Avenir Next}}
+
+\definecolor{Heading}{HTML}{222222}
+\color{Heading}
+
+\usepackage{ragged2e}
+
+\newfontfamily\bignumberfont{Avenir Next}
+
+\newcommand{\chapnum}{%
+  \ifnum\value{chapter}<10
+    \thechapter
+  \else
+    \StrChar{\thechapter}{1}\kern-0.1em\StrChar{\thechapter}{2}%
+  \fi
+}
+
+\titleformat{\chapter}[display]
+  {\thispagestyle{plain}\normalfont}
+  {}
+  {0pt}
+  {%
+    \vspace*{0.9cm}%
+    \noindent
+    \makebox[\textwidth][r]{%
+      {\bignumberfont\addfontfeatures{Kerning=On}\fontsize{84}{84}\selectfont\bfseries\color{gray!15}\chapnum}%
+    }\\[-0.10em]%
+    \hspace*{0.00\textwidth}%
+    \begin{minipage}{0.90\textwidth}
+      \RaggedRight
+      \hyphenpenalty=10000
+      \exhyphenpenalty=10000
+      {\headingfont\fontsize{25}{27}\selectfont\bfseries\color{Heading}#1}\\[0.9em]%
+      {\color{gray!45}\rule{0.72\linewidth}{0.6pt}}%
+    \end{minipage}%
+  }
+
+\titlespacing*{\chapter}{0pt}{0pt}{2.8em}
 
 \raggedbottom
 
-\geometry{left=1in, top=1in, bottom=1in, right=1in}
+\geometry{
+  paperwidth=193mm,
+  paperheight=260mm,
+  top=25mm,
+  bottom=25mm,
+  inner=25mm,
+  outer=28mm,
+  bindingoffset=5mm
+}
+
+%% \geometry{left=1in, top=1in, bottom=1in, right=1in}
 \setstretch{1.2}
 \titlespacing*{\section}{0pt}{*1.5}{*0.5}
 \titlespacing*{\subsection}{0pt}{*1.2}{*0.4}
@@ -167,39 +230,76 @@
 the#1\endcsname\quad}}
 \makeatother
 
-%% use the heading fonts in the TOC
-%% \renewcommand{\cftsecfont}{\sffamily\bfseries} % Matches section font
-%% \renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+\titleformat{\section}
+  {\normalfont\Large\bfseries\sffamily}
+  {\makebox[18mm][l]{\thesection}}
+  {0mm}
+  {}
 
-\renewcommand{\cftpartfont}{\sffamily}
-\renewcommand{\cftchapfont}{\sffamily} % Matches section font
-\renewcommand{\cftchappagefont}{\sffamily} % Matches section font
-\renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsecfont}{\sffamily} % Matches section font
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\sffamily}
+  {\makebox[16mm][l]{\thesubsection}}
+  {0mm}
+  {}
+
+%% use the heading fonts in the TOC
+%% \renewcommand{\cftpartfont}{\sffamily}
+%% \renewcommand{\cftchapfont}{\sffamily} % Matches section font
+%% \renewcommand{\cftchappagefont}{\sffamily} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsecfont}{\sffamily} % Matches section font
+
+%% \renewcommand{\cftpartfont}{\headingfont}
+%% \renewcommand{\cftchapfont}{\headingfont} % Matches section font
+%% \renewcommand{\cftchappagefont}{\headingfont} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\headingfont} % Example for subsections
+%% \renewcommand{\cftsubsubsecfont}{\headingfont} % Example for subsections
+%% \renewcommand{\cftsecfont}{\headingfont} % Matches section font
+
+%% Use the main text font in the TOC
+\renewcommand{\cftpartfont}{\rmfamily}
+\renewcommand{\cftpartpagefont}{\rmfamily}
+\renewcommand{\cftchapfont}{\rmfamily}
+\renewcommand{\cftchappagefont}{\rmfamily}
+\renewcommand{\cftsecfont}{\rmfamily}
+\renewcommand{\cftsecpagefont}{\rmfamily}
+\renewcommand{\cftsubsecfont}{\rmfamily}
+\renewcommand{\cftsubsecpagefont}{\rmfamily}
+\renewcommand{\cftsubsubsecfont}{\rmfamily}
+\renewcommand{\cftsubsubsecpagefont}{\rmfamily}
+
+
+
+\renewcommand{\cfttoctitlefont}{%
+  \headingfont
+  \fontsize{28}{32}\selectfont
+  \bfseries
+  \color{Heading}%
+}
+
+\renewcommand{\cftaftertoctitle}{%
+  \\[0.9em]%
+  {\color{gray!45}\rule{0.56\textwidth}{0.6pt}}%
+  \vspace{1.8em}%
+}
 
 \titleformat{name=\chapter,numberless}[display]
-  %{\fontspec{Avenir Light}\filcenter} % formatting applied to the
-  % heading text
-    {\filcenter} % formatting applied to the heading text
+  {\thispagestyle{plain}\normalfont}
   {}
   {0pt}
-  %% {\titlerule \vspace{1ex} \fontspec{Avenir Light} } 
- {\titlerule \vspace{1ex} }  % code before the heading text
-
-\titlespacing*{name=\chapter,numberless}
-  {0pt}{-1cm}{1cm}  % left, before, after
-
-  \renewcommand{\contentsname}{\fontspec{Avenir Light}Contents}
-  \renewcommand{\indexname}{\fontspec{Avenir Light}Index}
-  \renewcommand{\listtablename}{\fontspec{Avenir Light}List of tables}
-  \renewcommand{\listfigurename}{\fontspec{Avenir Light}List of figures}
-  
-  \sectionfont{%
-    \hrule                % place a horizontal line
-    \vspace{1ex}%         % add some vertical space
-    \fontspec{Avenir Light}       % set section title size & style
+  {%
+    \vspace*{2.2cm}%
+    \noindent
+    \begin{minipage}{0.95\textwidth}
+      \RaggedRight
+      {\headingfont\fontsize{25}{27}\selectfont\bfseries\color{Heading}#1}\\[0.9em]%
+      {\color{gray!45}\rule{0.72\linewidth}{0.6pt}}%
+    \end{minipage}%
   }
+
+\titlespacing*{name=\chapter,numberless}{0pt}{0pt}{2.8em}
+
 
 % Make labels in description bold
 \setlist[description]{font=\bfseries}
@@ -222,3 +322,29 @@ the#1\endcsname\quad}}
   skipabove=\baselineskip,
   skipbelow=\baselineskip
 ]{terminaloutput}
+
+\lstdefinelanguage{text}{}
+\lstdefinelanguage{yacc}{}
+\newfontfamily\codefont{IBM Plex Mono}
+\newfontfamily\headingfont{Avenir Next}
+
+\definecolor{PartGrey}{gray}{0.92}
+\definecolor{PartRule}{gray}{0.55}
+
+\titleformat{\part}[display]
+  {\thispagestyle{empty}\normalfont}
+  {}
+  {0pt}
+  {%
+    \vspace*{0.25\textheight}%
+    \noindent\hspace*{0.12\textwidth}%
+    {\color{gray!60}\rule{2mm}{7cm}}%
+    \hspace{1.5cm}%
+    \begin{minipage}[b]{0.88\textwidth}
+      {\fontspec{Avenir Next}\fontsize{16}{20}\selectfont\color{gray}PART \thepart}\\[1.5em]
+      {\fontspec{Avenir Next}\fontsize{34}{38}\selectfont\bfseries #1}
+    \end{minipage}%
+  }
+
+\titlespacing*{\part}{0pt}{0pt}{0pt}
+

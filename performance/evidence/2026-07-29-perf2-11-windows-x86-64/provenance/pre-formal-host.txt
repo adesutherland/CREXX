@@ -1,0 +1,17 @@
+﻿captured_utc=2026-07-29T18:57:38.9215078Z
+captured_local=2026-07-29T19:57:38.9604536+01:00
+os=Microsoft Windows 11 Home
+os_version=10.0.26200
+os_build=26200
+system=Acer Aspire A515-56G
+memory_bytes=21243420672
+cpu=11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+physical_cores=4
+logical_processors=8
+max_clock_mhz=2419
+cpu_load_percent=4
+free_physical_memory_kib=9416760
+battery_status=2
+estimated_charge_percent=100
+active_power_scheme=Power Scheme GUID: f1d59edc-8b32-46bf-8471-1011851f06a3  (Acer)
+selected_benchmark_processes=

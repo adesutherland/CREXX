@@ -1,0 +1,5 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+Sieve,rxtvm,elapsed_ns,12,1090987000.000000,1078112500.000000,-2.738281,-1.511313,-1.151705,-0.183721,1.186033,-0.817226,-1.609128,-0.025323,clear_favorable,9,12,no
+Sieve,rxbvm,elapsed_ns,12,1072205000.000000,1067575000.000000,-2.353330,-0.878267,-0.277965,0.046956,2.479993,-0.202903,-1.029794,0.623988,noisy_inconclusive,9,12,no
+RexxCPS,rxtvm,benchmark_rate,12,44028351.500000,44156879.000000,-3.005776,-0.055497,0.297678,0.565675,1.509283,0.093013,-0.628121,0.814148,noisy_inconclusive,8,12,no
+RexxCPS,rxbvm,benchmark_rate,12,44362686.000000,44538953.500000,-2.221555,-0.569081,0.009247,0.607725,2.104576,0.039233,-0.690063,0.768528,noisy_inconclusive,7,12,no

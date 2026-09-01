@@ -1,0 +1,1 @@
+PASS: compact cross-runtime timing matrix retained under /tmp/crexx-perf3-03.TsP0ej/prefilter3-common-timing-append-01

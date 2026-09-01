@@ -1,0 +1,54 @@
+options levelb
+
+namespace e5worker expose add get identity fail spin churn loop_forever recurse_forever native_then_complete
+import e5native
+
+boot: initialiser expose state
+  state = 100
+
+add: procedure = .int expose state
+  arg amount = .string
+  state = state + amount
+  return state
+
+get: procedure = .int expose state
+  return state
+
+identity: procedure = .int
+  arg number = .string
+  return number + 0
+
+fail: procedure = .int
+  assembler signal "INVALID_ARGUMENTS", "persistent executor failure fixture"
+  return 0
+
+spin: procedure = .int
+  arg iterations = .string
+  total = .int
+  total = 0
+  do index = 1 to iterations
+    total = total + 1
+  end
+  return total
+
+churn: procedure = .int
+  arg iterations = .string
+  items = .string[]
+  do index = 1 to iterations
+    items[index] = "0123456789abcdef0123456789abcdef" || index
+  end
+  return items[0]
+
+loop_forever: procedure = .int
+  counter = .int
+  counter = 0
+  do forever
+    counter = counter + 1
+  end
+  return counter
+
+recurse_forever: procedure = .int
+  return recurse_forever()
+
+native_then_complete: procedure = .int
+  return pause()

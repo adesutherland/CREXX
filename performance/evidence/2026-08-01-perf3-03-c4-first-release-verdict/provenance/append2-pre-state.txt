@@ -1,0 +1,28 @@
+utc=2026-08-01T15:01:19Z
+purpose=governed 12-pair interval append for unresolved Base64/rxvm and RexxCPS/rxbvm only
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+16:01  up 18 days,  9:09, 1 user, load averages: 1.07 1.17 1.13
+29739 /bin/zsh -c verdict_root=$(cat /tmp/crexx-perf3-03-first-verdict-active-dir.txt)
+cp "$verdict_root/first-verdict-manifest-v1.txt" "$verdict_root/interval-append-v1.txt"
+perl -ni -e 'print unless /^base64-.*-rxbvm\|/ || /^rexxcps-.*-rxvm\|/' "$verdict_root/interval-append-v1.txt"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  printf '%s\n' 'purpose=governed 12-pair interval append for unresolved Base64/rxvm and RexxCPS/rxbvm only'
+  pmset -g batt | sed -n '1,3p'
+  pmset -g therm 2>&1 | sed -n '1,20p'
+  uptime
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+  shasum -a 256 "$verdict_root/timing-initial/samples.csv" "$verdict_root/timing-append-01/samples.csv" "$verdict_root/interval-append-v1.txt" "$verdict_root/build-candidate/bin/rxvm" "$verdict_root/build-candidate/bin/rxbvm"
+} > "$verdict_root/append2-pre-state.txt" 2>&1
+sed -n '1,10p' "$verdict_root/interval-append-v1.txt"
+sed -n '1,30p' "$verdict_root/append2-pre-state.txt"
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --manifest "$verdict_root/interval-append-v1.txt" --output-dir "$verdict_root/timing-append-02" --measurement timing --warmups 0 --runs 12 > "$verdict_root/append2-runner.stdout.txt" 2> "$verdict_root/append2-runner.stderr.txt"
+c4fbc1a9b91a0b910608e472e97e23e0b9a3ca2d506e3eb031785ac1ff28c1ce  /tmp/crexx-perf3-03-first-verdict.xCMBN2/timing-initial/samples.csv
+607f76f35bbcab7d2b81df049bdbbd1cef0b112e503ee25b6183078c68492f13  /tmp/crexx-perf3-03-first-verdict.xCMBN2/timing-append-01/samples.csv
+9230482c1a4f99a5bd3cd665106074a7a7a0061e241dbf089958b968b095b789  /tmp/crexx-perf3-03-first-verdict.xCMBN2/interval-append-v1.txt
+e80c75887e940d605d87761269bff0e556fb21c82cb176ff91a3d031b0bd54a5  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm
+0015c0843e30d43925b20c9e599461848b49362403f62707535dc95e7e98e04c  /tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm

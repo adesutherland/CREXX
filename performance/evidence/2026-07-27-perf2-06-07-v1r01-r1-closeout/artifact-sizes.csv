@@ -1,0 +1,13 @@
+size_bytes,path
+2802496,cmake-build-release/bin/rxc
+579736,cmake-build-release/bin/rxas
+145416,cmake-build-release/bin/rxlink
+998904,cmake-build-release/bin/rxvm
+999064,cmake-build-release/bin/rxbvm
+862504,cmake-build-release/bin/library.rxbin
+4864,cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+11773,cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin
+17175,cmake-build-release/tests/benchmarks/benchmark_awfy_bounce_opt.rxbin
+78742,cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin
+38233,cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin
+68446,cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin

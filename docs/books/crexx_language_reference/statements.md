@@ -2,53 +2,322 @@
 
 ## ADDRESS
 
-`ADDRESS` sends commands or function requests to a named external environment.
+The `ADDRESS` instruction is used to effect a temporary or permanent change to the
+destination of commands. Commands are strings sent to an external environment,
+and may be sent by clauses consisting of just an expression as well as
+by the `ADDRESS` instruction.
+
+To send a single command to a specified environment, an environment name fol-
+lowed by an expression is given. The expression is evaluated, and the resulting
+command string is submitted to the given environment. After execution of the
+command the previously selected environment will be unchanged.
+
+In cRexx, `ADDRESS` sends commands or function requests to a named external environment.
 It is implemented through the current compiler-exit and VM environment protocol.
+If no environment is selected, the default command environment is `CREXX`.
 
 Basic command form:
 
 ```rexx
-address system "echo hello"
+address crexx "echo hello"
 ```
 
 Command output and error streams can be captured:
 
 ```rexx
-address command "echo #42" output out error err
+address crexx "echo #42" output out error err
 say out
 ```
 
-The built-in `COMMAND`/`CMD`/`SYSTEM`/`SHELL` and `PATH` environments execute a
-program with parsed arguments; they are not an interactive shell parser. Simple
-quoted arguments are supported, but complex nested shell quoting should be
-passed to an explicit shell through stdin:
+The capture destination determines the representation:
+
+- a `.string` receives the stream text, including line-ending characters as
+  delivered by the selected environment;
+- a `.string[]` receives one element per newline-delimited record, without the
+  newline; an empty line is retained as an empty element; and
+- `OUTPUT` and `ERROR` are independent, so either or both may be a string or
+  string array.
+
+After the command returns, `rc` contains its integer status independently of
+whether either stream was captured. A successful command may produce no output;
+with fresh destinations that is an empty string or an array whose count is
+zero. Captured Unicode text remains Level B text. Quotes, brackets, semicolons,
+pipes, and similar delimiters in emitted text are data and receive no special
+interpretation from capture.
 
 ```rexx
-command_lines = .string[]
-command_lines[1] = "printf '%s\n' alpha beta"
-address command "sh" input command_lines output out error err
+input_lines = .string[]
+input_lines[1] = "echo first"
+input_lines[2] = "echo second"
+
+output_lines = .string[]
+error_text = .string
+address crexx "batch" input input_lines output output_lines error error_text
+
+if rc = 0 then do
+  do i = 1 to output_lines.0
+    say output_lines[i]
+  end
+end
 ```
 
-ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
-auto-expose syntax. Their command meaning belongs to the selected environment
-handler; the VM carries binding values and write-back updates.
+Array destinations are mutable append targets. Redirection adds each captured
+record after the array's current last element; it does not clear or replace
+existing elements. An empty stream adds nothing, so any existing elements
+remain. Command failure does not change this rule: emitted records are appended
+to the corresponding `OUTPUT` or `ERROR` array, while a stream that emits
+nothing leaves its array unchanged.
 
-The current native registration API is environment based:
+Use `arraydrop` immediately before each command when the array should contain
+only that command's records. `OUTPUT` and `ERROR` are independent arrays and
+must each be dropped when replacement-style reuse is required:
 
-```c
-rxvml_address_register_callback_environment(ctx, name, id,
-    command_cb, function_cb, userdata);
+```rexx
+output_lines = .string[]
+error_lines = .string[]
+
+call arraydrop output_lines
+call arraydrop error_lines
+address crexx "echo current" output output_lines error error_lines
 ```
 
-The old command-only callback registration form is retired.
+A fresh array needs no preliminary `arraydrop`. Reusing without a drop is the
+supported accumulation form, not an implicit reset operation.
+
+When `OUTPUT` or `ERROR` is omitted, that stream is written to the normal cRexx
+standard stream and flushed as the command emits it. This includes the
+corresponding child stream from `ADDRESS CREXX "run ..."`: no hidden capture
+is inserted before the inherited stream. Long-running child or later work does
+not delay already-emitted CREXX command output until command or task
+completion. A stream with an explicit `OUTPUT` or `ERROR` destination retains
+the requested string/array capture semantics.
+
+### Built-In Command Environments
+
+The built-in environments enable a specific use of the underlying operating system functionality.
+
+| Environment | Purpose |
+| --- | --- |
+| `CREXX` | The default cREXX command environment. It is cREXX-specific and OS-independent, implemented by cREXX rather than by a shell. |
+| `SYSTEM` | The platform command processor. On POSIX this is standard `sh -c`; on Windows this is `%COMSPEC% /D /S /C` with a `cmd.exe` fallback. |
+| `COMMAND`, `CMD` | Compatibility aliases for `SYSTEM`. |
+| `PATH` | Direct executable dispatch through the platform process API. It resolves executables through process `PATH` where needed and calls them without shell syntax. |
+| `SHELL` | Explicit configured shell dispatch. Set `CREXX_ADDRESS_SHELL` to the shell executable and optionally `CREXX_ADDRESS_SHELL_ARGS` to the argument list used before the command text. If unset, it falls back to the platform command processor defaults. |
+
+```rexx
+address system "echo one && echo two" output out error err
+address cmd "cd ."
+address path "rxas -h" output out error err
+```
+
+### CREXX Command Environment
+
+`CREXX` is the default addressable command environment, but it is not a shell implementation. It is a cRexx specific command environment with stable
+command names and cRexx defined return-code behaviour across supported operating
+systems. It does not interpret shell punctuation such as `;`, `&&`, `||`, or
+pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
+`ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
+characters are `--` are skipped; batch stops at the first non-zero return code.
+
+`cd`, `pushd`, and `popd` change the current VM worker's logical working
+directory. It persists for later `ADDRESS CREXX` commands in that VM and is
+copied into children launched by `run`, `PATH`, `SYSTEM`, or `SHELL`; it never
+temporarily changes the host process working directory. File commands resolve
+relative paths against the same logical directory. In contrast, `ADDRESS
+SYSTEM "cd path"` changes only that child command processor and does not update
+the worker's logical directory after the child exits.
+
+`setenv` and `unsetenv` likewise update a worker-owned environment overlay.
+`env`, `which`, configured-shell lookup, and child launch see the overlay, while
+unrelated VM workers and native host threads continue to see the unchanged
+process environment. A child receives an immutable merged environment snapshot.
+
+The command set is useful but bounded. cRexx command names are
+literal. Host-variable anchors are supported only in command operands. In the
+table below, `anchorable` means an operand may be a scalar anchor such as
+`:name` or `${name}`. An operand ending in `...` may also be supplied by a stem
+anchor such as `:name[]`, `:name.`, `${name[]}`, or `${name.}`, which expands
+to zero or more operands. For fixed-arity commands, a stem anchor is valid only
+when it expands to exactly the number of operands required at that point.
+
+| Command | Anchorable operands | Behavior |
+| --- | --- | --- |
+| `help` | None. | Print the command list. |
+| `echo [text...]` | `text...` may use scalar or stem anchors. | Write text followed by a newline. |
+| `pwd` | None. | Print the current VM worker's logical working directory. |
+| `cd [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Change the worker's logical working directory; no path means the user's home directory where known. |
+| `pushd path` | `path` may use a scalar anchor, or a one-item stem anchor. | Push the current directory and change to `path`. |
+| `popd` | None. | Return to the most recent pushed directory. |
+| `ls [path...]`, `dir [path...]` | `path...` may use scalar or stem anchors. | List directory entries, excluding `.` and `..`. |
+| `exists path...` | `path...` may use scalar or stem anchors. | Print `1 path` or `0 path` for each path; returns non-zero if any are missing. |
+| `stat path...` | `path...` may use scalar or stem anchors. | Print type, size, and modification time for each path. |
+| `mkdir [-p] path...` | `-p` may be literal or scalar-anchored; `path...` may use scalar or stem anchors. | Create directories; `-p` creates missing parents. |
+| `rmdir path...` | `path...` may use scalar or stem anchors. | Remove empty directories. |
+| `rm [-r] path...`, `del [-r] path...` | `-r` may be literal or scalar-anchored; `path...` may use scalar or stem anchors. | Remove files, or recursively remove paths with `-r`. |
+| `copy source target`, `cp source target` | `source` and `target` may use scalar anchors, or one stem anchor that expands to both operands. | Copy a file. |
+| `move source target`, `mv source target`, `rename source target` | `source` and `target` may use scalar anchors, or one stem anchor that expands to both operands. | Rename or move a path. |
+| `touch path...` | `path...` may use scalar or stem anchors. | Create files if missing and update modification times. |
+| `cat path...`, `type path...` | `path...` may use scalar or stem anchors. | Write file contents to the command output stream. |
+| `head [-n count] path` | `count` and `path` may use scalar anchors; a stem anchor must expand to the exact option/value/path shape. | Write the first lines of a file; default count is 10. |
+| `tail [-n count] path` | `count` and `path` may use scalar anchors; a stem anchor must expand to the exact option/value/path shape. | Write the last lines of a file; default count is 10. |
+| `lines [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Count lines in a file, or in redirected command input when no path is supplied. |
+| `write path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Replace a file with the supplied text. |
+| `append path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Append the supplied text to a file. |
+| `which command` | `command` may use a scalar anchor, or a one-item stem anchor. | Resolve an executable through the worker environment's `PATH`. |
+| `now [local\|utc]`, `date [local\|utc]` | `local`/`utc` may be literal or scalar-anchored. | Print an ISO-like timestamp. |
+| `sleep seconds` | `seconds` may use a scalar anchor. | Sleep for the requested duration. |
+| `platform`, `os` | None. | Print operating-system and architecture details. |
+| `env [name...]` | `name...` may use scalar or stem anchors. | Print all environment variables, one variable's value, or `name=value` lines for multiple names. |
+| `setenv name value...` | `name` may use a scalar anchor, or a stem anchor whose first item is the name. `value...` may use scalar or stem anchors and is joined with spaces. | Set a variable in the current worker's environment overlay. |
+| `unsetenv name...` | `name...` may use scalar or stem anchors. | Hide one or more variables in the current worker's environment overlay. |
+| `pid` | None. | Print the current cREXX process id. |
+| `ps [pid]` | `pid` may use a scalar anchor. | Print current process details, or check whether a process id is alive. |
+| `kill pid [signal]` | `pid` and `signal` may use scalar anchors. | Terminate or signal a process. |
+| `resolve host` | `host` may use a scalar anchor. | Resolve host names to numeric addresses. |
+| `tcp host port` | `host` and `port` may use scalar anchors, or one stem anchor that expands to both operands. | Check that a TCP connection can be opened. |
+| `batch` | None in the `batch` command itself; input lines are runtime text and are not compiler auto-exposed. | Read commands from input and execute them in order. |
+| `run executable [arg...]` | `executable` may be literal or scalar-anchored. `arg...` may use scalar or stem anchors. `run :argv[]` is also accepted: the first stem item is the executable and the remaining items are arguments. The word `run` itself must be literal. | Execute a direct `PATH` command and forward its output and error streams. |
+
+Anchors must occupy a whole parsed operand. For example, `cat :file` expands
+`:file`, but `--file=:file` is a literal operand. Build combined operands in
+Rexx first, then pass the result with a scalar anchor. Stem anchors preserve
+each item as one operand, even when an item contains spaces or shell punctuation
+such as `&&`.
+
+### Argument-Vector Execution
+
+The argv-preserving command path is `ADDRESS CREXX "run :argv[]"`. The first
+array element is the executable and every later element is exactly one child
+argument. Empty elements remain empty arguments; whitespace, quotes, Unicode,
+wildcards, variable-like text and shell metacharacters are not split, expanded
+or executed. The child is launched directly through the platform process API.
+
+```rexx
+argv = .string[]
+argv[1] = executable
+argv[2] = "value with spaces"
+argv[3] = ""
+argv[4] = "; && | * ?"
+
+out = .string[]
+err = .string[]
+address crexx "run :argv[]" output out error err
+say rc
+```
+
+This is intentionally distinct from `ADDRESS COMMAND`, `ADDRESS SYSTEM`, and
+`ADDRESS CMD`: those environments accept one command string and invoke the
+platform command processor. Use them only when shell parsing is required. The
+`PATH` environment is direct process dispatch too, but accepts parsed command
+text; use `CREXX run :argv[]` when exact argument boundaries matter.
 
 ## ARG
 
-See Procedures and Arguments Section
+The ARG statement receives the arguments to programs or procedures and specifies the number of (required and optional) arguments and the expected types. In cRexx level B, it is *not* a short form of PARSE UPPER ARG but a seperate statement. 
+
+See the [Procedures and Arguments](procedures-and-arguments) section on page \pageref{procedures-and-arguments} for more information.
 
 ## CALL
 
 CALL routine \[ parameter \] \[, \[ parameter \] ... \] 
+
+`CALL` invokes a procedure, function, or method for its side effects and
+discards any returned value. In a class method, an unqualified method name is a
+call on the current receiver, in the same way that `rc = append(value)` calls
+the current receiver and keeps the result:
+
+```rexx
+fromArray: method = .int
+  arg list = .object[]
+  call clear()
+  loop i = 1 to list[0]
+    rc = append(list[i])
+  end
+  return 0
+```
+
+A qualified receiver can also be used:
+
+```rexx
+call list.add("red")
+```
+
+The receiver may be a postfix expression, including an indexed value, a
+parenthesized expression, a factory or function result, or an earlier method
+result:
+
+```rexx
+call lists[index].add("red")
+call makeList().add("blue")
+call makeContainer().list().clear()
+```
+
+The receiver expression and each argument are evaluated once in normal call
+order. If the method mutates a variable-like receiver such as `lists[index]`,
+the changed object is written back through that same selected location. The
+method's returned value, if any, is discarded by `CALL`.
+
+Use an expression call when the returned value is required.
+
+## Array Mutation
+
+Level B supports core statement forms for mutating one-dimensional dynamic raw
+typed arrays:
+
+```rexx
+append items with value
+insert items with value at index
+remove items at index
+remove items at index for count
+remove items at first to last
+clear items
+```
+
+The target must currently be a raw dynamic array such as `.string[]` or
+`.int[]`. Appended or inserted values must be assignable to the array element
+type, and index/count/range expressions must be integers. Fixed-size arrays,
+multi-dimensional arrays, and object/interface collection targets are not part
+of this first implementation phase.
+
+```rexx
+items = .string[]
+append items with "red"
+append items with "blue"
+insert items with "green" at 2
+remove items at 1
+clear items
+```
+
+`append`, `insert`, `remove`, `clear`, and `at` are contextual in this statement
+surface; method calls such as `list.append(value)` and variables named `at`
+remain ordinary symbols outside these statement forms.
+
+## CONSTANT
+
+Level B supports named compile-time constants:
+
+```rexx
+flags: procedure = .int
+  constant FLAG_STRING = 0x00010000
+  constant PAYLOAD = "41424344"x as .binary
+  return FLAG_STRING
+```
+
+Constants must be declared inside an explicit procedure, method, or factory
+scope. A `constant` declaration in the file body is a design defect and is not
+part of the Release 1 surface, because it is an instruction form and can
+accidentally imply an implicit `main()` in a library-shaped module.
+
+When a script needs shared constants in a separate declaration procedure, put the
+script body in an explicit `main`. A procedure body continues until the next
+callable boundary, so executable statements after a declaration procedure belong
+to that procedure unless a new `main: procedure` boundary is present.
+
+The initializer must be a compile-time constant expression. The declared name is
+immutable after declaration and can be used in ordinary expressions in its
+visible scope or as an inline assembler literal operand. Integer constants used
+as assembler immediates are substituted directly; string, decimal, float, and
+binary payload constants are stored through the normal RXBIN constant-pool path.
 
 ## DO/END
 
@@ -106,7 +375,20 @@ This statement terminates the innermost, active loop. If symbol is specified, it
 
 NOP ;
 
-The NOP instruction is the "null operation" directive; it executes without performing any operation.
+The NOP instruction is the *No Operation* directive; it executes without performing any operation. It is syntactically valid but intentionally does nothing. It exists primarily as a placeholder, in the following cases:
+
+- as a placeholder while developing or debugging;
+- in generated code where an empty statement is needed;
+- to make an intentionally empty branch explicit rather than accidental
+
+This example shows how a branch can be temporarily disabled while developing by inserting a `nop` statement:
+
+```rexx <!--nopexample.crexx-->
+if retries > 0 then
+    nop               /* retry logic temporarily disabled */
+else
+    call abortTransfer
+```
 
 ## OPTIONS
 
@@ -121,6 +403,16 @@ PARSE \[ option \] \[ CASELESS \] type \[ template \] ;
 Current implementation status:
 
 * `PARSE VALUE ...`, `PARSE VAR ...`, and `PARSE ARG ...` are implemented through the certified `PARSE` exit.
+* `PARSE VERSION template` uses the result of the `version()` built-in function
+  as its source and applies the normal PARSE template rules. For example,
+  `PARSE VERSION one` keeps the complete version string in `one`, while
+  `PARSE VERSION one two` assigns successive words to `one` and `two`.
+* `PARSE SOURCE template` uses the result of the `sourceinfo()` built-in
+  function as its source and applies the normal PARSE template rules. The
+  source string contains the system, invocation mode, and source file name.
+* These forms are supported in both Level G and Level B source. Their internal
+  certified lowering may use Level B instructions; that compiler detail does
+  not permit an authored `ASSEMBLER` statement in Level G source.
 * `PARSE ARG` uses the current procedure's `arg()` compatibility view.
 * In implicit `main`, that means command-line arguments.
 * In other procedures, that means the `...` tail if present, or an empty source string if there is no `...` tail.
@@ -156,6 +448,33 @@ proc2: procedure = .void expose var
 
 This is distinct from `ARG expose`, which exposes a call argument by reference.
 
+## INITIALISER
+
+`INITIALISER` declares a private procedure that the VM runs automatically
+before its mutable module instance becomes executable.
+
+```rexx
+name: initialiser
+name: initialiser expose state cache
+```
+
+A module may contain zero or more initializers. They run once per mutable
+module instance in declaration order. An initializer has no arguments and an
+implicit `.void` return type. It may use a bare `return`, but it cannot declare
+`arg` parameters or return a value.
+
+The label has the module's normal namespace-qualified identity in metadata and
+diagnostics, but it is not a callable or exportable procedure. A direct call to
+the label and a file-level `namespace ... expose` of the label are compile
+errors. The optional initializer-level `expose` clause binds module-global
+variables into the initializer body; it does not expose the initializer itself.
+
+The VM runs initializers after native-provider resolution, linking, and
+execution-image preparation, and before `main` or a public host call. A call
+from an initializer into an unready module initializes the target module first;
+an initialization cycle fails rather than entering a partially initialized
+module.
+
 ## SAY
 
 SAY \[ expr \] ;
@@ -163,6 +482,63 @@ SAY \[ expr \] ;
 Evaluates the expression expr and prints the resulting string onto the standard output stream.[^newline]
 
 [^newline]: with an added newline. For cases where no newline is wanted, the conventional way of using `call lineout` can be used, or the `sayx` assembler instruction.
+
+## MSAY
+
+MSAY mask, value-1, value-2, ...
+
+Example:
+
+```rexx <!--msayexample.crexx-->
+options levelb comments_dash numeric_classic
+import rxfnsb
+numeric digits 15
+b=.decimal;c=.decimal;p=.decimal
+n=.decimal;mn=.decimal
+b = 963807195502/100
+c = 180945931154/100
+p = 0.081090
+n = 30
+-- COMPUTE MN = (1 + P) ** N
+mn = (1+p) ** n
+-- COMPUTE B = (B + C) * MN + C * ( (MN - 1) / P - 1) .
+b = (b+c) * mn + c * (( mn - 1) / p - 1)
+msay "$$$,$$$,$$$,$$$,$$9.99.",b  
+```
+
+<!--splice--crexx msayexamplenep-->
+
+`MSAY` is a convenience syntax that formats values using `fmtmask` and immediately outputs the resulting line. The facility is intended for report-style output where fixed-width text and numeric alignment are desirable. See [MSAY and fmtmask](msay-and-fmtmask) on page \pageref{msay-and-fmtmask} for the complete template syntax.
+
+## FSAY
+
+`FSAY` is a convenience syntax that formats the template using `fsayfmt()` and
+outputs the resulting line.
+
+Unlike `fmtmask` and `MSAY`, which use COBOL-inspired picture masks,
+`fsayfmt` uses embedded placeholders similar to modern string interpolation
+systems.
+
+
+```rexx
+FSAY template
+```
+
+The template may contain one or more placeholders enclosed in braces.
+
+Example:
+
+```rexx <!--fsayexample.crexx-->
+name  = "Fred"
+qty   = 12
+price = 64.31
+
+FSAY "Name: {name:<10} Qty: {qty:>3} Price: {price:8.2}"
+```
+
+<!--splice--crexx fsayexample-->
+
+See [fsay and fsayfmt](fsay-and-fsayfmt) on page \pageref{fsay-and-fsayfmt} for the complete template syntax.
 
 ## SELECT/WHEN/OTHERWISE
 
@@ -210,8 +586,9 @@ handle_conversion: procedure = .signalaction
 ```
 
 The handler procedure receives one `.signal` argument and returns a
-`.signalaction`: `.signalaction.skip()`, `.signalaction.retry()`, or
-`.signalaction.fail()`.
+`.signalaction`: `.signalaction.skip()` or `.signalaction.fail()`. Retrying
+work requires an explicit source-level loop; instruction-level retry is not a
+handler action.
 
 Block-scoped handlers use `ON SIGNAL` clauses on a simple `DO ... END` group:
 
@@ -316,7 +693,16 @@ self-contained source-step metadata, and text TRACE no longer guesses
 assignment results from source text. Result coverage is still deliberately
 partial: optimized-away or folded values may have no trace event, and some
 compound-variable details such as final resolved-name reporting remain a
-compiler/runtime coverage task.
+compiler/ runtime coverage task.
+
+TRACE reports the executable program after optimisation. Folding, fusion,
+inlining, elimination and code motion or loop hoisting can therefore change,
+remove or relocate trace events. This does not affect ordinary program
+semantics, and retained events must still read the correct available value, but
+optimised trace output is not required to match the unoptimised event stream.
+For the closest correspondence to authored execution, use
+`crexx --nooptimise`, or disable both stages explicitly with `rxc -n` and
+`rxas -n`. The beta coverage limits above still apply.
 
 `TRACE LLM` is a cRexx extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted
@@ -366,8 +752,7 @@ TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
-The cRexx standard-library/BIF build deliberately compiles most  
-`lib/rxfnsb/rexx/*.crexx` files with compiler exits disabled (`rxc -x`) to avoid
+The cRexx standard-library/BIF build deliberately compiles most built-in function source files with compiler exits disabled (`rxc -x`) to avoid
 bootstrap and circular-dependency problems while building the library that the
 exits themselves use. Adding `TRACE RESULTS`, `TRACE R`, or another explicit
 TRACE instruction directly to a BIF source file such as `abs.crexx` therefore
@@ -377,126 +762,5 @@ exits enabled, use `TRACE UNSUPPRESS NAMESPACE rxfnsb` if you need to see
 library frames, and keep linked/native images unstripped with
 `--link-keep-source` when source-level TRACE metadata is needed.
 
-Implementation status and compatibility requirements are tracked in
+Implementation status and compatibility requirements are tracked in  
 `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
-
-# Procedures and Arguments
-
-## Procedure-Level Expose
-
-`procedure expose` is the local procedure form for sharing module-global state:
-
-```rexx
-main: procedure
-  call proc1
-  call proc2
-  say "but var in main is" var
-  return
-
-proc1: procedure = .void expose var
-  var = "Hello World"
-  return
-
-proc2: procedure = .void expose var
-  say "var is" var
-  return
-```
-
-Here `proc1` and `proc2` share the exposed global `var`. `main` does not list
-`var`, so its bare `var` reference is not the same exposed variable. To let
-`main` read or write the shared value, declare `main: procedure expose var` as
-well.
-
-The `expose` list follows the return type if a return type is present. The
-items in the procedure-level list are bare variable names:
-
-```rexx
-worker: procedure = .int expose state errors
-```
-
-For globally published module variables, prefer file-level
-`namespace name expose var`; those namespace-exposed globals auto-bind into
-procedures in the same source file.
-
-## Function Arguments
-
-Arguments can be passed to a procedure by reference or by value. When an argument is passed by reference, the procedure can modify the original variable that was passed to it. When an argument is passed by value, a copy of the variable is passed to the procedure, and any changes made to the copy do not affect the original variable.
-
-The user-visible rules are:
-
-* Plain `ARG name = type` is pass by value.
-* `ARG expose name = type` is pass by reference.
-* Pass-by-value semantics are defined by caller visibility, not by the VM calling convention. If the callee writes to a by-value formal, the caller must still observe its original value after the call.
-* This applies equally to simple values, arrays, and class/object references. Rebinding or mutating a by-value formal must not leak back to the caller's variable.
-* The compiler is allowed to optimise away an internal defensive copy only when that cannot change caller-visible behaviour, for example when the formal is provably read-only or when the actual value is a temporary expression that has no caller-side symbol to preserve.
-* If the caller wants the callee to update the original variable, the parameter must be declared with `expose`.
-
-By example:
-
-ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
-
-* Arg a1 is an optional integer (and 0 if not specified in the call)  
-* Arg a2 is a mandatory integer (pass by value)  
-* Arg a3 is a mandatory class aclass pass by reference  
-* Arg a4 is an optional class aclass pass by value; the default expression is the bare typed class value `.aclass`, not a factory call
-* Arg a5 is an array of strings and is one way to allow an arbitrary number of strings to be passed to the procedure (see also Ellipsis later)
-
-Optional defaults evaluate exactly as written. Use `?x = .SomeClass` for the
-bare typed class value and `?x = .SomeClass()` to call the default factory.
-
-Examples:
-
-```rexx
-bump: procedure = .int
-  arg value = .int
-  value = value + 1
-  return value
-
-x = 10
-say bump(x)
-say x           /* still 10 */
-```
-
-```rexx
-bumpref: procedure = .void
-  arg expose value = .int
-  value = value + 1
-  return
-
-x = 10
-call bumpref(x)
-say x           /* now 11 */
-```
-
-## Ellipsis (...)
-
-The last arguments declaration can be an ellipsis ('...'), this is used to show that 0 or more arguments can be provided. For example:
-
-ARG a1 \= 0, a2 \= .int, ... \= .string
-
-* The '...' shows that an arbitrary number of .string arguments can be added to the end of the call.  
-* The ? operator exist to access & query arguments:  
-* ?a1 returns true if the optional arg a1 was specified.  
-* ?a2 will always be true as a2 is not optional.
-
-Pseudo Array arg allows access to the '...' arguments. Also see the Arrays section.
-
-* arg\[1\] or arg.1 gives the first '...' argument. These can signal OUTOFRANGE  
-* arg\[0\], arg\[\], arg.0 or arg. return the number of '...' arguments
-* In a procedure without a `...` tail, the count forms return `0`
-
-The type of this Pseudo is the type of the '...' argument
-
-## arg() Operator
-
-The compatibility arg() operator is designed to provide some compatibility with Classic Rexx; by example:
-
-* arg() is equivalent to arg.0 etc. Type Integer.  
-* arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal OUTOFRANGE  
-* arg(4,E), arg(4,"E"), arg(4,Exxx), arg(4,"Exxx") etc. all return 1 (true) if there were 4 or more '...' arguments given or 0 (false) otherwise. E is Exists.  
-* Likewise arg(4,'O') etc. (O is Omitted) is equivalent to \~arg(4,'E').
-* In a procedure without a `...` tail, `arg()` returns `0` and the `E`/`O` probe forms operate on that empty tail
-
-## Implicit Main Procedure
-
-In the event that a module file contains instructions preceding a `PROCEDURE` instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.

@@ -1,0 +1,4 @@
+route,main_input_instructions,main_output_instructions,all_static_instructions,main_locals,code_segment_hex,image_bytes,first_epoch_ssa_bytes,first_epoch_work,route_selected
+s0,380,369,1214,103,0xf58,68449,83902504,10606,0
+s1,381,366,1211,104,0xf4f,68353,83902520,10976,4
+h1,380,365,1210,104,0xf48,68377,83902504,16715,4

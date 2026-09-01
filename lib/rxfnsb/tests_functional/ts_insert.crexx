@@ -1,102 +1,55 @@
-/* rexx test abs bif */
+/* Focused Level B INSERT tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+new_string = "123"
+target = "abc"
 
-x='CREXX is faster than BREXX'
+errors = errors + check(insert(new_string, target) = "123abc", "default insertion")
+errors = errors + check(insert(" ", "abcdef", 3) = "abc def", "middle insertion")
+errors = errors + check(insert(new_string, target, 5, 6) = "abc  123   ", "blank extension and formatting")
+errors = errors + check(insert(new_string, target, 5, 6, "+") = "abc++123+++", "explicit padding")
+errors = errors + check(insert(new_string, target, 0, 5, "-") = "123--abc", "formatted prefix")
+errors = errors + check(insert("abc", "def", 2) = "deabcf", "position is characters before insert")
+errors = errors + check(insert("abc", "def", 2, 1) = "deaf", "truncated insertion")
+errors = errors + check(insert("abc", "def", 2, 0) = "def", "zero length is identity")
+errors = errors + check(insert(new_string, target, , 5, "-") = "123--abc", "omitted position with later arguments")
+errors = errors + check(insert("日", "aéb", 2) = "aé日b", "Unicode character position")
+errors = errors + check(insert("X", "ab", 4, 3, "·") = "ab··X··", "Unicode pad and target extension")
+errors = errors + check(new_string = "123" & target = "abc", "arguments are not mutated")
 
-if insert('much',x,10,10) \= "CREXX is fmuch      aster than BREXX" then do
-  errors=errors+1
-  say 'INSERT failed in test 1' insert('much',x,10,10)
+caught = 0
+do
+  ignored = insert("x", "abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if insert('much ',x,10) \= 'CREXX is fmuch aster than BREXX' then do
-  errors=errors+1
-  say 'INSERT failed in test 2' insert('much ',x,10)
+do
+  ignored = .string
+  ignored = insert("x", "abc", 0, -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if insert('The new ',x,1) \= 'CThe new REXX is faster than BREXX' then do
-  errors=errors+1
-  say 'INSERT failed in test 3' insert('The new ',x,1)
+do
+  ignored = .string
+  ignored = insert("x", "abc", 0, 1, "")
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if insert(' ,isn"t it?',x,27) \= 'CREXX is faster than BREXX  ,isn"t it?' then do
-  errors=errors+1
-  say 'INSERT failed in test 4' insert(' ,isn"t it?',x,27)
+do
+  ignored = .string
+  ignored = insert("x", "abc", 0, 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
 end
+errors = errors + check(caught = 4, "position, length, and pad failures use signals")
 
-/* These from TRL */
+if errors = 0 then say "PASS: insert"
+return errors <> 0
 
-if insert(' ','abcdef',3) \= 'abc def' then do
-    errors=errors+1
-  say 'INSERT failed in test 5'
-end
-
-if insert('123','abc',5,6) \= 'abc  123   ' then do
-    errors=errors+1
-  say 'INSERT failed in test 6'
-end
-
-if insert('123','abc',5,6,'+') \= 'abc++123+++' then do
-    errors=errors+1
-  say 'INSERT failed in test 7'
-end
-
-/* if insert('123','abc') \= '123abc' then do */
-/*     errors=errors+1 */
-/*   say 'INSERT failed in test 8' */
-/* end */
-
-if insert('123','abc') \= '123abc'                then do
-    errors=errors+1
-  say 'INSERT failed in test 9'
-end
-
-if insert('123','abc',,5,'-') \= '123--abc'       then do
-      errors=errors+1
-  say 'INSERT failed in test 10'
-end
-
-/* These from Mark Hessling. */
-if insert("abc","def") \=  "abcdef" then do
-      errors=errors+1
-  say 'INSERT failed in test 11'
-end
-
-if insert("abc","def",2) \=  "deabcf" then do
-      errors=errors+1
-  say 'INSERT failed in test 12'
-end
-
-if insert("abc","def",3) \=  "defabc" then do
-      errors=errors+1
-  say 'INSERT failed in test 13'
-end
-
-if insert("abc","def",5) \=  "def  abc" then do
-      errors=errors+1
-  say 'INSERT failed in test 14'
-end
-
-if insert("abc","def",5,,'*') \=  "def**abc" then do
-      errors=errors+1
-  say 'INSERT failed in test 15'
-end
-
-if insert("abc" ,"def",5,4,'*') \=  "def**abc*" then do
-      errors=errors+1
-  say 'INSERT failed in test 16'
-end
-
-if insert("abc","def",,0) \=  "def"       then do
-      errors=errors+1
-  say 'INSERT failed in test 17'
-end
-
-if insert("abc","def",2,1) \=  "deaf"     then do
-      errors=errors+1
-  say 'INSERT failed in test 18'
-end
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: INSERT" label
+  return 1

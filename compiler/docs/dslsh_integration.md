@@ -102,6 +102,12 @@ then calls the same cREXX parser-mode entry point. The committed parser mirror
 and the editor's real `CodeBuffer` version are not advanced. This is intended
 for completion previews and similar "what would this look like?" queries.
 
+Before the initial parse completes, `rxc` answers DSLSH's `C|EP` request with
+seed rules for `.rexx`, `.rex`, `.crexx`, `.crx`, and `.the`. This parser-owned
+configuration is the bootstrap path for a new or empty buffer. Rules learned
+from an authoritative parse remain local to that document's `CodeBuffer`, as
+defined by DSLSH's emergency-parsing contract.
+
 ## Manual Parser-Mode Testing
 
 The ctest syntax-highlighting fixtures use DSLSH's `parser_tester` tool. The
@@ -123,6 +129,31 @@ logging:
 ```sh
 /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc --syntaxhighlight
 ```
+
+For `.rxpp` editor buffers, the prototype parser command is `rxpp-sh`. It writes
+the active RXPP buffer to a temp file, runs RXPP, parses the generated CREXX
+through the compiler parser, and maps source-map diagnostics back onto the
+original RXPP buffer.
+
+`rxpp-sh` now emits an authoritative shallow RXPP token pass over the original
+editor buffer before applying generated-code diagnostics. That token pass
+recognizes RXPP directive keywords, local `##define` / `##MACRO` macro names,
+macro calls to those local names, compile-time directive constants, `{name}`
+macro variables, comments, strings, ordinary CREXX keywords, identifiers,
+numbers, and operators. It is not yet a full RXPP semantic model and does not
+project generated CREXX semantic tokens back onto authored RXPP text.
+
+`rxpp-sh` honors `RXPP_SH_RXPP` and `RXPP_SH_MACLIB` overrides. Without those
+overrides it first uses the build-tree `rxpp` and staged `maclib.rexx` when
+available, then falls back to `rxpp` and `maclib.rexx` on the process search
+path/current directory. The wrapper redirects RXPP stdout/stderr away from the
+DSLSH protocol stream.
+
+The `.rxpp` emergency parser configuration still uses DSLSH's generic
+`prefix_tokens` and `span_tokens` rules so `##` directive lines and `{name}`
+macro variables have fast feedback while the full RXPP/rxc parse runs. It
+deliberately does not treat every `#` as a line comment because that masks RXPP
+directives.
 
 Level C parser-mode support now uses the dedicated Classic REXX scanner, glue,
 Lemon grammar, and validation path documented in
@@ -149,6 +180,48 @@ cREXX parser mode currently uses these DSLSH concepts:
 There is no separate hover, completion, code-action, or streaming side channel
 in the current integration. The editor receives one parse-result snapshot per
 request.
+
+## Coordinate Model
+
+DSLSH `CB_Node.pos` and `CB_Node.length` are editor character positions in the
+current `CodeBuffer`, not byte offsets. cREXX source-map diagnostics are being
+projected into that model, so the required contract is:
+
+- byte offsets are compiler/lexer internals only;
+- source-map columns and diagnostic columns crossing into DSLSH must be Unicode
+  scalar offsets in the authored source line;
+- THE display columns and grapheme width are a separate UI concern;
+- all byte-to-character conversion must happen at explicit compiler/DSLSH
+  boundaries.
+
+ASCII source-map tests are reliable today. Non-ASCII column behavior remains a
+known baseline blocker across RXPP source maps, diagnostics, `.srcstep`, RXAS
+style/source-step output, and THE ranges until the remaining compiler-side
+byte-pointer call sites are converted to that contract. The cREXX parser-mode
+highlighter itself now performs its repeated whole-source projections through
+the indexed, exact-boundary path described below; that does not by itself close
+the broader source-map audit.
+
+### Position and token indexing
+
+Parser mode constructs a DSLSH `CB_UTF8PositionIndex` for each immutable source
+used during one request. ASCII sources use direct byte/codepoint identity and
+allocate no boundary vector. Unicode sources store exact codepoint boundaries
+and use order-independent binary lookups. The index preserves the existing
+rejection of a span boundary that falls inside a multibyte character.
+
+The controller also projects the authoritative cREXX token list once into a
+position-sorted vector. The missing-token callback then performs a binary
+lookup at the requested DSLSH position instead of restarting at
+`context->token_head` and reconverting every preceding token. Both indexes are
+request-local and are freed before the parse context or source storage is
+released. If index preparation cannot allocate, the controller retains the
+compatible stateless conversion/token-scan fallback.
+
+This indexing is part of parser-mode correctness and responsiveness, not a
+wire-protocol change. Parser adapters with only a few byte spans may continue
+to use `cb_utf8_byte_span_to_codepoint_span()` directly; adapters projecting a
+whole token stream should reuse a `CB_UTF8PositionIndex`.
 
 ## cREXX to DSLSH Mapping
 
@@ -359,6 +432,15 @@ The current implementation is spread across a small number of files:
 - `message_code` for stable diagnostic identifiers,
 - broader use of `identifier_id` for more symbol categories and editor actions.
 
+### Available in DSLSH and used by `rxpp-sh`
+
+- emergency parser `prefix_tokens` for same-line directive-like constructs,
+- emergency parser `span_tokens` for same-line delimited constructs such as
+  RXPP `{name}` macro variables,
+- macro token kinds for authoritative RXPP source tokens:
+  `LEXER_MACRO_IDENTIFIER`, `LEXER_MACRO_VARIABLE`, and
+  `LEXER_MACRO_CONSTANT`.
+
 ### Likely needs DSLSH protocol or editor-model work
 
 - multiple diagnostics per position or per leaf,
@@ -370,6 +452,11 @@ The current implementation is spread across a small number of files:
 - code actions or fix-its with replacement ranges,
 - richer semantic token kinds than the current DSLSH leaf enum,
 - progressive analysis updates instead of one parse-result snapshot,
+- parser-request debounce/cancellation and generated-source dependency
+  invalidation hooks,
+- multi-buffer diagnostic overlays for included RXPP source files,
+- projection of generated CREXX semantic tokens back onto authored RXPP source
+  spans,
 - AI-driven editor messages that arrive in several updates or revisions.
 
 ### Likely cREXX follow-up work
@@ -381,4 +468,7 @@ The current implementation is spread across a small number of files:
 - keep Level C parser-mode fixtures in lockstep with tree-surgery lowering so
   the highlighter remains the static syntax canary,
 - expand source-owned semantic metadata so hover, completion, and navigation can
-  reuse the same source-tree path.
+  reuse the same source-tree path,
+- replace the shallow `rxpp-sh` RXPP token pass with a richer RXPP source model
+  if macro-aware semantic highlighting needs definition-site, expansion-site,
+  and generated-CREXX provenance in one tree.

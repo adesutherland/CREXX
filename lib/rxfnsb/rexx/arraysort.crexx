@@ -27,71 +27,126 @@ options levelb
 
 namespace rxfnsb expose arraysort
 
-/* ----------------------------------------------------------------------
- * ArraySort
+/**
+ * Sort a string array in place by a substring key.
  *
- * Shell sort for a CREXX string array.
- *
- * The array is sorted lexically (case-sensitive) using
- *     substr(element, offset)
- * as the comparison key, allowing sorting on a substring within
- * each element (e.g. fixed-format records).
- *
- * ARRAY CONVENTION
- *   - a[0] holds the element count (maintained automatically)
- *   - elements are stored in a[1] .. a[a[0]]
- *
- * PARAMETERS
- *   a      : .string[]  Array to be sorted
- *   offset : integer   1-based character position for the sort key (default 1)
- *   order  : string    'ASC' (default) or 'DESC'
- *
- * IMPLEMENTATION NOTES
- *   - Classic Shell sort with gap halving
- *   - Gapped insertion sort per pass
- *   - Integer division for gap calculation is enforced via IDIV
- *     to avoid dependency on numeric mode semantics
- *
- * RETURNS
- *   The number of sorted elements, if <0 an error occurred
- * ----------------------------------------------------------------------
+ * @param a exposed one-based string array to mutate
+ * @param offset optional positive one-based key start
+ * @param order optional ASC or DESC, case-insensitive
+ * @param debug optional 0/1 summary-output flag
+ * @return unchanged array high-water mark
+ * @signal INVALID_ARGUMENTS invalid offset, order, or debug flag
  */
 arraysort: procedure=.int
-  arg expose a=.string[], offset=1, order='ASC',debug=1
+  arg expose a=.string[], offset=1, order="ASC", debug=0
 
   n = a[0]
-  if n <= 1 then return a[0]
-  if offset < 1 then offset = 1
+  if offset < 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYSORT offset must be positive"
+  if debug <> 0 & debug <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYSORT debug flag must be zero or one"
 
-  order = upper(order)
-  if debug=1 then say 'ArraySort Debug offset='offset', order='order', items='a[0]
-  asc = (substr(order,1,3) = 'ASC')
-  gap = n
-  assembler idiv gap, gap, 2
+  folded_order = ""
+  assembler strupper folded_order,order
+  if folded_order <> "ASC" & folded_order <> "DESC" then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYSORT order must be ASC or DESC"
+  descending = folded_order = "DESC"
 
-  do while gap > 0
-     do i = gap + 1 to n
-        temp = a[i]
-        key  = substr(temp, offset)
-        j = i
-        if asc then do
-           do while j > gap
-              prev = a[j-gap]
-              if substr(prev, offset) <= key then leave
-              a[j] = prev
-              j = j - gap
-           end
+  if debug = 1 then say "ARRAYSORT offset="offset", order="folded_order", items="n
+  if n <= 1 then return n
+
+  /* Materialize each key once instead of once per comparison. */
+  keys = .string[]
+  zero_offset = offset - 1
+  do index = 1 to n
+    item = a[index]
+    item_length = .int
+    assembler strlen item_length,item
+    key = ""
+    if zero_offset < item_length then do
+      key_length = item_length - zero_offset
+      assembler substring key,item,zero_offset,key_length
+    end
+    keys[index] = key
+  end
+
+  /* Build a max heap for ASC or min heap for DESC. */
+  comparison = .int
+  start = .int
+  assembler idiv start,n,2
+  do start = start to 1 by -1
+    root = start
+    temp_value = a[root]
+    temp_key = keys[root]
+    child = root * 2
+    do while child <= n
+      if child < n then do
+        if descending then do
+          assembler slt comparison,keys[child + 1],keys[child]
+          if comparison then child = child + 1
         end
         else do
-           do while j > gap
-              prev = a[j-gap]
-              if substr(prev, offset) >= key then leave
-              a[j] = prev
-              j = j - gap
-           end
+          assembler sgt comparison,keys[child + 1],keys[child]
+          if comparison then child = child + 1
         end
-        a[j] = temp
-     end
-     assembler idiv gap, gap, 2
+      end
+      if descending then do
+        assembler slte comparison,temp_key,keys[child]
+        if comparison then leave
+      end
+      else do
+        assembler sgte comparison,temp_key,keys[child]
+        if comparison then leave
+      end
+      a[root] = a[child]
+      keys[root] = keys[child]
+      root = child
+      child = root * 2
+    end
+    a[root] = temp_value
+    keys[root] = temp_key
   end
-return a[0]
+
+  /* Move each heap root to its final position and restore the heap. */
+  heap_end = n
+  do while heap_end > 1
+    temp_value = .string
+    temp_value = a[heap_end]
+    temp_key = .string
+    temp_key = keys[heap_end]
+    a[heap_end] = a[1]
+    keys[heap_end] = keys[1]
+    heap_end = heap_end - 1
+
+    root = .int
+    root = 1
+    child = .int
+    child = 2
+    do while child <= heap_end
+      if child < heap_end then do
+        if descending then do
+          assembler slt comparison,keys[child + 1],keys[child]
+          if comparison then child = child + 1
+        end
+        else do
+          assembler sgt comparison,keys[child + 1],keys[child]
+          if comparison then child = child + 1
+        end
+      end
+      if descending then do
+        assembler slte comparison,temp_key,keys[child]
+        if comparison then leave
+      end
+      else do
+        assembler sgte comparison,temp_key,keys[child]
+        if comparison then leave
+      end
+      a[root] = a[child]
+      keys[root] = keys[child]
+      root = child
+      child = root * 2
+    end
+    a[root] = temp_value
+    keys[root] = temp_key
+  end
+  return n

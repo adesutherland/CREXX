@@ -1,0 +1,185 @@
+profiles=22 observed=184 rank176=FEQ_REG_REG_FLOAT score=8.600608655152898e-08 raw=2
+  1 BRF_ID_REG                                    score=2.32716313 raw=106217933
+  2 UNLINK_REG                                    score=1.42203612 raw=23661464
+  3 LINKATTR1_REG_REG_INT                         score=1.29938864 raw=21114832
+  4 BR_ID                                         score=0.90097019 raw=20288542
+  5 IEQ_REG_REG_INT                               score=0.89060573 raw=44976728
+  6 LOAD_REG_INT                                  score=0.76726092 raw=26213730
+  7 BRT_ID_REG                                    score=0.68949757 raw=25695584
+  8 ICOPY_REG_REG                                 score=0.54062985 raw=11798440
+  9 IADD_REG_REG_INT                              score=0.52321120 raw=15487561
+ 10 IGT_REG_REG_REG                               score=0.52012977 raw=21177162
+ 11 LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT score=0.51331790 raw=5568392
+ 12 COPY_REG_REG                                  score=0.47793452 raw=4740404
+ 13 IGETUNLINK_REG_REG                            score=0.47610427 raw=6558972
+ 14 SETTP_REG_INT                                 score=0.44595979 raw=7089174
+ 15 ISETATTR1_REG_INT_REG                         score=0.41166631 raw=5069458
+ 16 ILT_REG_REG_INT                               score=0.39865482 raw=9564399
+ 17 SCOPY_REG_REG                                 score=0.38460671 raw=12015125
+ 18 FADD_REG_REG_REG                              score=0.38114867 raw=49170882
+ 19 FMULT_REG_REG_REG                             score=0.38112287 raw=49170282
+ 20 IADD_REG_REG_REG                              score=0.37575776 raw=6926844
+ 21 BCTP_ID_REG                                   score=0.34416760 raw=19282528
+ 22 BRTF_ID_ID_REG                                score=0.31050483 raw=3535272
+ 23 NUMSCI_INT_INT_INT                            score=0.28301417 raw=4734270
+ 24 REFVALID_REG_REG                              score=0.27850272 raw=7930400
+ 25 UNLINKN_REG_REG                               score=0.27291333 raw=4132180
+ 26 LOAD_REG_STRING                               score=0.24218831 raw=7963655
+ 27 ASSERTINITIALIZED_REG                         score=0.22069469 raw=2762286
+ 28 ISETUNLINK_REG_REG                            score=0.21901548 raw=1776900
+ 29 SETLINKILOAD_REG_REG_INT_REG_REG_INT          score=0.21678904 raw=1606900
+ 30 ILT_REG_REG_REG                               score=0.20679125 raw=10366476
+ 31 ISUB_REG_REG_INT                              score=0.19959597 raw=5299618
+ 32 MINLINKATTR1_REG_REG_REG_INT                  score=0.19233894 raw=2118640
+ 33 IGT_REG_REG_INT                               score=0.18425012 raw=5780522
+ 34 BGETU8_REG_REG_REG                            score=0.17776823 raw=11892048
+ 35 BTOI_REG                                      score=0.15657141 raw=3978312
+ 36 STRLEN_REG_REG                                score=0.15592549 raw=5175216
+ 37 RET                                           score=0.14446403 raw=1484560
+ 38 BCF_ID_REG                                    score=0.14297616 raw=1178720
+ 39 NULLN_REG_REG_REG_REG                         score=0.14148420 raw=4157304
+ 40 FMULT_REG_REG_FLOAT                           score=0.13092425 raw=16891094
+ 41 FGT_REG_REG_FLOAT                             score=0.12704113 raw=16390098
+ 42 FSUB_REG_REG_REG                              score=0.12704104 raw=16390096
+ 43 BNE_ID_REG_INT                                score=0.12015324 raw=3456796
+ 44 INE_REG_REG_INT                               score=0.10796878 raw=2992153
+ 45 SUBSTRING_REG_REG_REG_REG                     score=0.10363354 raw=3160091
+ 46 RET_REG                                       score=0.10193446 raw=1398092
+ 47 ISETUNLINKN_REG_REG_REG                       score=0.10125102 raw=1153662
+ 48 SWAPN_REG_REG_REG_REG_REG_REG_REG_REG         score=0.09953555 raw=7600012
+ 49 CALL2_REG_FUNC_REG_REG                        score=0.09546992 raw=1070202
+ 50 NULL_REG                                      score=0.09331077 raw=1992928
+ 51 ISUB_REG_REG_REG                              score=0.09077015 raw=2975731
+ 52 CALL3_REG_FUNC_REG_REG_REG                    score=0.08087968 raw=964048
+ 53 DTOS_REG                                      score=0.07954126 raw=1850000
+ 54 STEMGET_REG_REG_REG                           score=0.07954126 raw=1850000
+ 55 IMOD_REG_REG_INT                              score=0.07294895 raw=2033888
+ 56 SEQ_REG_REG_STRING                            score=0.07075305 raw=2960436
+ 57 SETLINKATTR1_REG_REG_INT_REG                  score=0.06744218 raw=499900
+ 58 STRPOS_REG_REG_REG                            score=0.06665059 raw=2207600
+ 59 GETATTRS_REG_REG_INT                          score=0.06402913 raw=392266
+ 60 BGE_ID_REG_INT                                score=0.06167898 raw=2513682
+ 61 ENDLIFE_REG                                   score=0.06105593 raw=1163986
+ 62 ISUB_REG_INT_REG                              score=0.05808587 raw=1869722
+ 63 MINLINKATTR1_REG_REG_INT                      score=0.05644865 raw=4310026
+ 64 IMULT_REG_REG_INT                             score=0.05558853 raw=1873968
+ 65 CALL4_REG_FUNC_REG_REG_REG_REG                score=0.05460317 raw=1042806
+ 66 CONCAT_REG_REG_STRING                         score=0.05345199 raw=1243206
+ 67 BSETU8_REG_REG_REG                            score=0.05339404 raw=2394048
+ 68 STOD_REG                                      score=0.05281540 raw=1228400
+ 69 SETOBJUNINIT_REG_STRING                       score=0.04909536 raw=327920
+ 70 REQ_REG_REG_STRING                            score=0.04876459 raw=1288128
+ 71 MKREF_REG_REG                                 score=0.04848919 raw=1026800
+ 72 RNE_REG_REG_STRING                            score=0.04832760 raw=1782402
+ 73 DADD_REG_REG_REG                              score=0.04454311 raw=1036000
+ 74 DGT_REG_REG_REG                               score=0.04454311 raw=1036000
+ 75 STEMSET_REG_REG_REG                           score=0.04390678 raw=1021200
+ 76 BGE_ID_REG_REG                                score=0.04325886 raw=2340004
+ 77 NULLN_REG_REG_REG                             score=0.04197866 raw=1740005
+ 78 ILOADSETUNLINKN_REG_REG_INT_REG               score=0.04133388 raw=364198
+ 79 IDIV_REG_REG_INT                              score=0.04042977 raw=1730998
+ 80 IGTE_REG_REG_INT                              score=0.03994195 raw=1103857
+ 81 NULLN_REG_REG                                 score=0.03969781 raw=1130400
+ 82 SWAP_REG_REG                                  score=0.03849991 raw=695166
+ 83 BGETU8_REG_BINARY_REG                         score=0.03784951 raw=2890000
+ 84 RET_INT                                       score=0.03675373 raw=1854828
+ 85 BLE_ID_REG_INT                                score=0.03623832 raw=1339410
+ 86 IGTE_REG_REG_REG                              score=0.03595380 raw=1034040
+ 87 UNLINKBR_REG_ID                               score=0.03428153 raw=232350
+ 88 BEQ_ID_REG_INT                                score=0.03261646 raw=1515304
+ 89 BRTPANDT_ID_REG_INT                           score=0.03193723 raw=194824
+ 90 INSATTRS1_REG_REG_REG                         score=0.03177714 raw=191120
+ 91 CONCAT_REG_STRING_REG                         score=0.02672758 raw=621624
+ 92 DCOPY_REG_REG                                 score=0.02672586 raw=621600
+ 93 ASSERTTYPE_REG_STRING                         score=0.02452672 raw=163820
+ 94 SWAPN_REG_REG_REG_REG                         score=0.02305054 raw=801922
+ 95 SWAPSETTPSWAP_REG_REG_REG_INT_REG             score=0.02305031 raw=801920
+ 96 SETLINKATTR1_REG_REG_INT_REG_INT              score=0.02103136 raw=185310
+ 97 SETATTRS_REG_INT                              score=0.01962282 raw=139104
+ 98 SETOBJTYPE_REG_STRING                         score=0.01941704 raw=136668
+ 99 LOADSETTPSWAP_REG_INT_REG_INT_REG             score=0.01866837 raw=1421642
+100 SETTPCALL_REG_FUNC_REG_REG_INT                score=0.01844397 raw=122840
+101 SWAPCALL_REG_FUNC_REG_REG_REG                 score=0.01843878 raw=1402404
+102 SWAPSETTP_REG_REG_REG_INT                     score=0.01815664 raw=109204
+103 REQ_REG_REG_REG                               score=0.01786188 raw=415438
+104 DEQ_REG_REG_REG                               score=0.01781724 raw=414400
+105 DLT_REG_REG_REG                               score=0.01781724 raw=414400
+106 DMULT_REG_REG_REG                             score=0.01718091 raw=399600
+107 IEQ_REG_REG_REG                               score=0.01560838 raw=1362306
+108 SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG        score=0.01388261 raw=101920
+109 SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG        score=0.01204898 raw=920000
+110 LOAD_REG_FLOAT                                score=0.01167883 raw=1501214
+111 SWAPN_REG_REG_REG_REG_REG_REG                 score=0.00916787 raw=700004
+112 INE_REG_REG_REG                               score=0.00916780 raw=700004
+113 ITOS_REG                                      score=0.00891251 raw=207256
+114 APPEND_REG_REG                                score=0.00891126 raw=207242
+115 CONCAT_REG_REG_REG                            score=0.00890884 raw=207206
+116 PARSEPOS2_REG_REG_REG_INT                     score=0.00890862 raw=207200
+117 PARSEWORDS3D_REG_REG_REG_REG                  score=0.00890862 raw=207200
+118 PARSEWORDS3_REG_REG_REG_REG                   score=0.00890862 raw=207200
+119 STEMRESET_REG_REG                             score=0.00890862 raw=207200
+120 ITOF_REG_REG                                  score=0.00776667 raw=1002002
+121 BGT_ID_REG_REG                                score=0.00764987 raw=343000
+122 FDIVSUB_REG_REG_REG_FLOAT                     score=0.00388329 raw=501000
+123 ISHL_REG_REG_INT                              score=0.00387554 raw=500000
+124 SETTPSWAP_REG_INT_REG                         score=0.00261934 raw=200000
+125 ILTE_REG_REG_INT                              score=0.00248846 raw=190002
+126 IAND_REG_REG_INT                              score=0.00226963 raw=19998
+127 ILTE_REG_REG_REG                              score=0.00170257 raw=130000
+128 BLEN_REG_REG                                  score=0.00150773 raw=113008
+129 BLT_ID_REG_REG                                score=0.00144064 raw=110000
+130 CALL1_REG_FUNC_REG                            score=0.00131103 raw=30424
+131 BLT_ID_REG_INT                                score=0.00117888 raw=90004
+132 IXOR_REG_REG_INT                              score=0.00113311 raw=9984
+133 BCMPB_REG_REG_REG                             score=0.00065488 raw=50002
+134 LOAD_REG_BINARY                               score=0.00054617 raw=41000
+135 IXOR_REG_REG_REG                              score=0.00048832 raw=63000
+136 STOBIN_REG                                    score=0.00026193 raw=20000
+137 BCOPY_REG_REG                                 score=0.00015327 raw=11000
+138 LOADSETTP2_REG_INT_REG_INT                    score=0.00013114 raw=10004
+139 RGT_REG_REG_STRING                            score=0.00013097 raw=10000
+140 RLT_REG_REG_STRING                            score=0.00013097 raw=10000
+141 STRUPPER_REG_REG                              score=0.00012178 raw=2832
+142 CALL_REG_FUNC_REG                             score=0.00008703 raw=2014
+143 FNDNBLNK_REG_REG_REG                          score=0.00007164 raw=1666
+144 STRCHAR_REG_REG_REG                           score=0.00007143 raw=1661
+145 FCOPY_REG_REG                                 score=0.00005195 raw=1208
+146 FDIV_REG_REG_FLOAT                            score=0.00005178 raw=1204
+147 FTOS_REG                                      score=0.00005178 raw=1204
+148 BPOFF                                         score=0.00005160 raw=1200
+149 CALL_REG_FUNC                                 score=0.00005160 raw=1200
+150 ITOF_REG                                      score=0.00005160 raw=1200
+151 MTIME_REG                                     score=0.00005160 raw=1200
+152 BRESIZE_REG_REG                               score=0.00004465 raw=2002
+153 NOT_REG_REG                                   score=0.00003715 raw=864
+154 GETANDTP_REG_REG_INT                          score=0.00003647 raw=848
+155 STOF_REG                                      score=0.00002580 raw=600
+156 BINTOS_REG                                    score=0.00002230 raw=1000
+157 RET_STRING                                    score=0.00001720 raw=400
+158 INC1                                          score=0.00001330 raw=80
+159 ISHL_REG_REG_REG                              score=0.00000775 raw=1000
+160 SCONCAT_REG_REG_STRING                        score=0.00000285 raw=48
+161 SAY_REG                                       score=0.00000206 raw=32
+162 SAY_STRING                                    score=0.00000198 raw=30
+163 STOI_REG                                      score=0.00000163 raw=22
+164 STRLOWER_REG_REG                              score=0.00000138 raw=32
+165 APPENDCHAR_REG_REG                            score=0.00000082 raw=19
+166 POSCHAR_REG_REG_REG                           score=0.00000069 raw=16
+167 LOAD_REG_DECIMAL                              score=0.00000052 raw=12
+168 SETNUMFUZ_INT                                 score=0.00000043 raw=10
+169 SETNUMSTD_INT                                 score=0.00000043 raw=10
+170 BNE_ID_REG_REG                                score=0.00000034 raw=8
+171 SCONCAT_REG_STRING_REG                        score=0.00000034 raw=8
+172 BLE_ID_REG_REG                                score=0.00000017 raw=4
+173 FDIV_REG_FLOAT_REG                            score=0.00000017 raw=4
+174 SETNUMCAS_INT                                 score=0.00000017 raw=4
+175 FDIV_REG_REG_REG                              score=0.00000009 raw=2
+176 FEQ_REG_REG_FLOAT                             score=0.00000009 raw=2
+177 FEXTR_REG_REG_REG                             score=0.00000009 raw=2
+178 FLT_REG_REG_FLOAT                             score=0.00000009 raw=2
+179 FNDBLNK_REG_REG_REG                           score=0.00000009 raw=2
+180 IMULT_REG_REG_REG                             score=0.00000009 raw=2
+181 RXVERS_REG                                    score=0.00000009 raw=2
+182 SCONCAT_REG_REG_REG                           score=0.00000009 raw=2
+183 SETNUMFRM_INT                                 score=0.00000009 raw=2
+184 STOI_REG_REG                                  score=0.00000009 raw=2

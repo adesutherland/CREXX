@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270 20260728",
+  "result": "pass",
+  "started_utc": "2026-07-29T07:37:51+0000",
+  "completed_utc": "2026-07-29T07:42:50+0000",
+  "repository": {"branch":"unknown","commit":"d5f0827ca2708eae9d9be182c6d0d53bd6229b74","dirty_scope":[" M compiler/rxcp_opt.c"," M interpreter/rxvmintp.c"," M interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c"," M interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber/decNumber.c"," M lemon/lemon.c"," M lib/plugins/llist/llist.c"," M lib/plugins/rxtcp/rxtcp.c"," M lib/rxfnsb/rexx/x2d.crexx"," M performance/tools/inventory_performance_artifacts.crexx"," M performance/tools/run_cross_runtime_matrix.crexx"," M performance/tools/run_lifecycle.crexx","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Linux 7.0.0-27-generic x86_64","cpu":"unknown"},
+  "driver_arguments": ["--manifest","/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-gcc-schema5-full-v1.txt","--release-build","/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release","--profile-build","/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-profile","--vm","rxvm","--profile-mode","counts","--output-dir","/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/profiles/gcc/rxvm-counts"],
+  "input_manifest": {"path":"/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-gcc-schema5-full-v1.txt","sha256":"1dbc8d9259e89eb41f9ca67056df243dfd74a6498a3d305ee3eeb84fb72f543c"},
+  "ordinary_release": {"build":"/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxvm","vm_version":"crexx-1.0.0-beta.3+local.gd5f0827ca270 (Threaded Mode)","vm_sha256":"c4fbe32a5df9d4562d69e6a37217905c4af6082ff54f6010c50cb6e7eb3d312e"},
+  "profile_release": {"build":"/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxvm","profile_mode":"counts","vm_version":"crexx-1.0.0-beta.3+local.gd5f0827ca270.dirty (Threaded Mode)","vm_sha256":"0708ef87a3dfa8adfc672f565daa1003a8417d2d41913e307c4cd38834cdf543","rxseq_sha256":"9c841a25c5d1e7bf5ebc66e3c25da7503331d8cdc1874d891dde85a065c56b91"},
+  "toolchain": {"cmake":"cmake version 4.2.3","compiler_path":"/usr/bin/gcc","compiler":"gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/profiles/gcc/rxvm-counts"
+}

@@ -1,0 +1,10 @@
+options levelg
+namespace gate_f_task_reference_arg
+
+invalid: task = .int
+  arg value = reference .int
+  copied = dereference value
+  return copied
+
+main: procedure = .int
+  return 0

@@ -1,0 +1,9 @@
+crexx-perf2-profile-inputs|1
+permute|rxvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxvm-permute-opt.csv
+list|rxvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxvm-list-opt.csv
+base64|rxvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxvm-base64-opt.csv
+rexxcps|rxvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxvm-rexxcps-opt.csv
+permute|rxbvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxbvm-permute-opt.csv
+list|rxbvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxbvm-list-opt.csv
+base64|rxbvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxbvm-base64-opt.csv
+rexxcps|rxbvm|cow|/private/tmp/crexx-perf2-06.Pn88uJ/cow-count-profiles/rxbvm-rexxcps-opt.csv

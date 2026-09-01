@@ -1,0 +1,11 @@
+manifest=/Users/adrian/CLionProjects/CREXX/performance/manifests/nr09-macro-review-v1.tsv
+baseline_dir=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/profiles
+candidate_dir=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/profiles
+output_dir=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/macro-timing-report
+command=/Users/adrian/CLionProjects/CREXX/performance/tools/report_nr09_macro_timings.zsh /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/profiles /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/profiles /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/macro-timing-report /Users/adrian/CLionProjects/CREXX/performance/manifests/nr09-macro-review-v1.tsv
+sha256:
+f353deda6692f69e8e85b5bc78366e18e752d8f820dcab1fed45099dc739d67d  /Users/adrian/CLionProjects/CREXX/performance/manifests/nr09-macro-review-v1.tsv
+a90e6c5bd9f227f4a2d309da4d19172a4791a617af8495429d2c2c58bdcb68d8  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/profiles/canonical-opt-rxvm.csv
+f213bca0921c93b5dd343e5b1676aadd06fbb47d8311293928ba5e1b875dfc37  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict/profiles/canonical-opt-rxbvm.csv
+0a53a8f84962452c9162bb4adf345c94e087b9e93c99124a03e45f63932e0523  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/profiles/canonical-opt-rxvm.csv
+f3bf0bf4ecf745331de5b9f0bba7715e5892a45e8df65b7337e24013fbc18519  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/profiles/canonical-opt-rxbvm.csv

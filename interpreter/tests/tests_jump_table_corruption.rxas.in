@@ -1,0 +1,21 @@
+/* Dedicated packed jump-table corruption fixture. */
+
+main() .locals=2
+    .jtable words @ALGORITHM@
+    br after_cases
+
+case_alpha: .jcase words "alpha"
+    say "unexpected alpha"
+    ret
+case_beta: .jcase words "beta"
+    say "unexpected beta"
+    ret
+case_gamma: .jcase words "gamma"
+    say "unexpected gamma"
+    ret
+
+after_cases:
+    load r0,"beta"
+    jumps r0,words
+    say "unexpected miss"
+    ret

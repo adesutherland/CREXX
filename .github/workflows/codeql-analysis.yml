@@ -69,7 +69,8 @@ jobs:
       shell: bash
       run: |
         cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
-          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
 
     - name: Build
       shell: bash

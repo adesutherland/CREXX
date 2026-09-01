@@ -1,0 +1,35 @@
+PERF3-05-R3 host and product state, 2026-08-09
+
+Host
+  Darwin 25.5.0 arm64, Apple M5
+  10 logical CPUs
+  L1 instruction cache: 131072 bytes
+  L2 cache: 6291456 bytes
+  AC attached, battery 80%, low-power mode 0
+  No thermal or performance warning recorded
+
+Source
+  branch: codex/perf3-05-r3-handler-codegen-analysis
+  governance HEAD during measurement: 9240672a766442e5e53642396a7ab26ae303f0fb
+  R2 framework control: fd54b616764ef880270f4bce9dd202b476bf559c
+  untouched control: 6a65b9c685b3776da211bcd209af14fcf23be445
+  scratch root: /private/tmp/crexx-perf3-05-r3.IvLL06
+
+Toolchains
+  Apple clang 21.0.0, target arm64-apple-darwin25.5.0
+  Homebrew GCC 16.1.0, /opt/homebrew/opt/gcc/bin/gcc-16
+  CMake 4.3.2
+  Ninja 1.13.2
+
+Products
+  ordinary profiling-off Release, -O3 -DNDEBUG
+  Clang: CREXX_ENABLE_TLS=NETWORK
+  GCC: CREXX_ENABLE_TLS=OFF because the NETWORK backend uses Clang blocks
+  both concrete engines measured: rxtvm and rxbvm
+  product rxvm is an alias, not a third engine
+
+Final timing
+  started UTC: 2026-08-09T18:56:07+0000
+  completed UTC: 2026-08-09T19:32:25+0000
+  serial, pairwise balanced by workload
+  source and eleven manifest/product hashes matched before and after

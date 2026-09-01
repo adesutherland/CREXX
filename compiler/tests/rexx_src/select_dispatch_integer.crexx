@@ -1,0 +1,59 @@
+options levelb
+
+main: procedure = .int
+  i = .int
+  inner = .int
+
+  do i = -2 to 5
+    inner = i
+    say classify(i)
+    say no_default(i)
+    say nested_classify(i, inner)
+  end
+  say classify(5000000000)
+  return 0
+
+classify: procedure = .int
+  arg value = .int
+  constant CASE_THREE = 3
+
+  select value
+    when -1 then return -10
+    when 0 then return 10
+    when 1 then return 20
+    when 2 then return 30
+    when CASE_THREE then return 40
+    when 4 then return 50
+    when 5 then return 60
+    when 5000000000 then return 5000
+    otherwise return -1
+  end
+  return -2
+
+no_default: procedure = .int
+  arg value = .int
+
+  select value
+    when 0 then return 1000
+    when 1 then return 1001
+    when 2 then return 1002
+  end
+  return -9
+
+nested_classify: procedure = .int
+  arg outer = .int, inner = .int
+
+  select outer
+    when 0 then return 100
+    when 1 then do
+      select inner
+        when 1 then return 201
+        when 2 then return 202
+        when 3 then return 203
+        otherwise return -201
+      end
+    end
+    when 2 then return 300
+    otherwise return -100
+  end
+  return -2

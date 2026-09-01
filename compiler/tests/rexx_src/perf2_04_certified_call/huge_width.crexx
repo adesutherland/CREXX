@@ -1,0 +1,6 @@
+options levelb
+import rxfnsb
+
+/* Above the bounded compiler-result policy: this valid call must retain the
+ * complete Level B fallback rather than allocate its result while compiling. */
+ignored = left("x", 1048577, ".")

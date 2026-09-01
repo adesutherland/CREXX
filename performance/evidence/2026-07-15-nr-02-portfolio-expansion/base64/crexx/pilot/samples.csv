@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+base64,crexx,preallocated-binary-port,process,warmup,1,395543000,0,pass,,
+base64,crexx,preallocated-binary-port,process,recorded,1,433492000,0,pass,,
+base64,crexx,preallocated-binary-port,process,recorded,2,396327000,0,pass,,
+base64,crexx,preallocated-binary-port,process,recorded,3,443944000,0,pass,,

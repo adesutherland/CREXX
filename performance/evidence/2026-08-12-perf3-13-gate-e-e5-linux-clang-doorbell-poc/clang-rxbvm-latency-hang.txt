@@ -1,0 +1,14 @@
+2026-08-12T14:27:23Z
+    PID     TID     ELAPSED STAT %CPU %MEM WCHAN                    COMMAND
+ 470212  470212       05:10 Sl    0.0  0.0 futex_do_wait            /tmp/crexx-mthread-linux-clang-release/interpreter/persistent_worker_executor-rxbvml --doorbell-latency /tmp/crexx-mthread-linux-clang-release/interpreter/test_persistent_worker_executor.rxbin 1000
+ 470212  470214       05:10 Rl   99.8  0.0 -                        /tmp/crexx-mthread-linux-clang-release/interpreter/persistent_worker_executor-rxbvml --doorbell-latency /tmp/crexx-mthread-linux-clang-release/interpreter/test_persistent_worker_executor.rxbin 1000
+tid=470212 state=S utime=0 stime=0
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigCgt:	0000000100000000
+tid=470214 state=R utime=30967 stime=12
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigCgt:	0000000100000000

@@ -1,0 +1,6 @@
+# PERF2-09 Apple formal timing cells selected by the governed MAD/span rule.
+# No initial sample is removed. Aggregate is no in this capture-only manifest;
+# the authoritative merged summary uses perf2-09-mac-closure-v1.txt.
+crexx-cross-runtime-matrix|1
+base64-rxvm|Base64|crexx|rxvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf2-0809.uMsNxm/build-release/bin/rxvm;/private/tmp/crexx-perf2-0809.uMsNxm/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf2-0809.uMsNxm/build-release/bin/library.rxbin;-a;2500
+base64-rxbvm|Base64|crexx|rxbvm|equivalent-port|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/crexx-perf2-0809.uMsNxm/build-release/bin/rxbvm;/private/tmp/crexx-perf2-0809.uMsNxm/build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;/private/tmp/crexx-perf2-0809.uMsNxm/build-release/bin/library.rxbin;-a;2500

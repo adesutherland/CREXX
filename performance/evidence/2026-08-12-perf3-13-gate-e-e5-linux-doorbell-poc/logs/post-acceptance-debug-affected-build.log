@@ -1,0 +1,12 @@
+[0/2] Re-checking globbed directories...
+[1/12] Compiling PERF3-13 E5 POSIX doorbell control ...
+[2/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/tests/test_persistent_worker_executor.c.o
+[3/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxbvml.dir/tests/test_persistent_worker_executor.c.o
+[4/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxvml.dir/tests/test_persistent_worker_executor.c.o
+[5/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvmexecutor.c.o
+[6/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxvml.dir/rxvmexecutor.c.o
+[7/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxbvml.dir/rxvmexecutor.c.o
+[8/12] Linking C executable interpreter/persistent_worker_executor-rxvml
+[9/12] Linking C executable interpreter/persistent_worker_executor-rxbvml
+[10/12] Building C object interpreter/CMakeFiles/persistent_worker_executor-rxtvml.dir/rxvml.c.o
+[11/12] Linking C executable interpreter/persistent_worker_executor-rxtvml

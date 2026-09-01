@@ -1,0 +1,9 @@
+metric,control,candidate,delta
+generated_lines,172,163,-9
+br,1,0,-1
+brtpandt,1,0,-1
+scopy,1,0,-1
+setstrpos,1,0,-1
+swap,1,0,-1
+substring3,1,0,-1
+substring4,0,1,1

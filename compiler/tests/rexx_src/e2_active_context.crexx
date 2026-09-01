@@ -1,0 +1,40 @@
+options levelb
+namespace e2_active_context expose run state
+
+run: procedure = .int
+  address editor "FIRST"
+  if rc \= 0 then return 1
+  address editor "SECOND"
+  if rc \= 0 then return 2
+  return 0
+
+state: procedure = .string
+  arg directory = .string, token = .string, platform = .string
+  cwd = .string
+  env_value = .string
+  child_cwd = .string
+  child_env = .string
+  address crexx "cd " || directory
+  if rc \= 0 then return "CD_FAILURE"
+  address crexx "setenv CREXX_E2_TOKEN " || token
+  if rc \= 0 then return "SETENV_FAILURE"
+  address editor "STATE"
+  if rc \= 0 then return "BARRIER_FAILURE"
+  say token
+  address crexx "pwd" output cwd
+  if rc \= 0 then return "PWD_FAILURE"
+  address crexx "env CREXX_E2_TOKEN" output env_value
+  if rc \= 0 then return "ENV_FAILURE"
+  if platform = "windows" then do
+    address crexx "run cmd.exe /D /S /C cd" output child_cwd
+    if rc \= 0 then return "CHILD_PWD_FAILURE"
+    address crexx "run cmd.exe /D /S /C echo %CREXX_E2_TOKEN%" output child_env
+    if rc \= 0 then return "CHILD_ENV_FAILURE"
+  end
+  else do
+    address crexx "run pwd" output child_cwd
+    if rc \= 0 then return "CHILD_PWD_FAILURE"
+    address crexx "run printenv CREXX_E2_TOKEN" output child_env
+    if rc \= 0 then return "CHILD_ENV_FAILURE"
+  end
+  return cwd || "|" || env_value || "|" || child_cwd || "|" || child_env

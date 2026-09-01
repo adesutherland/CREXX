@@ -22,30 +22,43 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B prefix-abbreviation test.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/abbrev.md
+ */
 options levelb
 
 namespace rxfnsb expose abbrev
 
-/* abbrev(string,abbrebiated-string,min-char-match) */
-abbrev: procedure = .string
-  arg string = .string, astr = .string, len = 0
+/**
+ * Test whether `candidate` is an accepted prefix of `string`.
+ *
+ * @param string full reference string
+ * @param candidate proposed leading abbreviation
+ * @param minimum minimum accepted candidate length; defaults to zero, which
+ *        has the same result as the Classic default for this prefix test
+ * @return 1 when accepted, otherwise 0
+ */
+abbrev: procedure = .int
+  arg string = .string, candidate = .string, minimum = 0
+  string_length = .int
+  candidate_length = .int
+  string_character = .int
+  candidate_character = .int
   i = .int
-  slen=0
-  alen=0
-  char1=0
-  char2=0
-  assembler strlen slen,string
-  assembler strlen alen,astr
-  do i=0 to alen-1
-     assembler strchar char1,string,i
-     assembler itos char1
-     assembler strchar char2,astr,i
-     assembler itos char2
-     if char1\=char2 then return 0
+
+  if minimum < 0 then
+    assembler signal "INVALID_ARGUMENTS","ABBREV minimum length must be non-negative"
+
+  assembler strlen string_length,string
+  assembler strlen candidate_length,candidate
+  if candidate_length < minimum | string_length < candidate_length then return 0
+
+  do i = 0 to candidate_length - 1
+    assembler strchar string_character,string,i
+    assembler strchar candidate_character,candidate,i
+    if string_character <> candidate_character then return 0
   end
-  /* is the minimum match of chars satisfied */
-  if len>0 then do
-     if i<len then return 0
-  end
-return 1
+  return 1

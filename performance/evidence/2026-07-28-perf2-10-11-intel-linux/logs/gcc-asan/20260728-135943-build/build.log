@@ -1,0 +1,10 @@
+Command: cmake --build /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-debugasan --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+[0/2] Re-checking globbed directories...
+[1/7] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp_static.dir/rxtcp.c.o
+[2/7] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp.dir/rxtcp.c.o
+[3/7] Linking C shared module bin/rx_rxtcp.rxplugin
+[4/7] Linking C static library bin/rx_rxtcp_static.a
+[5/7] Generating tcp_test_noopt.rxbin
+[6/7] Generating tcp_test_opt.rxbin

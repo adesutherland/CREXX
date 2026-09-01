@@ -33,12 +33,21 @@
 #include "rxasgrmr.h"
 
 /* Queue code for the keyhole optimiser */
+void rxasquev(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount);
+void rxasque_span(Assembler_Context *context, Assembler_Token *instrToken,
+                  Assembler_Token *lastOperandToken);
 void rxasque0(Assembler_Context *context, Assembler_Token *instrToken);
 void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token);
 void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token);
 void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token);
+/* Replace the owned operand-vector view of an already queued opcode. */
+void rxas_set_queue_operands(Assembler_Context *context,
+                             instruction_queue *item,
+                             Assembler_Token *const *operandTokens,
+                             size_t operandCount);
 void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken);
 /* Source Step */
 void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
@@ -72,15 +81,26 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 /* Flush the optimiser queue */
 void flushopt(Assembler_Context *context);
 
+/* Run the transient whole-procedure machine-flow pass before emission. */
+void rxas_flow_optimise(Assembler_Context *context);
+
+/* Grow the mutable whole-procedure stream without invalidating queue records
+ * until the caller is ready to refresh its pointers. */
+void rxas_reserve_procedure_queue(Assembler_Context *context, size_t required);
+
 /* Generate code for an instructions */
+void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount);
+void promote_floats_to_decimalsv(Assembler_Token *instrToken,
+                                 Assembler_Token *const *operandTokens,
+                                 size_t operandCount);
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken);
 void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token);
 void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token);
 void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token);
-/** Generate code for an instruction with up to three operands
- *  NULLS in the operandToken's are used to detect the number of operands */
+/** Compatibility wrapper for instruction producers that emit up to three operands. */
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token);
 void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken);
@@ -89,6 +109,22 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken);
 void rxasexre(Assembler_Context *context, Assembler_Token *registerToken, Assembler_Token *exposeToken);
 void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken, Assembler_Token *exposeToken);
 void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *exposeToken);
+void rxasconst(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *kindToken,
+               Assembler_Token *valueToken);
+void rxasjtab(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *algorithmToken);
+void rxasjcase(Assembler_Context *context, Assembler_Token *labelToken, Assembler_Token *tableToken,
+               Assembler_Token *valueToken);
+void rxasjcase_after_label(Assembler_Context *context, Assembler_Token *jcaseToken,
+                           Assembler_Token *tableToken, Assembler_Token *valueToken);
+/* Read-only declared jump-table inventory used by whole-procedure control-flow
+ * analysis. A false count result means that no declaration belongs to the
+ * current procedure. Parser/packing errors still prevent module emission. */
+int rxas_jump_table_case_count(Assembler_Context *context,
+                               Assembler_Token *tableToken,
+                               size_t *count_out);
+Assembler_Token *rxas_jump_table_case_label(Assembler_Context *context,
+                                             Assembler_Token *tableToken,
+                                             size_t case_index);
 /* Source Step */
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

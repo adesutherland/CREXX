@@ -1,0 +1,298 @@
+/* PERF3-13 Gate C2 S0/S1/S1b balanced geometry-pair summary. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 3 then do
+  say "Usage: summarize_geometry_paired OUTPUT_SUMMARY OUTPUT_AGGREGATE SAMPLES [SAMPLES ...]"
+  return 2
+end
+
+output_path = argv[1]
+aggregate_path = argv[2]
+workloads = .string[]
+workloads[1] = "Sieve"
+workloads[2] = "Permute"
+workloads[3] = "Bounce"
+workloads[4] = "Richards"
+workloads[5] = "Base64"
+workloads[6] = "Towers"
+workloads[7] = "RexxCPS"
+candidates = .string[]
+candidates[1] = "S0"
+candidates[2] = "S1"
+candidates[3] = "S1b"
+values = .float[]
+counts = .int[]
+medians = .float[]
+
+do input_number = 3 to argv[0]
+  input_path = argv[input_number]
+  line_number = 0
+  do while lines(input_path)
+    line = linein(input_path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+    workload_index = find_name(workloads, fields[3])
+    candidate_index = find_name(candidates, fields[5])
+    if workload_index = 0 then return fail("unexpected workload")
+    if candidate_index = 0 then return fail("unexpected candidate")
+    slot = (workload_index - 1) * candidates[0] + candidate_index
+    counts[slot] = counts[slot] + 1
+    sample_value = fields[15]
+    if fields[3] = "RexxCPS" then do
+      sample_value = fields[19]
+      if sample_value = "" then return fail("missing RexxCPS benchmark rate")
+    end
+    values[slot * 100 + counts[slot]] = sample_value
+  end
+  call linein input_path
+end
+
+call remove_output output_path
+header = "candidate,workload,metric,pairs,s0_median,candidate_median," || ,
+    "min_percent,q1_percent,median_percent,q3_percent,max_percent," || ,
+    "mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent," || ,
+    "interval_result,favorable,total"
+if lineout(output_path, header) <> 0 then return fail("could not create paired summary")
+
+do workload_index = 1 to workloads[0]
+  control_slot = (workload_index - 1) * candidates[0] + 1
+  do candidate_index = 2 to candidates[0]
+    candidate_slot = (workload_index - 1) * candidates[0] + candidate_index
+    if counts[control_slot] <> counts[candidate_slot] then
+      return fail("incomplete pair set")
+    count = counts[control_slot]
+    if count < 2 | count > 36 then return fail("paired count is outside 2..36")
+    control = .float[]
+    candidate = .float[]
+    do pair = 1 to count
+      control[pair] = values[control_slot * 100 + pair]
+      candidate[pair] = values[candidate_slot * 100 + pair]
+    end
+    metric = "elapsed_ns"
+    if workloads[workload_index] = "RexxCPS" then metric = "benchmark_rate"
+    if write_summary(output_path, candidates[candidate_index], ,
+        workloads[workload_index], metric, control, candidate) <> 0 then return 1
+    call sort_floats control
+    call sort_floats candidate
+    medians[control_slot] = sample_quantile(control, 1, 2)
+    medians[candidate_slot] = sample_quantile(candidate, 1, 2)
+  end
+end
+call lineout output_path
+
+if write_aggregate(aggregate_path, workloads, candidates, medians) <> 0 then return 1
+say "PASS: PERF3-13 Gate C2 paired summary retained at" output_path
+return 0
+
+write_summary: procedure = .int
+  arg output_path = .string, candidate_name = .string, workload = .string, ,
+      metric = .string, control = .float[], candidate = .float[]
+  count = control[0]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+  do pair = 1 to count
+    if metric = "elapsed_ns" then
+      delta = ((control[pair] - candidate[pair]) * 100.0) / control[pair]
+    else delta = ((candidate[pair] - control[pair]) * 100.0) / control[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if delta > 0.0 then favorable = favorable + 1
+  end
+
+  call sort_floats control
+  call sort_floats candidate
+  call sort_floats deltas
+  mean = sum / (count as .float)
+  sum_squares = 0.0
+  do i = 1 to count
+    difference = deltas[i] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / ((count - 1) as .float))
+  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)
+  interval_low = mean - margin
+  interval_high = mean + margin
+  interval_result = "noisy_inconclusive"
+  if interval_low > 0.0 then interval_result = "clear_favorable"
+  else if interval_high < 0.0 then interval_result = "clear_adverse"
+  row = candidate_name || "," || workload || "," || metric || "," || count || ,
+      "," || float_text(sample_quantile(control, 1, 2)) || "," || ,
+      float_text(sample_quantile(candidate, 1, 2)) || "," || ,
+      float_text(deltas[1]) || "," || float_text(sample_quantile(deltas, 1, 4)) || ,
+      "," || float_text(sample_quantile(deltas, 1, 2)) || "," || ,
+      float_text(sample_quantile(deltas, 3, 4)) || "," || ,
+      float_text(deltas[count]) || "," || float_text(mean) || "," || ,
+      float_text(interval_low) || "," || float_text(interval_high) || "," || ,
+      interval_result || "," || favorable || "," || count
+  if lineout(output_path, row) <> 0 then return fail("could not append paired row")
+  return 0
+
+write_aggregate: procedure = .int
+  arg output_path = .string, workloads = .string[], candidates = .string[], ,
+      medians = .float[]
+  call remove_output output_path
+  if lineout(output_path, ,
+      "candidate,n,geometric_mean_candidate_over_s0,membership") <> 0 then
+    return fail("could not create stable-six aggregate")
+  do candidate_index = 2 to candidates[0]
+    product = 1.0
+    count = 0
+    membership = ""
+    do workload_index = 1 to workloads[0]
+      if stable_workload(workloads[workload_index]) = 0 then iterate
+      control_slot = (workload_index - 1) * candidates[0] + 1
+      candidate_slot = (workload_index - 1) * candidates[0] + candidate_index
+      if medians[control_slot] <= 0.0 | medians[candidate_slot] <= 0.0 then
+        return fail("non-positive stable-six median")
+      if workloads[workload_index] = "RexxCPS" then
+        ratio = medians[candidate_slot] / medians[control_slot]
+      else ratio = medians[control_slot] / medians[candidate_slot]
+      product = product * ratio
+      count = count + 1
+      if membership <> "" then membership = membership || ";"
+      membership = membership || workloads[workload_index]
+    end
+    if count <> 6 then return fail("stable-six aggregate does not contain six workloads")
+    row = candidates[candidate_index] || "," || count || "," || ,
+        float_text(nth_root(product, count)) || "," || membership
+    if lineout(output_path, row) <> 0 then return fail("could not append stable-six aggregate")
+  end
+  call lineout output_path
+  return 0
+
+stable_workload: procedure = .int
+  arg workload = .string
+  if workload = "Sieve" | workload = "Permute" | workload = "Bounce" | ,
+      workload = "Richards" | workload = "Towers" | workload = "RexxCPS" then return 1
+  return 0
+
+nth_root: procedure = .float
+  arg value = .float, degree = .int
+  if degree <= 0 | value <= 0.0 then return 0.0
+  guess = 1.0
+  if value > 1.0 then guess = value / (degree as .float)
+  do iteration = 1 to 80
+    divisor = int_power(guess, degree - 1)
+    if divisor = 0.0 then return 0.0
+    next_guess = (((degree - 1) as .float) * guess + value / divisor) / ,
+        (degree as .float)
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+int_power: procedure = .float
+  arg base = .float, exponent = .int
+  result = 1.0
+  do i = 1 to exponent
+    result = result * base
+  end
+  return result
+
+find_name: procedure = .int
+  arg names = .string[], wanted = .string
+  do index = 1 to names[0]
+    if names[index] = wanted then return index
+  end
+  return 0
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+t_critical_95: procedure = .float
+  arg degrees = .int
+  if degrees <= 11 then return 2.200985
+  if degrees = 12 then return 2.178813
+  if degrees = 13 then return 2.160369
+  if degrees = 14 then return 2.144787
+  if degrees = 15 then return 2.131450
+  if degrees = 16 then return 2.119905
+  if degrees = 17 then return 2.109816
+  if degrees = 18 then return 2.100922
+  if degrees = 19 then return 2.093024
+  if degrees = 20 then return 2.085963
+  if degrees = 21 then return 2.079614
+  if degrees = 22 then return 2.073873
+  if degrees = 23 then return 2.068658
+  if degrees = 24 then return 2.063899
+  if degrees = 25 then return 2.059539
+  if degrees = 26 then return 2.055529
+  if degrees = 27 then return 2.051831
+  if degrees = 28 then return 2.048407
+  if degrees = 29 then return 2.045230
+  if degrees = 30 then return 2.042272
+  if degrees = 31 then return 2.039513
+  if degrees = 32 then return 2.036933
+  if degrees = 33 then return 2.034515
+  if degrees = 34 then return 2.032245
+  return 2.030108
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

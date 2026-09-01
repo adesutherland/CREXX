@@ -1,0 +1,45 @@
+PERF3-01 current-product Apple formal refresh pre-run environment
+captured_utc=2026-07-31T13:00:06Z
+repository_branch=develop
+repository_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+product_worktree_status=0 rows
+upstream=21fdcf529d0e51ea264bf0c92ccfbdc06dea8200
+main_worktree_scope=PERF3-01 roadmap, worklist, manifest and current evidence only; five protected pre-existing lifecycle RXBINs remain untracked
+build_type=Release
+c_flags_release=-O3 -DNDEBUG
+crexx_vm_profiling=OFF
+host=Mac17,3; Apple M5; 10 logical CPUs; 25769803776 bytes
+os=macOS 26.5.2 build 25F84; Darwin 25.5.0 arm64
+power_source='AC Power'
+battery= -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+low_power_mode=0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+load_averages={ 1.64 3.08 2.88 }
+compiler=Apple clang version 21.0.0 (clang-2100.1.1.101)
+cmake=4.3.2
+ninja=1.13.2
+rxvm=crexx-1.0.0-beta.3+local.g3f43a0014be1 (Threaded Mode)
+rxbvm=crexx-1.0.0-beta.3+local.g3f43a0014be1 (Bytecode Mode)
+manifest=performance/manifests/perf3-01-current-mac-v1.txt
+manifest_sha256=6d6f870ab83e62692ecf3ecb3ea51c194a12e7d661611670ff06b09b91b08d66
+matrix_tool_source_sha256=efb194ec8194bfed5c26bd2fd98fb225f219c16a29fd710e9428fd331dc2a06c
+matrix_tool_rxbin_sha256=afbedd97fb6c8ec48e7fa3d6524aeb2dc3c39e6737ac3fa9f3e89a5c2d3b556b
+sampling=serial; runtime order rotated by workload and round
+formal_timing=2 warmups plus 10 recorded samples per cell
+common_membership=Sieve;Permute;Bounce;Richards;Base64
+separate_rows=Towers equal work 100; RexxCPS native rate
+formal_exclusions=Mandelbrot;Storage;List;JSON
+active_build_test_vm_processes_before_run:
+active_process_name_count=0
+top_processes_before_run:
+  PID  %CPU %MEM COMM
+  598  37.4  0.4 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  753  21.9  0.0 /usr/libexec/sysmond
+ 1088   7.1  0.4 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+ 1113   6.0  1.7 /Applications/ChatGPT.app/Contents/Resources/codex
+ 1137   5.4  5.4 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+50780   2.7  0.0 /bin/zsh
+14673   1.8  0.4 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor

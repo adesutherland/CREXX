@@ -22,32 +22,29 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Split on separators outside matching ASCII quotes. */
 options levelb
-
 namespace rxfnsb expose qsplit
 
-/* ------------------------------------------------------------------
- *  QSPLIT(text, sep)
- *  Splits 'text' into parts by 'sep', ignoring separators inside
- *  quotes (handles '' and "" escaped quotes).
- *  Returns a stem array .parts.1, .parts.2, ...  and .0 = count.
- * ------------------------------------------------------------------
+/**
+ * Split text without losing whitespace, empty fields, or quote delimiters.
+ *
+ * @param text source text
+ * @param sep non-empty separator
+ * @return exact fields including leading, adjacent, and trailing empty fields
+ * @signal INVALID_ARGUMENTS invalid separator or quote grammar
  */
-qsplit: procedure=.string[]
-   arg text=.string, sep=.string
-   count  = 0
-   start  = 1
-   parts=.string[]
-   do forever
-      npos = qpos(sep, text, start)
-      if npos = 0 then do
-         count = count + 1
-         parts[count] = substr(text, start)
-         leave
-      end
-      count = count + 1
-      parts[count] = strip(substr(text, start, npos - start))
-      start = npos + length(sep)
-   end
-return parts
+qsplit: procedure = .string[]
+  arg text = .string, sep = .string
+  matches = qscan_outside_matches(text,sep,1)
+  parts = .string[]
+  separator_length = .int
+  assembler strlen separator_length,sep
+  field_start = 1
+  do index = 1 to matches[0]
+    separator_position = matches[index]
+    parts[index] = substr(text,field_start,separator_position - field_start)
+    field_start = separator_position + separator_length
+  end
+  parts[matches[0] + 1] = substr(text,field_start)
+  return parts

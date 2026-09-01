@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+p05-baseline-rxvm,GenericWord-rxvm,crexx-accepted,rxvm,canonical,B,no,steady,2000000,elapsed_ns,22,175585000.000000,182804750.000000,184529500.000000,188222000.000000,199926000.000000,2771500.000000,1.501928,13.190845,yes
+p05-candidate-rxvm,GenericWord-rxvm,crexx-p05-cf1,rxvm,direct-canonical-mkref-guards,B,no,steady,2000000,elapsed_ns,22,6980000.000000,7374500.000000,7673500.000000,8060500.000000,9670000.000000,379500.000000,4.945592,35.055711,yes
+p05-baseline-rxbvm,GenericWord-rxbvm,crexx-accepted,rxbvm,canonical,B,no,steady,2000000,elapsed_ns,22,186112000.000000,195069250.000000,199864000.000000,201470000.000000,207410000.000000,3793000.000000,1.897790,10.656246,yes
+p05-candidate-rxbvm,GenericWord-rxbvm,crexx-p05-cf1,rxbvm,direct-canonical-mkref-guards,B,no,steady,2000000,elapsed_ns,22,9194000.000000,9407500.000000,9575500.000000,9855250.000000,10554000.000000,191000.000000,1.994674,14.202914,yes

@@ -64,6 +64,4 @@ the procedure, while `arg expose` exposes a call argument by reference.
 
 Optional arguments can be tested with the `?name` form. A final `... = type`
 tail accepts a variable number of arguments; those values are available through
-the pseudo array `arg[]`/`arg.0` and the compatibility `arg()` operator. See
-`statements.md` for the complete procedure, argument, ellipsis, and `arg()`
-rules.
+the pseudo array `arg[]`/`arg.0` and the compatibility `arg()` operator. See [Statements](statements) on page \pageref{statements} for the complete procedure, argument, ellipsis, and `arg()` rules.

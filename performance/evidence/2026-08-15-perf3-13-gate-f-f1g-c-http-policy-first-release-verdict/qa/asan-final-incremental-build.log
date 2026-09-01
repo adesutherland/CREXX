@@ -1,0 +1,85 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-194128-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260815-194128-build/build.log
+==> build passed
+[ 98%] Built target ts_qwordlength_opt_artifact
+[ 98%] Built target ts_objectarrayprepend
+[ 98%] Built target ts_qwordlength
+[ 98%] Built target ts_raise_noopt_artifact
+[ 98%] Built target ts_raise_opt_artifact
+[ 98%] Built target ts_raise
+[ 98%] Built target ts_rxsystem_noopt_artifact
+[ 98%] Built target ts_rxsystem_opt_artifact
+[ 98%] Built target ts_rxsystem
+[ 98%] Built target ts_rxsystem_exit_noopt_artifact
+[ 98%] Built target ts_rxsystem_exit_opt_artifact
+[ 98%] Built target ts_rxsystem_exit
+[ 98%] Built target ts_rxqueue_opt_artifact
+[ 98%] Built target ts_rxqueue_noopt_artifact
+[ 98%] Built target ts_rxqueue
+[ 98%] Built target ts_signal_opt_artifact
+[ 98%] Built target ts_signal_noopt_artifact
+[ 98%] Built target ts_signal
+[ 98%] Built target ts_substro_noopt_artifact
+[ 98%] Built target ts_substro_opt_artifact
+[ 98%] Built target ts_subword_noopt_artifact
+[ 98%] Built target ts_subword_opt_artifact
+[ 98%] Built target ts_substro
+[ 98%] Built target ts_xrange_opt_artifact
+[ 98%] Built target ts_xrange_noopt_artifact
+[ 98%] Built target ts_subword
+[ 98%] Built target ts_xrange
+[ 98%] Built target ts_objectarray_opt_artifact
+[ 98%] Built target ts_objectarray_noopt_artifact
+[ 98%] Built target ts_stem_noopt_artifact
+[ 98%] Built target ts_objectarray
+[ 98%] Built target ts_stem_opt_artifact
+[ 98%] Built target ts_rxjson_opt_artifact
+[ 98%] Built target ts_stem
+[ 98%] Built target ts_rxjson_noopt_artifact
+[ 98%] Built target ts_rxjson
+[ 98%] Built target ts_rxjson_document_opt_artifact
+[ 98%] Built target ts_rxjson_document_noopt_artifact
+[ 98%] Built target ts_rxjson_document
+[ 98%] Built target ts_rxjson_numeric_projection_opt_artifact
+[ 99%] Built target ts_rxjson_numeric_projection_noopt_artifact
+[ 99%] Built target ts_rxjson_numeric_projection
+[ 99%] Built target ts_rxjson_noisy_contract_noopt_artifact
+[ 99%] Built target ts_rxjson_noisy_contract_opt_artifact
+[ 99%] Built target ts_rxjson_noisy_contract
+[ 99%] Built target ts_rxsocket_noopt_artifact
+[ 99%] Built target ts_rxsocket_opt_artifact
+[ 99%] Built target ts_socket_tls_live_noopt_artifact
+[ 99%] Built target ts_rxsocket
+[100%] Built target ts_socket_tls_live_opt_artifact
+[100%] Built target ts_socket_tls_live
+[100%] Built target ts_rxhttp_noopt_artifact
+[100%] Built target ts_rxhttp_opt_artifact
+[100%] Built target ts_rxhttp
+[100%] Built target testbifs
+[100%] cREXX Linked Level G Library Image ...
+[100%] Built target rxfnsg
+[100%] Built target ts_http_policy_rxbvm_opt_artifact
+[100%] Built target ts_http_policy_rxtvm_noopt_artifact
+[100%] Built target ts_http_pooled_rxbvm_noopt_artifact
+[100%] Built target ts_http_policy_rxtvm_opt_artifact
+[100%] Built target ts_http_pooled_rxtvm_opt_artifact
+[100%] Built target address_llm_fixture_bin
+[100%] Built target ts_llm_ollama_opt_artifact
+[100%] Built target ts_http_pooled_rxbvm_opt_artifact
+[100%] Built target ts_llm_ollama_noopt_artifact
+[100%] Built target ts_http_policy_rxbvm_noopt_artifact
+[100%] Built target ts_http_pooled_rxtvm_noopt_artifact
+[100%] Built target ts_http_tls_live_rxbvm_noopt_artifact
+[100%] Built target ts_http_tls_live_rxtvm_noopt_artifact
+[100%] Built target ts_http_tls_live_rxtvm_opt_artifact
+[100%] Built target ts_http_tls_live_rxbvm_opt_artifact
+[100%] Built target ts_llm_providers_opt_artifact
+[100%] Built target ts_llm_ollama
+[100%] Built target ts_llm_providers_noopt_artifact
+[100%] Built target ts_http_policy
+[100%] Built target ts_http_pooled
+[100%] Built target ts_http_tls_live
+[100%] Built target ts_llm_providers
+[100%] Built target testrxfnsg
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-194128-build

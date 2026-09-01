@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+permute,crexx-release-clang-o3,50-repetitions-opt,process,warmup,1,144003000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,warmup,2,117714000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,1,102242000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,2,95902000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,3,97612000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,4,95658000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,5,96977000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,6,94253000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,7,97263000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,8,96826000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,9,134976000,0,pass,,
+permute,crexx-release-clang-o3,50-repetitions-opt,process,recorded,10,119749000,0,pass,,

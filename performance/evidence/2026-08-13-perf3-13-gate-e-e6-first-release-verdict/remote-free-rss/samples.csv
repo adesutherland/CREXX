@@ -1,0 +1,9 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+rss-remote-free-remote-free-local-recorded-1,rss,remote-free,remote-free-local,crexx,allocator,c0-local-free,E6-C0,no,process,recorded,1,1,1000000,19868000,73793536,0,pass,,
+rss-remote-free-remote-free-queued-recorded-1,rss,remote-free,remote-free-queued,crexx,allocator,c2-owner-drained-queue,E6-C2,no,process,recorded,1,2,1000000,51170000,73809920,0,pass,,
+rss-remote-free-remote-free-queued-recorded-2,rss,remote-free,remote-free-queued,crexx,allocator,c2-owner-drained-queue,E6-C2,no,process,recorded,2,1,1000000,51439000,73809920,0,pass,,
+rss-remote-free-remote-free-local-recorded-2,rss,remote-free,remote-free-local,crexx,allocator,c0-local-free,E6-C0,no,process,recorded,2,2,1000000,18806000,73809920,0,pass,,
+rss-remote-free-remote-free-local-recorded-3,rss,remote-free,remote-free-local,crexx,allocator,c0-local-free,E6-C0,no,process,recorded,3,1,1000000,18773000,73809920,0,pass,,
+rss-remote-free-remote-free-queued-recorded-3,rss,remote-free,remote-free-queued,crexx,allocator,c2-owner-drained-queue,E6-C2,no,process,recorded,3,2,1000000,51087000,73809920,0,pass,,
+rss-remote-free-remote-free-queued-recorded-4,rss,remote-free,remote-free-queued,crexx,allocator,c2-owner-drained-queue,E6-C2,no,process,recorded,4,1,1000000,51524000,73809920,0,pass,,
+rss-remote-free-remote-free-local-recorded-4,rss,remote-free,remote-free-local,crexx,allocator,c0-local-free,E6-C0,no,process,recorded,4,2,1000000,19255000,73809920,0,pass,,

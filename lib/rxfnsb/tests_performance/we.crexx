@@ -35,9 +35,10 @@ do i=today  to 900000
     leave
   end
 end
-do i=today-9000 to 900000
+do i=.float(today-9000) to 900000
   xv = I - date('b','23 Sep 1958')
   xy = I - date('b','26 Mar 1990')
+  p = .float
   p = xy/xv*100
   if p >= 50 then
   do
@@ -45,9 +46,10 @@ do i=today-9000 to 900000
     leave
   end
 end
-do i=today  to 900000
+do i=.float(today)  to 900000
   xr = I - date('b','10 Mar 1962')
   xm = I - date('b','19 Sep 1992')
+  p = .float
   p = xm/xr*100
   if p >= 50 then
   do
@@ -55,9 +57,10 @@ do i=today  to 900000
     leave
   end
 end
-do i=today-9000  to 900000
+do i=.float(today-9000)  to 900000
   xr = I - date('b','10 Mar 1962')
   xz = I - date('b','26 Mar 1990')
+  p = .float
   p = xz/xr*100
   if p >= 50 then
   do

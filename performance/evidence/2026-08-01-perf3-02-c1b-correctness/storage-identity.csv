@@ -1,0 +1,5 @@
+variant,procedure,nodes,cells,exact_cells,unknown_cells,links_exact,links_unknown,unlinks,joins,join_unknown,full_copy,full_copy_exact_base,tainted_full_copy,normal_edges,skip_edges,retry_edges
+C0,runTask,1013,56728,54565,2163,126,0,126,35,55,23,23,17,1040,224,224
+C1b-R1,runTask,1024,59392,58731,661,126,0,126,35,0,22,22,16,1051,225,225
+C0,schedule,122,1708,1430,278,14,0,14,6,18,1,1,1,128,27,27
+C1b-R1,schedule,133,2128,2064,64,14,0,14,6,0,0,0,0,139,30,30

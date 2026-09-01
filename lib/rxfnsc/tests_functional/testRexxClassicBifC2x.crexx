@@ -1,0 +1,79 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifc2x
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+errors = errors + check_text("", "", "BYTE")
+errors = errors + check_text("414243", "ABC", "BYTE")
+errors = errors + check_text("C3A9", "é", "BYTE")
+errors = errors + check_text("C3A9", "é", "UTF8")
+errors = errors + check_binary("FF00", "BYTE", "")
+errors = errors + check_binary("FF", "UTF8", "RXC-LC-23.1")
+errors = errors + check_count("RXC-LC-40.3", 0)
+errors = errors + check_count("RXC-LC-40.4", 2)
+errors = errors + check_omitted()
+
+if errors = 0 then say "PASS: Level C C2X BIF"
+return errors <> 0
+
+check_text: procedure = .int
+  arg expected = .string, source = .string, profile = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("C2X")
+  if profile = "UTF8" then call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2x..rexxclassicbif_c2x(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = source then return 0
+  say "FAIL: C2X text" profile "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_binary: procedure = .int
+  arg hexadecimal = .string, profile = .string, expected_error = .string
+  args = .RexxValue[]
+  exists = .int[]
+  bytes = rexxclassic_hex_to_bytes(hexadecimal)
+  args[1] = .RexxValue.fromBinary(bytes)
+  exists[1] = 1
+  context = .RexxBifCallContext("C2X")
+  if profile = "UTF8" then call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2x..rexxclassicbif_c2x(reference context)
+  if expected_error <> "" then do
+    if context.hasError() & context.errorCode() = expected_error then return 0
+  end
+  else if \context.hasError() & result.asString() = hexadecimal then return 0
+  say "FAIL: C2X binary" profile hexadecimal result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count: procedure = .int
+  arg expected = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to count
+    args[index] = .RexxValue("A")
+    exists[index] = 1
+  end
+  return run_error(expected, args, exists)
+
+check_omitted: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("A")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+run_error: procedure = .int
+  arg expected = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("C2X")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2x..rexxclassicbif_c2x(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: C2X expected error" expected "got" context.errorCode() result.asString()
+  return 1

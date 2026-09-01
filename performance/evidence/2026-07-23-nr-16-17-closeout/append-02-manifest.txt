@@ -1,0 +1,16 @@
+# Final append to the 36-pair cap for the six cells whose 24-pair mean interval
+# still crossed zero. The common rxvm aggregate already resolved at 24 pairs,
+# so only the remaining ambiguous cells are retained here.
+crexx-cross-runtime-matrix|1
+permute-rxvm-baseline-append02|Permute|crexx|rxvm|post-nr16-pre-nr17|A|no|no|5000|PASS: AWFY Permute||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+permute-rxvm-candidate-append02|Permute|crexx|rxvm|accepted-nr17|A|no|no|5000|PASS: AWFY Permute||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+base64-rxvm-baseline-append02|Base64|crexx|rxvm|post-nr16-pre-nr17|A|no|no|2500|PASS: Base64 Roundtrip||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+base64-rxvm-candidate-append02|Base64|crexx|rxvm|accepted-nr17|A|no|no|2500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+mandelbrot-rxbvm-baseline-append02|Mandelbrot|crexx|rxbvm|post-nr16-pre-nr17|A|no|no|500|PASS: AWFY Mandelbrot||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+mandelbrot-rxbvm-candidate-append02|Mandelbrot|crexx|rxbvm|accepted-nr17|A|no|no|500|PASS: AWFY Mandelbrot||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+towers-rxvm-baseline-append02|Towers|crexx|rxvm|post-nr16-pre-nr17|A|no|no|10|PASS: AWFY Towers||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+towers-rxvm-candidate-append02|Towers|crexx|rxvm|accepted-nr17|A|no|no|10|PASS: AWFY Towers||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+towers-rxbvm-baseline-append02|Towers|crexx|rxbvm|post-nr16-pre-nr17|A|no|no|10|PASS: AWFY Towers||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+towers-rxbvm-candidate-append02|Towers|crexx|rxbvm|accepted-nr17|A|no|no|10|PASS: AWFY Towers||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_towers_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+storage-rxvm-baseline-append02|Storage|crexx|rxvm|post-nr16-pre-nr17|A|no|no|10|PASS: AWFY Storage||/private/tmp/nr17-direct-call-baseline.xR29kj/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10
+storage-rxvm-candidate-append02|Storage|crexx|rxvm|accepted-nr17|A|no|no|10|PASS: AWFY Storage||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_storage_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;10

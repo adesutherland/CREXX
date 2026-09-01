@@ -32,6 +32,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Determine metadata
         id: metadata
@@ -43,7 +44,11 @@ jobs:
           version="$version_file"
           channel="local"
           timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
-          short_sha="${GITHUB_SHA:0:12}"
+          source_commit="${GITHUB_SHA}"
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            source_commit="$(jq -r '.pull_request.head.sha' "$GITHUB_EVENT_PATH")"
+          fi
+          short_sha="${source_commit:0:12}"
           release_name="CREXX Local Build ${timestamp}"
 
           if [ "${GITHUB_EVENT_NAME}" = "create" ] && [[ "${GITHUB_REF_NAME}" == v* ]]; then
@@ -74,12 +79,14 @@ jobs:
             display_version="crexx-${version_without_build}+${channel}.g${short_sha}"
           fi
 
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "channel=${channel}" >> "$GITHUB_OUTPUT"
-          echo "timestamp=${timestamp}" >> "$GITHUB_OUTPUT"
-          echo "commit=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "display_version=${display_version}" >> "$GITHUB_OUTPUT"
-          echo "release_name=${release_name}" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=${version}"
+            echo "channel=${channel}"
+            echo "timestamp=${timestamp}"
+            echo "commit=${source_commit}"
+            echo "display_version=${display_version}"
+            echo "release_name=${release_name}"
+          } >> "$GITHUB_OUTPUT"
 
   build:
     name: ${{ matrix.name }}
@@ -96,21 +103,29 @@ jobs:
             os: ubuntu-24.04
             platform: linux
             artifact_name: CREXX-linux-x64
+            build_jobs: 2
+            test_jobs: 5
             cmake_args: ""
           - name: Windows x64
             os: windows-2025
             platform: windows
             artifact_name: CREXX-windows-x64
+            build_jobs: 4
+            test_jobs: 2
             cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
           - name: macOS arm64
             os: macos-15
             platform: macos
             artifact_name: CREXX-macos-arm64
+            build_jobs: 2
+            test_jobs: 5
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
           - name: macOS x86_64
             os: macos-15-intel
             platform: macos
             artifact_name: CREXX-macos-x86_64
+            build_jobs: 2
+            test_jobs: 5
             cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
 
     steps:
@@ -118,6 +133,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
+          ref: ${{ needs.version.outputs.commit }}
 
       - name: Update toolchain (MSYS2)
         if: matrix.platform == 'windows'
@@ -139,11 +155,13 @@ jobs:
         shell: bash
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
-            -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
             ${{ matrix.cmake_args }}
 
       - name: Configure
@@ -151,45 +169,48 @@ jobs:
         shell: msys2 {0}
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
-            -DCMAKE_BUILD_TYPE=MinSizeRel \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
             ${{ matrix.cmake_args }}
 
-      - name: Build
+      - name: Build Release user product
         if: matrix.platform != 'windows'
         shell: bash
         run: |
-          cmake --build "${{ runner.temp }}/build" --parallel 2
+          cmake --build "${{ runner.temp }}/build" \
+            --target stage-product stage-optional \
+            --parallel ${{ matrix.build_jobs }}
 
-      - name: Build
+      - name: Build Release user product
         if: matrix.platform == 'windows'
         shell: msys2 {0}
         run: |
-          cmake --build "${{ runner.temp }}/build" --parallel 2
+          cmake --build "${{ runner.temp }}/build" \
+            --target stage-product stage-optional \
+            --parallel ${{ matrix.build_jobs }}
 
-      - name: CTest
+      - name: Run fast candidate QA
         if: matrix.platform != 'windows'
         shell: bash
         run: |
-          ctest --test-dir "${{ runner.temp }}/build" \
-            --output-on-failure \
-            --no-tests=error \
-            --parallel 1
+          cmake --build "${{ runner.temp }}/build" \
+            --target qa-smoke \
+            --parallel ${{ matrix.build_jobs }}
 
-      - name: CTest
+      - name: Run fast candidate QA
         if: matrix.platform == 'windows'
         shell: msys2 {0}
         run: |
-          ctest --test-dir "${{ runner.temp }}/build" \
-            --output-on-failure \
-            --no-tests=error \
-            --parallel 1
+          cmake --build "${{ runner.temp }}/build" \
+            --target qa-smoke \
+            --parallel ${{ matrix.build_jobs }}
 
       - name: Stage release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'
+        if: matrix.platform != 'windows'
         shell: bash
         run: |
           set -euo pipefail
@@ -197,25 +218,69 @@ jobs:
           stage="${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}"
           mkdir -p "$stage/bin" "$stage/examples"
 
-          cp "${{ runner.temp }}/build/bin/"* "$stage/bin/"
-          cp examples/* "$stage/examples/"
+          cp -R "${{ runner.temp }}/build/bin/." "$stage/bin/"
+          cp -R examples/. "$stage/examples/"
+          cp -R "${{ runner.temp }}/build/example-artifacts/." "$stage/examples/"
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "$stage/"
           cp "${{ runner.temp }}/build/generated/VERSION" "$stage/VERSION"
           cp "${{ runner.temp }}/build/generated/BUILDINFO" "$stage/BUILDINFO"
 
       - name: Stage release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
+        if: matrix.platform == 'windows'
         shell: pwsh
         run: |
           $stage = Join-Path "${{ runner.temp }}" "release-payload/${{ matrix.artifact_name }}"
           New-Item -ItemType Directory -Force -Path (Join-Path $stage "bin") | Out-Null
           New-Item -ItemType Directory -Force -Path (Join-Path $stage "examples") | Out-Null
 
-          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse
-          Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse -Force
+          Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse -Force
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/example-artifacts/*") -Destination (Join-Path $stage "examples") -Recurse -Force
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md" -Destination $stage
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/VERSION") -Destination (Join-Path $stage "VERSION") -Force
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
+
+      - name: Package exact-SHA user-test archive
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          payload_root="${{ runner.temp }}/release-payload"
+          payload="${{ matrix.artifact_name }}"
+          suffix="${payload#CREXX-}"
+          asset_dir="${{ runner.temp }}/user-test-assets"
+          asset="CREXX-user-test-${{ needs.version.outputs.commit }}-${suffix}.zip"
+
+          mkdir -p "$asset_dir"
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
+          else
+            (cd "$payload_root" && zip -qr "$asset_dir/$asset" "$payload")
+          fi
+
+      - name: Package exact-SHA user-test archive
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $payloadRoot = Join-Path "${{ runner.temp }}" "release-payload"
+          $payload = "${{ matrix.artifact_name }}"
+          $suffix = $payload -replace "^CREXX-", ""
+          $assetDir = Join-Path "${{ runner.temp }}" "user-test-assets"
+          $asset = "CREXX-user-test-${{ needs.version.outputs.commit }}-$suffix.zip"
+          $payloadPath = Join-Path $payloadRoot $payload
+          $assetPath = Join-Path $assetDir $asset
+
+          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
+          Compress-Archive -Path $payloadPath -DestinationPath $assetPath -Force
+
+      - name: Upload exact-SHA user-test archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: user-test-${{ needs.version.outputs.commit }}-${{ matrix.artifact_name }}
+          path: ${{ runner.temp }}/user-test-assets/CREXX-user-test-${{ needs.version.outputs.commit }}-*.zip
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Configure Apple signing keychain
         id: macos_signing
@@ -650,11 +715,162 @@ jobs:
             security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true
           fi
 
+  optimizer-parity:
+    name: Linux Debug Optimizer Parity
+    needs: version
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.version.outputs.commit }}
+
+      - name: Configure Debug parity build
+        shell: bash
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/debug-parity" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+
+      - name: Run optimized/non-optimized correctness parity
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/debug-parity" \
+            --target qa-optimizer-parity \
+            --parallel 2
+
+  comprehensive:
+    name: Comprehensive ${{ matrix.name }}
+    needs: version
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch' || (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-24.04
+            platform: linux
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: ""
+          - name: Windows x64
+            os: windows-2025
+            platform: windows
+            build_jobs: 4
+            test_jobs: 2
+            cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
+          - name: macOS arm64
+            os: macos-15
+            platform: macos
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+          - name: macOS x86_64
+            os: macos-15-intel
+            platform: macos
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.version.outputs.commit }}
+
+      - name: Update toolchain (MSYS2)
+        if: matrix.platform == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            git
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
+            openssl:p
+            pkgconf:p
+
+      - name: Configure Release qualification build
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            ${{ matrix.cmake_args }}
+
+      - name: Configure Release qualification build
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            ${{ matrix.cmake_args }}
+
+      - name: Run comprehensive correctness QA
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-comprehensive \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run comprehensive correctness QA
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-comprehensive \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run install/package/external-consumer qualification
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-qualification \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run install/package/external-consumer qualification
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-qualification \
+            --parallel ${{ matrix.build_jobs }}
+
   release:
     name: Create GitHub Release
     runs-on: ubuntu-24.04
     needs:
       - build
+      - comprehensive
       - version
     if: github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
     timeout-minutes: 15
@@ -670,6 +886,7 @@ jobs:
       - name: Download release assets
         uses: actions/download-artifact@v8
         with:
+          pattern: '*-release-asset'
           path: ${{ runner.temp }}/downloaded-release-assets
 
       - name: Collect release assets
@@ -791,6 +1008,7 @@ jobs:
         if: steps.publish_target.outputs.should_publish == 'true'
         uses: actions/download-artifact@v8
         with:
+          pattern: '*-release-asset'
           path: ${{ runner.temp }}/downloaded-dev-snapshot-assets
 
       - name: Collect dev snapshot assets
@@ -865,7 +1083,7 @@ jobs:
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
-            echo "Windows signing is completed separately. Prefer the \`CREXX-dev-snapshot-windows-x64-signed.zip\` asset when it is present and matches commit \`${short_sha}\` in this note."
+            echo "Windows signing and installer packaging are completed separately. Prefer \`CREXX-dev-snapshot-windows-x64-setup.exe\` for normal installation when it is present and matches commit \`${short_sha}\`; use \`CREXX-dev-snapshot-windows-x64-signed.zip\` as the portable archive."
           } > "$notes_file"
 
           echo "DEV_SNAPSHOT_NOTES_PATH=$notes_file" >> "$GITHUB_ENV"

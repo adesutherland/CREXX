@@ -1,0 +1,7 @@
+workload,vm,metric,pairs,control_median,candidate_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,median_absolute_ns,guard_hit
+RXPA-Reentrant-Drift,rxbvm,elapsed_ns,12,1267480500.000000,1242944000.000000,-15.839660,-3.125148,-2.439823,-1.200863,3.086623,-3.775905,-7.529830,-0.021980,clear_favorable,10,12,-24536500.000000,no
+RXPA-Reentrant-Drift,rxtvm,elapsed_ns,12,1247033000.000000,1224966000.000000,-7.412398,-3.359256,-2.827367,-0.761997,0.337795,-2.560034,-3.979992,-1.140075,clear_favorable,10,12,-22067000.000000,no
+RXPA-Session-Calls,rxbvm,elapsed_ns,12,1256430000.000000,1314740000.000000,2.982001,3.826041,5.341958,6.516078,8.075864,5.310167,4.239307,6.381027,clear_adverse,0,12,58310000.000000,not_applicable
+RXPA-Session-Calls,rxtvm,elapsed_ns,12,1233536500.000000,1315095500.000000,4.194056,5.275138,6.342357,6.722356,10.934331,6.398250,5.236356,7.560144,clear_adverse,0,12,81559000.000000,not_applicable
+RXPA-Session-Lifecycle,rxbvm,elapsed_ns,12,14291000.000000,14278500.000000,-2.613374,-0.794666,-0.044883,0.560266,1.986282,-0.166079,-1.007978,0.675821,noisy_inconclusive,6,12,-12500.000000,no
+RXPA-Session-Lifecycle,rxtvm,elapsed_ns,12,14353500.000000,14260500.000000,-3.133213,-1.611741,-0.569852,-0.135854,1.822307,-0.695232,-1.594117,0.203653,noisy_inconclusive,9,12,-93000.000000,no

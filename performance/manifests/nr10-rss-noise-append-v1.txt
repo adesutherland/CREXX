@@ -1,0 +1,6 @@
+# Initial version-1 RSS append retained for binary/JVM audit and non-common
+# diagnostics only. Use version 3 for the canonical baseline.
+crexx-cross-runtime-matrix|1
+sieve-netrexx|Sieve|netrexx|netrexx|equivalent-port|A|no|no|1000000|PASS: AWFY Sieve NetRexx port||/usr/bin/java;-cp;performance/evidence/2026-07-15-nr-02-cross-runtime/sieve/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;awfy_sieve;1000000
+base64-netrexx|Base64|netrexx|netrexx|equivalent-port|A|no|no|250000|PASS: Base64 Roundtrip NetRexx port||/usr/bin/java;-cp;performance/evidence/2026-07-15-nr-02-portfolio-expansion/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;base64_roundtrip;250000
+rexxcps-netrexx|RexxCPS|netrexx|netrexx|disclosed-2.2n|A|no|no|1000-clauses|PASS: RexxCPS 2.2n NetRexx disclosed adaptation|Performance:|/usr/bin/java;-cp;performance/evidence/2026-07-15-nr-02-cross-runtime/rexxcps/netrexx-2.2n:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar;rexxcps_2_2n

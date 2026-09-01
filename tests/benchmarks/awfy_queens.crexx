@@ -1,0 +1,88 @@
+/*
+ * Level B port of the Are We Fast Yet? Queens benchmark.
+ * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89
+ * under the SOM MIT license; see THIRD_PARTY_NOTICES.md.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+result = 0
+do iteration = 1 to repetitions
+  benchmark = .QueensBenchmark()
+  result = benchmark.run()
+  if result <> 1 then return fail("eight-queens search did not find a placement")
+end
+
+say "benchmark=awfy_queens repetitions="repetitions "result="result
+say "PASS: AWFY Queens"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+QueensBenchmark: class
+  free_maxs = .int[]
+  free_rows = .int[]
+  free_mins = .int[]
+  queen_rows = .int[]
+
+  *: factory
+    do i = 1 to 16
+      free_maxs[i] = 1
+      free_mins[i] = 1
+    end
+    do i = .int(1) to 8
+      free_rows[i] = 1
+      queen_rows[i] = -1
+    end
+    return
+
+  run: method = .int
+    result = 1
+    do i = 1 to 10 while result = 1
+      result = queens()
+    end
+    return result
+
+  queens: method = .int
+    do i = 1 to 16
+      free_maxs[i] = 1
+      free_mins[i] = 1
+    end
+    do i = .int(1) to 8
+      free_rows[i] = 1
+      queen_rows[i] = -1
+    end
+    return placeQueen(0)
+
+  placeQueen: method = .int
+    arg column = .int
+    do row = 0 to 7
+      if rowColumnFree(row, column) then do
+        queen_rows[row + 1] = column
+        call setRowColumn(row, column, 0)
+        if column = 7 then return 1
+        if placeQueen(column + 1) then return 1
+        call setRowColumn(row, column, 1)
+      end
+    end
+    return 0
+
+  rowColumnFree: method = .int
+    arg row = .int, column = .int
+    return free_rows[row + 1] & free_maxs[column + row + 1] & ,
+      free_mins[column - row + 8]
+
+  setRowColumn: method = .void
+    arg row = .int, column = .int, value = .int
+    free_rows[row + 1] = value
+    free_maxs[column + row + 1] = value
+    free_mins[column - row + 8] = value
+    return

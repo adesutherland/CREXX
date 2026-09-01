@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "richards-opt",
+  "pair": "richards",
+  "workload": "Richards",
+  "variant": "candidate",
+  "optimization_mode": "opt",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin","sha256":"f22b7251d6bf51ea611b2b1458d79718314e6ff336e11fccd3edf49687fe1f53"},
+  "modules": [{"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","sha256":"b7161c8b6fd1aab617d1e2db7dcfd0de08d41f6d9396244d0dbef59b83a9946d"}],
+  "arguments": ["1"],
+  "correctness_expectation": "PASS: AWFY Richards",
+  "source_trace_retention": "source=tests/benchmarks/awfy_richards.crexx;TRACE=Off",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","-a","1"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/profile/profile.csv","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","-a","1"],
+  "sequence_commands": ["\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=2\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n2.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"1\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n2.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n2-candidates.csv\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=3\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n3.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"1\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n3.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n3-candidates.csv\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=4\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n4.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"1\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n4.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_richards_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-03-automated-proof/entries/richards-opt/rxseq/n4-candidates.csv\""],
+  "median_elapsed_ns": 656396000
+}

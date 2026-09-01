@@ -1,0 +1,11 @@
+family,fixture,signature,accepted,negative_oracle,migration_id
+swap_cancel,implicit_inc0_unrelated,f9d23da9,1,implicit_inc0_relevant,K01
+swap_cancel,loadint_unrelated,f9d23da9,1,loadint_relevant,K01
+swap_cancel,linkarg_unrelated,f9d23da9,1,linkarg_relevant,K01
+copy_acopy,copy_acopy,d132e98f,1,copy_acopy_noopt,K06
+duplicate_link_string,duplicate_link_read,a00a9575,1,metadata_and_trace_relevant,K02
+duplicate_link_binary,duplicate_link_read_bcopy,998fd3d5,1,barrier_matrix,K02
+duplicate_attribute_string,duplicate_linkattr_read,8ab441ee,1,different_attribute_slot,K03
+duplicate_attribute_binary,duplicate_linkattr_read_bcopy,3bd65c72,1,different_attribute_slot,K03
+compare_branch,compare_branch,multiple,16,live_boolean_trace_and_call_window,K04
+branch_thread,representative,e5795815,11,target_and_fallthrough_shape,K05

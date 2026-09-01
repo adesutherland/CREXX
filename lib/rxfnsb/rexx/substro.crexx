@@ -22,79 +22,69 @@
  * SOFTWARE.
  */
 
-/* Classic REXX Runtime Library */
-
-options levelb /* Written in REXX Level B */
-
+/**
+ * Level B SUBSTRO implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/substro.md
+ */
+options levelb
 namespace rxfnsb expose substro
-import _rxsysb
 
-/* Substr() Procedure */
+/**
+ * Return a character slice, optionally padded to an exact length.
+ *
+ * @param string source text
+ * @param start positive 1-based start position
+ * @param length optional non-negative result length
+ * @param pad exactly one padding codepoint
+ * @return selected text, padded on the right when length is supplied
+ */
 substro: procedure = .string
-  arg string1 = .string, start = .int, len = length(string1) + 1 - start, pad = ' '
+  arg string = .string, start = .int, length = 0, pad = " "
+  length_supplied = ?length
+  string_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  start_offset = .int
+  available = .int
+  copy_length = .int
+  padding_length = .int
+  result = ""
 
-  padchar = 0 /* Is an integer */
-  outputstring = ''
-  inputLength = 0;
-  padLength = 0;
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTRO start must be positive"
+  if length_supplied & length < 0 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTRO length must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTRO pad must contain exactly one character"
 
-/* say 'SUBSTR: start =' start */
-/* say 'SUBSTR: string1 =' string1 */
-/* say 'SUBSTR: len =' len */
-/* say 'SUBSTR: pad =' pad */
+  assembler strlen string_length,string
+  start_offset = start - 1
+  available = string_length - start_offset
+  if available < 0 then available = 0
 
-  /* Check Start */
-  if start < 1 then call raise "syntax", "40.13", start /* Invalid start */
-  start = start - 1 /* 1 base to zero base */
-
-  /* Check Length */
-  if len < 1 then call raise "syntax", "40.13", len /* Invalid start */
-
-  /* Check length of pad */
-  assembler strlen padLength,pad;
-  if padLength > 1 then call raise "syntax", "40.23", pad /* Invalid pad length */
-  else if padLength = 0 then call raise "syntax", "40.23", "SUBSTR argument 4 must be a single character; found ''"
-
-
-  /* Get the Length of the input string */
-  assembler strlen inputLength,string1
-  inputLength = inputLength - start;
-
-  if inputLength > 0 then do
-    /* Yes there are characters needed from string1 */
-    if len <= inputLength then do
-      /* Just copy from string1 - no padding needed */
-      do i = start to start + len - 1
-        assembler concchar outputstring,string1,i
-      end
-    end
-    else do
-      /* Copy all of string1 and then pad */
-      do i = start to start + inputLength - 1
-        assembler concchar outputstring,string1,i
-      end
-
-      /* Then add pads */
-      /* Get Pad Char as integer */
-      if padLength = 0 then pad = " "
-      assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
-      /* Append the pads */
-      do i = 1 to len - inputLength
-        assembler appendchar outputstring,padchar
-      end
-    end
+  if \length_supplied then do
+    if available = 0 then return result
+    if start_offset = 0 then return string
+    assembler substring result,string,start_offset,available
+    return result
   end
 
-  else do
-    /* Nothing from string 1 - just Pad */
-    /* Get Pad Char as integer */
-    if padLength = 0 then pad = " "
-    assembler strchar padchar,pad,padchar /* padchar is set to 0 so can use it as char pos */
-    /* Append pads */
-    do i = 1 to len
-      assembler appendchar outputstring,padchar
-    end
+  if length = 0 then return result
+  copy_length = length
+  if available < copy_length then copy_length = available
+  if copy_length > 0 then do
+    if start_offset = 0 & copy_length = string_length & length = string_length then
+      return string
+    assembler substring result,string,start_offset,copy_length
   end
 
-  /* Done */
-  return outputstring
+  padding_length = length - copy_length
+  if padding_length > 0 then do
+    assembler strchar pad_character,pad,pad_index
+    assembler padstr result,pad_character,padding_length
+  end
+  return result

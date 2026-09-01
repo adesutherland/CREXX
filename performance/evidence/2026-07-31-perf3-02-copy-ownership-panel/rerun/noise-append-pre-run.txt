@@ -1,0 +1,14 @@
+PERF3-02 clean-host governed timing append pre-run record
+
+- Initial campaign: 156/156 executions passed; 12 recorded samples per cell.
+- Six cells exceeded relative MAD 3% or min/max span 10%.
+- Append manifest contains those six cells plus two C0 partners required for
+  balanced pairwise comparisons; no unflagged candidate cell is substituted.
+- Protocol: one warmup plus ten recorded samples, serial and rotated.
+- Exact binaries, work counts, AC/low-power state and user session are unchanged.
+- Pre-append UTC: 2026-07-31T15:54:01Z
+- Load averages: 2.10 2.46 2.47
+- AC Power; battery 80%; lowpowermode 0.
+- No thermal, performance or CPU-power warning was recorded.
+- Interactive sessions: adrian console only.
+- No overlapping build, test, compiler, assembler, linker or VM process found.

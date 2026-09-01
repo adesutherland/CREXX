@@ -1,0 +1,635 @@
+/*
+ * Level B port of the Are We Fast Yet? DeltaBlue benchmark.
+ * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89;
+ * see THIRD_PARTY_NOTICES.md. Stable integer handles preserve the identity of
+ * variables and constraints while lowering the upstream class hierarchy to a
+ * tagged Level B representation.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+problem_size = 10
+if argv[0] >= 1 then problem_size = argv[1]
+if problem_size < 1 then return fail("problem size must be positive")
+
+chain_planner = .DBPlanner()
+if \chain_planner.chainTest(problem_size) then
+  return fail(chain_planner.errorMessage())
+
+projection_planner = .DBPlanner()
+if \projection_planner.projectionTest(problem_size) then
+  return fail(projection_planner.errorMessage())
+
+say "benchmark=awfy_deltablue size="problem_size,
+    "adaptation=stable-indexed-constraint-graph"
+say "PASS: AWFY DeltaBlue"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+/** Small integer vector used by the indexed DeltaBlue graph and work queues. */
+DBIdList: class
+  values_ = .int[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  append: method = .void
+    arg value = .int
+    count_ = count_ + 1
+    values_[count_] = value
+    return
+
+  get: method = .int
+    arg index = .int
+    if index < 1 | index > count_ then return 0
+    return values_[index]
+
+  set: method = .void
+    arg index = .int, value = .int
+    if index >= 1 & index <= count_ then values_[index] = value
+    return
+
+  size: method = .int
+    return count_
+
+  isEmpty: method = .int
+    return count_ = 0
+
+  removeFirst: method = .int
+    if count_ = 0 then return 0
+    value = values_[1]
+    do index = 1 to count_ - 1
+      values_[index] = values_[index + 1]
+    end
+    values_[count_] = 0
+    count_ = count_ - 1
+    return value
+
+  removeValue: method = .void
+    arg value = .int
+    found = 0
+    do index = 1 to count_ while found = 0
+      if values_[index] = value then found = index
+    end
+    if found = 0 then return
+    do index = .int(found) to count_ - 1
+      values_[index] = values_[index + 1]
+    end
+    values_[count_] = 0
+    count_ = count_ - 1
+    return
+
+/**
+ * DeltaBlue planner with stable indexed variables and constraints.
+ *
+ * Constraint kinds are equality=1, scale=2, stay=3 and edit=4. Binary
+ * directions are forward=1, backward=-1 and unsatisfied=0. Strengths retain
+ * the arithmetic ordering of the pinned AWFY implementation.
+ */
+DBPlanner: class
+  current_mark_ = .int
+  variable_count_ = .int
+  constraint_count_ = .int
+  error_ = .string
+
+  variable_value_ = .int[]
+  variable_determined_by_ = .int[]
+  variable_mark_ = .int[]
+  variable_walk_strength_ = .int[]
+  variable_stay_ = .int[]
+  variable_constraints_ = .DBIdList[]
+
+  constraint_kind_ = .int[]
+  constraint_strength_ = .int[]
+  constraint_v1_ = .int[]
+  constraint_v2_ = .int[]
+  constraint_scale_ = .int[]
+  constraint_offset_ = .int[]
+  constraint_direction_ = .int[]
+  constraint_satisfied_ = .int[]
+
+  *: factory
+    current_mark_ = 1
+    variable_count_ = 0
+    constraint_count_ = 0
+    error_ = ""
+    return
+
+  errorMessage: method = .string
+    if error_ = "" then return "DeltaBlue verification failed"
+    return error_
+
+  setError: method = .void
+    arg message = .string
+    if error_ = "" then error_ = message
+    return
+
+  hasError: method = .int
+    return error_ <> ""
+
+  newVariable: method = .int
+    arg initial_value = .int
+    variable_count_ = variable_count_ + 1
+    variable_id = variable_count_
+    variable_value_[variable_id] = initial_value
+    variable_determined_by_[variable_id] = 0
+    variable_mark_[variable_id] = 0
+    variable_walk_strength_[variable_id] = 10000
+    variable_stay_[variable_id] = 1
+    variable_constraints_[variable_id] = .DBIdList()
+    return variable_id
+
+  addVariableConstraint: method = .void
+    arg variable_id = .int, constraint_id = .int
+    list_ref = reference variable_constraints_[variable_id]
+    list = dereference list_ref
+    call list.append(constraint_id)
+    return
+
+  removeVariableConstraint: method = .void
+    arg variable_id = .int, constraint_id = .int
+    if variable_id = 0 then return
+    list_ref = reference variable_constraints_[variable_id]
+    list = dereference list_ref
+    call list.removeValue(constraint_id)
+    if variable_determined_by_[variable_id] = constraint_id then
+      variable_determined_by_[variable_id] = 0
+    return
+
+  addConstraint: method = .int
+    arg kind = .int, v1 = .int, v2 = .int, scale = .int, offset = .int, ,
+        strength = .int
+    constraint_count_ = constraint_count_ + 1
+    constraint_id = constraint_count_
+    constraint_kind_[constraint_id] = kind
+    constraint_strength_[constraint_id] = strength
+    constraint_v1_[constraint_id] = v1
+    constraint_v2_[constraint_id] = v2
+    constraint_scale_[constraint_id] = scale
+    constraint_offset_[constraint_id] = offset
+    constraint_direction_[constraint_id] = 0
+    constraint_satisfied_[constraint_id] = 0
+    call addToGraph(constraint_id)
+    call incrementalAdd(constraint_id)
+    return constraint_id
+
+  addEqualityConstraint: method = .int
+    arg v1 = .int, v2 = .int, strength = .int
+    return addConstraint(1, v1, v2, 0, 0, strength)
+
+  addScaleConstraint: method = .int
+    arg source = .int, scale = .int, offset = .int, destination = .int, ,
+        strength = .int
+    return addConstraint(2, source, destination, scale, offset, strength)
+
+  addStayConstraint: method = .int
+    arg output = .int, strength = .int
+    return addConstraint(3, output, 0, 0, 0, strength)
+
+  addEditConstraint: method = .int
+    arg output = .int, strength = .int
+    return addConstraint(4, output, 0, 0, 0, strength)
+
+  addToGraph: method = .void
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    call addVariableConstraint(constraint_v1_[constraint_id], constraint_id)
+    if kind = 1 | kind = 2 then do
+      call addVariableConstraint(constraint_v2_[constraint_id], constraint_id)
+      if kind = 2 then do
+        call addVariableConstraint(constraint_scale_[constraint_id], constraint_id)
+        call addVariableConstraint(constraint_offset_[constraint_id], constraint_id)
+      end
+      constraint_direction_[constraint_id] = 0
+    end
+    else constraint_satisfied_[constraint_id] = 0
+    return
+
+  removeFromGraph: method = .void
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    call removeVariableConstraint(constraint_v1_[constraint_id], constraint_id)
+    if kind = 1 | kind = 2 then do
+      call removeVariableConstraint(constraint_v2_[constraint_id], constraint_id)
+      if kind = 2 then do
+        call removeVariableConstraint(constraint_scale_[constraint_id], constraint_id)
+        call removeVariableConstraint(constraint_offset_[constraint_id], constraint_id)
+      end
+      constraint_direction_[constraint_id] = 0
+    end
+    else constraint_satisfied_[constraint_id] = 0
+    return
+
+  isSatisfied: method = .int
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then return constraint_satisfied_[constraint_id]
+    return constraint_direction_[constraint_id] <> 0
+
+  isInput: method = .int
+    arg constraint_id = .int
+    return constraint_kind_[constraint_id] = 4
+
+  markUnsatisfied: method = .void
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then constraint_satisfied_[constraint_id] = 0
+    else constraint_direction_[constraint_id] = 0
+    return
+
+  outputOf: method = .int
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then return constraint_v1_[constraint_id]
+    if constraint_direction_[constraint_id] = 1 then
+      return constraint_v2_[constraint_id]
+    return constraint_v1_[constraint_id]
+
+  inputKnown: method = .int
+    arg variable_id = .int, mark = .int
+    if variable_mark_[variable_id] = mark then return 1
+    if variable_stay_[variable_id] then return 1
+    return variable_determined_by_[variable_id] = 0
+
+  inputsKnown: method = .int
+    arg constraint_id = .int, mark = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then return 1
+    input = constraint_v1_[constraint_id]
+    if constraint_direction_[constraint_id] <> 1 then
+      input = constraint_v2_[constraint_id]
+    if \inputKnown(input, mark) then return 0
+    if kind = 2 then do
+      if \inputKnown(constraint_scale_[constraint_id], mark) then return 0
+      if \inputKnown(constraint_offset_[constraint_id], mark) then return 0
+    end
+    return 1
+
+  markInputs: method = .void
+    arg constraint_id = .int, mark = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then return
+    input = constraint_v1_[constraint_id]
+    if constraint_direction_[constraint_id] <> 1 then
+      input = constraint_v2_[constraint_id]
+    variable_mark_[input] = mark
+    if kind = 2 then do
+      variable_mark_[constraint_scale_[constraint_id]] = mark
+      variable_mark_[constraint_offset_[constraint_id]] = mark
+    end
+    return
+
+  chooseMethod: method = .void
+    arg constraint_id = .int, mark = .int
+    kind = constraint_kind_[constraint_id]
+    strength = constraint_strength_[constraint_id]
+
+    if kind = 3 | kind = 4 then do
+      output = constraint_v1_[constraint_id]
+      constraint_satisfied_[constraint_id] = ,
+          variable_mark_[output] <> mark & ,
+          strength < variable_walk_strength_[output]
+      return
+    end
+
+    v1 = constraint_v1_[constraint_id]
+    v2 = constraint_v2_[constraint_id]
+    if variable_mark_[v1] = mark then do
+      if variable_mark_[v2] <> mark & strength < variable_walk_strength_[v2] then
+        constraint_direction_[constraint_id] = 1
+      else constraint_direction_[constraint_id] = 0
+      return
+    end
+
+    if variable_mark_[v2] = mark then do
+      if variable_mark_[v1] <> mark & strength < variable_walk_strength_[v1] then
+        constraint_direction_[constraint_id] = -1
+      else constraint_direction_[constraint_id] = 0
+      return
+    end
+
+    if variable_walk_strength_[v1] > variable_walk_strength_[v2] then do
+      if strength < variable_walk_strength_[v1] then
+        constraint_direction_[constraint_id] = -1
+      else constraint_direction_[constraint_id] = 0
+    end
+    else do
+      if strength < variable_walk_strength_[v2] then
+        constraint_direction_[constraint_id] = 1
+      else constraint_direction_[constraint_id] = 0
+    end
+    return
+
+  newMark: method = .int
+    current_mark_ = current_mark_ + 1
+    return current_mark_
+
+  satisfy: method = .int
+    arg constraint_id = .int, mark = .int
+    call chooseMethod(constraint_id, mark)
+    if isSatisfied(constraint_id) then do
+      call markInputs(constraint_id, mark)
+      output = outputOf(constraint_id)
+      overridden = variable_determined_by_[output]
+      if overridden <> 0 then call markUnsatisfied(overridden)
+      variable_determined_by_[output] = constraint_id
+      if \addPropagate(constraint_id, mark) then do
+        call setError("cycle encountered")
+        return 0
+      end
+      variable_mark_[output] = mark
+      return overridden
+    end
+
+    if constraint_strength_[constraint_id] = -800 then
+      call setError("could not satisfy a required constraint")
+    return 0
+
+  incrementalAdd: method = .void
+    arg constraint_id = .int
+    mark = newMark()
+    overridden = satisfy(constraint_id, mark)
+    do while overridden <> 0 & \hasError()
+      overridden = satisfy(overridden, mark)
+    end
+    return
+
+  incrementalRemove: method = .void
+    arg constraint_id = .int
+    output = outputOf(constraint_id)
+    call markUnsatisfied(constraint_id)
+    call removeFromGraph(constraint_id)
+    unsatisfied = removePropagateFrom(output)
+    do index = 1 to unsatisfied.size() while \hasError()
+      call incrementalAdd(unsatisfied.get(index))
+    end
+    return
+
+  destroyConstraint: method = .void
+    arg constraint_id = .int
+    if isSatisfied(constraint_id) then call incrementalRemove(constraint_id)
+    else call removeFromGraph(constraint_id)
+    return
+
+  addConstraintsConsumingTo: method = .void
+    arg variable_id = .int, collection = .DBIdList
+    determining = variable_determined_by_[variable_id]
+    constraints = variable_constraints_[variable_id]
+    do index = 1 to constraints.size()
+      constraint_id = constraints.get(index)
+      if constraint_id <> determining then do
+        if isSatisfied(constraint_id) then call collection.append(constraint_id)
+      end
+    end
+    return
+
+  executeConstraint: method = .void
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    if kind = 3 | kind = 4 then return
+    v1 = constraint_v1_[constraint_id]
+    v2 = constraint_v2_[constraint_id]
+    if kind = 1 then do
+      if constraint_direction_[constraint_id] = 1 then
+        variable_value_[v2] = variable_value_[v1]
+      else variable_value_[v1] = variable_value_[v2]
+      return
+    end
+
+    scale = constraint_scale_[constraint_id]
+    offset = constraint_offset_[constraint_id]
+    if constraint_direction_[constraint_id] = 1 then
+      variable_value_[v2] = variable_value_[v1] * variable_value_[scale] + ,
+          variable_value_[offset]
+    else
+      variable_value_[v1] = (variable_value_[v2] - variable_value_[offset]) / ,
+          variable_value_[scale]
+    return
+
+  recalculate: method = .void
+    arg constraint_id = .int
+    kind = constraint_kind_[constraint_id]
+    strength = constraint_strength_[constraint_id]
+    if kind = 3 | kind = 4 then do
+      output = constraint_v1_[constraint_id]
+      variable_walk_strength_[output] = strength
+      variable_stay_[output] = kind <> 4
+      if variable_stay_[output] then call executeConstraint(constraint_id)
+      return
+    end
+
+    input = constraint_v1_[constraint_id]
+    output = .int
+    output = constraint_v2_[constraint_id]
+    if constraint_direction_[constraint_id] <> 1 then do
+      input = constraint_v2_[constraint_id]
+      output = constraint_v1_[constraint_id]
+    end
+    input_strength = variable_walk_strength_[input]
+    if strength > input_strength then variable_walk_strength_[output] = strength
+    else variable_walk_strength_[output] = input_strength
+    variable_stay_[output] = variable_stay_[input]
+    if kind = 2 then
+      variable_stay_[output] = variable_stay_[output] & ,
+          variable_stay_[constraint_scale_[constraint_id]] & ,
+          variable_stay_[constraint_offset_[constraint_id]]
+    if variable_stay_[output] then call executeConstraint(constraint_id)
+    return
+
+  addPropagate: method = .int
+    arg constraint_id = .int, mark = .int
+    todo = .DBIdList()
+    call todo.append(constraint_id)
+    do while \todo.isEmpty()
+      next_id = todo.removeFirst()
+      output = outputOf(next_id)
+      if variable_mark_[output] = mark then do
+        call incrementalRemove(constraint_id)
+        return 0
+      end
+      call recalculate(next_id)
+      call addConstraintsConsumingTo(output, todo)
+    end
+    return 1
+
+  extractPlanFromConstraints: method = .DBIdList
+    arg constraints = .DBIdList
+    sources = .DBIdList()
+    do index = 1 to constraints.size()
+      constraint_id = constraints.get(index)
+      if isInput(constraint_id) & isSatisfied(constraint_id) then
+        call sources.append(constraint_id)
+    end
+    return makePlan(sources)
+
+  makePlan: method = .DBIdList
+    arg sources = .DBIdList
+    mark = newMark()
+    plan = .DBIdList()
+    todo = .DBIdList()
+    do index = 1 to sources.size()
+      call todo.append(sources.get(index))
+    end
+    do while \todo.isEmpty()
+      constraint_id = todo.removeFirst()
+      output = outputOf(constraint_id)
+      if variable_mark_[output] <> mark & inputsKnown(constraint_id, mark) then do
+        call plan.append(constraint_id)
+        variable_mark_[output] = mark
+        call addConstraintsConsumingTo(output, todo)
+      end
+    end
+    return plan
+
+  executePlan: method = .void
+    arg plan = .DBIdList
+    do index = 1 to plan.size()
+      call executeConstraint(plan.get(index))
+    end
+    return
+
+  sortByStrength: method = .void
+    arg constraints = .DBIdList
+    do right = 2 to constraints.size()
+      value = constraints.get(right)
+      left = right - 1
+      do while left >= 1
+        existing = constraints.get(left)
+        if constraint_strength_[existing] <= constraint_strength_[value] then leave
+        call constraints.set(left + 1, existing)
+        left = left - 1
+      end
+      call constraints.set(left + 1, value)
+    end
+    return
+
+  removePropagateFrom: method = .DBIdList
+    arg output = .int
+    unsatisfied = .DBIdList()
+    variable_determined_by_[output] = 0
+    variable_walk_strength_[output] = 10000
+    variable_stay_[output] = 1
+    todo = .DBIdList()
+    call todo.append(output)
+
+    do while \todo.isEmpty()
+      variable_id = todo.removeFirst()
+      constraints = variable_constraints_[variable_id]
+      do index = 1 to constraints.size()
+        constraint_id = constraints.get(index)
+        if \isSatisfied(constraint_id) then call unsatisfied.append(constraint_id)
+      end
+
+      determining = variable_determined_by_[variable_id]
+      do index = .int(1) to constraints.size()
+        constraint_id = .int
+        constraint_id = constraints.get(index)
+        if constraint_id <> determining then do
+          if isSatisfied(constraint_id) then do
+            call recalculate(constraint_id)
+            call todo.append(outputOf(constraint_id))
+          end
+        end
+      end
+    end
+    call sortByStrength(unsatisfied)
+    return unsatisfied
+
+  change: method = .void
+    arg variable_id = .int, new_value = .int
+    edit_constraint = addEditConstraint(variable_id, -400)
+    edits = .DBIdList()
+    call edits.append(edit_constraint)
+    plan = extractPlanFromConstraints(edits)
+    do iteration = 1 to 10
+      variable_value_[variable_id] = new_value
+      call executePlan(plan)
+    end
+    call destroyConstraint(edit_constraint)
+    return
+
+  chainTest: method = .int
+    arg problem_size = .int
+    variables = .int[]
+    do index = 1 to problem_size + 1
+      variables[index] = newVariable(0)
+    end
+    do index = .int(1) to problem_size
+      constraint_id = addEqualityConstraint(variables[index], ,
+          variables[index + 1], -800)
+    end
+    stay_constraint = addStayConstraint(variables[problem_size + 1], -200)
+    edit_constraint = addEditConstraint(variables[1], -400)
+    if hasError() then return 0
+
+    edits = .DBIdList()
+    call edits.append(edit_constraint)
+    plan = extractPlanFromConstraints(edits)
+    do value = 0 to 99
+      variable_value_[variables[1]] = value
+      call executePlan(plan)
+      if variable_value_[variables[problem_size + 1]] <> value then do
+        call setError("chain test failed at value " || value)
+        return 0
+      end
+    end
+    call destroyConstraint(edit_constraint)
+    return \hasError()
+
+  projectionTest: method = .int
+    arg problem_size = .int
+    destinations = .int[]
+    scale = newVariable(10)
+    offset = newVariable(1000)
+    source = 0
+    destination = 0
+
+    do index = 1 to problem_size
+      source = newVariable(index)
+      destination = newVariable(index)
+      destinations[index] = destination
+      stay_constraint = addStayConstraint(source, 0)
+      scale_constraint = addScaleConstraint(source, scale, offset, ,
+          destination, -800)
+    end
+    if hasError() then return 0
+
+    call change(source, 17)
+    if variable_value_[destination] <> 1170 then do
+      call setError("projection test 1 expected 1170, got " || ,
+          variable_value_[destination])
+      return 0
+    end
+
+    call change(destination, 1050)
+    if variable_value_[source] <> 5 then do
+      call setError("projection test 2 expected 5, got " || variable_value_[source])
+      return 0
+    end
+
+    call change(scale, 5)
+    do index = .int(1) to problem_size - 1
+      expected = index * 5 + 1000
+      if variable_value_[destinations[index]] <> expected then do
+        call setError("projection test 3 failed at destination " || index)
+        return 0
+      end
+    end
+
+    call change(offset, 2000)
+    do index = .int(1) to problem_size - 1
+      expected = .int
+      expected = index * 5 + 2000
+      if variable_value_[destinations[index]] <> expected then do
+        call setError("projection test 4 failed at destination " || index)
+        return 0
+      end
+    end
+    return \hasError()

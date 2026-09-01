@@ -27,13 +27,21 @@ options levelb
 
 namespace rxfnsb expose arrayjoin
 
-/* Join ARRAY elements with SEPARATOR. */
+/**
+ * Join array elements with a separator.
+ *
+ * @param array read-only one-based string array
+ * @param separator optional text inserted between adjacent elements
+ * @return joined string
+ */
 arrayjoin: procedure=.string
   arg array=.string[], separator=""
 
   out = ""
-  do i = 1 to array[0]
-    if i > 1 then out = out || separator
-    out = out || array[i]
+  high = array[0]
+  do i = 1 to high
+    if i > 1 then assembler append out,separator
+    item = array[i]
+    assembler append out,item
   end
-return out
+  return out

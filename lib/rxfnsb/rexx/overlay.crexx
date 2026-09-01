@@ -22,43 +22,96 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B OVERLAY implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/overlay.md
+ */
 options levelb
-
 namespace rxfnsb expose overlay
 
-/* overlay(insstr,string,position,length,pad) overlays string into existing string at certain position and length */
+/**
+ * Overlay formatted text onto a target from a character position.
+ *
+ * @param new_string replacement text
+ * @param target source text
+ * @param start optional positive 1-based overlay position
+ * @param overlay_length optional non-negative formatted overlay width
+ * @param pad exactly one padding codepoint
+ * @return target with the formatted overlay applied
+ */
 overlay: procedure = .string
-  arg insstr = .string, string = .string, position = .int, len = 0, pad = ""
-  padlen=0
-  slen=0
-  ilen=0
-  assembler strlen padlen,pad      /* padding char */
-  assembler strlen slen,string     /* source string  */
-  if padlen=0 then pad=" " /* define default pad char, just in case we need one */
+  arg new_string = .string, target = .string, start = 1, overlay_length = 0, pad = " "
+  length_supplied = ?overlay_length
+  new_length = .int
+  target_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  before = .int
+  padding_needed = .int
+  tail_start = .int
+  tail_length = .int
+  cursor = 0
+  padding = ""
+  segment = ""
+  result = ""
 
-  if slen=0 then do
-     string=pad
-     slen=1
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","OVERLAY start must be positive"
+  if length_supplied & overlay_length < 0 then
+    assembler signal "INVALID_ARGUMENTS","OVERLAY length must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","OVERLAY pad must contain exactly one character"
+
+  assembler strlen new_length,new_string
+  assembler strlen target_length,target
+  if \length_supplied then overlay_length = new_length
+  before = start - 1
+  if overlay_length = 0 & before <= target_length then return target
+
+  assembler strchar pad_character,pad,pad_index
+
+  /* LEFT(target, start - 1, pad), without a helper call. */
+  if before > 0 then do
+    if before >= target_length then do
+      assembler scopy result,target
+      if before > target_length then do
+        padding_needed = before - target_length
+        padding = ""
+        assembler padstr padding,pad_character,padding_needed
+        assembler append result,padding
+      end
+    end
+    else do
+      assembler substring result,target,cursor,before
+    end
   end
 
-  assembler strlen ilen,insstr
-  if ilen=0 then do         /* insert string */
-     if padlen=0 then return string
-     insstr=pad
+  /* LEFT(new_string, overlay_length, pad), appended directly. */
+  if overlay_length > 0 then do
+    if overlay_length >= new_length then do
+      if new_length > 0 then assembler append result,new_string
+      if overlay_length > new_length then do
+        padding_needed = overlay_length - new_length
+        padding = ""
+        assembler padstr padding,pad_character,padding_needed
+        assembler append result,padding
+      end
+    end
+    else do
+      assembler substring segment,new_string,cursor,overlay_length
+      assembler append result,segment
+    end
   end
 
-  if len>0 then do                           /* was there an insert string length?      */
-     if padlen>1 then pad=substr(pad,1,1)
-     newins=substr(insstr,1,len,pad)         /* format insert string to requested length*/
-     insstr=newins
-   end
-   assembler strlen ilen,insstr
-   if position+ilen>slen then string=substr(string,1,position+ilen,pad)  /* is position>string length , extend string */
-
-  if position=1 then str1=''                /* if insert position=1 then str1 is empty */
-     else str1=substr(string,1,position-1)  /*    else split string at insert position */
-  if position+ilen>slen then str2=''             /* if string was extended str2 is empty    */
-     else str2=substr(string,position+ilen) /*    else create str2                     */
-
- return str1||insstr||str2                   /* return newly constructed string         */
+  /* SUBSTR(target, start + overlay_length), when target text remains. */
+  tail_start = before + overlay_length
+  if tail_start < target_length then do
+    tail_length = target_length - tail_start
+    assembler substring segment,target,tail_start,tail_length
+    assembler append result,segment
+  end
+  return result

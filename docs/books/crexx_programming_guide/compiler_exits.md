@@ -50,6 +50,13 @@ The project ships a small bundle of exits primarily for demonstration and testin
 
 You can find their sources under `compiler/exits/` in the repository.
 
+The more elaborate `pprint` exit is a standalone packaged example under
+`examples/exits/pprint`. It lowers `pprint array,...` to the companion
+`arrayformatdemo` module under `examples/functions/array-formatting`. Neither
+the exit nor those formatter procedures are part of the default exit bundle or
+the Level B/Level G library contract. The example README gives the explicit
+bundle and import paths.
+
 ## Certified/System Exits
 
 Current user exits are intended for non-reserved keywords. The compiler now also

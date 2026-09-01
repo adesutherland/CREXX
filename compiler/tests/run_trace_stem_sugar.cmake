@@ -92,6 +92,7 @@ ttt
 
 set(EXPECTED_I [=[     6 *-*   x = .stem()
        >F>   ""
+       >=>   ""
      7 *-*   x.blah = \"sss\"
        >C>   "blah"
        >L>   "sss"

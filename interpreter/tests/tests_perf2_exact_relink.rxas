@@ -1,0 +1,148 @@
+/*
+ * PERF2-05 R1a process-private exact UNLINK/LINKREF relink guards.
+ * Public RXAS and canonical RXBIN retain the two-instruction composition.
+ */
+
+.globals=1
+
+main() .locals=32
+    /* Exact R1a shape preserves valid reference alias/write-through behavior. */
+    load r1,"target-a"
+    mkref r2,r1
+    load r3,"destination-base"
+    load r4,"old-target"
+    mkref r5,r4
+    linkref r3,r5
+    .srcstep 1 1 14 "perf2_exact_relink.rxas" 20 5 28 "exact reference relink"
+    unlink r3
+    .traceevent "V" 3 "R" "R" "r" 3 1 1 0 "unlinked_destination" ""
+    linkref r3,r2
+    .traceevent "V" 3 "R" "R" "r" 3 1 1 0 "relinked_destination" ""
+    load r3,"target-a-updated"
+    seq r0,r1,"target-a-updated"
+    brf fail_valid_write_through,r0
+    seq r0,r4,"old-target"
+    brf fail_old_target_mutation,r0
+    unlink r3
+    seq r0,r3,"destination-base"
+    brf fail_valid_base_restore,r0
+
+    /* Invalid references fail after the destination has been unlinked. */
+    load r6,"invalid-target"
+    mkref r7,r6
+    endlife r6
+    load r8,"invalid-base"
+    load r9,"previous-target"
+    mkref r10,r9
+    linkref r8,r10
+    sigbr invalid_reference_caught,"REFERENCE_INVALID"
+    unlink r8
+    linkref r8,r7
+    br fail_invalid_reference_signal
+invalid_reference_caught:
+    seq r0,r8,"invalid-base"
+    brf fail_invalid_reference_state,r0
+    load r8,"invalid-base-mutated"
+    seq r0,r9,"previous-target"
+    brf fail_invalid_previous_target,r0
+
+    /* A non-reference source has the same unlink-first failure state. */
+    load r11,"nonref-base"
+    linkref r11,r10
+    load r12,"plain-source"
+    sigbr nonreference_caught,"REFERENCE_INVALID"
+    unlink r11
+    linkref r11,r12
+    br fail_nonreference_signal
+nonreference_caught:
+    seq r0,r11,"nonref-base"
+    brf fail_nonreference_state,r0
+
+    /* A different LINKREF destination is not an R1a candidate. */
+    load r13,"separate-unlink-base"
+    linkref r13,r10
+    load r14,"separate-link-base"
+    unlink r13
+    linkref r14,r2
+    seq r0,r13,"separate-unlink-base"
+    brf fail_nonmatching_unlink,r0
+    load r14,"nonmatching-write"
+    seq r0,r1,"nonmatching-write"
+    brf fail_nonmatching_link,r0
+    unlink r14
+
+    /* Same-register source/destination remains on the canonical path. */
+    load r15,"same-register-base"
+    sigbr same_register_caught,"REFERENCE_INVALID"
+    unlink r15
+    linkref r15,r15
+    br fail_same_register_signal
+same_register_caught:
+    seq r0,r15,"same-register-base"
+    brf fail_same_register_state,r0
+
+    /* Breakpoint mode must observe UNLINK and LINKREF independently. */
+    load r16,"breakpoint-base"
+    load r18,"breakpoint-target"
+    mkref r19,r18
+    load g0,0
+    sigcall breakpoint_handler(),"BREAKPOINT"
+    bpon
+    unlink r16
+    linkref r16,r19
+    bpoff
+    ieq r0,g0,3
+    brf fail_breakpoint_fallback,r0
+    load r16,"breakpoint-updated"
+    seq r0,r18,"breakpoint-updated"
+    brf fail_breakpoint_value,r0
+
+    say "PASS: PERF2-05 Exact Reference Relink"
+    ret 0
+
+fail_valid_write_through:
+    say "FAIL: valid relink write-through"
+    ret 1
+fail_old_target_mutation:
+    say "FAIL: old target mutated"
+    ret 1
+fail_valid_base_restore:
+    say "FAIL: valid relink base restore"
+    ret 1
+fail_invalid_reference_signal:
+    say "FAIL: invalid reference signal missing"
+    ret 1
+fail_invalid_reference_state:
+    say "FAIL: invalid reference destination state"
+    ret 1
+fail_invalid_previous_target:
+    say "FAIL: invalid relink retained old alias"
+    ret 1
+fail_nonreference_signal:
+    say "FAIL: non-reference signal missing"
+    ret 1
+fail_nonreference_state:
+    say "FAIL: non-reference destination state"
+    ret 1
+fail_nonmatching_unlink:
+    say "FAIL: nonmatching unlink"
+    ret 1
+fail_nonmatching_link:
+    say "FAIL: nonmatching link"
+    ret 1
+fail_same_register_signal:
+    say "FAIL: same-register signal missing"
+    ret 1
+fail_same_register_state:
+    say "FAIL: same-register destination state"
+    ret 1
+fail_breakpoint_fallback:
+    say "FAIL: breakpoint canonical fallback"
+    ret 1
+fail_breakpoint_value:
+    say "FAIL: breakpoint relink value"
+    ret 1
+
+breakpoint_handler() .locals=0
+    iadd g0,g0,1
+    ret

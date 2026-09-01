@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_binary_arg_return.crexx
- * BUILT                  : 2026-05-27 17:54:03
  */
 
 .globals=0
@@ -8,21 +7,15 @@
 main() .locals=4
    .meta "inline_test_binary_arg_return.main"="b" ".int" main() ""
    .srcstep 5 5 17 "inline_test_binary_arg_return.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_binary_arg_return.main.data"="b" ".binary" r0
    .srcstep 1 1 17 "inline_test_binary_arg_return.crexx" 4 3 17 "  data = .binary"
    null r0
    .srcstep 2 2 17 "inline_test_binary_arg_return.crexx" 5 3 32 "  data = relayBinary(makeBinary())"
-   load r3,0
-   call r2,makeBinary(),r3
+   call r2,makeBinary()
    .traceevent "F" 4 "R" "X" "r" 2 2 2 0 "makebinary" ""
-   load r1,1
    settp r2,256
-   call r0,relayBinary(),r1
+   call1 r0,relayBinary(),r2
    .traceevent "F" 4 "R" "X" "r" 0 2 2 0 "relaybinary" ""
    .traceevent "A" 6 "R" "X" "r" 0 2 2 0 "data" ""
    .srcstep 3 3 17 "inline_test_binary_arg_return.crexx" 6 3 11 "  say \"ok\""
@@ -34,11 +27,7 @@ main() .locals=4
 relayBinary() .locals=1
    .meta "inline_test_binary_arg_return.relaybinary"="b" ".binary" relayBinary() "data=.binary"
    .srcstep 8 8 17 "inline_test_binary_arg_return.crexx" 9 1 33 "relayBinary: procedure = .binary"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 6 6 17 "inline_test_binary_arg_return.crexx" 10 7 21 "  arg data = .binary"
    .meta "inline_test_binary_arg_return.relaybinary.data"="b" ".binary" a1
    .srcstep 7 7 17 "inline_test_binary_arg_return.crexx" 11 3 14 "  return data"
@@ -49,11 +38,7 @@ relayBinary() .locals=1
 makeBinary() .locals=1
    .meta "inline_test_binary_arg_return.makebinary"="b" ".binary" makeBinary() ""
    .srcstep 12 12 17 "inline_test_binary_arg_return.crexx" 13 1 32 "makeBinary: procedure = .binary"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_binary_arg_return.makebinary.data"="b" ".binary" r0
    .srcstep 9 9 17 "inline_test_binary_arg_return.crexx" 14 3 17 "  data = .binary"
    null r0

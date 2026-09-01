@@ -1,0 +1,103 @@
+/* NR-16/17 observational stable-state workload. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+
+mode = "control"
+iterations = 20000
+if argv[0] >= 1 then mode = argv[1]
+if argv[0] >= 2 then iterations = argv[2]
+if iterations < 1 then return fail("iterations")
+
+checksum = 0
+set_rc = .int
+command_output = .string[]
+address crexx
+trace off
+start = time("us")
+
+select
+  when mode == "control" then do
+    do i = 1 to iterations
+      checksum = checksum + i
+    end
+  end
+  when mode == "trace-off" then do
+    do i = 1 to iterations
+      trace off
+      checksum = checksum + i
+    end
+  end
+  when mode == "trace-current" then do
+    do i = 1 to iterations
+      trace value _trace_current_mode()
+      checksum = checksum + i
+    end
+  end
+  when mode == "trace-transition" then do
+    do i = 1 to iterations
+      trace normal
+      trace off
+      checksum = checksum + i
+    end
+  end
+  when mode == "address-same-static" then do
+    do i = 1 to iterations
+      address crexx
+      checksum = checksum + i
+    end
+  end
+  when mode == "address-same-query" then do
+    do i = 1 to iterations
+      address value addressenv().environment_name()
+      checksum = checksum + i
+    end
+  end
+  when mode == "address-same-query-intended" then do
+    do i = 1 to iterations
+      set_rc = _set_address_environment(addressenv().environment_name())
+      checksum = checksum + i + set_rc
+    end
+  end
+  when mode == "address-same-current-name" then do
+    do i = 1 to iterations
+      set_rc = _set_address_environment(_current_address_environment())
+      checksum = checksum + i + set_rc
+    end
+  end
+  when mode == "address-alternating" then do
+    do i = 1 to iterations
+      address system
+      address crexx
+      checksum = checksum + i
+    end
+  end
+  when mode == "address-command" then do
+    do i = 1 to iterations
+      call arraydrop(command_output)
+      address crexx "echo nr16" output command_output
+      checksum = checksum + command_output[0]
+    end
+  end
+  otherwise return fail("mode")
+end
+
+elapsed = time("us") - start
+if elapsed < 0 then elapsed = elapsed + 86400000000
+trace off
+address crexx
+
+if checksum <= 0 then return fail("checksum")
+say "benchmark=nr16_17_stable_state_compare"
+say "mode="mode
+say "iterations="iterations
+say "elapsed_us="elapsed
+say "checksum="checksum
+say "PASS: NR-16/17 stable-state compare"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL: NR-16/17" label
+  return 1

@@ -1,0 +1,97 @@
+* NR-09 Class 1 sequences: retained mappings fuse; withdrawn mappings stay expanded.
+
+swap2() .locals=8
+    swap r0,r1
+    swap r2,r3
+    ret
+
+swap3() .locals=8
+    swap r0,r1
+    swap r2,r3
+    swap r4,r5
+    ret
+
+swap4() .locals=8
+    swap r0,r1
+    swap r2,r3
+    swap r4,r5
+    swap r6,r7
+    ret
+
+prep_settp_swap() .locals=8
+    settp r0,256
+    swap r1,r0
+    ret
+
+prep_load_settp() .locals=8
+    load r0,1
+    settp r1,256
+    ret
+
+prep_load_settp_swap() .locals=8
+    load r0,2
+    settp r1,512
+    swap r2,r1
+    ret
+
+prep_swap_settp() .locals=8
+    swap r0,r1
+    settp r2,256
+    ret
+
+prep_swap_settp_swap() .locals=8
+    swap r0,r1
+    settp r2,512
+    swap r3,r2
+    ret
+
+prep_settp_swap_settp() .locals=8
+    settp r0,256
+    swap r1,r0
+    settp r2,256
+    ret
+
+prep_settp_swap_settp_swap() .locals=8
+    settp r0,512
+    swap r1,r0
+    settp r2,512
+    swap r3,r2
+    ret
+
+null2() .locals=8
+    null r0
+    null r1
+    ret
+
+null3() .locals=8
+    null r0
+    null r1
+    null r2
+    ret
+
+null4() .locals=8
+    null r0
+    null r1
+    null r2
+    null r3
+    ret
+
+loadcopy() .locals=8
+    load r0,10
+    icopy r1,r0
+    say r1
+    ret
+
+loaddifferent() .locals=8
+    load r0,11
+    load r1,12
+    say r0
+    say r1
+    ret
+
+loadsame() .locals=8
+    load r0,13
+    load r1,13
+    say r0
+    say r1
+    ret

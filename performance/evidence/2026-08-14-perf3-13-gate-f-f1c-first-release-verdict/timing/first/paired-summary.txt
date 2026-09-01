@@ -1,0 +1,8 @@
+channel rxbvml identity,n=12,mean=-74.508154%,lo=-75.092240%,hi=-73.924067%
+channel rxbvml spin-w4,n=12,mean=-48.730571%,lo=-49.636469%,hi=-47.824672%
+channel rxtvml identity,n=12,mean=-74.592614%,lo=-75.351113%,hi=-73.834116%
+channel rxtvml spin-w4,n=12,mean=-44.708709%,lo=-45.858425%,hi=-43.558993%
+executor rxbvml spin-w1,n=12,mean=+2.341609%,lo=-2.378253%,hi=+7.061472%
+executor rxbvml spin-w4,n=12,mean=-1.015326%,lo=-4.634723%,hi=+2.604071%
+executor rxtvml spin-w1,n=12,mean=-8.520725%,lo=-11.361320%,hi=-5.680131%
+executor rxtvml spin-w4,n=12,mean=-9.197606%,lo=-11.257342%,hi=-7.137871%

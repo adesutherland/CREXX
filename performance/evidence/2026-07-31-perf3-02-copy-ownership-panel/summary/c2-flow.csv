@@ -1,0 +1,5 @@
+variant,workload,full_copy_removed,reject_live,reject_trace,reject_tainted,reject_effect,typed_copy_removed,output_relation,disposition
+C0,Richards,0,16,84,46,1,2,authority,full copies stopped before ordinary facts
+C2-E1,Richards,0,16,84,47,0,2,byte-identical-to-C0-same-invocation,one full copy reaches facts then rejects tainted
+C0,Towers,0,2,36,1,29,0,authority,full copies stopped before ordinary facts
+C2-E1,Towers,0,3,36,29,0,0,byte-identical-to-C0-same-invocation,28 full copies reject tainted and one live at effect barrier

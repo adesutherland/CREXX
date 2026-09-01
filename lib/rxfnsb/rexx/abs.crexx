@@ -22,14 +22,23 @@
  * SOFTWARE.
  */
 
-options levelb comments_dash
+/**
+ * Level B ABS implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/abs.md
+ */
+options levelb comments_dash numeric_classic
 namespace rxfnsb expose abs
 
-abs: procedure = .string
-arg number = .string
-number = space(number,0)
-number = strip(number,'b')
-if left(number,1) = '-' then number = substr(number,2)
-if left(number,1) = '+' then number = substr(number,2)
-return number
-
+/**
+ * Return the absolute value of a decimal number.
+ *
+ * @param number decimal value
+ * @return non-negative decimal value
+ * @signal CONVERSION_ERROR number cannot be converted to decimal
+ */
+abs: procedure = .decimal
+  arg number = .decimal
+  if number < 0 then return 0 - number
+  return number

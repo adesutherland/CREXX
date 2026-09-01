@@ -1,0 +1,137 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifpos
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("6", "day", "Saturday")
+errors = errors + check_default("0", "x", "abc def ghi")
+errors = errors + check_default("4", " ", "abc def ghi")
+errors = errors + check_start("8", " ", "abc def ghi", "5")
+errors = errors + check_default("3", "foo", "a foo foo b")
+errors = errors + check_start("7", "foo", "a foo foo b", "4")
+errors = errors + check_start("0", "foo", "a foo foo b", "30")
+errors = errors + check_default("0", "", "anything")
+errors = errors + check_default("0", "foo", "")
+errors = errors + check_default("2", "→", "a→b→c")
+errors = errors + check_start("4", "→", "a→b→c", "3")
+errors = errors + check_byte_profile("4", "b", "aéb")
+errors = errors + check_large()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_required(1)
+errors = errors + check_omitted_required(2)
+errors = errors + check_start_error("not-a-number", "RXC-LC-40.12")
+errors = errors + check_start_error("1.5", "RXC-LC-40.12")
+errors = errors + check_start_error("0", "RXC-LC-40.14")
+errors = errors + check_start_error("-1", "RXC-LC-40.14")
+
+if errors = 0 then say "PASS: Level C POS BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string
+  return run_check(expected, needle, haystack, 0, "")
+
+check_start: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string, start = .string
+  return run_check(expected, needle, haystack, 1, start)
+
+run_check: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string, start_exists = .boolean, start = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(needle)
+  args[2] = .RexxValue(haystack)
+  exists[1] = 1
+  exists[2] = 1
+  if start_exists then do
+    args[3] = .RexxValue(start)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("POS")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifpos..rexxclassicbif_pos(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = needle & args[2].asString() = haystack then return 0
+  say "FAIL: POS expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(needle)
+  args[2] = .RexxValue(haystack)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("POS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifpos..rexxclassicbif_pos(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: POS BYTE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_large: procedure = .int
+  large = ""
+  marker = "Z"
+  pad_character = 97
+  large_count = 1000
+  assembler padstr large,pad_character,large_count
+  assembler append large,marker
+  return check_default("1001", "Z", large)
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("POS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifpos..rexxclassicbif_pos(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: POS expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("POS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifpos..rexxclassicbif_pos(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: POS omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_start_error: procedure = .int
+  arg start = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("a")
+  args[2] = .RexxValue("abc")
+  args[3] = .RexxValue(start)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("POS")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifpos..rexxclassicbif_pos(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: POS start expected" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

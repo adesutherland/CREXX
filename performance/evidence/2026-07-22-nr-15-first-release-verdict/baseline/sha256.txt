@@ -1,0 +1,13 @@
+50addf7e7727ba16d09aea17a5981159e4f6335643e540ea2dedc973bd5b00ae  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/static/nr15_stem_access_noopt.rxas
+44e176743d00959a54a8086d6a159c95a47c10097dcc2b6d5d6037480aac7727  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/static/nr15_stem_access_opt.rxas
+afe7a1c3f556d0791746df691dfe5fd0725d5aa9ea2ce6dacb87b80b79c37d11  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/static/rexxcps_levelb_noopt.rxas
+6391e96200f52d3752d714ed4f9f929a4b3c1e400ad3e1792fa237cce0f47813  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/static/rexxcps_levelb_opt.rxas
+6521fd638853dee40059e19517ff6d0588e7d3725b0756ddea444e84d1043b57  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/library.rxbin
+0a705fea99b6493d75c33dfcce818d0a4ca086c995e9fc0167639b013285b862  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/nr15_stem_access_noopt-unlinked.rxbin
+9d009932a28a6401ad2c8849ae294d3418dd6d6b8e2616a66b015039910c9fcd  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/nr15_stem_access_noopt.rxbin
+baf3f19f825922f048b5bcfd461c33022cea592283249792cab27dcffa11792b  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/nr15_stem_access_opt-unlinked.rxbin
+3941e8fc9511147ea78cb7654371a88c9f2694228144ca6741299d22617d8022  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/nr15_stem_access_opt.rxbin
+4d2a0b0fdacc2cfa6d2ab75f0d6d0805c4a9a3fb6b7f493454aec4b6a890dad0  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/rexxcps_levelb_noopt-unlinked.rxbin
+ba278a7c52541cc48b988b1c4fa496287fc91da896016a9c364f06d74bb3c0e1  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/rexxcps_levelb_noopt.rxbin
+b1d7d30106c0e6204805e933c6b003e9bef9ed24c9eee7c1bc6d751a5e54ba8e  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/rexxcps_levelb_opt-unlinked.rxbin
+5e441693c085207f2e224575de0ba614fc61d35777f0ae0dc3ec9698830313ba  performance/evidence/2026-07-22-nr-15-first-release-verdict/baseline/images/rexxcps_levelb_opt.rxbin

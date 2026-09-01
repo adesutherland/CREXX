@@ -1,139 +1,37 @@
-/* rexx */
-options levelb numeric_classic # the last test case needs recurive prefix minus operators to work
+/* Focused Level B SIGN tests. */
+options levelb comments_dash numeric_classic
 import rxfnsb
 
-errors=0
+arg test_args = .string[]
+errors = 0
+source = "-7.25"
 
-if sign(3.14) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 1'
+errors = errors + check(sign(3.14) = 1, "positive decimal")
+errors = errors + check(sign(-3.14) = -1, "negative decimal")
+errors = errors + check(sign(0) = 0, "integer zero promotion")
+errors = errors + check(sign("-0") = 0, "negative zero")
+errors = errors + check(sign(source) = -1, "numeric string promotion")
+errors = errors + check(sign("1E-999") = 1, "positive below binary-float range")
+errors = errors + check(sign("-1E-999") = -1, "negative below binary-float range")
+errors = errors + check(sign("1E+999") = 1, "positive above binary-float range")
+errors = errors + check(sign("-1E+999") = -1, "negative above binary-float range")
+errors = errors + check(source = "-7.25", "argument is not mutated")
+
+invalid = "not-a-number"
+if test_args[0] = 1 then invalid = test_args[1]
+caught = 0
+do
+  ignored = sign(invalid)
+on signal conversion_error
+  caught = caught + 1
 end
-  
-if sign("3.14") \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 2'
-end
+errors = errors + check(caught = 1, "invalid dynamic decimal uses signal")
 
-if sign(-3.14) \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 3'
-end
+if errors = 0 then say "PASS: sign"
+return errors <> 0
 
-if sign(-"3.14") \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 4'
-end
-
-
-if sign(0) \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 5'
-end
-
-if sign("0") \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 6'
-end
-
-if sign("+0") \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 7'
-end
-
-if sign("-0") \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 8'
-end
-
-if sign("0e-12") \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 9'
-end
-
-if sign("0E999999999") \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 10'
-end
-
-/* if sign() \= 0 then do */
-/*   errors=errors+1 */
-/*   say 'SIGN Failed in test 11' */
-/* end */
-
-if sign(1) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 11'
-end
-
-if sign(+1.) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 12'
-end
-
-if sign(-2.0000000000000000) \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 13'
-end
-
-if sign(2.0000000000000000) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 14'
-end
-
-if sign(2.00000000000000005) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 15'
-end
-
-if sign(333333333333333333) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 16'
-end
-
-if sign(-4444444444444444444e12) \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 17'
-end
-
-/* if sign(9e999999999) \= 1 then do */
-/*   errors=errors+1 */
-/*   say 'SIGN Failed in test 18' */
-/* end */
-
-if sign("123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789") \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 19'
-end
-
-if sign('3132'x) \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 20'
-end
-
-if sign('1'||'23'||'456'||'7890') \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 21' 
-end
-
-if sign('17'-'1.e2') \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 22' 
-end
-
-/* this waits for numeric digits 9
-if sign(17+4-21.000000000000005) \= 0 then do
-  errors=errors+1
-  say 'SIGN Failed in test 23' 
-   end */
-
-if sign(-"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789") \= -1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 24' 
-end
-
-if sign(- -"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789") \= 1 then do
-  errors=errors+1
-  say 'SIGN Failed in test 24' 
-end
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: SIGN" label
+  return 1

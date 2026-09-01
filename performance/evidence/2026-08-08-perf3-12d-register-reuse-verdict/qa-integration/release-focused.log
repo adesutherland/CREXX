@@ -1,0 +1,56 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/20 Test    #1: linked_opt_runtime_artifacts_build ..........   Passed    1.05 sec
+      Start 1013: test_rxqueue_bin_build
+ 2/20 Test #1013: test_rxqueue_bin_build ......................   Passed    0.07 sec
+      Start  936: test_parse_bin_build
+ 3/20 Test  #936: test_parse_bin_build ........................   Passed    0.07 sec
+      Start  939: test_parse_direct_bin_build
+ 4/20 Test  #939: test_parse_direct_bin_build .................   Passed    0.07 sec
+      Start  942: test_parse_compiled_patterns_bin_build
+ 5/20 Test  #942: test_parse_compiled_patterns_bin_build ......   Passed    0.07 sec
+      Start  342: nr14_frozen_parse_contract
+      Start  938: test_parse_direct_opt
+      Start  937: test_parse_direct_noopt
+      Start 1417: ts_rxqueue_noopt
+      Start  935: test_parse_opt
+      Start  934: test_parse_noopt
+      Start 1418: ts_rxqueue_opt
+      Start 1012: test_rxqueue_opt
+      Start 1011: test_rxqueue_noopt
+      Start 1671: rxas_flow_graph_contract
+ 6/20 Test #1418: ts_rxqueue_opt ..............................   Passed    0.24 sec
+      Start 1670: rxas_optimizer_metadata
+ 7/20 Test #1011: test_rxqueue_noopt ..........................   Passed    0.25 sec
+      Start  940: test_parse_compiled_patterns_noopt
+ 8/20 Test #1417: ts_rxqueue_noopt ............................   Passed    0.25 sec
+      Start  941: test_parse_compiled_patterns_opt
+ 9/20 Test  #935: test_parse_opt ..............................   Passed    0.25 sec
+10/20 Test #1012: test_rxqueue_opt ............................   Passed    0.25 sec
+      Start 1687: rxas_optimizer_string_literal_reuse
+      Start 1688: rxas_optimizer_string_literal_reuse_noopt
+11/20 Test  #934: test_parse_noopt ............................   Passed    0.26 sec
+12/20 Test  #940: test_parse_compiled_patterns_noopt ..........   Passed    0.02 sec
+13/20 Test  #941: test_parse_compiled_patterns_opt ............   Passed    0.02 sec
+14/20 Test  #937: test_parse_direct_noopt .....................   Passed    0.31 sec
+15/20 Test  #938: test_parse_direct_opt .......................   Passed    0.31 sec
+16/20 Test #1671: rxas_flow_graph_contract ....................   Passed    0.43 sec
+17/20 Test #1670: rxas_optimizer_metadata .....................   Passed    0.40 sec
+18/20 Test #1688: rxas_optimizer_string_literal_reuse_noopt ...   Passed    0.61 sec
+19/20 Test #1687: rxas_optimizer_string_literal_reuse .........   Passed    0.61 sec
+20/20 Test  #342: nr14_frozen_parse_contract ..................   Passed    1.07 sec
+
+100% tests passed, 0 tests failed out of 20
+
+Label Time Summary:
+compiler       =   1.07 sec*proc (1 test)
+flow           =   0.43 sec*proc (1 test)
+linked_opt     =   0.24 sec*proc (1 test)
+metadata       =   0.83 sec*proc (2 tests)
+optimizer      =   2.05 sec*proc (4 tests)
+parse          =   1.07 sec*proc (1 test)
+performance    =   1.07 sec*proc (1 test)
+rxas           =   2.05 sec*proc (4 tests)
+rxbin          =   1.07 sec*proc (1 test)
+
+Total Test time (real) =   2.43 sec

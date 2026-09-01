@@ -1,0 +1,155 @@
+/*
+ * Level B port of the Are We Fast Yet? Towers benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * LICENSE-SOM-MIT.txt and README.md in this directory.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+result = 0
+do iteration = 1 to repetitions
+  benchmark = .TowersBenchmark()
+  result = benchmark.run()
+  if result <> 8191 then return fail("expected 8191 moves, got " || result)
+end
+
+say "benchmark=awfy_towers repetitions="repetitions "result="result
+say "PASS: AWFY Towers"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+TowersDisk: class
+  disk_size = .int
+  next_disk = .object
+  has_next = .int
+
+  *: factory
+    arg size = .int
+    disk_size = size
+    has_next = 0
+    return
+
+  size: method = .int
+    return disk_size
+
+  next: method = .TowersDisk
+    return next_disk as .TowersDisk
+
+  hasNext: method = .int
+    return has_next
+
+  setNext: method = .void
+    arg value = .TowersDisk
+    next_disk = value as .object
+    has_next = 1
+    return
+
+TowersBenchmark: class
+  pile0 = .TowersDisk
+  pile1 = .TowersDisk
+  pile2 = .TowersDisk
+  pile0_present = .int
+  pile1_present = .int
+  pile2_present = .int
+  moves_done = .int
+
+  *: factory
+    pile0_present = 0
+    pile1_present = 0
+    pile2_present = 0
+    moves_done = 0
+    return
+
+  run: method = .int
+    call buildTowerAt(0, 13)
+    moves_done = 0
+    call moveDisks(13, 0, 1)
+    return moves_done
+
+  pushDisk: method = .void
+    arg disk = .TowersDisk, pile = .int
+    top = .TowersDisk
+    has_top = 0
+    if pile = 0 then do
+      has_top = pile0_present
+      if has_top then top = pile0
+    end
+    else if pile = 1 then do
+      has_top = pile1_present
+      if has_top then top = pile1
+    end
+    else do
+      has_top = pile2_present
+      if has_top then top = pile2
+    end
+    if has_top then do
+      if disk.size() >= top.size() then return
+      call disk.setNext(top)
+    end
+    if pile = 0 then do
+      pile0 = disk
+      pile0_present = 1
+    end
+    else if pile = 1 then do
+      pile1 = disk
+      pile1_present = 1
+    end
+    else do
+      pile2 = disk
+      pile2_present = 1
+    end
+    return
+
+  popDiskFrom: method = .TowersDisk
+    arg pile = .int
+    top = .TowersDisk
+    if pile = 0 then top = pile0
+    else if pile = 1 then top = pile1
+    else top = pile2
+    if top.hasNext() then do
+      next_disk = top.next()
+      if pile = 0 then pile0 = next_disk
+      else if pile = 1 then pile1 = next_disk
+      else pile2 = next_disk
+    end
+    else do
+      if pile = 0 then pile0_present = 0
+      else if pile = 1 then pile1_present = 0
+      else pile2_present = 0
+    end
+    return top
+
+  moveTopDisk: method = .void
+    arg from_pile = .int, to_pile = .int
+    disk = popDiskFrom(from_pile)
+    call pushDisk(disk, to_pile)
+    moves_done = moves_done + 1
+    return
+
+  buildTowerAt: method = .void
+    arg pile = .int, disks = .int
+    do i = disks to 0 by -1
+      disk = .TowersDisk(i)
+      call pushDisk(disk, pile)
+    end
+    return
+
+  moveDisks: method = .void
+    arg disks = .int, from_pile = .int, to_pile = .int
+    if disks = 1 then call moveTopDisk(from_pile, to_pile)
+    else do
+      other_pile = (3 - from_pile) - to_pile
+      call moveDisks(disks - 1, from_pile, other_pile)
+      call moveTopDisk(from_pile, to_pile)
+      call moveDisks(disks - 1, other_pile, to_pile)
+    end
+    return

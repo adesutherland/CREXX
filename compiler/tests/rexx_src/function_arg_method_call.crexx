@@ -1,0 +1,31 @@
+options levelb
+
+import rxfnsb
+
+main: procedure = .int
+  box = .MethodBox()
+  direct = length(box.current())
+  nested = check_length(box.current())
+
+  if direct <> 1 then do
+    say "bad direct" direct
+    return 1
+  end
+  if nested <> 1 then do
+    say "bad nested" nested
+    return 2
+  end
+
+  say "function argument method call ok"
+  return 0
+
+check_length: procedure = .int
+  arg value = .string
+  return length(value)
+
+MethodBox: class
+  *: factory
+    return
+
+  current: method = .string
+    return "x"

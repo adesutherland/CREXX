@@ -1,0 +1,15 @@
+options levelg
+namespace gate_f_pending_return
+
+work: task = .int
+  return 7
+
+run: procedure = .int
+  do parallel
+    value = work()
+    return value
+  end
+  return 0
+
+main: procedure = .int
+  return run()

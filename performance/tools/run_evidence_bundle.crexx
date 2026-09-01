@@ -1,0 +1,1551 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+/*
+ * Exact-image performance evidence orchestration. Profiling and RXSEQ are
+ * deliberately separate runs; only the ordinary Release VM supplies product
+ * timing. Schema-4 profiles also feed the NR-05 call-census dashboard.
+ */
+main: procedure = .int
+  arg args = .string[]
+
+  manifest_path = ""
+  release_build = "cmake-build-release"
+  profile_build = "cmake-build-profile"
+  output_dir = ""
+  vm_name = "rxvm"
+  profile_mode = "timing"
+  force = 0
+  resume = 0
+  self_test_requested = 0
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--self-test" then self_test_requested = 1
+    else if option = "--force" then force = 1
+    else if option = "--resume" then resume = 1
+    else if option = "--vm" then do
+      if i = args[0] then return argument_error("missing value after --vm")
+      i = i + 1
+      vm_name = lower(args[i])
+    end
+    else if option = "--profile-mode" then do
+      if i = args[0] then return argument_error("missing value after --profile-mode")
+      i = i + 1
+      profile_mode = lower(args[i])
+    end
+    else if option = "--manifest" then do
+      if i = args[0] then return argument_error("missing value after --manifest")
+      i = i + 1
+      manifest_path = args[i]
+    end
+    else if option = "--release-build" then do
+      if i = args[0] then return argument_error("missing value after --release-build")
+      i = i + 1
+      release_build = args[i]
+    end
+    else if option = "--profile-build" then do
+      if i = args[0] then return argument_error("missing value after --profile-build")
+      i = i + 1
+      profile_build = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if self_test_requested then return self_test()
+  if manifest_path = "" then return argument_error("--manifest is required")
+  if output_dir = "" then return argument_error("--output-dir is required")
+  if vm_name <> "rxvm" & vm_name <> "rxbvm" then
+    return argument_error("--vm must be rxvm or rxbvm")
+  if profile_mode <> "timing" & profile_mode <> "counts" then
+    return argument_error("--profile-mode must be timing or counts")
+  if force & resume then return argument_error("--force and --resume are mutually exclusive")
+
+  repo_root = current_directory()
+  manifest_path = absolute_path(repo_root, manifest_path)
+  release_build = absolute_path(repo_root, release_build)
+  profile_build = absolute_path(repo_root, profile_build)
+  output_dir = absolute_path(repo_root, output_dir)
+
+  if cache_value(release_build || "/CMakeCache.txt", "CMAKE_BUILD_TYPE") <> "Release" then
+    return execution_error("ordinary build must be configured as Release")
+  if cache_value(release_build || "/CMakeCache.txt", "CREXX_VM_PROFILING") <> "OFF" then
+    return execution_error("ordinary Release build must have CREXX_VM_PROFILING=OFF")
+  if cache_value(profile_build || "/CMakeCache.txt", "CMAKE_BUILD_TYPE") <> "Release" then
+    return execution_error("profiling build must be configured as Release")
+  if cache_value(profile_build || "/CMakeCache.txt", "CREXX_VM_PROFILING") <> "ON" then
+    return execution_error("profiling Release build must have CREXX_VM_PROFILING=ON")
+
+  manifest_rows = read_input_manifest(manifest_path)
+  if manifest_rows[0] = 0 then return execution_error("manifest has no valid entries")
+  if resume then do
+    if \file_exists(output_dir) then
+      return execution_error("resume output directory does not exist: " || output_dir)
+  end
+  else if prepare_output_directory(output_dir, force) <> 0 then return 1
+
+  input_copy = output_dir || "/input-manifest.txt"
+  if resume & file_exists(input_copy) & sha256_file(input_copy) <> sha256_file(manifest_path) then do
+    prior_copy = output_dir || "/input-manifest.pre-resume.txt"
+    if \file_exists(prior_copy) then do
+      if copy_file(input_copy, prior_copy) <> 0 then return 1
+    end
+  end
+  if copy_file(manifest_path, input_copy) <> 0 then return 1
+
+  summary_dir = output_dir || "/summary"
+  entries_dir = output_dir || "/entries"
+  if make_directory(summary_dir) <> 0 then return 1
+  if make_directory(entries_dir) <> 0 then return 1
+
+  samples = .string[]
+  samples[1] = "entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness"
+  instructions = .string[]
+  instructions[1] = "entry,count_rank,total_time_rank,average_latency_rank,name,count,total_ns,average_ns,min_ns,max_ns,percent,status"
+  procedures = .string[]
+  procedures[1] = "entry,rank,name,metric,module,kind,count,total_ns,average_ns,completed,unwound,return_type,args,status"
+  allocations = .string[]
+  allocations[1] = "entry,name,count,bytes,max_bytes,high_water,status"
+  sequences = .string[]
+  sequences[1] = "entry,window,rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start"
+  profile_status = .string[]
+  profile_status[1] = "entry,name,value"
+  call_census = .string[]
+  call_census[1] = "entry,section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status"
+  timing_ids = .string[]
+  timing_pairs = .string[]
+  timing_variants = .string[]
+  timing_modes = .string[]
+  timing_medians = .int[]
+
+  started_utc = timestamp_utc()
+  bundle_manifest = output_dir || "/bundle-manifest.json"
+  if write_bundle_manifest(bundle_manifest, manifest_path, release_build, ,
+      profile_build, vm_name, profile_mode, output_dir, args, started_utc, "", ,
+      "running") <> 0 then return 1
+
+  do entry_index = 1 to manifest_rows[0]
+    if resume & entry_is_complete(manifest_rows[entry_index], entries_dir, vm_name, profile_mode) then
+      result = restore_entry(manifest_rows[entry_index], entries_dir, samples, ,
+          instructions, procedures, allocations, sequences, profile_status, ,
+          call_census, timing_ids, timing_pairs, timing_variants, timing_modes, ,
+          timing_medians)
+    else do
+      if resume then do
+        resume_fields = split_delimited(manifest_rows[entry_index], "|")
+        incomplete_dir = entries_dir || "/" || resume_fields[1]
+        if file_exists(incomplete_dir) then do
+          if remove_directory(incomplete_dir) <> 0 then return 1
+        end
+      end
+      result = process_entry(manifest_rows[entry_index], repo_root, release_build, ,
+          profile_build, vm_name, profile_mode, entries_dir, samples, instructions, procedures, allocations, ,
+          sequences, profile_status, call_census, timing_ids, timing_pairs, timing_variants, ,
+          timing_modes, timing_medians)
+    end
+    if result <> 0 then do
+      completed_utc = timestamp_utc()
+      call write_bundle_manifest bundle_manifest, manifest_path, release_build, ,
+          profile_build, vm_name, profile_mode, output_dir, args, started_utc, ,
+          completed_utc, "fail"
+      return result
+    end
+  end
+
+  if write_lines(summary_dir || "/timing-samples.csv", samples) <> 0 then return 1
+  if write_lines(summary_dir || "/instruction-ranking.csv", instructions) <> 0 then return 1
+  if write_lines(summary_dir || "/procedure-report.csv", procedures) <> 0 then return 1
+  if write_lines(summary_dir || "/allocation-report.csv", allocations) <> 0 then return 1
+  if write_lines(summary_dir || "/sequence-ranking.csv", sequences) <> 0 then return 1
+  if write_lines(summary_dir || "/profile-status.csv", profile_status) <> 0 then return 1
+  if write_lines(summary_dir || "/call-census.csv", call_census) <> 0 then return 1
+  if write_call_census_markdown(summary_dir || "/call-census.md", ,
+      manifest_rows[0], call_census) <> 0 then return 1
+
+  deltas = build_pair_deltas(timing_ids, timing_pairs, timing_variants, ,
+      timing_modes, timing_medians)
+  if deltas[0] <= 1 then return execution_error("no complete baseline/candidate timing pair was found")
+  if write_lines(summary_dir || "/paired-deltas.csv", deltas) <> 0 then return 1
+  if write_summary_markdown(summary_dir || "/summary.md", manifest_rows[0], ,
+      timing_ids, timing_pairs, timing_variants, timing_modes, timing_medians, ,
+      instructions[0] - 1, procedures[0] - 1, allocations[0] - 1, ,
+      sequences[0] - 1) <> 0 then return 1
+
+  verification = .string[]
+  verification[1] = "PASS: ordinary build is Release with CREXX_VM_PROFILING=OFF; profiling build is Release with CREXX_VM_PROFILING=ON"
+  verification[2] = "PASS: every input image/module checksum matched the explicit manifest"
+  verification[3] = "PASS: all warmups and recorded samples ran serially and retained stdout/stderr"
+  verification[4] = "PASS: every schema-4/schema-5 profile reported result=0, no counter overflow, and complete tracked domains"
+  verification[5] = "PASS: RXSEQ N=2, N=3, and N=4 binary captures and decoded candidate CSVs were retained"
+  verification[6] = "PASS: generated summaries preserve procedure metrics, the dynamic call census, and paired unprofiled timing deltas"
+  if write_lines(output_dir || "/verification.txt", verification) <> 0 then return 1
+
+  completed_utc = .string
+  completed_utc = timestamp_utc()
+  if write_bundle_manifest(bundle_manifest, manifest_path, release_build, ,
+      profile_build, vm_name, profile_mode, output_dir, args, started_utc, ,
+      completed_utc, "pass") <> 0 then return 1
+  if write_and_verify_checksums(output_dir) <> 0 then return 1
+
+  say "PASS: exact-image evidence bundle retained under" output_dir
+  return 0
+
+/* Manifest row fields:
+ * id|pair|workload|variant|mode|image|modules|args|expectation|source_trace|
+ * warmups|runs|image_sha256|module_sha256s
+ */
+process_entry: procedure = .int
+  arg row = .string, repo_root = .string, release_build = .string, ,
+      profile_build = .string, vm_name = .string, profile_mode = .string, ,
+      entries_dir = .string, ,
+      expose samples = .string[], expose instructions = .string[], ,
+      expose procedures = .string[], expose allocations = .string[], ,
+      expose sequences = .string[], expose profile_status = .string[], ,
+      expose call_census = .string[], ,
+      expose timing_ids = .string[], expose timing_pairs = .string[], ,
+      expose timing_variants = .string[], expose timing_modes = .string[], ,
+      expose timing_medians = .int[]
+
+  fields = split_delimited(row, "|")
+  if fields[0] <> 14 then return execution_error("manifest entry must contain 14 fields: " || row)
+
+  entry_id = fields[1]
+  pair_name = fields[2]
+  workload = fields[3]
+  variant = fields[4]
+  mode = fields[5]
+  image = absolute_path(repo_root, fields[6])
+  module_values = split_list(fields[7])
+  argument_values = split_list(fields[8])
+  expectation = fields[9]
+  source_trace = fields[10]
+  if \is_digits(fields[11]) | \is_digits(fields[12]) then
+    return execution_error("manifest warmups/runs must be integers for " || entry_id)
+  warmups = fields[11]
+  runs = fields[12]
+  if runs < 1 then return execution_error("recorded runs must be positive for " || entry_id)
+  image_expected_hash = lower(fields[13])
+  module_expected_hashes = split_list(fields[14])
+  if module_values[0] <> module_expected_hashes[0] then
+    return execution_error("module/hash count mismatch for " || entry_id)
+
+  if safe_component(entry_id) <> entry_id then
+    return execution_error("entry id is not path-safe: " || entry_id)
+  entry_dir = entries_dir || "/" || entry_id
+  timing_dir = entry_dir || "/timing"
+  profile_dir = entry_dir || "/profile"
+  rxseq_dir = entry_dir || "/rxseq"
+  if make_directory(timing_dir || "/raw") <> 0 then return 1
+  if make_directory(profile_dir) <> 0 then return 1
+  if make_directory(rxseq_dir) <> 0 then return 1
+
+  image_hash = sha256_file(image)
+  if image_hash = "" then return execution_error("could not hash image for " || entry_id)
+  if image_hash <> image_expected_hash then
+    return execution_error("image checksum mismatch for " || entry_id)
+
+  modules = .string[]
+  module_hashes = .string[]
+  do module_index = 1 to module_values[0]
+    modules[module_index] = absolute_path(repo_root, module_values[module_index])
+    module_hashes[module_index] = sha256_file(modules[module_index])
+    if module_hashes[module_index] = "" then
+      return execution_error("could not hash module for " || entry_id)
+    if module_hashes[module_index] <> lower(module_expected_hashes[module_index]) then
+      return execution_error("module checksum mismatch for " || entry_id)
+  end
+
+  release_vm = release_build || "/bin/" || vm_name
+  profile_vm = profile_build || "/bin/" || vm_name
+  rxseq_tool = profile_build || "/bin/rxseq"
+  timing_command = vm_command(release_vm, image, modules, argument_values)
+
+  entry_samples = .int[]
+  sample_number = 0
+  do sequence = 1 to warmups
+    elapsed_ns = 0
+    child_rc = 0
+    correctness = "fail"
+    sample_rc = capture_timed_sample(timing_command, expectation, "warmup", ,
+        sequence, timing_dir || "/raw", elapsed_ns, child_rc, correctness)
+    samples[samples[0] + 1] = timing_sample_row(entry_id, pair_name, workload, ,
+        variant, mode, "warmup", sequence, elapsed_ns, child_rc, correctness)
+    if sample_rc <> 0 | correctness <> "pass" then
+      return execution_error("warmup correctness failed for " || entry_id)
+  end
+
+  do sequence = .int(1) to runs
+    elapsed_ns = .int
+    elapsed_ns = 0
+    child_rc = .int
+    child_rc = 0
+    correctness = .string
+    correctness = "fail"
+    sample_rc = .int
+    sample_rc = capture_timed_sample(timing_command, expectation, "recorded", ,
+        sequence, timing_dir || "/raw", elapsed_ns, child_rc, correctness)
+    samples[samples[0] + 1] = timing_sample_row(entry_id, pair_name, workload, ,
+        variant, mode, "recorded", sequence, elapsed_ns, child_rc, correctness)
+    if sample_rc <> 0 | correctness <> "pass" then
+      return execution_error("recorded correctness failed for " || entry_id)
+    sample_number = sample_number + 1
+    entry_samples[sample_number] = elapsed_ns
+  end
+
+  call sort_ints entry_samples
+  median_ns = sample_median(entry_samples)
+  timing_ids[timing_ids[0] + 1] = entry_id
+  timing_pairs[timing_pairs[0] + 1] = pair_name
+  timing_variants[timing_variants[0] + 1] = variant
+  timing_modes[timing_modes[0] + 1] = mode
+  timing_medians[timing_medians[0] + 1] = median_ns
+
+  profile_path = profile_dir || "/profile.csv"
+  profile_command = vm_command(profile_vm, image, modules, argument_values)
+  if profile_mode = "counts" then
+    call arrayinsert profile_command, 2, 1, "--profile=counts"
+  call arrayinsert profile_command, 2, 1, "--profile-output"
+  call arrayinsert profile_command, 3, 1, profile_path
+  if capture_checked_command(profile_command, expectation, profile_dir || "/stdout.txt", ,
+      profile_dir || "/stderr.txt") <> 0 then
+    return execution_error("profile run failed for " || entry_id)
+  if collect_profile_summary(entry_id, profile_path, instructions, procedures, ,
+      allocations, profile_status, call_census) <> 0 then return 1
+
+  sequence_commands = .string[]
+  do window = 2 to 4
+    rxseq_path = rxseq_dir || "/n" || window || ".rxseq"
+    candidates_path = rxseq_dir || "/n" || window || "-candidates.csv"
+    sequence_command = vm_command(profile_vm, image, modules, argument_values)
+    call arrayinsert sequence_command, 2, 1, "--sequence-count=" || window
+    call arrayinsert sequence_command, 3, 1, "--sequence-output"
+    call arrayinsert sequence_command, 4, 1, rxseq_path
+    if capture_checked_command(sequence_command, expectation, ,
+        rxseq_dir || "/n" || window || ".stdout.txt", ,
+        rxseq_dir || "/n" || window || ".stderr.txt") <> 0 then
+      return execution_error("RXSEQ capture failed for " || entry_id || " N=" || window)
+
+    analyse_command = .string[]
+    analyse_command[1] = rxseq_tool
+    analyse_command[2] = rxseq_path
+    analyse_command[3] = image
+    do module_index = .int(1) to modules[0]
+      analyse_command[analyse_command[0] + 1] = modules[module_index]
+    end
+    analyse_command[analyse_command[0] + 1] = "--output"
+    analyse_command[analyse_command[0] + 1] = candidates_path
+    if capture_plain_command(analyse_command, rxseq_dir || "/n" || window || ,
+        "-analyse.stdout.txt", rxseq_dir || "/n" || window || ,
+        "-analyse.stderr.txt") <> 0 then
+      return execution_error("RXSEQ analysis failed for " || entry_id || " N=" || window)
+    if collect_sequence_summary(entry_id, window, candidates_path, sequences) <> 0 then return 1
+    sequence_commands[sequence_commands[0] + 1] = command_display(sequence_command)
+    sequence_commands[sequence_commands[0] + 1] = command_display(analyse_command)
+  end
+
+  if write_entry_manifest(entry_dir || "/manifest.json", entry_id, pair_name, ,
+      workload, variant, mode, vm_name, profile_mode, image, image_hash, modules, module_hashes, ,
+      argument_values, expectation, source_trace, warmups, runs, timing_command, ,
+      profile_command, sequence_commands, median_ns) <> 0 then return 1
+
+  say "PASS:" entry_id "retained" warmups "warmups," runs "recorded samples, profile, and RXSEQ N=2/3/4"
+  return 0
+
+usage: procedure = .void
+  say "Usage: run_evidence_bundle --manifest PATH --output-dir PATH [options]"
+  say ""
+  say "Options:"
+  say "  --manifest PATH       Version-1 exact-image input manifest"
+  say "  --release-build PATH  Ordinary Release build (default: cmake-build-release)"
+  say "  --profile-build PATH  Release profiling build (default: cmake-build-profile)"
+  say "  --vm NAME             Select rxvm or rxbvm (default: rxvm)"
+  say "  --profile-mode MODE   Select timing or deterministic counts (default: timing)"
+  say "  --output-dir PATH     New retained evidence-bundle directory"
+  say "  --resume              Retain complete entries and continue an interrupted bundle"
+  say "  --force               Replace an existing output directory"
+  say "  --self-test           Exercise parsers and paired-summary helpers"
+  say "  -h, --help            Show this help"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+absolute_path: procedure = .string
+  arg root = .string, path = .string
+  if path = "" then return root
+  if left(path, 1) = "/" then return path
+  return root || "/" || path
+
+current_directory: procedure = .string
+  out = .string[]
+  err = .string[]
+  address crexx "pwd" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return "unknown"
+
+timestamp_utc: procedure = .string
+  out = .string[]
+  err = .string[]
+  address crexx "now utc" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return date("S") || "T" || time("L")
+
+safe_component: procedure = .string
+  arg value = .string
+  result = ""
+  allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-"
+  do i = 1 to length(value)
+    character = substr(value, i, 1)
+    if pos(character, allowed) > 0 then result = result || character
+    else result = result || "-"
+  end
+  result = strip(result, "B", "-")
+  if result = "" then return "sample"
+  return result
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  say "ERROR: could not create directory:" path
+  return 1
+
+file_exists: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "stat :path" output out error err
+  return rc = 0
+
+file_contains_text: procedure = .int
+  arg path = .string, needle = .string
+  out = .string[]
+  err = .string[]
+  address crexx "cat :path" output out error err
+  if rc <> 0 then return 0
+  return has_text(out, needle)
+
+remove_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "rm -r :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not remove incomplete entry directory: " || path)
+
+json_integer_field: procedure = .int
+  arg path = .string, field_name = .string
+  prefix = '"' || field_name || '":'
+  out = .string[]
+  err = .string[]
+  address crexx "cat :path" output out error err
+  if rc <> 0 then return -1
+  do i = 1 to out[0]
+    line = strip(out[i])
+    if left(line, length(prefix)) = prefix then do
+      value = strip(substr(line, length(prefix) + 1))
+      if right(value, 1) = "," then value = left(value, length(value) - 1)
+      if is_digits(value) then return value as .int
+      return -1
+    end
+  end
+  return -1
+
+entry_is_complete: procedure = .int
+  arg row = .string, entries_dir = .string, vm_name = .string, profile_mode = .string
+  fields = split_delimited(row, "|")
+  if fields[0] <> 14 then return 0
+  entry_id = fields[1]
+  entry_dir = entries_dir || "/" || entry_id
+  manifest = entry_dir || "/manifest.json"
+  if \file_exists(manifest) | ,
+      \file_exists(entry_dir || "/profile/profile.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n2.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n2-candidates.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n3.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n3-candidates.csv") | ,
+      \file_exists(entry_dir || "/rxseq/n4.rxseq") | ,
+      \file_exists(entry_dir || "/rxseq/n4-candidates.csv") then return 0
+  if \file_contains_text(manifest, '"entry": ' || jsonquote(entry_id)) | ,
+      \file_contains_text(manifest, '"vm": ' || jsonquote(vm_name)) | ,
+      \file_contains_text(manifest, '"profile_mode": ' || jsonquote(profile_mode)) | ,
+      \file_contains_text(manifest, '"sha256":' || jsonquote(lower(fields[13]))) then return 0
+  return json_integer_field(manifest, "median_elapsed_ns") >= 0
+
+restore_entry: procedure = .int
+  arg row = .string, entries_dir = .string, ,
+      expose samples = .string[], expose instructions = .string[], ,
+      expose procedures = .string[], expose allocations = .string[], ,
+      expose sequences = .string[], expose profile_status = .string[], ,
+      expose call_census = .string[], ,
+      expose timing_ids = .string[], expose timing_pairs = .string[], ,
+      expose timing_variants = .string[], expose timing_modes = .string[], ,
+      expose timing_medians = .int[]
+
+  fields = split_delimited(row, "|")
+  entry_id = fields[1]
+  pair_name = fields[2]
+  workload = fields[3]
+  variant = fields[4]
+  mode = fields[5]
+  runs = fields[12] as .int
+  entry_dir = entries_dir || "/" || entry_id
+  median_ns = json_integer_field(entry_dir || "/manifest.json", "median_elapsed_ns")
+  if median_ns < 0 then return execution_error("could not restore median for " || entry_id)
+
+  samples[samples[0] + 1] = timing_sample_row(entry_id, pair_name, workload, ,
+      variant, mode, "recorded", 1, median_ns, 0, "pass")
+  timing_ids[timing_ids[0] + 1] = entry_id
+  timing_pairs[timing_pairs[0] + 1] = pair_name
+  timing_variants[timing_variants[0] + 1] = variant
+  timing_modes[timing_modes[0] + 1] = mode
+  timing_medians[timing_medians[0] + 1] = median_ns
+
+  if collect_profile_summary(entry_id, entry_dir || "/profile/profile.csv", ,
+      instructions, procedures, allocations, profile_status, call_census) <> 0 then return 1
+  do window = 2 to 4
+    if collect_sequence_summary(entry_id, window, entry_dir || "/rxseq/n" || ,
+        window || "-candidates.csv", sequences) <> 0 then return 1
+  end
+  say "PASS:" entry_id "resumed from checksum-validated complete retained entry (" || ,
+      runs || " recorded run(s))"
+  return 0
+
+prepare_output_directory: procedure = .int
+  arg path = .string, force = .int
+  stat_out = .string[]
+  stat_err = .string[]
+  address crexx "stat :path" output stat_out error stat_err
+  exists = rc = 0
+  if exists & \force then do
+    say "ERROR: output directory already exists (use --force):" path
+    return 1
+  end
+  if exists then do
+    rm_out = .string[]
+    rm_err = .string[]
+    address crexx "rm -r :path" output rm_out error rm_err
+    if rc <> 0 then return execution_error("could not replace output directory: " || path)
+  end
+  return make_directory(path)
+
+copy_file: procedure = .int
+  arg source = .string, target = .string
+  out = .string[]
+  err = .string[]
+  copy_args = .string[]
+  copy_args[1] = source
+  copy_args[2] = target
+  address crexx "copy :copy_args[]" output out error err
+  if rc = 0 then return 0
+  say "ERROR: could not copy" source "to" target
+  return 1
+
+write_lines: procedure = .int
+  arg path = .string, lines = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "rm :path" output out error err
+  if lines[0] = 0 then do
+    address crexx "touch :path" output out error err
+    if rc = 0 then return 0
+    return execution_error("could not create output file: " || path)
+  end
+  do i = 1 to lines[0]
+    if lineout(path, lines[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write output file: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+split_list: procedure = .string[]
+  arg value = .string
+  values = .string[]
+  if value = "" then return values
+  return split_delimited(value, ";")
+
+read_input_manifest: procedure = .string[]
+  arg path = .string
+  rows = .string[]
+  header_seen = 0
+  line_number = 0
+  do while lines(path)
+    line = linein(path)
+    line_number = line_number + 1
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-nr03-image-manifest|1" & ,
+          line <> "crexx-nr05-call-census-manifest|1" then do
+        say "ERROR: expected a supported exact-image manifest header at" path || ":" || line_number
+        call linein path
+        empty_rows = .string[]
+        return empty_rows
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 14 then do
+      say "ERROR: manifest row must have 14 fields at" path || ":" || line_number
+      call linein path
+      empty_rows = .string[]
+      return empty_rows
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  if \header_seen then say "ERROR: manifest header is missing:" path
+  return rows
+
+sha256_file: procedure = .string
+  arg path = .string
+  command = .string[]
+  command[1] = "cmake"
+  command[2] = "-E"
+  command[3] = "sha256sum"
+  command[4] = path
+  out = .string[]
+  err = .string[]
+  address crexx "run :command[]" output out error err
+  if rc <> 0 | out[0] = 0 then return ""
+  return lower(word(out[1], 1))
+
+vm_command: procedure = .string[]
+  arg vm = .string, image = .string, modules = .string[], arguments = .string[]
+  command = .string[]
+  command[1] = vm
+  command[2] = image
+  do i = 1 to modules[0]
+    command[command[0] + 1] = modules[i]
+  end
+  if arguments[0] > 0 then do
+    command[command[0] + 1] = "-a"
+    do i = .int(1) to arguments[0]
+      command[command[0] + 1] = arguments[i]
+    end
+  end
+  return command
+
+command_display: procedure = .string
+  arg command = .string[]
+  result = ""
+  do i = 1 to command[0]
+    if result <> "" then result = result || " "
+    result = result || jsonquote(command[i])
+  end
+  return result
+
+sample_label: procedure = .string
+  arg phase = .string, sequence = .int
+  sequence_text = sequence
+  if sequence < 10 then sequence_text = "0" || sequence
+  return safe_component(phase) || "-" || sequence_text
+
+capture_timed_sample: procedure = .int
+  arg command = .string[], expectation = .string, phase = .string, sequence = .int, ,
+      raw_dir = .string, expose elapsed_ns = .int, expose child_rc = .int, ,
+      expose correctness = .string
+  child_output = .string[]
+  child_error = .string[]
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+  elapsed_us = ended_us - started_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  elapsed_ns = elapsed_us * 1000
+  sample_id = sample_label(phase, sequence)
+  if write_lines(raw_dir || "/" || sample_id || ".stdout.txt", child_output) <> 0 then return 1
+  if write_lines(raw_dir || "/" || sample_id || ".stderr.txt", child_error) <> 0 then return 1
+  correctness = "fail"
+  if child_rc = 0 & (has_text(child_output, expectation) | has_text(child_error, expectation)) then
+    correctness = "pass"
+  return 0
+
+capture_checked_command: procedure = .int
+  arg command = .string[], expectation = .string, stdout_path = .string, stderr_path = .string
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  if write_lines(stdout_path, child_output) <> 0 then return 1
+  if write_lines(stderr_path, child_error) <> 0 then return 1
+  if child_rc <> 0 then return 1
+  if \has_text(child_output, expectation) & \has_text(child_error, expectation) then return 1
+  return 0
+
+capture_plain_command: procedure = .int
+  arg command = .string[], stdout_path = .string, stderr_path = .string
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  if write_lines(stdout_path, child_output) <> 0 then return 1
+  if write_lines(stderr_path, child_error) <> 0 then return 1
+  return child_rc
+
+has_text: procedure = .int
+  arg text_lines = .string[], needle = .string
+  if needle = "" then return 1
+  do i = 1 to text_lines[0]
+    if pos(needle, text_lines[i]) > 0 then return 1
+  end
+  return 0
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+timing_sample_row: procedure = .string
+  arg entry_id = .string, pair_name = .string, workload = .string, variant = .string, ,
+      mode = .string, phase = .string, sequence = .int, elapsed_ns = .int, ,
+      child_rc = .int, correctness = .string
+  return csv_field(entry_id) || "," || csv_field(pair_name) || "," || ,
+      csv_field(workload) || "," || csv_field(variant) || "," || csv_field(mode) || ,
+      ",process," || csv_field(phase) || "," || sequence || "," || elapsed_ns || ,
+      "," || child_rc || "," || csv_field(correctness)
+
+sort_ints: procedure = .void
+  arg expose values = .int[]
+  do i = 2 to values[0]
+    value = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > value
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = value
+  end
+  return
+
+sample_median: procedure = .int
+  arg values = .int[]
+  count = values[0]
+  if count = 0 then return 0
+  if count <mod> 2 = 1 then return values[(count + 1) <idiv> 2]
+  lower_index = count <idiv> 2
+  return (values[lower_index] + values[lower_index + 1]) <idiv> 2
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'
+          i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else do
+      if character = '"' & field = "" then quoted = 1
+      else if character = "," then do
+        fields[fields[0] + 1] = field
+        field = ""
+      end
+      else field = field || character
+    end
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+collect_profile_summary: procedure = .int
+  arg entry_id = .string, path = .string, expose instructions = .string[], ,
+      expose procedures = .string[], expose allocations = .string[], ,
+      expose profile_status = .string[], expose call_census = .string[]
+
+  instruction_names = .string[]
+  instruction_counts = .int[]
+  instruction_totals = .int[]
+  instruction_averages = .int[]
+  instruction_mins = .int[]
+  instruction_maxes = .int[]
+  instruction_percents = .string[]
+  schema_ok = 0
+  schema_version = ""
+  result_ok = 0
+  overflow_ok = 0
+  procedure_ok = 0
+  allocation_ok = 0
+  census_ok = 0
+  branch_ok = 0
+  domain_status_rows = 0
+  census_rows = 0
+  allocation_rows = 0
+  activation_high_water = 0
+  procedure_rank = 0
+  header_seen = 0
+
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if \header_seen then do
+      header_seen = 1
+      if fields[0] <> 24 | fields[1] <> "section" | fields[24] <> "status" then do
+        call linein path
+        return execution_error("unexpected profile CSV header for " || entry_id)
+      end
+      iterate
+    end
+    if fields[0] <> 24 then do
+      call linein path
+      return execution_error("profile CSV row does not have 24 columns for " || entry_id)
+    end
+    section = fields[1]
+    if section = "summary" then do
+      profile_status[profile_status[0] + 1] = csv_field(entry_id) || "," || ,
+          csv_field(fields[2]) || "," || csv_field(fields[3])
+      if fields[2] = "schema_version" & (fields[3] = "4" | fields[3] = "5") then do
+        schema_ok = 1
+        schema_version = fields[3]
+      end
+      if fields[2] = "result" & fields[3] = "0" then result_ok = 1
+      if fields[2] = "counter_overflow" & fields[3] = "0" then overflow_ok = 1
+      if fields[2] = "procedure_tracking_unavailable" & fields[3] = "0" then procedure_ok = 1
+      if fields[2] = "allocation_tracking_unavailable" & fields[3] = "0" then allocation_ok = 1
+      if fields[2] = "census_tracking_unavailable" & fields[3] = "0" then census_ok = 1
+      if fields[2] = "branch_tracking_unavailable" & fields[3] = "0" then branch_ok = 1
+    end
+    else if section = "instruction" then do
+      index = instruction_names[0] + 1
+      instruction_names[index] = fields[2]
+      instruction_counts[index] = fields[5]
+      instruction_totals[index] = fields[6]
+      instruction_averages[index] = fields[7]
+      instruction_mins[index] = fields[8]
+      instruction_maxes[index] = fields[9]
+      instruction_percents[index] = fields[10]
+    end
+    else if section = "procedure" then do
+      if fields[3] = "elapsed" | fields[3] = "native_total" then
+        procedure_rank = procedure_rank + 1
+      procedures[procedures[0] + 1] = csv_field(entry_id) || "," || procedure_rank || ,
+          "," || csv_field(fields[2]) || "," || csv_field(fields[3]) || "," || ,
+          csv_field(fields[15]) || "," || csv_field(fields[16]) || "," || ,
+          fields[5] || "," || fields[6] || "," || fields[7] || "," || ,
+          fields[17] || "," || fields[18] || "," || csv_field(fields[19]) || ,
+          "," || csv_field(fields[20]) || ",complete"
+    end
+    else if section = "allocation" then do
+      allocation_rows = allocation_rows + 1
+      allocations[allocations[0] + 1] = csv_field(entry_id) || "," || ,
+          csv_field(fields[2]) || "," || fields[5] || "," || fields[21] || ,
+          "," || fields[22] || "," || fields[23] || "," || csv_field(fields[24])
+      if fields[24] <> "complete" then allocation_ok = 0
+      if fields[2] = "frame_activations" then activation_high_water = fields[23]
+    end
+    else if section = "census" | section = "call" | section = "return" | ,
+        section = "dynamic" | section = "mechanics" | section = "unwind" | ,
+        section = "status" | section = "value_operation" | ,
+        section = "frame_entry" | section = "branch" then do
+      census_row = csv_field(entry_id)
+      do column = 1 to 24
+        census_row = census_row || "," || csv_field(fields[column])
+      end
+      call_census[call_census[0] + 1] = census_row
+      census_rows = census_rows + 1
+      if fields[24] <> "complete" then census_ok = 0
+      if section = "status" then domain_status_rows = domain_status_rows + 1
+    end
+  end
+  call linein path
+
+  /* Stable insertion sort by dynamic instruction count, then total time. */
+  do i = 2 to instruction_names[0]
+    name_value = instruction_names[i]
+    count_value = instruction_counts[i]
+    total_value = instruction_totals[i]
+    average_value = instruction_averages[i]
+    min_value = instruction_mins[i]
+    max_value = instruction_maxes[i]
+    percent_value = instruction_percents[i]
+    j = i - 1
+    do while j >= 1 & (instruction_counts[j] < count_value | ,
+        (instruction_counts[j] = count_value & instruction_totals[j] < total_value))
+      instruction_names[j + 1] = instruction_names[j]
+      instruction_counts[j + 1] = instruction_counts[j]
+      instruction_totals[j + 1] = instruction_totals[j]
+      instruction_averages[j + 1] = instruction_averages[j]
+      instruction_mins[j + 1] = instruction_mins[j]
+      instruction_maxes[j + 1] = instruction_maxes[j]
+      instruction_percents[j + 1] = instruction_percents[j]
+      j = j - 1
+    end
+    instruction_names[j + 1] = name_value
+    instruction_counts[j + 1] = count_value
+    instruction_totals[j + 1] = total_value
+    instruction_averages[j + 1] = average_value
+    instruction_mins[j + 1] = min_value
+    instruction_maxes[j + 1] = max_value
+    instruction_percents[j + 1] = percent_value
+  end
+  do rank = 1 to instruction_names[0]
+    count_rank = 1
+    total_rank = 1
+    average_rank = 1
+    do other = 1 to instruction_names[0]
+      if instruction_counts[other] > instruction_counts[rank] then
+        count_rank = count_rank + 1
+      if instruction_totals[other] > instruction_totals[rank] then
+        total_rank = total_rank + 1
+      if instruction_averages[other] > instruction_averages[rank] then
+        average_rank = average_rank + 1
+    end
+    instructions[instructions[0] + 1] = csv_field(entry_id) || "," || ,
+        count_rank || "," || total_rank || "," || average_rank || "," || ,
+        csv_field(instruction_names[rank]) || "," || instruction_counts[rank] || ,
+        "," || instruction_totals[rank] || "," || instruction_averages[rank] || ,
+        "," || instruction_mins[rank] || "," || instruction_maxes[rank] || ,
+        "," || instruction_percents[rank] || ",complete"
+  end
+
+  if \header_seen | \schema_ok | \result_ok | \overflow_ok | \procedure_ok | ,
+      \allocation_ok | \census_ok | allocation_rows = 0 | census_rows = 0 | ,
+      activation_high_water < 1 | ,
+      (schema_version = "5" & (\branch_ok | domain_status_rows < 7)) then
+    return execution_error("profile completeness gate failed for " || entry_id)
+  return 0
+
+collect_sequence_summary: procedure = .int
+  arg entry_id = .string, window = .int, path = .string, ,
+      expose sequences = .string[]
+  header_seen = 0
+  row_count = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if \header_seen then do
+      header_seen = 1
+      if fields[0] <> 10 | fields[1] <> "rank" | fields[10] <> "example_start" then do
+        call linein path
+        return execution_error("unexpected RXSEQ candidate header for " || entry_id)
+      end
+      iterate
+    end
+    if fields[0] <> 10 then do
+      call linein path
+      return execution_error("unexpected RXSEQ candidate row for " || entry_id)
+    end
+    sequences[sequences[0] + 1] = csv_field(entry_id) || "," || window || ,
+        "," || fields[1] || "," || fields[2] || "," || fields[3] || ,
+        "," || fields[4] || "," || fields[5] || "," || csv_field(fields[6]) || ,
+        "," || csv_field(fields[7]) || "," || csv_field(fields[8]) || ,
+        "," || csv_field(fields[9]) || "," || csv_field(fields[10])
+    row_count = row_count + 1
+  end
+  call linein path
+  if \header_seen | row_count = 0 then
+    return execution_error("RXSEQ candidate report is empty for " || entry_id || " N=" || window)
+  return 0
+
+write_entry_manifest: procedure = .int
+  arg path = .string, entry_id = .string, pair_name = .string, workload = .string, ,
+      variant = .string, mode = .string, vm_name = .string, ,
+      profile_mode = .string, image = .string, image_hash = .string, ,
+      modules = .string[], module_hashes = .string[], arguments = .string[], ,
+      expectation = .string, source_trace = .string, warmups = .int, runs = .int, ,
+      timing_command = .string[], profile_command = .string[], ,
+      sequence_commands = .string[], median_ns = .int
+
+  module_values = .string[]
+  do i = 1 to modules[0]
+    module_values[i] = '{"path":' || jsonquote(modules[i]) || ',"sha256":' || ,
+        jsonquote(module_hashes[i]) || "}"
+  end
+  argument_json = .string[]
+  do i = .int(1) to arguments[0]
+    argument_json[i] = jsonquote(arguments[i])
+  end
+  timing_json = .string[]
+  do i = .int(1) to timing_command[0]
+    timing_json[i] = jsonquote(timing_command[i])
+  end
+  profile_json = .string[]
+  do i = .int(1) to profile_command[0]
+    profile_json[i] = jsonquote(profile_command[i])
+  end
+  sequence_json = .string[]
+  do i = .int(1) to sequence_commands[0]
+    sequence_json[i] = jsonquote(sequence_commands[i])
+  end
+  output = .string[]
+  output[1] = "{"
+  output[2] = '  "schema": 1,'
+  output[3] = '  "entry": ' || jsonquote(entry_id) || ","
+  output[4] = '  "pair": ' || jsonquote(pair_name) || ","
+  output[5] = '  "workload": ' || jsonquote(workload) || ","
+  output[6] = '  "variant": ' || jsonquote(variant) || ","
+  output[7] = '  "optimization_mode": ' || jsonquote(mode) || ","
+  output[8] = '  "vm": ' || jsonquote(vm_name) || ","
+  output[9] = '  "profile_mode": ' || jsonquote(profile_mode) || ","
+  output[10] = '  "image": {"path":' || jsonquote(image) || ',"sha256":' || ,
+      jsonquote(image_hash) || "},"
+  output[11] = '  "modules": ' || jsonarray(module_values) || ","
+  output[12] = '  "arguments": ' || jsonarray(argument_json) || ","
+  output[13] = '  "correctness_expectation": ' || jsonquote(expectation) || ","
+  output[14] = '  "source_trace_retention": ' || jsonquote(source_trace) || ","
+  output[15] = '  "warmups": ' || warmups || ","
+  output[16] = '  "recorded_runs": ' || runs || ","
+  output[17] = '  "sampling": "serial",'
+  output[18] = '  "timing_source": "ordinary Release ' || vm_name || ' only",'
+  output[19] = '  "profile_timing_interpretation": "diagnostic only; never throughput",'
+  output[20] = '  "timing_command": ' || jsonarray(timing_json) || ","
+  output[21] = '  "profile_command": ' || jsonarray(profile_json) || ","
+  output[22] = '  "sequence_commands": ' || jsonarray(sequence_json) || ","
+  output[23] = '  "median_elapsed_ns": ' || median_ns
+  output[24] = "}"
+  return write_lines(path, output)
+
+build_pair_deltas: procedure = .string[]
+  arg ids = .string[], pairs = .string[], variants = .string[], modes = .string[], ,
+      medians = .int[]
+  output = .string[]
+  output[1] = "pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent"
+  seen_pairs = .string[]
+  do i = 1 to pairs[0]
+    already_seen = 0
+    do seen_index = 1 to seen_pairs[0]
+      if seen_pairs[seen_index] = pairs[i] then already_seen = 1
+    end
+    if already_seen then iterate
+    seen_pairs[seen_pairs[0] + 1] = pairs[i]
+    baseline = 0
+    candidate = 0
+    do j = 1 to pairs[0]
+      if pairs[j] = pairs[i] & variants[j] = "baseline" then baseline = j
+      if pairs[j] = pairs[i] & variants[j] = "candidate" then candidate = j
+    end
+    if baseline = 0 | candidate = 0 then iterate
+    delta_ns = medians[candidate] - medians[baseline]
+    if medians[baseline] = 0 then delta_percent = ""
+    else delta_percent = strip(floatformat(((delta_ns as .float) * 100.0) / ,
+        (medians[baseline] as .float), , 3))
+    output[output[0] + 1] = csv_field(pairs[i]) || "," || csv_field(ids[baseline]) || ,
+        "," || csv_field(ids[candidate]) || "," || csv_field(modes[baseline]) || ,
+        "," || csv_field(modes[candidate]) || "," || medians[baseline] || ,
+        "," || medians[candidate] || "," || delta_ns || "," || delta_percent
+  end
+  return output
+
+add_aggregate: procedure = .void
+  arg key = .string, count = .int, expose keys = .string[], ,
+      expose counts = .int[]
+  do i = 1 to keys[0]
+    if keys[i] = key then do
+      counts[i] = counts[i] + count
+      return
+    end
+  end
+  keys[keys[0] + 1] = key
+  counts[counts[0] + 1] = count
+  return
+
+aggregate_count: procedure = .int
+  arg key = .string, keys = .string[], counts = .int[]
+  do i = 1 to keys[0]
+    if keys[i] = key then return counts[i]
+  end
+  return 0
+
+ratio_text: procedure = .string
+  arg numerator = .int, denominator = .int
+  if denominator = 0 then return "n/a"
+  return strip(floatformat((numerator as .float) / (denominator as .float), , 6))
+
+append_census_row: procedure = .void
+  arg expose output = .string[], label = .string, key = .string, ,
+      keys = .string[], counts = .int[]
+  output[output[0] + 1] = "| " || label || " | " || ,
+      aggregate_count(key, keys, counts) || " |"
+  return
+
+write_call_census_markdown: procedure = .int
+  arg path = .string, entry_count = .int, census = .string[]
+  keys = .string[]
+  counts = .int[]
+  do i = 2 to census[0]
+    fields = parse_csv_line(census[i])
+    if fields[0] <> 25 then
+      return execution_error("call-census summary row has the wrong width")
+    section = fields[2]
+    if section = "call" then iterate
+    key = section || "|" || fields[3] || "|" || fields[4]
+    call add_aggregate key, fields[6] as .int, keys, counts
+  end
+
+  direct_bytecode = aggregate_count("census|call_path|direct_bytecode", keys, counts)
+  direct_native = aggregate_count("census|call_path|direct_native", keys, counts)
+  dynamic_bytecode = aggregate_count("census|call_path|dynamic_bytecode", keys, counts)
+  dynamic_native = aggregate_count("census|call_path|dynamic_native", keys, counts)
+  instruction_calls = direct_bytecode + direct_native + dynamic_bytecode + dynamic_native
+  setup_swaps = aggregate_count("mechanics|call_window|setup_swaps", keys, counts)
+  restoration_swaps = aggregate_count("mechanics|call_window|normal_restoration_swaps", keys, counts)
+  defensive_copies = aggregate_count("mechanics|call_window|defensive_argument_copies", keys, counts)
+  fresh_frames = aggregate_count("census|frame_disposition|fresh", keys, counts)
+  reused_frames = aggregate_count("census|frame_disposition|reused", keys, counts)
+  moved_returns = aggregate_count("return|placement|ret_reg_move_local", keys, counts)
+  copied_returns = aggregate_count("return|placement|ret_reg_copy_nonlocal", keys, counts)
+  dynamic_selections = aggregate_count("dynamic|srcmethodsel|attempt", keys, counts) + ,
+      aggregate_count("dynamic|srcfprocsel|attempt", keys, counts)
+  unwind_events = aggregate_count("unwind|signal|events", keys, counts)
+
+  output = .string[]
+  output[1] = "# NR-05 call-path census dashboard"
+  output[2] = ""
+  output[3] = "Dynamic schema-4 observations aggregated across " || entry_count || ,
+      " exact images. Counts reflect each manifest cell's disclosed bounded argv; they are census evidence, not product timing or a performance-win claim."
+  output[4] = ""
+  output[5] = "## Calls by runtime path"
+  output[6] = ""
+  output[7] = "| Path | Calls |"
+  output[8] = "|---|---:|"
+  call append_census_row output, "direct bytecode", "census|call_path|direct_bytecode", keys, counts
+  call append_census_row output, "direct native", "census|call_path|direct_native", keys, counts
+  call append_census_row output, "dynamic bytecode", "census|call_path|dynamic_bytecode", keys, counts
+  call append_census_row output, "dynamic native", "census|call_path|dynamic_native", keys, counts
+  call append_census_row output, "external/root", "census|call_path|external_root", keys, counts
+  call append_census_row output, "signal bytecode", "census|call_path|signal_bytecode", keys, counts
+  call append_census_row output, "signal native", "census|call_path|signal_native", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Actual arity"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Arity | Calls |"
+  output[output[0] + 1] = "|---:|---:|"
+  do i = .int(1) to keys[0]
+    if left(keys[i], length("census|arity|")) = "census|arity|" then do
+      arity = substr(keys[i], length("census|arity|") + 1)
+      output[output[0] + 1] = "| " || arity || " | " || counts[i] || " |"
+    end
+  end
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Callable and frame disposition"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Category | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "procedure", "census|callable_kind|procedure", keys, counts
+  call append_census_row output, "method", "census|callable_kind|method", keys, counts
+  call append_census_row output, "factory", "census|callable_kind|factory", keys, counts
+  call append_census_row output, "native", "census|callable_kind|native", keys, counts
+  call append_census_row output, "unknown", "census|callable_kind|unknown", keys, counts
+  call append_census_row output, "fresh frames", "census|frame_disposition|fresh", keys, counts
+  call append_census_row output, "reused frames", "census|frame_disposition|reused", keys, counts
+  call append_census_row output, "native no-child", "census|frame_disposition|no_child_native", keys, counts
+  call append_census_row output, "failed/no frame", "census|frame_disposition|none_failed", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Call-window mechanics"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Mechanic | Count | Per instruction call |"
+  output[output[0] + 1] = "|---|---:|---:|"
+  output[output[0] + 1] = "| setup swaps | " || setup_swaps || " | " || ,
+      ratio_text(setup_swaps, instruction_calls) || " |"
+  output[output[0] + 1] = "| normal restoration swaps | " || restoration_swaps || " | " || ,
+      ratio_text(restoration_swaps, instruction_calls) || " |"
+  output[output[0] + 1] = "| defensive argument copies | " || defensive_copies || " | " || ,
+      ratio_text(defensive_copies, instruction_calls) || " |"
+  output[output[0] + 1] = "| unclassified swaps | " || ,
+      aggregate_count("mechanics|call_window|unclassified_swaps", keys, counts) || " | n/a |"
+  output[output[0] + 1] = "| unclassified copies | " || ,
+      aggregate_count("mechanics|call_window|unclassified_copies", keys, counts) || " | n/a |"
+  output[output[0] + 1] = "| degraded attributions | " || ,
+      aggregate_count("mechanics|call_window|attribution_degraded", keys, counts) || " | n/a |"
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Return placement"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Placement | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "void", "return|placement|void", keys, counts
+  call append_census_row output, "RET_REG local move", "return|placement|ret_reg_move_local", keys, counts
+  call append_census_row output, "RET_REG non-local copy", "return|placement|ret_reg_copy_nonlocal", keys, counts
+  call append_census_row output, "ignored value", "return|placement|value_ignored", keys, counts
+  call append_census_row output, "immediate", "return|placement|immediate", keys, counts
+  call append_census_row output, "terminal/external", "return|placement|terminal_external", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Dynamic selection and signal unwind"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Counter | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "method selections", "dynamic|srcmethodsel|attempt", keys, counts
+  call append_census_row output, "method selection failures", "dynamic|srcmethodsel|failure", keys, counts
+  call append_census_row output, "factory selections", "dynamic|srcfprocsel|attempt", keys, counts
+  call append_census_row output, "factory selection failures", "dynamic|srcfprocsel|failure", keys, counts
+  call append_census_row output, "signal unwind events", "unwind|signal|events", keys, counts
+  call append_census_row output, "bytecode frames discarded", "unwind|signal|bytecode_frames_discarded", keys, counts
+  call append_census_row output, "bytecode windows restored", "unwind|signal|argument_windows_restored", keys, counts
+  call append_census_row output, "bytecode slots restored", "unwind|signal|argument_slots_restored", keys, counts
+  call append_census_row output, "native windows restored", "unwind|signal|interrupted_native_windows_restored", keys, counts
+  call append_census_row output, "native slots restored", "unwind|signal|interrupted_native_slots_restored", keys, counts
+  call append_census_row output, "restoration failures", "unwind|signal|restoration_failures", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## NR-06 and NR-12 handoff"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "- NR-06 call-window work should use the path and exact-arity distributions above, together with " || setup_swaps || " setup and " || restoration_swaps || " restoration swaps (" || ratio_text(setup_swaps + restoration_swaps, instruction_calls) || " combined per instruction call across this portfolio run)."
+  output[output[0] + 1] = "- Frame recycling supplied " || reused_frames || " of " || fresh_frames + reused_frames || " observed bytecode activations; preserve the per-workload rows before generalising from the aggregate."
+  output[output[0] + 1] = "- NR-12 should distinguish " || defensive_copies || " attributable argument-copy instructions from the unclassified copy population, and should treat " || copied_returns || " measured non-local RET_REG copies separately from " || moved_returns || " local moves."
+  output[output[0] + 1] = "- Dynamic selection occurred " || dynamic_selections || " times and signal unwind occurred " || unwind_events || " times. Zero values mean unobserved in these bounded portfolio cells, not unreachable VM paths; focused semantic fixtures cover the cold paths."
+  output[output[0] + 1] = "- These aggregate conclusions are portfolio-wide for the exact " || entry_count || "-image set. Workload-specific conclusions must be drawn from call-census.csv and the retained raw profile for that entry."
+  return write_lines(path, output)
+
+write_summary_markdown: procedure = .int
+  arg path = .string, entry_count = .int, ids = .string[], pairs = .string[], ,
+      variants = .string[], modes = .string[], medians = .int[], ,
+      instruction_rows = .int, procedure_rows = .int, allocation_rows = .int, ,
+      sequence_rows = .int
+  deltas = build_pair_deltas(ids, pairs, variants, modes, medians)
+  output = .string[]
+  output[1] = "# Exact-image performance evidence summary"
+  output[2] = ""
+  output[3] = "Product timings below come only from serial samples of the ordinary profiling-off Release VM. Profile elapsed times are diagnostic instrumentation evidence and are not throughput measurements. Startup/lifecycle evidence remains a separate programme surface."
+  output[4] = ""
+  output[5] = "Retained " || entry_count || " exact-image entries, " || instruction_rows || ,
+      " ranked instruction rows, " || procedure_rows || " procedure-metric rows, " || ,
+      allocation_rows || " allocation rows, and " || sequence_rows || " RXSEQ candidate rows."
+  output[6] = ""
+  output[7] = "| Pair | Baseline median ns | Candidate median ns | Delta ns | Delta % |"
+  output[8] = "|---|---:|---:|---:|---:|"
+  do i = 2 to deltas[0]
+    fields = parse_csv_line(deltas[i])
+    output[output[0] + 1] = "| " || fields[1] || " | " || fields[6] || " | " || ,
+        fields[7] || " | " || fields[8] || " | " || fields[9] || " |"
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "Negative deltas mean the candidate completed faster. Review raw samples, correctness output, profile status, allocation definitions, and N=2/3/4 sequence candidates before drawing a causality conclusion."
+  return write_lines(path, output)
+
+run_command_lines: procedure = .string[]
+  arg command = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "run :command[]" output out error err
+  if rc <> 0 then do
+    empty_lines = .string[]
+    return empty_lines
+  end
+  return out
+
+run_first_line: procedure = .string
+  arg command = .string[]
+  out = run_command_lines(command)
+  if out[0] > 0 then return out[1]
+  return "unknown"
+
+cache_value: procedure = .string
+  arg cache_path = .string, key = .string
+  value = "unknown"
+  prefix = key || ":"
+  cache_lines = .string[]
+  cache_errors = .string[]
+  address crexx "cat :cache_path" output cache_lines error cache_errors
+  if rc <> 0 then return value
+  do i = 1 to cache_lines[0]
+    line = cache_lines[i]
+    if left(line, length(prefix)) = prefix then do
+      equals_at = pos("=", line)
+      if equals_at > 0 then do
+        value = substr(line, equals_at + 1)
+        leave
+      end
+    end
+  end
+  return value
+
+json_string_array: procedure = .string
+  arg values = .string[]
+  quoted = .string[]
+  do i = 1 to values[0]
+    quoted[i] = jsonquote(values[i])
+  end
+  return jsonarray(quoted)
+
+write_bundle_manifest: procedure = .int
+  arg path = .string, input_manifest = .string, release_build = .string, ,
+      profile_build = .string, vm_name = .string, profile_mode = .string, ,
+      output_dir = .string, arguments = .string[], ,
+      started_utc = .string, completed_utc = .string, result = .string
+
+  git_branch_command = .string[]
+  git_branch_command[1] = "git"
+  git_branch_command[2] = "branch"
+  git_branch_command[3] = "--show-current"
+  git_commit_command = .string[]
+  git_commit_command[1] = "git"
+  git_commit_command[2] = "rev-parse"
+  git_commit_command[3] = "HEAD"
+  git_status_command = .string[]
+  git_status_command[1] = "git"
+  git_status_command[2] = "status"
+  git_status_command[3] = "--porcelain=v1"
+  uname_command = .string[]
+  uname_command[1] = "/usr/bin/uname"
+  uname_command[2] = "-srm"
+  cpu_command = .string[]
+  cpu_command[1] = "/usr/sbin/sysctl"
+  cpu_command[2] = "-n"
+  cpu_command[3] = "machdep.cpu.brand_string"
+  cmake_command = .string[]
+  cmake_command[1] = "cmake"
+  cmake_command[2] = "--version"
+  release_vm_command = .string[]
+  release_vm_command[1] = release_build || "/bin/" || vm_name
+  release_vm_command[2] = "-v"
+  profile_vm_command = .string[]
+  profile_vm_command[1] = profile_build || "/bin/" || vm_name
+  profile_vm_command[2] = "-v"
+
+  release_cache = release_build || "/CMakeCache.txt"
+  profile_cache = profile_build || "/CMakeCache.txt"
+  compiler = cache_value(release_cache, "CMAKE_C_COMPILER")
+  compiler_command = .string[]
+  compiler_command[1] = compiler
+  compiler_command[2] = "--version"
+  dirty_lines = run_command_lines(git_status_command)
+  cpu = run_first_line(cpu_command)
+  if cpu = "unknown" then do
+    cpu_command[1] = "/usr/bin/uname"
+    cpu_command[2] = "-m"
+    cpu_command[3] = ""
+    cpu = run_first_line(cpu_command)
+  end
+
+  output = .string[]
+  output[1] = "{"
+  output[2] = '  "schema": 1,'
+  output[3] = '  "capture_tool": "performance/tools/run_evidence_bundle.crexx",'
+  output[4] = '  "capture_tool_sha256": ' || ,
+      jsonquote(sha256_file(current_directory() || ,
+      "/performance/tools/run_evidence_bundle.crexx")) || ","
+  output[5] = '  "crexx_version": ' || jsonquote(version()) || ","
+  output[6] = '  "result": ' || jsonquote(result) || ","
+  output[7] = '  "started_utc": ' || jsonquote(started_utc) || ","
+  if completed_utc = "" then output[8] = '  "completed_utc": null,'
+  else output[8] = '  "completed_utc": ' || jsonquote(completed_utc) || ","
+  output[9] = '  "repository": {"branch":' || jsonquote(run_first_line(git_branch_command)) || ,
+      ',"commit":' || jsonquote(run_first_line(git_commit_command)) || ,
+      ',"dirty_scope":' || json_string_array(dirty_lines) || "},"
+  output[10] = '  "host": {"os":' || jsonquote(run_first_line(uname_command)) || ,
+      ',"cpu":' || jsonquote(cpu) || "},"
+  output[11] = '  "driver_arguments": ' || json_string_array(arguments) || ","
+  output[12] = '  "input_manifest": {"path":' || jsonquote(input_manifest) || ,
+      ',"sha256":' || jsonquote(sha256_file(input_manifest)) || "},"
+  output[13] = '  "ordinary_release": {"build":' || jsonquote(release_build) || ,
+      ',"generator":' || jsonquote(cache_value(release_cache, "CMAKE_GENERATOR")) || ,
+      ',"build_type":' || jsonquote(cache_value(release_cache, "CMAKE_BUILD_TYPE")) || ,
+      ',"c_flags_release":' || jsonquote(cache_value(release_cache, "CMAKE_C_FLAGS_RELEASE")) || ,
+      ',"profiling":' || jsonquote(cache_value(release_cache, "CREXX_VM_PROFILING")) || ,
+      ',"vm":' || jsonquote(vm_name) || ,
+      ',"vm_version":' || jsonquote(run_first_line(release_vm_command)) || ,
+      ',"vm_sha256":' || jsonquote(sha256_file(release_build || "/bin/" || vm_name)) || "},"
+  output[14] = '  "profile_release": {"build":' || jsonquote(profile_build) || ,
+      ',"generator":' || jsonquote(cache_value(profile_cache, "CMAKE_GENERATOR")) || ,
+      ',"build_type":' || jsonquote(cache_value(profile_cache, "CMAKE_BUILD_TYPE")) || ,
+      ',"c_flags_release":' || jsonquote(cache_value(profile_cache, "CMAKE_C_FLAGS_RELEASE")) || ,
+      ',"profiling":' || jsonquote(cache_value(profile_cache, "CREXX_VM_PROFILING")) || ,
+      ',"vm":' || jsonquote(vm_name) || ',"profile_mode":' || jsonquote(profile_mode) || ,
+      ',"vm_version":' || jsonquote(run_first_line(profile_vm_command)) || ,
+      ',"vm_sha256":' || jsonquote(sha256_file(profile_build || "/bin/" || vm_name)) || ,
+      ',"rxseq_sha256":' || jsonquote(sha256_file(profile_build || "/bin/rxseq")) || "},"
+  output[15] = '  "toolchain": {"cmake":' || jsonquote(run_first_line(cmake_command)) || ,
+      ',"compiler_path":' || jsonquote(compiler) || ',"compiler":' || ,
+      jsonquote(run_first_line(compiler_command)) || "},"
+  output[16] = '  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},'
+  output[17] = '  "output_directory": ' || jsonquote(output_dir)
+  output[18] = "}"
+  return write_lines(path, output)
+
+collect_files_recursive: procedure = .int
+  arg directory = .string, root = .string, expose files = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "ls :directory" output out error err
+  if rc <> 0 then return execution_error("could not list bundle directory: " || directory)
+  do i = 1 to out[0]
+    child = out[i]
+    if left(child, 1) <> "/" then child = directory || "/" || child
+    stat_out = .string[]
+    stat_err = .string[]
+    address crexx "stat :child" output stat_out error stat_err
+    if rc <> 0 | stat_out[0] = 0 then
+      return execution_error("could not stat bundle path: " || child)
+    if pos("type=directory", stat_out[1]) > 0 then do
+      if collect_files_recursive(child, root, files) <> 0 then return 1
+    end
+    else if pos("type=file", stat_out[1]) > 0 then do
+      relative = substr(child, length(root) + 2)
+      if relative <> "checksums.sha256" then files[files[0] + 1] = relative
+    end
+  end
+  return 0
+
+sort_strings: procedure = .void
+  arg expose values = .string[]
+  do i = 2 to values[0]
+    value = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > value
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = value
+  end
+  return
+
+write_and_verify_checksums: procedure = .int
+  arg root = .string
+  files = .string[]
+  if collect_files_recursive(root, root, files) <> 0 then return 1
+  call sort_strings files
+  checksum_lines = .string[]
+  do i = 1 to files[0]
+    hash = sha256_file(root || "/" || files[i])
+    if hash = "" then return execution_error("could not checksum bundle file: " || files[i])
+    checksum_lines[i] = hash || "  " || files[i]
+  end
+  checksum_path = root || "/checksums.sha256"
+  if write_lines(checksum_path, checksum_lines) <> 0 then return 1
+
+  verified = 0
+  do while lines(checksum_path)
+    line = linein(checksum_path)
+    if line = "" then iterate
+    expected = word(line, 1)
+    relative = substr(line, length(expected) + 3)
+    actual = sha256_file(root || "/" || relative)
+    if actual <> expected then do
+      call linein checksum_path
+      return execution_error("bundle checksum verification failed: " || relative)
+    end
+    verified = verified + 1
+  end
+  call linein checksum_path
+  if verified <> files[0] then return execution_error("bundle checksum row count changed during verification")
+  return 0
+
+self_test: procedure = .int
+  fields = parse_csv_line('alpha,"b,c","d""e"')
+  if fields[0] <> 3 | fields[1] <> "alpha" | fields[2] <> "b,c" | ,
+      fields[3] <> 'd"e' then return execution_error("CSV parser self-test failed")
+  pieces = split_delimited("a|b||d", "|")
+  if pieces[0] <> 4 | pieces[3] <> "" | pieces[4] <> "d" then
+    return execution_error("manifest parser self-test failed")
+  samples = .int[]
+  samples[1] = 9
+  samples[2] = 1
+  samples[3] = 5
+  samples[4] = 3
+  call sort_ints samples
+  if sample_median(samples) <> 4 then return execution_error("median self-test failed")
+  ids = .string[]
+  ids[1] = "base"
+  ids[2] = "candidate"
+  pairs = .string[]
+  pairs[1] = "proof"
+  pairs[2] = "proof"
+  variants = .string[]
+  variants[1] = "baseline"
+  variants[2] = "candidate"
+  modes = .string[]
+  modes[1] = "noopt"
+  modes[2] = "opt"
+  medians = .int[]
+  medians[1] = 100
+  medians[2] = 80
+  deltas = build_pair_deltas(ids, pairs, variants, modes, medians)
+  if deltas[0] <> 2 | pos(",-20,-20.000", deltas[2]) = 0 then
+    return execution_error("paired-delta self-test failed")
+  aggregate_keys = .string[]
+  aggregate_counts = .int[]
+  call add_aggregate "census|call_path|direct_bytecode", 2, ,
+      aggregate_keys, aggregate_counts
+  call add_aggregate "census|call_path|direct_bytecode", 3, ,
+      aggregate_keys, aggregate_counts
+  if aggregate_count("census|call_path|direct_bytecode", ,
+      aggregate_keys, aggregate_counts) <> 5 then
+    return execution_error("call-census aggregate self-test failed")
+  if ratio_text(1, 4) <> "0.250000" then
+    return execution_error("call-census ratio self-test failed")
+  say "PASS: NR-03 evidence tool self-test"
+  return 0

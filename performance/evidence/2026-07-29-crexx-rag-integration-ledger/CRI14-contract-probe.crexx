@@ -1,0 +1,95 @@
+/**
+ * Generic operation contract used to probe the compiled CREXX metadata surface.
+ *
+ * The prose contract is version 1. A successful result has no initialized
+ * problem object; an unsuccessful result has one.
+ *
+ * @param request typed input payload
+ * @param correlation optional caller correlation text
+ * @return typed result payload
+ * @throws errorcontract structured operation failure
+ */
+options levelb
+namespace cri14_contract expose operationcontract requestcontract resultcontract errorcontract requestrecord resultrecord errorrecord
+
+operationcontract: interface
+  execute: method = .resultcontract
+    arg request = .requestcontract, correlation = ""
+
+requestcontract: interface
+  query: method = .string
+  tags: method = .string[]
+  limit: method = .int
+
+resultcontract: interface
+  ok: method = .boolean
+  items: method = .string[]
+  problem: method = .errorcontract
+
+errorcontract: interface
+  code: method = .string
+  message: method = .string
+  details: method = .string[]
+
+requestrecord: class implements .requestcontract
+  _query = .string
+  _tags = .string[]
+  _limit = .int
+
+  *: factory
+    arg query = .string, tags = .string[], limit = 0
+    _query = query
+    _tags = tags
+    _limit = limit
+    return
+
+  query: method = .string
+    return _query
+
+  tags: method = .string[]
+    return _tags
+
+  limit: method = .int
+    return _limit
+
+errorrecord: class implements .errorcontract
+  _code = .string
+  _message = .string
+  _details = .string[]
+
+  *: factory
+    arg code = .string, message = .string, details = .string[]
+    _code = code
+    _message = message
+    _details = details
+    return
+
+  code: method = .string
+    return _code
+
+  message: method = .string
+    return _message
+
+  details: method = .string[]
+    return _details
+
+resultrecord: class implements .resultcontract
+  _ok = .boolean
+  _items = .string[]
+  _problem = .errorcontract
+
+  *: factory
+    arg ok = .boolean, items = .string[], problem = .errorcontract
+    _ok = ok
+    _items = items
+    _problem = problem
+    return
+
+  ok: method = .boolean
+    return _ok
+
+  items: method = .string[]
+    return _items
+
+  problem: method = .errorcontract
+    return _problem

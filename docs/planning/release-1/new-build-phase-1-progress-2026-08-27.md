@@ -1,0 +1,609 @@
+# New-build Phase 1 progress — 2026-08-27
+
+## Status
+
+Phase 1 is complete on `temp/newbuild`. Thirteen bounded ownership,
+preparation, classification and gate-repair waves originally incorporated
+`origin/develop` through `657b833d9f70e3f0e69536e6d76e4dd6a9e953aa`.
+Implementation commit `2a840950e268c790b138ea90e8976bfbac211099`
+passed the broad macOS Debug gate and exact-tree Linux ARM64 Debug and Release
+captures. Portability repairs then produced exact hosted acceptance commit
+`0a0c17d56f341692d4d735ee87238c06ef6757c0`; GitHub Actions run `33156840598`
+passed Linux x64, Windows x64, macOS ARM64 and macOS Intel. CTest contains no
+build fixture and does not rebuild the active tree, the configured graph has
+no ownership, cleanup or wave finding, and named Ninja pools bound the
+evidenced high-pressure native work.
+
+On 2026-08-28 the branch was resynchronised with `origin/develop` through
+`b64f67a00b3585b130f909640a30d120095e64f6`. The merge incorporates later
+RexxScript string-BIF and POSIX child-terminal work. Phase 2 Wave P2.1 then
+qualified exact resynchronised commit `c8ce9ed4f42c976a5501ac7ac4e2bc3e48b0dcf1`
+on Linux x64, Windows x64, macOS ARM64 and macOS Intel in GitHub Actions run
+`33176811762`. That later result is a Phase 2 baseline gate; it does not rewrite
+the exact-SHA boundary of the original Phase 1 acceptance.
+
+No performance measurement was run. Host timings below are diagnostic only;
+other work was active on the machine.
+
+## Wave-by-wave working cadence
+
+Phase 1 is deliberately not using a clean whole-product build after every
+edit. Each ownership family is handled as a separate wave:
+
+1. change one bounded output/dependency family;
+2. re-export and statically validate the configured graph;
+3. build only that family and its changed prerequisites;
+4. test only the behaviour owned or consumed by the family;
+5. prove jobs 1, 5 and 30 once when the concurrency shape changes; and
+6. retain that evidence until a code, test or build input invalidates it.
+
+A broad Debug correctness sweep belongs at a meaningful Phase 1 checkpoint,
+not after each wave. A history-only merge or documentation edit does not
+invalidate retained QA evidence. The current configured build identity can
+still make a later build regenerate artifacts when the commit changes; that
+fan-out is now a recorded fragility to separate from evidence validity.
+Compiler, assembler or linker changes do invalidate the post-bootstrap products
+they generate. Correctness/stress workers always exclude
+`performance-measurement`; performance execution receives an idle, isolated
+worker later.
+
+## Wave 1: jump-table corruption bases
+
+The seven mutation fixtures previously configured repeated candidate owners
+for three shared base RXBINs. `interpreter/CMakeLists.txt` now creates each
+algorithm base through one guarded producer target. Each mutation depends on
+the relevant base file and producer.
+
+Evidence:
+
+- clean focused builds and all seven corruption tests passed at jobs 1, 5 and
+  30;
+- after the subsequent `develop` assembler merge, one incremental jobs-30
+  rebuild compiled the changed assembler, regenerated the three bases and
+  seven mutations, and passed all seven tests in 0.06 seconds; and
+- the graph exporter now reports zero multiple-candidate output owners.
+
+The earlier jobs 1 and 5 evidence remains applicable because the later merge
+did not change this CMake ownership shape.
+
+## Wave 2: RexxScript private assembly and publication
+
+RexxScript no longer uses a shared deletion stamp or deletes
+`bin/rexxscript.rxbin` from member actions. The current path is:
+
+1. copy `library.rxbin` and `rxfnsc.rxbin` into a curated, immutable import
+   stage;
+2. compile each member in its own work directory with `--no-exe-import`, adding
+   only explicit predecessor member directories to the ordered import roots;
+3. declare each generated RXAS file as the byproduct of its member action;
+4. link the members into the private `rexxscript/linked/rexxscript.rxbin`;
+5. publish the completed image through one temporary-file-and-rename action;
+   and
+6. compile the standalone runner from the public `bin/` import root only.
+
+This directly addresses the known `rxc` source/RXBIN search-order risk. An old
+public RexxScript image and stale former member files are not compiler import
+candidates while the replacement library is built. RXAS, RXBIN and embedded
+metadata remain in the generating action's private directory until the single
+publication action succeeds.
+
+Evidence before the later compiler merge:
+
+- clean/family-owned rebuilds succeeded at jobs 1, 5 and 30;
+- jobs 1 and 5 produced the same public/private SHA-256,
+  `7a4da345ed50139e809a21375eea184c302e957f2be3ce6c06b9196fe8f9f632`;
+- that image was byte-identical to the Phase 0 Debug baseline;
+- private and public images were byte-identical, the publication temporary was
+  absent after success, and deleting only the public image reran only the
+  publication action; and
+- `ninja -t missingdeps rexxscript` found no missing generated-file dependency
+  among 654 processed nodes.
+
+The imported `develop` compiler work is intentionally allowed to change newly
+generated bytecode, so the earlier baseline hash is not a parity requirement
+after that merge. The changed compiler invalidated the Level B product chain;
+an incremental `testrexxscript` rebuild therefore ran 414 required steps. The
+four runtime/compatibility tests and CLI smoke test then all passed.
+
+## Wave 3: explicit linked-runtime QA preparation
+
+The broad `linked_opt_runtime_artifacts_build` CTest fixture has moved into the
+build graph:
+
+- `qa-prep-linked-opt-runtime` owns the existing generated-runtime aggregate;
+- `qa-prep` is the human/CI aggregate preparation stage;
+- linked-runtime tests no longer declare the removed build fixture;
+- `linked_opt_sweep` depends on preparation and then runs CTest, excluding
+  `performance-measurement` explicitly; and
+- active macOS, Linux and Windows workflows, the maintained sanitizer runner's
+  existing full/focused paths, and developer documentation now prepare before
+  CTest.
+
+This is staging work, not an ASan scope redesign. The sanitizer runner retains
+its existing selections and leak policy; only the required artifacts move from
+a hidden CTest build to the visible preparation target.
+
+The first jobs-30 `qa-prep` proof exposed 1,273 build actions and took about
+288 seconds on the active host. That inventory had been hidden inside CTest.
+The retained tree also changed from the pre-documentation merge identity to the
+checkpoint commit identity, so this run records the combined preparation and
+configured-identity fan-out rather than a comparative performance number.
+
+After preparation:
+
+- the five selected RexxScript tests ran directly in 1.01 seconds, with no
+  setup test;
+- a repeated direct CTest run took 0.75 seconds and left both the line count
+  and SHA-256 of `.ninja_log` unchanged;
+- `ninja -t missingdeps qa-prep` processed 3,844 nodes and found no missing
+  generated-file dependency;
+- actionlint passed after excluding three pre-existing shellcheck diagnostics,
+  `bash -n tools/asan-run.sh` passed, and all ten exporter unit tests passed;
+  and
+- no performance measurement executed.
+
+## Wave 4: compiler-exit QA preparation
+
+The 28 compiler-exit runtime artifact builds now belong to one explicit
+`qa-prep-compiler-exits` target, which is part of `qa-prep`. Their 56 no-opt
+and opt runtime consumers no longer require build fixtures, and the 28
+`*_bin_build` tests have been removed. Artifact commands, their existing
+dependencies and the runtime test commands are otherwise unchanged.
+
+The first jobs-30 preparation after checkpoint B ran 457 actions in about 223
+seconds. As in Wave 3, the retained tree had crossed a commit identity, so
+this is regeneration evidence rather than a comparative timing. An immediate
+repeat took 0.13 seconds and ran only the existing `rxvm` symlink action.
+
+After preparation:
+
+- all 56 compiler-exit consumers passed at parallel 30 in 2.50 seconds;
+- the line count and SHA-256 of `.ninja_log` were unchanged across that CTest
+  run, proving that the tests did not invoke Ninja;
+- `ninja -t missingdeps qa-prep-compiler-exits` processed 779 nodes and found
+  no missing generated-file dependency;
+- the re-export is schema-valid, graph-clean and has no fallback
+  classification; and
+- no performance measurement executed.
+
+## Wave 5: example QA preparation
+
+The array-formatting and pprint example artifacts now belong to
+`qa-prep-examples`, which is part of `qa-prep`. Their two build fixture tests
+and the matching consumer fixture requirements have been removed. Existing
+artifact owners, the dependency from pprint to array formatting, and the two
+example runtime commands are unchanged.
+
+The first jobs-30 preparation after checkpoint C ran 274 actions in about
+62.55 seconds. The retained tree had again crossed a commit identity, so this
+is regeneration evidence rather than an example-only timing. An immediate
+repeat was a true no-op in 0.08 seconds.
+
+After preparation:
+
+- both example consumers passed at parallel 30 in 0.12 seconds;
+- the line count and SHA-256 of `.ninja_log` were unchanged across that CTest
+  run;
+- `ninja -t missingdeps qa-prep-examples` processed 531 nodes and found no
+  missing generated-file dependency;
+- the re-export is schema-valid, graph-clean, has no fallback classification,
+  and reports no test that invokes a build; and
+- no performance measurement executed.
+
+## Wave 6: rxfnsc isolated source production and publication
+
+The 65 `rxfnsc` members no longer share one compiler work directory, delete
+one another's outputs, or delete the public `bin/rxfnsc.rxbin` image. The new
+family graph:
+
+1. stages only `library.rxbin`, `classlib.rxbin`, and `rxcexits.rxbin` in a
+   curated external-binary import root;
+2. copies each member and its declared transitive internal source dependencies
+   into a member-private, dependency-keyed source root;
+3. runs `rxc --no-exe-import` and `rxas` in that member's private directory;
+4. permits all members to run concurrently from direct semantic dependencies;
+5. links the member RXBINs into private `lib/rxfnsc/linked/rxfnsc.rxbin`; and
+6. publishes the complete image through one temporary-file-and-rename action.
+
+Keying the source root from the member and dependency closure means a changed
+dependency list selects a new root; a stale copied `.crexx` file cannot remain
+eligible after an edge is removed. The first isolated build also exposed two
+dependencies that the old shared source directory had masked:
+`RexxClassicBitFunctions` requires `RexxClassicEncoding`, and
+`RexxClassicBifSpace` requires `RexxClassicCharacterOps`.
+
+This wave deliberately resolves internal `rxfnsc` dependencies through one
+coherent source route. The previous shared directory produced a mixed route:
+some members recorded source provenance while others imported generated RXBIN
+metadata. A private-RXBIN prototype confirmed that route choice can change
+metadata provenance and the linked image even when runtime behaviour remains
+correct. Consequently, the old mixed-route public SHA-256
+`60b60bd804d72ea996b7b79c9c4035f53cb039d18baabc38ca9c3611db43254b`
+is not a byte-parity requirement. The new coherent-source image is
+`cf62e13f185a8b393ec9451fba50ea7fadf60d031f81beff19be15317c5a2b51`.
+Permanent source/RXAS/RXBIN route-parity qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- family-owned rebuilds ran 68 actions at jobs 1, 5, and 30 in approximately
+  64.42, 25.65, and 21.08 seconds respectively; these are diagnostic timings
+  only because other activity was present on the host;
+- all 65 member RXAS and 65 member RXBIN hashes, plus the public image hash,
+  were identical across jobs 1, 5, and 30;
+- a final dependency-key hardening rebuild retained all 131 hashes exactly and
+  an immediate repeat was a no-op;
+- `ninja -t missingdeps rxfnsc` processed 1,338 nodes without finding a missing
+  generated-file dependency;
+- all 112 focused `rxfnsc` runtime tests passed at parallel 30 in 7.17 seconds,
+  without changing the Ninja log; and
+- the five direct RexxScript runtime, compatibility, and CLI consumers then
+  passed at parallel 30 in 0.47 seconds, also without changing the Ninja log.
+
+Those consumer checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No
+performance measurement executed.
+
+## Wave 7: main classlib deterministic hybrid production
+
+The 53 Rexx-only classlib members no longer share a compiler work directory,
+delete one another's outputs, or delete the public `bin/classlib.rxbin` image.
+Each member now has:
+
+1. a dependency-keyed private source root containing only its declared source
+   providers;
+2. private generated RXBIN roots for only its declared binary providers;
+3. a curated external root containing only `library.rxbin` and the mandatory
+   `rxcexits.rxbin` compiler module;
+4. `rxc --no-exe-import` and `rxas` execution in its private work directory;
+5. private link assembly under `lib/classlib/linked/main/`; and
+6. one temporary-file-and-rename publication action for the public image.
+
+Classlib cannot yet use the coherent all-source route selected for `rxfnsc`.
+That prototype exposed route-sensitive interface signatures in `ArrayList` and
+`ObjectArrayList`. The old shared directory also mixed source and member RXBIN
+providers, including source-side class cycles. The deterministic replacement
+therefore records two separate contracts: `CLASS_DEPS_*` selects generated
+RXBIN providers, while `CLASS_SOURCE_DEPS_*` selects source providers. No
+incidental completed member is visible.
+
+Isolation exposed dependencies that the shared directory had masked, including
+the `ArrayBagIterator`/`ArrayBag` source cycle, `Iterable` on the `Iterator`
+RXBIN, `DateTime` on `Printable`, `RexxComparator` on the `Rexx` source,
+`TreeMap` on `ObjectPrintable`, and `StringTreeMap` on `ObjectPrintable`.
+It also established that `rxcexits.rxbin` is a mandatory compiler input even
+without `-x` when executable-directory imports are disabled.
+
+The deterministic route reproduces 51 of 53 baseline member RXAS/RXBIN pairs.
+`ArrayBagIterator` and `ISO8601` retain route-sensitive metadata/inlining
+differences, so the post-merge shared-directory public SHA-256
+`bce926dd011c6b756447bac7a89ca07ae834d6a4731e7b253cf4e201d858e3d2`
+is not byte-identical to the deterministic image
+`6df1e2fe4a96fbdf74fc4a9a31ea718efaee7084ccc8955be37ba60dd4620c6f`.
+The focused inline-preservation and runtime checks pass; permanent route-parity
+qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- 56 family actions rebuilt from retained empty owned-output positions at jobs
+  1, 5, and 30 in approximately 19.43, 5.49, and 4.15 seconds respectively;
+  these are diagnostic timings only because other activity was present;
+- all 53 member RXAS and 53 member RXBIN hashes, plus the public image hash,
+  were identical across jobs 1, 5, and 30;
+- `ninja -t missingdeps classlib` processed 688 nodes without finding a missing
+  generated-file dependency;
+- preparation of the 21 main test programs ran separately from CTest and took
+  approximately 63.18 seconds under concurrent host load;
+- all 42 prepared no-opt/opt runtime consumers passed at parallel 30 in 2.99
+  seconds without changing the Ninja log; and
+- five inline, RexxDoc, API-doc, method-coverage, and bridge inspections passed
+  in 1.24 seconds, also without changing the Ninja log.
+
+These checks exercise `rxc`, `rxas`, `rxlink`, `rxdas`, and `rxvm`. No
+performance measurement executed.
+
+## Wave 8: native-backed classlib isolation
+
+The `Id`, `KeyDB`, and `Os` adapters no longer share a compiler work directory,
+delete one another's member images, or delete the public
+`bin/classlib_native.rxbin` image. Their replacement graph:
+
+1. stages only `library.rxbin` and mandatory `rxcexits.rxbin` in a curated
+   native-classlib base import root;
+2. records the precise native providers for each member: `Id` sees only
+   `rxid.rxplugin`, `KeyDB` sees only `rx_keyaccess.rxplugin`, and `Os` sees
+   only `rxfs.rxplugin` and `rxplatform.rxplugin`;
+3. copies those providers and the member source into dependency-keyed private
+   roots;
+4. runs `rxc --no-exe-import` and `rxas` in the member's private directory;
+5. links the three private member images under
+   `lib/classlib/linked/native/`; and
+6. publishes the complete image through one temporary-file-and-rename action.
+
+This explicitly closes the broad-search ambiguity between a provider needed by
+one adapter and incidental plugins present in `bin/`. Baseline RXAS provenance
+confirmed that `KeyDB` also obtains `strip`, `arrayappend`, `left`, and `pos`
+from `library.rxbin`; no additional plugin is in its curated root.
+
+`Id` and `Os` retain exact baseline RXAS/RXBIN hashes. `KeyDB` resolves the
+same named provider declarations but the removal of executable-directory
+search changes compiler-generated label IDs and their debug trace names. After
+normalising only those IDs, the old and private `KeyDB` RXAS files match
+line-for-line. The resulting deterministic public image SHA-256 is
+`be960d9afd05ea86ebcbad6ae39a7a658294e33a98f45a8e9ba65746e23cfc43`;
+the former broad-search image was
+`5dcf9ad8c700309e40e7eaac572491c0edb5049e1ebfb660097a28f6611592f6`.
+This remains route-sensitive byte provenance, not an observed semantic change;
+permanent route-parity qualification remains Phase 2 work.
+
+Concurrency and functional evidence:
+
+- all seven family actions rebuilt from retained empty owned-output positions
+  at jobs 1, 5, and 30 in approximately 2.04, 0.85, and 0.88 seconds;
+  timings are diagnostic only because other activity was present;
+- the three member RXAS hashes, three member RXBIN hashes, and public image hash
+  were identical across jobs 1, 5, and 30;
+- an immediate repeat was a no-op;
+- `ninja -t missingdeps classlib_native` processed 544 nodes without finding a
+  missing generated-file dependency; and
+- all six prepared no-opt/opt `Id`, `KeyDB`, and `Os` runtime consumers passed
+  at parallel 30 in 0.46 seconds without changing the Ninja log.
+
+These checks exercise `rxc`, `rxas`, `rxlink`, and `rxvm`. No performance
+measurement executed.
+
+## Wave 9: private RXPP production pipeline
+
+RXPP no longer compiles, links, and packages in one directory that is also an
+`rxc` import root. The two deletions of its own `rxpp.rxbin` and
+`rxpp_linked.rxbin` outputs have been replaced by four explicit actions:
+
+1. stage the declared `library`, classlib, `rxfnsc`, RexxScript,
+   `rxcexits`, and `rxprecomp` compiler inputs in an immutable curated root;
+2. copy `rxpp.crexx` into a private member root, then run
+   `rxc --no-exe-import` and `rxas` there;
+3. link that member and the four runtime library images into the private
+   `preprocessor/linked/rxpp/rxpp_linked.rxbin`; and
+4. package the linked image through a temporary C file and atomic rename before
+   the ordinary native compiler consumes it.
+
+An older `rxpp.rxbin` or `rxpp_linked.rxbin` is therefore never a candidate
+while RXPP rebuilds. The private RXAS and RXBIN are exactly byte-identical to
+the former route, with SHA-256 values
+`6d7c7d818d2ec681172f8f911b73a46d7faf0aec105455c9b9a6d12cfdb26fb8`
+and
+`a87142d0db7006f79c6c5c5424f4dd0a61730c9710a372a33feb851affdf49b3`.
+The old retained linked image was not a valid current-input baseline: its
+timestamp predates all four regenerated runtime library inputs. Repeating the
+old link invocation against the current inputs produced the exact private link
+hash
+`e01619a71c2895940ac0b7130daf6381e4f10eb2ac0e54be90f574fe30f14e34`.
+
+Concurrency and functional evidence:
+
+- all six pipeline/native actions rebuilt from retained empty owned-output
+  positions at jobs 1, 5, and 30 in approximately 4.45, 4.31, and 4.31
+  seconds; the largely serial dependency chain is intentionally not expected
+  to accelerate, and timings are diagnostic only;
+- all six staged imports, staged source, RXAS, RXBIN, linked image, generated C
+  and generated C object hashes were identical across jobs 1, 5, and 30;
+- the final macOS Debug executable differed only after the identical object
+  input entered the native link; its Mach-O UUID/debug/signature metadata is a
+  platform link reproducibility question, not build-order evidence;
+- an immediate repeat was a no-op;
+- `ninja -t missingdeps rxpp` processed 1,508 nodes without finding a missing
+  generated-file dependency; and
+- all eight maintained RXPP, source-map, diagnostics, and parser-wrapper checks
+  passed. Five ran immediately; the three parser-wrapper checks first proved
+  that CTest would not hide their absent tools, then passed after explicit
+  `rxpp_sh` and `parser_tester` preparation. Both test runs left the Ninja log
+  unchanged.
+
+No performance measurement executed.
+
+## Wave 10: evidence-sized native resource pools
+
+The global job count remains a throughput control over the complete DAG; it is
+no longer the only control over high-memory native actions. A new
+`CREXX_BUILD_RESOURCE_PROFILE` configuration supplies two independent Ninja
+pools:
+
+| Profile | VM-core compile depth | native link depth |
+| --- | ---: | ---: |
+| `developer-fast` | 4 | 6 |
+| `portable` | 2 | 2 |
+| `memory-constrained` | 1 | 1 |
+
+`auto` selects `developer-fast` on Apple ARM64 and `portable` elsewhere. Both
+depths have positive-integer cache overrides. Non-Ninja generators retain their
+own scheduler because CMake job pools are a Ninja facility.
+
+The initial values are deliberately conservative consequences of Phase 0
+shape evidence, not benchmark-derived optimums. The largest observed
+optimized Linux VM compile reached about 1.36 GiB RSS in a 5 GiB Minikube pod,
+which supports two concurrent VM-core compiles while leaving headroom. The
+macOS Release observation was about 682 MiB for one process, supporting four
+on the current development host. All native link edges use a separate pool so
+link pressure does not consume the VM-compile allowance.
+
+Only the four ordinary/instrumented switch/direct-threaded VM core object
+targets use the compile pool: 76 configured compile edges in the current Debug
+tree. Ordinary compiler, assembler, library, and independent Rexx generation
+remain eligible for the global `--parallel 30` developer setting. No separate
+`rxc`/`rxas` throttle was introduced because Phase 0 did not identify them as
+the memory-pressure source; doing so would reduce the independent parallelism
+created by the preceding waves without evidence.
+
+Evidence:
+
+- `auto`, `portable`, and `memory-constrained` configurations generated the
+  expected `4/6`, `2/2`, and `1/1` pool depths, then the active tree was
+  restored to `auto`;
+- the Ninja graph assigns all 76 VM-core compile edges to
+  `crexx_vm_compile`, assigns 187 native link edges to `crexx_native_link`, and
+  leaves an unrelated assembler compile outside the VM pool;
+- a retained partial-tree build supplied 52 missing VM-core objects under
+  global parallel 30; every captured action belonged to the VM pool and the
+  Ninja log showed a maximum overlap of exactly four;
+- repeating the completed target performed no product action (only CMake's
+  always-run glob verification); and
+- `ninja -t missingdeps all` processed 5,925 nodes without finding a missing
+  generated-file dependency.
+
+No speedup or performance claim is made; other activity remained present on
+the host, and the purpose of this evidence is scheduling enforcement.
+
+## Wave 11: reviewed product-layer and execution-wave model
+
+The provisional classification has been replaced by an explicit product model
+for core C targets, Level B bootstrap and substrate, certified exits, Level C,
+Level G, Level L, assembled products and optional QA surfaces. In particular:
+
+- embedded VMs and the packed library are product-assembly outputs in Wave 7,
+  rather than core C bootstrap tools;
+- generated test programs, runtime images and benchmark-shaped correctness
+  fixtures are optional QA artifacts in Wave 7;
+- main Level B bootstrap ownership is separate from class/native substrate;
+  and
+- the five bundled native providers `hash`, `float`, `fs`, `stats` and
+  `vector` no longer force themselves into targeted `rxc` or bare-VM builds.
+
+Removing those manual provider dependencies is a real graph cleanup. The
+providers remain members of the default assembled product, but a request for a
+core C tool no longer pulls a later Level B substrate backwards through the
+stage model. Exporter classification tests now cover the aggregate,
+generated-artifact, test-executable, embedded-VM and QA-runner cases.
+
+The reviewed manifest reduced provisional wave inversions from 813 to zero.
+It remains an observation/export of CMake rather than a second executable build
+system.
+
+## Wave 12: explicit optional surfaces and QA tiers
+
+Standalone example and demonstration outputs are no longer implicit
+default-build members. Their explicit umbrella targets are `crexx-examples`
+and `crexx-demos`; source examples that double as correctness fixtures remain
+visible to QA preparation. Thirteen benchmark-only artifact groups likewise
+lost their `ALL` membership while remaining available to explicit `qa-prep`
+and focused consumers. Native adapters and other correctness fixtures may
+still compile in the ordinary build; no measurement workload runs there.
+
+Network access is now an explicit configuration capability. With no local
+DSL-Syntax-Highlighter checkout, a fresh default configuration disables parser
+mode and performs no fetch. Forcing parser mode without a local checkout and
+without `CREXX_ALLOW_NETWORK_DOWNLOADS=ON` fails during configuration. The
+native SQLite ADDRESS demo defaults off and requires the same network opt-in.
+Maintained hosted workflows opt in to the pinned parser download explicitly.
+
+All 2,366 configured tests have exactly one execution tier while preserving
+their existing topical labels:
+
+| Tier | Tests | Named target |
+| --- | ---: | --- |
+| essential | 12 | `qa-essential` |
+| smoke | 138 | `qa-smoke` (also runs essential, 150 total) |
+| comprehensive | 2,100 | included in `qa-comprehensive` |
+| qualification | 85 | `qa-qualification` |
+| stress | 7 | `qa-stress` |
+| performance measurement | 24 | `qa-measurement` |
+
+`qa-comprehensive` selects the 2,335 non-stress, non-measurement correctness
+tests after `qa-prep`. `qa-measurement` uses a deliberately narrow preparation
+target, is intrinsically serial, and is documented for a quiescent host. The
+ordinary hosted/local correctness workflows exclude both stress and
+measurement. Sanitizer scope has deliberately not been redesigned as part of
+this wave.
+
+## Wave 13: indirect active-tree build detection and removal
+
+The first broad gate exposed three new Ninja-log entries during CTest even
+though the direct test commands contained no `cmake --build`. The cause was
+`rxpa_external_sdk_consumer`: its direct command invoked a CMake script, and
+that script rebuilt the active CREXX tree before creating its isolated SDK
+consumer.
+
+The `cri07_rxpa_sdk_consumer_prereqs` target is now owned by `qa-prep`, and the
+qualification script only installs the already prepared product and builds its
+private scratch consumer. A focused rerun passed and left the active Ninja log
+byte-for-byte unchanged.
+
+The catalogue audit now follows CTest `cmake -P` scripts and resolves their
+`-D` variables sufficiently to distinguish a build of the active tree from a
+legitimate scratch consumer build. Its regression proves both cases. This
+closes the detection gap that allowed the first direct-command-only inventory
+to report a false zero.
+
+## Current graph movement
+
+The current Debug export covers 1,518 targets, 1,354 custom commands and 2,366
+tests.
+
+| Finding | Phase 0 | This checkpoint |
+| --- | ---: | ---: |
+| multiple candidate output owners | 2 | 0 |
+| cleanup touches another action's output | 251 | 0 |
+| tests that invoke a build | 31 | 0 |
+| fixture setup tests | 31 | 0 |
+| tests with fixture requirements | 937 | 0 |
+| provisional wave inversions | 813 | 0 |
+| performance-measurement tests | 24 | 24 |
+
+There is no ownership, cleanup, nested-build, unlabeled-test or wave finding.
+The only review findings are three command-bearing run/check targets without
+declared byproducts; they do not claim generated file ownership. The manifest
+projection is schema-valid and graph-clean.
+
+## Phase 1 gates
+
+On macOS ARM64, implementation commit `2a840950e` passed:
+
+- the 2,335-test normal correctness selection at 30 workers in 208.31 seconds;
+- all seven stress-tier tests in a separate 30-worker invocation;
+- byte-identical 8,100-line Ninja logs before and after both CTest invocations;
+  and
+- the final exact-commit catalogue export with zero graph findings, zero
+  active-tree nested builds and all 2,366 tests assigned exactly one tier.
+
+The 24 performance-measurement tests did not run. The times above are retained
+only as diagnostic gate durations on a shared host, not as performance
+evidence.
+
+The exact implementation commit then completed clean, offline Linux ARM64
+Minikube captures using five global jobs and the portable resource profile:
+
+| Configuration | Clean build | Peak process RSS | Graph result |
+| --- | ---: | ---: | --- |
+| Debug | 348.63 s | 452,796,416 bytes | clean; 5,730-node missing-dependency check passed |
+| Release | 289.39 s | 1,360,756,736 bytes | clean; 5,730-node missing-dependency check passed |
+
+Both Linux catalogues contain 2,288 platform-applicable tests, zero fixtures,
+zero active-tree nested builds and zero manifest graph findings. Their timings
+and memory observations are indicative only. The Minikube profile was returned
+to its prior stopped state after evidence was copied out.
+
+## Original QA/build-cycle evidence
+
+The selected RexxScript CTest command still triggered the
+`linked_opt_runtime_artifacts_build` fixture. After the compiler merge that
+hidden build took 168.11 seconds; the five requested tests themselves each
+finished in 0.90 seconds or less. The fixture compiled a broad inventory,
+including benchmark inputs, but did not execute performance measurements.
+
+This is evidence for the planned `qa-prep` separation: build preparation must
+be visible, selectable and complete before CTest, so a narrow test selection
+cannot silently build unrelated artifacts. It is also evidence that action
+timing and resource-pool classification should be retained separately from
+test timing.
+
+## Remaining gates and Phase 2 boundary
+
+1. Windows publication/rename behaviour passed in the exact Phase 1 hosted
+   workflow. There is still no local Windows runner, so later code changes must
+   retain Windows as an exact-SHA hosted gate.
+2. A deliberately reduced ASan scope remains separate work; Phase 1 does not
+   claim sanitizer closure or redesign the maintained sanitizer runner.
+3. Phase 2 can now harden the reviewed catalogue into a declarative manifest,
+   record actual import and metadata decisions, and prove one bounded manifest
+   slice through CMake/Ninja without carrying hidden active-tree build behavior
+   forward. The Level B post-bootstrap orchestrator remains Phase 3.
+
+Phase 1 makes no sanitizer-clean claim. Its Windows claim is limited to the
+successful hosted workflow at exact commit `0a0c17d56`.

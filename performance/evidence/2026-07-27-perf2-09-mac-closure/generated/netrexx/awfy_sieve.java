@@ -1,0 +1,45 @@
+/* Generated from 'awfy_sieve.nrx' 27 Jul 2026 18:39:26 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_sieve{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(669);private static final netrexx.lang.Rexx $03=netrexx.lang.Rexx.toRexx("result=");private static final netrexx.lang.Rexx $04=new netrexx.lang.Rexx((short)5000);private static final netrexx.lang.Rexx $05=new netrexx.lang.Rexx(0);private static final java.lang.String $0="awfy_sieve.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx repetitions;netrexx.lang.Rexx result;netrexx.lang.Rexx iteration=null;
+repetitions=new netrexx.lang.Rexx((byte)1);
+if (new netrexx.lang.Rexx(args.length).OpGtEq(null,$01)) repetitions=netrexx.lang.Rexx.toRexx(args[0]);
+if (repetitions.OpLt(null,$01)) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=new netrexx.lang.Rexx((byte)0);
+{netrexx.lang.Rexx $1=repetitions;iteration=new netrexx.lang.Rexx((byte)1);iteration:for(;iteration.OpLtEq(null,$1);iteration=iteration.OpAdd(null,new netrexx.lang.Rexx(1))){
+result=sieveOnce();
+if (result.OpNotEq(null,$02)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected 669 primes, got").OpCcblank(null,result));
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say(((netrexx.lang.Rexx.toRexx("benchmark=awfy_sieve repetitions=").OpCc(null,repetitions)).OpCcblank(null,$03)).OpCc(null,result));
+netrexx.lang.RexxIO.Say("PASS: AWFY Sieve NetRexx decimal port");return;}
+
+@SuppressWarnings("unchecked") public static netrexx.lang.Rexx sieveOnce(){netrexx.lang.Rexx flags[];netrexx.lang.Rexx i=null;netrexx.lang.Rexx primeCount;netrexx.lang.Rexx k=null;
+flags=new netrexx.lang.Rexx[5001];
+{i=new netrexx.lang.Rexx((byte)1);i:for(;i.OpLtEq(null,$04);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+flags[i.toint()]=new netrexx.lang.Rexx((byte)1);
+}}/*i*/
+
+primeCount=new netrexx.lang.Rexx((byte)0);
+{i=new netrexx.lang.Rexx((byte)2);i:for(;i.OpLtEq(null,$04);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+if ((flags[i.toint()]).OpNotEq(null,$05)) {
+primeCount=primeCount.OpAdd(null,$01);
+{netrexx.lang.Rexx $2=i;boolean $3=$2.OpGtEq(null,$05);k=i.OpAdd(null,i).OpPlus(null);k:for(;$3?k.OpLtEq(null,$04):k.OpGtEq(null,$04);k=k.OpAdd(null,$2)){
+flags[k.toint()]=new netrexx.lang.Rexx((byte)0);
+}}/*k*/
+}
+}}/*i*/
+return primeCount;}private awfy_sieve(){return;}}

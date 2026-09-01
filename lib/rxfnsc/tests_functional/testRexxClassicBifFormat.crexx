@@ -1,0 +1,134 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifformat
+import rexxvalue
+
+errors = test_scientific() + test_engineering()
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 6)
+errors = errors + check_omitted_required()
+errors = errors + check_number_error("RXC-LC-40.11", "not-a-number")
+errors = errors + check_second_error("RXC-LC-40.12", "1.2", "x")
+errors = errors + check_second_error("RXC-LC-40.13", "1.2", "-1")
+errors = errors + check_fit_error("RXC-LC-40.38", "123", "2", "", "", "", 1, 0, 0, 0)
+errors = errors + check_fit_error("RXC-LC-40.38", "1E20", "1", "1", "1", "1", 1, 1, 1, 1)
+
+if errors = 0 then say "PASS: Level C FORMAT BIF"
+return errors <> 0
+
+test_scientific: procedure = .int
+  numeric digits 18
+  numeric form scientific
+  errors = 0
+  errors = errors + check_one("-12.73", " - 12.73")
+  errors = errors + check_value("  12.7300", "12.73", "4", "4", "", "", 1, 1, 0, 0)
+  errors = errors + check_value("   2", "1.73", "4", "0", "", "", 1, 1, 0, 0)
+  errors = errors + check_value("  -0.8", "-.76", "4", "1", "", "", 1, 1, 0, 0)
+  errors = errors + check_value("0", "-0.4", "", "0", "", "", 0, 1, 0, 0)
+  errors = errors + check_value("1.234573E+04", "12345.73", "", "", "2", "2", 0, 0, 1, 1)
+  errors = errors + check_value("1.235E+4", "12345.73", "", "3", "", "0", 0, 1, 0, 1)
+  errors = errors + check_value("1.235    ", "1.2345", "", "3", "2", "0", 0, 1, 1, 1)
+  errors = errors + check_value("1E+20", "1E20", "", "", "2", "", 0, 0, 1, 0)
+  errors = errors + check_value("12345.73", "12345.73", "", "", "0", "1", 0, 0, 1, 1)
+  errors = errors + check_value("100.00", "99.999", "", "2", "", "2", 0, 1, 0, 1)
+  return errors
+
+test_engineering: procedure = .int
+  numeric digits 18
+  numeric form engineering
+  return check_value("12.345E+003", "12345", "", "3", "3", "0", 0, 1, 1, 1)
+
+check_one: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, number = .string
+  return check_value(expected, number, "", "", "", "", 0, 0, 0, 0)
+
+check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, number = .string, before = .string, after = .string, expp = .string, expt = .string, e2 = .int, e3 = .int, e4 = .int, e5 = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(before)
+  exists[2] = e2
+  args[3] = .RexxValue(after)
+  exists[3] = e3
+  args[4] = .RexxValue(expp)
+  exists[4] = e4
+  args[5] = .RexxValue(expt)
+  exists[5] = e5
+  context = .RexxBifCallContext("FORMAT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifformat..rexxclassicbif_format(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = number then return 0
+  say "FAIL: FORMAT" number "expected [" || expected || "] got [" || result.asString() || "]",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_number_error: procedure = .int
+  arg expected_code = .string, number = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  return run_error(expected_code, args, exists)
+
+check_second_error: procedure = .int
+  arg expected_code = .string, number = .string, control = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(control)
+  exists[2] = 1
+  return run_error(expected_code, args, exists)
+
+check_fit_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, number = .string, before = .string, after = .string, expp = .string, expt = .string, e2 = .int, e3 = .int, e4 = .int, e5 = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(before)
+  exists[2] = e2
+  args[3] = .RexxValue(after)
+  exists[3] = e3
+  args[4] = .RexxValue(expp)
+  exists[4] = e4
+  args[5] = .RexxValue(expt)
+  exists[5] = e5
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("FORMAT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifformat..rexxclassicbif_format(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: FORMAT expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

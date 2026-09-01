@@ -31,7 +31,7 @@ They are part of the current architecture, not a compatibility afterthought.
 
 `rxas` turns RXAS text into RXBIN bytecode. RXBIN is a record-stream format
 containing module records, a constant pool, instructions, and metadata. The
-Release 1 beta bytecode stream uses format version `003`.
+Release 1 beta bytecode stream uses format version `006`.
 
 RXAS is useful both as compiler output and as a low-level language for runtime
 support. Inline assembler in Level B source is available for code that needs

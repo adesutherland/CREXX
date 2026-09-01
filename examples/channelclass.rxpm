@@ -1,0 +1,18 @@
+##MACRO CHANNELCLASS classname,schema
+    .gen &classname: class
+    .gen ##emit class_fields
+    .gen ##emit factory
+    .gen return
+    .gen ##emit getters
+    .gen ##emit setters
+    .gen to_channel: method = .channelvalue
+    .gen names = .string[]
+    .gen values = .channelvalue[]
+    .gen ##emit channel_pack_names
+    .gen ##emit channel_pack_values
+    .gen return .channelvalue.record_value("&schema",1,names,values)
+    .gen from_channel: factory
+    .gen arg encoded = .channelvalue
+    .gen ##emit channel_unpack
+    .gen return
+##MEND

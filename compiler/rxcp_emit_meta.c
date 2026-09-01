@@ -170,6 +170,42 @@ char *callable_effective_return_type(ASTNode *node) {
     if (!node) return strdup(".void");
     context = node->context;
 
+    /*
+     * A factory's source contract has no explicit return type: it always
+     * returns its owning class or interface.  Derive that identity directly
+     * from the owner before consulting the callable symbol.  In particular,
+     * imported stubs for same-named classes in different namespaces can have
+     * a transient value_class binding that must not leak into metadata.
+     */
+    if (node->node_type == FACTORY) {
+        ASTNode *owner = node->parent;
+        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
+            owner = owner->parent;
+        }
+        if (owner) {
+            const char *name = 0;
+            char *normalized = 0;
+            char *result;
+
+            if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
+                normalized = sym_frnm(owner->symbolNode->symbol);
+                name = normalized;
+            } else if (owner->node_string) {
+                normalized = rxcp_normalize_source_symbol_name(owner->node_string,
+                                                               owner->node_string_length,
+                                                               0,
+                                                               1);
+                name = normalized;
+            }
+            if (name && name[0]) {
+                result = metadata_type_string(context, TP_OBJECT, 0, 0, 0, name);
+                free(normalized);
+                return result;
+            }
+            free(normalized);
+        }
+    }
+
     if (node->symbolNode && node->symbolNode->symbol &&
         (node->symbolNode->symbol->type != TP_UNKNOWN ||
          node->symbolNode->symbol->value_class ||
@@ -186,37 +222,6 @@ char *callable_effective_return_type(ASTNode *node) {
 
     return_node = ast_type_child(node);
     if (!return_node) return strdup(".void");
-    if (node->node_type == FACTORY && return_node && return_node->node_type == VOID) {
-        ASTNode *owner = node->parent;
-        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
-            owner = owner->parent;
-        }
-        if (owner) {
-            const char *name = 0;
-            char *normalized = 0;
-            char *result;
-
-            if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
-                normalized = sym_frnm(owner->symbolNode->symbol);
-                name = normalized;
-            }
-            else if (owner->node_string) {
-                normalized = rxcp_normalize_source_symbol_name(owner->node_string,
-                                                               owner->node_string_length,
-                                                               0,
-                                                               1);
-                name = normalized;
-            }
-
-            if (name && name[0]) {
-                result = metadata_type_string(context, TP_OBJECT, 0, 0, 0, name);
-                if (normalized) free(normalized);
-                return result;
-            }
-            if (normalized) free(normalized);
-        }
-    }
-
     if (context) {
         size_t dims = 0;
         int *dim_base = 0;
@@ -255,6 +260,8 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
     char *type;
     SymbolNode *symbol_node;
 
+    if (symbol->suppress_metadata) return;
+
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         /* Logic that works out if we should emit the variable meta data here */
@@ -268,8 +275,13 @@ void meta_set_symbol(Symbol *symbol, void *payload) {
             type = sym_2tp(symbol);
             symbol_fqn = sym_frnm(symbol);
 
-            symbol_node = sym_trnd(symbol, 0);
-            if (symbol_node) {
+            if (symbol->constant_alias) {
+                buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%s\"\n",
+                                 symbol_fqn,
+                                 type,
+                                 symbol->constant_alias->name);
+            }
+            else if ((symbol_node = sym_trnd(symbol, 0))) {
                 buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" \"%.*s\"\n",
                                  symbol_fqn,
                                  type,
@@ -344,7 +356,8 @@ void add_initiator(Symbol *symbol, void *payload) {
         }
 
         /* Output Variable metadata here - as it is "locked in" and has been initiated */
-        if (symbol->register_num >= 0 && !symbol->meta_emitted) { // Should be true
+        if (!symbol->suppress_metadata &&
+            symbol->register_num >= 0 && !symbol->meta_emitted) { // Should be true
             symbol_fqn = sym_frnm(symbol);
             type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
@@ -370,10 +383,14 @@ void add_initiator(Symbol *symbol, void *payload) {
             free(buffer);
         }
 
-        /* We need to clear the register */
-        char* init = mprintf("   null %c%d\n", symbol->register_type, symbol->register_num);
-        output_append_text(output, init);
-        free(init);
+        /* Keep metadata/source anchors even when NR-26 proves the default
+         * value is overwritten before every first read. */
+        if (!symbol->flow_skip_default_initiation &&
+            !symbol->inline_skip_default_initiation) {
+            char* init = mprintf("   null %c%d\n", symbol->register_type, symbol->register_num);
+            output_append_text(output, init);
+            free(init);
+        }
     }
 }
 
@@ -487,6 +504,8 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
     char* buffer;
     char* symbol_fqn;
 
+    if (symbol->suppress_metadata) return;
+
     if (symbol->symbol_type != FUNCTION_SYMBOL) {
 
         if (!symbol->meta_emitted) {
@@ -515,6 +534,47 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
         output_append_text(output,buffer);
         free(buffer);
     }
+}
+
+static int node_owns_recyclable_scope(ASTNode *node) {
+    if (!node || !node->scope) return 0;
+    if (node->scope->defining_node != node) return 0;
+    if (node->inherit_parent_reg_scope) return 0;
+    if (node->scope->type != SCOPE_LOCAL) return 0;
+    return 1;
+}
+
+typedef struct meta_scope_clear_payload {
+    ASTNode *node;
+    OutputFragment *output;
+} meta_scope_clear_payload;
+
+static void meta_clear_scoped_symbol(Symbol *symbol, void *payload) {
+    meta_scope_clear_payload *clear = (meta_scope_clear_payload*)payload;
+    ASTNode *node = clear->node;
+    OutputFragment *output = clear->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == FUNCTION_SYMBOL || symbol->suppress_metadata) return;
+    if (!symbol->meta_emitted) return;
+    if (symbol->symbol_type != CONSTANT_SYMBOL && symbol->register_num < 0) return;
+
+    symbol_fqn = sym_frnm(symbol);
+    buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
+    free(symbol_fqn);
+
+    output_append_text(output, buffer);
+    free(buffer);
+}
+
+void clear_scope_variable_metadata(OutputFragment *output, ASTNode *node) {
+    meta_scope_clear_payload payload;
+
+    if (!output || !node_owns_recyclable_scope(node)) return;
+    payload.node = node;
+    payload.output = output;
+    scp_4all(node->scope, meta_clear_scoped_symbol, &payload);
 }
 
 /* Clear all variable metadata */

@@ -37,8 +37,9 @@ Rexx source surface:
   direction. Native handle/reference migration is therefore not a blocker for
   this reference feature.
 - Rexx source syntax direction is now agreed for the Level B essential source
-  surface: word-form `reference`, `dereference`, and `snapshot` expressions, `refvalid(ref)`,
-  and `reference .T` as the reference type modifier. Convenience live-access
+  surface: word-form `reference`, `dereference`, and `snapshot` expressions,
+  `<refvalid>(ref)`, explicit `left <refsame> right` storage-identity tests, and
+  `reference .T` as the reference type modifier. Convenience live-access
   syntax such as `itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)`
   is not required for Level B and is deferred as a Level G feature candidate.
 - Reference variance and casts are deferred. Level B and Level G may choose
@@ -70,7 +71,8 @@ Rexx source surface:
   allocated from context-local root buckets with a bounded free-list and
   context-local ids.
 - Step 3 is implemented in the working tree: RXAS can create and use reference
-  values with `mkref`, `deref`, `linkref`, `setref`, `refvalid`, and `unref`.
+  values with `mkref`, `deref`, `linkref`, `setref`, `refvalid`, `refsame`, and
+  `unref`.
   Invalid reference use raises the dedicated, catchable `REFERENCE_INVALID`
   signal. This remains the lower-level operation contract that the Rexx source
   syntax targets.
@@ -79,7 +81,7 @@ Rexx source surface:
   backing-array-backed iterator state with live references, explicit snapshot
   copies via `deref`, invalid backing/parent detection, and checksum-only
   performance smoke coverage. The fixtures run through optimized and
-  non-optimized assembly under both `rxvm` and `rxbvm`.
+  non-optimized assembly under product `rxvm`.
 - The first compiler-shaped contract slice is implemented in the working tree:
   `reference_generated_contract.rxas` models `StringArrayList`/iterator helper code
   that creates references from receiver arguments and backing attributes, uses
@@ -89,8 +91,9 @@ Rexx source surface:
 - The first explicit Rexx source slice is implemented in the working tree:
   `reference .T` declares reference values, `reference target` creates a weak
   reference to aliasable storage, `snapshot ref` makes an explicit snapshot
-  copy, `refvalid(ref)` checks validity, and method `self` can be referenced
-  explicitly. The source fixture runs noopt/opt through both `rxvm` and `rxbvm`
+  copy, `<refvalid>(ref)` checks validity, `<refsame>` compares retained storage
+  identity without dereferencing, and method `self` can be referenced explicitly.
+  The source fixture runs noopt/opt through product `rxvm`
   and negative fixtures cover value/reference boundary errors, non-storage
   targets, reference-to-reference targets, nested reference types, and non-ref
   operands to `snapshot`/`refvalid`.
@@ -193,8 +196,8 @@ or libraries could eventually emit:
   snapshot values unless `deref` is deliberately used for a deep snapshot;
 - `refvalid` gives client code a cheap preflight check, and invalid use remains
   catchable through `REFERENCE_INVALID`;
-- both optimized and non-optimized RXAS output are exercised by both VM
-  implementations (`rxvm` and `rxbvm`).
+- both optimized and non-optimized RXAS output are exercised through product
+  `rxvm`; the separate basic dispatch contract covers both concrete engines.
 
 The performance fixture is intentionally a smoke test rather than a benchmark
 gate. It prints elapsed times and asserts checksums so regressions in semantics
@@ -202,12 +205,12 @@ are caught without making CI depend on local machine speed.
 
 The source-level performance smoke under `tests/performance` mirrors the same
 direct, snapshot-parent, snapshot-backing, dynamic-parent, and dynamic-backing
-shapes. It records factory and iteration timings for opt/noopt runs on both VM
-modes; the timing output is observational, while checksums remain enforced.
+shapes. It records factory and iteration timings for opt/noopt product-VM runs;
+the timing output is observational, while checksums remain enforced.
 
 The classlib performance smoke adds the public `StringArrayList` surface to that
 coverage: direct `get()`, live `iterator()`, and `snapshotIterator()` are timed
-with enforced checksums under opt/noopt and both VM modes.
+with enforced checksums under opt/noopt through product `rxvm`.
 
 ## Internal Generated-Code Contract
 
@@ -511,6 +514,17 @@ RXAS has an explicit reference surface that the source compiler should target.
 - `unref rRef`
   Clear a reference value, releasing its hold on the reference cell.
 
+- `endlife rLocal`
+  End the storage lifetime for `rLocal`. This invalidates references targeting
+  that storage and nested attribute storage, and releases any reference payload
+  held by the register, without clearing ordinary value contents. The compiler
+  emits this for storage-owning locals during lexical scope cleanup; eligible
+  block-local registers are then returned to the scoped reuse pool. Register
+  reuse is deliberately narrower than cleanup: argument and `.ref` argument
+  storage, receiver/factory pseudo-locals, exposed storage, reference-targeted
+  storage, and compiler inline scaffolding are not reuse candidates. User code
+  should normally prefer the source-level lifetime rules.
+
 ### Why `linkref`, Not Overloaded `link`
 
 Overloading the existing `link` instruction would be compact, but it makes
@@ -718,10 +732,10 @@ scope. Attribute, array-element, argument, global, and expression destinations
 are rejected. The compiler emits `unlink` when that local scope exits; frame
 exit also resets linked locals.
 
-Use `refvalid(ref)` to test whether a weak reference can currently be used:
+Use `<refvalid>(ref)` to test whether a weak reference can currently be used:
 
 ```rexx
-if \refvalid(listRef) then return 0
+if <refvalid>(listRef) = 0 then return 0
 ```
 
 Level G convenience syntax may allow reference values to be used as the base of

@@ -1,0 +1,75 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..76d0d35fb 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -163,7 +163,7 @@ do trial = 1 to 2
+           if 17 < length(j as .string) - 1 then say "Failed3"
+           if (j as .string) = "foobar" then say "Failed4"
+           if substr(1234, 1, 1) = "9" then say "Failed5"
+-          if word(key1, 1) = "?" then say "Failed6"
++          if word1_is_question_ceiling(key1) then say "Failed6"
+           if j < classic_five then do /* This path is taken. */
+             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
+             if j = classic_two then leave
+@@ -210,6 +210,11 @@ do trial = 1 to 2
+   calibrated = 1
+ end
+ 
++/* PERF2-04 scratch-only post-timer semantic guard for the WORD ceiling. */
++if verify_word1_question_ceiling() <> 0 then
++  return fail("PERF2-04 WORD ceiling semantic guard failed")
++say "PERF2-04-WORD-GUARD PASS"
++
+ /* Show the counts. */
+ say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+ say "REXXCPS-EFFECTIVE contract=" || contract ,
+@@ -250,6 +255,49 @@ cps_subroutine: procedure = .void
+   return
+ 
+ 
++verify_word1_question_ceiling: procedure = .int
++  errors = 0
++  errors = errors + check_word1_question_case("")
++  errors = errors + check_word1_question_case("     ")
++  errors = errors + check_word1_question_case("Key Bee")
++  errors = errors + check_word1_question_case("?")
++  errors = errors + check_word1_question_case("? tail")
++  errors = errors + check_word1_question_case("  ?  tail")
++  errors = errors + check_word1_question_case("?x tail")
++  errors = errors + check_word1_question_case("é ?")
++  errors = errors + check_word1_question_case(" ?　tail")
++  errors = errors + check_word1_question_case("？ tail")
++  return errors
++
++
++check_word1_question_case: procedure = .int
++  arg source = .string
++  expected = 0
++  if word(source, 1) = "?" then expected = 1
++  actual = word1_is_question_ceiling(source)
++  if actual <> expected then return 1
++  return 0
++
++
++word1_is_question_ceiling: procedure = .int
++  arg source = .string
++  word_start = .int
++  word_end = .int
++  word_length = .int
++  codepoint = .int
++  zero = 0
++  if source == "" then return 0
++  assembler fndnblnk word_start,source,zero
++  if word_start < 0 then return 0
++  assembler strchar codepoint,source,word_start
++  if codepoint <> 63 then return 0
++  assembler fndblnk word_end,source,word_start
++  if word_end < 0 then assembler strlen word_end,source
++  word_length = word_end - word_start
++  if word_length = 1 then return 1
++  return 0
++
++
+ fail: procedure = .int
+   numeric digits 9
+   arg message = .string

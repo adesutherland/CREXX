@@ -1,0 +1,10 @@
+utc=2026-07-27T08:13:36Z
+local=2026-07-27T09:13:36+0100
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+ lowpowermode         0
+ lowpowermode         0
+ 9:13  up 13 days,  2:21, 1 user, load averages: 1.24 3.81 5.46

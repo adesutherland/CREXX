@@ -1,0 +1,48 @@
+/* Focused Level B ARRAYSET tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + test_grow_with_fill()
+errors = errors + test_grow_with_default()
+errors = errors + test_overwrite_and_append()
+errors = errors + test_invalid_index()
+
+if errors = 0 then say "PASS: arrayset"
+return errors <> 0
+
+test_grow_with_fill: procedure = .int
+  array = .string[]
+  rc = arrayset(array, 3, "C", "_")
+  if rc = 3 & array[0] = 3 & array[1] == "_" & array[2] == "_" & array[3] == "C" then return 0
+  say "FAIL: ARRAYSET filled growth"
+  return 1
+
+test_grow_with_default: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  rc = arrayset(array, 4, "D")
+  if rc = 4 & array[1] == "A" & array[2] == "" & array[3] == "" & array[4] == "D" then return 0
+  say "FAIL: ARRAYSET default-filled growth"
+  return 1
+
+test_overwrite_and_append: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  array[2] = "B"
+  first_rc = arrayset(array, 1, "X", "unused")
+  append_rc = arrayset(array, 3, "C", "unused")
+  if first_rc = 2 & append_rc = 3 & array[1] == "X" & array[2] == "B" & array[3] == "C" then return 0
+  say "FAIL: ARRAYSET overwrite/append"
+  return 1
+
+test_invalid_index: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  do
+    ignored = arrayset(array, 0, "X")
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYSET invalid index did not signal"
+  return 1

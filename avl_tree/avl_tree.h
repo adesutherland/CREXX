@@ -26,6 +26,8 @@
 
 #ifdef __GNUC__
 #  define AVL_INLINE inline __attribute__((always_inline))
+#elif defined(_MSC_VER)
+#  define AVL_INLINE __forceinline
 #else
 #  define AVL_INLINE inline
 #  warning "AVL tree functions may not be inlined as intended"

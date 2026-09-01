@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g2ff2a345a216 20260819",
+  "workload": "sha256-4096",
+  "runtime": "direct-c",
+  "variant": "ceiling",
+  "lifecycle": "process",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: CREXXRAG-SHA256 direct-C ceiling",
+  "metric_prefix": "elapsed_us=",
+  "command": ["cmake-build-release/tests/performance/crexxrag_sha256_c_ceiling","4096","500"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-08-19T12:16:39+0000",
+  "completed_utc": "2026-08-19T12:16:39+0000",
+  "result": "pass"
+}

@@ -1,0 +1,82 @@
+/*
+ * SOURCE                 : lifecycle_probe.crexx
+ */
+
+.globals=0
+
+main() .locals=6
+   .meta "lifecycle_probe.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "lifecycle_probe.crexx" 4 1 9 "left = 0"
+   .meta "lifecycle_probe.main.left"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "left" ""
+   .srcstep 2 2 17 "lifecycle_probe.crexx" 5 1 10 "right = 1"
+   .meta "lifecycle_probe.main.right"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "right" ""
+   .srcstep 9 9 17 "lifecycle_probe.crexx" 6 1 3 "do index = 1 to 20"
+   .srcstep 3 3 17 "lifecycle_probe.crexx" 6 4 13 "do index = 1 to 20"
+   .meta "lifecycle_probe.main.index"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "index" ""
+   .srcstep 4 4 17 "lifecycle_probe.crexx" 6 14 19 "do index = 1 to 20"
+   load r4,20
+   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+l11dostart:
+   .srcstep 4 4 17 "lifecycle_probe.crexx" 6 14 19 "do index = 1 to 20"
+   igt r5,r2,r4
+   brt l11doend,r5
+   .srcstep 6 6 17 "lifecycle_probe.crexx" 7 3 22 "  next = left + right"
+   .meta "lifecycle_probe.main.next"="b" ".int" r3
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "left" ""
+   .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "right" ""
+   iadd r3,r0,r1
+   .traceevent "O" 4 "R" "I" "r" 3 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "next" ""
+   .srcstep 7 7 17 "lifecycle_probe.crexx" 8 3 15 "  left = right"
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "right" ""
+   icopy r0,r1
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "left" ""
+   .srcstep 8 8 17 "lifecycle_probe.crexx" 9 3 15 "  right = next"
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "next" ""
+   icopy r1,r3
+   .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "right" ""
+l11doinc:
+   .srcstep 5 5 17 "lifecycle_probe.crexx" 6 4 9 "do index = 1 to 20"
+   inc r2
+   .srcstep 10 10 17 "lifecycle_probe.crexx" 10 1 4 "end"
+   br l11dostart
+l11doend:
+   .meta "lifecycle_probe.main.index"
+   .meta "lifecycle_probe.main.next"
+   .srcstep 13 13 17 "lifecycle_probe.crexx" 11 1 16 "if left <> 6765 then do"
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "left" ""
+   ine r5,r0,6765
+   .traceevent "O" 4 "R" "B" "r" 5 13 13 0 "" ""
+   brf l40iffalse,r5
+   .srcstep 14 14 17 "lifecycle_probe.crexx" 11 17 21 "if left <> 6765 then do"
+   .srcstep 11 11 17 "lifecycle_probe.crexx" 12 3 38 "  say \"FAIL: expected 6765, got\" left"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 11 11 0 "left" ""
+   sconcat r4,"FAIL: expected 6765, got",r0
+   .traceevent "O" 4 "R" "S" "r" 4 11 11 0 "" ""
+   say r4
+   .srcstep 12 12 17 "lifecycle_probe.crexx" 13 3 11 "  return 1"
+   ret 1
+l40iffalse:
+   .srcstep 15 15 17 "lifecycle_probe.crexx" 15 1 18 "say \"result=\"left"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 15 15 0 "left" ""
+   concat r5,"result=",r0
+   .traceevent "O" 4 "R" "S" "r" 5 15 15 0 "" ""
+   say r5
+   .srcstep 16 16 17 "lifecycle_probe.crexx" 16 1 34 "say \"PASS: Lifecycle Probe cREXX\""
+   say "PASS: Lifecycle Probe cREXX"
+   .srcstep 17 17 17 "lifecycle_probe.crexx" 17 1 9 "return 0"
+   ret 0
+   .meta "lifecycle_probe.main.left"
+   .meta "lifecycle_probe.main.right"

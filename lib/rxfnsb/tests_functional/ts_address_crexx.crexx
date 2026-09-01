@@ -1,0 +1,396 @@
+/* CREXX command environment tests */
+options levelb
+import rxfnsb
+
+errors=0
+
+out = .string[]
+err = .string[]
+path_out = .string[]
+exists_out = .string[]
+stat_out = .string[]
+cat_out = .string[]
+head_out = .string[]
+tail_out = .string[]
+lines_out = .string[]
+dir_out = .string[]
+pushd_out = .string[]
+popd_out = .string[]
+pwd_out = .string[]
+platform_out = .string[]
+now_out = .string[]
+env_out = .string[]
+multi_env_out = .string[]
+pid_out = .string[]
+ps_out = .string[]
+resolve_out = .string[]
+batch_in = .string[]
+batch_out = .string[]
+bad_batch_in = .string[]
+bad_batch_out = .string[]
+operator_err = .string[]
+operator_out = .string[]
+run_out = .string[]
+run_exe_anchor_out = .string[]
+run_array_out = .string[]
+run_dot_out = .string[]
+run_space_out = .string[]
+run_space_err = .string[]
+rxas_exists_out = .string[]
+anchor_out = .string[]
+dollar_anchor_out = .string[]
+anchor_file_out = .string[]
+copy_anchor_cat = .string[]
+run_argv = .string[]
+run_scalar_arg = .string[]
+run_tail = .string[]
+rxas_argv = .string[]
+anchor_items = .string[]
+env_names = .string[]
+workdir = .string
+subdir = .string
+source_file = .string
+space_file = .string
+copy_file = .string
+copy_anchor_file = .string
+moved_file = .string
+touched_file = .string
+anchor_text = .string
+anchor_scalar = .string
+command_name = .string
+rxas_exe = .string
+asm_path = .string
+asm_text = .string
+rxas_out_stem = .string
+rxas_out_file = .string
+nl = .string
+copy_pair = .string[]
+
+address crexx "pid" output pid_out error err
+if rc <> 0 | pid_out.1 = "" then do
+  say "CREXX_PID" rc pid_out.1
+  return 1
+end
+
+workdir = "crexx_address_tmp_" || pid_out.1
+subdir = workdir || "/sub"
+source_file = workdir || "/source.txt"
+space_file = workdir || "/space file.txt"
+copy_file = workdir || "/copy.txt"
+copy_anchor_file = workdir || "/copy anchor.txt"
+moved_file = workdir || "/moved.txt"
+touched_file = workdir || "/touched.txt"
+rxas_exe = "../../../bin/rxas"
+asm_path = workdir || "/source with spaces.rxas"
+rxas_out_stem = workdir || "/out with spaces"
+rxas_out_file = rxas_out_stem || ".rxbin"
+
+address crexx "rm -r " || workdir output out error err
+address crexx "mkdir -p " || subdir output out error err
+if rc <> 0 then do
+  say "CREXX_MKDIR" rc
+  errors=errors+1
+end
+
+address crexx "write " || source_file || " alpha" output out error err
+if rc <> 0 then do
+  say "CREXX_WRITE" rc
+  errors=errors+1
+end
+
+address crexx "append " || source_file || " beta" output out error err
+if rc <> 0 then do
+  say "CREXX_APPEND" rc
+  errors=errors+1
+end
+
+address crexx "exists " || source_file output exists_out error err
+if rc <> 0 | exists_out.1 <> "1 " || source_file then do
+  say "CREXX_EXISTS" rc exists_out.1
+  errors=errors+1
+end
+
+address crexx "copy " || source_file || " " || copy_file output out error err
+if rc <> 0 then do
+  say "CREXX_COPY" rc
+  errors=errors+1
+end
+
+address crexx "move " || copy_file || " " || moved_file output out error err
+if rc <> 0 then do
+  say "CREXX_MOVE" rc
+  errors=errors+1
+end
+
+address crexx "cat " || moved_file output cat_out error err
+if rc <> 0 | cat_out.1 <> "alphabeta" then do
+  say "CREXX_CAT" rc cat_out.1
+  errors=errors+1
+end
+
+copy_pair[1] = moved_file
+copy_pair[2] = copy_anchor_file
+address crexx "copy :copy_pair[]" output out error err
+if rc <> 0 then do
+  say "CREXX_COPY_ARRAY" rc
+  errors=errors+1
+end
+
+address crexx "cat :copy_anchor_file" output copy_anchor_cat error err
+if rc <> 0 | copy_anchor_cat.1 <> "alphabeta" then do
+  say "CREXX_COPY_ARRAY_CAT" rc copy_anchor_cat.1
+  errors=errors+1
+end
+
+address crexx "head -n 1 " || moved_file output head_out error err
+if rc <> 0 | head_out.1 <> "alphabeta" then do
+  say "CREXX_HEAD" rc head_out.1
+  errors=errors+1
+end
+
+address crexx "tail -n 1 " || moved_file output tail_out error err
+if rc <> 0 | tail_out.1 <> "alphabeta" then do
+  say "CREXX_TAIL" rc tail_out.1
+  errors=errors+1
+end
+
+address crexx "lines " || moved_file output lines_out error err
+if rc <> 0 | lines_out.1 <> "1" then do
+  say "CREXX_LINES" rc lines_out.1
+  errors=errors+1
+end
+
+address crexx "stat " || moved_file output stat_out error err
+if rc <> 0 | pos("type=file", stat_out.1) = 0 then do
+  say "CREXX_STAT" rc stat_out.1
+  errors=errors+1
+end
+
+address crexx "touch " || touched_file output out error err
+if rc <> 0 then do
+  say "CREXX_TOUCH" rc
+  errors=errors+1
+end
+
+address crexx "ls " || workdir output dir_out error err
+if rc <> 0 | dir_out.0 < 3 then do
+  say "CREXX_LS" rc dir_out.0
+  errors=errors+1
+end
+
+address crexx "pushd " || workdir output pushd_out error err
+if rc <> 0 | pushd_out.1 = "" then do
+  say "CREXX_PUSHD" rc pushd_out.1
+  errors=errors+1
+end
+
+address crexx "pwd" output pwd_out error err
+if rc <> 0 | pwd_out.1 = "" then do
+  say "CREXX_PWD" rc pwd_out.1
+  errors=errors+1
+end
+
+address crexx "popd" output popd_out error err
+if rc <> 0 | popd_out.1 = "" then do
+  say "CREXX_POPD" rc popd_out.1
+  errors=errors+1
+end
+
+address crexx "which " || rxas_exe output path_out error err
+if rc <> 0 | path_out.1 = "" then do
+  say "CREXX_WHICH" rc path_out.1
+  errors=errors+1
+end
+
+address crexx "run " || rxas_exe || " -h" output run_out error err
+if rc <> 0 | run_out.1 <> "cREXX Assembler" then do
+  say "CREXX_RUN" rc run_out.1
+  errors=errors+1
+end
+
+run_scalar_arg[1] = "-h"
+address crexx "run :rxas_exe :run_scalar_arg[]" output run_exe_anchor_out error err
+if rc <> 0 | run_exe_anchor_out.1 <> "cREXX Assembler" then do
+  say "CREXX_RUN_EXE_ANCHOR" rc run_exe_anchor_out.1
+  errors=errors+1
+end
+
+run_argv[1] = rxas_exe
+run_argv[2] = "-h"
+address crexx "run :run_argv[]" output run_array_out error err
+if rc <> 0 | run_array_out.1 <> "cREXX Assembler" then do
+  say "CREXX_RUN_ARRAY" rc run_array_out.1
+  errors=errors+1
+end
+
+run_tail[1] = "-h"
+address crexx "run " || rxas_exe || " :run_tail." output run_dot_out error err
+if rc <> 0 | run_dot_out.1 <> "cREXX Assembler" then do
+  say "CREXX_RUN_DOT" rc run_dot_out.1
+  errors=errors+1
+end
+
+nl = "0a"x
+asm_text = ".globals=0" || nl || nl || "main() .locals=1" || nl || "   load r0,7" || nl || "   ret 0" || nl
+address crexx "write :asm_path :asm_text" output out error err
+if rc <> 0 then do
+  say "CREXX_RXAS_SPACE_WRITE" rc
+  errors=errors+1
+end
+
+rxas_argv[1] = rxas_exe
+rxas_argv[2] = "-o"
+rxas_argv[3] = rxas_out_stem
+rxas_argv[4] = asm_path
+address crexx "run :rxas_argv[]" output run_space_out error run_space_err
+if rc <> 0 then do
+  say "CREXX_RUN_ARGV_SPACE" rc run_space_err.1
+  errors=errors+1
+end
+
+address crexx "exists :rxas_out_file" output rxas_exists_out error err
+if rc <> 0 | rxas_exists_out.1 <> "1 " || rxas_out_file then do
+  say "CREXX_RUN_ARGV_SPACE_OUT" rc rxas_exists_out.1
+  errors=errors+1
+end
+
+anchor_text = "anchor text"
+address crexx "write :space_file :anchor_text" output out error err
+if rc <> 0 then do
+  say "CREXX_ANCHOR_SPACE_WRITE" rc
+  errors=errors+1
+end
+
+address crexx "cat :space_file" output anchor_file_out error err
+if rc <> 0 | anchor_file_out.1 <> anchor_text then do
+  say "CREXX_ANCHOR_SPACE_CAT" rc anchor_file_out.1
+  errors=errors+1
+end
+
+anchor_scalar = "A B"
+anchor_items[1] = "&&"
+anchor_items[2] = "C D"
+address crexx "echo :anchor_scalar :anchor_items[]" output anchor_out error err
+if rc <> 0 | anchor_out.1 <> "A B && C D" then do
+  say "CREXX_ANCHOR_ARRAY_DATA" rc anchor_out.1
+  errors=errors+1
+end
+
+address crexx "echo ${anchor_scalar} ${anchor_items[]}" output dollar_anchor_out error err
+if rc <> 0 | dollar_anchor_out.1 <> "A B && C D" then do
+  say "CREXX_DOLLAR_ANCHOR_ARRAY_DATA" rc dollar_anchor_out.1
+  errors=errors+1
+end
+
+command_name = "echo"
+address crexx ":command_name SHOULD_NOT_RUN" output out error err
+if rc <> 127 then do
+  say "CREXX_ANCHOR_COMMAND_NAME" rc
+  errors=errors+1
+end
+
+address crexx "platform" output platform_out error err
+if rc <> 0 | left(platform_out.1, 3) <> "os=" then do
+  say "CREXX_PLATFORM" rc platform_out.1
+  errors=errors+1
+end
+
+address crexx "now utc" output now_out error err
+if rc <> 0 | length(now_out.1) < 10 then do
+  say "CREXX_NOW" rc now_out.1
+  errors=errors+1
+end
+
+address crexx "setenv CREXX_ADDRESS_TEST_VALUE ready" output out error err
+if rc <> 0 then do
+  say "CREXX_SETENV" rc
+  errors=errors+1
+end
+
+address crexx "env CREXX_ADDRESS_TEST_VALUE" output env_out error err
+if rc <> 0 | env_out.1 <> "ready" then do
+  say "CREXX_ENV" rc env_out.1
+  errors=errors+1
+end
+
+address crexx "setenv CREXX_ADDRESS_TEST_VALUE_TWO steady" output out error err
+if rc <> 0 then do
+  say "CREXX_SETENV_TWO" rc
+  errors=errors+1
+end
+
+env_names[1] = "CREXX_ADDRESS_TEST_VALUE"
+env_names[2] = "CREXX_ADDRESS_TEST_VALUE_TWO"
+address crexx "env :env_names[]" output multi_env_out error err
+if rc <> 0 | multi_env_out.1 <> "CREXX_ADDRESS_TEST_VALUE=ready" | multi_env_out.2 <> "CREXX_ADDRESS_TEST_VALUE_TWO=steady" then do
+  say "CREXX_ENV_ARRAY" rc multi_env_out.1 multi_env_out.2
+  errors=errors+1
+end
+
+address crexx "unsetenv :env_names[]" output out error err
+if rc <> 0 then do
+  say "CREXX_UNSETENV" rc
+  errors=errors+1
+end
+
+address crexx "ps" output ps_out error err
+if rc <> 0 | left(ps_out.1, 4) <> "pid=" then do
+  say "CREXX_PS" rc ps_out.1
+  errors=errors+1
+end
+
+address crexx "resolve localhost" output resolve_out error err
+if rc <> 0 | resolve_out.1 = "" then do
+  say "CREXX_RESOLVE" rc resolve_out.1
+  errors=errors+1
+end
+
+batch_in[1] = "echo BATCH_ONE"
+batch_in[2] = "-- comment"
+batch_in[3] = "echo BATCH_TWO"
+address crexx "batch" input batch_in output batch_out error err
+if rc <> 0 | batch_out.1 <> "BATCH_ONE" | batch_out.2 <> "BATCH_TWO" then do
+  say "CREXX_BATCH" rc batch_out.1 batch_out.2
+  errors=errors+1
+end
+
+bad_batch_in[1] = "echo BEFORE_BAD"
+bad_batch_in[2] = "unknown_crexx_command"
+bad_batch_in[3] = "echo AFTER_BAD"
+address crexx "batch" input bad_batch_in output bad_batch_out error err
+if rc <> 127 | bad_batch_out.1 <> "BEFORE_BAD" | bad_batch_out.0 <> 1 then do
+  say "CREXX_BATCH_STOP" rc bad_batch_out.1 bad_batch_out.0
+  errors=errors+1
+end
+
+address crexx "echo ONE && echo TWO" output operator_out error operator_err
+if rc <> 2 then do
+  say "CREXX_OPERATOR_REJECT" rc
+  errors=errors+1
+end
+
+address crexx "exists __crexx_missing_address_file__" output out error err
+if rc <> 4 then do
+  say "CREXX_EXISTS_MISSING" rc
+  errors=errors+1
+end
+
+address crexx "rm " || touched_file output out error err
+if rc <> 0 then do
+  say "CREXX_RM_FILE" rc
+  errors=errors+1
+end
+
+address crexx "rmdir " || subdir output out error err
+if rc <> 0 then do
+  say "CREXX_RMDIR" rc
+  errors=errors+1
+end
+
+address crexx "rm -r " || workdir output out error err
+if rc <> 0 then do
+  say "CREXX_RM_TREE" rc
+  errors=errors+1
+end
+
+return errors<>0

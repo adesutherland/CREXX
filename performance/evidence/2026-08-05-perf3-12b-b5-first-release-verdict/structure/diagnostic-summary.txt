@@ -1,0 +1,249 @@
+PERF3 legacy-rule procedure=main signature=5c7aa54a first=swap records=72,73
+PERF3 legacy-rule procedure=main signature=c0a71640 first=load records=98,99
+PERF3 legacy-rule procedure=main signature=8caf6384 first=concat records=99
+PERF3 legacy-rule procedure=main signature=8caf6384 first=concat records=99
+PERF3 legacy-rule procedure=main signature=7720d46d first=inc records=97,99
+PERF3 legacy-rule procedure=main signature=cd8d8983 first=null records=96,99
+PERF3 legacy-rule procedure=main signature=4c4c4bdb first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=32105929 first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=cd8d8983 first=null records=96,99
+PERF3 legacy-rule procedure=main signature=4c4c4bdb first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=32105929 first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=cd8d8983 first=null records=96,99
+PERF3 legacy-rule procedure=main signature=4c4c4bdb first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=32105929 first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=cd8d8983 first=null records=96,99
+PERF3 legacy-rule procedure=main signature=4c4c4bdb first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=32105929 first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=cd8d8983 first=null records=96,99
+PERF3 legacy-rule procedure=main signature=4c4c4bdb first=nulln records=96,99
+PERF3 legacy-rule procedure=main signature=7720d46d first=inc records=97,99
+PERF3 legacy-rule procedure=main signature=7720d46d first=inc records=97,99
+PERF3 legacy-rule procedure=main signature=7720d46d first=inc records=97,99
+PERF3 legacy-rule procedure=main signature=5c7aa54a first=swap records=98,99
+PERF3 legacy-rule procedure=main signature=8caf6384 first=concat records=99
+PERF3 legacy-rule procedure=main signature=8caf6384 first=concat records=99
+PERF3 legacy-rule procedure=main signature=8caf6384 first=concat records=99
+PERF3 legacy-rule procedure=main signature=c0a71640 first=load records=98,99
+PERF3 optimisation-census procedure=main records=1145 instructions=380 capabilities=0xff local-swap-pack=4 local-call-pack=42 local-null-pack=1 local-concat=1 K06-status-copy=1 local-loop-branch=19 local-single-use-copy=29 M00-reachability=380 M01-derivation=25 M02-constant=37 M03-absent=1 M04-self-copy=35 M05-typed-copy=29 M06-producer-forward=5 X01-component-placement=11 M07-storage-diagnostic=380 diagnostic-flow-dump=380 K01-storage-permutation=4 K04-compare-branch=13 K05-branch-thread=51 H01-joined-key-reuse=8
+PERF3 typed-copy-proof procedure=main candidate=121:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=253:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=266:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=372:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=510:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=575:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=659:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=728:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=766:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=770:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=794:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=804:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=808:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=812:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=820:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=830:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=834:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=838:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=846:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=856:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=860:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=864:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=872:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=882:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=886:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=890:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=944:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=972:FCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 component-placement-proof procedure=main copy=266:SCOPY_REG_REG derivation=267:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=510:SCOPY_REG_REG derivation=511:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=523:DCOPY_REG_REG derivation=524:DTOS_REG proved=0 reason=storage-changed rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+NR27 accept procedure=main candidate=550:DTOS_REG reason=component-placement-ssa redirects=2
+PERF3 component-placement-proof procedure=main copy=575:SCOPY_REG_REG derivation=576:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=579:DCOPY_REG_REG derivation=580:DTOS_REG proved=0 reason=storage-changed rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=728:SCOPY_REG_REG derivation=729:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+NR27 accept procedure=main candidate=733:DTOS_REG reason=component-placement-ssa redirects=3
+PERF3 component-placement-proof procedure=main copy=944:SCOPY_REG_REG derivation=945:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=30:INE_REG_REG_INT branch=32:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136559 leaf=28 leaf-kind=1 leaf-presence=1 leaf-def=8 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=38:INE_REG_REG_INT branch=40:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136560 leaf=58 leaf-kind=1 leaf-presence=1 leaf-def=11 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=77:INE_REG_REG_INT branch=79:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136561 leaf=232 leaf-kind=1 leaf-presence=1 leaf-def=30 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=102:ILT_REG_REG_INT branch=104:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136562 leaf=136569 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=181:ILT_REG_REG_INT branch=183:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=7674 leaf=460 leaf-kind=1 leaf-presence=1 leaf-def=69 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=242:IGT_REG_REG_REG branch=243:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136572 leaf=449 leaf-kind=7 leaf-presence=0 leaf-def=66 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=294:IGT_REG_REG_REG branch=295:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136582 leaf=704 leaf-kind=7 leaf-presence=0 leaf-def=101 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=311:IGT_REG_REG_REG branch=312:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136870 leaf=136958 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=348:IEQ_REG_REG_INT branch=350:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=24358 leaf=24359 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=397:IGT_REG_REG_REG branch=398:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=137209 leaf=137456 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+NR27 accept procedure=main candidate=540:ILT_REG_INT_REG reason=compare-branch-fused-ssa redirects=2
+PERF3 compare-branch-proof procedure=main candidate=956:INE_REG_REG_INT branch=958:BRF_ID_REG proved=0 reason=compare-result-observed component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=1 use-record=942 use-instruction=306 use-operand=3 use-value=111499
+PERF3 compare-branch-proof procedure=main candidate=980:IEQ_REG_REG_INT branch=984:BRF_ID_REG proved=0 reason=not-adjacent-branch component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 joined-key-reuse-select procedure=main seed=466 candidate=476 stem=478 loop=3 cache=r103 candidate=r68 seed-redirect=2 trace-delete=1 preheader=spec:1,must:0(not-must-execute),invariant:0(not-invariant),trace-free:0,eligible:0
+NR27 accept procedure=main candidate=476:CONCAT_REG_STRING_REG reason=joined-key-loop-reuse-private-local redirects=2
+PERF3 joined-key-reuse-select procedure=main seed=466 candidate=506 stem=508 loop=3 cache=r103 candidate=r72 seed-redirect=2 trace-delete=1 preheader=spec:1,must:0(not-must-execute),invariant:0(not-invariant),trace-free:0,eligible:0
+NR27 accept procedure=main candidate=506:CONCAT_REG_STRING_REG reason=joined-key-loop-reuse-private-local redirects=2
+PERF3 joined-key-reuse-select procedure=main seed=466 candidate=567 stem=581 loop=3 cache=r103 candidate=r75 seed-redirect=2 trace-delete=1 preheader=spec:1,must:0(not-must-execute),invariant:0(not-invariant),trace-free:0,eligible:0
+NR27 accept procedure=main candidate=567:CONCAT_REG_STRING_REG reason=joined-key-loop-reuse-private-local redirects=2
+PERF3 joined-key-reuse-select procedure=main seed=466 candidate=571 stem=573 loop=3 cache=r103 candidate=r79 seed-redirect=2 trace-delete=1 preheader=spec:1,must:0(not-must-execute),invariant:0(not-invariant),trace-free:0,eligible:0
+NR27 accept procedure=main candidate=571:CONCAT_REG_STRING_REG reason=joined-key-loop-reuse-private-local redirects=2
+NR27 accept procedure=main candidate=196:LOAD_REG_INT reason=redundant-component-ssa-constant redirects=0
+NR27 accept procedure=main candidate=263:LOAD_REG_INT reason=redundant-component-ssa-constant redirects=0
+NR27 accept procedure=main candidate=474:ITOS_REG reason=redundant-component-ssa-conversion redirects=0
+NR27 accept procedure=main candidate=504:ITOS_REG reason=redundant-component-ssa-conversion redirects=0
+NR27 accept procedure=main candidate=565:ITOS_REG reason=redundant-component-ssa-conversion redirects=0
+NR27 accept procedure=main candidate=569:ITOS_REG reason=redundant-component-ssa-conversion redirects=0
+NR27 accept procedure=main candidate=602:ITOS_REG reason=redundant-component-ssa-conversion redirects=0
+PERF3 semantic-batch procedure=main epoch=2 plans=14 records=32 deleted=20 opcodes=1 operand-records=12 private-locals=1 status=applied
+PERF3 typed-copy-proof procedure=main candidate=121:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=253:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=266:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=372:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=510:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=575:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=659:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=728:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=766:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=770:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=794:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=804:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=808:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=812:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=820:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=830:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=834:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=838:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=846:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=856:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=860:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=864:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=872:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=882:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=886:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=890:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=944:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=972:FCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 component-placement-proof procedure=main copy=266:SCOPY_REG_REG derivation=267:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=510:SCOPY_REG_REG derivation=511:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=523:DCOPY_REG_REG derivation=524:DTOS_REG proved=0 reason=use-not-redirectable rejected-kind=6 rejected-record=574 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=3310
+PERF3 component-placement-proof procedure=main copy=575:SCOPY_REG_REG derivation=576:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=579:DCOPY_REG_REG derivation=580:DTOS_REG proved=0 reason=source-result-observed rejected-kind=6 rejected-record=727 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=95012
+PERF3 component-placement-proof procedure=main copy=659:SCOPY_REG_REG derivation=660:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+NR27 accept procedure=main candidate=664:DTOS_REG reason=component-placement-ssa redirects=3
+PERF3 component-placement-proof procedure=main copy=728:SCOPY_REG_REG derivation=729:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=944:SCOPY_REG_REG derivation=945:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=30:INE_REG_REG_INT branch=32:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136072 leaf=28 leaf-kind=1 leaf-presence=1 leaf-def=8 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=38:INE_REG_REG_INT branch=40:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136073 leaf=58 leaf-kind=1 leaf-presence=1 leaf-def=11 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=77:INE_REG_REG_INT branch=79:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136074 leaf=232 leaf-kind=1 leaf-presence=1 leaf-def=30 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=102:ILT_REG_REG_INT branch=104:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136075 leaf=136082 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=181:ILT_REG_REG_INT branch=183:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=7520 leaf=460 leaf-kind=1 leaf-presence=1 leaf-def=69 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=242:IGT_REG_REG_REG branch=243:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136085 leaf=449 leaf-kind=7 leaf-presence=0 leaf-def=66 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=294:IGT_REG_REG_REG branch=295:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136094 leaf=698 leaf-kind=7 leaf-presence=0 leaf-def=99 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=311:IGT_REG_REG_REG branch=312:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136377 leaf=136464 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=348:IEQ_REG_REG_INT branch=350:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=23548 leaf=23549 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=397:IGT_REG_REG_REG branch=398:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=136710 leaf=136944 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=956:INE_REG_REG_INT branch=958:BRF_ID_REG proved=0 reason=compare-result-observed component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=1 use-record=942 use-instruction=292 use-operand=3 use-value=107818
+PERF3 compare-branch-proof procedure=main candidate=980:IEQ_REG_REG_INT branch=984:BRF_ID_REG proved=0 reason=not-adjacent-branch component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 semantic-batch procedure=main epoch=3 plans=1 records=4 deleted=2 opcodes=0 operand-records=2 private-locals=0 status=applied
+PERF3 typed-copy-proof procedure=main candidate=121:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=253:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=266:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=372:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=510:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=575:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=659:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=728:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=766:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=770:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=794:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=804:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=808:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=812:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=820:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=830:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=834:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=838:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=846:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=856:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=860:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=864:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=872:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=882:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=886:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=890:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=944:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=972:FCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 component-placement-proof procedure=main copy=266:SCOPY_REG_REG derivation=267:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=510:SCOPY_REG_REG derivation=511:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=523:DCOPY_REG_REG derivation=524:DTOS_REG proved=0 reason=use-not-redirectable rejected-kind=6 rejected-record=574 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=3309
+PERF3 component-placement-proof procedure=main copy=575:SCOPY_REG_REG derivation=576:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=579:DCOPY_REG_REG derivation=580:DTOS_REG proved=0 reason=source-result-observed rejected-kind=6 rejected-record=727 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=95020
+PERF3 component-placement-proof procedure=main copy=659:SCOPY_REG_REG derivation=660:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=728:SCOPY_REG_REG derivation=729:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=944:SCOPY_REG_REG derivation=945:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=30:INE_REG_REG_INT branch=32:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131480 leaf=28 leaf-kind=1 leaf-presence=1 leaf-def=8 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=38:INE_REG_REG_INT branch=40:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131481 leaf=58 leaf-kind=1 leaf-presence=1 leaf-def=11 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=77:INE_REG_REG_INT branch=79:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131482 leaf=232 leaf-kind=1 leaf-presence=1 leaf-def=30 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=102:ILT_REG_REG_INT branch=104:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131483 leaf=131490 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=181:ILT_REG_REG_INT branch=183:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=7527 leaf=460 leaf-kind=1 leaf-presence=1 leaf-def=69 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=242:IGT_REG_REG_REG branch=243:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131493 leaf=449 leaf-kind=7 leaf-presence=0 leaf-def=66 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=294:IGT_REG_REG_REG branch=295:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131502 leaf=698 leaf-kind=7 leaf-presence=0 leaf-def=99 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=311:IGT_REG_REG_REG branch=312:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131785 leaf=131872 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=348:IEQ_REG_REG_INT branch=350:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=23555 leaf=23556 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=397:IGT_REG_REG_REG branch=398:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=132118 leaf=132352 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=956:INE_REG_REG_INT branch=958:BRF_ID_REG proved=0 reason=compare-result-observed component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=1 use-record=942 use-instruction=291 use-operand=3 use-value=107826
+PERF3 compare-branch-proof procedure=main candidate=980:IEQ_REG_REG_INT branch=984:BRF_ID_REG proved=0 reason=not-adjacent-branch component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+NR27 accept procedure=main record=978 reason=immutable-cfg-branch-thread
+PERF3 typed-copy-proof procedure=main candidate=121:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=253:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=266:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=372:ICOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=510:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=575:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=659:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=728:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=766:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=770:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=794:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=804:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=808:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=812:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=820:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=830:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=834:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=838:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=846:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=856:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=860:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=864:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=872:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=882:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=886:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=890:SCOPY_REG_REG proved=0 reason=storage-changed
+PERF3 typed-copy-proof procedure=main candidate=944:SCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 typed-copy-proof procedure=main candidate=972:FCOPY_REG_REG proved=0 reason=use-not-redirectable
+PERF3 component-placement-proof procedure=main copy=266:SCOPY_REG_REG derivation=267:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=510:SCOPY_REG_REG derivation=511:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=523:DCOPY_REG_REG derivation=524:DTOS_REG proved=0 reason=use-not-redirectable rejected-kind=6 rejected-record=574 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=3309
+PERF3 component-placement-proof procedure=main copy=575:SCOPY_REG_REG derivation=576:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=579:DCOPY_REG_REG derivation=580:DTOS_REG proved=0 reason=source-result-observed rejected-kind=6 rejected-record=727 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=95020
+PERF3 component-placement-proof procedure=main copy=659:SCOPY_REG_REG derivation=660:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=728:SCOPY_REG_REG derivation=729:STOD_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 component-placement-proof procedure=main copy=944:SCOPY_REG_REG derivation=945:STOF_REG proved=0 reason=not-exact-component-placement rejected-kind=0 rejected-record=18446744073709551615 rejected-instruction=18446744073709551615 rejected-operand=18446744073709551615 rejected-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=30:INE_REG_REG_INT branch=32:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131480 leaf=28 leaf-kind=1 leaf-presence=1 leaf-def=8 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=38:INE_REG_REG_INT branch=40:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131481 leaf=58 leaf-kind=1 leaf-presence=1 leaf-def=11 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=77:INE_REG_REG_INT branch=79:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131482 leaf=232 leaf-kind=1 leaf-presence=1 leaf-def=30 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=102:ILT_REG_REG_INT branch=104:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131483 leaf=131490 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=181:ILT_REG_REG_INT branch=183:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=7527 leaf=460 leaf-kind=1 leaf-presence=1 leaf-def=69 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=242:IGT_REG_REG_REG branch=243:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131493 leaf=449 leaf-kind=7 leaf-presence=0 leaf-def=66 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=294:IGT_REG_REG_REG branch=295:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131502 leaf=698 leaf-kind=7 leaf-presence=0 leaf-def=99 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=311:IGT_REG_REG_REG branch=312:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=131785 leaf=131873 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=348:IEQ_REG_REG_INT branch=350:BRF_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=23555 leaf=23556 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=397:IGT_REG_REG_REG branch=398:BRT_ID_REG proved=0 reason=cleanup-required component=0x40 kind=6 presence=0 value=132118 leaf=132352 leaf-kind=7 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+PERF3 compare-branch-proof procedure=main candidate=956:INE_REG_REG_INT branch=958:BRF_ID_REG proved=0 reason=compare-result-observed component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=1 use-record=942 use-instruction=291 use-operand=3 use-value=107826
+PERF3 compare-branch-proof procedure=main candidate=980:IEQ_REG_REG_INT branch=984:BRF_ID_REG proved=0 reason=not-adjacent-branch component=0x0 kind=0 presence=0 value=18446744073709551615 leaf=18446744073709551615 leaf-kind=0 leaf-presence=0 leaf-def=18446744073709551615 use-kind=0 use-record=18446744073709551615 use-instruction=18446744073709551615 use-operand=18446744073709551615 use-value=18446744073709551615
+NR27 flow procedure=main blocks=251 registers=108 instructions=380->365 unreachable=0 dead=0 typed-copy=3 local-single-use-copy=0 compare-prep=0 full-copy=0 redundant-load=2 redundant-init=0 redundant-conversion=5 producer-forward=0 swap-roundtrip=0 compare-branch=1 trace-delete=1 redirects=6 constant-proof=2/14 rejected=12 unavailable=0 absent-proof=0/0 rejected=0 unavailable=0 self-copy-proof=0/36 rejected=36 unavailable=0 derivation-proof=5/18 rejected=13 unavailable=0 producer-proof=0/0 rejected=0 unavailable=0 component-placement-proof=3/34 rejected=31 unavailable=0 applied=3 trace-delete=2 duplicate-linked-read-proof=0/0 rejected=0 reused=0 storage-permutation-proof=0/0 rejected=0 compare-branch-proof=1/49 rejected=48 joined-key-reuse-proof=4/4 rejected=0 reused=4 trace-delete=4 private-locals=1 preheader=0 branch-thread=1/2 rejected=1 applied=1 batches=1 semantic-batch=2 rejected=0 records=36 deleted=22 opcodes=1 operand-records=14 reject-live=191 reject-trace=0 reject-tainted=0 reject-effect=4
+PERF3 flow-graph procedure=main epoch=6 records=1146 instructions=365 code-blocks=251 blocks=258 edges=652 normal=229 branch=58 skip=91 handler=91 terminal=91 unwind=92 unknown=0 complete=1
+PERF3 sparse-storage-oracle procedure=main status=complete queries=6 exact=6 unknown=0 storage=1346 base=108 site=3 attribute=0 phi=1235 unknown-nodes=0 retained-bytes=6176376
+PERF3 flow-proof procedure=main disabled=invalid-graph budget=85760 work=1304
+NR27 flow procedure=cps_subroutine blocks=14 registers=29 instructions=21->21 unreachable=0 dead=0 typed-copy=0 local-single-use-copy=0 compare-prep=0 full-copy=0 redundant-load=0 redundant-init=0 redundant-conversion=0 producer-forward=0 swap-roundtrip=0 compare-branch=0 trace-delete=0 redirects=0 constant-proof=0/0 rejected=0 unavailable=0 absent-proof=0/0 rejected=0 unavailable=0 self-copy-proof=0/0 rejected=0 unavailable=0 derivation-proof=0/0 rejected=0 unavailable=0 producer-proof=0/0 rejected=0 unavailable=0 component-placement-proof=0/0 rejected=0 unavailable=0 applied=0 trace-delete=0 duplicate-linked-read-proof=0/0 rejected=0 reused=0 storage-permutation-proof=0/0 rejected=0 compare-branch-proof=0/0 rejected=0 joined-key-reuse-proof=0/0 rejected=0 reused=0 trace-delete=0 private-locals=0 preheader=0 branch-thread=0/1 rejected=1 applied=0 batches=0 semantic-batch=0 rejected=0 records=0 deleted=0 opcodes=0 operand-records=0 reject-live=8 reject-trace=0 reject-tainted=0 reject-effect=0
+NR27 flow procedure=fail blocks=3 registers=7 instructions=4->4 unreachable=0 dead=0 typed-copy=0 local-single-use-copy=0 compare-prep=0 full-copy=0 redundant-load=0 redundant-init=0 redundant-conversion=0 producer-forward=0 swap-roundtrip=0 compare-branch=0 trace-delete=0 redirects=0 constant-proof=0/0 rejected=0 unavailable=0 absent-proof=0/0 rejected=0 unavailable=0 self-copy-proof=0/0 rejected=0 unavailable=0 derivation-proof=0/0 rejected=0 unavailable=0 producer-proof=0/0 rejected=0 unavailable=0 component-placement-proof=0/0 rejected=0 unavailable=0 applied=0 trace-delete=0 duplicate-linked-read-proof=0/0 rejected=0 reused=0 storage-permutation-proof=0/0 rejected=0 compare-branch-proof=0/0 rejected=0 joined-key-reuse-proof=0/0 rejected=0 reused=0 trace-delete=0 private-locals=0 preheader=0 branch-thread=0/0 rejected=0 applied=0 batches=0 semantic-batch=0 rejected=0 records=0 deleted=0 opcodes=0 operand-records=0 reject-live=0 reject-trace=0 reject-tainted=0 reject-effect=0
+NR27 flow procedure=__rxtrace_handler blocks=681 registers=74 instructions=844->816 unreachable=0 dead=0 typed-copy=3 local-single-use-copy=0 compare-prep=0 full-copy=0 redundant-load=12 redundant-init=0 redundant-conversion=0 producer-forward=0 swap-roundtrip=0 compare-branch=13 trace-delete=11 redirects=3 constant-proof=12/99 rejected=87 unavailable=1 absent-proof=0/3 rejected=3 unavailable=1 self-copy-proof=0/104 rejected=104 unavailable=0 derivation-proof=0/24 rejected=24 unavailable=1 producer-proof=0/0 rejected=0 unavailable=0 component-placement-proof=0/0 rejected=0 unavailable=0 applied=0 trace-delete=0 duplicate-linked-read-proof=0/0 rejected=0 reused=0 storage-permutation-proof=0/0 rejected=0 compare-branch-proof=13/262 rejected=249 joined-key-reuse-proof=0/0 rejected=0 reused=0 trace-delete=0 private-locals=0 preheader=0 branch-thread=1/2 rejected=1 applied=1 batches=1 semantic-batch=2 rejected=0 records=55 deleted=39 opcodes=13 operand-records=16 reject-live=330 reject-trace=3 reject-tainted=0 reject-effect=71
+NR27 flow procedure=__rxtrace_reset_display_state blocks=3 registers=3 instructions=4->4 unreachable=0 dead=0 typed-copy=0 local-single-use-copy=0 compare-prep=0 full-copy=0 redundant-load=0 redundant-init=0 redundant-conversion=0 producer-forward=0 swap-roundtrip=0 compare-branch=0 trace-delete=0 redirects=0 constant-proof=0/0 rejected=0 unavailable=0 absent-proof=0/0 rejected=0 unavailable=0 self-copy-proof=0/0 rejected=0 unavailable=0 derivation-proof=0/0 rejected=0 unavailable=0 producer-proof=0/0 rejected=0 unavailable=0 component-placement-proof=0/0 rejected=0 unavailable=0 applied=0 trace-delete=0 duplicate-linked-read-proof=0/0 rejected=0 reused=0 storage-permutation-proof=0/0 rejected=0 compare-branch-proof=0/0 rejected=0 joined-key-reuse-proof=0/0 rejected=0 reused=0 trace-delete=0 private-locals=0 preheader=0 branch-thread=0/0 rejected=0 applied=0 batches=0 semantic-batch=0 rejected=0 records=0 deleted=0 opcodes=0 operand-records=0 reject-live=0 reject-trace=0 reject-tainted=0 reject-effect=0

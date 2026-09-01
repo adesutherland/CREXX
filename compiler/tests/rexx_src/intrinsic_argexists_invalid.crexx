@@ -1,0 +1,5 @@
+options levelb
+
+main: procedure = .int
+  if <argexists>() then return 1
+  return 0

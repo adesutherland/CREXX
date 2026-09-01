@@ -1,0 +1,2 @@
+Error in eq_levelb_fail.crexx @ 6:4 - #EQ_ONLY_LEVELG, "left <eq> right"
+1 error(s) in source file

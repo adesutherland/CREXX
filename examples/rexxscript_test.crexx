@@ -1,0 +1,334 @@
+options levelb
+import rxfnsb
+
+main: procedure
+raw=.string[]
+
+v1=17
+v2=25
+myresult=0
+udf='myresult=25*v1+v2'
+rexxScript udf expose v1, v2, myRESULT   RESULT raw DEBUG
+call show_RESULT raw
+say 'myResult='myresult
+
+
+rexxScript "sum = 0; do until sum = 3; sum = sum + 1; say 'iteration sum='sum;end"  RESULT raw DEBUG
+call show_RESULT raw
+
+
+rexxScript "sum = 0; do i = 1 to 5; if i = 3 then leave; sum = sum + i; say 'iteration 'i' sum='sum; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 5; if i = 2 then iterate;  sum = sum + i;  say 'iteration 'i' sum='sum; end" RESULT raw DEBUG  
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 3; sum = sum + i; say 'iteration 'i' sum='sum;  end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 5 by 2; sum = sum + i;  say 'iteration 'i' sum='sum; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "total = 0; do i = 1 to 2; do j = 1 to 2; total = total + 1;  say 'iteration 'i':'j' total='total;end; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "i = 0; j=0; do while i < 10; i = i + 1; say 'Outer i/j='i'/'j; j=0; do while j < 5; j = j + 1; say 'Inner i/j='i'/'j;end; end"  RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 3; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 5 by 2; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "total = 0; do i = 1 to 2; do j = 1 to 2; total = total + 1; end; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0; do while x < 3; x = x + 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0; do while x > 0; x = 1; end; y = 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "i = 0; total = 0; do while i < 2; j = 0; do while j < 2; total = total + 1; j = j + 1; end; i = i + 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a= 47; if a = 0 then x = 5 else x = 7" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a=1 ; if 1 = a then x = 5 else x = 7" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 = 1 then do; x = 1; y = 2; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 > 1 then do; x = 1; y = 2; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "do; fred=47; if 1> 1 then do; x = 1; y = 2; end; z=21; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "text = 'abcdef'; part = substr(text, 4,length(text))" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "text = 'abc'; n = length(text)" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "name='Mary'; age=42" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 2 < 3 then x = 1" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a=10; b=20; total=a+b" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "first='Mary'; last='Smith'; say first; say last; full=first||' '||last; say full" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x=5; if x > 3 then say 'Large'; say x" RESULT raw DEBUG
+call show_RESULT raw
+
+/* configurable tax calculation */
+country_tax = 19
+net = 1200
+udf = 'gross='net'+'net'*'country_tax'/100; Name="Peter"'
+rexxScript udf RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "answer = 42" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'name = "Ada"; say name' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 2 + 3 * 4" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a = 10; b = a / 2; say b" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 5 / 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "MiXeD = 7; say mixed" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'first = "Ada"; last = "Lovelace"; full = first || last' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'text = "a;b"; say text' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a = 1; return; a = 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 = 1 then x = 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 = 0 then x = 5; y = 7" RESULT raw DEBUG
+call show_RESULT raw
+
+
+rexxScript "if 1 = 0 then x = 5 else x = 7" RESULT raw DEBUG
+call show_RESULT raw
+
+
+rexxScript "if 2 < 3 then x = 1" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 = 1 then do; x = 1; y = 2; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'if "A" = "A" then say "yes"' RESULT raw DEBUG
+call show_RESULT raw
+
+
+rexxScript 'if "A" <> "B" then say "ok"' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 01; if x = 1 then y = 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "if 1 = 1 then return; x = 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "return 1" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "say missing" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 9 / 0" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 1 + 1" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'x = "oops' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'say "a" + 1' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "a = 1; b = missing" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0 - 7 / 3" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x=1;y=2;z=x+y" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0007" RESULT raw DEBUG
+call show_RESULT raw
+
+ rexxScript "x = 1 + 2 + 3 + 4" RESULT raw DEBUG
+call show_RESULT raw
+
+ rexxScript "x = 1 + 2 + 3 + 4" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 2; say 'Record 'x" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'a = "A"; b = "B"; c = a || b || "C"' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "text = 'abc'; n = length(text)" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "text = 'abcdef'; part = substr(text, 2, 3)" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "text = 'abcdef'; tail = substr(text, 4)" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "say 123" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'say "hello"' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 8 / 3" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0 - 8 / 3" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 1;;y = 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "   " RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "say" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "= 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "1abc = 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "say unknown" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 1 + y" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'x = "a" + "b"' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 5 * 0" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0 / 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "say mixedCase" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 1 + 2 * 3 - 4" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript 'x = "a"; y = "b"; say x || y' RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "return" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "return; say 1" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 1 ; ; ; return ; x = 2" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "do; x = 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0; do while x < 3; x = x + 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "x = 0; do while x > 0; x = 1; end; y = 5" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do until sum = 3; sum = sum + 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 3; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "limit = 3; sum = 0; do i = 1 to limit; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 5 by 2; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 5; if i = 3 then leave; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "sum = 0; do i = 1 to 3; if i = 2 then iterate; sum = sum + i; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "total = 0; do i = 1 to 2; do j = 1 to 2; total = total + 1; end; end" RESULT raw DEBUG
+call show_RESULT raw
+
+rexxScript "i = 0; total = 0; do while i < 2; j = 0; do while j < 2; total = total + 1; j = j + 1; end; i = i + 1; end" RESULT raw DEBUG
+call show_RESULT raw
+
+exit 0
+
+show_result: PROCEDURE
+  arg result=.string[]
+  say copies('-',64)
+  say "Status :" result[1]
+  say copies('-',64)
+
+  i = 2
+  output_start = 0
+
+  do while i <= result[0]
+    if datatype(result[i], "W") then do
+      output_start = i
+      leave
+    end
+
+    say "Variable:" result[i] "=" result[i + 1]
+    i = i + 2
+  end
+
+  if output_start > 0 then do
+    say
+    say "Output lines:" result[output_start]
+    say copies('-',64)
+
+    do j = 1 to result[output_start]
+      say right(j,4,'0') result[output_start + j]
+    end
+  end
+
+return

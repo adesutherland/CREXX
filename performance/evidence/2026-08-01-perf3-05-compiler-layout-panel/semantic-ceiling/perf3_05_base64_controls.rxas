@@ -1,0 +1,3536 @@
+/*
+ * SOURCE                 : perf2_04_base64_controls.crexx
+ */
+
+.globals=0
+
+main() .locals=44
+   .meta "perf2_04_base64_controls.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "perf2_04_base64_controls.main.decoded"="b" ".binary" r4
+   .srcstep 1 1 17 "perf2_04_base64_controls.crexx" 24 1 18 "decoded = .binary"
+   null r4
+   .srcstep 2 2 17 "perf2_04_base64_controls.crexx" 14 5 19 "arg argv = .string[]"
+   .meta "perf2_04_base64_controls.main.argv"="b" ".string[*]" r2
+   brtpandt l6c,a1,512
+   copy r2,a1
+   br l6d
+l6c:
+   swap r2,a1
+l6d:
+   .srcstep 7 7 17 "perf2_04_base64_controls.crexx" 15 1 16 "if argv[0] <> 2 then return fail(\"use VARIANT REPETITIONS\")"
+   .traceevent "C" 4 "R" "V" "r" 0 7 7 0 "argv" ""
+   getattrs r8,r2,0
+   .traceevent "V" 6 "R" "I" "r" 8 7 7 0 "argv" ""
+   ine r8,r8,2
+   .traceevent "O" 4 "R" "B" "r" 8 7 7 0 "" ""
+   brf l21iffalse,r8
+   .srcstep 8 8 17 "perf2_04_base64_controls.crexx" 15 17 21 "if argv[0] <> 2 then return fail(\"use VARIANT REPETITIONS\")"
+   .srcstep 6 6 17 "perf2_04_base64_controls.crexx" 15 22 60 "if argv[0] <> 2 then return fail(\"use VARIANT REPETITIONS\")"
+   .srcstep 5 5 17 "perf2_04_base64_controls.crexx" 15 29 33 "if argv[0] <> 2 then return fail(\"use VARIANT REPETITIONS\")"
+   .srcstep 3 3 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   say "FAIL: use VARIANT REPETITIONS"
+   .srcstep 4 4 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 6 6 0 "" ""
+   icopy r9,r0
+   br l2068bexprend
+l2068bexprend:
+   ret r9
+l21iffalse:
+   .srcstep 12 12 17 "perf2_04_base64_controls.crexx" 16 1 23 "variant = lower(argv[1])"
+   .meta "perf2_04_base64_controls.main.result"="b" ".string" r10
+   .srcstep 9 9 25 "lower.crexx" 42 3 19 "  result = .string"
+   .srcstep 10 10 33 "perf2_04_base64_controls.crexx" 16 23 23 "variant = lower(argv[1])"
+   minlinkattr1 r9,r2,1
+   .traceevent "V" 6 "R" "S" "r" 9 10 10 0 "argv" ""
+   scopy r11,r9
+   .traceevent "A" 6 "R" "S" "r" 11 10 10 0 "string" ""
+   unlink r9
+   .srcstep 11 11 25 "lower.crexx" 43 13 35 "  assembler strlower result,string"
+   .traceevent "V" 6 "R" "S" "r" 10 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 11 0 0 0 "string" ""
+   strlower r10,r11
+   .traceevent "V" 6 "R" "S" "r" 10 0 0 0 "result" ""
+   copy r7,r10
+   .traceevent "A" 6 "R" "S" "r" 7 0 0 0 "variant" ""
+   .srcstep 17 17 17 "perf2_04_base64_controls.crexx" 17 1 38 "if verify(argv[2], \"0123456789\") <> 0 then"
+   .meta "perf2_04_base64_controls.main.variant"="b" ".string" r7
+   minlinkattr1 r9,r2,2
+   .traceevent "V" 6 "R" "S" "r" 9 17 17 0 "argv" ""
+   load r14,"0123456789"
+   .traceevent "L" 4 "R" "S" "r" 14 17 17 0 "" ""
+   load r12,4
+   swap r13,r9
+   settp r15,512
+   settpcall r8,rxfnsb.verify(),r12,r16,0
+   swap r9,r13
+   unlink r9
+   .traceevent "F" 4 "R" "I" "r" 8 17 17 0 "verify" ""
+   ine r16,r8,0
+   .traceevent "O" 4 "R" "B" "r" 16 17 17 0 "" ""
+   brf l36iffalse,r16
+   .srcstep 18 18 17 "perf2_04_base64_controls.crexx" 17 39 43 "if verify(argv[2], \"0123456789\") <> 0 then"
+   .srcstep 16 16 17 "perf2_04_base64_controls.crexx" 18 3 46 "  return fail(\"REPETITIONS must be positive\")"
+   .srcstep 15 15 17 "perf2_04_base64_controls.crexx" 18 10 14 "  return fail(\"REPETITIONS must be positive\")"
+   .srcstep 13 13 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   say "FAIL: REPETITIONS must be positive"
+   .srcstep 14 14 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 16 16 0 "" ""
+   icopy r14,r15
+   br l2225bexprend
+l2225bexprend:
+   ret r14
+l36iffalse:
+   .srcstep 19 19 17 "perf2_04_base64_controls.crexx" 19 1 30 "repetitions = argv[2] as .int"
+   .meta "perf2_04_base64_controls.main.repetitions"="b" ".int" r6
+   minlinkattr1 r16,r2,2
+   .traceevent "V" 6 "R" "S" "r" 16 19 19 0 "argv" ""
+   stoi r6,r16
+   unlink r16
+   .traceevent "A" 6 "R" "I" "r" 6 19 19 0 "repetitions" ""
+   .srcstep 24 24 17 "perf2_04_base64_controls.crexx" 20 1 19 "if repetitions < 1 then return fail(\"REPETITIONS must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 6 24 24 0 "repetitions" ""
+   ilt r16,r6,1
+   .traceevent "O" 4 "R" "B" "r" 16 24 24 0 "" ""
+   brf l49iffalse,r16
+   .srcstep 25 25 17 "perf2_04_base64_controls.crexx" 20 20 24 "if repetitions < 1 then return fail(\"REPETITIONS must be positive\")"
+   .srcstep 23 23 17 "perf2_04_base64_controls.crexx" 20 25 68 "if repetitions < 1 then return fail(\"REPETITIONS must be positive\")"
+   .srcstep 22 22 17 "perf2_04_base64_controls.crexx" 20 32 36 "if repetitions < 1 then return fail(\"REPETITIONS must be positive\")"
+   .srcstep 20 20 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   say "FAIL: REPETITIONS must be positive"
+   .srcstep 21 21 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 23 23 0 "" ""
+   icopy r14,r15
+   br l2236bexprend
+l2236bexprend:
+   ret r14
+l49iffalse:
+   .srcstep 39 39 17 "perf2_04_base64_controls.crexx" 22 1 19 "input = make_input()"
+   .meta "perf2_04_base64_controls.main.data"="b" ".binary" r17
+   .srcstep 26 26 17 "perf2_04_base64_controls.crexx" 53 3 17 "  data = .binary"
+   null r17
+   .srcstep 31 31 17 "perf2_04_base64_controls.crexx" 54 3 28 "  call binresize data, 1024"
+   .srcstep 27 27 33 "perf2_04_base64_controls.crexx" 54 28 28 "  call binresize data, 1024"
+   load r20,1024
+   .traceevent "L" 4 "R" "I" "r" 20 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 27 27 0 "length" ""
+   .srcstep 28 28 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r21,0
+   .traceevent "L" 4 "R" "I" "r" 21 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 28 28 0 "result" ""
+   .srcstep 29 29 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 17 0 0 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 20 0 0 0 "length" ""
+   bresize r17,r20
+   .srcstep 30 30 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 17 0 0 0 "data" ""
+   blen r21,r17
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 21 0 0 0 "__inline_unused_1770" ""
+   .srcstep 36 36 17 "perf2_04_base64_controls.crexx" 55 3 5 "  do offset = 0 to 1023"
+   .srcstep 32 32 17 "perf2_04_base64_controls.crexx" 55 6 16 "  do offset = 0 to 1023"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 32 32 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 32 32 0 "offset" ""
+   .srcstep 33 33 17 "perf2_04_base64_controls.crexx" 55 17 24 "  do offset = 0 to 1023"
+   load r15,1023
+   .traceevent "L" 4 "R" "I" "r" 15 0 0 0 "" ""
+l2267dostart:
+   .srcstep 33 33 17 "perf2_04_base64_controls.crexx" 55 17 24 "  do offset = 0 to 1023"
+   igt r14,r16,r15
+   brt l2267doend,r14
+   .srcstep 35 35 17 "perf2_04_base64_controls.crexx" 56 5 56 "    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256"
+   .traceevent "V" 6 "R" "X" "r" 17 35 35 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 16 35 35 0 "offset" ""
+   .traceevent "V" 6 "R" "I" "r" 16 35 35 0 "offset" ""
+   imult r13,r16,31
+   .traceevent "O" 4 "R" "I" "r" 13 35 35 0 "" ""
+   iadd r13,r13,7
+   .traceevent "O" 4 "R" "I" "r" 13 35 35 0 "" ""
+   imod r13,r13,256
+   .traceevent "O" 4 "R" "I" "r" 13 35 35 0 "" ""
+   bsetu8 r17,r16,r13
+l2267doinc:
+   .srcstep 34 34 17 "perf2_04_base64_controls.crexx" 55 6 12 "  do offset = 0 to 1023"
+   inc r16
+   .srcstep 37 37 17 "perf2_04_base64_controls.crexx" 57 3 6 "  end"
+   br l2267dostart
+l2267doend:
+   .srcstep 38 38 6 "perf2_04_base64_controls.crexx" 22 1 6 "input = make_input()"
+   .traceevent "V" 6 "R" "X" "r" 17 0 0 0 "data" ""
+   copy r5,r17
+   .srcstep 40 40 17 "perf2_04_base64_controls.crexx" 23 1 13 "encoded = \"\""
+   .meta "perf2_04_base64_controls.main.encoded"="b" ".string" r1
+   .meta "perf2_04_base64_controls.main.input"="b" ".binary" r5
+   load r1,""
+   .traceevent "L" 4 "R" "S" "r" 1 40 40 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 40 40 0 "encoded" ""
+   .srcstep 100 100 17 "perf2_04_base64_controls.crexx" 25 1 3 "do iteration = 1 to repetitions"
+   .srcstep 41 41 17 "perf2_04_base64_controls.crexx" 25 4 17 "do iteration = 1 to repetitions"
+   .meta "perf2_04_base64_controls.main.iteration"="b" ".int" r16
+   load r16,1
+   .traceevent "L" 4 "R" "I" "r" 16 41 41 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 41 41 0 "iteration" ""
+   .srcstep 42 42 17 "perf2_04_base64_controls.crexx" 25 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "repetitions" ""
+l60dostart:
+   .srcstep 42 42 17 "perf2_04_base64_controls.crexx" 25 18 32 "do iteration = 1 to repetitions"
+   igt r15,r16,r6
+   brt l60doend,r15
+   .srcstep 91 91 17 "perf2_04_base64_controls.crexx" 26 3 33 "  encoded = base64_encode(input)"
+   .meta "perf2_04_base64_controls.main.result"="b" ".binary" r27
+   .srcstep 44 44 17 "perf2_04_base64_controls.crexx" 65 3 19 "  result = .binary"
+   null r27
+   .srcstep 45 45 6 "perf2_04_base64_controls.crexx" 61 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 5 0 0 0 "input" ""
+   .srcstep 46 46 17 "perf2_04_base64_controls.crexx" 62 3 91 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\" as .binary"
+   load r22,0x4142434445464748494a4b4c4d4e4f505152535455565758595a6162636465666768696a6b6c6d6e6f707172737475767778797a303132333435363738392b2f
+   .traceevent "L" 4 "R" "X" "r" 22 46 46 0 "" ""
+   .traceevent "A" 6 "R" "X" "r" 22 46 46 0 "alphabet" ""
+   .srcstep 50 50 17 "perf2_04_base64_controls.crexx" 63 3 33 "  input_length = binlength(data)"
+   .srcstep 47 47 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 5 0 0 0 "data" ""
+   copy r28,r5
+   .srcstep 48 48 25 "binary.crexx" 45 3 10 "  len = 0"
+   load r29,0
+   .traceevent "L" 4 "R" "I" "r" 29 48 48 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 48 48 0 "len" ""
+   .srcstep 49 49 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+   .traceevent "V" 6 "R" "I" "r" 29 0 0 0 "len" ""
+   .traceevent "V" 6 "R" "X" "r" 28 0 0 0 "data" ""
+   blen r29,r28
+   .traceevent "V" 6 "R" "I" "r" 29 0 0 0 "len" ""
+   .traceevent "A" 6 "R" "I" "r" 29 0 0 0 "input_length" ""
+   .srcstep 51 51 17 "perf2_04_base64_controls.crexx" 64 3 53 "  encoded_length = ((input_length + 2) <idiv> 3) * 4"
+   .traceevent "V" 6 "R" "I" "r" 29 51 51 0 "input_length" ""
+   iadd r14,r29,2
+   .traceevent "O" 4 "R" "I" "r" 14 51 51 0 "" ""
+   idiv r14,r14,3
+   .traceevent "O" 4 "R" "I" "r" 14 51 51 0 "" ""
+   imult r23,r14,4
+   .traceevent "O" 4 "R" "I" "r" 23 51 51 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 51 51 0 "encoded_length" ""
+   .srcstep 56 56 17 "perf2_04_base64_controls.crexx" 66 3 40 "  call binresize result, encoded_length"
+   .srcstep 52 52 33 "perf2_04_base64_controls.crexx" 66 40 40 "  call binresize result, encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 23 52 52 0 "encoded_length" ""
+   .traceevent "A" 6 "R" "I" "r" 23 52 52 0 "length" ""
+   .srcstep 53 53 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 53 53 0 "result" ""
+   .srcstep 54 54 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 27 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "length" ""
+   bresize r27,r23
+   .srcstep 55 55 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 33 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 27 0 0 0 "result" ""
+   blen r33,r27
+   .traceevent "V" 6 "R" "I" "r" 33 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 33 0 0 0 "__inline_unused_1770" ""
+   .srcstep 57 57 17 "perf2_04_base64_controls.crexx" 67 3 19 "  input_offset = 0"
+   load r25,0
+   .traceevent "L" 4 "R" "I" "r" 25 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 57 57 0 "input_offset" ""
+   .srcstep 58 58 17 "perf2_04_base64_controls.crexx" 68 3 20 "  output_offset = 0"
+   load r26,0
+   .traceevent "L" 4 "R" "I" "r" 26 58 58 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 58 58 0 "output_offset" ""
+   .srcstep 88 88 17 "perf2_04_base64_controls.crexx" 69 3 5 "  do while input_offset < input_length"
+l2776dostart:
+   .srcstep 59 59 17 "perf2_04_base64_controls.crexx" 69 6 39 "  do while input_offset < input_length"
+   .traceevent "V" 6 "R" "I" "r" 25 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 29 0 0 0 "input_length" ""
+   ilt r36,r25,r29
+   .traceevent "O" 4 "R" "B" "r" 36 0 0 0 "" ""
+   brf l2776doend,r36
+   .srcstep 60 60 17 "perf2_04_base64_controls.crexx" 70 5 44 "    remaining = input_length - input_offset"
+   .traceevent "V" 6 "R" "I" "r" 29 60 60 0 "input_length" ""
+   .traceevent "V" 6 "R" "I" "r" 25 60 60 0 "input_offset" ""
+   isub r35,r29,r25
+   .traceevent "O" 4 "R" "I" "r" 35 60 60 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 60 60 0 "remaining" ""
+   .srcstep 61 61 17 "perf2_04_base64_controls.crexx" 71 5 40 "    byte1 = <at..u8>(input_offset) data"
+   .traceevent "V" 6 "R" "X" "r" 5 61 61 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 25 61 61 0 "input_offset" ""
+   bgetu8 r14,r5,r25
+   .traceevent "A" 6 "R" "I" "r" 14 61 61 0 "byte1" ""
+   .srcstep 62 62 17 "perf2_04_base64_controls.crexx" 72 5 14 "    byte2 = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 62 62 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 62 62 0 "byte2" ""
+   .srcstep 63 63 17 "perf2_04_base64_controls.crexx" 73 5 14 "    byte3 = 0"
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 63 63 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 63 63 0 "byte3" ""
+   .srcstep 65 65 17 "perf2_04_base64_controls.crexx" 74 5 21 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "I" "r" 35 65 65 0 "remaining" ""
+   igt r37,r35,1
+   .traceevent "O" 4 "R" "B" "r" 37 65 65 0 "" ""
+   brf l2800iffalse,r37
+   .srcstep 66 66 17 "perf2_04_base64_controls.crexx" 74 22 26 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .srcstep 64 64 17 "perf2_04_base64_controls.crexx" 74 27 66 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "X" "r" 5 64 64 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 25 64 64 0 "input_offset" ""
+   iadd r38,r25,1
+   .traceevent "O" 4 "R" "I" "r" 38 64 64 0 "" ""
+   bgetu8 r13,r5,r38
+   .traceevent "A" 6 "R" "I" "r" 13 64 64 0 "byte2" ""
+l2800iffalse:
+   .srcstep 68 68 17 "perf2_04_base64_controls.crexx" 75 5 21 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "I" "r" 35 68 68 0 "remaining" ""
+   igt r38,r35,2
+   .traceevent "O" 4 "R" "B" "r" 38 68 68 0 "" ""
+   brf l2812iffalse,r38
+   .srcstep 69 69 17 "perf2_04_base64_controls.crexx" 75 22 26 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .srcstep 67 67 17 "perf2_04_base64_controls.crexx" 75 27 66 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "X" "r" 5 67 67 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 25 67 67 0 "input_offset" ""
+   iadd r37,r25,2
+   .traceevent "O" 4 "R" "I" "r" 37 67 67 0 "" ""
+   bgetu8 r12,r5,r37
+   .traceevent "A" 6 "R" "I" "r" 12 67 67 0 "byte3" ""
+l2812iffalse:
+   .srcstep 70 70 17 "perf2_04_base64_controls.crexx" 77 5 28 "    digit1 = byte1 <idiv> 4"
+   .traceevent "V" 6 "R" "I" "r" 14 70 70 0 "byte1" ""
+   idiv r9,r14,4
+   .traceevent "O" 4 "R" "I" "r" 9 70 70 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 70 70 0 "digit1" ""
+   .srcstep 71 71 17 "perf2_04_base64_controls.crexx" 78 5 52 "    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16"
+   .traceevent "V" 6 "R" "I" "r" 14 71 71 0 "byte1" ""
+   imod r38,r14,4
+   .traceevent "O" 4 "R" "I" "r" 38 71 71 0 "" ""
+   imult r38,r38,16
+   .traceevent "O" 4 "R" "I" "r" 38 71 71 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 13 71 71 0 "byte2" ""
+   idiv r37,r13,16
+   .traceevent "O" 4 "R" "I" "r" 37 71 71 0 "" ""
+   iadd r8,r38,r37
+   .traceevent "O" 4 "R" "I" "r" 8 71 71 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 71 71 0 "digit2" ""
+   .srcstep 72 72 17 "perf2_04_base64_controls.crexx" 79 5 52 "    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64"
+   .traceevent "V" 6 "R" "I" "r" 13 72 72 0 "byte2" ""
+   imod r38,r13,16
+   .traceevent "O" 4 "R" "I" "r" 38 72 72 0 "" ""
+   imult r38,r38,4
+   .traceevent "O" 4 "R" "I" "r" 38 72 72 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 12 72 72 0 "byte3" ""
+   idiv r37,r12,64
+   .traceevent "O" 4 "R" "I" "r" 37 72 72 0 "" ""
+   iadd r0,r38,r37
+   .traceevent "O" 4 "R" "I" "r" 0 72 72 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 72 72 0 "digit3" ""
+   .srcstep 73 73 17 "perf2_04_base64_controls.crexx" 80 5 28 "    digit4 = byte3 <mod> 64"
+   .traceevent "V" 6 "R" "I" "r" 12 73 73 0 "byte3" ""
+   imod r34,r12,64
+   .traceevent "O" 4 "R" "I" "r" 34 73 73 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 73 73 0 "digit4" ""
+   .srcstep 74 74 17 "perf2_04_base64_controls.crexx" 82 5 63 "    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 27 74 74 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 74 74 0 "output_offset" ""
+   .traceevent "V" 6 "R" "X" "r" 22 74 74 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 9 74 74 0 "digit1" ""
+   bgetu8 r38,r22,r9
+   bsetu8 r27,r26,r38
+   .srcstep 75 75 17 "perf2_04_base64_controls.crexx" 83 5 67 "    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 27 75 75 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 75 75 0 "output_offset" ""
+   iadd r38,r26,1
+   .traceevent "O" 4 "R" "I" "r" 38 75 75 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 22 75 75 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 8 75 75 0 "digit2" ""
+   bgetu8 r37,r22,r8
+   bsetu8 r27,r38,r37
+   .srcstep 78 78 17 "perf2_04_base64_controls.crexx" 84 5 21 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 35 78 78 0 "remaining" ""
+   igt r38,r35,1
+   .traceevent "O" 4 "R" "B" "r" 38 78 78 0 "" ""
+   brf l2876iffalse,r38
+   .srcstep 79 79 17 "perf2_04_base64_controls.crexx" 84 22 26 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .srcstep 76 76 17 "perf2_04_base64_controls.crexx" 84 27 89 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 27 76 76 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 76 76 0 "output_offset" ""
+   iadd r37,r26,2
+   .traceevent "O" 4 "R" "I" "r" 37 76 76 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 22 76 76 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 0 76 76 0 "digit3" ""
+   bgetu8 r39,r22,r0
+   bsetu8 r27,r37,r39
+   br l2876ifend
+   .srcstep 80 80 17 "perf2_04_base64_controls.crexx" 85 5 9 "    else <at..u8>(output_offset + 2) result = 61"
+l2876iffalse:
+   .srcstep 77 77 17 "perf2_04_base64_controls.crexx" 85 10 49 "    else <at..u8>(output_offset + 2) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 27 77 77 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 77 77 0 "output_offset" ""
+   iadd r40,r26,2
+   .traceevent "O" 4 "R" "I" "r" 40 77 77 0 "" ""
+   load r41,61
+   .traceevent "L" 4 "R" "I" "r" 41 77 77 0 "" ""
+   bsetu8 r27,r40,r41
+l2876ifend:
+   .srcstep 83 83 17 "perf2_04_base64_controls.crexx" 86 5 21 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 35 83 83 0 "remaining" ""
+   igt r41,r35,2
+   .traceevent "O" 4 "R" "B" "r" 41 83 83 0 "" ""
+   brf l2899iffalse,r41
+   .srcstep 84 84 17 "perf2_04_base64_controls.crexx" 86 22 26 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .srcstep 81 81 17 "perf2_04_base64_controls.crexx" 86 27 89 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 27 81 81 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 81 81 0 "output_offset" ""
+   iadd r40,r26,3
+   .traceevent "O" 4 "R" "I" "r" 40 81 81 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 22 81 81 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 34 81 81 0 "digit4" ""
+   bgetu8 r39,r22,r34
+   bsetu8 r27,r40,r39
+   br l2899ifend
+   .srcstep 85 85 17 "perf2_04_base64_controls.crexx" 87 5 9 "    else <at..u8>(output_offset + 3) result = 61"
+l2899iffalse:
+   .srcstep 82 82 17 "perf2_04_base64_controls.crexx" 87 10 49 "    else <at..u8>(output_offset + 3) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 27 82 82 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 82 82 0 "output_offset" ""
+   iadd r38,r26,3
+   .traceevent "O" 4 "R" "I" "r" 38 82 82 0 "" ""
+   load r37,61
+   .traceevent "L" 4 "R" "I" "r" 37 82 82 0 "" ""
+   bsetu8 r27,r38,r37
+l2899ifend:
+   .srcstep 86 86 17 "perf2_04_base64_controls.crexx" 88 5 36 "    input_offset = input_offset + 3"
+   .traceevent "V" 6 "R" "I" "r" 25 86 86 0 "input_offset" ""
+   iadd r25,r25,3
+   .traceevent "O" 4 "R" "I" "r" 25 86 86 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 25 86 86 0 "input_offset" ""
+   .srcstep 87 87 17 "perf2_04_base64_controls.crexx" 89 5 38 "    output_offset = output_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 26 87 87 0 "output_offset" ""
+   iadd r26,r26,4
+   .traceevent "O" 4 "R" "I" "r" 26 87 87 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 26 87 87 0 "output_offset" ""
+l2776doinc:
+   .srcstep 89 89 17 "perf2_04_base64_controls.crexx" 90 3 6 "  end"
+   br l2776dostart
+l2776doend:
+   .srcstep 90 90 33 "perf2_04_base64_controls.crexx" 91 3 9 "  return result as .string"
+   .traceevent "V" 6 "R" "X" "r" 27 90 90 0 "result" ""
+   bcopy r1,r27
+   bintos r1
+   .traceevent "A" 6 "R" "S" "r" 1 90 90 0 "encoded" ""
+   .srcstep 99 99 6 "perf2_04_base64_controls.crexx" 27 3 9 "  select"
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "variant" ""
+   .jtable jtable4746 auto
+   jumpr r7,jtable4746
+   br l4746dispatchdefault
+l4746dispatchcase0: .jcase jtable4746 "current"
+   .srcstep 92 92 17 "perf2_04_base64_controls.crexx" 28 35 75 "    when variant = \"current\" then decoded = base64_decode_current(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 1 92 92 0 "encoded" ""
+   settp r1,256
+   call1 r4,base64_decode_current(),r1
+   .traceevent "F" 4 "R" "X" "r" 4 92 92 0 "base64_decode_current" ""
+   .traceevent "A" 6 "R" "X" "r" 4 92 92 0 "decoded" ""
+   br l4746dispatchend
+l4746dispatchcase1: .jcase jtable4746 "codepoint-poschar"
+   .srcstep 93 93 17 "perf2_04_base64_controls.crexx" 30 7 57 "      decoded = base64_decode_codepoint_poschar(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 1 93 93 0 "encoded" ""
+   settp r1,256
+   call1 r4,base64_decode_codepoint_poschar(),r1
+   .traceevent "F" 4 "R" "X" "r" 4 93 93 0 "base64_decode_codepoint_poschar" ""
+   .traceevent "A" 6 "R" "X" "r" 4 93 93 0 "decoded" ""
+   br l4746dispatchend
+l4746dispatchcase2: .jcase jtable4746 "codepoint-arithmetic"
+   .srcstep 94 94 17 "perf2_04_base64_controls.crexx" 32 7 60 "      decoded = base64_decode_codepoint_arithmetic(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 1 94 94 0 "encoded" ""
+   settp r1,256
+   call1 r4,base64_decode_codepoint_arithmetic(),r1
+   .traceevent "F" 4 "R" "X" "r" 4 94 94 0 "base64_decode_codepoint_arithmetic" ""
+   .traceevent "A" 6 "R" "X" "r" 4 94 94 0 "decoded" ""
+   br l4746dispatchend
+l4746dispatchdefault:
+   .srcstep 98 98 17 "perf2_04_base64_controls.crexx" 33 15 45 "    otherwise return fail(\"unknown VARIANT\")"
+   .srcstep 97 97 17 "perf2_04_base64_controls.crexx" 33 22 26 "    otherwise return fail(\"unknown VARIANT\")"
+   .srcstep 95 95 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   say "FAIL: unknown VARIANT"
+   .srcstep 96 96 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r41,1
+   .traceevent "L" 4 "R" "I" "r" 41 98 98 0 "" ""
+   icopy r40,r41
+   br l4681bexprend
+l4681bexprend:
+   ret r40
+l4746dispatchend:
+l60doinc:
+   .srcstep 43 43 17 "perf2_04_base64_controls.crexx" 25 4 13 "do iteration = 1 to repetitions"
+   inc r16
+   .srcstep 101 101 17 "perf2_04_base64_controls.crexx" 34 3 6 "  end"
+   br l60dostart
+l60doend:
+   .meta "perf2_04_base64_controls.main.iteration"
+   .srcstep 117 117 17 "perf2_04_base64_controls.crexx" 37 1 27 "if length(encoded) <> 1368 then"
+   .srcstep 106 106 17 "perf2_04_base64_controls.crexx" 37 4 10 "if length(encoded) <> 1368 then"
+   .srcstep 102 102 33 "perf2_04_base64_controls.crexx" 37 10 10 "if length(encoded) <> 1368 then"
+   .traceevent "V" 6 "R" "S" "r" 1 102 102 0 "encoded" ""
+   scopy r40,r1
+   .traceevent "A" 6 "R" "S" "r" 40 102 102 0 "string" ""
+   .srcstep 103 103 25 "length.crexx" 42 3 13 "  result = 0"
+   load r41,0
+   .traceevent "L" 4 "R" "I" "r" 41 103 103 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 41 103 103 0 "result" ""
+   .srcstep 104 104 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 41 117 117 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 40 117 117 0 "string" ""
+   strlen r41,r40
+   .srcstep 105 105 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 41 117 117 0 "result" ""
+   br l2937bexprend
+l2937bexprend:
+   ine r41,r41,1368
+   .traceevent "O" 4 "R" "B" "r" 41 117 117 0 "" ""
+   brf l113iffalse,r41
+   .srcstep 118 118 17 "perf2_04_base64_controls.crexx" 37 28 32 "if length(encoded) <> 1368 then"
+   .srcstep 116 116 17 "perf2_04_base64_controls.crexx" 38 3 71 "  return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 115 115 17 "perf2_04_base64_controls.crexx" 38 10 14 "  return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 112 112 33 "perf2_04_base64_controls.crexx" 274 7 14 "  arg message = .string"
+   .srcstep 111 111 17 "perf2_04_base64_controls.crexx" 38 55 61 "  return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 107 107 33 "perf2_04_base64_controls.crexx" 38 61 61 "  return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .traceevent "V" 6 "R" "S" "r" 1 107 107 0 "encoded" ""
+   scopy r38,r1
+   .traceevent "A" 6 "R" "S" "r" 38 107 107 0 "string" ""
+   .srcstep 108 108 25 "length.crexx" 42 3 13 "  result = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 108 108 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 108 108 0 "result" ""
+   .srcstep 109 109 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 39 112 112 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 38 112 112 0 "string" ""
+   strlen r39,r38
+   .srcstep 110 110 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 39 112 112 0 "result" ""
+   br l2969bexprend
+l2969bexprend:
+   itos r39
+   concat r40,"expected encoded length 1368, got ",r39
+   .traceevent "O" 4 "R" "S" "r" 40 112 112 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 40 112 112 0 "message" ""
+   .srcstep 113 113 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 40 113 113 0 "message" ""
+   sconcat r39,"FAIL:",r40
+   .traceevent "O" 4 "R" "S" "r" 39 113 113 0 "" ""
+   say r39
+   .srcstep 114 114 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r39,1
+   .traceevent "L" 4 "R" "I" "r" 39 116 116 0 "" ""
+   icopy r38,r39
+   br l2963bexprend
+l2963bexprend:
+   ret r38
+l113iffalse:
+   .srcstep 144 144 17 "perf2_04_base64_controls.crexx" 39 1 35 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 139 139 17 "perf2_04_base64_controls.crexx" 39 4 14 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 119 119 14 "binary.crexx" 219 7 11 "  arg left = .binary, right = .binary"
+   .traceevent "V" 6 "R" "X" "r" 5 144 144 0 "input" ""
+   .srcstep 120 120 14 "binary.crexx" 219 23 28 "  arg left = .binary, right = .binary"
+   .traceevent "V" 6 "R" "X" "r" 4 144 144 0 "decoded" ""
+   .srcstep 121 121 25 "binary.crexx" 220 3 15 "  left_len = 0"
+   load r41,0
+   .traceevent "L" 4 "R" "I" "r" 41 121 121 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 41 121 121 0 "left_len" ""
+   .srcstep 122 122 25 "binary.crexx" 221 3 16 "  right_len = 0"
+   load r40,0
+   .traceevent "L" 4 "R" "I" "r" 40 122 122 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 40 122 122 0 "right_len" ""
+   .srcstep 123 123 25 "binary.crexx" 222 13 31 "  assembler blen left_len,left"
+   .traceevent "V" 6 "R" "I" "r" 41 144 144 0 "left_len" ""
+   .traceevent "V" 6 "R" "X" "r" 5 144 144 0 "left" ""
+   blen r41,r5
+   .srcstep 124 124 25 "binary.crexx" 223 13 33 "  assembler blen right_len,right"
+   .traceevent "V" 6 "R" "I" "r" 40 144 144 0 "right_len" ""
+   .traceevent "V" 6 "R" "X" "r" 4 144 144 0 "right" ""
+   blen r40,r4
+   .traceevent "V" 6 "R" "I" "r" 41 144 144 0 "left_len" ""
+   .traceevent "V" 6 "R" "I" "r" 40 144 144 0 "right_len" ""
+   ieq r38,r41,r40
+   .traceevent "O" 4 "R" "B" "r" 38 144 144 0 "" ""
+   brf l3014iffalse,r38
+   .srcstep 125 125 25 "binary.crexx" 225 5 19 "    comparison = 0"
+   load r37,0
+   .traceevent "L" 4 "R" "I" "r" 37 125 125 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 125 125 0 "comparison" ""
+   .srcstep 126 126 25 "binary.crexx" 226 15 42 "    assembler bcmpb comparison,left,right"
+   .traceevent "V" 6 "R" "I" "r" 37 144 144 0 "comparison" ""
+   .traceevent "V" 6 "R" "X" "r" 5 144 144 0 "left" ""
+   .traceevent "V" 6 "R" "X" "r" 4 144 144 0 "right" ""
+   bcmpb r37,r5,r4
+   .traceevent "V" 6 "R" "I" "r" 37 144 144 0 "comparison" ""
+   ieq r36,r37,0
+   .traceevent "O" 4 "R" "B" "r" 36 144 144 0 "" ""
+   brf l3026iffalse,r36
+   .srcstep 127 127 25 "binary.crexx" 227 28 36 "    if comparison = 0 then return 0"
+   load r35,0
+   .traceevent "L" 4 "R" "I" "r" 35 144 144 0 "" ""
+   icopy r37,r35
+   br l2988bexprend
+l3026iffalse:
+l3014iffalse:
+   .srcstep 128 128 25 "binary.crexx" 229 3 22 "  scan_len = left_len"
+   .traceevent "V" 6 "R" "I" "r" 41 128 128 0 "left_len" ""
+   icopy r39,r41
+   .traceevent "A" 6 "R" "I" "r" 39 128 128 0 "scan_len" ""
+   .traceevent "V" 6 "R" "I" "r" 40 144 144 0 "right_len" ""
+   .traceevent "V" 6 "R" "I" "r" 39 144 144 0 "scan_len" ""
+   ilt r38,r40,r39
+   .traceevent "O" 4 "R" "B" "r" 38 144 144 0 "" ""
+   brf l3035iffalse,r38
+   .srcstep 129 129 25 "binary.crexx" 230 32 52 "  if right_len < scan_len then scan_len = right_len"
+   .traceevent "V" 6 "R" "I" "r" 40 129 129 0 "right_len" ""
+   icopy r39,r40
+   .traceevent "A" 6 "R" "I" "r" 39 129 129 0 "scan_len" ""
+l3035iffalse:
+   .srcstep 130 130 25 "binary.crexx" 231 6 16 "  do offset = 0 to scan_len - 1"
+   load r37,0
+   .traceevent "L" 4 "R" "I" "r" 37 130 130 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 130 130 0 "offset" ""
+   .srcstep 131 131 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+   .traceevent "V" 6 "R" "I" "r" 39 144 144 0 "scan_len" ""
+   isub r35,r39,1
+   .traceevent "O" 4 "R" "I" "r" 35 144 144 0 "" ""
+l3042dostart:
+   .srcstep 131 131 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+   igt r34,r37,r35
+   brt l3042doend,r34
+   .srcstep 132 132 25 "binary.crexx" 232 5 18 "    left_byte = 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 132 132 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 132 132 0 "left_byte" ""
+   .srcstep 133 133 25 "binary.crexx" 233 5 19 "    right_byte = 0"
+   load r36,0
+   .traceevent "L" 4 "R" "I" "r" 36 133 133 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 133 133 0 "right_byte" ""
+   .srcstep 134 134 25 "binary.crexx" 234 15 44 "    assembler getbyte left_byte,left,offset"
+   .traceevent "V" 6 "R" "I" "r" 38 144 144 0 "left_byte" ""
+   .traceevent "V" 6 "R" "X" "r" 5 144 144 0 "left" ""
+   .traceevent "V" 6 "R" "I" "r" 37 144 144 0 "offset" ""
+   getbyte r38,r5,r37
+   .srcstep 135 135 25 "binary.crexx" 235 15 46 "    assembler getbyte right_byte,right,offset"
+   .traceevent "V" 6 "R" "I" "r" 36 144 144 0 "right_byte" ""
+   .traceevent "V" 6 "R" "X" "r" 4 144 144 0 "right" ""
+   .traceevent "V" 6 "R" "I" "r" 37 144 144 0 "offset" ""
+   getbyte r36,r4,r37
+   .traceevent "V" 6 "R" "I" "r" 38 144 144 0 "left_byte" ""
+   .traceevent "V" 6 "R" "I" "r" 36 144 144 0 "right_byte" ""
+   ine r16,r38,r36
+   .traceevent "O" 4 "R" "B" "r" 16 144 144 0 "" ""
+   brf l3067iffalse,r16
+   .srcstep 136 136 25 "binary.crexx" 236 37 54 "    if left_byte <> right_byte then return offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 37 144 144 0 "offset" ""
+   iadd r15,r37,1
+   .traceevent "O" 4 "R" "I" "r" 15 144 144 0 "" ""
+   icopy r37,r15
+   br l2988bexprend
+l3067iffalse:
+l3042doinc:
+   inc r37
+   br l3042dostart
+l3042doend:
+   .traceevent "V" 6 "R" "I" "r" 41 144 144 0 "left_len" ""
+   .traceevent "V" 6 "R" "I" "r" 40 144 144 0 "right_len" ""
+   ine r38,r41,r40
+   .traceevent "O" 4 "R" "B" "r" 38 144 144 0 "" ""
+   brf l3075iffalse,r38
+   .srcstep 137 137 25 "binary.crexx" 238 33 52 "  if left_len <> right_len then return scan_len + 1"
+   .traceevent "V" 6 "R" "I" "r" 39 144 144 0 "scan_len" ""
+   iadd r37,r39,1
+   .traceevent "O" 4 "R" "I" "r" 37 144 144 0 "" ""
+   br l2988bexprend
+l3075iffalse:
+   .srcstep 138 138 25 "binary.crexx" 239 3 11 "  return 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 144 144 0 "" ""
+   icopy r37,r38
+   br l2988bexprend
+l2988bexprend:
+   ine r41,r37,0
+   .traceevent "O" 4 "R" "B" "r" 41 144 144 0 "" ""
+   brf l122iffalse,r41
+   .srcstep 145 145 17 "perf2_04_base64_controls.crexx" 39 36 40 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 143 143 17 "perf2_04_base64_controls.crexx" 39 41 87 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 142 142 17 "perf2_04_base64_controls.crexx" 39 48 52 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 140 140 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   say "FAIL: decoded bytes differ from input"
+   .srcstep 141 141 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r40,1
+   .traceevent "L" 4 "R" "I" "r" 40 143 143 0 "" ""
+   icopy r39,r40
+   br l3085bexprend
+l3085bexprend:
+   ret r39
+l122iffalse:
+   .srcstep 160 160 17 "perf2_04_base64_controls.crexx" 40 1 34 "checksum = byte_checksum(decoded)"
+   .srcstep 146 146 6 "perf2_04_base64_controls.crexx" 266 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 4 0 0 0 "decoded" ""
+   .srcstep 147 147 17 "perf2_04_base64_controls.crexx" 267 3 15 "  checksum = 0"
+   load r42,0
+   .traceevent "L" 4 "R" "I" "r" 42 147 147 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 42 147 147 0 "checksum" ""
+   .srcstep 157 157 17 "perf2_04_base64_controls.crexx" 268 3 5 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 148 148 17 "perf2_04_base64_controls.crexx" 268 6 16 "  do offset = 0 to binlength(data) - 1"
+   load r41,0
+   .traceevent "L" 4 "R" "I" "r" 41 148 148 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 41 148 148 0 "offset" ""
+   .srcstep 154 154 17 "perf2_04_base64_controls.crexx" 268 17 39 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 153 153 17 "perf2_04_base64_controls.crexx" 268 20 29 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 149 149 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 4 0 0 0 "data" ""
+   copy r40,r4
+   .srcstep 150 150 25 "binary.crexx" 45 3 10 "  len = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 150 150 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 150 150 0 "len" ""
+   .srcstep 151 151 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+   .traceevent "V" 6 "R" "I" "r" 39 0 0 0 "len" ""
+   .traceevent "V" 6 "R" "X" "r" 40 0 0 0 "data" ""
+   blen r39,r40
+   .srcstep 152 152 25 "binary.crexx" 47 3 13 "  return len"
+   .traceevent "V" 6 "R" "I" "r" 39 0 0 0 "len" ""
+   br l3113bexprend
+l3113bexprend:
+   endlife r40
+   isub r40,r39,1
+   .traceevent "O" 4 "R" "I" "r" 40 0 0 0 "" ""
+l3106dostart:
+   .srcstep 154 154 17 "perf2_04_base64_controls.crexx" 268 17 39 "  do offset = 0 to binlength(data) - 1"
+   igt r39,r41,r40
+   brt l3106doend,r39
+   .srcstep 156 156 17 "perf2_04_base64_controls.crexx" 269 5 48 "    checksum = checksum + <at..u8>(offset) data"
+   .traceevent "V" 6 "R" "I" "r" 42 156 156 0 "checksum" ""
+   .traceevent "V" 6 "R" "X" "r" 4 156 156 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 41 156 156 0 "offset" ""
+   bgetu8 r38,r4,r41
+   iadd r42,r42,r38
+   .traceevent "O" 4 "R" "I" "r" 42 156 156 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 42 156 156 0 "checksum" ""
+l3106doinc:
+   .srcstep 155 155 17 "perf2_04_base64_controls.crexx" 268 6 12 "  do offset = 0 to binlength(data) - 1"
+   inc r41
+   .srcstep 158 158 17 "perf2_04_base64_controls.crexx" 270 3 6 "  end"
+   br l3106dostart
+l3106doend:
+   .srcstep 159 159 33 "perf2_04_base64_controls.crexx" 271 3 9 "  return checksum"
+   .traceevent "V" 6 "R" "I" "r" 42 159 159 0 "checksum" ""
+   copy r3,r42
+   .traceevent "A" 6 "R" "I" "r" 3 159 159 0 "checksum" ""
+   .srcstep 166 166 17 "perf2_04_base64_controls.crexx" 41 1 22 "if checksum <> 130560 then"
+   .traceevent "V" 6 "R" "I" "r" 42 166 166 0 "checksum" ""
+   ine r41,r42,130560
+   .traceevent "O" 4 "R" "B" "r" 41 166 166 0 "" ""
+   brf l135iffalse,r41
+   .srcstep 167 167 17 "perf2_04_base64_controls.crexx" 41 23 27 "if checksum <> 130560 then"
+   .srcstep 165 165 17 "perf2_04_base64_controls.crexx" 42 3 60 "  return fail(\"expected checksum 130560, got \" || checksum)"
+   .meta "perf2_04_base64_controls.main.checksum"="b" ".int" r3
+   .srcstep 164 164 17 "perf2_04_base64_controls.crexx" 42 10 14 "  return fail(\"expected checksum 130560, got \" || checksum)"
+   .srcstep 161 161 33 "perf2_04_base64_controls.crexx" 274 7 14 "  arg message = .string"
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 161 161 0 "checksum" ""
+   concat r40,"expected checksum 130560, got ",r3
+   .traceevent "O" 4 "R" "S" "r" 40 161 161 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 40 161 161 0 "message" ""
+   .srcstep 162 162 17 "perf2_04_base64_controls.crexx" 275 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 40 162 162 0 "message" ""
+   sconcat r39,"FAIL:",r40
+   .traceevent "O" 4 "R" "S" "r" 39 162 162 0 "" ""
+   say r39
+   .srcstep 163 163 17 "perf2_04_base64_controls.crexx" 276 3 11 "  return 1"
+   load r39,1
+   .traceevent "L" 4 "R" "I" "r" 39 165 165 0 "" ""
+   icopy r38,r39
+   br l4692bexprend
+l4692bexprend:
+   ret r38
+l135iffalse:
+   .srcstep 176 176 17 "perf2_04_base64_controls.crexx" 44 1 52 "say \"PERF2-04-BASE64-CONTROL variant=\" || variant ,"
+   .srcstep 175 175 17 "perf2_04_base64_controls.crexx" 44 5 39 "say \"PERF2-04-BASE64-CONTROL variant=\" || variant ,"
+   .srcstep 168 168 33 "perf2_04_base64_controls.crexx" 46 25 25 "    \"encoded_length=\" || length(encoded) ,"
+   .traceevent "V" 6 "R" "S" "r" 7 168 168 0 "variant" ""
+   concat r41,"PERF2-04-BASE64-CONTROL variant=",r7
+   .traceevent "O" 4 "R" "S" "r" 41 168 168 0 "" ""
+   sconcat r41,r41,"repetitions="
+   .traceevent "O" 4 "R" "S" "r" 41 168 168 0 "" ""
+   itos r6
+   .traceevent "V" 6 "R" "S" "r" 6 168 168 0 "repetitions" ""
+   concat r41,r41,r6
+   .traceevent "O" 4 "R" "S" "r" 41 168 168 0 "" ""
+   sconcat r43,r41,"encoded_length="
+   .traceevent "O" 4 "R" "S" "r" 43 168 168 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 43 168 168 0 "__inline_lhs_144_147" ""
+   .srcstep 174 174 33 "perf2_04_base64_controls.crexx" 46 23 25 "    \"encoded_length=\" || length(encoded) ,"
+   .traceevent "V" 6 "R" "S" "r" 43 176 176 0 "__inline_lhs_144_147" ""
+   .srcstep 173 173 17 "perf2_04_base64_controls.crexx" 46 26 32 "    \"encoded_length=\" || length(encoded) ,"
+   .srcstep 169 169 33 "perf2_04_base64_controls.crexx" 46 32 32 "    \"encoded_length=\" || length(encoded) ,"
+   .traceevent "V" 6 "R" "S" "r" 1 169 169 0 "encoded" ""
+   scopy r40,r1
+   .traceevent "A" 6 "R" "S" "r" 40 169 169 0 "string" ""
+   .srcstep 170 170 25 "length.crexx" 42 3 13 "  result = 0"
+   load r41,0
+   .traceevent "L" 4 "R" "I" "r" 41 170 170 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 41 170 170 0 "result" ""
+   .srcstep 171 171 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 41 176 176 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 40 176 176 0 "string" ""
+   strlen r41,r40
+   .srcstep 172 172 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 41 176 176 0 "result" ""
+   br l4728bexprend
+l4728bexprend:
+   itos r41
+   concat r41,r43,r41
+   .traceevent "O" 4 "R" "S" "r" 41 176 176 0 "" ""
+   scopy r40,r41
+   br l4705bexprend
+l4705bexprend:
+   sconcat r40,r40,"checksum="
+   .traceevent "O" 4 "R" "S" "r" 40 176 176 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 176 176 0 "checksum" ""
+   concat r40,r40,r3
+   .traceevent "O" 4 "R" "S" "r" 40 176 176 0 "" ""
+   sconcat r40,r40,"publication=attribution-only"
+   .traceevent "O" 4 "R" "S" "r" 40 176 176 0 "" ""
+   say r40
+   .srcstep 177 177 17 "perf2_04_base64_controls.crexx" 49 1 36 "say \"PASS: PERF2-04 Base64 control\""
+   say "PASS: PERF2-04 Base64 control"
+   .srcstep 178 178 17 "perf2_04_base64_controls.crexx" 50 1 9 "return 0"
+   ret 0
+   .meta "perf2_04_base64_controls.main.argv"
+   .meta "perf2_04_base64_controls.main.checksum"
+   .meta "perf2_04_base64_controls.main.decoded"
+   .meta "perf2_04_base64_controls.main.encoded"
+   .meta "perf2_04_base64_controls.main.input"
+   .meta "perf2_04_base64_controls.main.repetitions"
+   .meta "perf2_04_base64_controls.main.variant"
+
+base64_decode_current() .locals=39
+   .meta "perf2_04_base64_controls.base64_decode_current"="b" ".binary" base64_decode_current() "encoded=.string"
+   .srcstep 521 521 17 "perf2_04_base64_controls.crexx" 93 1 43 "base64_decode_current: procedure = .binary"
+   numsci 18,1,1
+   .srcstep 239 239 17 "perf2_04_base64_controls.crexx" 94 7 24 "  arg encoded = .string"
+   .meta "perf2_04_base64_controls.base64_decode_current.encoded"="b" ".string" a1
+   .meta "perf2_04_base64_controls.base64_decode_current.result"="b" ".binary" r6
+   .srcstep 240 240 17 "perf2_04_base64_controls.crexx" 101 3 19 "  result = .binary"
+   null r6
+   .srcstep 244 244 17 "perf2_04_base64_controls.crexx" 96 3 35 "  encoded_length = length(encoded)"
+   .srcstep 241 241 33 "perf2_04_base64_controls.crexx" 96 35 35 "  encoded_length = length(encoded)"
+   .traceevent "V" 6 "R" "S" "a" 1 241 241 0 "encoded" ""
+   scopy r8,a1
+   .traceevent "A" 6 "R" "S" "r" 8 241 241 0 "string" ""
+   .srcstep 242 242 25 "length.crexx" 42 3 13 "  result = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 242 242 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 242 242 0 "result" ""
+   .srcstep 243 243 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 8 0 0 0 "string" ""
+   strlen r7,r8
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+   copy r1,r7
+   .traceevent "A" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+   .srcstep 245 245 17 "perf2_04_base64_controls.crexx" 97 3 14 "  padding = 0"
+   .meta "perf2_04_base64_controls.base64_decode_current.alphabet"="b" ".string" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .meta "perf2_04_base64_controls.base64_decode_current.encoded_length"="b" ".int" r1
+   .meta "perf2_04_base64_controls.base64_decode_current.padding"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 245 245 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 245 245 0 "padding" ""
+   .srcstep 276 276 17 "perf2_04_base64_controls.crexx" 98 3 46 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .srcstep 274 274 17 "perf2_04_base64_controls.crexx" 98 6 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r9
+   .srcstep 246 246 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r9
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r10
+   .srcstep 247 247 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r10
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r12
+   .srcstep 248 248 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r12
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r14
+   .srcstep 249 249 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r14
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r15
+   .srcstep 250 250 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r15
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r17
+   .srcstep 251 251 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r17
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r19
+   .srcstep 252 252 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r19
+   .srcstep 253 253 33 "perf2_04_base64_controls.crexx" 98 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 253 253 0 "encoded" ""
+   scopy r18,a1
+   .traceevent "A" 6 "R" "S" "r" 18 253 253 0 "string" ""
+   .srcstep 254 254 33 "perf2_04_base64_controls.crexx" 98 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 254 254 0 "encoded_length" ""
+   .traceevent "A" 6 "R" "I" "r" 1 254 254 0 "start" ""
+   .srcstep 255 255 33 "perf2_04_base64_controls.crexx" 98 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   load r11," "
+   .traceevent "L" 4 "R" "S" "r" 11 255 255 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 255 255 0 "pad" ""
+   .srcstep 256 256 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 256 256 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 256 256 0 "pad_index" ""
+   .srcstep 257 257 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 257 257 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 257 257 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 1 276 276 0 "start" ""
+   ilt r20,r1,1
+   .traceevent "O" 4 "R" "B" "r" 20 276 276 0 "" ""
+   brf l2354iffalse,r20
+   .srcstep 258 258 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2354iffalse:
+   .srcstep 259 259 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 14 276 276 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 11 276 276 0 "pad" ""
+   strlen r14,r11
+   .traceevent "V" 6 "R" "I" "r" 14 276 276 0 "pad_length" ""
+   ine r20,r14,1
+   .traceevent "O" 4 "R" "B" "r" 20 276 276 0 "" ""
+   brf l2373iffalse,r20
+   .srcstep 260 260 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2373iffalse:
+   .srcstep 261 261 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 19 276 276 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 18 276 276 0 "string" ""
+   strlen r19,r18
+   .srcstep 262 262 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 1 262 262 0 "start" ""
+   isub r17,r1,1
+   .traceevent "O" 4 "R" "I" "r" 17 262 262 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 262 262 0 "start_offset" ""
+   .srcstep 263 263 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 19 263 263 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 17 263 263 0 "start_offset" ""
+   isub r9,r19,r17
+   .traceevent "O" 4 "R" "I" "r" 9 263 263 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 263 263 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 9 276 276 0 "available" ""
+   ilt r20,r9,0
+   .traceevent "O" 4 "R" "B" "r" 20 276 276 0 "" ""
+   brf l2393iffalse,r20
+   .srcstep 264 264 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 264 264 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 264 264 0 "available" ""
+l2393iffalse:
+   .srcstep 265 265 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 265 265 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 265 265 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 9 276 276 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 10 276 276 0 "copy_length" ""
+   ilt r20,r9,r10
+   .traceevent "O" 4 "R" "B" "r" 20 276 276 0 "" ""
+   brf l2434iffalse,r20
+   .srcstep 266 266 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 9 266 266 0 "available" ""
+   icopy r10,r9
+   .traceevent "A" 6 "R" "I" "r" 10 266 266 0 "copy_length" ""
+l2434iffalse:
+   .traceevent "V" 6 "R" "I" "r" 10 276 276 0 "copy_length" ""
+   igt r20,r10,0
+   .traceevent "O" 4 "R" "B" "r" 20 276 276 0 "" ""
+   brf l2441iffalse,r20
+   .traceevent "V" 6 "R" "I" "r" 17 276 276 0 "start_offset" ""
+   ieq r21,r17,0
+   .traceevent "O" 4 "R" "B" "r" 21 276 276 0 "" ""
+   brf l2448andend,r21
+   .traceevent "V" 6 "R" "I" "r" 10 276 276 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 19 276 276 0 "string_length" ""
+   ieq r21,r10,r19
+   .traceevent "O" 4 "R" "B" "r" 21 276 276 0 "" ""
+l2448andend:
+   .traceevent "O" 4 "R" "B" "r" 21 276 276 0 "" ""
+   brf l2447andfalse,r21
+   .traceevent "V" 6 "R" "I" "r" 19 276 276 0 "string_length" ""
+   ieq r22,r19,1
+   .traceevent "O" 4 "R" "B" "r" 22 276 276 0 "" ""
+   br l2447andend
+l2447andfalse:
+   load r22,0
+l2447andend:
+   .traceevent "O" 4 "R" "B" "r" 22 276 276 0 "" ""
+   brf l2446iffalse,r22
+   .srcstep 267 267 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 18 276 276 0 "string" ""
+   scopy r22,r18
+   br l2310bexprend
+l2446iffalse:
+   .srcstep 268 268 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 18 276 276 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 17 276 276 0 "start_offset" ""
+   setstrpos r18,r17
+   .srcstep 269 269 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 16 276 276 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 18 276 276 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 10 276 276 0 "copy_length" ""
+   substring r16,r18,r10
+l2441iffalse:
+   .srcstep 270 270 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 10 270 270 0 "copy_length" ""
+   isub r15,1,r10
+   .traceevent "O" 4 "R" "I" "r" 15 270 270 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 270 270 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 276 276 0 "padding_length" ""
+   igt r22,r15,0
+   .traceevent "O" 4 "R" "B" "r" 22 276 276 0 "" ""
+   brf l2472iffalse,r22
+   .srcstep 271 271 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 12 276 276 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 11 276 276 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 13 276 276 0 "pad_index" ""
+   strchar r12,r11,r13
+   .srcstep 272 272 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 16 276 276 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 12 276 276 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 15 276 276 0 "padding_length" ""
+   padstr r16,r12,r15
+l2472iffalse:
+   .srcstep 273 273 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 16 276 276 0 "result" ""
+   scopy r22,r16
+   br l2310bexprend
+l2310bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   req r22,r22,"="
+   .traceevent "O" 4 "R" "B" "r" 22 276 276 0 "" ""
+   brf l484iffalse,r22
+   .srcstep 277 277 17 "perf2_04_base64_controls.crexx" 98 47 51 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .srcstep 275 275 17 "perf2_04_base64_controls.crexx" 98 52 73 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 275 275 0 "padding" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 275 275 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 275 275 0 "padding" ""
+l484iffalse:
+   .srcstep 308 308 17 "perf2_04_base64_controls.crexx" 99 3 50 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .srcstep 306 306 17 "perf2_04_base64_controls.crexx" 99 6 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r22
+   .srcstep 278 278 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r22
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r20
+   .srcstep 279 279 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r20
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r18
+   .srcstep 280 280 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r18
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r16
+   .srcstep 281 281 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r16
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r15
+   .srcstep 282 282 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r15
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r12
+   .srcstep 283 283 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r12
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r10
+   .srcstep 284 284 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r10
+   .srcstep 285 285 33 "perf2_04_base64_controls.crexx" 99 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 285 285 0 "encoded" ""
+   scopy r11,a1
+   .traceevent "A" 6 "R" "S" "r" 11 285 285 0 "string" ""
+   .srcstep 286 286 33 "perf2_04_base64_controls.crexx" 99 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 286 286 0 "encoded_length" ""
+   isub r13,r1,1
+   .traceevent "O" 4 "R" "I" "r" 13 286 286 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 286 286 0 "start" ""
+   .srcstep 287 287 33 "perf2_04_base64_controls.crexx" 99 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   load r19," "
+   .traceevent "L" 4 "R" "S" "r" 19 287 287 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 19 287 287 0 "pad" ""
+   .srcstep 288 288 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 288 288 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 288 288 0 "pad_index" ""
+   .srcstep 289 289 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 289 289 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 14 289 289 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 13 308 308 0 "start" ""
+   ilt r9,r13,1
+   .traceevent "O" 4 "R" "B" "r" 9 308 308 0 "" ""
+   brf l2533iffalse,r9
+   .srcstep 290 290 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2533iffalse:
+   .srcstep 291 291 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 16 308 308 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 19 308 308 0 "pad" ""
+   strlen r16,r19
+   .traceevent "V" 6 "R" "I" "r" 16 308 308 0 "pad_length" ""
+   ine r9,r16,1
+   .traceevent "O" 4 "R" "B" "r" 9 308 308 0 "" ""
+   brf l2552iffalse,r9
+   .srcstep 292 292 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2552iffalse:
+   .srcstep 293 293 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 10 308 308 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 11 308 308 0 "string" ""
+   strlen r10,r11
+   .srcstep 294 294 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 13 294 294 0 "start" ""
+   isub r12,r13,1
+   .traceevent "O" 4 "R" "I" "r" 12 294 294 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 294 294 0 "start_offset" ""
+   .srcstep 295 295 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 10 295 295 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 12 295 295 0 "start_offset" ""
+   isub r22,r10,r12
+   .traceevent "O" 4 "R" "I" "r" 22 295 295 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 295 295 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 22 308 308 0 "available" ""
+   ilt r9,r22,0
+   .traceevent "O" 4 "R" "B" "r" 9 308 308 0 "" ""
+   brf l2572iffalse,r9
+   .srcstep 296 296 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r22,0
+   .traceevent "L" 4 "R" "I" "r" 22 296 296 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 296 296 0 "available" ""
+l2572iffalse:
+   .srcstep 297 297 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 297 297 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 297 297 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 22 308 308 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 20 308 308 0 "copy_length" ""
+   ilt r9,r22,r20
+   .traceevent "O" 4 "R" "B" "r" 9 308 308 0 "" ""
+   brf l2613iffalse,r9
+   .srcstep 298 298 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 22 298 298 0 "available" ""
+   icopy r20,r22
+   .traceevent "A" 6 "R" "I" "r" 20 298 298 0 "copy_length" ""
+l2613iffalse:
+   .traceevent "V" 6 "R" "I" "r" 20 308 308 0 "copy_length" ""
+   igt r9,r20,0
+   .traceevent "O" 4 "R" "B" "r" 9 308 308 0 "" ""
+   brf l2620iffalse,r9
+   .traceevent "V" 6 "R" "I" "r" 12 308 308 0 "start_offset" ""
+   ieq r23,r12,0
+   .traceevent "O" 4 "R" "B" "r" 23 308 308 0 "" ""
+   brf l2627andend,r23
+   .traceevent "V" 6 "R" "I" "r" 20 308 308 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 10 308 308 0 "string_length" ""
+   ieq r23,r20,r10
+   .traceevent "O" 4 "R" "B" "r" 23 308 308 0 "" ""
+l2627andend:
+   .traceevent "O" 4 "R" "B" "r" 23 308 308 0 "" ""
+   brf l2626andfalse,r23
+   .traceevent "V" 6 "R" "I" "r" 10 308 308 0 "string_length" ""
+   ieq r24,r10,1
+   .traceevent "O" 4 "R" "B" "r" 24 308 308 0 "" ""
+   br l2626andend
+l2626andfalse:
+   load r24,0
+l2626andend:
+   .traceevent "O" 4 "R" "B" "r" 24 308 308 0 "" ""
+   brf l2625iffalse,r24
+   .srcstep 299 299 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 11 308 308 0 "string" ""
+   scopy r24,r11
+   br l2487bexprend
+l2625iffalse:
+   .srcstep 300 300 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 11 308 308 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 12 308 308 0 "start_offset" ""
+   setstrpos r11,r12
+   .srcstep 301 301 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 14 308 308 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 11 308 308 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 20 308 308 0 "copy_length" ""
+   substring r14,r11,r20
+l2620iffalse:
+   .srcstep 302 302 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 20 302 302 0 "copy_length" ""
+   isub r15,1,r20
+   .traceevent "O" 4 "R" "I" "r" 15 302 302 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 302 302 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 308 308 0 "padding_length" ""
+   igt r24,r15,0
+   .traceevent "O" 4 "R" "B" "r" 24 308 308 0 "" ""
+   brf l2651iffalse,r24
+   .srcstep 303 303 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 18 308 308 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 19 308 308 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 17 308 308 0 "pad_index" ""
+   strchar r18,r19,r17
+   .srcstep 304 304 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 14 308 308 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 18 308 308 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 15 308 308 0 "padding_length" ""
+   padstr r14,r18,r15
+l2651iffalse:
+   .srcstep 305 305 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 14 308 308 0 "result" ""
+   scopy r24,r14
+   br l2487bexprend
+l2487bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   req r24,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 24 308 308 0 "" ""
+   brf l498iffalse,r24
+   .srcstep 309 309 17 "perf2_04_base64_controls.crexx" 99 51 55 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .srcstep 307 307 17 "perf2_04_base64_controls.crexx" 99 56 77 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 307 307 0 "padding" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 307 307 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 307 307 0 "padding" ""
+l498iffalse:
+   .srcstep 310 310 17 "perf2_04_base64_controls.crexx" 100 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+   .meta "perf2_04_base64_controls.base64_decode_current.output_length"="b" ".int" r3
+   .traceevent "V" 6 "R" "I" "r" 1 310 310 0 "encoded_length" ""
+   idiv r24,r1,4
+   .traceevent "O" 4 "R" "I" "r" 24 310 310 0 "" ""
+   imult r24,r24,3
+   .traceevent "O" 4 "R" "I" "r" 24 310 310 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 5 310 310 0 "padding" ""
+   isub r3,r24,r5
+   .traceevent "O" 4 "R" "I" "r" 3 310 310 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 310 310 0 "output_length" ""
+   .srcstep 315 315 17 "perf2_04_base64_controls.crexx" 102 3 39 "  call binresize result, output_length"
+   .srcstep 311 311 33 "perf2_04_base64_controls.crexx" 102 39 39 "  call binresize result, output_length"
+   .traceevent "V" 6 "R" "I" "r" 3 311 311 0 "output_length" ""
+   .traceevent "A" 6 "R" "I" "r" 3 311 311 0 "length" ""
+   .srcstep 312 312 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r27,0
+   .traceevent "L" 4 "R" "I" "r" 27 312 312 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 27 312 312 0 "result" ""
+   .srcstep 313 313 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "length" ""
+   bresize r6,r3
+   .srcstep 314 314 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+   blen r27,r6
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 27 0 0 0 "__inline_unused_1770" ""
+   .srcstep 316 316 17 "perf2_04_base64_controls.crexx" 104 3 19 "  input_offset = 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.input_offset"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 316 316 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 316 316 0 "input_offset" ""
+   .srcstep 317 317 17 "perf2_04_base64_controls.crexx" 105 3 20 "  output_offset = 0"
+   .meta "perf2_04_base64_controls.base64_decode_current.output_offset"="b" ".int" r4
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 317 317 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 317 317 0 "output_offset" ""
+   .srcstep 518 518 17 "perf2_04_base64_controls.crexx" 106 3 5 "  do while input_offset <= encoded_length"
+l521dostart:
+   .srcstep 318 318 17 "perf2_04_base64_controls.crexx" 106 6 42 "  do while input_offset <= encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+   ilte r16,r2,r1
+   .traceevent "O" 4 "R" "B" "r" 16 0 0 0 "" ""
+   brf l521doend,r16
+   .srcstep 363 363 17 "perf2_04_base64_controls.crexx" 107 5 78 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit1"="b" ".int" r20
+   .srcstep 362 362 17 "perf2_04_base64_controls.crexx" 107 14 34 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   .srcstep 348 348 33 "perf2_04_base64_controls.crexx" 131 7 16 "  arg character = .string, alphabet = .string"
+   .srcstep 347 347 17 "perf2_04_base64_controls.crexx" 107 35 41 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r13
+   .srcstep 319 319 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r13
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r12
+   .srcstep 320 320 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r12
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r10
+   .srcstep 321 321 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r10
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r28
+   .srcstep 322 322 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r28
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r29
+   .srcstep 323 323 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r29
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r32
+   .srcstep 324 324 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r32
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r34
+   .srcstep 325 325 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r34
+   .srcstep 326 326 33 "perf2_04_base64_controls.crexx" 107 41 41 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   .traceevent "V" 6 "R" "S" "a" 1 326 326 0 "encoded" ""
+   scopy r33,a1
+   .traceevent "A" 6 "R" "S" "r" 33 326 326 0 "string" ""
+   .srcstep 327 327 33 "perf2_04_base64_controls.crexx" 107 41 41 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   .traceevent "V" 6 "R" "I" "r" 2 327 327 0 "input_offset" ""
+   icopy r31,r2
+   .traceevent "A" 6 "R" "I" "r" 31 327 327 0 "start" ""
+   .srcstep 328 328 33 "perf2_04_base64_controls.crexx" 107 41 41 "    digit1 = base64_digit_current(substr(encoded, input_offset, 1), alphabet)"
+   load r11," "
+   .traceevent "L" 4 "R" "S" "r" 11 328 328 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 328 328 0 "pad" ""
+   .srcstep 329 329 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 329 329 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 329 329 0 "pad_index" ""
+   .srcstep 330 330 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r30,""
+   .traceevent "L" 4 "R" "S" "r" 30 330 330 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 30 330 330 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 31 348 348 0 "start" ""
+   ilt r35,r31,1
+   .traceevent "O" 4 "R" "B" "r" 35 348 348 0 "" ""
+   brf l3365iffalse,r35
+   .srcstep 331 331 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3365iffalse:
+   .srcstep 332 332 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 28 348 348 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 11 348 348 0 "pad" ""
+   strlen r28,r11
+   .traceevent "V" 6 "R" "I" "r" 28 348 348 0 "pad_length" ""
+   ine r35,r28,1
+   .traceevent "O" 4 "R" "B" "r" 35 348 348 0 "" ""
+   brf l3384iffalse,r35
+   .srcstep 333 333 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3384iffalse:
+   .srcstep 334 334 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 34 348 348 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 33 348 348 0 "string" ""
+   strlen r34,r33
+   .srcstep 335 335 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 31 335 335 0 "start" ""
+   isub r32,r31,1
+   .traceevent "O" 4 "R" "I" "r" 32 335 335 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 335 335 0 "start_offset" ""
+   .srcstep 336 336 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 34 336 336 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 32 336 336 0 "start_offset" ""
+   isub r13,r34,r32
+   .traceevent "O" 4 "R" "I" "r" 13 336 336 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 336 336 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 13 348 348 0 "available" ""
+   ilt r35,r13,0
+   .traceevent "O" 4 "R" "B" "r" 35 348 348 0 "" ""
+   brf l3404iffalse,r35
+   .srcstep 337 337 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 337 337 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 337 337 0 "available" ""
+l3404iffalse:
+   .srcstep 338 338 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 338 338 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 338 338 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 13 348 348 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 12 348 348 0 "copy_length" ""
+   ilt r35,r13,r12
+   .traceevent "O" 4 "R" "B" "r" 35 348 348 0 "" ""
+   brf l3445iffalse,r35
+   .srcstep 339 339 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 13 339 339 0 "available" ""
+   icopy r12,r13
+   .traceevent "A" 6 "R" "I" "r" 12 339 339 0 "copy_length" ""
+l3445iffalse:
+   .traceevent "V" 6 "R" "I" "r" 12 348 348 0 "copy_length" ""
+   igt r35,r12,0
+   .traceevent "O" 4 "R" "B" "r" 35 348 348 0 "" ""
+   brf l3452iffalse,r35
+   .traceevent "V" 6 "R" "I" "r" 32 348 348 0 "start_offset" ""
+   ieq r36,r32,0
+   .traceevent "O" 4 "R" "B" "r" 36 348 348 0 "" ""
+   brf l3459andend,r36
+   .traceevent "V" 6 "R" "I" "r" 12 348 348 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 34 348 348 0 "string_length" ""
+   ieq r36,r12,r34
+   .traceevent "O" 4 "R" "B" "r" 36 348 348 0 "" ""
+l3459andend:
+   .traceevent "O" 4 "R" "B" "r" 36 348 348 0 "" ""
+   brf l3458andfalse,r36
+   .traceevent "V" 6 "R" "I" "r" 34 348 348 0 "string_length" ""
+   ieq r37,r34,1
+   .traceevent "O" 4 "R" "B" "r" 37 348 348 0 "" ""
+   br l3458andend
+l3458andfalse:
+   load r37,0
+l3458andend:
+   .traceevent "O" 4 "R" "B" "r" 37 348 348 0 "" ""
+   brf l3457iffalse,r37
+   .srcstep 340 340 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 33 348 348 0 "string" ""
+   scopy r15,r33
+   br l3321bexprend
+l3457iffalse:
+   .srcstep 341 341 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 33 348 348 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 32 348 348 0 "start_offset" ""
+   setstrpos r33,r32
+   .srcstep 342 342 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 30 348 348 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 33 348 348 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 12 348 348 0 "copy_length" ""
+   substring r30,r33,r12
+l3452iffalse:
+   .srcstep 343 343 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 12 343 343 0 "copy_length" ""
+   isub r29,1,r12
+   .traceevent "O" 4 "R" "I" "r" 29 343 343 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 343 343 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 29 348 348 0 "padding_length" ""
+   igt r37,r29,0
+   .traceevent "O" 4 "R" "B" "r" 37 348 348 0 "" ""
+   brf l3483iffalse,r37
+   .srcstep 344 344 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 10 348 348 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 11 348 348 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 9 348 348 0 "pad_index" ""
+   strchar r10,r11,r9
+   .srcstep 345 345 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 30 348 348 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 10 348 348 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 29 348 348 0 "padding_length" ""
+   padstr r30,r10,r29
+l3483iffalse:
+   .srcstep 346 346 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 30 348 348 0 "result" ""
+   scopy r15,r30
+   br l3321bexprend
+l3321bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   .traceevent "A" 6 "R" "S" "r" 15 348 348 0 "character" ""
+   .srcstep 357 357 17 "perf2_04_base64_controls.crexx" 132 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 356 356 17 "perf2_04_base64_controls.crexx" 132 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"="b" ".int" r37
+   .srcstep 349 349 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r37
+   .srcstep 350 350 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 15 350 350 0 "character" ""
+   scopy r34,r15
+   .traceevent "A" 6 "R" "S" "r" 34 350 350 0 "needle" ""
+   .srcstep 351 351 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   load r35,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 35 351 351 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 351 351 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 34 357 357 0 "needle" ""
+   seq r33,r34,""
+   .traceevent "O" 4 "R" "B" "r" 33 357 357 0 "" ""
+   brt l3526orend,r33
+   .traceevent "V" 6 "R" "S" "r" 35 357 357 0 "haystack" ""
+   seq r33,r35,""
+   .traceevent "O" 4 "R" "B" "r" 33 357 357 0 "" ""
+l3526orend:
+   .traceevent "O" 4 "R" "B" "r" 33 357 357 0 "" ""
+   brf l3525iffalse,r33
+   .srcstep 352 352 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r32,0
+   .traceevent "L" 4 "R" "I" "r" 32 357 357 0 "" ""
+   icopy r33,r32
+   br l3504bexprend
+l3525iffalse:
+   .srcstep 353 353 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 353 353 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 353 353 0 "found_position" ""
+   .srcstep 354 354 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 37 357 357 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 34 357 357 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 35 357 357 0 "haystack" ""
+   strpos r37,r34,r35
+   .srcstep 355 355 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 37 357 357 0 "found_position" ""
+   icopy r33,r37
+   br l3504bexprend
+l3504bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"
+   isub r14,r33,1
+   .traceevent "O" 4 "R" "I" "r" 14 357 357 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 357 357 0 "digit" ""
+   .srcstep 359 359 17 "perf2_04_base64_controls.crexx" 133 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 14 359 359 0 "digit" ""
+   ilt r37,r14,0
+   .traceevent "O" 4 "R" "B" "r" 37 359 359 0 "" ""
+   brf l3545iffalse,r37
+   .srcstep 360 360 17 "perf2_04_base64_controls.crexx" 133 16 20 "  if digit < 0 then return 0"
+   .srcstep 358 358 17 "perf2_04_base64_controls.crexx" 133 21 29 "  if digit < 0 then return 0"
+   load r35,0
+   .traceevent "L" 4 "R" "I" "r" 35 363 363 0 "" ""
+   icopy r37,r35
+   br l3317bexprend
+l3545iffalse:
+   .srcstep 361 361 17 "perf2_04_base64_controls.crexx" 134 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 14 363 363 0 "digit" ""
+   icopy r37,r14
+   br l3317bexprend
+l3317bexprend:
+   icopy r20,r37
+   .traceevent "A" 6 "R" "I" "r" 20 363 363 0 "digit1" ""
+   .srcstep 408 408 17 "perf2_04_base64_controls.crexx" 108 5 82 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit2"="b" ".int" r19
+   .srcstep 407 407 17 "perf2_04_base64_controls.crexx" 108 14 34 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   .srcstep 393 393 33 "perf2_04_base64_controls.crexx" 131 7 16 "  arg character = .string, alphabet = .string"
+   .srcstep 392 392 17 "perf2_04_base64_controls.crexx" 108 35 41 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r34
+   .srcstep 364 364 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r34
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r33
+   .srcstep 365 365 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r33
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r31
+   .srcstep 366 366 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r31
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r29
+   .srcstep 367 367 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r29
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r28
+   .srcstep 368 368 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r28
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r13
+   .srcstep 369 369 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r13
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r11
+   .srcstep 370 370 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r11
+   .srcstep 371 371 33 "perf2_04_base64_controls.crexx" 108 41 41 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   .traceevent "V" 6 "R" "S" "a" 1 371 371 0 "encoded" ""
+   scopy r12,a1
+   .traceevent "A" 6 "R" "S" "r" 12 371 371 0 "string" ""
+   .srcstep 372 372 33 "perf2_04_base64_controls.crexx" 108 41 41 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   .traceevent "V" 6 "R" "I" "r" 2 372 372 0 "input_offset" ""
+   iadd r14,r2,1
+   .traceevent "O" 4 "R" "I" "r" 14 372 372 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 372 372 0 "start" ""
+   .srcstep 373 373 33 "perf2_04_base64_controls.crexx" 108 41 41 "    digit2 = base64_digit_current(substr(encoded, input_offset + 1, 1), alphabet)"
+   load r32," "
+   .traceevent "L" 4 "R" "S" "r" 32 373 373 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 32 373 373 0 "pad" ""
+   .srcstep 374 374 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r30,0
+   .traceevent "L" 4 "R" "I" "r" 30 374 374 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 374 374 0 "pad_index" ""
+   .srcstep 375 375 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r15,""
+   .traceevent "L" 4 "R" "S" "r" 15 375 375 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 15 375 375 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 14 393 393 0 "start" ""
+   ilt r10,r14,1
+   .traceevent "O" 4 "R" "B" "r" 10 393 393 0 "" ""
+   brf l3782iffalse,r10
+   .srcstep 376 376 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3782iffalse:
+   .srcstep 377 377 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 29 393 393 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 32 393 393 0 "pad" ""
+   strlen r29,r32
+   .traceevent "V" 6 "R" "I" "r" 29 393 393 0 "pad_length" ""
+   ine r10,r29,1
+   .traceevent "O" 4 "R" "B" "r" 10 393 393 0 "" ""
+   brf l3801iffalse,r10
+   .srcstep 378 378 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3801iffalse:
+   .srcstep 379 379 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 11 393 393 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 12 393 393 0 "string" ""
+   strlen r11,r12
+   .srcstep 380 380 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 14 380 380 0 "start" ""
+   isub r13,r14,1
+   .traceevent "O" 4 "R" "I" "r" 13 380 380 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 380 380 0 "start_offset" ""
+   .srcstep 381 381 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 11 381 381 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 13 381 381 0 "start_offset" ""
+   isub r34,r11,r13
+   .traceevent "O" 4 "R" "I" "r" 34 381 381 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 381 381 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 34 393 393 0 "available" ""
+   ilt r10,r34,0
+   .traceevent "O" 4 "R" "B" "r" 10 393 393 0 "" ""
+   brf l3821iffalse,r10
+   .srcstep 382 382 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 382 382 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 382 382 0 "available" ""
+l3821iffalse:
+   .srcstep 383 383 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r33,1
+   .traceevent "L" 4 "R" "I" "r" 33 383 383 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 383 383 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 34 393 393 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 33 393 393 0 "copy_length" ""
+   ilt r10,r34,r33
+   .traceevent "O" 4 "R" "B" "r" 10 393 393 0 "" ""
+   brf l3862iffalse,r10
+   .srcstep 384 384 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 34 384 384 0 "available" ""
+   icopy r33,r34
+   .traceevent "A" 6 "R" "I" "r" 33 384 384 0 "copy_length" ""
+l3862iffalse:
+   .traceevent "V" 6 "R" "I" "r" 33 393 393 0 "copy_length" ""
+   igt r10,r33,0
+   .traceevent "O" 4 "R" "B" "r" 10 393 393 0 "" ""
+   brf l3869iffalse,r10
+   .traceevent "V" 6 "R" "I" "r" 13 393 393 0 "start_offset" ""
+   ieq r9,r13,0
+   .traceevent "O" 4 "R" "B" "r" 9 393 393 0 "" ""
+   brf l3876andend,r9
+   .traceevent "V" 6 "R" "I" "r" 33 393 393 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 11 393 393 0 "string_length" ""
+   ieq r9,r33,r11
+   .traceevent "O" 4 "R" "B" "r" 9 393 393 0 "" ""
+l3876andend:
+   .traceevent "O" 4 "R" "B" "r" 9 393 393 0 "" ""
+   brf l3875andfalse,r9
+   .traceevent "V" 6 "R" "I" "r" 11 393 393 0 "string_length" ""
+   ieq r38,r11,1
+   .traceevent "O" 4 "R" "B" "r" 38 393 393 0 "" ""
+   br l3875andend
+l3875andfalse:
+   load r38,0
+l3875andend:
+   .traceevent "O" 4 "R" "B" "r" 38 393 393 0 "" ""
+   brf l3874iffalse,r38
+   .srcstep 385 385 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 12 393 393 0 "string" ""
+   scopy r38,r12
+   br l3736bexprend
+l3874iffalse:
+   .srcstep 386 386 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 12 393 393 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 13 393 393 0 "start_offset" ""
+   setstrpos r12,r13
+   .srcstep 387 387 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 15 393 393 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 12 393 393 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 33 393 393 0 "copy_length" ""
+   substring r15,r12,r33
+l3869iffalse:
+   .srcstep 388 388 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 33 388 388 0 "copy_length" ""
+   isub r28,1,r33
+   .traceevent "O" 4 "R" "I" "r" 28 388 388 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 388 388 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 28 393 393 0 "padding_length" ""
+   igt r38,r28,0
+   .traceevent "O" 4 "R" "B" "r" 38 393 393 0 "" ""
+   brf l3900iffalse,r38
+   .srcstep 389 389 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 31 393 393 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 32 393 393 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 30 393 393 0 "pad_index" ""
+   strchar r31,r32,r30
+   .srcstep 390 390 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 15 393 393 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 31 393 393 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 28 393 393 0 "padding_length" ""
+   padstr r15,r31,r28
+l3900iffalse:
+   .srcstep 391 391 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 15 393 393 0 "result" ""
+   scopy r38,r15
+   br l3736bexprend
+l3736bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   scopy r37,r38
+   .traceevent "A" 6 "R" "S" "r" 37 393 393 0 "character" ""
+   .srcstep 402 402 17 "perf2_04_base64_controls.crexx" 132 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 401 401 17 "perf2_04_base64_controls.crexx" 132 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"="b" ".int" r38
+   .srcstep 394 394 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r38
+   .srcstep 395 395 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 37 395 395 0 "character" ""
+   scopy r33,r37
+   .traceevent "A" 6 "R" "S" "r" 33 395 395 0 "needle" ""
+   .srcstep 396 396 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   load r34,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 34 396 396 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 34 396 396 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 33 402 402 0 "needle" ""
+   seq r32,r33,""
+   .traceevent "O" 4 "R" "B" "r" 32 402 402 0 "" ""
+   brt l3943orend,r32
+   .traceevent "V" 6 "R" "S" "r" 34 402 402 0 "haystack" ""
+   seq r32,r34,""
+   .traceevent "O" 4 "R" "B" "r" 32 402 402 0 "" ""
+l3943orend:
+   .traceevent "O" 4 "R" "B" "r" 32 402 402 0 "" ""
+   brf l3942iffalse,r32
+   .srcstep 397 397 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 402 402 0 "" ""
+   icopy r32,r31
+   br l3921bexprend
+l3942iffalse:
+   .srcstep 398 398 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r38,1
+   .traceevent "L" 4 "R" "I" "r" 38 398 398 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 398 398 0 "found_position" ""
+   .srcstep 399 399 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 38 402 402 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 33 402 402 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 34 402 402 0 "haystack" ""
+   strpos r38,r33,r34
+   .srcstep 400 400 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 38 402 402 0 "found_position" ""
+   icopy r32,r38
+   br l3921bexprend
+l3921bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"
+   isub r35,r32,1
+   .traceevent "O" 4 "R" "I" "r" 35 402 402 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 402 402 0 "digit" ""
+   .srcstep 404 404 17 "perf2_04_base64_controls.crexx" 133 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 35 404 404 0 "digit" ""
+   ilt r38,r35,0
+   .traceevent "O" 4 "R" "B" "r" 38 404 404 0 "" ""
+   brf l3962iffalse,r38
+   .srcstep 405 405 17 "perf2_04_base64_controls.crexx" 133 16 20 "  if digit < 0 then return 0"
+   .srcstep 403 403 17 "perf2_04_base64_controls.crexx" 133 21 29 "  if digit < 0 then return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 408 408 0 "" ""
+   icopy r38,r34
+   br l3732bexprend
+l3962iffalse:
+   .srcstep 406 406 17 "perf2_04_base64_controls.crexx" 134 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 35 408 408 0 "digit" ""
+   icopy r38,r35
+   br l3732bexprend
+l3732bexprend:
+   icopy r19,r38
+   .traceevent "A" 6 "R" "I" "r" 19 408 408 0 "digit2" ""
+   .srcstep 438 438 17 "perf2_04_base64_controls.crexx" 109 5 49 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .meta "perf2_04_base64_controls.base64_decode_current.char3"="b" ".string" r24
+   .srcstep 437 437 17 "perf2_04_base64_controls.crexx" 109 13 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r38
+   .srcstep 409 409 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r38
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r37
+   .srcstep 410 410 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r37
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r34
+   .srcstep 411 411 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r34
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r32
+   .srcstep 412 412 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r32
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r31
+   .srcstep 413 413 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r31
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r28
+   .srcstep 414 414 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r28
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r14
+   .srcstep 415 415 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r14
+   .srcstep 416 416 33 "perf2_04_base64_controls.crexx" 109 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .traceevent "V" 6 "R" "S" "a" 1 416 416 0 "encoded" ""
+   scopy r15,a1
+   .traceevent "A" 6 "R" "S" "r" 15 416 416 0 "string" ""
+   .srcstep 417 417 33 "perf2_04_base64_controls.crexx" 109 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .traceevent "V" 6 "R" "I" "r" 2 417 417 0 "input_offset" ""
+   iadd r29,r2,2
+   .traceevent "O" 4 "R" "I" "r" 29 417 417 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 417 417 0 "start" ""
+   .srcstep 418 418 33 "perf2_04_base64_controls.crexx" 109 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   load r35," "
+   .traceevent "L" 4 "R" "S" "r" 35 418 418 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 418 418 0 "pad" ""
+   .srcstep 419 419 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 419 419 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 419 419 0 "pad_index" ""
+   .srcstep 420 420 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r30,""
+   .traceevent "L" 4 "R" "S" "r" 30 420 420 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 30 420 420 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 29 438 438 0 "start" ""
+   ilt r13,r29,1
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4016iffalse,r13
+   .srcstep 421 421 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l4016iffalse:
+   .srcstep 422 422 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 32 438 438 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 35 438 438 0 "pad" ""
+   strlen r32,r35
+   .traceevent "V" 6 "R" "I" "r" 32 438 438 0 "pad_length" ""
+   ine r13,r32,1
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4035iffalse,r13
+   .srcstep 423 423 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l4035iffalse:
+   .srcstep 424 424 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 14 438 438 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 15 438 438 0 "string" ""
+   strlen r14,r15
+   .srcstep 425 425 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 29 425 425 0 "start" ""
+   isub r28,r29,1
+   .traceevent "O" 4 "R" "I" "r" 28 425 425 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 425 425 0 "start_offset" ""
+   .srcstep 426 426 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 14 426 426 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 28 426 426 0 "start_offset" ""
+   isub r38,r14,r28
+   .traceevent "O" 4 "R" "I" "r" 38 426 426 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 426 426 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 38 438 438 0 "available" ""
+   ilt r13,r38,0
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4055iffalse,r13
+   .srcstep 427 427 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 427 427 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 427 427 0 "available" ""
+l4055iffalse:
+   .srcstep 428 428 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 428 428 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 428 428 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 38 438 438 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 37 438 438 0 "copy_length" ""
+   ilt r13,r38,r37
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4096iffalse,r13
+   .srcstep 429 429 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 38 429 429 0 "available" ""
+   icopy r37,r38
+   .traceevent "A" 6 "R" "I" "r" 37 429 429 0 "copy_length" ""
+l4096iffalse:
+   .traceevent "V" 6 "R" "I" "r" 37 438 438 0 "copy_length" ""
+   igt r13,r37,0
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4103iffalse,r13
+   .traceevent "V" 6 "R" "I" "r" 28 438 438 0 "start_offset" ""
+   ieq r12,r28,0
+   .traceevent "O" 4 "R" "B" "r" 12 438 438 0 "" ""
+   brf l4110andend,r12
+   .traceevent "V" 6 "R" "I" "r" 37 438 438 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 14 438 438 0 "string_length" ""
+   ieq r12,r37,r14
+   .traceevent "O" 4 "R" "B" "r" 12 438 438 0 "" ""
+l4110andend:
+   .traceevent "O" 4 "R" "B" "r" 12 438 438 0 "" ""
+   brf l4109andfalse,r12
+   .traceevent "V" 6 "R" "I" "r" 14 438 438 0 "string_length" ""
+   ieq r11,r14,1
+   .traceevent "O" 4 "R" "B" "r" 11 438 438 0 "" ""
+   br l4109andend
+l4109andfalse:
+   load r11,0
+l4109andend:
+   .traceevent "O" 4 "R" "B" "r" 11 438 438 0 "" ""
+   brf l4108iffalse,r11
+   .srcstep 430 430 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 15 438 438 0 "string" ""
+   scopy r13,r15
+   br l3970bexprend
+l4108iffalse:
+   .srcstep 431 431 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 15 438 438 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 28 438 438 0 "start_offset" ""
+   setstrpos r15,r28
+   .srcstep 432 432 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 30 438 438 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 15 438 438 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 37 438 438 0 "copy_length" ""
+   substring r30,r15,r37
+l4103iffalse:
+   .srcstep 433 433 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 37 433 433 0 "copy_length" ""
+   isub r31,1,r37
+   .traceevent "O" 4 "R" "I" "r" 31 433 433 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 31 433 433 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 31 438 438 0 "padding_length" ""
+   igt r13,r31,0
+   .traceevent "O" 4 "R" "B" "r" 13 438 438 0 "" ""
+   brf l4134iffalse,r13
+   .srcstep 434 434 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 34 438 438 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 35 438 438 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 33 438 438 0 "pad_index" ""
+   strchar r34,r35,r33
+   .srcstep 435 435 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 30 438 438 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 34 438 438 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 31 438 438 0 "padding_length" ""
+   padstr r30,r34,r31
+l4134iffalse:
+   .srcstep 436 436 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 30 438 438 0 "result" ""
+   scopy r13,r30
+   br l3970bexprend
+l3970bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   scopy r24,r13
+   .traceevent "A" 6 "R" "S" "r" 24 438 438 0 "char3" ""
+   .srcstep 468 468 17 "perf2_04_base64_controls.crexx" 110 5 49 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .meta "perf2_04_base64_controls.base64_decode_current.char4"="b" ".string" r22
+   .srcstep 467 467 17 "perf2_04_base64_controls.crexx" 110 13 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .meta "perf2_04_base64_controls.base64_decode_current.available"="b" ".int" r38
+   .srcstep 439 439 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r38
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"="b" ".int" r37
+   .srcstep 440 440 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r37
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"="b" ".int" r34
+   .srcstep 441 441 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r34
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"="b" ".int" r32
+   .srcstep 442 442 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r32
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"="b" ".int" r31
+   .srcstep 443 443 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r31
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"="b" ".int" r28
+   .srcstep 444 444 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r28
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"="b" ".int" r14
+   .srcstep 445 445 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r14
+   .srcstep 446 446 33 "perf2_04_base64_controls.crexx" 110 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .traceevent "V" 6 "R" "S" "a" 1 446 446 0 "encoded" ""
+   scopy r15,a1
+   .traceevent "A" 6 "R" "S" "r" 15 446 446 0 "string" ""
+   .srcstep 447 447 33 "perf2_04_base64_controls.crexx" 110 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .traceevent "V" 6 "R" "I" "r" 2 447 447 0 "input_offset" ""
+   iadd r29,r2,3
+   .traceevent "O" 4 "R" "I" "r" 29 447 447 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 447 447 0 "start" ""
+   .srcstep 448 448 33 "perf2_04_base64_controls.crexx" 110 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   load r35," "
+   .traceevent "L" 4 "R" "S" "r" 35 448 448 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 448 448 0 "pad" ""
+   .srcstep 449 449 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 449 449 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 449 449 0 "pad_index" ""
+   .srcstep 450 450 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r30,""
+   .traceevent "L" 4 "R" "S" "r" 30 450 450 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 30 450 450 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 29 468 468 0 "start" ""
+   ilt r13,r29,1
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4195iffalse,r13
+   .srcstep 451 451 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l4195iffalse:
+   .srcstep 452 452 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 32 468 468 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 35 468 468 0 "pad" ""
+   strlen r32,r35
+   .traceevent "V" 6 "R" "I" "r" 32 468 468 0 "pad_length" ""
+   ine r13,r32,1
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4214iffalse,r13
+   .srcstep 453 453 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l4214iffalse:
+   .srcstep 454 454 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 14 468 468 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 15 468 468 0 "string" ""
+   strlen r14,r15
+   .srcstep 455 455 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 29 455 455 0 "start" ""
+   isub r28,r29,1
+   .traceevent "O" 4 "R" "I" "r" 28 455 455 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 455 455 0 "start_offset" ""
+   .srcstep 456 456 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 14 456 456 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 28 456 456 0 "start_offset" ""
+   isub r38,r14,r28
+   .traceevent "O" 4 "R" "I" "r" 38 456 456 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 456 456 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 38 468 468 0 "available" ""
+   ilt r13,r38,0
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4234iffalse,r13
+   .srcstep 457 457 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 457 457 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 457 457 0 "available" ""
+l4234iffalse:
+   .srcstep 458 458 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 458 458 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 458 458 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 38 468 468 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 37 468 468 0 "copy_length" ""
+   ilt r13,r38,r37
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4275iffalse,r13
+   .srcstep 459 459 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 38 459 459 0 "available" ""
+   icopy r37,r38
+   .traceevent "A" 6 "R" "I" "r" 37 459 459 0 "copy_length" ""
+l4275iffalse:
+   .traceevent "V" 6 "R" "I" "r" 37 468 468 0 "copy_length" ""
+   igt r13,r37,0
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4282iffalse,r13
+   .traceevent "V" 6 "R" "I" "r" 28 468 468 0 "start_offset" ""
+   ieq r11,r28,0
+   .traceevent "O" 4 "R" "B" "r" 11 468 468 0 "" ""
+   brf l4289andend,r11
+   .traceevent "V" 6 "R" "I" "r" 37 468 468 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 14 468 468 0 "string_length" ""
+   ieq r11,r37,r14
+   .traceevent "O" 4 "R" "B" "r" 11 468 468 0 "" ""
+l4289andend:
+   .traceevent "O" 4 "R" "B" "r" 11 468 468 0 "" ""
+   brf l4288andfalse,r11
+   .traceevent "V" 6 "R" "I" "r" 14 468 468 0 "string_length" ""
+   ieq r10,r14,1
+   .traceevent "O" 4 "R" "B" "r" 10 468 468 0 "" ""
+   br l4288andend
+l4288andfalse:
+   load r10,0
+l4288andend:
+   .traceevent "O" 4 "R" "B" "r" 10 468 468 0 "" ""
+   brf l4287iffalse,r10
+   .srcstep 460 460 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 15 468 468 0 "string" ""
+   scopy r13,r15
+   br l4149bexprend
+l4287iffalse:
+   .srcstep 461 461 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 15 468 468 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 28 468 468 0 "start_offset" ""
+   setstrpos r15,r28
+   .srcstep 462 462 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 30 468 468 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 15 468 468 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 37 468 468 0 "copy_length" ""
+   substring r30,r15,r37
+l4282iffalse:
+   .srcstep 463 463 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 37 463 463 0 "copy_length" ""
+   isub r31,1,r37
+   .traceevent "O" 4 "R" "I" "r" 31 463 463 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 31 463 463 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 31 468 468 0 "padding_length" ""
+   igt r13,r31,0
+   .traceevent "O" 4 "R" "B" "r" 13 468 468 0 "" ""
+   brf l4313iffalse,r13
+   .srcstep 464 464 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 34 468 468 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 35 468 468 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 33 468 468 0 "pad_index" ""
+   strchar r34,r35,r33
+   .srcstep 465 465 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 30 468 468 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 34 468 468 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 31 468 468 0 "padding_length" ""
+   padstr r30,r34,r31
+l4313iffalse:
+   .srcstep 466 466 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 30 468 468 0 "result" ""
+   scopy r13,r30
+   br l4149bexprend
+l4149bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.available"
+   .meta "perf2_04_base64_controls.base64_decode_current.copy_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_character"
+   .meta "perf2_04_base64_controls.base64_decode_current.pad_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.start_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.string_length"
+   scopy r22,r13
+   .traceevent "A" 6 "R" "S" "r" 22 468 468 0 "char4" ""
+   .srcstep 469 469 17 "perf2_04_base64_controls.crexx" 111 5 15 "    digit3 = 0"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit3"="b" ".int" r18
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 469 469 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 469 469 0 "digit3" ""
+   .srcstep 470 470 17 "perf2_04_base64_controls.crexx" 112 5 15 "    digit4 = 0"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit4"="b" ".int" r17
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 470 470 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 470 470 0 "digit4" ""
+   .srcstep 487 487 17 "perf2_04_base64_controls.crexx" 113 5 20 "    if char3 <> \"=\" then digit3 = base64_digit_current(char3, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 24 487 487 0 "char3" ""
+   rne r38,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 38 487 487 0 "" ""
+   brf l575iffalse,r38
+   .srcstep 488 488 17 "perf2_04_base64_controls.crexx" 113 21 25 "    if char3 <> \"=\" then digit3 = base64_digit_current(char3, alphabet)"
+   .srcstep 486 486 17 "perf2_04_base64_controls.crexx" 113 26 72 "    if char3 <> \"=\" then digit3 = base64_digit_current(char3, alphabet)"
+   .srcstep 485 485 17 "perf2_04_base64_controls.crexx" 113 35 55 "    if char3 <> \"=\" then digit3 = base64_digit_current(char3, alphabet)"
+   .srcstep 471 471 33 "perf2_04_base64_controls.crexx" 131 7 16 "  arg character = .string, alphabet = .string"
+   .traceevent "V" 6 "R" "S" "r" 24 471 471 0 "char3" ""
+   scopy r37,r24
+   .traceevent "A" 6 "R" "S" "r" 37 471 471 0 "character" ""
+   .srcstep 480 480 17 "perf2_04_base64_controls.crexx" 132 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 479 479 17 "perf2_04_base64_controls.crexx" 132 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"="b" ".int" r34
+   .srcstep 472 472 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r34
+   .srcstep 473 473 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 37 473 473 0 "character" ""
+   scopy r32,r37
+   .traceevent "A" 6 "R" "S" "r" 32 473 473 0 "needle" ""
+   .srcstep 474 474 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   load r33,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 33 474 474 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 33 474 474 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 32 480 480 0 "needle" ""
+   seq r31,r32,""
+   .traceevent "O" 4 "R" "B" "r" 31 480 480 0 "" ""
+   brt l4361orend,r31
+   .traceevent "V" 6 "R" "S" "r" 33 480 480 0 "haystack" ""
+   seq r31,r33,""
+   .traceevent "O" 4 "R" "B" "r" 31 480 480 0 "" ""
+l4361orend:
+   .traceevent "O" 4 "R" "B" "r" 31 480 480 0 "" ""
+   brf l4360iffalse,r31
+   .srcstep 475 475 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r30,0
+   .traceevent "L" 4 "R" "I" "r" 30 480 480 0 "" ""
+   icopy r31,r30
+   br l4339bexprend
+l4360iffalse:
+   .srcstep 476 476 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r34,1
+   .traceevent "L" 4 "R" "I" "r" 34 476 476 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 476 476 0 "found_position" ""
+   .srcstep 477 477 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 34 480 480 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 32 480 480 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 33 480 480 0 "haystack" ""
+   strpos r34,r32,r33
+   .srcstep 478 478 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 34 480 480 0 "found_position" ""
+   icopy r31,r34
+   br l4339bexprend
+l4339bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"
+   isub r35,r31,1
+   .traceevent "O" 4 "R" "I" "r" 35 480 480 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 480 480 0 "digit" ""
+   .srcstep 482 482 17 "perf2_04_base64_controls.crexx" 133 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 35 482 482 0 "digit" ""
+   ilt r34,r35,0
+   .traceevent "O" 4 "R" "B" "r" 34 482 482 0 "" ""
+   brf l4380iffalse,r34
+   .srcstep 483 483 17 "perf2_04_base64_controls.crexx" 133 16 20 "  if digit < 0 then return 0"
+   .srcstep 481 481 17 "perf2_04_base64_controls.crexx" 133 21 29 "  if digit < 0 then return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 486 486 0 "" ""
+   icopy r34,r33
+   br l4328bexprend
+l4380iffalse:
+   .srcstep 484 484 17 "perf2_04_base64_controls.crexx" 134 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 35 486 486 0 "digit" ""
+   icopy r34,r35
+   br l4328bexprend
+l4328bexprend:
+   icopy r18,r34
+   .traceevent "A" 6 "R" "I" "r" 18 486 486 0 "digit3" ""
+l575iffalse:
+   .srcstep 505 505 17 "perf2_04_base64_controls.crexx" 114 5 20 "    if char4 <> \"=\" then digit4 = base64_digit_current(char4, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 22 505 505 0 "char4" ""
+   rne r38,r22,"="
+   .traceevent "O" 4 "R" "B" "r" 38 505 505 0 "" ""
+   brf l584iffalse,r38
+   .srcstep 506 506 17 "perf2_04_base64_controls.crexx" 114 21 25 "    if char4 <> \"=\" then digit4 = base64_digit_current(char4, alphabet)"
+   .srcstep 504 504 17 "perf2_04_base64_controls.crexx" 114 26 72 "    if char4 <> \"=\" then digit4 = base64_digit_current(char4, alphabet)"
+   .srcstep 503 503 17 "perf2_04_base64_controls.crexx" 114 35 55 "    if char4 <> \"=\" then digit4 = base64_digit_current(char4, alphabet)"
+   .srcstep 489 489 33 "perf2_04_base64_controls.crexx" 131 7 16 "  arg character = .string, alphabet = .string"
+   .traceevent "V" 6 "R" "S" "r" 22 489 489 0 "char4" ""
+   scopy r37,r22
+   .traceevent "A" 6 "R" "S" "r" 37 489 489 0 "character" ""
+   .srcstep 498 498 17 "perf2_04_base64_controls.crexx" 132 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 497 497 17 "perf2_04_base64_controls.crexx" 132 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"="b" ".int" r34
+   .srcstep 490 490 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r34
+   .srcstep 491 491 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 37 491 491 0 "character" ""
+   scopy r32,r37
+   .traceevent "A" 6 "R" "S" "r" 32 491 491 0 "needle" ""
+   .srcstep 492 492 33 "perf2_04_base64_controls.crexx" 132 14 14 "  digit = pos(character, alphabet) - 1"
+   load r33,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 33 492 492 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 33 492 492 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 32 498 498 0 "needle" ""
+   seq r31,r32,""
+   .traceevent "O" 4 "R" "B" "r" 31 498 498 0 "" ""
+   brt l4421orend,r31
+   .traceevent "V" 6 "R" "S" "r" 33 498 498 0 "haystack" ""
+   seq r31,r33,""
+   .traceevent "O" 4 "R" "B" "r" 31 498 498 0 "" ""
+l4421orend:
+   .traceevent "O" 4 "R" "B" "r" 31 498 498 0 "" ""
+   brf l4420iffalse,r31
+   .srcstep 493 493 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r30,0
+   .traceevent "L" 4 "R" "I" "r" 30 498 498 0 "" ""
+   icopy r31,r30
+   br l4399bexprend
+l4420iffalse:
+   .srcstep 494 494 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r34,1
+   .traceevent "L" 4 "R" "I" "r" 34 494 494 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 494 494 0 "found_position" ""
+   .srcstep 495 495 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 34 498 498 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 32 498 498 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 33 498 498 0 "haystack" ""
+   strpos r34,r32,r33
+   .srcstep 496 496 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 34 498 498 0 "found_position" ""
+   icopy r31,r34
+   br l4399bexprend
+l4399bexprend:
+   .meta "perf2_04_base64_controls.base64_decode_current.found_position"
+   isub r35,r31,1
+   .traceevent "O" 4 "R" "I" "r" 35 498 498 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 498 498 0 "digit" ""
+   .srcstep 500 500 17 "perf2_04_base64_controls.crexx" 133 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 35 500 500 0 "digit" ""
+   ilt r34,r35,0
+   .traceevent "O" 4 "R" "B" "r" 34 500 500 0 "" ""
+   brf l4440iffalse,r34
+   .srcstep 501 501 17 "perf2_04_base64_controls.crexx" 133 16 20 "  if digit < 0 then return 0"
+   .srcstep 499 499 17 "perf2_04_base64_controls.crexx" 133 21 29 "  if digit < 0 then return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 504 504 0 "" ""
+   icopy r34,r33
+   br l4388bexprend
+l4440iffalse:
+   .srcstep 502 502 17 "perf2_04_base64_controls.crexx" 134 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 35 504 504 0 "digit" ""
+   icopy r34,r35
+   br l4388bexprend
+l4388bexprend:
+   icopy r17,r34
+   .traceevent "A" 6 "R" "I" "r" 17 504 504 0 "digit4" ""
+l584iffalse:
+   .srcstep 507 507 17 "perf2_04_base64_controls.crexx" 116 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+   .traceevent "V" 6 "R" "X" "r" 6 507 507 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 507 507 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 20 507 507 0 "digit1" ""
+   imult r38,r20,4
+   .traceevent "O" 4 "R" "I" "r" 38 507 507 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 19 507 507 0 "digit2" ""
+   idiv r37,r19,16
+   .traceevent "O" 4 "R" "I" "r" 37 507 507 0 "" ""
+   iadd r38,r38,r37
+   .traceevent "O" 4 "R" "I" "r" 38 507 507 0 "" ""
+   bsetu8 r6,r4,r38
+   .srcstep 508 508 17 "perf2_04_base64_controls.crexx" 117 5 38 "    output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 508 508 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 508 508 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 508 508 0 "output_offset" ""
+   .srcstep 511 511 17 "perf2_04_base64_controls.crexx" 118 5 56 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 4 511 511 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 511 511 0 "output_length" ""
+   iadd r38,r3,1
+   .traceevent "O" 4 "R" "I" "r" 38 511 511 0 "" ""
+   ilt r38,r4,r38
+   .traceevent "O" 4 "R" "B" "r" 38 511 511 0 "" ""
+   brf l615andend,r38
+   .traceevent "V" 6 "R" "S" "r" 24 511 511 0 "char3" ""
+   rne r38,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 38 511 511 0 "" ""
+l615andend:
+   .traceevent "O" 4 "R" "B" "r" 38 511 511 0 "" ""
+   brf l641iffalse,r38
+   .srcstep 512 512 17 "perf2_04_base64_controls.crexx" 118 57 61 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .srcstep 509 509 17 "perf2_04_base64_controls.crexx" 119 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+   .traceevent "V" 6 "R" "X" "r" 6 509 509 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 509 509 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 19 509 509 0 "digit2" ""
+   imod r37,r19,16
+   .traceevent "O" 4 "R" "I" "r" 37 509 509 0 "" ""
+   imult r37,r37,16
+   .traceevent "O" 4 "R" "I" "r" 37 509 509 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 18 509 509 0 "digit3" ""
+   idiv r35,r18,4
+   .traceevent "O" 4 "R" "I" "r" 35 509 509 0 "" ""
+   iadd r37,r37,r35
+   .traceevent "O" 4 "R" "I" "r" 37 509 509 0 "" ""
+   bsetu8 r6,r4,r37
+   .srcstep 510 510 17 "perf2_04_base64_controls.crexx" 120 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 510 510 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 510 510 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 510 510 0 "output_offset" ""
+l641iffalse:
+   .srcstep 515 515 17 "perf2_04_base64_controls.crexx" 122 5 56 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 4 515 515 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 515 515 0 "output_length" ""
+   iadd r38,r3,1
+   .traceevent "O" 4 "R" "I" "r" 38 515 515 0 "" ""
+   ilt r38,r4,r38
+   .traceevent "O" 4 "R" "B" "r" 38 515 515 0 "" ""
+   brf l650andend,r38
+   .traceevent "V" 6 "R" "S" "r" 22 515 515 0 "char4" ""
+   rne r38,r22,"="
+   .traceevent "O" 4 "R" "B" "r" 38 515 515 0 "" ""
+l650andend:
+   .traceevent "O" 4 "R" "B" "r" 38 515 515 0 "" ""
+   brf l674iffalse,r38
+   .srcstep 516 516 17 "perf2_04_base64_controls.crexx" 122 57 61 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .srcstep 513 513 17 "perf2_04_base64_controls.crexx" 123 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+   .traceevent "V" 6 "R" "X" "r" 6 513 513 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 513 513 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 18 513 513 0 "digit3" ""
+   imod r37,r18,4
+   .traceevent "O" 4 "R" "I" "r" 37 513 513 0 "" ""
+   imult r37,r37,64
+   .traceevent "O" 4 "R" "I" "r" 37 513 513 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 17 513 513 0 "digit4" ""
+   iadd r37,r37,r17
+   .traceevent "O" 4 "R" "I" "r" 37 513 513 0 "" ""
+   bsetu8 r6,r4,r37
+   .srcstep 514 514 17 "perf2_04_base64_controls.crexx" 124 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 514 514 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 514 514 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 514 514 0 "output_offset" ""
+l674iffalse:
+   .srcstep 517 517 17 "perf2_04_base64_controls.crexx" 126 5 36 "    input_offset = input_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 2 517 517 0 "input_offset" ""
+   iadd r2,r2,4
+   .traceevent "O" 4 "R" "I" "r" 2 517 517 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 517 517 0 "input_offset" ""
+l521doinc:
+   .srcstep 519 519 17 "perf2_04_base64_controls.crexx" 127 3 6 "  end"
+   br l521dostart
+l521doend:
+   .meta "perf2_04_base64_controls.base64_decode_current.char3"
+   .meta "perf2_04_base64_controls.base64_decode_current.char4"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit1"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit2"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit3"
+   .meta "perf2_04_base64_controls.base64_decode_current.digit4"
+   .srcstep 520 520 17 "perf2_04_base64_controls.crexx" 128 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 6 520 520 0 "result" ""
+   ret r6
+   .meta "perf2_04_base64_controls.base64_decode_current.alphabet"
+   .meta "perf2_04_base64_controls.base64_decode_current.encoded"
+   .meta "perf2_04_base64_controls.base64_decode_current.encoded_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.input_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.output_length"
+   .meta "perf2_04_base64_controls.base64_decode_current.output_offset"
+   .meta "perf2_04_base64_controls.base64_decode_current.padding"
+   .meta "perf2_04_base64_controls.base64_decode_current.result"
+
+base64_decode_codepoint_poschar() .locals=27
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar"="b" ".binary" base64_decode_codepoint_poschar() "encoded=.string"
+   .srcstep 619 619 17 "perf2_04_base64_controls.crexx" 136 1 53 "base64_decode_codepoint_poschar: procedure = .binary"
+   numsci 18,1,1
+   .srcstep 537 537 17 "perf2_04_base64_controls.crexx" 137 7 24 "  arg encoded = .string"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.encoded"="b" ".string" r9
+   brtpandt l709c,a1,512
+   scopy r9,a1
+   br l709d
+l709c:
+   swap r9,a1
+l709d:
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code1"="b" ".int" r1
+   .srcstep 538 538 17 "perf2_04_base64_controls.crexx" 139 3 15 "  code1 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code2"="b" ".int" r2
+   .srcstep 539 539 17 "perf2_04_base64_controls.crexx" 140 3 15 "  code2 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code3"="b" ".int" r3
+   .srcstep 540 540 17 "perf2_04_base64_controls.crexx" 141 3 15 "  code3 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code4"="b" ".int" r4
+   .srcstep 541 541 17 "perf2_04_base64_controls.crexx" 142 3 15 "  code4 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit1"="b" ".int" r5
+   .srcstep 542 542 17 "perf2_04_base64_controls.crexx" 143 3 16 "  digit1 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit2"="b" ".int" r6
+   .srcstep 543 543 17 "perf2_04_base64_controls.crexx" 144 3 16 "  digit2 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit3"="b" ".int" r7
+   .srcstep 544 544 17 "perf2_04_base64_controls.crexx" 145 3 16 "  digit3 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit4"="b" ".int" r8
+   .srcstep 545 545 17 "perf2_04_base64_controls.crexx" 146 3 16 "  digit4 = .int"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.result"="b" ".binary" r16
+   .srcstep 546 546 17 "perf2_04_base64_controls.crexx" 156 3 19 "  result = .binary"
+   null r16
+   .srcstep 547 547 17 "perf2_04_base64_controls.crexx" 138 3 80 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\""
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.alphabet"="b" ".string" r0
+   load r0,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 0 547 547 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 547 547 0 "alphabet" ""
+   .srcstep 551 551 17 "perf2_04_base64_controls.crexx" 147 3 35 "  encoded_length = length(encoded)"
+   .srcstep 548 548 33 "perf2_04_base64_controls.crexx" 147 35 35 "  encoded_length = length(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 9 548 548 0 "encoded" ""
+   scopy r18,r9
+   .traceevent "A" 6 "R" "S" "r" 18 548 548 0 "string" ""
+   .srcstep 549 549 25 "length.crexx" 42 3 13 "  result = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 549 549 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 549 549 0 "result" ""
+   .srcstep 550 550 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 18 0 0 0 "string" ""
+   strlen r17,r18
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 17 0 0 0 "encoded_length" ""
+   .srcstep 552 552 17 "perf2_04_base64_controls.crexx" 148 3 14 "  padding = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.encoded_length"="b" ".int" r10
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.padding"="b" ".int" r15
+   load r15,0
+   .traceevent "L" 4 "R" "I" "r" 15 552 552 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 552 552 0 "padding" ""
+   .srcstep 553 553 17 "perf2_04_base64_controls.crexx" 149 3 28 "  last = encoded_length - 1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.last"="b" ".int" r12
+   .traceevent "V" 6 "R" "I" "r" 17 553 553 0 "encoded_length" ""
+   isub r12,r17,1
+   .traceevent "O" 4 "R" "I" "r" 12 553 553 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 553 553 0 "last" ""
+   .srcstep 554 554 17 "perf2_04_base64_controls.crexx" 150 13 39 "  assembler strchar code4,encoded,last"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "code4" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "last" ""
+   strchar r4,r9,r12
+   .srcstep 556 556 17 "perf2_04_base64_controls.crexx" 151 3 16 "  if code4 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 556 556 0 "code4" ""
+   ieq r19,r4,61
+   .traceevent "O" 4 "R" "B" "r" 19 556 556 0 "" ""
+   brf l764iffalse,r19
+   .srcstep 557 557 17 "perf2_04_base64_controls.crexx" 151 17 21 "  if code4 = 61 then padding = padding + 1"
+   .srcstep 555 555 17 "perf2_04_base64_controls.crexx" 151 22 43 "  if code4 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 15 555 555 0 "padding" ""
+   iadd r15,r15,1
+   .traceevent "O" 4 "R" "I" "r" 15 555 555 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 555 555 0 "padding" ""
+l764iffalse:
+   .srcstep 558 558 17 "perf2_04_base64_controls.crexx" 152 3 18 "  last = last - 1"
+   .traceevent "V" 6 "R" "I" "r" 12 558 558 0 "last" ""
+   isub r12,r12,1
+   .traceevent "O" 4 "R" "I" "r" 12 558 558 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 558 558 0 "last" ""
+   .srcstep 559 559 17 "perf2_04_base64_controls.crexx" 153 13 39 "  assembler strchar code3,encoded,last"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "code3" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "last" ""
+   strchar r3,r9,r12
+   .srcstep 561 561 17 "perf2_04_base64_controls.crexx" 154 3 16 "  if code3 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 561 561 0 "code3" ""
+   ieq r19,r3,61
+   .traceevent "O" 4 "R" "B" "r" 19 561 561 0 "" ""
+   brf l782iffalse,r19
+   .srcstep 562 562 17 "perf2_04_base64_controls.crexx" 154 17 21 "  if code3 = 61 then padding = padding + 1"
+   .srcstep 560 560 17 "perf2_04_base64_controls.crexx" 154 22 43 "  if code3 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 15 560 560 0 "padding" ""
+   iadd r15,r15,1
+   .traceevent "O" 4 "R" "I" "r" 15 560 560 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 560 560 0 "padding" ""
+l782iffalse:
+   .srcstep 563 563 17 "perf2_04_base64_controls.crexx" 155 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.output_length"="b" ".int" r13
+   .traceevent "V" 6 "R" "I" "r" 17 563 563 0 "encoded_length" ""
+   idiv r19,r17,4
+   .traceevent "O" 4 "R" "I" "r" 19 563 563 0 "" ""
+   imult r19,r19,3
+   .traceevent "O" 4 "R" "I" "r" 19 563 563 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 15 563 563 0 "padding" ""
+   isub r13,r19,r15
+   .traceevent "O" 4 "R" "I" "r" 13 563 563 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 563 563 0 "output_length" ""
+   .srcstep 568 568 17 "perf2_04_base64_controls.crexx" 157 3 39 "  call binresize result, output_length"
+   .srcstep 564 564 33 "perf2_04_base64_controls.crexx" 157 39 39 "  call binresize result, output_length"
+   .traceevent "V" 6 "R" "I" "r" 13 564 564 0 "output_length" ""
+   .traceevent "A" 6 "R" "I" "r" 13 564 564 0 "length" ""
+   .srcstep 565 565 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r22,0
+   .traceevent "L" 4 "R" "I" "r" 22 565 565 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 565 565 0 "result" ""
+   .srcstep 566 566 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 16 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "length" ""
+   bresize r16,r13
+   .srcstep 567 567 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 16 0 0 0 "result" ""
+   blen r22,r16
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 22 0 0 0 "__inline_unused_1770" ""
+   .srcstep 569 569 17 "perf2_04_base64_controls.crexx" 159 3 19 "  input_offset = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.input_offset"="b" ".int" r11
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 569 569 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 569 569 0 "input_offset" ""
+   .srcstep 570 570 17 "perf2_04_base64_controls.crexx" 160 3 20 "  output_offset = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.output_offset"="b" ".int" r14
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 570 570 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 570 570 0 "output_offset" ""
+   .srcstep 616 616 17 "perf2_04_base64_controls.crexx" 161 3 5 "  do while input_offset < encoded_length"
+l805dostart:
+   .srcstep 571 571 17 "perf2_04_base64_controls.crexx" 161 6 41 "  do while input_offset < encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "encoded_length" ""
+   ilt r23,r11,r17
+   .traceevent "O" 4 "R" "B" "r" 23 0 0 0 "" ""
+   brf l805doend,r23
+   .srcstep 572 572 17 "perf2_04_base64_controls.crexx" 162 15 49 "    assembler strchar code1,encoded,input_offset"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "code1" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "input_offset" ""
+   strchar r1,r9,r11
+   .srcstep 573 573 17 "perf2_04_base64_controls.crexx" 163 5 28 "    next = input_offset + 1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.next"="b" ".int" r19
+   .traceevent "V" 6 "R" "I" "r" 11 573 573 0 "input_offset" ""
+   iadd r19,r11,1
+   .traceevent "O" 4 "R" "I" "r" 19 573 573 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 573 573 0 "next" ""
+   .srcstep 574 574 17 "perf2_04_base64_controls.crexx" 164 15 41 "    assembler strchar code2,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "code2" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "next" ""
+   strchar r2,r9,r19
+   .srcstep 575 575 17 "perf2_04_base64_controls.crexx" 165 5 28 "    next = input_offset + 2"
+   .traceevent "V" 6 "R" "I" "r" 11 575 575 0 "input_offset" ""
+   iadd r19,r11,2
+   .traceevent "O" 4 "R" "I" "r" 19 575 575 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 575 575 0 "next" ""
+   .srcstep 576 576 17 "perf2_04_base64_controls.crexx" 166 15 41 "    assembler strchar code3,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "code3" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "next" ""
+   strchar r3,r9,r19
+   .srcstep 577 577 17 "perf2_04_base64_controls.crexx" 167 5 28 "    next = input_offset + 3"
+   .traceevent "V" 6 "R" "I" "r" 11 577 577 0 "input_offset" ""
+   iadd r19,r11,3
+   .traceevent "O" 4 "R" "I" "r" 19 577 577 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 577 577 0 "next" ""
+   .srcstep 578 578 17 "perf2_04_base64_controls.crexx" 168 15 41 "    assembler strchar code4,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "code4" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "next" ""
+   strchar r4,r9,r19
+   .srcstep 579 579 17 "perf2_04_base64_controls.crexx" 170 5 16 "    digit1 = -1"
+   load r5,-1
+   .traceevent "L" 4 "R" "I" "r" 5 579 579 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 579 579 0 "digit1" ""
+   .srcstep 580 580 17 "perf2_04_base64_controls.crexx" 171 5 16 "    digit2 = -1"
+   load r6,-1
+   .traceevent "L" 4 "R" "I" "r" 6 580 580 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 580 580 0 "digit2" ""
+   .srcstep 581 581 17 "perf2_04_base64_controls.crexx" 172 5 15 "    digit3 = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 581 581 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 581 581 0 "digit3" ""
+   .srcstep 582 582 17 "perf2_04_base64_controls.crexx" 173 5 15 "    digit4 = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 582 582 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 582 582 0 "digit4" ""
+   .srcstep 583 583 17 "perf2_04_base64_controls.crexx" 174 15 44 "    assembler poschar digit1,alphabet,code1"
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "digit1" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "code1" ""
+   poschar r5,r0,r1
+   .srcstep 584 584 17 "perf2_04_base64_controls.crexx" 175 15 44 "    assembler poschar digit2,alphabet,code2"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "digit2" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "code2" ""
+   poschar r6,r0,r2
+   .srcstep 586 586 17 "perf2_04_base64_controls.crexx" 176 5 18 "    if digit1 < 0 then digit1 = 0"
+   .traceevent "V" 6 "R" "I" "r" 5 586 586 0 "digit1" ""
+   ilt r24,r5,0
+   .traceevent "O" 4 "R" "B" "r" 24 586 586 0 "" ""
+   brf l870iffalse,r24
+   .srcstep 587 587 17 "perf2_04_base64_controls.crexx" 176 19 23 "    if digit1 < 0 then digit1 = 0"
+   .srcstep 585 585 17 "perf2_04_base64_controls.crexx" 176 24 34 "    if digit1 < 0 then digit1 = 0"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 585 585 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 585 585 0 "digit1" ""
+l870iffalse:
+   .srcstep 589 589 17 "perf2_04_base64_controls.crexx" 177 5 18 "    if digit2 < 0 then digit2 = 0"
+   .traceevent "V" 6 "R" "I" "r" 6 589 589 0 "digit2" ""
+   ilt r24,r6,0
+   .traceevent "O" 4 "R" "B" "r" 24 589 589 0 "" ""
+   brf l877iffalse,r24
+   .srcstep 590 590 17 "perf2_04_base64_controls.crexx" 177 19 23 "    if digit2 < 0 then digit2 = 0"
+   .srcstep 588 588 17 "perf2_04_base64_controls.crexx" 177 24 34 "    if digit2 < 0 then digit2 = 0"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 588 588 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 588 588 0 "digit2" ""
+l877iffalse:
+   .srcstep 596 596 17 "perf2_04_base64_controls.crexx" 178 5 19 "    if code3 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 3 596 596 0 "code3" ""
+   ine r24,r3,61
+   .traceevent "O" 4 "R" "B" "r" 24 596 596 0 "" ""
+   brf l897iffalse,r24
+   .srcstep 597 597 17 "perf2_04_base64_controls.crexx" 178 20 24 "    if code3 <> 61 then do"
+   .srcstep 591 591 17 "perf2_04_base64_controls.crexx" 179 7 18 "      digit3 = -1"
+   load r7,-1
+   .traceevent "L" 4 "R" "I" "r" 7 591 591 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 591 591 0 "digit3" ""
+   .srcstep 592 592 17 "perf2_04_base64_controls.crexx" 180 17 46 "      assembler poschar digit3,alphabet,code3"
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "digit3" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "code3" ""
+   poschar r7,r0,r3
+   .srcstep 594 594 17 "perf2_04_base64_controls.crexx" 181 7 20 "      if digit3 < 0 then digit3 = 0"
+   .traceevent "V" 6 "R" "I" "r" 7 594 594 0 "digit3" ""
+   ilt r25,r7,0
+   .traceevent "O" 4 "R" "B" "r" 25 594 594 0 "" ""
+   brf l896iffalse,r25
+   .srcstep 595 595 17 "perf2_04_base64_controls.crexx" 181 21 25 "      if digit3 < 0 then digit3 = 0"
+   .srcstep 593 593 17 "perf2_04_base64_controls.crexx" 181 26 36 "      if digit3 < 0 then digit3 = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 593 593 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 593 593 0 "digit3" ""
+l896iffalse:
+l897iffalse:
+   .srcstep 603 603 17 "perf2_04_base64_controls.crexx" 183 5 19 "    if code4 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 4 603 603 0 "code4" ""
+   ine r25,r4,61
+   .traceevent "O" 4 "R" "B" "r" 25 603 603 0 "" ""
+   brf l917iffalse,r25
+   .srcstep 604 604 17 "perf2_04_base64_controls.crexx" 183 20 24 "    if code4 <> 61 then do"
+   .srcstep 598 598 17 "perf2_04_base64_controls.crexx" 184 7 18 "      digit4 = -1"
+   load r8,-1
+   .traceevent "L" 4 "R" "I" "r" 8 598 598 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 598 598 0 "digit4" ""
+   .srcstep 599 599 17 "perf2_04_base64_controls.crexx" 185 17 46 "      assembler poschar digit4,alphabet,code4"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "digit4" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "code4" ""
+   poschar r8,r0,r4
+   .srcstep 601 601 17 "perf2_04_base64_controls.crexx" 186 7 20 "      if digit4 < 0 then digit4 = 0"
+   .traceevent "V" 6 "R" "I" "r" 8 601 601 0 "digit4" ""
+   ilt r24,r8,0
+   .traceevent "O" 4 "R" "B" "r" 24 601 601 0 "" ""
+   brf l916iffalse,r24
+   .srcstep 602 602 17 "perf2_04_base64_controls.crexx" 186 21 25 "      if digit4 < 0 then digit4 = 0"
+   .srcstep 600 600 17 "perf2_04_base64_controls.crexx" 186 26 36 "      if digit4 < 0 then digit4 = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 600 600 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 600 600 0 "digit4" ""
+l916iffalse:
+l917iffalse:
+   .srcstep 605 605 17 "perf2_04_base64_controls.crexx" 189 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+   .traceevent "V" 6 "R" "X" "r" 16 605 605 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 14 605 605 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 5 605 605 0 "digit1" ""
+   imult r25,r5,4
+   .traceevent "O" 4 "R" "I" "r" 25 605 605 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 6 605 605 0 "digit2" ""
+   idiv r24,r6,16
+   .traceevent "O" 4 "R" "I" "r" 24 605 605 0 "" ""
+   iadd r25,r25,r24
+   .traceevent "O" 4 "R" "I" "r" 25 605 605 0 "" ""
+   bsetu8 r16,r14,r25
+   .srcstep 606 606 17 "perf2_04_base64_controls.crexx" 190 5 38 "    output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 14 606 606 0 "output_offset" ""
+   iadd r14,r14,1
+   .traceevent "O" 4 "R" "I" "r" 14 606 606 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 606 606 0 "output_offset" ""
+   .srcstep 609 609 17 "perf2_04_base64_controls.crexx" 191 5 55 "    if output_offset < output_length + 1 & code3 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 14 609 609 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 13 609 609 0 "output_length" ""
+   iadd r25,r13,1
+   .traceevent "O" 4 "R" "I" "r" 25 609 609 0 "" ""
+   ilt r25,r14,r25
+   .traceevent "O" 4 "R" "B" "r" 25 609 609 0 "" ""
+   brf l948andend,r25
+   .traceevent "V" 6 "R" "I" "r" 3 609 609 0 "code3" ""
+   ine r25,r3,61
+   .traceevent "O" 4 "R" "B" "r" 25 609 609 0 "" ""
+l948andend:
+   .traceevent "O" 4 "R" "B" "r" 25 609 609 0 "" ""
+   brf l974iffalse,r25
+   .srcstep 610 610 17 "perf2_04_base64_controls.crexx" 191 56 60 "    if output_offset < output_length + 1 & code3 <> 61 then do"
+   .srcstep 607 607 17 "perf2_04_base64_controls.crexx" 192 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+   .traceevent "V" 6 "R" "X" "r" 16 607 607 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 14 607 607 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 6 607 607 0 "digit2" ""
+   imod r24,r6,16
+   .traceevent "O" 4 "R" "I" "r" 24 607 607 0 "" ""
+   imult r24,r24,16
+   .traceevent "O" 4 "R" "I" "r" 24 607 607 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 7 607 607 0 "digit3" ""
+   idiv r26,r7,4
+   .traceevent "O" 4 "R" "I" "r" 26 607 607 0 "" ""
+   iadd r26,r24,r26
+   .traceevent "O" 4 "R" "I" "r" 26 607 607 0 "" ""
+   bsetu8 r16,r14,r26
+   .srcstep 608 608 17 "perf2_04_base64_controls.crexx" 193 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 14 608 608 0 "output_offset" ""
+   iadd r14,r14,1
+   .traceevent "O" 4 "R" "I" "r" 14 608 608 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 608 608 0 "output_offset" ""
+l974iffalse:
+   .srcstep 613 613 17 "perf2_04_base64_controls.crexx" 195 5 55 "    if output_offset < output_length + 1 & code4 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 14 613 613 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 13 613 613 0 "output_length" ""
+   iadd r26,r13,1
+   .traceevent "O" 4 "R" "I" "r" 26 613 613 0 "" ""
+   ilt r26,r14,r26
+   .traceevent "O" 4 "R" "B" "r" 26 613 613 0 "" ""
+   brf l983andend,r26
+   .traceevent "V" 6 "R" "I" "r" 4 613 613 0 "code4" ""
+   ine r26,r4,61
+   .traceevent "O" 4 "R" "B" "r" 26 613 613 0 "" ""
+l983andend:
+   .traceevent "O" 4 "R" "B" "r" 26 613 613 0 "" ""
+   brf l1007iffalse,r26
+   .srcstep 614 614 17 "perf2_04_base64_controls.crexx" 195 56 60 "    if output_offset < output_length + 1 & code4 <> 61 then do"
+   .srcstep 611 611 17 "perf2_04_base64_controls.crexx" 196 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+   .traceevent "V" 6 "R" "X" "r" 16 611 611 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 14 611 611 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 7 611 611 0 "digit3" ""
+   imod r25,r7,4
+   .traceevent "O" 4 "R" "I" "r" 25 611 611 0 "" ""
+   imult r25,r25,64
+   .traceevent "O" 4 "R" "I" "r" 25 611 611 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 8 611 611 0 "digit4" ""
+   iadd r25,r25,r8
+   .traceevent "O" 4 "R" "I" "r" 25 611 611 0 "" ""
+   bsetu8 r16,r14,r25
+   .srcstep 612 612 17 "perf2_04_base64_controls.crexx" 197 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 14 612 612 0 "output_offset" ""
+   iadd r14,r14,1
+   .traceevent "O" 4 "R" "I" "r" 14 612 612 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 612 612 0 "output_offset" ""
+l1007iffalse:
+   .srcstep 615 615 17 "perf2_04_base64_controls.crexx" 199 5 36 "    input_offset = input_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 11 615 615 0 "input_offset" ""
+   iadd r11,r11,4
+   .traceevent "O" 4 "R" "I" "r" 11 615 615 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 615 615 0 "input_offset" ""
+l805doinc:
+   .srcstep 617 617 17 "perf2_04_base64_controls.crexx" 200 3 6 "  end"
+   br l805dostart
+l805doend:
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.next"
+   .srcstep 618 618 17 "perf2_04_base64_controls.crexx" 201 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 16 618 618 0 "result" ""
+   ret r16
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.alphabet"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code2"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code3"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.code4"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit2"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit3"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.digit4"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.encoded"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.encoded_length"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.input_offset"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.last"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.output_length"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.output_offset"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.padding"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_poschar.result"
+
+base64_decode_codepoint_arithmetic() .locals=35
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic"="b" ".binary" base64_decode_codepoint_arithmetic() "encoded=.string"
+   .srcstep 777 777 17 "perf2_04_base64_controls.crexx" 203 1 56 "base64_decode_codepoint_arithmetic: procedure = .binary"
+   numsci 18,1,1
+   .srcstep 620 620 17 "perf2_04_base64_controls.crexx" 204 7 24 "  arg encoded = .string"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.encoded"="b" ".string" r4
+   brtpandt l1018c,a1,512
+   scopy r4,a1
+   br l1018d
+l1018c:
+   swap r4,a1
+l1018d:
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code1"="b" ".int" r0
+   .srcstep 621 621 17 "perf2_04_base64_controls.crexx" 205 3 15 "  code1 = .int"
+   null r0
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code2"="b" ".int" r1
+   .srcstep 622 622 17 "perf2_04_base64_controls.crexx" 206 3 15 "  code2 = .int"
+   null r1
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code3"="b" ".int" r2
+   .srcstep 623 623 17 "perf2_04_base64_controls.crexx" 207 3 15 "  code3 = .int"
+   null r2
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code4"="b" ".int" r3
+   .srcstep 624 624 17 "perf2_04_base64_controls.crexx" 208 3 15 "  code4 = .int"
+   null r3
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.result"="b" ".binary" r11
+   .srcstep 625 625 17 "perf2_04_base64_controls.crexx" 218 3 19 "  result = .binary"
+   null r11
+   .srcstep 629 629 17 "perf2_04_base64_controls.crexx" 209 3 35 "  encoded_length = length(encoded)"
+   .srcstep 626 626 33 "perf2_04_base64_controls.crexx" 209 35 35 "  encoded_length = length(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 4 626 626 0 "encoded" ""
+   scopy r13,r4
+   .traceevent "A" 6 "R" "S" "r" 13 626 626 0 "string" ""
+   .srcstep 627 627 25 "length.crexx" 42 3 13 "  result = 0"
+   load r12,0
+   .traceevent "L" 4 "R" "I" "r" 12 627 627 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 627 627 0 "result" ""
+   .srcstep 628 628 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 13 0 0 0 "string" ""
+   strlen r12,r13
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 12 0 0 0 "encoded_length" ""
+   .srcstep 630 630 17 "perf2_04_base64_controls.crexx" 210 3 14 "  padding = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.encoded_length"="b" ".int" r5
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.padding"="b" ".int" r10
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 630 630 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 630 630 0 "padding" ""
+   .srcstep 631 631 17 "perf2_04_base64_controls.crexx" 211 3 28 "  last = encoded_length - 1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.last"="b" ".int" r7
+   .traceevent "V" 6 "R" "I" "r" 12 631 631 0 "encoded_length" ""
+   isub r7,r12,1
+   .traceevent "O" 4 "R" "I" "r" 7 631 631 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 631 631 0 "last" ""
+   .srcstep 632 632 17 "perf2_04_base64_controls.crexx" 212 13 39 "  assembler strchar code4,encoded,last"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "code4" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "last" ""
+   strchar r3,r4,r7
+   .srcstep 634 634 17 "perf2_04_base64_controls.crexx" 213 3 16 "  if code4 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 3 634 634 0 "code4" ""
+   ieq r14,r3,61
+   .traceevent "O" 4 "R" "B" "r" 14 634 634 0 "" ""
+   brf l1058iffalse,r14
+   .srcstep 635 635 17 "perf2_04_base64_controls.crexx" 213 17 21 "  if code4 = 61 then padding = padding + 1"
+   .srcstep 633 633 17 "perf2_04_base64_controls.crexx" 213 22 43 "  if code4 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 10 633 633 0 "padding" ""
+   iadd r10,r10,1
+   .traceevent "O" 4 "R" "I" "r" 10 633 633 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 633 633 0 "padding" ""
+l1058iffalse:
+   .srcstep 636 636 17 "perf2_04_base64_controls.crexx" 214 3 18 "  last = last - 1"
+   .traceevent "V" 6 "R" "I" "r" 7 636 636 0 "last" ""
+   isub r7,r7,1
+   .traceevent "O" 4 "R" "I" "r" 7 636 636 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 636 636 0 "last" ""
+   .srcstep 637 637 17 "perf2_04_base64_controls.crexx" 215 13 39 "  assembler strchar code3,encoded,last"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "code3" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "last" ""
+   strchar r2,r4,r7
+   .srcstep 639 639 17 "perf2_04_base64_controls.crexx" 216 3 16 "  if code3 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 2 639 639 0 "code3" ""
+   ieq r14,r2,61
+   .traceevent "O" 4 "R" "B" "r" 14 639 639 0 "" ""
+   brf l1076iffalse,r14
+   .srcstep 640 640 17 "perf2_04_base64_controls.crexx" 216 17 21 "  if code3 = 61 then padding = padding + 1"
+   .srcstep 638 638 17 "perf2_04_base64_controls.crexx" 216 22 43 "  if code3 = 61 then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 10 638 638 0 "padding" ""
+   iadd r10,r10,1
+   .traceevent "O" 4 "R" "I" "r" 10 638 638 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 638 638 0 "padding" ""
+l1076iffalse:
+   .srcstep 641 641 17 "perf2_04_base64_controls.crexx" 217 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.output_length"="b" ".int" r8
+   .traceevent "V" 6 "R" "I" "r" 12 641 641 0 "encoded_length" ""
+   idiv r14,r12,4
+   .traceevent "O" 4 "R" "I" "r" 14 641 641 0 "" ""
+   imult r14,r14,3
+   .traceevent "O" 4 "R" "I" "r" 14 641 641 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 10 641 641 0 "padding" ""
+   isub r8,r14,r10
+   .traceevent "O" 4 "R" "I" "r" 8 641 641 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 641 641 0 "output_length" ""
+   .srcstep 646 646 17 "perf2_04_base64_controls.crexx" 219 3 39 "  call binresize result, output_length"
+   .srcstep 642 642 33 "perf2_04_base64_controls.crexx" 219 39 39 "  call binresize result, output_length"
+   .traceevent "V" 6 "R" "I" "r" 8 642 642 0 "output_length" ""
+   .traceevent "A" 6 "R" "I" "r" 8 642 642 0 "length" ""
+   .srcstep 643 643 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 643 643 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 643 643 0 "result" ""
+   .srcstep 644 644 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 11 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "length" ""
+   bresize r11,r8
+   .srcstep 645 645 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 11 0 0 0 "result" ""
+   blen r17,r11
+   .traceevent "V" 6 "R" "I" "r" 17 0 0 0 "result" ""
+   .traceevent "A" 6 "R" "I" "r" 17 0 0 0 "__inline_unused_1770" ""
+   .srcstep 647 647 17 "perf2_04_base64_controls.crexx" 221 3 19 "  input_offset = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.input_offset"="b" ".int" r6
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 647 647 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 647 647 0 "input_offset" ""
+   .srcstep 648 648 17 "perf2_04_base64_controls.crexx" 222 3 20 "  output_offset = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.output_offset"="b" ".int" r9
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 648 648 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 648 648 0 "output_offset" ""
+   .srcstep 774 774 17 "perf2_04_base64_controls.crexx" 223 3 5 "  do while input_offset < encoded_length"
+l1099dostart:
+   .srcstep 649 649 17 "perf2_04_base64_controls.crexx" 223 6 41 "  do while input_offset < encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "encoded_length" ""
+   ilt r22,r6,r12
+   .traceevent "O" 4 "R" "B" "r" 22 0 0 0 "" ""
+   brf l1099doend,r22
+   .srcstep 650 650 17 "perf2_04_base64_controls.crexx" 224 15 49 "    assembler strchar code1,encoded,input_offset"
+   .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "code1" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "input_offset" ""
+   strchar r0,r4,r6
+   .srcstep 651 651 17 "perf2_04_base64_controls.crexx" 225 5 28 "    next = input_offset + 1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.next"="b" ".int" r21
+   .traceevent "V" 6 "R" "I" "r" 6 651 651 0 "input_offset" ""
+   iadd r21,r6,1
+   .traceevent "O" 4 "R" "I" "r" 21 651 651 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 651 651 0 "next" ""
+   .srcstep 652 652 17 "perf2_04_base64_controls.crexx" 226 15 41 "    assembler strchar code2,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "code2" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "next" ""
+   strchar r1,r4,r21
+   .srcstep 653 653 17 "perf2_04_base64_controls.crexx" 227 5 28 "    next = input_offset + 2"
+   .traceevent "V" 6 "R" "I" "r" 6 653 653 0 "input_offset" ""
+   iadd r21,r6,2
+   .traceevent "O" 4 "R" "I" "r" 21 653 653 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 653 653 0 "next" ""
+   .srcstep 654 654 17 "perf2_04_base64_controls.crexx" 228 15 41 "    assembler strchar code3,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "code3" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "next" ""
+   strchar r2,r4,r21
+   .srcstep 655 655 17 "perf2_04_base64_controls.crexx" 229 5 28 "    next = input_offset + 3"
+   .traceevent "V" 6 "R" "I" "r" 6 655 655 0 "input_offset" ""
+   iadd r21,r6,3
+   .traceevent "O" 4 "R" "I" "r" 21 655 655 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 655 655 0 "next" ""
+   .srcstep 656 656 17 "perf2_04_base64_controls.crexx" 230 15 41 "    assembler strchar code4,encoded,next"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "code4" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 21 0 0 0 "next" ""
+   strchar r3,r4,r21
+   .srcstep 681 681 17 "perf2_04_base64_controls.crexx" 232 5 43 "    digit1 = base64_digit_codepoint(code1)"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit1"="b" ".int" r14
+   .srcstep 680 680 17 "perf2_04_base64_controls.crexx" 232 14 36 "    digit1 = base64_digit_codepoint(code1)"
+   .srcstep 657 657 33 "perf2_04_base64_controls.crexx" 254 7 16 "  arg codepoint = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 657 657 0 "code1" ""
+   .traceevent "A" 6 "R" "I" "r" 0 657 657 0 "codepoint" ""
+   .srcstep 676 676 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 0 676 676 0 "codepoint" ""
+   igte r23,r0,65
+   .traceevent "O" 4 "R" "B" "r" 23 676 676 0 "" ""
+   brf l4454andend,r23
+   .traceevent "V" 6 "R" "I" "r" 0 676 676 0 "codepoint" ""
+   ilte r23,r0,90
+   .traceevent "O" 4 "R" "B" "r" 23 676 676 0 "" ""
+l4454andend:
+   .traceevent "O" 4 "R" "B" "r" 23 676 676 0 "" ""
+   brf l4453iffalse,r23
+   .srcstep 677 677 17 "perf2_04_base64_controls.crexx" 256 44 48 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .srcstep 658 658 17 "perf2_04_base64_controls.crexx" 256 49 70 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .traceevent "V" 6 "R" "I" "r" 0 681 681 0 "codepoint" ""
+   isub r24,r0,65
+   .traceevent "O" 4 "R" "I" "r" 24 681 681 0 "" ""
+   icopy r14,r24
+   br l4448bexprend
+   br l4453ifend
+   .srcstep 678 678 17 "perf2_04_base64_controls.crexx" 257 5 9 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+l4453iffalse:
+   .srcstep 673 673 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 0 673 673 0 "codepoint" ""
+   igte r25,r0,97
+   .traceevent "O" 4 "R" "B" "r" 25 673 673 0 "" ""
+   brf l4466andend,r25
+   .traceevent "V" 6 "R" "I" "r" 0 673 673 0 "codepoint" ""
+   ilte r25,r0,122
+   .traceevent "O" 4 "R" "B" "r" 25 673 673 0 "" ""
+l4466andend:
+   .traceevent "O" 4 "R" "B" "r" 25 673 673 0 "" ""
+   brf l4465iffalse,r25
+   .srcstep 674 674 17 "perf2_04_base64_controls.crexx" 257 45 49 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .srcstep 659 659 17 "perf2_04_base64_controls.crexx" 257 50 71 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .traceevent "V" 6 "R" "I" "r" 0 681 681 0 "codepoint" ""
+   isub r26,r0,71
+   .traceevent "O" 4 "R" "I" "r" 26 681 681 0 "" ""
+   icopy r14,r26
+   br l4448bexprend
+   br l4465ifend
+   .srcstep 675 675 17 "perf2_04_base64_controls.crexx" 258 5 9 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+l4465iffalse:
+   .srcstep 670 670 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 0 670 670 0 "codepoint" ""
+   igte r27,r0,48
+   .traceevent "O" 4 "R" "B" "r" 27 670 670 0 "" ""
+   brf l4478andend,r27
+   .traceevent "V" 6 "R" "I" "r" 0 670 670 0 "codepoint" ""
+   ilte r27,r0,57
+   .traceevent "O" 4 "R" "B" "r" 27 670 670 0 "" ""
+l4478andend:
+   .traceevent "O" 4 "R" "B" "r" 27 670 670 0 "" ""
+   brf l4477iffalse,r27
+   .srcstep 671 671 17 "perf2_04_base64_controls.crexx" 258 44 48 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .srcstep 660 660 17 "perf2_04_base64_controls.crexx" 258 49 69 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .traceevent "V" 6 "R" "I" "r" 0 681 681 0 "codepoint" ""
+   iadd r28,r0,4
+   .traceevent "O" 4 "R" "I" "r" 28 681 681 0 "" ""
+   icopy r14,r28
+   br l4448bexprend
+   br l4477ifend
+   .srcstep 672 672 17 "perf2_04_base64_controls.crexx" 259 5 9 "    when codepoint = 43 then return 62"
+l4477iffalse:
+   .srcstep 667 667 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 0 667 667 0 "codepoint" ""
+   ieq r29,r0,43
+   .traceevent "O" 4 "R" "B" "r" 29 667 667 0 "" ""
+   brf l4489iffalse,r29
+   .srcstep 668 668 17 "perf2_04_base64_controls.crexx" 259 25 29 "    when codepoint = 43 then return 62"
+   .srcstep 661 661 17 "perf2_04_base64_controls.crexx" 259 30 39 "    when codepoint = 43 then return 62"
+   load r30,62
+   .traceevent "L" 4 "R" "I" "r" 30 681 681 0 "" ""
+   icopy r14,r30
+   br l4448bexprend
+   br l4489ifend
+   .srcstep 669 669 17 "perf2_04_base64_controls.crexx" 260 5 9 "    when codepoint = 47 then return 63"
+l4489iffalse:
+   .srcstep 664 664 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 0 664 664 0 "codepoint" ""
+   ieq r31,r0,47
+   .traceevent "O" 4 "R" "B" "r" 31 664 664 0 "" ""
+   brf l4495iffalse,r31
+   .srcstep 665 665 17 "perf2_04_base64_controls.crexx" 260 25 29 "    when codepoint = 47 then return 63"
+   .srcstep 662 662 17 "perf2_04_base64_controls.crexx" 260 30 39 "    when codepoint = 47 then return 63"
+   load r32,63
+   .traceevent "L" 4 "R" "I" "r" 32 681 681 0 "" ""
+   icopy r14,r32
+   br l4448bexprend
+   br l4495ifend
+   .srcstep 666 666 17 "perf2_04_base64_controls.crexx" 261 5 14 "    otherwise return 0"
+l4495iffalse:
+   .srcstep 663 663 17 "perf2_04_base64_controls.crexx" 261 15 23 "    otherwise return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 681 681 0 "" ""
+   icopy r14,r33
+   br l4448bexprend
+l4495ifend:
+l4489ifend:
+l4477ifend:
+l4465ifend:
+l4453ifend:
+   .srcstep 679 679 17 "perf2_04_base64_controls.crexx" 263 3 11 "  return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 681 681 0 "" ""
+   icopy r14,r33
+   br l4448bexprend
+l4448bexprend:
+   .traceevent "A" 6 "R" "I" "r" 14 681 681 0 "digit1" ""
+   .srcstep 706 706 17 "perf2_04_base64_controls.crexx" 233 5 43 "    digit2 = base64_digit_codepoint(code2)"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit2"="b" ".int" r18
+   .srcstep 705 705 17 "perf2_04_base64_controls.crexx" 233 14 36 "    digit2 = base64_digit_codepoint(code2)"
+   .srcstep 682 682 33 "perf2_04_base64_controls.crexx" 254 7 16 "  arg codepoint = .int"
+   .traceevent "V" 6 "R" "I" "r" 1 682 682 0 "code2" ""
+   .traceevent "A" 6 "R" "I" "r" 1 682 682 0 "codepoint" ""
+   .srcstep 701 701 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 1 701 701 0 "codepoint" ""
+   igte r33,r1,65
+   .traceevent "O" 4 "R" "B" "r" 33 701 701 0 "" ""
+   brf l4511andend,r33
+   .traceevent "V" 6 "R" "I" "r" 1 701 701 0 "codepoint" ""
+   ilte r33,r1,90
+   .traceevent "O" 4 "R" "B" "r" 33 701 701 0 "" ""
+l4511andend:
+   .traceevent "O" 4 "R" "B" "r" 33 701 701 0 "" ""
+   brf l4510iffalse,r33
+   .srcstep 702 702 17 "perf2_04_base64_controls.crexx" 256 44 48 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .srcstep 683 683 17 "perf2_04_base64_controls.crexx" 256 49 70 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .traceevent "V" 6 "R" "I" "r" 1 706 706 0 "codepoint" ""
+   isub r32,r1,65
+   .traceevent "O" 4 "R" "I" "r" 32 706 706 0 "" ""
+   icopy r18,r32
+   br l4505bexprend
+   br l4510ifend
+   .srcstep 703 703 17 "perf2_04_base64_controls.crexx" 257 5 9 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+l4510iffalse:
+   .srcstep 698 698 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 1 698 698 0 "codepoint" ""
+   igte r31,r1,97
+   .traceevent "O" 4 "R" "B" "r" 31 698 698 0 "" ""
+   brf l4523andend,r31
+   .traceevent "V" 6 "R" "I" "r" 1 698 698 0 "codepoint" ""
+   ilte r31,r1,122
+   .traceevent "O" 4 "R" "B" "r" 31 698 698 0 "" ""
+l4523andend:
+   .traceevent "O" 4 "R" "B" "r" 31 698 698 0 "" ""
+   brf l4522iffalse,r31
+   .srcstep 699 699 17 "perf2_04_base64_controls.crexx" 257 45 49 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .srcstep 684 684 17 "perf2_04_base64_controls.crexx" 257 50 71 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .traceevent "V" 6 "R" "I" "r" 1 706 706 0 "codepoint" ""
+   isub r30,r1,71
+   .traceevent "O" 4 "R" "I" "r" 30 706 706 0 "" ""
+   icopy r18,r30
+   br l4505bexprend
+   br l4522ifend
+   .srcstep 700 700 17 "perf2_04_base64_controls.crexx" 258 5 9 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+l4522iffalse:
+   .srcstep 695 695 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 1 695 695 0 "codepoint" ""
+   igte r29,r1,48
+   .traceevent "O" 4 "R" "B" "r" 29 695 695 0 "" ""
+   brf l4535andend,r29
+   .traceevent "V" 6 "R" "I" "r" 1 695 695 0 "codepoint" ""
+   ilte r29,r1,57
+   .traceevent "O" 4 "R" "B" "r" 29 695 695 0 "" ""
+l4535andend:
+   .traceevent "O" 4 "R" "B" "r" 29 695 695 0 "" ""
+   brf l4534iffalse,r29
+   .srcstep 696 696 17 "perf2_04_base64_controls.crexx" 258 44 48 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .srcstep 685 685 17 "perf2_04_base64_controls.crexx" 258 49 69 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .traceevent "V" 6 "R" "I" "r" 1 706 706 0 "codepoint" ""
+   iadd r28,r1,4
+   .traceevent "O" 4 "R" "I" "r" 28 706 706 0 "" ""
+   icopy r18,r28
+   br l4505bexprend
+   br l4534ifend
+   .srcstep 697 697 17 "perf2_04_base64_controls.crexx" 259 5 9 "    when codepoint = 43 then return 62"
+l4534iffalse:
+   .srcstep 692 692 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 1 692 692 0 "codepoint" ""
+   ieq r27,r1,43
+   .traceevent "O" 4 "R" "B" "r" 27 692 692 0 "" ""
+   brf l4546iffalse,r27
+   .srcstep 693 693 17 "perf2_04_base64_controls.crexx" 259 25 29 "    when codepoint = 43 then return 62"
+   .srcstep 686 686 17 "perf2_04_base64_controls.crexx" 259 30 39 "    when codepoint = 43 then return 62"
+   load r26,62
+   .traceevent "L" 4 "R" "I" "r" 26 706 706 0 "" ""
+   icopy r18,r26
+   br l4505bexprend
+   br l4546ifend
+   .srcstep 694 694 17 "perf2_04_base64_controls.crexx" 260 5 9 "    when codepoint = 47 then return 63"
+l4546iffalse:
+   .srcstep 689 689 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 1 689 689 0 "codepoint" ""
+   ieq r25,r1,47
+   .traceevent "O" 4 "R" "B" "r" 25 689 689 0 "" ""
+   brf l4552iffalse,r25
+   .srcstep 690 690 17 "perf2_04_base64_controls.crexx" 260 25 29 "    when codepoint = 47 then return 63"
+   .srcstep 687 687 17 "perf2_04_base64_controls.crexx" 260 30 39 "    when codepoint = 47 then return 63"
+   load r24,63
+   .traceevent "L" 4 "R" "I" "r" 24 706 706 0 "" ""
+   icopy r18,r24
+   br l4505bexprend
+   br l4552ifend
+   .srcstep 691 691 17 "perf2_04_base64_controls.crexx" 261 5 14 "    otherwise return 0"
+l4552iffalse:
+   .srcstep 688 688 17 "perf2_04_base64_controls.crexx" 261 15 23 "    otherwise return 0"
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 706 706 0 "" ""
+   icopy r18,r23
+   br l4505bexprend
+l4552ifend:
+l4546ifend:
+l4534ifend:
+l4522ifend:
+l4510ifend:
+   .srcstep 704 704 17 "perf2_04_base64_controls.crexx" 263 3 11 "  return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 706 706 0 "" ""
+   icopy r18,r33
+   br l4505bexprend
+l4505bexprend:
+   .traceevent "A" 6 "R" "I" "r" 18 706 706 0 "digit2" ""
+   .srcstep 707 707 17 "perf2_04_base64_controls.crexx" 234 5 15 "    digit3 = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit3"="b" ".int" r19
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 707 707 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 707 707 0 "digit3" ""
+   .srcstep 708 708 17 "perf2_04_base64_controls.crexx" 235 5 15 "    digit4 = 0"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit4"="b" ".int" r20
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 708 708 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 708 708 0 "digit4" ""
+   .srcstep 734 734 17 "perf2_04_base64_controls.crexx" 236 5 19 "    if code3 <> 61 then digit3 = base64_digit_codepoint(code3)"
+   .traceevent "V" 6 "R" "I" "r" 2 734 734 0 "code3" ""
+   ine r33,r2,61
+   .traceevent "O" 4 "R" "B" "r" 33 734 734 0 "" ""
+   brf l1157iffalse,r33
+   .srcstep 735 735 17 "perf2_04_base64_controls.crexx" 236 20 24 "    if code3 <> 61 then digit3 = base64_digit_codepoint(code3)"
+   .srcstep 733 733 17 "perf2_04_base64_controls.crexx" 236 25 63 "    if code3 <> 61 then digit3 = base64_digit_codepoint(code3)"
+   .srcstep 732 732 17 "perf2_04_base64_controls.crexx" 236 34 56 "    if code3 <> 61 then digit3 = base64_digit_codepoint(code3)"
+   .srcstep 709 709 33 "perf2_04_base64_controls.crexx" 254 7 16 "  arg codepoint = .int"
+   .traceevent "V" 6 "R" "I" "r" 2 709 709 0 "code3" ""
+   .traceevent "A" 6 "R" "I" "r" 2 709 709 0 "codepoint" ""
+   .srcstep 728 728 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 2 728 728 0 "codepoint" ""
+   igte r32,r2,65
+   .traceevent "O" 4 "R" "B" "r" 32 728 728 0 "" ""
+   brf l4568andend,r32
+   .traceevent "V" 6 "R" "I" "r" 2 728 728 0 "codepoint" ""
+   ilte r32,r2,90
+   .traceevent "O" 4 "R" "B" "r" 32 728 728 0 "" ""
+l4568andend:
+   .traceevent "O" 4 "R" "B" "r" 32 728 728 0 "" ""
+   brf l4567iffalse,r32
+   .srcstep 729 729 17 "perf2_04_base64_controls.crexx" 256 44 48 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .srcstep 710 710 17 "perf2_04_base64_controls.crexx" 256 49 70 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .traceevent "V" 6 "R" "I" "r" 2 733 733 0 "codepoint" ""
+   isub r31,r2,65
+   .traceevent "O" 4 "R" "I" "r" 31 733 733 0 "" ""
+   icopy r19,r31
+   br l4562bexprend
+   br l4567ifend
+   .srcstep 730 730 17 "perf2_04_base64_controls.crexx" 257 5 9 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+l4567iffalse:
+   .srcstep 725 725 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 2 725 725 0 "codepoint" ""
+   igte r30,r2,97
+   .traceevent "O" 4 "R" "B" "r" 30 725 725 0 "" ""
+   brf l4580andend,r30
+   .traceevent "V" 6 "R" "I" "r" 2 725 725 0 "codepoint" ""
+   ilte r30,r2,122
+   .traceevent "O" 4 "R" "B" "r" 30 725 725 0 "" ""
+l4580andend:
+   .traceevent "O" 4 "R" "B" "r" 30 725 725 0 "" ""
+   brf l4579iffalse,r30
+   .srcstep 726 726 17 "perf2_04_base64_controls.crexx" 257 45 49 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .srcstep 711 711 17 "perf2_04_base64_controls.crexx" 257 50 71 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .traceevent "V" 6 "R" "I" "r" 2 733 733 0 "codepoint" ""
+   isub r29,r2,71
+   .traceevent "O" 4 "R" "I" "r" 29 733 733 0 "" ""
+   icopy r19,r29
+   br l4562bexprend
+   br l4579ifend
+   .srcstep 727 727 17 "perf2_04_base64_controls.crexx" 258 5 9 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+l4579iffalse:
+   .srcstep 722 722 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 2 722 722 0 "codepoint" ""
+   igte r28,r2,48
+   .traceevent "O" 4 "R" "B" "r" 28 722 722 0 "" ""
+   brf l4592andend,r28
+   .traceevent "V" 6 "R" "I" "r" 2 722 722 0 "codepoint" ""
+   ilte r28,r2,57
+   .traceevent "O" 4 "R" "B" "r" 28 722 722 0 "" ""
+l4592andend:
+   .traceevent "O" 4 "R" "B" "r" 28 722 722 0 "" ""
+   brf l4591iffalse,r28
+   .srcstep 723 723 17 "perf2_04_base64_controls.crexx" 258 44 48 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .srcstep 712 712 17 "perf2_04_base64_controls.crexx" 258 49 69 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .traceevent "V" 6 "R" "I" "r" 2 733 733 0 "codepoint" ""
+   iadd r27,r2,4
+   .traceevent "O" 4 "R" "I" "r" 27 733 733 0 "" ""
+   icopy r19,r27
+   br l4562bexprend
+   br l4591ifend
+   .srcstep 724 724 17 "perf2_04_base64_controls.crexx" 259 5 9 "    when codepoint = 43 then return 62"
+l4591iffalse:
+   .srcstep 719 719 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 2 719 719 0 "codepoint" ""
+   ieq r26,r2,43
+   .traceevent "O" 4 "R" "B" "r" 26 719 719 0 "" ""
+   brf l4603iffalse,r26
+   .srcstep 720 720 17 "perf2_04_base64_controls.crexx" 259 25 29 "    when codepoint = 43 then return 62"
+   .srcstep 713 713 17 "perf2_04_base64_controls.crexx" 259 30 39 "    when codepoint = 43 then return 62"
+   load r25,62
+   .traceevent "L" 4 "R" "I" "r" 25 733 733 0 "" ""
+   icopy r19,r25
+   br l4562bexprend
+   br l4603ifend
+   .srcstep 721 721 17 "perf2_04_base64_controls.crexx" 260 5 9 "    when codepoint = 47 then return 63"
+l4603iffalse:
+   .srcstep 716 716 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 2 716 716 0 "codepoint" ""
+   ieq r24,r2,47
+   .traceevent "O" 4 "R" "B" "r" 24 716 716 0 "" ""
+   brf l4609iffalse,r24
+   .srcstep 717 717 17 "perf2_04_base64_controls.crexx" 260 25 29 "    when codepoint = 47 then return 63"
+   .srcstep 714 714 17 "perf2_04_base64_controls.crexx" 260 30 39 "    when codepoint = 47 then return 63"
+   load r23,63
+   .traceevent "L" 4 "R" "I" "r" 23 733 733 0 "" ""
+   icopy r19,r23
+   br l4562bexprend
+   br l4609ifend
+   .srcstep 718 718 17 "perf2_04_base64_controls.crexx" 261 5 14 "    otherwise return 0"
+l4609iffalse:
+   .srcstep 715 715 17 "perf2_04_base64_controls.crexx" 261 15 23 "    otherwise return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 733 733 0 "" ""
+   icopy r19,r34
+   br l4562bexprend
+l4609ifend:
+l4603ifend:
+l4591ifend:
+l4579ifend:
+l4567ifend:
+   .srcstep 731 731 17 "perf2_04_base64_controls.crexx" 263 3 11 "  return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 733 733 0 "" ""
+   icopy r19,r34
+   br l4562bexprend
+l4562bexprend:
+   .traceevent "A" 6 "R" "I" "r" 19 733 733 0 "digit3" ""
+l1157iffalse:
+   .srcstep 761 761 17 "perf2_04_base64_controls.crexx" 237 5 19 "    if code4 <> 61 then digit4 = base64_digit_codepoint(code4)"
+   .traceevent "V" 6 "R" "I" "r" 3 761 761 0 "code4" ""
+   ine r34,r3,61
+   .traceevent "O" 4 "R" "B" "r" 34 761 761 0 "" ""
+   brf l1165iffalse,r34
+   .srcstep 762 762 17 "perf2_04_base64_controls.crexx" 237 20 24 "    if code4 <> 61 then digit4 = base64_digit_codepoint(code4)"
+   .srcstep 760 760 17 "perf2_04_base64_controls.crexx" 237 25 63 "    if code4 <> 61 then digit4 = base64_digit_codepoint(code4)"
+   .srcstep 759 759 17 "perf2_04_base64_controls.crexx" 237 34 56 "    if code4 <> 61 then digit4 = base64_digit_codepoint(code4)"
+   .srcstep 736 736 33 "perf2_04_base64_controls.crexx" 254 7 16 "  arg codepoint = .int"
+   .traceevent "V" 6 "R" "I" "r" 3 736 736 0 "code4" ""
+   .traceevent "A" 6 "R" "I" "r" 3 736 736 0 "codepoint" ""
+   .srcstep 755 755 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 3 755 755 0 "codepoint" ""
+   igte r33,r3,65
+   .traceevent "O" 4 "R" "B" "r" 33 755 755 0 "" ""
+   brf l4625andend,r33
+   .traceevent "V" 6 "R" "I" "r" 3 755 755 0 "codepoint" ""
+   ilte r33,r3,90
+   .traceevent "O" 4 "R" "B" "r" 33 755 755 0 "" ""
+l4625andend:
+   .traceevent "O" 4 "R" "B" "r" 33 755 755 0 "" ""
+   brf l4624iffalse,r33
+   .srcstep 756 756 17 "perf2_04_base64_controls.crexx" 256 44 48 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .srcstep 737 737 17 "perf2_04_base64_controls.crexx" 256 49 70 "    when codepoint >= 65 & codepoint <= 90 then return codepoint - 65"
+   .traceevent "V" 6 "R" "I" "r" 3 760 760 0 "codepoint" ""
+   isub r32,r3,65
+   .traceevent "O" 4 "R" "I" "r" 32 760 760 0 "" ""
+   icopy r20,r32
+   br l4619bexprend
+   br l4624ifend
+   .srcstep 757 757 17 "perf2_04_base64_controls.crexx" 257 5 9 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+l4624iffalse:
+   .srcstep 752 752 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 3 752 752 0 "codepoint" ""
+   igte r31,r3,97
+   .traceevent "O" 4 "R" "B" "r" 31 752 752 0 "" ""
+   brf l4637andend,r31
+   .traceevent "V" 6 "R" "I" "r" 3 752 752 0 "codepoint" ""
+   ilte r31,r3,122
+   .traceevent "O" 4 "R" "B" "r" 31 752 752 0 "" ""
+l4637andend:
+   .traceevent "O" 4 "R" "B" "r" 31 752 752 0 "" ""
+   brf l4636iffalse,r31
+   .srcstep 753 753 17 "perf2_04_base64_controls.crexx" 257 45 49 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .srcstep 738 738 17 "perf2_04_base64_controls.crexx" 257 50 71 "    when codepoint >= 97 & codepoint <= 122 then return codepoint - 71"
+   .traceevent "V" 6 "R" "I" "r" 3 760 760 0 "codepoint" ""
+   isub r30,r3,71
+   .traceevent "O" 4 "R" "I" "r" 30 760 760 0 "" ""
+   icopy r20,r30
+   br l4619bexprend
+   br l4636ifend
+   .srcstep 754 754 17 "perf2_04_base64_controls.crexx" 258 5 9 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+l4636iffalse:
+   .srcstep 749 749 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 3 749 749 0 "codepoint" ""
+   igte r29,r3,48
+   .traceevent "O" 4 "R" "B" "r" 29 749 749 0 "" ""
+   brf l4649andend,r29
+   .traceevent "V" 6 "R" "I" "r" 3 749 749 0 "codepoint" ""
+   ilte r29,r3,57
+   .traceevent "O" 4 "R" "B" "r" 29 749 749 0 "" ""
+l4649andend:
+   .traceevent "O" 4 "R" "B" "r" 29 749 749 0 "" ""
+   brf l4648iffalse,r29
+   .srcstep 750 750 17 "perf2_04_base64_controls.crexx" 258 44 48 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .srcstep 739 739 17 "perf2_04_base64_controls.crexx" 258 49 69 "    when codepoint >= 48 & codepoint <= 57 then return codepoint + 4"
+   .traceevent "V" 6 "R" "I" "r" 3 760 760 0 "codepoint" ""
+   iadd r28,r3,4
+   .traceevent "O" 4 "R" "I" "r" 28 760 760 0 "" ""
+   icopy r20,r28
+   br l4619bexprend
+   br l4648ifend
+   .srcstep 751 751 17 "perf2_04_base64_controls.crexx" 259 5 9 "    when codepoint = 43 then return 62"
+l4648iffalse:
+   .srcstep 746 746 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 3 746 746 0 "codepoint" ""
+   ieq r27,r3,43
+   .traceevent "O" 4 "R" "B" "r" 27 746 746 0 "" ""
+   brf l4660iffalse,r27
+   .srcstep 747 747 17 "perf2_04_base64_controls.crexx" 259 25 29 "    when codepoint = 43 then return 62"
+   .srcstep 740 740 17 "perf2_04_base64_controls.crexx" 259 30 39 "    when codepoint = 43 then return 62"
+   load r26,62
+   .traceevent "L" 4 "R" "I" "r" 26 760 760 0 "" ""
+   icopy r20,r26
+   br l4619bexprend
+   br l4660ifend
+   .srcstep 748 748 17 "perf2_04_base64_controls.crexx" 260 5 9 "    when codepoint = 47 then return 63"
+l4660iffalse:
+   .srcstep 743 743 6 "perf2_04_base64_controls.crexx" 255 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "r" 3 743 743 0 "codepoint" ""
+   ieq r25,r3,47
+   .traceevent "O" 4 "R" "B" "r" 25 743 743 0 "" ""
+   brf l4666iffalse,r25
+   .srcstep 744 744 17 "perf2_04_base64_controls.crexx" 260 25 29 "    when codepoint = 47 then return 63"
+   .srcstep 741 741 17 "perf2_04_base64_controls.crexx" 260 30 39 "    when codepoint = 47 then return 63"
+   load r24,63
+   .traceevent "L" 4 "R" "I" "r" 24 760 760 0 "" ""
+   icopy r20,r24
+   br l4619bexprend
+   br l4666ifend
+   .srcstep 745 745 17 "perf2_04_base64_controls.crexx" 261 5 14 "    otherwise return 0"
+l4666iffalse:
+   .srcstep 742 742 17 "perf2_04_base64_controls.crexx" 261 15 23 "    otherwise return 0"
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 760 760 0 "" ""
+   icopy r20,r23
+   br l4619bexprend
+l4666ifend:
+l4660ifend:
+l4648ifend:
+l4636ifend:
+l4624ifend:
+   .srcstep 758 758 17 "perf2_04_base64_controls.crexx" 263 3 11 "  return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 760 760 0 "" ""
+   icopy r20,r33
+   br l4619bexprend
+l4619bexprend:
+   .traceevent "A" 6 "R" "I" "r" 20 760 760 0 "digit4" ""
+l1165iffalse:
+   .srcstep 763 763 17 "perf2_04_base64_controls.crexx" 239 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+   .traceevent "V" 6 "R" "X" "r" 11 763 763 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 9 763 763 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 14 763 763 0 "digit1" ""
+   imult r34,r14,4
+   .traceevent "O" 4 "R" "I" "r" 34 763 763 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 18 763 763 0 "digit2" ""
+   idiv r33,r18,16
+   .traceevent "O" 4 "R" "I" "r" 33 763 763 0 "" ""
+   iadd r34,r34,r33
+   .traceevent "O" 4 "R" "I" "r" 34 763 763 0 "" ""
+   bsetu8 r11,r9,r34
+   .srcstep 764 764 17 "perf2_04_base64_controls.crexx" 240 5 38 "    output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 9 764 764 0 "output_offset" ""
+   iadd r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 764 764 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 764 764 0 "output_offset" ""
+   .srcstep 767 767 17 "perf2_04_base64_controls.crexx" 241 5 55 "    if output_offset < output_length + 1 & code3 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 9 767 767 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 8 767 767 0 "output_length" ""
+   iadd r34,r8,1
+   .traceevent "O" 4 "R" "I" "r" 34 767 767 0 "" ""
+   ilt r34,r9,r34
+   .traceevent "O" 4 "R" "B" "r" 34 767 767 0 "" ""
+   brf l1196andend,r34
+   .traceevent "V" 6 "R" "I" "r" 2 767 767 0 "code3" ""
+   ine r34,r2,61
+   .traceevent "O" 4 "R" "B" "r" 34 767 767 0 "" ""
+l1196andend:
+   .traceevent "O" 4 "R" "B" "r" 34 767 767 0 "" ""
+   brf l1222iffalse,r34
+   .srcstep 768 768 17 "perf2_04_base64_controls.crexx" 241 56 60 "    if output_offset < output_length + 1 & code3 <> 61 then do"
+   .srcstep 765 765 17 "perf2_04_base64_controls.crexx" 242 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+   .traceevent "V" 6 "R" "X" "r" 11 765 765 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 9 765 765 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 18 765 765 0 "digit2" ""
+   imod r33,r18,16
+   .traceevent "O" 4 "R" "I" "r" 33 765 765 0 "" ""
+   imult r33,r33,16
+   .traceevent "O" 4 "R" "I" "r" 33 765 765 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 19 765 765 0 "digit3" ""
+   idiv r32,r19,4
+   .traceevent "O" 4 "R" "I" "r" 32 765 765 0 "" ""
+   iadd r33,r33,r32
+   .traceevent "O" 4 "R" "I" "r" 33 765 765 0 "" ""
+   bsetu8 r11,r9,r33
+   .srcstep 766 766 17 "perf2_04_base64_controls.crexx" 243 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 9 766 766 0 "output_offset" ""
+   iadd r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 766 766 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 766 766 0 "output_offset" ""
+l1222iffalse:
+   .srcstep 771 771 17 "perf2_04_base64_controls.crexx" 245 5 55 "    if output_offset < output_length + 1 & code4 <> 61 then do"
+   .traceevent "V" 6 "R" "I" "r" 9 771 771 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 8 771 771 0 "output_length" ""
+   iadd r34,r8,1
+   .traceevent "O" 4 "R" "I" "r" 34 771 771 0 "" ""
+   ilt r34,r9,r34
+   .traceevent "O" 4 "R" "B" "r" 34 771 771 0 "" ""
+   brf l1231andend,r34
+   .traceevent "V" 6 "R" "I" "r" 3 771 771 0 "code4" ""
+   ine r34,r3,61
+   .traceevent "O" 4 "R" "B" "r" 34 771 771 0 "" ""
+l1231andend:
+   .traceevent "O" 4 "R" "B" "r" 34 771 771 0 "" ""
+   brf l1255iffalse,r34
+   .srcstep 772 772 17 "perf2_04_base64_controls.crexx" 245 56 60 "    if output_offset < output_length + 1 & code4 <> 61 then do"
+   .srcstep 769 769 17 "perf2_04_base64_controls.crexx" 246 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+   .traceevent "V" 6 "R" "X" "r" 11 769 769 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 9 769 769 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 19 769 769 0 "digit3" ""
+   imod r33,r19,4
+   .traceevent "O" 4 "R" "I" "r" 33 769 769 0 "" ""
+   imult r33,r33,64
+   .traceevent "O" 4 "R" "I" "r" 33 769 769 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 20 769 769 0 "digit4" ""
+   iadd r33,r33,r20
+   .traceevent "O" 4 "R" "I" "r" 33 769 769 0 "" ""
+   bsetu8 r11,r9,r33
+   .srcstep 770 770 17 "perf2_04_base64_controls.crexx" 247 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 9 770 770 0 "output_offset" ""
+   iadd r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 770 770 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 770 770 0 "output_offset" ""
+l1255iffalse:
+   .srcstep 773 773 17 "perf2_04_base64_controls.crexx" 249 5 36 "    input_offset = input_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 6 773 773 0 "input_offset" ""
+   iadd r6,r6,4
+   .traceevent "O" 4 "R" "I" "r" 6 773 773 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 773 773 0 "input_offset" ""
+l1099doinc:
+   .srcstep 775 775 17 "perf2_04_base64_controls.crexx" 250 3 6 "  end"
+   br l1099dostart
+l1099doend:
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit2"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit3"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.digit4"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.next"
+   .srcstep 776 776 17 "perf2_04_base64_controls.crexx" 251 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 11 776 776 0 "result" ""
+   ret r11
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code1"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code2"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code3"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.code4"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.encoded"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.encoded_length"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.input_offset"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.last"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.output_length"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.output_offset"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.padding"
+   .meta "perf2_04_base64_controls.base64_decode_codepoint_arithmetic.result"
+
+/* Imported Declaration from file: verify@library.rxbin */
+
+rxfnsb.verify() .expose=rxfnsb.verify
+   .meta "rxfnsb.verify"="b" ".int" rxfnsb.verify() "expose string=.string,expose refchars=.string,?option=.string,?start=.int"

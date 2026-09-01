@@ -1,0 +1,49 @@
+options levelb
+namespace signal_control_unwind
+
+return_from_block: procedure = .int
+  do
+    return 7
+  on signal other
+    say "BAD: return handler"
+  end
+  return 99
+
+leave_from_block: procedure = .int
+  count = 0
+  do index = 1 to 3
+    do
+      count = count + 1
+      if index = 2 then leave
+    on signal other
+      say "BAD: leave handler"
+    end
+  end
+  return count
+
+leave_with_from_block: procedure = .int
+  answer = do
+    do
+      leave with 11
+    on signal other
+      say "BAD: leave-with handler"
+    end
+    leave with 99
+  end
+  return answer
+
+main: procedure = .int
+  if return_from_block() <> 7 then do
+    say "FAIL: return"
+    return 1
+  end
+  if leave_from_block() <> 2 then do
+    say "FAIL: leave"
+    return 1
+  end
+  if leave_with_from_block() <> 11 then do
+    say "FAIL: leave with"
+    return 1
+  end
+  say "PASS: signal control unwind"
+  return 0

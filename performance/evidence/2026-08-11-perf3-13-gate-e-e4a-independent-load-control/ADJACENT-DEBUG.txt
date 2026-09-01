@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+
+ 1/10 linked_opt_runtime_artifacts_build .......... Passed
+ 2/10 reentrancy_check ............................ Passed
+ 3/10 program_generation_control-rxtvml ........... Passed
+ 4/10 rxasdispatchcontract-rxbvm .................. Passed
+ 5/10 program_generation_control-rxvml ............ Passed
+ 6/10 rxasdispatchcontract-rxtvm .................. Passed
+ 7/10 program_generation_control-rxbvml ........... Passed
+ 8/10 rxas_optimizer_barrier_metaloadmodule ....... Passed
+ 9/10 ts_loadmodule_opt ........................... Passed
+10/10 ts_loadmodule_noopt ......................... Passed
+
+100% tests passed, 0 tests failed out of 10

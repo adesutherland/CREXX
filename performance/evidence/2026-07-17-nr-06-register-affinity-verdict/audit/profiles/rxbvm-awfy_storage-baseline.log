@@ -1,0 +1,5 @@
+benchmark=awfy_storage repetitions=10 result=5461
+PASS: AWFY Storage
+real 2.68
+user 2.59
+sys 0.07

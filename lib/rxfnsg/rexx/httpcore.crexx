@@ -1,0 +1,620 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * Private binary-oriented HTTP/1.1 protocol core shared by the Level G client
+ * and server. This module owns protocol validation, framing and parsing; it
+ * never owns a socket, task, pool or live VM value.
+ *
+ * @docType runtime-module
+ */
+options levelb
+
+namespace _rxhttpcore expose http_request_wire http_stream_request_wire http_response_wire http_response_wire_value http_admission_frame http_body_start http_header_value http_header_count http_header_name_valid http_header_value_valid http_header_lines_valid http_response_header_lines_valid http_method_valid http_method_idempotent http_request_target_valid http_retryable_status http_redirect_status http_same_origin_path http_content_length http_hex_value http_chunked_complete http_decode_chunked http_response_complete http_status_code http_build_request http_build_stream_head http_parse_response httpcoreresponse http_parse_request httpcorerequest http_build_response httpcorewire
+import rxfnsb
+import concurrency
+
+/** Encode one buffered request for a connection-owner task. */
+http_request_wire: procedure = .binary
+  arg verb = .string, path = .string, body = .binary, content_type = .string, headers = .string
+  verb_bytes = verb as .binary
+  path_bytes = path as .binary
+  content_type_bytes = content_type as .binary
+  header_bytes = headers as .binary
+  wire = '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'x as .binary
+  <at..int>(0) wire = 1
+  <at..int>(8) wire = 0
+  <at..int>(16) wire = binlength(verb_bytes)
+  <at..int>(24) wire = binlength(path_bytes)
+  <at..int>(32) wire = binlength(body)
+  <at..int>(40) wire = binlength(content_type_bytes)
+  <at..int>(48) wire = binlength(header_bytes)
+  call binappend wire, verb_bytes
+  call binappend wire, path_bytes
+  call binappend wire, body
+  call binappend wire, content_type_bytes
+  call binappend wire, header_bytes
+  return wire
+
+/** Encode one streamed request for a connection-owner task. */
+http_stream_request_wire: procedure = .binary
+  arg verb = .string, path = .string, body_length = .int, body_reference = .binary, content_type = .string, headers = .string
+  verb_bytes = verb as .binary
+  path_bytes = path as .binary
+  content_type_bytes = content_type as .binary
+  header_bytes = headers as .binary
+  wire = '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'x as .binary
+  <at..int>(0) wire = 1
+  <at..int>(8) wire = 1
+  <at..int>(16) wire = binlength(verb_bytes)
+  <at..int>(24) wire = binlength(path_bytes)
+  <at..int>(32) wire = body_length
+  <at..int>(40) wire = binlength(content_type_bytes)
+  <at..int>(48) wire = binlength(header_bytes)
+  call binappend wire, verb_bytes
+  call binappend wire, path_bytes
+  call binappend wire, body_reference
+  call binappend wire, content_type_bytes
+  call binappend wire, header_bytes
+  return wire
+
+/** Encode one private response frame. The body remains binary end to end. */
+http_response_wire: procedure = .binary
+  arg transport_status = .int, http_status = .int, headers = .string, body = .binary, error = .string, attempts = .int, redirects = .int, ambiguous = .boolean
+  header_bytes = headers as .binary
+  error_bytes = error as .binary
+  wire = '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'x as .binary
+  <at..int>(0) wire = transport_status
+  <at..int>(8) wire = http_status
+  <at..int>(16) wire = attempts
+  <at..int>(24) wire = redirects
+  <at..int>(32) wire = ambiguous
+  <at..int>(40) wire = binlength(header_bytes)
+  <at..int>(48) wire = binlength(body)
+  <at..int>(56) wire = binlength(error_bytes)
+  call binappend wire, header_bytes
+  call binappend wire, body
+  call binappend wire, error_bytes
+  return wire
+
+/** Encode a fixed-size admission descriptor. */
+http_admission_frame: procedure = .binary
+  arg request_reference = .channelvalue, response_reference = .channelvalue, request_bytes = .int
+  request_encoded = request_reference.encode()
+  response_encoded = response_reference.encode()
+  frame = request_encoded
+  call binappend frame, response_encoded
+  length_bytes = '0000000000000000'x as .binary
+  <at..int>(0) length_bytes = request_bytes
+  call binappend frame, length_bytes
+  return frame
+
+http_body_start: procedure = .int
+  arg message = .binary
+  boundary = binpos('0d0a0d0a'x as .binary, message)
+  if boundary > 0 then return boundary + 4
+  boundary = binpos('0a0a'x as .binary, message)
+  if boundary > 0 then return boundary + 2
+  return 0
+
+http_header_value: procedure = .string
+  arg headers = .string, name = .string
+  wanted = translate(name)
+  cursor = 1
+  do while cursor <= length(headers)
+    terminator = 2
+    line_end = pos("0d0a"x, headers, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = pos("0a"x, headers, cursor)
+    end
+    if line_end = 0 then line_end = length(headers) + 1
+    line = substr(headers, cursor, line_end - cursor)
+    colon = pos(":", line)
+    if colon > 0 then do
+      key = translate(strip(left(line, colon - 1)))
+      if key = wanted then return strip(substr(line, colon + 1))
+    end
+    if line_end > length(headers) then leave
+    cursor = line_end + terminator
+  end
+  return ""
+
+http_header_count: procedure = .int
+  arg headers = .string
+  count = 0
+  cursor = 1
+  do while cursor <= length(headers)
+    terminator = 2
+    line_end = pos("0d0a"x, headers, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = pos("0a"x, headers, cursor)
+    end
+    if line_end = 0 then line_end = length(headers) + 1
+    line = substr(headers, cursor, line_end - cursor)
+    if pos(":", line) > 0 then count = count + 1
+    if line_end > length(headers) then leave
+    cursor = line_end + terminator
+  end
+  return count
+
+http_header_name_valid: procedure = .boolean
+  arg name = .string
+  if name = "" then return 0
+  allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-.^_`|~"
+  return verify(name, allowed) = 0
+
+http_header_value_valid: procedure = .boolean
+  arg value = .string
+  return pos("0d"x, value) = 0 & pos("0a"x, value) = 0
+
+http_header_lines_valid: procedure = .boolean
+  arg lines = .string
+  cursor = 1
+  do while cursor <= length(lines)
+    line_end = pos("0d0a"x, lines, cursor)
+    if line_end = 0 then return 0
+    line = substr(lines, cursor, line_end - cursor)
+    colon = pos(":", line)
+    if colon <= 1 then return 0
+    name = left(line, colon - 1)
+    value = substr(line, colon + 1)
+    if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return 0
+    normalized = translate(name)
+    reserved = normalized = "HOST" | normalized = "CONTENT-LENGTH" | normalized = "CONTENT-TYPE" | normalized = "CONNECTION" | normalized = "TRANSFER-ENCODING" | normalized = "ACCEPT-ENCODING"
+    if reserved then return 0
+    cursor = line_end + 2
+  end
+  return 1
+
+/** Validate server response fields while retaining library-owned framing. */
+http_response_header_lines_valid: procedure = .boolean
+  arg lines = .string
+  cursor = 1
+  do while cursor <= length(lines)
+    line_end = pos("0d0a"x, lines, cursor)
+    if line_end = 0 then return 0
+    line = substr(lines, cursor, line_end - cursor)
+    colon = pos(":", line)
+    if colon <= 1 then return 0
+    name = left(line, colon - 1)
+    value = substr(line, colon + 1)
+    if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return 0
+    normalized = translate(name)
+    reserved = normalized = "CONTENT-LENGTH" | normalized = "CONNECTION" | normalized = "TRANSFER-ENCODING"
+    if reserved then return 0
+    cursor = line_end + 2
+  end
+  return 1
+
+http_method_valid: procedure = .boolean
+  arg verb = .string
+  if verb = "" | length(verb) > 32 then return 0
+  allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%&'*+-.^_`|~"
+  return verb = translate(verb) & verify(verb, allowed) = 0
+
+http_method_idempotent: procedure = .boolean
+  arg verb = .string
+  return verb = "GET" | verb = "HEAD" | verb = "PUT" | verb = "DELETE" | verb = "OPTIONS" | verb = "TRACE"
+
+http_request_target_valid: procedure = .boolean
+  arg path = .string
+  if path = "" | left(path, 1) <> "/" then return 0
+  if binlength(path as .binary) > 8192 then return 0
+  return pos("0d"x, path) = 0 & pos("0a"x, path) = 0
+
+http_retryable_status: procedure = .boolean
+  arg status = .int
+  return status = 408 | status = 425 | status = 429 | status = 500 | status = 502 | status = 503 | status = 504
+
+http_redirect_status: procedure = .boolean
+  arg status = .int
+  return status >= 301 & status <= 303 | status = 307 | status = 308
+
+http_same_origin_path: procedure = .string
+  arg origin = .string, location = .string
+  if left(location, 1) = "/" then return location
+  if translate(left(location, length(origin))) <> translate(origin) then return ""
+  if length(location) = length(origin) then return "/"
+  if substr(location, length(origin) + 1, 1) <> "/" then return ""
+  return substr(location, length(origin) + 1)
+
+http_content_length: procedure = .int
+  arg headers = .string
+  value = http_header_value(headers, "Content-Length")
+  if value = "" | datatype(value, "W") = 0 then return -1
+  return value
+
+_http_hex_digit: procedure = .int
+  arg digit = .string
+  position = pos(translate(digit), "0123456789ABCDEF")
+  if position = 0 then return -1
+  return position - 1
+
+http_hex_value: procedure = .int
+  arg text = .string
+  if text = "" then return -1
+  value = 0
+  do index = 1 to length(text)
+    digit = _http_hex_digit(substr(text, index, 1))
+    if digit < 0 then return -1
+    value = value * 16 + digit
+  end
+  return value
+
+http_chunked_complete: procedure = .boolean
+  arg body = .binary
+  cursor = 1
+  body_length = binlength(body)
+  do while cursor <= body_length
+    terminator = 2
+    line_end = binpos('0d0a'x as .binary, body, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = binpos('0a'x as .binary, body, cursor)
+    end
+    if line_end = 0 then return 0
+    size_text = strip(binsubstr(body, cursor, line_end - cursor) as .string)
+    semicolon = pos(";", size_text)
+    if semicolon > 0 then size_text = strip(left(size_text, semicolon - 1))
+    chunk_size = http_hex_value(size_text)
+    if chunk_size < 0 then return 0
+    cursor = line_end + terminator
+    if chunk_size = 0 then do
+      if bincompare(binsubstr(body, cursor, 2), '0d0a'x as .binary) = 0 then return 1
+      if bincompare(binsubstr(body, cursor, 1), '0a'x as .binary) = 0 then return 1
+      return binpos('0d0a0d0a'x as .binary, body, cursor) > 0 | binpos('0a0a'x as .binary, body, cursor) > 0
+    end
+    if body_length - cursor + 1 < chunk_size then return 0
+    cursor = cursor + chunk_size
+    if bincompare(binsubstr(body, cursor, 2), '0d0a'x as .binary) = 0 then cursor = cursor + 2
+    else if bincompare(binsubstr(body, cursor, 1), '0a'x as .binary) = 0 then cursor = cursor + 1
+    else return 0
+  end
+  return 0
+
+http_decode_chunked: procedure = .binary
+  arg body = .binary
+  result = ''x as .binary
+  cursor = 1
+  do while cursor <= binlength(body)
+    terminator = 2
+    line_end = binpos('0d0a'x as .binary, body, cursor)
+    if line_end = 0 then do
+      terminator = 1
+      line_end = binpos('0a'x as .binary, body, cursor)
+    end
+    if line_end = 0 then return result
+    size_text = strip(binsubstr(body, cursor, line_end - cursor) as .string)
+    semicolon = pos(";", size_text)
+    if semicolon > 0 then size_text = strip(left(size_text, semicolon - 1))
+    chunk_size = http_hex_value(size_text)
+    if chunk_size <= 0 then return result
+    cursor = line_end + terminator
+    call binappend result, binsubstr(body, cursor, chunk_size)
+    cursor = cursor + chunk_size
+    if bincompare(binsubstr(body, cursor, 2), '0d0a'x as .binary) = 0 then cursor = cursor + 2
+    else if bincompare(binsubstr(body, cursor, 1), '0a'x as .binary) = 0 then cursor = cursor + 1
+  end
+  return result
+
+http_response_complete: procedure = .boolean
+  arg response = .binary
+  body_start = http_body_start(response)
+  if body_start = 0 then return 0
+  headers = binsubstr(response, 1, body_start - 1) as .string
+  body = binsubstr(response, body_start)
+  status = http_status_code(headers)
+  if status = 204 | status = 304 then return 1
+  if pos("CHUNKED", translate(http_header_value(headers, "Transfer-Encoding"))) > 0 then return http_chunked_complete(body)
+  content_length = http_content_length(headers)
+  if content_length < 0 then return 0
+  return binlength(body) >= content_length
+
+http_status_code: procedure = .int
+  arg response = .string
+  line_end = pos("0d0a"x, response)
+  if line_end = 0 then line_end = pos("0a"x, response)
+  if line_end = 0 then return 0
+  status_text = word(left(response, line_end - 1), 2)
+  if datatype(status_text, "W") = 0 then return 0
+  return status_text
+
+/** Construct a validated HTTP/1.1 request as bytes. */
+http_build_request: procedure = .binary
+  arg verb = .string, host = .string, port = .int, path = .string, body = .binary, content_type = .string, headers = .string, connection = .string, accept_encoding = .string
+  if path = "" then path = "/"
+  authority = host
+  if pos(":", host) > 0 then authority = "[" || host || "]"
+  crlf = "0d0a"x
+  request = verb || " " || path || " HTTP/1.1" || crlf || ,
+            "Host: " || authority || ":" || port || crlf || ,
+            "User-Agent: cREXX-http/1" || crlf || ,
+            "Accept: */*" || crlf || ,
+            "Accept-Encoding: " || accept_encoding || crlf || ,
+            "Connection: " || connection || crlf
+  if content_type <> "" then request = request || "Content-Type: " || content_type || crlf
+  if headers <> "" then request = request || headers
+  request = request || "Content-Length: " || binlength(body) || crlf || crlf
+  wire = request as .binary
+  call binappend wire, body
+  return wire
+
+http_build_stream_head: procedure = .binary
+  arg verb = .string, host = .string, port = .int, path = .string, body_length = .int, content_type = .string, headers = .string
+  authority = host
+  if pos(":", host) > 0 then authority = "[" || host || "]"
+  crlf = "0d0a"x
+  request = verb || " " || path || " HTTP/1.1" || crlf || ,
+            "Host: " || authority || ":" || port || crlf || ,
+            "User-Agent: cREXX-http/1" || crlf || ,
+            "Accept: */*" || crlf || ,
+            "Accept-Encoding: identity" || crlf || ,
+            "Connection: keep-alive" || crlf
+  if content_type <> "" then request = request || "Content-Type: " || content_type || crlf
+  if headers <> "" then request = request || headers
+  if body_length >= 0 then request = request || "Content-Length: " || body_length || crlf || crlf
+  else request = request || "Transfer-Encoding: chunked" || crlf || crlf
+  return request as .binary
+
+/** Incremental result for one buffered inbound request. */
+httpcorerequest: class
+  _state = .int
+  _status = .int
+  _verb = .string
+  _target = .string
+  _headers = .string
+  _body = .binary
+  _consumed = .int
+  _keep_alive = .boolean
+  _error = .string
+
+  new: factory
+    arg state = .int, status = .int, verb = .string, target = .string, headers = .string, body = .binary, consumed = .int, keep_alive = .boolean, error = .string
+    _state = state
+    _status = status
+    _verb = verb
+    _target = target
+    _headers = headers
+    _body = body
+    _consumed = consumed
+    _keep_alive = keep_alive
+    _error = error
+    return
+
+  /** @return 0 incomplete, 1 complete and valid, 2 protocol error */
+  state: method = .int
+    return _state
+  status: method = .int
+    return _status
+  verb: method = .string
+    return _verb
+  target: method = .string
+    return _target
+  headers: method = .string
+    return _headers
+  body: method = .binary
+    return _body
+  consumed: method = .int
+    return _consumed
+  keep_alive: method = .boolean
+    return _keep_alive
+  error: method = .string
+    return _error
+
+/** Parse at most one HTTP/1.x request without owning the receive buffer.
+ * Transfer-Encoding is rejected in the initial buffered server; callers must
+ * send an absent or single canonical Content-Length field.
+ */
+http_parse_request: procedure = .httpcorerequest
+  arg message = .binary, maximum_header_bytes = .int, maximum_headers = .int, maximum_body_bytes = .int
+  empty = ''x as .binary
+  body_start = http_body_start(message)
+  if body_start = 0 then do
+    if binlength(message) > maximum_header_bytes then return .httpcorerequest.new(2, 431, "", "", "", empty, binlength(message), 0, "HTTP request headers exceed the configured limit")
+    return .httpcorerequest.new(0, 0, "", "", "", empty, 0, 0, "")
+  end
+  header_bytes = body_start - 1
+  if header_bytes > maximum_header_bytes then return .httpcorerequest.new(2, 431, "", "", "", empty, header_bytes, 0, "HTTP request headers exceed the configured limit")
+  head = binsubstr(message, 1, header_bytes) as .string
+  first_end = pos("0d0a"x, head)
+  first_terminator = 2
+  if first_end = 0 then do
+    first_end = pos("0a"x, head)
+    first_terminator = 1
+  end
+  if first_end = 0 then return .httpcorerequest.new(2, 400, "", "", "", empty, header_bytes, 0, "HTTP request line is incomplete")
+  request_line = left(head, first_end - 1)
+  if words(request_line) <> 3 then return .httpcorerequest.new(2, 400, "", "", "", empty, header_bytes, 0, "HTTP request line is invalid")
+  verb = word(request_line, 1)
+  target = word(request_line, 2)
+  version = word(request_line, 3)
+  if http_method_valid(verb) = 0 | http_request_target_valid(target) = 0 then return .httpcorerequest.new(2, 400, verb, target, "", empty, header_bytes, 0, "HTTP method or request target is invalid")
+  if version <> "HTTP/1.1" & version <> "HTTP/1.0" then return .httpcorerequest.new(2, 505, verb, target, "", empty, header_bytes, 0, "HTTP version is not supported")
+
+  headers = ""
+  cursor = first_end + first_terminator
+  count = 0
+  content_lengths = 0
+  content_length = 0
+  transfer_encoding = ""
+  host = ""
+  host_count = 0
+  connection = ""
+  do while cursor <= length(head)
+    line_end = pos("0d0a"x, head, cursor)
+    terminator = 2
+    if line_end = 0 then do
+      line_end = pos("0a"x, head, cursor)
+      terminator = 1
+    end
+    if line_end = 0 then leave
+    line = substr(head, cursor, line_end - cursor)
+    if line = "" then leave
+    colon = pos(":", line)
+    if colon <= 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request header is invalid")
+    name = left(line, colon - 1)
+    value = strip(substr(line, colon + 1))
+    if http_header_name_valid(name) = 0 | http_header_value_valid(value) = 0 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request header is unsafe")
+    count = count + 1
+    if count > maximum_headers then return .httpcorerequest.new(2, 431, verb, target, headers, empty, header_bytes, 0, "HTTP request has too many headers")
+    normalized = translate(name)
+    if normalized = "CONTENT-LENGTH" then do
+      content_lengths = content_lengths + 1
+      if value = "" | verify(value, "0123456789") <> 0 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP Content-Length is invalid")
+      if length(value) > 10 then return .httpcorerequest.new(2, 413, verb, target, headers, empty, header_bytes, 0, "HTTP request body exceeds the configured limit")
+      content_length = value
+    end
+    else if normalized = "TRANSFER-ENCODING" then transfer_encoding = value
+    else if normalized = "HOST" then do
+      host_count = host_count + 1
+      host = value
+    end
+    else if normalized = "CONNECTION" then connection = translate(value)
+    headers = headers || name || ": " || value || "0d0a"x
+    cursor = line_end + terminator
+  end
+  if version = "HTTP/1.1" & host = "" then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP/1.1 request has no Host header")
+  if host_count > 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request has multiple Host fields")
+  if content_lengths > 1 then return .httpcorerequest.new(2, 400, verb, target, headers, empty, header_bytes, 0, "HTTP request has multiple Content-Length fields")
+  if transfer_encoding <> "" then return .httpcorerequest.new(2, 501, verb, target, headers, empty, header_bytes, 0, "HTTP request Transfer-Encoding is not supported")
+  if content_length < 0 | content_length > maximum_body_bytes then return .httpcorerequest.new(2, 413, verb, target, headers, empty, header_bytes, 0, "HTTP request body exceeds the configured limit")
+  total = header_bytes + content_length
+  if binlength(message) < total then return .httpcorerequest.new(0, 0, verb, target, headers, empty, 0, 0, "")
+  body = binsubstr(message, body_start, content_length)
+  connection_words = translate(connection, " ", ",")
+  if version = "HTTP/1.1" then keep_alive = wordpos("CLOSE", connection_words) = 0
+  else keep_alive = wordpos("KEEP-ALIVE", connection_words) > 0
+  return .httpcorerequest.new(1, 0, verb, target, headers, body, total, keep_alive, "")
+
+/** Binary response wrapper avoids a caller-register alias at the module edge. */
+httpcorewire: class
+  _bytes = .binary
+
+  new: factory
+    arg bytes = .binary
+    _bytes = bytes
+    return
+
+  bytes: method = .binary
+    return _bytes
+
+/** Wrap the existing private response transfer frame at a safe module edge. */
+http_response_wire_value: procedure = .httpcorewire
+  arg transport_status = .int, http_status = .int, headers = .string, body = .binary, error = .string, attempts = .int, redirects = .int, ambiguous = .boolean
+  wire = http_response_wire(transport_status, http_status, headers, body, error, attempts, redirects, ambiguous)
+  return .httpcorewire.new(wire)
+
+/** Build one bounded HTTP/1.1 response; connection framing remains core-owned. */
+http_build_response: procedure = .httpcorewire
+  arg status = .int, headers = .string, body = .binary, keep_alive = .boolean, send_body = .boolean
+  invalid_response = status < 100
+  if status > 599 then invalid_response = 1
+  if http_response_header_lines_valid(headers) = 0 then invalid_response = 1
+  if invalid_response then do
+    invalid = ''x as .binary
+    return .httpcorewire.new(invalid)
+  end
+  if status = 204 | status = 304 then body = ''x as .binary
+  select
+    when status = 200 then reason = "OK"
+    when status = 201 then reason = "Created"
+    when status = 202 then reason = "Accepted"
+    when status = 204 then reason = "No Content"
+    when status = 400 then reason = "Bad Request"
+    when status = 404 then reason = "Not Found"
+    when status = 405 then reason = "Method Not Allowed"
+    when status = 408 then reason = "Request Timeout"
+    when status = 413 then reason = "Payload Too Large"
+    when status = 429 then reason = "Too Many Requests"
+    when status = 431 then reason = "Request Header Fields Too Large"
+    when status = 500 then reason = "Internal Server Error"
+    when status = 501 then reason = "Not Implemented"
+    when status = 503 then reason = "Service Unavailable"
+    when status = 504 then reason = "Gateway Timeout"
+    when status = 505 then reason = "HTTP Version Not Supported"
+    otherwise reason = "Status"
+  end
+  crlf = "0d0a"x
+  if keep_alive then connection = "keep-alive"
+  else connection = "close"
+  head = "HTTP/1.1 " || status || " " || reason || crlf || ,
+         "Server: cREXX-http/1" || crlf
+  if headers <> "" then head = head || headers
+  head = head || "Content-Length: " || binlength(body) || crlf || ,
+         "Connection: " || connection || crlf || crlf
+  wire = head as .binary
+  if send_body then call binappend wire, body
+  return .httpcorewire.new(wire)
+
+/** Parsed raw response used by compatibility helpers and protocol tests. */
+httpcoreresponse: class
+  _status = .int
+  _headers = .string
+  _body = .binary
+  _error_code = .int
+  _error = .string
+
+  new: factory
+    arg status = .int, headers = .string, body = .binary, error_code = .int, error = .string
+    _status = status
+    _headers = headers
+    _body = body
+    _error_code = error_code
+    _error = error
+    return
+
+  status: method = .int
+    return _status
+  headers: method = .string
+    return _headers
+  body: method = .binary
+    return _body
+  error_code: method = .int
+    return _error_code
+  error: method = .string
+    return _error
+
+http_parse_response: procedure = .httpcoreresponse
+  arg response = .binary
+  body_start = http_body_start(response)
+  if body_start = 0 then return .httpcoreresponse.new(0, "", ''x as .binary, -20, "HTTP response has no header/body boundary")
+  headers = binsubstr(response, 1, body_start - 1) as .string
+  body = binsubstr(response, body_start)
+  status = http_status_code(headers)
+  if status = 0 then return .httpcoreresponse.new(0, headers, body, -21, "HTTP response status is invalid")
+  if pos("CHUNKED", translate(http_header_value(headers, "Transfer-Encoding"))) > 0 then do
+    if http_chunked_complete(body) = 0 then return .httpcoreresponse.new(status, headers, http_decode_chunked(body), -30, "Chunked HTTP response is incomplete or invalid")
+    body = http_decode_chunked(body)
+  end
+  else do
+    content_length = http_content_length(headers)
+    if content_length >= 0 then do
+      if binlength(body) < content_length then return .httpcoreresponse.new(status, headers, body, -31, "HTTP response ended before Content-Length bytes")
+      body = binsubstr(body, 1, content_length)
+    end
+  end
+  if status < 200 | status >= 300 then return .httpcoreresponse.new(status, headers, body, status, "HTTP status " || status)
+  return .httpcoreresponse.new(status, headers, body, 0, "")

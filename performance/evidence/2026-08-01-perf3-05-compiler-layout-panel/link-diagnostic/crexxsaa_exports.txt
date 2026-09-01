@@ -1,0 +1,16 @@
+_crexxsaa_address_variable_get_alloc
+_crexxsaa_address_variable_set
+_crexxsaa_clear_cache
+_crexxsaa_create
+_crexxsaa_destroy
+_crexxsaa_free
+_crexxsaa_get_cache_dir
+_crexxsaa_invalidate_all
+_crexxsaa_invalidate_source
+_crexxsaa_last_error
+_crexxsaa_register_address_environment
+_crexxsaa_run_rxbin
+_crexxsaa_run_source
+_crexxsaa_set_address_environment
+_crexxsaa_set_cache_dir
+_crexxsaa_set_compiler

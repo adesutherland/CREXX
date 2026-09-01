@@ -5,6 +5,7 @@ failures = 0
 
 failures = failures + check_int("valid object", jsonvalid('{"ok":true,"n":12}'), 1)
 failures = failures + check_int("invalid object", jsonvalid('{"ok":true,}'), 0)
+failures = failures + check_int("blank text invalid", jsonvalid(" "), 0)
 failures = failures + check_str("root type", jsontype('{"ok":true}', ''), "object")
 failures = failures + check_str("missing type", jsontype('{"ok":true}', 'nope'), "missing")
 failures = failures + check_str("bool type", jsontype('{"ok":true}', 'ok'), "boolean")
@@ -53,6 +54,17 @@ body = jsonobject(body_keys, body_values)
 failures = failures + check_int("llm body valid", jsonvalid(body), 1)
 failures = failures + check_str("llm body model", jsonget(body, "model"), "demo-model")
 failures = failures + check_str("llm body message", jsonget(body, "messages.1.content"), "Say hi")
+
+blankKeyJson = '{"":"empty"," ":"blank"}'
+failures = failures + check_str("blank key type", jsontype(blankKeyJson, " "), "string")
+failures = failures + check_str("blank key get", jsonget(blankKeyJson, " "), "blank")
+failures = failures + check_int("trailing input invalid", jsonvalid('{"ok":true}x'), 0)
+failures = failures + check_str("bad bracket path", jsontype(response, "choices[bad]"), "error")
+failures = failures + check_str("unicode key get", jsonget('{"α":"beta"}', "α"), "beta")
+failures = failures + check_str("unicode value get", jsonget('{"value":"αβ","after":true}', "value"), "αβ")
+failures = failures + check_str("escaped key get", jsonget('{"a\u0062":7}', "ab"), "7")
+failures = failures + check_str("unicode escape unquote", jsonunquote('"\u03b1"'), "α")
+failures = failures + check_str("unicode escape get", jsonget('{"letter":"\u03b1"}', "letter"), "α")
 
 if failures <> 0 then do
   say "rxjson failures:" failures

@@ -1,0 +1,3 @@
+# PERF2-04 profiling-off fixed-valid-input native Base64 ceiling.
+crexx-cross-runtime-matrix|1
+base64-native|PERF2-04 Base64 native control|native-c|native|B64-N1-fixed-valid|P|no|no|2500|PASS: PERF2-04 Base64 native control||/private/tmp/crexx-perf2-04.3k3Dfw/evidence/perf2_04_base64_native_control;2500

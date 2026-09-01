@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/opt/homebrew/bin/regina",
+    "/Users/adrian/CLionProjects/CREXX/tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2_opaque.rex",
+    "A"
+  ],
+  "completed_utc": "2026-07-15T15:27:39.209069+00:00",
+  "correctness_expectation": "PASS: RexxCPS 2.2 Classic opaque/result-observation diagnostic",
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "lifecycle": "process",
+  "metric_regex": "Performance:\\s+(?P<value>[0-9]+)\\s+(?P<unit>REXX clauses per second)",
+  "python": "3.14.4",
+  "recorded_runs": 2,
+  "result": "pass",
+  "runtime": "regina",
+  "sampling": "serial",
+  "schema": 1,
+  "started_utc": "2026-07-15T15:27:33.139919+00:00",
+  "variant": "2.2-opaque-A",
+  "warmups": 1,
+  "workload": "rexxcps"
+}

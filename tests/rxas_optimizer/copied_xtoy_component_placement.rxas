@@ -1,0 +1,133 @@
+* X01: place an adjacent typed-copy/XTOY derivation on the proven source.
+
+decimal_to_string() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    .traceevent "A" 6 "R" "S" "r" 1 0 0 0 "placed-string-delete" ""
+    strlen r2,r1
+    ret r2
+
+integer_to_string() .locals=4
+    load r0,12
+    icopy r1,r0
+    itos r1
+    strlen r2,r1
+    ret r2
+
+float_to_string() .locals=4
+    load r0,1.25
+    fcopy r1,r0
+    ftos r1
+    strlen r2,r1
+    ret r2
+
+source_result_observed() .locals=4
+    load r0,"old"
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    strlen r2,r1
+    strlen r3,r0
+    ret r2
+
+temporary_input_observed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    strlen r2,r1
+    dadd r3,r1,1d
+    ret r2
+
+source_result_changed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    load r0,"changed"
+    strlen r2,r1
+    ret r2
+
+read_write_result() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    stod r1
+    ret r1
+
+context_boundary_not_crossed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    setnumdgts 7
+    dtos r1
+    strlen r2,r1
+    ret r2
+
+branch_phi_observed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    brt branch_phi_changed,a0
+    br branch_phi_use
+branch_phi_changed:
+    load r1,"changed"
+branch_phi_use:
+    strlen r2,r1
+    ret r2
+
+linked_result_observed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    link r2,r1
+    strlen r3,r2
+    unlink r2
+    ret r3
+
+call_result_observed() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    call r2,component_placement_consumer(),r1
+    ret r2
+
+signal_handler_observes_source_result() .locals=5
+    sigbr component_placement_signal_handler,"OVERFLOW_UNDERFLOW"
+    load r0,"old"
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    inc0
+    strlen r2,r1
+    ret r2
+component_placement_signal_handler:
+    strlen r3,r0
+    ret r3
+
+metadata_observes_result() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    .meta "fixture.x1"="result" ".string" r1
+    strlen r2,r1
+    ret r2
+
+trace_observes_temporary_input() .locals=4
+    load r0,12d
+    dcopy r1,r0
+    dtos r1
+    .traceevent "V" 6 "R" "D" "r" 1 0 0 0 "temporary-input" ""
+    strlen r2,r1
+    ret r2
+
+referenced_source_observed() .locals=5
+    load r0,12d
+    mkref r2,r0
+    dcopy r1,r0
+    dtos r1
+    strlen r3,r1
+    deref r4,r2
+    ret r3
+
+component_placement_consumer() .locals=1
+    strlen r0,a0
+    ret r0

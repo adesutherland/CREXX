@@ -70,9 +70,12 @@ headers ::= headers header.
 header ::= globals.
 header ::= global_reg.
 header ::= global_meta.
+header ::= const_alias.
 header ::= NEWLINE.
 
 // Header error messages
+header ::= KW_JTABLE(T) error NEWLINE. {rxaserat(context, T, "Jump tables can only be declared inside a procedure");}
+header ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, "Jump table cases can only be declared inside a procedure");}
 header ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid header directive");}
 
 // Global directive
@@ -90,6 +93,7 @@ global_reg ::= GREG KW_EXPOSE(T) error NEWLINE. {rxaseaft(context, T, "Expecting
 global_meta ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+global_meta ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
 global_meta ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_INTERFACE NEWLINE. {rxasqmintf(context,V,OP,T);}
@@ -98,6 +102,11 @@ global_meta ::= KW_META STRING(O) EQUAL STRING(K) STRING(M) STRING(T) STRING(A) 
 global_meta ::= KW_META STRING(E) NEWLINE. {rxaserat(context, E, "Cannot clear metadata here");}
 global_meta ::= KW_META STRING(E) EQUAL STRING STRING STRING NEWLINE. {rxaserat(context, E, "Cannot set constant metadata here");}
 global_meta ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
+
+// Constant aliases
+const_alias ::= KW_CONST ID(N) ID(K) HEX(V) NEWLINE. {rxasconst(context,N,K,V);}
+const_alias ::= KW_CONST ID(N) ID(K) STRING(V) NEWLINE. {rxasconst(context,N,K,V);}
+const_alias ::= KW_CONST(T) error NEWLINE. {rxaseaft(context, T, "Expecting {id} binary {hex} or {id} string {string}");}
 
 // Function list and Declarations and Definitions
 functions ::= function.
@@ -128,7 +137,10 @@ functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_EXPOSE(T) error NEWLINE.
 instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
-instruction ::= LABEL(L). {rxasqlbl(context,L);}
+instruction ::= LABEL(L). {rxasqlbl(context,L); context->last_label_token = L;}
+instruction ::= KW_JTABLE ID(T) NEWLINE. {rxasjtab(context,T,0);}
+instruction ::= KW_JTABLE ID(T) ID(A) NEWLINE. {rxasjtab(context,T,A);}
+instruction ::= KW_JCASE(J) ID(T) jcase_literal(V) NEWLINE. {rxasjcase_after_label(context,J,T,V);}
 instruction ::= KW_SRCSTEP INT(ST) INT(CL) INT(FL) STRING(F) INT(L) INT(SC) INT(EC) STRING(S) NEWLINE.
                 {rxasqmstp(context, ST, CL, FL, F, L, SC, EC, S);}
 instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) INT(VR) INT(ST) INT(CL) INT(FL) STRING(SYM) STRING(RN) NEWLINE.
@@ -136,6 +148,7 @@ instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) 
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+instruction ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) STRING(C) NEWLINE. {rxasqmct(context,V,OP,T,C);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_CLASS NEWLINE. {rxasqmclss(context,V,OP,T);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_ATTR INT(R) NEWLINE. {rxasqmattr(context,V,OP,T,R);}
@@ -148,6 +161,8 @@ instruction ::= NEWLINE.
 // Instruction error messages
 instruction ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
 instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
+instruction ::= KW_JTABLE(T) error NEWLINE. {rxaseaft(context, T, "Expecting {id} [auto|linear|openhash|acph]");}
+instruction ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, ".jcase must decorate a same-line label");}
 instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcstep {step} {clause} {flags} \"{file}\" {line} {start-col} {end-col} \"{source line}\"");}
 instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Expecting .traceevent \"{kind}\" {mode-mask} \"{value-source}\" \"{value-type}\" \"{register-type}\" {value-ref} {source-step} {clause} {flags} \"{symbol}\" \"{resolved-name}\"");}
 
@@ -156,10 +171,13 @@ decl_instructions ::= decl_instruction.
 decl_instructions ::= decl_instructions decl_instruction.
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
+decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) HEX(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 decl_instruction ::= NEWLINE.
 
 // Declaration instruction error messages
 decl_instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
+decl_instruction ::= KW_JTABLE(T) error NEWLINE. {rxaserat(context, T, "Cannot define jump table here");}
+decl_instruction ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, "Cannot define jump table case here");}
 decl_instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Cannot define source step here");}
 decl_instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Cannot define trace event here");}
 decl_instruction ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
@@ -169,21 +187,14 @@ decl_instruction ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting 
 
 // operation/instruction
 instr ::= ID(IN). {rxasque0(context,IN);}
-instr ::= ID(IN) operand(OP1). {rxasque1(context,IN,OP1);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxasque2(context,IN,OP1,OP2);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2) COMMA operand(OP3).
-          {rxasque3(context,IN,OP1,OP2,OP3);}
+instr ::= ID(IN) operands(LAST). {rxasque_span(context,IN,LAST);}
+operands(LAST) ::= operand(OP). {LAST=OP;}
+operands(LAST) ::= operands COMMA operand(OP). {LAST=OP;}
 
 // instr error messages
 instr ::= ID ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand COMMA(T) ANYTHING error NEWLINE. {rxaseaft(context, T, "Expecting {operand}");}
-instr ::= ID operand COMMA operand ANYTHING(T) error NEWLINE.
-          {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand COMMA operand COMMA(T) ANYTHING error NEWLINE.
-          {rxaseaft(context, T, "Expecting {operand}");}
-instr ::= ID operand COMMA operand COMMA operand ANYTHING(T) error NEWLINE.
-          {rxaserat(context, T, "Expecting {newline} - max 3 operands");}
+instr ::= ID operands ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting comma or newline");}
+instr ::= ID operands COMMA(T) error NEWLINE. {rxaseaft(context, T, "Expecting {operand}");}
 
 // Register Types
 reg ::= RREG.
@@ -200,3 +211,7 @@ operand ::= CHAR.
 operand ::= STRING.
 operand ::= HEX.
 operand ::= DECIMAL.
+
+jcase_literal ::= STRING.
+jcase_literal ::= HEX.
+jcase_literal ::= INT.

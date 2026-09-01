@@ -1,0 +1,5 @@
+benchmark=base64_roundtrip repetitions=500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+real 1.73
+user 1.70
+sys 0.01

@@ -1,0 +1,5 @@
+benchmark=awfy_list repetitions=100 result=10
+PASS: AWFY List
+real 2.82
+user 2.75
+sys 0.02

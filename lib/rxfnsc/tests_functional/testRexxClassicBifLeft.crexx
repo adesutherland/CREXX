@@ -1,0 +1,163 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifleft
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("abc d   ", "abc d", "8")
+errors = errors + check_pad("abc d...", "abc d", "8", ".")
+errors = errors + check_default("abc de", "abc defg", "6")
+errors = errors + check_default("", "foobar", "0")
+errors = errors + check_default("foobar", "foobar", "6")
+errors = errors + check_pad("foobar**", "foobar", "8", "*")
+errors = errors + check_default("aé", "aé日", "2")
+errors = errors + check_pad("é··", "é", "3", "·")
+errors = errors + check_byte_profile()
+errors = errors + check_large()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_required(1)
+errors = errors + check_omitted_required(2)
+errors = errors + check_width_error("not-a-number", "RXC-LC-40.12")
+errors = errors + check_width_error("1.5", "RXC-LC-40.12")
+errors = errors + check_width_error("-1", "RXC-LC-40.13")
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+
+if errors = 0 then say "PASS: Level C LEFT BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, string = .string, width = .string
+  return run_check(expected, string, width, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, string = .string, width = .string, pad = .string
+  return run_check(expected, string, width, 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, width = .string, pad_exists = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(width)
+  exists[1] = 1
+  exists[2] = 1
+  if pad_exists then do
+    args[3] = .RexxValue(pad)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("LEFT")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: LEFT expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("éx")
+  args[2] = .RexxValue("2")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "C3A9" then return 0
+  say "FAIL: LEFT BYTE expected C3A9 got" actual,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_large: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("x")
+  args[2] = .RexxValue("1000")
+  args[3] = .RexxValue(".")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  text = result.asString()
+  text_length = .int
+  assembler strlen text_length,text
+  if \context.hasError() & text_length = 1000 then return 0
+  say "FAIL: LEFT substantial padding" text_length,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: LEFT expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: LEFT omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_width_error: procedure = .int
+  arg width = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue(width)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: LEFT width expected" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("5")
+  args[3] = .RexxValue(pad)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("LEFT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifleft..rexxclassicbif_left(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: LEFT pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

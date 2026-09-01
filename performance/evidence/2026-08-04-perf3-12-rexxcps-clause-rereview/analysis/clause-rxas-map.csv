@@ -1,0 +1,20 @@
+source_lines,family,hot_executions,current_lowering,measured_or_derived_work,interpretation
+156-196,hot lvar body,280000,main loop and cps_subroutine call,280000 lvar iterations and calls,work denominator
+159,R12-S01,280000,CONCAT Key Bee dot plus lvar then STEMSET,280000 concat and stemset,joined compound tail
+160,R12-S01,280000,CONCAT Key Bee dot plus lvar then STEMGET,280000 concat and stemget,joined compound tail
+162,R12-S01,560000,CONCAT Key Bee dot plus lvar then STEMGET,560000 concat and stemget,two j iterations per lvar
+168,R12-S01,560000,two identical CONCATS feeding STEMGET and STEMSET,1120000 concat plus 560000 get and 560000 set,same tail repeated within clause
+173,R12-S01,280000,CONCAT 1.0 plus lvar then STEMRESET,280000 concat and reset,distinct once-per-lvar tail; no reuse ceiling
+163-164,R12-C01,1120000,DCOPY j to temporary then DTOS and string consumer,1120000 DCOPY and DTOS,decimal j remains live
+168,R12-C01,560000,decimal result DCOPY then DTOS and STEMSET,560000 DCOPY and DTOS,decimal result has string-only downstream use
+178,R12-C01,260000,decimal result DCOPY then DTOS and STEMSET,260000 DCOPY and DTOS,executed for lvar 2 through 14
+185,R12-C01,280000,decimal result DCOPY then DTOS and STEMSET,280000 DCOPY and DTOS,executed once per lvar
+188,R12-P01,280000,PARSEPOS2 into two temps then two SCOPY assignments,560000 parse-result SCOPY plus one grouped null site,no source SCOPY
+192-195,R12-P01,1120000,source SCOPY plus PARSEWORDS3 into three temps plus three result SCOPY,4480000 SCOPY plus 1120000 parse ops and four grouped null sites,main PARSE bulk
+245,R12-P01,280000,source SCOPY plus PARSEWORDS3D and three result SCOPY,1120000 SCOPY plus 280000 parse ops and one grouped null site,subroutine first parse
+248,R12-P01,280000,source SCOPY plus PARSEWORDS3 and three result SCOPY,1120000 SCOPY plus 280000 parse ops and one grouped null site,subroutine second parse
+189,R12-T01,100,_trace_current_mode call outside hot count loop,100 procedure calls,inactive TRACE cost is not per lvar
+151 and 200,R12-T01,100,trace value and trace off setup/teardown,100 to 200 helper calls per procedure,inactive runtime route near zero relative to kernel
+190,R12-A01,0,metadata only after optimized lowering,zero emitted runtime instructions or procedure calls,no runtime candidate in this slice
+191,R12-I01,280000,direct CALL4 to cps_subroutine and RET,560000 call plus return instruction ceiling before frame domain,review after PARSE simplification
+main and cps_subroutine,R12-R01,1 and 280000,.locals 103 and 22,19 main and 8 subroutine parse-only temporaries,compaction follows deletion

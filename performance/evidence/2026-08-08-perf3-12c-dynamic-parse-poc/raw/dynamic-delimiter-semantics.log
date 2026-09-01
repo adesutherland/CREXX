@@ -1,0 +1,12 @@
+CELL vm=rxtvm mode=opt
+PASS dynamic delimiter semantics
+rc=0
+CELL vm=rxtvm mode=noopt
+PASS dynamic delimiter semantics
+rc=0
+CELL vm=rxbvm mode=opt
+PASS dynamic delimiter semantics
+rc=0
+CELL vm=rxbvm mode=noopt
+PASS dynamic delimiter semantics
+rc=0

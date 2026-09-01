@@ -1,0 +1,25 @@
+/* Focused public rxplatform contract. */
+options levelb
+
+import rxplatform
+
+main: procedure = .int
+  failures = 0
+  if rxplatform..uptime() < 0 then do; say "FAIL: uptime"; failures = failures + 1; end
+  if length(rxplatform..user()) = 0 then do; say "FAIL: user"; failures = failures + 1; end
+  if length(rxplatform..host()) = 0 then do; say "FAIL: host"; failures = failures + 1; end
+  if length(rxplatform..osname()) = 0 then do; say "FAIL: osname"; failures = failures + 1; end
+  if rxplatform..sleep(1) <> 0 then do; say "FAIL: sleep"; failures = failures + 1; end
+  do
+    ignored = rxplatform..sleep(-1)
+    say "FAIL: negative sleep did not signal"
+    failures = failures + 1
+  on signal invalid_arguments as problem
+    if pos("RXPLATFORM.SLEEP", problem.message()) = 0 then do
+      say "FAIL: negative sleep signal identity" problem.message()
+      failures = failures + 1
+    end
+  end
+  if failures > 0 then return 1
+  say "PASS: rxplatform public contract"
+  return 0

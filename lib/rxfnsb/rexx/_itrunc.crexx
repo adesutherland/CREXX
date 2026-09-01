@@ -22,27 +22,36 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B formatted-float integer helper.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/_itrunc.md
+ */
 options levelb
-
 namespace _rxsysb expose _itrunc
 
+/**
+ * Return the text before the decimal point in a VM-formatted float.
+ *
+ * @param number floating-point value
+ * @return formatted integer prefix, including any sign
+ */
 _itrunc: procedure = .string
-       arg innum = .float
-   retnum=""
-   hlen=0
-   schar='.'
-   char=""
-   i=0
-   assembler strchar schar,schar,i   /* get decimal point */
-   assembler itos schar
-   assembler ftos innum              /* translate input from float to string */
-   Assembler strlen hlen,innum       /* determine string length              */
-/* transfer all digits before decimal point */
-   do i=0 to hlen-1                  /* transfer byte by byte, until decimal point */
-      assembler strchar char,innum,i /* get next input byte  */
-      assembler itos char
-      if char=schar then leave       /* is it decimal point  */
-      else assembler appendchar retnum,char /* if no, transfer byte  */
-   end
-return retnum
+  arg number = .float
+  result = ""
+  decimal_point = "."
+  point_position = 1
+  integer_length = .int
+  start = 0
+
+  assembler ftos number
+  assembler strpos point_position,decimal_point,number
+  if point_position = 0 then do
+    assembler scopy result,number
+    return result
+  end
+  integer_length = point_position - 1
+  if integer_length <= 0 then return result
+  assembler substring result,number,start,integer_length
+  return result

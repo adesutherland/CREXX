@@ -1,0 +1,101 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da524..c2cb42be4 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -270,12 +270,96 @@ static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const cha
+     return left_len == right_len && memcmp(left, right, left_len) == 0;
+ }
+ 
++/* PERF3-03 disposable diagnostic counters. This worktree is never production. */
++static uint64_t perf3_03_loose_calls;
++static uint64_t perf3_03_both_numeric;
++static uint64_t perf3_03_left_numeric_only;
++static uint64_t perf3_03_right_numeric_only;
++static uint64_t perf3_03_neither_numeric;
++static uint64_t perf3_03_numeric_operands;
++static uint64_t perf3_03_failed_operands;
++static uint64_t perf3_03_first_char_rejectable;
++static uint64_t perf3_03_operand_bytes;
++static uint64_t perf3_03_len_le_4;
++static uint64_t perf3_03_len_le_8;
++static uint64_t perf3_03_len_le_16;
++static uint64_t perf3_03_len_le_32;
++static uint64_t perf3_03_len_gt_32;
++
++static int perf3_03_ascii_space(unsigned char c) {
++    return c == ' ' || c == '\t' || c == '\n' || c == '\r' ||
++           c == '\f' || c == '\v';
++}
++
++static void perf3_03_record_operand(const char *text, size_t length, int numeric) {
++    size_t i = 0;
++    unsigned char first;
++
++    perf3_03_operand_bytes += length;
++    if (length <= 4) perf3_03_len_le_4++;
++    else if (length <= 8) perf3_03_len_le_8++;
++    else if (length <= 16) perf3_03_len_le_16++;
++    else if (length <= 32) perf3_03_len_le_32++;
++    else perf3_03_len_gt_32++;
++    if (numeric) {
++        perf3_03_numeric_operands++;
++        return;
++    }
++    perf3_03_failed_operands++;
++    while (i < length && perf3_03_ascii_space((unsigned char)text[i])) i++;
++    if (i == length) {
++        perf3_03_first_char_rejectable++;
++        return;
++    }
++    first = (unsigned char)text[i];
++    if (!((first >= '0' && first <= '9') || first == '+' || first == '-' ||
++          first == '.' || first == 'i' || first == 'I' || first == 'n' ||
++          first == 'N')) {
++        perf3_03_first_char_rejectable++;
++    }
++}
++
++#if defined(__GNUC__) || defined(__clang__)
++__attribute__((destructor))
++#endif
++static void perf3_03_report_loose_compare(void) {
++    fprintf(stderr,
++            "PERF3_03_LOOSE_COMPARE calls=%llu both_numeric=%llu "
++            "left_only=%llu right_only=%llu neither=%llu "
++            "numeric_operands=%llu failed_operands=%llu "
++            "first_char_rejectable=%llu operand_bytes=%llu "
++            "len_le_4=%llu len_le_8=%llu len_le_16=%llu "
++            "len_le_32=%llu len_gt_32=%llu\n",
++            (unsigned long long)perf3_03_loose_calls,
++            (unsigned long long)perf3_03_both_numeric,
++            (unsigned long long)perf3_03_left_numeric_only,
++            (unsigned long long)perf3_03_right_numeric_only,
++            (unsigned long long)perf3_03_neither_numeric,
++            (unsigned long long)perf3_03_numeric_operands,
++            (unsigned long long)perf3_03_failed_operands,
++            (unsigned long long)perf3_03_first_char_rejectable,
++            (unsigned long long)perf3_03_operand_bytes,
++            (unsigned long long)perf3_03_len_le_4,
++            (unsigned long long)perf3_03_len_le_8,
++            (unsigned long long)perf3_03_len_le_16,
++            (unsigned long long)perf3_03_len_le_32,
++            (unsigned long long)perf3_03_len_gt_32);
++}
++
+ static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+     double left_number;
+     double right_number;
+     int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+     int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
+ 
++    perf3_03_loose_calls++;
++    if (left_numeric && right_numeric) perf3_03_both_numeric++;
++    else if (left_numeric) perf3_03_left_numeric_only++;
++    else if (right_numeric) perf3_03_right_numeric_only++;
++    else perf3_03_neither_numeric++;
++    perf3_03_record_operand(left, left_len, left_numeric);
++    perf3_03_record_operand(right, right_len, right_numeric);
++
+     if (left_numeric && right_numeric) {
+         if (left_number > right_number) return 1;
+         if (left_number < right_number) return -1;

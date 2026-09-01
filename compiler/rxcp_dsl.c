@@ -113,7 +113,17 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_MOD:
         case TK_IDIV:
         case TK_POWER_L:
-        case TK_POWER_R: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_POWER_R:
+        case TK_NAMED_MULT_OPERATOR: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_NAMED_SHIFT_OPERATOR:
+        case TK_NAMED_AND_OPERATOR:
+        case TK_NAMED_XOR_OPERATOR:
+        case TK_NAMED_OR_OPERATOR:
+        case TK_INTRINSIC_LT:
+        case TK_INTRINSIC_PREFIX_LT:
+        case TK_INTRINSIC_NAME:
+        case TK_INTRINSIC_GENERIC_OPEN:
+        case TK_NAMED_OPERATOR: return LEXER_OPERATOR;
         case TK_EQUAL:
         case TK_NEQ:
         case TK_GT:
@@ -274,14 +284,20 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
         LOG("cREXX Parser Server starting... (debug=%d)", debug_mode);
     }
 
-    const char *crexx_config = 
-        "[.rexx]\n"
-        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,expose,return,exit,pull,parse,arg\n"
-        "operators=+,-,*,/,=,<,>,(,),{,},,,;\n"
-        "line_comment=--\n"
-        "block_start=/*\n"
-        "block_end=*/\n"
-        "quotes=\"\n";
+#define CREXX_EP_RULES \
+        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,initialiser,expose,return,exit,pull,parse,arg\n" \
+        "operators=+,-,*,/,=,<,>,(,),{,},,,;\n" \
+        "line_comment=--\n" \
+        "block_start=/*\n" \
+        "block_end=*/\n" \
+        "quotes=\"\n"
+    const char *crexx_config =
+        "[.rexx]\n" CREXX_EP_RULES
+        "[.rex]\n" CREXX_EP_RULES
+        "[.crexx]\n" CREXX_EP_RULES
+        "[.crx]\n" CREXX_EP_RULES
+        "[.the]\n" CREXX_EP_RULES;
+#undef CREXX_EP_RULES
     cb_set_ep_config_string(crexx_config);
 
     CodeBuffer *cb = create_code_buffer(NULL, rxc_highlight_controller_parse);

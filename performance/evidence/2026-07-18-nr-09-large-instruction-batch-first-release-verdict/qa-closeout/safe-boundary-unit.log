@@ -1,0 +1,12 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 10: rxcp_super_combiner
+1/1 Test #10: rxcp_super_combiner ..............   Passed    0.37 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler       =   0.37 sec*proc (1 test)
+nr09           =   0.37 sec*proc (1 test)
+performance    =   0.37 sec*proc (1 test)
+
+Total Test time (real) =   0.41 sec

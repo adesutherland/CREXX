@@ -1,0 +1,3 @@
+vm,old_vm_cps_median,new_vm_cps_median,cps_delta_percent,old_vm_real_median_s,new_vm_real_median_s,real_delta_percent
+rxvm,1195649,1194926,-0.060,8.38,8.38,+0.000
+rxbvm,1180487,1179673,-0.069,8.48,8.49,+0.118

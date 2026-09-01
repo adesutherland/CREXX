@@ -18,7 +18,7 @@ The implemented Level B surface is:
 - optional same-named class-side `match` for factory selection
 - checked casts with `expr as .type`
 - boolean type tests with `expr is .type`
-- concrete type introspection with `typeof(expr)`
+- concrete type introspection with `<typeof>(expr)`
 - namespace-qualified contract references such as `.pkg..thing()`
 
 Each class also has an intrinsic interface of its own name, so `.box()` and
@@ -70,8 +70,8 @@ during typing.
 
 The relevant emitted VM lookups are:
 
-- `srcmethod` for interface method dispatch
-- `srcfproc` for interface default and named factory dispatch
+- `srcmethodsel` for interface method dispatch
+- `srcfprocsel` for interface default and named factory dispatch
 
 The dynamic call itself still goes through the existing `dcall` path once the
 lookup step resolves the concrete procedure.
@@ -110,8 +110,10 @@ For each effective member:
 1. prefer the concrete class method, if present
 2. otherwise bind the interface default method when the member is `method final`
 
-At execution time `srcmethod` resolves through that registry, then `dcall`
-invokes the bound procedure.
+At execution time `srcmethodsel` resolves through that registry, then `dcall`
+invokes the bound procedure. The selector is a callable descriptor
+(`rxsig1|name|return_type|args`), so the VM validates the metadata signature
+before binding.
 
 ### Factory dispatch
 
@@ -126,7 +128,7 @@ Each candidate row stores:
 - the resolved concrete factory procedure
 - the optional resolved concrete `match` procedure
 
-At execution time `srcfproc`:
+At execution time `srcfprocsel`:
 
 1. finds all candidates for the requested interface/member pair
 2. evaluates the effective `match` for every candidate, even if there is only
@@ -144,13 +146,13 @@ Level B now supports:
 
 - `expr as .type` for checked casts
 - `expr is .type` for boolean type tests
-- `typeof(expr)` for concrete runtime type introspection
+- `<typeof>(expr)` for concrete runtime type introspection
 
 Object casts are runtime-checked. `as .interface` succeeds when the concrete
 class implements that interface, while `as .class` requires the exact concrete
 class. Failed casts raise `CONVERSION_ERROR`.
 
-`typeof(expr)` is emitted as a compile-time constant for scalar expressions and
+`<typeof>(expr)` is emitted as a compile-time constant for scalar expressions and
 as a VM lookup for object expressions, which return the concrete runtime class
 in source form such as `.pkg..thing`.
 

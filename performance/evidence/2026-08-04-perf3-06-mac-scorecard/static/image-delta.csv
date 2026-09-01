@@ -1,0 +1,9 @@
+workload,perf3_01_static_instructions,perf3_06_static_instructions,instruction_delta,instruction_delta_percent,perf3_01_max_locals,perf3_06_max_locals,locals_delta,perf3_01_rxbin_bytes,perf3_06_rxbin_bytes,rxbin_byte_delta
+Sieve,72,72,0,0.000,16,16,0,4900,4900,0
+Permute,209,209,0,0.000,24,24,0,11810,11810,0
+Bounce,352,356,4,1.136,20,20,0,17167,17247,80
+Richards,1815,1805,-10,-0.551,54,56,2,78734,79102,368
+Base64,609,606,-3,-0.493,40,40,0,38237,38197,-40
+Towers,557,552,-5,-0.898,34,34,0,28686,28638,-48
+RexxCPS,1240,1222,-18,-1.452,103,103,0,68473,68585,112
+shared-library,62244,62606,362,0.582,,,,935917,937413,1496

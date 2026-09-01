@@ -1,0 +1,56 @@
+/*
+ * NetRexx port of the Are We Fast Yet? Storage benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * ../../LICENSE-SOM-MIT.txt and ../../README.md.
+ */
+options binary
+
+class awfy_storage
+
+  method main(args=String[]) static
+    repetitions=int 1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    result=int 0
+    loop iteration=1 to repetitions
+      result=StorageBenchmark().run()
+      if result\=5461 then do
+        say 'FAIL: expected 5461 allocations, got' result
+        exit 1
+      end
+    end
+
+    say 'benchmark=awfy_storage repetitions='repetitions 'result='result
+    say 'PASS: AWFY Storage NetRexx port'
+
+class StorageRandom
+  properties private
+    seedValue=int 74755
+
+  method next() binary returns int
+    seedValue=((seedValue*1309)+13849)//65536
+    return seedValue
+
+class StorageBenchmark
+  properties private
+    allocationCount=int
+
+  method run() binary returns int
+    random=StorageRandom()
+    allocationCount=0
+    tree=Object buildTreeDepth(7,random)
+    if tree=null then return 0
+    return allocationCount
+
+  method buildTreeDepth(depth=int,random=StorageRandom) private binary returns Object
+    allocationCount=allocationCount+1
+    if depth=1 then return Object[(random.next()//10)+1]
+    tree=Object[4]
+    loop i=0 to 3
+      tree[i]=buildTreeDepth(depth-1,random)
+    end
+    return tree

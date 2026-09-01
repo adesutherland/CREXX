@@ -1,10 +1,11 @@
-# `rxsocket` Core TCP Library
-
+<!-- # `rxsocket` Core TCP Library -->
+# The .rxsocket library
 `rxsocket.rexx` is the Level B wrapper around the VM's core socket
-instructions. It is built into `library.rxbin`, so scripts can `import
-rxsocket` without loading the older dynamic socket plugin. That deprecated
-OpenSSL-backed plugin is now build-time opt-in via
-`CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`.
+instructions. It is built into `library.rxbin`.
+<!-- so scripts can `import -->
+<!-- rxsocket` without loading the older dynamic socket plugin. That deprecated -->
+<!-- OpenSSL-backed plugin is now build-time opt-in via -->
+<!-- `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`. -->
 
 The implementation uses the operating system socket API directly: POSIX sockets
 on Unix-like systems and Winsock2 on Windows. Client TLS is provided by the VM
@@ -12,10 +13,11 @@ socket TLS backend when one is selected.
 
 ## Handles and Status
 
-`socketcreate()` returns a positive VM-managed socket handle. Handles are not
-OS file descriptors and should only be used with `rxsocket` functions. The VM
+`socketcreate()` returns a positive VM-managed socket handle[^handle]. The VM
 closes any live handles when the VM context is freed, but programs should still
 call `socketclose()` when finished.
+
+[^handle]: Handles are not OS file descriptors and should only be used with `rxsocket` functions.
 
 Status codes are:
 
@@ -134,3 +136,70 @@ The functional coverage lives in `lib/rxfnsb/tests_functional/ts_rxsocket.rexx`.
 TLS handshake smoke test; set `CREXX_TLS_LIVE_SMOKE=1` to enable it on a runner
 with network access. The lower-level RXAS instruction coverage lives in
 `interpreter/tests/tests_socket.rxas`.
+
+## Echo server example
+
+The below sample implements an echo-type server to illustrate the flow over the network. In the example, the `netcat` utility (abbreviated as a command to `nc`) is used to send input over a socket on port 10001 (on the same machine) to the server, which will promptly echo it back to the shell in which `netcat` is running.
+
+```rexx
+options levelb comments_dash
+
+import rxsocket
+import rxfnsb
+
+host	   = "127.0.0.1"
+port	   = 10001
+backlog	   = 5
+bufferSize = 4096
+
+server = socketcreate()
+if server <= 0 then exit 1
+
+if socketbind(server, host, port) <> 0 then do
+  drop_rc = socketclose(server)
+  exit 1
+end
+
+if socketlisten(server, backlog) <> 0 then do
+  drop_rc = socketclose(server)
+  exit 1
+end
+
+say "Backend server listening on "host":"port
+
+do forever
+  client = socketaccept(server)
+
+  if client <= 0 then do
+    say "socketaccept failed"
+    leave
+  end
+
+  say "Client connected"
+
+  do forever
+    data = socketrecv(client, bufferSize)
+    dl = length(data)
+
+    if left(data,dl-1) = 'version' then data=version()
+    if data = "" then leave 
+
+    bytesSent = socketsend(client, data)
+    say bytesSent 'bytes send' 
+  end -- do forever
+
+  drop_rc = socketclose(client)
+  say "Client disconnected"
+end
+
+drop_rc = socketclose(server)
+```
+
+Run this, and then use `nc` to send input to it:
+
+```bash
+nc 127.0.0.1 10001
+```
+
+The server listens on port 10001 of localhost and will echo everything that is typed into `netcat` back to that session; except for when the string is `version`, in which case it will return the version of the running cRexx runtime. The comparision needs to be to one character less of the `data` variable, because this will include a linefeed.
+

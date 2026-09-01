@@ -1,0 +1,26 @@
+/* PERF2-02 Q7 build-private diagnostic: one static COPY site executes three
+ * times, first with a plain integer, then a string, then an integer again. */
+
+.globals=0
+
+main() .locals=6
+    load r2,1
+    load r3,0
+
+again:
+    copy r1,r2
+    inc r3
+    ieq r0,r3,1
+    brf after_first,r0
+    load r2,"nonplain"
+    br again
+
+after_first:
+    ieq r0,r3,2
+    brf done,r0
+    load r2,2
+    br again
+
+done:
+    say "PASS: PERF2-02 Q7 copy transition"
+    ret 0

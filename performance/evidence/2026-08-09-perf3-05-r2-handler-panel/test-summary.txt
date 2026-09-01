@@ -1,0 +1,33 @@
+PERF3-05-R2 correctness and build summary, 2026-08-09
+
+Untouched origin/develop Release baseline
+  focused CTest: 11/11 passed
+
+All-inline Release
+  complete build: passed
+  full CTest: 2002/2002 passed, 56.38 s
+  governed dual-engine workload smokes: 14/14 passed
+
+All-outline Release
+  complete build: passed, 114.00 s, max RSS 734560256 bytes, 0 swaps
+  full CTest: 2002/2002 passed, 57.80 s
+  governed dual-engine workload smokes: 14/14 passed
+
+Profile-30 Release
+  complete build: passed, 114.07 s, max RSS 734838784 bytes, 0 swaps
+  full CTest: 2002/2002 passed, 58.51 s
+  governed dual-engine workload smokes: 14/14 passed
+
+Final source-sync focused dispatch/instrumentation suite
+  all-inline Release: 11/11 passed
+  all-outline Release: 11/11 passed
+  profile-30 Release: 11/11 passed
+
+All-outline Debug
+  fresh complete build: passed, 378.84 s, max RSS 735100928 bytes, 0 swaps
+  full CTest: 2002/2002 passed, 224.47 s
+
+Formal balanced timing matrix
+  42 cells, 2 warmups plus 12 recorded rounds per cell
+  588/588 executions passed exact output checks
+  504/504 recorded samples retained

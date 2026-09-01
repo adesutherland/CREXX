@@ -1,0 +1,35 @@
+options levelb
+
+import rxfnsb
+
+main: procedure = .int
+  registry = .Registry()
+  call registry.add("openai")
+  say registry.getDriver(1)
+  return 0
+
+normalize_words: procedure = .string
+  arg value = .string
+  value = upper(value)
+  value = space(value)
+  return value
+
+Registry: class
+  count = .int
+  drivers = .string[]
+
+  *: factory
+    count = 0
+    return
+
+  add: method
+    arg driver = .string
+    idx = .int
+    idx = count + 1
+    count = idx
+    drivers[idx] = normalize_words(driver)
+    return
+
+  getDriver: method = .string
+    arg idx = .int
+    return drivers[idx]

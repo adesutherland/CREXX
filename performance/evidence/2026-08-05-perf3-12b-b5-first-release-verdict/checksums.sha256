@@ -1,0 +1,16 @@
+d0ccb68c00f20d29f176e3eae842cbeb2c209455801113d951902c171572e537  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/COMMANDS.md
+459ede96bd0e5de6aabc53d07c43b24fe82e8f9f8210ce8406dcc5abb0060c89  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/README.md
+f4693591f589219680ceb9cad46c7dfca11df48cbddab1cd30379fa24eb8a512  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/artifacts/rexxcps-production.rxbin
+489510472a1c1120141c032f502530f7f814e28084c727a280f0705a82629486  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/identities.sha256
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/driver.stderr
+d007aa8ae3bda702d2d724f749eeed04b7b2d9b32e295269e758cc225fd8d551  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/driver.stdout
+b73ec95678dc25d778ed0ccad492031a2aee01c79634080e6cbacc16278ec0c1  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/focused-debug-ctest.log
+d2c967aa5e8bbe2b23c545d6697e342fff4ebf8e80c3211f188abac98f4bdc5e  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/logs/focused-release-ctest.log
+e1925eff27bda58d77f45858cbe59781e4207e115bda2fb44c96ff10edccc4e4  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/diagnostic-summary.txt
+8d2a9201d50af482d69e2863a96dcd48d898442b7e25768728365fb69f2abde2  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/production-disassembly.rxas
+c6939057b78e3d90d63d0acefddd4c511c6c4ed6429fefa1dcc6f6b06bf37810  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/structure/s0-disassembly.rxas
+43f41e0e62b07e908d7c4b1cc354baf37b92bd83ba87ebab974db25739280504  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/capture-manifest.json
+d6e060520087f061b848de8d2fa7c5e2c6e712e9ff058d7b050840927966ee03  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/outputs.csv
+176cd676e59f21b433710503e0a78a80331dd4684af2a0843b5c250998078bed  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/paired.csv
+d16487dcba95069c6cbf21688ac6ad31fe0e2fb81c6160de8fb896bc36d4e873  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/samples.csv
+1fff87c9025b85eb501e802d14ac16c18cad845d27685ba266807c11b1ccb064  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/timing/summary.csv

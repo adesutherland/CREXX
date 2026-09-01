@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gb08611179db5.dirty 20260727",
+  "source_manifest": "/private/tmp/crexx-perf2-0607.HOrlKC/v1r01-harness/first-verdict-manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-27T13:18:48+0000",
+  "completed_utc": "2026-07-27T13:19:33+0000",
+  "result": "fail"
+}

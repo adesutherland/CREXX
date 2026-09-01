@@ -1,0 +1,26 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+rss-Sieve-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+rss-Sieve-sieve-rxvm-recorded-1,stderr,1,"	Command being timed: ""/tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/rxvm /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin /tmp/crexx-perf2-linux-x64.d5f0827ca/gcc-release/bin/library.rxbin -a 5500"""
+rss-Sieve-sieve-rxvm-recorded-1,stderr,2,	User time (seconds): 2.84
+rss-Sieve-sieve-rxvm-recorded-1,stderr,3,	System time (seconds): 0.00
+rss-Sieve-sieve-rxvm-recorded-1,stderr,4,	Percent of CPU this job got: 99%
+rss-Sieve-sieve-rxvm-recorded-1,stderr,5,	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.84
+rss-Sieve-sieve-rxvm-recorded-1,stderr,6,	Average shared text size (kbytes): 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,7,	Average unshared data size (kbytes): 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,8,	Average stack size (kbytes): 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,9,	Average total size (kbytes): 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,10,	Maximum resident set size (kbytes): 14152
+rss-Sieve-sieve-rxvm-recorded-1,stderr,11,	Average resident set size (kbytes): 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,12,	Major (requiring I/O) page faults: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,13,	Minor (reclaiming a frame) page faults: 3520
+rss-Sieve-sieve-rxvm-recorded-1,stderr,14,	Voluntary context switches: 1
+rss-Sieve-sieve-rxvm-recorded-1,stderr,15,	Involuntary context switches: 20
+rss-Sieve-sieve-rxvm-recorded-1,stderr,16,	Swaps: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,17,	File system inputs: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,18,	File system outputs: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,19,	Socket messages sent: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,20,	Socket messages received: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,21,	Signals delivered: 0
+rss-Sieve-sieve-rxvm-recorded-1,stderr,22,	Page size (bytes): 4096
+rss-Sieve-sieve-rxvm-recorded-1,stderr,23,	Exit status: 0

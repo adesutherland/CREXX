@@ -1,0 +1,22 @@
+options levelb
+import rxfnsb
+
+errors = 0
+
+loaded = loadmodule("ts_loadmodule_provider.rxbin")
+errors = errors + check(loaded > 0, "loads explicit provider")
+
+missing = loadmodule("__definitely_missing_crexx_module_586__.rxbin")
+errors = errors + check(missing <= 0, "missing provider returns status")
+
+blank = loadmodule("")
+errors = errors + check(blank <= 0, "blank path returns loader status")
+
+if errors = 0 then say "PASS: Level B loadmodule"
+return errors <> 0
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1

@@ -1,0 +1,7 @@
+crexx-nr04a-kind-index-manifest|1
+# Fixed-count optimizer-resistant RexxCPS diagnostic. The exact images were linked
+# with the frozen starting-commit rxlink from the same optimized workload and
+# library modules. Arguments A, Off, 1, 1 disable calibration drift.
+# Fields: id|pair|workload|variant|mode|image|modules|args|expectation|source_trace|warmups|runs|image_sha256|module_sha256s
+rexxcps-opaque-retained|rexxcps-opaque-fixed|RexxCPS opaque fixed|baseline|opt-retained|/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-retained.rxbin||A;Off;1;1|PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic|linked;source_TRACE=retained;fixed_count=1;averaging=1|2|7|7c20ec8ba3d00913ddc0cb51600dc0ebed5890f5d13c5c8544a4e3fe8757543d|
+rexxcps-opaque-stripped|rexxcps-opaque-fixed|RexxCPS opaque fixed|candidate|opt-stripped|/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/fixed/rexxcps-opaque-stripped.rxbin||A;Off;1;1|PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic|linked;source_TRACE=stripped;fixed_count=1;averaging=1|2|7|7661c128cbacc4c553166080cc86459e0e83efe600c2c3646c2b9d842fa1c88f|

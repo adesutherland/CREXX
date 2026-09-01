@@ -35,9 +35,13 @@ typedef struct Assembler_Token Assembler_Token;
 typedef struct Assembler_Error Assembler_Error;
 struct avl_tree_node;
 
-/* Keyhole Optimiser */
-/* We are aiming for 20 instructions in the keyhole */
-#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 20
+/* Keyhole Optimiser
+ *
+ * Keep a deliberately bounded local fixed-point stage ahead of procedure
+ * CFG/SSA construction.  One hundred records gives locally provable rules
+ * generous lookahead without turning the rule matcher into a procedure-wide
+ * flow solver. */
+#define OPTIMISER_TARGET_MAX_QUEUE_SIZE 100
 /* We add 40 slots for any instruction growth caused by rules */
 #define OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE 40
 
@@ -51,6 +55,10 @@ enum queue_item_type {
 typedef struct instruction_queue {
     enum queue_item_type instrType;
     Assembler_Token *instrToken;
+    /* OP_CODE operands are owned by the queue and have no fixed limit. */
+    Assembler_Token **operandTokens;
+    size_t operandCount;
+    /* Legacy named slots remain for optimiser rules and metadata records. */
     Assembler_Token *operand1Token;
     Assembler_Token *operand2Token;
     Assembler_Token *operand3Token;
@@ -92,16 +100,23 @@ typedef struct Assembler_Context {
     struct avl_tree_node *decimal_constants_tree;
     struct avl_tree_node *float_constants_tree;
     struct avl_tree_node *binary_constants_tree;
+    struct avl_tree_node *constant_aliases_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
+    struct rxas_jump_table *jump_tables;
     char *extern_regs;
+    char *current_proc_name;
     instruction_queue *optimiser_queue;
     size_t optimiser_queue_items;
+    instruction_queue *procedure_queue;
+    size_t procedure_queue_items;
+    size_t procedure_queue_capacity;
     int optimiser_counter;
     FILE *traceFile;
     int debug_mode;
     int quiet;
+    Assembler_Token *last_label_token;
 } Assembler_Context;
 
 /* Assembler_Token Functions */
@@ -231,8 +246,10 @@ int rxasoutf(Assembler_Context *scanner);
 /* Clear and Free Assembler Context */
 void rxasclrc(Assembler_Context *scanner);
 
-/* Convert FLOAT tokens to a DECIMAL tokens as defined by the instruction types */
-void promote_floats_to_decimals(Assembler_Token *instrToken,
-                                Assembler_Token *operand1Token, Assembler_Token *operand2Token, Assembler_Token *operand3Token);
+/* Return an opcode operand from its variable-length queue representation. */
+Assembler_Token *rxas_queue_operand(const instruction_queue *item, size_t operand_index);
+
+/* Release any variable-length operands owned by a queued opcode. */
+void rxas_free_queue_item(instruction_queue *item);
 
 #endif //CREXX_RXSA_H

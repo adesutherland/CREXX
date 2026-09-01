@@ -1,0 +1,167 @@
+/*
+ * SOURCE                 : select_dispatch_fallback.crexx
+ */
+
+.globals=0
+
+main() .locals=7
+   .meta "select_dispatch_fallback.main"="b" ".int" main() ""
+   .srcstep 10 10 17 "select_dispatch_fallback.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .meta "select_dispatch_fallback.main.i"="b" ".int" r0
+   .srcstep 1 1 17 "select_dispatch_fallback.crexx" 4 3 11 "  i = .int"
+   null r0
+   .srcstep 7 7 17 "select_dispatch_fallback.crexx" 6 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "select_dispatch_fallback.crexx" 6 6 11 "  do i = 1 to 3"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "select_dispatch_fallback.crexx" 6 12 16 "  do i = 1 to 3"
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
+l9dostart:
+   .srcstep 3 3 17 "select_dispatch_fallback.crexx" 6 12 16 "  do i = 1 to 3"
+   igt r2,r0,r1
+   brt l9doend,r2
+   .srcstep 5 5 17 "select_dispatch_fallback.crexx" 7 5 26 "    say duplicate_case(i)"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
+   call1 r5,duplicate_case(),r0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "duplicate_case" ""
+   say r5
+   .srcstep 6 6 17 "select_dispatch_fallback.crexx" 8 5 32 "    say dynamic_case(i, i + 10)"
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "i" ""
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "i" ""
+   iadd r5,r0,10
+   .traceevent "O" 4 "R" "I" "r" 5 6 6 0 "" ""
+   call2 r6,dynamic_case(),r0,r5
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 6 6 0 "dynamic_case" ""
+   say r6
+l9doinc:
+   .srcstep 4 4 17 "select_dispatch_fallback.crexx" 6 6 7 "  do i = 1 to 3"
+   inc r0
+   .srcstep 8 8 17 "select_dispatch_fallback.crexx" 9 3 6 "  end"
+   br l9dostart
+l9doend:
+   .srcstep 9 9 17 "select_dispatch_fallback.crexx" 10 3 11 "  return 0"
+   ret 0
+   .meta "select_dispatch_fallback.main.i"
+
+duplicate_case() .locals=7
+   .meta "select_dispatch_fallback.duplicate_case"="b" ".int" duplicate_case() "value=.int"
+   .srcstep 25 25 17 "select_dispatch_fallback.crexx" 12 1 33 "duplicate_case: procedure = .int"
+   numsci 18,1,1
+   .srcstep 11 11 17 "select_dispatch_fallback.crexx" 13 7 19 "  arg value = .int"
+   .meta "select_dispatch_fallback.duplicate_case.value"="b" ".int" a1
+   .meta "select_dispatch_fallback.duplicate_case.select_tmp"="b" ".int" r1
+   .srcstep 12 12 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
+   null r1
+   .srcstep 13 13 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
+   .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "value" ""
+   icopy r1,a1
+   .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "select_tmp" ""
+   .srcstep 22 22 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
+   ieq r2,r1,1
+   .traceevent "O" 4 "R" "B" "r" 2 22 22 0 "" ""
+   brf l102iffalse,r2
+   .srcstep 14 14 17 "select_dispatch_fallback.crexx" 16 17 26 "    when 1 then return 10"
+   ret 10
+   br l102ifend
+   .srcstep 23 23 17 "select_dispatch_fallback.crexx" 17 5 9 "    when 1 then return 11"
+l102iffalse:
+   .srcstep 20 20 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
+   ieq r3,r1,1
+   .traceevent "O" 4 "R" "B" "r" 3 20 20 0 "" ""
+   brf l105iffalse,r3
+   .srcstep 15 15 17 "select_dispatch_fallback.crexx" 17 17 26 "    when 1 then return 11"
+   ret 11
+   br l105ifend
+   .srcstep 21 21 17 "select_dispatch_fallback.crexx" 18 5 9 "    when 2 then return 20"
+l105iffalse:
+   .srcstep 18 18 6 "select_dispatch_fallback.crexx" 15 3 15 "  select value"
+   ieq r4,r1,2
+   .traceevent "O" 4 "R" "B" "r" 4 18 18 0 "" ""
+   brf l108iffalse,r4
+   .srcstep 16 16 17 "select_dispatch_fallback.crexx" 18 17 26 "    when 2 then return 20"
+   ret 20
+   br l108ifend
+   .srcstep 19 19 17 "select_dispatch_fallback.crexx" 19 5 14 "    otherwise return -1"
+l108iffalse:
+   .srcstep 17 17 17 "select_dispatch_fallback.crexx" 19 15 24 "    otherwise return -1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 17 17 0 "" ""
+   isub r6,0,r5
+   .traceevent "P" 4 "R" "I" "r" 6 17 17 0 "" ""
+   ret r6
+l108ifend:
+l105ifend:
+l102ifend:
+   .srcstep 24 24 17 "select_dispatch_fallback.crexx" 21 3 12 "  return -2"
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 24 24 0 "" ""
+   isub r5,0,r6
+   .traceevent "P" 4 "R" "I" "r" 5 24 24 0 "" ""
+   ret r5
+   .meta "select_dispatch_fallback.duplicate_case.value"
+
+dynamic_case() .locals=8
+   .meta "select_dispatch_fallback.dynamic_case"="b" ".int" dynamic_case() "value=.int,dynamic=.int"
+   .srcstep 41 41 17 "select_dispatch_fallback.crexx" 23 1 31 "dynamic_case: procedure = .int"
+   numsci 18,1,1
+   .srcstep 26 26 17 "select_dispatch_fallback.crexx" 24 7 19 "  arg value = .int, dynamic = .int"
+   .meta "select_dispatch_fallback.dynamic_case.value"="b" ".int" a1
+   .srcstep 27 27 17 "select_dispatch_fallback.crexx" 24 21 35 "  arg value = .int, dynamic = .int"
+   .meta "select_dispatch_fallback.dynamic_case.dynamic"="b" ".int" a2
+   .meta "select_dispatch_fallback.dynamic_case.select_tmp"="b" ".int" r2
+   .srcstep 28 28 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
+   null r2
+   .srcstep 29 29 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
+   .traceevent "V" 6 "R" "I" "a" 1 29 29 0 "value" ""
+   icopy r2,a1
+   .traceevent "A" 6 "R" "I" "r" 2 29 29 0 "select_tmp" ""
+   .srcstep 38 38 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
+   ieq r3,r2,1
+   .traceevent "O" 4 "R" "B" "r" 3 38 38 0 "" ""
+   brf l117iffalse,r3
+   .srcstep 30 30 17 "select_dispatch_fallback.crexx" 27 17 26 "    when 1 then return 10"
+   ret 10
+   br l117ifend
+   .srcstep 39 39 17 "select_dispatch_fallback.crexx" 28 5 9 "    when dynamic then return 20"
+l117iffalse:
+   .srcstep 36 36 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
+   .traceevent "V" 6 "R" "I" "a" 2 36 36 0 "dynamic" ""
+   ieq r4,r2,a2
+   .traceevent "O" 4 "R" "B" "r" 4 36 36 0 "" ""
+   brf l120iffalse,r4
+   .srcstep 31 31 17 "select_dispatch_fallback.crexx" 28 23 32 "    when dynamic then return 20"
+   ret 20
+   br l120ifend
+   .srcstep 37 37 17 "select_dispatch_fallback.crexx" 29 5 9 "    when 3 then return 30"
+l120iffalse:
+   .srcstep 34 34 6 "select_dispatch_fallback.crexx" 26 3 15 "  select value"
+   ieq r5,r2,3
+   .traceevent "O" 4 "R" "B" "r" 5 34 34 0 "" ""
+   brf l123iffalse,r5
+   .srcstep 32 32 17 "select_dispatch_fallback.crexx" 29 17 26 "    when 3 then return 30"
+   ret 30
+   br l123ifend
+   .srcstep 35 35 17 "select_dispatch_fallback.crexx" 30 5 14 "    otherwise return -1"
+l123iffalse:
+   .srcstep 33 33 17 "select_dispatch_fallback.crexx" 30 15 24 "    otherwise return -1"
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 33 33 0 "" ""
+   isub r7,0,r6
+   .traceevent "P" 4 "R" "I" "r" 7 33 33 0 "" ""
+   ret r7
+l123ifend:
+l120ifend:
+l117ifend:
+   .srcstep 40 40 17 "select_dispatch_fallback.crexx" 32 3 12 "  return -2"
+   load r7,2
+   .traceevent "L" 4 "R" "I" "r" 7 40 40 0 "" ""
+   isub r6,0,r7
+   .traceevent "P" 4 "R" "I" "r" 6 40 40 0 "" ""
+   ret r6
+   .meta "select_dispatch_fallback.dynamic_case.dynamic"
+   .meta "select_dispatch_fallback.dynamic_case.value"

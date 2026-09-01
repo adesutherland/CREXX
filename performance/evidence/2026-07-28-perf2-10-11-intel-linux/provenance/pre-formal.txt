@@ -1,0 +1,20 @@
+captured_utc=2026-07-28T18:33:59Z
+captured_local=2026-07-28T19:33:59+01:00
+Linux adrian-linux 7.0.0-27-generic #27-Ubuntu SMP PREEMPT_DYNAMIC Thu Jun 18 19:13:49 UTC 2026 x86_64 GNU/Linux
+uptime= 19:33:59 up 11:21,  1 user,  load average: 0.90, 3.39, 4.93
+loadavg=0.90 3.39 4.93 1/1119 315634
+               total        used        free      shared  buff/cache   available
+Mem:            18Gi       9.2Gi       8.2Gi       4.7Gi       6.6Gi       9.6Gi
+Swap:          8.0Gi       767Mi       7.3Gi
+perf_event_paranoid=-1
+kptr_restrict=1
+nmi_watchdog=1
+/sys/class/power_supply/ACAD/online=1
+/sys/class/power_supply/BAT1/status=Full
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver=intel_pstate
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=powersave
+/sys/devices/system/cpu/intel_pstate/status=active
+/sys/devices/system/cpu/intel_pstate/no_turbo=0
+/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference=performance
+153936 /snap/clion/481/bin/clang/linux/x64/bin/clangd --clion-mode=clion-main -update-debounce=0 -index=false -include-ineligible-results -clang-tidy=0 -resource-dir=/snap/clion/481/bin/clang/linux/x64 -keep-asts=30 -ranking-model=heuristics -clion-extra-completion-preamble -clion-keep-obsolete-ast=false -header-extensions=h;h;cuh;
+315502 /bin/bash -lc set -euo pipefail root=/tmp/crexx-perf2-linux-x64.d5f0827ca src="$root/source" ev=/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux export LD_LIBRARY_PATH=/home/adrian/.local/opt/regina/3.9.7/lib export PATH=/home/adrian/.local/opt/temurin/26.0.1+8/bin:$PATH "$root/gcc-release/bin/crexx" "$src/performance/tools/run_cross_runtime_matrix.crexx" --nokeep --args --self-test >"$ev/logs/matrix-self-test.log" 2>&1 {   date -u '+captured_utc=%Y-%m-%dT%H:%M:%SZ'   date '+captured_local=%Y-%m-%dT%H:%M:%S%:z'   uname -a   printf 'uptime='; uptime   printf 'loadavg='; cat /proc/loadavg   free -h   printf 'perf_event_paranoid='; cat /proc/sys/kernel/perf_event_paranoid   printf 'kptr_restrict='; cat /proc/sys/kernel/kptr_restrict   printf 'nmi_watchdog='; cat /proc/sys/kernel/nmi_watchdog   for p in /sys/class/power_supply/*/online /sys/class/power_supply/*/status /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor /sys/devices/system/cpu/intel_pstate/status /sys/devices/system/cpu/intel_pstate/no_turbo /sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference; do [ -r "$p" ] && printf '%s=%s\n' "$p" "$(cat "$p")"; done   sensors 2>/dev/null || true   pgrep -af 'cmake|ctest|ninja|rxvm|rxbvm|rexx|java|clang|gcc|cc1' || true } >"$ev/provenance/pre-formal.txt" printf '%s\n' 'self-test:' tail -n 5 "$ev/logs/matrix-self-test.log" printf '%s\n' 'pre-formal:' sed -n '1,45p' "$ev/provenance/pre-formal.txt"

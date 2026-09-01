@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "sieve-opt-retained-candidate-vm",
+  "pair": "Sieve-retained-vm",
+  "workload": "Sieve",
+  "variant": "candidate",
+  "optimization_mode": "opt-retained-candidate-vm",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","sha256":"2924b1e9274abd017f4b9fc146adb95575a8709ee9bde91d3d07a24f5b1bb18f"},
+  "modules": [],
+  "arguments": ["50"],
+  "correctness_expectation": "PASS: AWFY Sieve",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","-a","50"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/interleaved-four-cell/entries/sieve-opt-retained-candidate-vm/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","-a","50"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 14620000
+}

@@ -2,10 +2,40 @@
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if index('Saturday','day') \= 6 then do
-  errors=errors+1
-  say 'INDEX failed in test 1 '
+errors = 0
+errors = errors + check(6, index("Saturday", "day"), "argument order")
+errors = errors + check(2, index("banana", "ana"), "first match")
+errors = errors + check(4, index("banana", "ana", 3), "start")
+errors = errors + check(0, index("banana", "ANA"), "case-sensitive")
+errors = errors + check(3, index("α🙂β🙂", "β"), "Unicode position")
+errors = errors + check(0, index("abc", ""), "empty needle")
+errors = errors + check(0, index("", "a"), "empty haystack")
+
+haystack = "a🙂b"
+needle = "🙂"
+ignored = index(haystack, needle)
+errors = errors + check_string("a🙂b", haystack, "haystack unchanged")
+errors = errors + check_string("🙂", needle, "needle unchanged")
+
+caught = 0
+do
+  ignored = index("abc", "a", 0)
+on signal invalid_arguments
+  caught = 1
 end
-return errors<>0
+errors = errors + check(1, caught, "invalid start signals")
+
+if errors = 0 then say "PASS: index"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: INDEX" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: INDEX" label "values differ"
+  return 1

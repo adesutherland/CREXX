@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+adapter-mc-common18-conversion-v2,DECIMAL-L1-conversion,crexx,adapter,D0-mc-current,D,no,steady-adapter,20000000,elapsed_ns,10,1026956000.000000,1041561750.000000,1046065500.000000,1052376000.000000,1067627000.000000,5350500.000000,0.511488,3.887997,no
+adapter-db-common18-conversion-v2,DECIMAL-L1-conversion,crexx,adapter,D1a-db-diagnostic,D,no,steady-adapter,20000000,elapsed_ns,10,5654102000.000000,5668940000.000000,5681717000.000000,5709129000.000000,5785632000.000000,17736000.000000,0.312159,2.314969,no
+adapter-mc-classic9-conversion-v2,DECIMAL-L1-conversion,crexx,adapter,D0-mc-current,D,no,steady-adapter,20000000,elapsed_ns,10,1016539000.000000,1030032250.000000,1036646500.000000,1043123750.000000,1048066000.000000,7079000.000000,0.682875,3.041249,no
+adapter-db-classic9-conversion-v2,DECIMAL-L1-conversion,crexx,adapter,D1b-db-qualified,D,no,steady-adapter,20000000,elapsed_ns,10,3398265000.000000,3414221750.000000,3427684000.000000,3433127750.000000,3501189000.000000,11423000.000000,0.333257,3.002727,no

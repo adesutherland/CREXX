@@ -9,6 +9,14 @@ import rxfnsb
  * -------------------------------------------------------------- */
 ccod = .int[]
 
+parse version vr
+say "CREXX Version: "vr
+
+parse source source_system source_invocation source_file
+## call assert_equal '143a', 'windows', source_system, ccod   /* no test, because it's not always windows */
+call assert_equal '143b', 'COMMAND', source_invocation, ccod
+call assert_equal '143c', 'test_parse.crexx', source_file, ccod
+
 fred = 'Now is the time for all good men '
 parse into abc var fred  first second
 Say 'Display extracted Variables'
@@ -593,7 +601,7 @@ parse x e5
 
 call assert_equal '105a', 'aa 6 bb', e5, ccod
 
-/* not available in CREXX PARSE
+/* not available in CREXX PARSE */
 /* -------------------------------------------------------------- */
 /* TEST 106: variable and literal patterns */
 /* -------------------------------------------------------------- */
@@ -604,7 +612,6 @@ call assert_equal '106a', 'c',         verb,  ccod
 call assert_equal '106b', '/',         delim, ccod
 call assert_equal '106c', 'my string', str,   ccod
 call assert_equal '106d', '1 10',      rest,  ccod
-*/
 
 /***** disabled legacy tests 21-24 kept commented out in original *****/
 
@@ -969,7 +976,7 @@ end
 say copies('-',32)
 
 if ccod.11 = 0 & ccod.2 = 0 then do
-    say 'SUCCESS'
+    say 'PARSE TESTS PASSED'
 end
 return
 

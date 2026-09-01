@@ -1,0 +1,4 @@
+workload,procedures,work,budget,retained_bytes,policy_versions,policy_writes,policy_phis,policy_clobbers,effect_versions,effect_phis,trace_writes,call_writes,edge_states,conservative_effect_edge_states
+Richards,24,64677,6699520,2181184,1043,0,1019,0,27342,7133,1738,410,4972,14350
+Towers,13,19684,2147840,666264,374,0,361,0,8359,2527,434,122,1437,4270
+RexxCPS,5,52168,4820992,2009160,793,5,783,0,25529,5465,1252,445,3405,15575

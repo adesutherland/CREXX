@@ -1,0 +1,80 @@
+/* Functional contract for CRI-12 ADDRESS redirect-array reuse. */
+options levelb
+import rxfnsb
+
+failures = 0
+output_lines = .string[]
+error_lines = .string[]
+
+address crexx "echo FIRST" output output_lines error error_lines
+failures = failures + check_int("first rc", rc, 0)
+failures = failures + check_int("first count", output_lines[0], 1)
+failures = failures + check_str("first item", output_lines[1], "FIRST")
+
+address crexx "echo SECOND" output output_lines error error_lines
+failures = failures + check_int("reuse rc", rc, 0)
+failures = failures + check_int("reuse appends", output_lines[0], 2)
+failures = failures + check_str("reuse preserves first", output_lines[1], "FIRST")
+failures = failures + check_str("reuse adds second", output_lines[2], "SECOND")
+
+address crexx "cd ." output output_lines error error_lines
+failures = failures + check_int("empty rc", rc, 0)
+failures = failures + check_int("empty preserves existing output", output_lines[0], 2)
+failures = failures + check_int("empty preserves empty errors", error_lines[0], 0)
+
+call arraydrop output_lines
+call arraydrop error_lines
+address crexx "cd ." output output_lines error error_lines
+failures = failures + check_int("empty after drop rc", rc, 0)
+failures = failures + check_int("empty after drop output", output_lines[0], 0)
+failures = failures + check_int("empty after drop errors", error_lines[0], 0)
+
+pid_lines = .string[]
+address crexx "pid" output pid_lines
+missing = "__crexx_cri12_missing_" || pid_lines[1]
+call arraydrop pid_lines
+
+address crexx "rm :missing" output output_lines error error_lines
+failures = failures + check_int("first failure rc", rc, 8)
+failures = failures + check_int("first failure output", output_lines[0], 0)
+failures = failures + check_int("first failure errors", error_lines[0], 1)
+failures = failures + check_true("first failure path", pos(missing, error_lines[1]) > 0)
+
+address crexx "rm :missing" output output_lines error error_lines
+failures = failures + check_int("reused failure rc", rc, 8)
+failures = failures + check_int("reused failure output", output_lines[0], 0)
+failures = failures + check_int("reused failure appends errors", error_lines[0], 2)
+failures = failures + check_true("reused failure path", pos(missing, error_lines[2]) > 0)
+
+call arraydrop output_lines
+call arraydrop error_lines
+address crexx "rm :missing" output output_lines error error_lines
+failures = failures + check_int("failure after drop rc", rc, 8)
+failures = failures + check_int("failure after drop output", output_lines[0], 0)
+failures = failures + check_int("failure after drop errors", error_lines[0], 1)
+
+if failures <> 0 then do
+  say "ADDRESS array lifecycle failures:" failures
+  return 1
+end
+
+say "PASS: ADDRESS array lifecycle"
+return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say label || ": expected " || expected || " got " || actual
+  return 1
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say label || ": expected [" || expected || "] got [" || actual || "]"
+  return 1
+
+check_true: procedure = .int
+  arg label = .string, actual = .int
+  if actual then return 0
+  say label || ": expected true"
+  return 1

@@ -22,26 +22,42 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Return the character position of one word.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/wordindex.md
+ */
 options levelb
 
 namespace rxfnsb expose wordindex
 
-wordindex: procedure=.int
-   arg string=.string, wordnum=.int
-   len = length(string)
-   offset = 0
-   count = 0
-   if wordnum<1 then return 0
-   if len<1     then return 0
+/**
+ * Return the positive one-based character position of a word.
+ *
+ * @param string source text
+ * @param wordnum positive one-based word number
+ * @return word start position, or zero when absent
+ * @signal INVALID_ARGUMENTS non-positive word number
+ */
+wordindex: procedure = .int
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORDINDEX number must be positive"
 
-   do while offset < len
-      assembler fndnblnk offset,string,offset     /* Find the next non-blank character */
-      if offset < 0 then return 0                 /* No more words, negative value to distinguish from offset=0 which is valid */
-      count = count + 1
-      wordStart = offset
-      assembler fndblnk offset,string,offset     /* Find the next blank after the word */
-      if count = wordnum then return wordstart+1
-      if offset < 0 then return 0                /* No more words, negative value to distinguish from offset=0 which is valid */
-   end
-return 0  /* wordnum not found */
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return 0
+
+  scan = 0
+  current_word = 0
+  word_start = 0
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return 0
+    current_word = current_word + 1
+    if current_word = wordnum then return word_start + 1
+    assembler fndblnk scan,string,word_start
+    if scan < 0 then return 0
+  end
+  return 0

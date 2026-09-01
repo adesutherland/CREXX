@@ -1,0 +1,59 @@
+PERF2-04 LEN-C0 versus LEN-H1 exact generated-artifact comparison
+baseline_commit=6567f0ba23f20623e01322f5a62323b2347ab09d
+compiler_sha256=900c2ba2229632c74da2a00cc313efa517beeb13ed8ab58f7e0e1afb41bad857
+assembler_sha256=80d3ff3e5b28e7132158c1b186513755457baf1472c2edd653874005a2648fc4
+
+[LEN-C0]
+rxas_path=/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+rxas_sha256=e9c8b16163b5ff647ee9bb9345080e045823fd1ea0ab5892e7206ee4450150a8
+rxas_bytes=220731
+rxbin_path=/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+rxbin_sha256=9b535403baddc5b7076d5eb23027a296d982660546bcecc74d3784bb2fa23741
+rxbin_bytes=77438
+executable_rxas=1498
+main_executable_rxas=573
+main_locals=105
+call_opcodes=27
+residual_length_calls=0
+strlen_opcodes=18
+selected_taken_path=9
+  dcopy r78,r25
+  dtos r78
+  load r79,0
+  strlen r79,r78
+  icopy r77,r79
+  br l3664bexprend
+  isub r79,r77,1
+  ilt r79,17,r79
+  brf l312iffalse,r79
+
+[LEN-H1]
+rxas_path=/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_length_direct_ceiling.rxas
+rxas_sha256=26b5b4f1f78ebc4ed694c5d27e275adcd393cbe13e02f3f0238e77f40c17b6b2
+rxas_bytes=222737
+rxbin_path=/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_length_direct_ceiling.rxbin
+rxbin_sha256=77d1a5bcacec6c61409ef99ae083888db599377fb204d883983cd82fd5eb26cb
+rxbin_bytes=78270
+executable_rxas=1510
+main_executable_rxas=585
+main_locals=107
+call_opcodes=27
+residual_length_calls=0
+strlen_opcodes=18
+selected_taken_path=6
+  dcopy r18,r27
+  dtos r18
+  strlen r17,r18
+  isub r81,r17,1
+  ilt r81,17,r81
+  brf l323iffalse,r81
+
+[delta]
+selected_static_instructions_per_call=-3
+selected_dynamic_calls_per_top_level_iteration=28
+selected_dynamic_instructions_per_top_level_iteration=-84
+whole_module_executable_rxas=+12
+main_locals=+2
+rxas_bytes=+2006
+rxbin_bytes=+832
+note=whole-module increases include scratch declarations and post-timer semantic guards; they are not a production lowering estimate

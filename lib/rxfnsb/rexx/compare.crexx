@@ -22,33 +22,57 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B COMPARE implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/compare.md
+ */
 options levelb
 
 namespace rxfnsb expose compare
 
+/**
+ * Return the first differing character position after virtual padding.
+ *
+ * @param left first string
+ * @param right second string
+ * @param pad exactly one codepoint used beyond the shorter string
+ * @return first differing 1-based position, or zero
+ */
 compare: procedure = .int
-  arg string = .string, astr = .string, pad = " "
-  slen=0
-  alen=0
-  char1=0
-  char2=0
-  assembler strlen slen,string
-  assembler strlen alen,astr
-  clen=slen
-  if slen>alen then do
-     astr=substr(astr,1,slen,pad)
-     clen=slen
-  end
-  else do
-     if alen>slen then string=substr(string,1,alen,pad)
-     clen=alen
- end
+  arg left = .string, right = .string, pad = " "
+  left_length = .int
+  right_length = .int
+  common_length = .int
+  pad_length = .int
+  pad_character = .int
+  left_character = .int
+  right_character = .int
+  pad_index = 0
+  i = .int
 
-  do i=0 to clen-1
-     assembler strchar char1,string,i
-     assembler strchar char2,astr,i
-     if char1\=char2 then return i+1
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","COMPARE pad must contain exactly one character"
+  assembler strchar pad_character,pad,pad_index
+  assembler strlen left_length,left
+  assembler strlen right_length,right
+
+  common_length = left_length
+  if right_length < common_length then common_length = right_length
+  do i = 0 to common_length - 1
+    assembler strchar left_character,left,i
+    assembler strchar right_character,right,i
+    if left_character <> right_character then return i + 1
   end
 
-return 0
+  if left_length > right_length then do i = common_length to left_length - 1
+    assembler strchar left_character,left,i
+    if left_character <> pad_character then return i + 1
+  end
+  else if right_length > left_length then do i = common_length to right_length - 1
+    assembler strchar right_character,right,i
+    if pad_character <> right_character then return i + 1
+  end
+  return 0

@@ -1,0 +1,48 @@
+options levelb
+
+main: procedure = .int
+  iterations = 2000000
+  checksum = 0
+  do i = 1 to iterations
+    if user_word("  Alpha Beta", 2) = "Beta" then checksum = checksum + 1
+  end
+  if checksum <> iterations then do
+    say "FAIL: PERF2-05 generic user body" checksum
+    return 1
+  end
+  say "PASS: PERF2-05 generic user body"
+  return 0
+
+/* Ordinary unregistered user function, intentionally equivalent to the
+ * selected Level B WORD body but independent of the rxfnsb namespace. */
+user_word: procedure = .string
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORD number must be positive"
+
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return ""
+
+  scan = 0
+  current_word = 0
+  word_start = 0
+  word_end = 0
+  word_length = 0
+  result = ""
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return ""
+    current_word = current_word + 1
+    assembler fndblnk word_end,string,word_start
+    if current_word = wordnum then do
+      if word_end < 0 then word_end = string_length
+      word_length = word_end - word_start
+      assembler setstrpos string,word_start
+      assembler substring result,string,word_length
+      return result
+    end
+    if word_end < 0 then return ""
+    scan = word_end
+  end
+  return ""

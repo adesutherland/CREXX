@@ -1,0 +1,756 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxvalue expose RexxValue rexxvalue_numeric_mode rexxvalue_set_numeric_mode rexxvalue_numeric_digits rexxvalue_set_numeric_digits rexxvalue_numeric_fuzz rexxvalue_set_numeric_fuzz
+import rxfnsb
+
+-- RexxValue cache flags live in the VM value status word.
+rexxvalue_constants: procedure expose RV_FLAG_STRING RV_FLAG_INT RV_FLAG_FLOAT RV_FLAG_DECIMAL RV_FLAG_BINARY RV_FLAG_TEXT RV_FLAGS_STRING_TEXT RV_FLAGS_STRING_BINARY_TEXT RV_NUMERIC_DECIMAL RV_NUMERIC_FLOAT RV_NUMERIC_DEFAULT_DIGITS RV_NUMERIC_DEFAULT_FUZZ
+  constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
+  constant RV_FLAG_INT = 0x00020000      -- 131072: int view current
+  constant RV_FLAG_FLOAT = 0x00040000    -- 262144: float view current
+  constant RV_FLAG_DECIMAL = 0x00080000  -- 524288: decimal view current
+  constant RV_FLAG_BINARY = 0x00100000   -- 1048576: binary view current
+  constant RV_FLAG_TEXT = 0x00200000     -- 2097152: binary contents are valid text
+
+  constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
+  constant RV_FLAGS_STRING_BINARY_TEXT = RV_FLAG_STRING + RV_FLAG_BINARY + RV_FLAG_TEXT
+
+  constant RV_NUMERIC_DECIMAL = 0
+  constant RV_NUMERIC_FLOAT = 1
+  constant RV_NUMERIC_DEFAULT_DIGITS = 18
+  constant RV_NUMERIC_DEFAULT_FUZZ = 0
+  return
+
+rexxvalue_numeric_mode: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  call ensure_rexxvalue_numeric_context
+  return _rv_numeric_mode
+
+rexxvalue_set_numeric_mode: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  arg mode = .int
+  call ensure_rexxvalue_numeric_context
+  if mode = RV_NUMERIC_FLOAT then _rv_numeric_mode = RV_NUMERIC_FLOAT
+  else _rv_numeric_mode = RV_NUMERIC_DECIMAL
+  return _rv_numeric_mode
+
+rexxvalue_numeric_digits: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  call ensure_rexxvalue_numeric_context
+  return _rv_numeric_digits
+
+rexxvalue_set_numeric_digits: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  arg digits = .int
+  call ensure_rexxvalue_numeric_context
+  if digits <= _rv_numeric_fuzz then return -1
+  _rv_numeric_digits = digits
+  return _rv_numeric_digits
+
+rexxvalue_numeric_fuzz: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  call ensure_rexxvalue_numeric_context
+  return _rv_numeric_fuzz
+
+rexxvalue_set_numeric_fuzz: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  arg fuzz = .int
+  call ensure_rexxvalue_numeric_context
+  if fuzz < 0 then return -1
+  if fuzz >= _rv_numeric_digits then return -1
+  _rv_numeric_fuzz = fuzz
+  return _rv_numeric_fuzz
+
+ensure_rexxvalue_numeric_context: procedure expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
+  if _rv_numeric_ready = 1 then return
+  _rv_numeric_mode = RV_NUMERIC_DECIMAL
+  _rv_numeric_digits = RV_NUMERIC_DEFAULT_DIGITS
+  _rv_numeric_fuzz = RV_NUMERIC_DEFAULT_FUZZ
+  _rv_numeric_ready = 1
+  return
+
+/**
+ * Classic Rexx scalar value proof.
+ *
+ * All typed views below are mapped to register.0: the containing VM value
+ * itself. The cache flags live in that same value's status word.
+ */
+RexxValue: class
+  string_value = .string with register.0.string
+  int_value = .int with register.0.int
+  float_value = .float with register.0.float
+  decimal_value = .decimal with register.0.decimal
+  binary_value = .binary with register.0.binary
+  cache_flags = .int with register.0.flags.library
+
+  *: factory
+    arg value = .string
+    temp = .string
+    temp = value
+    string_value = temp
+    cache_flags = RV_FLAGS_STRING_TEXT
+    return
+
+  fromInt: factory
+    arg value = .int
+    temp = 0
+    temp = value
+    int_value = temp
+    cache_flags = RV_FLAG_INT
+    return
+
+  fromFloat: factory
+    arg value = .float
+    temp = 0 as .float
+    temp = value
+    float_value = temp
+    cache_flags = RV_FLAG_FLOAT
+    return
+
+  fromDecimal: factory
+    arg value = .decimal
+    temp = "0" as .decimal
+    temp = value
+    decimal_value = temp
+    cache_flags = RV_FLAG_DECIMAL
+    return
+
+  fromBinary: factory
+    arg value = .binary
+    temp = .binary
+    temp = value
+    binary_value = temp
+    cache_flags = RV_FLAG_BINARY
+    return
+
+  fromBinaryText: factory
+    arg value = .binary
+    bytes = .binary
+    text = .string
+    bytes = value
+    text = bytes as .string            -- validates the bytes as Level B text
+    binary_value = bytes
+    string_value = text
+    cache_flags = RV_FLAGS_STRING_BINARY_TEXT
+    return
+
+  setString: method = .void
+    arg value = .string
+    temp = .string
+    temp = value
+    string_value = temp
+    cache_flags = RV_FLAGS_STRING_TEXT
+    return
+
+  setInt: method = .void
+    arg value = .int
+    temp = 0
+    temp = value
+    int_value = temp
+    cache_flags = RV_FLAG_INT
+    return
+
+  setFloat: method = .void
+    arg value = .float
+    temp = 0 as .float
+    temp = value
+    float_value = temp
+    cache_flags = RV_FLAG_FLOAT
+    return
+
+  setDecimal: method = .void
+    arg value = .decimal
+    temp = "0" as .decimal
+    temp = value
+    decimal_value = temp
+    cache_flags = RV_FLAG_DECIMAL
+    return
+
+  setBinary: method = .void
+    arg value = .binary
+    temp = .binary
+    temp = value
+    binary_value = temp
+    cache_flags = RV_FLAG_BINARY
+    return
+
+  setBinaryText: method = .void
+    arg value = .binary
+    bytes = .binary
+    text = .string
+    bytes = value
+    text = bytes as .string
+    binary_value = bytes
+    string_value = text
+    cache_flags = RV_FLAGS_STRING_BINARY_TEXT
+    return
+
+  cacheFlags: method = .int
+    return cache_flags
+
+  hasString: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_STRING) then return 1
+    return 0
+
+  hasInt: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_INT) then return 1
+    return 0
+
+  hasFloat: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_FLOAT) then return 1
+    return 0
+
+  hasDecimal: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_DECIMAL) then return 1
+    return 0
+
+  hasBinary: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_BINARY) then return 1
+    return 0
+
+  hasText: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_TEXT) then return 1
+    return 0
+
+  asString: method = .string
+    temp = .string
+    flags = cache_flags
+    if (flags <has> RV_FLAG_STRING) then return string_value
+    if (flags <has> RV_FLAG_DECIMAL) then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+      temp = decimal_value as .string
+      string_value = temp
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      return temp
+    end
+    if (flags <has> RV_FLAG_INT) then do
+      temp = int_value as .string
+      string_value = temp
+      new_flags = .int
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      return temp
+    end
+    if (flags <has> RV_FLAG_FLOAT) then do
+      temp = float_value as .string
+      string_value = temp
+      new_flags = .int
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      return temp
+    end
+    if (flags <has> RV_FLAG_BINARY) then do
+      temp = binary_value as .string
+      string_value = temp
+      new_flags = .int
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      return temp
+    end
+    return ""
+
+  asInt: method = .int
+    temp = 0
+    flags = cache_flags
+    if (flags <has> RV_FLAG_INT) then return int_value
+    if (flags <has> RV_FLAG_DECIMAL) then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+      temp = decimal_value as .int
+    end
+    else if (flags <has> RV_FLAG_FLOAT) then
+      temp = float_value as .int
+    else if (flags <has> RV_FLAG_STRING) then
+      temp = string_value as .int
+    else if (flags <has> RV_FLAG_BINARY) then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .int
+    end
+    else
+      temp = string_value as .int
+    int_value = temp
+    cache_flags = cache_flags <set> RV_FLAG_INT
+    return temp
+
+  asFloat: method = .float
+    temp = 0 as .float
+    flags = cache_flags
+    if (flags <has> RV_FLAG_FLOAT) then return float_value
+    if (flags <has> RV_FLAG_DECIMAL) then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+      temp = decimal_value as .float
+    end
+    else if (flags <has> RV_FLAG_INT) then
+      temp = int_value as .float
+    else if (flags <has> RV_FLAG_STRING) then
+      temp = string_value as .float
+    else if (flags <has> RV_FLAG_BINARY) then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .float
+    end
+    else
+      temp = string_value as .float
+    float_value = temp
+    cache_flags = cache_flags <set> RV_FLAG_FLOAT
+    return temp
+
+  asDecimal: method = .decimal
+    temp = "0" as .decimal
+    flags = cache_flags
+    if (flags <has> RV_FLAG_DECIMAL) then return decimal_value
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    if (flags <has> RV_FLAG_INT) then
+      temp = int_value as .decimal
+    else if (flags <has> RV_FLAG_FLOAT) then
+      temp = float_value as .decimal
+    else if (flags <has> RV_FLAG_STRING) then
+      temp = string_value as .decimal
+    else if (flags <has> RV_FLAG_BINARY) then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .decimal
+    end
+    else
+      temp = string_value as .decimal
+    decimal_value = temp
+    cache_flags = cache_flags <set> RV_FLAG_DECIMAL
+    return temp
+
+  asBinary: method = .binary
+    temp = .binary
+    flags = cache_flags
+    if (flags <has> RV_FLAG_BINARY) then return binary_value
+    if (flags <has> RV_FLAG_STRING) then
+      temp = string_value as .binary
+    else if (flags <has> RV_FLAG_DECIMAL) then do
+      numeric_digits = rexxvalue_numeric_digits()
+      numeric_fuzz = rexxvalue_numeric_fuzz()
+      assembler setnumdgts numeric_digits
+      assembler setnumfuz numeric_fuzz
+      text = decimal_value as .string
+      string_value = text
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else if (flags <has> RV_FLAG_INT) then do
+      text = .string
+      text = int_value as .string
+      string_value = text
+      new_flags = .int
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else if (flags <has> RV_FLAG_FLOAT) then do
+      text = .string
+      text = float_value as .string
+      string_value = text
+      new_flags = .int
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else
+      temp = "" as .binary
+    binary_value = temp
+    cache_flags = cache_flags <set> RV_FLAG_BINARY
+    return temp
+
+  validateText: method = .boolean
+    flags = cache_flags
+    if (flags <has> RV_FLAG_TEXT) then return 1
+    if (flags <has> RV_FLAG_BINARY) then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags <set> RV_FLAG_TEXT
+      if (flags <has> RV_FLAG_STRING) = 0 then new_flags = new_flags <set> RV_FLAG_STRING
+      cache_flags = new_flags
+      return 1
+    end
+    text = .string
+    text = asString()
+    return 1
+
+  binaryLength: method = .int
+    len = 0
+    bytes = .binary
+    bytes = asBinary()
+    assembler blen len,bytes
+    return len
+
+  copyFrom: method = .void
+    arg other = .RexxValue
+    if other.hasBinary() & \other.hasText() then do
+      call setBinary(other.asBinary())
+      return
+    end
+    call setString(other.asString())
+    return
+
+  concat: method = .RexxValue
+    arg other = .RexxValue
+    return .RexxValue(asString() || other.asString())
+
+  spaceConcat: method = .RexxValue
+    arg other = .RexxValue
+    return .RexxValue(asString() || " " || other.asString())
+
+  add: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() + other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() + other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  subtract: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() - other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() - other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  multiply: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() * other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() * other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  divide: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() / other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() / other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  integerDivide: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      int_result = 0
+      float_result = asFloat() / other.asFloat()
+      int_result = float_result as .int
+      return .RexxValue.fromFloat(int_result as .float)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() % other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  remainder: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      left_float = 0 as .float
+      right_float = 0 as .float
+      quotient = 0
+      float_result = 0 as .float
+      left_float = asFloat()
+      right_float = other.asFloat()
+      quotient = (left_float / right_float) as .int
+      float_result = left_float - (right_float * (quotient as .float))
+      return .RexxValue.fromFloat(float_result)
+    end
+    left_dec = "0" as .decimal
+    right_dec = "0" as .decimal
+    result = "0" as .decimal
+    quotient = .int
+    quotient = 0
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() // other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  power: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() ** other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() ** other.asInt()
+    return .RexxValue.fromDecimal(result)
+
+  negate: method = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = -asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = -asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  positive: method = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  logicalValue: method = .boolean
+    return _rv_logical_text(asString())
+
+  logicalResult: method = .RexxValue
+    return _rv_bool_value(_rv_logical_text(asString()))
+
+  logicalNot: method = .RexxValue
+    return _rv_bool_value(\_rv_logical_text(asString()))
+
+  logicalXor: method = .RexxValue
+    arg other = .RexxValue
+    left_bool = _rv_logical_text(asString())
+    right_bool = _rv_logical_text(other.asString())
+    return _rv_bool_value((left_bool & \right_bool) | (\left_bool & right_bool))
+
+  compareEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) = 0)
+
+  compareNotEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) <> 0)
+
+  compareGreaterThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) > 0)
+
+  compareLessThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) < 0)
+
+  compareGreaterOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) >= 0)
+
+  compareLessOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) <= 0)
+
+  strictCompareEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) = 0)
+
+  strictCompareNotEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) <> 0)
+
+  strictCompareGreaterThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) > 0)
+
+  strictCompareLessThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) < 0)
+
+  strictCompareGreaterOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) >= 0)
+
+  strictCompareLessOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) <= 0)
+
+  equals: method = .boolean
+    arg other = .RexxValue
+    if asString() = other.asString() then return 1
+    return 0
+
+  compare: method = .int
+    arg other = .RexxValue
+    left = asString()
+    right = other.asString()
+    if left = right then return 0
+    if left < right then return -1
+    return 1
+
+_rv_bool_value: procedure = .RexxValue
+  arg value = .boolean
+  if value then return .RexxValue.fromInt(1)
+  return .RexxValue.fromInt(0)
+
+_rv_logical_text: procedure = .boolean
+  arg text = .string
+  if text = "0" then return 0
+  if text = "1" then return 1
+  return text as .boolean
+
+_rv_is_number_text: procedure = .boolean
+  arg value = .string
+  text = strip(value)
+  if length(text) = 0 then return 0
+  posn = 1
+  saw_digit = 0
+  saw_dot = 0
+
+  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then do
+    posn = posn + 1
+    if posn > length(text) then return 0
+  end
+
+  do while posn <= length(text)
+    ch = substr(text, posn, 1)
+    if pos(ch, "0123456789") > 0 then saw_digit = 1
+    else if ch = "." then do
+      if saw_dot then return 0
+      saw_dot = 1
+    end
+    else leave
+    posn = posn + 1
+  end
+
+  if saw_digit = 0 then return 0
+  if posn > length(text) then return 1
+  if translate(substr(text, posn, 1)) <> "E" then return 0
+
+  posn = posn + 1
+  if posn > length(text) then return 0
+  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then posn = posn + 1
+  if posn > length(text) then return 0
+
+  do i = posn to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return 1
+
+_rv_compare_standard: procedure = .int
+  arg left = .RexxValue, right = .RexxValue
+  left_text = left.asString()
+  right_text = right.asString()
+  if _rv_is_number_text(left_text) & _rv_is_number_text(right_text) then do
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    left_dec = left.asDecimal()
+    right_dec = right.asDecimal()
+    if left_dec = right_dec then return 0
+    if left_dec < right_dec then return -1
+    return 1
+  end
+  return _rv_compare_loose_text(left_text, right_text)
+
+_rv_compare_loose_text: procedure = .int
+  arg left = .string, right = .string
+  left_text = strip(left)
+  right_text = strip(right)
+  if length(left_text) < length(right_text) then
+    left_text = left_text || copies(" ", length(right_text) - length(left_text))
+  else if length(right_text) < length(left_text) then
+    right_text = right_text || copies(" ", length(left_text) - length(right_text))
+  if left_text = right_text then return 0
+  if left_text < right_text then return -1
+  return 1
+
+_rv_compare_strict_text: procedure = .int
+  arg left = .string, right = .string
+  if left == right then return 0
+  if left << right then return -1
+  return 1

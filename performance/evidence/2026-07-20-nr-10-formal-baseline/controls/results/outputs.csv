@@ -1,0 +1,97 @@
+sample_id,stream,line_number,text
+timing-Native-C-mechanical-native-c-mechanical-warmup-1,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-warmup-1,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-warmup-1,stdout,3,Performance: 517856635 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-warmup-1,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-warmup-2,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-warmup-2,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-warmup-2,stdout,3,Performance: 517308066 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-warmup-2,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-1,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-1,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-1,stdout,3,Performance: 519330677 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-1,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-2,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-2,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-2,stdout,3,Performance: 519520465 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-2,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-3,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-3,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-3,stdout,3,Performance: 519504403 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-3,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-4,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-4,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-4,stdout,3,Performance: 519553002 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-4,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-5,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-5,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-5,stdout,3,Performance: 519402294 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-5,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-6,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-6,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-6,stdout,3,Performance: 519546412 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-6,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-7,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-7,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-7,stdout,3,Performance: 519527054 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-7,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-8,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-8,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-8,stdout,3,Performance: 519131159 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-8,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-9,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-9,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-9,stdout,3,Performance: 519456226 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-9,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-mechanical-native-c-mechanical-recorded-10,stdout,1,CONTROL: mechanical scalar flow; 1000 nominal operations per iteration
+timing-Native-C-mechanical-native-c-mechanical-recorded-10,stdout,2,DIGEST: 11733271806842147436
+timing-Native-C-mechanical-native-c-mechanical-recorded-10,stdout,3,Performance: 519520053 mechanical C nominal operations per second
+timing-Native-C-mechanical-native-c-mechanical-recorded-10,stdout,4,PASS: NR-10 mechanical native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-warmup-1,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-warmup-1,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-warmup-1,stdout,3,Performance: 50133841 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-warmup-1,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-warmup-2,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-warmup-2,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-warmup-2,stdout,3,Performance: 49613214 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-warmup-2,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-1,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-1,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-1,stdout,3,Performance: 48538627 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-1,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-2,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-2,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-2,stdout,3,Performance: 47926837 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-2,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-3,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-3,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-3,stdout,3,Performance: 47174212 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-3,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-4,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-4,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-4,stdout,3,Performance: 49789222 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-4,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-5,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-5,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-5,stdout,3,Performance: 47796724 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-5,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-6,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-6,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-6,stdout,3,Performance: 49225356 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-6,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-7,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-7,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-7,stdout,3,Performance: 47348687 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-7,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-8,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-8,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-8,stdout,3,Performance: 47865733 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-8,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-9,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-9,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-9,stdout,3,Performance: 48070378 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-9,stdout,4,PASS: NR-10 dynamic-value native C ceiling
+timing-Native-C-dynamic-native-c-dynamic-recorded-10,stdout,1,CONTROL: tagged dynamic value; 1000 nominal operations per iteration
+timing-Native-C-dynamic-native-c-dynamic-recorded-10,stdout,2,DIGEST: 17983481938527287841
+timing-Native-C-dynamic-native-c-dynamic-recorded-10,stdout,3,Performance: 48451269 dynamic-value C nominal operations per second
+timing-Native-C-dynamic-native-c-dynamic-recorded-10,stdout,4,PASS: NR-10 dynamic-value native C ceiling

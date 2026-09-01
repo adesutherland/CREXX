@@ -22,7 +22,56 @@ To test end-to-end execution:
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
 
-### 5. Isolating Assembler Keyhole Optimiser Bugs
+### CTest Result Contracts
+
+Do not use `PASS_REGULAR_EXPRESSION` to represent an expected process failure.
+CMake deliberately ignores an ordinary nonzero exit code when that property
+matches. Expected-negative runtime tests must use the checked runtime helpers in
+`cmake/CrexxLinkedRuntime.cmake`, specifying the exact nonzero exit code,
+required output, forbidden output, and a concise failure description. A valid
+negative test prints, for example:
+
+```text
+EXPECTED FAILURE: SIGNAL ERROR at bytecode address 15, exit code 3; test passed
+```
+
+The `crexx_expected_failure_contract` CTest proves that the assertion helper
+accepts the specified failure and rejects unexpected success. Existing positive
+tests that still use `PASS_REGULAR_EXPRESSION` are covered by the serialized
+`ctest_pass_regex_exit_contract`: their normal registration validates output,
+and the contract independently executes them and requires exit code zero. This
+audit intentionally adds time to a full CTest sweep and prevents a matched
+success marker from masking a later process failure.
+
+Verbose CTest output also lists `CREXX_DIAGNOSTICS=raw` for compiler tests. That
+is the deterministic machine-readable diagnostic mode used by golden tests, not
+an error indication.
+
+### 5. RXPP And Source-Map Diagnostics
+
+For `.rxpp` problems, split the pipeline before changing compiler C code:
+
+1. Run `rxpp` directly and inspect the generated `.crexx`.
+2. RXPP emits `options ... srcmap` by default. Compile the generated file with
+   `rxc --diagnostics raw` and check for `SRCMAP_MALFORMED` or
+   `SRCMAP_UNBALANCED` before debugging normal parser/validator behavior.
+3. Confirm literal `@` is escaped as `@@` in default srcmap mode. Only explicit
+   `##CFLAG nosrcmap` output should preserve literal `@` unchanged.
+4. For macro diagnostics, check whether the innermost generated token is inside
+   a nested `@...{ ... @}` span. `rxc` intentionally chooses the narrowest
+   enclosing source-map span.
+
+Focused coverage:
+
+```sh
+ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnostics|diagnostic_catalogs)' --output-on-failure
+```
+
+See `docs/ai-context/RXPP_PREPROCESSOR.md` for the marker syntax and component
+layout. For RXPP warning/error text, set `CREXX_DIAGNOSTICS=raw` to inspect the
+stable `RXPP_*` code and parameters before checking localized wording.
+
+### 6. Isolating Assembler Keyhole Optimiser Bugs
 If generated `.rxas` looks correct but the `.rxbin` or disassembly looks wrong,
 compare assembler output with and without the keyhole optimiser:
 
@@ -40,7 +89,7 @@ assembly input is already known and the question is whether peephole rules,
 instruction-flow metadata, or hidden register-use handling changed the bytecode
 incorrectly.
 
-### 6. RXDB Trace Debugger
+### 7. RXDB Trace Debugger
 
 `debugger/rxdb.crexx` is the early Level B debugger prototype. It now delegates
 source lookup, ASM instruction decoding, module/procedure lookup, breakpoint
@@ -85,7 +134,7 @@ target selection; generated/debugger handlers should limit themselves to the
 unavoidable frame-local register link and then hand the value back to the
 shared trace runtime.
 
-### 7. High-Risk Compiler Change Checklist
+### 8. High-Risk Compiler Change Checklist
 
 For broad compiler work such as new source syntax, type-system changes,
 metadata changes, reference/value ownership, or inliner behaviour, treat the
@@ -107,12 +156,14 @@ Process lessons:
   diagnostics.
 * Composite type metadata usually needs both value and target sidecars. A plain
   `TP_REFERENCE` or `TP_OBJECT` enum is not enough when diagnostics, metadata,
-  assignment checks, and `typeof()` must preserve the referent class, array
+  assignment checks, and `<typeof>()` must preserve the referent class, array
   dimensions, or nested type information.
 * Add source-level positive tests and negative tests together. Boundary errors
   are part of the contract, not cleanup work.
-* Run the affected feature through noopt and opt, both `rxvm` and `rxbvm`, and
-  linked optimized runtime paths. Optimizer or linker-only failures are common
+* Run the affected feature through noopt and opt using product `rxvm`, and
+  linked optimized runtime paths. Add the narrow `rxbvm`/`rxtvm` dispatch
+  contract when the change touches dispatch or execution-image preparation.
+  Optimizer or linker-only failures are common
   when metadata, imports, inlining, or register lifetimes change.
 * Use ASAN for ownership-sensitive changes. In sanitizer build trees, build the
   test helper explicitly when needed:
@@ -121,10 +172,10 @@ Process lessons:
   cmake --build cmake-build-asan --target crexx_test_driver
   ```
 
-* If a test unexpectedly fails in a broad setup target such as
-  `linked_opt_runtime_artifacts_build`, check whether CTest is building a
-  prerequisite rather than hanging. Under ASAN that setup can take much longer
-  than the actual focused tests.
+* Build broad generated prerequisites explicitly with
+  `cmake --build <build-dir> --target qa-prep-linked-opt-runtime` before linked
+  optimized tests. CTest no longer starts that build, so a missing-artifact
+  failure means the preparation stage was omitted or failed.
 
 Reference source-syntax lessons:
 
@@ -144,7 +195,7 @@ Reference source-syntax lessons:
   a scoped live link; it should emit `linkref` plus compiler-managed `unlink`
   at scope exit. Do not confuse source `snapshot` with the RXAS `deref`
   mnemonic, which remains the VM deep-copy instruction.
-* `refvalid(ref)` is only a validity preflight. Invalid use must still raise the
+* `<refvalid>(ref)` is only a validity preflight. Invalid use must still raise the
   VM's catchable `REFERENCE_INVALID` signal through operations such as `deref`,
   `linkref`, and `setref`.
 * When emitting `mkref` from a linked child expression, append the child cleanup
@@ -164,7 +215,7 @@ Reference source-syntax lessons:
 * Inlining can accidentally extend stack/local lifetime. A callable that returns
   an object containing reference attributes can hide a weak reference to one of
   its own locals; inlining that callable into the caller can make the local
-  survive long enough that `refvalid()` disagrees between opt and noopt. Reject
+  survive long enough that `<refvalid>()` disagrees between opt and noopt. Reject
   reference-bearing return classes for now and keep opt/noopt iterator lifetime
   tests paired.
 * Top-level executable assignments synthesize implicit `main`. In a file with
@@ -175,14 +226,14 @@ Reference source-syntax lessons:
 Useful focused commands from the reference source slice:
 
 ```sh
-cmake --build cmake-build-debug --target rxc rxas rxvm rxbvm library compiler_exit_bin crexx_test_driver
+cmake --build cmake-build-debug --target rxc rxas rxvm library compiler_exit_bin crexx_test_driver
 ctest --test-dir cmake-build-debug -R 'reference_source_' --output-on-failure
 ctest --test-dir cmake-build-debug -R 'reference_(iterator|generated|source)|type_ops|arg_semantics_(scalar|array|object)|object_reference_regression|inline_test_ref_|inline_ref_array_count|inline_test_block_expr_live_sibling' --output-on-failure
-cmake --build cmake-build-asan --target rxc rxas rxvm rxbvm library crexx_test_driver
+cmake --build cmake-build-asan --target rxc rxas rxvm library crexx_test_driver
 ctest --test-dir cmake-build-asan -R 'reference_source_|reference_(iterator|generated)' --output-on-failure
 ```
 
-### 8. Known Build and Platform Issues
+### 9. Known Build and Platform Issues
 When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:
 *   **OpenSSL Resolution:** If CMake cannot find OpenSSL on macOS or Linux, ensure `CREXX_FORCE_SYSTEM_OPENSSL` is correctly handled. In `lib/plugins/socket/CMakeLists.txt`, hardcoded MSYS2 paths (`C:/msys64/...`) must be protected by an `if(WIN32)` check to prevent them from breaking path resolution on other OSs.
 *   **Massive Memory Leaks / Explosions (50+GB):** If the compiler (`rxc`) or assembler unexpectedly consumes gigabytes of memory and hangs, suspect a failure in `file2buf` (`platform/platform.c` or `S370/cmsutil.c`). Endpoint security tools (like ThreatLocker) or stream abstractions can cause `ftell()` or `fseek()` to fail, returning `-1`. If this `-1` is cast directly to a `size_t` without error checking, it overflows to `SIZE_MAX`. A subsequent `malloc(*bytes + 2)` wraps around to `1`, and `fread()` then performs a massive heap buffer overflow trying to read `SIZE_MAX` bytes, corrupting allocator headers and causing the OS to infinitely allocate memory. Always ensure `ftell()` is stored in a signed integer (e.g., `long`) and checked for errors (`< 0`) before casting to `size_t`.

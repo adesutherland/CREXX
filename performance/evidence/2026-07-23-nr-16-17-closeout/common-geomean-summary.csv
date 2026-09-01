@@ -1,0 +1,3 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Sieve+Permute+Bounce+Richards+Base64,rxvm,paired_common_geomean_throughput,24,315.228688,311.299656,-4.642651,-2.201414,-0.839179,0.087793,3.190542,-0.956741,-1.718474,-0.195007,7,24,clear_adverse,no
+Sieve+Permute+Bounce+Richards+Base64,rxbvm,paired_common_geomean_throughput,12,279.503570,291.751433,0.769467,2.916379,4.948381,6.070363,7.238137,4.515008,3.217533,5.812484,12,12,clear_favorable,no

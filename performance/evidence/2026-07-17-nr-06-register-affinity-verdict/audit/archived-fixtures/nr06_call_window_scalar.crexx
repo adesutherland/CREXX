@@ -1,0 +1,57 @@
+options levelb
+namespace nr06_call_window_scalar
+
+nr06_call_window_scalar_constants: procedure expose NR06_NO_INLINE
+  constant NR06_NO_INLINE = 0
+  return
+
+main: procedure = .int
+  number = 7
+  ratio = doubleFloat(1.25)
+  enabled = number > 0
+  text = echoText("keep")
+
+  say add(number, 3)
+  say doubleFloat(ratio)
+  say boolToInt(enabled)
+  say optionalInt(number)
+  say echoText(text)
+  call incrementRef(number)
+  say number
+  say text
+  say conflictCases(number, 3)
+  return 0
+
+add: procedure = .int expose NR06_NO_INLINE
+  arg left = .int, right = .int
+  return left + right
+
+doubleFloat: procedure = .float expose NR06_NO_INLINE
+  arg value = .float
+  return value * 2.0
+
+boolToInt: procedure = .int expose NR06_NO_INLINE
+  arg value = .boolean
+  if value then return 1
+  return 0
+
+optionalInt: procedure = .int expose NR06_NO_INLINE
+  arg value = 10
+  return value
+
+echoText: procedure = .string expose NR06_NO_INLINE
+  arg value = .string
+  return value
+
+incrementRef: procedure = .void expose NR06_NO_INLINE
+  arg expose value = .int
+  value = value + 1
+  return
+
+conflictCases: procedure = .int expose NR06_NO_INLINE
+  arg first = .int, second = .int
+  localFirst = first + 0
+  localSecond = second + 0
+  direct = add(localFirst, localSecond)
+  repeated = add(localFirst, localFirst)
+  return direct + repeated

@@ -1,0 +1,93 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifc2d
+import rexxclassicencoding
+import rexxvalue
+
+numeric digits 40
+errors = 0
+errors = errors + check_value("0", "", "", 0)
+errors = errors + check_value("1", "01", "", 0)
+errors = errors + check_value("255", "FF", "", 0)
+errors = errors + check_value("-1", "FF", "1", 1)
+errors = errors + check_value("255", "FF", "2", 1)
+errors = errors + check_value("129", "0081", "", 0)
+errors = errors + check_value("-127", "0081", "1", 1)
+errors = errors + check_value("129", "0081", "2", 1)
+errors = errors + check_value("18446744073709551615", "FFFFFFFFFFFFFFFF", "", 0)
+errors = errors + check_value("-1", "FFFFFFFFFFFFFFFF", "8", 1)
+errors = errors + check_value("0", "FFFFFFFF", "0", 1)
+errors = errors + check_digits_error()
+errors = errors + check_count("RXC-LC-40.3", 0)
+errors = errors + check_count("RXC-LC-40.4", 3)
+errors = errors + check_omitted()
+errors = errors + check_argument_error("RXC-LC-40.12", "1.5")
+errors = errors + check_argument_error("RXC-LC-40.13", "-1")
+
+if errors = 0 then say "PASS: Level C C2D BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, hexadecimal = .string, length_text = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(hexadecimal))
+  exists[1] = 1
+  args[2] = .RexxValue(length_text)
+  exists[2] = length_exists
+  context = .RexxBifCallContext("C2D")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2d..rexxclassicbif_c2d(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: C2D" hexadecimal length_text "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_digits_error: procedure = .int
+  numeric digits 3
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("FFFF"))
+  exists[1] = 1
+  return run_error("RXC-LC-40.35", args, exists)
+
+check_count: procedure = .int
+  numeric digits inherited
+  arg expected = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to count
+    args[index] = .RexxValue("1")
+    exists[index] = 1
+  end
+  return run_error(expected, args, exists)
+
+check_omitted: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_argument_error: procedure = .int
+  arg expected = .string, length_text = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("A")
+  exists[1] = 1
+  args[2] = .RexxValue(length_text)
+  exists[2] = 1
+  return run_error(expected, args, exists)
+
+run_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("C2D")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifc2d..rexxclassicbif_c2d(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: C2D expected error" expected "got" context.errorCode() result.asString()
+  return 1

@@ -189,7 +189,9 @@ distribution flow is therefore:
 3. Apply `com.apple.security.cs.disable-library-validation` only to host tools
    that must load CREXX native plugins outside the host's own signature context.
 4. Verify every payload signature with `codesign --verify --strict`.
-5. Build a flat installer package with `pkgbuild` or `productbuild`.
+5. Build a component package with `pkgbuild`, then wrap it with
+   `productbuild` so the installer can include Distribution resources such as
+   welcome text, conclusion text, and the CREXX background image.
 6. Sign the package with the Developer ID Installer identity.
 7. Submit the signed package with `xcrun notarytool submit --wait`.
 8. Staple the returned ticket to the package with `xcrun stapler staple`.
@@ -276,8 +278,9 @@ The `.pkg` workflow implements the recommended flow above:
 
 1. Build the current macOS payload.
 2. Sign Mach-O files with `Developer ID Application`.
-3. Build a package with `scripts/package-macos-pkg.sh`, which wraps `pkgbuild`.
-4. Sign the package with `Developer ID Installer`.
+3. Build a package with `scripts/package-macos-pkg.sh`, which uses `pkgbuild`
+   for the payload and `productbuild` for the final branded installer package.
+4. Sign the final product package with `Developer ID Installer`.
 5. Submit the package to notarization with `xcrun notarytool submit --wait`.
 6. Staple the notarization ticket with `xcrun stapler staple`.
 7. Verify with `spctl --assess --type install`.

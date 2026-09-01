@@ -1,0 +1,12 @@
+# PERF2-04 ordinary profiling-off Release RexxCPS SUBSTR exact-site panel.
+# SLC-H1 composes existing cursor/slice primitives for the two proved cases.
+# SLC-CF1 replaces those constant expressions with their canonical results.
+# Both are scratch ceilings: neither source rewrite reproduces the current
+# inlined SUBSTR body TRACE/source-step sequence.
+crexx-cross-runtime-matrix|1
+substr-baseline-rxvm|PERF2-04 SUBSTR RexxCPS|crexx|rxvm|SLC-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+substr-baseline-rxbvm|PERF2-04 SUBSTR RexxCPS|crexx|rxbvm|SLC-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+substr-direct-rxvm|PERF2-04 SUBSTR RexxCPS|crexx|rxvm|SLC-H1-direct-composition|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_substr_direct_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+substr-direct-rxbvm|PERF2-04 SUBSTR RexxCPS|crexx|rxbvm|SLC-H1-direct-composition|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_substr_direct_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+substr-constant-rxvm|PERF2-04 SUBSTR RexxCPS|crexx|rxvm|SLC-CF1-constant-fold|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_substr_const_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+substr-constant-rxbvm|PERF2-04 SUBSTR RexxCPS|crexx|rxbvm|SLC-CF1-constant-fold|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps_substr_const_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a

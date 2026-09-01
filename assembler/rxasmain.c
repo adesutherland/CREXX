@@ -56,76 +56,36 @@ static void prt_ops_new() {
     int i;
     printf("\n* REXX Assembly Instruction List\n");
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
-        char buffer[100];
-        OperandType types[3];
-        int num_ops = 0;
+        size_t num_ops;
         if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
-        switch (op_table[i].format) {
-            case FMT_EMPTY: num_ops = 0; break;
-            case FMT_B: types[0] = OP_BINARY; num_ops = 1; break;
-            case FMT_C: types[0] = OP_CHAR; num_ops = 1; break;
-            case FMT_F: types[0] = OP_FLOAT; num_ops = 1; break;
-            case FMT_I: types[0] = OP_INT; num_ops = 1; break;
-            case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; num_ops = 2; break;
-            case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; num_ops = 2; break;
-            case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_L: types[0] = OP_ID; num_ops = 1; break;
-            case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; num_ops = 3; break;
-            case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; num_ops = 2; break;
-            case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; num_ops = 3; break;
-            case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; num_ops = 2; break;
-            case FMT_P: types[0] = OP_FUNC; num_ops = 1; break;
-            case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;
-            case FMT_R: types[0] = OP_REG; num_ops = 1; break;
-            case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; num_ops = 2; break;
-            case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; num_ops = 2; break;
-            case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; num_ops = 2; break;
-            case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; num_ops = 2; break;
-            case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; num_ops = 2; break;
-            case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; num_ops = 2; break;
-            case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; num_ops = 2; break;
-            case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; num_ops = 3; break;
-            case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; num_ops = 3; break;
-            case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; num_ops = 3; break;
-            case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; num_ops = 2; break;
-            case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; num_ops = 3; break;
-            case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; num_ops = 3; break;
-            case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; num_ops = 3; break;
-            case FMT_S: types[0] = OP_STRING; num_ops = 1; break;
-            case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; num_ops = 2; break;
-            case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; num_ops = 2; break;
-            case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; num_ops = 3; break;
-        }
-        switch (num_ops) {
-            case 0: snprintf(buffer, 100, "no operand"); break;
-            case 1: snprintf(buffer, 100, "{%s}", operand_name_str(types[0])); break;
-            case 2: snprintf(buffer, 100, "{%s,%s}", operand_name_str(types[0]), operand_name_str(types[1])); break;
-            case 3: snprintf(buffer, 100, "{%s,%s,%s}", operand_name_str(types[0]), operand_name_str(types[1]), operand_name_str(types[2])); break;
-        }
+        num_ops = rxop_format_operand_count(op_table[i].format);
 
         {
             char mnemonic[100];
             int j = 0;
+            size_t operand_index;
+            size_t format_width = num_ops ? 2 + (num_ops - 1) : strlen("no operand");
             while (op_table[i].mnemonic[j] && op_table[i].mnemonic[j] != '_') {
                 mnemonic[j] = (char)tolower((unsigned char)op_table[i].mnemonic[j]);
                 j++;
             }
             mnemonic[j] = 0;
-            printf("0x%.4x %-10s %-20s %s\n",
-                   op_table[i].opcode, mnemonic, buffer, op_table[i].description);
+            printf("0x%.4x %-10s ", op_table[i].opcode, mnemonic);
+            if (!num_ops) {
+                printf("no operand");
+            } else {
+                putchar('{');
+                for (operand_index = 0; operand_index < num_ops; operand_index++) {
+                    const char *name = operand_name_str(
+                            rxop_format_operand_type(op_table[i].format, operand_index));
+                    if (operand_index) putchar(',');
+                    fputs(name, stdout);
+                    format_width += strlen(name);
+                }
+                putchar('}');
+            }
+            while (format_width++ < 20) putchar(' ');
+            printf(" %s\n", op_table[i].description);
         }
     }
     printf("\n");

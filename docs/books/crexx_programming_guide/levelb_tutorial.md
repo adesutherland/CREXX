@@ -1,7 +1,7 @@
-# Level B Tutorial For Rexx Programmers
+# Level B Tutorial
 
 This tutorial is for experienced Rexx programmers who want to write practical
-cRexx Level B programs in the Release 1 beta 2 documentation line. It assumes
+cRexx Level B programs in the Release 1 beta 3 documentation line. It assumes
 you know Rexx ideas such as `say`, `parse`, `do`, `arg`, and built-in
 functions, but it does not assume you have used cRexx's typed compiler,
 modules, classes, or interfaces before.
@@ -15,17 +15,20 @@ For exact syntax details, keep these reference pages close:
 
 - [Data types](../crexx_language_reference/data_types.md)
 - [Statements](../crexx_language_reference/statements.md)
+- [Binary memory](../crexx_language_reference/binary_memory.md)
 - [Classes and interfaces](../crexx_language_reference/classes_and_interfaces.md)
 - [Namespaces](../crexx_language_reference/namespace.md)
 - [Toolchain overview](toolchain.md)
 
 For more implemented examples in a source download, start with these paths:
-`examples/hello.crexx`, `examples/ooBank.crexx`,
-`lib/rxfnsb/rexx/stem.crexx`,
-`compiler/tests/rexx_src/interface_showcase_same_module.crexx`, and
-`compiler/tests/rexx_src/reference_source_iterator.crexx`.
 
-## 1. Why Level B Still Feels Like Rexx
+- `examples/hello.crexx`, 
+- `examples/ooBank.crexx`,
+- `lib/rxfnsb/rexx/stem.crexx`,
+- `compiler/tests/rexx_src/interface_showcase_same_module.crexx`, and
+- `compiler/tests/rexx_src/reference_source_iterator.crexx`.
+
+## Why Level B Still Feels Like Rexx
 
 The first pleasant surprise is that much of the surface still reads like Rexx:
 
@@ -44,13 +47,13 @@ That trade is worth leaning into. Do not write vague Classic Rexx and hope the
 compiler guesses your intent. Write a small amount of explicit Level B so the
 compiler and VM can help you.
 
-## 2. First Program and Workflow
+## First Program and Workflow
 
 The usual source extension for new cRexx code is `.crexx`. For reusable code,
 start with `options levelb` and import the Level B standard library when you
 use it.
 
-```rexx
+```rexx <!--levelbtut1.crexx-->
 options levelb
 import rxfnsb
 
@@ -66,10 +69,7 @@ crexx hello.crexx
 
 Expected output:
 
-```bash
-Hello Level B
-length=4
-```
+<!--splice--crexx levelbtut1.crexx-->
 
 The `crexx` driver wraps the normal compile, assemble, and run path. The
 underlying stages are still visible:
@@ -79,7 +79,7 @@ underlying stages are still visible:
 3. `rxvm` or `rxvme` runs `.rxbin`.
 4. `rxlink` can combine modules into a linked image.
 
-The commands in this tutorial assume CREXX has been installed and `crexx`,
+The commands in this tutorial assume cRexx has been installed and `crexx`,
 `rxc`, `rxas`, and `rxvm` are on your `PATH`. In a source download before
 installation, use the matching binaries from your build directory instead.
 For day-to-day scripts, use `crexx`. For multi-module class/interface examples
@@ -87,12 +87,12 @@ where provider modules must be present at runtime, compile the modules and run
 or link the resulting `.rxbin` files explicitly. The mini-project below shows
 that shape.
 
-## 3. Source File Conventions
+## Source File Conventions
 
 Use this header shape for committed Level B code. This is a header fragment,
 not a complete program:
 
-```rexx
+```rexx <!--headerfragment.crexx-->
 options levelb
 namespace myapp expose public_symbol
 import rxfnsb
@@ -115,7 +115,7 @@ be explicit.
 
 Command-line arguments arrive through `arg`:
 
-```rexx
+```rexx <!--levelbtut2.crexx-->
 options levelb
 
 arg words = .string[]
@@ -133,19 +133,21 @@ end
 
 Run with arguments by putting `-args` last:
 
-```bash
+```bash <!--runargs.sh-->
 crexx args.crexx -args alpha beta
 ```
 
 Expected output:
 
-```bash
-count=2
-1:alpha
-2:beta
-```
+<!--splice--crexx levelbtut2.crexx -args alpha beta-->
 
-## 4. Types You Will Use Immediately
+<!-- ```bash -->
+<!-- count=2 -->
+<!-- 1:alpha -->
+<!-- 2:beta -->
+<!-- ``` -->
+
+## Types You Will Use Immediately
 
 Level B values have types. The most common built-in source spellings are:
 
@@ -167,7 +169,7 @@ A local variable can be inferred from its first assignment, or you can declare
 the type first and assign the value next. The latter is useful when the value
 will be filled later or when you want a specific target type.
 
-```rexx
+```rexx <!--levelbtut3.crexx-->
 options levelb
 import rxfnsb
 
@@ -203,15 +205,17 @@ say people["grace.hopper"]
 
 Expected output:
 
-```bash
-Level B:2
-.float
-.boolean
-2
-3:alpha,beta,gamma
-analytical
-compiler
-```
+<!--splice--crexx levelbtut3.crexx-->
+
+<!-- ```bash -->
+<!-- Level B:2 -->
+<!-- .float -->
+<!-- .boolean -->
+<!-- 2 -->
+<!-- 3:alpha,beta,gamma -->
+<!-- analytical -->
+<!-- compiler -->
+<!-- ``` -->
 
 Practical notes:
 
@@ -229,12 +233,12 @@ Practical notes:
   and bracket keys such as `people["grace.hopper"]`.
 - `.string` is valid UTF-8 text in normal builds. Use `.binary` for bytes.
 
-## 5. Procedures, Arguments, Returns, and Varargs
+## Procedures, Arguments, Returns, and Varargs
 
 A Level B procedure can declare its return type after `=`, and it binds call
 arguments with `arg`.
 
-```rexx
+```rexx <!--levelbtut4.crexx-->
 options levelb
 
 main: procedure
@@ -262,10 +266,12 @@ bump: procedure = .void
 
 Expected output:
 
-```bash
-total=10
-x=11
-```
+<!--splice--crexx levelbtut4.crexx-->
+
+<!-- ```bash -->
+<!-- total=10 -->
+<!-- x=11 -->
+<!-- ``` -->
 
 The important habits are:
 
@@ -280,7 +286,7 @@ The important habits are:
 storage into a procedure. Prefer explicit arguments and return values until you
 really need shared module state.
 
-## 6. Expressions, Assignment, Casts, and Comparisons
+## Expressions, Assignment, Casts, and Comparisons
 
 Level B keeps Rexx operators, but type checking happens before bytecode is
 emitted.
@@ -297,13 +303,13 @@ Use these idioms:
 
 For binary data, be explicit. This is a fragment:
 
-```rexx
+```rexx <!--payload.crexx-->
 payload = "4f4b"x as .binary
 ```
 
 For objects, cast at the boundary. This is a fragment:
 
-```rexx
+```rexx <!--cast.crexx-->
 generic = selected as .object
 restored = generic as .asset
 ```
@@ -311,13 +317,13 @@ restored = generic as .asset
 If a cast cannot succeed, Level B raises a conversion signal instead of silently
 changing the meaning of the value.
 
-## 7. Control Flow
+## Control Flow
 
 The usual Rexx control-flow tools are present. `select` has both Classic Rexx
 condition style and a switch-like expression style. `leave` and `iterate` work
 on loops. Expression-form `do ... end` can return a value with `leave with`.
 
-```rexx
+```rexx <!--levelbtut5.crexx-->
 options levelb
 
 arg words = .string[]
@@ -344,19 +350,22 @@ say "summary=" || summary
 
 Run:
 
-```bash
+```bash <!--controlflow.sh-->
 crexx control_flow.crexx -args alpha skip beta stop gamma
 ```
 
+
 Expected output:
 
-```bash
-word=alpha
-word=beta
-summary=many
-```
+<!--splice--crexx levelbtut5.crexx -args alpha skip beta stop gamma-->
 
-## 8. Rexx-Flavoured Features
+<!-- ```bash -->
+<!-- word=alpha -->
+<!-- word=beta -->
+<!-- summary=many -->
+<!-- ``` -->
+
+## Rexx-Flavoured Features
 
 Level B keeps several Rexx features that make the language feel direct:
 
@@ -368,7 +377,7 @@ Level B keeps several Rexx features that make the language feel direct:
 
 This example keeps the output small:
 
-```rexx
+```rexx <!--levelbtut6.crexx-->
 options levelb
 import rxfnsb
 
@@ -378,7 +387,7 @@ main: procedure
 
   out = .string[]
   err = .string[]
-  address command "echo #42" output out error err
+  address crexx "echo 42" output out error err
   say "address=" || out[1]
 
   handled = ""
@@ -393,16 +402,18 @@ main: procedure
 
 Expected output:
 
-```bash
-Lovelace:1815
-address=#42
-OTHER:from block
-```
+<!--splice--crexx levelbtut6.crexx-->
+
+<!-- ```bash -->
+<!-- Lovelace:1815 -->
+<!-- address=#42 -->
+<!-- OTHER:from block -->
+<!-- ``` -->
 
 Trace is useful but intentionally noisy. These are reference-only forms, not a
 runnable tutorial example:
 
-```bash
+```text
 trace results
 trace asm
 trace llm to file "trace.jsonl"
@@ -414,7 +425,7 @@ Do not add `TRACE`, `PARSE`, or `ADDRESS` directly to `lib/rxfnsb/rexx/`
 library sources while debugging the library build. Those files are built with
 compiler exits disabled. Write a small caller program instead.
 
-## 9. Modules and Libraries
+## Modules and Libraries
 
 Each source file is a module. Public module identity comes from `namespace`,
 not from the filename alone. A module exposes selected symbols; another module
@@ -422,7 +433,7 @@ imports the namespace and calls those symbols.
 
 Library module:
 
-```rexx
+```rexx <!--greetings.crexx-->
 options levelb
 namespace greetings expose salutation count_items
 
@@ -437,7 +448,7 @@ count_items: procedure = .int
 
 Caller:
 
-```rexx
+```rexx <!--modulesmain.crexx-->
 options levelb
 import greetings
 
@@ -452,29 +463,31 @@ say "names=" || greetings..count_items(names)
 Run the caller with the directory containing `greetings.crexx` on the source
 import path:
 
-```bash
+```bash <!--runmodules.sh-->
 crexx modules_main.crexx -s/path/to/examples
 ```
 
 Expected output:
 
-```bash
-Hello, Ada
-names=2
-```
+<!--splice--crexx modulesmain.crexx-->
+
+<!-- ```bash -->
+<!-- Hello, Ada -->
+<!-- names=2 -->
+<!-- ``` -->
 
 Use `namespace..symbol` for qualified calls. The older
 `namespace::symbol` spelling is accepted for compatibility, but new examples
 should prefer the double-dot form.
 
-## 10. Classes
+## Classes
 
 Classes hold attributes and methods. A class factory is written as `*: factory`
 or `name: factory`; do not write a return type on a factory. In a class
 factory, bare `return` returns the object being constructed. This fragment is
 from the complete interface example in the next section:
 
-```rexx
+```rexx <!--tutclasses1-->
 fileasset: class implements .asset
   _name = .string
 
@@ -494,7 +507,7 @@ Ordinary application classes should let the compiler allocate attribute
 storage. The `with register.N` form exists for low-level VM/native interop, not
 for day-to-day business objects.
 
-## 11. Interfaces
+## Interfaces
 
 Interfaces define contracts. Classes implement them. Interface methods can be
 abstract, or they can provide a default/final body. In current Level B, an
@@ -503,7 +516,7 @@ override it.
 
 Here is a complete same-file interface and provider example:
 
-```rexx
+```rexx <!--tutclasses2-->
 options levelb
 namespace tutorial_objects
 
@@ -568,7 +581,7 @@ cacheasset: class implements .asset
 
 Expected output:
 
-```bash
+```text <!--outtex.txt-->
 file:log.txt
 cache:memo
 file selected
@@ -580,7 +593,7 @@ providers. The `*: match` method is a class-side selector. Positive scores
 accept the provider, zero or negative scores reject it, and the highest score
 wins.
 
-## 12. Object Use
+## Object Use
 
 Use object values through factories, methods, interfaces, type tests, and
 checked casts:
@@ -599,7 +612,7 @@ call it explicitly.
 Level B also does not currently implement interface inheritance, interface
 attributes, overloads, singleton declarations, or destructor/finalizer syntax.
 
-## 13. Collections and Iteration
+## Collections and Iteration
 
 Current Level B collection patterns are explicit:
 
@@ -620,7 +633,7 @@ Current Level B collection patterns are explicit:
 
 The mini-project below uses this pattern. This is a fragment:
 
-```rexx
+```rexx <!--tutcoll1-->
 items = .object[]
 items[1] = .ledger..entry("coffee", -3) as .object
 
@@ -632,7 +645,7 @@ For iterator-like classes, current Level B uses explicit references when the
 iterator should see live container state. Use snapshots when the iterator should
 see a stable copy.
 
-## 14. References
+## References
 
 References are explicit weak aliases to storage. They do not keep a target
 alive. If the target storage goes away, `refvalid(ref)` returns false and
@@ -643,11 +656,11 @@ Use the four source forms deliberately:
 - `reference target`: create a weak reference to aliasable storage.
 - `local = dereference ref`: link a current-scope local to the target.
 - `snapshot ref`: make a deep copy of the current target.
-- `refvalid(ref)`: test whether the target is still valid.
+- `<refvalid>(ref)`: test whether the target is invalid.
 
 This example contrasts a live reference with a snapshot:
 
-```rexx
+```rexx <!--tutref1.crexx-->
 options levelb
 import rxfnsb
 namespace tutorial_references
@@ -700,7 +713,7 @@ LiveCounter: class
     return
 
   count: method = .int
-    if \refvalid(bag_ref) then return -1
+    if <refvalid>(bag_ref) = 0 then return -1
     bag = dereference bag_ref
     return bag.size()
 
@@ -718,23 +731,25 @@ SnapshotCounter: class
 
 Expected output:
 
-```bash
-live=3
-snapshot=2
-```
+<!--splice--crexx tutref1.crexx-->
+
+<!-- ```text <\!--out2.txt-\-> -->
+<!-- live=3 -->
+<!-- snapshot=2 -->
+<!-- ``` -->
 
 Keep reference boundaries visible. Level B does not let you write convenience
 forms such as `list_ref.add(...)` or `items_ref[i]` directly through the
 reference.
 
-## 15. Mini-Project: A Typed Ledger Module
+## Mini-Project: A Typed Ledger Module
 
 This mini-project uses two source files: a reusable module with an interface
 and class, and a small application that imports it.
 
 `ledger.crexx`:
 
-```rexx
+```rexx <!--ledger.crexx-->
 options levelb
 namespace ledger expose entry ledger_total
 
@@ -776,7 +791,7 @@ ledger_total: procedure = .int
 
 `ledger_app.crexx`:
 
-```rexx
+```rexx <!--ledgerapp.crexx-->
 options levelb
 import ledger
 
@@ -818,7 +833,7 @@ The explicit `rxvm` command matters here because interface factory providers
 are discovered from the modules present in the runtime image. For deployable
 programs, `rxlink` is the usual way to combine those modules into one image.
 
-## 16. Migration Guide For Classic Rexx Habits
+## Migration Guide For Classic Rexx Habits
 
 Classic Rexx habit:
 : Rely on untyped variables.
@@ -863,14 +878,14 @@ Level B habit:
 : Define an interface, implement it with classes, and use checked casts and
   type tests at boundaries.
 
-## 17. Known Beta 2 Boundaries
+## Known Beta 3 Boundaries
 
 Level B is the main implemented Release 1 beta language, but this is still a
 beta line. Current boundaries that matter to tutorial code:
 
 - Level B is not Classic Rexx compatibility mode. Level C is where Classic
-  compatibility work belongs, and normal Level C compilation is not a beta 2
-  contract.
+  compatibility work belongs, and normal Level C compilation is not a beta 3
+  contract unless the beta 3 release notes explicitly say otherwise.
 - Level G has real early library work, including `rxfnsg`, but it is not the
   baseline user language for this release line.
 - Interface default methods are final.
@@ -883,35 +898,35 @@ beta line. Current boundaries that matter to tutorial code:
 - Multi-module interface-provider programs need all provider modules loaded or
   linked at runtime.
 
-## Tested Example Appendix
+<!-- ## Tested Example Appendix -->
 
-The examples below were tested from the repository root with installed tools on
-`PATH`. The commands use `$WORK` for the directory containing the tutorial
-example files.
+<!-- The examples below were tested from the repository root with installed tools on -->
+<!-- `PATH`. The commands use `$WORK` for the directory containing the tutorial -->
+<!-- example files. -->
 
-| Example | Command used | Expected output | Known limitation |
-| --- | --- | --- | --- |
-| First program | `crexx $WORK/hello.crexx` | `Hello Level B`<br>`length=4` | None. |
-| Command-line args | `crexx $WORK/args.crexx -args alpha beta` | `count=2`<br>`1:alpha`<br>`2:beta` | `-args` must be the final driver option before user arguments. |
-| Types, arrays, and stems | `crexx $WORK/types_arrays.crexx` | `Level B:2`<br>`.float`<br>`.boolean`<br>`2`<br>`3:alpha,beta,gamma`<br>`analytical`<br>`compiler` | Uses explicit declarations plus assignment, not constructor-call examples. |
-| Procedures and varargs | `crexx $WORK/procedures.crexx` | `total=10`<br>`x=11` | None. |
-| Control flow | `crexx $WORK/control_flow.crexx -args alpha skip beta stop gamma` | `word=alpha`<br>`word=beta`<br>`summary=many` | None. |
-| Parse, address, signal | `crexx $WORK/rexx_features.crexx` | `Lovelace:1815`<br>`address=#42`<br>`OTHER:from block` | Shell output assumes `echo` is available. |
-| Namespace import | `crexx $WORK/modules_main.crexx -s$WORK` | `Hello, Ada`<br>`names=2` | Demonstrates source import. Interface-provider programs need runtime loading too. |
-| Classes and interfaces | `crexx $WORK/objects.crexx` | `file:log.txt`<br>`cache:memo`<br>`file selected`<br>`.tutorial_objects..fileasset` | Same-file providers keep the run command simple. |
-| References | `crexx $WORK/references.crexx` | `live=3`<br>`snapshot=2` | None. |
-| Ledger mini-project | See the command block below. | `coffee=-3`<br>`book=-12`<br>`gift=20`<br>`total=5` | All provider modules must be loaded or linked at runtime. |
+<!-- | Example | Command used | Expected output | Known limitation | -->
+<!-- | --- | --- | --- | --- | -->
+<!-- | First program | `crexx $WORK/hello.crexx` | `Hello Level B`<br>`length=4` | None. | -->
+<!-- | Command-line args | `crexx $WORK/args.crexx -args alpha beta` | `count=2`<br>`1:alpha`<br>`2:beta` | `-args` must be the final driver option before user arguments. | -->
+<!-- | Types, arrays, and stems | `crexx $WORK/types_arrays.crexx` | `Level B:2`<br>`.float`<br>`.boolean`<br>`2`<br>`3:alpha,beta,gamma`<br>`analytical`<br>`compiler` | Uses explicit declarations plus assignment, not constructor-call examples. | -->
+<!-- | Procedures and varargs | `crexx $WORK/procedures.crexx` | `total=10`<br>`x=11` | None. | -->
+<!-- | Control flow | `crexx $WORK/control_flow.crexx -args alpha skip beta stop gamma` | `word=alpha`<br>`word=beta`<br>`summary=many` | None. | -->
+<!-- | Parse, address, signal | `crexx $WORK/rexx_features.crexx` | `Lovelace:1815`<br>`address=#42`<br>`OTHER:from block` | Shell output assumes `echo` is available. | -->
+<!-- | Namespace import | `crexx $WORK/modules_main.crexx -s$WORK` | `Hello, Ada`<br>`names=2` | Demonstrates source import. Interface-provider programs need runtime loading too. | -->
+<!-- | Classes and interfaces | `crexx $WORK/objects.crexx` | `file:log.txt`<br>`cache:memo`<br>`file selected`<br>`.tutorial_objects..fileasset` | Same-file providers keep the run command simple. | -->
+<!-- | References | `crexx $WORK/references.crexx` | `live=3`<br>`snapshot=2` | None. | -->
+<!-- | Ledger mini-project | See the command block below. | `coffee=-3`<br>`book=-12`<br>`gift=20`<br>`total=5` | All provider modules must be loaded or linked at runtime. | -->
 
-Ledger mini-project command sequence:
+<!-- Ledger mini-project command sequence: -->
 
-```bash
-CREXX_BIN=$(dirname "$(command -v crexx)")
-rxc -i "$CREXX_BIN" -o "$WORK/main" "$WORK/ledger_app.crexx"
-rxas -o "$WORK/main.rxbin" "$WORK/main"
-rxc -i "$CREXX_BIN" -o "$WORK/ledger" "$WORK/ledger.crexx"
-rxas -o "$WORK/ledger.rxbin" "$WORK/ledger"
-rxvm "$CREXX_BIN/library.rxbin" "$WORK/ledger.rxbin" "$WORK/main.rxbin"
-```
+<!-- ```bash <\!--commandsequence.sh-\-> -->
+<!-- CREXX_BIN=$(dirname "$(command -v crexx)") -->
+<!-- rxc -i "$CREXX_BIN" -o "$WORK/main" "$WORK/ledger_app.crexx" -->
+<!-- rxas -o "$WORK/main.rxbin" "$WORK/main" -->
+<!-- rxc -i "$CREXX_BIN" -o "$WORK/ledger" "$WORK/ledger.crexx" -->
+<!-- rxas -o "$WORK/ledger.rxbin" "$WORK/ledger" -->
+<!-- rxvm "$CREXX_BIN/library.rxbin" "$WORK/ledger.rxbin" "$WORK/main.rxbin" -->
+<!-- ``` -->
 
-The TRACE forms in section 8 are intentionally marked reference-only because
-trace output is diagnostic and can be much larger than the tutorial needs.
+<!-- The TRACE forms in section 8 are intentionally marked reference-only because -->
+<!-- trace output is diagnostic and can be much larger than the tutorial needs. -->

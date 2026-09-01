@@ -1,0 +1,86 @@
+Compiled from "awfy_bounce.java"
+public class awfy_bounce {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: iconst_1
+         3: istore_1
+         4: aload_0
+         5: arraylength
+         6: iconst_1
+         7: if_icmplt     20
+        10: aload_0
+        11: iconst_0
+        12: aaload
+        13: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        16: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        19: istore_1
+        20: iload_1
+        21: iconst_1
+        22: if_icmpge     36
+        25: ldc           #11                 // String FAIL: repetitions must be positive
+        27: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        30: pop
+        31: iconst_1
+        32: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        35: return
+        36: iconst_0
+        37: istore_2
+        38: iload_1
+        39: istore        4
+        41: iconst_1
+        42: istore_3
+        43: iload_3
+        44: iload         4
+        46: if_icmpgt     101
+        49: new           #25                 // class BounceBenchmark
+        52: dup
+        53: invokespecial #27                 // Method BounceBenchmark."<init>":()V
+        56: invokevirtual #31                 // Method BounceBenchmark.run:()I
+        59: istore_2
+        60: iload_2
+        61: sipush        1331
+        64: if_icmpeq     95
+        67: new           #34                 // class java/lang/StringBuilder
+        70: dup
+        71: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+        74: ldc           #37                 // String FAIL: expected 1331 bounces, got
+        76: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        79: iload_2
+        80: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        83: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        86: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        89: pop
+        90: iconst_1
+        91: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        94: return
+        95: iinc          3, 1
+        98: goto          43
+       101: new           #34                 // class java/lang/StringBuilder
+       104: dup
+       105: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+       108: ldc           #50                 // String benchmark=awfy_bounce repetitions=
+       110: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       113: iload_1
+       114: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       117: ldc           #52                 // String  result=
+       119: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       122: iload_2
+       123: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       126: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       129: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       132: pop
+       133: ldc           #54                 // String PASS: AWFY Bounce NetRexx port
+       135: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       138: pop
+       139: return
+
+  private awfy_bounce();
+    Code:
+         0: aload_0
+         1: invokespecial #56                 // Method java/lang/Object."<init>":()V
+         4: return
+}

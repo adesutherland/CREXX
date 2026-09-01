@@ -2,20 +2,12 @@ cmake_minimum_required(VERSION 3.24)
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Trace.rxbin
-        COMMAND ${CMAKE_COMMAND} -E env RXCP_DISABLE_EXIT=1 $<TARGET_FILE:rxc> -x -i ${CREXX_EXIT_IMPORT_PATH} -o Trace ${CMAKE_CURRENT_SOURCE_DIR}/Trace.crexx
-        COMMAND $<TARGET_FILE:rxas> -o Trace Trace
-        DEPENDS rxc rxas library ${CMAKE_CURRENT_SOURCE_DIR}/Trace.crexx ${CMAKE_CURRENT_BINARY_DIR}/../token.rxbin
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Building Trace.rxbin"
-)
-add_custom_target(exit_trace_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Trace.rxbin)
+crexx_add_compiler_exit_component(exit_trace_bin Trace)
 
 crexx_add_compiler_exit_runtime_test(
         test_trace_exit
         test_trace_exit.crexx
-        PASS_REGULAR_EXPRESSION "[ ]*5 \\*-\\*[ ]+say .*TRACE REXX ACTIVE"
+        PASS_REGULAR_EXPRESSION "SUCCESS"
         RUN_SUFFIX ${LIBRPATH}
 )
 
@@ -110,7 +102,7 @@ endif()
 function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
     set(options)
     set(oneValueArgs EXPECT_STDOUT_REGEX REJECT_STDOUT_REGEX EXPECT_STDERR_REGEX REJECT_STDERR_REGEX TRACE_FILE EXPECT_FILE_REGEX ENV_CREXX_TRACE ENV_CREXX_TRACE_TO)
-    set(multiValueArgs EXTRA_DEPENDS EXTRA_SOURCE_FILES)
+    set(multiValueArgs EXTRA_DEPENDS EXTRA_SOURCE_FILES VM_TARGETS)
     cmake_parse_arguments(TRACE_CAPTURE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_outputs)
@@ -154,28 +146,46 @@ function(crexx_add_trace_capture_test TARGET_NAME SOURCE_FILE)
         list(APPEND _outputs ${_output})
         list(APPEND _outputs ${_extra_outputs})
 
-        add_test(
-                NAME ${TARGET_NAME}_${_mode}
-                COMMAND ${CMAKE_COMMAND}
-                        -DRXVM=$<TARGET_FILE:rxvm>
-                        -DRXBIN=${_output}
-                        -DEXTRA_RXBINS=${_extra_rxbin_arg}
-                        -DLIBRPATH=${LIBRPATH}
-                        -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/${_base}_work
-                        -DENV_CREXX_TRACE=${TRACE_CAPTURE_ENV_CREXX_TRACE}
-                        -DENV_CREXX_TRACE_TO=${TRACE_CAPTURE_ENV_CREXX_TRACE_TO}
-                        -DEXPECT_STDOUT_REGEX=${TRACE_CAPTURE_EXPECT_STDOUT_REGEX}
-                        -DREJECT_STDOUT_REGEX=${TRACE_CAPTURE_REJECT_STDOUT_REGEX}
-                        -DEXPECT_STDERR_REGEX=${TRACE_CAPTURE_EXPECT_STDERR_REGEX}
-                        -DREJECT_STDERR_REGEX=${TRACE_CAPTURE_REJECT_STDERR_REGEX}
-                        -DTRACE_FILE=${TRACE_CAPTURE_TRACE_FILE}
-                        -DEXPECT_FILE_REGEX=${TRACE_CAPTURE_EXPECT_FILE_REGEX}
-                        -P ${TRACE_CAPTURE_SCRIPT}
-        )
+        set(_vm_targets ${TRACE_CAPTURE_VM_TARGETS})
+        if(NOT _vm_targets)
+            set(_vm_targets rxvm)
+        endif()
+        list(LENGTH _vm_targets _vm_target_count)
+        foreach(_vm_target IN LISTS _vm_targets)
+            if(_vm_target STREQUAL "rxvm")
+                set(_vm_executable "${CREXX_RXVM_EXECUTABLE}")
+            else()
+                set(_vm_executable "$<TARGET_FILE:${_vm_target}>")
+            endif()
+            set(_test_name ${TARGET_NAME}_${_mode})
+            set(_work_name ${_base}_work)
+            if(_vm_target_count GREATER 1)
+                set(_test_name ${_test_name}_${_vm_target})
+                set(_work_name ${_base}_${_vm_target}_work)
+            endif()
+            add_test(
+                    NAME ${_test_name}
+                    COMMAND ${CMAKE_COMMAND}
+                            -DRXVM=${_vm_executable}
+                            -DRXBIN=${_output}
+                            -DEXTRA_RXBINS=${_extra_rxbin_arg}
+                            -DLIBRPATH=${LIBRPATH}
+                            -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/${_work_name}
+                            -DENV_CREXX_TRACE=${TRACE_CAPTURE_ENV_CREXX_TRACE}
+                            -DENV_CREXX_TRACE_TO=${TRACE_CAPTURE_ENV_CREXX_TRACE_TO}
+                            -DEXPECT_STDOUT_REGEX=${TRACE_CAPTURE_EXPECT_STDOUT_REGEX}
+                            -DREJECT_STDOUT_REGEX=${TRACE_CAPTURE_REJECT_STDOUT_REGEX}
+                            -DEXPECT_STDERR_REGEX=${TRACE_CAPTURE_EXPECT_STDERR_REGEX}
+                            -DREJECT_STDERR_REGEX=${TRACE_CAPTURE_REJECT_STDERR_REGEX}
+                            -DTRACE_FILE=${TRACE_CAPTURE_TRACE_FILE}
+                            -DEXPECT_FILE_REGEX=${TRACE_CAPTURE_EXPECT_FILE_REGEX}
+                            -P ${TRACE_CAPTURE_SCRIPT}
+            )
+        endforeach()
     endforeach()
 
     add_custom_target(${TARGET_NAME}_bin ALL DEPENDS ${_outputs})
-    add_dependencies(${TARGET_NAME}_bin compiler_exit_bin rxvm)
+    add_dependencies(${TARGET_NAME}_bin compiler_exit_bin ${_vm_targets})
 endfunction()
 
 crexx_add_trace_capture_test(
@@ -215,6 +225,13 @@ crexx_add_trace_capture_test(
         EXPECT_STDOUT_REGEX "TRACE ENV DONE 42"
         EXPECT_STDERR_REGEX ">=>[ ]+\"42\""
         REJECT_STDOUT_REGEX "\\*-\\*"
+)
+
+crexx_add_trace_capture_test(
+        test_trace_event_batch
+        test_trace_event_batch.crexx
+        EXPECT_STDOUT_REGEX ">=>[ ]+\"41\"[\r\n]+[ ]*>V>[ ]+\"41\""
+        VM_TARGETS rxvm
 )
 
 crexx_add_trace_capture_test(
@@ -289,11 +306,13 @@ endfunction()
 crexx_add_trace_compile_fail_test(
         test_trace_unknown_option_diagnostic
         test_trace_unknown_option.crexx
-        "#TRACE_UNKNOWN_OPTION, \"potato\""
+        "TRACE option is not known\\., \"potato\""
 )
 
 crexx_add_trace_compile_fail_test(
         test_trace_bad_abbreviation_diagnostic
         test_trace_bad_abbreviation.crexx
-        "#TRACE_UNKNOWN_OPTION, \"ras\""
+        "TRACE option is not known\\., \"ras\""
 )
+
+crexx_finalize_directory_qa_tiers()

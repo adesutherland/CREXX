@@ -22,22 +22,36 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place object-array deletion.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/objectarraydelete.md
+ */
 options levelb
-
 namespace rxfnsb expose objectarraydelete
 
-/* Closes a gap in an object array. */
-objectarraydelete: procedure=.int
-  arg expose array=.object[], from=1, count=0
+/**
+ * Delete a range from a one-based object array.
+ *
+ * @param array exposed object array using array[0] as its high-water mark
+ * @param from positive first index to delete
+ * @param count non-negative maximum number of elements to delete
+ * @return the new array high-water mark
+ * @signal INVALID_ARGUMENTS invalid position or count
+ */
+objectarraydelete: procedure = .int
+  arg expose array = .object[], from = .int, count = .int
 
   hi = array[0]
-  if hi < 1 then return hi
-  if count < 1 then return hi
-  if from < 1 then return hi
-  if from > hi then return hi
+  if from < 1 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYDELETE position must be positive"
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYDELETE count must be non-negative"
+  if count = 0 | hi < 1 | from > hi then return hi
 
-  if from + count - 1 > hi then count = hi - from + 1
+  available = hi - from + 1
+  if count > available then count = available
 
   assembler DELATTRS1 array,from,count
-return hi - count
+  return array[0]

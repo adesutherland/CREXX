@@ -1,0 +1,99 @@
+Test project /home/adrian/crexx-concurrency-linux-c38a5d184-RXzbaL/build
+    Start 1718: ts_http_server_rxbvm_opt
+    Test #1718: ts_http_server_rxbvm_opt ..............   Passed    3.28 sec
+    Start 1718: ts_http_server_rxbvm_opt
+    Test #1718: ts_http_server_rxbvm_opt ..............   Passed    2.48 sec
+    Start 1718: ts_http_server_rxbvm_opt
+    Test #1718: ts_http_server_rxbvm_opt ..............   Passed    2.41 sec
+    Start 1718: ts_http_server_rxbvm_opt
+    Test #1718: ts_http_server_rxbvm_opt ..............   Passed    2.58 sec
+    Start 1718: ts_http_server_rxbvm_opt
+1/8 Test #1718: ts_http_server_rxbvm_opt ..............   Passed    2.70 sec
+    Start 1724: ts_http_server_failures_rxtvm_opt
+    Test #1724: ts_http_server_failures_rxtvm_opt .....   Passed    2.40 sec
+    Start 1724: ts_http_server_failures_rxtvm_opt
+    Test #1724: ts_http_server_failures_rxtvm_opt .....   Passed    2.43 sec
+    Start 1724: ts_http_server_failures_rxtvm_opt
+    Test #1724: ts_http_server_failures_rxtvm_opt .....   Passed    2.39 sec
+    Start 1724: ts_http_server_failures_rxtvm_opt
+    Test #1724: ts_http_server_failures_rxtvm_opt .....   Passed    2.37 sec
+    Start 1724: ts_http_server_failures_rxtvm_opt
+2/8 Test #1724: ts_http_server_failures_rxtvm_opt .....   Passed    2.40 sec
+    Start 1722: ts_http_server_failures_rxbvm_opt
+    Test #1722: ts_http_server_failures_rxbvm_opt .....   Passed    2.40 sec
+    Start 1722: ts_http_server_failures_rxbvm_opt
+    Test #1722: ts_http_server_failures_rxbvm_opt .....   Passed    2.62 sec
+    Start 1722: ts_http_server_failures_rxbvm_opt
+    Test #1722: ts_http_server_failures_rxbvm_opt .....   Passed    2.20 sec
+    Start 1722: ts_http_server_failures_rxbvm_opt
+    Test #1722: ts_http_server_failures_rxbvm_opt .....   Passed    2.65 sec
+    Start 1722: ts_http_server_failures_rxbvm_opt
+3/8 Test #1722: ts_http_server_failures_rxbvm_opt .....   Passed    2.34 sec
+    Start 1721: ts_http_server_failures_rxbvm_noopt
+    Test #1721: ts_http_server_failures_rxbvm_noopt ...   Passed    2.43 sec
+    Start 1721: ts_http_server_failures_rxbvm_noopt
+    Test #1721: ts_http_server_failures_rxbvm_noopt ...   Passed    2.41 sec
+    Start 1721: ts_http_server_failures_rxbvm_noopt
+    Test #1721: ts_http_server_failures_rxbvm_noopt ...   Passed    2.42 sec
+    Start 1721: ts_http_server_failures_rxbvm_noopt
+    Test #1721: ts_http_server_failures_rxbvm_noopt ...   Passed    2.57 sec
+    Start 1721: ts_http_server_failures_rxbvm_noopt
+4/8 Test #1721: ts_http_server_failures_rxbvm_noopt ...   Passed    2.58 sec
+    Start 1723: ts_http_server_failures_rxtvm_noopt
+    Test #1723: ts_http_server_failures_rxtvm_noopt ...   Passed    2.43 sec
+    Start 1723: ts_http_server_failures_rxtvm_noopt
+    Test #1723: ts_http_server_failures_rxtvm_noopt ...   Passed    2.48 sec
+    Start 1723: ts_http_server_failures_rxtvm_noopt
+    Test #1723: ts_http_server_failures_rxtvm_noopt ...   Passed    2.52 sec
+    Start 1723: ts_http_server_failures_rxtvm_noopt
+    Test #1723: ts_http_server_failures_rxtvm_noopt ...   Passed    2.42 sec
+    Start 1723: ts_http_server_failures_rxtvm_noopt
+5/8 Test #1723: ts_http_server_failures_rxtvm_noopt ...   Passed    2.73 sec
+    Start 1719: ts_http_server_rxtvm_noopt
+    Test #1719: ts_http_server_rxtvm_noopt ............   Passed    2.89 sec
+    Start 1719: ts_http_server_rxtvm_noopt
+    Test #1719: ts_http_server_rxtvm_noopt ............   Passed    2.52 sec
+    Start 1719: ts_http_server_rxtvm_noopt
+    Test #1719: ts_http_server_rxtvm_noopt ............   Passed    3.11 sec
+    Start 1719: ts_http_server_rxtvm_noopt
+    Test #1719: ts_http_server_rxtvm_noopt ............   Passed    3.12 sec
+    Start 1719: ts_http_server_rxtvm_noopt
+6/8 Test #1719: ts_http_server_rxtvm_noopt ............   Passed    3.05 sec
+    Start 1720: ts_http_server_rxtvm_opt
+    Test #1720: ts_http_server_rxtvm_opt ..............   Passed    2.64 sec
+    Start 1720: ts_http_server_rxtvm_opt
+    Test #1720: ts_http_server_rxtvm_opt ..............   Passed    2.62 sec
+    Start 1720: ts_http_server_rxtvm_opt
+    Test #1720: ts_http_server_rxtvm_opt ..............   Passed    2.52 sec
+    Start 1720: ts_http_server_rxtvm_opt
+    Test #1720: ts_http_server_rxtvm_opt ..............   Passed    2.54 sec
+    Start 1720: ts_http_server_rxtvm_opt
+7/8 Test #1720: ts_http_server_rxtvm_opt ..............   Passed    2.76 sec
+    Start 1717: ts_http_server_rxbvm_noopt
+    Test #1717: ts_http_server_rxbvm_noopt ............   Passed    2.69 sec
+    Start 1717: ts_http_server_rxbvm_noopt
+    Test #1717: ts_http_server_rxbvm_noopt ............   Passed    2.57 sec
+    Start 1717: ts_http_server_rxbvm_noopt
+    Test #1717: ts_http_server_rxbvm_noopt ............   Passed    2.49 sec
+    Start 1717: ts_http_server_rxbvm_noopt
+    Test #1717: ts_http_server_rxbvm_noopt ............   Passed    2.63 sec
+    Start 1717: ts_http_server_rxbvm_noopt
+8/8 Test #1717: ts_http_server_rxbvm_noopt ............   Passed    2.56 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+concurrency         =  21.12 sec*proc (8 tests)
+concurrency-sp07    =  21.12 sec*proc (8 tests)
+concurrency-sp08    =  21.12 sec*proc (8 tests)
+failure             =  10.05 sec*proc (4 tests)
+http                =  21.12 sec*proc (8 tests)
+levelg              =  21.12 sec*proc (8 tests)
+library             =  21.12 sec*proc (8 tests)
+linked              =  10.92 sec*proc (4 tests)
+linked_opt          =  10.20 sec*proc (4 tests)
+rxbvm               =  10.17 sec*proc (4 tests)
+rxtvm               =  10.95 sec*proc (4 tests)
+server              =  21.12 sec*proc (8 tests)
+
+Total Test time (real) = 103.51 sec

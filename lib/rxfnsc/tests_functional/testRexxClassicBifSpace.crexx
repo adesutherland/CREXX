@@ -1,0 +1,185 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifspace
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("abc def", "abc  def  ")
+errors = errors + check_count("abc   def", "  abc  def", "3")
+errors = errors + check_count("abcdef", "abc  def  ", "0")
+errors = errors + check_pad("abc++def", "abc  def  ", "2", "+")
+errors = errors + check_omitted_count_pad("foo-bar", " foo bar ", "-")
+errors = errors + check_default("", "")
+errors = errors + check_default("", " 　 ")
+errors = errors + check_pad("a·b", "a　b", "1", "·")
+errors = errors + check_count("solo", "solo", "100000")
+errors = errors + check_byte_profile()
+errors = errors + check_configured_byte_blank()
+
+large_source = "   "
+large_expected = ""
+word_text = "word"
+blank_run = "   "
+large_separator = ".."
+do i = 1 to 250
+  if i > 1 then do
+    assembler append large_source,blank_run
+    assembler append large_expected,large_separator
+  end
+  assembler append large_source,word_text
+  assembler append large_expected,word_text
+end
+assembler append large_source,blank_run
+errors = errors + check_pad(large_expected, large_source, "2", ".")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_required()
+errors = errors + check_numeric_error("not-a-number", "RXC-LC-40.12")
+errors = errors + check_numeric_error("1.5", "RXC-LC-40.12")
+errors = errors + check_numeric_error("-1", "RXC-LC-40.13")
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+
+if errors = 0 then say "PASS: Level C SPACE BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, string = .string
+  return run_check(expected, string, 0, "", 0, "")
+
+check_count: procedure = .int
+  arg expected = .string, string = .string, count = .string
+  return run_check(expected, string, 1, count, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, string = .string, count = .string, pad = .string
+  return run_check(expected, string, 1, count, 1, pad)
+
+check_omitted_count_pad: procedure = .int
+  arg expected = .string, string = .string, pad = .string
+  return run_check(expected, string, 0, "", 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, count_exists = .boolean, count = .string, pad_exists = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  exists[1] = 1
+  if count_exists | pad_exists then do
+    args[2] = .RexxValue(count)
+    exists[2] = count_exists
+  end
+  if pad_exists then do
+    args[3] = .RexxValue(pad)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("SPACE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: SPACE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = "a　b"
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if \context.hasError() & result.asString() == source then return 0
+  say "FAIL: SPACE BYTE changed UTF8-only whitespace",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_configured_byte_blank: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "61FF62"x
+  blank = .binary
+  blank = "FF"x
+  args[1] = .RexxValue.fromBinary(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setByteOtherBlanks(blank)
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  actual = result.asBinary()
+  actual_length = .int
+  middle = .int
+  middle_index = 1
+  assembler blen actual_length,actual
+  assembler getbyte middle,actual,middle_index
+  if \context.hasError() & actual_length = 3 & middle = 32 then return 0
+  say "FAIL: SPACE configured BYTE blank"
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: SPACE expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: SPACE omitted required got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_numeric_error: procedure = .int
+  arg count = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("a b")
+  args[2] = .RexxValue(count)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: SPACE count expected" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("a b")
+  args[2] = .RexxValue("1")
+  args[3] = .RexxValue(pad)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: SPACE pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

@@ -8,10 +8,10 @@ translate an `rxas` file produced by the cRexx compiler
 
 ## Program Structure
 
-![Program Structure](charts/asmstructure-crop.pdf "Title"){height=100 width=500}
+![Program Structure](charts/asmstructure-crop.pdf "Title"){height=70 width=500}
 
 The assembler processing goes through a number of steps in a single
-pass: first, the Lexer / Scanner tokenises the RXAS code. After that,
+pass: first, the Lexer / Scanner tokenises the `.rxas` code. After that,
 the Parser parses the structure into a series of instructions. The
 binary writer generates the binary code and constant pool for the
 program at hand. The backpatcher runs last and handles forward references.
@@ -28,7 +28,7 @@ errors only) and can produce a trace file in Debug/verbose mode
 
 ## Character sets
 
-The input file is assumed to be valid UTF8.
+The input file is assumed to be valid utf-8 and will fail invalid input.
 The assembler, like the compiler, operates using two character
 sets. The first is for symbols in the assembler language
 statements. These are all composed of the ASCII subset of Unicode. The
@@ -43,7 +43,7 @@ When the command line argument -h is specified the options are shown:
 \small
 \obeylines \splice{rxas -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Optimizer
 
@@ -76,17 +76,17 @@ Example:
 
 ```rxas
 loop:
-    fndnblnk r3,r1,r3   /* find first/next non blank offset    */
-    ilt r5,r3,0         /* if <0, nothing found, end search    */
-    brt break,r5
-    inc r6              /* else increase word count            */
-                        /* offset of word is in R3             */
-    copy r8,r3          /* save offset of word                 */
-    fndblnk r3,r1,r3    /* from offset find next blank offset  */
-    ieq r7,r6,r2        /* is this the word we are looking for?*/
-    brt wordf,r7        /* go and fetch it                     */
-    ilt r5,r3,0         /* if <0, nothing found, end search    */
-    brt break,r5        /* word not found                      */
+    fndnblnk r3,r1,r3   /* find first/next non blank offset         */
+    ilt r5,r3,0         /* if <0, nothing found, end search         */
+    brt break,r5        /* branch to break                          */
+    inc r6              /* else increase word count                 */
+                        /* offset of word is in R3                  */
+    copy r8,r3          /* save offset of word                      */
+    fndblnk r3,r1,r3    /* from offset find next blank offset       */
+    ieq r7,r6,r2        /* is this the word we are looking for?     */
+    brt wordf,r7        /* go fetch it                              */
+    ilt r5,r3,0         /* if <0, nothing found, end search         */
+    brt break,r5        /* no word found                            */
     bct loop,r4,r3      /* continue to look for next non blank char */
 ```
   
@@ -179,9 +179,10 @@ for `ipow` is always executed, the example in `crexx` on
 page \pageref{fpowexample} shows that the cRexx optimizer of the
 compiler can eliminate this code entirely.
 
-The use of Assembler directives is not allowed in inline assembly, so
-(as an example) is it not possible to define procedures in an inline
-assembler block.
+The use of assembler directives[^directives] is not allowed in inline assembly, so
+it is (for example) not possible to define procedures in an inline assembler block.
+
+[^directives]: as opposed to assembler (rxvm) instructions 
 
 ## Troubleshooting
 
@@ -194,8 +195,8 @@ a number of different strategies can be followed.
 ### Adding say statements
 
 It is easy to add `say` statements to your program. Unlike
-Rexx, there is no trace statement for assembler programs. It
-is possible to disassemble (see page \pageref{rxdas---the-crexx-disassembler} an `.rxbin` module, and reassemble it
+Rexx, there is no trace statement for assembler programs. However, it
+is easy to disassemble (see [rxdas](rxdas---the-crexx-disassembler) on page \pageref{rxdas---the-crexx-disassembler}) an `.rxbin` module, and reassemble it
 with added statements.
 
 ### Using the debugger
@@ -204,4 +205,30 @@ The `rxdb` debugger has a mode for assembler. This can be used to
 set breakpoints and/or step through the code; here the registers can
 be traced so variables in your program can be followed and the
 comparisons and branches can be checked. For more information about the
-debugger, see page \pageref{rxdb---the-crexx-debugger}.
+debugger, see [rxdb](rxdb---the-crexx-debugger) on page \pageref{rxdb---the-crexx-debugger}).
+
+### Using the Trace statement
+
+The `trace asm` statement in cRexx is designed to trace `.rxas` code as it is executed. This works only from a Rexx program.
+
+As an example, when we want to know which VM instructions are executed:
+
+```rexx <!--hellotrace.crexx-->
+options levelb
+# trace the world
+trace asm
+say 'hello trace'
+say 5**2
+```
+
+<!--splice--crexx hellotrace-->
+
+and we see that the optimiser did its work by deciding the answer will never be anything other than 25. If we want to see how it is calculated, we need to compile without optimisation:
+
+```bash
+crexx hellotrace --nooptimise
+```
+
+and the resulting trace will show
+
+<!--splice--crexx hellotrace --nooptimise-->

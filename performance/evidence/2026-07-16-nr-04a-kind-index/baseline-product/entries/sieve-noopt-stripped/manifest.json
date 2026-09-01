@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "sieve-noopt-stripped",
+  "pair": "sieve-noopt-metadata",
+  "workload": "Sieve",
+  "variant": "candidate",
+  "optimization_mode": "noopt-stripped",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/noopt/sieve-stripped.rxbin","sha256":"c0e529337ec2b59a89efccc227e98ad4de30737ce8346f02366842b93761a561"},
+  "modules": [],
+  "arguments": ["50"],
+  "correctness_expectation": "PASS: AWFY Sieve",
+  "source_trace_retention": "linked;source_TRACE=stripped",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/noopt/sieve-stripped.rxbin","-a","50"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-product/entries/sieve-noopt-stripped/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/noopt/sieve-stripped.rxbin","-a","50"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 21120000
+}

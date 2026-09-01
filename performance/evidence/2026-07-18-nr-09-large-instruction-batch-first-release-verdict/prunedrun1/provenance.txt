@@ -1,0 +1,80 @@
+started_utc=2026-07-19T16:22:42Z
+repo_root=/Users/adrian/CLionProjects/CREXX
+candidate_branch=develop
+candidate_head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+source_sha256=2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6
+accepted_rxbin_sha256=fa2856eff33d2514536e01149c76e6160f8ab9632f2896db22fc5923a69dd11b
+accepted_library_sha256=ec8c8ae42793def24a952800164059cb52820db5f7621364e884673666240817
+accepted_rxvm_sha256=61978081370f6bfda97bbfc1f1c98b6b8faa77dd9bd34f8add8cc84e5161bd0c
+accepted_rxbvm_sha256=25bd6665cf909e8c73813a577eb1777bf236933f2c495cb023506c5c4859f979
+candidate_rxc_sha256=3928292aa94d3193d0dc2f793ad73ccfa61277892f00fc21461b45a2487c9578
+candidate_rxas_sha256=603afc111db221ee5d8a3d4ef2a640d3ad2000c66c06619759ae4e0acadce638
+candidate_rxas_image_sha256=9715bbd495821cd80fc12b99beecc8fb05adada691c50b0e87d5a7026bf37b6b
+candidate_rxbin_sha256=942339800cad54f7594bfdee029329754b775e0695c8e49f1ea74b6001d4fe4f
+candidate_library_sha256=8a658a63019aedb99244ad71206882ef8e488aa4f79fbab64a77ed84654b0049
+candidate_rxvm_sha256=fb4ea75dcb945572e4ea68457bd385b172bd81011eee30dc142487d38be7c29f
+candidate_rxbvm_sha256=d7af504e48217c5cdb81498f2a33ed537ddb9946b974ad5ad441caad34dd526d
+schedule=12 recorded rounds; all six A/B/C permutations twice; reverse-symmetric; VM order alternates by round
+cell_A=accepted VM + accepted RXBIN + accepted library
+cell_B=corrected candidate VM + accepted RXBIN + accepted library
+cell_C=corrected candidate VM + corrected candidate RXBIN + corrected candidate library
+uname=Darwin Mac.lan 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+cpu=Apple M5
+logical_cpus=10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+17:22  up 5 days, 10:30, 1 user, load averages: 1.11 1.43 1.94
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	100%; finishing charge; 0:00 remaining present: true
+cmake version 4.3.2
+ninja 1.13.2
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+candidate_build_options:
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
+CREXX_VM_PROFILING:BOOL=OFF
+CMAKE_GENERATOR:INTERNAL=Ninja
+candidate_dirty_worktree:
+ M assembler/rxas_opt.c
+ M binutils/include/rxopeffects.h
+ M binutils/include/rxops.h
+ M compiler/CMakeLists.txt
+ M compiler/docs/emitter_architecture.md
+ M compiler/rxcp_emit.h
+ M compiler/rxcp_emit_core.c
+ M compiler/rxcp_emit_expr.c
+ M compiler/rxcp_emit_flow.c
+ M compiler/rxcpemit.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/nr06_codegen_contract.cmake
+ M compiler/tests/nr09_numeric_context_contract.cmake
+ M docs/ai-context/RXAS_ASSEMBLER.md
+ M docs/instructions/insert_ins.sql
+ M docs/instructions/instructionbase.sqb
+ M docs/instructions/instructions.txt
+ M docs/reference/rxas/instruction-inventory.md
+ M docs/reference/rxas/instructions/03-integer-logical-and-boolean.md
+ M docs/reference/rxas/instructions/06-strings-and-characters.md
+ M docs/reference/rxas/instructions/README.md
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvmintp.c
+ M performance/NR-08-09-WORKLIST.md
+ M performance/NR-09-MAPPING-REGISTER.md
+ M performance/README.md
+ M performance/ROADMAP.md
+ M tests/CMakeLists.txt
+ M tests/rxas_optimizer/check_optimizer.cmake
+ M tests/test_rxop_metadata.c
+?? compiler/rxcp_emit_super.c
+?? compiler/tests/nr09_codegen_contract.cmake
+?? compiler/tests/test_rxcp_super_combiner.c
+?? docs/books/crexx_vm_spec/examples/nr09_large_instructions.rxas
+?? docs/reference/rxas/instructions/12-large-instructions.md
+?? interpreter/tests/tests_nr09_superinstructions.rxas
+?? performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/
+?? performance/manifests/nr09-macro-review-v1.tsv
+?? performance/tools/report_nr09_macro_timings.zsh
+?? tests/rxas_optimizer/nr09_class1.rxas
+?? tests/rxas_optimizer/nr09_class1_boundaries.rxas
+ended_utc=2026-07-19T16:33:47Z

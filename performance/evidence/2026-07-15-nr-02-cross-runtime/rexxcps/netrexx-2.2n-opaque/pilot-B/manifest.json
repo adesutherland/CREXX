@@ -1,0 +1,25 @@
+{
+  "command": [
+    "java",
+    "-cp",
+    "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-02-cross-runtime/rexxcps/netrexx-2.2n-opaque:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar",
+    "rexxcps_2_2n_opaque",
+    "B"
+  ],
+  "completed_utc": "2026-07-15T15:26:07.042520+00:00",
+  "correctness_expectation": "PASS: RexxCPS 2.2n NetRexx opaque/result-observation diagnostic",
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "lifecycle": "process",
+  "metric_regex": "Performance:\\s+(?P<value>[0-9_]+)\\s+(?P<unit>NetRexx clauses per second)",
+  "python": "3.14.4",
+  "recorded_runs": 2,
+  "result": "pass",
+  "runtime": "netrexx",
+  "sampling": "serial",
+  "schema": 1,
+  "started_utc": "2026-07-15T15:26:02.379232+00:00",
+  "variant": "2.2n-opaque-B",
+  "warmups": 1,
+  "workload": "rexxcps"
+}

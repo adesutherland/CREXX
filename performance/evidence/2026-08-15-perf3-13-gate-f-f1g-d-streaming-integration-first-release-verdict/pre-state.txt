@@ -1,0 +1,78 @@
+utc=2026-08-15T21:26:10Z
+develop
+cd2453e357a30b8f2103be13a983acda1fef7a41
+ M cmake/CrexxTestModes.cmake
+ M compiler/rxcp_task_lower.c
+ M compiler/rxcp_val_check.c
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/rexx_src/gate_f_task_method_import.crexx
+ M compiler/tests/rexx_src/gate_f_task_method_lib.crexx
+ M interpreter/rxvmchannel.c
+ M interpreter/rxvmexecutor.c
+ M lib/classlib/Concurrency.crexx
+ M lib/classlib/tests_functional/testConcurrency.crexx
+ M lib/rxfnsg/rexx/CMakeLists.txt
+ M lib/rxfnsg/rexx/http.crexx
+ M lib/rxfnsg/tests_functional/CMakeLists.txt
+ M performance/PERF3-13-GATE-F-AI-SPEC.md
+ M performance/PERF3-13-GATE-F-IMPLEMENTATION-PLAN.md
+ M performance/PERF3-13-GATE-F-USER-GUIDE.md
+?? lib/rxfnsg/rexx/httpcodec.crexx
+?? lib/rxfnsg/tests_functional/ts_http_codec.crexx
+?? lib/rxfnsg/tests_functional/ts_http_crexx_rag.crexx
+?? lib/rxfnsg/tests_functional/ts_http_streaming.crexx
+?? performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+cmake version 4.3.2
+CMAKE_BUILD_TYPE:STRING=Release
+CREXX_VM_HANDLER_PANEL:STRING=profile-20
+CREXX_VM_PROFILING:BOOL=OFF
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+22:26  up 32 days, 15:34, 1 user, load averages: 1.55 12.62 14.70
+22ea81c29d4423a496e7c6ad51bcd5bc4fef1170dc9db59266728f136cc3f418  /tmp/crexx-gate-f-f1g-d-control-cd2453e35/rxbvm
+3e30b39d560f302c650ad7588bcd2a99c77944c47a2dbcb91da3e69e5b774fdd  /tmp/crexx-gate-f-f1g-d-control-cd2453e35/rxtvm
+b719f2512f10e779d5d6d6ae89f1b4de691dc815ac266fe0bab455d5b4c474f1  cmake-build-release/bin/rxbvm
+e8fa670c1ea6832bc305b5195971282d716431c724197bcf7999b3a1e990b187  cmake-build-release/bin/rxtvm
+2c56bee7e3e4b12f3bff7d99f4abcd312868b60084723e32022e9784fdd8df8b  cmake-build-release/bin/library.rxbin
+d77ff2571965f498809449fbfd0a294e2389614a79206bc1f9a31074a700e72e  cmake-build-release/interpreter/test_gate_f_channel_benchmark.rxbin
+a9db0e5dc96ab05fd3b78471fedc4bb641555d8b5c209ae33b1a2f80e8dc9d06  cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin
+e7e24bdbd42f41d957bc0213d375423491748bee60e6898e2b4c32d1890b7a8f  cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+c119a20e1c1e1104fb12e6146891a1e57fad4b916286106f7b5298daa7c56710  performance/tools/run_cross_runtime_matrix.crexx
+73ba4dc970e8a554c092dd8be6cc0e4f724826e104cac79dc2c3995bdda180cd  performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/manifest.txt
+e92e0b3c839f22cefbf13d52688fc8048debbd454609a4465dcf4c485109ab0a  performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/summarize_paired.crexx
+d5f69043fa0ab3cba69ac5d2a1f76b34cc6f7818de45ccc28dfa504268407d59  performance/evidence/2026-08-15-perf3-13-gate-f-f1g-d-streaming-integration-first-release-verdict/summarize_task_paired.crexx

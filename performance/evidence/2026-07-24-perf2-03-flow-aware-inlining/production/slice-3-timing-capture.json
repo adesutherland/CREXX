@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c.dirty 20260724",
+  "source_manifest": "/private/tmp/crexx-perf2-03-slice3-refresh.IJbjRs/timing-manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-24T16:20:57+0000",
+  "completed_utc": "2026-07-24T16:22:20+0000",
+  "result": "pass"
+}

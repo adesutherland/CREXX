@@ -1,0 +1,142 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbiftranslate expose rexxclassicbif_translate
+import rexxclassicbifs
+import rexxvalue
+
+/** Apply configured Classic uppercase or parallel character-table mapping. */
+rexxclassicbif_translate: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oANY oANY oPAD") = 0 then return .RexxValue("")
+
+  config = context.characterConfig()
+  output_supplied = context.argumentExists(2)
+  input_supplied = context.argumentExists(3)
+  pad_supplied = context.argumentExists(4)
+
+  if config.isByteProfile() then do
+    source = context.argument(1).asBinary()
+    output_table = .binary
+    input_table = .binary
+    source_length = .int
+    output_length = 0
+    input_length = 0
+    source_byte = .int
+    table_byte = .int
+    replacement_byte = .int
+    pad_byte = 32
+    offset = 0
+    if output_supplied then do
+      output_table = context.argument(2).asBinary()
+      assembler blen output_length,output_table
+    end
+    if input_supplied then do
+      input_table = context.argument(3).asBinary()
+      assembler blen input_length,input_table
+    end
+    if pad_supplied then do
+      pad_bytes = context.argument(4).asBinary()
+      assembler getbyte pad_byte,pad_bytes,offset
+    end
+
+    assembler blen source_length,source
+    result = .binary
+    assembler bresize result,source_length
+    do source_index = 0 to source_length - 1
+      assembler getbyte source_byte,source,source_index
+      replacement_byte = source_byte
+      if \output_supplied & \input_supplied then do
+        if source_byte >= 97 & source_byte <= 122 then replacement_byte = source_byte - 32
+      end
+      else do
+        table_position = -1
+        if input_supplied then do input_index = 0 to input_length - 1
+          assembler getbyte table_byte,input_table,input_index
+          if source_byte = table_byte then do
+            table_position = input_index
+            leave
+          end
+        end
+        else table_position = source_byte
+
+        if table_position >= 0 then do
+          if table_position < output_length then
+            assembler getbyte replacement_byte,output_table,table_position
+          else replacement_byte = pad_byte
+        end
+      end
+      assembler setbyte result,source_index,replacement_byte
+    end
+    return .RexxValue.fromBinary(result)
+  end
+
+  if output_supplied & \input_supplied then do
+    call rexxclassicbif_set_error(context_ref, "40.1", 0, "", "")
+    return .RexxValue("")
+  end
+
+  source_text = context.argumentText(1)
+  if \output_supplied & \input_supplied then do
+    result_text = ""
+    assembler strupper result_text,source_text
+    return .RexxValue(result_text)
+  end
+
+  output_text = ""
+  input_text = ""
+  if output_supplied then output_text = context.argumentText(2)
+  if input_supplied then input_text = context.argumentText(3)
+  pad_codepoint = 32
+  zero = 0
+  if pad_supplied then do
+    pad_text = context.argumentText(4)
+    assembler strchar pad_codepoint,pad_text,zero
+  end
+
+  source_length = .int
+  output_length = .int
+  source_codepoint = .int
+  replacement_codepoint = .int
+  assembler strlen source_length,source_text
+  assembler strlen output_length,output_text
+  result_text = .string
+  result_text = ""
+  do source_index = .int(0) to source_length - 1
+    assembler strchar source_codepoint,source_text,source_index
+    table_position = .int
+    table_position = -1
+    assembler poschar table_position,input_text,source_codepoint
+    replacement_codepoint = source_codepoint
+    if table_position >= 0 then do
+      if table_position < output_length then
+        assembler strchar replacement_codepoint,output_text,table_position
+      else replacement_codepoint = pad_codepoint
+    end
+    assembler appendchar result_text,replacement_codepoint
+  end
+  return .RexxValue(result_text)

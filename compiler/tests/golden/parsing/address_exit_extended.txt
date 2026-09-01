@@ -246,54 +246,58 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
               FUNCTION : "_array2redir" (1:28) [Type: .unknown]
                 VAR_SYMBOL : "input_lines" (1:40) [Type: .unknown]
               FUNCTION : "_redir2array" (1:54) [Type: .unknown]
-                VAR_SYMBOL : "output_lines" (1:66) [Type: .unknown]
-              FUNCTION : "_redir2string" (1:81) [Type: .unknown]
-                VAR_SYMBOL : "error_text" (1:94) [Type: .unknown]
-              STRING : "user" (1:108) [Type: .string]
-              VAR_SYMBOL : "user" (1:116) [Type: .unknown]
+                OP_REFERENCE : "reference" (1:66) [Type: .unknown]
+                  VAR_SYMBOL : "output_lines" (1:77) [Type: .unknown]
+              FUNCTION : "_redir2string" (1:91) [Type: .unknown]
+                OP_REFERENCE : "reference" (1:104) [Type: .unknown]
+                  VAR_SYMBOL : "error_text" (1:115) [Type: .unknown]
+              STRING : "user" (1:128) [Type: .string]
+              VAR_SYMBOL : "user" (1:136) [Type: .unknown]
         RETURN : "return" (9:2) [Type: .unknown]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .unknown]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_array2redir" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:26) [Type: .binary]
+    PROCEDURE : "_array2redir" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
         ARG : "" (3:4) [Type: .unknown]
-          VAR_REFERENCE : "arr" (3:4) [Type: .unknown]
-          CLASS : ".string" (3:15) [Type: .string]
-            RANGE : "" (3:23) [Type: .unknown]
-              NOVAL : "" (3:22) [Type: .unknown]
-              NOVAL : "*" (3:23) [Type: .unknown]
-      NOP : "" (3:24) [Type: .unknown]
+          VAR_TARGET : "source" (3:4) [Type: .unknown]
+          CLASS : ".string" (3:11) [Type: .string]
+            RANGE : "" (3:19) [Type: .unknown]
+              NOVAL : "" (3:18) [Type: .unknown]
+              NOVAL : "*" (3:19) [Type: .unknown]
+      NOP : "" (3:20) [Type: .unknown]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .unknown]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_redir2array" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:26) [Type: .binary]
+    PROCEDURE : "_redir2array" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
         ARG : "" (3:4) [Type: .unknown]
-          VAR_REFERENCE : "arr" (3:4) [Type: .unknown]
-          CLASS : ".string" (3:15) [Type: .string]
-            RANGE : "" (3:23) [Type: .unknown]
-              NOVAL : "" (3:22) [Type: .unknown]
-              NOVAL : "*" (3:23) [Type: .unknown]
-      NOP : "" (3:24) [Type: .unknown]
+          VAR_TARGET : "target" (3:4) [Type: .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+              RANGE : "" (3:29) [Type: .unknown]
+                NOVAL : "" (3:28) [Type: .unknown]
+                NOVAL : "*" (3:29) [Type: .unknown]
+      NOP : "" (3:30) [Type: .unknown]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .unknown]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_redir2string" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:27) [Type: .binary]
+    PROCEDURE : "_redir2string" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:27) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
         ARG : "" (3:4) [Type: .unknown]
-          VAR_REFERENCE : "str" (3:4) [Type: .unknown]
-          CLASS : ".string" (3:15) [Type: .string]
-      NOP : "" (3:22) [Type: .unknown]
+          VAR_TARGET : "target" (3:4) [Type: .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+      NOP : "" (3:28) [Type: .unknown]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
     REXX_OPTIONS : "options" (0:1) [Type: .unknown]
       LITERAL : "levelb" (0:9) [Type: .unknown]
@@ -310,17 +314,128 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
           STRING : "" (3:20) [Type: .string]
         ARG : "" (3:24) [Type: .unknown]
           VAR_TARGET : "in" (3:24) [Type: .unknown]
-          CLASS : ".binary" (3:27) [Type: .binary]
-        ARG : "" (3:36) [Type: .unknown]
-          VAR_TARGET : "out" (3:36) [Type: .unknown]
-          CLASS : ".binary" (3:40) [Type: .binary]
-        ARG : "" (3:49) [Type: .unknown]
-          VAR_TARGET : "err" (3:49) [Type: .unknown]
-          CLASS : ".binary" (3:53) [Type: .binary]
-        ARG : "" (3:69) [Type: .unknown]
-          VARG_REFERENCE : "..." (3:69) [Type: .unknown]
-          CLASS : ".string" (3:73) [Type: .string]
-      NOP : "" (3:80) [Type: .unknown]
+          CLASS : ".addressredirect" (3:27) [Type: .object]
+        ARG : "" (3:45) [Type: .unknown]
+          VAR_TARGET : "out" (3:45) [Type: .unknown]
+          CLASS : ".addressredirect" (3:49) [Type: .object]
+        ARG : "" (3:67) [Type: .unknown]
+          VAR_TARGET : "err" (3:67) [Type: .unknown]
+          CLASS : ".addressredirect" (3:71) [Type: .object]
+        ARG : "" (3:96) [Type: .unknown]
+          VARG_REFERENCE : "..." (3:96) [Type: .unknown]
+          CLASS : ".string" (3:100) [Type: .string]
+      NOP : "" (3:107) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    CLASS_DEF : "addressredirect" (2:0) [Type: .void]
+      DEFINE : "=" (3:2) [Type: .unknown]
+        VAR_TARGET : "_array_target" (3:2) [Type: .unknown]
+        TYPE_REFERENCE : "reference" (3:18) [Type: reference .unknown]
+          CLASS : ".string" (3:28) [Type: .string]
+            RANGE : "" (3:36) [Type: .unknown]
+              NOVAL : "" (3:35) [Type: .unknown]
+              NOVAL : "*" (3:36) [Type: .unknown]
+        NODE_REGISTER : "register" (3:44) [Type: .unknown]
+          INTEGER : "1" (3:52) [Type: .unknown]
+          VAR_SYMBOL : "object" (3:54) [Type: .unknown]
+      DEFINE : "=" (4:2) [Type: .unknown]
+        VAR_TARGET : "_captured" (4:2) [Type: .unknown]
+        CLASS : ".binary" (4:14) [Type: .binary]
+        NODE_REGISTER : "register" (4:27) [Type: .unknown]
+          INTEGER : "2" (4:35) [Type: .unknown]
+          VAR_SYMBOL : "binary" (4:37) [Type: .unknown]
+      DEFINE : "=" (5:2) [Type: .unknown]
+        VAR_TARGET : "_input" (5:2) [Type: .unknown]
+        CLASS : ".binary" (5:11) [Type: .binary]
+        NODE_REGISTER : "register" (5:24) [Type: .unknown]
+          INTEGER : "3" (5:32) [Type: .unknown]
+          VAR_SYMBOL : "binary" (5:34) [Type: .unknown]
+      DEFINE : "=" (6:2) [Type: .unknown]
+        VAR_TARGET : "_kind" (6:2) [Type: .unknown]
+        CLASS : ".int" (6:10) [Type: .int]
+        NODE_REGISTER : "register" (6:20) [Type: .unknown]
+          INTEGER : "4" (6:28) [Type: .unknown]
+          VAR_SYMBOL : "int" (6:30) [Type: .unknown]
+      DEFINE : "=" (7:2) [Type: .unknown]
+        VAR_TARGET : "_string_target" (7:2) [Type: .unknown]
+        TYPE_REFERENCE : "reference" (7:19) [Type: reference .unknown]
+          CLASS : ".string" (7:29) [Type: .string]
+        NODE_REGISTER : "register" (7:42) [Type: .unknown]
+          INTEGER : "5" (7:50) [Type: .unknown]
+          VAR_SYMBOL : "object" (7:52) [Type: .unknown]
+      FACTORY : "none" (8:2) [Type: .unknown]
+        VOID : "" (8:7) [Type: .void]
+        ARGS : "" (8:7) [Type: .unknown]
+        NOP : "" (8:7) [Type: .unknown]
+      FACTORY : "input_string" (9:2) [Type: .unknown]
+        VOID : "" (9:15) [Type: .void]
+        ARGS : "" (10:6) [Type: .unknown]
+          ARG : "" (10:6) [Type: .unknown]
+            VAR_TARGET : "source" (10:6) [Type: .unknown]
+            CLASS : ".string" (10:13) [Type: .string]
+        NOP : "" (10:20) [Type: .unknown]
+      FACTORY : "input_array" (11:2) [Type: .unknown]
+        VOID : "" (11:14) [Type: .void]
+        ARGS : "" (12:6) [Type: .unknown]
+          ARG : "" (12:6) [Type: .unknown]
+            VAR_TARGET : "source" (12:6) [Type: .unknown]
+            CLASS : ".string" (12:13) [Type: .string]
+              RANGE : "" (12:21) [Type: .unknown]
+                NOVAL : "" (12:20) [Type: .unknown]
+                NOVAL : "*" (12:21) [Type: .unknown]
+        NOP : "" (12:22) [Type: .unknown]
+      FACTORY : "output_string" (13:2) [Type: .unknown]
+        VOID : "" (13:16) [Type: .void]
+        ARGS : "" (14:6) [Type: .unknown]
+          ARG : "" (14:6) [Type: .unknown]
+            VAR_TARGET : "target" (14:6) [Type: .unknown]
+            TYPE_REFERENCE : "reference" (14:13) [Type: reference .unknown]
+              CLASS : ".string" (14:23) [Type: .string]
+        NOP : "" (14:30) [Type: .unknown]
+      FACTORY : "output_array" (15:2) [Type: .unknown]
+        VOID : "" (15:15) [Type: .void]
+        ARGS : "" (16:6) [Type: .unknown]
+          ARG : "" (16:6) [Type: .unknown]
+            VAR_TARGET : "target" (16:6) [Type: .unknown]
+            TYPE_REFERENCE : "reference" (16:13) [Type: reference .unknown]
+              CLASS : ".string" (16:23) [Type: .string]
+                RANGE : "" (16:31) [Type: .unknown]
+                  NOVAL : "" (16:30) [Type: .unknown]
+                  NOVAL : "*" (16:31) [Type: .unknown]
+        NOP : "" (16:32) [Type: .unknown]
+      METHOD : "has_input" (17:2) [Type: .boolean]
+        CLASS : ".boolean" (17:22) [Type: .boolean]
+        ARGS : "" (17:30) [Type: .unknown]
+        NOP : "" (17:30) [Type: .unknown]
+      METHOD : "captures_output" (18:2) [Type: .boolean]
+        CLASS : ".boolean" (18:28) [Type: .boolean]
+        ARGS : "" (18:36) [Type: .unknown]
+        NOP : "" (18:36) [Type: .unknown]
+      METHOD : "input_snapshot" (19:2) [Type: .binary]
+        CLASS : ".binary" (19:27) [Type: .binary]
+        ARGS : "" (19:34) [Type: .unknown]
+        NOP : "" (19:34) [Type: .unknown]
+      METHOD : "append_bytes" (20:2) [Type: .void]
+        CLASS : ".void" (20:25) [Type: .void]
+        ARGS : "" (21:6) [Type: .unknown]
+          ARG : "" (21:6) [Type: .unknown]
+            VAR_TARGET : "bytes" (21:6) [Type: .unknown]
+            CLASS : ".binary" (21:12) [Type: .binary]
+        NOP : "" (21:19) [Type: .unknown]
+      METHOD : "native_emit" (22:2) [Type: .int]
+        CLASS : ".int" (22:24) [Type: .int]
+        ARGS : "" (23:6) [Type: .unknown]
+          ARG : "" (23:6) [Type: .unknown]
+            VAR_TARGET : "text" (23:6) [Type: .unknown]
+            CLASS : ".string" (23:11) [Type: .string]
+        NOP : "" (23:18) [Type: .unknown]
+      METHOD : "finish" (24:2) [Type: .void]
+        CLASS : ".void" (24:19) [Type: .void]
+        ARGS : "" (24:24) [Type: .unknown]
+        NOP : "" (24:24) [Type: .unknown]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_exit_extended (Namespace) -> .unknown
@@ -339,25 +454,418 @@ Scope [0]: Unnamed
       Scope [3]: Unnamed
   Scope [1]: _rxsysb
     _address (Function) -> .int [EXPOSED]
-    _array2redir (Function) -> .binary [EXPOSED]
-    _redir2array (Function) -> .binary [EXPOSED]
-    _redir2string (Function) -> .binary [EXPOSED]
+    _array2redir (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2array (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2string (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    addressredirect (Class) -> .unknown [EXPOSED]
     Scope [2]: _array2redir
-      arr (Variable) -> .string[*]
+      source (Variable) -> .string[*]
     Scope [2]: _redir2array
-      arr (Variable) -> .string[*]
+      target (Variable) -> reference .string[*]
     Scope [2]: _redir2string
-      str (Variable) -> .string
+      target (Variable) -> reference .string
     Scope [2]: _address
       command (Variable) -> .string
       env (Variable) -> .string
-      err (Variable) -> .binary
-      in (Variable) -> .binary
-      out (Variable) -> .binary
+      err (Variable) -> .addressredirect
+      in (Variable) -> .addressredirect
+      out (Variable) -> .addressredirect
+    Scope [2]: addressredirect
+      _array_target (Variable) -> reference .string[*]
+      _captured (Variable) -> .binary
+      _input (Variable) -> .binary
+      _kind (Variable) -> .int
+      _string_target (Variable) -> reference .string
+      append_bytes (Function) -> .void
+      captures_output (Function) -> .boolean
+      finish (Function) -> .void
+      has_input (Function) -> .boolean
+      input_snapshot (Function) -> .binary
+      native_emit (Function) -> .int
+      §factory (Namespace) -> .unknown
+      Scope [3]: §factory
+        input_array (Function) -> .object
+        input_string (Function) -> .object
+        none (Function) -> .object
+        output_array (Function) -> .object
+        output_string (Function) -> .object
+      Scope [3]: none
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_string
+        source (Variable) -> .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_array
+        source (Variable) -> .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_string
+        target (Variable) -> reference .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_array
+        target (Variable) -> reference .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+      Scope [3]: input_snapshot
+        §this (Variable) -> .addressredirect
+      Scope [3]: append_bytes
+        bytes (Variable) -> .binary
+        §this (Variable) -> .addressredirect
+      Scope [3]: native_emit
+        text (Variable) -> .string
+        §this (Variable) -> .addressredirect
+      Scope [3]: finish
+        §this (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+
+--- STAGE_SYMBOLS (Iteration 3) ---
+REXX_UNIVERSE : "" (0:1) [Type: .unknown]
+  PROGRAM_FILE : "address_exit_extended" (0:1) [Type: .void]
+    IMPORT : "" (-1:-1) [Type: .unknown]
+      LITERAL : "_rxsysb" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+    PROCEDURE : "main" (2:0) [Type: .void]
+      VOID : "" (2:5) [Type: .void]
+      ARGS : "" (2:5) [Type: .unknown]
+      INSTRUCTIONS : "" (3:2) [Type: .unknown]
+        DEFINE : "" (8:2) [Type: .unknown]
+          VAR_TARGET : "rc" (8:2) [Type: .unknown]
+          CLASS : ".unknown" (8:2) [Type: .unknown]
+        DEFINE : "=" (3:2) [Type: .unknown]
+          VAR_TARGET : "input_lines" (3:2) [Type: .unknown]
+          CLASS : ".string" (3:16) [Type: .string]
+            RANGE : "" (3:23) [Type: .unknown]
+              NOVAL : "" (3:23) [Type: .unknown]
+              NOVAL : "" (3:23) [Type: .unknown]
+        DEFINE : "=" (4:2) [Type: .unknown]
+          VAR_TARGET : "output_lines" (4:2) [Type: .unknown]
+          CLASS : ".string" (4:17) [Type: .string]
+            RANGE : "" (4:24) [Type: .unknown]
+              NOVAL : "" (4:24) [Type: .unknown]
+              NOVAL : "" (4:24) [Type: .unknown]
+        DEFINE : "=" (5:2) [Type: .unknown]
+          VAR_TARGET : "error_text" (5:2) [Type: .unknown]
+          CLASS : ".string" (5:15) [Type: .string]
+        ASSIGN : "=" (6:2) [Type: .unknown]
+          VAR_TARGET : "user" (6:2) [Type: .unknown]
+          STRING : "ALICE" (6:9) [Type: .string]
+        INSTRUCTIONS : "address" (8:2) [Type: .unknown]
+          ASSIGN : "=" (1:0) [Type: .unknown]
+            VAR_TARGET : "rc" (1:0) [Type: .unknown]
+            FUNCTION : "_address" (1:3) [Type: .unknown]
+              STRING : "system" (1:12) [Type: .string]
+              STRING : "sort" (1:21) [Type: .string]
+              FUNCTION : "_array2redir" (1:28) [Type: .unknown]
+                VAR_SYMBOL : "input_lines" (1:40) [Type: .unknown]
+              FUNCTION : "_redir2array" (1:54) [Type: .unknown]
+                OP_REFERENCE : "reference" (1:66) [Type: .unknown]
+                  VAR_SYMBOL : "output_lines" (1:77) [Type: .unknown]
+              FUNCTION : "_redir2string" (1:91) [Type: .unknown]
+                OP_REFERENCE : "reference" (1:104) [Type: .unknown]
+                  VAR_SYMBOL : "error_text" (1:115) [Type: .unknown]
+              STRING : "user" (1:128) [Type: .string]
+              VAR_SYMBOL : "user" (1:136) [Type: .unknown]
+        RETURN : "return" (9:2) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    PROCEDURE : "_array2redir" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
+      ARGS : "" (3:4) [Type: .unknown]
+        ARG : "" (3:4) [Type: .unknown]
+          VAR_TARGET : "source" (3:4) [Type: .unknown]
+          CLASS : ".string" (3:11) [Type: .string]
+            RANGE : "" (3:19) [Type: .unknown]
+              NOVAL : "" (3:18) [Type: .unknown]
+              NOVAL : "*" (3:19) [Type: .unknown]
+      NOP : "" (3:20) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    PROCEDURE : "_redir2array" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
+      ARGS : "" (3:4) [Type: .unknown]
+        ARG : "" (3:4) [Type: .unknown]
+          VAR_TARGET : "target" (3:4) [Type: .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+              RANGE : "" (3:29) [Type: .unknown]
+                NOVAL : "" (3:28) [Type: .unknown]
+                NOVAL : "*" (3:29) [Type: .unknown]
+      NOP : "" (3:30) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    PROCEDURE : "_redir2string" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:27) [Type: .object]
+      ARGS : "" (3:4) [Type: .unknown]
+        ARG : "" (3:4) [Type: .unknown]
+          VAR_TARGET : "target" (3:4) [Type: .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+      NOP : "" (3:28) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    PROCEDURE : "_address" (2:0) [Type: .int]
+      CLASS : ".int" (2:22) [Type: .int]
+      ARGS : "" (3:4) [Type: .unknown]
+        ARG : "" (3:4) [Type: .unknown]
+          VAR_TARGET : "env" (3:4) [Type: .unknown]
+          STRING : "" (3:8) [Type: .string]
+        ARG : "" (3:12) [Type: .unknown]
+          VAR_TARGET : "command" (3:12) [Type: .unknown]
+          STRING : "" (3:20) [Type: .string]
+        ARG : "" (3:24) [Type: .unknown]
+          VAR_TARGET : "in" (3:24) [Type: .unknown]
+          CLASS : ".addressredirect" (3:27) [Type: .object]
+        ARG : "" (3:45) [Type: .unknown]
+          VAR_TARGET : "out" (3:45) [Type: .unknown]
+          CLASS : ".addressredirect" (3:49) [Type: .object]
+        ARG : "" (3:67) [Type: .unknown]
+          VAR_TARGET : "err" (3:67) [Type: .unknown]
+          CLASS : ".addressredirect" (3:71) [Type: .object]
+        ARG : "" (3:96) [Type: .unknown]
+          VARG_REFERENCE : "..." (3:96) [Type: .unknown]
+          CLASS : ".string" (3:100) [Type: .string]
+      NOP : "" (3:107) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .unknown]
+    REXX_OPTIONS : "options" (0:1) [Type: .unknown]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .unknown]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    CLASS_DEF : "addressredirect" (2:0) [Type: .void]
+      DEFINE : "=" (3:2) [Type: .unknown]
+        VAR_TARGET : "_array_target" (3:2) [Type: .unknown]
+        TYPE_REFERENCE : "reference" (3:18) [Type: reference .unknown]
+          CLASS : ".string" (3:28) [Type: .string]
+            RANGE : "" (3:36) [Type: .unknown]
+              NOVAL : "" (3:35) [Type: .unknown]
+              NOVAL : "*" (3:36) [Type: .unknown]
+        NODE_REGISTER : "register" (3:44) [Type: .unknown]
+          INTEGER : "1" (3:52) [Type: .unknown]
+          VAR_SYMBOL : "object" (3:54) [Type: .unknown]
+      DEFINE : "=" (4:2) [Type: .unknown]
+        VAR_TARGET : "_captured" (4:2) [Type: .unknown]
+        CLASS : ".binary" (4:14) [Type: .binary]
+        NODE_REGISTER : "register" (4:27) [Type: .unknown]
+          INTEGER : "2" (4:35) [Type: .unknown]
+          VAR_SYMBOL : "binary" (4:37) [Type: .unknown]
+      DEFINE : "=" (5:2) [Type: .unknown]
+        VAR_TARGET : "_input" (5:2) [Type: .unknown]
+        CLASS : ".binary" (5:11) [Type: .binary]
+        NODE_REGISTER : "register" (5:24) [Type: .unknown]
+          INTEGER : "3" (5:32) [Type: .unknown]
+          VAR_SYMBOL : "binary" (5:34) [Type: .unknown]
+      DEFINE : "=" (6:2) [Type: .unknown]
+        VAR_TARGET : "_kind" (6:2) [Type: .unknown]
+        CLASS : ".int" (6:10) [Type: .int]
+        NODE_REGISTER : "register" (6:20) [Type: .unknown]
+          INTEGER : "4" (6:28) [Type: .unknown]
+          VAR_SYMBOL : "int" (6:30) [Type: .unknown]
+      DEFINE : "=" (7:2) [Type: .unknown]
+        VAR_TARGET : "_string_target" (7:2) [Type: .unknown]
+        TYPE_REFERENCE : "reference" (7:19) [Type: reference .unknown]
+          CLASS : ".string" (7:29) [Type: .string]
+        NODE_REGISTER : "register" (7:42) [Type: .unknown]
+          INTEGER : "5" (7:50) [Type: .unknown]
+          VAR_SYMBOL : "object" (7:52) [Type: .unknown]
+      FACTORY : "none" (8:2) [Type: .unknown]
+        VOID : "" (8:7) [Type: .void]
+        ARGS : "" (8:7) [Type: .unknown]
+        NOP : "" (8:7) [Type: .unknown]
+      FACTORY : "input_string" (9:2) [Type: .unknown]
+        VOID : "" (9:15) [Type: .void]
+        ARGS : "" (10:6) [Type: .unknown]
+          ARG : "" (10:6) [Type: .unknown]
+            VAR_TARGET : "source" (10:6) [Type: .unknown]
+            CLASS : ".string" (10:13) [Type: .string]
+        NOP : "" (10:20) [Type: .unknown]
+      FACTORY : "input_array" (11:2) [Type: .unknown]
+        VOID : "" (11:14) [Type: .void]
+        ARGS : "" (12:6) [Type: .unknown]
+          ARG : "" (12:6) [Type: .unknown]
+            VAR_TARGET : "source" (12:6) [Type: .unknown]
+            CLASS : ".string" (12:13) [Type: .string]
+              RANGE : "" (12:21) [Type: .unknown]
+                NOVAL : "" (12:20) [Type: .unknown]
+                NOVAL : "*" (12:21) [Type: .unknown]
+        NOP : "" (12:22) [Type: .unknown]
+      FACTORY : "output_string" (13:2) [Type: .unknown]
+        VOID : "" (13:16) [Type: .void]
+        ARGS : "" (14:6) [Type: .unknown]
+          ARG : "" (14:6) [Type: .unknown]
+            VAR_TARGET : "target" (14:6) [Type: .unknown]
+            TYPE_REFERENCE : "reference" (14:13) [Type: reference .unknown]
+              CLASS : ".string" (14:23) [Type: .string]
+        NOP : "" (14:30) [Type: .unknown]
+      FACTORY : "output_array" (15:2) [Type: .unknown]
+        VOID : "" (15:15) [Type: .void]
+        ARGS : "" (16:6) [Type: .unknown]
+          ARG : "" (16:6) [Type: .unknown]
+            VAR_TARGET : "target" (16:6) [Type: .unknown]
+            TYPE_REFERENCE : "reference" (16:13) [Type: reference .unknown]
+              CLASS : ".string" (16:23) [Type: .string]
+                RANGE : "" (16:31) [Type: .unknown]
+                  NOVAL : "" (16:30) [Type: .unknown]
+                  NOVAL : "*" (16:31) [Type: .unknown]
+        NOP : "" (16:32) [Type: .unknown]
+      METHOD : "has_input" (17:2) [Type: .boolean]
+        CLASS : ".boolean" (17:22) [Type: .boolean]
+        ARGS : "" (17:30) [Type: .unknown]
+        NOP : "" (17:30) [Type: .unknown]
+      METHOD : "captures_output" (18:2) [Type: .boolean]
+        CLASS : ".boolean" (18:28) [Type: .boolean]
+        ARGS : "" (18:36) [Type: .unknown]
+        NOP : "" (18:36) [Type: .unknown]
+      METHOD : "input_snapshot" (19:2) [Type: .binary]
+        CLASS : ".binary" (19:27) [Type: .binary]
+        ARGS : "" (19:34) [Type: .unknown]
+        NOP : "" (19:34) [Type: .unknown]
+      METHOD : "append_bytes" (20:2) [Type: .void]
+        CLASS : ".void" (20:25) [Type: .void]
+        ARGS : "" (21:6) [Type: .unknown]
+          ARG : "" (21:6) [Type: .unknown]
+            VAR_TARGET : "bytes" (21:6) [Type: .unknown]
+            CLASS : ".binary" (21:12) [Type: .binary]
+        NOP : "" (21:19) [Type: .unknown]
+      METHOD : "native_emit" (22:2) [Type: .int]
+        CLASS : ".int" (22:24) [Type: .int]
+        ARGS : "" (23:6) [Type: .unknown]
+          ARG : "" (23:6) [Type: .unknown]
+            VAR_TARGET : "text" (23:6) [Type: .unknown]
+            CLASS : ".string" (23:11) [Type: .string]
+        NOP : "" (23:18) [Type: .unknown]
+      METHOD : "finish" (24:2) [Type: .void]
+        CLASS : ".void" (24:19) [Type: .void]
+        ARGS : "" (24:24) [Type: .unknown]
+        NOP : "" (24:24) [Type: .unknown]
+Scope [0]: Unnamed
+  _rxsysb (Namespace) -> .unknown
+  address_exit_extended (Namespace) -> .unknown
+  Scope [1]: address_exit_extended
+    main (Function) -> .void
+    Scope [2]: main
+      error (Constant) -> .string
+      error_text (Variable) -> .string
+      input (Constant) -> .string
+      input_lines (Variable) -> .string[*]
+      output (Constant) -> .string
+      output_lines (Variable) -> .string[*]
+      rc (Variable) -> .int
+      system (Constant) -> .string
+      user (Variable) -> .string
+      Scope [3]: Unnamed
+  Scope [1]: _rxsysb
+    _address (Function) -> .int [EXPOSED]
+    _array2redir (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2array (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2string (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    addressredirect (Class) -> .unknown [EXPOSED]
+    Scope [2]: _array2redir
+      source (Variable) -> .string[*]
+    Scope [2]: _redir2array
+      target (Variable) -> reference .string[*]
+    Scope [2]: _redir2string
+      target (Variable) -> reference .string
+    Scope [2]: _address
+      command (Variable) -> .string
+      env (Variable) -> .string
+      err (Variable) -> .addressredirect
+      in (Variable) -> .addressredirect
+      out (Variable) -> .addressredirect
+    Scope [2]: addressredirect
+      _array_target (Variable) -> reference .string[*]
+      _captured (Variable) -> .binary
+      _input (Variable) -> .binary
+      _kind (Variable) -> .int
+      _string_target (Variable) -> reference .string
+      append_bytes (Function) -> .void
+      captures_output (Function) -> .boolean
+      finish (Function) -> .void
+      has_input (Function) -> .boolean
+      input_snapshot (Function) -> .binary
+      native_emit (Function) -> .int
+      §factory (Namespace) -> .unknown
+      §factory.input_array (Function) -> .addressredirect
+      §factory.input_string (Function) -> .addressredirect
+      §factory.none (Function) -> .addressredirect
+      §factory.output_array (Function) -> .addressredirect
+      §factory.output_string (Function) -> .addressredirect
+      Scope [3]: §factory
+        input_array (Function) -> .object
+        input_string (Function) -> .object
+        none (Function) -> .object
+        output_array (Function) -> .object
+        output_string (Function) -> .object
+      Scope [3]: none
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_string
+        source (Variable) -> .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_array
+        source (Variable) -> .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_string
+        target (Variable) -> reference .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_array
+        target (Variable) -> reference .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+      Scope [3]: input_snapshot
+        §this (Variable) -> .addressredirect
+      Scope [3]: append_bytes
+        bytes (Variable) -> .binary
+        §this (Variable) -> .addressredirect
+      Scope [3]: native_emit
+        text (Variable) -> .string
+        §this (Variable) -> .addressredirect
+      Scope [3]: finish
+        §this (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+      Scope [3]: §factory.none
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_array
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_array
+        §factory (Variable) -> .addressredirect
+DEBUG_INLINE _array2redir @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _redir2array @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _redir2string @ _address@library.rxbin:2 - reject: procedure has no instruction list
 DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
-DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
-DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
-DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.none @ _address@library.rxbin:8:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.input_string @ _address@library.rxbin:9:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.input_array @ _address@library.rxbin:11:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.output_string @ _address@library.rxbin:13:2 - reject: procedure has no instruction list
+DEBUG_INLINE §factory.output_array @ _address@library.rxbin:15:2 - reject: procedure has no instruction list
+DEBUG_INLINE input_snapshot @ _address@library.rxbin:19:2 - reject: procedure has no instruction list
+DEBUG_INLINE append_bytes @ _address@library.rxbin:20:2 - reject: procedure has no instruction list
+DEBUG_INLINE native_emit @ _address@library.rxbin:22:2 - reject: procedure has no instruction list
+DEBUG_INLINE finish @ _address@library.rxbin:24:2 - reject: procedure has no instruction list
 
 --- STAGE_FINAL ---
 REXX_UNIVERSE : "" (0:1) [Type: .void]
@@ -397,81 +905,61 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
             FUNCTION : "_address" (1:3) [Type: .int]
               CONSTANT : "system" (1:12) [Type: .string]
               CONSTANT : "sort" (1:21) [Type: .string]
-              BLOCK_EXPR : "do" (1:28) [Type: .binary]
-                INSTRUCTIONS : "_array2redir" (1:28) [Type: .void]
-                  DEFINE : "=" (1538:4) [Type: .binary]
-                    VAR_TARGET : "handle" (1538:4) [Type: .binary]
-                    CLASS : ".binary" (1538:13) [Type: .binary]
-                  ASSEMBLER : "arr2redir" (1539:14) [Type: .unknown]
-                    VAR_SYMBOL : "handle" (1539:24) [Type: .binary]
-                    VAR_SYMBOL : "input_lines" (1:40) [Type: .string]
-                  LEAVE_WITH : "leave" (1540:4) [Type: .binary]
-                    VAR_SYMBOL : "handle" (1540:11) [Type: .binary]
-              BLOCK_EXPR : "do" (1:54) [Type: .binary]
-                INSTRUCTIONS : "_redir2array" (1:54) [Type: .void]
-                  DEFINE : "=" (1524:4) [Type: .binary]
-                    VAR_TARGET : "handle" (1524:4) [Type: .binary]
-                    CLASS : ".binary" (1524:13) [Type: .binary]
-                  ASSEMBLER : "redir2arr" (1525:14) [Type: .unknown]
-                    VAR_SYMBOL : "handle" (1525:24) [Type: .binary]
-                    VAR_SYMBOL : "output_lines" (1:66) [Type: .string]
-                  LEAVE_WITH : "leave" (1526:4) [Type: .binary]
-                    VAR_SYMBOL : "handle" (1526:11) [Type: .binary]
-              BLOCK_EXPR : "do" (1:81) [Type: .binary]
-                INSTRUCTIONS : "_redir2string" (1:81) [Type: .void]
-                  DEFINE : "=" (1531:4) [Type: .binary]
-                    VAR_TARGET : "handle" (1531:4) [Type: .binary]
-                    CLASS : ".binary" (1531:13) [Type: .binary]
-                  ASSEMBLER : "redir2str" (1532:14) [Type: .unknown]
-                    VAR_SYMBOL : "handle" (1532:24) [Type: .binary]
-                    VAR_SYMBOL : "error_text" (1:94) [Type: .string]
-                  LEAVE_WITH : "leave" (1533:4) [Type: .binary]
-                    VAR_SYMBOL : "handle" (1533:11) [Type: .binary]
-              CONSTANT : "user" (1:108) [Type: .string]
-              VAR_SYMBOL : "user" (1:116) [Type: .string]
+              FUNCTION : "_array2redir" (1:28) [Type: .object]
+                VAR_SYMBOL : "input_lines" (1:40) [Type: .string]
+              FUNCTION : "_redir2array" (1:54) [Type: .object]
+                OP_REFERENCE : "reference" (1:66) [Type: reference .unknown]
+                  VAR_SYMBOL : "output_lines" (1:77) [Type: .string]
+              FUNCTION : "_redir2string" (1:91) [Type: .object]
+                OP_REFERENCE : "reference" (1:104) [Type: reference .unknown]
+                  VAR_SYMBOL : "error_text" (1:115) [Type: .string]
+              CONSTANT : "user" (1:128) [Type: .string]
+              VAR_SYMBOL : "user" (1:136) [Type: .string]
         RETURN : "return" (9:2) [Type: .void]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .void]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .void]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_array2redir" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:26) [Type: .binary]
+    PROCEDURE : "_array2redir" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
         ARG : "" (3:4) [Type: .string]
-          VAR_REFERENCE : "arr" (3:4) [Type: .string]
-          CLASS : ".string" (3:15) [Type: .string]
-            RANGE : "" (3:23) [Type: .void]
-              NOVAL : "" (3:22) [Type: .void]
-              NOVAL : "*" (3:23) [Type: .void]
-      NOP : "" (3:24) [Type: .void]
+          VAR_TARGET : "source" (3:4) [Type: .string]
+          CLASS : ".string" (3:11) [Type: .string]
+            RANGE : "" (3:19) [Type: .void]
+              NOVAL : "" (3:18) [Type: .void]
+              NOVAL : "*" (3:19) [Type: .void]
+      NOP : "" (3:20) [Type: .void]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .void]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .void]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_redir2array" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:26) [Type: .binary]
+    PROCEDURE : "_redir2array" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:26) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
-        ARG : "" (3:4) [Type: .string]
-          VAR_REFERENCE : "arr" (3:4) [Type: .string]
-          CLASS : ".string" (3:15) [Type: .string]
-            RANGE : "" (3:23) [Type: .void]
-              NOVAL : "" (3:22) [Type: .void]
-              NOVAL : "*" (3:23) [Type: .void]
-      NOP : "" (3:24) [Type: .void]
+        ARG : "" (3:4) [Type: reference .unknown]
+          VAR_TARGET : "target" (3:4) [Type: reference .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+              RANGE : "" (3:29) [Type: .void]
+                NOVAL : "" (3:28) [Type: .void]
+                NOVAL : "*" (3:29) [Type: .void]
+      NOP : "" (3:30) [Type: .void]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .void]
       LITERAL : "levelb" (0:9) [Type: .unknown]
       NAMESPACE : "namespace" (1:0) [Type: .void]
         LITERAL : "_rxsysb" (1:10) [Type: .unknown]
-    PROCEDURE : "_redir2string" (2:0) [Type: .binary]
-      CLASS : ".binary" (2:27) [Type: .binary]
+    PROCEDURE : "_redir2string" (2:0) [Type: .object]
+      CLASS : "._rxsysb..addressredirect" (2:27) [Type: .object]
       ARGS : "" (3:4) [Type: .unknown]
-        ARG : "" (3:4) [Type: .string]
-          VAR_REFERENCE : "str" (3:4) [Type: .string]
-          CLASS : ".string" (3:15) [Type: .string]
-      NOP : "" (3:22) [Type: .void]
+        ARG : "" (3:4) [Type: reference .unknown]
+          VAR_TARGET : "target" (3:4) [Type: reference .unknown]
+          TYPE_REFERENCE : "reference" (3:11) [Type: reference .unknown]
+            CLASS : ".string" (3:21) [Type: .string]
+      NOP : "" (3:28) [Type: .void]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .void]
       LITERAL : "levelb" (0:9) [Type: .unknown]
@@ -486,19 +974,130 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
         ARG : "" (3:12) [Type: .string]
           VAR_TARGET : "command" (3:12) [Type: .string]
           CONSTANT : "" (3:20) [Type: .string]
-        ARG : "" (3:24) [Type: .binary]
-          VAR_TARGET : "in" (3:24) [Type: .binary]
-          CLASS : ".binary" (3:27) [Type: .binary]
-        ARG : "" (3:36) [Type: .binary]
-          VAR_TARGET : "out" (3:36) [Type: .binary]
-          CLASS : ".binary" (3:40) [Type: .binary]
-        ARG : "" (3:49) [Type: .binary]
-          VAR_TARGET : "err" (3:49) [Type: .binary]
-          CLASS : ".binary" (3:53) [Type: .binary]
-        ARG : "" (3:69) [Type: .string]
-          VARG_REFERENCE : "..." (3:69) [Type: .string]
-          CLASS : ".string" (3:73) [Type: .string]
-      NOP : "" (3:80) [Type: .void]
+        ARG : "" (3:24) [Type: .object]
+          VAR_TARGET : "in" (3:24) [Type: .object]
+          CLASS : ".addressredirect" (3:27) [Type: .object]
+        ARG : "" (3:45) [Type: .object]
+          VAR_TARGET : "out" (3:45) [Type: .object]
+          CLASS : ".addressredirect" (3:49) [Type: .object]
+        ARG : "" (3:67) [Type: .object]
+          VAR_TARGET : "err" (3:67) [Type: .object]
+          CLASS : ".addressredirect" (3:71) [Type: .object]
+        ARG : "" (3:96) [Type: .string]
+          VARG_REFERENCE : "..." (3:96) [Type: .string]
+          CLASS : ".string" (3:100) [Type: .string]
+      NOP : "" (3:107) [Type: .void]
+  IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
+    REXX_OPTIONS : "options" (0:1) [Type: .void]
+      LITERAL : "levelb" (0:9) [Type: .unknown]
+      NAMESPACE : "namespace" (1:0) [Type: .void]
+        LITERAL : "_rxsysb" (1:10) [Type: .unknown]
+    CLASS_DEF : "addressredirect" (2:0) [Type: .void]
+      DEFINE : "=" (3:2) [Type: reference .unknown]
+        VAR_TARGET : "_array_target" (3:2) [Type: reference .unknown]
+        TYPE_REFERENCE : "reference" (3:18) [Type: reference .unknown]
+          CLASS : ".string" (3:28) [Type: .string]
+            RANGE : "" (3:36) [Type: .void]
+              NOVAL : "" (3:35) [Type: .void]
+              NOVAL : "*" (3:36) [Type: .void]
+        NODE_REGISTER : "register" (3:44) [Type: .unknown]
+          CONSTANT : "1" (3:52) [Type: .unknown]
+          VAR_SYMBOL : "object" (3:54) [Type: .unknown]
+      DEFINE : "=" (4:2) [Type: .binary]
+        VAR_TARGET : "_captured" (4:2) [Type: .binary]
+        CLASS : ".binary" (4:14) [Type: .binary]
+        NODE_REGISTER : "register" (4:27) [Type: .unknown]
+          CONSTANT : "2" (4:35) [Type: .unknown]
+          VAR_SYMBOL : "binary" (4:37) [Type: .unknown]
+      DEFINE : "=" (5:2) [Type: .binary]
+        VAR_TARGET : "_input" (5:2) [Type: .binary]
+        CLASS : ".binary" (5:11) [Type: .binary]
+        NODE_REGISTER : "register" (5:24) [Type: .unknown]
+          CONSTANT : "3" (5:32) [Type: .unknown]
+          VAR_SYMBOL : "binary" (5:34) [Type: .unknown]
+      DEFINE : "=" (6:2) [Type: .int]
+        VAR_TARGET : "_kind" (6:2) [Type: .int]
+        CLASS : ".int" (6:10) [Type: .int]
+        NODE_REGISTER : "register" (6:20) [Type: .unknown]
+          CONSTANT : "4" (6:28) [Type: .unknown]
+          VAR_SYMBOL : "int" (6:30) [Type: .unknown]
+      DEFINE : "=" (7:2) [Type: reference .unknown]
+        VAR_TARGET : "_string_target" (7:2) [Type: reference .unknown]
+        TYPE_REFERENCE : "reference" (7:19) [Type: reference .unknown]
+          CLASS : ".string" (7:29) [Type: .string]
+        NODE_REGISTER : "register" (7:42) [Type: .unknown]
+          CONSTANT : "5" (7:50) [Type: .unknown]
+          VAR_SYMBOL : "object" (7:52) [Type: .unknown]
+      FACTORY : "none" (8:2) [Type: .void]
+        VOID : "" (8:7) [Type: .void]
+        ARGS : "" (8:7) [Type: .unknown]
+        NOP : "" (8:7) [Type: .void]
+      FACTORY : "input_string" (9:2) [Type: .void]
+        VOID : "" (9:15) [Type: .void]
+        ARGS : "" (10:6) [Type: .unknown]
+          ARG : "" (10:6) [Type: .string]
+            VAR_TARGET : "source" (10:6) [Type: .string]
+            CLASS : ".string" (10:13) [Type: .string]
+        NOP : "" (10:20) [Type: .void]
+      FACTORY : "input_array" (11:2) [Type: .void]
+        VOID : "" (11:14) [Type: .void]
+        ARGS : "" (12:6) [Type: .unknown]
+          ARG : "" (12:6) [Type: .string]
+            VAR_TARGET : "source" (12:6) [Type: .string]
+            CLASS : ".string" (12:13) [Type: .string]
+              RANGE : "" (12:21) [Type: .void]
+                NOVAL : "" (12:20) [Type: .void]
+                NOVAL : "*" (12:21) [Type: .void]
+        NOP : "" (12:22) [Type: .void]
+      FACTORY : "output_string" (13:2) [Type: .void]
+        VOID : "" (13:16) [Type: .void]
+        ARGS : "" (14:6) [Type: .unknown]
+          ARG : "" (14:6) [Type: reference .unknown]
+            VAR_TARGET : "target" (14:6) [Type: reference .unknown]
+            TYPE_REFERENCE : "reference" (14:13) [Type: reference .unknown]
+              CLASS : ".string" (14:23) [Type: .string]
+        NOP : "" (14:30) [Type: .void]
+      FACTORY : "output_array" (15:2) [Type: .void]
+        VOID : "" (15:15) [Type: .void]
+        ARGS : "" (16:6) [Type: .unknown]
+          ARG : "" (16:6) [Type: reference .unknown]
+            VAR_TARGET : "target" (16:6) [Type: reference .unknown]
+            TYPE_REFERENCE : "reference" (16:13) [Type: reference .unknown]
+              CLASS : ".string" (16:23) [Type: .string]
+                RANGE : "" (16:31) [Type: .void]
+                  NOVAL : "" (16:30) [Type: .void]
+                  NOVAL : "*" (16:31) [Type: .void]
+        NOP : "" (16:32) [Type: .void]
+      METHOD : "has_input" (17:2) [Type: .boolean]
+        CLASS : ".boolean" (17:22) [Type: .boolean]
+        ARGS : "" (17:30) [Type: .unknown]
+        NOP : "" (17:30) [Type: .void]
+      METHOD : "captures_output" (18:2) [Type: .boolean]
+        CLASS : ".boolean" (18:28) [Type: .boolean]
+        ARGS : "" (18:36) [Type: .unknown]
+        NOP : "" (18:36) [Type: .void]
+      METHOD : "input_snapshot" (19:2) [Type: .binary]
+        CLASS : ".binary" (19:27) [Type: .binary]
+        ARGS : "" (19:34) [Type: .unknown]
+        NOP : "" (19:34) [Type: .void]
+      METHOD : "append_bytes" (20:2) [Type: .void]
+        CLASS : ".void" (20:25) [Type: .void]
+        ARGS : "" (21:6) [Type: .unknown]
+          ARG : "" (21:6) [Type: .binary]
+            VAR_TARGET : "bytes" (21:6) [Type: .binary]
+            CLASS : ".binary" (21:12) [Type: .binary]
+        NOP : "" (21:19) [Type: .void]
+      METHOD : "native_emit" (22:2) [Type: .int]
+        CLASS : ".int" (22:24) [Type: .int]
+        ARGS : "" (23:6) [Type: .unknown]
+          ARG : "" (23:6) [Type: .string]
+            VAR_TARGET : "text" (23:6) [Type: .string]
+            CLASS : ".string" (23:11) [Type: .string]
+        NOP : "" (23:18) [Type: .void]
+      METHOD : "finish" (24:2) [Type: .void]
+        CLASS : ".void" (24:19) [Type: .void]
+        ARGS : "" (24:24) [Type: .unknown]
+        NOP : "" (24:24) [Type: .void]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_exit_extended (Namespace) -> .unknown
@@ -515,30 +1114,88 @@ Scope [0]: Unnamed
       system (Constant) -> .string
       user (Variable) -> .string
       Scope [3]: Unnamed
-        Scope [4]: Unnamed
-          arr (Variable) -> .string[*]
-          handle (Variable) -> .binary
-        Scope [4]: Unnamed
-          arr (Variable) -> .string[*]
-          handle (Variable) -> .binary
-        Scope [4]: Unnamed
-          handle (Variable) -> .binary
-          str (Variable) -> .string
   Scope [1]: _rxsysb
     _address (Function) -> .int [EXPOSED]
-    _array2redir (Function) -> .binary [EXPOSED]
-    _redir2array (Function) -> .binary [EXPOSED]
-    _redir2string (Function) -> .binary [EXPOSED]
+    _array2redir (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2array (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    _redir2string (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    addressredirect (Class) -> .unknown [EXPOSED]
     Scope [2]: _array2redir
-      arr (Variable) -> .string[*]
+      source (Variable) -> .string[*]
     Scope [2]: _redir2array
-      arr (Variable) -> .string[*]
+      target (Variable) -> reference .string[*]
     Scope [2]: _redir2string
-      str (Variable) -> .string
+      target (Variable) -> reference .string
     Scope [2]: _address
       command (Variable) -> .string
       env (Variable) -> .string
-      err (Variable) -> .binary
-      in (Variable) -> .binary
-      out (Variable) -> .binary
+      err (Variable) -> .addressredirect
+      in (Variable) -> .addressredirect
+      out (Variable) -> .addressredirect
+    Scope [2]: addressredirect
+      _array_target (Variable) -> reference .string[*]
+      _captured (Variable) -> .binary
+      _input (Variable) -> .binary
+      _kind (Variable) -> .int
+      _string_target (Variable) -> reference .string
+      append_bytes (Function) -> .void
+      captures_output (Function) -> .boolean
+      finish (Function) -> .void
+      has_input (Function) -> .boolean
+      input_snapshot (Function) -> .binary
+      native_emit (Function) -> .int
+      §factory (Namespace) -> .unknown
+      §factory.input_array (Function) -> .addressredirect
+      §factory.input_string (Function) -> .addressredirect
+      §factory.none (Function) -> .addressredirect
+      §factory.output_array (Function) -> .addressredirect
+      §factory.output_string (Function) -> .addressredirect
+      Scope [3]: §factory
+        input_array (Function) -> .object
+        input_string (Function) -> .object
+        none (Function) -> .object
+        output_array (Function) -> .object
+        output_string (Function) -> .object
+      Scope [3]: none
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_string
+        source (Variable) -> .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: input_array
+        source (Variable) -> .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_string
+        target (Variable) -> reference .string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: output_array
+        target (Variable) -> reference .string[*]
+        §factory (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+      Scope [3]: input_snapshot
+        §this (Variable) -> .addressredirect
+      Scope [3]: append_bytes
+        bytes (Variable) -> .binary
+        §this (Variable) -> .addressredirect
+      Scope [3]: native_emit
+        text (Variable) -> .string
+        §this (Variable) -> .addressredirect
+      Scope [3]: finish
+        §this (Variable) -> .addressredirect
+      Scope [3]: has_input
+        §this (Variable) -> .addressredirect
+      Scope [3]: captures_output
+        §this (Variable) -> .addressredirect
+      Scope [3]: §factory.none
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_array
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_string
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_array
+        §factory (Variable) -> .addressredirect
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

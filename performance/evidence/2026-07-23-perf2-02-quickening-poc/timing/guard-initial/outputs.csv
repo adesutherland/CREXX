@@ -1,0 +1,161 @@
+sample_id,stream,line_number,text
+timing-Sieve-q0-sieve-rxvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxbvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxbvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxbvm-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxbvm-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxbvm-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxbvm-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxbvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxbvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxvm-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxvm-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q4-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q4-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-q0-sieve-rxbvm-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-q0-sieve-rxbvm-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Permute-q0-permute-rxvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxbvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxbvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxbvm-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxbvm-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxbvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxbvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxbvm-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxbvm-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxbvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxbvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxbvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxbvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxvm-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxvm-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-q4-permute-rxbvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q4-permute-rxbvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-q0-permute-rxbvm-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-q0-permute-rxbvm-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Storage-q0-storage-rxvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxbvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxbvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxbvm-warmup-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxbvm-warmup-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxbvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxbvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxbvm-recorded-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxbvm-recorded-1,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxbvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxbvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxbvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxbvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxvm-recorded-2,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxvm-recorded-2,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Storage-q4-storage-rxbvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q4-storage-rxbvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Storage-q0-storage-rxbvm-recorded-3,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-q0-storage-rxbvm-recorded-3,stdout,2,PASS: AWFY Storage
+timing-Towers-q0-towers-rxvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxbvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxbvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxbvm-warmup-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxbvm-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxbvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxbvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxbvm-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxbvm-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxbvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxbvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxbvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxbvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxvm-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxvm-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-q4-towers-rxbvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q4-towers-rxbvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-q0-towers-rxbvm-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-q0-towers-rxbvm-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Base64-q0-base64-rxvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxbvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxbvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxbvm-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxbvm-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q4-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q4-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-q0-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-q0-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip

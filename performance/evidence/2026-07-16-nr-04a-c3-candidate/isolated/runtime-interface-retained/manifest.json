@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gdb94bc9caebf.dirty 20260716",
+  "workload": "rxgraph-isolated",
+  "runtime": "rxbin-c3",
+  "variant": "runtime-interface-retained",
+  "lifecycle": "process",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial",
+  "correctness_expectation": "rxgraph_bench,schema=1",
+  "metric_prefix": null,
+  "command": ["cmake-build-release/bin/rxgraph_bench","--iterations","1000000","--samples","7","performance/evidence/2026-07-16-nr-04a-rxbin-007-early-baseline/images/runtime-interface-retained.rxbin"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-16T17:00:58+0000",
+  "completed_utc": "2026-07-16T17:00:59+0000",
+  "result": "pass"
+}

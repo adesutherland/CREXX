@@ -1,0 +1,14 @@
+/* Gate F F1a RXAS/RXBIN channel-instruction contract. */
+
+.globals=0
+
+main() .locals=0
+   ret
+
+channel_contract() .locals=8
+   chanopen r0,r1,r2,r3,r4
+   chanstart r0,r1,r2,r3,r4
+   chanwait r0,r1,r2,r3
+   chancancel r0,r1,r2,r3
+   chanclose r0,r1,r2
+   ret

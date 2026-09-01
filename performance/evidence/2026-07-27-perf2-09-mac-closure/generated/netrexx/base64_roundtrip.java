@@ -1,0 +1,106 @@
+/* Generated from 'base64_roundtrip.nrx' 27 Jul 2026 18:39:27 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+public class base64_roundtrip{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx((short)1023);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(31);private static final netrexx.lang.Rexx $04=new netrexx.lang.Rexx(7);private static final netrexx.lang.Rexx $05=new netrexx.lang.Rexx(256);private static final netrexx.lang.Rexx $06=new netrexx.lang.Rexx(127);private static final netrexx.lang.Rexx $07=new netrexx.lang.Rexx(1368);private static final netrexx.lang.Rexx $08=new netrexx.lang.Rexx(130560);private static final netrexx.lang.Rexx $09=netrexx.lang.Rexx.toRexx("checksum=");private static final netrexx.lang.Rexx $010=new netrexx.lang.Rexx(2);private static final netrexx.lang.Rexx $011=new netrexx.lang.Rexx(4);private static final netrexx.lang.Rexx $012=new netrexx.lang.Rexx(16);private static final netrexx.lang.Rexx $013=new netrexx.lang.Rexx(64);private static final netrexx.lang.Rexx $014=new netrexx.lang.Rexx(3);private static final netrexx.lang.Rexx $015=new netrexx.lang.Rexx(61);private static final java.lang.String $0="base64_roundtrip.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx repetitions;byte input[];netrexx.lang.Rexx offset=null;netrexx.lang.Rexx value=null;java.lang.String encoded;byte decoded[]=null;netrexx.lang.Rexx iteration=null;netrexx.lang.Rexx checksum;byte encodedByte=0;
+repetitions=new netrexx.lang.Rexx((byte)1);
+if (new netrexx.lang.Rexx(args.length).OpGtEq(null,$01)) repetitions=netrexx.lang.Rexx.toRexx(args[0]);
+if (repetitions.OpLt(null,$01)) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+input=new byte[1024];
+{offset=new netrexx.lang.Rexx((byte)0);offset:for(;offset.OpLtEq(null,$02);offset=offset.OpAdd(null,new netrexx.lang.Rexx(1))){
+value=((offset.OpMult(null,$03).OpAdd(null,$04))).OpRem(null,$05);
+if (value.OpGt(null,$06)) value=value.OpSub(null,$05);
+input[offset.toint()]=(new netrexx.lang.Rexx(value)).tobyte();
+}}/*offset*/
+
+encoded="";
+
+{netrexx.lang.Rexx $1=repetitions;iteration=new netrexx.lang.Rexx((byte)1);iteration:for(;iteration.OpLtEq(null,$1);iteration=iteration.OpAdd(null,new netrexx.lang.Rexx(1))){
+encoded=encode(input);
+decoded=decode(encoded);
+}}/*iteration*/
+
+if (new netrexx.lang.Rexx(encoded.length()).OpNotEq(null,$07)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected encoded length 1368, got").OpCcblank(null,new netrexx.lang.Rexx(encoded.length())));
+{System.exit(1);return;}
+}
+if (new netrexx.lang.Rexx(java.util.Arrays.equals(input,decoded)).OpNot(null)) {
+netrexx.lang.RexxIO.Say("FAIL: decoded bytes differ from input");
+{System.exit(1);return;}
+}
+checksum=new netrexx.lang.Rexx((byte)0);
+{int $4=0;byte[] $3=new byte[decoded.length];synchronized(decoded){for(;;){if($4==$3.length)break;$3[$4]=decoded[decoded.length-1-$4];$4++;}}encodedByte:for(;;){if(--$4<0)break;encodedByte=(byte)$3[$4];
+checksum=checksum.OpAdd(null,new netrexx.lang.Rexx(java.lang.Byte.toUnsignedInt(encodedByte)));
+}}/*encodedByte*/
+if (checksum.OpNotEq(null,$08)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected checksum 130560, got").OpCcblank(null,checksum));
+{System.exit(1);return;}
+}
+netrexx.lang.RexxIO.Say(((((netrexx.lang.Rexx.toRexx("benchmark=base64_roundtrip repetitions=").OpCc(null,repetitions)).OpCcblank(null,netrexx.lang.Rexx.toRexx("encoded_length="))).OpCc(null,new netrexx.lang.Rexx(encoded.length()))).OpCcblank(null,$09)).OpCc(null,checksum));
+netrexx.lang.RexxIO.Say("PASS: Base64 Roundtrip NetRexx decimal port");return;}
+
+@SuppressWarnings("unchecked") public static java.lang.String encode(byte data[]){java.lang.String alphabet;java.lang.StringBuilder result;netrexx.lang.Rexx offset;netrexx.lang.Rexx remaining=null;int byte1=0;netrexx.lang.Rexx byte2=null;netrexx.lang.Rexx byte3=null;netrexx.lang.Rexx digit1=null;netrexx.lang.Rexx digit2=null;netrexx.lang.Rexx digit3=null;netrexx.lang.Rexx digit4=null;
+alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+result=new java.lang.StringBuilder();
+offset=new netrexx.lang.Rexx((byte)0);
+{for(;;){if(!offset.OpLt(null,new netrexx.lang.Rexx(data.length)))break;
+remaining=new netrexx.lang.Rexx(data.length).OpSub(null,offset);
+byte1=java.lang.Byte.toUnsignedInt(data[offset.toint()]);
+byte2=new netrexx.lang.Rexx((byte)0);
+byte3=new netrexx.lang.Rexx((byte)0);
+if (remaining.OpGt(null,$01)) byte2=new netrexx.lang.Rexx(java.lang.Byte.toUnsignedInt(data[offset.OpAdd(null,$01).toint()]));
+if (remaining.OpGt(null,$010)) byte3=new netrexx.lang.Rexx(java.lang.Byte.toUnsignedInt(data[offset.OpAdd(null,$010).toint()]));
+digit1=new netrexx.lang.Rexx(byte1).OpDivI(null,$011);
+digit2=((new netrexx.lang.Rexx(byte1).OpRem(null,$011))).OpMult(null,$012).OpAdd(null,byte2.OpDivI(null,$012));
+digit3=((byte2.OpRem(null,$012))).OpMult(null,$011).OpAdd(null,byte3.OpDivI(null,$013));
+digit4=byte3.OpRem(null,$013);
+result.append(alphabet.substring(digit1.toint(),digit1.OpAdd(null,$01).toint()));
+result.append(alphabet.substring(digit2.toint(),digit2.OpAdd(null,$01).toint()));
+if (remaining.OpGt(null,$01)) result.append(alphabet.substring(digit3.toint(),digit3.OpAdd(null,$01).toint()));
+else result.append('=');
+if (remaining.OpGt(null,$010)) result.append(alphabet.substring(digit4.toint(),digit4.OpAdd(null,$01).toint()));
+else result.append('=');
+offset=offset.OpAdd(null,$014);
+}}
+return result.toString();}
+
+@SuppressWarnings("unchecked") public static byte[] decode(java.lang.String encoded){java.lang.String alphabet;netrexx.lang.Rexx padding;byte result[];netrexx.lang.Rexx inputOffset;netrexx.lang.Rexx outputOffset;int digit1=0;int digit2=0;int char3=0;int char4=0;netrexx.lang.Rexx digit3=null;netrexx.lang.Rexx digit4=null;netrexx.lang.Rexx value=null;
+alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+padding=new netrexx.lang.Rexx((byte)0);
+if (new netrexx.lang.Rexx(encoded.codePointAt(new netrexx.lang.Rexx(encoded.length()).OpSub(null,$01).toint())).OpEq(null,$015)) padding=padding.OpAdd(null,$01);
+if (new netrexx.lang.Rexx(encoded.codePointAt(new netrexx.lang.Rexx(encoded.length()).OpSub(null,$010).toint())).OpEq(null,$015)) padding=padding.OpAdd(null,$01);
+result=new byte[((new netrexx.lang.Rexx(encoded.length()).OpDivI(null,$011))).OpMult(null,$014).OpSub(null,padding).toint()];
+inputOffset=new netrexx.lang.Rexx((byte)0);
+outputOffset=new netrexx.lang.Rexx((byte)0);
+{for(;;){if(!inputOffset.OpLt(null,new netrexx.lang.Rexx(encoded.length())))break;
+digit1=alphabet.indexOf(encoded.codePointAt(inputOffset.toint()));
+digit2=alphabet.indexOf(encoded.codePointAt(inputOffset.OpAdd(null,$01).toint()));
+char3=encoded.codePointAt(inputOffset.OpAdd(null,$010).toint());
+char4=encoded.codePointAt(inputOffset.OpAdd(null,$014).toint());
+digit3=new netrexx.lang.Rexx((byte)0);
+digit4=new netrexx.lang.Rexx((byte)0);
+if (new netrexx.lang.Rexx(char3).OpNotEq(null,$015)) digit3=new netrexx.lang.Rexx(alphabet.indexOf(char3));
+if (new netrexx.lang.Rexx(char4).OpNotEq(null,$015)) digit4=new netrexx.lang.Rexx(alphabet.indexOf(char4));
+value=new netrexx.lang.Rexx(digit1).OpMult(null,$011).OpAdd(null,new netrexx.lang.Rexx(digit2).OpDivI(null,$012));
+if (value.OpGt(null,$06)) value=value.OpSub(null,$05);
+result[outputOffset.toint()]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset=outputOffset.OpAdd(null,$01);
+if (new netrexx.lang.Rexx(char3).OpNotEq(null,$015)) {
+value=((new netrexx.lang.Rexx(digit2).OpRem(null,$012))).OpMult(null,$012).OpAdd(null,digit3.OpDivI(null,$011));
+if (value.OpGt(null,$06)) value=value.OpSub(null,$05);
+result[outputOffset.toint()]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset=outputOffset.OpAdd(null,$01);
+}
+if (new netrexx.lang.Rexx(char4).OpNotEq(null,$015)) {
+value=((digit3.OpRem(null,$011))).OpMult(null,$013).OpAdd(null,digit4);
+if (value.OpGt(null,$06)) value=value.OpSub(null,$05);
+result[outputOffset.toint()]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset=outputOffset.OpAdd(null,$01);
+}
+inputOffset=inputOffset.OpAdd(null,$011);
+}}
+return result;}private base64_roundtrip(){return;}}

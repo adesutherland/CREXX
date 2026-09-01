@@ -22,48 +22,72 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Extended, typed Level B DATE implementation. */
 options levelb numeric_classic
-
 namespace rxfnsb expose date
 import _rxsysb
 
-date: Procedure = .string
- arg oFormat = "", idate = "", iFormat = "", osep="", isep=""
-  if iformat="" then iformat="NORMAL"
-  if oformat="" then oformat="NORMAL"
-  if isep\="" then isep=substr(isep,1,1)
-  if osep\="" then osep=substr(osep,1,1)
-  iformat=upper(iformat)
-  oformat=upper(oformat)
-  idate=upper(idate)
-  iNorm = ""
+/**
+ * Convert or query a Gregorian calendar date.
+ *
+ * An empty input date selects the current local date and ignores `iformat`.
+ * Separators are either empty or exactly one Unicode codepoint.
+ *
+ * @param oformat output format or documented abbreviation
+ * @param idate input date; empty means today
+ * @param iformat input format or documented abbreviation
+ * @param osep optional output separator override
+ * @param isep optional input separator override
+ * @return formatted date; numeric results are strings
+ * @signal INVALID_ARGUMENTS invalid date, format, or separator
+ */
+date: procedure = .string
+  arg oformat = "", idate = "", iformat = "", osep = "", isep = ""
+  output_separator_length = .int
+  input_separator_length = .int
+  jdn = .int
 
-  /* 1. Check and translate input data according to its format to a JDN */
-  if idate="" then do      /* no date set, take today, ignore input format */
-     today=0
-     assembler time today
-     assembler itos today
-     iNorm=today%86400+1721426+719162
-  end
-  else if fabbreV('JDN',iformat,3)  then nop
-  else if fabbreV('BASE',iformat,1) then iNorm=idate+1721426
-  else if fabbreV('UNIX',iformat,2) then iNorm=idate+1721426+719162
-  else if fabbreV('JULIAN',iformat,1) then do
-     idate=right(idate,7,'0')
-     YY=substr(idate,1,4)
-     daysofyear=substr(idate,5,3)
-     iNorm=_jdn(1,1,YY)+daysofyear-1
-  end
-  else do
-     iNorm=_datei(idate,iformat,isep)
-     if iNorm='SYNTAX' then return ''
-  end
-/* 2. Translate JDN according to its output format */
+  assembler strlen output_separator_length,osep
+  assembler strlen input_separator_length,isep
+  if output_separator_length > 1 | input_separator_length > 1 then
+    assembler signal "INVALID_ARGUMENTS","DATE separators must be empty or one Unicode codepoint"
 
-return _dateo(iNorm,oFormat,osep)
+  if idate = "" then jdn = _date_today_jdn()
+  else jdn = _datei(idate,iformat,isep)
+  return _dateo(jdn,oformat,osep)
 
-fabbreV: Procedure = .int
-  arg p0 = .string, p1 = .string, flen = 1
-  if substr(p0,1,flen)=substr(p1,1,flen) then return 1
-return 0
+/*
+ * TIME returns standard-local shifted epoch seconds while MTIME returns the
+ * actual local wall-clock time since midnight. Their difference therefore
+ * captures any current daylight-saving adjustment without a platform BIF.
+ */
+_date_today_jdn: procedure = .int
+  before_microseconds = .int
+  after_microseconds = .int
+  standard_seconds = .int
+  standard_day = .int
+  standard_second_of_day = .int
+  local_second_of_day = .int
+  adjustment = .int
+  adjusted_second = .int
+
+  assembler mtime before_microseconds
+  assembler time standard_seconds
+  assembler mtime after_microseconds
+  if after_microseconds < before_microseconds then assembler time standard_seconds
+
+  standard_day = standard_seconds % 86400
+  standard_second_of_day = standard_seconds // 86400
+  if standard_second_of_day < 0 then do
+    standard_second_of_day = standard_second_of_day + 86400
+    standard_day = standard_day - 1
+  end
+  local_second_of_day = after_microseconds % 1000000
+  adjustment = local_second_of_day - standard_second_of_day
+  if adjustment > 43200 then adjustment = adjustment - 86400
+  else if adjustment < -43200 then adjustment = adjustment + 86400
+
+  adjusted_second = standard_second_of_day + adjustment
+  if adjusted_second < 0 then standard_day = standard_day - 1
+  else if adjusted_second >= 86400 then standard_day = standard_day + 1
+  return standard_day + 2440588

@@ -149,18 +149,32 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
     _error = ""
     if _driver = "OPENAI" then do
       client = .openai(_model, "demo-key")
-      return client.buildBody(prompt)
+      result = client.buildBody(prompt)
+      call client.close()
+      return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
-      return client.buildBody(prompt)
+      result = .string
+      result = client.buildBody(prompt)
+      call client.close()
+      return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
-      return client.buildBody(prompt)
+      result = .string
+      result = client.buildBody(prompt)
+      call client.close()
+      return result
     end
+    client = .llm
     client = .llm(_model)
-    return client.buildBody(prompt)
+    result = .string
+    result = client.buildBody(prompt)
+    call client.close()
+    return result
 
   _request: method = .string
     arg prompt = .string
@@ -168,18 +182,32 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
     _error = ""
     if _driver = "OPENAI" then do
       client = .openai(_model, "demo-key")
-      return llm_mask_request(client.buildRequest(prompt))
+      result = llm_mask_request(client.buildRequest(prompt))
+      call client.close()
+      return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
-      return llm_mask_request(client.buildRequest(prompt))
+      result = .string
+      result = llm_mask_request(client.buildRequest(prompt))
+      call client.close()
+      return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
-      return llm_mask_request(client.buildRequest(prompt))
+      result = .string
+      result = llm_mask_request(client.buildRequest(prompt))
+      call client.close()
+      return result
     end
+    client = .llm
     client = .llm(_model)
-    return client.buildRequest(prompt)
+    result = .string
+    result = client.buildRequest(prompt)
+    call client.close()
+    return result
 
   _extract: method = .string
     arg response_json = .string
@@ -189,26 +217,33 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model, "demo-key")
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model, "demo-key")
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
     result = client.extractText(response_json)
     _status = client.status()
     _error = client.error()
+    call client.close()
     return result
 
   _generate: method = .string
@@ -221,49 +256,60 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
       if client.status() <> 0 then do
         _status = client.status()
         _error = client.error()
+        call client.close()
         return ""
       end
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
     if _driver = "ANTHROPIC" then do
+      client = .anthropic
       client = .anthropic(_model)
       response_json = client.generateJson(prompt)
       if client.status() <> 0 then do
         _status = client.status()
         _error = client.error()
+        call client.close()
         return ""
       end
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
     if _driver = "GEMINI" then do
+      client = .gemini
       client = .gemini(_model)
       response_json = client.generateJson(prompt)
       if client.status() <> 0 then do
         _status = client.status()
         _error = client.error()
+        call client.close()
         return ""
       end
       result = client.extractText(response_json)
       _status = client.status()
       _error = client.error()
+      call client.close()
       return result
     end
+    client = .llm
     client = .llm(_model)
     response_json = client.generateJson(prompt)
     if client.status() <> 0 then do
       _status = client.status()
       _error = client.error()
+      call client.close()
       return ""
     end
     result = client.extractText(response_json)
     _status = client.status()
     _error = client.error()
+    call client.close()
     return result
 
 llm_finish_command: procedure = .addressresponse

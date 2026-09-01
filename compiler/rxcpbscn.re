@@ -64,6 +64,9 @@ int rexbscan(Context* s) {
 /*!include:re2c "encoding.re" */
 
   if (s->lexer_stem_mode) goto lexer_stem_mode;
+  if (s->lexer_intrinsic_mode == 2) goto lexer_intrinsic_generics_mode;
+  if (s->lexer_intrinsic_mode == 3) goto lexer_intrinsic_after_generics_mode;
+  if (s->lexer_intrinsic_mode) goto lexer_intrinsic_mode;
 
   regular:
 
@@ -85,11 +88,19 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
+  hexint = "0" [xX] hex+;
   integer = digit+;
   decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
   qual_sep = "::" | "..";
   qualified = simple qual_sep simple;
+  intrinsic_head = simple ((qual_sep | [.] ) simple)*;
+  intrinsic_type_ws = [ \t\r\n]*;
+  intrinsic_type = [.] simple ((qual_sep | [.] ) simple)*;
+  intrinsic_type_list = intrinsic_type_ws intrinsic_type (intrinsic_type_ws "," intrinsic_type_ws intrinsic_type)* intrinsic_type_ws;
+  intrinsic_generics = [.] "[" intrinsic_type_list "]";
+  intrinsic_angle = intrinsic_head intrinsic_generics? ">";
+  intrinsic_prefix_angle = ('AT'|'PACKED') ((".." simple) | intrinsic_generics) ">";
   class = [.] (qualified|simple);
   namedfactory = class "." simple;
   sqstr = ['] ((any\['\n\r])|(['][']))* ['];
@@ -133,9 +144,24 @@ int rexbscan(Context* s) {
     "/" ob "/" { RET(s->numeric_standard ? TK_MOD : TK_UNKNOWN); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "*" ob "*" { RET(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
+    '<IDIV>' | '<MOD>' | '<REM>' { RET(TK_NAMED_MULT_OPERATOR); }
+    '<SHL>' | '<SHR>' { RET(TK_NAMED_SHIFT_OPERATOR); }
+    '<AND>' | '<HAS>' | '<CLEAR>' { RET(TK_NAMED_AND_OPERATOR); }
+    '<XOR>' { RET(TK_NAMED_XOR_OPERATOR); }
+    '<OR>' | '<SET>' { RET(TK_NAMED_OR_OPERATOR); }
+    '<NOT>' { RET(TK_NAMED_OPERATOR); }
+    '<REFSAME>' | '<EQ>' { RET(TK_NAMED_COMPARISON_OPERATOR); }
     "=" { RET(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
     ">" { RET(TK_GT); }
+    "<" / intrinsic_prefix_angle {
+      s->lexer_intrinsic_mode = 1;
+      RET(TK_INTRINSIC_PREFIX_LT);
+    }
+    "<" / intrinsic_angle {
+      s->lexer_intrinsic_mode = 1;
+      RET(TK_INTRINSIC_LT);
+    }
     "<" { RET(TK_LT); }
     ">" ob "=" | not ob "<" { RET(TK_GTE); }
     "<" ob "=" | not ob ">" { RET(TK_LTE); }
@@ -172,7 +198,10 @@ int rexbscan(Context* s) {
     'AS' { RET(TK_AS); }
     'CALL' { RET(TK_CALL); }
     'CLASS' { RET(TK_CLASS); }
+    'CONSTANT' { RET(TK_CONSTANT); }
+    'TASK' { RET(TK_TASK); }
     'DO' { RET(TK_DO); }
+    'PARALLEL' { RET(TK_PARALLEL); }
     'LOOP' { RET(TK_LOOP); }
     'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
     'INTERFACE' { RET(TK_INTERFACE); }
@@ -187,6 +216,7 @@ int rexbscan(Context* s) {
     'FACTORY' { RET(TK_FACTORY); }
     'IF' { RET(TK_IF); }
     'IMPORT' { RET(TK_IMPORT); }
+    'INITIALISER' { RET(TK_INITIALISER); }
     'IS' { RET(TK_IS); }
   //  'INPUT' { RET(TK_INPUT); }
   //  'INTERPRET' { RET(TK_INTERPRET); }
@@ -244,10 +274,12 @@ int rexbscan(Context* s) {
     'VOID' { RET(TK_VOID); }
     'WHILE' { RET(TK_WHILE); }
     'WITH' { RET(TK_WITH); }
+    'USING' { RET(TK_USING); }
     namedfactory / "(" { RET(TK_CLASS_FACTORY); }
     class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }
+    hexint { RET(TK_INTEGER); }
     integer { RET(TK_INTEGER); }
     qualified { RET(TK_QUALIFIED_SYMBOL); }
     'ARG' / [.] {
@@ -290,6 +322,102 @@ int rexbscan(Context* s) {
       RET(TK_UNKNOWN);
     }
   */
+
+  lexer_intrinsic_mode:
+/*!re2c
+    "::" simple { RET(TK_INTRINSIC_NAME); }
+    ".." simple { RET(TK_INTRINSIC_NAME); }
+    "." "[" {
+       s->lexer_intrinsic_mode = 2;
+       RET(TK_INTRINSIC_GENERIC_OPEN);
+    }
+    "." simple { RET(TK_INTRINSIC_NAME); }
+    simple { RET(TK_INTRINSIC_NAME); }
+    "(" {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_UNKNOWN);
+    }
+    ">" {
+       if (s->lexer_intrinsic_mode == 1 || s->lexer_intrinsic_mode == 3) {
+          s->lexer_intrinsic_mode = 0;
+          RET(TK_GT);
+       }
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_UNKNOWN);
+    }
+    eof {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    $ {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    * {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_UNKNOWN);
+    }
+*/
+
+  lexer_intrinsic_generics_mode:
+/*!re2c
+    [ \t]+ {
+       s->top = s->cursor;
+       goto lexer_intrinsic_generics_mode;
+    }
+    eol2 {
+       s->line++;
+       s->prev_linestart = s->linestart;
+       s->linestart = s->cursor+2;
+       s->top = s->cursor;
+       goto lexer_intrinsic_generics_mode;
+    }
+    eol1 {
+       s->line++;
+       s->prev_linestart = s->linestart;
+       s->linestart = s->cursor+1;
+       s->top = s->cursor;
+       goto lexer_intrinsic_generics_mode;
+    }
+    intrinsic_type { RET(TK_CLASS_TYPE); }
+    "," { RET(TK_COMMA); }
+    "]" {
+       s->lexer_intrinsic_mode = 3;
+       RET(TK_CLOSE_SBRACKET);
+    }
+    eof {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    $ {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    * {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_UNKNOWN);
+    }
+*/
+
+  lexer_intrinsic_after_generics_mode:
+/*!re2c
+    ">" {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_GT);
+    }
+    eof {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    $ {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_EOS);
+    }
+    * {
+       s->lexer_intrinsic_mode = 0;
+       RET(TK_UNKNOWN);
+    }
+*/
 
   lexer_stem_mode:
 /*!re2c

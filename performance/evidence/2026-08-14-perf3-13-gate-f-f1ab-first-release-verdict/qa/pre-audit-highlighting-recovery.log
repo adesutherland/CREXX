@@ -1,0 +1,38 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  784: syntaxhighlight_srcmap_generated
+ 1/12 Test  #784: syntaxhighlight_srcmap_generated .......   Passed    0.74 sec
+      Start  785: syntaxhighlight_compound_names
+ 2/12 Test  #785: syntaxhighlight_compound_names .........   Passed    0.72 sec
+      Start  786: syntaxhighlight_structure_nodes
+ 3/12 Test  #786: syntaxhighlight_structure_nodes ........   Passed    0.74 sec
+      Start  787: syntaxhighlight_exit_keyword
+ 4/12 Test  #787: syntaxhighlight_exit_keyword ...........   Passed    0.68 sec
+      Start  788: syntaxhighlight_address_keywords
+ 5/12 Test  #788: syntaxhighlight_address_keywords .......   Passed    0.79 sec
+      Start  789: syntaxhighlight_parse_keywords
+ 6/12 Test  #789: syntaxhighlight_parse_keywords .........   Passed    0.84 sec
+      Start  791: syntaxhighlight_top_level_statements
+ 7/12 Test  #791: syntaxhighlight_top_level_statements ...   Passed    0.73 sec
+      Start  843: syntaxhighlight_block_comment
+ 8/12 Test  #843: syntaxhighlight_block_comment ..........   Passed    0.74 sec
+      Start  846: syntaxhighlight_comments_dash
+ 9/12 Test  #846: syntaxhighlight_comments_dash ..........   Passed    0.74 sec
+      Start 1244: rxpp_sh_srcmap
+10/12 Test #1244: rxpp_sh_srcmap .........................   Passed    1.07 sec
+      Start 1245: rxpp_sh_default_lookup
+11/12 Test #1245: rxpp_sh_default_lookup .................   Passed    1.08 sec
+      Start 1246: rxpp_sh_tokens
+12/12 Test #1246: rxpp_sh_tokens .........................   Passed    0.69 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+compiler               =   6.72 sec*proc (9 tests)
+preprocessor           =   2.84 sec*proc (3 tests)
+smoke                  =   0.69 sec*proc (1 test)
+srcmap                 =   2.15 sec*proc (2 tests)
+stage0                 =   5.99 sec*proc (8 tests)
+stage1                 =   0.73 sec*proc (1 test)
+syntax_highlighting    =   9.56 sec*proc (12 tests)
+
+Total Test time (real) =   9.59 sec

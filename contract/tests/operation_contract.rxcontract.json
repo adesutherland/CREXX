@@ -1,0 +1,39 @@
+{
+  "format": "crexx.operation-contract",
+  "formatVersion": 1,
+  "contractVersion": "1.0.0",
+  "operation": "operation_contract_test.operationcontract.execute",
+  "input": [
+    {"name": "request", "required": true, "nullable": false, "schema": {"kind": "record", "type": "operation_contract_test.requestcontract"}},
+    {"name": "correlation", "required": false, "nullable": false, "schema": {"kind": "string"}}
+  ],
+  "result": {"kind": "record", "type": "operation_contract_test.resultcontract"},
+  "errors": [
+    {"kind": "record", "type": "operation_contract_test.errorcontract"}
+  ],
+  "types": [
+    {"name": "operation_contract_test.errorcontract", "kind": "record", "fields": [
+      {"name": "code", "required": true, "nullable": false, "schema": {"kind": "string"}},
+      {"name": "details", "required": false, "nullable": false, "schema": {"kind": "array", "items": {"kind": "string"}}},
+      {"name": "message", "required": true, "nullable": false, "schema": {"kind": "string"}}
+    ]},
+    {"name": "operation_contract_test.nestedcontract", "kind": "record", "fields": [
+      {"name": "label", "required": true, "nullable": false, "schema": {"kind": "string"}},
+      {"name": "étiquette", "required": true, "nullable": false, "schema": {"kind": "string"}}
+    ]},
+    {"name": "operation_contract_test.requestcontract", "kind": "record", "fields": [
+      {"name": "amount", "required": true, "nullable": false, "schema": {"kind": "string", "encoding": "crexx-decimal"}},
+      {"name": "count", "required": true, "nullable": false, "schema": {"kind": "integer", "minimum": -9223372036854775808, "maximum": 9223372036854775807}},
+      {"name": "enabled", "required": true, "nullable": false, "schema": {"kind": "boolean"}},
+      {"name": "nested", "required": true, "nullable": false, "schema": {"kind": "record", "type": "operation_contract_test.nestedcontract"}},
+      {"name": "payload", "required": true, "nullable": false, "schema": {"kind": "string", "contentEncoding": "base64"}},
+      {"name": "query", "required": true, "nullable": false, "schema": {"kind": "string"}},
+      {"name": "score", "required": true, "nullable": false, "schema": {"kind": "number", "finite": true}},
+      {"name": "tags", "required": true, "nullable": false, "schema": {"kind": "array", "items": {"kind": "string"}}}
+    ]},
+    {"name": "operation_contract_test.resultcontract", "kind": "record", "fields": [
+      {"name": "items", "required": true, "nullable": false, "schema": {"kind": "array", "items": {"kind": "string"}}},
+      {"name": "problem", "required": true, "nullable": true, "schema": {"kind": "record", "type": "operation_contract_test.errorcontract"}}
+    ]}
+  ]
+}

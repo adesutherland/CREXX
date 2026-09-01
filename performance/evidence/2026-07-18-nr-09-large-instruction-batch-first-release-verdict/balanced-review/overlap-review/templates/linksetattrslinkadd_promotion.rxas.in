@@ -1,0 +1,63 @@
+/* Generated overlap-selection Release cell for LINKSETATTRSLINKADD_PROMOTION. */
+
+.globals=0
+
+main() .locals=8
+    load r5,5
+    load r6,0
+pair:
+    brt reverse_order,r6
+forward_order:
+    say "current_us"
+    call r1,measure_current_linksetattrslinkadd_promotion()
+    say "alternative_us"
+    call r1,measure_alternative_linksetattrslinkadd_promotion()
+    load r6,1
+    br pair_done
+reverse_order:
+    say "alternative_us"
+    call r1,measure_alternative_linksetattrslinkadd_promotion()
+    say "current_us"
+    call r1,measure_current_linksetattrslinkadd_promotion()
+    load r6,0
+pair_done:
+    dec r5
+    brt pair,r5
+    ret 0
+
+measure_current_linksetattrslinkadd_promotion() .locals=24
+    setattrs r1,2
+    load r4,1
+    mtime r22
+    load r0,500000
+linksetattrslinkadd_promotion_current_loop:
+    linkattr1 r2,r1,2
+    setlinkattr1 r3,r2,6,r4,1
+    unlink r3
+    unlink r2
+    dec r0
+    brt linksetattrslinkadd_promotion_current_loop,r0
+    mtime r23
+    isub r1,r23,r22
+    itos r1
+    say r1
+    ret r1
+
+measure_alternative_linksetattrslinkadd_promotion() .locals=24
+@PADDING@
+    setattrs r1,2
+    load r4,1
+    mtime r22
+    load r0,500000
+linksetattrslinkadd_promotion_alternative_loop:
+    linksetattrslinkadd r2,r1,2,6,r3,r4,1
+    unlink r3
+    unlink r2
+    dec r0
+    brt linksetattrslinkadd_promotion_alternative_loop,r0
+    mtime r23
+    isub r1,r23,r22
+    itos r1
+    say r1
+    ret r1
+

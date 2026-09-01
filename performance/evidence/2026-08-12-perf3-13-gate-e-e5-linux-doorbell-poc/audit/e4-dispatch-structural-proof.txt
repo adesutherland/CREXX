@@ -1,0 +1,141 @@
+PERF3-13 E5 Linux ordinary E4 dispatch structural proof
+control_commit=295a6d886b33b161e57d71bc641970e394f58f66
+candidate_commit=b6edf2556f2411fe5033049e32ee77ddd9a2e15f
+control_rxvmintp_h_blob=343bb9712721306dedc03f21ba4a02fa82e0aacc
+candidate_rxvmintp_h_blob=343bb9712721306dedc03f21ba4a02fa82e0aacc
+
+Current Linux uncommitted source paths:
+interpreter/CMakeLists.txt
+interpreter/interrupt.c
+interpreter/rxvmexecutor.c
+
+E4 control -> mthread rxvmintp.h diff (empty; dispatch macros are byte-identical):
+
+E4 control -> mthread rxvmintp.c diff (only CANCEL string mapping and cold frame-default setup):
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index a1d9af4e8..0d8c62fff 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4142,24 +4142,26 @@ const char *interrupt_to_string(unsigned char interrupt) {
+         case RXSIGNAL_FUNCTION_NOT_FOUND:
+             return "FUNCTION_NOT_FOUND";
+         case RXSIGNAL_NOT_IMPLEMENTED:
+             return "NOT_IMPLEMENTED";
+         case RXSIGNAL_INVALID_SIGNAL_CODE:
+             return "INVALID_SIGNAL_CODE";
+         case RXSIGNAL_REFERENCE_INVALID:
+             return "REFERENCE_INVALID";
+         case RXSIGNAL_OBJECT_NOT_INITIALIZED:
+             return "OBJECT_NOT_INITIALIZED";
+         case RXSIGNAL_RXBIN_CORRUPTION:
+             return "RXBIN_CORRUPTION";
++        case RXSIGNAL_CANCEL:
++            return "CANCEL";
+         case RXSIGNAL_OUT_OF_RANGE:
+             return "OUT_OF_RANGE";
+         case RXSIGNAL_FAILURE:
+             return "FAILURE";
+         case RXSIGNAL_QUIT:
+             return "QUIT";
+         case RXSIGNAL_TERM:
+             return "TERM";
+         case RXSIGNAL_NOTREADY:
+             return "NOTREADY";
+         case RXSIGNAL_INVALID_ARGUMENTS:
+             return "INVALID_ARGUMENTS";
+@@ -4190,24 +4192,25 @@ const char *interrupt_to_string(unsigned char interrupt) {
+ unsigned char string_to_interrupt(const char *interrupt) {
+     if (strcmp(interrupt, "KILL") == 0) return RXSIGNAL_KILL;
+     if (strcmp(interrupt, "ERROR") == 0) return RXSIGNAL_ERROR;
+     if (strcmp(interrupt, "OVERFLOW_UNDERFLOW") == 0) return RXSIGNAL_OVERFLOW_UNDERFLOW;
+     if (strcmp(interrupt, "CONVERSION_ERROR") == 0) return RXSIGNAL_CONVERSION_ERROR;
+     if (strcmp(interrupt, "UNKNOWN_INSTRUCTION") == 0) return RXSIGNAL_UNKNOWN_INSTRUCTION;
+     if (strcmp(interrupt, "FUNCTION_NOT_FOUND") == 0) return RXSIGNAL_FUNCTION_NOT_FOUND;
+     if (strcmp(interrupt, "NOT_IMPLEMENTED") == 0) return RXSIGNAL_NOT_IMPLEMENTED;
+     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
+     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
+     if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
+     if (strcmp(interrupt, "RXBIN_CORRUPTION") == 0) return RXSIGNAL_RXBIN_CORRUPTION;
++    if (strcmp(interrupt, "CANCEL") == 0) return RXSIGNAL_CANCEL;
+     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
+     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
+     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
+     if (strcmp(interrupt, "TERM") == 0) return RXSIGNAL_TERM;
+     if (strcmp(interrupt, "NOTREADY") == 0) return RXSIGNAL_NOTREADY;
+     if (strcmp(interrupt, "INVALID_ARGUMENTS") == 0) return RXSIGNAL_INVALID_ARGUMENTS;
+     if (strcmp(interrupt, "DIVISION_BY_ZERO") == 0) return RXSIGNAL_DIVISION_BY_ZERO;
+     if (strcmp(interrupt, "UNICODE_ERROR") == 0) return RXSIGNAL_UNICODE_ERROR;
+     if (strcmp(interrupt, "POSIX_HUP") == 0) return RXSIGNAL_POSIX_HUP;
+     if (strcmp(interrupt, "POSIX_INT") == 0) return RXSIGNAL_POSIX_INT;
+     if (strcmp(interrupt, "POSIX_USR1") == 0) return RXSIGNAL_POSIX_USR1;
+     if (strcmp(interrupt, "POSIX_USR2") == 0) return RXSIGNAL_POSIX_USR2;
+@@ -4571,24 +4574,25 @@ RX_INLINE stack_frame *frame_f(
+ 
+         /* Set up the default interrupt mask */
+         this->interrupt_table[RXSIGNAL_KILL-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_OVERFLOW_UNDERFLOW-1].response = RXSIGNAL_RESPONSE_IGNORE;
+         this->interrupt_table[RXSIGNAL_CONVERSION_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_UNKNOWN_INSTRUCTION-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_NOT_IMPLEMENTED-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_RXBIN_CORRUPTION-1].response = RXSIGNAL_RESPONSE_HALT;
++        this->interrupt_table[RXSIGNAL_CANCEL-1].response = RXSIGNAL_RESPONSE_SILENT_HALT;
+         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_TERM-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_NOTREADY-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_INVALID_ARGUMENTS-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_DIVISION_BY_ZERO-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_UNICODE_ERROR-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_POSIX_HUP-1].response = RXSIGNAL_RESPONSE_IGNORE;
+         this->interrupt_table[RXSIGNAL_POSIX_INT-1].response = RXSIGNAL_RESPONSE_HALT;
+         this->interrupt_table[RXSIGNAL_POSIX_USR1-1].response = RXSIGNAL_RESPONSE_IGNORE;
+         this->interrupt_table[RXSIGNAL_POSIX_USR2-1].response = RXSIGNAL_RESPONSE_IGNORE;
+
+Candidate dispatch macro source:
+#define RXVM_DISPATCH_PREPARE()                                                 \
+    do {                                                                        \
+        RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
+                current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
+                RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
+        pc = next_pc;                                                           \
+        RXVM_INSTRUMENTATION_INTERRUPT_POLL();                                  \
+    } while (0)
+
+#define RXVM_OWNER_DISPATCH()                                                   \
+    do {                                                                        \
+        RXVM_DISPATCH_PREPARE();                                                \
+        if (pending_interrupts && !current_frame->is_interrupt)                 \
+            goto INTERRUPT;                                                     \
+        VM_DISPATCH_TARGET();                                                   \
+    } while (0)
+
+#define DISPATCH RXVM_OWNER_DISPATCH()
+#undef DISPATCH
+#define DISPATCH                                                               \
+    do {                                                                       \
+        RXVM_DISPATCH_PREPARE();                                               \
+        if (pending_interrupts && !current_frame->is_interrupt)                \
+            return RXVM_HANDLER_RESULT_INTERRUPT;                              \
+        return RXVM_HANDLER_RESULT_DISPATCH;                                   \
+    } while (0)
+
+Release symbol sizes:
+[rxbvm control]
+00000000000c6310 0000000000000151 T run
+00000000000c7dc0 0000000000089cf2 t rxvm_run_owned_core
+[rxbvm candidate]
+00000000000c6450 0000000000000151 T run
+00000000000c7f00 0000000000089d32 t rxvm_run_owned_core
+[rxtvm control]
+00000000000cc490 0000000000000151 T run
+00000000000cdf50 000000000008ab92 t rxvm_run_owned_core
+[rxtvm candidate]
+00000000000cc610 0000000000000151 T run
+00000000000ce0d0 000000000008ac12 t rxvm_run_owned_core
+
+Interpretation: run remains 0x151 bytes in all four binaries. The normalized run instruction/control-flow stream is identical. rxvm_run_owned_core layout grows by 0x40 rxbvm / 0x80 rxtvm from the committed cold CANCEL/default mapping; no dispatch source macro changed. No Linux edit touches rxvmintp.c or rxvmintp.h.

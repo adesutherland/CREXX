@@ -1,0 +1,2 @@
+Error in binary_memory_target_not_binary.crexx @ 5:19 - #BINARY_MEMORY_TARGET_NOT_BINARY, "text"
+1 error(s) in source file

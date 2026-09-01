@@ -1,0 +1,72 @@
+/* Generated from 'awfy_list.nrx' 27 Jul 2026 18:14:57 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_list{private static final java.lang.String $0="awfy_list.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;int result;int iteration=0;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+result=(new ListBenchmark()).run();
+if (result!=10) {
+netrexx.lang.RexxIO.Say("FAIL: expected length 10, got"+" "+result);
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say("benchmark=awfy_list repetitions="+repetitions+" "+"result="+result);
+netrexx.lang.RexxIO.Say("PASS: AWFY List NetRexx port");return;}
+
+private awfy_list(){return;}}class ListElement{private static final java.lang.String $0="awfy_list.nrx";
+/* properties private */
+private int value;
+private ListElement nextElement;
+
+@SuppressWarnings("unchecked") public ListElement(int initialValue){super();
+value=initialValue;return;}
+
+@SuppressWarnings("unchecked") public int length(){
+if (nextElement==null) return 1;
+return 1+(nextElement.length());}
+
+@SuppressWarnings("unchecked") public ListElement next(){
+return nextElement;}
+
+@SuppressWarnings("unchecked") public void setNext(ListElement element){
+nextElement=element;return;}
+
+}class ListBenchmark{private static final java.lang.String $0="awfy_list.nrx";
+@SuppressWarnings("unchecked") public int run(){ListElement result;
+result=tail(makeList(15),makeList(10),makeList(6));
+return result.length();}
+
+@SuppressWarnings("unchecked") private ListElement makeList(int listLength){ListElement element;
+if (listLength==0) return (ListElement)null;
+element=new ListElement(listLength);
+element.setNext(makeList(listLength-1));
+return element;}
+
+@SuppressWarnings("unchecked") private boolean isShorterThan(ListElement x,ListElement y){ListElement xTail;ListElement yTail;
+xTail=x;
+yTail=y;
+{for(;;){if(!(yTail!=null))break;
+if (xTail==null) return true;
+xTail=xTail.next();
+yTail=yTail.next();
+}}
+return false;}
+
+@SuppressWarnings("unchecked") private ListElement tail(ListElement x,ListElement y,ListElement z){
+if (isShorterThan(y,x)) 
+return tail(tail(x.next(),y,z),tail(y.next(),z,x),tail(z.next(),x,y));
+return z;}public ListBenchmark(){return;}}

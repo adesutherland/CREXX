@@ -227,7 +227,6 @@ The same namespace should expose `.signalaction`:
 
 ```rexx
 signalaction: interface
-  retry: factory
   skip: factory
   fail: factory
   kind: method = .string
@@ -237,7 +236,6 @@ Named factories make the intended handler outcome readable:
 
 ```rexx
 return .signalaction.skip()
-return .signalaction.retry()
 return .signalaction.fail()
 ```
 
@@ -385,7 +383,6 @@ The handler procedure receives one `.signal` argument.
 Procedure handlers should return a small `.signalaction`, not an arbitrary
 application value. The essential actions are:
 
-- `retry`: retry the faulting instruction
 - `skip`: continue after the signal point
 - `fail`: propagate the signal after the handler returns
 
@@ -407,10 +404,10 @@ at the original handler token. The signal exit maps missing-handler errors to
 `SIGNAL_HANDLER_NOT_FOUND` and signature/return-shape errors to
 `SIGNAL_HANDLER_BAD_SIGNATURE`.
 
-`skip` maps to the current `SIGCALL` resume behaviour. `retry` and `fail`
-require VM support to interpret the handler's return value when an interrupt
-frame returns. The VM already records the relevant fault/resume address
-distinction, but the return path must make the action explicit.
+`skip` maps to the current `SIGCALL` resume behaviour. `fail` makes propagation
+explicit when the interrupt frame returns. Instruction-level retry is not part
+of the public action contract; retryable application work uses a source loop or
+wrapper procedure.
 
 This form is for frame/procedure-scoped handlers. Block-scoped handlers use the
 `do ... on signal ... end` form below.
@@ -669,7 +666,7 @@ Status on 2026-04-28:
 - Add a certified `SIGNAL` exit or compiler support for simple signal
   statements.
 - Add `.signal` and raw-VM-object-backed `runtime_signal`.
-- Add `.signalaction` with `retry`, `skip`, and `fail`.
+- Add `.signalaction` with `skip` and `fail`.
 - Support:
   - `signal .signal("name")`
   - `signal name`
@@ -696,9 +693,9 @@ Status on 2026-04-28:
 - added VM/RXAS `sigcalla` for action-aware procedure handlers
 - added dynamic-name RXAS signal forms backed by `INVALID_SIGNAL_CODE` on
   unknown runtime names
-- procedure handlers receive `.signal`; returning `.signalaction.skip()` resumes
-  after the signal, `.retry()` resumes at the interrupted address, and
-  `.fail()` falls through to the default panic report with source metadata
+- procedure handlers receive `.signal`; returning `.signalaction.skip()`
+  resumes after the signal and `.fail()` falls through to the default panic
+  report with source metadata
 - bad procedure handler signatures now report at the handler token with
   `SIGNAL_HANDLER_BAD_SIGNATURE`; missing procedure handlers report
   `SIGNAL_HANDLER_NOT_FOUND`
@@ -707,6 +704,13 @@ Status on 2026-04-28:
   optimized builds even when a generated helper body is optimized
 - `signal off` restores the VM root default (`sighalt` or `sigignore` for the
   VM's default-ignored signals)
+
+Decision on 2026-08-03: instruction-level `.signalaction.retry()` is retired
+before Release 1. It is not a standard REXX condition-trap continuation, had no
+production users, and requires unsafe or underspecified repetition of partial
+writes, by-reference mutation and external side effects. The VM treats the old
+internal marker as an unknown action and fails safely. Explicit source loops or
+wrapper procedures own retryable work.
 
 ### Phase 2: Block-Scoped Error Handling
 
@@ -771,13 +775,12 @@ Status on 2026-04-28:
 - Added focused tests for on/off, REXX/NORMAL mode, ASM mode, invalid options,
   and parser-mode/highlighting coverage for trace keywords.
 
-## Approval Gates
+## Resolved Approval Gates
 
-Before implementation, these decisions need explicit approval:
+These decisions were resolved during implementation:
 
 1. Final spelling of `.signalaction` factories/methods.
-2. Whether `retry`, `skip`, and `fail` must all be in phase 1, or whether
-   `retry` can wait for a second VM pass.
+2. `skip` and `fail` remain; `retry` was retired on 2026-08-03.
 3. Whether `trace normal` and `trace rexx` should be distinct in phase 1 or
    aliases until scope controls are added.
 
@@ -792,7 +795,6 @@ Proceed in this order:
 4. Extract the trace controller after the signal context model exists.
 5. Implement `TRACE` as a certified exit over that controller.
 
-The design now deliberately avoids user-visible labels. The main remaining
-risk is handler outcome semantics, especially `retry`, because it requires the
-VM return path from an interrupt frame to choose between fault address, resume
-address, and propagation.
+The design deliberately avoids user-visible labels. Handler outcomes now have
+only the resumable `skip` and propagating `fail` cases, with missing and legacy
+markers taking the safe fail path.

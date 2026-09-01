@@ -1,0 +1,8 @@
+# DECIMAL-01 libmpdec direct-core capacity fairness check, Apple M5, 2026-08-18.
+# One warmup and four serial pairwise-balanced observations per cell. This is
+# a bounded implementation diagnostic, not the formal L1 candidate screen.
+crexx-cross-runtime-matrix|1
+mpd-capacity-core-decnumber-common18|DECIMAL-MPD-capacity-core-common18|c|direct-core|D0-decNumber-3.68|D|no|steady-core|50000000|DECIMAL-CORE provider=decnumber||/Users/adrian/CLionProjects/CREXX/cmake-build-release-mpd/bin/mpd_decimal_core_comparison;decnumber;common;50000000;18
+mpd-capacity-core-libmpdec-common18|DECIMAL-MPD-capacity-core-common18|c|direct-core|D4-libmpdec-4.0.1-matched-capacity|D|no|steady-core|50000000|DECIMAL-CORE provider=libmpdec||/Users/adrian/CLionProjects/CREXX/cmake-build-release-mpd/bin/mpd_decimal_core_comparison;libmpdec;common;50000000;18
+mpd-capacity-core-decnumber-classic9|DECIMAL-MPD-capacity-core-classic9|c|direct-core|D0-decNumber-3.68|D|no|steady-core|50000000|DECIMAL-CORE provider=decnumber||/Users/adrian/CLionProjects/CREXX/cmake-build-release-mpd/bin/mpd_decimal_core_comparison;decnumber;classic;50000000;9
+mpd-capacity-core-libmpdec-classic9|DECIMAL-MPD-capacity-core-classic9|c|direct-core|D4-libmpdec-4.0.1-matched-capacity|D|no|steady-core|50000000|DECIMAL-CORE provider=libmpdec||/Users/adrian/CLionProjects/CREXX/cmake-build-release-mpd/bin/mpd_decimal_core_comparison;libmpdec;classic;50000000;9

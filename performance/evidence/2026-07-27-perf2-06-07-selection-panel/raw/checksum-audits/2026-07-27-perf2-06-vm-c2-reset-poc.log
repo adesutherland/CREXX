@@ -1,0 +1,247 @@
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/COMMANDS.md: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/COMMANDS.md: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/PROVENANCE.md: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/PROVENANCE.md: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/README.md: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/README.md: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxbvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r0-rxvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxbvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r1-rxvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxbvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-nm.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-nm.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-otool.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-otool.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-stat.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/code-size/r2-rxvm-stat.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-frame-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-frame-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-life-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-life-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-signal-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r1-signal-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-frame-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-frame-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-life-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-life-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-signal-ctest.log: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/correctness/r2-signal-ctest.log: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-base64.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-base64.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxbvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-base64.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-base64.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r1-rxvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-base64.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-base64.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxbvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-base64.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-base64.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/r2-rxvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/reset-summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/machine-stats/reset-summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/poc/vm-c2-reset-poc.patch: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/poc/vm-c2-reset-poc.patch: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/product-hashes.sha256: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/product-hashes.sha256: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/product-size-summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/product-size-summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/operation-identity.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/operation-identity.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxbvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r0-rxvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxbvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r1-rxvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxbvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-list.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-list.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-list.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-list.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-permute.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-permute.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-permute.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-permute.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-sieve.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-sieve.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-sieve.out: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/profiles/r2-rxvm-sieve.out: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/capture-manifest.json: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/capture-manifest.json: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/geomeans.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/geomeans.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/outputs.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/outputs.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/r1-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/r1-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/r2-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/r2-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/ratios.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/ratios.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-10/summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/capture-manifest.json: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/capture-manifest.json: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/geomeans.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/geomeans.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/outputs.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/outputs.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/r1-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/r1-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/r2-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/r2-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/ratios.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/ratios.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/extension-12/summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/capture-manifest.json: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/capture-manifest.json: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/geomeans.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/geomeans.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/outputs.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/outputs.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/r1-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/r1-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/r2-paired-samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/r2-paired-samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/ratios.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/ratios.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/samples.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/samples.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-12/summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/geomeans.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/geomeans.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/ratios.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/ratios.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-22-summary/summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/geomeans.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/geomeans.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/ratios.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/ratios.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/formal-34-summary/summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-final.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-final.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-post.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-post.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-pre.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/host-pre.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/manifest.txt: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/manifest.txt: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/r1-vs-r0-paired-summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/r1-vs-r0-paired-summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/r2-vs-r0-paired-summary.csv: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/timing/r2-vs-r0-paired-summary.csv: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/compare_vm_c2_profiles.crexx: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/compare_vm_c2_profiles.crexx: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/filter_vm_c2_pairs.crexx: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/filter_vm_c2_pairs.crexx: FAILED open or read
+shasum: performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/summarize_vm_c2_reset.crexx: No such file or directory
+performance/evidence/2026-07-27-perf2-06-vm-c2-reset-poc/tools/summarize_vm_c2_reset.crexx: FAILED open or read
+shasum: WARNING: 123 listed files could not be read

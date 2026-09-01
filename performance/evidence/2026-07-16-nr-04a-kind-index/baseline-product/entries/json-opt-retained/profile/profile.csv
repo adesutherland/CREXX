@@ -1,0 +1,194 @@
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
+summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,vm_mode,rxvm,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,result,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,timer_read_min_ns,41,,1,41,41,41,41,0,,,,,,,,,,,,,,
+summary,timer_zero_deltas,744,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,interrupt_polls,145210032,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,invalid_events,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,counter_overflow,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,procedure_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,census_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+instruction,SWAP_REG_REG,,510,19150000,424399073,22,0,1010292,18.046389,,,,,,,,,,,,,,
+instruction,BRF_ID_REG,,38,29110002,382236476,13,0,2664500,16.253542,,,,,,,,,,,,,,
+instruction,IEQ_REG_REG_INT,,101,20480000,285707117,13,0,1368459,12.148899,,,,,,,,,,,,,,
+instruction,CALL_REG_FUNC_REG,,46,745000,149142116,200,83,1511417,6.341853,,,,,,,,,,,,,,
+instruction,BGETU8_REG_REG_REG,,585,9020000,126985665,14,0,185792,5.399712,,,,,,,,,,,,,,
+instruction,ILT_REG_REG_REG,,110,8335000,110844147,13,0,208500,4.713339,,,,,,,,,,,,,,
+instruction,COPY_REG_REG,,8,3610001,95675382,26,0,795958,4.068329,,,,,,,,,,,,,,
+instruction,ENDLIFE_REG,,514,6115001,84127983,13,0,865333,3.577308,,,,,,,,,,,,,,
+instruction,IADD_REG_REG_INT,,16,6205000,82796654,13,0,124667,3.520697,,,,,,,,,,,,,,
+instruction,BRT_ID_REG,,37,5355001,76923076,14,0,53083,3.270940,,,,,,,,,,,,,,
+instruction,ICOPY_REG_REG,,9,5265001,69671021,13,0,92958,2.962566,,,,,,,,,,,,,,
+instruction,BR_ID,,36,4995001,63209071,12,0,240792,2.687790,,,,,,,,,,,,,,
+instruction,BRTF_ID_ID_REG,,39,4265000,56379310,13,0,40500,2.397373,,,,,,,,,,,,,,
+instruction,SETTP_REG_INT,,517,3690000,51989904,14,0,30041,2.210726,,,,,,,,,,,,,,
+instruction,ILT_REG_REG_INT,,111,3705001,51080798,13,0,22209,2.172069,,,,,,,,,,,,,,
+instruction,LOAD_REG_INT,,1,3695003,48161157,13,0,111000,2.047919,,,,,,,,,,,,,,
+instruction,IGTE_REG_REG_REG,,107,1390000,20795357,14,0,17167,0.884265,,,,,,,,,,,,,,
+instruction,IEQ_REG_REG_REG,,100,1295000,18985530,14,0,24333,0.807307,,,,,,,,,,,,,,
+instruction,SETNUMDGTS_INT,,246,745001,15766739,21,0,15750,0.670437,,,,,,,,,,,,,,
+instruction,RET_INT,,50,510001,14545984,28,0,20708,0.618527,,,,,,,,,,,,,,
+instruction,RET_REG,,49,235000,13894086,59,0,70500,0.590807,,,,,,,,,,,,,,
+instruction,IGTE_REG_REG_INT,,108,790001,11568920,14,0,18334,0.491936,,,,,,,,,,,,,,
+instruction,INE_REG_REG_INT,,103,705000,10216227,14,0,12292,0.434417,,,,,,,,,,,,,,
+instruction,SETNUMCAS_INT,,255,745001,10024724,13,0,18834,0.426273,,,,,,,,,,,,,,
+instruction,SETNUMFRM_INT,,252,745001,9870010,13,0,7917,0.419695,,,,,,,,,,,,,,
+instruction,SETNUMSTD_INT,,258,745001,9788589,13,0,35459,0.416232,,,,,,,,,,,,,,
+instruction,SETNUMFUZ_INT,,249,745001,9783947,13,0,15042,0.416035,,,,,,,,,,,,,,
+instruction,NULL_REG,,14,535000,7218363,13,0,18583,0.306941,,,,,,,,,,,,,,
+instruction,REQ_REG_REG_STRING,,564,110000,3912022,35,0,75875,0.166348,,,,,,,,,,,,,,
+instruction,SCOPY_REG_REG,,11,265000,3797512,14,0,7500,0.161479,,,,,,,,,,,,,,
+instruction,IGT_REG_REG_INT,,105,220000,3086953,14,0,7792,0.131264,,,,,,,,,,,,,,
+instruction,BCMPB_REG_REG_REG,,623,40000,2665590,66,0,2010958,0.113347,,,,,,,,,,,,,,
+instruction,ILTE_REG_REG_INT,,114,180000,2473754,13,0,14166,0.105189,,,,,,,,,,,,,,
+instruction,STRLEN_REG_REG,,149,165000,2242565,13,0,4708,0.095359,,,,,,,,,,,,,,
+instruction,LOAD_REG_STRING,,3,150000,2155663,14,0,8625,0.091664,,,,,,,,,,,,,,
+instruction,BNE_ID_REG_INT,,43,150000,2055318,13,0,18583,0.087397,,,,,,,,,,,,,,
+instruction,BGT_ID_REG_INT,,353,5000,1593243,318,0,1497500,0.067748,,,,,,,,,,,,,,
+instruction,ISUB_REG_REG_INT,,18,80000,1327677,16,0,146750,0.056456,,,,,,,,,,,,,,
+instruction,ISUB_REG_REG_REG,,17,85000,1189189,13,0,5709,0.050567,,,,,,,,,,,,,,
+instruction,SETSTRPOS_REG_REG,,154,65000,1054797,16,0,41000,0.044852,,,,,,,,,,,,,,
+instruction,SUBSTRING_REG_REG_REG,,161,65000,1054248,16,0,44834,0.044829,,,,,,,,,,,,,,
+instruction,BGE_ID_REG_INT,,355,70000,983270,14,0,8208,0.041811,,,,,,,,,,,,,,
+instruction,BGE_ID_REG_REG,,354,70000,959464,13,0,9666,0.040799,,,,,,,,,,,,,,
+instruction,ISUB_REG_INT_REG,,19,65000,909139,13,0,916,0.038659,,,,,,,,,,,,,,
+instruction,ILTE_REG_REG_REG,,113,65000,908096,13,0,917,0.038614,,,,,,,,,,,,,,
+instruction,BLE_ID_REG_INT,,359,65000,888142,13,0,5625,0.037766,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_REG_INT,,223,50000,869552,17,0,6917,0.036975,,,,,,,,,,,,,,
+instruction,BLEN_REG_REG,,184,50000,833770,16,0,4125,0.035454,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_REG,,202,50000,765797,15,0,6792,0.032563,,,,,,,,,,,,,,
+instruction,UNLINK_REG,,213,50001,740846,14,0,7291,0.031502,,,,,,,,,,,,,,
+instruction,IGT_REG_REG_REG,,104,45001,712005,15,0,7834,0.030276,,,,,,,,,,,,,,
+instruction,LOAD_REG_BINARY,,183,35000,592368,16,0,12084,0.025189,,,,,,,,,,,,,,
+instruction,IADD_REG_REG_REG,,15,35000,507977,14,0,5375,0.021600,,,,,,,,,,,,,,
+instruction,RLTE_REG_REG_STRING,,579,5000,399684,79,0,165458,0.016995,,,,,,,,,,,,,,
+instruction,BCOPY_REG_REG,,581,15000,344892,22,0,12667,0.014666,,,,,,,,,,,,,,
+instruction,INE_REG_REG_REG,,102,15000,255637,17,0,4167,0.010870,,,,,,,,,,,,,,
+instruction,RGTE_REG_REG_STRING,,573,5000,237464,47,0,1750,0.010097,,,,,,,,,,,,,,
+instruction,STOBIN_REG,,192,10000,229798,22,0,12084,0.009772,,,,,,,,,,,,,,
+instruction,BCTP_ID_REG,,349,5000,149741,29,0,1000,0.006367,,,,,,,,,,,,,,
+instruction,SAY_REG,,450,1,9625,9625,9625,9625,0.000409,,,,,,,,,,,,,,
+instruction,APPEND_REG_REG,,143,1,5208,5208,5208,5208,0.000221,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_INT,,203,1,2667,2667,2667,2667,0.000113,,,,,,,,,,,,,,
+instruction,GETATTRS_REG_REG_INT,,215,1,2583,2583,2583,2583,0.000110,,,,,,,,,,,,,,
+instruction,STOI_REG,,237,1,2291,2291,2291,2291,0.000097,,,,,,,,,,,,,,
+instruction,BRTPANDT_ID_REG_INT,,524,1,1833,1833,1833,1833,0.000078,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_INT,,222,1,1292,1292,1292,1292,0.000055,,,,,,,,,,,,,,
+instruction,ITOS_REG,,229,2,1126,563,167,959,0.000048,,,,,,,,,,,,,,
+instruction,SCONCAT_REG_REG_STRING,,138,1,750,750,750,750,0.000032,,,,,,,,,,,,,,
+instruction,SAY_STRING,,455,1,666,666,666,666,0.000028,,,,,,,,,,,,,,
+instruction,CONCAT_REG_STRING_REG,,136,1,292,292,292,292,0.000012,,,,,,,,,,,,,,
+transition,sequential_same_frame,,0,115685028,1283446448,11,0,5456917,79.967876,,,,,,,,,,,,,,
+transition,branch_same_frame,,1,28035003,305711758,10,0,605250,19.048025,,,,,,,,,,,,,,
+transition,call_enter_frame,,2,745000,8060176,10,0,15042,0.502207,,,,,,,,,,,,,,
+transition,return_leave_frame,,3,745000,7730686,10,0,5125,0.481677,,,,,,,,,,,,,,
+transition,external_entry,,6,1,3459,3459,3459,3459,0.000216,,,,,,,,,,,,,,
+transition,terminal,,7,1,0,0,0,0,0.000000,,,,,,,,,,,,,,
+interrupt,scan_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,scan_without_selection,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,mechanics_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+procedure,"rxjson._json_parse_value","elapsed",,655000,11796290718,18009,1541,4337333,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_value","inclusive_body",,655000,11627303043,17751,1333,4336791,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_value","self",,655000,2577915524,3935,1333,2685749,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_value","native_child",,655000,0,0,0,0,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_value","entry_overhead",,655000,137840997,210,84,1511583,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_value","exit_overhead",,655000,31146678,47,0,70541,0,,,,,"rxjson",procedure,655000,0,".int","data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","elapsed",,80000,4033733582,50421,9000,4334750,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","inclusive_body",,80000,4012360896,50154,8791,4334375,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","self",,80000,973359204,12166,5124,2856917,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","native_child",,80000,0,0,0,0,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","entry_overhead",,80000,17096106,213,125,22834,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"rxjson._json_parse_object","exit_overhead",,80000,4276580,53,0,17625,0,,,,,"rxjson",procedure,80000,0,".int","data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",,,,
+procedure,"json_parser.main","elapsed",,1,3956664459,3956664459,3956664459,3956664459,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"json_parser.main","inclusive_body",,1,3956660875,3956660875,3956660875,3956660875,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"json_parser.main","self",,1,1632195,1632195,1632195,1632195,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"json_parser.main","native_child",,1,0,0,0,0,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"json_parser.main","entry_overhead",,1,3459,3459,3459,3459,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"json_parser.main","exit_overhead",,1,125,125,125,125,0,,,,,"benchmark_json_parser_opt",procedure,1,0,".int","",,,,
+procedure,"rxjson.jsoncount","elapsed",,5000,3955028680,791005,727416,6921750,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson.jsoncount","inclusive_body",,5000,3953664097,790732,727208,6920000,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson.jsoncount","self",,5000,92591667,18518,16544,1646001,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson.jsoncount","native_child",,5000,0,0,0,0,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson.jsoncount","entry_overhead",,5000,881368,176,83,11417,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson.jsoncount","exit_overhead",,5000,483215,96,41,5125,0,,,,,"rxjson",procedure,5000,0,".int","json=.string,path=.string",,,,
+procedure,"rxjson._json_parse_path","elapsed",,5000,119437341,23887,20458,5498250,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+procedure,"rxjson._json_parse_path","inclusive_body",,5000,117789362,23557,20208,5496375,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+procedure,"rxjson._json_parse_path","self",,5000,117789362,23557,20208,5496375,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+procedure,"rxjson._json_parse_path","native_child",,5000,0,0,0,0,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+procedure,"rxjson._json_parse_path","entry_overhead",,5000,1383821,276,166,15583,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+procedure,"rxjson._json_parse_path","exit_overhead",,5000,264158,52,0,6875,0,,,,,"rxjson",procedure,5000,0,".int","path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",,,,
+allocation,frame_blocks,,,12,0,0,0,0,0,,,,,,,,,,,296832,29224,0,complete
+allocation,standalone_values,,,39,0,0,0,0,0,,,,,,,,,,,9984,256,0,complete
+allocation,attribute_value_blocks,,,22,0,0,0,0,0,,,,,,,,,,,45056,2048,0,complete
+allocation,attribute_pointer_storage,,,66,0,0,0,0,0,,,,,,,,,,,4224,64,0,complete
+allocation,string_buffers,,,15063,0,0,0,0,0,,,,,,,,,,,15422592,1024,0,complete
+allocation,binary_buffers,,,25070,0,0,0,0,0,,,,,,,,,,,15740768,1024,0,complete
+allocation,value_slots,,,1229,0,0,0,0,0,,,,,,,,,,,314624,25856,0,complete
+allocation,frame_activations,,,745001,0,0,0,0,0,,,,,,,,,,,0,0,11,complete
+allocation,frame_reuses,,,744989,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+census,"call_path","direct_bytecode",,745000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","direct_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","external_root",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","1",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","2",,5000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","5",,5000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","13",,655000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","14",,80000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","procedure",,745001,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","method",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","factory",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","unknown",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","fresh",,12,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","reused",,744989,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","no_child_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","none_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","success",,745001,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","unresolved",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","frame_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","invalid",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","void",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_move_local",,235000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_copy_nonlocal",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","value_ignored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","immediate",,510000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","terminal_external",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","setup_swaps",,9575000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","normal_restoration_swaps",,9575000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_swaps",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","defensive_argument_copies",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_copies",,3610001,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","attribution_degraded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","events",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","bytecode_frames_discarded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","restoration_failures",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+call,"json_parser.main","external_root",0,1,0,0,0,0,0,1,,,,"benchmark_json_parser_opt","procedure",,,"fresh","success",0,0,0,"complete"
+call,"rxjson.jsoncount","direct_bytecode",97,1,0,0,0,0,0,2,,,,"benchmark_json_parser_opt","procedure",,,"fresh","success",0,0,0,"complete"
+call,"rxjson._json_parse_path","direct_bytecode",1184,1,0,0,0,0,0,5,,,,"rxjson","procedure",,,"fresh","success",5,5,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",1290,1,0,0,0,0,0,13,,,,"rxjson","procedure",,,"fresh","success",12,12,0,"complete"
+call,"rxjson._json_parse_object","direct_bytecode",11993,2,0,0,0,0,0,14,,,,"rxjson","procedure",,,"fresh","success",28,28,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",14828,3,0,0,0,0,0,13,,,,"rxjson","procedure",,,"fresh","success",39,39,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",14828,169997,0,0,0,0,0,13,,,,"rxjson","procedure",,,"reused","success",2209961,2209961,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",12370,439997,0,0,0,0,0,13,,,,"rxjson","procedure",,,"reused","success",5719961,5719961,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",12370,3,0,0,0,0,0,13,,,,"rxjson","procedure",,,"fresh","success",39,39,0,"complete"
+call,"rxjson._json_parse_object","direct_bytecode",11993,79998,0,0,0,0,0,14,,,,"rxjson","procedure",,,"reused","success",1119972,1119972,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",1679,40000,0,0,0,0,0,13,,,,"rxjson","procedure",,,"reused","success",440000,440000,0,"complete"
+call,"rxjson.jsoncount","direct_bytecode",97,4999,0,0,0,0,0,2,,,,"benchmark_json_parser_opt","procedure",,,"reused","success",0,0,0,"complete"
+call,"rxjson._json_parse_path","direct_bytecode",1184,4999,0,0,0,0,0,5,,,,"rxjson","procedure",,,"reused","success",24995,24995,0,"complete"
+call,"rxjson._json_parse_value","direct_bytecode",1290,4999,0,0,0,0,0,13,,,,"rxjson","procedure",,,"reused","success",59988,59988,0,"complete"

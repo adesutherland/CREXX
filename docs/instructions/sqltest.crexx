@@ -1,6 +1,6 @@
 /* Rexx test a sqlite call */
-options levelb
-import rxfnsb
+options levelb comments_dash
+--import rxfnsb
 
 query_in = .string[]
 query_in.1 = 'select *',

@@ -1,0 +1,105 @@
+Compiled from "awfy_richards.java"
+public class awfy_richards {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: aconst_null
+         4: astore        5
+         6: iconst_1
+         7: istore_1
+         8: aload_0
+         9: arraylength
+        10: iconst_1
+        11: if_icmplt     24
+        14: aload_0
+        15: iconst_0
+        16: aaload
+        17: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        20: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        23: istore_1
+        24: iload_1
+        25: iconst_1
+        26: if_icmpge     40
+        29: ldc           #11                 // String FAIL: repetitions must be positive
+        31: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        34: pop
+        35: iconst_1
+        36: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        39: return
+        40: iconst_0
+        41: istore_2
+        42: iconst_0
+        43: istore_3
+        44: iload_1
+        45: istore        6
+        47: iconst_1
+        48: istore        4
+        50: iload         4
+        52: iload         6
+        54: if_icmpgt     137
+        57: new           #25                 // class RichardsScheduler
+        60: dup
+        61: invokespecial #27                 // Method RichardsScheduler."<init>":()V
+        64: astore        5
+        66: aload         5
+        68: invokevirtual #31                 // Method RichardsScheduler.run:()Z
+        71: ifne          119
+        74: new           #35                 // class java/lang/StringBuilder
+        77: dup
+        78: invokespecial #37                 // Method java/lang/StringBuilder."<init>":()V
+        81: ldc           #38                 // String FAIL: expected queue/hold counts 23246/9297, got
+        83: invokevirtual #40                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        86: aload         5
+        88: invokevirtual #44                 // Method RichardsScheduler.queueCount:()I
+        91: invokevirtual #47                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        94: ldc           #50                 // String /
+        96: invokevirtual #40                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        99: aload         5
+       101: invokevirtual #52                 // Method RichardsScheduler.holdCount:()I
+       104: invokevirtual #47                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       107: invokevirtual #55                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       110: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       113: pop
+       114: iconst_1
+       115: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       118: return
+       119: aload         5
+       121: invokevirtual #44                 // Method RichardsScheduler.queueCount:()I
+       124: istore_2
+       125: aload         5
+       127: invokevirtual #52                 // Method RichardsScheduler.holdCount:()I
+       130: istore_3
+       131: iinc          4, 1
+       134: goto          50
+       137: new           #35                 // class java/lang/StringBuilder
+       140: dup
+       141: invokespecial #37                 // Method java/lang/StringBuilder."<init>":()V
+       144: ldc           #59                 // String benchmark=awfy_richards repetitions=
+       146: invokevirtual #40                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       149: iload_1
+       150: invokevirtual #47                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       153: ldc           #61                 // String  queue_packets=
+       155: invokevirtual #40                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       158: iload_2
+       159: invokevirtual #47                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       162: ldc           #63                 // String  holds=
+       164: invokevirtual #40                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       167: iload_3
+       168: invokevirtual #47                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       171: invokevirtual #55                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       174: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       177: pop
+       178: ldc           #65                 // String PASS: AWFY Richards NetRexx port
+       180: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       183: pop
+       184: return
+
+  private awfy_richards();
+    Code:
+         0: aload_0
+         1: invokespecial #67                 // Method java/lang/Object."<init>":()V
+         4: return
+}

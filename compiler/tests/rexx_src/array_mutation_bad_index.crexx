@@ -1,0 +1,5 @@
+options levelb
+
+ints = .int[]
+insert ints with 1 at "x"
+return

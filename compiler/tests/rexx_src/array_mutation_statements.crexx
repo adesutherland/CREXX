@@ -1,0 +1,41 @@
+options levelb
+
+strings = .string[]
+append strings with "red"
+append strings with "blue"
+insert strings with "green" at 2
+say "strings1=" || strings[0] || ":" || strings[1] || ":" || strings[2] || ":" || strings[3]
+
+remove strings at 2
+say "strings2=" || strings[0] || ":" || strings[1] || ":" || strings[2]
+
+append strings with "gold"
+append strings with "white"
+remove strings at 2 for 2
+say "strings3=" || strings[0] || ":" || strings[1] || ":" || strings[2]
+
+append strings with "black"
+append strings with "silver"
+append strings with "orange"
+remove strings at 2 to 3
+say "strings4=" || strings[0] || ":" || strings[1] || ":" || strings[2] || ":" || strings[3]
+
+clear strings
+say "strings5=" || strings[0]
+
+ints = .int[]
+append ints with 10
+append ints with 30
+insert ints with 20 at 2
+remove ints at 1
+append ints with 40
+remove ints at 2 to 1
+say "ints1=" || ints[0] || ":" || ints[1] || ":" || ints[2] || ":" || ints[3]
+
+remove ints at 2 for 2
+say "ints2=" || ints[0] || ":" || ints[1]
+
+clear ints
+say "ints3=" || ints[0]
+
+return

@@ -1,0 +1,475 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * Diagnostic catalogue completeness check.
+ *
+ * The base catalogue must define every diagnostic code emitted by the compiler.
+ * Complete translations must carry the same keys and placeholder sets. Override
+ * catalogues, such as en_US, may contain only changed messages but their keys
+ * and placeholders must still match the base catalogue.
+ *
+ * This script currently covers the compiler-side catalogue test. See
+ * docs/planning/beta-3/notes/diagnostic-catalogue-scope.md before extending
+ * the scope to RXPP, the debugger, VM/runtime diagnostics, or library-origin
+ * unhandled signals.
+ *
+ * RXPP now reuses this checker with a preprocessor-specific source list. Keep
+ * producer selection in CMake; this script only enforces catalog parity and
+ * scans the structured diagnostic call shapes it knows about.
+ */
+options levelb
+import rxfnsb
+
+arg args = .string[]
+
+if args[0] < 4 then do
+  say "Usage: check_diagnostic_catalogs <base-catalog> <source-list> <complete-count> <complete-catalog>... <override-count> <override-catalog>..."
+  return 2
+end
+
+base_catalog = args[1]
+source_list = args[2]
+complete_count = args[3]
+arg_index = 4
+
+if args[0] < 4 + complete_count then do
+  say "Diagnostic catalogue check arguments are incomplete"
+  return 2
+end
+
+base_entries = load_catalog(base_catalog)
+if has_load_error(base_entries) then return 2
+
+failures = 0
+
+do i = 1 to complete_count
+  failures = failures + check_complete_catalog(base_entries, args[arg_index])
+  arg_index = arg_index + 1
+end
+
+if arg_index > args[0] then do
+  say "Diagnostic catalogue check is missing the override catalogue count"
+  return 2
+end
+
+override_count = args[arg_index]
+arg_index = arg_index + 1
+
+if args[0] < arg_index + override_count - 1 then do
+  say "Diagnostic catalogue check override arguments are incomplete"
+  return 2
+end
+
+do i = 1 to override_count
+  failures = failures + check_override_catalog(base_entries, args[arg_index])
+  arg_index = arg_index + 1
+end
+
+emitted_codes = scan_sources(source_list)
+if has_load_error(emitted_codes) then return 2
+
+missing = 0
+do i = 1 to emitted_codes[0]
+  emitted = emitted_code(emitted_codes[i])
+  if \catalog_contains(base_entries, emitted) then do
+    missing = missing + 1
+    say "Missing base diagnostic catalogue entry:" emitted "from" emitted_location(emitted_codes[i])
+  end
+end
+
+failures = failures + missing
+
+if failures > 0 then do
+  say "Diagnostic catalogue check failed:" failures "problem(s)"
+  return 1
+end
+
+say "Diagnostic catalogue check ok:" base_entries[0] "base messages," emitted_codes[0] "emitted codes"
+return 0
+
+load_catalog: procedure = .string[]
+  arg path = .string
+
+  entries = .string[]
+  more = lines(path)
+  if more < 0 then do
+    entries[1] = "__LOAD_ERROR__" || '09'x || path
+    say "Diagnostic catalogue could not be read:" path
+    return entries
+  end
+
+  line_number = 0
+  do while more > 0
+    line = linein(path)
+    line_number = line_number + 1
+    more = lines(path)
+
+    stripped = strip(line)
+    if stripped = "" then iterate
+    if left(stripped, 1) = "#" then iterate
+
+    equals = pos("=", stripped)
+    if equals = 0 then do
+      entries[entries[0] + 1] = "__LOAD_ERROR__" || '09'x || path || ":" || line_number
+      say "Malformed diagnostic catalogue line" path || ":" || line_number":" stripped
+      iterate
+    end
+
+    key = strip(left(stripped, equals - 1))
+    template = strip(substr(stripped, equals + 1))
+    if key = "" then do
+      entries[entries[0] + 1] = "__LOAD_ERROR__" || '09'x || path || ":" || line_number
+      say "Diagnostic catalogue line has no key" path || ":" || line_number
+      iterate
+    end
+
+    if catalog_contains(entries, key) then do
+      entries[entries[0] + 1] = "__LOAD_ERROR__" || '09'x || path || ":" || line_number
+      say "Duplicate diagnostic catalogue key" key "in" path || ":" || line_number
+      iterate
+    end
+
+    entries[entries[0] + 1] = key || '09'x || template
+  end
+  call lineout path
+  return entries
+
+has_load_error: procedure = .int
+  arg entries = .string[]
+
+  do i = 1 to entries[0]
+    if entry_key(entries[i]) = "__LOAD_ERROR__" then return 1
+  end
+  return 0
+
+check_complete_catalog: procedure = .int
+  arg base_entries = .string[], path = .string
+
+  entries = load_catalog(path)
+  if has_load_error(entries) then return 1
+
+  failures = 0
+  do i = 1 to base_entries[0]
+    key = entry_key(base_entries[i])
+    if \catalog_contains(entries, key) then do
+      failures = failures + 1
+      say "Missing translated diagnostic key" key "in" path
+    end
+    else failures = failures + check_placeholder_match(key, entry_template(base_entries[i]), catalog_template(entries, key), path)
+  end
+
+  do i = 1 to entries[0]
+    key = entry_key(entries[i])
+    if \catalog_contains(base_entries, key) then do
+      failures = failures + 1
+      say "Translated diagnostic key has no base entry" key "in" path
+    end
+  end
+
+  return failures
+
+check_override_catalog: procedure = .int
+  arg base_entries = .string[], path = .string
+
+  entries = load_catalog(path)
+  if has_load_error(entries) then return 1
+
+  failures = 0
+  do i = 1 to entries[0]
+    key = entry_key(entries[i])
+    if \catalog_contains(base_entries, key) then do
+      failures = failures + 1
+      say "Override diagnostic key has no base entry" key "in" path
+    end
+    else failures = failures + check_placeholder_match(key, catalog_template(base_entries, key), entry_template(entries[i]), path)
+  end
+
+  return failures
+
+check_placeholder_match: procedure = .int
+  arg key = .string, base_template = .string, other_template = .string, path = .string
+
+  base_placeholders = placeholders(base_template)
+  other_placeholders = placeholders(other_template)
+  failures = 0
+
+  if base_placeholders[0] \= other_placeholders[0] then do
+    say "Diagnostic placeholder count mismatch for" key "in" path
+    return 1
+  end
+
+  do i = 1 to base_placeholders[0]
+    placeholder = base_placeholders[i]
+    if placeholder_count(base_placeholders, placeholder) \= placeholder_count(other_placeholders, placeholder) then do
+      failures = failures + 1
+      say "Diagnostic placeholder mismatch for" key "placeholder" placeholder "in" path
+    end
+  end
+
+  do i = 1 to other_placeholders[0]
+    placeholder = other_placeholders[i]
+    if placeholder_count(base_placeholders, placeholder) \= placeholder_count(other_placeholders, placeholder) then do
+      failures = failures + 1
+      say "Diagnostic placeholder mismatch for" key "placeholder" placeholder "in" path
+    end
+  end
+
+  if failures > 0 then return 1
+  return 0
+
+placeholders: procedure = .string[]
+  arg template = .string
+
+  result = .string[]
+  start = 1
+  do forever
+    open = pos("{", template, start)
+    if open = 0 then leave
+    close = pos("}", template, open + 1)
+    if close = 0 then leave
+    result[result[0] + 1] = substr(template, open, close - open + 1)
+    start = close + 1
+  end
+  return result
+
+placeholder_count: procedure = .int
+  arg placeholders = .string[], placeholder = .string
+
+  count = 0
+  do i = 1 to placeholders[0]
+    if placeholders[i] = placeholder then count = count + 1
+  end
+  return count
+
+scan_sources: procedure = .string[]
+  arg source_list = .string
+
+  emitted_codes = .string[]
+  more = lines(source_list)
+  if more < 0 then do
+    emitted_codes[1] = "__LOAD_ERROR__" || '09'x || source_list
+    say "Diagnostic source list could not be read:" source_list
+    return emitted_codes
+  end
+
+  do while more > 0
+    source_file = strip(linein(source_list))
+    more = lines(source_list)
+    if source_file = "" then iterate
+    call scan_source_file emitted_codes, source_file
+  end
+  call lineout source_list
+  return emitted_codes
+
+scan_source_file: procedure = .void
+  arg expose emitted_codes = .string[], source_file = .string
+
+  more = lines(source_file)
+  if more < 0 then do
+    emitted_codes[emitted_codes[0] + 1] = "__LOAD_ERROR__" || '09'x || source_file
+    say "Diagnostic source file could not be read:" source_file
+    return
+  end
+
+  line_number = 0
+  generic_window = 0
+  levelc_window = 0
+
+  do while more > 0
+    line = linein(source_file)
+    line_number = line_number + 1
+    more = lines(source_file)
+
+    if starts_generic_diagnostic_context(line) then generic_window = 6
+    if starts_levelc_diagnostic_context(line) then levelc_window = 6
+
+    if generic_window > 0 | levelc_window > 0 then call collect_line_codes emitted_codes, line, source_file, line_number, levelc_window > 0
+
+    if generic_window > 0 then generic_window = generic_window - 1
+    if levelc_window > 0 then levelc_window = levelc_window - 1
+  end
+
+  call lineout source_file
+  return
+
+starts_generic_diagnostic_context: procedure = .int
+  arg line = .string
+
+  text = lower(line)
+  if pos("mknd_", text) > 0 then return 1
+  if pos("ast_err", text) > 0 then return 1
+  if pos("append_diagnostic", text) > 0 then return 1
+  if pos("rxcp_diag_create", text) > 0 then return 1
+  if pos("call rxpp_diag ", text) > 0 then return 1
+  if pos("rxpp_diag_text('", text) > 0 then return 1
+  if pos("exitdiagnostic", text) > 0 then return 1
+  if pos("error_result", text) > 0 then return 1
+  return 0
+
+starts_levelc_diagnostic_context: procedure = .int
+  arg line = .string
+
+  text = lower(line)
+  if pos("rxcp_levelc_ast_error", text) > 0 then return 1
+  if pos("rxcp_levelc_add_error", text) > 0 then return 1
+  if pos("levelc_make_diagnostic", text) > 0 then return 1
+  if pos("levelc_mknd_error", text) > 0 then return 1
+  if pos("levelc_replace_error_diagnostic", text) > 0 then return 1
+  return 0
+
+collect_line_codes: procedure = .void
+  arg expose emitted_codes = .string[], line = .string, source_file = .string, line_number = .int, levelc_context = .int
+
+  call collect_line_codes_for_quote emitted_codes, line, source_file, line_number, levelc_context, '"'
+  call collect_line_codes_for_quote emitted_codes, line, source_file, line_number, levelc_context, "'"
+  return
+
+collect_line_codes_for_quote: procedure = .void
+  arg expose emitted_codes = .string[], line = .string, source_file = .string, line_number = .int, levelc_context = .int, quote_char = .string
+
+  start = 1
+  do forever
+    quote = pos(quote_char, line, start)
+    if quote = 0 then leave
+
+    close = quote + 1
+    value = ""
+    do while close <= length(line)
+      ch = substr(line, close, 1)
+      if quote_char = '"' & ch = "\" then do
+        if close < length(line) then value = value || substr(line, close + 1, 1)
+        close = close + 2
+        iterate
+      end
+      if quote_char = "'" & ch = "'" & close < length(line) & substr(line, close + 1, 1) = "'" then do
+        value = value || "'"
+        close = close + 2
+        iterate
+      end
+      if ch = quote_char then leave
+      value = value || ch
+      close = close + 1
+    end
+
+    if close > length(line) then leave
+
+    if levelc_context & is_levelc_standard_code(value) then call add_emitted_code emitted_codes, "RXC-LC-" || value, source_file, line_number
+    else if looks_like_diagnostic_code(value) then call add_emitted_code emitted_codes, value, source_file, line_number
+
+    start = close + 1
+  end
+  return
+
+is_levelc_standard_code: procedure = .int
+  arg value = .string
+
+  if value = "" then return 0
+  has_digit = 0
+  do i = 1 to length(value)
+    ch = substr(value, i, 1)
+    if pos(ch, "0123456789") > 0 then do
+      has_digit = 1
+      iterate
+    end
+    if ch = "." then iterate
+    return 0
+  end
+  return has_digit
+
+looks_like_diagnostic_code: procedure = .int
+  arg value = .string
+
+  if length(value) < 3 then return 0
+  if left(value, 7) = "RXC-LC-" then return 1
+  if value \= upper(value) then return 0
+
+  if pos("_", value) = 0 then return is_known_plain_diagnostic_code(value)
+
+  has_letter = 0
+  do i = 1 to length(value)
+    ch = substr(value, i, 1)
+    if pos(ch, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") > 0 then has_letter = 1
+    if pos(ch, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.") = 0 then return 0
+  end
+
+  return has_letter
+
+is_known_plain_diagnostic_code: procedure = .int
+  arg value = .string
+
+  if value = "BADEXPR" then return 1
+  if value = "BADCHAR" then return 1
+  if value = "EXTRANEOUS" then return 1
+  if value = "KEYWORD" then return 1
+  if value = "SHADOWING" then return 1
+  return 0
+
+add_emitted_code: procedure = .void
+  arg expose emitted_codes = .string[], code = .string, source_file = .string, line_number = .int
+
+  if code = "" then return
+  do i = 1 to emitted_codes[0]
+    if emitted_code(emitted_codes[i]) = code then return
+  end
+  emitted_codes[emitted_codes[0] + 1] = code || '09'x || source_file || ":" || line_number
+  return
+
+catalog_contains: procedure = .int
+  arg entries = .string[], key = .string
+
+  do i = 1 to entries[0]
+    if entry_key(entries[i]) = key then return 1
+  end
+  return 0
+
+catalog_template: procedure = .string
+  arg entries = .string[], key = .string
+
+  do i = 1 to entries[0]
+    if entry_key(entries[i]) = key then return entry_template(entries[i])
+  end
+  return ""
+
+entry_key: procedure = .string
+  arg entry = .string
+
+  tab = pos('09'x, entry)
+  if tab = 0 then return entry
+  return left(entry, tab - 1)
+
+entry_template: procedure = .string
+  arg entry = .string
+
+  tab = pos('09'x, entry)
+  if tab = 0 then return ""
+  return substr(entry, tab + 1)
+
+emitted_code: procedure = .string
+  arg entry = .string
+  return entry_key(entry)
+
+emitted_location: procedure = .string
+  arg entry = .string
+  return entry_template(entry)

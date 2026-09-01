@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-c0-rxbvm,RexxCPS,crexx,rxbvm,C0-current,A,no,no,1000-clauses,benchmark_rate,10,31334653.000000,36420549.500000,36740344.500000,36820287.000000,36945972.000000,108073.500000,0.294155,15.272908,yes
+rexxcps-prefilter3-rxbvm,RexxCPS,crexx,rxbvm,C4-production,A,no,no,1000-clauses,benchmark_rate,10,35294097.000000,36233569.250000,36499769.500000,36784859.250000,37450168.000000,296928.500000,0.813508,5.907081,no

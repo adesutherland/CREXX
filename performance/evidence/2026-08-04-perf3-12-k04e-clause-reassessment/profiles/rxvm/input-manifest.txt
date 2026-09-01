@@ -1,0 +1,5 @@
+crexx-nr05-call-census-manifest|1
+# PERF3-12 K04e fixed-count RexxCPS optimized/no-opt diagnostic profile
+# id|pair|workload|variant|mode|image|modules|args|expectation|source_trace|warmups|runs|image_sha256|module_sha256s
+rexxcps-noopt|rexxcps-k04e|RexxCPS|baseline|noopt|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_rexxcps_levelb_noopt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/library.rxbin|--smoke-count;200|PASS: RexxCPS 2.2d cREXX port|retained|0|1|6a3d8844d60f28c4c60315031b7e8116fb344af10f6ac4422359d508c138d223|7322d7ef98f30ecfc6ce52ac3e976a26fdeda5e24d0dfc2be4d3e83a2e68971f
+rexxcps-opt|rexxcps-k04e|RexxCPS|candidate|opt|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin|/private/tmp/crexx-perf3-k04e-scorecard.tTgMRO/build-release/bin/library.rxbin|--smoke-count;200|PASS: RexxCPS 2.2d cREXX port|retained|0|1|46c4fb77a567135de1f4221c8b3486ec468c3ada43cb485e7c4cf5b00e1478e0|7322d7ef98f30ecfc6ce52ac3e976a26fdeda5e24d0dfc2be4d3e83a2e68971f

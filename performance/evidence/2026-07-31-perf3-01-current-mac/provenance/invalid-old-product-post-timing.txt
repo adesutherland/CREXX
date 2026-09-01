@@ -1,0 +1,17 @@
+PERF3-01 current-product Apple formal refresh post-timing environment
+captured_utc=2026-07-31T13:19:03Z
+repository_head=3f43a0014be10c930a12b8a636297b60f294c0a6
+power_source='AC Power'
+battery= -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+low_power_mode=0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+load_averages={ 1.15 1.25 1.78 }
+formal_timing_initial=348 of 348 executions passed
+formal_timing_append=40 of 40 selected executions passed
+initial_policy_triggers=permute-rxvm;base64-rxvm;base64-rxbvm;rexxcps-rxvm
+merged_still_noisy=permute-rxvm;base64-rxvm;base64-rxbvm;rexxcps-rxvm; no second append permitted
+samples_removed=0
+competing_build_test_benchmark_campaigns=none
+interpretation=formal current-product same-host Apple observation; not a paired before-after verdict

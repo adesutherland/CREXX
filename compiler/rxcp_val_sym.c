@@ -32,6 +32,113 @@
 #include "utf.h"
 #include "rxcp_val.h"
 
+static void mknd_function_name_err(ASTNode *node, char *message) {
+    int saved_line;
+    int saved_column;
+    char *saved_source_start;
+    char *saved_source_end;
+    Token *saved_token_start;
+    Token *saved_token_end;
+
+    if (!node) return;
+    if (!node->token) {
+        mknd_err(node, message);
+        return;
+    }
+
+    saved_line = node->line;
+    saved_column = node->column;
+    saved_source_start = node->source_start;
+    saved_source_end = node->source_end;
+    saved_token_start = node->token_start;
+    saved_token_end = node->token_end;
+
+    node->line = node->token->line;
+    node->column = node->token->column;
+    node->source_start = node->token->token_string;
+    node->source_end = node->token->token_string + node->token->length - 1;
+    node->token_start = node->token;
+    node->token_end = node->token;
+
+    mknd_err(node, message);
+
+    node->line = saved_line;
+    node->column = saved_column;
+    node->source_start = saved_source_start;
+    node->source_end = saved_source_end;
+    node->token_start = saved_token_start;
+    node->token_end = saved_token_end;
+}
+
+static int attr_text_equals_ci(ASTNode *node, const char *value) {
+    size_t i;
+    size_t length;
+
+    if (!node || !node->node_string || !value) return 0;
+    length = strlen(value);
+    if (node->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)node->node_string[i]) !=
+            tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static ASTNode *symbol_register_attribute(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int symbol_is_readonly_flag_view(Symbol *symbol) {
+    ASTNode *attr = symbol_register_attribute(symbol);
+
+    return attr_text_equals_ci(attr, "flags.vm") ||
+           attr_text_equals_ci(attr, "flags.compiler") ||
+           attr_text_equals_ci(attr, "flags.language") ||
+           attr_text_equals_ci(attr, "flags.readable");
+}
+
+static int symbol_has_initializer_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
+    for (i = 0u; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        if (link && link->node && link->node->is_initializer) return 1;
+    }
+    return 0;
+}
+
+static void validate_readonly_flag_view_writes(Symbol *symbol) {
+    int i;
+
+    if (!symbol_is_readonly_flag_view(symbol)) return;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+
+        if (link->writeUsage) {
+            mknd_err(link->node, "READ_ONLY_REGISTER_FLAG_VIEW");
+        }
+    }
+}
+
 static char *build_factory_symbol_name(ASTNode *node) {
     static const char factory_prefix[] = "\xc2\xa7" "factory";
 
@@ -511,7 +618,8 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (node->parent->node_type == ARG) {
                     /* Arguments are local to the current scope */
                     symbol = sym_lrsv(context->current_scope, node);
-                } else if (node->parent->node_type == DEFINE) {
+                } else if (node->parent->node_type == DEFINE ||
+                           node->parent->node_type == CONSTANT_DEF) {
                     /* Typed declarations shadow in local blocks, but assert in procedures/namespaces */
                     if (context->current_scope->type == SCOPE_LOCAL) {
                         /* Force shadowing in local blocks */
@@ -528,7 +636,8 @@ walker_result build_symbols_walker(walker_direction direction,
                         }
                     }
                 } else {
-                    /* Untyped usage resolves outward; if not found, will create in procedure scope (hoisting) */
+                    /* Implicit usage resolves outward; if no visible binding
+                     * exists, a new symbol is created in the current scope. */
                     symbol = sym_rslv_tiered(context->current_scope, node);
                     if (symbol) {
                         if (symbol->symbol_type != VARIABLE_SYMBOL && symbol->symbol_type != CONSTANT_SYMBOL) {
@@ -540,7 +649,8 @@ walker_result build_symbols_walker(walker_direction direction,
                             /* TEMPORAL CHECK: Only bind if the symbol was used/defined EARLIER in the source */
                             if (symbol->creation_ordinal != -1 && !symbol->is_global_var && symbol->creation_ordinal > node->high_ordinal) {
                                 /* The existing symbol appears later in the source.
-                                 * In Level B, we ignore "future" definitions to allow local creation/hoisting. */
+                                 * Ignore that future definition so this use creates
+                                 * a binding in its current lexical scope. */
                                 symbol = NULL;
                             }
                         }
@@ -553,12 +663,17 @@ walker_result build_symbols_walker(walker_direction direction,
 
                     symbol = sym_f(target_scope, node);
                     sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
-                } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
+                } else if ((node->parent->node_type == DEFINE ||
+                            node->parent->node_type == CONSTANT_DEF) &&
+                           symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
                 }
 
                 if (symbol && symbol->symbol_type == UNKNOWN_SYMBOL) {
                     sym_promote_symtype(context, symbol, VARIABLE_SYMBOL);
+                }
+                if (symbol && node->suppress_symbol_metadata) {
+                    symbol->suppress_metadata = 1;
                 }
 
                 /* Ensure creation info is set */
@@ -566,7 +681,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     if (symbol->creation_node == 0 || symbol->creation_node == node) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
-                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                    } else if ((node->parent->node_type == DEFINE ||
+                                node->parent->node_type == CONSTANT_DEF) &&
+                               symbol->creation_node->parent &&
+                               symbol->creation_node->parent->node_type != DEFINE &&
+                               symbol->creation_node->parent->node_type != CONSTANT_DEF) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
                     } else if (node->high_ordinal < symbol->creation_ordinal) {
@@ -667,7 +786,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     if (symbol->creation_node == 0 || symbol->creation_node == node) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
-                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                    } else if ((node->parent->node_type == DEFINE ||
+                                node->parent->node_type == CONSTANT_DEF) &&
+                               symbol->creation_node->parent &&
+                               symbol->creation_node->parent->node_type != DEFINE &&
+                               symbol->creation_node->parent->node_type != CONSTANT_DEF) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
                     } else if (node->high_ordinal < symbol->creation_ordinal) {
@@ -678,8 +801,15 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 if (node->parent->node_type == ASSEMBLER) {
                     /* If an assembler instruction we need to assume read/write
-                     * access - and therefore disable some optimisations */
-                    sym_adnd(symbol, node, 1, 1);
+                     * access for registers. Explicit constants are immediate
+                     * operands, so keep those references read-only. */
+                    int write_access = 1;
+                    if (symbol->creation_node &&
+                        symbol->creation_node->parent &&
+                        symbol->creation_node->parent->node_type == CONSTANT_DEF) {
+                        write_access = 0;
+                    }
+                    sym_adnd(symbol, node, 1, write_access);
                 } else sym_adnd(symbol, node, 1, 0);
             }
         }
@@ -712,7 +842,8 @@ walker_result build_symbols_walker(walker_direction direction,
             return request_skip;
         }
 
-        else if (node->node_type == DO || node->node_type == SIGNAL_BLOCK || node->node_type == BLOCK_EXPR) {
+        else if (node->node_type == DO || node->node_type == SIGNAL_BLOCK ||
+                 node->node_type == BLOCK_EXPR) {
             /* Create/Navigate to scope - handled in the navigation block above */
         }
 
@@ -867,7 +998,9 @@ walker_result resolve_functions_walker(walker_direction direction,
                             utf8lwr(local_name);
                             #endif
 
-                            mknd_war(node, "EXTERNAL_SHADOW_BYPASS, external procedure \"%s\" shadowing local procedure \"%s\"", fqn, local_name);
+                            mknd_war2(node, "EXTERNAL_SHADOW_BYPASS",
+                                      "external", fqn,
+                                      "local", local_name);
                             free(fqn);
                             free(local_name);
                         }
@@ -903,12 +1036,22 @@ walker_result resolve_functions_walker(walker_direction direction,
                         }
                     } else if (local_symbol && local_symbol->status != SYM_STATUS_UNRESOLVED) {
                         /* Found something locally but it's not a function, and no global function found */
-                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "NOT_A_FUNCTION");
+                        if (!ast_chld(node, ERROR, 0)) {
+                            mknd_function_name_err(node,
+                                    node->parent && node->parent->node_type == TASK_TARGET
+                                            ? "TASK_DYNAMIC_TARGET"
+                                            : "NOT_A_FUNCTION");
+                        }
                     } else if (context->after_rewrite) {
                         /* Not found anywhere */
-                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "FUNCTION_NOT_FOUND");
+                        if (!ast_chld(node, ERROR, 0)) mknd_function_name_err(node, "FUNCTION_NOT_FOUND");
                     }
                 }
+            }
+            if (node->symbolNode && node->symbolNode->symbol &&
+                symbol_has_initializer_definition(node->symbolNode->symbol) &&
+                !ast_chld(node, ERROR, 0)) {
+                mknd_function_name_err(node, "INITIALISER_NOT_CALLABLE");
             }
         }
 
@@ -966,7 +1109,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                 /* We might be exposing one of the procedure's variables */
                                 symbol = sym_drsv(proc_node->scope, n); /* find it deep */
-                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                                if (symbol &&
+                                    (symbol->symbol_type == VARIABLE_SYMBOL ||
+                                     symbol->symbol_type == CONSTANT_SYMBOL) &&
+                                    !symbol->is_arg) {
                                     /* We found a variable to expose - so expose it by moving its scope */
                                     merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
 
@@ -979,7 +1125,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                     if (merged_symbol->exposed == 0) {
                                         merged_symbol->exposed = 1;
-                                        merged_symbol->is_global_var = 1;
+                                        if (merged_symbol->symbol_type == VARIABLE_SYMBOL) {
+                                            merged_symbol->is_global_var = 1;
+                                        }
                                         context->changed_flags |= FLAG_VAL_SYM;
                                     }
                                     found = 1;
@@ -1017,20 +1165,24 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         }
                     }
                     else if (symbol->symbol_type ==  FUNCTION_SYMBOL) {
-                        temp_node = sym_proc(symbol); /* Procedure */
-                        if (temp_node) temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
-                        if (temp_node && temp_node->node_type == INSTRUCTIONS) {
-                            if (symbol->exposed == 0) {
-                                /* Link and expose - if not already processed */
-                                sym_adnd(symbol, n, 1, 1);
-                                symbol->exposed = 1;
-                                context->changed_flags |= FLAG_VAL_SYM;
+                        if (symbol_has_initializer_definition(symbol)) {
+                            mknd_err_unique(n, "INITIALISER_NOT_EXPOSABLE");
+                        } else {
+                            temp_node = sym_proc(symbol); /* Procedure */
+                            if (temp_node) temp_node = ast_chld(temp_node, INSTRUCTIONS, NOP); /* Instructions */
+                            if (temp_node && temp_node->node_type == INSTRUCTIONS) {
+                                if (symbol->exposed == 0) {
+                                    /* Link and expose - if not already processed */
+                                    sym_adnd(symbol, n, 1, 1);
+                                    symbol->exposed = 1;
+                                    context->changed_flags |= FLAG_VAL_SYM;
+                                }
                             }
-                        }
-                        else {
-                            /* Add an error - if it has not already errored */
-                            if (ast_chld(n, ERROR, 0) == 0)
-                                mknd_err(n, "IMPORTED_FUNCTION");
+                            else {
+                                /* Add an error - if it has not already errored */
+                                if (ast_chld(n, ERROR, 0) == 0)
+                                    mknd_err(n, "IMPORTED_FUNCTION");
+                            }
                         }
                     }
                     else if (symbol->symbol_type ==  CLASS_SYMBOL) {
@@ -1053,6 +1205,13 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             context->changed_flags |= FLAG_VAL_SYM;
                         }
                         sym_adnd(symbol, n, 1, 1);
+                    }
+                    else if (symbol->symbol_type == CONSTANT_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            symbol->exposed = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                        sym_adnd(symbol, n, 1, 0);
                     }
                     else {
                         /* Add an error - if it has not already errored */
@@ -1077,7 +1236,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
                     if (!symbol) {
                         /* It is not global yet, so we should be exposing one of the procedure's variables */
                         symbol = sym_drsv(node->parent->scope, n); /* find it deep */
-                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                        if (symbol &&
+                            (symbol->symbol_type == VARIABLE_SYMBOL ||
+                             symbol->symbol_type == CONSTANT_SYMBOL) &&
+                            !symbol->is_arg) {
                             if (symbol->exposed == 0) { /* Avoid double processing */
                                 /* We found a variable to expose - so expose it by moving its scope */
                                 merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
@@ -1089,7 +1251,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                 if (merged_symbol->exposed == 0) {
                                     merged_symbol->exposed = 1;
-                                    merged_symbol->is_global_var = 1;
+                                    if (merged_symbol->symbol_type == VARIABLE_SYMBOL) {
+                                        merged_symbol->is_global_var = 1;
+                                    }
                                     context->changed_flags |= FLAG_VAL_SYM;
                                 }
                             }
@@ -1179,6 +1343,13 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 }
                             }
                         }
+                    }
+                    else if (symbol->symbol_type == CONSTANT_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            symbol->exposed = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                        sym_adnd(symbol, n, 1, 0);
                     }
 
                     else {
@@ -1498,6 +1669,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
         }
     }
 
+    validate_readonly_flag_view_writes(symbol);
+
 exit:
     if (symbol->type != old_type || symbol->value_dims != old_dims) {
         context->changed_flags |= FLAG_VAL_SYM;
@@ -1646,12 +1819,13 @@ static ASTNode *ast_prepare_branch_hoist_block(Context *ctx, ASTNode *current_no
  * levels: -1 = Procedure/Method level, 0 = Current level (inserted just before current_node), 1 = Parent level
  * Returns 1 if hoisted/already exists, 0 on failure.
  */
-int ast_hoist_var_typed(Context* ctx,
-                        ASTNode* current_node,
-                        const char* var_name,
-                        int levels,
-                        const char* type_name,
-                        size_t dims) {
+static int ast_hoist_var_typed_mode(Context* ctx,
+                                    ASTNode* current_node,
+                                    const char* var_name,
+                                    int levels,
+                                    const char* type_name,
+                                    size_t dims,
+                                    int suppress_metadata) {
     current_node = ast_prepare_branch_hoist_block(ctx, current_node);
 
     ASTNode *target_scope_node = current_node;
@@ -1694,6 +1868,7 @@ int ast_hoist_var_typed(Context* ctx,
         ASTNode *def_node = ast_ft(ctx, DEFINE);
         ASTNode *var_node = ast_ftt(ctx, VAR_TARGET, strdup(var_name));
         var_node->free_node_string = 1;
+        var_node->suppress_symbol_metadata = suppress_metadata != 0;
         ASTNode *type_node = ast_ft(ctx, CLASS);
         const char *effective_type = (type_name && *type_name) ? type_name : ".unknown";
         type_node->node_string = strdup(effective_type);
@@ -1754,6 +1929,26 @@ int ast_hoist_var_typed(Context* ctx,
     }
 
     return 1;
+}
+
+int ast_hoist_var_typed(Context* ctx,
+                        ASTNode* current_node,
+                        const char* var_name,
+                        int levels,
+                        const char* type_name,
+                        size_t dims) {
+    return ast_hoist_var_typed_mode(
+            ctx, current_node, var_name, levels, type_name, dims, 0);
+}
+
+int ast_hoist_internal_var_typed(Context* ctx,
+                                 ASTNode* current_node,
+                                 const char* var_name,
+                                 int levels,
+                                 const char* type_name,
+                                 size_t dims) {
+    return ast_hoist_var_typed_mode(
+            ctx, current_node, var_name, levels, type_name, dims, 1);
 }
 
 int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels) {

@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+sieve-rxvm,Sieve,crexx,rxvm,equivalent-port,A,yes,no,5500,max_rss_bytes,1,14372864.000000,14372864.000000,14372864.000000,14372864.000000,14372864.000000,0.000000,0.000000,0.000000,no
+sieve-rxbvm,Sieve,crexx,rxbvm,equivalent-port,A,yes,no,5500,max_rss_bytes,1,14372864.000000,14372864.000000,14372864.000000,14372864.000000,14372864.000000,0.000000,0.000000,0.000000,no
+sieve-oorexx,Sieve,oorexx,oorexx,equivalent-port,A,yes,no,5500,max_rss_bytes,1,24453120.000000,24453120.000000,24453120.000000,24453120.000000,24453120.000000,0.000000,0.000000,0.000000,no
+sieve-netrexx,Sieve,netrexx,netrexx,decimal-rexx-port,A,yes,no,5500,max_rss_bytes,1,528887808.000000,528887808.000000,528887808.000000,528887808.000000,528887808.000000,0.000000,0.000000,0.000000,no

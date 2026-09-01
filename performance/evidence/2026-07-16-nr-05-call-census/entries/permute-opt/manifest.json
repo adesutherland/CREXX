@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "permute-opt",
+  "pair": "permute",
+  "workload": "Permute",
+  "variant": "candidate",
+  "optimization_mode": "opt",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin","sha256":"0990c68551998ecebcf0ffe4ff01efd35b6b537d9414c7fdde9c1e75bd12a839"},
+  "modules": [{"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","sha256":"ef017bc04eab57e8bb515df75f4e8cee2b52d7827c665278c095d3af96beaf6b"}],
+  "arguments": ["50"],
+  "correctness_expectation": "PASS: AWFY Permute",
+  "source_trace_retention": "source=tests/benchmarks/awfy_permute.crexx;TRACE=Off",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","-a","50"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/profile/profile.csv","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","-a","50"],
+  "sequence_commands": ["\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=2\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n2.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"50\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n2.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n2-candidates.csv\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=3\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n3.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"50\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n3.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n3-candidates.csv\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm\" \"--sequence-count=4\" \"--sequence-output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n4.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"-a\" \"50\"","\"/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n4.rxseq\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_permute_opt.rxbin\" \"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin\" \"--output\" \"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-05-call-census/entries/permute-opt/rxseq/n4-candidates.csv\""],
+  "median_elapsed_ns": 96328000
+}

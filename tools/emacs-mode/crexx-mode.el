@@ -52,9 +52,9 @@
 ;; ------------------------------
 
 (defconst rexx-keywords
-  '("address" "arg" "assembler" "break" "call" "class" "do" "drop"
+  '("address" "arg" "assembler" "break" "call" "class" "constant" "do" "drop"
     "echo" "else" "end" "exit"
-    "factory" "forever" "if" "import" "interface" "interpret" "iterate" "leave" "method"
+    "factory" "forever" "if" "implements" "import" "interface" "interpret" "iterate" "leave" "method"
     "namespace" "nop" "numeric" "options" "otherwise"
     "parse" "procedure" "push" "pull" "expose"
     "queue" "return" "say" "select" "shell" "signal"

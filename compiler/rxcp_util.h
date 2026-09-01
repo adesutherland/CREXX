@@ -55,6 +55,10 @@ int rxcp_split_internal_symbol_name(const char* name, char **namespace_name, cha
 /* Format an internal symbol name into source syntax, optionally with a leading ".". */
 char* rxcp_internal_name_to_source_qualified(const char* name, int leading_dot);
 
+/* Deterministic, target-unique 80-byte binary placeholder for Gate F task
+ * relocation metadata. The assembler/linker replaces every byte. */
+char* rxcp_task_placeholder_hex(const char* callable_identity);
+
 /* Encodes a string into a malloced buffer for output/assembly */
 char* encdstrg(const char* string, size_t length);
 
@@ -82,5 +86,24 @@ const char* token_to_string(int token_id);
 
 /* Convert NodeType to human-readable string */
 const char* node_type_to_string(NodeType type);
+
+typedef struct RxcpBinaryStorageInfo {
+    const char *name;
+    ValueType value_type;
+    int width;
+    int is_fixed;
+    const char *rxas_get;
+    const char *rxas_set;
+} RxcpBinaryStorageInfo;
+
+int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info);
+int rxcp_packed_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info);
+int rxcp_binary_storage_is_valid(ASTNode *type_node);
+int rxcp_binary_storage_is_fixed(ASTNode *type_node);
+int rxcp_binary_storage_sizeof(ASTNode *type_node);
+int rxcp_binary_memory_at_parts(ASTNode *node, ASTNode **type_node, ASTNode **base, ASTNode **offset);
+int rxcp_binary_memory_is_access(ASTNode *node);
+int rxcp_binary_memory_is_lhs(ASTNode *node);
+int rxcp_binary_memory_base_is_readonly(ASTNode *node);
 
 #endif //CREXX_RXCP_UTIL_H

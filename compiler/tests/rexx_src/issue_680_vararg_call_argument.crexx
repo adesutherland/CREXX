@@ -1,0 +1,15 @@
+options levelb
+
+call test("Do something", 2, 3, 4)
+exit
+
+test: procedure
+  arg command = .string, ... = .string
+  say command
+  call error(arg[1])
+return
+
+error: procedure
+  arg message = .string
+  say message
+return

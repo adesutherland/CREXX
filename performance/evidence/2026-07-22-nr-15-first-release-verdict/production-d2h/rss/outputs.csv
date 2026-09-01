@@ -1,0 +1,337 @@
+sample_id,stream,line_number,text
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,8,     Performance: 5554966 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,1,        1.80 real         1.79 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,2,            10158080  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,6,                 792  page reclaims
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,7,                   7  page faults
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,15,                 223  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,16,         32238766909  instructions retired
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,17,          7758008341  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-before-recorded-1,stderr,18,             5112240  peak memory footprint
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.7 s)
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,8,     Performance: 5985852 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,1,        1.67 real         1.66 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,2,            10108928  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,6,                 793  page reclaims
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,15,                 151  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,16,         29459397226  instructions retired
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,17,          6977038127  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-after-recorded-1,stderr,18,             5063088  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.9 s)
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,8,     Performance: 5132150 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,1,        1.95 real         1.94 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,2,            10223616  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,6,                 797  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,7,                   7  page faults
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,15,                 127  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,16,         34586753114  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,17,          8508772904  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-1,stderr,18,             5194160  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,8,     Performance: 5605755 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,1,        1.79 real         1.78 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,2,            10108928  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,6,                 793  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,15,                 102  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,16,         31447655387  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,17,          7790795174  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-1,stderr,18,             5063088  peak memory footprint
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,8,     Performance: 6243534 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,1,        1.60 real         1.60 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,2,            10108928  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,6,                 793  page reclaims
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,15,                 117  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,16,         29457991606  instructions retired
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,17,          6990973076  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-after-recorded-2,stderr,18,             5063088  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.0 s)
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,8,     Performance: 5072844 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,1,        1.97 real         1.97 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,2,            10125312  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,6,                 795  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,15,                 128  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,16,         34733443875  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,17,          8601854532  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-2,stderr,18,             5095856  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,8,     Performance: 5596143 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,1,        1.79 real         1.78 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,2,            10207232  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,6,                 799  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,15,                 113  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,16,         31527347538  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,17,          7795069056  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-2,stderr,18,             5161392  peak memory footprint
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,8,     Performance: 5611342 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,1,        1.78 real         1.78 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,2,            10190848  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,6,                 798  page reclaims
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,15,                 109  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,16,         32237258600  instructions retired
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,17,          7773151954  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-before-recorded-2,stderr,18,             5145008  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.0 s)
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,8,     Performance: 5093735 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,1,        1.96 real         1.96 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,2,            10272768  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,6,                 803  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,15,                 131  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,16,         34574669648  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,17,          8555100617  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-before-recorded-3,stderr,18,             5243312  peak memory footprint
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,7,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,8,     Performance: 5636168 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,9,
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,1,        1.78 real         1.77 user         0.00 sys
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,2,            10125312  maximum resident set size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,6,                 794  page reclaims
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,15,                 121  involuntary context switches
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,16,         31537633743  instructions retired
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,17,          7728129156  cycles elapsed
+rss-rexxcps-canonical-rss-rxbvm-after-recorded-3,stderr,18,             5079472  peak memory footprint
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.8 s)
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,8,     Performance: 5597954 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,1,        1.79 real         1.78 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,2,            10207232  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,6,                 799  page reclaims
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,14,                   1  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,15,                 120  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,16,         32237165897  instructions retired
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,17,          7787127962  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-before-recorded-3,stderr,18,             5161392  peak memory footprint
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g240b29f456e9.dirty 20260722
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,3,       System is: macOS
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 1.6 s)
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,7,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,8,     Performance: 6176175 cREXX clauses per second
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,9,
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,1,        1.62 real         1.62 user         0.00 sys
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,2,            10158080  maximum resident set size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,3,                   0  average shared memory size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,4,                   0  average unshared data size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,5,                   0  average unshared stack size
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,6,                 796  page reclaims
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,7,                   3  page faults
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,8,                   0  swaps
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,9,                   0  block input operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,10,                   0  block output operations
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,11,                   0  messages sent
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,12,                   0  messages received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,13,                   0  signals received
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,14,                   0  voluntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,15,                 100  involuntary context switches
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,16,         29468158132  instructions retired
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,17,          7057381863  cycles elapsed
+rss-rexxcps-canonical-rss-rxvm-after-recorded-3,stderr,18,             5112240  peak memory footprint

@@ -31,28 +31,28 @@
 #include "rxcp_emit.h"
 #include "rxcp_util.h"
 
-static int flow_needs_attr_copy(ASTNode *node) {
-    if (!node) return 0;
-
-    if (node->value_dims || node->target_dims) return 1;
-
-    return node->value_type == TP_STRING ||
-           node->value_type == TP_OBJECT ||
-           node->value_type == TP_BINARY ||
-           node->value_type == TP_REFERENCE ||
-           node->target_type == TP_STRING ||
-           node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY ||
-           node->target_type == TP_REFERENCE;
-}
-
 static const char *signal_block_catch_all_names[] = {
         "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
         "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
-        "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+        "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
         "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
-        "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER", 0
+        "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD",
+        "CHANNEL_ERROR", "TASK_FAILURE", "OTHER", 0
 };
+
+/* A direct final BLOCK_EXPR exit is immediately followed by the block-end
+ * label. Cleanup and signal unwind are still emitted; only the branch to the
+ * next instruction is redundant. */
+static int leave_with_falls_through_to_block_end(ASTNode *node) {
+    ASTNode *instrs;
+
+    if (!node || node->node_type != LEAVE_WITH || node->sibling ||
+        !(instrs = node->parent) || instrs->node_type != INSTRUCTIONS ||
+        !instrs->parent || instrs->parent->node_type != BLOCK_EXPR) {
+        return 0;
+    }
+    return node->association == instrs->parent;
+}
 
 typedef struct signal_emit_names {
     char **items;
@@ -86,8 +86,181 @@ static int flow_scope_owns_cleanup(ASTNode *node) {
     return node && node->scope && node->scope->defining_node == node;
 }
 
+static int flow_scope_owns_recyclable_registers(ASTNode *node) {
+    if (!flow_scope_owns_cleanup(node)) return 0;
+    if (node->inherit_parent_reg_scope) return 0;
+    if (node->scope->type != SCOPE_LOCAL) return 0;
+    return 1;
+}
+
+/* Return the literal held by an ordinary write-once decimal symbol without
+ * replacing the symbol use.  Decimal immediates are parsed by the VM at each
+ * instruction dispatch, so arithmetic must retain the prepared register.
+ * Counted-loop emission still benefits from the narrower fact that a fixed BY
+ * value has a known sign.  This mirrors the mature constant-propagation
+ * definition/write checks while leaving storage and TRACE-visible reads intact. */
+static const char *flow_readonly_decimal_literal(ASTNode *node) {
+    static const char zero[] = "0.0";
+    Symbol *symbol;
+    ASTNode *first;
+    ASTNode *assignment;
+    ASTNode *value;
+    size_t i;
+    size_t writes_start;
+
+    if (!node || !node->symbolNode) return 0;
+    symbol = node->symbolNode->symbol;
+    if (!symbol || symbol->type != TP_DECIMAL) return 0;
+    if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return 0;
+    if (symbol->has_reference_target || symbol->value_dims) return 0;
+    if (!sym_nond(symbol)) return 0;
+
+    first = sym_trnd(symbol, 0)->node;
+    value = 0;
+    writes_start = 0;
+
+    if (first && first->node_type == VAR_TARGET && first->parent &&
+        first->parent->node_type == ASSIGN && first->sibling) {
+        value = first->sibling;
+        writes_start = 1;
+    }
+    else if (first && first->parent && first->parent->node_type == DEFINE) {
+        if (sym_nond(symbol) < 2) return zero;
+        assignment = sym_trnd(symbol, 1)->node;
+        if (assignment && assignment->node_type == VAR_TARGET &&
+            assignment->parent && assignment->parent->node_type == ASSIGN &&
+            assignment->sibling) {
+            value = assignment->sibling;
+            writes_start = 2;
+        }
+        else {
+            for (i = 1; i < sym_nond(symbol); i++) {
+                if (sym_trnd(symbol, i)->writeUsage) return 0;
+            }
+            return zero;
+        }
+    }
+    else return 0;
+
+    for (i = writes_start; i < sym_nond(symbol); i++) {
+        if (sym_trnd(symbol, i)->writeUsage) return 0;
+    }
+    if (!is_constant(value) || value->value_type != TP_DECIMAL ||
+        value->target_type != TP_DECIMAL || !value->decimal_value) return 0;
+    return value->decimal_value;
+}
+
+static void emit_dispatch(ASTNode *node) {
+    ASTNode *selector = ast_chdn(node, 0);
+    ASTNode *entry;
+    ASTNode *default_entry = 0;
+    char *text;
+    char *comment_meta;
+    size_t case_index = 0;
+    const char *instruction;
+    ValueType key_type;
+
+    if (!selector) return;
+    switch ((DispatchKind)node->dispatch_kind) {
+        case DISPATCH_INTEGER:
+            instruction = "jumpi";
+            key_type = TP_INTEGER;
+            break;
+        case DISPATCH_STRING_EXACT:
+            instruction = "jumps";
+            key_type = TP_STRING;
+            break;
+        case DISPATCH_STRING_PADDED:
+            instruction = "jumpr";
+            key_type = TP_STRING;
+            break;
+        case DISPATCH_STRING_NUMERIC:
+            instruction = "jumpn";
+            key_type = TP_STRING;
+            break;
+        case DISPATCH_BINARY_EXACT:
+            instruction = "jumpb";
+            key_type = TP_BINARY;
+            break;
+        default:
+            return;
+    }
+    if (!node->output) node->output = output_f();
+
+    comment_meta = get_metaline(node);
+    output_prepend_text(comment_meta, node->output);
+    free(comment_meta);
+
+    if (selector->output) output_concat(node->output, selector->output);
+    text = mprintf("   .jtable jtable%d auto\n"
+                   "   %s %c%d,jtable%d\n",
+                   node->node_number,
+                   instruction,
+                   selector->register_type,
+                   selector->register_num,
+                   node->node_number);
+    output_append_text(node->output, text);
+    free(text);
+
+    for (entry = selector->sibling; entry; entry = entry->sibling) {
+        if (entry->node_type == OPT_DISPATCH_DEFAULT) {
+            default_entry = entry;
+            break;
+        }
+    }
+
+    text = mprintf("   br l%ddispatch%s\n",
+                   node->node_number,
+                   default_entry ? "default" : "end");
+    output_append_text(node->output, text);
+    free(text);
+
+    for (entry = selector->sibling; entry; entry = entry->sibling) {
+        ASTNode *key;
+        ASTNode *body;
+        char *key_text;
+
+        if (entry->node_type != OPT_DISPATCH_CASE) continue;
+        key = ast_chdn(entry, 0);
+        body = ast_chdn(entry, 1);
+        if (!key || !body) continue;
+
+        key_text = format_constant(key_type, key);
+        text = mprintf("l%ddispatchcase%zu: .jcase jtable%d %s\n",
+                       node->node_number,
+                       case_index,
+                       node->node_number,
+                       key_text);
+        output_append_text(node->output, text);
+        free(text);
+        free(key_text);
+
+        if (body->output) output_concat(node->output, body->output);
+        if (body->cleanup) output_concat(node->output, body->cleanup);
+        text = mprintf("   br l%ddispatchend\n", node->node_number);
+        output_append_text(node->output, text);
+        free(text);
+        case_index++;
+    }
+
+    if (default_entry) {
+        ASTNode *body = ast_chdn(default_entry, 0);
+        text = mprintf("l%ddispatchdefault:\n", node->node_number);
+        output_append_text(node->output, text);
+        free(text);
+        if (body && body->output) output_concat(node->output, body->output);
+        if (body && body->cleanup) output_concat(node->output, body->cleanup);
+    }
+
+    text = mprintf("l%ddispatchend:\n", node->node_number);
+    output_append_text(node->output, text);
+    free(text);
+    if (selector->cleanup) output_concat(node->output, selector->cleanup);
+}
+
 static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
     size_t i;
+    Symbol *pending = 0;
 
     if (!output || !scope) return;
     for (i = scp_dereference_symbol_count(scope); i > 0; i--) {
@@ -95,10 +268,98 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
         char *line;
 
         if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
-        line = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+        if (!pending) {
+            pending = symbol;
+        } else {
+            line = mprintf("   unlinkn %c%d,%c%d\n",
+                           pending->register_type, pending->register_num,
+                           symbol->register_type, symbol->register_num);
+            output_append_text(output, line);
+            free(line);
+            pending = 0;
+        }
+    }
+    if (pending) {
+        char *line = mprintf("   unlink %c%d\n",
+                             pending->register_type, pending->register_num);
         output_append_text(output, line);
         free(line);
     }
+}
+
+static int flow_symbol_owns_scope_lifetime(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (symbol->inline_value_alias) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
+    if (symbol->name && strncmp(symbol->name, "__inline", 8) == 0) return 0;
+    return 1;
+}
+
+static int flow_scope_is_generated_lifetime_boundary(Scope *scope) {
+    Scope *current;
+
+    for (current = scope; current; current = current->parent) {
+        if (current->type != SCOPE_PROCEDURE) continue;
+        if (!current->name) return 0;
+        return strncmp(current->name, "__inline", 8) == 0 ||
+               strncmp(current->name, "__rxtrace", 9) == 0;
+    }
+    return 0;
+}
+
+static int flow_symbol_is_reference_lifetime_free_scalar(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (!symbol->scope || symbol->scope->type != SCOPE_LOCAL) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
+    if (symbol->has_reference_target || symbol->value_dims != 0) return 0;
+    if (flow_scope_is_generated_lifetime_boundary(symbol->scope)) return 0;
+    if (symbol->name && (strncmp(symbol->name, "__inline", 8) == 0 ||
+                         strncmp(symbol->name, "__rxtrace", 9) == 0)) return 0;
+
+    /* A dereference local is an alias even when its resolved value type is scalar. */
+    for (i = 0; i < scp_dereference_symbol_count(symbol->scope); i++) {
+        if (scp_dereference_symbol_at(symbol->scope, i) == symbol) return 0;
+    }
+
+    switch (symbol->type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_DECIMAL:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+void emit_scope_reference_lifetimes(OutputFragment *output, ASTNode *node) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!output || !node || !flow_scope_owns_recyclable_registers(node)) return;
+
+    symbols = scp_syms(node->scope);
+    if (!symbols) return;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+        char *line;
+
+        if (!flow_symbol_owns_scope_lifetime(symbol)) continue;
+        if (flow_symbol_is_reference_lifetime_free_scalar(symbol)) continue;
+        line = mprintf("   endlife %c%d\n", symbol->register_type, symbol->register_num);
+        output_append_text(output, line);
+        free(line);
+    }
+
+    free(symbols);
 }
 
 static char *signal_emit_canonical_name(ASTNode *node) {
@@ -163,6 +424,135 @@ static void signal_emit_pop_names(OutputFragment *output, signal_emit_names *ins
     }
 }
 
+/* Control transfers that leave a protected block must restore every branch
+ * handler installed by that block.  Normal SIGNAL_BLOCK fall-through already
+ * emits the same pops; this path covers RETURN and LEAVE without relying on a
+ * runtime frame teardown to repair block-scoped handler policy. */
+static void signal_emit_unwind_for_control(OutputFragment *output,
+                                           ASTNode *node,
+                                           ASTNode *stop_before) {
+    ASTNode *ancestor;
+    ASTNode *handler_owner = 0;
+
+    if (!output || !node) return;
+    for (ancestor = node->parent;
+         ancestor && ancestor != stop_before;
+         ancestor = ancestor->parent) {
+        if (ancestor->node_type == SIGNAL_HANDLER) {
+            handler_owner = ancestor->parent;
+        } else if (ancestor->node_type == SIGNAL_BLOCK) {
+            ASTNode *handler;
+            signal_emit_names installed = {0};
+
+            if (ancestor == handler_owner) {
+                handler_owner = 0;
+                continue;
+            }
+            for (handler = ast_chdn(ancestor, 1);
+                 handler;
+                 handler = ast_nsib(handler)) {
+                signal_emit_names handler_names = {0};
+                size_t i;
+
+                signal_emit_collect_names(handler->child, &handler_names);
+                for (i = 0; i < handler_names.count; i++) {
+                    signal_emit_names_add(&installed, handler_names.items[i]);
+                }
+                signal_emit_names_free(&handler_names);
+            }
+            signal_emit_pop_names(output, &installed);
+            signal_emit_names_free(&installed);
+        }
+    }
+}
+
+static void flow_append_output_copy(OutputFragment *output,
+                                    OutputFragment *source) {
+    if (!output || !source) return;
+    while (source->before) source = source->before;
+    for (; source; source = source->after) {
+        if (source->output) output_append_text(output, source->output);
+    }
+}
+
+/* A structured exit may bypass the normal end of one or more lexical scopes
+ * and counted loops.  Their cleanup cannot be moved into the exit path because
+ * the ordinary fall-through path still needs it, so reproduce it for every
+ * crossed ancestor.  The target itself is excluded: LEAVE branches to its
+ * normal end cleanup, ITERATE keeps the target loop active, and LEAVE_WITH
+ * branches to the block-expression cleanup label. */
+static void flow_emit_crossed_cleanups(OutputFragment *output,
+                                       ASTNode *node,
+                                       ASTNode *stop_before) {
+    ASTNode *ancestor;
+
+    if (!output || !node) return;
+    for (ancestor = node->parent;
+         ancestor && ancestor != stop_before;
+         ancestor = ancestor->parent) {
+        if (ancestor->node_type == DO) {
+            ASTNode *repeat = ast_chdn(ancestor, 0);
+            if (repeat && repeat->node_type == REPEAT && repeat->cleanup) {
+                flow_append_output_copy(output, repeat->cleanup);
+            }
+        }
+
+        if (flow_scope_owns_cleanup(ancestor)) {
+            flow_emit_scope_dereference_unlinks(output, ancestor->scope);
+            emit_scope_reference_lifetimes(output, ancestor);
+            clear_scope_variable_metadata(output, ancestor);
+        }
+    }
+}
+
+/* A runtime SIGNAL can originate at any instruction in a protected body, so
+ * its handler cannot use the single-ancestor path available to an explicit
+ * LEAVE.  Restore every register that any descendant scope may have linked,
+ * then end descendant reference lifetimes after all pointer mappings are back
+ * at their base storage.  Repeating an unlink or lifetime release for an
+ * inactive/reused sibling scope is intentionally harmless. */
+static void flow_emit_descendant_unlinks(OutputFragment *output,
+                                         ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (node->branch_cleanup) {
+        flow_append_output_copy(output, node->branch_cleanup);
+    }
+    if (flow_scope_owns_cleanup(node)) {
+        flow_emit_scope_dereference_unlinks(output, node->scope);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_unlinks(output, child);
+    }
+}
+
+static void flow_emit_descendant_lifetimes(OutputFragment *output,
+                                           ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (flow_scope_owns_cleanup(node)) {
+        emit_scope_reference_lifetimes(output, node);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_lifetimes(output, child);
+    }
+}
+
+static void flow_emit_descendant_metadata_clear(OutputFragment *output,
+                                                ASTNode *node) {
+    ASTNode *child;
+
+    if (!output || !node) return;
+    if (flow_scope_owns_cleanup(node)) {
+        clear_scope_variable_metadata(output, node);
+    }
+    for (child = node->child; child; child = child->sibling) {
+        flow_emit_descendant_metadata_clear(output, child);
+    }
+}
+
 void emit_flow(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -171,6 +561,7 @@ void emit_flow(ASTNode *node, void *pl) {
     char *temp2;
     char *comment_meta;
     char *op;
+    const char *constant_decimal;
     int j;
     unsigned int trace_step_id;
     unsigned int trace_clause_id;
@@ -208,6 +599,8 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             comment_meta = get_reporting_metalines(node);
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
@@ -229,6 +622,27 @@ void emit_flow(ASTNode *node, void *pl) {
             handler_index = 0;
             while (handler) {
                 signal_emit_names handler_names = {0};
+
+                signal_emit_collect_names(handler->child, &handler_names);
+                for (j = 0; j < (int)handler_names.count; j++) {
+                    temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    signal_emit_names_add(&installed, handler_names.items[j]);
+                }
+                signal_emit_names_free(&handler_names);
+                handler = ast_nsib(handler);
+                handler_index++;
+            }
+
+            /* Register the branches only after every saved handler is on the
+             * stack.  The VM records this common top as the block boundary, so
+             * a runtime branch can discard nested registrations without also
+             * discarding another name owned by this SIGNAL_BLOCK. */
+            handler = child2;
+            handler_index = 0;
+            while (handler) {
+                signal_emit_names handler_names = {0};
                 ASTNode *binding = signal_handler_binding_target(handler);
 
                 signal_emit_collect_names(handler->child, &handler_names);
@@ -240,11 +654,6 @@ void emit_flow(ASTNode *node, void *pl) {
                         binding_register = binding->symbolNode->symbol->register_num;
                         binding_register_type = binding->symbolNode->symbol->register_type;
                     }
-
-                    temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                    signal_emit_names_add(&installed, handler_names.items[j]);
 
                     if (binding) {
                         temp1 = mprintf("   sigbrv l%dsignalhandler%zu,%c%d,\"%s\"\n",
@@ -285,6 +694,9 @@ void emit_flow(ASTNode *node, void *pl) {
                 free(temp1);
 
                 signal_emit_pop_names(node->output, &installed);
+                flow_emit_descendant_unlinks(node->output, child1);
+                flow_emit_descendant_lifetimes(node->output, child1);
+                flow_emit_descendant_metadata_clear(node->output, child1);
                 if (handler_body && handler_body->output) output_concat(node->output, handler_body->output);
                 if (handler_body && handler_body->cleanup) output_concat(node->output, handler_body->cleanup);
 
@@ -301,6 +713,8 @@ void emit_flow(ASTNode *node, void *pl) {
             free(temp1);
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             signal_emit_names_free(&installed);
             break;
@@ -373,6 +787,7 @@ void emit_flow(ASTNode *node, void *pl) {
                                 child1->register_num);
                 // TODO - Test array element as we have not unlinked
             }
+            signal_emit_unwind_for_control(node->output, node, ast_proc(node));
             output_append_text(node->output, temp1);
             free(temp1);
             break;
@@ -427,6 +842,10 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             break;
 
+        case OPT_DISPATCH:
+            emit_dispatch(node);
+            break;
+
         case DO: /* DO LOOP */
             /* Loop Assignments REPEAT->output */
 
@@ -475,9 +894,17 @@ void emit_flow(ASTNode *node, void *pl) {
             temp1 = mprintf("   br l%ddostart\nl%ddoend:\n",
                             node->node_number, node->node_number);
             output_append_text(node->output, temp1);
-            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            if (child1->cleanup) {
+                /* The transient producer retains its own detached
+                 * branch_cleanup.  Copying the aggregate REPEAT cleanup here
+                 * would make a SIGNAL handler visit both copies and unlink the
+                 * same live mapping twice. */
+                output_concat(node->output, child1->cleanup);
+            }
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node->output, node);
+                clear_scope_variable_metadata(node->output, node);
             }
             free(temp1);
             free(comment_meta);
@@ -593,6 +1020,14 @@ void emit_flow(ASTNode *node, void *pl) {
                                 else j = 1;
                             }
                             else j = 0; /* Not a constant */
+                        }
+                        else if (payload->context->optimise &&
+                                 ast_chdn(n, 0)->value_type == TP_DECIMAL &&
+                                 (constant_decimal = flow_readonly_decimal_literal(ast_chdn(n, 0)))) {
+                            /* Preserve the prepared register operand while
+                             * recovering only the immutable step-sign fact. */
+                            if (constant_decimal[0] == '-') j = -1;
+                            else j = 1;
                         }
                         else j = 0; /* Not a constant */
                     }
@@ -800,6 +1235,11 @@ void emit_flow(ASTNode *node, void *pl) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
+            flow_emit_crossed_cleanups(node->output, node,
+                                       node->association);
+            signal_emit_unwind_for_control(node->output, node,
+                                           node->association);
+
             temp1 = mprintf("   br l%ddoend\n",
                             node->association->node_number);
             output_append_text(node->output, temp1);
@@ -845,16 +1285,6 @@ void emit_flow(ASTNode *node, void *pl) {
                                         child1->register_num);
                         output_append_text(node->output, temp1);
                         free(temp1);
-
-                        if (flow_needs_attr_copy(node->association)) {
-                            temp1 = mprintf("   acopy %c%d,%c%d\n",
-                                            node->association->register_type,
-                                            node->association->register_num,
-                                            child1->register_type,
-                                            child1->register_num);
-                            output_append_text(node->output, temp1);
-                            free(temp1);
-                        }
                     }
                 }
 
@@ -862,10 +1292,16 @@ void emit_flow(ASTNode *node, void *pl) {
             }
 
             if (node->association) {
-                temp1 = mprintf("   br l%dbexprend\n",
-                                node->association->node_number);
-                output_append_text(node->output, temp1);
-                free(temp1);
+                flow_emit_crossed_cleanups(node->output, node,
+                                           node->association);
+                signal_emit_unwind_for_control(node->output, node,
+                                               node->association);
+                if (!leave_with_falls_through_to_block_end(node)) {
+                    temp1 = mprintf("   br l%dbexprend\n",
+                                    node->association->node_number);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
             }
             break;
 
@@ -880,6 +1316,8 @@ void emit_flow(ASTNode *node, void *pl) {
             /* Add Variable Metadata */
             add_variable_metadata(node);
 
+            flow_emit_crossed_cleanups(node->output, node,
+                                       node->association);
             temp1 = mprintf("   br l%ddoinc\n",
                             node->association->node_number);
             output_append_text(node->output, temp1);

@@ -1,0 +1,262 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+say BITAND("A", "B")
+
+
+errors = errors + check_text(1,"BITAND", "@", "A", "B")
+errors = errors + check_text(2,"BITOR", "C", "A", "B")
+errors = errors + check_hex(3,"BITXOR", "00", "41", "41", "", "", 0)
+errors = errors + check_hex(4,"BITAND", "AABBCC", "AABBCC", "FF", "", "", 0)
+errors = errors + check_hex(5,"BITOR", "FFF0", "F000", "0FF0", "", "", 0)
+errors = errors + check_hex(6,"BITXOR", "F00F", "FFFF", "0FF0", "", "", 0)
+errors = errors + check_hex(7, "BITAND", "00F0", "F0F0", "0F", "FF", "", 1)
+errors = errors + check_hex(8,"BITOR", "FF00", "F000", "0F", "00", "", 1)
+errors = errors + check_hex(9,"BITXOR", "F00F", "FFFF", "0F", "F0", "", 1)
+errors = errors + check_hex(10,"BITAND", "F0F0", "F0F0", "", "", "", 0)
+errors = errors + check_count_error(11,"BITAND", "RXC-LC-40.3", 0)
+errors = errors + check_count_error(12,"BITOR", "RXC-LC-40.4", 4)
+errors = errors + check_omitted_required("BITXOR")
+errors = errors + check_bad_pad()
+
+/* new */
+/* ASCII-compatible text operations. */
+errors = errors + check_text(13, "BITAND", "@", "A", "@")
+errors = errors + check_text(14, "BITOR",  "a", "A", " ")
+errors = errors + check_text(15, "BITXOR", " ", "A", "a")
+
+/* Mixed high/low bits over several bytes. */
+errors = errors + check_hex(16, "BITAND", "80007000", "80017F00", "FF00F0AA", "", "", 0)
+
+errors = errors + check_hex(17, "BITOR", "FF01FFAA", "80017F00", "FF00F0AA", "", "", 0)
+
+errors = errors + check_hex(18, "BITXOR", "7F018FAA", "80017F00", "FF00F0AA", "", "", 0)
+
+/*
+ * Unequal lengths without a pad.
+ * Only the common prefix is processed; the remaining bytes of the
+ * longer operand are copied unchanged.
+ */
+errors = errors + check_hex(19, "BITAND", "0ABBCC", "AABBCC", "0F", "", "", 0)
+
+errors = errors + check_hex(20, "BITOR", "AFBBCC", "AABBCC", "0F", "", "", 0)
+
+errors = errors + check_hex(21, "BITXOR", "A5BBCC", "AABBCC", "0F", "", "", 0)
+
+/* Same unequal-length cases with the longer operand second. */
+errors = errors + check_hex(22, "BITAND", "0ABBCC", "0F", "AABBCC", "", "", 0)
+
+errors = errors + check_hex(23, "BITOR", "AFBBCC", "0F", "AABBCC", "", "", 0)
+
+errors = errors + check_hex(24, "BITXOR", "A5BBCC", "0F", "AABBCC", "", "", 0)
+
+/*
+ * Unequal lengths with explicit F0 padding.
+ *
+ * Short operand AA becomes AA F0.
+ */
+errors = errors + check_hex(25, "BITAND", "0A00", "AA", "0F0F", "F0", "", 1)
+
+errors = errors + check_hex(26, "BITOR", "AFFF", "AA", "0F0F", "F0", "", 1)
+
+errors = errors + check_hex(27, "BITXOR", "A5FF", "AA", "0F0F", "F0", "", 1)
+
+/* Padding must also work when the second operand is shorter. */
+errors = errors + check_hex(28, "BITAND", "0A00", "0F0F", "AA", "F0", "", 1)
+
+errors = errors + check_hex(29, "BITOR", "AFFF", "0F0F", "AA", "F0", "", 1)
+
+errors = errors + check_hex(30, "BITXOR", "A5FF", "0F0F", "AA", "F0", "", 1)
+
+/*
+ * Omitted second argument and no pad.
+ * The first string must be returned unchanged.
+ */
+errors = errors + check_hex(31, "BITAND", "DEADBEEF", "DEADBEEF", "", "", "", 0)
+
+errors = errors + check_hex(32, "BITOR", "DEADBEEF", "DEADBEEF", "", "", "", 0)
+
+errors = errors + check_hex(33, "BITXOR", "DEADBEEF", "DEADBEEF", "", "", "", 0)
+
+/*
+ * Omitted second argument with a supplied pad.
+ * Your helper represents this with right_hex="" and pad_exists=1.
+ */
+errors = errors + check_hex(34, "BITAND", "0000", "F0F0", "", "0F", "", 1)
+
+errors = errors + check_hex(35, "BITOR", "FFFF", "F0F0", "", "0F", "", 1)
+
+errors = errors + check_hex(36, "BITXOR", "FFFF", "F0F0", "", "0F", "", 1)
+
+/* Identity padding with an omitted second argument. */
+errors = errors + check_hex(37, "BITAND", "123456", "123456", "", "FF", "", 1)
+
+errors = errors + check_hex(38, "BITOR", "123456", "123456", "", "00", "", 1)
+
+errors = errors + check_hex(39, "BITXOR", "123456", "123456", "", "00", "", 1)
+
+/* Embedded zero bytes must not terminate processing. */
+errors = errors + check_hex(40, "BITAND", "0A000C", "AA00CC", "0FFF0F", "", "", 0)
+
+errors = errors + check_hex(41, "BITOR", "AFFFCF", "AA00CC", "0FFF0F", "", "", 0)
+
+errors = errors + check_hex(42, "BITXOR", "A5FFC3", "AA00CC", "0FFF0F", "", "", 0)
+
+/* All-zero and all-one identities. */
+errors = errors + check_hex(43, "BITAND", "00000000", "12345678", "00000000", "", "", 0)
+
+errors = errors + check_hex(44, "BITAND", "12345678", "12345678", "FFFFFFFF", "", "", 0)
+
+errors = errors + check_hex(45, "BITOR", "12345678", "12345678", "00000000", "", "", 0)
+
+errors = errors + check_hex(46, "BITOR", "FFFFFFFF", "12345678", "FFFFFFFF", "", "", 0)
+
+errors = errors + check_hex(47, "BITXOR", "12345678", "12345678", "00000000", "", "", 0)
+
+errors = errors + check_hex(48, "BITXOR", "EDCBA987", "12345678", "FFFFFFFF", "", "", 0)
+
+/* Operating on a value with itself. */
+errors = errors + check_hex(49, "BITAND", "89ABCDEF", "89ABCDEF", "89ABCDEF", "", "", 0)
+
+errors = errors + check_hex(50, "BITOR", "89ABCDEF", "89ABCDEF", "89ABCDEF", "", "", 0)
+
+errors = errors + check_hex(51, "BITXOR", "00000000", "89ABCDEF", "89ABCDEF", "", "", 0)
+
+/* Null first string with omitted second string. */
+errors = errors + check_hex(52, "BITAND", "", "", "", "", "", 0)
+
+errors = errors + check_hex(53, "BITOR", "", "", "", "", "", 0)
+
+errors = errors + check_hex(54, "BITXOR", "", "", "", "", "", 0)
+
+/*
+ * UTF-8 profile: verify that binary input is processed as encoded bytes
+ * and is not treated as a zero-terminated or character-counted value.
+ *
+ * C3 A9 is the UTF-8 representation of U+00E9.
+ */
+errors = errors + check_hex(55, "BITAND", "C3A9", "C3A9", "FFFF", "", "UTF8", 0)
+
+errors = errors + check_hex(56, "BITOR", "C3A9", "C3A9", "0000", "", "UTF8", 0)
+
+errors = errors + check_hex(57, "BITXOR", "3C56", "C3A9", "FFFF", "", "UTF8", 0)
+
+/* -------------- */
+
+
+if errors = 0 then say "PASS: Level C BITAND/BITOR/BITXOR BIFs"
+return errors <> 0
+
+check_text: procedure = .int
+  arg testnum=.int, name = .string, expected = .string, left = .string, right = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(left)
+  args[2] = .RexxValue(right)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext(name)
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = invoke_bitwise(name, reference context)
+  if \context.hasError() & result.asString() = expected then do
+       say "SUCCESS, test:" testnum result.asString()' = 'expected
+     return 0
+  end
+  say "FAIL, test:" testnum name "text expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_hex: procedure = .int
+  arg testnum=.int, name = .string, expected_hex = .string, left_hex = .string, right_hex = .string, pad_hex = .string, profile = .string, pad_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(left_hex))
+  exists[1] = 1
+  if right_hex <> "" then do
+    args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(right_hex))
+    exists[2] = 1
+  end
+  if pad_exists then do
+    if right_hex = "" then do
+      args[2] = .RexxValue("")
+      exists[2] = 0
+    end
+    args[3] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(pad_hex))
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext(name)
+  if profile = "UTF8" then call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = invoke_bitwise(name, reference context)
+  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual_hex = expected_hex then  do
+     say "SUCCESS, test:" testnum actual_hex' = 'expected_hex
+     return 0
+  end
+  say "FAIL test:" testnum" name hex expected" expected_hex "got" actual_hex,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg testnum=.int, name = .string, expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to count
+    args[index] = .RexxValue("A")
+    exists[index] = 1
+  end
+  context = .RexxBifCallContext(name)
+  call context.setArguments(args, exists)
+  result = invoke_bitwise(name, reference context)
+  if context.hasError() & context.errorCode() = expected_code then do
+       say "SUCCESS, test:" testnum context.errorCode()' = 'expected_code
+    return 0
+  end
+
+  say "FFAIL, test:" testnum name "expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  arg name = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("A")
+  exists[1] = 0
+  context = .RexxBifCallContext(name)
+  call context.setArguments(args, exists)
+  result = invoke_bitwise(name, reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL, test:" name "omitted required got error" context.errorCode(),
+      context.errorMessage()
+  return 1
+
+check_bad_pad: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("AA"))
+  args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("BB"))
+  args[3] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("CCDD"))
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("BITAND")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_bitand(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: BITAND bad pad got error" context.errorCode(),
+      context.errorMessage()
+  return 1
+
+invoke_bitwise: procedure = .RexxValue
+  arg name = .string, context_ref = reference .RexxBifCallContext
+  select
+    when name = "BITAND" then return rexxclassicbif_bitand(context_ref)
+    when name = "BITOR" then return rexxclassicbif_bitor(context_ref)
+    otherwise return rexxclassicbif_bitxor(context_ref)
+  end
+  return .RexxValue("")

@@ -1,0 +1,21 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 20  of event 'cycles:u'
+# Event count (approx.): 178749687
+#
+# Overhead  Command  Shared Object  Symbol                                      IPC   [IPC Coverage]
+# ........  .......  .............  ..........................................  ....................
+#
+    61.79%  rxvm     rxvm           [.] run                                     -      -            
+    15.71%  rxvm     rxvm           [.] resolve_runtime_procedure               -      -            
+    12.10%  rxvm     rxvm           [.] rxbin_reader_next_module                -      -            
+     6.06%  rxvm     rxvm           [.] runtime_proc_matches_signature          -      -            
+     4.35%  rxvm     rxvm           [.] rxvm_rebuild_interface_method_registry  -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

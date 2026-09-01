@@ -1,6 +1,6 @@
 # Introduction
 
-cRexx is a Rexx-family language and toolchain that compiles source
+cRexx is a Rexx[^1]-family language and toolchain that compiles source
 programs to an open bytecode format, then executes that bytecode on the
 cRexx virtual machine or packages it into a native executable.
 
@@ -13,6 +13,33 @@ The public documentation should describe what the current toolchain can do.
 Ideas for future levels remain part of the project direction, but they are not
 release facts. In this book, unless a section says otherwise, syntax and
 behaviour refer to the current Level B implementation.
+
+## The origins of \crexx{}
+
+Rexx did not derive from a single earlier language. Its immediate
+predecessor was IBM’s EXEC 2, from which it inherited the idea of a general
+command and application-extension language. Its structured syntax and many
+of its programming constructs belong principally to the PL/I and Algol
+tradition, with Pascal forming part of the same background. Cowlishaw also
+acknowledged influences from APL and from several unpublished experimental
+languages that he had developed during the 1970s. These influences were not
+adopted mechanically: existing ideas were repeatedly simplified or
+reformulated according to Rexx’s central objective of making programs easy
+to write and read.
+
+In “The Design of the REXX Language[^2],” Cowlishaw discusses BASIC and
+Logo as languages intended for general or non-specialist users. He places
+Rexx in the same broad “personal language” category, while arguing that Rexx
+was intended to support both casual and professional programming.
+
+cRexx is part of this tradition and apart from the mentioned languages, several
+Rexx variants as brexx, Object Rexx and NetRexx influenced its design. With 
+native (hardware) types, compilation to native executables, ambitious performance goals, Unicode support and libraries for contemporary IT, it explicitly aims at the professional programmer, while keeping the simplicity
+and easy integration with platforms and applications its predecessors are known for.
+
+
+[^1]:<!--cite-->[cowlishaw1985rexx]
+[^2]:<!--cite-->[cowlishaw1987]
 
 ## What The Release 1 Beta Line Contains
 
@@ -74,5 +101,5 @@ The reference is intentionally factual rather than aspirational:
 - Experimental areas are labelled as experimental when the implementation is
   intentionally small or still being shaped.
 
-If a page conflicts with compiler tests, source, or the agent context files in
-`docs/ai-context/`, treat that as a documentation bug.
+<!-- If a page conflicts with compiler tests, source, or the agent context files in -->
+<!-- `docs/ai-context/`, treat that as a documentation bug. -->

@@ -1,0 +1,2 @@
+Error in initializer_namespace_expose.crexx @ 2:47 - #INITIALISER_NOT_EXPOSABLE, "boot"
+1 error(s) in source file

@@ -1,0 +1,15 @@
+/*
+ * Instruction-level signal retry is retired.  A legacy handler marker must
+ * fail safely instead of re-entering a potentially partially executed opcode.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigcalla legacy_retry(),"OTHER"
+    signal "OTHER","retired retry marker"
+    say "FAIL: retired retry marker resumed execution"
+    ret 1
+
+legacy_retry() .locals=0
+    ret "__rxsignal_retry"

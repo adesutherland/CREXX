@@ -1,0 +1,43 @@
+utc=2026-08-29T20:26:56Z
+Darwin Adrians-MacBook-Air.local 25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:16:20 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8142 arm64
+ProductName:		macOS
+ProductVersion:		26.6.2
+BuildVersion:		25G83
+Mac17,3
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	93%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+21:26  up 19:21, 2 users, load averages: 2.66 3.24 2.90
+post_utc=2026-08-29T20:27:11Z
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	93%; AC attached; not charging present: true
+21:27  up 19:21, 2 users, load averages: 2.73 3.23 2.90

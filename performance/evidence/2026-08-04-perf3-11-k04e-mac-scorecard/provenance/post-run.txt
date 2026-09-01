@@ -1,0 +1,9 @@
+campaign_end_utc=2026-08-04T09:44:25Z
+post_check_utc=2026-08-04T09:47:19Z
+power=AC attached; battery 93 percent
+low_power_mode=0
+thermal=No thermal or performance warning recorded
+load_average=1.17 1.52 4.47
+active_crexx_build_test_vm_processes=none
+samples_removed=0
+second_append=not run

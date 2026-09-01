@@ -1,0 +1,23 @@
+options levelb numeric_common
+
+main: procedure = .int
+  flags = 0
+  bit = 1
+  mask = 1 <shl> bit + 1
+  flags = flags <set> mask
+  flags = flags <or> 1
+  say flags
+  say flags <has> 4
+  say flags <has> 2
+  flags = flags <clear> 1
+  say flags
+  say flags <and> 4
+  say flags <xor> 12
+  say 1 <set> 1 <shl> bit + 1
+  say 5 <has> 1 <shl> 2
+  say 7 <xor> 3 <and> 1
+  say <not> 0
+  say 7 <idiv> 2
+  say 7 <mod> 2
+  say 7 <rem> 2
+  return 0

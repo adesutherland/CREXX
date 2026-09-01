@@ -1,0 +1,5 @@
+candidate,workload,vm,n,favourable,paired_median_percent,q1_percent,q3_percent,mean_percent,ci95_mean_low_percent,ci95_mean_high_percent,disposition
+C4-production,Base64,rxvm,34,21,4.858771,-4.835853,12.169198,4.457017,0.469367,8.444667,decisive_favourable_at_cap
+C4-production,Base64,rxbvm,22,16,5.780083,-2.252938,12.353335,6.522025,1.033959,12.010092,decisive_favourable
+C4-production,RexxCPS,rxvm,12,12,2.517269,1.197911,2.966694,2.330943,1.400783,3.261103,decisive_favourable
+C4-production,RexxCPS,rxbvm,34,11,-0.608650,-1.263675,0.310595,-0.274176,-1.556911,1.008559,noisy_neutral_at_cap

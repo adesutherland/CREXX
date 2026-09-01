@@ -1,0 +1,4 @@
+workload,caller_source_line,caller,callee,c0_disassembly_instruction_index,c0_rxas_line,c0_receiver_copy,c1a_r1_rxas_line,c1a_r1_receiver_binding,c1a_r2_rxas_line,c1a_r2_receiver_copy,dynamic_top_level_copies,recursive_copy_operations,recursive_bytes,correctness
+Richards,218,awfy_richards.richardsscheduler.runtask(),awfy_richards.richardsscheduler.iswaitingwithpacket(),2945,2054,"copy r3,a1",2056,"first attribute link uses a1 directly",2051,"copy r3,a1",65790,9671064,76842192,"C0 and C1a-R2 correct; C1a-R1 contributes to 0/1 failure"
+Richards,300,awfy_richards.richardsscheduler.schedule(),awfy_richards.richardsscheduler.isholdingorwaiting(),6630,4827,"copy r5,a1",4827,"first attribute link uses a1 directly",4814,"copy r5,a1",106604,15670674,124512560,"C0 and C1a-R2 correct; C1a-R1 contributes to 0/1 failure"
+Richards,TOTAL,,,,,,,,,,172394,25341738,201354752,"C1a-R1 invalid; no timing"

@@ -1,0 +1,21 @@
+/* PERF2-04 focused imported-body UPPER call-shape probe. */
+options levelb comments_dash
+import rxfnsb
+
+symbol_source = "mixed Symbol"
+literal_result = upper("mixed Literal")
+symbol_result = upper(symbol_source)
+expression_result = upper("mixed " || "Expression")
+
+if literal_result <> "MIXED LITERAL" then return fail("literal result")
+if symbol_result <> "MIXED SYMBOL" then return fail("symbol result")
+if expression_result <> "MIXED EXPRESSION" then return fail("expression result")
+if symbol_source <> "mixed Symbol" then return fail("source changed")
+
+say "PASS: PERF2-04 UPPER inline call-shape probe"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

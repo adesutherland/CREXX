@@ -1,23 +1,75 @@
-/* rexx test sequence */
+/* rexx */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+errors = errors + check_string("ij", sequence("i", "j"), "ASCII")
+errors = errors + check_string("αβγ", sequence("α", "γ"), "Greek")
+errors = errors + check_string("🙂", sequence("🙂", "🙂"), "equal supplementary")
 
-if sequence('i','j') \= 'ij' then do
-  errors=errors+1
-  say 'SEQUENCE failed in test 1'
+before_surrogates = make_character(55295)
+after_surrogates = make_character(57344)
+across = sequence(before_surrogates, after_surrogates)
+errors = errors + check_int(2, character_length(across), "surrogates skipped")
+errors = errors + check_codepoint(55295, across, 0, "before surrogate range")
+errors = errors + check_codepoint(57344, across, 1, "after surrogate range")
+
+highest = make_character(1114111)
+errors = errors + check_string(highest, sequence(highest, highest), "highest scalar")
+
+from = "a"
+tos = "c"
+ignored = sequence(from, tos)
+errors = errors + check_string("a", from, "from unchanged")
+errors = errors + check_string("c", tos, "to unchanged")
+
+caught = 0
+do
+  ignored = sequence("z", "a")
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-
-if sequence('i','y') \= 'ijklmnopqrstuvwxy' then do
-  errors=errors+1
-  say 'SEQUENCE failed in test 2'
+do
+  ignored = sequence("", "a")
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if sequence('α','γ') \= 'αβγ' then do
-  errors=errors+1
-  say 'SEQUENCE failed in test 3'
+do
+  ignored = sequence("ab", "c")
+on signal invalid_arguments
+  caught = caught + 1
 end
+errors = errors + check_int(3, caught, "invalid endpoints signal")
 
-return errors<>0
+if errors = 0 then say "PASS: sequence"
+return errors <> 0
+
+make_character: procedure = .string
+  arg codepoint = .int
+  result = ""
+  assembler appendchar result,codepoint
+  return result
+
+character_length: procedure = .int
+  arg value = .string
+  result = .int
+  assembler strlen result,value
+  return result
+
+check_codepoint: procedure = .int
+  arg expected = .int, value = .string, index = .int, label = .string
+  actual = .int
+  assembler strchar actual,value,index
+  return check_int(expected, actual, label)
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: SEQUENCE" label "values differ"
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: SEQUENCE" label "expected" expected "got" actual
+  return 1

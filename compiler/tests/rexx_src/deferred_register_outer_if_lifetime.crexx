@@ -1,0 +1,64 @@
+options levelb
+
+probe = .DeferredRegisterProbe()
+direct_result = probe.directOuterIf()
+
+probe = .DeferredRegisterProbe()
+typed_loop_result = probe.typedLoopOuterIf()
+
+probe = .DeferredRegisterProbe()
+loop_then_if_result = probe.loopThenIf()
+
+if direct_result <> 1 | typed_loop_result <> 1 | loop_then_if_result <> 1 then
+  return fail("expected 1/1/1, got " || direct_result || "/" ||,
+      typed_loop_result || "/" || loop_then_if_result)
+
+say "PASS: Deferred Register Outer IF Lifetime"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+DeferredRegisterProbe: class
+  flags_ = .int[]
+
+  *: factory
+    flags_[1] = 1
+    flags_[2] = 1
+    flags_[3] = 1
+    return
+
+  directOuterIf: method = .int
+    if flags_[1] then do
+      index = .int
+      do index = 1 to 1
+        sink = identity(index)
+      end
+    end
+    return flags_[1]
+
+  typedLoopOuterIf: method = .int
+    if flags_[2] then do
+      marker = 0
+      do typed_index = .int(1) to 1
+        sink = identity(typed_index)
+      end
+    end
+    return flags_[2]
+
+  loopThenIf: method = .int
+    do outer = .int(1) to 1
+      if flags_[3] then do
+        index = .int
+        do index = 1 to 1
+          sink = identity(index)
+        end
+      end
+    end
+    return flags_[3]
+
+  identity: method = .int
+    arg value = .int
+    return value

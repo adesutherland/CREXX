@@ -1,0 +1,3 @@
+benchmark=awfy_sieve repetitions=50 result=669
+PASS: AWFY Sieve
+VM_C2_RESET_STATS,vm=rxbvm,mode=2,result=0,prepared_procedures=703,may_rebind_procedures=506,proved_clean_procedures=161,unknown_fallback_procedures=36,instructions_scanned=55104,fresh_activations=1,reused_activations=0,eligible_core_slots=0,core_reset_activations=0,core_reset_slots=0,core_reset_bytes=0,static_skip_activations=0,static_skip_slots=0,zero_core_activations=0,reused_a0_resets=0

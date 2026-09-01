@@ -23,7 +23,7 @@
  */
 
 options levelb
-namespace data_ObjectStack expose ObjectStack
+namespace data expose ObjectStack
 
 /**
  * ObjectStack is a last-in-first-out stack of object values.

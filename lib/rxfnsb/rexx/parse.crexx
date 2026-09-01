@@ -22,25 +22,81 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Compile and execute a legacy dynamic PARSE template.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/parse.md
+ */
 options levelb
-
 namespace rxfnsb expose parse
 
-/* ----------------------------------------------------------------------
- * Compile the given template, split it in tokens and token.ktypes
- * ----------------------------------------------------------------------
+/**
+ * Parse source text and return aligned variable-name and value arrays.
+ *
+ * @param source source text
+ * @param template dynamic legacy template
+ * @param variable exposed output variable names
+ * @param variable_content exposed output values
+ * @param strip_option optional 0 preserve or 1 strip values
+ * @param case_option optional 0 preserve, 1 uppercase, or 2 lowercase
+ * @return number of output variables
+ * @signal INVALID_ARGUMENTS invalid option or template
  */
-parse: Procedure=.int
-  arg string2Parse=.string, template=.string, expose variable=.string[], expose variable_content=.string[],option=0,upper=0
-  token.1=''          ## init token array
-  token_type.1=''     ## init types array
-  count=parseCompile(template,token,token_type)
+parse: procedure = .int
+  arg source = .string, template = .string, expose variable = .string[], expose variable_content = .string[], strip_option = 0, case_option = 0
+  token = .string[]
+  token_type = .int[]
+  token_count = .int
+  transformed = .string
+  folded = .string
+  token_value = .string[]
 
-  call parseString string2Parse, count, token, token_type,variable,variable_content,template
-  if option=1 | upper>0 then do i=1 to variable_content.0
-     if option=1 then variable_content.i=strip(variable_content.i)
-     if upper=1 then variable_content.i=upper(variable_content.i)
-     else if upper=2 then variable_content.i=lower(variable_content.i)
+  if strip_option <> 0 & strip_option <> 1 then
+    assembler signal "INVALID_ARGUMENTS","PARSE strip option must be 0 or 1"
+  if case_option < 0 | case_option > 2 then
+    assembler signal "INVALID_ARGUMENTS","PARSE case option must be 0, 1, or 2"
+
+  token_count = parsecompile(template,token,token_type)
+  do item = 1 to token_count
+    if token_type[item] = 6 then token_value[item] = value(token[item])
   end
-return variable.0
+  call parsestring_values source,token_count,token,token_type,variable,variable_content,template,token_value
+
+  if strip_option = 1 | case_option > 0 then do item = .int(1) to variable_content[0]
+    transformed = variable_content[item]
+    if strip_option = 1 then transformed = _parse_strip_value(transformed)
+    if case_option = 1 then do
+      assembler strupper folded,transformed
+      transformed = folded
+    end
+    else if case_option = 2 then do
+      assembler strlower folded,transformed
+      transformed = folded
+    end
+    variable_content[item] = transformed
+  end
+  return variable[0]
+
+_parse_strip_value: procedure = .string
+  arg source = .string
+  source_length = .int
+  first = .int
+  last = .int
+  search = .int
+  slice_length = .int
+  result = ""
+
+  assembler strlen source_length,source
+  if source_length = 0 then return result
+  search = 0
+  assembler fndnblnk first,source,search
+  if first < 0 then return result
+  search = 0 - source_length
+  assembler fndnblnk last,source,search
+  if first = 0 & last = source_length - 1 then return source
+  slice_length = last - first + 1
+  assembler substring result,source,first,slice_length
+  return result
+
+

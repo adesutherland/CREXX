@@ -20,12 +20,12 @@ say "*** Connect to Database..."
  */
 say "*** set/change Database..."
   newdb = odbc_database('customer')
-  if newdb = "Error changing database" then call error_exit "Failed to set database: "odbc_error_message(),""
-  say "Database set to: '"newdb"'"
+  if newdb <> 0 then call error_exit "Failed to set database: "odbc_error_message(),""
+  say "Database selected"
   /* Explicitly set the database */
   newdb = odbc_database(database)
-  if newdb = "Error changing database" then call error_exit "Failed to set database: "odbc_error_message(),""
-  say "Database set to: '"newdb"'"
+  if newdb <> 0 then call error_exit "Failed to set database: "odbc_error_message(),""
+  say "Database selected"
 /* -----------------------------------------------------------------
  * Execute SELECT * FROM table
  * -----------------------------------------------------------------
@@ -123,9 +123,8 @@ say "=== Query with Error Handling Example ==="
   end
   say coln
   say copies('-',33)
-  call odbc_fetch(5)
   /* Fetch and display results */
-  do while odbc_fetch(0) >= 0
+  do while odbc_fetch() = 0
      colx=''
      do coli = 1 to cols
         colx=colx||right(odbc_getcolumn(coli),16)" "
@@ -152,7 +151,7 @@ say "=== Query with Error Handling Example ==="
   say coln
   say copies('-',33)
   /* Fetch and display results */
-  do while odbc_fetch(0) >= 0
+  do while odbc_fetch() = 0
      colx=''
      do coli = 1 to cols
         colx=colx||right(odbc_getcolumn(coli),16)" "

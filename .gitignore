@@ -71,6 +71,7 @@ _deps
 
 # cREXX
 *.rxbin
+!performance/evidence/**/lifecycle_probe.rxbin
 
 # emacs backup files
 *~

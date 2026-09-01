@@ -1,0 +1,10 @@
+compiler/rxcp_inline_bind.c
+compiler/rxcp_inline_clone.c
+compiler/tests/CMakeLists.txt
+compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+compiler/tests/perf2_07_v3_representation.cmake
+compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+compiler/tests/run_inline_receiver_nested_this_opt.cmake
+interpreter/rxvmintp.c
+interpreter/rxvmvars.h

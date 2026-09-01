@@ -1,6 +1,6 @@
 # CREXX Documentation
 
-_Release documentation for `crexx-1.0.0-beta.2`._
+_Release documentation for `crexx-1.0.0-beta.3` on `develop`._
 
 This site is the public entry point for current CREXX documentation. It should
 describe what is implemented in the release branch, not old plans or speculative
@@ -9,7 +9,10 @@ designs.
 ## Start Here
 
 - [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
-- [Release notes](releases/v1.0.0-beta.2.md): what is included in CREXX 1.0.0 beta 2
+- [Beta 3 release notes](releases/v1.0.0-beta.3.md): current beta 3 WIP scope,
+  timetable, and limitations
+- [Beta 2 release notes](releases/v1.0.0-beta.2.md): what is included in the
+  latest completed CREXX 1.0.0 beta 2 baseline
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)
@@ -20,7 +23,14 @@ designs.
 ## Language
 
 - [Language reference](books/crexx_language_reference/about.md)
+- [Concurrency language reference](books/crexx_language_reference/concurrency.md)
 - [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
+- [Concurrent programming](books/crexx_programming_guide/concurrency.md)
+- [Concurrency classes](books/crexx_library_reference/concurrency.md)
+- [Concurrent HTTP client and server](books/crexx_library_reference/concurrent_http.md)
+- [Mathematics](books/crexx_library_reference/mathematics.md)
+- [Unicode text services](books/crexx_library_reference/unicode.md)
+- [Packed vectors](books/crexx_library_reference/rxvector.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)
@@ -28,6 +38,8 @@ designs.
 - [Namespaces](books/crexx_language_reference/namespace.md)
 - [Standard library](books/crexx_language_reference/standard_library.md)
 - [Built-in function reference](books/crexx_language_reference/bifs_function_reference.md)
+- [RexxScript user guide](../rexxscript/doc/user-guide.md)
+- [RexxScript developer guide](../rexxscript/doc/developer-guide.md)
 
 ## Tools
 
@@ -36,7 +48,9 @@ designs.
 - [rxas assembler](books/crexx_programming_guide/rxas.md)
 - [rxlink linker](books/crexx_programming_guide/rxlink.md)
 - [rxdas disassembler](books/crexx_programming_guide/rxdas.md)
+- [Operation contracts](books/crexx_programming_guide/operation_contracts.md)
 - [Assembler programming guide](books/crexx_programming_guide/rxas_programming_guide.md)
+- [RXAS human reference skeleton](reference/rxas/README.md)
 - [Plugin architecture](books/crexx_programming_guide/rxpa.md)
 - [crexxsaa host integration](books/crexx_programming_guide/crexxsaa.md)
 - [Compiler exits](books/crexx_programming_guide/compiler_exits.md)
@@ -46,7 +60,9 @@ designs.
 - [VM specification](books/crexx_vm_spec/about.md)
 - [Instruction characteristics](books/crexx_vm_spec/instruction_characteristics.md)
 - [Platform considerations](books/crexx_vm_spec/platform_considerations.md)
+- [Unicode algorithm appendix](books/crexx_vm_spec/unicode_algorithms.md)
 - [Current architecture notes](ai-context/CREXX_ARCHITECTURE.md)
+- [Concurrency architecture and maintainer reference](ai-context/CREXX_CONCURRENCY.md)
 - [Assembler internals](ai-context/RXAS_ASSEMBLER.md)
 - [Linker internals](ai-context/RXLINK_LINKER.md)
 - [Interpreter internals](ai-context/RXVM_INTERPRETER.md)

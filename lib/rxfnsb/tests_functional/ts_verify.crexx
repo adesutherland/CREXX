@@ -1,67 +1,68 @@
-/* rexx */
+/* Focused Level B VERIFY tests. */
 options levelb
 import rxfnsb
 
-/* VERIFY */
-errors=0
-/* These from the Rexx book. */
-if verify('123','1234567890') \= 0 then do
-  errors=errors+1
-  say 'VERIFY failed in test 1 '
+errors = 0
+source = "AB3CD5"
+refchars = "1234567890"
+
+errors = errors + check(verify("123", refchars) = 0, "documented all present")
+errors = errors + check(verify("1Z3", refchars) = 2, "documented first non-match")
+errors = errors + check(verify("AB4T", refchars, "M") = 3, "documented first match")
+errors = errors + check(verify("1P3Q4", refchars,,3) = 4, "documented omitted option")
+errors = errors + check(verify("ABCDE", "", "n", 3) = 3, "documented empty reference")
+errors = errors + check(verify(source, refchars, "match", 4) = 6, "long lowercase option")
+errors = errors + check(verify("", refchars) = 0, "empty source")
+errors = errors + check(verify("", "", "M") = 0, "both empty in match mode")
+errors = errors + check(verify("abc", "", "M") = 0, "empty reference in match mode")
+errors = errors + check(verify("abc", "abc", "N", 4) = 0, "start beyond source")
+errors = errors + check(verify("é🙂x", "🙂", "M") = 2, "Unicode table match")
+errors = errors + check(verify("é🙂x", "é🙂", "N") = 3, "Unicode table non-match")
+nul = "00"x
+errors = errors + check(verify(nul, nul) = 0, "NUL present in reference")
+errors = errors + check(verify(nul, "") = 1, "NUL absent from reference")
+errors = errors + check(source = "AB3CD5" & refchars = "1234567890", "arguments are not mutated")
+
+large = ""
+a_code = 97
+z_code = 90
+do i = 1 to 1000
+  assembler appendchar large,a_code
 end
-if verify('1Z3','1234567890') \= 2 then do
-  errors=errors+1
-  say 'VERIFY failed in test 2 '
+assembler appendchar large,z_code
+errors = errors + check(verify(large, "a") = 1001, "substantial native table scan")
+
+caught = 0
+do
+  ignored = verify("a", "a", "")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if verify('AB4T','1234567890','M') \= 3 then do
-  errors=errors+1
-  say 'VERIFY failed in test 3 '
+do
+  ignored = .int
+  ignored = verify("a", "a", "X")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if verify('1P3Q4','1234567890',,3) \= 4 then do
-  errors=errors+1
-  say 'VERIFY failed in test 4 '
+do
+  ignored = .int
+  ignored = verify("a", "a", "N", 0)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if verify('ABCDE','',,3) \= 3 then do
-  errors=errors+1
-  say 'VERIFY failed in test 5 '
+do
+  ignored = .int
+  ignored = verify("a", "a", "N", -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if verify('AB3CD5','1234567890','M',4) \= 6 then do
-  errors=errors+1
-  say 'VERIFY failed in test 6 '
-end
-  /* These from Mark Hessling. */
-if verify('foobar', 'barfo', N, 1) \= 0 then do
-  errors=errors+1
-  say 'VERIFY failed in test 7 '
-end
-if verify('foobar', 'barfo', M, 1) \= 1 then do
-  errors=errors+1
-  say 'VERIFY failed in test 8 '
-end
-if verify('', 'barfo') \= 0 then do
-  errors=errors+1
-  say 'VERIFY failed in test 9 '
-end
-if verify('foobar', '') \= 1 then do
-  errors=errors+1
-  say 'VERIFY failed in test 10 '
-end
-if verify('foobar', 'barf', N, 3) \= 3 then do
-  errors=errors+1
-  say 'VERIFY failed in test 11 '
-end
-if verify('foobar', 'barf', N, 4) \= 0 then do
-  errors=errors+1
-  say 'VERIFY failed in test 12 '
-end
-if verify('', '') \= 0 then do
-  errors=errors+1
-  say 'VERIFY failed in test 13 '
-end
-/* say verify('123456','0123456789') */
-/* say verify('12w36','0123456789') */
-/* say verify('12w36','0123456789',,4) */
-/* say verify('a12w36','0123456789','M') */
-/* return */
-/* verify()  */
-return errors<>0
+errors = errors + check(caught = 4, "invalid option/start use signals")
+
+if errors = 0 then say "PASS: verify"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: VERIFY" label
+  return 1

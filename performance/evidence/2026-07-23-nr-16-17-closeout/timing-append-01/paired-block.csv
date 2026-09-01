@@ -1,0 +1,17 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Sieve,rxvm,normalized_work_per_second,12,5114.923043,5134.112353,-0.608131,0.139383,0.577348,0.877861,2.166054,0.599822,0.130742,1.068902,10,12,clear_favorable,no
+Permute,rxvm,normalized_work_per_second,12,678.118001,679.535519,-2.458187,-0.853734,0.195028,0.796775,1.355812,-0.056448,-0.782505,0.669609,6,12,noisy_inconclusive,no
+Bounce,rxvm,normalized_work_per_second,12,340.767850,330.996645,-4.308350,-3.700724,-2.641212,-1.058359,-0.182347,-2.480820,-3.426649,-1.534990,0,12,clear_adverse,no
+Bounce,rxbvm,normalized_work_per_second,12,312.099068,314.320351,-0.671928,-0.046279,0.441582,1.228319,2.706706,0.675539,0.059881,1.291197,8,12,clear_favorable,no
+Richards,rxvm,normalized_work_per_second,12,1.727057,1.738746,-0.122197,0.248016,0.622999,1.209977,1.682960,0.715066,0.359732,1.070399,11,12,clear_favorable,no
+Richards,rxbvm,normalized_work_per_second,12,1.707515,1.713980,-0.494743,-0.081642,0.072513,0.649543,1.424884,0.281082,-0.074705,0.636868,8,12,noisy_inconclusive,no
+Base64,rxvm,normalized_work_per_second,12,1537.260098,1427.629011,-17.835621,-9.965047,-2.777048,-1.195935,2.427043,-5.112667,-9.054153,-1.171181,2,12,clear_adverse,no
+Base64,rxbvm,normalized_work_per_second,12,1264.427270,1645.037150,19.390390,26.112217,29.432260,40.013283,51.479886,32.388445,25.944144,38.832745,12,12,clear_favorable,no
+Mandelbrot,rxvm,normalized_work_per_second,12,3305.927291,3341.115713,-2.817031,-0.973325,3.217878,3.944524,7.658070,2.186509,-0.098129,4.471146,8,12,noisy_inconclusive,no
+Mandelbrot,rxbvm,normalized_work_per_second,12,2926.732736,2901.287706,-1.922645,-1.044506,-0.696513,-0.261067,1.302720,-0.577261,-1.130584,-0.023939,2,12,clear_adverse,no
+Towers,rxvm,normalized_work_per_second,12,14.577059,14.639416,-2.821974,-1.009556,-0.531732,0.608903,3.267575,-0.139831,-1.150575,0.870914,4,12,noisy_inconclusive,no
+Towers,rxbvm,normalized_work_per_second,12,14.196311,14.244088,-1.201833,0.194284,0.671623,1.320305,2.908136,0.755371,0.020308,1.490433,9,12,clear_favorable,no
+Storage,rxvm,normalized_work_per_second,12,5.640615,5.703537,-0.448820,0.537366,0.743740,1.282008,4.057479,1.017016,0.272977,1.761054,10,12,clear_favorable,no
+Storage,rxbvm,normalized_work_per_second,12,5.604966,5.658657,-0.641749,0.063488,0.550105,1.417889,2.231474,0.730505,0.148762,1.312248,9,12,clear_favorable,no
+List,rxbvm,normalized_work_per_second,12,435.624888,460.260009,4.691275,5.250786,6.076662,6.257998,16.271384,6.680613,4.702737,8.658490,12,12,clear_favorable,no
+RexxCPS,rxbvm,benchmark_rate,12,26413059.000000,26865748.000000,0.393342,0.822014,1.813978,2.477801,4.195873,1.793500,1.075049,2.511951,12,12,clear_favorable,no

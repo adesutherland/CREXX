@@ -1,0 +1,214 @@
+/*
+ * SOURCE                 : generic_word_cell.crexx
+ */
+
+.globals=0
+
+main() .locals=15
+   .meta "generic_word_cell.main"="b" ".int" main() ""
+   .srcstep 52 52 17 "generic_word_cell.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 1 1 17 "generic_word_cell.crexx" 5 3 15 "  checksum = 0"
+   .meta "generic_word_cell.main.checksum"="b" ".int" r0
+   .meta "generic_word_cell.main.iterations"="b" ".int" "2000000"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "checksum" ""
+   .srcstep 44 44 17 "generic_word_cell.crexx" 6 3 5 "  do i = 1 to iterations"
+   .srcstep 2 2 17 "generic_word_cell.crexx" 6 6 11 "  do i = 1 to iterations"
+   .meta "generic_word_cell.main.i"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "i" ""
+   .srcstep 3 3 17 "generic_word_cell.crexx" 6 12 25 "  do i = 1 to iterations"
+   load r2,2000000
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+l12dostart:
+   .srcstep 3 3 17 "generic_word_cell.crexx" 6 12 25 "  do i = 1 to iterations"
+   igt r3,r1,r2
+   brt l12doend,r3
+   .srcstep 42 42 17 "generic_word_cell.crexx" 7 5 45 "    if user_word(\"  Alpha Beta\", 2) = \"Beta\" then checksum = checksum + 1"
+   .srcstep 40 40 17 "generic_word_cell.crexx" 7 8 17 "    if user_word(\"  Alpha Beta\", 2) = \"Beta\" then checksum = checksum + 1"
+   .meta "generic_word_cell.main.string_length"="b" ".int" r8
+   .srcstep 5 5 17 "generic_word_cell.crexx" 23 3 23 "  string_length = .int"
+   null r8
+   .srcstep 6 6 33 "generic_word_cell.crexx" 19 7 13 "  arg string = .string, wordnum = .int"
+   load r7,"  Alpha Beta"
+   .traceevent "L" 4 "R" "S" "r" 7 6 6 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 6 6 0 "string" ""
+   .srcstep 7 7 17 "generic_word_cell.crexx" 24 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 8 42 42 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 7 42 42 0 "string" ""
+   strlen r8,r7
+   .srcstep 9 9 17 "generic_word_cell.crexx" 25 3 23 "  if string_length = 0 then return \"\""
+   .traceevent "V" 6 "R" "I" "r" 8 9 9 0 "string_length" ""
+   ieq r12,r8,0
+   .traceevent "O" 4 "R" "B" "r" 12 9 9 0 "" ""
+   brf l182iffalse,r12
+   .srcstep 10 10 17 "generic_word_cell.crexx" 25 24 28 "  if string_length = 0 then return \"\""
+   .srcstep 8 8 17 "generic_word_cell.crexx" 25 29 38 "  if string_length = 0 then return \"\""
+   load r13,""
+   .traceevent "L" 4 "R" "S" "r" 13 42 42 0 "" ""
+   br l161bexprend
+l182iffalse:
+   .srcstep 11 11 17 "generic_word_cell.crexx" 27 3 11 "  scan = 0"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 11 11 0 "scan" ""
+   .srcstep 12 12 17 "generic_word_cell.crexx" 28 3 19 "  current_word = 0"
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 12 12 0 "current_word" ""
+   .srcstep 13 13 17 "generic_word_cell.crexx" 29 3 17 "  word_start = 0"
+   load r11,0
+   .traceevent "L" 4 "R" "I" "r" 11 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 13 13 0 "word_start" ""
+   .srcstep 14 14 17 "generic_word_cell.crexx" 30 3 15 "  word_end = 0"
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 14 14 0 "word_end" ""
+   .srcstep 15 15 17 "generic_word_cell.crexx" 31 3 18 "  word_length = 0"
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 15 15 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 15 15 0 "word_length" ""
+   .srcstep 16 16 17 "generic_word_cell.crexx" 32 3 14 "  result = \"\""
+   load r5,""
+   .traceevent "L" 4 "R" "S" "r" 5 16 16 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 5 16 16 0 "result" ""
+   .srcstep 37 37 17 "generic_word_cell.crexx" 33 3 5 "  do while scan < string_length"
+l206dostart:
+   .srcstep 17 17 17 "generic_word_cell.crexx" 33 6 32 "  do while scan < string_length"
+   .traceevent "V" 6 "R" "I" "r" 6 42 42 0 "scan" ""
+   .traceevent "V" 6 "R" "I" "r" 8 42 42 0 "string_length" ""
+   ilt r13,r6,r8
+   .traceevent "O" 4 "R" "B" "r" 13 42 42 0 "" ""
+   brf l206doend,r13
+   .srcstep 18 18 17 "generic_word_cell.crexx" 34 15 46 "    assembler fndnblnk word_start,string,scan"
+   .traceevent "V" 6 "R" "I" "r" 11 42 42 0 "word_start" ""
+   .traceevent "V" 6 "R" "S" "r" 7 42 42 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 6 42 42 0 "scan" ""
+   fndnblnk r11,r7,r6
+   .srcstep 20 20 17 "generic_word_cell.crexx" 35 5 22 "    if word_start < 0 then return \"\""
+   .traceevent "V" 6 "R" "I" "r" 11 20 20 0 "word_start" ""
+   ilt r12,r11,0
+   .traceevent "O" 4 "R" "B" "r" 12 20 20 0 "" ""
+   brf l217iffalse,r12
+   .srcstep 21 21 17 "generic_word_cell.crexx" 35 23 27 "    if word_start < 0 then return \"\""
+   .srcstep 19 19 17 "generic_word_cell.crexx" 35 28 37 "    if word_start < 0 then return \"\""
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 42 42 0 "" ""
+   scopy r13,r14
+   br l161bexprend
+l217iffalse:
+   .srcstep 22 22 17 "generic_word_cell.crexx" 36 5 36 "    current_word = current_word + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 22 22 0 "current_word" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 22 22 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 22 22 0 "current_word" ""
+   .srcstep 23 23 17 "generic_word_cell.crexx" 37 15 49 "    assembler fndblnk word_end,string,word_start"
+   .traceevent "V" 6 "R" "I" "r" 9 42 42 0 "word_end" ""
+   .traceevent "V" 6 "R" "S" "r" 7 42 42 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 11 42 42 0 "word_start" ""
+   fndblnk r9,r7,r11
+   .srcstep 31 31 17 "generic_word_cell.crexx" 38 5 30 "    if current_word = wordnum then do"
+   .traceevent "V" 6 "R" "I" "r" 4 31 31 0 "current_word" ""
+   ieq r14,r4,2
+   .traceevent "O" 4 "R" "B" "r" 14 31 31 0 "" ""
+   brf l232iffalse,r14
+   .srcstep 32 32 17 "generic_word_cell.crexx" 38 31 35 "    if current_word = wordnum then do"
+   .srcstep 25 25 17 "generic_word_cell.crexx" 39 7 22 "      if word_end < 0 then word_end = string_length"
+   .traceevent "V" 6 "R" "I" "r" 9 25 25 0 "word_end" ""
+   ilt r12,r9,0
+   .traceevent "O" 4 "R" "B" "r" 12 25 25 0 "" ""
+   brf l237iffalse,r12
+   .srcstep 26 26 17 "generic_word_cell.crexx" 39 23 27 "      if word_end < 0 then word_end = string_length"
+   .srcstep 24 24 17 "generic_word_cell.crexx" 39 28 52 "      if word_end < 0 then word_end = string_length"
+   .traceevent "V" 6 "R" "I" "r" 8 24 24 0 "string_length" ""
+   icopy r9,r8
+   .traceevent "A" 6 "R" "I" "r" 9 24 24 0 "word_end" ""
+l237iffalse:
+   .srcstep 27 27 17 "generic_word_cell.crexx" 40 7 42 "      word_length = word_end - word_start"
+   .traceevent "V" 6 "R" "I" "r" 9 27 27 0 "word_end" ""
+   .traceevent "V" 6 "R" "I" "r" 11 27 27 0 "word_start" ""
+   isub r10,r9,r11
+   .traceevent "O" 4 "R" "I" "r" 10 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 27 27 0 "word_length" ""
+   .srcstep 28 28 17 "generic_word_cell.crexx" 41 17 44 "      assembler setstrpos string,word_start"
+   .traceevent "V" 6 "R" "S" "r" 7 42 42 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 11 42 42 0 "word_start" ""
+   setstrpos r7,r11
+   .srcstep 29 29 17 "generic_word_cell.crexx" 42 17 52 "      assembler substring result,string,word_length"
+   .traceevent "V" 6 "R" "S" "r" 5 42 42 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 7 42 42 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 10 42 42 0 "word_length" ""
+   substring r5,r7,r10
+   .srcstep 30 30 17 "generic_word_cell.crexx" 43 7 20 "      return result"
+   .traceevent "V" 6 "R" "S" "r" 5 42 42 0 "result" ""
+   scopy r13,r5
+   br l161bexprend
+l232iffalse:
+   .srcstep 34 34 17 "generic_word_cell.crexx" 45 5 20 "    if word_end < 0 then return \"\""
+   .traceevent "V" 6 "R" "I" "r" 9 34 34 0 "word_end" ""
+   ilt r14,r9,0
+   .traceevent "O" 4 "R" "B" "r" 14 34 34 0 "" ""
+   brf l258iffalse,r14
+   .srcstep 35 35 17 "generic_word_cell.crexx" 45 21 25 "    if word_end < 0 then return \"\""
+   .srcstep 33 33 17 "generic_word_cell.crexx" 45 26 35 "    if word_end < 0 then return \"\""
+   load r12,""
+   .traceevent "L" 4 "R" "S" "r" 12 42 42 0 "" ""
+   scopy r13,r12
+   br l161bexprend
+l258iffalse:
+   .srcstep 36 36 17 "generic_word_cell.crexx" 46 5 20 "    scan = word_end"
+   .traceevent "V" 6 "R" "I" "r" 9 36 36 0 "word_end" ""
+   icopy r6,r9
+   .traceevent "A" 6 "R" "I" "r" 6 36 36 0 "scan" ""
+l206doinc:
+   .srcstep 38 38 17 "generic_word_cell.crexx" 47 3 6 "  end"
+   br l206dostart
+l206doend:
+   .srcstep 39 39 17 "generic_word_cell.crexx" 48 3 12 "  return \"\""
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 42 42 0 "" ""
+   scopy r13,r14
+   br l161bexprend
+l161bexprend:
+   .meta "generic_word_cell.main.string_length"
+   req r13,r13,"Beta"
+   .traceevent "O" 4 "R" "B" "r" 13 42 42 0 "" ""
+   brf l29iffalse,r13
+   .srcstep 43 43 17 "generic_word_cell.crexx" 7 46 50 "    if user_word(\"  Alpha Beta\", 2) = \"Beta\" then checksum = checksum + 1"
+   .srcstep 41 41 17 "generic_word_cell.crexx" 7 51 74 "    if user_word(\"  Alpha Beta\", 2) = \"Beta\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "I" "r" 0 41 41 0 "checksum" ""
+   iadd r0,r0,1
+   .traceevent "O" 4 "R" "I" "r" 0 41 41 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 41 41 0 "checksum" ""
+l29iffalse:
+l12doinc:
+   .srcstep 4 4 17 "generic_word_cell.crexx" 6 6 7 "  do i = 1 to iterations"
+   inc r1
+   .srcstep 45 45 17 "generic_word_cell.crexx" 8 3 6 "  end"
+   br l12dostart
+l12doend:
+   .meta "generic_word_cell.main.i"
+   .srcstep 48 48 17 "generic_word_cell.crexx" 9 3 28 "  if checksum <> iterations then do"
+   .traceevent "V" 6 "R" "I" "r" 0 48 48 0 "checksum" ""
+   ine r14,r0,2000000
+   .traceevent "O" 4 "R" "B" "r" 14 48 48 0 "" ""
+   brf l41iffalse,r14
+   .srcstep 49 49 17 "generic_word_cell.crexx" 9 29 33 "  if checksum <> iterations then do"
+   .srcstep 46 46 17 "generic_word_cell.crexx" 10 5 52 "    say \"FAIL: PERF2-05 generic user body\" checksum"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 46 46 0 "checksum" ""
+   sconcat r13,"FAIL: PERF2-05 generic user body",r0
+   .traceevent "O" 4 "R" "S" "r" 13 46 46 0 "" ""
+   say r13
+   .srcstep 47 47 17 "generic_word_cell.crexx" 11 5 13 "    return 1"
+   ret 1
+l41iffalse:
+   .srcstep 50 50 17 "generic_word_cell.crexx" 13 3 41 "  say \"PASS: PERF2-05 generic user body\""
+   say "PASS: PERF2-05 generic user body"
+   .srcstep 51 51 17 "generic_word_cell.crexx" 14 3 11 "  return 0"
+   ret 0
+   .meta "generic_word_cell.main.checksum"
+   .meta "generic_word_cell.main.iterations"

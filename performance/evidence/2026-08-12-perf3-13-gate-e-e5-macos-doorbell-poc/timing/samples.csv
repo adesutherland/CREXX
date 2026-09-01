@@ -1,0 +1,157 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-rxbvm-e4-warmup-1,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,warmup,1,1,5500,997026000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-warmup-1,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,warmup,1,2,5500,1337638000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-warmup-1,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,warmup,1,3,5500,946255000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-warmup-1,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,warmup,1,4,5500,1224501000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-1,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,1,1,5500,996706000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-1,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,1,2,5500,1002468000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-1,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,3,5500,927254000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-1,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,1,4,5500,941967000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-2,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,2,1,5500,971140000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-2,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,5500,945789000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-2,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,2,3,5500,998723000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-2,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,2,4,5500,995829000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-3,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,5500,963257000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-3,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,3,2,5500,943501000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-3,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,3,3,5500,996142000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-3,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,3,4,5500,1008798000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-4,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,4,1,5500,1007415000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-4,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,4,2,5500,993123000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-4,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,4,3,5500,965389000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-4,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,4,5500,957144000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-5,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,5,1,5500,999449000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-5,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,5,2,5500,1006903000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-5,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,3,5500,943035000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-5,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,5,4,5500,932606000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-6,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,6,1,5500,929597000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-6,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,5500,941894000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-6,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,6,3,5500,1008011000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-6,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,6,4,5500,996311000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-7,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,5500,935465000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-7,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,7,2,5500,940413000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-7,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,7,3,5500,994843000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-7,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,7,4,5500,1005742000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-8,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,8,1,5500,1009933000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-8,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,8,2,5500,997253000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-8,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,8,3,5500,928308000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-8,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,4,5500,964161000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-9,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,9,1,5500,989943000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-9,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,9,2,5500,1013654000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-9,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,3,5500,948280000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-9,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,9,4,5500,968672000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-10,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,10,1,5500,956258000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-10,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,5500,967934000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-10,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,10,3,5500,1008105000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-10,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,10,4,5500,991682000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-11,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,5500,961395000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-11,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,11,2,5500,970800000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-11,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,11,3,5500,996314000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-11,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,11,4,5500,1003193000,,0,pass,,
+timing-Sieve-sieve-rxbvm-poc-recorded-12,timing,Sieve,sieve-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,12,1,5500,1003056000,,0,pass,,
+timing-Sieve-sieve-rxbvm-e4-recorded-12,timing,Sieve,sieve-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,12,2,5500,995285000,,0,pass,,
+timing-Sieve-sieve-rxtvm-poc-recorded-12,timing,Sieve,sieve-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,12,3,5500,926492000,,0,pass,,
+timing-Sieve-sieve-rxtvm-e4-recorded-12,timing,Sieve,sieve-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,4,5500,1007957000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-warmup-1,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,warmup,1,1,5000,1740699000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-warmup-1,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,warmup,1,2,5000,1691689000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-warmup-1,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,warmup,1,3,5000,1575065000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-warmup-1,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,warmup,1,4,5000,1586640000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-1,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,1,1,5000,1716448000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-1,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,1,2,5000,1748882000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-1,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,3,5000,1600322000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-1,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,1,4,5000,1571823000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-2,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,2,1,5000,1566134000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-2,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,5000,1626274000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-2,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,2,3,5000,1710827000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-2,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,2,4,5000,1725463000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-3,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,5000,1620029000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-3,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,3,2,5000,1605329000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-3,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,3,3,5000,1758519000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-3,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,3,4,5000,1677171000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-4,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,4,1,5000,1702122000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-4,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,4,2,5000,1757828000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-4,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,4,3,5000,1592761000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-4,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,4,5000,1568310000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-5,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,5,1,5000,1738158000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-5,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,5,2,5000,1696250000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-5,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,3,5000,1592024000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-5,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,5,4,5000,1596298000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-6,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,6,1,5000,1614203000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-6,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,5000,1623389000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-6,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,6,3,5000,1702241000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-6,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,6,4,5000,1735085000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-7,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,5000,1632438000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-7,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,7,2,5000,1612998000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-7,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,7,3,5000,1750442000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-7,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,7,4,5000,1690989000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-8,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,8,1,5000,1726181000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-8,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,8,2,5000,1719785000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-8,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,8,3,5000,1577619000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-8,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,4,5000,1587804000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-9,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,9,1,5000,1727204000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-9,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,9,2,5000,1683868000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-9,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,3,5000,1542358000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-9,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,9,4,5000,1599519000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-10,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,10,1,5000,1607916000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-10,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,5000,1582418000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-10,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,10,3,5000,1699355000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-10,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,10,4,5000,1717326000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-11,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,5000,1579713000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-11,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,11,2,5000,1580871000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-11,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,11,3,5000,1789407000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-11,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,11,4,5000,1698518000,,0,pass,,
+timing-Permute-permute-rxbvm-poc-recorded-12,timing,Permute,permute-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,12,1,5000,1693581000,,0,pass,,
+timing-Permute-permute-rxbvm-e4-recorded-12,timing,Permute,permute-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,12,2,5000,1737326000,,0,pass,,
+timing-Permute-permute-rxtvm-poc-recorded-12,timing,Permute,permute-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,12,3,5000,1614635000,,0,pass,,
+timing-Permute-permute-rxtvm-e4-recorded-12,timing,Permute,permute-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,4,5000,1589696000,,0,pass,,
+timing-RexxCPS-rexxcps-rxbvm-e4-warmup-1,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,warmup,1,1,1000-clauses,1331785000,,0,pass,45836446,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-warmup-1,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,warmup,1,2,1000-clauses,1354200000,,0,pass,45010051,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-warmup-1,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,warmup,1,3,1000-clauses,1351128000,,0,pass,45038675,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-warmup-1,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,warmup,1,4,1000-clauses,1341647000,,0,pass,45462274,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,1,1,1000-clauses,1328387000,,0,pass,45972192,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,1,2,1000-clauses,1354913000,,0,pass,45086191,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,1,3,1000-clauses,1354829000,,0,pass,45120938,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,1,4,1000-clauses,1323819000,,0,pass,46132526,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,2,1,1000-clauses,1327542000,,0,pass,45926545,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,2,2,1000-clauses,1344219000,,0,pass,45322862,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,2,3,1000-clauses,1377260000,,0,pass,44247670,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,2,4,1000-clauses,1333854000,,0,pass,45709814,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,3,1,1000-clauses,1359913000,,0,pass,44796886,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,3,2,1000-clauses,1342051000,,0,pass,45494498,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,3,3,1000-clauses,1325229000,,0,pass,46031784,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,3,4,1000-clauses,1325705000,,0,pass,46037082,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,4,1,1000-clauses,1336504000,,0,pass,45631888,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,4,2,1000-clauses,1330605000,,0,pass,45865837,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,4,3,1000-clauses,1342697000,,0,pass,45431499,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,4,4,1000-clauses,1319828000,,0,pass,46220033,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,5,1,1000-clauses,1343315000,,0,pass,45435297,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,5,2,1000-clauses,1355835000,,0,pass,44972400,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,5,3,1000-clauses,1328998000,,0,pass,45880736,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,5,4,1000-clauses,1327264000,,0,pass,45944439,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,6,1,1000-clauses,1327317000,,0,pass,45960994,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,6,2,1000-clauses,1319379000,,0,pass,46216060,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,6,3,1000-clauses,1353647000,,0,pass,45037133,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,6,4,1000-clauses,1319131000,,0,pass,46256336,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,7,1,1000-clauses,1332612000,,0,pass,45799079,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,7,2,1000-clauses,1319867000,,0,pass,46197272,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,7,3,1000-clauses,1321882000,,0,pass,46102070,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,7,4,1000-clauses,1352593000,,0,pass,45083671,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,8,1,1000-clauses,1355628000,,0,pass,44955337,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,8,2,1000-clauses,1335369000,,0,pass,45698785,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,8,3,1000-clauses,1339662000,,0,pass,45620938,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,8,4,1000-clauses,1319186000,,0,pass,46231316,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,9,1,1000-clauses,1324454000,,0,pass,46040812,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,9,2,1000-clauses,1349577000,,0,pass,45163324,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,9,3,1000-clauses,1354083000,,0,pass,45204564,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,9,4,1000-clauses,1349916000,,0,pass,45206036,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,10,1,1000-clauses,1345284000,,0,pass,45466946,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,10,2,1000-clauses,1327947000,,0,pass,45990756,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,10,3,1000-clauses,1338596000,,0,pass,45582550,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,10,4,1000-clauses,1343089000,,0,pass,45448678,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,11,1,1000-clauses,1324121000,,0,pass,46091573,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,11,2,1000-clauses,1332150000,,0,pass,45806800,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,11,3,1000-clauses,1349695000,,0,pass,45160795,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,11,4,1000-clauses,1346691000,,0,pass,45286491,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,timing,RexxCPS,rexxcps-rxbvm-poc,crexx,rxbvm,macos-doorbell-poc,A,no,startup-included,recorded,12,1,1000-clauses,1343307000,,0,pass,45410580,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,timing,RexxCPS,rexxcps-rxbvm-e4,crexx,rxbvm,e4-control,A,no,startup-included,recorded,12,2,1000-clauses,1345504000,,0,pass,45352461,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,timing,RexxCPS,rexxcps-rxtvm-poc,crexx,rxtvm,macos-doorbell-poc,A,no,startup-included,recorded,12,3,1000-clauses,1343142000,,0,pass,45406332,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,timing,RexxCPS,rexxcps-rxtvm-e4,crexx,rxtvm,e4-control,A,no,startup-included,recorded,12,4,1000-clauses,1339565000,,0,pass,45511352,cREXX clauses per second

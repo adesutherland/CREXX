@@ -22,22 +22,38 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place object-array prepend.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/objectarrayprepend.md
+ */
 options levelb
-
 namespace rxfnsb expose objectarrayprepend
 
-/* Prepend VALUE COUNT times to an object array. */
-objectarrayprepend: procedure=.int
-  arg expose array=.object[], value=.object, count=1
+/**
+ * Prepend one object value one or more times.
+ *
+ * @param array exposed object array using array[0] as its high-water mark
+ * @param value object value copied into each prepended slot
+ * @param count optional non-negative number of copies; defaults to one
+ * @return the new array high-water mark
+ * @signal INVALID_ARGUMENTS count is negative
+ */
+objectarrayprepend: procedure = .int
+  arg expose array = .object[], value = .object, count = 1
 
   hi = array[0]
-  if count < 1 then return hi
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYPREPEND count must be non-negative"
+  if count = 0 then return hi
 
   from = 1
   assembler INSATTRS1 array,from,count
 
-  do i = 1 to count
+  i = 1
+  do count
     array[i] = value
+    i = i + 1
   end
-return array[0]
+  return array[0]

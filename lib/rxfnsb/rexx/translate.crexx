@@ -22,45 +22,72 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Native Level B code-point translation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/translate.md
+ */
 options levelb
-
 namespace rxfnsb expose translate
 
-/* translate  */
-
+/**
+ * Uppercase text or translate code points through parallel tables.
+ *
+ * When both tables are omitted the configured Level B simple uppercase
+ * operation is used. An omitted input table denotes the fixed U+0000..U+00FF
+ * Level B byte-domain range without allocating that range. An omitted output
+ * table is empty, so matching input characters use `pad`.
+ *
+ * @param source source text
+ * @param output_table optional replacement table
+ * @param input_table optional search table
+ * @param pad optional one-codepoint replacement for missing output entries
+ * @return translated text
+ * @signal INVALID_ARGUMENTS pad is not exactly one codepoint
+ */
 translate: procedure = .string
-  arg source = .string, tochar = "?????", fromchar = "?????",pad=" "
+  arg source = .string, output_table = "", input_table = "", pad = " "
+  output_supplied = ?output_table
+  input_supplied = ?input_table
+  pad_length = .int
+  pad_codepoint = .int
+  source_length = .int
+  output_length = 0
+  source_codepoint = .int
+  replacement_codepoint = .int
+  table_position = .int
+  zero = 0
+  result = ""
 
-  slen=0
-  flen=0
-  tlen=0
-  result=""
-  schar=0
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","TRANSLATE pad must contain exactly one character"
+  assembler strchar pad_codepoint,pad,zero
 
-  /* !!! fromchar or tochar containing '?????' mean it is not set, while '' mean it is empty */
-  if pad=' ' then do
-     if fromchar="?????" & tochar="?????" then return upper(source)
-     if fromchar="" & tochar="" then return source
-  end
-  assembler strlen slen,source                 /* get length of souce string     */
-  if fromchar="?????" then do
-     if tochar="?????" then  return copies(pad,slen)
-     if tochar="" then return copies(pad,slen)
-     fromchar=" "
-  end
-  if tochar="?????" then tochar=" "
-  if fromchar="?????" then fromchar=" "
-
-  assembler strlen flen,fromchar               /* get length of from list        */
-  assembler strlen tlen,tochar                 /* get length of to   list        */
-  if flen>tlen then tochar=left(tochar,flen,pad)  /* from and to list must be equal */
-  else if tlen>flen then fromchar=left(fromchar,tlen,pad)
-
-  do i=0 to slen-1                             /* run through from source string */
-     assembler strchar schar,source,i
-     assembler transchar schar,tochar,fromchar /* translate source char (if necessary) */
-     assembler appendchar result,schar         /* append it to result  */
+  if \output_supplied & \input_supplied then do
+    assembler strupper result,source
+    return result
   end
 
-return result
+  assembler strlen source_length,source
+  if source_length = 0 then return result
+  if output_supplied then assembler strlen output_length,output_table
+
+  do source_index = 0 to source_length - 1
+    assembler strchar source_codepoint,source,source_index
+    table_position = -1
+    if input_supplied then
+      assembler poschar table_position,input_table,source_codepoint
+    else if source_codepoint >= 0 & source_codepoint <= 255 then
+      table_position = source_codepoint
+
+    replacement_codepoint = source_codepoint
+    if table_position >= 0 then do
+      if table_position < output_length then
+        assembler strchar replacement_codepoint,output_table,table_position
+      else replacement_codepoint = pad_codepoint
+    end
+    assembler appendchar result,replacement_codepoint
+  end
+  return result

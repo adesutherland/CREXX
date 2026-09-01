@@ -1,0 +1,116 @@
+   load r82,"ARGS"
+   .traceevent "L" 4 "R" "S" "r" 82 173 173 0 "" ""
+   load r83,"(THIS IS THE SECOND)11"
+   .traceevent "L" 4 "R" "S" "r" 83 173 173 0 "" ""
+   settp r80,768
+   settp r81,768
+   settp r82,768
+   settp r83,768
+   call4 r77,cps_subroutine(),r80,r81,r82,r83
+   .traceevent "F" 4 "R" "V" "r" 77 173 173 0 "cps_subroutine" ""
+   .srcstep 174 174 17 "rexxcps_static_b.crexx" 192 9 51 "        text = \"This is an awfully boring program\"; parse var text p1 \"b\" p5"
+   .meta "rexxcps_static_b.main.text"="b" ".string" r57
+   load r57,"This is an awfully boring program"
+   .traceevent "L" 4 "R" "S" "r" 57 174 174 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 57 174 174 0 "text" ""
+   .srcstep 175 175 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_509=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 57 175 175 0 "text" ""
+   scopy r5,r57
+   .traceevent "A" 6 "R" "S" "r" 5 175 175 0 "__rxcpx_parse_source_509" ""
+   .srcstep 176 176 33 "exit_fragment" 2 1 132 "parseplan __rxcpx_parse_prepared_509,__rxcpx_parse_source_509,\"500108000400020003000100000000000000010102000100000001000000620101\"x"
+   .traceevent "V" 6 "R" "S" "r" 11 0 0 0 "__rxcpx_parse_prepared_509" ""
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "__rxcpx_parse_source_509" ""
+   parseplan r11,r5,"P\x01\b\0\x04\0\x02\0\x03\0\x01\0\0\0\0\0\0\0\x01\x01\x02\0\x01\0\0\0\x01\0\0\0b\x01\x01"
+   .srcstep 177 177 33 "exit_fragment" 2 1 32 "p1=__rxcpx_parse_prepared_509[1"
+   minlinkattr1 r83,r11,1
+   .traceevent "V" 6 "R" "S" "r" 83 177 177 0 "__rxcpx_parse_prepared_509" ""
+   scopy r49,r83
+   .traceevent "A" 6 "R" "S" "r" 49 177 177 0 "p1" ""
+   unlink r83
+   .srcstep 178 178 33 "exit_fragment" 2 1 32 "p5=__rxcpx_parse_prepared_509[2"
+   minlinkattr1 r83,r11,2
+   .traceevent "V" 6 "R" "S" "r" 83 178 178 0 "__rxcpx_parse_prepared_509" ""
+   scopy r53,r83
+   .traceevent "A" 6 "R" "S" "r" 53 178 178 0 "p5" ""
+   unlink r83
+   .srcstep 179 179 17 "rexxcps_static_b.crexx" 193 9 51 "        text = \"is an awfully boring program This\"; parse var text p2 \"b\" p6"
+   load r57,"is an awfully boring program This"
+   .traceevent "L" 4 "R" "S" "r" 57 179 179 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 57 179 179 0 "text" ""
+   .srcstep 180 180 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_518=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 57 180 180 0 "text" ""
+   scopy r3,r57
+   .traceevent "A" 6 "R" "S" "r" 3 180 180 0 "__rxcpx_parse_source_518" ""
+   .srcstep 181 181 33 "exit_fragment" 2 1 132 "parseplan __rxcpx_parse_prepared_518,__rxcpx_parse_source_518,\"500108000400020003000100000000000000010102000100000001000000620101\"x"
+   .traceevent "V" 6 "R" "S" "r" 10 0 0 0 "__rxcpx_parse_prepared_518" ""
+   .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "__rxcpx_parse_source_518" ""
+   parseplan r10,r3,"P\x01\b\0\x04\0\x02\0\x03\0\x01\0\0\0\0\0\0\0\x01\x01\x02\0\x01\0\0\0\x01\0\0\0b\x01\x01"
+   .srcstep 182 182 33 "exit_fragment" 2 1 32 "p2=__rxcpx_parse_prepared_518[1"
+   minlinkattr1 r83,r10,1
+   .traceevent "V" 6 "R" "S" "r" 83 182 182 0 "__rxcpx_parse_prepared_518" ""
+   scopy r50,r83
+   .traceevent "A" 6 "R" "S" "r" 50 182 182 0 "p2" ""
+   unlink r83
+   .srcstep 183 183 33 "exit_fragment" 2 1 32 "p6=__rxcpx_parse_prepared_518[2"
+   minlinkattr1 r83,r10,2
+   .traceevent "V" 6 "R" "S" "r" 83 183 183 0 "__rxcpx_parse_prepared_518" ""
+   scopy r54,r83
+   .traceevent "A" 6 "R" "S" "r" 54 183 183 0 "p6" ""
+   unlink r83
+   .srcstep 184 184 17 "rexxcps_static_b.crexx" 194 9 51 "        text = \"an awfully boring program This is\"; parse var text p3 \"b\" p7"
+   load r57,"an awfully boring program This is"
+   .traceevent "L" 4 "R" "S" "r" 57 184 184 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 57 184 184 0 "text" ""
+   .srcstep 185 185 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_527=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 57 185 185 0 "text" ""
+   scopy r2,r57
+   .traceevent "A" 6 "R" "S" "r" 2 185 185 0 "__rxcpx_parse_source_527" ""
+   .srcstep 186 186 33 "exit_fragment" 2 1 132 "parseplan __rxcpx_parse_prepared_527,__rxcpx_parse_source_527,\"500108000400020003000100000000000000010102000100000001000000620101\"x"
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "__rxcpx_parse_prepared_527" ""
+   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "__rxcpx_parse_source_527" ""
+   parseplan r9,r2,"P\x01\b\0\x04\0\x02\0\x03\0\x01\0\0\0\0\0\0\0\x01\x01\x02\0\x01\0\0\0\x01\0\0\0b\x01\x01"
+   .srcstep 187 187 33 "exit_fragment" 2 1 32 "p3=__rxcpx_parse_prepared_527[1"
+   minlinkattr1 r83,r9,1
+   .traceevent "V" 6 "R" "S" "r" 83 187 187 0 "__rxcpx_parse_prepared_527" ""
+   scopy r51,r83
+   .traceevent "A" 6 "R" "S" "r" 51 187 187 0 "p3" ""
+   unlink r83
+   .srcstep 188 188 33 "exit_fragment" 2 1 32 "p7=__rxcpx_parse_prepared_527[2"
+   minlinkattr1 r83,r9,2
+   .traceevent "V" 6 "R" "S" "r" 83 188 188 0 "__rxcpx_parse_prepared_527" ""
+   scopy r55,r83
+   .traceevent "A" 6 "R" "S" "r" 55 188 188 0 "p7" ""
+   unlink r83
+   .srcstep 189 189 17 "rexxcps_static_b.crexx" 195 9 51 "        text = \"awfully boring program This is an\"; parse var text p4 \"b\" p8"
+   load r57,"awfully boring program This is an"
+   .traceevent "L" 4 "R" "S" "r" 57 189 189 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 57 189 189 0 "text" ""
+   .srcstep 190 190 33 "exit_fragment" 2 1 43 "__rxcpx_parse_source_536=(text) as .string"
+   .traceevent "V" 6 "R" "S" "r" 57 190 190 0 "text" ""
+   scopy r0,r57
+   .traceevent "A" 6 "R" "S" "r" 0 190 190 0 "__rxcpx_parse_source_536" ""
+   .srcstep 191 191 33 "exit_fragment" 2 1 132 "parseplan __rxcpx_parse_prepared_536,__rxcpx_parse_source_536,\"500108000400020003000100000000000000010102000100000001000000620101\"x"
+   .traceevent "V" 6 "R" "S" "r" 7 0 0 0 "__rxcpx_parse_prepared_536" ""
+   .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "__rxcpx_parse_source_536" ""
+   parseplan r7,r0,"P\x01\b\0\x04\0\x02\0\x03\0\x01\0\0\0\0\0\0\0\x01\x01\x02\0\x01\0\0\0\x01\0\0\0b\x01\x01"
+   .srcstep 192 192 33 "exit_fragment" 2 1 32 "p4=__rxcpx_parse_prepared_536[1"
+   minlinkattr1 r83,r7,1
+   .traceevent "V" 6 "R" "S" "r" 83 192 192 0 "__rxcpx_parse_prepared_536" ""
+   scopy r52,r83
+   .traceevent "A" 6 "R" "S" "r" 52 192 192 0 "p4" ""
+   unlink r83
+   .srcstep 193 193 33 "exit_fragment" 2 1 32 "p8=__rxcpx_parse_prepared_536[2"
+   minlinkattr1 r83,r7,2
+   .traceevent "V" 6 "R" "S" "r" 83 193 193 0 "__rxcpx_parse_prepared_536" ""
+   scopy r56,r83
+   .traceevent "A" 6 "R" "S" "r" 56 193 193 0 "p8" ""
+   unlink r83
+l253doinc:
+   .srcstep 83 83 17 "rexxcps_static_b.crexx" 156 10 14 "      do lvar = 1 to 14"
+   inc r48
+   .srcstep 195 195 17 "rexxcps_static_b.crexx" 196 7 10 "      end"
+   br l253dostart
+l253doend:
+   endlife r11
+   endlife r10
+   endlife r9

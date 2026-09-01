@@ -1,0 +1,103 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("A", .RexxValue("8"))
+call __rxcp_levelc_pool.setValue("B", .RexxValue("3"))
+say __rxcp_levelc_pool.value("A").add(__rxcp_levelc_pool.value("B")).asString()
+say __rxcp_levelc_pool.value("A").subtract(__rxcp_levelc_pool.value("B")).asString()
+say __rxcp_levelc_pool.value("A").multiply(__rxcp_levelc_pool.value("B")).asString()
+say .RexxValue("8").divide(.RexxValue("2")).asString()
+say __rxcp_levelc_pool.value("A").integerDivide(__rxcp_levelc_pool.value("B")).asString()
+say __rxcp_levelc_pool.value("A").remainder(__rxcp_levelc_pool.value("B")).asString()
+say .RexxValue("2").power(.RexxValue("3")).asString()
+say .RexxValue("5").negate().asString()
+say .RexxValue("6").positive().asString()
+say .RexxValue("a").concat(.RexxValue("b").spaceConcat(.RexxValue("c"))).asString()
+say .RexxValue("9").compareEqual(.RexxValue("09")).asString()
+say .RexxValue("a").compareEqual(.RexxValue("a ")).asString()
+say .RexxValue("a").strictCompareEqual(.RexxValue("a ")).asString()
+say __rxcp_levelc_pool.value("A").compareGreaterThan(__rxcp_levelc_pool.value("B")).asString()
+say .RexxValue("2").compareLessThan(.RexxValue("1")).asString()
+say .RexxValue("0").logicalNot().asString()
+say .RexxValue("1").logicalXor(.RexxValue("0")).asString()
+
+call __rxcp_levelc_pool.setValue("FLAG", .RexxValue("0"))
+
+__rxcp_levelc_expr_and_false = .RexxValue.fromInt(0)
+if .RexxValue("0").logicalValue() then do
+  __rxcp_levelc_expr_and_false = __rxcp_levelc_proc_MARK(reference __rxcp_levelc_pool).logicalResult()
+end
+else do
+  __rxcp_levelc_expr_and_false = .RexxValue.fromInt(0)
+end
+say __rxcp_levelc_expr_and_false.asString()
+say __rxcp_levelc_pool.value("FLAG").asString()
+
+__rxcp_levelc_expr_or_true = .RexxValue.fromInt(0)
+if .RexxValue("1").logicalValue() then do
+  __rxcp_levelc_expr_or_true = .RexxValue.fromInt(1)
+end
+else do
+  __rxcp_levelc_expr_or_true = __rxcp_levelc_proc_MARK(reference __rxcp_levelc_pool).logicalResult()
+end
+say __rxcp_levelc_expr_or_true.asString()
+say __rxcp_levelc_pool.value("FLAG").asString()
+
+__rxcp_levelc_expr_and_true = .RexxValue.fromInt(0)
+if .RexxValue("1").logicalValue() then do
+  __rxcp_levelc_expr_and_true = __rxcp_levelc_proc_MARK(reference __rxcp_levelc_pool).logicalResult()
+end
+else do
+  __rxcp_levelc_expr_and_true = .RexxValue.fromInt(0)
+end
+say __rxcp_levelc_expr_and_true.asString()
+say __rxcp_levelc_pool.value("FLAG").asString()
+
+__rxcp_levelc_substr_result_1 = levelc_target_substr("abc", .RexxValue("1"), .RexxValue("1"), .RexxValue(""))
+__rxcp_levelc_expr_or_bif = .RexxValue.fromInt(0)
+if .RexxValue("0").logicalValue() then do
+  __rxcp_levelc_expr_or_bif = .RexxValue.fromInt(1)
+end
+else do
+  __rxcp_levelc_expr_or_bif = __rxcp_levelc_substr_result_1.compareEqual(.RexxValue("a")).logicalResult()
+end
+say __rxcp_levelc_expr_or_bif.asString()
+
+__rxcp_levelc_substr_result_2 = levelc_target_substr("abc", .RexxValue("1"), .RexxValue("1"), .RexxValue(""))
+__rxcp_levelc_expr_and_bif = .RexxValue.fromInt(0)
+if .RexxValue("1").logicalValue() then do
+  __rxcp_levelc_expr_and_bif = __rxcp_levelc_substr_result_2.compareEqual(.RexxValue("a")).logicalResult()
+end
+else do
+  __rxcp_levelc_expr_and_bif = .RexxValue.fromInt(0)
+end
+say __rxcp_levelc_expr_and_bif.asString()
+say rexxclassicbif_length(.RexxValue("a").concat(.RexxValue("bc"))).asString()
+return
+
+__rxcp_levelc_proc_MARK: procedure = .RexxValue
+  arg __rxcp_levelc_parent_pool_ref = reference .RexxVariablePool
+  __rxcp_levelc_parent_pool = dereference __rxcp_levelc_parent_pool_ref
+  __rxcp_levelc_pool = .RexxVariablePool()
+  call __rxcp_levelc_pool.exposeValue("FLAG", reference __rxcp_levelc_parent_pool, "FLAG")
+  call __rxcp_levelc_pool.setValue("FLAG", __rxcp_levelc_pool.value("FLAG").add(.RexxValue("1")))
+  return .RexxValue("1")
+
+levelc_target_substr: procedure = .RexxValue
+  arg text = .string, start = .RexxValue, count = .RexxValue, pad = .RexxValue
+  __rxcp_levelc_bif_args = .RexxValue[]
+  __rxcp_levelc_bif_exists = .int[]
+  __rxcp_levelc_bif_args[1] = .RexxValue(text)
+  __rxcp_levelc_bif_exists[1] = 1
+  __rxcp_levelc_bif_args[2] = start
+  __rxcp_levelc_bif_exists[2] = 1
+  __rxcp_levelc_bif_args[3] = count
+  __rxcp_levelc_bif_exists[3] = 1
+  __rxcp_levelc_bif_args[4] = pad
+  __rxcp_levelc_bif_exists[4] = 0
+  __rxcp_levelc_bif_context = .RexxBifCallContext("SUBSTR")
+  call __rxcp_levelc_bif_context.setArguments(__rxcp_levelc_bif_args, __rxcp_levelc_bif_exists)
+  return rexxclassicbif_call(reference __rxcp_levelc_bif_context)

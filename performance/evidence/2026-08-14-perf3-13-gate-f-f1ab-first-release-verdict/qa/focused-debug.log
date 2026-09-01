@@ -1,0 +1,98 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  343: nr14_frozen_parse_contract
+      Start 1193: persistent_worker_executor-rxvml-sparse-owner
+      Start 1221: persistent_worker_executor-rxtvml-sparse-owner
+      Start 1207: persistent_worker_executor-rxbvml-sparse-owner
+      Start 1189: program_generation_control-rxbvml
+      Start 1188: program_generation_control-rxvml
+      Start  342: nr21_fixed_call_contract
+      Start 1190: program_generation_control-rxtvml
+      Start 1051: rxvmmemory_allocator
+      Start 1210: persistent_worker_executor-rxbvml-native-return
+ 1/31 Test #1189: program_generation_control-rxbvml .......................   Passed    0.01 sec
+      Start 1196: persistent_worker_executor-rxvml-native-return
+ 2/31 Test #1188: program_generation_control-rxvml ........................   Passed    0.01 sec
+      Start 1052: rxvmworker_lifecycle
+ 3/31 Test #1190: program_generation_control-rxtvml .......................   Passed    0.01 sec
+      Start 1224: persistent_worker_executor-rxtvml-native-return
+ 4/31 Test #1052: rxvmworker_lifecycle ....................................   Passed    0.00 sec
+      Start 1219: persistent_worker_executor-rxtvml
+ 5/31 Test #1051: rxvmmemory_allocator ....................................   Passed    0.01 sec
+      Start 1053: rxvmactive_isolation
+ 6/31 Test #1053: rxvmactive_isolation ....................................   Passed    0.00 sec
+      Start 1205: persistent_worker_executor-rxbvml
+ 7/31 Test #1210: persistent_worker_executor-rxbvml-native-return .........   Passed    0.12 sec
+      Start 1191: persistent_worker_executor-rxvml
+ 8/31 Test #1205: persistent_worker_executor-rxbvml .......................   Passed    0.10 sec
+      Start  345: gate_f_channel_contract
+ 9/31 Test #1219: persistent_worker_executor-rxtvml .......................   Passed    0.11 sec
+      Start 1194: persistent_worker_executor-rxvml-sparse-owner-stress
+10/31 Test #1196: persistent_worker_executor-rxvml-native-return ..........   Passed    0.12 sec
+      Start 1192: persistent_worker_executor-rxvml-doorbell-stress
+11/31 Test #1224: persistent_worker_executor-rxtvml-native-return .........   Passed    0.12 sec
+      Start 1195: persistent_worker_executor-rxvml-sparse-progress
+12/31 Test #1193: persistent_worker_executor-rxvml-sparse-owner ...........   Passed    0.13 sec
+      Start 1220: persistent_worker_executor-rxtvml-doorbell-stress
+13/31 Test #1207: persistent_worker_executor-rxbvml-sparse-owner ..........   Passed    0.13 sec
+      Start 1222: persistent_worker_executor-rxtvml-sparse-owner-stress
+14/31 Test #1195: persistent_worker_executor-rxvml-sparse-progress ........   Passed    0.01 sec
+      Start 1208: persistent_worker_executor-rxbvml-sparse-owner-stress
+15/31 Test #1221: persistent_worker_executor-rxtvml-sparse-owner ..........   Passed    0.14 sec
+      Start 1206: persistent_worker_executor-rxbvml-doorbell-stress
+16/31 Test #1194: persistent_worker_executor-rxvml-sparse-owner-stress ....   Passed    0.02 sec
+      Start 1135: gate_f_channel_local_rxbvm
+17/31 Test #1192: persistent_worker_executor-rxvml-doorbell-stress ........   Passed    0.02 sec
+      Start 1223: persistent_worker_executor-rxtvml-sparse-progress
+18/31 Test #1223: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.01 sec
+      Start 1136: gate_f_channel_local_rxtvm
+19/31 Test #1220: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.02 sec
+      Start 1209: persistent_worker_executor-rxbvml-sparse-progress
+20/31 Test #1222: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.02 sec
+      Start  344: nr15_native_stem_contract
+21/31 Test #1208: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.02 sec
+      Start 1751: rxas_optimizer_metadata
+22/31 Test #1751: rxas_optimizer_metadata .................................   Passed    0.00 sec
+23/31 Test #1206: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.02 sec
+24/31 Test #1135: gate_f_channel_local_rxbvm ..............................   Passed    0.02 sec
+25/31 Test  #345: gate_f_channel_contract .................................   Passed    0.04 sec
+26/31 Test #1209: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.01 sec
+27/31 Test #1136: gate_f_channel_local_rxtvm ..............................   Passed    0.02 sec
+28/31 Test  #344: nr15_native_stem_contract ...............................   Passed    0.04 sec
+29/31 Test #1191: persistent_worker_executor-rxvml ........................   Passed    0.09 sec
+30/31 Test  #342: nr21_fixed_call_contract ................................   Passed    1.38 sec
+31/31 Test  #343: nr14_frozen_parse_contract ..............................   Passed    3.47 sec
+
+100% tests passed, 0 tests failed out of 31
+
+Label Time Summary:
+channels       =   0.08 sec*proc (3 tests)
+compiler       =   4.93 sec*proc (4 tests)
+e4a            =   0.02 sec*proc (3 tests)
+e4b            =   0.02 sec*proc (3 tests)
+e5             =   1.20 sec*proc (18 tests)
+f1b            =   0.03 sec*proc (2 tests)
+fallback       =   0.84 sec*proc (12 tests)
+gate-e         =   1.22 sec*proc (21 tests)
+gate-f         =   0.08 sec*proc (3 tests)
+industrial     =   1.20 sec*proc (18 tests)
+interpreter    =   1.27 sec*proc (26 tests)
+lifecycle      =   0.50 sec*proc (11 tests)
+macos          =   1.20 sec*proc (18 tests)
+memory         =   0.01 sec*proc (2 tests)
+metadata       =   0.00 sec*proc (1 test)
+native         =   0.35 sec*proc (3 tests)
+nr15           =   0.04 sec*proc (1 test)
+optimizer      =   0.00 sec*proc (1 test)
+parse          =   3.47 sec*proc (1 test)
+perf3          =   1.25 sec*proc (23 tests)
+performance    =   4.93 sec*proc (4 tests)
+private        =   1.20 sec*proc (18 tests)
+race           =   0.12 sec*proc (6 tests)
+rxas           =   0.04 sec*proc (2 tests)
+rxbin          =   4.93 sec*proc (4 tests)
+signals        =   0.00 sec*proc (1 test)
+sparse         =   0.84 sec*proc (12 tests)
+stem           =   0.04 sec*proc (1 test)
+worker         =   0.01 sec*proc (2 tests)
+
+Total Test time (real) =   3.51 sec

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "mandelbrot-opt-stripped",
+  "pair": "mandelbrot-opt-metadata",
+  "workload": "Mandelbrot",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/mandelbrot-stripped.rxbin","sha256":"301688b0cfb620b396eee2721660513d5607ee21ce0bbf0f57a8960d08287e8c"},
+  "modules": [],
+  "arguments": ["500"],
+  "correctness_expectation": "PASS: AWFY Mandelbrot",
+  "source_trace_retention": "linked;source_TRACE=stripped",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/mandelbrot-stripped.rxbin","-a","500"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/candidate/entries/mandelbrot-opt-stripped/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/mandelbrot-stripped.rxbin","-a","500"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 184423000
+}

@@ -1,0 +1,25 @@
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers ooRexx object port
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers ooRexx object port
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage ooRexx object port
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage ooRexx object port
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List ooRexx object port
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List ooRexx object port
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser ooRexx port
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser ooRexx port
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot Classic procedural port
+mandelbrot size=1 exit=0
+FAIL: expected 191, got 255
+mandelbrot size=500 exit=1
+FAIL: expected 50, got 128
+mandelbrot size=750 exit=1
+FAIL: expected 50, got 128
+mandelbrot size=750 exit=1

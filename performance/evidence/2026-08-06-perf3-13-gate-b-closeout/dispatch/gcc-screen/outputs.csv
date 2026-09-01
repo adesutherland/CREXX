@@ -1,0 +1,221 @@
+sample_id,stream,line_number,text
+timing-Sieve-sieve-rxvm-harness-control-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-harness-control-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-harness-control-warmup-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-harness-control-warmup-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-harness-control-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-harness-control-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-harness-control-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-harness-control-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-harness-control-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-harness-control-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-harness-control-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-harness-control-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-harness-control-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-harness-control-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-harness-control-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-harness-control-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-harness-control-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-harness-control-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxvm-harness-control-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxvm-harness-control-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Permute-permute-rxvm-harness-control-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-harness-control-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-harness-control-warmup-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-harness-control-warmup-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-harness-control-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-harness-control-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-harness-control-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-harness-control-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-harness-control-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-harness-control-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-harness-control-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-harness-control-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-harness-control-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-harness-control-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-harness-control-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-harness-control-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxbvm-harness-control-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxbvm-harness-control-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxvm-harness-control-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxvm-harness-control-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Bounce-bounce-rxvm-harness-control-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-harness-control-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-harness-control-warmup-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxbvm-harness-control-warmup-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-harness-control-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-harness-control-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-harness-control-recorded-1,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxbvm-harness-control-recorded-1,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-harness-control-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxbvm-harness-control-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-harness-control-recorded-2,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-harness-control-recorded-2,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-harness-control-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-harness-control-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-harness-control-recorded-3,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxbvm-harness-control-recorded-3,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxbvm-harness-control-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxbvm-harness-control-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Bounce-bounce-rxvm-harness-control-recorded-4,stdout,1,benchmark=awfy_bounce repetitions=4200 result=1331
+timing-Bounce-bounce-rxvm-harness-control-recorded-4,stdout,2,PASS: AWFY Bounce
+timing-Richards-richards-rxvm-harness-control-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-harness-control-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-harness-control-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-harness-control-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-harness-control-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-harness-control-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-harness-control-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-harness-control-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-harness-control-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-harness-control-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-harness-control-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-harness-control-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-harness-control-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-harness-control-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-harness-control-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-harness-control-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxbvm-harness-control-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxbvm-harness-control-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-rxvm-harness-control-recorded-4,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-rxvm-harness-control-recorded-4,stdout,2,PASS: AWFY Richards
+timing-Base64-base64-rxvm-harness-control-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-harness-control-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-harness-control-warmup-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-harness-control-warmup-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-harness-control-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-harness-control-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-harness-control-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-harness-control-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-harness-control-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-harness-control-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-harness-control-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-harness-control-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-harness-control-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-harness-control-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-harness-control-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-harness-control-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-harness-control-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-harness-control-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-harness-control-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-harness-control-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Towers-towers-rxvm-harness-control-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-harness-control-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxbvm-harness-control-warmup-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxbvm-harness-control-warmup-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-harness-control-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-harness-control-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxbvm-harness-control-recorded-1,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxbvm-harness-control-recorded-1,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxbvm-harness-control-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxbvm-harness-control-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-harness-control-recorded-2,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-harness-control-recorded-2,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-harness-control-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-harness-control-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxbvm-harness-control-recorded-3,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxbvm-harness-control-recorded-3,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxbvm-harness-control-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxbvm-harness-control-recorded-4,stdout,2,PASS: AWFY Towers
+timing-Towers-towers-rxvm-harness-control-recorded-4,stdout,1,benchmark=awfy_towers repetitions=100 result=8191
+timing-Towers-towers-rxvm-harness-control-recorded-4,stdout,2,PASS: AWFY Towers
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,5,        Averaged: 500 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,8,     Performance: 48861144 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-harness-control-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,8,     Performance: 40658092 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,5,        Averaged: 500 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,8,     Performance: 48443745 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,8,     Performance: 40314128 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,8,     Performance: 40281690 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,5,        Averaged: 500 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,8,     Performance: 48292102 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,5,        Averaged: 500 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,8,     Performance: 47393455 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,8,     Performance: 40444853 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,5,        Averaged: 400 x 100 iterations of 1000 clauses (over 1.0 s)
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=400 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,8,     Performance: 40230521 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-harness-control-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.ga1f40a196660 20260805
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,5,        Averaged: 500 x 100 iterations of 1000 clauses (over 1.1 s)
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=500 averaging=100 calibrated=1
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,8,     Performance: 47431310 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxvm-harness-control-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port

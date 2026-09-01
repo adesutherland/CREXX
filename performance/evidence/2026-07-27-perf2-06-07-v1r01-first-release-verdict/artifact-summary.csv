@@ -1,0 +1,15 @@
+kind,name,current_bytes,candidate_bytes,delta_bytes,delta_percent,guard_hit
+product,rxc,2802496,2802496,0,0.000000,no
+product,rxas,579736,579736,0,0.000000,no
+product,rxlink,145416,145416,0,0.000000,no
+product,rxvm,998904,998904,0,0.000000,no
+product,rxbvm,999064,999064,0,0.000000,no
+product,rxseq,175656,175656,0,0.000000,no
+product,library.rxbin,862920,862928,8,0.000927,no
+product,rxcexits.rxbin,1481152,1481152,0,0.000000,no
+linked_image,sieve-opt.rxbin,4840,4840,0,0.000000,no
+linked_image,permute-opt.rxbin,11909,11821,-88,-0.738937,no
+linked_image,bounce-opt.rxbin,17215,17239,24,0.139413,no
+linked_image,richards-opt.rxbin,79150,78758,-392,-0.495262,no
+linked_image,base64-opt.rxbin,38417,38417,0,0.000000,no
+linked_image,rexxcps-opt.rxbin,159739,68982,-90757,-56.815806,no

@@ -237,6 +237,7 @@ static int require_not_contains(const char *haystack, const char *needle) {
 
 int main(void) {
     static const char binary_value[] = { 0x41, 0x42, 0x43 };
+    static const char hex_digits[] = "0123456789abcdef";
     unsigned char *pool;
     bin_code *code;
     bin_space pgm;
@@ -268,6 +269,7 @@ int main(void) {
     size_t s_member_name;
     size_t s_inline_payload;
     size_t binary_const;
+    size_t large_binary_const;
     size_t float_const;
     size_t proc_main;
     size_t proc_word;
@@ -288,21 +290,49 @@ int main(void) {
     size_t meta_main_const;
     size_t meta_helper_func;
     size_t meta_clear;
+    const char *dump_path;
+    char *large_binary_value;
+    char *large_binary_literal;
+    char *large_binary_declaration;
+    char large_binary_alias[64];
+    char large_binary_instruction[128];
+    char *large_binary_literal_instruction;
+    size_t large_binary_length;
+    size_t byte_index;
     int rc;
 
-    pool = calloc(1u, 8192u);
-    code = calloc(2u, sizeof(bin_code));
+    large_binary_length = 3000u;
+    pool = calloc(1u, 16384u);
+    code = calloc(5u, sizeof(bin_code));
+    large_binary_value = malloc(large_binary_length);
+    large_binary_literal = malloc(large_binary_length * 2u + 3u);
+    large_binary_declaration = malloc(large_binary_length * 2u + 96u);
+    large_binary_literal_instruction = malloc(large_binary_length * 2u + 32u);
     output = 0;
     stream = 0;
     rc = 0;
 
-    if (!pool || !code) {
+    if (!pool || !code || !large_binary_value || !large_binary_literal ||
+        !large_binary_declaration || !large_binary_literal_instruction) {
         fprintf(stderr, "allocation failed\n");
         free(pool);
         free(code);
+        free(large_binary_value);
+        free(large_binary_literal);
+        free(large_binary_declaration);
+        free(large_binary_literal_instruction);
         return 1;
     }
 
+    large_binary_literal[0] = '0';
+    large_binary_literal[1] = 'x';
+    for (byte_index = 0u; byte_index < large_binary_length; byte_index++) {
+        unsigned char byte = (unsigned char)(byte_index & 0xffu);
+        large_binary_value[byte_index] = (char)byte;
+        large_binary_literal[2u + byte_index * 2u] = hex_digits[byte >> 4u];
+        large_binary_literal[3u + byte_index * 2u] = hex_digits[byte & 0x0fu];
+    }
+    large_binary_literal[large_binary_length * 2u + 2u] = 0;
     used = 0;
     s_hello = add_string_entry(pool, &used, STRING_CONST, "hello", 5u);
     s_decimal = add_string_entry(pool, &used, DECIMAL_CONST, "12.5", 4u);
@@ -328,6 +358,16 @@ int main(void) {
     s_member_name = add_string_entry(pool, &used, STRING_CONST, "describe", 8u);
     s_inline_payload = add_string_entry(pool, &used, STRING_CONST, "I4;a;b", 6u);
     binary_const = add_string_entry(pool, &used, BINARY_CONST, binary_value, 3u);
+    large_binary_const = add_string_entry(pool, &used, BINARY_CONST,
+                                          large_binary_value, large_binary_length);
+    snprintf(large_binary_alias, sizeof(large_binary_alias),
+             "\xC2\xA7" "rxdas.const.%lx", (unsigned long)large_binary_const);
+    snprintf(large_binary_declaration, large_binary_length * 2u + 96u,
+             ".const %s binary %s", large_binary_alias, large_binary_literal);
+    snprintf(large_binary_instruction, sizeof(large_binary_instruction),
+             "load g0 /* aka r0 */,%s", large_binary_alias);
+    snprintf(large_binary_literal_instruction, large_binary_length * 2u + 32u,
+             "load g0 /* aka r0 */,%s", large_binary_literal);
     float_const = add_float_entry(pool, &used, 1.5);
 
     proc_main = add_proc_entry(pool, &used, "main", 1, 0u);
@@ -386,7 +426,7 @@ int main(void) {
     module.header.meta_head = (int)meta_class;
 
     pgm.globals = 1;
-    pgm.inst_size = 2u;
+    pgm.inst_size = 5u;
     pgm.const_size = used;
     pgm.binary = code;
     pgm.const_pool = pool;
@@ -395,12 +435,22 @@ int main(void) {
     code[0].instruction.no_ops = 0;
     code[1].instruction.opcode = 48;
     code[1].instruction.no_ops = 0;
+    code[2].instruction.opcode = 183;
+    code[2].instruction.no_ops = 2;
+    code[3].index = 0u;
+    code[4].index = large_binary_const;
 
-    stream = tmpfile();
+    dump_path = "test_disassembler_dump.tmp";
+    remove(dump_path);
+    stream = fopen(dump_path, "w+b");
     if (!stream) {
-        fprintf(stderr, "tmpfile failed\n");
+        fprintf(stderr, "temporary dump file failed\n");
         free(pool);
         free(code);
+        free(large_binary_value);
+        free(large_binary_literal);
+        free(large_binary_declaration);
+        free(large_binary_literal_instruction);
         return 1;
     }
 
@@ -408,10 +458,15 @@ int main(void) {
 
     output = read_stream(stream);
     fclose(stream);
+    remove(dump_path);
     if (!output) {
         fprintf(stderr, "failed to read disassembly\n");
         free(pool);
         free(code);
+        free(large_binary_value);
+        free(large_binary_literal);
+        free(large_binary_declaration);
+        free(large_binary_literal_instruction);
         return 1;
     }
 
@@ -419,6 +474,9 @@ int main(void) {
     rc |= require_contains(output, "DECIMAL \"12.5\"");
     rc |= require_contains(output, "FLOAT 1.5");
     rc |= require_contains(output, "BINARY 0x414243");
+    rc |= require_contains(output, large_binary_declaration);
+    rc |= require_contains(output, large_binary_instruction);
+    rc |= require_not_contains(output, large_binary_literal_instruction);
     rc |= require_contains(output, "EXPOSED-REG g0 <-> as synthetic.shared");
     rc |= require_contains(output, "EXPOSED-PROC word() <-- as rxfnsb.word");
     rc |= require_contains(output, "EXPOSED-PROC helper() --> as synthetic.helper");
@@ -441,6 +499,10 @@ int main(void) {
     free(output);
     free(pool);
     free(code);
+    free(large_binary_value);
+    free(large_binary_literal);
+    free(large_binary_declaration);
+    free(large_binary_literal_instruction);
 
     return rc ? 1 : 0;
 }

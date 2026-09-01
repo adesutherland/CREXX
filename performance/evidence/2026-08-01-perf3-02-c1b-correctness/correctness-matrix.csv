@@ -1,0 +1,7 @@
+variant,optimization,vm,queue_packets,holds,exit_code,result
+C0,opt,rxvm,23246,9297,0,PASS
+C0,opt,rxbvm,23246,9297,0,PASS
+C1b-R1,opt,rxvm,23246,9297,0,PASS
+C1b-R1,opt,rxbvm,23246,9297,0,PASS
+C1b-R1,noopt,rxvm,23246,9297,0,PASS
+C1b-R1,noopt,rxbvm,23246,9297,0,PASS

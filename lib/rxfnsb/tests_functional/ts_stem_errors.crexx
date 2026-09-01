@@ -1,0 +1,51 @@
+/* Level B STEM repeated-signal and receiver-preservation tests. */
+options levelb
+import rxfnsb
+
+item = .stem()
+call item.set("A", "1")
+errors = 0
+
+caught = 0
+do
+  ignored = item.key(0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & item.get("A") == "1", "key")
+
+caught = 0
+do
+  ignored = .string
+  ignored = item.value(2)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & item.get("A") == "1", "value")
+
+caught = 0
+do
+  ignored = .string
+  ignored = item.valueAt(-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & item.get("A") == "1", "valueAt")
+
+caught = 0
+do
+  ignored = .stemiterator
+  ignored = .stemIterator(reference item, 2)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & item.get("A") == "1", "iterator")
+
+if errors = 0 then say "PASS: stem errors"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: STEM" label "signal or receiver preservation"
+  return 1

@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_multi_return_call.crexx
- * BUILT                  : 2026-05-27 17:53:51
  */
 
 .globals=0
@@ -8,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_multi_return_call.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_multi_return_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_multi_return_call.crexx" 4 3 50 "  say \"Starting multi return call inline test...\""
    say "Starting multi return call inline test..."
    .srcstep 6 6 17 "inline_test_multi_return_call.crexx" 5 3 5 "  do i = 0 to 2"
@@ -30,10 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_multi_return_call.crexx" 6 5 21 "    call maybeLog(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swap r4,r0
-   call r5,maybeLog(),r3
-   swap r0,r4
+   call1 r5,maybeLog(),r0
    .traceevent "F" 4 "R" "V" "r" 5 5 5 0 "maybelog" ""
 l8doinc:
    .srcstep 4 4 17 "inline_test_multi_return_call.crexx" 5 6 7 "  do i = 0 to 2"
@@ -41,6 +33,7 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_multi_return_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   .meta "inline_test_multi_return_call.main.i"
    .srcstep 8 8 17 "inline_test_multi_return_call.crexx" 8 3 48 "  say \"Multi return call inline test finished.\""
    say "Multi return call inline test finished."
    .srcstep 9 9 17 "inline_test_multi_return_call.crexx" 9 3 11 "  return 0"
@@ -49,11 +42,7 @@ l8doend:
 maybeLog() .locals=2
    .meta "inline_test_multi_return_call.maybelog"="b" ".void" maybeLog() "val=.int"
    .srcstep 17 17 17 "inline_test_multi_return_call.crexx" 11 1 28 "maybeLog: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_multi_return_call.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_multi_return_call.maybelog.val"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_multi_return_call.crexx" 13 3 13 "  if val = 0 then return"

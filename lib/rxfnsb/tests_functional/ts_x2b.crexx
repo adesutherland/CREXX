@@ -1,60 +1,71 @@
-/* X2B */
+/* Focused Level B X2B tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if x2b('C3') \= '11000011' then do
-  errors=errors+1
-  say 'X2B failed in test 1 '
+errors = 0
+source = "DeadBeef"
+errors = errors + check("11000011", x2b("C3"), "documented pair")
+errors = errors + check("0111", x2b("7"), "single nibble")
+errors = errors + check("000111000001", x2b("1 C1"), "documented grouping")
+errors = errors + check("11011110101011011011111011101111", x2b(source), "mixed case")
+errors = errors + check("DeadBeef", source, "source is not mutated")
+errors = errors + check("0000000000000001", x2b("0001"), "leading zero nibbles retained")
+errors = errors + check("00000000", x2b("00"), "all zero nibbles retained")
+errors = errors + check("00010000001000000011", x2b("1  02 03"), "consecutive valid group blanks")
+errors = errors + check("00010000001000000011", x2b("102 03"), "uneven left group")
+errors = errors + check("", x2b(""), "empty input")
+
+large_hex = ""
+large_binary = ""
+do 64
+  large_hex = large_hex || "F"
+  large_binary = large_binary || "1111"
 end
-if x2b('7') \= '0111' then do
-  errors=errors+1
-  say 'X2B failed in test 2 '
+errors = errors + check(large_binary, x2b(large_hex), "256-bit input")
+
+caught = 0
+do
+  ignored = x2b(" A")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if x2b('1 C1') \= '000111000001' then do
-  errors=errors+1
-  say 'X2B failed in test 3 '
+do
+  ignored = .string
+  ignored = x2b("A ")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if x2b('C3') \= '11000011' then do
-  errors=errors+1
-  say 'X2B failed in test 4 '
+do
+  ignored = .string
+  ignored = x2b("1 0")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if x2b(d2x('129')) \= '10000001' then do
-  errors=errors+1
-  say 'X2B failed in test 5 '
+do
+  ignored = .string
+  ignored = x2b("0G")
+on signal invalid_arguments
+  caught = caught + 1
 end
-if x2b(d2x('12')) \= '1100' then do
-  errors=errors+1
-  say 'X2B failed in test 6 '
+do
+  ignored = .string
+  ignored = x2b("0" || "09"x || "0")
+on signal invalid_arguments
+  caught = caught + 1
 end
-/* These from Mark Hessling. */
-if x2b("416263") \= "010000010110001001100011" then do
-  errors=errors+1
-  say 'X2B failed in test 7 '
-end
-if x2b("DeadBeef") \= "11011110101011011011111011101111" then do
-  errors=errors+1
-  say 'X2B failed in test 8 '
-end
-if x2b("1 02 03") \= "00010000001000000011" then do
-  errors=errors+1
-  say 'X2B failed in test 9 '
-end
-if x2b("102 03") \= "00010000001000000011" then do
-  errors=errors+1
-  say 'X2B failed in test 10 '
-end
-if x2b("102") \= "000100000010" then do
-  errors=errors+1
-  say 'X2B failed in test 11 '
-end
-if x2b("11 2F") \= "0001000100101111" then do
-  errors=errors+1
-  say 'X2B failed in test 12 '
-end
-if x2b("") \= "" then do
-  errors=errors+1
-  say 'X2B failed in test 13 '
-end
-return errors<>0
+errors = errors + check_int(5, caught, "invalid blank placement and characters signal")
+
+if errors = 0 then say "PASS: x2b"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: X2B" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: X2B" label "expected" expected "got" actual
+  return 1

@@ -10,6 +10,13 @@ The `validate_ast` function (in `rxcp_val_orch.c`) orchestrates the following se
 1.  **AST Structure Fixup (`ast_structure_fixup_walker`)**:
     *   **AST Restructuring**: Fixes the unfinished flat AST produced by the parser into a logical hierarchy (e.g., hoisting procedures from the flat parser list to become children of the file/namespace and nesting their instruction bodies).
     *   *Note on Exits*: Suppresses the generation of implicit `RETURN` nodes for AST fragments coming from the exit framework to avoid `RETVAL_MISSING` conflicts when grafted into typed procedures.
+    *   **Implicit Return Reachability**: A callable receives a compiler-added
+        bare `RETURN` only when its body can reach the end. An unconditional
+        `DO FOREVER` has no fall-through unless a reachable `LEAVE` exits that
+        loop. Conditional exits count; statements after `RETURN` or `ITERATE`
+        do not; and an unqualified `LEAVE` in a nested loop belongs to the
+        nested loop. This keeps real value-return fall-through diagnostic while
+        allowing typed routines that provably never return.
 
 2.  **Source Location Tracking (`source_location_walker`)**:
     *   Sets token boundary pointers and source location metadata bottom-up for accurate error reporting.
@@ -44,6 +51,7 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
     *   Performs **Code Injection** if the plugin returns a Rexx string.
     *   Splices injected AST nodes and sets `context->changed_flags |= FLAG_VAL_PLUGIN`.
     *   Structured replacements are valid here, including nested `DO`, `IF`, and nested `INSTRUCTIONS` blocks. Freshly grafted fragments may still be missing final `SCOPE_LOCAL` attachments until the later symbol-structure rebuild.
+    *   Replacement code from a registered certified exit is marked as a compiler-owned Level B fragment. Level-B-only lowering such as the certified `PARSE` exit's `parseplan` remains valid when the fragment is revalidated inside a Level G caller; authored Level G `ASSEMBLER` and uncertified replacement code remain rejected.
     *   Debug validation for this step is intentionally deferred until after `structure_symbols_walker` / `build_symbols_walker`, so valid structured exit output is checked only after its local scopes have been materialized.
     *   *Idempotency*: Guarded by `node->exit_obj_reg` to prevent re-processing.
 
@@ -90,6 +98,15 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
         *   *Functions shadowing imported functions*: **Warning**.
         *   *Classes shadowing imported classes*: **Warning**.
         *   *Same-namespace collisions*: Hard Error (`#DUPLICATE_SYMBOL`).
+    *   **Disjoint-scope reuse**: When an implicit assignment or a taken-
+        constant read creates a binding whose name was used in an earlier
+        disjoint local scope, the compiler reports `#NOT_IN_SAME_SCOPE`. The
+        program remains valid. An explicit declaration such as `x = .int`
+        records deliberate creation of the separate binding and suppresses
+        this warning; using an already-visible outer binding does not create a
+        disjoint symbol and is also quiet. This is a lexical diagnostic rather
+        than a control-flow proof: early returns and mutually exclusive paths
+        do not suppress it.
 
 12. **Exit Dispatch (`exit_dispatch_walker` - Pass B)**:
     *   Allows plugins to react to resolved symbols or types.
@@ -112,10 +129,19 @@ All walkers within this loop are **Idempotent**. Under debug mode `-d3`, the com
 13.3 **Function Call Type Safety (`func_type_safety_walker`)**: 
     *   Validates arguments and reference parameters.
 
+13.4 **Typed Flow Graph (`rxcp_flow_analyze`)**:
+    *   Builds procedure-local reachability, liveness, definite-assignment,
+        and reaching-definition facts after typed rewriting. An unconditional
+        `DO FOREVER` has a body edge but no synthetic normal-exit edge; a real
+        `LEAVE` contributes the explicit edge to the instruction after the
+        loop. `DO FOREVER WHILE` / `UNTIL` and other conditional or bounded
+        loop forms retain their possible normal-exit edge.
+
 14. **Certified Exit Lowering and System Rewrite (`exit_dispatch_walker` / `rewrite_exit_walker`)**: 
     *   Lowers certified exits such as `ADDRESS` through the exit bridge and rewrites `EXIT` into the internal `_exit` call.
     *   If exits are disabled, certified primaries that fell back to `IMPLICIT_CMD` are diagnosed before `_rxsysb` import/hoisting.
     *   Certified exits may inject required runtime imports during `REPLACE`; `PARSE` uses this to add `rxfnsb`.
+    *   Attached certified-exit objects are associated back to their registered exit entry before replacement is grafted, preserving the certified-fragment policy on that invocation path.
     *   Inline branch statements lowered from certified exits may be wrapped in synthetic `INSTRUCTIONS` blocks for structural safety; these wrappers can inherit the parent lexical scope so hoisted bindings stay visible after the branch.
     *   *Idempotency*: Exit lowering replaces the original node; `rewrite_exit_walker` mutates `EXIT` into a call.
 
@@ -180,13 +206,28 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 *   Classes are imported as **Stubs**. The compiler parses the imported file, extracts the class signature (methods, factories), and injects a stub definition into the `master_context`'s AST.
 *   **On-Demand Import**: Currently, class stubs are only imported if the class name is **explicitly referenced** in the source code (e.g., via a factory call `.ClassName()` or a typed variable definition). Merely having a function return an object of that class does **not** automatically trigger the class stub import, which may lead to unresolved method calls at the call site.
 *   **Import Precedence**: When multiple importable artifacts share the same module stem, the scanner prefers `.rexx` over `.rxas`, and `.rxas` over `.rxbin`. The compiler also skips generated side-products for the module currently being compiled so stale build artifacts cannot shadow the active source file.
+*   **Metadata Type Identity**: Imported callable metadata may spell the same
+    nominal class as source-qualified `.namespace..class` or internal
+    `namespace.class`. Contract checks normalize those spellings and resolve
+    them to the loaded class symbol before comparing them. Array shape and
+    reference/value form still have to match exactly; unrelated classes remain
+    a hard `#TYPE_MISMATCH`. This also prevents a source artifact and its
+    matching binary side-product from being reported as inconsistent merely
+    because their return-type text uses the two different spellings.
+*   **RXPA Signature Validation**: Native `ADDPROC` return and argument metadata
+    is parsed as a synthetic Level B declaration before it is grafted into the
+    importing AST. Empty components and statement separators are rejected at
+    the metadata boundary. Other malformed return/argument declarations are
+    classified from the failed synthetic parse and reported at the consumer
+    call site as `RXPA_IMPORT_SIGNATURE_INVALID`, with the plugin, routine,
+    field, original declaration, and reason retained as structured parameters.
 
 ## Business Rule Inventory ("The Magic")
 
 | Behavior | Logic Location | Description |
 | :--- | :--- | :--- |
 | **Array Length Intrinsics** | `set_node_types_walker` | `arr[]` or `arr[..., void]` is automatically typed as `TP_INTEGER` (returning the array length). |
-| **Implicit Main `arg` Compatibility** | `rxcp_val_check.c`, `rxcp_val_sym.c`, `rxcp_val_type.c`, `rxcpemit.c` | Compiler-generated implicit `main()` carries `is_implicit_main`; `arg()` / `arg[]` / `arg[n]` in that routine are redirected onto the hidden VM command-line argv array, while ordinary procedures keep normal vararg semantics. |
+| **Implicit Main `arg` Compatibility** | `rxcp_val_check.c`, `rxcp_val_sym.c`, `rxcp_val_type.c`, `rxcpemit.c` | Compiler-generated implicit `main()` carries `is_implicit_main`; `arg[]` / `arg[n]` in that routine are redirected onto the hidden VM command-line argv array, while ordinary procedures keep normal vararg semantics. |
 | **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if a certified system exit, `EXIT`, or `IMPLICIT_CMD` needs it. |
 | **ADDRESS Certified Exit Lowering** | `exit_dispatch_walker` | Lowers `ADDRESS` through the certified exit bridge into the `_address(...)` call shape. |
 | **EXIT Instruction Rewrite** | `rewrite_exit_walker` | Transforms `EXIT` into a call to the internal `_exit` function. |

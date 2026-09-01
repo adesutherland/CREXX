@@ -1,0 +1,23 @@
+/*
+ * interpreter/tests/tests_selector_descriptor_bad_method.rxas
+ */
+
+.meta "selector_bad_method.box"="b" ".unknown" .class
+
+.globals=0
+
+main() .locals=4
+   null r0
+   setobjtype r0,"selector_bad_method.box"
+   load r1,1
+   settp r0,256
+   swap r2,r0
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
+   ret 0
+
+§selector_bad_method.box.describe() .locals=2
+   .meta "selector_bad_method.box.describe"="b" ".int" §selector_bad_method.box.describe() ""
+   .meta "selector_bad_method.box.describe.§this"="b" ".box" a1
+   load r1,7
+   ret r1
+   .meta "selector_bad_method.box.describe.§this"

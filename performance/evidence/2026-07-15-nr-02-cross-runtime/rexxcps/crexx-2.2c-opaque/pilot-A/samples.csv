@@ -1,0 +1,2 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,crexx,2.2c-opaque-A,process,recorded,1,18705178584,0,pass,535462,cREXX clauses per second

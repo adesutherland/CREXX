@@ -1,0 +1,11 @@
+utc=2026-07-31T15:06:27Z
+local=2026-07-31T16:06:27+0100
+power=AC attached; battery 80%; not charging
+low_power_mode_ac=0
+thermal_warning=none recorded
+performance_warning=none recorded
+uptime_load=up 17 days 9:14; load averages 2.73 3.44 3.42
+overlapping_build_test_benchmark_processes=none
+sampling=serial rotated by workload; one warmup plus 12 recorded rounds
+target=Towers 100 repetitions
+guard=Richards 5 repetitions; candidate main RXAS/RXBIN byte-identical to C0

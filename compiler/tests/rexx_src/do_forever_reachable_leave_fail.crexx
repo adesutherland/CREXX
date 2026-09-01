@@ -1,0 +1,7 @@
+options levelb
+namespace do_forever_reachable_leave_fail
+
+missing_after_leave: procedure = .int
+  do forever
+    leave
+  end

@@ -1,0 +1,77 @@
+/* Focused Level B ARRAYDELETE tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + test_delete("middle", "ABCDE", 2, 2, 3, "A|D|E")
+errors = errors + test_delete("first", "ABC", 1, 1, 2, "B|C")
+errors = errors + test_delete("last", "ABC", 3, 1, 2, "A|B")
+errors = errors + test_delete("whole", "ABC", 1, 3, 0, "")
+errors = errors + test_delete("tail clamp", "ABCD", 3, 999999999, 2, "A|B")
+errors = errors + test_delete("above high no-op", "AB", 3, 1, 2, "A|B")
+errors = errors + test_delete("zero count no-op", "AB", 1, 0, 2, "A|B")
+errors = errors + test_empty()
+errors = errors + test_invalid_from()
+errors = errors + test_invalid_count()
+
+if errors = 0 then say "PASS: arraydelete"
+return errors <> 0
+
+test_delete: procedure = .int
+  arg label = .string, data = .string, from = .int, count = .int, expected_rc = .int, expected = .string
+  array = load(data)
+  rc = arraydelete(array, from, count)
+  actual = join(array)
+  if rc = expected_rc & actual == expected then return 0
+  say "FAIL: ARRAYDELETE" label "expected" expected_rc expected "got" rc actual
+  return 1
+
+test_empty: procedure = .int
+  array = .string[]
+  rc = arraydelete(array, 1, 1)
+  if rc = 0 & array[0] = 0 then return 0
+  say "FAIL: ARRAYDELETE empty array"
+  return 1
+
+test_invalid_from: procedure = .int
+  array = load("AB")
+  do
+    ignored = arraydelete(array, 0, 1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYDELETE invalid position did not signal"
+  return 1
+
+test_invalid_count: procedure = .int
+  array = load("AB")
+  do
+    ignored = arraydelete(array, 1, -1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYDELETE invalid count did not signal"
+  return 1
+
+load: procedure = .string[]
+  arg data = .string
+  array = .string[]
+  data_length = .int
+  codepoint = .int
+  assembler strlen data_length,data
+  do index = 0 to data_length - 1
+    item = ""
+    assembler strchar codepoint,data,index
+    assembler appendchar item,codepoint
+    array[index + 1] = item
+  end
+  return array
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do i = 1 to array[0]
+    if i > 1 then result = result || "|"
+    result = result || array[i]
+  end
+  return result

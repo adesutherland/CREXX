@@ -1,0 +1,7 @@
+.meta "ambiguous_contract.operationcontract"="b" ".unknown" .interface
+.meta "ambiguous_contract.operationcontract"="method" "execute" ".string" "request=.payload" .member
+.meta "left.payload"="b" ".unknown" .interface
+.meta "left.payload"="method" "value" ".string" "" .member
+.meta "right.payload"="b" ".unknown" .interface
+.meta "right.payload"="method" "value" ".string" "" .member
+.globals=0

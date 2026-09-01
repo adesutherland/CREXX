@@ -5,12 +5,13 @@ project(Disassembler C)
 set(CMAKE_C_STANDARD 90)
 
 include(CMakeParseArguments)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../binutils/include/rxbin.h)
 
 add_dependencies(rxdas avl_tree platform)
 
-target_link_libraries(rxdas avl_tree platform)
+target_link_libraries(rxdas avl_tree rxbin platform)
 
 target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../platform ../binutils/include)
 
@@ -19,7 +20,11 @@ add_custom_target(rxdas_test_prereqs ALL
 
 function(crexx_add_rxdas_roundtrip)
     set(options)
-    set(oneValueArgs NAME SOURCE EXPECT_DISASSEMBLY_TEXT_1 EXPECT_DISASSEMBLY_TEXT_2)
+    set(oneValueArgs NAME SOURCE
+            EXPECT_DISASSEMBLY_TEXT_1 EXPECT_DISASSEMBLY_TEXT_2
+            EXPECT_DISASSEMBLY_TEXT_3 EXPECT_DISASSEMBLY_TEXT_4
+            EXPECT_DISASSEMBLY_TEXT_5 EXPECT_DISASSEMBLY_TEXT_6
+            EXPECT_DISASSEMBLY_TEXT_7 EXPECT_DISASSEMBLY_TEXT_8)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "" ${ARGN})
 
     if(NOT CREXX_NAME OR NOT CREXX_SOURCE)
@@ -45,7 +50,7 @@ function(crexx_add_rxdas_roundtrip)
             COMMAND ${CMAKE_COMMAND}
             -DRXDAS=$<TARGET_FILE:rxdas>
             -DRXAS=$<TARGET_FILE:rxas>
-            -DRXVM=$<TARGET_FILE:rxvm>
+            -DRXVM=${CREXX_RXVM_EXECUTABLE}
             -DRXBVM=$<TARGET_FILE:rxbvm>
             -DINPUT_RXBIN=${_crexx_artifact}
             -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
@@ -53,6 +58,12 @@ function(crexx_add_rxdas_roundtrip)
             -DREQUIRE_NO_UNKNOWN=ON
             -DEXPECT_DISASSEMBLY_TEXT_1=${CREXX_EXPECT_DISASSEMBLY_TEXT_1}
             -DEXPECT_DISASSEMBLY_TEXT_2=${CREXX_EXPECT_DISASSEMBLY_TEXT_2}
+            -DEXPECT_DISASSEMBLY_TEXT_3=${CREXX_EXPECT_DISASSEMBLY_TEXT_3}
+            -DEXPECT_DISASSEMBLY_TEXT_4=${CREXX_EXPECT_DISASSEMBLY_TEXT_4}
+            -DEXPECT_DISASSEMBLY_TEXT_5=${CREXX_EXPECT_DISASSEMBLY_TEXT_5}
+            -DEXPECT_DISASSEMBLY_TEXT_6=${CREXX_EXPECT_DISASSEMBLY_TEXT_6}
+            -DEXPECT_DISASSEMBLY_TEXT_7=${CREXX_EXPECT_DISASSEMBLY_TEXT_7}
+            -DEXPECT_DISASSEMBLY_TEXT_8=${CREXX_EXPECT_DISASSEMBLY_TEXT_8}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_roundtrip.cmake
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
@@ -61,6 +72,13 @@ endfunction()
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_basic
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_basic.rxas
+)
+
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_int64_contract
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_int_contract.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "9223372036854775807"
+        EXPECT_DISASSEMBLY_TEXT_2 "-9223372036854775808"
 )
 
 crexx_add_rxdas_roundtrip(
@@ -76,6 +94,34 @@ crexx_add_rxdas_roundtrip(
 )
 
 crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_wide_operands
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_wide_operands.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "cnop r0,r1,r2,r3,r4,r5,r6,r7,r8"
+)
+
+add_executable(mutate_graph_rxbin tests/mutate_graph_rxbin.c)
+set_target_properties(mutate_graph_rxbin PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(_crexx_corrupt_graph_rxbin
+        "${CMAKE_CURRENT_BINARY_DIR}/tests_compact_format_corrupt_graph.rxbin")
+add_custom_command(
+        OUTPUT ${_crexx_corrupt_graph_rxbin}
+        COMMAND $<TARGET_FILE:mutate_graph_rxbin>
+                ${CMAKE_CURRENT_BINARY_DIR}/tests_compact_format.rxbin
+                ${_crexx_corrupt_graph_rxbin}
+        DEPENDS rxdas_roundtrip_compact_format_artifact mutate_graph_rxbin
+        VERBATIM
+        COMMENT "cREXX RXDAS invalid semantic-graph fixture ...")
+add_custom_target(rxdas_graph_error_artifact ALL DEPENDS ${_crexx_corrupt_graph_rxbin})
+add_dependencies(rxdas_graph_error_artifact rxdas)
+add_test(
+        NAME rxdas_graph_error
+        COMMAND ${CMAKE_COMMAND}
+                -DRXDAS=$<TARGET_FILE:rxdas>
+                -DINPUT_RXBIN=${_crexx_corrupt_graph_rxbin}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_graph_error.cmake)
+
+crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_interfaces
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_interfaces.rxas
 )
@@ -88,6 +134,8 @@ crexx_add_rxdas_roundtrip(
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_imported
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_disassembler_imported.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 ".provider.optional"
+        EXPECT_DISASSEMBLY_TEXT_2 "rx_test_words"
 )
 
 crexx_add_rxdas_roundtrip(
@@ -95,9 +143,60 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_binary.rxas
 )
 
+# Keep this generated: it must exceed rxdas' ordinary line buffer without
+# burdening the source tree with a hand-maintained multi-kilobyte literal.
+string(REPEAT "000102030405060708090a0b0c0d0e0f" 160
+        _rxdas_large_binary_payload)
+set(_rxdas_large_binary_source
+        "${CMAKE_CURRENT_BINARY_DIR}/tests_rxdas_large_binary.rxas")
+file(GENERATE OUTPUT "${_rxdas_large_binary_source}" CONTENT
+".globals=0
+.const prepared binary 0x${_rxdas_large_binary_payload}
+
+main() .locals=2
+   load r0,prepared
+   blen r1,r0
+   say r1
+   ret 0
+")
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_large_binary_alias
+        SOURCE "${_rxdas_large_binary_source}"
+        EXPECT_DISASSEMBLY_TEXT_1 ".const §rxdas.const."
+        EXPECT_DISASSEMBLY_TEXT_2 "load r0,§rxdas.const."
+)
+
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_jtable_linear
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_jump_table.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 ".jtable jtable_"
+        EXPECT_DISASSEMBLY_TEXT_2 " linear"
+        EXPECT_DISASSEMBLY_TEXT_3 ".jcase jtable_"
+        EXPECT_DISASSEMBLY_TEXT_4 " jumps "
+        EXPECT_DISASSEMBLY_TEXT_5 " jumpb "
+        EXPECT_DISASSEMBLY_TEXT_6 " jumpbs "
+        EXPECT_DISASSEMBLY_TEXT_7 " jumpi "
+)
+
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_jtable_hash
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_jump_table_hash_edges.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 " openhash"
+        EXPECT_DISASSEMBLY_TEXT_2 " acph"
+        EXPECT_DISASSEMBLY_TEXT_3 ".jcase jtable_"
+)
+
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_jtable_rexx_strings
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_jump_table_rexx_strings.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 " jumpr "
+        EXPECT_DISASSEMBLY_TEXT_2 " jumpn "
+        EXPECT_DISASSEMBLY_TEXT_3 ".jcase jtable_"
+)
+
 add_executable(test_disassembler_dump tests/test_disassembler_dump.c rxdadism.c)
 add_dependencies(test_disassembler_dump avl_tree platform rxdas_test_prereqs)
-target_link_libraries(test_disassembler_dump avl_tree platform)
+target_link_libraries(test_disassembler_dump avl_tree rxbin platform)
 target_include_directories(test_disassembler_dump PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ../assembler
@@ -113,3 +212,19 @@ add_test(
         COMMAND test_disassembler_dump
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+crexx_label_smoke_tests(
+        rxdas_roundtrip_basic
+        rxdas_roundtrip_interfaces
+        rxdas_roundtrip_large_binary_alias
+        rxdas_graph_error
+        rxdas_dump_support
+        PREP_TARGETS
+            rxdas_roundtrip_basic_artifact
+            rxdas_roundtrip_interfaces_artifact
+            rxdas_roundtrip_large_binary_alias_artifact
+            rxdas_graph_error_artifact
+            test_disassembler_dump
+)
+
+crexx_finalize_directory_qa_tiers()

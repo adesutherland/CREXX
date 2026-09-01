@@ -1,556 +1,287 @@
-
-options levelb comments_dash
+/* Complete public-surface tests for the Level B .Rexx class. */
+options levelb comments_dash numeric_classic
 import rexx
 import rxfnsb
 
-say 'started testrexx'
 errors = 0
+errors = errors + test_construction()
+errors = errors + test_text_methods()
+errors = errors + test_conversions()
+errors = errors + test_numeric_methods()
+errors = errors + test_format_presence()
+errors = errors + test_word_and_introspection_methods()
+errors = errors + test_signals()
 
-t = .testrexx()
+if errors = 0 then say "PASS: Rexx class complete public surface"
+return errors <> 0
 
-rc = t.t_abbrev() ; errors=errors+rc
-say 'rc abbrev=' rc
-say 'errors' errors
+test_construction: procedure = .int
+  errors = 0
+  subject = .rexx("Mixed")
+  errors = errors + check(subject.toString() = "Mixed", "factory and toString")
+  errors = errors + check(subject.stringValue() = "Mixed", "stringValue")
+  errors = errors + check(subject.length() = 5, "length")
+  errors = errors + check(subject.linesize() = 999999999, "linesize")
+  return errors
 
-rc = t.t_abs() ; errors=errors+rc
-say 'rc abs=' rc
-say 'errors' errors
+test_text_methods: procedure = .int
+  errors = 0
 
-rc = t.t_b2x() ; errors=errors+rc
-say 'rc b2x=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("Print").abbrev("Pri"), "abbrev default")
+  errors = errors + check(.rexx("PRINT").abbrev("PRI", 4) = 0, "abbrev minimum")
+  errors = errors + check(.rexx("ABC").center(8, "-").toString() = "--ABC---", "center")
+  errors = errors + check(.rexx("ABC").centre(7).toString() = "  ABC  ", "centre")
+  errors = errors + check(.rexx("elephant").changestr("ph", "X").toString() = "eleXant", "changestr")
+  errors = errors + check(.rexx("abc").compare("ak") = 2, "compare")
+  errors = errors + check(.rexx("ab ").compare("ab", "x") = 3, "compare pad")
+  errors = errors + check(.rexx("abc").copies(3).toString() = "abcabcabc", "copies")
+  errors = errors + check(.rexx("abcabc").countstr("bc") = 2, "countstr")
 
-rc = t.t_centre() ; errors=errors+rc
-say 'rc centre=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("abcde").delstr(3).toString() = "ab", "delstr omitted length")
+  errors = errors + check(.rexx("abcde").delstr(3, 0).toString() = "abcde", "delstr explicit zero")
+  errors = errors + check(.rexx("Now is the  time").delword(2, 2).toString() = "Now time", "delword count")
+  errors = errors + check(.rexx("Now is the time ").delword(3).toString() = "Now is ", "delword omitted count")
 
-rc = t.t_changestr() ; errors=errors+rc
-say 'rc changestr=' rc
-say 'errors' errors
+  target = .rexx("abc")
+  errors = errors + check(target.insert("123").toString() = "123abc", "insert default")
+  errors = errors + check(target.insert("123", 5, 6, "+").toString() = "abc++123+++", "insert extension")
+  errors = errors + check(target.insert("123", 0, 0).toString() = "abc", "insert explicit zero")
+  errors = errors + check(target.insert("123", , 5, "-").toString() = "123--abc", "insert optional hole")
+  errors = errors + check(target.toString() = "abc", "insert receiver unchanged")
 
-rc = t.t_compare() ; errors=errors+rc
-say 'rc compare=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("Fou-Baa").lower().toString() = "fou-baa", "lower")
+  overlay_target = .rexx("abcdef")
+  errors = errors + check(overlay_target.overlay("qq").toString() = "qqcdef", "overlay default")
+  errors = errors + check(overlay_target.overlay(".", 3, 2).toString() = "ab. ef", "overlay width")
+  errors = errors + check(overlay_target.overlay("qq", 3, 0).toString() = "abcdef", "overlay explicit zero")
+  errors = errors + check(overlay_target.overlay("foo", , 4, "*").toString() = "foo*ef", "overlay optional hole")
+  errors = errors + check(overlay_target.toString() = "abcdef", "overlay receiver unchanged")
 
-rc = t.t_copies() ; errors=errors+rc
-say 'rc copies=' rc
-say 'errors' errors
+  search = .rexx("abc def ghi")
+  errors = errors + check(search.pos(" ") = 4, "pos receiver is haystack")
+  errors = errors + check(search.pos(" ", 5) = 8, "pos start")
+  errors = errors + check(search.lastpos(" ") = 8, "lastpos receiver is haystack")
+  errors = errors + check(search.lastpos(" ", 7) = 4, "lastpos search end")
 
-rc = t.t_countstr() ; errors=errors+rc
-say 'rc countstr=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("abc d").left(8).toString() = "abc d   ", "left")
+  errors = errors + check(.rexx("abc d").left(8, ".").toString() = "abc d...", "left pad")
+  errors = errors + check(.rexx("12").right(5, "0").toString() = "00012", "right pad")
+  errors = errors + check(.rexx("ABc.").reverse().toString() = ".cBA", "reverse")
+  errors = errors + check(.rexx("  abc   def ").space(2, "+").toString() = "abc++def", "space")
 
-rc = t.t_c2d() ; errors=errors+rc
-say 'rc c2d=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("　ab c　").strip().toString() = "ab c", "strip omitted Unicode whitespace")
+  errors = errors + check(.rexx(" x　").strip(, " ").toString() = "x　", "strip explicit blank")
+  errors = errors + check(.rexx("0012.7000").strip("B", "0").toString() = "12.7", "strip custom")
+  errors = errors + check(.rexx("abc").substr(2).toString() = "bc", "substr omitted length")
+  errors = errors + check(.rexx("abc").substr(2, 0).toString() = "", "substr explicit zero")
+  errors = errors + check(.rexx("abc").substr(2, 6, ".").toString() = "bc....", "substr padding")
 
-rc = t.t_c2x() ; errors=errors+rc
-say 'rc c2x=' rc
-say 'errors' errors
+  errors = errors + check(.rexx("abbc").translate("&", "b").toString() = "a&&c", "translate")
+  errors = errors + check(.rexx("Foo").translate().toString() = "FOO", "translate omitted tables")
+  errors = errors + check(.rexx("a b").translate(, " ", "*").toString() = "a*b", "translate omitted output")
+  errors = errors + check(.rexx("abc").translate(,, "$").toString() = "ABC", "translate pad does not replace uppercase mode")
+  errors = errors + check(.rexx("Fou-Baa").upper().toString() = "FOU-BAA", "upper")
+  errors = errors + check(.rexx("AB4T").verify("1234567890", "M") = 3, "verify")
+  errors = errors + check(.rexx("i").sequence("l").toString() = "ijkl", "sequence")
+  errors = errors + check(.rexx("a").xrange("f").toString() = "abcdef", "xrange")
+  return errors
 
-rc = t.t_datatype() ; errors=errors+rc
-say 'rc datatype=' rc
-say 'errors' errors
+test_conversions: procedure = .int
+  errors = 0
+  errors = errors + check(.rexx("10111").b2x().toString() = "17", "b2x")
+  errors = errors + check(.rexx("10 1010").b2d() = 42, "b2d")
+  errors = errors + check(.rexx("M").c2x().toString() = "4D", "c2x")
+  errors = errors + check(.rexx("M").c2d() = 77, "c2d")
+  errors = errors + check(.rexx("129").d2b().toString() = "10000001", "d2b")
+  errors = errors + check(.rexx("77").d2c().toString() = "M", "d2c")
+  errors = errors + check(.rexx("129").d2x().toString() = "81", "d2x")
+  errors = errors + check(.rexx("0001").x2b().toString() = "0000000000000001", "x2b leading zeros")
+  errors = errors + check(.rexx("FF").x2c().toString() = "ÿ", "x2c Unicode byte")
+  errors = errors + check(.rexx("81").x2d() = 129, "x2d omitted width")
+  errors = errors + check(.rexx("81").x2d(2) = -127, "x2d signed width")
+  errors = errors + check(.rexx("0031").x2d(0) = 0, "x2d explicit zero")
+  errors = errors + check(.rexx("A").reradix(16, 10).toString() = "10", "reradix")
+  return errors
 
-rc = t.t_delstr() ; errors=errors+rc
-say 'rc delstr=' rc
-say 'errors' errors
+test_numeric_methods: procedure = .int
+  errors = 0
+  source = .rexx(" - 123.45 ")
+  errors = errors + check(source.abs().toString() = "123.45", "abs Classic sign whitespace")
+  errors = errors + check(source.sign().toString() = "-1", "sign Classic sign whitespace")
+  errors = errors + check(.rexx(" - 127.09782 ").trunc(3).toString() = "-127.097", "trunc Classic sign whitespace")
+  errors = errors + check(source.toString() = " - 123.45 ", "numeric receiver unchanged")
+  return errors
 
-rc = t.t_delword() ; errors=errors+rc
-say 'rc delword=' rc
-say 'errors' errors
+test_format_presence: procedure = .int
+  numeric digits 18
+  numeric form scientific
+  errors = 0
+  wrapped = .rexx(" + 12345.73 ")
+  number = "12345.73" as .decimal
 
-rc = t.t_d2c() ; errors=errors+rc
-say 'rc d2c=' rc
-say 'errors' errors
+  errors = errors + check(wrapped.format().toString() = .rxfnsb..format(number), "format no controls")
+  errors = errors + check(wrapped.format(8).toString() = .rxfnsb..format(number, 8), "format before")
+  errors = errors + check(wrapped.format(, 3).toString() = .rxfnsb..format(number, , 3), "format after")
+  errors = errors + check(wrapped.format(, , 2).toString() = .rxfnsb..format(number, , , 2), "format expp")
+  errors = errors + check(wrapped.format(, , , 2).toString() = .rxfnsb..format(number, , , , 2), "format expt")
+  errors = errors + check(wrapped.format(8, 3).toString() = .rxfnsb..format(number, 8, 3), "format before after")
+  errors = errors + check(wrapped.format(8, , 2).toString() = .rxfnsb..format(number, 8, , 2), "format before expp")
+  errors = errors + check(wrapped.format(8, , , 2).toString() = .rxfnsb..format(number, 8, , , 2), "format before expt")
+  errors = errors + check(wrapped.format(, 3, 2).toString() = .rxfnsb..format(number, , 3, 2), "format after expp")
+  errors = errors + check(wrapped.format(, 3, , 2).toString() = .rxfnsb..format(number, , 3, , 2), "format after expt")
+  errors = errors + check(wrapped.format(, , 2, 2).toString() = .rxfnsb..format(number, , , 2, 2), "format expp expt")
+  errors = errors + check(wrapped.format(8, 3, 2).toString() = .rxfnsb..format(number, 8, 3, 2), "format before after expp")
+  errors = errors + check(wrapped.format(8, 3, , 2).toString() = .rxfnsb..format(number, 8, 3, , 2), "format before after expt")
+  errors = errors + check(wrapped.format(8, , 2, 2).toString() = .rxfnsb..format(number, 8, , 2, 2), "format before expp expt")
+  errors = errors + check(wrapped.format(, 3, 2, 2).toString() = .rxfnsb..format(number, , 3, 2, 2), "format after expp expt")
+  errors = errors + check(wrapped.format(8, 3, 2, 2).toString() = .rxfnsb..format(number, 8, 3, 2, 2), "format all controls")
+  return errors
 
-rc = t.t_d2x() ; errors=errors+rc
-say 'rc d2x=' rc
-say 'errors' errors
+test_word_and_introspection_methods: procedure = .int
+  errors = 0
+  words = .rexx("Now is the  time")
+  errors = errors + check(words.word(3).toString() = "the", "word")
+  errors = errors + check(words.words() = 4, "words")
+  errors = errors + check(words.wordindex(3) = 8, "wordindex")
+  errors = errors + check(words.subword(2, 2).toString() = "is the", "subword count")
+  errors = errors + check(words.subword(3).toString() = "the  time", "subword omitted count")
+  errors = errors + check(words.wordlength(3) = 3, "wordlength")
+  errors = errors + check(words.wordpos("is the") = 2, "wordpos")
+  errors = errors + check(.rexx("not_used").symbol() = "LIT", "symbol")
+  errors = errors + check(.rexx("21.3").datatype() = "NUM", "datatype classification")
+  errors = errors + check(.rexx("123").datatype("W") = "1", "datatype test")
+  errors = errors + check(.rexx("missing").value().toString() = "MISSING", "value fallback")
+  return errors
 
-rc = t.t_format() ; errors=errors+rc
-say 'rc format=' rc
-say 'errors' errors
+test_signals: procedure = .int
+  errors = 0
+  caught = 0
 
+  do
+    ignored = .rexx("Print").abbrev("Pri", -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = .rexx("102").b2d()
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").delstr(0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").delstr(1, -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").insert("x", -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").left(4, "")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").overlay("x", 0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = .rexx("abc").pos("a", 0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = .rexx("abc").lastpos("a", 0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").right(4, "xy")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").strip(, "")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").substr(0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("abc").substr(1, -1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("not-a-number").abs()
+  on signal conversion_error
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("not-a-number").sign()
+  on signal conversion_error
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("not-a-number").trunc()
+  on signal conversion_error
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("123").format(2)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("1").trunc(-1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .rexx..rexx
+    ignored = .rexx("1G").x2b()
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = .rexx("81").x2d(-1)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
 
--- return errors<>0
-return 0
+  errors = errors + check(caught = 20, "all adapter failures are catchable signals")
+  return errors
 
-testrexx: class
-
-  *: factory
-    return
-
-  t_abbrev: method = .int
-    flag=.boolean
-    flag = 1
-    p1=.rexx('Print'); p2=.rexx('PRINT')
-    flag=flag & (p1.abbrev('Pri')=='1')
-    flag=flag & (p2.abbrev('Pri')=='0')
-    flag=flag & (p2.abbrev('PRI',2)=='1')
-    flag=flag & (p2.abbrev('PRI',3)=='1')
-    flag=flag & (p2.abbrev('PRI',4)=='0')
-    flag=flag & (p2.abbrev('PRY')=='0')
-    flag=flag & (p2.abbrev('')=='1')
-    flag=flag & (p2.abbrev('',0)=='1')
-    flag=flag & (p2.abbrev('',1)=='0')
-    return \flag
-
-  t_abs: method = .int
-    flag=.boolean
-    flag = 1
-    s = .rexx('-1')
-    flag=flag & s.abs().toString() = .rexx('1').toString()
-    s = .rexx('0')
-    flag=flag & s.abs().toString() = .rexx('0').toString()
-    s = .rexx('+1')
-    flag=flag & s.abs().toString() =.rexx('1').toString()
-    s = .rexx(' - 12345678        ')
-    flag=flag & s.abs().toString() =.rexx('12345678').toString()
-    s = .rexx(' - 123456789        ')
-    flag=flag & s.abs().toString() =.rexx('123456789').toString()
-    s = .rexx(' - 1234567890      ')
-    flag=flag & s.abs().toString() =.rexx('1234567890').toString()
-    s = .rexx(' - 12345678900     ')
-    flag=flag & s.abs().toString() =.rexx('12345678900').toString()
-    -- s = .rexx('123.45E+16')
-    -- flag=flag & s.abs().toString() =.rexx('1.2345E+18').toString()
-    s = .rexx('- 1234567.7654321')
-    flag=flag & s.abs().toString() =.rexx('1234567.7654321').toString()
-    return \flag
-
- /*-- B 2 X -------------------------------------------------------*/
-  t_b2x: method = .int
-    flag=.boolean
-    flag = 1
-    s = .rexx('0')
-    flag=flag & s.b2x().toString() ='0'
-    s = .rexx('1')
-    flag=flag & s.b2x().toString() ='1'
-    s = .rexx('10')
-    flag=flag & s.b2x().toString() ='2'
-    s = .rexx('101')
-    flag=flag & s.b2x().toString() ='5'
-    s = .rexx('1011')
-    flag=flag & s.b2x().toString() ='B'
-    s = .rexx('10101')
-    flag=flag & s.b2x().toString() ='15'
-    return \flag
-
-     /*-- C E N T R E / C E N T E R -----------------------------------*/
- t_centre: method = .int
-    flag=.boolean
-    flag = 1
-    
-    a=.rexx('abc'); b=.rexx('The blue sky'); n=.rexx('')
-    flag=flag & (a.centre(7).toString() =='  abc  ')
-    flag=flag & (a.center(7).toString() =='  abc  ')
-    flag=flag & (a.centre(7,'-').toString() =='--abc--')
-    flag=flag & (a.centre(8,'-').toString() =='--abc---')
-    flag=flag & (b.centre(8).toString() =='e blue s')
-    flag=flag & (b.centre(7).toString() =='e blue ')
-    flag=flag & (b.centre(0).toString() =='')
-    flag=flag & (n.centre(0).toString() =='')
-    -- flag=flag & (n.centre(1)==' ')
-    flag=flag & (n.centre(2).toString() =='  ')
-    flag=flag & (n.centre(3).toString() =='   ')
-    flag=flag & (n.centre(4).toString() =='    ')
-    return \flag
-
-    /*-- C H A N G E S T R -------------------------------------------*/
- t_changestr: method =.int
-    flag=.boolean
-    flag = 1
-    v=.rexx('abcdef'); v2=.rexx('abcabc'); w3=.rexx('aa bbb cccc')
-
-    -- flag=flag & (v.changestr('1','2')=v)
-    flag=flag & (v.changestr('a','xx').toString() ='xxbcdef')
-    flag=flag & (v.changestr('cd','x').toString() ='abxef')
-    flag=flag & (v2.changestr('a','A').toString() ='AbcAbc')
-    -- flag=flag & (v2.changestr('cd','z')=v2
-    -- flag=flag & (v2.changestr('bc','')='aa')
-    -- flag=flag & (w3.changestr('', 'z')=w3)
-    return \flag
-
-     /*-- C O M P A R E -----------------------------------------------*/
-  t_compare: method =.int
-    flag=.boolean
-    flag = 1
-    s=.rexx('abc');t=.rexx('ab');u=.rexx('');v=.rexx('d')
-    w=.rexx('ab ');x=.rexx('ab-- ')
-
-    flag=flag & (s.compare('abc')       = '0')
-    flag=flag & (s.compare('ak')        = '2')
-    flag=flag & (s.compare('ab')        = 3)
-    flag=flag & ( t.compare('abc')      = 3)
-    flag=flag & ( u.compare('abc')      = 1)
-    flag=flag & ( v.compare('')         = 1)
-    flag=flag & ( w.compare('ab')       = 0)
-    flag=flag & ( w.compare('ab',' ')   = 0)
-    flag=flag & ( w.compare('ab','x')   = 3)
-    flag=flag & ( x.compare('ab','-')   = 5)
-    return \flag
-
-     /*-- C O P I E S -------------------------------------------------*/
-  t_copies: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('abcdef'); c=.rexx('c')
-    flag=flag & (v.copies(0).toString() ='')
-    flag=flag & (c.copies(1).toString() =c.toString())
-    flag=flag & (v.copies(1).toString() ==v)
-    flag=flag & (v.copies(2).toString() ==v.toString()||v.toString())
-    flag=flag & (v.copies(2).toString() =='abcdefabcdef')
-    flag=flag & (c.copies(5).toString() =="ccccc")
-    return \flag
-
-
-     /*-- C O U N T S T R ---------------------------------------------*/
- t_countstr: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('abcdef'); v2=.rexx('abcabc'); w3=.rexx('aa bbb cccc')
-    flag=flag & (v.countstr(1) =0)
-    flag=flag & (v.countstr('a') =1)
-    flag=flag & (v.countstr('cd') =1)
-    flag=flag & (v2.countstr('a') =2)
-    flag=flag & (v2.countstr('cd') =0)
-    flag=flag & (v2.countstr('bc') =2)
-    flag=flag & (w3.countstr(' ') =2)
-    return \flag
-    
- /*-- C 2 D -------------------------------------------------------*/
-  t_c2d: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('M');w=.rexx('\0')
-    flag=flag & v.c2d()=='77'
-    -- flag=flag & w.c2d()=='0'
-    return \flag
-    
-    /*-- C 2 X -------------------------------------------------------*/
-  t_c2x: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('0123'x)
-    x=.rexx('M')
-    y=.rexx('\0')
-
-    -- flag=flag & v.c2x()=='123'
-    -- flag=flag & w.c2x()=='BEEF'
-    flag=flag & x.c2x().toString() ='4D'
-    -- flag=flag & y.c2x()=='0'
-    return \flag
-
- /*-- D A T A T Y P E ---------------------------------------------*/
- t_datatype: method = .int
-    flag=.boolean
-    flag = 1
-    a=.rexx('Mixed21')
-    b=.rexx('0100110')
-    d=.rexx('987032')
-    l=.rexx('foobar')
-    m=.rexx('BiCap')
-    n=.rexx('21.3')
-    s=.rexx('Fred_21')
-    u=.rexx('SHOUT')
-    w=.rexx('1234')
-    x=.rexx('deadBEEF0123')
-    z=.rexx('**(^^&')
-
-    flag=flag & (a.datatype('a')=='1')
-    flag=flag & (b.datatype('a')=='1')
-    flag=flag & (d.datatype('a')=='1')
-    flag=flag & (l.datatype('a')=='1')
-    flag=flag & (m.datatype('a')=='1')
-    flag=flag & (n.datatype('a')=='0')
-    flag=flag & (s.datatype('a')=='0')
-    flag=flag & (u.datatype('a')=='1')
-    flag=flag & (w.datatype('a')=='1')
-    flag=flag & (x.datatype('a')=='1')
-    flag=flag & (z.datatype('a')=='0')
-    
-    flag=flag & (a.datatype('b')=='0')
-    flag=flag & (b.datatype('b')=='1')
-    flag=flag & (d.datatype('b')=='0')
-    flag=flag & (l.datatype('b')=='0')
-    flag=flag & (m.datatype('b')=='0')
-    flag=flag & (n.datatype('b')=='0')
-    flag=flag & (s.datatype('b')=='0')
-    flag=flag & (u.datatype('b')=='0')
-    flag=flag & (w.datatype('b')=='0')
-    flag=flag & (x.datatype('b')=='0')
-    flag=flag & (z.datatype('b')=='0')
-    
-    flag=flag & (a.datatype('d')=='0')
-    -- flag=flag & (b.datatype('d')=='1')
-    -- flag=flag & (d.datatype('d')=='1')
-    flag=flag & (l.datatype('d')=='0')
-    flag=flag & (m.datatype('d')=='0')
-    flag=flag & (n.datatype('d')=='0')
-    flag=flag & (s.datatype('d')=='0')
-    flag=flag & (u.datatype('d')=='0')
-    -- flag=flag & (w.datatype('d')=='1')
-    flag=flag & (x.datatype('d')=='0')
-    flag=flag & (z.datatype('d')=='0')
-    
-    flag=flag & (a.datatype('l')=='0')
-    flag=flag & (b.datatype('l')=='0')
-    flag=flag & (d.datatype('l')=='0')
-    flag=flag & (l.datatype('l')=='1')
-    flag=flag & (m.datatype('l')=='0')
-    flag=flag & (n.datatype('l')=='0')
-    flag=flag & (s.datatype('l')=='0')
-    flag=flag & (u.datatype('l')=='0')
-    flag=flag & (w.datatype('l')=='0')
-    flag=flag & (x.datatype('l')=='0')
-    flag=flag & (z.datatype('l')=='0')
-    
-    flag=flag & (a.datatype('m')=='0')
-    flag=flag & (b.datatype('m')=='0')
-    flag=flag & (d.datatype('m')=='0')
-    flag=flag & (l.datatype('m')=='1')
-    flag=flag & (m.datatype('m')=='1')
-    flag=flag & (n.datatype('m')=='0')
-    flag=flag & (s.datatype('m')=='0')
-    flag=flag & (u.datatype('m')=='1')
-    flag=flag & (w.datatype('m')=='0')
-    flag=flag & (x.datatype('m')=='0')
-    flag=flag & (z.datatype('m')=='0')
-    
-    flag=flag & (a.datatype('n')=='0')
-    flag=flag & (b.datatype('n')=='1')
-    flag=flag & (d.datatype('n')=='1')
-    flag=flag & (l.datatype('n')=='0')
-    flag=flag & (m.datatype('n')=='0')
-    flag=flag & (n.datatype('n')=='1')
-    flag=flag & (s.datatype('n')=='0')
-    flag=flag & (u.datatype('n')=='0')
-    flag=flag & (w.datatype('n')=='1')
-    flag=flag & (x.datatype('n')=='0')
-    flag=flag & (z.datatype('n')=='0')
-    
-    flag=flag & (a.datatype('s')=='1')
-    -- flag=flag & (b.datatype('s')=='0')
-    -- flag=flag & (d.datatype('s')=='0')
-    flag=flag & (l.datatype('s')=='1')
-    flag=flag & (m.datatype('s')=='1')
-    flag=flag & (n.datatype('s')=='0')
-    flag=flag & (s.datatype('s')=='1')
-    flag=flag & (u.datatype('s')=='1')
-    -- flag=flag & (w.datatype('s')=='0')
-    flag=flag & (x.datatype('s')=='1')
-    flag=flag & (z.datatype('s')=='0')
-    
-    flag=flag & (a.datatype('u')=='0')
-    flag=flag & (b.datatype('u')=='0')
-    flag=flag & (d.datatype('u')=='0')
-    flag=flag & (l.datatype('u')=='0')
-    flag=flag & (m.datatype('u')=='0')
-    flag=flag & (n.datatype('u')=='0')
-    flag=flag & (s.datatype('u')=='0')
-    flag=flag & (u.datatype('u')=='1')
-    flag=flag & (w.datatype('u')=='0')
-    flag=flag & (x.datatype('u')=='0')
-    flag=flag & (z.datatype('u')=='0')
-    
-    flag=flag & (a.datatype('w')=='0')
-    flag=flag & (b.datatype('w')=='1')
-    flag=flag & (d.datatype('w')=='1')
-    flag=flag & (l.datatype('w')=='0')
-    flag=flag & (m.datatype('w')=='0')
-    flag=flag & (n.datatype('w')=='0')
-    flag=flag & (s.datatype('w')=='0')
-    flag=flag & (u.datatype('w')=='0')
-    flag=flag & (w.datatype('w')=='1')
-    flag=flag & (x.datatype('w')=='0')
-    flag=flag & (z.datatype('w')=='0')
-    
-    flag=flag & (a.datatype('x')=='0')
-    flag=flag & (b.datatype('x')=='1')
-    flag=flag & (d.datatype('x')=='1')
-    flag=flag & (l.datatype('x')=='0')
-    flag=flag & (m.datatype('x')=='0')
-    flag=flag & (n.datatype('x')=='0')
-    flag=flag & (s.datatype('x')=='0')
-    flag=flag & (u.datatype('x')=='0')
-    flag=flag & (w.datatype('x')=='1')
-    flag=flag & (x.datatype('x')=='1')
-    flag=flag & (z.datatype('x')=='0')
-    
-    return \flag
-
-    /*-- D E L S T R -------------------------------------------------*/
-  t_delstr: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('abcd')
-    w=.rexx('abcde')
-    -- x=.rexx('')
-    flag=flag & (v.delstr(3).toString()    = 'ab')
-    -- flag=flag & (w.delstr(3,2).toString() = 'abe')
-    -- flag=flag & (w.delstr(6).toString()   = 'abcde')
-    -- flag=flag & (w.delstr(9).toString()   = 'abcde')
-    -- flag=flag & (w.delstr(1,0) = 'abcde')
-    -- flag=flag & (x.delstr(1,0).toString() = '')
-    -- flag=flag & (x.delstr(1,2).toString() = '')
-    return \flag
-    
-    /*-- D E L W O R D -----------------------------------------------*/
-  t_delword: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('Now is the  time')
-    w=.rexx('Now is the time ')
-    x=.rexx('Now  time')
-    flag=flag & (v.delword(1,2).toString() == 'the  time')
-    -- flag=flag & (v.delword(2,2) == 'Now time')
-    flag=flag & (w.delword(3).toString() == 'Now is ')
-    flag=flag & (x.delword(5).toString() == 'Now  time')
-    return \flag
-
- /*-- D 2 C -------------------------------------------------------*/
- t_d2c: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('77');w=.rexx('+77')
-    flag=flag & v.d2c().toString() ='M'
-    flag=flag & w.d2c().toString() ='M'
-    return \flag
-
- /*-- D 2 X ---------------TODO--------------------------------------*/
-  t_d2x: method = .int
-    flag=.boolean
-    flag = 1
-    v=.rexx('8947848')
-    w=.rexx(9)
-    x=.rexx('129')
-    y=.rexx('127')
-    z=.rexx('257')
-    a=.rexx('-127')
-    b=.rexx('12')
-    c=.rexx('-7829368')
-    
-    flag=flag & (w.d2x().toString()     = '9' )
-    flag=flag & (x.d2x().toString()     = '81' )
-    -- flag=flag & (x.d2x()    = 1 )
-    -- flag=flag & (x.d2x()    = '81')
-    -- flag=flag & (y.d2x()    = '07F')
-    -- flag=flag & (x.d2x()    = '0081')
-    -- flag=flag & (z.d2x()    = '01')
-    -- flag=flag & (a.d2x()    = '81')
-    -- flag=flag & (a.d2x()    = 'FF81')
-    -- flag=flag & (b.d2x()    = '')
-    -- flag=flag & (v.d2x()    = '888888')
-    -- flag=flag & (v.d2x()    = '8888')
-    -- flag=flag & (v.d2x()    = '88888')
-    -- flag=flag & (v.d2x()    = '888888')
-    -- flag=flag & (v.d2x()    = '0888888')
-    -- flag=flag & (v.d2x()    = '00888888')
-    -- flag=flag & (c.d2x()    = '8888')
-    -- flag=flag & (c.d2x()    = '88888')
-    -- flag=flag & (c.d2x()    = '888888')
-    -- flag=flag & (c.d2x()    = 'F888888')
-    -- flag=flag & (c.d2x()    = 'FF888888')
-    return \flag
-
--- /*-- E X I S T S --------- not in crexx (yet?---------------------*/
---   --   method exists static
---   --       flag=.boolean
---   --   flag = 1
-
---   -- flag=boolean 1; count=count+1
---   -- vowel=0
---   -- vowel['a']=1
---   -- vowel['b']=1
---   -- vowel['b']=null -- drops previous assignment
---   -- flag=flag & (vowel.exists('a') == '1')
---   -- flag=flag & (vowel.exists('b') == '0')
---   -- flag=flag & (vowel.exists('c') == '0')
---   -- if \flag then signal DiagX('Rexx exists')
---   -- return
-
- /*-- F O R M A T -------------------------------------------------*/
- t_format: method = .int
-    flag=.boolean
-    flag = 1
-    v = .rexx('12.3')
-    flag=flag & (v.format().toString()             == 12.3)
-    v = .rexx(' - 12.73')
-    flag=flag & (v.format().toString()         = '-12.73')
-    -- flag=flag & ('0.000'.format            == '0')
-    -- flag=flag & ('3'.format(4)             == '   3')
-    -- flag=flag & ('1.73'.format(4,0)        == '   2')
-    -- flag=flag & ('1.73'.format(4,1)        == '   1.7')
-    -- flag=flag & ('1.75'.format(4,1)        == '   1.8')
-    -- flag=flag & ('1.73'.format(4,2)        == '   1.73')
-    -- flag=flag & ('1.73'.format(4,3)        == '   1.730')
-    -- flag=flag & ('-.76'.format(4,1)        == '  -0.8')
-    -- flag=flag & ('3.03'.format(4)          == '   3.03')
-    -- flag=flag & (' - 12.73'.format(null,4) == '-12.7300')
-    -- flag=flag & ('3.03'.format(4,null,3)   == '   3.03     ')
-    -- flag=flag & ('3.03'.format(null,null,3)== '3.03     ')
-    
-    -- flag=flag & ('0.05'.format(4,1)        == '   0.1')
-    -- flag=flag & ('0.005'.format(4,0)       == '   0')
-    -- flag=flag & ('0.005'.format(4,1)       == '   0.0')
-    -- flag=flag & ('0.005'.format(4,2)       == '   0.01')
-    -- flag=flag & ('0.005'.format(4,3)       == '   0.005')
-    -- flag=flag & ('0.005'.format(4,4)       == '   0.0050')
-    -- flag=flag & ('0'.format(4,0)           == '   0')
-    -- flag=flag & ('0'.format(4,1)           == '   0.0')
-    -- flag=flag & ('0'.format(4,2)           == '   0.00')
-    
-    -- flag=flag & ('0.4'.format(null,0)      == '0')
-    -- flag=flag & ('-0.4'.format(null,0)     == '0')
-    -- flag=flag & ('0.444'.format(null,0)     == '0')
-    -- flag=flag & ('-0.444'.format(null,0)     == '0')
-    
-    -- flag=flag & ('12345.73'.format(null,null,null,3) == '1.234573E+4')
-    -- flag=flag & ('12345.73'.format(null,null,null,4) == '1.234573E+4')
-    -- flag=flag & ('12345.73'.format(null,null,null,5) == '12345.73')
-    -- flag=flag & ('12345.73'.format(null,null,null,6) == '12345.73')
-    
-    -- flag=flag & ('12345.73'.format(null,8,null,3)    == '1.23457300E+4')
-    -- flag=flag & ('12345.73'.format(null,7,null,3)    == '1.2345730E+4')
-    -- flag=flag & ('12345.73'.format(null,6,null,3)    == '1.234573E+4')
-    -- flag=flag & ('12345.73'.format(null,5,null,3)    == '1.23457E+4')
-    -- flag=flag & ('12345.73'.format(null,4,null,3)    == '1.2346E+4')
-    -- flag=flag & ('12345.73'.format(null,3,null,3)    == '1.235E+4')
-    -- flag=flag & ('12345.73'.format(null,2,null,3)    == '1.23E+4')
-    -- flag=flag & ('12345.73'.format(null,1,null,3)    == '1.2E+4')
-    -- flag=flag & ('12345.73'.format(null,0,null,3)    == '1E+4')
-    
-    -- flag=flag & ('99999.99'.format(null,6,null,3)    == '9.999999E+4')
-    -- flag=flag & ('99999.99'.format(null,5,null,3)    == '1.00000E+5')
-    -- flag=flag & ('99999.99'.format(null,2,null,3)    == '1.00E+5')
-    -- flag=flag & ('99999.99'.format(null,1,null,3)    == '1.0E+5')
-    -- flag=flag & ('99999.99'.format(null,0,null,3)    == '1E+5')
-    -- flag=flag & ('99999.99'.format(3,0,null,3)       == '  1E+5')
-    
-    -- flag=flag & ('12345.73'.format(null,null,2,2) == '1.234573E+04')
-    -- flag=flag & ('12345.73'.format(null,3,null,0) == '1.235E+4')
-    -- flag=flag & ('1.234573'.format(null,3,null,0) == '1.235')
-    -- flag=flag & ('123.45'.format(null,3,2,0)      == '1.235E+02')
-    
-    -- flag=flag & ('1234.5'.format(null,3,2,0,'e')  == '1.235E+03')
-    -- flag=flag & ('12345'.format(null,3,3,0,'e')   == '12.345E+003')
-    -- flag=flag & ('12345'.format(null,3,3,0,'s')   == '1.235E+004')
-    -- flag=flag & ('1234.5'.format(4,3,2,0,'e')     == '   1.235E+03')
-    -- flag=flag & ('12345'.format(5,3,3,0,'e')      == '   12.345E+003')
-    -- flag=flag & ('12345'.format(6,3,3,0,'s')      == '     1.235E+004')
-    
-    -- flag=flag & ('1.2345'.format(null,3,2,0)      == '1.235    ')
-    -- flag=flag & ('12345.73'.format(null,null,3,6) == '12345.73     ')
-    -- flag=flag & ('12345e+5'.format(null,0)        == '1234500000')
-    -- flag=flag & ('12345e+5'.format(null,1)        == '1234500000.0')
-    -- flag=flag & ('12345e+5'.format(null,2)        == '1234500000.00')
-    -- flag=flag & ('12345e+5'.format(null,3)        == '1234500000.000')
-    -- flag=flag & ('12345e+5'.format(null,4)        == '1234500000.0000')
-    
-    -- /* The ANSI nasties [Dallas, Nov. 1998] */
-    -- flag=flag & ('99.999'.format(null,2,null,2)   == '100.00')
-    -- flag=flag & ('0.99999'.format(null,4,2,2)     == '1.0000    ')
-    
-    return \flag
-
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: Rexx class" label
+  return 1

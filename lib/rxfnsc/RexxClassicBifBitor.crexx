@@ -1,0 +1,8 @@
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifbitor expose BITOR
+import rexxclassicbitfunctions
+
+BITOR: procedure = .string
+  arg left = .string, right = "", pad = ""
+  result = rexxclassic_bitop(left, right, pad, "OR")
+  return rexxclassic_bit_result_text(result)

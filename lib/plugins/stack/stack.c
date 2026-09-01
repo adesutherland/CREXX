@@ -3,10 +3,11 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>      // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 #include <math.h>
 #include <string.h>
+
+RXPA_PLUGIN_PROCESS_REENTRANT
 
 /*
  * STACK primitive Linked List

@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crexx.org/schemas/build-manifest-v1.json",
+  "title": "cREXX staged build manifest",
+  "description": "Versioned observation of the action and QA graph. Catalogue projections are explicitly not executable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "source_commit",
+    "configuration",
+    "actions",
+    "tests"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "crexx.build-manifest/v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "observed-provisional-not-executable",
+        "draft",
+        "executable"
+      ]
+    },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "configuration": {
+      "type": "object"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "tests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/test"
+      }
+    }
+  },
+  "$defs": {
+    "product_layer": {
+      "type": "string",
+      "enum": [
+        "C0",
+        "C1",
+        "B0",
+        "X",
+        "B1",
+        "C",
+        "G",
+        "L",
+        "Product",
+        "Optional"
+      ]
+    },
+    "qa_tier": {
+      "type": "string",
+      "enum": [
+        "none",
+        "graph",
+        "essential",
+        "smoke",
+        "comprehensive",
+        "qualification",
+        "stress",
+        "measurement"
+      ]
+    },
+    "string_array": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifact_kind": {
+      "type": "string",
+      "enum": [
+        "source",
+        "rxas",
+        "rxbin",
+        "rxplugin"
+      ]
+    },
+    "expected_provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "kind",
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "request": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/artifact_kind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "import_invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "source_roots",
+        "binary_roots",
+        "allowed_kinds",
+        "auto_import_rxas",
+        "executable_directory",
+        "resolution_report",
+        "expected_providers"
+      ],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "binary_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "allowed_kinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_kind"
+          },
+          "uniqueItems": true
+        },
+        "auto_import_rxas": {
+          "type": "boolean"
+        },
+        "executable_directory": {
+          "type": "string",
+          "enum": [
+            "included",
+            "excluded"
+          ]
+        },
+        "resolution_report": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_providers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expected_provider"
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "product_layer",
+        "wave",
+        "qa_tier",
+        "tool",
+        "argv",
+        "inputs",
+        "outputs",
+        "byproducts",
+        "needs",
+        "import_policy",
+        "metadata_policy",
+        "work_dir",
+        "resources",
+        "qa_tags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "product_layer": {
+          "$ref": "#/$defs/product_layer"
+        },
+        "wave": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "qa_tier": {
+          "$ref": "#/$defs/qa_tier"
+        },
+        "tool": {
+          "type": "string"
+        },
+        "argv": {
+          "$ref": "#/$defs/string_array"
+        },
+        "inputs": {
+          "$ref": "#/$defs/string_array"
+        },
+        "outputs": {
+          "$ref": "#/$defs/string_array"
+        },
+        "byproducts": {
+          "$ref": "#/$defs/string_array"
+        },
+        "needs": {
+          "$ref": "#/$defs/string_array"
+        },
+        "import_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "source_roots",
+            "binary_roots",
+            "allowed_kinds"
+          ],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "not-observed",
+                "observed",
+                "declared"
+              ]
+            },
+            "source_roots": {
+              "$ref": "#/$defs/string_array"
+            },
+            "binary_roots": {
+              "$ref": "#/$defs/string_array"
+            },
+            "allowed_kinds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/artifact_kind"
+              },
+              "uniqueItems": true
+            },
+            "invocations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/import_invocation"
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "const": "declared"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "invocations"
+                ]
+              }
+            }
+          ]
+        },
+        "metadata_policy": {
+          "type": "object",
+          "required": [
+            "status",
+            "required",
+            "preserved",
+            "stripped"
+          ]
+        },
+        "work_dir": {
+          "type": "string"
+        },
+        "resources": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory_weight",
+            "io_weight",
+            "exclusive"
+          ]
+        },
+        "qa_tags": {
+          "$ref": "#/$defs/string_array"
+        },
+        "observations": {
+          "type": "object"
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "product_layer",
+        "wave",
+        "qa_tier",
+        "labels",
+        "fixtures_setup",
+        "fixtures_required",
+        "fixtures_cleanup",
+        "resource_locks",
+        "run_serial"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "product_layer": {
+          "$ref": "#/$defs/product_layer"
+        },
+        "wave": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "qa_tier": {
+          "$ref": "#/$defs/qa_tier"
+        },
+        "labels": {
+          "$ref": "#/$defs/string_array"
+        },
+        "fixtures_setup": {},
+        "fixtures_required": {},
+        "fixtures_cleanup": {},
+        "resource_locks": {},
+        "run_serial": {
+          "type": "boolean"
+        },
+        "timeout_seconds": {},
+        "observations": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

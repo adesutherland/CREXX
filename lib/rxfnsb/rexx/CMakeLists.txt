@@ -3,13 +3,16 @@ cmake_minimum_required(VERSION 3.24)
 set(BIFS
 		_address
 		_rxsystem
+		_jdn
 		_datei
 		_dateo
 		_ftrunc
 		_itrunc
-		_jdn
+		_typedformat
 		abbrev
 		abs
+		intabs
+		floatabs
 		b2x
 		b2d
 		binary
@@ -30,6 +33,8 @@ set(BIFS
 		fileio
 		filter
 		format
+		intformat
+		floatformat
 		fnv
 #		global
 		getenv
@@ -39,10 +44,15 @@ set(BIFS
 		loadmodule
 		lower
 		max
+		intmax
+		floatmax
 		min
+		intmin
+		floatmin
 		numeric
 		overlay
 		pos
+		qscan
 		qpos
 		qsplit
 		qsplitsafe
@@ -59,6 +69,8 @@ set(BIFS
 		signal
 		trace
 		sign
+		intsign
+		floatsign
 		space
 		strip
 		substr
@@ -67,10 +79,12 @@ set(BIFS
 		time
 		translate
 		trunc
+		floattrunc
 		upper
 		value
 		verify
 		version
+		sourceinfo
 		word
 		words
 		wordindex
@@ -122,18 +136,15 @@ set(BIFS
 		arraydrop
 		arrayhi
 		arraymove
-		arraydump
-		arrayformat
 		fmtmask
 		compilemask
 		runmask
-		parseExec
 		stem
 		rxjson
 		rxsocket
-		rxhttp
 		wordrep
-		evaluate
+		rxqueue
+		afterword
 )
 
 foreach (BIF ${BIFS})
@@ -151,12 +162,14 @@ set(REXX_IMPORT_RXAS
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
-	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
 	add_custom_command(
 		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
-		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
+		  # A library self-build must not import the previous library image next
+		  # to rxc. Current sibling sources and the explicit RXAS root are the
+		  # complete compile-time interface set for every module.
+		  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import --import-rxas -o ${_basename} -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  DEPENDS rxas rxc library-rxas ${REXXSRC} ${REXX_IMPORT_RXAS} ${_prev_target}
+		  DEPENDS rxas rxc library-rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx ${REXX_IMPORT_RXAS} ${_prev_target}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

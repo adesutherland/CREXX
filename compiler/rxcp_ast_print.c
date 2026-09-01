@@ -31,8 +31,52 @@
 #include <string.h>
 #include "rxcpmain.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
+
+static int print_error_context_ptr(Context *context, const char *ptr) {
+    return context &&
+           ptr &&
+           context->buff_start &&
+           context->buff_end &&
+           ptr >= context->buff_start &&
+           ptr <= context->buff_end;
+}
+
+static void print_error_apply_srcmap(ASTNode *node) {
+    RxcpSrcMapLocation mapped;
+    const char *lookup_ptr;
+    size_t start_offset;
+    size_t end_offset;
+
+    if (!node || !node->context || !node->context->srcmap) return;
+
+    lookup_ptr = node->source_start;
+    if (!print_error_context_ptr(node->context, lookup_ptr) && node->token) {
+        lookup_ptr = node->token->token_string;
+    }
+    if (!print_error_context_ptr(node->context, lookup_ptr)) return;
+    if (!rxcp_srcmap_lookup(node->context, lookup_ptr, node->line, node->column, &mapped)) return;
+
+    node->file_name = (char *)mapped.file_name;
+    node->line = mapped.line;
+    node->column = mapped.column;
+    node->source_start = 0;
+    node->source_end = 0;
+
+    if (!mapped.line_text || mapped.line_text_length == 0) return;
+    start_offset = mapped.column < 0 ? 0 : (size_t)mapped.column;
+    if (start_offset >= mapped.line_text_length) return;
+    end_offset = start_offset + (mapped.length > 0 ? (size_t)mapped.length : 1);
+    if (end_offset > mapped.line_text_length) end_offset = mapped.line_text_length;
+    if (end_offset <= start_offset) end_offset = start_offset + 1;
+    node->source_start = (char *)(mapped.line_text + start_offset);
+    node->source_end = (char *)(mapped.line_text + end_offset - 1);
+}
 
 void print_error(ASTNode* node, FILE* stream, char* prefix) {
+    char *message;
+    int len;
+    int i;
 
     if (node->is_duplicate_warning) return;
 
@@ -73,30 +117,39 @@ void print_error(ASTNode* node, FILE* stream, char* prefix) {
         if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
     }
 
+    print_error_apply_srcmap(node);
+
     /* Print error - truncate source to one line */
-    int len = (int) (node->source_end - node->source_start + 1);
-    int i;
-    for (i=0; i<len; i++) {
-        if (!node->source_start || node->source_start[i] == '\n') {
-            len = i;
-            break;
+    len = 0;
+    if (node->source_start && node->source_end && node->source_end >= node->source_start) {
+        len = (int) (node->source_end - node->source_start + 1);
+        for (i=0; i<len; i++) {
+            if (node->source_start[i] == '\n') {
+                len = i;
+                break;
+            }
         }
     }
+    message = rxcp_diag_render(node->diagnostic, node->node_string ? node->node_string : "Syntax Error");
+    if (!message) message = strdup(node->node_string ? node->node_string : "Syntax Error");
+    if (!message) return;
+
     if (len) {
         fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
+                node->column + 1, message);
         prt_unex(stream, node->source_start, len);
         fprintf(stream, "\"\n");
     }
     else {
         fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
+                node->column + 1, message);
     }
+    free(message);
 }
 
 walker_result prnt_walker_handler(walker_direction direction,
                                         ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
+                                  RXCP_UNUSED void *payload) {
     if (direction == in) {
         if (node->child) { /* Non-terminal node */
             printf(" ^(");
@@ -122,7 +175,7 @@ walker_result prnt_walker_handler(walker_direction direction,
 
 static walker_result print_error_walker(walker_direction direction,
                                   ASTNode* node,
-                                  __attribute__((unused)) void *payload) {
+                                  RXCP_UNUSED void *payload) {
 
     int *errors = (int*)payload;
 
@@ -137,7 +190,7 @@ static walker_result print_error_walker(walker_direction direction,
 
 static walker_result print_warning_walker(walker_direction direction,
                                         ASTNode* node,
-                                        __attribute__((unused)) void *payload) {
+                                        RXCP_UNUSED void *payload) {
 
     int *errors = (int*)payload;
 
@@ -153,6 +206,7 @@ static walker_result print_warning_walker(walker_direction direction,
 static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const char *prefix) {
     int len;
     int i;
+    char *message;
 
     if (!diag || !stream || !prefix) return;
 
@@ -167,13 +221,17 @@ static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const 
         }
     }
 
+    message = rxcp_diag_render(diag->diagnostic, diag->message ? diag->message : "Syntax Error");
+    if (!message) message = strdup(diag->message ? diag->message : "Syntax Error");
+    if (!message) return;
+
     if (len > 0) {
         fprintf(stream, "%s %s @ %d:%d - #%s, \"",
                 prefix,
                 diag->file_name ? diag->file_name : "<unknown>",
                 diag->line + 1,
                 diag->column + 1,
-                diag->message ? diag->message : "Syntax Error");
+                message);
         prt_unex(stream, diag->source_start, len);
         fprintf(stream, "\"\n");
     } else {
@@ -182,8 +240,9 @@ static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const 
                 diag->file_name ? diag->file_name : "<unknown>",
                 diag->line + 1,
                 diag->column + 1,
-                diag->message ? diag->message : "Syntax Error");
+                message);
     }
+    free(message);
 }
 
 /* Prints errors and returns the number of errors in the AST Tree */
@@ -364,6 +423,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case ASSIGN:
             case CALL:
             case DEFINE:
+            case CONSTANT_DEF:
             case DEC_DIGITS:
             case DEC_FUZZ:
             case DEC_FORM:
@@ -387,6 +447,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case UPPER:
             case PARSE:
             case BLOCK_EXPR:
+            case PARALLEL_DO:
+            case PARALLEL_BLOCK_EXPR:
                 attributes = "color=green4";
                 only_type = 1;
                 break;
@@ -398,6 +460,8 @@ walker_result pdot_walker_handler(walker_direction direction,
             case FUNCTION:
             case FUNC_SYMBOL:
             case PROCEDURE:
+            case TASK_DECL:
+            case TASK_TARGET:
                 attributes = "color=pink";
                 break;
 
@@ -432,6 +496,19 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_NOT:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
+            case OP_BINARY_AT:
+            case OP_BINARY_FOR:
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_COMPARE:
+            case OP_PACKED_AT:
+            case OP_SIZEOF:
             case OP_MAKE_ARRAY:
             case NOVAL:
                 attributes = "color=darkcyan";

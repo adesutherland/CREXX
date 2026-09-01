@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : strict_compare_codegen.crexx
- * BUILT                  : 2026-05-27 17:52:43
  */
 
 .globals=0
@@ -8,11 +7,7 @@
 main() .locals=0
    .meta "strict_compare_codegen.main"="b" ".int" main() ""
    .srcstep 4 4 17 "strict_compare_codegen.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "strict_compare_codegen.crexx" 10 23 31 "  if left == \"2\" then return 1"
    .meta "strict_compare_codegen.main.left"="b" ".int" "2"
    .meta "strict_compare_codegen.main.right"="b" ".int" "10"

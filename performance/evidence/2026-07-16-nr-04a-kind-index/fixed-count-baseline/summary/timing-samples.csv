@@ -1,0 +1,19 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,warmup,1,8514000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,warmup,2,8557000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,1,8866000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,2,9016000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,3,8708000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,4,8349000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,5,8036000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,6,8025000,0,pass
+rexxcps-opaque-retained,rexxcps-opaque-fixed,RexxCPS opaque fixed,baseline,opt-retained,process,recorded,7,8173000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,warmup,1,6448000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,warmup,2,6702000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,1,6351000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,2,6373000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,3,6532000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,4,6383000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,5,6256000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,6,6186000,0,pass
+rexxcps-opaque-stripped,rexxcps-opaque-fixed,RexxCPS opaque fixed,candidate,opt-stripped,process,recorded,7,6186000,0,pass

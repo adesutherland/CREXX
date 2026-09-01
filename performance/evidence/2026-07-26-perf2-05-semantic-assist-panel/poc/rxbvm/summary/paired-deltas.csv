@@ -1,0 +1,5 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+list-r1,list-r1-control,list-r1-candidate,control,relinkref,86077000,84680000,-1397000,-1.623
+list-r2,list-r2-control,list-r2-candidate,control,copyattr1,86101000,80802000,-5299000,-6.154
+list-r12,list-r12-control,list-r12-candidate,control,combined,86053000,79510000,-6543000,-7.603
+base64-b1,base64-b1-control,base64-b1-candidate,control,icopybr,317608000,304680000,-12928000,-4.070

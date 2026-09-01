@@ -1,0 +1,39 @@
+/*
+ * Deterministic JSON parser workload using the cREXX Level B JSON foundation.
+ * The in-memory RAP-style payload is derived from the data shapes used by the
+ * Are We Fast Yet? JSON benchmark; see THIRD_PARTY_NOTICES.md.
+ */
+options levelb comments_dash
+import rxjson
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+payload = '{"head":{"requestCounter":4,"ok":true},"operations":[' || ,
+  '["destroy","w54"],' || ,
+  '["set","w2",{"activeControl":"w99"}],' || ,
+  '["set","w21",{"customVariant":"variant_navigation"}],' || ,
+  '["create","w95","rwt.widgets.Composite",{"parent":"w53","bounds":[0,0,1008,586],"children":["w96","w97"],"tabIndex":-1}],' || ,
+  '["create","w96","rwt.widgets.Label",{"parent":"w95","bounds":[10,30,112,26],"text":"TableViewer"}],' || ,
+  '["listen","w98",{"KeyDown":true,"Modify":true}],' || ,
+  '["set","w99",{"itemCount":118,"headerVisible":true,"selection":["w108"]}],' || ,
+  '["call","rwt.client.BrowserNavigation","addToHistory",{"entries":[["tableviewer","TableViewer"]]}]' || ,
+  ']}'
+
+result = 0
+do iteration = 1 to repetitions
+  result = jsoncount(payload, "operations")
+  if result <> 8 then return fail("expected 8 operations, got " || result)
+end
+
+say "benchmark=json_parser repetitions="repetitions "operations="result
+say "PASS: JSON Parser"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

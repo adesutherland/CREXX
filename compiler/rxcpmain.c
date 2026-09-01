@@ -34,6 +34,10 @@
 #include "rxcpmain.h"
 #include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
+#include "rxcp_levelc_lower.h"
+#include "rxcp_dispatch.h"
+#include "rxcp_flow.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
@@ -155,6 +159,13 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
+            "  --autoload      Emit packaged-RXBIN autoload hints (default)\n"
+            "  --no-autoload   Do not emit packaged-RXBIN autoload hints\n"
+            "  --no-exe-import Do not add the executable directory to binary roots\n"
+            "  --import-resolution-report path  Write observe-only import selection JSON\n"
+            "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
+            "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
+            "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
             "  -o output_stem  RXAS output stem or .rxas file\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
@@ -184,6 +195,7 @@ Context *cntx_f() {
     context->cli_level_override = UNKNOWN;
     context->cli_default_level = UNKNOWN;
     context->lexer_stem_mode = 0;
+    context->lexer_intrinsic_mode = 0;
     context->comments_hash = 1; /* This is the recommended & default line comment style */
     context->floats_decimal = 0; /* Force floats to be decimal */
     context->floats_binary = 0;  /* Force floats to be binary */
@@ -195,6 +207,7 @@ Context *cntx_f() {
     context->comments_slash_specified = 0; /* Set if Slash comments option explicitly specified */
     context->debug_mode = 0;
     context->optimise = 1; /* Optimise by default */
+    context->emit_autoload_hints = 1;
     context->decimal_plugin = 0; /* No decimal plugin by default */
 
     return context;
@@ -243,7 +256,18 @@ void fre_cntx(Context *context)  {
         free(context->source_import_locations);
     }
 
+    rxcp_import_report_free(context);
+    if (context->import_resolution_report_path) free(context->import_resolution_report_path);
+
     source_tree_free(context);
+
+    /* The flow overlay points at AST/symbol objects but does not own them. */
+    rxcp_flow_free(context);
+
+    /* AST nodes and symbols form a bidirectional relationship. Imported
+     * contexts may bind nodes to symbols owned by the master context, so the
+     * dying context must unregister its side while both objects are live. */
+    ast_disconnect_symbols(context);
 
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
@@ -268,6 +292,9 @@ void fre_cntx(Context *context)  {
 
     /* Deallocate Tokens */
     free_tok(context);
+
+    rxcp_srcmap_free(context->srcmap);
+    context->srcmap = 0;
 
     /* Deallocate VM Bridge */
     if (context->rxvml_bridge) {
@@ -320,12 +347,18 @@ int rxcmain(int argc, char *argv[]) {
     char *source_import_locations = 0;
     char *exe_path = 0;
     char *combined_import_locations = 0;
+    char *import_resolution_report_path = 0;
     char c;
     int do_optimise = 1;
     int disable_exits = 0;
     int auto_import_rxas = 0;
+    int emit_autoload_hints = 1;
+    int add_executable_import = 1;
+    size_t executable_import_root_index = 0;
     char *file_directory = 0;
     char *input_source_extension = 0;
+    char *srcmap_cleaned = 0;
+    size_t srcmap_cleaned_len = 0;
     const char* filename_extension;
     RexxLevel cli_default_level = UNKNOWN;
     char **cli_import_names = 0;
@@ -398,6 +431,60 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--import-rxas") == 0) {
             auto_import_rxas = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--autoload") == 0) {
+            emit_autoload_hints = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-autoload") == 0) {
+            emit_autoload_hints = 0;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-exe-import") == 0) {
+            add_executable_import = 0;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--import-resolution-report") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing path after --import-resolution-report");
+            }
+            import_resolution_report_path = argv[i];
+            continue;
+        }
+
+        if (strcmp(argv[i], "--diagnostics") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing mode after --diagnostics");
+            }
+            if (rxcp_diag_set_mode(argv[i]) != 0) {
+                error_and_exit(2, "Invalid diagnostic mode after --diagnostics");
+            }
+            continue;
+        }
+
+        if (strcmp(argv[i], "--diagnostic-locale") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing locale after --diagnostic-locale");
+            }
+            if (rxcp_diag_set_locale(argv[i]) != 0) {
+                error_and_exit(2, "Invalid diagnostic locale after --diagnostic-locale");
+            }
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-localisation") == 0 ||
+            strcmp(argv[i], "--no-localization") == 0) {
+            if (rxcp_diag_set_mode("raw") != 0) {
+                error_and_exit(2, "Unable to set raw diagnostics mode");
+            }
             continue;
         }
 
@@ -498,30 +585,43 @@ int rxcmain(int argc, char *argv[]) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
-    /* Add the executable-path binary import root. */
-    exe_path = exepath();
-    if (import_locations) {
-        char *user_import_locations = import_locations;
-        size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
-        combined_import_locations = malloc(combined_import_locations_size);
-        if (!combined_import_locations) {
-            RX_PANIC_OOM("malloc rxc binary import locations",
-                         combined_import_locations_size, import_locations);
+    /* Deployed programs see libraries next to rxc by default. Toolchain and
+     * library self-builds can suppress that implicit root so an older product
+     * image cannot compete with the current source/interface set. */
+    if (add_executable_import) {
+        const char *root_cursor;
+
+        executable_import_root_index = 0;
+        if (import_locations && import_locations[0]) {
+            executable_import_root_index = 1;
+            for (root_cursor = import_locations; *root_cursor; root_cursor++) {
+                if (*root_cursor == ';') executable_import_root_index++;
+            }
         }
-        sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
-        free(user_import_locations);
-        import_locations = combined_import_locations;
-    } else {
-        size_t combined_import_locations_size = strlen(exe_path) + 1;
-        combined_import_locations = malloc(combined_import_locations_size);
-        if (!combined_import_locations) {
-            RX_PANIC_OOM("malloc rxc binary import locations",
-                         combined_import_locations_size, exe_path);
+        exe_path = exepath();
+        if (import_locations) {
+            char *user_import_locations = import_locations;
+            size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
+            combined_import_locations = malloc(combined_import_locations_size);
+            if (!combined_import_locations) {
+                RX_PANIC_OOM("malloc rxc binary import locations",
+                             combined_import_locations_size, import_locations);
+            }
+            sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
+            free(user_import_locations);
+            import_locations = combined_import_locations;
+        } else {
+            size_t combined_import_locations_size = strlen(exe_path) + 1;
+            combined_import_locations = malloc(combined_import_locations_size);
+            if (!combined_import_locations) {
+                RX_PANIC_OOM("malloc rxc binary import locations",
+                             combined_import_locations_size, exe_path);
+            }
+            sprintf(combined_import_locations, "%s", exe_path);
+            import_locations = combined_import_locations;
         }
-        sprintf(combined_import_locations, "%s", exe_path);
-        import_locations = combined_import_locations;
+        free(exe_path);
     }
-    free(exe_path);
     if (source_import_locations && debug_mode >= 2) fprintf(stderr, "Combined source import roots: %s\n", source_import_locations);
     if (import_locations && debug_mode >= 2) fprintf(stderr, "Combined binary import roots: %s\n", import_locations);
 
@@ -613,6 +713,17 @@ int rxcmain(int argc, char *argv[]) {
     context->optimise = do_optimise;
     context->disable_exits = disable_exits || (getenv("RXCP_DISABLE_EXIT") != NULL);
     context->auto_import_rxas = (char) auto_import_rxas;
+    context->emit_autoload_hints = (char) emit_autoload_hints;
+    context->executable_import_included = (char)add_executable_import;
+    context->executable_import_root_index = executable_import_root_index;
+    if (import_resolution_report_path) {
+        context->import_resolution_report_path = strdup(import_resolution_report_path);
+        if (!context->import_resolution_report_path) {
+            RX_PANIC_OOM("strdup import resolution report path",
+                         strlen(import_resolution_report_path) + 1,
+                         import_resolution_report_path);
+        }
+    }
     if (file_directory) context->location = strdup(file_directory);
     else context->location = location ? strdup(location) : 0;
 
@@ -659,13 +770,60 @@ int rxcmain(int argc, char *argv[]) {
     /* Deallocate memory and reset context */
     free_ast(context);
     free_tok(context);
+
+    if (context->source_has_srcmap) {
+        if (rxcp_srcmap_preprocess(context, &srcmap_cleaned, &srcmap_cleaned_len) != 0) {
+            errors = prnterrs(context);
+            if (errors) fprintf(stderr,"%d error(s) in source file\n", errors);
+            goto finish;
+        }
+        free(buff_start);
+        buff_start = srcmap_cleaned;
+        bytes = srcmap_cleaned_len;
+    }
+
     cntx_buf(context, buff_start, bytes);
 
     /* Parse program for real */
     switch (context->level){
-        case LEVELC:
-            fprintf(stderr,"REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet\n");
+        case LEVELC: {
+            const char *levelc_reject_reason = 0;
+
+            if (debug_mode >= 2) fprintf(stderr, "REXX Level C (Classic REXX)\n");
+            rxcp_init_exits(context);
+            rexcpars(context);
+            if (context->debug_mode) {
+                rxcp_debug_header("STAGE_RAW", -1);
+                rxcp_print_ast_recursive(context->ast, 0);
+            }
+
+            if (!context->ast) break;
+
+            rxcp_levelc_prepare_source_ast(context);
+            source_tree_sync_diagnostics(context);
+            errors = prnterrs(context);
+            if (errors) {
+                fprintf(stderr,"%d error(s) in source file\n", errors);
+                if (context->stop_after_parse) goto dp_stop;
+                goto finish;
+            }
+
+            if (!rxcp_levelc_lower_to_canonical(context, &levelc_reject_reason)) {
+                fprintf(stderr, "%s", rxcp_levelc_compile_unsupported_message());
+                if (levelc_reject_reason) {
+                    fprintf(stderr, ": %s", levelc_reject_reason);
+                }
+                fprintf(stderr, "\n");
+                errors = 1;
+                goto finish;
+            }
+
+            if (context->debug_mode) {
+                rxcp_debug_header("STAGE_LEVELC_LOWERED", -1);
+                rxcp_print_ast_recursive(context->ast, 0);
+            }
             break;
+        }
 
         case LEVELA:
         case LEVELD:
@@ -762,6 +920,19 @@ int rxcmain(int argc, char *argv[]) {
 #endif
     }
 
+    /* Explicit C-style SELECT is a dispatch construct in both no-opt and
+     * optimized builds. General IF-ladder discovery remains an optimization. */
+    rxcp_lower_select_dispatch(context);
+
+    /* Build NR-26 facts after typed AST rewriting and before register
+     * assignment. No-opt compilation constructs the same overlay for parity,
+     * but only optimized compilation applies production transformations. */
+    if (!rxcp_flow_analyze(context, context->optimise)) {
+        fprintf(stderr, "INTERNAL ERROR: Failed to build typed flow analysis\n");
+        errors = 1;
+        goto finish;
+    }
+
     errors = prnterrs(context);
     if (errors) {
         fprintf(stderr,"%d error(s) in source file\n", errors);
@@ -809,6 +980,12 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Close outfile */
     if (outFile) fclose(outFile);
+
+    if (rxcp_import_report_write(context) != 0) {
+        fprintf(stderr, "Can't write import resolution report %s\n",
+                context->import_resolution_report_path ? context->import_resolution_report_path : "");
+        errors = 1;
+    }
 
     /* Free context */
     if (context->file_name) free(context->file_name);

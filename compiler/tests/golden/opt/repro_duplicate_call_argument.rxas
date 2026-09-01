@@ -1,0 +1,37 @@
+/*
+ * SOURCE                 : repro_duplicate_call_argument.crexx
+ */
+
+.globals=0
+
+main() .locals=2
+   .meta "repro_duplicate_call_argument.main"="b" ".int" main() ""
+   .srcstep 10 10 17 "repro_duplicate_call_argument.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 3 3 17 "repro_duplicate_call_argument.crexx" 7 3 38 "  say combine_numbers(number, number)"
+   .meta "repro_duplicate_call_argument.main.number"="b" ".int" "7"
+   .meta "repro_duplicate_call_argument.main.text"="b" ".string" "same"
+   .srcstep 2 2 17 "repro_duplicate_call_argument.crexx" 7 7 22 "  say combine_numbers(number, number)"
+   .srcstep 1 1 17 "repro_duplicate_call_argument.crexx" 15 3 27 "  return left * 10 + right"
+   load r0,77
+   .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
+   icopy r1,r0
+l62bexprend:
+   itos r1
+   say r1
+   .srcstep 4 4 17 "repro_duplicate_call_argument.crexx" 8 3 13 "  say number"
+   say "7"
+   .srcstep 7 7 17 "repro_duplicate_call_argument.crexx" 9 3 31 "  say combine_text(text, text)"
+   .srcstep 6 6 17 "repro_duplicate_call_argument.crexx" 9 7 19 "  say combine_text(text, text)"
+   .srcstep 5 5 17 "repro_duplicate_call_argument.crexx" 19 3 30 "  return left || \":\" || right"
+   load r1,"same:same"
+   .traceevent "L" 4 "R" "S" "r" 1 7 7 0 "" ""
+   scopy r0,r1
+l76bexprend:
+   say r0
+   .srcstep 8 8 17 "repro_duplicate_call_argument.crexx" 10 3 11 "  say text"
+   say "same"
+   .srcstep 9 9 17 "repro_duplicate_call_argument.crexx" 11 3 11 "  return 0"
+   ret 0
+   .meta "repro_duplicate_call_argument.main.number"
+   .meta "repro_duplicate_call_argument.main.text"

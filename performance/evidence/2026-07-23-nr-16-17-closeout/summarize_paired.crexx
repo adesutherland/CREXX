@@ -1,0 +1,314 @@
+/* NR-16/NR-17 accepted closeout paired-summary helper. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 6 then do
+  say "Usage: summarize_paired PAIRED_OUTPUT COMMON_OUTPUT FIRST LAST COMMON SAMPLES..."
+  return 2
+end
+
+paired_path = argv[1]
+common_path = argv[2]
+first_group = argv[3] as .int
+last_group = argv[4] as .int
+write_common = argv[5] as .int
+workloads = .string[]
+vms = .string[]
+before_rates = .float[]
+after_rates = .float[]
+before_counts = .int[]
+after_counts = .int[]
+group_count = 0
+
+do path_index = 6 to argv[0]
+  input_path = argv[path_index]
+  line_number = 0
+  do while lines(input_path)
+    line = linein(input_path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+
+    workload = fields[3]
+    vm = fields[6]
+    group = find_group(workloads, vms, group_count, workload, vm)
+    if group = 0 then do
+      group_count = group_count + 1
+      group = group_count
+      workloads[group] = workload
+      vms[group] = vm
+    end
+
+    if workload = "RexxCPS" then rate = fields[19] as .float
+    else rate = (fields[14] as .float) * 1000000000.0 / (fields[15] as .float)
+    if rate <= 0.0 then return fail("non-positive throughput sample")
+
+    if fields[7] = "post-nr16-pre-nr17" then do
+      before_counts[group] = before_counts[group] + 1
+      slot = group * 100 + before_counts[group]
+      before_rates[slot] = rate
+    end
+    else if fields[7] = "accepted-nr17" then do
+      after_counts[group] = after_counts[group] + 1
+      slot = group * 100 + after_counts[group]
+      after_rates[slot] = rate
+    end
+    else return fail("unexpected variant")
+  end
+  call linein input_path
+end
+
+call remove_output paired_path
+if write_common then call remove_output common_path
+header = "workload,vm,metric,pairs,before_median,after_median,min_percent," || ,
+    "q1_percent,median_percent,q3_percent,max_percent,mean_percent," || ,
+    "mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total," || ,
+    "interval_result,guard_hit"
+if lineout(paired_path, header) <> 0 then return fail("could not create paired summary")
+
+if first_group <> 0 | last_group <> 0 then do
+  if first_group < 1 | last_group < first_group | last_group > group_count then
+    return fail("summary group range is invalid")
+  do group = first_group to last_group
+    if before_counts[group] <> after_counts[group] then
+      return fail("incomplete before/after pair set")
+    if before_counts[group] < 2 | before_counts[group] > 36 then
+      return fail("paired count is outside 2..36")
+    before_values = .float[]
+    after_values = .float[]
+    do pair = 1 to before_counts[group]
+      slot = group * 100 + pair
+      before_values[pair] = before_rates[slot]
+      after_values[pair] = after_rates[slot]
+    end
+    metric = "normalized_work_per_second"
+    if workloads[group] = "RexxCPS" then metric = "benchmark_rate"
+    if write_summary_row(paired_path, workloads[group], vms[group], metric, ,
+        before_values, after_values, 3.0) <> 0 then return 1
+  end
+end
+call lineout paired_path
+
+if \write_common then do
+  say "PASS: NR-16/NR-17 paired summary partition retained"
+  return 0
+end
+if lineout(common_path, header) <> 0 then return fail("could not create common summary")
+do vm_index = 1 to 2
+  vm = "rxvm"
+  if vm_index = 2 then vm = "rxbvm"
+  common_groups = .int[]
+  do group = 1 to group_count
+    if vms[group] = vm & is_common(workloads[group]) then
+      common_groups[common_groups[0] + 1] = group
+  end
+  if common_groups[0] <> 5 then return fail("common aggregate membership is not five")
+  pair_count = before_counts[common_groups[1]]
+  do member = 1 to common_groups[0]
+    group = common_groups[member]
+    if after_counts[group] < pair_count then pair_count = after_counts[group]
+    if before_counts[group] < pair_count then pair_count = before_counts[group]
+  end
+  if pair_count < 2 then return fail("common aggregate has fewer than two pairs")
+
+  common_before = .float[]
+  common_after = .float[]
+  do pair = 1 to pair_count
+    before_product = 1.0
+    after_product = 1.0
+    do member = 1 to common_groups[0]
+      group = common_groups[member]
+      slot = group * 100 + pair
+      before_product = before_product * before_rates[slot]
+      after_product = after_product * after_rates[slot]
+    end
+    common_before[pair] = nth_root(before_product, 5)
+    common_after[pair] = nth_root(after_product, 5)
+  end
+  if write_summary_row(common_path, "Sieve+Permute+Bounce+Richards+Base64", ,
+      vm, "paired_common_geomean_throughput", common_before, common_after, 1.0) <> 0 then return 1
+end
+call lineout common_path
+
+say "PASS: NR-16/NR-17 paired summaries retained"
+return 0
+
+write_summary_row: procedure = .int
+  arg output_path = .string, workload = .string, vm = .string, metric = .string, ,
+      before_values = .float[], after_values = .float[], guard_percent = .float
+  count = before_values[0]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+  do pair = 1 to count
+    before = before_values[pair]
+    after = after_values[pair]
+    delta = ((after - before) * 100.0) / before
+    deltas[pair] = delta
+    sum = sum + delta
+    if delta > 0.0 then favorable = favorable + 1
+  end
+
+  call sort_floats before_values
+  call sort_floats after_values
+  call sort_floats deltas
+  before_median = sample_quantile(before_values, 1, 2)
+  after_median = sample_quantile(after_values, 1, 2)
+  minimum = deltas[1]
+  q1 = sample_quantile(deltas, 1, 4)
+  median = sample_quantile(deltas, 1, 2)
+  q3 = sample_quantile(deltas, 3, 4)
+  maximum = deltas[deltas[0]]
+  mean = sum / (count as .float)
+  sum_squares = 0.0
+  do i = 1 to deltas[0]
+    difference = deltas[i] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / ((count - 1) as .float))
+  margin = t_critical_95(count - 1) * sample_deviation / square_root(count as .float)
+  interval_low = mean - margin
+  interval_high = mean + margin
+
+  interval_result = "noisy_inconclusive"
+  if interval_low > 0.0 then interval_result = "clear_favorable"
+  else if interval_high < 0.0 then interval_result = "clear_adverse"
+  guard_hit = "no"
+  if median < -guard_percent then guard_hit = "yes"
+
+  row = workload || "," || vm || "," || metric || "," || count || "," || ,
+      float_text(before_median) || "," || float_text(after_median) || "," || ,
+      float_text(minimum) || "," || float_text(q1) || "," || float_text(median) || ,
+      "," || float_text(q3) || "," || float_text(maximum) || "," || ,
+      float_text(mean) || "," || float_text(interval_low) || "," || ,
+      float_text(interval_high) || "," || favorable || "," || count || "," || ,
+      interval_result || "," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append paired row")
+  return 0
+
+find_group: procedure = .int
+  arg workloads = .string[], vms = .string[], group_count = .int, ,
+      workload = .string, vm = .string
+  do group = 1 to group_count
+    if workloads[group] = workload & vms[group] = vm then return group
+  end
+  return 0
+
+is_common: procedure = .int
+  arg workload = .string
+  return workload = "Sieve" | workload = "Permute" | workload = "Bounce" | ,
+      workload = "Richards" | workload = "Base64"
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  upper_value = values[lower_zero_index + 2]
+  return lower_value + (upper_value - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+nth_root: procedure = .float
+  arg value = .float, n = .int
+  if value <= 0.0 then return 0.0
+  guess = 1.0
+  do iteration = 1 to 100
+    denominator = 1.0
+    do power = 1 to n - 1
+      denominator = denominator * guess
+    end
+    next_guess = (((n - 1) as .float) * guess + value / denominator) / (n as .float)
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+t_critical_95: procedure = .float
+  arg degrees = .int
+  if degrees <= 11 then return 2.200985
+  if degrees = 12 then return 2.178813
+  if degrees = 13 then return 2.160369
+  if degrees = 14 then return 2.144787
+  if degrees = 15 then return 2.131450
+  if degrees = 16 then return 2.119905
+  if degrees = 17 then return 2.109816
+  if degrees = 18 then return 2.100922
+  if degrees = 19 then return 2.093024
+  if degrees = 20 then return 2.085963
+  if degrees = 21 then return 2.079614
+  if degrees = 22 then return 2.073873
+  if degrees = 23 then return 2.068658
+  if degrees = 24 then return 2.063899
+  if degrees = 25 then return 2.059539
+  if degrees = 26 then return 2.055529
+  if degrees = 27 then return 2.051831
+  if degrees = 28 then return 2.048407
+  if degrees = 29 then return 2.045230
+  if degrees = 30 then return 2.042272
+  if degrees = 31 then return 2.039513
+  if degrees = 32 then return 2.036933
+  if degrees = 33 then return 2.034515
+  if degrees = 34 then return 2.032245
+  return 2.030108
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

@@ -22,122 +22,347 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Parse a documented extended Level B DATE input into a Julian day number. */
 options levelb numeric_classic
-
 namespace _rxsysb expose _datei
-import rxfnsb
 
-_datei: Procedure = .int
- arg idate = .string, format = .string, isep=""
-/* ----------------------------------------------------------
- *  Converts given Date in Julian Day Number
- * ----------------------------------------------------------
+/**
+ * Parse an extended Level B DATE input.
+ *
+ * Two-digit years are deliberately deterministic: they identify 2000 through
+ * 2099. X-prefixed numeric formats require four year digits.
+ *
+ * @param idate input date text
+ * @param format documented Level B DATE input format or abbreviation
+ * @param isep optional one-codepoint separator override
+ * @return Julian day number
+ * @signal INVALID_ARGUMENTS invalid format, separator, or date
  */
-  /* Remove NOT_IN_SAME_SCOPE warnings */
-  YY = .string
-  mm = .string
-  dd = .string
-  mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+_datei: procedure = .int
+  arg idate = .string, format = .string, isep = ""
+  format_code = .int
+  input_length = .int
+  separator_length = .int
+  day = .int
+  month = .int
+  year = .int
+  value = .int
+  remainder = .int
+  day_of_year = .int
+  jdn = .int
+  weekday = .int
 
-  if format='' then format='NORMAL'
-  if fabbreV('DAYS',format,1) then do
-      call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(D) DAYS"
-      return -1
-  end
-  if fabbreV('CENTURY',format,1) then do
-    call raise "SYNTAX","Error 40.28: invalid DATE argument 3","(C) CENTURY"
-    return -1
-  end
-  if fabbreV('EPOCH',format,3) then do
-     idate=idate%86400+_jdn(1,1,1970)
-     return idate
-  end
-  if fabbreV('EUROPEAN',format,1) | abbreV('GERMAN',format,1) | abbreV('XEUROPEAN',format,1) | abbreV('XGERMAN',format,1) | abbreV('DEC',format,3) | abbreV('XDEC',format,3) then do  /* format dd.mm.yy or dd/mm/yy */
-     idate=split(idate,isep)
-     YY=word(idate,3)
-     yy=testyear(yy)
-     mm=word(idate,2)
-     dd=word(idate,1)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('USA',format,1)  | abbreV('XUSA',format,2) then do  /* format dd.mm.yy or mm/dd/yy */
-     idate=split(idate,isep)
-     YY=word(idate,3)
-     yy=testyear(yy)
-     mm=word(idate,1)
-     dd=word(idate,2)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('INTERNATIONAL',format,2)  then do  /* format yyyy-mm-dd */
-     idate=split(idate,isep)
-     YY=word(idate,1)
-     yy=testyear(yy)
-     mm=word(idate,2)
-     dd=word(idate,3)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('QUALIFIED',format,2) then do  /* format Thursday, December 17, 2020 */
-     idate=split(idate,isep)
-     YY=word(idate,4)
-     yy=testyear(yy)
-     mm=word(idate,2)
-     dd=word(idate,3)
-     mm=wordpos(mm,mlist)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('NORMAL',format,1) then do  /* format 24 December 2021 */
-     idate=split(idate,isep)
-     YY=word(idate,3)
-     yy=testyear(yy)
-     mm=word(idate,2)
-     dd=word(idate,1)
-     mm=wordpos(mm,mlist)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('STANDARD',format,1) then do
-     idate=right(idate,8,'0')
-     YY=substr(idate,1,4)
-     yy=testyear(yy)
-     mm=substr(idate,5,2)
-     dd=substr(idate,7,2)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('ORDERED',format,1) then do
-     idate=right(idate,10,'0')
-     YY=substr(idate,1,4)
-     mm=substr(idate,6,2)
-     dd=substr(idate,9,2)
-     return _jdn(dd,mm,YY)
-  end
-  if fabbreV('JDN',format,3) then return idate                   /* is already JDN */
-  if fabbreV('BASE',format,1) then return idate+1721426          /* calulate JDN   */
-  if fabbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
-  call raise "SYNTAX","Error 40.28: invalid DATE argument 3",format
-return -1
+  format_code = _dateformat(format,0)
+  assembler strlen input_length,idate
+  assembler strlen separator_length,isep
+  if format_code = 0 | input_length = 0 | separator_length > 1 then call _datei_fail
 
-fabbreV: Procedure = .int
-  arg p0 = .string, p1 = .string, flen = 1
-  if substr(p0,1,flen)=substr(p1,1,flen) then return 1
-return 0
-
-testyear: procedure = .int
-  arg year = .int
-  if year%1000=0 then return 2000+year
-return year
-
-split: Procedure = .string
-  arg idate = .string, isep=""
-  xlen=0
-  retstr=""
-  c0=" "
-  if isep="" then isep="/"
-  assembler strlen xlen,idate
-
-  do i=1 to xlen
-      c0=substr(idate,i,1)
-      if c0="." | c0="/" | c0="," | c0="-" | c0=isep then retstr=retstr||" "
-      else retstr=retstr||c0
+  /* Numeric calendar origins. */
+  if format_code >= 15 & format_code <= 18 then do
+    if \_date_integer(idate,value) then call _datei_fail
+    select
+      when format_code = 15 then do
+        if value < 0 | value > 3652058 then call _datei_fail
+        return value + 1721426
+      end
+      when format_code = 16 then do
+        if value < -719162 | value > 2932896 then call _datei_fail
+        return value + 2440588
+      end
+      when format_code = 17 then do
+        if value < -62135596800 | value > 253402300799 then call _datei_fail
+        day_of_year = value % 86400
+        remainder = value // 86400
+        if value < 0 & remainder <> 0 then day_of_year = day_of_year - 1
+        return day_of_year + 2440588
+      end
+      otherwise do
+        if value < 1721426 | value > 5373484 then call _datei_fail
+        return value
+      end
+    end
   end
-  if words(retstr)<3 then say "invalid input date "retstr
-return retstr
+
+  /* Compact fixed-width dates. */
+  if format_code = 3 then do
+    if input_length <> 8 then call _datei_fail
+    if \_date_unsigned_span(idate,0,4,year) then call _datei_fail
+    if \_date_unsigned_span(idate,4,2,month) then call _datei_fail
+    if \_date_unsigned_span(idate,6,2,day) then call _datei_fail
+    return _jdn(day,month,year)
+  end
+  if format_code = 14 then do
+    if input_length <> 7 then call _datei_fail
+    if \_date_unsigned_span(idate,0,4,year) then call _datei_fail
+    if \_date_unsigned_span(idate,4,3,day_of_year) then call _datei_fail
+    if year < 1 | year > 9999 then call _datei_fail
+    if day_of_year < 1 | day_of_year > 365 + _leapyear(year) then call _datei_fail
+    return _jdn(1,1,year) + day_of_year - 1
+  end
+
+  /* Named-month dates. */
+  if format_code = 1 | format_code = 2 | format_code = 13 then do
+    if \_date_named(idate,format_code,day,month,year,weekday) then call _datei_fail
+    jdn = _jdn(day,month,year)
+    if format_code = 13 then do
+      if jdn // 7 + 1 <> weekday then call _datei_fail
+    end
+    return jdn
+  end
+
+  /* Separated numeric dates. */
+  if format_code = 4 | format_code = 5 | format_code = 6 | format_code = 7 |,
+     format_code = 8 | format_code = 9 | format_code = 10 | format_code = 11 |,
+     format_code = 12 | format_code = 23 | format_code = 24 then do
+    if \_date_separated(idate,format_code,isep,day,month,year) then call _datei_fail
+    return _jdn(day,month,year)
+  end
+
+  /* DAYS, WEEKDAY, MONTH, CENTURY, and SORTED are output-only. */
+  call _datei_fail
+  return 0
+
+_date_separated: procedure = .boolean
+  arg source = .string, format_code = .int, separator = .string, expose day = .int, expose month = .int, expose year = .int
+  source_length = .int
+  separator_code = .int
+  first = .int
+  second = .int
+  third = .int
+  first_digits = .int
+  second_digits = .int
+  third_digits = .int
+  position = .int
+  year_digits = .int
+
+  assembler strlen source_length,source
+  if separator = "" then separator = _date_default_separator(format_code)
+  assembler strchar separator_code,separator,position
+
+  if \_date_component(source,source_length,position,separator_code,first,first_digits) then return 0
+  if position >= source_length then return 0
+  if \_date_component(source,source_length,position,separator_code,second,second_digits) then return 0
+  if position >= source_length then return 0
+  if \_date_component(source,source_length,position,-1,third,third_digits) then return 0
+  if position <> source_length then return 0
+  if first_digits < 1 | first_digits > 4 | second_digits < 1 | second_digits > 2 | third_digits < 1 | third_digits > 4 then return 0
+
+  /* yyyy/mm/dd: XORDERED and INTERNATIONAL. */
+  if format_code = 5 | format_code = 12 then do
+    if first_digits <> 4 | second_digits > 2 | third_digits > 2 then return 0
+    year = first
+    month = second
+    day = third
+    return 1
+  end
+
+  /* yy/mm/dd: ORDERED. */
+  if format_code = 4 then do
+    if first_digits <> 2 | second_digits > 2 | third_digits > 2 then return 0
+    year = 2000 + first
+    month = second
+    day = third
+    return 1
+  end
+
+  /* mm/dd/year: USA family. */
+  if format_code = 10 | format_code = 11 then do
+    year_digits = 2
+    if format_code = 11 then year_digits = 4
+    if first_digits > 2 | second_digits > 2 | third_digits <> year_digits then return 0
+    month = first
+    day = second
+    year = third
+    if year_digits = 2 then year = 2000 + year
+    return 1
+  end
+
+  /* dd/mm/year: European, German, and DEC families. */
+  year_digits = 2
+  if format_code = 7 | format_code = 9 | format_code = 24 then year_digits = 4
+  if first_digits > 2 | second_digits > 2 | third_digits <> year_digits then return 0
+  day = first
+  month = second
+  year = third
+  if year_digits = 2 then year = 2000 + year
+  return 1
+
+_date_component: procedure = .boolean
+  arg source = .string, source_length = .int, expose position = .int, separator_code = .int, expose value = .int, expose digits = .int
+  codepoint = .int
+  value = 0
+  digits = 0
+  do while position < source_length
+    assembler strchar codepoint,source,position
+    if codepoint < 48 | codepoint > 57 then leave
+    value = value * 10 + codepoint - 48
+    digits = digits + 1
+    position = position + 1
+  end
+  if digits = 0 then return 0
+  if separator_code < 0 then return position = source_length
+  if position >= source_length then return 0
+  assembler strchar codepoint,source,position
+  if codepoint <> separator_code then return 0
+  position = position + 1
+  return 1
+
+_date_named: procedure = .boolean
+  arg source = .string, format_code = .int, expose day = .int, expose month = .int, expose year = .int, expose weekday = .int
+  source_length = .int
+  position = .int
+  token1 = .string
+  token2 = .string
+  token3 = .string
+  token4 = .string
+  extra_token = .string
+  token_length = .int
+
+  assembler strlen source_length,source
+  if \_date_next_token(source,source_length,position,token1) then return 0
+  if \_date_next_token(source,source_length,position,token2) then return 0
+  if \_date_next_token(source,source_length,position,token3) then return 0
+
+  if format_code = 13 then do
+    if \_date_next_token(source,source_length,position,token4) then return 0
+    if _date_next_token(source,source_length,position,extra_token) then return 0
+    weekday = _date_weekday_number(token1)
+    month = _date_month_number(token2)
+    assembler strlen token_length,token3
+    if token_length < 1 | token_length > 2 | \_date_unsigned(token3,day) then return 0
+    assembler strlen token_length,token4
+    if token_length <> 4 | \_date_unsigned(token4,year) then return 0
+    return weekday > 0 & month > 0
+  end
+
+  if _date_next_token(source,source_length,position,token4) then return 0
+  assembler strlen token_length,token1
+  if token_length < 1 | token_length > 2 | \_date_unsigned(token1,day) then return 0
+  month = _date_month_number(token2)
+  assembler strlen token_length,token3
+  if token_length <> 4 | \_date_unsigned(token3,year) then return 0
+  return month > 0
+
+_date_next_token: procedure = .boolean
+  arg source = .string, source_length = .int, expose position = .int, expose token = .string
+  codepoint = .int
+  token = ""
+  do while position < source_length
+    assembler strchar codepoint,source,position
+    if codepoint > 32 & codepoint <> 44 then leave
+    position = position + 1
+  end
+  do while position < source_length
+    assembler strchar codepoint,source,position
+    if codepoint <= 32 | codepoint = 44 then leave
+    assembler appendchar token,codepoint
+    position = position + 1
+  end
+  return token <> ""
+
+_date_month_number: procedure = .int
+  arg name = .string
+  normalized = .string
+  normalized_length = .int
+  assembler strupper normalized,name
+  assembler strlen normalized_length,normalized
+  if normalized_length < 3 then return 0
+  if _date_name_prefix("JANUARY",normalized) then return 1
+  if _date_name_prefix("FEBRUARY",normalized) then return 2
+  if _date_name_prefix("MARCH",normalized) then return 3
+  if _date_name_prefix("APRIL",normalized) then return 4
+  if _date_name_prefix("MAY",normalized) then return 5
+  if _date_name_prefix("JUNE",normalized) then return 6
+  if _date_name_prefix("JULY",normalized) then return 7
+  if _date_name_prefix("AUGUST",normalized) then return 8
+  if _date_name_prefix("SEPTEMBER",normalized) then return 9
+  if _date_name_prefix("OCTOBER",normalized) then return 10
+  if _date_name_prefix("NOVEMBER",normalized) then return 11
+  if _date_name_prefix("DECEMBER",normalized) then return 12
+  return 0
+
+_date_weekday_number: procedure = .int
+  arg name = .string
+  normalized = .string
+  normalized_length = .int
+  assembler strupper normalized,name
+  assembler strlen normalized_length,normalized
+  if normalized_length < 3 then return 0
+  if _date_name_prefix("MONDAY",normalized) then return 1
+  if _date_name_prefix("TUESDAY",normalized) then return 2
+  if _date_name_prefix("WEDNESDAY",normalized) then return 3
+  if _date_name_prefix("THURSDAY",normalized) then return 4
+  if _date_name_prefix("FRIDAY",normalized) then return 5
+  if _date_name_prefix("SATURDAY",normalized) then return 6
+  if _date_name_prefix("SUNDAY",normalized) then return 7
+  return 0
+
+_date_name_prefix: procedure = .boolean
+  arg canonical = .string, candidate = .string
+  canonical_length = .int
+  candidate_length = .int
+  canonical_code = .int
+  candidate_code = .int
+  assembler strlen canonical_length,canonical
+  assembler strlen candidate_length,candidate
+  if candidate_length > canonical_length then return 0
+  do index = 0 to candidate_length - 1
+    assembler strchar canonical_code,canonical,index
+    assembler strchar candidate_code,candidate,index
+    if canonical_code <> candidate_code then return 0
+  end
+  return 1
+
+_date_unsigned: procedure = .boolean
+  arg text = .string, expose value = .int
+  text_length = .int
+  assembler strlen text_length,text
+  return _date_unsigned_span(text,0,text_length,value)
+
+_date_unsigned_span: procedure = .boolean
+  arg text = .string, start = .int, count = .int, expose value = .int
+  codepoint = .int
+  value = 0
+  if count < 1 then return 0
+  do index = start to start + count - 1
+    assembler strchar codepoint,text,index
+    if codepoint < 48 | codepoint > 57 then return 0
+    value = value * 10 + codepoint - 48
+  end
+  return 1
+
+_date_integer: procedure = .boolean
+  arg text = .string, expose value = .int
+  text_length = .int
+  position = .int
+  codepoint = .int
+  sign = .int
+  magnitude = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  sign = 1
+  assembler strchar codepoint,text,position
+  if codepoint = 43 | codepoint = 45 then do
+    if codepoint = 45 then sign = -1
+    position = 1
+    if position = text_length then return 0
+  end
+  if text_length - position > 12 then return 0
+  do while position < text_length
+    assembler strchar codepoint,text,position
+    if codepoint < 48 | codepoint > 57 then return 0
+    magnitude = magnitude * 10 + codepoint - 48
+    position = position + 1
+  end
+  value = magnitude * sign
+  return 1
+
+_date_default_separator: procedure = .string
+  arg format_code = .int
+  if format_code = 8 | format_code = 9 then return "."
+  if format_code = 12 | format_code = 23 | format_code = 24 then return "-"
+  return "/"
+
+_datei_fail: procedure
+  assembler signal "INVALID_ARGUMENTS","DATE input does not match the requested Level B format"
+  return

@@ -1,0 +1,257 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005, 2006 Rexx Language Association. All rights reserved.   */
+/* Copyright (c) 1981, 2025 Mike Cowlishaw. All rights reserved.              */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* https://www.oorexx.org/license.html                                        */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* This measure of Rexx execution speed is based on an analysis of            */
+/* the dynamic mix of clauses found in a (subjectively chosen)                */
+/* collection of Rexx programs (including commands, macros, and               */
+/* personal programs).  Approximately 2,500,000 lines of trace                */
+/* output were analysed, and the program below recreates the                  */
+/* dynamic mix of constructs found in that analysis.                          */
+/* In view of the dramatic differences between systems in their               */
+/* efficiency of issuing commands, the timed loop does not issue              */
+/* commands (an 'RC=expression; PARSE' sequence is used instead).             */
+/* This program therefore measures the performance of a Rexx                  */
+/* implementation, exclusive of command execution overhead.                   */
+/* Elapsed (user-perceived) time is used, rather than any form of             */
+/* virtual time, with an adjustment for the inner loop overhead.              */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* 1.0  17 Jan 1981 Original version (Mike Cowlishaw)                         */
+/* 2.0   3 Jun 1989 Remove attempt to simulate commands                       */
+/* 2.1   7 Oct 1989 Remove use of not symbols, and correct commentary         */
+/*      12 Aug 2011 Restore lost comments + minor cleanups                    */
+/* 2.2  15 Mar 2025 Merged in changes by Rick McGuire which adjusts for       */
+/*                  modern CPU speeds. Runs shorter than one second are       */
+/*                  repeated with an automatically increased count.           */
+/* 2.2c 14 Jul 2026 Faithful cREXX Level B port of 2.2. The timed source      */
+/*                  retains the 1,000-clause dynamic mix. Port substitutions  */
+/*                  are audited in README.md and this score is quotable only  */
+/*                  as RexxCPS 2.2c, not as unchanged RexxCPS 2.2.            */
+/* 2.2d 17 Jul 2026 Select Classic's default 9 digits explicitly; keep the   */
+/*                  clause workload's arithmetic decimal, integral controls  */
+/*                  native integer, and the disclosed timer adaptation       */
+/*                  binary64 with matching typed text BIFs. This revision is  */
+/*                  quotable only as RexxCPS 2.2d for cREXX.                  */
+/*----------------------------------------------------------------------------*/
+
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+numeric digits 9
+arg argv = .string[]
+
+rexxcps = "2.2d" /* REXXCPS cREXX port version */
+
+/* Loop counts; these are auto-adjusted so total run time is over one second. */
+count = 100       /* Repetition count */
+averaging = 100   /* Averaging-over count */
+
+/*
+ * The canonical baseline has no arguments. CTest may request a deliberately
+ * noncanonical short smoke run, but positional count overrides are rejected so
+ * a wrapper cannot silently turn a baseline into a smoke result.
+ */
+contract = "canonical-default"
+if argv[0] <> 0 then do
+  if argv[0] <> 2 then
+    return fail("use no arguments for the canonical run or --smoke-count COUNT")
+  if argv[1] <> "--smoke-count" then
+    return fail("unknown argument; use --smoke-count COUNT only for smoke tests")
+  if verify(argv[2], "0123456789") <> 0 then
+    return fail("--smoke-count must be a positive integer")
+  count = argv[2]
+  contract = "noncanonical-smoke"
+end
+if count < 1 then return fail("count must be positive")
+initial_count = count
+calibrated = 0
+
+tracevar = "Off" /* Trace setting (for development and clause auditing). */
+
+version_info = version()
+system = word(version_info, 1)
+
+say "----- REXXCPS" rexxcps "-- Measuring cREXX clauses/second -----"
+say " cREXX version is:" version_info
+say "       System is:" system
+say "REXXCPS-PROVENANCE contract=" || contract ,
+    "argv_count=" || argv[0] ,
+    "initial_count=" || initial_count ,
+    "averaging=" || averaging
+if count < 100 then
+  say "NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100"
+
+/* Level B makes the backing objects for Classic compound variables explicit. */
+acompound = .stem()
+avar = .stem()
+
+/* Predeclare values that must remain visible after their control blocks. */
+empty = 0.0
+full = 0.0
+total = 0.0
+innertime = 0.0
+thousand = 0.0
+j = .decimal
+classic_one = "1" as .decimal
+classic_two = "2" as .decimal
+classic_one_point_one = "1.1" as .decimal
+classic_two_point_two = "2.2" as .decimal
+classic_five = "5" as .decimal
+classic_ninety_nine_point_seven = "99.7" as .decimal
+
+/* Calibrate for the empty do-loop. */
+do i = 1 to averaging
+  call time("R")
+  do count; end
+  empty = (time("R") as .float) + empty
+end
+empty = empty / (averaging as .float)
+
+/* Measure twice; the first trial is used to increase short-run counts. */
+do trial = 1 to 2
+
+  /* Now the true timer loop; average timing again. */
+  full = 0.0
+  do i = 1 to averaging
+    trace value tracevar
+    call time("R")
+    do count
+      /* -----  This is first of the 1000 clauses ----- */
+      flag = "0"; p0 = "b"
+      do lvar = 1 to 14
+        /* This is the "block" comment in lvar. */
+        key1 = "Key Bee"
+        acompound.key1.lvar = substr(1234 "5678", 6, 2)
+        if flag = acompound.key1.lvar then say "Failed1"
+        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+          if j > (acompound.key1.lvar as .decimal) then say "Failed2"
+          if 17 < length(j as .string) - 1 then say "Failed3"
+          if (j as .string) = "foobar" then say "Failed4"
+          if substr(1234, 1, 1) = "9" then say "Failed5"
+          if word(key1, 1) = "?" then say "Failed6"
+          if j < classic_five then do /* This path is taken. */
+            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
+            if j = classic_two then leave
+          end
+          iterate
+        end /* j */
+        avar. = "1.0" || lvar
+        select
+          when flag = "string" then say "FailedS1"
+          when avar.flag.2 = "0" then say "FailedS2"
+          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say "FailedS3"
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+          when flag == "0" then flag = "0"
+        end
+        if 1 then flag = "1"
+        select
+          when flag == "ring" then say "FailedT1"
+          when avar.flag.3 = "0" then say "FailedT2"
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+          when flag == "0" then flag = "1"
+        end
+        parse value "Foo Bar" with v1 +5 v2 .
+        trace value _trace_current_mode()
+        address value addressenv().environment_name()
+        call cps_subroutine(upper("with"), upper("2"), upper("args"), upper("(This is the second)" || 1 || "" || 1))
+        text = "This is an awfully boring program"; parse var text p1 (p0) p5
+        text = "is an awfully boring program This"; parse var text p2 (p0) p6
+        text = "an awfully boring program This is"; parse var text p3 (p0) p7
+        text = "awfully boring program This is an"; parse var text p4 (p0) p8
+      end
+      /* -----  This is last of the 1000 clauses ----- */
+    end
+    full = (time("R") as .float) + full
+    trace off
+  end
+  total = full /* total time */
+
+  /* If total is over one second it is usable; trial 2 is always final. */
+  if total > 1.0 | trial = 2 then leave
+
+  /* Bump count so the second run should take about one second. */
+  if total = 0.0 then count = count * 100
+  else count = ((floattrunc(1.0 / total) as .int) + 1) * count
+  calibrated = 1
+end
+
+/* Show the counts. */
+say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+say "REXXCPS-EFFECTIVE contract=" || contract ,
+    "initial_count=" || initial_count ,
+    "effective_count=" || count ,
+    "averaging=" || averaging ,
+    "calibrated=" || calibrated
+
+/* Now display the statistics. */
+innertime = total / (averaging as .float) - empty
+thousand = innertime / (count as .float)
+
+/* Developer's statistics. */
+if left(tracevar, 1) = "O" then nop
+else do
+  say
+  say "Total (full DOs):" total "secs (average of" averaging "measures of" count "iterations)"
+  say "Time for one iteration (1000 clauses) was:" thousand "seconds"
+end
+
+/* And finally, the result. */
+say
+say "     Performance:" floatformat(1000.0 / thousand, , 0) "cREXX clauses per second"
+say
+say "PASS: RexxCPS 2.2d cREXX port"
+return 0
+
+
+/* Target routine for the timed CALL - called 14 times. */
+cps_subroutine: procedure = .void
+  numeric digits 9
+  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+  parse var a3 b1 b2 b3 .
+  do 1
+    text = a1 || " " || a2 || " " || a3
+    parse var text c1 c2 c3
+  end
+  return
+
+
+fail: procedure = .int
+  numeric digits 9
+  arg message = .string
+  say "FAIL:" message
+  return 1

@@ -22,51 +22,45 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * String-array high-water query and bounded shrink.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayhi.md
+ */
 options levelb
 
 namespace rxfnsb expose arrayhi
 
-/* ------------------------------------------------------------------
- * ARRAYHI(array[, 'GET' | 'SET'[, new_hi]])
+/**
+ * Query an array high-water mark or shrink it in place.
  *
- * Get or set the high index (size) of a Rexx array.
- *
- * CALL SYNTAX
- *   hi = ARRAYHI(array)
- *   hi = ARRAYHI(array, 'GET')
- *   hi = ARRAYHI(array, 'SET', new_hi)
- *
- * SEMANTICS
- *   - Default mode is GET: returns array[0]
- *   - In SET mode, the array may only be shrunk
- *
- * BEHAVIOR (SET mode)
- *   - If new_hi >= current array size, the request is ignored
- *   - If new_hi < 1, the request is ignored
- *   - If 1 <= new_hi < current array size:
- *       * elements above new_hi are discarded
- *       * array[0] is updated accordingly
- *
- * CONVENTION
- *   - array[0] holds the number of elements
- *   - elements are stored in array[1] .. array[array[0]]
- *
- * NOTES
- *   - The array is modified in place in SET mode
- *   - ARRAYHI never grows an array
- *   - No new elements are allocated or initialised
- *
- * RETURNS
- *   - The current high index after the operation
- *
- * ------------------------------------------------------------------ */
+ * @param array exposed string array using array[0] as its high-water mark
+ * @param mode optional case-insensitive GET or SET; omitted means GET
+ * @param newhi positive smaller mark used only with SET
+ * @return the resulting array high-water mark
+ * @signal INVALID_ARGUMENTS invalid mode or mode/newhi combination
+ */
 arrayhi: procedure=.int
-  arg expose array=.string[],mode='GET',newhi=0
-  mode=upper(mode)
-  if mode='SET' then do
-     if newhi>=array[0] then return array[0]
-     if newhi< 1 then return array[0]
-     assembler SETATTRS array,newhi
+  arg expose array=.string[], mode="GET", newhi=0
+  mode_supplied = ?mode
+  newhi_supplied = ?newhi
+  high = array[0]
+
+  if \mode_supplied then return high
+
+  folded_mode = ""
+  assembler strupper folded_mode,mode
+  if folded_mode == "GET" then do
+    if newhi_supplied then
+      assembler signal "INVALID_ARGUMENTS", "ARRAYHI GET does not accept a new high-water mark"
+    return high
   end
-return array[0]
+  if folded_mode <> "SET" then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYHI mode must be GET or SET"
+  if \newhi_supplied then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYHI SET requires a new high-water mark"
+
+  if newhi >= high | newhi < 1 then return high
+  assembler SETATTRS array,newhi
+  return newhi

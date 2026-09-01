@@ -1,0 +1,9 @@
+workload,vm,candidate,n,min_percent,q1_percent,median_percent,q3_percent,max_percent,favorable_count,mean_percent,mean_ci95_low_percent,mean_ci95_high_percent,disposition
+Richards,rxbvm,c1a-r2,12,-10.239095,-9.593307,-9.109690,-8.646792,-4.757898,12,-8.799975,-9.691456,-7.908494,decisive-favorable
+Richards,rxbvm,c1ab-r1,12,-53.673118,-53.246081,-52.567830,-52.162085,-51.918483,12,-52.730224,-53.152028,-52.308419,decisive-favorable
+Richards,rxbvm,c1b-r1,12,-44.372695,-44.148839,-44.009829,-43.770139,-42.494780,12,-43.852719,-44.185822,-43.519615,decisive-favorable
+Richards,rxvm,c1a-r2,12,-10.386038,-9.484116,-9.043939,-8.799269,-7.550924,12,-9.077045,-9.562434,-8.591657,decisive-favorable
+Richards,rxvm,c1ab-r1,12,-54.446398,-53.815936,-53.551893,-53.334796,-52.642707,12,-53.558747,-53.851671,-53.265823,decisive-favorable
+Richards,rxvm,c1b-r1,12,-45.673826,-44.832514,-44.277539,-44.139320,-43.323885,12,-44.504447,-44.931154,-44.077740,decisive-favorable
+Towers,rxbvm,c1c-r1,12,-21.040946,-19.664427,-18.972750,-18.605171,-17.841001,12,-19.156119,-19.758106,-18.554133,decisive-favorable
+Towers,rxvm,c1c-r1,12,-21.479194,-19.388352,-18.923272,-18.339759,-10.088093,12,-18.266860,-20.114585,-16.419134,decisive-favorable

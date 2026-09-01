@@ -1,0 +1,46 @@
+/*
+ * interpreter/tests/tests_selector_descriptors.rxas
+ */
+
+.meta "selector_descriptor.box"="b" ".unknown" .class
+.meta "selector_descriptor.box"="selector_descriptor.shape" .implements
+.meta "selector_descriptor.shape"="b" ".unknown" .interface
+.meta "selector_descriptor.shape"="method" "describe" ".string" "" .member
+.meta "selector_descriptor.shape"="factory" "*" ".shape" "" .member
+
+.globals=0
+
+main() .locals=6
+   load r1,0
+   srcfprocsel r0,"rxsig1|selector_descriptor.shape|.shape|",r1
+   dcall r0,r0,r1
+
+   load r1,1
+   settp r0,256
+   swap r2,r0
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
+   dcall r3,r3,r1
+   swap r0,r2
+
+   seq r4,r3,"dynamic-ok"
+   brf fail,r4
+   say "PASS: Descriptor Selector Contracts"
+   ret 0
+
+fail:
+   say "FAIL: Descriptor Selector Contracts"
+   say r3
+   ret 0
+
+§selector_descriptor.box.§factory() .locals=2
+   .meta "selector_descriptor.box.§factory"="b" ".shape" §selector_descriptor.box.§factory() ""
+   setattrs r1,1
+   setobjtype r1,"selector_descriptor.box"
+   ret r1
+
+§selector_descriptor.box.describe() .locals=2
+   .meta "selector_descriptor.box.describe"="b" ".string" §selector_descriptor.box.describe() ""
+   .meta "selector_descriptor.box.describe.§this"="b" ".box" a1
+   load r1,"dynamic-ok"
+   ret r1
+   .meta "selector_descriptor.box.describe.§this"

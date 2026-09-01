@@ -44,55 +44,6 @@ typedef struct {
     int group_depth;
 } LevelCLabel;
 
-static char *levelc_escape_diag_value(const char *value) {
-    char *escaped;
-    char *out;
-    size_t length;
-    size_t i;
-    size_t escaped_length;
-    unsigned char ch;
-    char hex[5];
-
-    if (!value) value = "";
-    length = strlen(value);
-    escaped_length = 0;
-    for (i = 0; i < length; i++) {
-        ch = (unsigned char)value[i];
-        if (ch == '\\' || ch == '"') escaped_length += 2;
-        else if (ch == '\n' || ch == '\r' || ch == '\t') escaped_length += 2;
-        else if (ch < 32) escaped_length += 4;
-        else escaped_length++;
-    }
-
-    escaped = malloc(escaped_length + 1);
-    if (!escaped) return strdup("");
-    out = escaped;
-    for (i = 0; i < length; i++) {
-        ch = (unsigned char)value[i];
-        if (ch == '\\' || ch == '"') {
-            *out++ = '\\';
-            *out++ = (char)ch;
-        } else if (ch == '\n') {
-            *out++ = '\\';
-            *out++ = 'n';
-        } else if (ch == '\r') {
-            *out++ = '\\';
-            *out++ = 'r';
-        } else if (ch == '\t') {
-            *out++ = '\\';
-            *out++ = 't';
-        } else if (ch < 32) {
-            snprintf(hex, sizeof(hex), "\\x%02X", ch);
-            memcpy(out, hex, 4);
-            out += 4;
-        } else {
-            *out++ = (char)ch;
-        }
-    }
-    *out = '\0';
-    return escaped;
-}
-
 static char *levelc_token_value(Token *token) {
     if (!token || !token->token_string || token->length <= 0) return strdup("");
     return rx_strndup(token->token_string, (size_t)token->length);
@@ -119,41 +70,47 @@ static char *levelc_fallback_line_text(Token *token) {
     return strdup(buffer);
 }
 
-char *rxcp_levelc_diag_format(const char *standard_code,
-                              const char *insert_name,
-                              const char *insert_value) {
-    return rxcp_levelc_diag_format2(standard_code, insert_name, insert_value, 0, 0);
+static RxcpDiagnostic *levelc_make_diagnostic2(const char *standard_code,
+                                               const char *insert_name1,
+                                               const char *insert_value1,
+                                               const char *insert_name2,
+                                               const char *insert_value2) {
+    RxcpDiagnostic *diagnostic;
+    char *code;
+
+    code = rxcp_diag_levelc_code(standard_code);
+    diagnostic = rxcp_diag_create(code ? code : "RXC-LC-0");
+    if (code) free(code);
+    if (!diagnostic) return 0;
+
+    if (insert_name1 && *insert_name1) rxcp_diag_add_param(diagnostic, insert_name1, insert_value1);
+    if (insert_name2 && *insert_name2) rxcp_diag_add_param(diagnostic, insert_name2, insert_value2);
+    return diagnostic;
 }
 
-char *rxcp_levelc_diag_format2(const char *standard_code,
-                               const char *insert_name1,
-                               const char *insert_value1,
-                               const char *insert_name2,
-                               const char *insert_value2) {
-    char *escaped;
-    char *escaped2;
-    char *message;
+static ASTNode *levelc_mknd_error2(ASTNode *node,
+                                   const char *standard_code,
+                                   const char *insert_name1,
+                                   const char *insert_value1,
+                                   const char *insert_name2,
+                                   const char *insert_value2) {
+    ASTNode *result;
+    char *code;
 
-    if (!standard_code) standard_code = "0";
-    if (!insert_name1 || !*insert_name1) return mprintf("RXC-LC-%s", standard_code);
+    if (!node) return 0;
+    code = rxcp_diag_levelc_code(standard_code);
+    if (!code) return mknd_err(node, "RXC-LC-0");
 
-    escaped = levelc_escape_diag_value(insert_value1);
-    if (!insert_name2 || !*insert_name2) {
-        message = mprintf("RXC-LC-%s %s=\"%s\"", standard_code, insert_name1, escaped ? escaped : "");
-        if (escaped) free(escaped);
-        return message;
+    if (insert_name1 && *insert_name1 && insert_name2 && *insert_name2) {
+        result = mknd_err2(node, code, insert_name1, insert_value1, insert_name2, insert_value2);
+    } else if (insert_name1 && *insert_name1) {
+        result = mknd_err1(node, code, insert_name1, insert_value1);
+    } else {
+        result = mknd_err(node, code);
     }
 
-    escaped2 = levelc_escape_diag_value(insert_value2);
-    message = mprintf("RXC-LC-%s %s=\"%s\" %s=\"%s\"",
-                      standard_code,
-                      insert_name1,
-                      escaped ? escaped : "",
-                      insert_name2,
-                      escaped2 ? escaped2 : "");
-    if (escaped) free(escaped);
-    if (escaped2) free(escaped2);
-    return message;
+    free(code);
+    return result;
 }
 
 ASTNode *rxcp_levelc_ast_error_insert(Context *context,
@@ -173,13 +130,10 @@ ASTNode *rxcp_levelc_ast_error_insert2(Context *context,
                                        const char *insert_name2,
                                        const char *insert_value2) {
     ASTNode *node;
-    char *message;
 
     node = ast_f(context, TOKEN, token);
-    message = rxcp_levelc_diag_format2(standard_code, insert_name1, insert_value1,
-                                       insert_name2, insert_value2);
-    mknd_err(node, "%s", message ? message : "RXC-LC-0");
-    if (message) free(message);
+    levelc_mknd_error2(node, standard_code, insert_name1, insert_value1,
+                       insert_name2, insert_value2);
     return node;
 }
 
@@ -214,30 +168,22 @@ ASTNode *rxcp_levelc_add_error2(ASTNode *node,
                                 const char *insert_value1,
                                 const char *insert_name2,
                                 const char *insert_value2) {
-    char *message;
-
     if (!node) return 0;
-    message = rxcp_levelc_diag_format2(standard_code, insert_name1, insert_value1,
-                                       insert_name2, insert_value2);
-    mknd_err(node, "%s", message ? message : "RXC-LC-0");
-    if (message) free(message);
-    return node;
+    return levelc_mknd_error2(node, standard_code, insert_name1, insert_value1,
+                              insert_name2, insert_value2);
 }
 
 static int levelc_has_detached_diagnostic(Context *context,
                                           Token *token,
-                                          const char *message) {
+                                          RxcpDiagnostic *diagnostic) {
     ASTNode *diag;
-    size_t message_len;
 
-    if (!context || !message) return 0;
-    message_len = strlen(message);
+    if (!context || !diagnostic) return 0;
     diag = (ASTNode *)context->diagnostics_list;
     while (diag) {
         if (diag->node_type == ERROR &&
             diag->token == token &&
-            diag->node_string_length == message_len &&
-            strncmp(diag->node_string, message, message_len) == 0) {
+            rxcp_diag_equal(diag->diagnostic, diagnostic)) {
             return 1;
         }
         diag = diag->sibling;
@@ -247,15 +193,21 @@ static int levelc_has_detached_diagnostic(Context *context,
 
 static void levelc_append_detached_diagnostic(Context *context,
                                               Token *token,
-                                              const char *message) {
+                                              RxcpDiagnostic *diagnostic) {
     ASTNode *diag;
     ASTNode *tail;
 
-    if (!context || !message) return;
-    if (levelc_has_detached_diagnostic(context, token, message)) return;
+    if (!context || !diagnostic) {
+        rxcp_diag_free(diagnostic);
+        return;
+    }
+    if (levelc_has_detached_diagnostic(context, token, diagnostic)) {
+        rxcp_diag_free(diagnostic);
+        return;
+    }
 
     diag = ast_ft(context, ERROR);
-    ast_copy_str(diag, (char *)message);
+    ast_set_diagnostic(diag, diagnostic);
     diag->token = token;
     diag->file_name = context->file_name;
     if (token) {
@@ -276,24 +228,19 @@ static void levelc_append_detached_diagnostic(Context *context,
 }
 
 static void levelc_append_code(Context *context, Token *token, const char *standard_code) {
-    char *message;
-
-    message = rxcp_levelc_diag_format(standard_code, 0, 0);
-    levelc_append_detached_diagnostic(context, token, message);
-    free(message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, 0, 0, 0, 0));
 }
 
 static void levelc_append_code_token(Context *context,
                                      Token *token,
                                      const char *standard_code) {
     char *token_text;
-    char *message;
 
     token_text = levelc_fallback_token_text(token);
-    message = rxcp_levelc_diag_format(standard_code, "token", token_text);
-    levelc_append_detached_diagnostic(context, token, message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, "token", token_text, 0, 0));
     free(token_text);
-    free(message);
 }
 
 static void levelc_append_code_found_token(Context *context,
@@ -301,35 +248,27 @@ static void levelc_append_code_found_token(Context *context,
                                            const char *standard_code,
                                            Token *found_token) {
     char *token_text;
-    char *message;
 
     token_text = levelc_fallback_token_text(found_token);
-    message = rxcp_levelc_diag_format(standard_code, "token", token_text);
-    levelc_append_detached_diagnostic(context, anchor, message);
+    levelc_append_detached_diagnostic(context, anchor,
+                                      levelc_make_diagnostic2(standard_code, "token", token_text, 0, 0));
     free(token_text);
-    free(message);
 }
 
 static void levelc_append_code_name(Context *context,
                                     Token *token,
                                     const char *standard_code,
                                     const char *name) {
-    char *message;
-
-    message = rxcp_levelc_diag_format(standard_code, "name", name);
-    levelc_append_detached_diagnostic(context, token, message);
-    free(message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, "name", name, 0, 0));
 }
 
 static void levelc_append_code_value(Context *context,
                                      Token *token,
                                      const char *standard_code,
                                      const char *value) {
-    char *message;
-
-    message = rxcp_levelc_diag_format(standard_code, "value", value);
-    levelc_append_detached_diagnostic(context, token, message);
-    free(message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, "value", value, 0, 0));
 }
 
 static void levelc_append_code_char(Context *context,
@@ -337,13 +276,11 @@ static void levelc_append_code_char(Context *context,
                                     const char *standard_code,
                                     char value) {
     char char_text[2];
-    char *message;
 
     char_text[0] = value;
     char_text[1] = '\0';
-    message = rxcp_levelc_diag_format(standard_code, "char", char_text);
-    levelc_append_detached_diagnostic(context, token, message);
-    free(message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, "char", char_text, 0, 0));
 }
 
 static void levelc_append_code_position(Context *context,
@@ -351,12 +288,10 @@ static void levelc_append_code_position(Context *context,
                                         const char *standard_code,
                                         int position) {
     char position_text[32];
-    char *message;
 
     snprintf(position_text, sizeof(position_text), "%d", position);
-    message = rxcp_levelc_diag_format(standard_code, "position", position_text);
-    levelc_append_detached_diagnostic(context, token, message);
-    free(message);
+    levelc_append_detached_diagnostic(context, token,
+                                      levelc_make_diagnostic2(standard_code, "position", position_text, 0, 0));
 }
 
 static void levelc_append_missing_then(Context *context,
@@ -365,17 +300,15 @@ static void levelc_append_missing_then(Context *context,
                                        const char *standard_code) {
     char *line;
     char *token_text;
-    char *message;
 
     line = levelc_fallback_line_text(keyword);
     token_text = levelc_fallback_token_text(found);
-    message = rxcp_levelc_diag_format2(standard_code,
-                                       "linenumber", line,
-                                       "token", token_text);
-    levelc_append_detached_diagnostic(context, keyword, message);
+    levelc_append_detached_diagnostic(context, keyword,
+                                      levelc_make_diagnostic2(standard_code,
+                                                              "linenumber", line,
+                                                              "token", token_text));
     free(line);
     free(token_text);
-    free(message);
 }
 
 static void levelc_append_line_token(Context *context,
@@ -385,34 +318,30 @@ static void levelc_append_line_token(Context *context,
                                      Token *found_token) {
     char *line;
     char *token_text;
-    char *message;
 
     line = levelc_fallback_line_text(line_token);
     token_text = levelc_fallback_token_text(found_token);
-    message = rxcp_levelc_diag_format2(standard_code,
-                                       "linenumber", line,
-                                       "token", token_text);
-    levelc_append_detached_diagnostic(context, anchor, message);
+    levelc_append_detached_diagnostic(context, anchor,
+                                      levelc_make_diagnostic2(standard_code,
+                                                              "linenumber", line,
+                                                              "token", token_text));
     free(line);
     free(token_text);
-    free(message);
 }
 
 static void levelc_append_keywords_token(Context *context,
                                          Token *anchor,
                                          const char *standard_code,
-                                         const char *keywords,
+    const char *keywords,
                                          Token *found_token) {
     char *token_text;
-    char *message;
 
     token_text = levelc_fallback_token_text(found_token);
-    message = rxcp_levelc_diag_format2(standard_code,
-                                       "keywords", keywords,
-                                       "token", token_text);
-    levelc_append_detached_diagnostic(context, anchor, message);
+    levelc_append_detached_diagnostic(context, anchor,
+                                      levelc_make_diagnostic2(standard_code,
+                                                              "keywords", keywords,
+                                                              "token", token_text));
     free(token_text);
-    free(message);
 }
 
 static int levelc_token_is_boundary(Token *token) {

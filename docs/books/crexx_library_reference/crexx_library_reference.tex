@@ -1,6 +1,6 @@
 \input{../../../boilerplate/preamble}
 \begin{document}
-\renewcommand{\isbn}{978-90-819090-1-3}
+\renewcommand{\isbn}{978-94-039116-4-9}
 \setcounter{tocdepth}{1}
 \title{\fontspec{TeX Gyre
     Pagella}\textsc{crexx}\protect\fontspec{Bodoni URW
@@ -9,19 +9,14 @@
 \author{The \crexx{} team}
 %\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
 \date{\null\hfill \today}
-\maketitle
-\pagenumbering{Roman}
-\pagestyle{plain}
-\frontmatter
 
-\pagenumbering{Roman}
+\frontmatter
+\maketitle
 \pagestyle{fancy}
 \input{../../../boilerplate/bookmeta}
 \tableofcontents
 
-\newpage
-\pagenumbering{arabic}
-\frontmatter
+\cleardoublepage
 \large
 \input{../../../boilerplate/hyphenation}
 \input{../../../boilerplate/series}
@@ -29,6 +24,7 @@
 
 \mainmatter
 \input{structure}
+
 \backmatter
 \listoftables
 %\listoffigures

@@ -1,0 +1,127 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* rexx */
+options levelb
+
+namespace rexxscript expose rexxscript_evaluate rexxscript_evaluate_exposed rexxscriptevaluator rexxscript_output rexxscript_value
+import rexxscriptcore
+import rxfnsb
+
+
+/**
+ * Public RexxScript evaluator facade.
+ *
+ * The facade preserves the original rexxscript namespace and keeps the
+ * transitional last-result helpers out of the core evaluator module.
+ */
+rexxscriptevaluator: class
+  _core = .rexxscriptcore..rexxscriptcoreevaluator
+
+  *: factory
+    _core = .rexxscriptcore..rexxscriptcoreevaluator()
+    return
+
+  evaluate: method = .string[]
+    arg statements = .string, debug = 0
+    result = _core.evaluate(statements, debug)
+    out = _core.output()
+    names = _core.export_names()
+    values = _core.export_values()
+    call _rexxscript_store_last_arrays(out, names, values)
+    return result
+
+  evaluate_exposed: method = .string[]
+    arg statements = .string, names = .string[], values = .string[], debug = 0
+    result = _core.evaluate_exposed(statements, names, values, debug)
+    out = _core.output()
+    export_names = _core.export_names()
+    export_values = _core.export_values()
+    call _rexxscript_store_last_arrays(out, export_names, export_values)
+    return result
+
+  output: method = .string[]
+    return _core.output()
+
+  value: method = .string
+    arg name = .string
+    return _core.value(name)
+
+  export_names: method = .string[]
+    return _core.export_names()
+
+  export_values: method = .string[]
+    return _core.export_values()
+
+  export_content: method = .string
+    arg index = .int
+    return _core.export_content(index)
+
+rexxscript_evaluate: procedure = .string[]
+  arg statements = .string, debug = 0
+  evaluator = .rexxscriptevaluator()
+  result = evaluator.evaluate(statements, debug)
+  return result
+
+rexxscript_evaluate_exposed: procedure = .string[]
+  arg statements = .string, names = .string[], values = .string[], debug = 0
+  evaluator = .rexxscriptevaluator()
+  result = evaluator.evaluate_exposed(statements, names, values, debug)
+  return result
+
+rexxscript_output: procedure = .string[] expose _rexxscript_last_ready _rexxscript_last_output _rexxscript_last_names _rexxscript_last_keys _rexxscript_last_values _rexxscript_last_count
+  call _rexxscript_ensure_last()
+  return _rexxscript_last_output
+
+rexxscript_value: procedure = .string expose _rexxscript_last_ready _rexxscript_last_output _rexxscript_last_names _rexxscript_last_keys _rexxscript_last_values _rexxscript_last_count
+  arg name = .string
+  call _rexxscript_ensure_last()
+  key = translate(name)
+  do i = 1 to _rexxscript_last_count
+    if _rexxscript_last_keys[i] = key then return _rexxscript_last_values[i]
+  end
+  return ""
+
+_rexxscript_store_last_arrays: procedure = .void expose _rexxscript_last_ready _rexxscript_last_output _rexxscript_last_names _rexxscript_last_keys _rexxscript_last_values _rexxscript_last_count
+  arg out = .string[], names = .string[], values = .string[]
+  _rexxscript_last_output = out
+  _rexxscript_last_names = names
+  _rexxscript_last_values = values
+  _rexxscript_last_keys = .string[]
+  _rexxscript_last_count = names[0]
+  do i = 1 to _rexxscript_last_count
+    _rexxscript_last_keys[i] = translate(names[i])
+  end
+  _rexxscript_last_ready = 1
+  return
+
+_rexxscript_ensure_last: procedure = .void expose _rexxscript_last_ready _rexxscript_last_output _rexxscript_last_names _rexxscript_last_keys _rexxscript_last_values _rexxscript_last_count
+  if _rexxscript_last_ready = 1 then return
+  _rexxscript_last_output = .string[]
+  _rexxscript_last_names = .string[]
+  _rexxscript_last_keys = .string[]
+  _rexxscript_last_values = .string[]
+  _rexxscript_last_count = 0
+  _rexxscript_last_ready = 1
+  return

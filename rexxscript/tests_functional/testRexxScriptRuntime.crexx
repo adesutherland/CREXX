@@ -1,0 +1,258 @@
+/* rexx */
+options levelb
+
+import rexxscript
+import rxfnsb
+
+errors = 0
+
+result = rexxscript_evaluate("a = 1; .gen starting; say a; a = a + 2", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE status failed:" result[1]
+end
+
+result = rexxscript_evaluate("a = 1; say 'starting'; say a; a = a + 2", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE status failed:" result[1]
+end
+
+if result[2] <> "a" | result[3] <> "3" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE export failed:" result[2] result[3]
+end
+
+if out[0] <> 2 | out[1] <> "starting" | out[2] <> "1" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE output failed:" out[0] out[1] out[2]
+end
+
+names = .string[]
+values = .string[]
+names[1] = "a"
+values[1] = "7"
+names[2] = "message"
+values[2] = ""
+
+result = rexxscript_evaluate_exposed("say a; a = a + 3; message = 'total ' || a", names, values, 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE_EXPOSED status failed:" result[1]
+end
+
+if rexxscript_value("a") <> "10" | rexxscript_value("message") <> "total 10" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE_EXPOSED value failed:" rexxscript_value("a") rexxscript_value("message")
+end
+
+if out[0] <> 1 | out[1] <> "7" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE_EXPOSED output failed:" out[0] out[1]
+end
+
+runner = .rexxscriptevaluator()
+result = runner.evaluate("if 0 then do; say 'bad'; end; say 'good'", 0)
+out = runner.output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT evaluator status failed:" result[1]
+end
+
+if out[0] <> 1 | out[1] <> "good" then do
+  errors = errors + 1
+  say "REXXSCRIPT evaluator skipped block failed:" out[0] out[1]
+end
+
+result = rexxscript_evaluate("say 'before'; signal done; say 'bad'; done:; say 'after'", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT SIGNAL status failed:" result[1]
+end
+
+if out[0] <> 2 | out[1] <> "before" | out[2] <> "after" then do
+  errors = errors + 1
+  say "REXXSCRIPT SIGNAL output failed:" out[0] out[1] out[2]
+end
+
+runner_a = .rexxscriptevaluator()
+runner_b = .rexxscriptevaluator()
+result_a = runner_a.evaluate("value = 'A'; say 'alpha'", 0)
+result_b = runner_b.evaluate("value = 'B'; say 'bravo'; say value", 0)
+out_a = runner_a.output()
+out_b = runner_b.output()
+
+if result_a[1] <> "OK" | result_b[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance status failed:" result_a[1] result_b[1]
+end
+
+if runner_a.value("value") <> "A" | runner_b.value("value") <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance value failed:" runner_a.value("value") runner_b.value("value")
+end
+
+if out_a[0] <> 1 | out_a[1] <> "alpha" | out_b[0] <> 2 | out_b[1] <> "bravo" | out_b[2] <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance output failed:" out_a[0] out_a[1] out_b[0] out_b[1] out_b[2]
+end
+
+last_out = rexxscript_output()
+if last_out[0] <> 2 | last_out[1] <> "bravo" | last_out[2] <> "B" | rexxscript_value("VALUE") <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT last-result facade after instance failed:" last_out[0] last_out[1] last_out[2] rexxscript_value("VALUE")
+end
+
+result_a = runner_a.evaluate("say 'second'; value2 = 'C'", 0)
+out_a = runner_a.output()
+if result_a[1] <> "OK" | out_a[0] <> 1 | out_a[1] <> "second" | runner_a.value("value") <> "" | runner_a.value("value2") <> "C" then do
+  errors = errors + 1
+  say "REXXSCRIPT instance reset failed:" result_a[1] out_a[0] out_a[1] runner_a.value("value") runner_a.value("value2")
+end
+
+result = runner_a.evaluate("say 'before error'; x = substr('abc', 0)", 0)
+out = runner_a.output()
+if pos("RXC-LC-40.14", result[1]) = 0 | out[0] <> 1 | out[1] <> "before error" then do
+  errors = errors + 1
+  say "REXXSCRIPT error output failed:" result[1] out[0] out[1]
+end
+
+result = runner_a.evaluate("say 'after error'; y = 5", 0)
+out = runner_a.output()
+if result[1] <> "OK" | out[0] <> 1 | out[1] <> "after error" | runner_a.value("x") <> "" | runner_a.value("y") <> "5" then do
+  errors = errors + 1
+  say "REXXSCRIPT reset after error failed:" result[1] out[0] out[1] runner_a.value("x") runner_a.value("y")
+end
+
+result = rexxscript_evaluate("say 'before'; goto done; say 'bad'; done:; say 'after'", 0)
+out = rexxscript_output()
+if result[1] <> "OK" | out[0] <> 2 | out[1] <> "before" | out[2] <> "after" then do
+  errors = errors + 1
+  say "REXXSCRIPT GOTO alias failed:" result[1] out[0] out[1] out[2]
+end
+
+result = rexxscript_evaluate("signal missing", 0)
+if pos("undefined label", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT undefined label failed:" result[1]
+end
+
+result = rexxscript_evaluate("done:; done:; say 'bad'", 0)
+if pos("duplicate label", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT duplicate label failed:" result[1]
+end
+
+result = rexxscript_evaluate("x = substr('abc', 2, 4, '.') || ':' || right('7', 3, '0') || ':' || space('a  b', 0) || ':' || datatype('12.3', 'N') || ':' || max(4, 9, 2)", 0)
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF status failed:" result[1]
+end
+
+if rexxscript_value("x") <> "bc..:007:ab:1:9" then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF value failed:" rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("x = abbrev('PRINT','PRI') || ':' || copies('ab',3) || ':' || verify('1Z3','1234567890') || ':' || word('Now is the time',3) || ':' || words('Now is the time') || ':' || abs('-12.5') || ':' || sign('-0.307') || ':' || min(4,-1,9) || ':' || upper('Mixed') || ':' || lower('Mixed') || ':' || length(substr('abcdef',2,3))", 0)
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT expanded BIF status failed:" result[1]
+end
+
+if rexxscript_value("x") <> "1:ababab:2:the:4:12.5:-1:-1:MIXED:mixed:3" then do
+  errors = errors + 1
+  say "REXXSCRIPT expanded BIF value failed:" rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("x = wordpos('brown fox', 'the quick brown fox') || ':' || lastpos('a', 'banana') || ':' || changestr('a', 'banana', 'X') || ':' || countstr('ana', 'banana') || ':' || translate('abc', '123', 'abc') || ':' || delstr('abcdef', 2, 2) || ':' || insert('X', 'abc', 2) || ':' || overlay('XY', 'abcdef', 2) || ':' || delword('one two three', 2, 1)", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> "3:6:bXnXnX:1:123:adef:abXc:aXYdef:one three" then do
+  errors = errors + 1
+  say "REXXSCRIPT string BIF status/value failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("collect 'one'; say 'finished'; collect 2", 0)
+if result[1] <> "OK" | result[2] <> "1" | result[3] <> "finished" | result[4] <> "__REXXSCRIPT_COLLECT__" | result[5] <> "2" | result[6] <> "one" | result[7] <> "2" then do
+  errors = errors + 1
+  say "REXXSCRIPT COLLECT/raw result failed:" result[1] result[2] result[3] result[4] result[5] result[6] result[7]
+end
+
+result = rexxscript_evaluate("d = date(); t = time(); u = time('UTC')", 0)
+if result[1] <> "OK" | rexxscript_value("d") = "" | rexxscript_value("t") = "" | rexxscript_value("u") = "" then do
+  errors = errors + 1
+  say "REXXSCRIPT DATE/TIME failed:" result[1] rexxscript_value("d") rexxscript_value("t") rexxscript_value("u")
+end
+
+result = rexxscript_evaluate("x = substr('abc', 0)", 0)
+if pos("RXC-LC-40.14", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF error failed:" result[1]
+end
+
+result = rexxscript_evaluate("x = not_allowed(substr('abc', 0))", 0)
+if pos("undefined function not_allowed", lower(result[1])) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT intrinsic allow-list failed:" result[1]
+end
+
+/* RexxScript streams are evaluator-local and retain one cursor per filename. */
+input_file = "rexxscript_lineio_input.tmp"
+output_file = "rexxscript_lineio_output.tmp"
+call eraseFile input_file
+call lineout input_file, "alpha"
+call lineout input_file, "beta"
+call lineout input_file
+
+runner = .rexxscriptevaluator()
+result = runner.evaluate("p = lines('" || input_file || "'); a = linein('" || input_file || "'); q = lines('" || input_file || "'); b = linein('" || input_file || "'); r = lines('" || input_file || "'); c = linein('" || input_file || "'); e = lines('" || input_file || "')", 0)
+if result[1] <> "OK" | runner.value("p") <> "1" | runner.value("a") <> "alpha" | runner.value("q") <> "1" | runner.value("b") <> "beta" | runner.value("r") <> "0" | runner.value("c") <> "" | runner.value("e") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEIN/LINES cursor failed:" result[1] runner.value("p") runner.value("a") runner.value("q") runner.value("b") runner.value("r") runner.value("c") runner.value("e")
+end
+
+/* Reset closes the old stream, so a new evaluation starts at the beginning. */
+result = runner.evaluate("a = linein('" || input_file || "')", 0)
+if result[1] <> "OK" | runner.value("a") <> "alpha" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEIN reset failed:" result[1] runner.value("a")
+end
+
+result = runner.evaluate("r = lineout('" || output_file || "', 'one'); r = lineout('" || output_file || "', 'two'); call lineout('" || output_file || "')", 0)
+if result[1] <> "OK" | runner.value("r") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEOUT status failed:" result[1] runner.value("r")
+end
+
+written = readLines(output_file)
+if written[0] <> 2 | written[1] <> "one" | written[2] <> "two" then do
+  errors = errors + 1
+  say "REXXSCRIPT LINEOUT content failed:" written[0] written[1] written[2]
+end
+result = runner.evaluate("r = eraseFile('" || output_file || "')", 0)
+if result[1] <> "OK" | runner.value("r") <> "0" then do
+  errors = errors + 1
+  say "REXXSCRIPT ERASEFILE status failed:" result[1] runner.value("r")
+end
+written = readLines(output_file)
+if written[0] <> 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT ERASEFILE content failed:" written[0]
+end
+call eraseFile input_file
+call eraseFile output_file
+
+if errors = 0 then say "PASS: RexxScript runtime"
+else say "FAIL: RexxScript runtime" errors
+
+return errors <> 0

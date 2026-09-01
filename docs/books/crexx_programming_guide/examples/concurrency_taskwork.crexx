@@ -1,0 +1,47 @@
+options levelg comments_dash
+namespace concurrency_taskwork
+
+adderwork: class implements .taskwork
+  _delta = .int
+
+  *: factory
+    arg delta = .int
+    _delta = delta
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.null_value()
+    return .channelvalue.integer_value(request.as_integer() + _delta)
+
+run_one: procedure = .int
+  arg pool = .taskpool, delta = .int, input = .int
+
+  target = task .adderwork(delta)
+  scope = .taskscope.collectall(pool, 60000)
+  child = scope.submit(target, .channelvalue.integer_value(input))
+  completion = child.wait(-1)
+
+  if completion.succeeded() = 0 then do
+    call scope.abort(.channelvalue.string_value("taskwork failed"))
+    return 1
+  end
+
+  answer = completion.value().as_integer()
+  call scope.finish()
+  if answer <> 42 then return 2
+  return 0
+
+main: procedure = .int
+  local_pool = .taskpool.local(1, 4)
+  local_error = run_one(local_pool, 2, 40)
+  call local_pool.close()
+  if local_error <> 0 then return 10 + local_error
+
+  process_pool = .taskpool.process(1, 4)
+  process_error = run_one(process_pool, 3, 39)
+  call process_pool.close()
+  if process_error <> 0 then return 20 + process_error
+
+  say "PASS: advanced taskwork example"
+  return 0

@@ -1,0 +1,1404 @@
+options levelb comments_dash
+
+import data_KeyDB
+import rxfnsb
+
+namespace data_MetaCatalog expose MetaCatalog
+
+catalog = .MetaCatalog()
+
+rc = catalog.open("metaRexx.db")
+say "open:" rc
+
+if rc < 0 then return rc
+
+
+
+/* ================================================================= */
+/* TEST: Build small application metadata catalog                    */
+/* ================================================================= */
+
+say
+say "=== BUILD APPLICATION CATALOG ==="
+/* -------------------------------------------------------------------
+ * Build a small application metadata catalog
+ *
+ * This example models a small RexxScript application and some of
+ * the software members on which it depends.
+ *
+ * The important point is that every entity is simply a catalog
+ * member. A member may be a RexxScript, BIF, class, method,
+ * interface, or anything else we decide to describe.
+ *
+ * The example represents this structure:
+ *
+ *  myRexx
+ *     |
+ *     +-- uses BIF ----------> POS
+ *     +-- uses BIF ----------> UPPER
+ *     |
+ *     +-- uses class --------> .Customer
+ *                                 |
+ *                                 +-- has method
+ *                                 |      |
+ *                                 |      v
+ *                                 |  .Customer.validate
+ *                                 |      |
+ *                                 |      +-- uses class --> .Address
+ *                                 |                         |
+ *                                 |                         +-- has method
+ *                                 |                         |   .Address.normalize
+ *                                 |                         |
+ *                                 |                         +-- implements
+ *                                 |                              .Printable
+ *                                 |
+ *                                 +-- implements
+ *                                      .Validatable
+ *
+ * Later we will use the reverse references to answer questions
+ * such as:
+ *
+ *  "If .Address changes, which higher-level members may be
+ *   affected?"
+ *
+ * The expected reverse path is:
+ *
+ *  .Address
+ *     <- .Customer.validate
+ *     <- .Customer
+ *     <- myRexx
+ *
+ * No source scanner is involved in this example. The catalog is
+ * populated explicitly so that we can first demonstrate the
+ * member/reference model and dependency traversal.
+ * ------------------------------------------------------------------
+ */
+
+
+/* ================================================================= */
+/* RexxScript: myRexx                                                */
+/* ================================================================= */
+
+rc = catalog.addMember( ,
+    "myRexx", ,
+    "C:\sources\myRexx.rexx", ,
+    "myRexx_meta.rexx", ,
+    "rexxscript")
+
+say "Add member myRexx:" rc
+
+
+/* ----------------------------------------------------------------- */
+/* POS                                                               */
+/* ----------------------------------------------------------------- */
+
+rc = catalog.addMember( ,
+    "POS", ,
+    "", ,
+    "", ,
+    "bif")
+
+say "Add member POS:" rc
+
+rc = catalog.LinkMembers( ,
+    "myRexx", ,
+    "POS", ,
+    "uses-bif", ,
+    "is-used-by")
+
+say "Link myRexx with POS:" rc
+
+
+rc = catalog.LinkMembers( ,
+    "myRexx", ,
+    "POS-dummy", ,
+    "uses-bif", ,
+    "is-used-by")
+
+say "Link myRexx with POS-dummy:" rc
+
+rc = catalog.LinkMembers( ,
+    "myRexx", ,
+    "POS_any", ,
+    "uses-bif", ,
+    "is-used-by")
+
+say "Link myRexx with POS-any:" rc
+
+
+/* ----------------------------------------------------------------- */
+/* UPPER                                                             */
+/* ----------------------------------------------------------------- */
+
+rc = catalog.addMember( ,
+    "UPPER", ,
+    "", ,
+    "", ,
+    "bif")
+
+say "Add member UPPER:" rc
+
+rc = catalog.LinkMembers( ,
+    "myRexx", ,
+    "UPPER", ,
+    "uses-bif", ,
+    "is-used-by")
+
+say "Link myRexx with UPPER:" rc
+
+
+/* ----------------------------------------------------------------- */
+/* .Customer                                                         */
+/* ----------------------------------------------------------------- */
+
+rc = catalog.addMember( ,
+    ".Customer", ,
+    "C:\sources\Customer.crexx", ,
+    "Customer_meta.rexx", ,
+    "class")
+
+say "Add member .Customer:" rc
+
+rc = catalog.LinkMembers( ,
+    "myRexx", ,
+    ".Customer", ,
+    "uses-class", ,
+    "is-used-by")
+
+say "Link myRexx with .Customer:" rc
+
+
+/* ----------------------------------------------------------------- */
+/* .Customer.validate                                                */
+/* ----------------------------------------------------------------- */
+
+rc = catalog.addMember( ,
+    ".Customer.validate", ,
+    "C:\sources\Customer.crexx", ,
+    "Customer_validate_meta.rexx", ,
+    "method")
+
+say "Add member .Customer.validate:" rc
+
+rc = catalog.LinkMembers( ,
+    ".Customer", ,
+    ".Customer.validate", ,
+    "has-method", ,
+    "method-of")
+
+say "Link .Customer with .Customer.validate:" rc
+
+
+/* ----------------------------------------------------------------- */
+/* .Address                                                          */
+/* ----------------------------------------------------------------- */
+
+rc = catalog.addMember( ,
+    ".Address", ,
+    "C:\sources\Address.crexx", ,
+    "Address_meta.rexx", ,
+    "class")
+
+say "Add member .Address:" rc
+
+rc = catalog.LinkMembers( ,
+    ".Customer.validate", ,
+    ".Address", ,
+    "uses-class", ,
+    "is-used-by")
+
+say "Link .Customer.validate with .Address:" rc
+
+/* ================================================================= */
+/* At this point the catalog contains both members and relationships.*/
+/*                                                                   */
+/* Two useful queries can now demonstrate the concept:               */
+/*                                                                   */
+/* Forward navigation:                                               */
+/*                                                                   */
+/*     Starting with myRexx, what does it depend on?                 */
+/*                                                                   */
+/* Reverse / impact navigation:                                      */
+/*                                                                   */
+/*     Starting with .Address, which members ultimately depend       */
+/*     on it?                                                        */
+/*                                                                   */
+/* The second query should be able to discover the path:             */
+/*                                                                   */
+/*     .Address                                                      */
+/*        <- .Customer.validate                                     */
+/*        <- .Customer                                              */
+/*        <- myRexx                                                 */
+/*                                                                   */
+/* No source parsing is necessary to demonstrate this. The scanner   */
+/* would only be a future mechanism for automatically populating     */
+/* exactly this catalog information.                                 */
+/* ================================================================= */
+
+bom = catalog.billOfMaterial("myRexx")
+i = .int
+
+say "--- BILL OF MATERIAL ---"
+do i = 1 to bom[0]
+  say bom[i]
+end
+
+bom = catalog.billOfMaterial("myRexx",'BIf')
+say "--- BILL OF MATERIAL only  bifs ---"
+do i = 1 to bom[0]
+  say bom[i]
+end
+
+
+impact = catalog.impactAnalysis("translate")
+
+hdr="IMPACT ANALYSIS of "impact[1]
+say
+say hdr
+say copies('-',length(hdr))
+do i = 1 to impact[0]
+  say impact[i]
+end
+
+impact = catalog.impactAnalysis("translate","CLass")
+
+hdr="IMPACT ANALYSIS of "impact[1]' only classes'
+say
+say hdr
+say copies('-',length(hdr))
+do i = 1 to impact[0]
+  say impact[i]
+end
+
+
+members = catalog.listMembers("")
+
+say " "
+say 'Member                            Used-By Member-Type'
+say '--------------------------------  ------- -----------'
+do i = 1 to members[0]
+  say members[i]
+end
+
+members = catalog.listMembers("bif")
+say " "
+say 'Member                            Used-By Member-Type'
+say '--------------------------------  ------- -----------'
+
+do i = 1 to members[0]
+  say members[i]
+end
+
+dependencies = catalog.listDependencies("myRexx")
+say " "
+say "--- DIRECT DEPENDENCIES OF myRexx ---"
+do i = 1 to dependencies[0]
+  say dependencies[i]
+end
+
+dummies = catalog.listDummyMembers()
+say " "
+say "--- DUMMY MEMBERS ---"
+do i = 1 to dummies[0]
+  say dummies[i]
+end
+
+typeCounts = catalog.countByType()
+say " "
+say "--- MEMBER COUNTS BY TYPE ---"
+do i = 1 to typeCounts[0]
+  say typeCounts[i]
+end
+
+
+return 0
+
+/* ================================================================= */
+/* MetaCatalog class                                                 */
+/* ================================================================= */
+
+MetaCatalog: class
+
+  catalog_     = .KeyDB
+  catalogFile_ = .string
+  echo         = .int
+
+
+  /**
+   * Create a closed metadata catalog object.
+   */
+  *: factory
+    catalog_ = .KeyDB()
+    catalogFile_ = ""
+    echo=1
+    return
+
+
+  /**
+   * Open or create a metadata catalog.
+   *
+   * @param filename Catalog database filename.
+   * @return .int Native KeyDB handle or negative error code.
+   */
+  open: method = .int
+    arg filename = .string
+
+    catalogFile_ = filename
+
+    return catalog_.open(filename, "w+")
+
+
+  /**
+   * Close the metadata catalog.
+   *
+   * @return .int Status code.
+   */
+  close: method = .int
+    return catalog_.close()
+
+
+  /**
+   * Return 1 if the catalog is open.
+   *
+   * @return .int 1 if open, otherwise 0.
+   */
+  isOpen: method = .int
+    return catalog_.isOpen()
+
+/**
+ * Register or replace a logical type in the catalog.
+ *
+ * This method manages only the canonical type entry:
+ *
+ *   type:<logicalName>
+ *
+ * Relationships are maintained independently through
+ * addRelationship(), removeReference(), and hasReference().
+ *
+ * @param logicalName Canonical logical type name, including leading dot.
+ * @param sourceFile Original cREXX source file.
+ * @param metaSourceFile Generated metadata source file.
+ * @param metaClassName Generated metadata class name.
+ * @param isInterface 1 for an interface, otherwise 0.
+ * @return .int 0 on success, otherwise KeyDB status code.
+ */
+addMember: method = .int
+    arg logicalName = .string, ,
+        sourceFile = .string, ,
+        metaSourceFile = .string, ,
+        metaClassName = .string
+
+
+    typeKey = .string
+    oldRecord = .string
+    kind = metaClassName
+    record = .string
+    rc = .int
+
+    if logicalName = "" then return -1
+    if catalog_.isOpen() = 0 then return -1
+
+    typeKey = "type:" || logicalName
+
+    /*
+     * Build canonical type record.
+     */
+    record = makeTypeRecord( ,
+        sourceFile, ,
+        metaSourceFile, ,
+        metaClassName, ,
+        kind)
+
+    /*
+     * Check whether this type already exists.
+     */
+    oldRecord = catalog_.get(typeKey)
+
+    rc = catalog_.begin()
+    if rc <> 0 then return rc
+
+    /*
+     * Replace previous canonical entry if present.
+     */
+    if oldRecord <> "NOT_FOUND" then do
+
+      if oldRecord = "ERROR" then do
+        call catalog_.rollback()
+        return -1
+      end
+
+      rc = catalog_.remove(typeKey)
+
+      if rc <> 0 then do
+        call catalog_.rollback()
+        return rc
+      end
+
+    end
+
+    /*
+     * Store new canonical type entry.
+     */
+    rc = catalog_.put(typeKey, record)
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    rc = catalog_.commit()
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    return 0
+
+  /**
+   * Link two catalog members using forward and reverse relationships.
+   *
+   * @param memberFrom Source member of the forward relationship.
+   * @param memberTo Target member of the forward relationship.
+   * @param forwardRelation Relationship from MEMBERFROM to MEMBERTO.
+   * @param reverseRelation Relationship from MEMBERTO to MEMBERFROM.
+   * @return .int 0 on success, otherwise catalog status code.
+   */
+  linkMembers: method = .int
+    arg memberFrom = .string, ,
+        memberTo = .string, ,
+        forwardRelation = .string, ,
+        reverseRelation = .string
+
+    rc = .int
+
+    if memberFrom = "" then return -1
+    if memberTo = "" then return -1
+    if forwardRelation = "" then return -1
+    if reverseRelation = "" then return -1
+    if catalog_.isOpen() = 0 then return -1
+    if catalog_.containsKey("type:" || memberFrom) = 0 then return -1
+
+    /*
+     * Keep unresolved targets visible to normal catalog queries.  A later
+     * addMember() call can replace this minimal record with real metadata.
+     */
+    if catalog_.containsKey("type:" || memberTo) = 0 then do
+        rc = addMember(memberTo, "", "", "dummy")
+        if rc <> 0 then return rc
+    end
+
+    rc = addRelationship(forwardRelation, memberFrom, memberTo)
+    if rc <> 0 then return rc
+
+    rc = addRelationship(reverseRelation, memberTo, memberFrom)
+    if rc <> 0 then return rc
+
+    return 0
+
+  /**
+   * Test whether a logical type exists in the catalog.
+   *
+   * @param logicalName Canonical logical type name.
+   * @return .int 1 if registered, otherwise 0.
+   */
+  containsType: method = .int
+    arg logicalName = .string
+
+    if catalog_.isOpen() = 0 then return 0
+
+    return catalog_.containsKey("type:" || logicalName)
+
+
+  /**
+   * Return the raw canonical catalog record for a logical type.
+   *
+   * @param logicalName Canonical logical type name.
+   * @return .string Catalog record, NOT_FOUND, or ERROR.
+   */
+  getType: method = .string
+    arg logicalName = .string
+
+    if catalog_.isOpen() = 0 then return "ERROR"
+
+    return catalog_.get("type:" || logicalName)
+
+
+  /**
+   * Test whether a generic forward relationship exists.
+   *
+   * Relationship names are catalog data. Examples:
+   *
+   *   implements
+   *   extends
+   *   uses
+   *
+   * @param relation Relationship type.
+   * @param logicalFrom Referencing logical type.
+   * @param logicalTo Referenced logical type.
+   * @return .int 1 if the relationship exists, otherwise 0.
+   */
+  hasReference: method = .int
+    arg relation = .string, ,
+        logicalFrom = .string, ,
+        logicalTo = .string
+
+    referenceKey = .string
+
+    if relation = "" then return 0
+    if logicalFrom = "" then return 0
+    if logicalTo = "" then return 0
+    if catalog_.isOpen() = 0 then return 0
+
+    referenceKey = ,
+        makeReferenceKey( ,
+            relation, ,
+            logicalFrom, ,
+            logicalTo)
+
+    return catalog_.containsKey(referenceKey)
+
+
+  /**
+   * Remove a type and the forward IMPLEMENTS references currently
+   * recorded by its canonical type entry.
+   *
+   * The reference subsystem itself is generic. The current metadata
+   * record contains only implemented-interface relationships, so
+   * those are the references currently owned and cleaned here.
+   *
+   * References pointing to this type from other catalog entries are
+   * deliberately not maintained as reverse references.
+   *
+   * @param logicalName Canonical logical type name.
+   * @return .int 0 on success, otherwise KeyDB status code.
+   */
+  removeType: method = .int
+    arg logicalName = .string
+
+    typeKey = .string
+    record = .string
+    oldInterfaceNames = .string[]
+    referenceKey = .string
+    rc = .int
+    i = .int
+
+    if logicalName = "" then return -1
+    if left(logicalName, 1) <> "." then return -1
+    if catalog_.isOpen() = 0 then return -1
+
+    typeKey = "type:" || logicalName
+
+    record = catalog_.get(typeKey)
+
+    if record = "NOT_FOUND" then return 0
+    if record = "ERROR" then return -1
+
+
+    /*
+     * Recover the currently owned IMPLEMENTS relationships.
+     */
+    oldInterfaceNames = getRecordInterfaces(record)
+
+
+    rc = catalog_.begin()
+
+    if rc <> 0 then return rc
+
+
+    /*
+     * Remove owned IMPLEMENTS references.
+     */
+    do i = 1 to oldInterfaceNames[0]
+
+      referenceKey = ,
+          makeReferenceKey( ,
+              "implements", ,
+              logicalName, ,
+              oldInterfaceNames[i])
+
+      if catalog_.containsKey(referenceKey) = 1 then do
+
+        rc = catalog_.remove(referenceKey)
+
+        if rc <> 0 then do
+          call catalog_.rollback()
+          return rc
+        end
+
+      end
+
+    end
+
+
+    /*
+     * Remove the canonical type entry.
+     */
+    rc = catalog_.remove(typeKey)
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+
+    rc = catalog_.commit()
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    return 0
+
+
+  /**
+   * Build a generic forward relationship key.
+   *
+   * Format:
+   *
+   *   ref:<relation>:<logical-from>:<logical-to>
+   *
+   * Examples:
+   *
+   *   ref:implements:.MyClass:.ObjectPrintable
+   *   ref:extends:.Child:.Parent
+   *   ref:uses:.Parser:.Tokenizer
+   *
+   * @param relation Relationship type.
+   * @param logicalFrom Referencing logical type.
+   * @param logicalTo Referenced logical type.
+   * @return .string Catalog relationship key.
+   */
+  makeReferenceKey: method = .string
+    arg relation = .string, ,
+        logicalFrom = .string, ,
+        logicalTo = .string
+
+    return "ref:" || ,
+           lower(relation) || ":" || ,
+           logicalFrom || ":" || ,
+           logicalTo
+
+
+  /**
+   * Build a canonical type record.
+   *
+   * Current private record format:
+   *
+   *   source|metaSource|metaClass|kind|interface1,interface2,...
+   *
+   * NOTE:
+   *
+   * The reference key mechanism is generic, but the canonical type
+   * record currently contains only implemented interfaces because
+   * that is the only relationship exposed by generated metadata.
+   *
+   * @param sourceFile Original cREXX source file.
+   * @param metaSourceFile Generated metadata source file.
+   * @param metaClassName Generated metadata class name.
+   * @param kind "class" or "interface".
+   * @param interfaceNames Implemented logical interface names.
+   * @return .string Encoded canonical catalog record.
+   */
+  makeRecord: method = .string
+    arg sourceFile = .string, ,
+        metaSourceFile = .string, ,
+        metaClassName = .string, ,
+        kind = .string, ,
+        interfaceNames = .string[]
+
+    interfaceList = .string
+    i = .int
+
+    interfaceList = ""
+
+    do i = 1 to interfaceNames[0]
+
+      if i > 1 then
+        interfaceList = interfaceList || ","
+
+      interfaceList = interfaceList || interfaceNames[i]
+
+    end
+
+    return sourceFile || "|" || ,
+           metaSourceFile || "|" || ,
+           metaClassName || "|" || ,
+           kind || "|" || ,
+           interfaceList
+
+
+  /**
+   * Extract the implemented-interface list from a canonical
+   * type record.
+   *
+   * @param record Encoded canonical catalog record.
+   * @return .string[] Logical interface names.
+   */
+  getRecordInterfaces: method = .string[]
+    arg record = .string
+
+    result = .string[]
+    rest = .string
+    interfaceList = .string
+    interfaceName = .string
+    separator = .int
+    i = .int
+
+    rest = record
+
+
+    /*
+     * Skip the first four fields:
+     *
+     *   source
+     *   metadata source
+     *   metadata class
+     *   kind
+     */
+    do i = 1 to 4
+
+      separator = pos("|", rest)
+
+      if separator = 0 then return result
+
+      rest = substr(rest, separator + 1)
+
+    end
+
+
+    interfaceList = strip(rest)
+
+
+    /*
+     * Parse comma-separated logical interface names.
+     */
+    do while interfaceList <> ""
+
+      separator = pos(",", interfaceList)
+
+      if separator = 0 then do
+
+        interfaceName = strip(interfaceList)
+        interfaceList = ""
+
+      end
+      else do
+
+        interfaceName = ,
+            strip(substr(interfaceList, 1, separator - 1))
+
+        interfaceList = ,
+            strip(substr(interfaceList, separator + 1))
+
+      end
+
+
+      if interfaceName <> "" then
+        result[result[0] + 1] = interfaceName
+
+    end
+
+    return result
+
+  addRelationship: method = .int
+    arg referenceType = .string, ,
+        logicalFrom = .string, ,
+        logicalTo = .string
+
+    referenceKey = .string
+    rc = .int
+
+    if referenceType = "" then return -1
+    if logicalFrom = "" then return -1
+    if logicalTo = "" then return -1
+    if catalog_.isOpen() = 0 then return -1
+
+    referenceKey = makeReferenceKey( ,
+        referenceType, ,
+        logicalFrom, ,
+        logicalTo)
+
+    rc = catalog_.begin()
+    if rc <> 0 then return rc
+
+    rc = catalog_.put(referenceKey, "1")
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    rc = catalog_.commit()
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    return 0
+
+/**
+ * Remove a reference from the catalog.
+ *
+ * @return .int 0 reference removed,
+ *              4 reference was not present,
+ *              negative value on error.
+ */
+
+  removeReference: method = .int
+    arg referenceType = .string, ,
+        logicalFrom = .string, ,
+        logicalTo = .string
+
+    referenceKey = .string
+    rc = .int
+
+    if referenceType = "" then return -1
+    if logicalFrom = "" then return -1
+    if logicalTo = "" then return -1
+    if catalog_.isOpen() = 0 then return -1
+
+    referenceKey = makeReferenceKey( ,
+        referenceType, ,
+        logicalFrom, ,
+        logicalTo)
+
+    /*
+     * Removing a reference which does not exist is successful.
+     */
+    if catalog_.containsKey(referenceKey) = 0 then return 4
+
+    rc = catalog_.begin()
+    if rc <> 0 then return rc
+
+    rc = catalog_.remove(referenceKey)
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    rc = catalog_.commit()
+
+    if rc <> 0 then do
+      call catalog_.rollback()
+      return rc
+    end
+
+    return 0
+
+    /**
+     * Build a canonical type record.
+     *
+     * Current private record format:
+     *
+     *   source|metaSource|metaClass|kind
+     *
+     * References are deliberately not stored in the type record.
+     *
+     * @param sourceFile Original cREXX source file.
+     * @param metaSourceFile Generated metadata source file.
+     * @param metaClassName Generated metadata class name.
+     * @param kind "class" or "interface".
+     * @return .string Encoded canonical type record.
+     */
+    makeTypeRecord: method = .string
+      arg sourceFile = .string, ,
+          metaSourceFile = .string, ,
+          metaClassName = .string, ,
+          kind = .string
+
+      return sourceFile || "|" || ,
+             metaSourceFile || "|" || ,
+             metaClassName || "|" || ,
+             kind
+
+/* ================================================================= */
+/* Bill of Material                                                  */
+/*                                                                   */
+/* Starting with MEMBER, recursively walk all forward relationships  */
+/* and build a textual BOM.                                          */
+/* ================================================================= */
+
+billOfMaterial: method = .string[]
+    arg member = .string, memberType = ""
+
+    result = .string[]
+    visited = .string[]
+    resolvedMember = resolveMemberName(member)
+
+    if echo=1 then do
+       say
+       say "============================================================="
+       say "Echo Command: billOfMaterial( "|| member||","memberType")"
+      say "============================================================="
+    end
+
+    if resolvedMember <> "" then
+        member = resolvedMember
+
+    call bomWalk(member, 0, result, visited)
+    if memberType <> "" then do
+       filteredList = .string[]
+       memberType = lower(memberType)
+       filteredList[1] = result[1]  /* First entry must remain it is the starting member name. */
+       do i = 2 to result[0]
+          if pos("["memberType"]", result[i])=0 then iterate
+          filteredList[filteredList[0] + 1] = result[i]
+       end
+       return filteredList
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* Recursive BOM walker                                              */
+/* ================================================================= */
+
+bomWalk: method = .void
+    arg member = .string, ,
+        level = .int, ,
+        expose result = .string[], ,
+        visited = .string[]
+
+    call bomWalkEdge(member, level, "", result, visited)
+    return
+
+
+bomWalkEdge: method = .void
+    arg member = .string, ,
+        level = .int, ,
+        relation = .string, ,
+        expose result = .string[], ,
+        visited = .string[]
+
+    if alreadyVisited(member, visited) then return
+
+    call markVisited(member, visited)
+    call addBomEntry(result, level, member, relation)
+
+    references = findForwardReferences(member)
+    do i = 1 to references[0]
+        edge = references[i]
+        separator = pos("|", edge)
+        relation = substr(edge, 1, separator - 1)
+        target = substr(edge, separator + 1)
+        call bomWalkEdge(target, level + 1, relation, result, visited)
+    end
+
+    return
+
+
+/* ================================================================= */
+/* Find active forward references whose source is MEMBER.             */
+/* ================================================================= */
+
+findForwardReferences: method = .string[]
+    arg member = .string
+
+    result = .string[]
+    referenceKeys = catalog_.findkeys("ref:", "ONLY")
+    referenceKey = .string
+    rest = .string
+    separator = .int
+    relation = .string
+    logicalFrom = .string
+    logicalTo = .string
+
+    do i = 1 to referenceKeys[0]
+        referenceKey = referenceKeys[i]
+        rest = substr(referenceKey, 5)
+
+        /* Skip the relation field. */
+        separator = pos(":", rest)
+        if separator <> 0 then do
+            relation = substr(rest, 1, separator - 1)
+            rest = substr(rest, separator + 1)
+
+            /* Extract the logical source and target fields. */
+            separator = pos(":", rest)
+            if separator <> 0 then do
+                logicalFrom = substr(rest, 1, separator - 1)
+                logicalTo = substr(rest, separator + 1)
+
+                if logicalFrom = member & ,
+                   (relation = "uses-bif" | ,
+                    relation = "uses-class" | ,
+                    relation = "has-method" | ,
+                    relation = "implements") then
+                    result[result[0] + 1] = relation || "|" || logicalTo
+            end
+        end
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* Build the reverse BOM: members which depend on MEMBER.             */
+/* ================================================================= */
+
+impactAnalysis: method = .string[]
+    arg member = .string, memberType = ""
+
+    result = .string[]
+    visited = .string[]
+    resolvedMember = resolveMemberName(member)
+
+    if resolvedMember <> "" then
+        member = resolvedMember
+
+    if echo=1 then do
+       say
+       say "============================================================="
+       say "Echo Command: impactAnalysis( "|| member||","memberType")"
+       say "============================================================="
+    end
+
+    call impactWalk(member, 0, result, visited)
+    if memberType <> "" then do
+       filteredList = .string[]
+       memberType = lower(memberType)
+       filteredList[1] = result[1]  /* First entry must remain it is the starting member name. */
+       do i = 2 to result[0]
+          if pos("["memberType"]", result[i])=0 then iterate
+          filteredList[filteredList[0] + 1] = result[i]
+       end
+       return filteredList
+    end
+    return result
+
+
+/* ================================================================= */
+/* Resolve a member name case-insensitively to its catalog spelling.   */
+/* ================================================================= */
+
+resolveMemberName: method = .string
+    arg member = .string
+
+    typeKeys = catalog_.findkeys("type:", "ONLY")
+
+    do i = 1 to typeKeys[0]
+        candidate = substr(typeKeys[i], 6)
+        if upper(candidate) = upper(member) then
+            return candidate
+    end
+
+    return ""
+
+
+/* ================================================================= */
+/* Recursively walk reverse relationships toward their sources.       */
+/* ================================================================= */
+
+impactWalk: method = .void
+    arg member = .string, ,
+        level = .int, ,
+        expose result = .string[], ,
+        visited = .string[]
+
+    call impactWalkEdge(member, level, "", result, visited)
+    return
+
+
+impactWalkEdge: method = .void
+    arg member = .string, ,
+        level = .int, ,
+        relation = .string, ,
+        expose result = .string[], ,
+        visited = .string[]
+
+    if alreadyVisited(member, visited) then return
+
+    call markVisited(member, visited)
+    call addBomEntry(result, level, member, relation)
+
+    references = findReverseReferences(member)
+    do i = 1 to references[0]
+        edge = references[i]
+        separator = pos("|", edge)
+        relation = substr(edge, 1, separator - 1)
+        target = substr(edge, separator + 1)
+        call impactWalkEdge(target, level + 1, relation, result, visited)
+    end
+
+    return
+
+
+/* ================================================================= */
+/* Find active references whose target is MEMBER.                      */
+/* ================================================================= */
+
+findReverseReferences: method = .string[]
+    arg member = .string
+
+    result = .string[]
+    referenceKeys = catalog_.findkeys("ref:", "ONLY")
+    referenceKey = .string
+    rest = .string
+    separator = .int
+    relation = .string
+    inverseRelation = .string
+    logicalFrom = .string
+    logicalTo = .string
+
+    do i = 1 to referenceKeys[0]
+        referenceKey = referenceKeys[i]
+        rest = substr(referenceKey, 5)
+
+        /* Skip the relation field. */
+        separator = pos(":", rest)
+        if separator <> 0 then do
+            relation = substr(rest, 1, separator - 1)
+            rest = substr(rest, separator + 1)
+
+            /* Extract the logical source and target fields. */
+            separator = pos(":", rest)
+            if separator <> 0 then do
+                logicalFrom = substr(rest, 1, separator - 1)
+                logicalTo = substr(rest, separator + 1)
+
+                /*
+                 * The sample stores inverse records as well.  Only
+                 * canonical forward relations describe dependencies;
+                 * otherwise an impact walk would immediately traverse
+                 * both directions of every mirrored relationship.
+                 */
+                if logicalTo = member & ,
+                   (relation = "uses-bif" | ,
+                    relation = "uses-class" | ,
+                    relation = "has-method" | ,
+                    relation = "implements") then
+                    do
+                        if relation = "has-method" then
+                            inverseRelation = "method-of"
+                        else if relation = "implements" then
+                            inverseRelation = "implemented-by"
+                        else
+                            inverseRelation = "is-used-by"
+
+                        result[result[0] + 1] = ,
+                            inverseRelation || "|" || logicalFrom
+                    end
+            end
+        end
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* List registered members and their incoming dependency counts.      */
+/*                                                                   */
+/* An empty MEMBERTYPE lists both classes and interfaces.              */
+/* ================================================================= */
+
+listMembers: method = .string[]
+    arg memberType = .string
+
+    result = .string[]
+    typeKeys = catalog_.findkeys("type:", "ONLY")
+    member = .string
+    record = .string
+    kind = .string
+    separator = .int
+    usage = .int
+    references = .string[]
+    requestedType = lower(strip(memberType))
+    summary= .stem()
+    summary. =0
+    i = .int
+
+    if echo=1 then do
+       say
+       say "============================================================="
+       say "Echo Command: ListMembers("memberType")"
+       say "============================================================="
+    end
+
+    do i = 1 to typeKeys[0]
+        member = substr(typeKeys[i], 6)
+        record = catalog_.get(typeKeys[i])
+
+        if record <> "NOT_FOUND" & record <> "ERROR" then do
+            separator = lastpos("|", record)
+            if separator <> 0 then do
+                kind = strip(substr(record, separator + 1))
+                kind = lower(kind)
+                if requestedType = "" | kind = requestedType then do
+                    references = findReverseReferences(member)
+                    usage = references[0]
+                    if length(member)<36 then member = left(member,32) || " "
+                    result[result[0] + 1] = member || "   " || ,
+                        right(usage,4,'0') || "  "|| left(kind,16)
+                    summary.kind=summary.kind+1
+                end
+
+            end
+        end
+    end
+
+    if result[0]=0 then return result
+
+    tails = summary.tails()
+    values = summary.values()
+    i=.int
+    result[result[0] + 1]=copies('-',48)
+    result[result[0] + 1]="    Summary "tails[1] "=" values[1]
+    do i = 2 to tails[0]
+       result[result[0] + 1]="            "tails[i] "=" values[i]
+    end
+    return result
+
+
+/* ================================================================= */
+/* List the direct forward dependencies of MEMBER.                    */
+/* ================================================================= */
+
+listDependencies: method = .string[]
+    arg member = .string
+
+    result = .string[]
+    resolvedMember = resolveMemberName(member)
+    references = .string[]
+    edge = .string
+    relation = .string
+    target = .string
+    separator = .int
+
+    if resolvedMember <> "" then
+        member = resolvedMember
+
+    references = findForwardReferences(member)
+    do i = 1 to references[0]
+        edge = references[i]
+        separator = pos("|", edge)
+        relation = substr(edge, 1, separator - 1)
+        target = substr(edge, separator + 1)
+        result[result[0] + 1] = "--" || relation || "--> " || ,
+            target || " [" || memberKind(target) || "]"
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* List members represented by minimal dummy records.                 */
+/* ================================================================= */
+
+listDummyMembers: method = .string[]
+    arg unused = ""
+
+    result = .string[]
+    typeKeys = catalog_.findkeys("type:", "ONLY")
+    member = .string
+    usageReferences = .string[]
+    usage = .int
+
+    do i = 1 to typeKeys[0]
+        member = substr(typeKeys[i], 6)
+        if memberKind(member) = "dummy" then do
+            usageReferences = findReverseReferences(member)
+            usage = usageReferences[0]
+            result[result[0] + 1] = member || " [dummy, references=" || usage || "]"
+        end
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* Count registered members by their stored member type.              */
+/* ================================================================= */
+
+countByType: method = .string[]
+    arg unused = ""
+
+    result = .string[]
+    typeKeys = catalog_.findkeys("type:", "ONLY")
+    counts = .stem()
+    counts. = 0
+    kind = .string
+    tails = .string[]
+    values = .string[]
+    i = .int
+
+    do i = 1 to typeKeys[0]
+        kind = memberKind(substr(typeKeys[i], 6))
+        counts.kind = counts.kind + 1
+    end
+
+    tails = counts.tails()
+    values = counts.values()
+    do i = 1 to tails[0]
+        result[result[0] + 1] = lower(tails[i]) || " = " || values[i]
+    end
+
+    return result
+
+
+/* ================================================================= */
+/* Return the stored type of a member, or UNKNOWN if it is absent.     */
+/* ================================================================= */
+
+memberKind: method = .string
+    arg member = .string
+
+    record = catalog_.get("type:" || member)
+    separator = lastpos("|", record)
+
+    if separator = 0 then return "unknown"
+    return lower(strip(substr(record, separator + 1)))
+
+
+/* ================================================================= */
+/* Test whether MEMBER has already been visited.                      */
+/* ================================================================= */
+
+alreadyVisited: method = .boolean
+    arg member = .string, visited = .string[]
+
+    do i = 1 to visited[0]
+        if visited[i] = member then return 1
+    end
+
+    return 0
+
+
+/* ================================================================= */
+/* Add MEMBER to the visited list.                                    */
+/* ================================================================= */
+
+markVisited: method
+    arg member = .string, expose visited = .string[]
+
+    visited[visited[0] + 1] = member
+    return
+
+
+/* ================================================================= */
+/* Add one member to the BOM result.                                  */
+/* ================================================================= */
+
+addBomEntry: method
+    arg expose result = .string[], level = .int, member = .string, relation = ""
+
+    indent = copies("  ", level)
+    record = catalog_.get("type:" || member)
+    separator = lastpos("|", record)
+
+    if separator <> 0 then
+        kind = lower(strip(substr(record, separator + 1)))
+    else
+        kind = "unknown"
+
+    if relation = "" then
+        entry = member || " [" || kind || "]"
+    else
+        entry = "--" || relation || "--> " || member || " [" || kind || "]"
+
+    result[result[0] + 1] = indent || entry
+    return

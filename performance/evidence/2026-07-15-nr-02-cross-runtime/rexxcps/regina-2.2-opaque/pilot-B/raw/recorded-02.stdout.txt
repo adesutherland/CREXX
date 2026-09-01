@@ -1,0 +1,9 @@
+----- REXXCPS 2.2-opaque -- Measuring REXX clauses/second -----
+ REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+       System is: UNIX
+        Averaged: 300 x 100 iterations of 1000 clauses (over 1.5s)
+
+     Performance: 20691953 REXX clauses per second
+
+OBSERVED: B|1|69|1.22694
+PASS: RexxCPS 2.2 Classic opaque/result-observation diagnostic

@@ -1,0 +1,22 @@
+Controlled build configuration
+
+Clang tree: /tmp/crexx-e4-linux-clang-control-release
+  C compiler: /usr/bin/clang
+  C++ compiler: /usr/bin/clang++
+  C/C++ Release flags: -O3 -DNDEBUG
+  build type: Release
+  handler panel: profile-20
+  VM profiling: OFF
+
+GCC tree: /tmp/crexx-e4-linux-gcc-control-comparison-release
+  C compiler: /usr/bin/gcc
+  C++ compiler: /usr/bin/g++
+  C/C++ Release flags: -O3 -DNDEBUG
+  build type: Release
+  handler panel: profile-20
+  VM profiling: OFF
+
+Both fresh builds use /tmp/crexx-e4-linux-control-src at
+295a6d886b33b161e57d71bc641970e394f58f66, Ninja, --parallel 6, and targets
+rxbvm rxtvm. See logs/control-*.time, logs/gcc-control-*.time and
+build-compiler-comparison.csv.

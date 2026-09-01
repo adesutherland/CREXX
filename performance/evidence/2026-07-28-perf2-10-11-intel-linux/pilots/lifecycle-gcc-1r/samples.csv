@@ -1,0 +1,9 @@
+runtime,vm,lifecycle,phase,sequence,elapsed_ns,correctness
+crexx,shared,compile-load-first-result,compile,1,147086000,pass
+crexx,shared,compile-load-first-result,assemble,1,9525000,pass
+crexx,rxvm,compile-load-first-result,load_first_result,1,2428000,pass
+crexx,rxbvm,compile-load-first-result,load_first_result,1,2099000,pass
+oorexx,oorexx,compile-load-first-result,translate,1,5441000,pass
+oorexx,oorexx,compile-load-first-result,load_first_result,1,5149000,pass
+netrexx,netrexx,compile-load-first-result,compile,1,1111603000,pass
+netrexx,netrexx,compile-load-first-result,load_first_result,1,30865000,pass

@@ -34,11 +34,9 @@ static uint64_t now_ms_snow(void) {
 /* ---------------- tiny mutex ---------------- */
 #if defined(_WIN32)
 #include <windows.h>
-static CRITICAL_SECTION g_lock;
-static int g_lock_inited = 0;
-static void lock_init(void){ if(!g_lock_inited){ InitializeCriticalSection(&g_lock); g_lock_inited=1; } }
-static void lock_enter(void){ if(!g_lock_inited) lock_init(); EnterCriticalSection(&g_lock); }
-static void lock_leave(void){ LeaveCriticalSection(&g_lock); }
+static SRWLOCK g_lock = SRWLOCK_INIT;
+static void lock_enter(void){ AcquireSRWLockExclusive(&g_lock); }
+static void lock_leave(void){ ReleaseSRWLockExclusive(&g_lock); }
 #else
 #include <pthread.h>
   static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -47,7 +45,7 @@ static void lock_leave(void){ LeaveCriticalSection(&g_lock); }
 #endif
 
 /* ---------------- state ---------------- */
-// static uint64_t g_last_ms = 0;   // defined somewhere else
+static uint64_t g_snowflake_last_ms = 0;
 static uint16_t g_node_id = 0xFFFF; /* means "unset / auto" */
 static uint16_t g_seq     = 0;
 
@@ -127,22 +125,23 @@ int snowflake_next_u64(uint64_t *out) {
     uint64_t rel = (ms >= SNOWFLAKE_EPOCH_MS) ? (ms - SNOWFLAKE_EPOCH_MS) : 0;
 
     /* If clock goes backward, pin to last_ms (monotonic) */
-    if (ms < g_last_ms) {
-        rel = (g_last_ms >= SNOWFLAKE_EPOCH_MS) ? (g_last_ms - SNOWFLAKE_EPOCH_MS) : 0;
-        ms = g_last_ms;
+    if (ms < g_snowflake_last_ms) {
+        rel = (g_snowflake_last_ms >= SNOWFLAKE_EPOCH_MS) ?
+              (g_snowflake_last_ms - SNOWFLAKE_EPOCH_MS) : 0;
+        ms = g_snowflake_last_ms;
     }
 
-    if (ms == g_last_ms) {
+    if (ms == g_snowflake_last_ms) {
         g_seq = (uint16_t)((g_seq + 1) & SNOWFLAKE_MAX_SEQ);
         if (g_seq == 0) {
             /* sequence overflow within same ms -> wait next ms */
-            do { ms = now_ms_snow(); } while (ms <= g_last_ms);
+            do { ms = now_ms_snow(); } while (ms <= g_snowflake_last_ms);
             rel = ms - SNOWFLAKE_EPOCH_MS;
         }
     } else {
         g_seq = 0;
     }
-    g_last_ms = ms;
+    g_snowflake_last_ms = ms;
 
     uint64_t id = (rel << time_shift) | ((uint64_t)node_ensure() << node_shift) | (uint64_t)g_seq;
 

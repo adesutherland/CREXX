@@ -1,0 +1,84 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Private Level B Unicode 17.0.0 ordinary case-fold executor. The build
+ * injects one compiler-owned read-only prepared constant at the marker below.
+ */
+
+options levelb
+
+namespace _rxunicode expose casefold
+
+unicode_casefold_constants: procedure expose UNICODE_CASEFOLD_DATA
+  /* rxc emits this source constant once and reuses its module-scoped alias. */
+  /* @RXUNICODE_CASEFOLD_DATA@ */
+  return
+
+_casefold_boot: initialiser
+  data_length = <blen>(UNICODE_CASEFOLD_DATA)
+  if data_length \= 4501380 |,
+     <at..u8>(0) UNICODE_CASEFOLD_DATA \= 67 |,
+     <at..u8>(1) UNICODE_CASEFOLD_DATA \= 85 |,
+     <at..u8>(2) UNICODE_CASEFOLD_DATA \= 67 |,
+     <at..u8>(3) UNICODE_CASEFOLD_DATA \= 70 |,
+     <at..u16>(4) UNICODE_CASEFOLD_DATA \= 1 |,
+     <at..u16>(6) UNICODE_CASEFOLD_DATA \= 64 |,
+     <at..u16>(8) UNICODE_CASEFOLD_DATA \= 17 |,
+     <at..u16>(10) UNICODE_CASEFOLD_DATA \= 0 |,
+     <at..u16>(12) UNICODE_CASEFOLD_DATA \= 0 |,
+     <at..u32>(16) UNICODE_CASEFOLD_DATA \= 64 |,
+     <at..u32>(20) UNICODE_CASEFOLD_DATA \= 0x110000 |,
+     <at..u32>(28) UNICODE_CASEFOLD_DATA \= 1585 |,
+     <at..u32>(36) UNICODE_CASEFOLD_DATA \= 1707 |,
+     <at..u32>(40) UNICODE_CASEFOLD_DATA \= 1481 |,
+     <at..u32>(44) UNICODE_CASEFOLD_DATA \= 31 |,
+     <at..u32>(48) UNICODE_CASEFOLD_DATA \= 104 |,
+     <at..u32>(52) UNICODE_CASEFOLD_DATA \= 2 |,
+     <at..u32>(56) UNICODE_CASEFOLD_DATA \= 3 |,
+     <at..u32>(60) UNICODE_CASEFOLD_DATA \= data_length then,
+    signal failure "rxunicode case-fold data is corrupt or unsupported"
+  return
+
+/**
+ * Private scalar executor used by the pure Level G facade.
+ * Mode 1 is simple, 2 full, 3 Turkic simple, and 4 Turkic full.
+ */
+casefold: procedure = .string
+  arg source = .string, mode = .int
+  result = ""
+  source_length = 0
+  assembler strlen source_length,source
+  do source_index = 0 to source_length - 1
+    codepoint = 0
+    assembler strchar codepoint,source,source_index
+    descriptor = <at..u32>(64 + codepoint * 4) UNICODE_CASEFOLD_DATA
+    if descriptor = 0 then do
+      assembler appendchar result,codepoint
+      iterate
+    end
+
+    record_offset = <at..u32>(24) UNICODE_CASEFOLD_DATA + (descriptor - 1) * 24
+    if mode = 1 | mode = 3 then do
+      mapped = <at..u32>(record_offset + 4) UNICODE_CASEFOLD_DATA
+      if mode = 3 then do
+        special = <at..u32>(record_offset + 8) UNICODE_CASEFOLD_DATA
+        if special \= 0x110000 then mapped = special
+      end
+      assembler appendchar result,mapped
+      iterate
+    end
+
+    first = <at..u32>(record_offset + 12) UNICODE_CASEFOLD_DATA
+    count = <at..u8>(record_offset + 20) UNICODE_CASEFOLD_DATA
+    if mode = 4 & <at..u8>(record_offset + 21) UNICODE_CASEFOLD_DATA > 0 then do
+      first = <at..u32>(record_offset + 16) UNICODE_CASEFOLD_DATA
+      count = <at..u8>(record_offset + 21) UNICODE_CASEFOLD_DATA
+    end
+    if count = 0 then assembler appendchar result,codepoint
+    else do component_index = 0 to count - 1
+      component = <at..u32>(<at..u32>(32) UNICODE_CASEFOLD_DATA +,
+                  (first + component_index) * 4) UNICODE_CASEFOLD_DATA
+      assembler appendchar result,component
+    end
+  end
+  return result

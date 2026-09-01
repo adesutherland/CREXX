@@ -1,0 +1,42 @@
+/* Focused Level B B2X tests. */
+options levelb comments_dash
+import rxfnsb
+
+errors = 0
+source = "11000011"
+errors = errors + check("C3", b2x(source), "two nibbles")
+errors = errors + check("17", b2x("10111"), "partial leading nibble")
+errors = errors + check("5", b2x("0101"), "leading bit zero")
+errors = errors + check("01", b2x("00000001"), "whole leading zero nibble")
+errors = errors + check("1F0", b2x("111110000"), "three output digits")
+errors = errors + check("2A", b2x("10 1010"), "valid grouped blank")
+errors = errors + check("10", b2x("1  0000"), "consecutive group blanks")
+errors = errors + check("", b2x(""), "empty binary string")
+errors = errors + check(copies("F", 64), b2x(copies("1111", 64)), "large input has no integer limit")
+errors = errors + check(source, source, "argument is not mutated")
+errors = errors + check_invalid(" 1010", "leading blank")
+errors = errors + check_invalid("1010 ", "trailing blank")
+errors = errors + check_invalid("1010 10", "misplaced blank")
+errors = errors + check_invalid("10 10", "short group after blank")
+errors = errors + check_invalid("1020", "non-binary character")
+
+if errors = 0 then say "PASS: b2x"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if actual = expected then return 0
+  say "FAIL: B2X" label "expected [" || expected || "] got [" || actual || "]"
+  return 1
+
+check_invalid: procedure = .int
+  arg source = .string, label = .string
+  caught = 0
+  do
+    ignored = b2x(source)
+  on signal invalid_arguments
+    caught = 1
+  end
+  if caught then return 0
+  say "FAIL: B2X" label "did not signal"
+  return 1

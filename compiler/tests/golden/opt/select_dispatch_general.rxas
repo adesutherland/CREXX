@@ -1,0 +1,683 @@
+/*
+ * SOURCE                 : select_dispatch_general.crexx
+ */
+
+.globals=0
+
+main() .locals=8
+   .meta "select_dispatch_general.main"="b" ".int" main() ""
+   .srcstep 23 23 17 "select_dispatch_general.crexx" 4 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .meta "select_dispatch_general.main.index"="b" ".int" r1
+   .srcstep 1 1 17 "select_dispatch_general.crexx" 5 3 15 "  index = .int"
+   .srcstep 9 9 17 "select_dispatch_general.crexx" 8 3 5 "  do index = -1 to 6"
+   .srcstep 2 2 17 "select_dispatch_general.crexx" 8 6 16 "  do index = -1 to 6"
+   .meta "select_dispatch_general.main.exposed_value"="b" ".int" "3"
+   load r1,-1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "index" ""
+   .srcstep 3 3 17 "select_dispatch_general.crexx" 8 17 21 "  do index = -1 to 6"
+   load r0,6
+   .traceevent "L" 4 "R" "I" "r" 0 0 0 0 "" ""
+l20dostart:
+   .srcstep 3 3 17 "select_dispatch_general.crexx" 8 17 21 "  do index = -1 to 6"
+   igt r2,r1,r0
+   brt l20doend,r2
+   .srcstep 5 5 17 "select_dispatch_general.crexx" 9 5 27 "    say if_classify(index)"
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "index" ""
+   call1 r5,if_classify(),r1
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "if_classify" ""
+   say r5
+   .srcstep 6 6 17 "select_dispatch_general.crexx" 10 5 32 "    say classic_classify(index)"
+   .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "index" ""
+   call1 r3,classic_classify(),r1
+   itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "classic_classify" ""
+   say r3
+   .srcstep 7 7 17 "select_dispatch_general.crexx" 11 5 31 "    say strict_classify(index)"
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "index" ""
+   call1 r3,strict_classify(),r1
+   itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "strict_classify" ""
+   say r3
+   .srcstep 8 8 17 "select_dispatch_general.crexx" 12 5 36 "    say mixed_if(index + 11, index)"
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "index" ""
+   iadd r4,r1,11
+   .traceevent "O" 4 "R" "I" "r" 4 8 8 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "index" ""
+   call2 r6,mixed_if(),r4,r1
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 8 8 0 "mixed_if" ""
+   say r6
+l20doinc:
+   .srcstep 4 4 17 "select_dispatch_general.crexx" 8 6 11 "  do index = -1 to 6"
+   inc r1
+   .srcstep 10 10 17 "select_dispatch_general.crexx" 13 3 6 "  end"
+   br l20dostart
+l20doend:
+   .srcstep 11 11 17 "select_dispatch_general.crexx" 15 3 23 "  say mixed_if(10, 99)"
+   say "299"
+   .srcstep 12 12 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 12 12 0 "" ""
+   call1 r4,referenced_if(),r6
+   itos r4
+   .traceevent "F" 4 "R" "S" "r" 4 12 12 0 "referenced_if" ""
+   say r4
+   .srcstep 16 16 17 "select_dispatch_general.crexx" 18 3 32 "  say exposed_if(exposed_value)"
+   .srcstep 15 15 17 "select_dispatch_general.crexx" 18 7 17 "  say exposed_if(exposed_value)"
+   .srcstep 13 13 17 "select_dispatch_general.crexx" 98 26 36 "  else if value = 3 then return 703"
+   load r6,703
+   .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
+   icopy r4,r6
+   br l737bexprend
+   .srcstep 14 14 17 "select_dispatch_general.crexx" 100 3 14 "  return -701"
+   load r5,-701
+   .traceevent "L" 4 "R" "I" "r" 5 16 16 0 "" ""
+   icopy r4,r5
+l737bexprend:
+   itos r4
+   say r4
+   .srcstep 17 17 17 "select_dispatch_general.crexx" 19 3 20 "  say exposed_value"
+   say "3"
+   .srcstep 18 18 17 "select_dispatch_general.crexx" 20 3 21 "  say string_if(\"b\")"
+   load r6,"b"
+   .traceevent "L" 4 "R" "S" "r" 6 18 18 0 "" ""
+   settp r6,768
+   call1 r4,string_if(),r6
+   itos r4
+   .traceevent "F" 4 "R" "S" "r" 4 18 18 0 "string_if" ""
+   say r4
+   .srcstep 19 19 17 "select_dispatch_general.crexx" 21 3 18 "  say short_if(2)"
+   say "902"
+   .srcstep 20 20 17 "select_dispatch_general.crexx" 22 3 19 "  say public_if(2)"
+   say "1002"
+   .srcstep 21 21 17 "select_dispatch_general.crexx" 23 3 22 "  say duplicate_if(1)"
+   say "1101"
+   .srcstep 22 22 17 "select_dispatch_general.crexx" 24 3 11 "  return 0"
+   ret 0
+   .meta "select_dispatch_general.main.exposed_value"
+   .meta "select_dispatch_general.main.index"
+
+if_classify() .locals=1
+   .meta "select_dispatch_general.if_classify"="b" ".int" if_classify() "value=.int"
+   .srcstep 36 36 17 "select_dispatch_general.crexx" 26 1 30 "if_classify: procedure = .int"
+   numsci 18,1,1
+   .srcstep 24 24 17 "select_dispatch_general.crexx" 27 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.if_classify.value"="b" ".int" a1
+   .srcstep 34 34 6 "select_dispatch_general.crexx" 29 3 32 "  if value = -1 then return -10"
+   .traceevent "V" 6 "R" "I" "a" 1 0 0 0 "value" ""
+   .jtable jtable1030 auto
+   jumpi a1,jtable1030
+   br l1030dispatchdefault
+l1030dispatchcase0: .jcase jtable1030 -1
+   .srcstep 25 25 17 "select_dispatch_general.crexx" 29 22 32 "  if value = -1 then return -10"
+   ret -10
+   br l1030dispatchend
+l1030dispatchcase1: .jcase jtable1030 0
+   .srcstep 26 26 17 "select_dispatch_general.crexx" 30 26 35 "  else if value = 0 then return 10"
+   ret 10
+   br l1030dispatchend
+l1030dispatchcase2: .jcase jtable1030 1
+   .srcstep 27 27 17 "select_dispatch_general.crexx" 31 26 35 "  else if value = 1 then return 20"
+   ret 20
+   br l1030dispatchend
+l1030dispatchcase3: .jcase jtable1030 2
+   .srcstep 28 28 17 "select_dispatch_general.crexx" 32 26 35 "  else if value = 2 then return 30"
+   ret 30
+   br l1030dispatchend
+l1030dispatchcase4: .jcase jtable1030 3
+   .srcstep 29 29 17 "select_dispatch_general.crexx" 33 26 35 "  else if value = 3 then return 40"
+   ret 40
+   br l1030dispatchend
+l1030dispatchcase5: .jcase jtable1030 4
+   .srcstep 30 30 17 "select_dispatch_general.crexx" 34 26 35 "  else if value = 4 then return 50"
+   ret 50
+   br l1030dispatchend
+l1030dispatchcase6: .jcase jtable1030 5
+   .srcstep 31 31 17 "select_dispatch_general.crexx" 35 26 35 "  else if value = 5 then return 60"
+   ret 60
+   br l1030dispatchend
+l1030dispatchcase7: .jcase jtable1030 6
+   .srcstep 32 32 17 "select_dispatch_general.crexx" 36 26 35 "  else if value = 6 then return 70"
+   ret 70
+   br l1030dispatchend
+l1030dispatchdefault:
+   .srcstep 33 33 17 "select_dispatch_general.crexx" 37 8 17 "  else return -1"
+   ret -1
+l1030dispatchend:
+   .srcstep 35 35 17 "select_dispatch_general.crexx" 38 3 12 "  return -2"
+   ret -2
+   .meta "select_dispatch_general.if_classify.value"
+
+classic_classify() .locals=1
+   .meta "select_dispatch_general.classic_classify"="b" ".int" classic_classify() "value=.int"
+   .srcstep 49 49 17 "select_dispatch_general.crexx" 40 1 35 "classic_classify: procedure = .int"
+   numsci 18,1,1
+   .srcstep 37 37 17 "select_dispatch_general.crexx" 41 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.classic_classify.value"="b" ".int" a1
+   .srcstep 47 47 6 "select_dispatch_general.crexx" 43 3 9 "  select"
+   .traceevent "V" 6 "R" "I" "a" 1 0 0 0 "value" ""
+   .jtable jtable1048 auto
+   jumpi a1,jtable1048
+   br l1048dispatchdefault
+l1048dispatchcase0: .jcase jtable1048 -1
+   .srcstep 38 38 17 "select_dispatch_general.crexx" 44 26 37 "    when value = -1 then return -110"
+   ret -110
+   br l1048dispatchend
+l1048dispatchcase1: .jcase jtable1048 0
+   .srcstep 39 39 17 "select_dispatch_general.crexx" 45 25 35 "    when value = 0 then return 110"
+   ret 110
+   br l1048dispatchend
+l1048dispatchcase2: .jcase jtable1048 1
+   .srcstep 40 40 17 "select_dispatch_general.crexx" 46 25 35 "    when value = 1 then return 120"
+   ret 120
+   br l1048dispatchend
+l1048dispatchcase3: .jcase jtable1048 2
+   .srcstep 41 41 17 "select_dispatch_general.crexx" 47 25 35 "    when value = 2 then return 130"
+   ret 130
+   br l1048dispatchend
+l1048dispatchcase4: .jcase jtable1048 3
+   .srcstep 42 42 17 "select_dispatch_general.crexx" 48 25 35 "    when value = 3 then return 140"
+   ret 140
+   br l1048dispatchend
+l1048dispatchcase5: .jcase jtable1048 4
+   .srcstep 43 43 17 "select_dispatch_general.crexx" 49 25 35 "    when value = 4 then return 150"
+   ret 150
+   br l1048dispatchend
+l1048dispatchcase6: .jcase jtable1048 5
+   .srcstep 44 44 17 "select_dispatch_general.crexx" 50 25 35 "    when value = 5 then return 160"
+   ret 160
+   br l1048dispatchend
+l1048dispatchcase7: .jcase jtable1048 6
+   .srcstep 45 45 17 "select_dispatch_general.crexx" 51 25 35 "    when value = 6 then return 170"
+   ret 170
+   br l1048dispatchend
+l1048dispatchdefault:
+   .srcstep 46 46 17 "select_dispatch_general.crexx" 52 15 26 "    otherwise return -101"
+   ret -101
+l1048dispatchend:
+   .srcstep 48 48 17 "select_dispatch_general.crexx" 54 3 14 "  return -102"
+   ret -102
+   .meta "select_dispatch_general.classic_classify.value"
+
+strict_classify() .locals=9
+   .meta "select_dispatch_general.strict_classify"="b" ".int" strict_classify() "value=.int"
+   .srcstep 85 85 17 "select_dispatch_general.crexx" 56 1 34 "strict_classify: procedure = .int"
+   numsci 18,1,1
+   .srcstep 50 50 17 "select_dispatch_general.crexx" 57 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.strict_classify.value"="b" ".int" a1
+   .srcstep 81 81 17 "select_dispatch_general.crexx" 59 3 17 "  if value == -1 then return -410"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 81 81 0 "value" ""
+   seq r1,a1,"-1"
+   .traceevent "O" 4 "R" "B" "r" 1 81 81 0 "" ""
+   brf l259iffalse,r1
+   .srcstep 82 82 17 "select_dispatch_general.crexx" 59 18 22 "  if value == -1 then return -410"
+   .srcstep 51 51 17 "select_dispatch_general.crexx" 59 23 34 "  if value == -1 then return -410"
+   ret -410
+   br l259ifend
+   .srcstep 83 83 17 "select_dispatch_general.crexx" 60 3 7 "  else if value == 0 then return 410"
+l259iffalse:
+   .srcstep 78 78 17 "select_dispatch_general.crexx" 60 8 21 "  else if value == 0 then return 410"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 78 78 0 "value" ""
+   seq r2,a1,"0"
+   .traceevent "O" 4 "R" "B" "r" 2 78 78 0 "" ""
+   brf l258iffalse,r2
+   .srcstep 79 79 17 "select_dispatch_general.crexx" 60 22 26 "  else if value == 0 then return 410"
+   .srcstep 52 52 17 "select_dispatch_general.crexx" 60 27 37 "  else if value == 0 then return 410"
+   ret 410
+   br l258ifend
+   .srcstep 80 80 17 "select_dispatch_general.crexx" 61 3 7 "  else if value == 1 then return 420"
+l258iffalse:
+   .srcstep 75 75 17 "select_dispatch_general.crexx" 61 8 21 "  else if value == 1 then return 420"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 75 75 0 "value" ""
+   seq r3,a1,"1"
+   .traceevent "O" 4 "R" "B" "r" 3 75 75 0 "" ""
+   brf l257iffalse,r3
+   .srcstep 76 76 17 "select_dispatch_general.crexx" 61 22 26 "  else if value == 1 then return 420"
+   .srcstep 53 53 17 "select_dispatch_general.crexx" 61 27 37 "  else if value == 1 then return 420"
+   ret 420
+   br l257ifend
+   .srcstep 77 77 17 "select_dispatch_general.crexx" 62 3 7 "  else if value == 2 then return 430"
+l257iffalse:
+   .srcstep 72 72 17 "select_dispatch_general.crexx" 62 8 21 "  else if value == 2 then return 430"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 72 72 0 "value" ""
+   seq r4,a1,"2"
+   .traceevent "O" 4 "R" "B" "r" 4 72 72 0 "" ""
+   brf l256iffalse,r4
+   .srcstep 73 73 17 "select_dispatch_general.crexx" 62 22 26 "  else if value == 2 then return 430"
+   .srcstep 54 54 17 "select_dispatch_general.crexx" 62 27 37 "  else if value == 2 then return 430"
+   ret 430
+   br l256ifend
+   .srcstep 74 74 17 "select_dispatch_general.crexx" 63 3 7 "  else if value == 3 then return 440"
+l256iffalse:
+   .srcstep 69 69 17 "select_dispatch_general.crexx" 63 8 21 "  else if value == 3 then return 440"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 69 69 0 "value" ""
+   seq r5,a1,"3"
+   .traceevent "O" 4 "R" "B" "r" 5 69 69 0 "" ""
+   brf l255iffalse,r5
+   .srcstep 70 70 17 "select_dispatch_general.crexx" 63 22 26 "  else if value == 3 then return 440"
+   .srcstep 55 55 17 "select_dispatch_general.crexx" 63 27 37 "  else if value == 3 then return 440"
+   ret 440
+   br l255ifend
+   .srcstep 71 71 17 "select_dispatch_general.crexx" 64 3 7 "  else if value == 4 then return 450"
+l255iffalse:
+   .srcstep 66 66 17 "select_dispatch_general.crexx" 64 8 21 "  else if value == 4 then return 450"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 66 66 0 "value" ""
+   seq r6,a1,"4"
+   .traceevent "O" 4 "R" "B" "r" 6 66 66 0 "" ""
+   brf l254iffalse,r6
+   .srcstep 67 67 17 "select_dispatch_general.crexx" 64 22 26 "  else if value == 4 then return 450"
+   .srcstep 56 56 17 "select_dispatch_general.crexx" 64 27 37 "  else if value == 4 then return 450"
+   ret 450
+   br l254ifend
+   .srcstep 68 68 17 "select_dispatch_general.crexx" 65 3 7 "  else if value == 5 then return 460"
+l254iffalse:
+   .srcstep 63 63 17 "select_dispatch_general.crexx" 65 8 21 "  else if value == 5 then return 460"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 63 63 0 "value" ""
+   seq r7,a1,"5"
+   .traceevent "O" 4 "R" "B" "r" 7 63 63 0 "" ""
+   brf l253iffalse,r7
+   .srcstep 64 64 17 "select_dispatch_general.crexx" 65 22 26 "  else if value == 5 then return 460"
+   .srcstep 57 57 17 "select_dispatch_general.crexx" 65 27 37 "  else if value == 5 then return 460"
+   ret 460
+   br l253ifend
+   .srcstep 65 65 17 "select_dispatch_general.crexx" 66 3 7 "  else if value == 6 then return 470"
+l253iffalse:
+   .srcstep 60 60 17 "select_dispatch_general.crexx" 66 8 21 "  else if value == 6 then return 470"
+   itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 60 60 0 "value" ""
+   seq r8,a1,"6"
+   .traceevent "O" 4 "R" "B" "r" 8 60 60 0 "" ""
+   brf l252iffalse,r8
+   .srcstep 61 61 17 "select_dispatch_general.crexx" 66 22 26 "  else if value == 6 then return 470"
+   .srcstep 58 58 17 "select_dispatch_general.crexx" 66 27 37 "  else if value == 6 then return 470"
+   ret 470
+   br l252ifend
+   .srcstep 62 62 17 "select_dispatch_general.crexx" 67 3 7 "  else return -401"
+l252iffalse:
+   .srcstep 59 59 17 "select_dispatch_general.crexx" 67 8 19 "  else return -401"
+   ret -401
+l252ifend:
+l253ifend:
+l254ifend:
+l255ifend:
+l256ifend:
+l257ifend:
+l258ifend:
+l259ifend:
+   .srcstep 84 84 17 "select_dispatch_general.crexx" 68 3 14 "  return -402"
+   ret -402
+   .meta "select_dispatch_general.strict_classify.value"
+
+mixed_if() .locals=7
+   .meta "select_dispatch_general.mixed_if"="b" ".int" mixed_if() "value=.int,guard=.int"
+   .srcstep 110 110 17 "select_dispatch_general.crexx" 70 1 27 "mixed_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 86 86 17 "select_dispatch_general.crexx" 71 7 19 "  arg value = .int, guard = .int"
+   .meta "select_dispatch_general.mixed_if.value"="b" ".int" a1
+   .srcstep 87 87 17 "select_dispatch_general.crexx" 71 21 33 "  arg value = .int, guard = .int"
+   .meta "select_dispatch_general.mixed_if.guard"="b" ".int" a2
+   .srcstep 106 106 17 "select_dispatch_general.crexx" 73 3 15 "  if value = 1 then return 201"
+   .traceevent "V" 6 "R" "I" "a" 1 106 106 0 "value" ""
+   ieq r2,a1,1
+   .traceevent "O" 4 "R" "B" "r" 2 106 106 0 "" ""
+   brf l304iffalse,r2
+   .srcstep 107 107 17 "select_dispatch_general.crexx" 73 16 20 "  if value = 1 then return 201"
+   .srcstep 88 88 17 "select_dispatch_general.crexx" 73 21 31 "  if value = 1 then return 201"
+   ret 201
+   br l304ifend
+   .srcstep 108 108 17 "select_dispatch_general.crexx" 74 3 7 "  else if guard = 99 then return 299"
+l304iffalse:
+   .srcstep 103 103 17 "select_dispatch_general.crexx" 74 8 21 "  else if guard = 99 then return 299"
+   .traceevent "V" 6 "R" "I" "a" 2 103 103 0 "guard" ""
+   ieq r3,a2,99
+   .traceevent "O" 4 "R" "B" "r" 3 103 103 0 "" ""
+   brf l303iffalse,r3
+   .srcstep 104 104 17 "select_dispatch_general.crexx" 74 22 26 "  else if guard = 99 then return 299"
+   .srcstep 89 89 17 "select_dispatch_general.crexx" 74 27 37 "  else if guard = 99 then return 299"
+   ret 299
+   br l303ifend
+   .srcstep 105 105 17 "select_dispatch_general.crexx" 75 3 7 "  else if value = 10 then return 310"
+l303iffalse:
+   .srcstep 100 100 17 "select_dispatch_general.crexx" 75 8 21 "  else if value = 10 then return 310"
+   .traceevent "V" 6 "R" "I" "a" 1 100 100 0 "value" ""
+   ieq r4,a1,10
+   .traceevent "O" 4 "R" "B" "r" 4 100 100 0 "" ""
+   brf l302iffalse,r4
+   .srcstep 101 101 17 "select_dispatch_general.crexx" 75 22 26 "  else if value = 10 then return 310"
+   .srcstep 90 90 17 "select_dispatch_general.crexx" 75 27 37 "  else if value = 10 then return 310"
+   ret 310
+   br l302ifend
+   .srcstep 102 102 17 "select_dispatch_general.crexx" 76 3 7 "  else if value = 11 then return 311"
+l302iffalse:
+   .srcstep 97 97 17 "select_dispatch_general.crexx" 76 8 21 "  else if value = 11 then return 311"
+   .traceevent "V" 6 "R" "I" "a" 1 97 97 0 "value" ""
+   ieq r5,a1,11
+   .traceevent "O" 4 "R" "B" "r" 5 97 97 0 "" ""
+   brf l301iffalse,r5
+   .srcstep 98 98 17 "select_dispatch_general.crexx" 76 22 26 "  else if value = 11 then return 311"
+   .srcstep 91 91 17 "select_dispatch_general.crexx" 76 27 37 "  else if value = 11 then return 311"
+   ret 311
+   br l301ifend
+   .srcstep 99 99 17 "select_dispatch_general.crexx" 77 3 7 "  else if value = 12 then return 312"
+l301iffalse:
+   .srcstep 94 94 17 "select_dispatch_general.crexx" 77 8 21 "  else if value = 12 then return 312"
+   .traceevent "V" 6 "R" "I" "a" 1 94 94 0 "value" ""
+   ieq r6,a1,12
+   .traceevent "O" 4 "R" "B" "r" 6 94 94 0 "" ""
+   brf l300iffalse,r6
+   .srcstep 95 95 17 "select_dispatch_general.crexx" 77 22 26 "  else if value = 12 then return 312"
+   .srcstep 92 92 17 "select_dispatch_general.crexx" 77 27 37 "  else if value = 12 then return 312"
+   ret 312
+   br l300ifend
+   .srcstep 96 96 17 "select_dispatch_general.crexx" 78 3 7 "  else return -200"
+l300iffalse:
+   .srcstep 93 93 17 "select_dispatch_general.crexx" 78 8 19 "  else return -200"
+   ret -200
+l300ifend:
+l301ifend:
+l302ifend:
+l303ifend:
+l304ifend:
+   .srcstep 109 109 17 "select_dispatch_general.crexx" 79 3 14 "  return -201"
+   ret -201
+   .meta "select_dispatch_general.mixed_if.guard"
+   .meta "select_dispatch_general.mixed_if.value"
+
+referenced_if() .locals=7
+   .meta "select_dispatch_general.referenced_if"="b" ".int" referenced_if() "seed=.int"
+   .srcstep 129 129 17 "select_dispatch_general.crexx" 81 1 32 "referenced_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 111 111 17 "select_dispatch_general.crexx" 82 7 18 "  arg seed = .int"
+   .meta "select_dispatch_general.referenced_if.seed"="b" ".int" a1
+   .meta "select_dispatch_general.referenced_if.value_ref"="b" "reference .int" r2
+   .srcstep 112 112 17 "select_dispatch_general.crexx" 84 3 29 "  value_ref = reference .int"
+   null r2
+   .srcstep 113 113 17 "select_dispatch_general.crexx" 83 3 15 "  value = seed"
+   .meta "select_dispatch_general.referenced_if.value"="b" ".int" r1
+   .traceevent "V" 6 "R" "I" "a" 1 113 113 0 "seed" ""
+   icopy r1,a1
+   .traceevent "A" 6 "R" "I" "r" 1 113 113 0 "value" ""
+   .srcstep 114 114 17 "select_dispatch_general.crexx" 85 3 30 "  value_ref = reference value"
+   .traceevent "V" 6 "R" "I" "r" 1 114 114 0 "value" ""
+   mkref r2,r1
+   .traceevent "A" 6 "R" "R" "r" 2 114 114 0 "value_ref" ""
+   .srcstep 125 125 17 "select_dispatch_general.crexx" 87 3 15 "  if value = 1 then return 601"
+   .traceevent "V" 6 "R" "I" "r" 1 125 125 0 "value" ""
+   ieq r4,r1,1
+   .traceevent "O" 4 "R" "B" "r" 4 125 125 0 "" ""
+   brf l345iffalse,r4
+   .srcstep 126 126 17 "select_dispatch_general.crexx" 87 16 20 "  if value = 1 then return 601"
+   .srcstep 115 115 17 "select_dispatch_general.crexx" 87 21 31 "  if value = 1 then return 601"
+   ret 601
+   br l345ifend
+   .srcstep 127 127 17 "select_dispatch_general.crexx" 88 3 7 "  else if value = 2 then return 602"
+l345iffalse:
+   .srcstep 122 122 17 "select_dispatch_general.crexx" 88 8 20 "  else if value = 2 then return 602"
+   .traceevent "V" 6 "R" "I" "r" 1 122 122 0 "value" ""
+   ieq r5,r1,2
+   .traceevent "O" 4 "R" "B" "r" 5 122 122 0 "" ""
+   brf l344iffalse,r5
+   .srcstep 123 123 17 "select_dispatch_general.crexx" 88 21 25 "  else if value = 2 then return 602"
+   .srcstep 116 116 17 "select_dispatch_general.crexx" 88 26 36 "  else if value = 2 then return 602"
+   ret 602
+   br l344ifend
+   .srcstep 124 124 17 "select_dispatch_general.crexx" 89 3 7 "  else if value = 3 then return 603"
+l344iffalse:
+   .srcstep 119 119 17 "select_dispatch_general.crexx" 89 8 20 "  else if value = 3 then return 603"
+   .traceevent "V" 6 "R" "I" "r" 1 119 119 0 "value" ""
+   ieq r6,r1,3
+   .traceevent "O" 4 "R" "B" "r" 6 119 119 0 "" ""
+   brf l343iffalse,r6
+   .srcstep 120 120 17 "select_dispatch_general.crexx" 89 21 25 "  else if value = 3 then return 603"
+   .srcstep 117 117 17 "select_dispatch_general.crexx" 89 26 36 "  else if value = 3 then return 603"
+   ret 603
+   br l343ifend
+   .srcstep 121 121 17 "select_dispatch_general.crexx" 90 3 7 "  else return -600"
+l343iffalse:
+   .srcstep 118 118 17 "select_dispatch_general.crexx" 90 8 19 "  else return -600"
+   ret -600
+l343ifend:
+l344ifend:
+l345ifend:
+   .srcstep 128 128 17 "select_dispatch_general.crexx" 91 3 14 "  return -601"
+   ret -601
+   .meta "select_dispatch_general.referenced_if.seed"
+   .meta "select_dispatch_general.referenced_if.value"
+   .meta "select_dispatch_general.referenced_if.value_ref"
+
+exposed_if() .locals=4 .expose=select_dispatch_general.exposed_if
+   .meta "select_dispatch_general.exposed_if"="b" ".int" exposed_if() "expose value=.int"
+   .meta "select_dispatch_general.exposed_if"=".inline" "I6;c,1,1,3,0,6,0,7,23,0,3,0,0,3,0,449;f,0,73656C6563745F64697370617463685F67656E6572616C2E6372657878;u,0,0,93,7,26,1,2020617267206578706F73652076616C7565203D202E696E74;u,1,0,93,7,19,1,2020617267206578706F73652076616C7565203D202E696E74;u,2,0,93,22,26,1,2020617267206578706F73652076616C7565203D202E696E74;u,3,0,95,3,31,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,4,0,95,6,15,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,5,0,95,6,11,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,6,0,95,14,15,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,7,0,95,21,31,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,8,0,95,28,31,1,202069662076616C7565203D2031207468656E2072657475726E20373031;u,9,0,96,8,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,10,0,96,11,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,11,0,96,11,16,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,12,0,96,19,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,13,0,96,26,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,14,0,96,33,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20373032;u,15,0,97,8,36,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,16,0,97,11,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,17,0,97,11,16,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,18,0,97,19,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,19,0,97,26,36,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,20,0,97,33,36,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E20373033;u,21,0,98,8,19,1,2020656C73652072657475726E202D373030;u,22,0,98,15,19,1,2020656C73652072657475726E202D373030;u,23,0,99,3,14,1,202072657475726E202D373031;u,24,0,99,10,14,1,202072657475726E202D373031;q,0,-1,3;s,0,0,76616C7565,2,3,0,-,-,-,3,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,1,-1,-1,0,0,0,0,0,-,-;>,0,1,110,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,701,0,0,373031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,2,0,0,32,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,702,0,0,373032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,3,0,0,33,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,703,0,0,373033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-700,0,0,2D373030,-;<;<;<;<;<;>,0,23,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,24,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-701,0,0,2D373031,-;<;<;<"
+   .srcstep 145 145 17 "select_dispatch_general.crexx" 93 1 29 "exposed_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 130 130 17 "select_dispatch_general.crexx" 94 7 26 "  arg expose value = .int"
+   .meta "select_dispatch_general.exposed_if.value"="b" ".int" a1
+   .srcstep 141 141 17 "select_dispatch_general.crexx" 96 3 15 "  if value = 1 then return 701"
+   .traceevent "V" 6 "R" "I" "a" 1 141 141 0 "value" ""
+   ieq r1,a1,1
+   .traceevent "O" 4 "R" "B" "r" 1 141 141 0 "" ""
+   brf l375iffalse,r1
+   .srcstep 142 142 17 "select_dispatch_general.crexx" 96 16 20 "  if value = 1 then return 701"
+   .srcstep 131 131 17 "select_dispatch_general.crexx" 96 21 31 "  if value = 1 then return 701"
+   ret 701
+   br l375ifend
+   .srcstep 143 143 17 "select_dispatch_general.crexx" 97 3 7 "  else if value = 2 then return 702"
+l375iffalse:
+   .srcstep 138 138 17 "select_dispatch_general.crexx" 97 8 20 "  else if value = 2 then return 702"
+   .traceevent "V" 6 "R" "I" "a" 1 138 138 0 "value" ""
+   ieq r2,a1,2
+   .traceevent "O" 4 "R" "B" "r" 2 138 138 0 "" ""
+   brf l374iffalse,r2
+   .srcstep 139 139 17 "select_dispatch_general.crexx" 97 21 25 "  else if value = 2 then return 702"
+   .srcstep 132 132 17 "select_dispatch_general.crexx" 97 26 36 "  else if value = 2 then return 702"
+   ret 702
+   br l374ifend
+   .srcstep 140 140 17 "select_dispatch_general.crexx" 98 3 7 "  else if value = 3 then return 703"
+l374iffalse:
+   .srcstep 135 135 17 "select_dispatch_general.crexx" 98 8 20 "  else if value = 3 then return 703"
+   .traceevent "V" 6 "R" "I" "a" 1 135 135 0 "value" ""
+   ieq r3,a1,3
+   .traceevent "O" 4 "R" "B" "r" 3 135 135 0 "" ""
+   brf l373iffalse,r3
+   .srcstep 136 136 17 "select_dispatch_general.crexx" 98 21 25 "  else if value = 3 then return 703"
+   .srcstep 133 133 17 "select_dispatch_general.crexx" 98 26 36 "  else if value = 3 then return 703"
+   ret 703
+   br l373ifend
+   .srcstep 137 137 17 "select_dispatch_general.crexx" 99 3 7 "  else return -700"
+l373iffalse:
+   .srcstep 134 134 17 "select_dispatch_general.crexx" 99 8 19 "  else return -700"
+   ret -700
+l373ifend:
+l374ifend:
+l375ifend:
+   .srcstep 144 144 17 "select_dispatch_general.crexx" 100 3 14 "  return -701"
+   ret -701
+   .meta "select_dispatch_general.exposed_if.value"
+
+string_if() .locals=1 .expose=select_dispatch_general.string_if
+   .meta "select_dispatch_general.string_if"="b" ".int" string_if() "value=.string"
+   .srcstep 153 153 17 "select_dispatch_general.crexx" 102 1 28 "string_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 146 146 17 "select_dispatch_general.crexx" 103 7 22 "  arg value = .string"
+   .meta "select_dispatch_general.string_if.value"="b" ".string" a1
+   .srcstep 151 151 6 "select_dispatch_general.crexx" 105 3 34 "  if value == \"a\" then return 801"
+   .traceevent "V" 6 "R" "S" "a" 1 0 0 0 "value" ""
+   .jtable jtable1066 auto
+   jumps a1,jtable1066
+   br l1066dispatchdefault
+l1066dispatchcase0: .jcase jtable1066 "a"
+   .srcstep 147 147 17 "select_dispatch_general.crexx" 105 24 34 "  if value == \"a\" then return 801"
+   ret 801
+   br l1066dispatchend
+l1066dispatchcase1: .jcase jtable1066 "b"
+   .srcstep 148 148 17 "select_dispatch_general.crexx" 106 29 39 "  else if value == \"b\" then return 802"
+   ret 802
+   br l1066dispatchend
+l1066dispatchcase2: .jcase jtable1066 "c"
+   .srcstep 149 149 17 "select_dispatch_general.crexx" 107 29 39 "  else if value == \"c\" then return 803"
+   ret 803
+   br l1066dispatchend
+l1066dispatchdefault:
+   .srcstep 150 150 17 "select_dispatch_general.crexx" 108 8 19 "  else return -800"
+   ret -800
+l1066dispatchend:
+   .srcstep 152 152 17 "select_dispatch_general.crexx" 109 3 14 "  return -801"
+   ret -801
+   .meta "select_dispatch_general.string_if.value"
+
+short_if() .locals=3 .expose=select_dispatch_general.short_if
+   .meta "select_dispatch_general.short_if"="b" ".int" short_if() "value=.int"
+   .meta "select_dispatch_general.short_if"=".inline" "I6;c,1,1,3,0,6,0,7,17,0,2,0,0,3,0,400;f,0,73656C6563745F64697370617463685F67656E6572616C2E6372657878;u,0,0,111,7,19,1,20206172672076616C7565203D202E696E74;u,1,0,111,7,12,1,20206172672076616C7565203D202E696E74;u,2,0,111,15,19,1,20206172672076616C7565203D202E696E74;u,3,0,113,3,31,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,4,0,113,6,15,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,5,0,113,6,11,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,6,0,113,14,15,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,7,0,113,21,31,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,8,0,113,28,31,1,202069662076616C7565203D2031207468656E2072657475726E20393031;u,9,0,114,8,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,10,0,114,11,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,11,0,114,11,16,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,12,0,114,19,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,13,0,114,26,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,14,0,114,33,36,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E20393032;u,15,0,115,8,19,1,2020656C73652072657475726E202D393030;u,16,0,115,15,19,1,2020656C73652072657475726E202D393030;u,17,0,116,3,14,1,202072657475726E202D393031;u,18,0,116,10,14,1,202072657475726E202D393031;q,0,-1,3;s,0,0,76616C7565,2,3,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,901,0,0,393031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,2,0,0,32,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,902,0,0,393032,-;<;<;>,0,15,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,16,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-900,0,0,2D393030,-;<;<;<;<;>,0,17,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,18,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-901,0,0,2D393031,-;<;<;<"
+   .srcstep 165 165 17 "select_dispatch_general.crexx" 111 1 27 "short_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 154 154 17 "select_dispatch_general.crexx" 112 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.short_if.value"="b" ".int" a1
+   .srcstep 161 161 17 "select_dispatch_general.crexx" 114 3 15 "  if value = 1 then return 901"
+   .traceevent "V" 6 "R" "I" "a" 1 161 161 0 "value" ""
+   ieq r1,a1,1
+   .traceevent "O" 4 "R" "B" "r" 1 161 161 0 "" ""
+   brf l429iffalse,r1
+   .srcstep 162 162 17 "select_dispatch_general.crexx" 114 16 20 "  if value = 1 then return 901"
+   .srcstep 155 155 17 "select_dispatch_general.crexx" 114 21 31 "  if value = 1 then return 901"
+   ret 901
+   br l429ifend
+   .srcstep 163 163 17 "select_dispatch_general.crexx" 115 3 7 "  else if value = 2 then return 902"
+l429iffalse:
+   .srcstep 158 158 17 "select_dispatch_general.crexx" 115 8 20 "  else if value = 2 then return 902"
+   .traceevent "V" 6 "R" "I" "a" 1 158 158 0 "value" ""
+   ieq r2,a1,2
+   .traceevent "O" 4 "R" "B" "r" 2 158 158 0 "" ""
+   brf l428iffalse,r2
+   .srcstep 159 159 17 "select_dispatch_general.crexx" 115 21 25 "  else if value = 2 then return 902"
+   .srcstep 156 156 17 "select_dispatch_general.crexx" 115 26 36 "  else if value = 2 then return 902"
+   ret 902
+   br l428ifend
+   .srcstep 160 160 17 "select_dispatch_general.crexx" 116 3 7 "  else return -900"
+l428iffalse:
+   .srcstep 157 157 17 "select_dispatch_general.crexx" 116 8 19 "  else return -900"
+   ret -900
+l428ifend:
+l429ifend:
+   .srcstep 164 164 17 "select_dispatch_general.crexx" 117 3 14 "  return -901"
+   ret -901
+   .meta "select_dispatch_general.short_if.value"
+
+public_if() .locals=4 .expose=select_dispatch_general.public_if
+   .meta "select_dispatch_general.public_if"="b" ".int" public_if() "value=.int"
+   .meta "select_dispatch_general.public_if"=".inline" "I6;c,1,1,3,0,6,0,7,23,0,3,0,0,3,0,400;f,0,73656C6563745F64697370617463685F67656E6572616C2E6372657878;u,0,0,119,7,19,1,20206172672076616C7565203D202E696E74;u,1,0,119,7,12,1,20206172672076616C7565203D202E696E74;u,2,0,119,15,19,1,20206172672076616C7565203D202E696E74;u,3,0,121,3,32,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,4,0,121,6,15,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,5,0,121,6,11,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,6,0,121,14,15,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,7,0,121,21,32,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,8,0,121,28,32,1,202069662076616C7565203D2031207468656E2072657475726E2031303031;u,9,0,122,8,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,10,0,122,11,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,11,0,122,11,16,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,12,0,122,19,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,13,0,122,26,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,14,0,122,33,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031303032;u,15,0,123,8,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,16,0,123,11,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,17,0,123,11,16,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,18,0,123,19,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,19,0,123,26,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,20,0,123,33,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031303033;u,21,0,124,8,20,1,2020656C73652072657475726E202D31303030;u,22,0,124,15,20,1,2020656C73652072657475726E202D31303030;u,23,0,125,3,15,1,202072657475726E202D31303031;u,24,0,125,10,15,1,202072657475726E202D31303031;q,0,-1,3;s,0,0,76616C7565,2,3,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1001,0,0,31303031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,2,0,0,32,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1002,0,0,31303032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,3,0,0,33,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1003,0,0,31303033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-1000,0,0,2D31303030,-;<;<;<;<;<;>,0,23,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,24,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-1001,0,0,2D31303031,-;<;<;<"
+   .srcstep 181 181 17 "select_dispatch_general.crexx" 119 1 28 "public_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 166 166 17 "select_dispatch_general.crexx" 120 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.public_if.value"="b" ".int" a1
+   .srcstep 177 177 17 "select_dispatch_general.crexx" 122 3 15 "  if value = 1 then return 1001"
+   .traceevent "V" 6 "R" "I" "a" 1 177 177 0 "value" ""
+   ieq r1,a1,1
+   .traceevent "O" 4 "R" "B" "r" 1 177 177 0 "" ""
+   brf l459iffalse,r1
+   .srcstep 178 178 17 "select_dispatch_general.crexx" 122 16 20 "  if value = 1 then return 1001"
+   .srcstep 167 167 17 "select_dispatch_general.crexx" 122 21 32 "  if value = 1 then return 1001"
+   ret 1001
+   br l459ifend
+   .srcstep 179 179 17 "select_dispatch_general.crexx" 123 3 7 "  else if value = 2 then return 1002"
+l459iffalse:
+   .srcstep 174 174 17 "select_dispatch_general.crexx" 123 8 20 "  else if value = 2 then return 1002"
+   .traceevent "V" 6 "R" "I" "a" 1 174 174 0 "value" ""
+   ieq r2,a1,2
+   .traceevent "O" 4 "R" "B" "r" 2 174 174 0 "" ""
+   brf l458iffalse,r2
+   .srcstep 175 175 17 "select_dispatch_general.crexx" 123 21 25 "  else if value = 2 then return 1002"
+   .srcstep 168 168 17 "select_dispatch_general.crexx" 123 26 37 "  else if value = 2 then return 1002"
+   ret 1002
+   br l458ifend
+   .srcstep 176 176 17 "select_dispatch_general.crexx" 124 3 7 "  else if value = 3 then return 1003"
+l458iffalse:
+   .srcstep 171 171 17 "select_dispatch_general.crexx" 124 8 20 "  else if value = 3 then return 1003"
+   .traceevent "V" 6 "R" "I" "a" 1 171 171 0 "value" ""
+   ieq r3,a1,3
+   .traceevent "O" 4 "R" "B" "r" 3 171 171 0 "" ""
+   brf l457iffalse,r3
+   .srcstep 172 172 17 "select_dispatch_general.crexx" 124 21 25 "  else if value = 3 then return 1003"
+   .srcstep 169 169 17 "select_dispatch_general.crexx" 124 26 37 "  else if value = 3 then return 1003"
+   ret 1003
+   br l457ifend
+   .srcstep 173 173 17 "select_dispatch_general.crexx" 125 3 7 "  else return -1000"
+l457iffalse:
+   .srcstep 170 170 17 "select_dispatch_general.crexx" 125 8 20 "  else return -1000"
+   ret -1000
+l457ifend:
+l458ifend:
+l459ifend:
+   .srcstep 180 180 17 "select_dispatch_general.crexx" 126 3 15 "  return -1001"
+   ret -1001
+   .meta "select_dispatch_general.public_if.value"
+
+duplicate_if() .locals=5 .expose=select_dispatch_general.duplicate_if
+   .meta "select_dispatch_general.duplicate_if"="b" ".int" duplicate_if() "value=.int"
+   .meta "select_dispatch_general.duplicate_if"=".inline" "I6;c,1,1,3,0,6,0,7,29,0,4,0,0,3,0,400;f,0,73656C6563745F64697370617463685F67656E6572616C2E6372657878;u,0,0,128,7,19,1,20206172672076616C7565203D202E696E74;u,1,0,128,7,12,1,20206172672076616C7565203D202E696E74;u,2,0,128,15,19,1,20206172672076616C7565203D202E696E74;u,3,0,130,3,32,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,4,0,130,6,15,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,5,0,130,6,11,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,6,0,130,14,15,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,7,0,130,21,32,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,8,0,130,28,32,1,202069662076616C7565203D2031207468656E2072657475726E2031313031;u,9,0,131,8,37,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,10,0,131,11,20,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,11,0,131,11,16,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,12,0,131,19,20,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,13,0,131,26,37,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,14,0,131,33,37,1,2020656C73652069662076616C7565203D2031207468656E2072657475726E2031313032;u,15,0,132,8,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,16,0,132,11,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,17,0,132,11,16,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,18,0,132,19,20,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,19,0,132,26,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,20,0,132,33,37,1,2020656C73652069662076616C7565203D2032207468656E2072657475726E2031313033;u,21,0,133,8,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,22,0,133,11,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,23,0,133,11,16,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,24,0,133,19,20,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,25,0,133,26,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,26,0,133,33,37,1,2020656C73652069662076616C7565203D2033207468656E2072657475726E2031313034;u,27,0,134,8,20,1,2020656C73652072657475726E202D31313030;u,28,0,134,15,20,1,2020656C73652072657475726E202D31313030;u,29,0,135,3,15,1,202072657475726E202D31313031;u,30,0,135,10,15,1,202072657475726E202D31313031;q,0,-1,3;s,0,0,76616C7565,2,3,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,3,3,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,3,3,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E696E74,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1101,0,0,31313031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1,0,0,31,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1102,0,0,31313032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,2,0,0,32,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1103,0,0,31313033,-;<;<;>,0,21,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,22,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,23,111,3,3,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,24,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,3,0,0,33,-;<;<;>,0,25,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,26,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,1104,0,0,31313034,-;<;<;>,0,27,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,28,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-1100,0,0,2D31313030,-;<;<;<;<;<;<;>,0,29,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,30,116,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,-1101,0,0,2D31313031,-;<;<;<"
+   .srcstep 201 201 17 "select_dispatch_general.crexx" 128 1 31 "duplicate_if: procedure = .int"
+   numsci 18,1,1
+   .srcstep 182 182 17 "select_dispatch_general.crexx" 129 7 19 "  arg value = .int"
+   .meta "select_dispatch_general.duplicate_if.value"="b" ".int" a1
+   .srcstep 197 197 17 "select_dispatch_general.crexx" 131 3 15 "  if value = 1 then return 1101"
+   .traceevent "V" 6 "R" "I" "a" 1 197 197 0 "value" ""
+   ieq r1,a1,1
+   .traceevent "O" 4 "R" "B" "r" 1 197 197 0 "" ""
+   brf l495iffalse,r1
+   .srcstep 198 198 17 "select_dispatch_general.crexx" 131 16 20 "  if value = 1 then return 1101"
+   .srcstep 183 183 17 "select_dispatch_general.crexx" 131 21 32 "  if value = 1 then return 1101"
+   ret 1101
+   br l495ifend
+   .srcstep 199 199 17 "select_dispatch_general.crexx" 132 3 7 "  else if value = 1 then return 1102"
+l495iffalse:
+   .srcstep 194 194 17 "select_dispatch_general.crexx" 132 8 20 "  else if value = 1 then return 1102"
+   .traceevent "V" 6 "R" "I" "a" 1 194 194 0 "value" ""
+   ieq r2,a1,1
+   .traceevent "O" 4 "R" "B" "r" 2 194 194 0 "" ""
+   brf l494iffalse,r2
+   .srcstep 195 195 17 "select_dispatch_general.crexx" 132 21 25 "  else if value = 1 then return 1102"
+   .srcstep 184 184 17 "select_dispatch_general.crexx" 132 26 37 "  else if value = 1 then return 1102"
+   ret 1102
+   br l494ifend
+   .srcstep 196 196 17 "select_dispatch_general.crexx" 133 3 7 "  else if value = 2 then return 1103"
+l494iffalse:
+   .srcstep 191 191 17 "select_dispatch_general.crexx" 133 8 20 "  else if value = 2 then return 1103"
+   .traceevent "V" 6 "R" "I" "a" 1 191 191 0 "value" ""
+   ieq r3,a1,2
+   .traceevent "O" 4 "R" "B" "r" 3 191 191 0 "" ""
+   brf l493iffalse,r3
+   .srcstep 192 192 17 "select_dispatch_general.crexx" 133 21 25 "  else if value = 2 then return 1103"
+   .srcstep 185 185 17 "select_dispatch_general.crexx" 133 26 37 "  else if value = 2 then return 1103"
+   ret 1103
+   br l493ifend
+   .srcstep 193 193 17 "select_dispatch_general.crexx" 134 3 7 "  else if value = 3 then return 1104"
+l493iffalse:
+   .srcstep 188 188 17 "select_dispatch_general.crexx" 134 8 20 "  else if value = 3 then return 1104"
+   .traceevent "V" 6 "R" "I" "a" 1 188 188 0 "value" ""
+   ieq r4,a1,3
+   .traceevent "O" 4 "R" "B" "r" 4 188 188 0 "" ""
+   brf l492iffalse,r4
+   .srcstep 189 189 17 "select_dispatch_general.crexx" 134 21 25 "  else if value = 3 then return 1104"
+   .srcstep 186 186 17 "select_dispatch_general.crexx" 134 26 37 "  else if value = 3 then return 1104"
+   ret 1104
+   br l492ifend
+   .srcstep 190 190 17 "select_dispatch_general.crexx" 135 3 7 "  else return -1100"
+l492iffalse:
+   .srcstep 187 187 17 "select_dispatch_general.crexx" 135 8 20 "  else return -1100"
+   ret -1100
+l492ifend:
+l493ifend:
+l494ifend:
+l495ifend:
+   .srcstep 200 200 17 "select_dispatch_general.crexx" 136 3 15 "  return -1101"
+   ret -1101
+   .meta "select_dispatch_general.duplicate_if.value"

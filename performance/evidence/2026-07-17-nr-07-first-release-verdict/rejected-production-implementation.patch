@@ -1,0 +1,316 @@
+diff --git a/compiler/rxcp_emit.h b/compiler/rxcp_emit.h
+index d3bab5a08..fe0890bb0 100644
+--- a/compiler/rxcp_emit.h
++++ b/compiler/rxcp_emit.h
+@@ -50,6 +50,7 @@ struct OutputFragment {
+ };
+ 
+ extern const char* emit_promotion[10][10];
++int rxcp_emit_is_direct_integer_condition(ASTNode *condition);
+ 
+ OutputFragment *output_f();
+ OutputFragment *output_fs(char* text);
+diff --git a/compiler/rxcp_emit_expr.c b/compiler/rxcp_emit_expr.c
+index a1fa19492..fde3ef300 100644
+--- a/compiler/rxcp_emit_expr.c
++++ b/compiler/rxcp_emit_expr.c
+@@ -482,6 +482,148 @@ static ASTNode *call_argument_group_primary(ASTNode *first,
+     return primary;
+ }
+ 
++static ValueType direct_condition_effective_type(ASTNode *node) {
++    if (!node) return TP_UNKNOWN;
++    return node->target_type != TP_UNKNOWN ? node->target_type : node->value_type;
++}
++
++static int direct_condition_operand_is_integer(ASTNode *node) {
++    ValueType type = direct_condition_effective_type(node);
++    return type == TP_BOOLEAN || type == TP_INTEGER;
++}
++
++int rxcp_emit_is_direct_integer_condition(ASTNode *condition) {
++    ASTNode *left;
++    ASTNode *right;
++    ASTNode *parent;
++
++    if (!condition || !condition->context || !condition->context->optimise) return 0;
++    switch (condition->node_type) {
++        case OP_COMPARE_EQUAL:
++        case OP_COMPARE_NEQ:
++        case OP_COMPARE_GT:
++        case OP_COMPARE_LT:
++        case OP_COMPARE_GTE:
++        case OP_COMPARE_LTE:
++            break;
++        default:
++            return 0;
++    }
++
++    parent = condition->parent;
++    if (!parent || parent->child != condition ||
++        (parent->node_type != IF &&
++         parent->node_type != WHILE &&
++         parent->node_type != UNTIL)) return 0;
++
++    left = ast_chdn(condition, 0);
++    right = ast_chdn(condition, 1);
++    if (!left || !right) return 0;
++    if (!direct_condition_operand_is_integer(left) ||
++        !direct_condition_operand_is_integer(right)) return 0;
++    if (condition->cleanup || left->cleanup || right->cleanup) return 0;
++    if (is_constant(left) && is_constant(right)) return 0;
++    if (!is_constant(left) && left->register_num < 0) return 0;
++    if (!is_constant(right) && right->register_num < 0) return 0;
++    return 1;
++}
++
++static NodeType direct_condition_reverse_compare(NodeType type) {
++    switch (type) {
++        case OP_COMPARE_GT: return OP_COMPARE_LT;
++        case OP_COMPARE_LT: return OP_COMPARE_GT;
++        case OP_COMPARE_GTE: return OP_COMPARE_LTE;
++        case OP_COMPARE_LTE: return OP_COMPARE_GTE;
++        default: return type;
++    }
++}
++
++static const char *direct_condition_branch_opcode(NodeType type, int branch_when_true) {
++    if (branch_when_true) {
++        switch (type) {
++            case OP_COMPARE_EQUAL: return "beq";
++            case OP_COMPARE_NEQ: return "bne";
++            case OP_COMPARE_GT: return "bgt";
++            case OP_COMPARE_LT: return "blt";
++            case OP_COMPARE_GTE: return "bge";
++            case OP_COMPARE_LTE: return "ble";
++            default: return 0;
++        }
++    }
++
++    switch (type) {
++        case OP_COMPARE_EQUAL: return "bne";
++        case OP_COMPARE_NEQ: return "beq";
++        case OP_COMPARE_GT: return "ble";
++        case OP_COMPARE_LT: return "bge";
++        case OP_COMPARE_GTE: return "blt";
++        case OP_COMPARE_LTE: return "bgt";
++        default: return 0;
++    }
++}
++
++/* Emit the branch as the direct condition's expression output so each operand
++ * fragment remains owned by exactly one output chain. */
++static int emit_direct_integer_condition(ASTNode *condition) {
++    ASTNode *left;
++    ASTNode *right;
++    ASTNode *parent;
++    NodeType compare_type;
++    const char *opcode;
++    const char *suffix;
++    int label;
++    int branch_when_true;
++    char *right_operand;
++    char *text;
++
++    if (!rxcp_emit_is_direct_integer_condition(condition)) return 0;
++    parent = condition->parent;
++    left = ast_chdn(condition, 0);
++    right = ast_chdn(condition, 1);
++    compare_type = condition->node_type;
++
++    if (parent->node_type == IF) {
++        label = parent->node_number;
++        suffix = "iffalse";
++        branch_when_true = 0;
++    } else {
++        if (!parent->parent || !parent->parent->parent) return 0;
++        label = parent->parent->parent->node_number;
++        suffix = "doend";
++        branch_when_true = parent->node_type == UNTIL;
++    }
++
++    if (!condition->output) condition->output = output_f();
++    if (left->output) output_concat(condition->output, left->output);
++    if (right->output) output_concat(condition->output, right->output);
++
++    if (is_constant(left)) {
++        ASTNode *temporary = left;
++        left = right;
++        right = temporary;
++        compare_type = direct_condition_reverse_compare(compare_type);
++    }
++
++    opcode = direct_condition_branch_opcode(compare_type, branch_when_true);
++    right_operand = is_constant(right)
++                    ? format_constant(TP_INTEGER, right)
++                    : mprintf("%c%d", right->register_type, right->register_num);
++    if (!opcode || !right_operand) return 0;
++
++    text = mprintf("   %s l%d%s,%c%d,%s\n",
++                   opcode,
++                   label,
++                   suffix,
++                   left->register_type,
++                   left->register_num,
++                   right_operand);
++    free(right_operand);
++    if (!text) return 0;
++    output_append_text(condition->output, text);
++    free(text);
++    return 1;
++}
++
+ void emit_expression(ASTNode *node, void *payload) {
+     walker_payload *wp = (walker_payload*)payload;
+     char *op = 0;
+@@ -903,21 +1045,27 @@ void emit_expression(ASTNode *node, void *payload) {
+ 
+         /* These operators have a prefix type of that of the first child */
+         case OP_COMPARE_EQUAL:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="eq";
+         case OP_COMPARE_NEQ:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="ne";
+         case OP_COMPARE_GT:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="gt";
+         case OP_COMPARE_LT:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="lt";
+         case OP_COMPARE_GTE:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="gte";
+         case OP_COMPARE_LTE:
++            if (emit_direct_integer_condition(node)) break;
+             loose_string_compare = 1;
+             if (!op) op="lte";
+         case OP_COMPARE_S_EQ:
+diff --git a/compiler/rxcp_emit_flow.c b/compiler/rxcp_emit_flow.c
+index 19c5c77fe..0c24439ec 100644
+--- a/compiler/rxcp_emit_flow.c
++++ b/compiler/rxcp_emit_flow.c
+@@ -522,15 +522,17 @@ void emit_flow(ASTNode *node, void *pl) {
+             free(comment_meta);
+ 
+             if (child1->output) output_concat(node->output, child1->output);
++            if (!rxcp_emit_is_direct_integer_condition(child1)) {
++                temp1 = mprintf("   brf l%diffalse,%c%d\n",
++                                node->node_number,
++                                node->register_type,
++                                node->register_num);
++                output_append_text(node->output, temp1);
++                free(temp1);
++            }
+             output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+             comment_meta = get_metaline_token_after(child1);
+-            temp1 = mprintf("   brf l%diffalse,%c%d\n%s",
+-                            node->node_number,
+-                            node->register_type,
+-                            node->register_num,
+-                            comment_meta);
+-            output_append_text(node->output, temp1);
+-            free(temp1);
++            output_append_text(node->output, comment_meta);
+             free(comment_meta);
+             output_concat(node->output, child2->output);
+             if (child3) {
+@@ -896,12 +898,14 @@ void emit_flow(ASTNode *node, void *pl) {
+             node->loopstartchecks = output_fs(comment_meta);
+             free(comment_meta);
+             output_concat(node->loopstartchecks, child1->output);
+-            temp1 = mprintf("   brf l%ddoend,%c%d\n",
+-                            node->parent->parent->node_number,
+-                            node->register_type,
+-                            node->register_num);
+-            output_append_text(node->loopstartchecks, temp1);
+-            free(temp1);
++            if (!rxcp_emit_is_direct_integer_condition(child1)) {
++                temp1 = mprintf("   brf l%ddoend,%c%d\n",
++                                node->parent->parent->node_number,
++                                node->register_type,
++                                node->register_num);
++                output_append_text(node->loopstartchecks, temp1);
++                free(temp1);
++            }
+             if (child1->cleanup) {
+                 if (!node->cleanup) node->cleanup = output_f();
+                 output_concat(node->cleanup, child1->cleanup);
+@@ -918,12 +922,14 @@ void emit_flow(ASTNode *node, void *pl) {
+             node->loopendchecks = output_fs(comment_meta);
+             free(comment_meta);
+             output_concat(node->loopendchecks, child1->output);
+-            temp1 = mprintf("   brt l%ddoend,%c%d\n",
+-                            node->parent->parent->node_number,
+-                            node->register_type,
+-                            node->register_num);
+-            output_append_text(node->loopendchecks, temp1);
+-            free(temp1);
++            if (!rxcp_emit_is_direct_integer_condition(child1)) {
++                temp1 = mprintf("   brt l%ddoend,%c%d\n",
++                                node->parent->parent->node_number,
++                                node->register_type,
++                                node->register_num);
++                output_append_text(node->loopendchecks, temp1);
++                free(temp1);
++            }
+             if (child1->cleanup) {
+                 if (!node->cleanup) node->cleanup = output_f();
+                 output_concat(node->cleanup, child1->cleanup);
+diff --git a/compiler/tests/golden/opt/07_loops.rxas b/compiler/tests/golden/opt/07_loops.rxas
+index 3386f6fb9..1305f5384 100644
+--- a/compiler/tests/golden/opt/07_loops.rxas
++++ b/compiler/tests/golden/opt/07_loops.rxas
+@@ -48,9 +48,7 @@ l3doend:
+ l19dostart:
+    .srcstep 8 8 17 "07_loops.crexx" 10 4 15 "do while j < 3"
+    .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "j" ""
+-   ilt r4,r0,3
+-   .traceevent "O" 4 "R" "B" "r" 4 0 0 0 "" ""
+-   brf l19doend,r4
++   bge l19doend,r0,3
+    .srcstep 9 9 17 "07_loops.crexx" 11 5 18 "    say \"While\" j"
+    itos r0
+    .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "j" ""
+diff --git a/compiler/tests/golden/opt/basic_loops.rxas b/compiler/tests/golden/opt/basic_loops.rxas
+index 935f27906..16b04f393 100644
+--- a/compiler/tests/golden/opt/basic_loops.rxas
++++ b/compiler/tests/golden/opt/basic_loops.rxas
+@@ -33,9 +33,7 @@ l7dostart:
+    .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "i" ""
+    imod r6,r3,2
+    .traceevent "O" 4 "R" "I" "r" 6 7 7 0 "" ""
+-   ieq r6,r6,0
+-   .traceevent "O" 4 "R" "B" "r" 6 7 7 0 "" ""
+-   brf l27iffalse,r6
++   bne l27iffalse,r6,0
+    .srcstep 8 8 17 "basic_loops.crexx" 4 16 20 "  if i % 2 = 0 then say i || \" is even\""
+    .srcstep 5 5 17 "basic_loops.crexx" 4 21 40 "  if i % 2 = 0 then say i || \" is even\""
+    itos r3
+@@ -75,9 +73,7 @@ l7doend:
+ l37dostart:
+    .srcstep 14 14 17 "basic_loops.crexx" 10 4 15 "do while j > 0"
+    .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "j" ""
+-   igt r8,r1,0
+-   .traceevent "O" 4 "R" "B" "r" 8 0 0 0 "" ""
+-   brf l37doend,r8
++   ble l37doend,r1,0
+    .srcstep 15 15 17 "basic_loops.crexx" 11 3 16 "  say \"j=\" || j"
+    itos r1
+    .traceevent "V" 6 "R" "S" "r" 1 15 15 0 "j" ""
+@@ -124,9 +120,7 @@ l61dostart:
+ l61doinc:
+    .srcstep 21 21 17 "basic_loops.crexx" 17 4 15 "do until k = 3"
+    .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "k" ""
+-   ieq r8,r2,3
+-   .traceevent "O" 4 "R" "B" "r" 8 0 0 0 "" ""
+-   brt l61doend,r8
++   beq l61doend,r2,3
+    .srcstep 26 26 17 "basic_loops.crexx" 21 1 4 "end"
+    br l61dostart
+ l61doend:

@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://crexx.org/schemas/import-resolution-report-v1.json",
+  "title": "cREXX compiler import-resolution report",
+  "description": "Canonical observe-or-enforce evidence emitted by rxc at import discovery and provider-selection decision points.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "tool",
+    "primary_source",
+    "options",
+    "candidate_events",
+    "selected_candidates",
+    "provider_bindings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "crexx.import-resolution-report/v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "enforced"
+      ]
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "rxc"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "primary_source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_roots",
+        "binary_roots",
+        "auto_import_rxas",
+        "executable_directory"
+      ],
+      "properties": {
+        "source_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "binary_roots": {
+          "$ref": "#/$defs/string_array"
+        },
+        "auto_import_rxas": {
+          "type": "boolean"
+        },
+        "executable_directory": {
+          "type": "string",
+          "enum": [
+            "included",
+            "excluded"
+          ]
+        }
+      }
+    },
+    "candidate_events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/candidate_event"
+      }
+    },
+    "selected_candidates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/selected_candidate"
+      }
+    },
+    "provider_bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/provider_binding"
+      }
+    }
+  },
+  "$defs": {
+    "string_array": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifact_kind": {
+      "type": "string",
+      "enum": [
+        "source",
+        "rxas",
+        "rxbin",
+        "rxplugin"
+      ]
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "source",
+        "binary",
+        "native"
+      ]
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "root_kind",
+        "root_index",
+        "sha256",
+        "digest_status",
+        "mtime_seconds"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "$ref": "#/$defs/artifact_kind"
+        },
+        "root_kind": {
+          "type": "string",
+          "enum": [
+            "primary-source",
+            "source",
+            "binary",
+            "executable"
+          ]
+        },
+        "root_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "digest_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "missing",
+            "read-error"
+          ]
+        },
+        "mtime_seconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "candidate_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "stage",
+        "module",
+        "candidate",
+        "decision",
+        "reason"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stage": {
+          "$ref": "#/$defs/stage"
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate": {
+          "$ref": "#/$defs/candidate"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "admitted",
+            "rejected",
+            "replaced"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replaced_path": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "selected_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "module",
+        "candidate"
+      ],
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/stage"
+        },
+        "module": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate": {
+          "$ref": "#/$defs/candidate"
+        }
+      }
+    },
+    "provider_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "request",
+        "provider_path",
+        "provider_kind",
+        "provider_sha256",
+        "reason"
+      ],
+      "properties": {
+        "request": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_kind": {
+          "$ref": "#/$defs/artifact_kind"
+        },
+        "provider_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

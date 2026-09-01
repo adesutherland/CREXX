@@ -22,13 +22,22 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place object-array clear.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/objectarraydrop.md
+ */
 options levelb
-
 namespace rxfnsb expose objectarraydrop
 
-/* Clear an object array in place. */
-objectarraydrop: procedure=.int
-  arg expose array=.object[]
+/**
+ * Remove every value from an object array.
+ *
+ * @param array exposed object array to clear
+ * @return zero, the new high-water mark
+ */
+objectarraydrop: procedure = .int
+  arg expose array = .object[]
   assembler SETATTRS array,0
-return 0
+  return 0

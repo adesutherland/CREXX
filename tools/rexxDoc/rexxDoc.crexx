@@ -1,18 +1,4 @@
-/* REXX */
-
-options levelb
-import rxfnsb
-
-main: procedure
-
-/* ----- add here a rexx program with rexxDOC content -----
-                    v
-                    v                  */
-   rexx="/Users/rvjansen/apps/crexx-develop/lib/classlib/TreeMap.crexx"
-/* extract documentation */
-   call rexxDoc(rexx,'html')    /* format either DUMP or HTML */
-return
-
+options levelb comments_dash
 /* ------------------------------------------------------------------
  *  Program:   RexxDoc JavaDoc Extractor
  *
@@ -37,7 +23,8 @@ rexxDoc: procedure
    rexxContent = loadText(file)
 
    /* Extract all JavaDoc comment blocks including delimiters */
-   founddocs = QEXTRACTALL('/**','*/',rexxContent,'incl')
+   -- founddocs = QEXTRACTALL('/**','*/',rexxContent,'incl')
+   founddocs.1 = '' 
    do i = 1 to founddocs.0
       do         /* Fresh arrays for each parsed block */
          tagName = .string[]

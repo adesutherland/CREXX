@@ -1,0 +1,7 @@
+input,scope,procedures,state_cells,exact_cells,unknown_cells,exact_percent,aliased_cells,exact_links,unknown_links,success_only_links,exact_swap_pairs,unknown_swap_pairs,unlinks,joins,join_unknown_cells,backedges,unsupported,full_copies,full_copy_exact,full_copy_base,tainted_full_copies,tainted_full_exact,tainted_full_base,alias_self_copies,swap_roundtrips,interpretation
+richards,current_compiler_rxas,24,176414,171203,5211,97.046,18,0,649,649,9,0,642,101,79,5,0,71,69,69,55,55,55,0,0,all_globally_tainted_full_copy_sites_have_exact_base_storage_but_removal_is_unproved
+towers,current_compiler_rxas,13,39858,39040,818,97.948,0,0,64,64,1,0,61,87,14,4,0,64,21,21,56,13,13,0,0,thirteen_globally_tainted_full_copy_sites_recover_exact_base_storage
+cri13_hot_shape,retained_trace_focused_fixture,1,264,262,2,99.242,0,0,1,1,0,0,1,0,0,0,0,2,1,1,0,0,0,0,0,register_local_second_copy_exact_first_throwing_attribute_copy_unknown
+swap_roundtrip,focused_fixture,1,20,20,0,100.000,8,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,1,non_adjacent_unobserved_swapn_roundtrip_found_without_rewrite
+swap_observed,focused_negative_fixture,1,20,20,0,100.000,8,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,affected_mapping_write_blocks_roundtrip_candidate
+

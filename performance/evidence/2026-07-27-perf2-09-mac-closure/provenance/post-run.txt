@@ -1,0 +1,21 @@
+PERF2-09 Apple formal closure post-run environment
+captured_utc=2026-07-27T18:10:45Z
+repository_branch=develop
+repository_head=057592681c0c68e90f436bf02d8c5a116111952a
+power_source=AC Power
+battery=80 percent; AC attached; not charging
+low_power_mode=0
+thermal_warning=none recorded
+performance_warning=none recorded
+cpu_power_warning=none recorded
+uptime=13 days 12 hours 18 minutes
+load_averages=2.97 2.79 2.49
+formal_timing_initial=348 of 348 executions passed
+formal_timing_append=20 of 20 Base64 executions passed; both cREXX series remain noisy
+formal_rss_initial=87 of 87 executions passed
+formal_rss_append=40 of 40 NetRexx executions passed; four selected series remain noisy
+formal_lifecycle_initial=80 of 80 phase rows passed
+formal_lifecycle_append=80 of 80 phase rows passed; seven of eight merged phases remain noisy
+samples_removed=0
+competing_campaigns=none
+interpretation=formal same-host Apple observation; no cross-platform or release-wide claim

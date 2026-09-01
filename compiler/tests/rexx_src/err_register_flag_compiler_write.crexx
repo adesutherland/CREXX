@@ -1,0 +1,16 @@
+options levelb
+namespace err_register_flag_compiler_write
+
+box = .FlagBox()
+call box.bad()
+exit 0
+
+FlagBox: class
+  compiler_flags = .int with register.0.flags.compiler
+
+  *: factory
+    return
+
+  bad: method = .void
+    compiler_flags = 0
+    return

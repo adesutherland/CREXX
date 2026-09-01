@@ -10,6 +10,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 # Create dynamic plugin module
 add_dynamic_plugin_target(_getpi getpi.c)
+target_link_libraries(_getpi PRIVATE Threads::Threads)
 
 add_custom_target(getpi_test ALL)
 crexx_add_rexx_opt_matrix(

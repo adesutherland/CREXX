@@ -1,0 +1,7 @@
+49efe16928bc9720904d127325a93d1e7c39642eb2f592f2972e52fbdcdcb585  performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/artifacts/s0/rexxcps.rxas
+0872544ec7a7dc57ccf175d48083c3b7db97859da34bd7aaa013028b78f97f65  performance/evidence/2026-08-04-perf3-12b-b4-comparative-panel/artifacts/s0/rexxcps.rxbin
+f4693591f589219680ceb9cad46c7dfca11df48cbddab1cd30379fa24eb8a512  performance/evidence/2026-08-05-perf3-12b-b5-first-release-verdict/artifacts/rexxcps-production.rxbin
+ce4a4fc1da748b17c2c16403f5f1234a846d7252f2789668042207b63146a475  cmake-build-release/bin/rxas
+a5ed57119982b1466b9fccafae9d4af2a0258d8d68551a04cef85ac79deebcc5  cmake-build-release/bin/rxvm
+eb5d4b1f2aa619124a20e709ee4f61bcdd84db9df4a142d159afe35d3a110048  cmake-build-release/bin/rxbvm
+947553bbb83b144f6089e360b5a7d8feca24860f296cd6eb6cd83646e5cd831e  cmake-build-release/bin/library.rxbin

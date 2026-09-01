@@ -1,0 +1,395 @@
+[0/2] Re-checking globbed directories...
+[1/395] cREXX RXLINK fixture tests_link_root ...
+[2/395] cREXX RXLINK fixture tests_link_provider_a ...
+[3/395] cREXX RXLINK fixture tests_link_interface_impl ...
+[4/395] cREXX RXLINK fixture tests_link_interface_root ...
+[5/395] cREXX RXAS Float Constant Pool Tests ...
+[6/395] cREXX RXBIN 007 portable-format tests ...
+[7/395] cREXX RXLINK success fixture ...
+[8/395] cREXX RXLINK inline-metadata fixture ...
+[9/395] cREXX RXLINK interface fixture ...
+[10/395] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o
+[11/395] Building C object lib/plugins/system/CMakeFiles/_system_static.dir/system.c.o
+[12/395] Building C object tests/rxpa/CMakeFiles/_rxpa_classdecl_static_decl.dir/rxpa_classdecl.c.o
+[13/395] cREXX RXLINK stripped fixture ...
+[14/395] Building C object interpreter/CMakeFiles/mutate_jtable_rxbin.dir/tests/mutate_jtable_rxbin.c.o
+[15/395] cREXX RXLINK record-stream concat fixture ...
+[16/395] cREXX RXLINK fixture tests_link_provider_b ...
+[17/395] Building C object tests/rxpa/CMakeFiles/_rxpalink_static.dir/rxpa_staticlink.c.o
+[18/395] cREXX RXLINK fixture tests_link_srcfproc_root ...
+[19/395] cREXX RXLINK fixture tests_link_srcfproc_contract ...
+[20/395] cREXX RXLINK fixture tests_link_srcmethod_root ...
+[21/395] cREXX RXLINK fixture tests_link_srcmethod_provider ...
+[22/395] Building C object compiler/tests/CMakeFiles/test_rxcp_super_combiner.dir/test_rxcp_super_combiner.c.o
+[23/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/exitfunc.c.o
+[24/395] Linking C executable interpreter/mutate_jtable_rxbin
+[25/395] Building C object linker/CMakeFiles/test_linked_format.dir/tests/test_linked_format.c.o
+[26/395] Linking C static library bin/rx_system_static.a
+[27/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/interrupt.c.o
+[28/395] Building C object compiler/tests/CMakeFiles/test_source_provenance.dir/src/test_source_provenance.c.o
+[29/395] Building C object binutils/CMakeFiles/test_rxgraph.dir/tests/test_rxgraph.c.o
+[30/395] Building C object compiler/tests/CMakeFiles/test_source_semantics.dir/src/test_source_semantics.c.o
+[31/395] Building C object contract/CMakeFiles/crexx-contract.dir/contract_model.c.o
+[32/395] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o
+[33/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/interrupt.c.o
+[34/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/exitfunc.c.o
+[35/395] Linking C executable bin/rxdas
+[36/395] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[37/395] Building C object interpreter/CMakeFiles/test_rxseqfile.dir/tests/test_rxseqfile.c.o
+[38/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/rxvml/rxvm_run.c.o
+[39/395] cREXX RXDAS roundtrip fixture tests_compact_format ...
+[40/395] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/tests/test_disassembler_dump.c.o
+[41/395] Building C object interpreter/CMakeFiles/test_rxseqfile.dir/rxseqfile.c.o
+[42/395] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[43/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmload.c.o
+[44/395] Building C object interpreter/CMakeFiles/rxvm_instrumented.dir/rxvmmain.c.o
+[45/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxpafuncs.c.o
+[46/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/rxvmload.c.o
+[47/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/rxpafuncs.c.o
+[48/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvml/rxvm_run.c.o
+[49/395] Building C object interpreter/CMakeFiles/test_rxcrexxcmd_flush.dir/tests/test_rxcrexxcmd_flush.c.o
+[50/395] cREXX RXAS jump-table corruption base (linear) ...
+[51/395] Linking C shared library bin/libcrexxsaa.dylib
+[52/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented.dir/rxvmmain.c.o
+[53/395] cREXX RXAS jump-table corruption base (openhash) ...
+[54/395] cREXX RXAS jump-table corruption base (acph) ...
+[55/395] Building C object interpreter/CMakeFiles/test_float_pool_format.dir/tests/test_float_pool_format.c.o
+[56/395] Building C object interpreter/CMakeFiles/test_compact_format.dir/tests/test_compact_format.c.o
+[57/395] Building C object disassembler/CMakeFiles/test_disassembler_dump.dir/rxdadism.c.o
+[58/395] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[59/395] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[60/395] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/tests/test_rxpa_utf_validation.c.o
+[61/395] Building C object lib/plugins/rxmath/CMakeFiles/_rxmath_static.dir/rxmath.c.o
+[62/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/rxspawn.c.o
+[63/395] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess_static.dir/keyaccess.c.o
+[64/395] Building C object lib/plugins/llist/CMakeFiles/_llist_static.dir/llist.c.o
+[65/395] Building C object interpreter/CMakeFiles/test_rxpa_utf_validation.dir/rxpafuncs.c.o
+[66/395] Building C object tests/rxpa/CMakeFiles/_rxpa_bad_signatures.dir/rxpa_bad_signatures.c.o
+[67/395] Building C object lib/plugins/id/CMakeFiles/_id_static.dir/id.c.o
+[68/395] Building C object tests/rxpa/CMakeFiles/_rxpa_classdecl.dir/rxpa_classdecl.c.o
+[69/395] Building C object tests/CMakeFiles/test_rxinteger_contract.dir/test_rxinteger_contract.c.o
+[70/395] Building C object lib/plugins/rxtcp/CMakeFiles/_rxtcp_static.dir/rxtcp.c.o
+[71/395] Building C object lib/plugins/treemap/CMakeFiles/_treemap_static.dir/treemap.c.o
+[72/395] Building C object interpreter/CMakeFiles/test_rxvmstem.dir/tests/test_rxvmstem.c.o
+[73/395] Linking C static library tests/rx_rxpa_classdecl_static_decl.a
+[74/395] Linking C executable bin/test_rxgraph
+[75/395] Linking C executable bin/crexx-contract
+[76/395] Building C object interpreter/CMakeFiles/ts_regvalue_tester.dir/tests/ts_regvalue_tester.c.o
+[77/395] Linking C static library tests/rx_rxpalink_static.a
+[78/395] Building C object tests/rxpa/CMakeFiles/testvm.dir/__/__/interpreter/rxvmmain.c.o
+[79/395] Linking C executable compiler/tests/test_rxvml_utf_boundaries
+[80/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxspawn.c.o
+[81/395] Building C object lib/plugins/recv390/CMakeFiles/_recv390_static.dir/recv390.c.o
+[82/395] Linking C executable compiler/tests/test_highlight_cache
+[83/395] Linking C executable compiler/tests/test_highlight_editor_diagnostics
+[84/395] Linking C executable compiler/tests/test_rxcp_super_combiner
+[85/395] Linking C executable compiler/tests/test_source_provenance
+[86/395] Linking C executable compiler/tests/test_crexxsaa_status
+[87/395] Linking C executable compiler/tests/test_source_semantics
+[88/395] C Packing cREXX RXFNSB Library ...
+[89/395] Building C object interpreter/CMakeFiles/rxvme.dir/rxvmmain.c.o
+[90/395] Compiling test_trace_source_jump_helper.crexx (opt)
+[91/395] Building C object interpreter/CMakeFiles/rxbvme.dir/rxvmmain.c.o
+[92/395] Compiling test_trace_source_jump_helper.crexx (noopt)
+[93/395] Building optimized arraydump function example
+[94/395] Building optimized arrayformat function example
+[95/395] Bundling array-formatting function example
+[96/395] Compiling test_reentrancy.crexx ...
+[97/395] cREXX compile and assemble rxdb_gui ...
+[98/395] Compiling dynamic_load_provider.crexx ...
+[99/395] Compiling stub_plugin.crexx ...
+[100/395] Building optimized array-formatting example program
+[101/395] Linking C executable compiler/tests/test_bridge
+[102/395] Compiling sqlite_address_demo.crexx ...
+[103/395] Linking C executable compiler/tests/native_sqlite_address_demo
+[104/395] Compiling kv_address_demo.crexx ...
+[105/395] Linking C executable compiler/tests/native_kv_address_demo
+[106/395] Compiling test_dump.crexx with exit (noopt)
+[107/395] Compiling test_query.crexx with exit (opt)
+[108/395] Compiling test_query.crexx with exit (noopt)
+[109/395] Compiling test_sort.crexx with exit (noopt)
+[110/395] Compiling crexxsaa_variables_host.crexx ...
+[111/395] Compiling test_dump.crexx with exit (opt)
+[112/395] Linking C executable compiler/tests/test_crexxsaa_variables
+[113/395] Compiling test_sort.crexx with exit (opt)
+[114/395] Compiling test_sortx.crexx with exit (noopt)
+[115/395] Compiling test_sortx.crexx with exit (opt)
+[116/395] Compiling address_callback_host.crexx ...
+[117/395] Linking C executable compiler/tests/test_address_callback_host
+[118/395] Building C object interpreter/CMakeFiles/rxbvm_instrumented_core_objects.dir/rxvmintp.c.o
+[119/395] Compiling cms_address_demo.crexx ...
+[120/395] Building C object interpreter/CMakeFiles/rxvm_instrumented_core_objects.dir/rxvmintp.c.o
+[121/395] Building optimized pprint compiler-exit example
+[122/395] Bundling standalone pprint compiler-exit example
+[123/395] Compiling test_address.crexx with exit (noopt)
+[124/395] Compiling cms_address_environment.crexx ...
+[125/395] Compiling test_address.crexx with exit (opt)
+[126/395] Compiling test_address_direct.crexx with exit (noopt)
+[127/395] Compiling address_llm_host.crexx ...
+[128/395] Compiling address_cms_host.crexx ...
+[129/395] Linking C executable compiler/tests/test_address_bridge
+[130/395] Compiling llm_address_environment.crexx ...
+[131/395] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[132/395] Compiling test_execio.crexx with exit (noopt)
+[133/395] Linking C executable bin/rxvme
+[134/395] Compiling dynamic_load_host.crexx ...
+[135/395] Compiling test_execio.crexx with exit (opt)
+[136/395] Linking C executable compiler/tests/test_dynamic_load
+[137/395] Compiling test_fsay.crexx with exit (opt)
+[138/395] Compiling test_fsay.crexx with exit (noopt)
+[139/395] Compiling test_address_direct.crexx with exit (opt)
+[140/395] Building C object interpreter/CMakeFiles/rxbvme.dir/library.c.o
+[141/395] Compiling test_msay.crexx with exit (noopt)
+[142/395] Compiling test_msay.crexx with exit (opt)
+[143/395] cREXX compile, assemble, link and package rxdb ...
+[144/395] Building C object debugger/CMakeFiles/rxdb.dir/rxdb.c.o
+[145/395] Compiling test_add.crexx with exit (noopt)
+[146/395] Compiling test_signal.crexx with exit (noopt)
+[147/395] Compiling test_add.crexx with exit (opt)
+[148/395] Compiling test_parse_direct.crexx with exit (noopt)
+[149/395] Compiling test_signal.crexx with exit (opt)
+[150/395] Compiling reference_source_invalid_signal.crexx with exit (noopt)
+[151/395] Compiling test_signal_direct.crexx with exit (noopt)
+[152/395] Compiling reference_source_invalid_signal.crexx with exit (opt)
+[153/395] Compiling test_signal_block.crexx with exit (noopt)
+[154/395] Compiling test_signal_block.crexx with exit (opt)
+[155/395] Compiling test_signal_direct.crexx with exit (opt)
+[156/395] Compiling test_trace_stderr.crexx with exit (noopt)
+[157/395] Compiling test_trace_file.crexx with exit (noopt)
+[158/395] Compiling test_trace_stderr.crexx with exit (opt)
+[159/395] Linking C executable linker/test_linked_format
+[160/395] cREXX RXLINK fixture tests_link_signature_bad_impl ...
+[161/395] cREXX RXLINK control-file fixture ...
+[162/395] cREXX RXLINK srcfprocsel fixture ...
+[163/395] cREXX RXLINK srcmethodsel fixture ...
+[164/395] cREXX RXDAS roundtrip fixture tests_basic ...
+[165/395] cREXX RXDAS roundtrip fixture tests_int_contract ...
+[166/395] cREXX RXDAS roundtrip fixture tests_float_pool ...
+[167/395] Linking C executable disassembler/test_disassembler_dump
+[168/395] cREXX RXDAS roundtrip fixture tests_wide_operands ...
+[169/395] cREXX RXDAS roundtrip fixture tests_disassembler_roundtrip ...
+[170/395] cREXX RXDAS roundtrip fixture tests_interfaces ...
+[171/395] cREXX RXDAS roundtrip fixture tests_disassembler_imported ...
+[172/395] cREXX RXDAS roundtrip fixture tests_binary ...
+[173/395] cREXX RXDAS roundtrip fixture tests_jump_table ...
+[174/395] cREXX RXDAS roundtrip fixture tests_jump_table_rexx_strings ...
+[175/395] cREXX RXDAS roundtrip fixture tests_jump_table_hash_edges ...
+[176/395] Linking C executable bin/rxseq
+[177/395] Linking C executable bin/rxdb
+[178/395] Linking C executable bin/test_rxseqfile
+[179/395] Linking C executable bin/rxvm_instrumented
+[180/395] Linking C executable bin/rxbvm_instrumented
+[181/395] Linking C executable bin/rxbvme
+[182/395] Linking C executable bin/test_rxcrexxcmd_flush
+[183/395] Linking C executable interpreter/ts_regvalue_tester
+[184/395] Linking C executable bin/crexxsaa
+[185/395] Linking C executable interpreter/test_rxpa_utf_validation
+[186/395] Linking C executable interpreter/test_rxvmstem
+[187/395] Linking C executable interpreter/test_float_pool_format
+[188/395] Linking C executable interpreter/test_compact_format
+[189/395] cREXX RXAS Instruction Tests (raise uncaptured signal) ...
+[190/395] cREXX RXAS Instruction Tests (fallback panic source reporting) ...
+[191/395] cREXX RXAS Instruction Tests (breakpoint address reporting) ...
+[192/395] cREXX RXAS Instruction Tests (register flag partitioning) ...
+[193/395] Linking C executable interpreter/test_reentrancy
+[194/395] cREXX RXAS Instruction Tests (UTF flag cache) ...
+[195/395] cREXX RXAS Instruction Tests (attribute bulk insert/delete) ...
+[196/395] cREXX RXAS Instruction Tests (reference value instructions) ...
+[197/395] cREXX RXAS Instruction Tests (PERF2-02 direct reference guards) ...
+[198/395] cREXX RXAS Instruction Tests (PERF2-05 partial reference materialization) ...
+[199/395] cREXX RXAS Instruction Tests (object initialization lifecycle instructions) ...
+[200/395] cREXX RXAS Instruction Tests (PERF2-05 exact reference relink) ...
+[201/395] cREXX RXAS Instruction Tests (signal handler response modes) ...
+[202/395] cREXX RXAS Instruction Tests (signal call argument attributes) ...
+[203/395] cREXX RXAS Instruction Tests (signal mask boundary handling) ...
+[204/395] cREXX RXAS Instruction Tests (signal call-window mapping unwind) ...
+[205/395] cREXX RXAS Instruction Tests (signal silent halt response) ...
+[206/395] cREXX RXAS Instruction Tests (signal frame handler table scope) ...
+[207/395] cREXX RXAS Instruction Tests (nested pending signal delivery) ...
+[208/395] cREXX RXAS Instruction Tests (action-aware signal handlers) ...
+[209/395] cREXX RXAS Instruction Tests (signal handler push/pop scope) ...
+[210/395] cREXX RXAS Instruction Tests (signal branch with bound value) ...
+[211/395] cREXX RXAS Basic Instruction Tests ...
+[212/395] cREXX RXAS Instruction Tests (NR-09 large instructions) ...
+[213/395] cREXX RXAS Instruction Tests (signed 64-bit integer contract) ...
+[214/395] cREXX RXAS Integer Math Instruction Tests ...
+[215/395] cREXX RXAS Float Math Instruction Tests ...
+[216/395] cREXX RXAS String Instruction Tests ...
+[217/395] cREXX RXAS Logic and Flow Instruction Tests ...
+[218/395] cREXX RXAS System and I/O Instruction Tests ...
+[219/395] cREXX RXAS Instruction Tests (binary buffer and I/O) ...
+[220/395] cREXX RXAS Instruction Tests (linear jump table dispatch) ...
+[221/395] cREXX RXAS Instruction Tests (linear jump table source matrix) ...
+[222/395] cREXX RXAS Instruction Tests (typed binary memory operations) ...
+[223/395] cREXX RXAS Instruction Tests (openhash jump table source matrix) ...
+[224/395] cREXX RXAS Instruction Tests (acph jump table source matrix) ...
+[225/395] cREXX RXAS Instruction Tests (auto jump table source matrix) ...
+[226/395] cREXX RXAS Instruction Tests (open-hash and ACPH jump table edge cases) ...
+[227/395] cREXX RXAS Instruction Tests (auto jump table policy paths) ...
+[228/395] cREXX RXAS Instruction Tests (Rexx padded and numeric string jump tables) ...
+[229/395] cREXX RXAS Instruction Tests (jump table syntax and value boundaries) ...
+[230/395] Compiling test_trace_normal_quiet.crexx with exit (noopt)
+[231/395] Mutating jump table rxasjtablecorruptalgorithm (algorithm) ...
+[232/395] Mutating jump table rxasjtablecorruptheader (header) ...
+[233/395] Mutating jump table rxasjtablecorruptlinearkey (linear-key-offset) ...
+[234/395] Mutating jump table rxasjtablecorruptlineartarget (linear-target) ...
+[235/395] Mutating jump table rxasjtablecorruptopenslot (open-slot-offset) ...
+[236/395] Mutating jump table rxasjtablecorruptacphslot (acph-slot-kind) ...
+[237/395] Mutating jump table rxasjtablecorruptacphtarget (acph-target) ...
+[238/395] cREXX RXAS Socket Instruction Tests ...
+[239/395] cREXX RXAS Conversion Instruction Tests ...
+[240/395] cREXX RXAS Object Instruction Tests ...
+[241/395] cREXX RXAS Reflection Instruction Tests ...
+[242/395] cREXX RXAS Interface Dispatch Instruction Tests ...
+[243/395] cREXX RXAS Instruction Tests (descriptor selector contracts) ...
+[244/395] cREXX RXAS Stress Instruction Tests ...
+[245/395] cREXX RXAS Instruction Tests (arbitrary operand pipeline) ...
+[246/395] cREXX RXAS Decimal Instruction Tests ...
+[247/395] cREXX RXAS Instruction Tests (remaining deterministic instruction gaps) ...
+[248/395] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_test_harness
+[249/395] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_dyn_test_harness
+[250/395] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_manual_test_harness
+[251/395] Linking C executable interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal_full_tests
+[252/395] Linking archive-level db_decimal regression harness ...
+[253/395] Linking C executable interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal_tests
+[254/395] Linking C executable bin/rxpp-sh
+[255/395] Compiling test_trace_normal_command.crexx with exit (noopt)
+[256/395] Compiling test_trace_file.crexx with exit (opt)
+[257/395] Compiling test_trace_env.crexx with exit (noopt)
+[258/395] Compiling test_trace_event_batch.crexx with exit (noopt)
+[259/395] Compiling test_trace_env.crexx with exit (noopt)
+[260/395] Linking C static library bin/rx_rxmath_static.a
+[261/395] Compiling test_trace_normal_quiet.crexx with exit (opt)
+[262/395] Linking C static library bin/rx_stack_static.a
+[263/395] Compiling test_trace_env_ignored.crexx with exit (noopt)
+[264/395] Linking C static library bin/rx_cipher_static.a
+[265/395] Compiling test_trace_env.crexx with exit (opt)
+[266/395] Compiling test_trace_normal_command.crexx with exit (opt)
+[267/395] Compiling test_trace_event_batch.crexx with exit (opt)
+[268/395] Linking C static library bin/rx_keyaccess_static.a
+[269/395] Compiling test_rexxscript.crexx with exit (noopt)
+[270/395] Compiling test_parse_direct.crexx with exit (opt)
+[271/395] Compiling test_trace_source_jump.crexx with exit (noopt)
+[272/395] Linking C static library bin/rx_llist_static.a
+[273/395] Compiling test_trace_env.crexx with exit (opt)
+[274/395] Compiling test_rexxscript_direct.crexx with exit (noopt)
+[275/395] Linking C static library bin/rx_treemap_static.a
+[276/395] Linking C static library bin/rx_id_static.a
+[277/395] Compiling test_trace_env_ignored.crexx with exit (opt)
+[278/395] Compiling test_rexxscript.crexx with exit (opt)
+[279/395] Linking C static library bin/rx_recv390_static.a
+[280/395] Linking C static library bin/rx_rxtcp_static.a
+[281/395] Compiling test_rexxscript_direct.crexx with exit (opt)
+[282/395] Generating ts_arraysort_errors_noopt.rxbin
+[283/395] Generating ts_stem_errors_noopt.rxbin
+[284/395] Generating ts_rxhttp_noopt.rxbin
+[285/395] Compiling test_dummy.crexx with exit (noopt)
+[286/395] Compiling test_trace_source_jump.crexx with exit (opt)
+[287/395] Generating ts_llm_providers_noopt.rxbin
+[288/395] Generating ts_tinyexpr_noopt.rxbin
+[289/395] Generating whole_procedure_runtime_rxvm_noopt.rxbin
+[290/395] Generating whole_procedure_runtime_rxbvm_noopt.rxbin
+[291/395] Generating nr18_flow_runtime_rxvm_noopt.rxbin
+[292/395] Linking C executable tests/test_rxinteger_contract
+[293/395] Generating nr18_flow_runtime_rxbvm_noopt.rxbin
+[294/395] Generating storage_identity_runtime_rxvm_noopt.rxbin
+[295/395] Generating storage_identity_runtime_rxbvm_noopt.rxbin
+[296/395] Compiling test_dummy.crexx with exit (opt)
+[297/395] cREXX RXAS intr_test - Native Signal Test Harness ...
+[298/395] Compiling test_substr.crexx with exit (noopt)
+[299/395] Compiling test_substr.crexx with exit (opt)
+[300/395] Generating testJSON_noopt.rxbin
+[301/395] Generating testOS_noopt.rxbin
+[302/395] Generating testRexxClassicBifXrange_noopt.rxbin
+[303/395] Generating testRexxScriptCompat_noopt.rxbin
+[304/395] Generating concatenation_noopt.rxbin
+[305/395] cREXX compile, assemble, link and package standalone RexxScript runner ...
+[306/395] Generating crexxbrexx_noopt.rxbin
+[307/395] Generating arrays_test_noopt.rxbin
+[308/395] Generating math_test_noopt.rxbin
+[309/395] Generating stack_test_noopt.rxbin
+[310/395] Generating cipher_test_noopt.rxbin
+[311/395] Generating getpi_test_noopt.rxbin
+[312/395] Generating strings_test_noopt.rxbin
+[313/395] Generating keyaccess_test_noopt.rxbin
+[314/395] Building C object rexxscript/CMakeFiles/rexxscript_cli.dir/RexxScriptRunner.c.o
+[315/395] Generating treemap_test_noopt.rxbin
+[316/395] Generating llist_test_noopt.rxbin
+[317/395] Generating id_test_noopt.rxbin
+[318/395] Linking C executable bin/rexxscript
+[319/395] Generating recv390_test_noopt.rxbin
+[320/395] Generating system_test_noopt.rxbin
+[321/395] Generating map_test_noopt.rxbin
+[322/395] Generating tcp_test_noopt.rxbin
+[323/395] Generating benchmark_awfy_sieve_noopt.rxbin
+[324/395] Generating levelbfunc_noopt.rxbin
+[325/395] cREXX compile and assemble veclib ...
+[326/395] Building program with standalone pprint exit example
+[327/395] Generating benchmark_awfy_permute_noopt.rxbin
+[328/395] Generating benchmark_awfy_mandelbrot_noopt.rxbin
+[329/395] Generating benchmark_awfy_towers_noopt.rxbin
+[330/395] Generating benchmark_awfy_bounce_noopt.rxbin
+[331/395] Generating benchmark_awfy_storage_noopt.rxbin
+[332/395] Generating benchmark_awfy_list_noopt.rxbin
+[333/395] Generating benchmark_awfy_richards_noopt.rxbin
+[334/395] Generating reference_iterator_system_rxvm_noopt.rxbin
+[335/395] Generating reference_iterator_system_rxbvm_noopt.rxbin
+[336/395] Generating reference_iterator_perf_rxvm_noopt.rxbin
+[337/395] Generating reference_iterator_perf_rxbvm_noopt.rxbin
+[338/395] Generating reference_generated_contract_rxvm_noopt.rxbin
+[339/395] Generating reference_generated_contract_rxbvm_noopt.rxbin
+[340/395] Linking C shared module tests/rxpa/rx_rxpa_classdecl.rxplugin
+[341/395] Linking C shared module tests/rxpa/rx_rxpa_bad_signatures.rxplugin
+[342/395] Linking C executable tests/rxc_classdecl_static
+[343/395] Linking C executable tests/testvm
+[344/395] Generating benchmark_json_parser_noopt.rxbin
+[345/395] Generating benchmark_base64_roundtrip_noopt.rxbin
+[346/395] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[347/395] Generating inlining_simple_noopt.rxbin
+[348/395] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[349/395] Generating stringarraylist_iterator_compare_rxbvm_noopt.rxbin
+[350/395] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[351/395] Generating reference_iterator_compare_rxbvm_noopt.rxbin
+[352/395] Generating benchmark_runner_noopt.rxbin
+[353/395] Generating binary_fastpath_compare_noopt.rxbin
+[354/395] Generating stringtreemap_insert_compare_noopt.rxbin
+[355/395] Generating binary_byvalue_compare_rxvm_noopt.rxbin
+[356/395] Generating binary_byvalue_compare_rxbvm_noopt.rxbin
+[357/395] Generating rxjson_parser_compare_noopt.rxbin
+[358/395] Generating nr10_artifact_inventory_selftest_noopt.rxbin
+[359/395] Generating rxjson_numeric_materialization_compare_noopt.rxbin
+[360/395] Generating jump_dispatch_compare_noopt.rxbin
+[361/395] Generating inlining_complex_noopt.rxbin
+[362/395] Generating runtime_interface_lookup_compare_noopt.rxbin
+[363/395] Generating nr10_lifecycle_tool_selftest_noopt.rxbin
+[364/395] Generating nr10_cross_runtime_matrix_selftest_noopt.rxbin
+[365/395] Generating rxpa_dynlink_run_noopt.rxbin
+[366/395] Generating rxpa_staticlink_run_noopt.rxbin
+[367/395] Generating rxpa_signal_funcs_dynamic_noopt.rxbin
+[368/395] Generating benchmark_parse_frozen_generic_noopt.rxbin
+[369/395] Generating rxpa_signal_funcs_static_noopt.rxbin
+[370/395] Generating rxpa_string_funcs_dynamic_noopt.rxbin
+[371/395] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[372/395] Generating rxpa_int_funcs_static_noopt.rxbin
+[373/395] Generating rxpa_int_funcs_dynamic_noopt.rxbin
+[374/395] Generating rxpa_string_funcs_static_noopt.rxbin
+[375/395] Generating benchmark_rexxcps_levelb_opaque_noopt.rxbin
+[376/395] Generating benchmark_rexxcps_levelb_noopt.rxbin
+[377/395] Generating rxpa_float_funcs_static_noopt.rxbin
+[378/395] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[379/395] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[380/395] Generating benchmark_parse_frozen_noopt.rxbin
+[381/395] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[382/395] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[383/395] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[384/395] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[385/395] Generating rxpa_mult_test_noopt.rxbin
+[386/395] Generating nr03_evidence_tool_selftest_noopt.rxbin
+[387/395] Compiling test_parse.crexx with exit (noopt)
+[388/395] Compiling test_parse.crexx with exit (opt)
+[389/395] cREXX compile, assemble, link and package crexx ...
+[390/395] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[391/395] Linking C executable bin/crexx
+[392/395] Compiling dynamic interface contract ...
+[393/395] Compiling dynamic interface provider ...
+[394/395] Compiling dynamic interface host ...

@@ -3,98 +3,135 @@ options levelb comments_dash
 import data_KeyDB
 import rxfnsb
 
-kdb = .KeyDB()
+arg test_args = .string[]
 
-handle = kdb.open("kdb.db", "w+")
+if test_args.0 > 0 then database_file = "testKeyDB." || test_args.1 || ".db"
+else database_file = "testKeyDB.db"
+
+kdb = .KeyDB()
+failures = 0
+alpha_value = "one" || d2c(26) || "tail" /* ASCII SUB must survive binary file I/O on Windows. */
+
+handle = kdb.open(database_file, "w+")
 if handle < 0 then do
-    say "Failed to openkey database"
-    exit 1
+  say "Failed to open key database:" handle
+  return 1
 end
 
-/* Begin transaction */
 rc = kdb.begin()
-
-/* kdb.put some test data */
-rc =  kdb.put("Tokyo", "Japan")
-rc =  kdb.put("New York City", "United States")
-rc =  kdb.put("London", "United Kingdom")
-rc =  kdb.put("Paris", "France")
-rc =  kdb.put("Berlin", "Germany")
-rc =  kdb.put("Madrid", "Spain")
-rc =  kdb.put("Rome", "Italy")
-rc =  kdb.put("Beijing", "China")
-rc =  kdb.put("Moscow", "Russia")
-rc =  kdb.put("Sydney", "Australia")
-rc =  kdb.put("Toronto", "Canada")
-rc =  kdb.put("São Paulo", "Brazil")
-rc =  kdb.put("Buenos Aires", "Argentina")
-rc =  kdb.put("Cairo", "Egypt")
-rc =  kdb.put("Cape Town", "South Africa")
-rc =  kdb.put("Istanbul", "Turkey")
-rc =  kdb.put("Mumbai", "India")
-rc =  kdb.put("Bangkok", "Thailand")
-rc =  kdb.put("Jakarta", "Indonesia")
-rc =  kdb.put("Seoul", "South Korea")
-rc =  kdb.put("Dubai", "United Arab Emirates")
-rc =  kdb.put("Singapore", "Singapore")
-rc =  kdb.put("Athens", "Greece")
-rc =  kdb.put("Lisbon", "Portugal")
-rc =  kdb.put("Dublin", "Ireland")
-rc =  kdb.put("Amsterdam", "Netherlands")
-rc =  kdb.put("Warsaw", "Poland")
-rc =  kdb.put("Vienna", "Austria")
-rc =  kdb.put("Zurich", "Switzerland")
-rc =  kdb.put("Oslo", "Norway")
-rc =  kdb.put("Stockholm", "Sweden")
-rc =  kdb.put("Helsinki", "Finland")
-rc =  kdb.put("Reykjavik", "Iceland")
-rc =  kdb.put("Nairobi", "Kenya")
-rc =  kdb.put("Casablanca", "Morocco")
-rc =  kdb.put("Tehran", "Iran")
-rc =  kdb.put("Baghdad", "Iraq")
-rc =  kdb.put("Riyadh", "Saudi Arabia")
-rc =  kdb.put("Caracas", "Venezuela")
-rc =  kdb.put("Lima", "Peru")
-rc =  kdb.put("Santiago", "Chile")
-rc =  kdb.put("Bogota", "Colombia")
-rc =  kdb.put("Havana", "Cuba")
-rc =  kdb.put("Mexico City", "Mexico")
-rc =  kdb.put("Kuala Lumpur", "Malaysia")
-rc =  kdb.put("Ho Chi Minh City", "Vietnam")
-rc =  kdb.put("Manila", "Philippines")
-rc =  kdb.put("Auckland", "New Zealand")
-rc =  kdb.put("Hong Kong", "China")
-rc =  kdb.put("Los Angeles", "United States")
-
-/* Commit transaction */
-rc =  kdb.commit()
-
-/* get the size */
-say
-count = kdb.size()
-say count "keys found"
-
-/* readkey and display values */
-say ""
-say "readkey values:"
-say "City:" kdb.get("Lima")
-say "City:" kdb.get("Bogota")
-
-/* Delete a key */
-say ""
-say "Deleting Berlin..."
-rc = kdb.begin()
-rc = kdb.remove("Berlin")
+failures = failures + check_int("begin", rc, 0)
+failures = failures + check_int("put alpha", kdb.put("alpha", alpha_value), 0)
+failures = failures + check_int("put beta", kdb.put("beta", "two"), 0)
 rc = kdb.commit()
+failures = failures + check_int("commit", rc, 0)
 
-/* listkey keys again */
-say ""
-say "Keys after deletion:"
-count = kdb.size()
-say count "keys found"
+failures = failures + check_string("get alpha", kdb.get("alpha"), alpha_value)
+failures = failures + check_string("get beta", kdb.get("beta"), "two")
+failures = failures + check_int("contains alpha", kdb.containsKey("alpha"), 1)
+failures = failures + check_int("size after insert", kdb.size(), 2)
+failures = failures + check_int("validate", kdb.validate(), 0)
 
-/* Show statistics */
-say ""
-say "Database statistics:"
-say kdb.stats()
+/* Enumeration keeps its own cursor when get() seeks the index file. */
+key = kdb.firstKey()
+failures = failures + check_string("first key", key, "alpha")
+failures = failures + check_string("get during enumeration", kdb.get(key), alpha_value)
+failures = failures + check_string("next key after get", kdb.nextKey(), "beta")
+failures = failures + check_string("end of enumeration", kdb.nextKey(), "NOT_FOUND")
 
+/* Prefix search scans active keys and returns them in index order. */
+failures = failures + check_int("begin prefix data", kdb.begin(), 0)
+failures = failures + check_int("put prefix one", kdb.put("customer:001", "one"), 0)
+failures = failures + check_int("put prefix two", kdb.put("customer:002", "two"), 0)
+failures = failures + check_int("put other prefix", kdb.put("order:001", "order"), 0)
+failures = failures + check_int("commit prefix data", kdb.commit(), 0)
+prefix_keys = .string[]
+prefix_keys = kdb.findkeys("customer:",'ONLY')
+failures = failures + check_int("prefix match count", prefix_keys[0], 2)
+if prefix_keys[0] = 2 then do
+  failures = failures + check_string("prefix first key", prefix_keys[1], "customer:001")
+  failures = failures + check_string("prefix second key", prefix_keys[2], "customer:002")
+end
+empty_prefix = .string[]
+empty_prefix = kdb.findkeys("missing:",'only')
+failures = failures + check_int("prefix no match", empty_prefix[0], 0)
+failures = failures + check_int("remove prefix one", kdb.removeCommit("customer:001"), 0)
+failures = failures + check_int("remove prefix two", kdb.removeCommit("customer:002"), 0)
+failures = failures + check_int("remove other prefix", kdb.removeCommit("order:001"), 0)
+
+/* Updates replace the existing record and rollback restores both files. */
+failures = failures + check_int("begin update rollback", kdb.begin(), 0)
+failures = failures + check_int("update alpha", kdb.put("alpha", "rolled back"), 0)
+failures = failures + check_int("rollback update", kdb.rollback(), 0)
+failures = failures + check_string("value after rollback", kdb.get("alpha"), alpha_value)
+failures = failures + check_int("size after rollback", kdb.size(), 2)
+
+failures = failures + check_int("update commit begin", kdb.begin(), 0)
+failures = failures + check_int("update alpha committed", kdb.put("alpha", "updated"), 0)
+failures = failures + check_int("update commit", kdb.commit(), 0)
+failures = failures + check_string("updated value", kdb.get("alpha"), "updated")
+failures = failures + check_int("size after update", kdb.size(), 2)
+
+failures = failures + check_int("remove beta", kdb.removeCommit("beta"), 0)
+
+stats = kdb.stats()
+if length(stats) = 0 then do
+  say "stats returned an empty string"
+  failures = failures + 1
+end
+
+/* Closing with an active transaction must roll it back. */
+failures = failures + check_int("begin close rollback", kdb.begin(), 0)
+failures = failures + check_int("put close rollback", kdb.put("transient", "not committed"), 0)
+failures = failures + check_int("close rolls back", kdb.close(), 0)
+
+rc = kdb.close()
+failures = failures + check_int("close", rc, 0)
+
+handle = kdb.open(database_file, "r")
+if handle < 0 then do
+  say "Failed to reopen key database:" handle
+  failures = failures + 1
+end
+else do
+  failures = failures + check_string("get alpha after reopen", kdb.get("alpha"), "updated")
+  failures = failures + check_int("contains beta after reopen", kdb.containsKey("beta"), 0)
+  failures = failures + check_string("get beta after reopen", kdb.get("beta"), "NOT_FOUND")
+  failures = failures + check_string("uncommitted key absent", kdb.get("transient"), "NOT_FOUND")
+  failures = failures + check_string("first key after deletion", kdb.firstKey(), "alpha")
+  failures = failures + check_string("deleted key skipped", kdb.nextKey(), "NOT_FOUND")
+  failures = failures + check_int("reopen already-open handle", kdb.open(database_file, "r") < 0, 0)
+  failures = failures + check_string("value after repeated open", kdb.get("alpha"), "updated")
+  failures = failures + check_int("close before clear", kdb.close(), 0)
+  failures = failures + check_int("open for clear", kdb.open(database_file, "w+") < 0, 0)
+  failures = failures + check_int("clear", kdb.clear(), 0)
+  failures = failures + check_int("size after clear", kdb.size(), 0)
+  failures = failures + check_string("first key after clear", kdb.firstKey(), "NOT_FOUND")
+  failures = failures + check_int("begin reset data", kdb.begin(), 0)
+  failures = failures + check_int("put reset data", kdb.put("reset-me", "value"), 0)
+  failures = failures + check_int("commit reset data", kdb.commit(), 0)
+  failures = failures + check_string("reset data present", kdb.get("reset-me"), "value")
+  failures = failures + check_int("reset", kdb.reset(), 0)
+  failures = failures + check_int("size after reset", kdb.size(), 0)
+  failures = failures + check_string("reset removes data", kdb.get("reset-me"), "NOT_FOUND")
+  failures = failures + check_int("close after reopen", kdb.close(), 0)
+end
+
+if failures > 0 then do
+  say "testKeyDB failed:" failures "check(s)"
+  return 1
+end
+
+say "testKeyDB ok"
+return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say label "expected" expected "got" actual
+  return 1

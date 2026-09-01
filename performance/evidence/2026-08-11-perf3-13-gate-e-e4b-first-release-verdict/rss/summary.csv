@@ -1,0 +1,5 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+lifecycle-rxbvm-control,VM-Lifecycle,crexx,rxbvm,e4a-control,A,no,startup-included,load-run-teardown,max_rss_bytes,12,18071552.000000,18083840.000000,18096128.000000,18124800.000000,18153472.000000,24576.000000,0.135808,0.452694,no
+lifecycle-rxbvm-candidate,VM-Lifecycle,crexx,rxbvm,e4b-candidate,A,no,startup-included,load-run-teardown,max_rss_bytes,12,18022400.000000,18051072.000000,18096128.000000,18108416.000000,18120704.000000,24576.000000,0.135808,0.543232,no
+lifecycle-rxtvm-control,VM-Lifecycle,crexx,rxtvm,e4a-control,A,no,startup-included,load-run-teardown,max_rss_bytes,12,18104320.000000,18137088.000000,18153472.000000,18169856.000000,18169856.000000,16384.000000,0.090253,0.361011,no
+lifecycle-rxtvm-candidate,VM-Lifecycle,crexx,rxtvm,e4b-candidate,A,no,startup-included,load-run-teardown,max_rss_bytes,12,18038784.000000,18087936.000000,18104320.000000,18120704.000000,18153472.000000,16384.000000,0.090498,0.633484,no

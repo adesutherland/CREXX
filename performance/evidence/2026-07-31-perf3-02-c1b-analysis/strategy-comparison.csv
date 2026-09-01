@@ -1,0 +1,6 @@
+strategy,full_receiver_copies_removed_at_two_sites,normal_exit_proof,exceptional_exit_proof,implementation_surface,semantic_risk,disposition
+B0 current materialized receiver,0,"private copy contains any stale alias writes","existing frame/materialized-value behavior","none",low,"retain as fail-closed fallback"
+B1 common-exit normalization,0,"already present but predicate cleanup can be bypassed before common epilogue","does not add signal cleanup","inline return rewrite plus emitter if extended",high,"insufficient alone"
+B2 path-complete private receiver copyback,0,"can place copyback on each LEAVE_WITH but read-only sites need no copyback","would require unwind placement for mutating cases","existing receiver-copyback wrappers",medium-high,"reject for this slice because initial full copy remains"
+B3 broad direct binding,2,"C1a-R1 proves no-write summary is insufficient","unproved for same-frame handlers","receiver-sharing gate only",high,"rejected"
+B3 C1b-R1 detached receiver-guard snapshot,2,"finite: snapshot all receiver-derived scalar guards before IF and require no other receiver use","fail closed for local signal blocks; outer-handler unwind discards current frame","candidate-local inline analysis/binding/rewrite; no ISA or ABI change",medium,"bounded PoC candidate"

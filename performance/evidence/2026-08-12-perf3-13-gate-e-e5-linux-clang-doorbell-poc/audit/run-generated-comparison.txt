@@ -1,0 +1,19 @@
+Normalized objdump --disassemble=run comparison.
+Normalization removes only load addresses, branch/call target addresses and
+RIP-relative layout addresses/comments; mnemonics, operands and symbolic call
+targets remain.
+
+rxbvm control:   b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27
+rxbvm candidate: b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27
+RESULT=PASS identical normalized run stream; both symbols are 0x114 bytes.
+
+rxtvm control:   b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27
+rxtvm candidate: b5bbe182fe703c59028c4775371e376402bece5102f87e8f060f1cd55e911e27
+RESULT=PASS identical normalized run stream; both symbols are 0x114 bytes.
+
+The frozen E4 and tested-commit rxvmintp.h blobs are identical. The only
+tested-commit rxvmintp.c differences are the committed cold CANCEL string,
+parse and default-response mappings; the Linux dirty diff does not touch
+rxvmintp.c or rxvmintp.h. No ordinary-dispatch poll, load, branch, worker test,
+counter or alternate loop was added.
+

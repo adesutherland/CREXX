@@ -6,14 +6,14 @@
 
 main() .locals=4
    settp r0,1
-   gettp r1,r0
+   getandtp r1,r0,255
    ieq r2,r1,0
    brf fail_low_write,r2
 
    brtpt fail_low_branch,r0
 
    settp r0,256
-   gettp r1,r0
+   getandtp r1,r0,768
    ieq r2,r1,256
    brf fail_public_write,r2
 
@@ -25,10 +25,41 @@ main() .locals=4
    br fail_public_branch
 
 public_branch:
+   settp r0,2162688
+   settp r0,256
+   getandtp r1,r0,2162944
+   ieq r2,r1,2162944
+   brf fail_band_preserve,r2
+
+   settp r0,512
+   getandtp r1,r0,2163456
+   ieq r2,r1,2163200
+   brf fail_band_replace,r2
+
    settp r0,0
-   gettp r1,r0
+   getandtp r1,r0,2147418880
    ieq r2,r1,0
    brf fail_public_clear,r2
+
+   settp r0,1024
+   getandtp r1,r0,64512
+   ieq r2,r1,1024
+   brf fail_language_write,r2
+
+   brtpt fail_language_public_branch,r0
+   brtpandt language_branch,r0,1024
+   br fail_language_mask_branch
+
+language_branch:
+   settp r0,256
+   getandtp r1,r0,1280
+   ieq r2,r1,1280
+   brf fail_language_preserve,r2
+
+   settp r0,0
+   gettp r1,r0
+   ieq r2,r1,1024
+   brf fail_language_zero_preserve,r2
 
    say "PASS: Register Flag Partition"
    ret 0
@@ -53,6 +84,34 @@ fail_public_branch:
    say "FAIL: compiler flag band did not branch through BRTPANDT"
    ret 1
 
+fail_band_preserve:
+   say "FAIL: SETTP compiler band write did not preserve library flags"
+   ret 1
+
+fail_band_replace:
+   say "FAIL: SETTP compiler band write did not replace compiler flags"
+   ret 1
+
 fail_public_clear:
    say "FAIL: public flags did not clear"
+   ret 1
+
+fail_language_write:
+   say "FAIL: language flag band was not writable from trusted RXAS"
+   ret 1
+
+fail_language_public_branch:
+   say "FAIL: language flag changed unmasked public branch behavior"
+   ret 1
+
+fail_language_mask_branch:
+   say "FAIL: language flag was not readable through explicit mask"
+   ret 1
+
+fail_language_preserve:
+   say "FAIL: compiler ABI write did not preserve language flags"
+   ret 1
+
+fail_language_zero_preserve:
+   say "FAIL: public clear did not preserve language flags"
    ret 1

@@ -1,0 +1,302 @@
+/*
+ * SOURCE                 : decimal_math_benchmark.crexx
+ */
+
+.globals=0
+
+run_workload() .locals=8
+   .meta "decimal_math_benchmark.run_workload"="b" ".decimal" run_workload() "iterations=.int"
+   .srcstep 23 23 17 "decimal_math_benchmark.crexx" 6 1 35 "run_workload: procedure = .decimal"
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "decimal_math_benchmark.crexx" 8 7 24 "  arg iterations = .int"
+   .meta "decimal_math_benchmark.run_workload.iterations"="b" ".int" a1
+   .meta "decimal_math_benchmark.run_workload.total"="b" ".decimal" r3
+   .srcstep 2 2 17 "decimal_math_benchmark.crexx" 10 3 19 "  total = .decimal"
+   .meta "decimal_math_benchmark.run_workload.value"="b" ".decimal" r1
+   .srcstep 3 3 17 "decimal_math_benchmark.crexx" 9 3 19 "  value = .decimal"
+   null r1
+   .srcstep 4 4 17 "decimal_math_benchmark.crexx" 11 3 30 "  value = \"0.125\" as .decimal"
+   load r0,"0.125"
+   .traceevent "L" 4 "R" "S" "r" 0 4 4 0 "" ""
+   scopy r1,r0
+   stod r1
+   .traceevent "A" 6 "R" "D" "r" 1 4 4 0 "value" ""
+   .srcstep 5 5 17 "decimal_math_benchmark.crexx" 12 3 12 "  total = 0"
+   load r3,0
+   itod r3
+   .traceevent "L" 4 "R" "D" "r" 3 5 5 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 5 5 0 "total" ""
+   .srcstep 20 20 17 "decimal_math_benchmark.crexx" 13 3 5 "  do iteration = 1 to iterations"
+   .srcstep 6 6 17 "decimal_math_benchmark.crexx" 13 6 19 "  do iteration = 1 to iterations"
+   .meta "decimal_math_benchmark.run_workload.iteration"="b" ".int" r0
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "iteration" ""
+   .srcstep 7 7 17 "decimal_math_benchmark.crexx" 13 20 33 "  do iteration = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "a" 1 0 0 0 "iterations" ""
+l27dostart:
+   .srcstep 7 7 17 "decimal_math_benchmark.crexx" 13 20 33 "  do iteration = 1 to iterations"
+   igt r4,r0,a1
+   brt l27doend,r4
+   .srcstep 9 9 17 "decimal_math_benchmark.crexx" 14 5 47 "    total = total + rxdecimal..sqrt(value + 1)"
+   .traceevent "V" 6 "R" "D" "r" 3 9 9 0 "total" ""
+   .traceevent "V" 6 "R" "D" "r" 1 9 9 0 "value" ""
+   dadd r6,r1,1d
+   .traceevent "O" 4 "R" "D" "r" 6 9 9 0 "" ""
+   load r5,1
+   call r7,rxdecimal.sqrt(),r5
+   .traceevent "F" 4 "R" "D" "r" 7 9 9 0 "sqrt" ""
+   dadd r3,r3,r7
+   .traceevent "O" 4 "R" "D" "r" 3 9 9 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 9 9 0 "total" ""
+   .srcstep 10 10 17 "decimal_math_benchmark.crexx" 15 5 42 "    total = total + rxdecimal..exp(value)"
+   .traceevent "V" 6 "R" "D" "r" 3 10 10 0 "total" ""
+   .traceevent "V" 6 "R" "D" "r" 1 10 10 0 "value" ""
+   load r6,1
+   swapcall r5,rxdecimal.exp(),r6,r1,r7
+   swap r1,r7
+   .traceevent "F" 4 "R" "D" "r" 5 10 10 0 "exp" ""
+   dadd r3,r3,r5
+   .traceevent "O" 4 "R" "D" "r" 3 10 10 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 10 10 0 "total" ""
+   .srcstep 11 11 17 "decimal_math_benchmark.crexx" 16 5 45 "    total = total + rxdecimal..ln(value + 1)"
+   .traceevent "V" 6 "R" "D" "r" 3 11 11 0 "total" ""
+   .traceevent "V" 6 "R" "D" "r" 1 11 11 0 "value" ""
+   dadd r7,r1,1d
+   .traceevent "O" 4 "R" "D" "r" 7 11 11 0 "" ""
+   load r6,1
+   call r5,rxdecimal.ln(),r6
+   .traceevent "F" 4 "R" "D" "r" 5 11 11 0 "ln" ""
+   dadd r3,r3,r5
+   .traceevent "O" 4 "R" "D" "r" 3 11 11 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 11 11 0 "total" ""
+   .srcstep 12 12 17 "decimal_math_benchmark.crexx" 17 5 42 "    total = total + rxdecimal..sin(value)"
+   .traceevent "V" 6 "R" "D" "r" 3 12 12 0 "total" ""
+   .traceevent "V" 6 "R" "D" "r" 1 12 12 0 "value" ""
+   load r6,1
+   swapcall r5,rxdecimal.sin(),r6,r1,r7
+   swap r1,r7
+   .traceevent "F" 4 "R" "D" "r" 5 12 12 0 "sin" ""
+   dadd r3,r3,r5
+   .traceevent "O" 4 "R" "D" "r" 3 12 12 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 12 12 0 "total" ""
+   .srcstep 13 13 17 "decimal_math_benchmark.crexx" 18 5 42 "    total = total + rxdecimal..cos(value)"
+   .traceevent "V" 6 "R" "D" "r" 3 13 13 0 "total" ""
+   .traceevent "V" 6 "R" "D" "r" 1 13 13 0 "value" ""
+   load r6,1
+   swapcall r5,rxdecimal.cos(),r6,r1,r7
+   swap r1,r7
+   .traceevent "F" 4 "R" "D" "r" 5 13 13 0 "cos" ""
+   dadd r3,r3,r5
+   .traceevent "O" 4 "R" "D" "r" 3 13 13 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 13 13 0 "total" ""
+   .srcstep 14 14 17 "decimal_math_benchmark.crexx" 19 5 34 "    total = total + rxdecimal..pi()"
+   .traceevent "V" 6 "R" "D" "r" 3 14 14 0 "total" ""
+   load r7,0
+   call r6,rxdecimal.pi(),r7
+   .traceevent "F" 4 "R" "D" "r" 6 14 14 0 "pi" ""
+   dadd r3,r3,r6
+   .traceevent "O" 4 "R" "D" "r" 3 14 14 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 14 14 0 "total" ""
+   .srcstep 15 15 17 "decimal_math_benchmark.crexx" 20 5 37 "    total = total + rxdecimal..euler()"
+   .traceevent "V" 6 "R" "D" "r" 3 15 15 0 "total" ""
+   load r7,0
+   call r6,rxdecimal.euler(),r7
+   .traceevent "F" 4 "R" "D" "r" 6 15 15 0 "euler" ""
+   dadd r3,r3,r6
+   .traceevent "O" 4 "R" "D" "r" 3 15 15 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 3 15 15 0 "total" ""
+   .srcstep 16 16 17 "decimal_math_benchmark.crexx" 21 5 43 "    value = value + \"0.000001\" as .decimal"
+   .traceevent "V" 6 "R" "D" "r" 1 16 16 0 "value" ""
+   dadd r1,r1,0.000001d
+   .traceevent "O" 4 "R" "D" "r" 1 16 16 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 1 16 16 0 "value" ""
+   .srcstep 18 18 17 "decimal_math_benchmark.crexx" 22 5 35 "    if value > \"0.225\" as .decimal then value = \"0.125\" as .decimal"
+   .traceevent "V" 6 "R" "D" "r" 1 18 18 0 "value" ""
+   dgt r7,r1,0.225d
+   .traceevent "O" 4 "R" "B" "r" 7 18 18 0 "" ""
+   brf l98iffalse,r7
+   .srcstep 19 19 17 "decimal_math_benchmark.crexx" 22 36 40 "    if value > \"0.225\" as .decimal then value = \"0.125\" as .decimal"
+   .srcstep 17 17 17 "decimal_math_benchmark.crexx" 22 41 68 "    if value > \"0.225\" as .decimal then value = \"0.125\" as .decimal"
+   load r1,0.125d
+   .traceevent "L" 4 "R" "D" "r" 1 17 17 0 "" ""
+   .traceevent "A" 6 "R" "D" "r" 1 17 17 0 "value" ""
+l98iffalse:
+l27doinc:
+   .srcstep 8 8 17 "decimal_math_benchmark.crexx" 13 6 15 "  do iteration = 1 to iterations"
+   inc r0
+   .srcstep 21 21 17 "decimal_math_benchmark.crexx" 23 3 6 "  end"
+   br l27dostart
+l27doend:
+   .meta "decimal_math_benchmark.run_workload.iteration"
+   .srcstep 22 22 17 "decimal_math_benchmark.crexx" 24 3 15 "  return total"
+   .traceevent "V" 6 "R" "D" "r" 3 22 22 0 "total" ""
+   ret r3
+   .meta "decimal_math_benchmark.run_workload.iterations"
+   .meta "decimal_math_benchmark.run_workload.total"
+   .meta "decimal_math_benchmark.run_workload.value"
+
+run_digits_9() .locals=5
+   .meta "decimal_math_benchmark.run_digits_9"="b" ".decimal" run_digits_9() "iterations=.int"
+   .srcstep 26 26 17 "decimal_math_benchmark.crexx" 26 1 35 "run_digits_9: procedure = .decimal"
+   numsci 9,1,1
+   .srcstep 24 24 17 "decimal_math_benchmark.crexx" 28 7 24 "  arg iterations = .int"
+   .meta "decimal_math_benchmark.run_digits_9.iterations"="b" ".int" a1
+   .srcstep 25 25 17 "decimal_math_benchmark.crexx" 29 3 34 "  return run_workload(iterations)"
+   .traceevent "V" 6 "R" "I" "a" 1 25 25 0 "iterations" ""
+   call1 r4,run_workload(),a1
+   .traceevent "F" 4 "R" "D" "r" 4 25 25 0 "run_workload" ""
+   ret r4
+   .meta "decimal_math_benchmark.run_digits_9.iterations"
+
+main() .locals=9
+   .meta "decimal_math_benchmark.main"="b" ".int" main() "arguments=.string[*]"
+   .srcstep 55 55 17 "decimal_math_benchmark.crexx" 36 1 23 "main: procedure = .int"
+   numsci 18,1,1
+   .srcstep 29 29 17 "decimal_math_benchmark.crexx" 37 7 26 "  arg arguments = .string[]"
+   .meta "decimal_math_benchmark.main.arguments"="b" ".string[*]" a1
+   .meta "decimal_math_benchmark.main.checksum"="b" ".decimal" r3
+   .srcstep 30 30 17 "decimal_math_benchmark.crexx" 45 3 22 "  checksum = .decimal"
+   null r3
+   .srcstep 33 33 17 "decimal_math_benchmark.crexx" 38 3 23 "  if arguments[0] <> 2 then do"
+   .traceevent "C" 4 "R" "V" "r" 0 33 33 0 "arguments" ""
+   getattrs r5,a1,0
+   .traceevent "V" 6 "R" "I" "r" 5 33 33 0 "arguments" ""
+   ine r5,r5,2
+   .traceevent "O" 4 "R" "B" "r" 5 33 33 0 "" ""
+   brf l141iffalse,r5
+   .srcstep 34 34 17 "decimal_math_benchmark.crexx" 38 24 28 "  if arguments[0] <> 2 then do"
+   .srcstep 31 31 17 "decimal_math_benchmark.crexx" 39 5 55 "    say \"FAIL: expected precision and iteration count\""
+   say "FAIL: expected precision and iteration count"
+   .srcstep 32 32 17 "decimal_math_benchmark.crexx" 40 5 13 "    return 2"
+   ret 2
+l141iffalse:
+   .srcstep 35 35 17 "decimal_math_benchmark.crexx" 43 3 35 "  precision = arguments[1] as .int"
+   .meta "decimal_math_benchmark.main.precision"="b" ".int" r4
+   minlinkattr1 r5,a1,1
+   .traceevent "V" 6 "R" "S" "r" 5 35 35 0 "arguments" ""
+   stoi r4,r5
+   unlink r5
+   .traceevent "A" 6 "R" "I" "r" 4 35 35 0 "precision" ""
+   .srcstep 36 36 17 "decimal_math_benchmark.crexx" 44 3 36 "  iterations = arguments[2] as .int"
+   .meta "decimal_math_benchmark.main.iterations"="b" ".int" r1
+   minlinkattr1 r5,a1,2
+   .traceevent "V" 6 "R" "S" "r" 5 36 36 0 "arguments" ""
+   stoi r1,r5
+   unlink r5
+   .traceevent "A" 6 "R" "I" "r" 1 36 36 0 "iterations" ""
+   .srcstep 46 46 17 "decimal_math_benchmark.crexx" 46 3 19 "  if precision = 9 then checksum = run_digits_9(iterations)"
+   .traceevent "V" 6 "R" "I" "r" 4 46 46 0 "precision" ""
+   ieq r5,r4,9
+   .traceevent "O" 4 "R" "B" "r" 5 46 46 0 "" ""
+   brf l179iffalse,r5
+   .srcstep 47 47 17 "decimal_math_benchmark.crexx" 46 20 24 "  if precision = 9 then checksum = run_digits_9(iterations)"
+   .srcstep 37 37 17 "decimal_math_benchmark.crexx" 46 25 60 "  if precision = 9 then checksum = run_digits_9(iterations)"
+   .traceevent "V" 6 "R" "I" "r" 1 37 37 0 "iterations" ""
+   call1 r3,run_digits_9(),r1
+   .traceevent "F" 4 "R" "D" "r" 3 37 37 0 "run_digits_9" ""
+   .traceevent "A" 6 "R" "D" "r" 3 37 37 0 "checksum" ""
+   br l179ifend
+   .srcstep 48 48 17 "decimal_math_benchmark.crexx" 47 3 7 "  else if precision = 18 then checksum = run_digits_18(iterations)"
+l179iffalse:
+   .srcstep 43 43 17 "decimal_math_benchmark.crexx" 47 8 25 "  else if precision = 18 then checksum = run_digits_18(iterations)"
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "precision" ""
+   ieq r0,r4,18
+   .traceevent "O" 4 "R" "B" "r" 0 43 43 0 "" ""
+   brf l178iffalse,r0
+   .srcstep 44 44 17 "decimal_math_benchmark.crexx" 47 26 30 "  else if precision = 18 then checksum = run_digits_18(iterations)"
+   .srcstep 40 40 17 "decimal_math_benchmark.crexx" 47 31 67 "  else if precision = 18 then checksum = run_digits_18(iterations)"
+   .srcstep 38 38 33 "decimal_math_benchmark.crexx" 33 7 17 "  arg iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 1 38 38 0 "iterations" ""
+   .traceevent "A" 6 "R" "I" "r" 1 38 38 0 "iterations" ""
+   .srcstep 39 39 33 "decimal_math_benchmark.crexx" 34 3 9 "  return run_workload(iterations)"
+   .traceevent "V" 6 "R" "I" "r" 1 39 39 0 "iterations" ""
+   call1 r3,run_workload(),r1
+   .traceevent "F" 4 "R" "D" "r" 3 39 39 0 "run_workload" ""
+   .traceevent "A" 6 "R" "D" "r" 3 39 39 0 "checksum" ""
+   br l178ifend
+   .srcstep 45 45 6 "decimal_math_benchmark.crexx" 48 3 7 "  else do"
+l178iffalse:
+   .srcstep 41 41 17 "decimal_math_benchmark.crexx" 49 5 58 "    say \"FAIL: unsupported benchmark precision\" precision"
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 41 41 0 "precision" ""
+   sconcat r8,"FAIL: unsupported benchmark precision",r4
+   .traceevent "O" 4 "R" "S" "r" 8 41 41 0 "" ""
+   say r8
+   .srcstep 42 42 17 "decimal_math_benchmark.crexx" 50 5 13 "    return 2"
+   ret 2
+l178ifend:
+l179ifend:
+   .srcstep 51 51 17 "decimal_math_benchmark.crexx" 53 3 19 "  if checksum <= 0 then do"
+   .traceevent "V" 6 "R" "D" "r" 3 51 51 0 "checksum" ""
+   dlte r8,r3,0d
+   .traceevent "O" 4 "R" "B" "r" 8 51 51 0 "" ""
+   brf l190iffalse,r8
+   .srcstep 52 52 17 "decimal_math_benchmark.crexx" 53 20 24 "  if checksum <= 0 then do"
+   .srcstep 49 49 17 "decimal_math_benchmark.crexx" 54 5 54 "    say \"FAIL: decimal mathematics checksum\" checksum"
+   dtos r3
+   .traceevent "V" 6 "R" "S" "r" 3 49 49 0 "checksum" ""
+   sconcat r7,"FAIL: decimal mathematics checksum",r3
+   .traceevent "O" 4 "R" "S" "r" 7 49 49 0 "" ""
+   say r7
+   .srcstep 50 50 17 "decimal_math_benchmark.crexx" 55 5 13 "    return 1"
+   ret 1
+l190iffalse:
+   .srcstep 53 53 17 "decimal_math_benchmark.crexx" 57 3 81 "  say \"PASS: RCC-5C decimal mathematics benchmark\" precision iterations checksum"
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 53 53 0 "precision" ""
+   sconcat r8,"PASS: RCC-5C decimal mathematics benchmark",r4
+   .traceevent "O" 4 "R" "S" "r" 8 53 53 0 "" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 53 53 0 "iterations" ""
+   sconcat r8,r8,r1
+   .traceevent "O" 4 "R" "S" "r" 8 53 53 0 "" ""
+   dtos r3
+   .traceevent "V" 6 "R" "S" "r" 3 53 53 0 "checksum" ""
+   sconcat r8,r8,r3
+   .traceevent "O" 4 "R" "S" "r" 8 53 53 0 "" ""
+   say r8
+   .srcstep 54 54 17 "decimal_math_benchmark.crexx" 58 3 11 "  return 0"
+   ret 0
+   .meta "decimal_math_benchmark.main.arguments"
+   .meta "decimal_math_benchmark.main.checksum"
+   .meta "decimal_math_benchmark.main.iterations"
+   .meta "decimal_math_benchmark.main.precision"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.sqrt() .expose=rxdecimal.sqrt
+   .meta "rxdecimal.sqrt"="b" ".decimal" rxdecimal.sqrt() "value=.decimal"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.exp() .expose=rxdecimal.exp
+   .meta "rxdecimal.exp"="b" ".decimal" rxdecimal.exp() "value=.decimal"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.ln() .expose=rxdecimal.ln
+   .meta "rxdecimal.ln"="b" ".decimal" rxdecimal.ln() "value=.decimal"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.sin() .expose=rxdecimal.sin
+   .meta "rxdecimal.sin"="b" ".decimal" rxdecimal.sin() "value=.decimal"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.cos() .expose=rxdecimal.cos
+   .meta "rxdecimal.cos"="b" ".decimal" rxdecimal.cos() "value=.decimal"
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.pi() .expose=rxdecimal.pi
+   .meta "rxdecimal.pi"="b" ".decimal" rxdecimal.pi() ""
+
+/* Imported Declaration from file: decimal@rxfnsg.rxbin */
+
+rxdecimal.euler() .expose=rxdecimal.euler
+   .meta "rxdecimal.euler"="b" ".decimal" rxdecimal.euler() ""

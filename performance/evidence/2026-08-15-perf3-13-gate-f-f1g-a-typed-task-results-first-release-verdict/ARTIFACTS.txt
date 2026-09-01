@@ -1,0 +1,29 @@
+PERF3-13 Gate F F1g-A retained artifacts
+
+Host/toolchain:
+- Darwin 25.5.0 arm64, 10 logical CPUs
+- CMake 4.3.2, Apple clang 21.0.0
+- ordinary profiling-off Release, profile-20 handler panel
+- AC attached; no recorded thermal or performance warning after timing
+
+Correctness:
+- qa/debug-focused-build.log: focused Debug product/test build
+- qa/debug-focused-ctest.log: 16/16 focused Debug CTest
+- qa/debug-ctest.log: 2,151/2,151 full Debug CTest
+- qa/release-build.log: ordinary Release product/compiler/classlib build
+- qa/release-benchmark-build.log: sealed benchmark image refresh
+- qa/release-gate-f.log: 37/37 focused Release Gate F
+- qa/asan-build.log: complete Apple ASan build, leak detection disabled
+- qa/asan-ctest.log: 138/138 focused Apple ASan CTest
+
+Timing:
+- timing/incremental/raw.log and samples.csv: authoritative one-warmup plus
+  12 balanced pairs using the two-source a5a99be15 control
+- timing/incremental/summary.csv: Level B reducer output
+- timing/pre-import-fix/: secondary result captured before the final imported
+  binding materialization fix; it is not the qualification verdict
+- the retained paired harness is
+  ../2026-08-15-perf3-13-gate-f-f3c1-task-binding-cache-first-release-verdict/capture-task-cache-paired.zsh
+
+Raw benchmark-native microseconds are retained separately from process/harness
+elapsed time. Samples ran serially; no outlier was removed.

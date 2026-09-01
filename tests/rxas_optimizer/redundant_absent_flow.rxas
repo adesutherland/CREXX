@@ -1,0 +1,63 @@
+* PERF3-11 M03 component/value-proved repeated all-component absence.
+
+old_null_floor() .locals=10
+    null r0
+    brt old_null_left,a0
+    br old_null_join
+old_null_left:
+    load r9,1
+old_null_join:
+    null r0
+    ret
+
+same_absence_phi() .locals=10
+    brt same_absence_left,a0
+    null r1
+    br same_absence_join
+same_absence_left:
+    null r1
+same_absence_join:
+    null r1
+    ret
+
+different_absence_phi() .locals=10
+    brt different_absence_left,a0
+    null r2
+    br different_absence_join
+different_absence_left:
+    load r2,8
+different_absence_join:
+    null r2
+    ret
+
+intervening_scalar() .locals=10
+    null r3
+    load r3,1
+    null r3
+    ret
+
+trace_equivalent_absence() .locals=10
+    null r4
+    .traceevent "V" 6 "R" "I" "r" 4 1 1 0 "first-null" ""
+    null r4
+    .traceevent "A" 6 "R" "I" "r" 4 1 1 0 "second-null" ""
+    ret
+
+linked_absent_storage() .locals=10
+    null r5
+    link r6,r5
+    null r6
+    unlink r6
+    ret
+
+reference_cleanup_required() .locals=10
+    null r7
+    mkref r7,r8
+    null r7
+    ret
+
+native_cleanup_required() .locals=11
+    null r9
+    bcopy r9,r10
+    null r9
+    ret

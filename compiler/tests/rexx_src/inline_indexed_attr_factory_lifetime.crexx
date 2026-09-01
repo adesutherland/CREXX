@@ -1,0 +1,48 @@
+options levelb
+
+pool = .LifetimePool()
+item_id = pool.add(7)
+if item_id <> 1 then return fail("expected item id 1")
+if pool.itemSize(item_id) <> 0 then return fail("stored item was corrupted")
+say "PASS: indexed attribute factory lifetime"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+LifetimeItem: class
+  count_ = .int
+  values_ = .int[]
+
+  *: factory
+    count_ = 0
+    return
+
+  size: method = .int
+    return count_
+
+LifetimePool: class
+  values_ = .int[]
+  zeroes_ = .int[]
+  count_ = .int
+  items_ = .LifetimeItem[]
+
+  *: factory
+    count_ = 0
+    return
+
+  add: method = .int
+    arg value = .int
+    count_ = count_ + 1
+    item_id = count_
+    values_[item_id] = value
+    zeroes_[item_id] = 0
+    items_[item_id] = .LifetimeItem()
+    return item_id
+
+  itemSize: method = .int
+    arg item_id = .int
+    item = items_[item_id]
+    return item.size()

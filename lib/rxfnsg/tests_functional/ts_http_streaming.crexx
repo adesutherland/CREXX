@@ -1,0 +1,259 @@
+/* Concurrent HTTP request/response streaming and backpressure proof. */
+options levelg
+
+namespace ts_http_streaming
+import rxfnsb
+import rxsocket
+import concurrency
+import rxfnsg
+
+endpoint_write: procedure = .int
+  arg endpoint = .byteendpoint, bytes = .binary
+  request = endpoint.start_write(bytes, -1)
+  completion = request.wait(-1)
+  if completion.succeeded() = 0 then return -1
+  return completion.value().as_integer()
+
+endpoint_read_exact: procedure = .binary
+  arg endpoint = .byteendpoint, expected = .int
+  result = ''x as .binary
+  do while binlength(result) < expected
+    request = endpoint.start_read(expected - binlength(result), -1)
+    completion = request.wait(-1)
+    if completion.succeeded() = 0 then return result
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  return result
+
+request_body_start: procedure = .int
+  arg request = .string
+  boundary = pos("0d0a0d0a"x, request)
+  if boundary = 0 then return 0
+  return boundary + 4
+
+header_value: procedure = .string
+  arg headers = .string, name = .string
+  marker = translate(name) || ":"
+  start = pos(marker, translate(headers))
+  if start = 0 then return ""
+  start = start + length(marker)
+  finish = pos("0d0a"x, headers, start)
+  if finish = 0 then return ""
+  return strip(substr(headers, start, finish - start))
+
+chunked_complete: procedure = .boolean
+  arg body = .string
+  return pos("0d0a300d0a0d0a"x, body) > 0 | left(body, 5) = "300d0a0d0a"x
+
+read_request: procedure = .string
+  arg socket = .int
+  request = ""
+  do forever
+    start = request_body_start(request)
+    if start > 0 then do
+      headers = left(request, start - 1)
+      transfer = translate(header_value(headers, "Transfer-Encoding"))
+      if transfer = "CHUNKED" then do
+        if chunked_complete(substr(request, start)) then return request
+      end
+      else do
+        wanted_text = header_value(headers, "Content-Length")
+        if datatype(wanted_text, "W") then do
+          if binlength(substr(request, start) as .binary) >= wanted_text then return request
+        end
+      end
+    end
+    chunk = socketrecv(socket, 4096)
+    if chunk = "" then return request
+    request = request || chunk
+  end
+
+decode_chunked_request: procedure = .string
+  arg request = .string
+  crlf = "0d0a"x
+  cursor = pos(crlf || crlf, request)
+  if cursor = 0 then return "#invalid"
+  cursor = cursor + 4
+  result = ""
+  do forever
+    line_end = pos(crlf, request, cursor)
+    if line_end = 0 then return "#invalid"
+    size_text = substr(request, cursor, line_end - cursor)
+    if size_text = "" | verify(size_text, "0123456789abcdefABCDEF") > 0 then return "#invalid"
+    size = x2d(size_text)
+    cursor = line_end + 2
+    if size = 0 then return result
+    if length(request) - cursor + 1 < size + 2 then return "#invalid"
+    result = result || substr(request, cursor, size)
+    cursor = cursor + size
+    if substr(request, cursor, 2) <> crlf then return "#invalid"
+    cursor = cursor + 2
+  end
+
+produce_fixed: task = .int
+  arg body = .httpbody
+  if body.write("fixed-" as .binary, 5000) <> 6 then return 1
+  if body.write("request" as .binary, 5000) <> 7 then return 2
+  if body.write("-body" as .binary, 5000) <> 5 then return 3
+  call body.finish()
+  return 0
+
+produce_chunked: task = .int
+  arg body = .httpbody
+  if body.write("chunk" as .binary, 5000) <> 5 then return 1
+  if body.write("ed-" as .binary, 5000) <> 3 then return 2
+  if body.write("reque" as .binary, 5000) <> 5 then return 3
+  if body.write("st-" as .binary, 5000) <> 3 then return 4
+  if body.write("body" as .binary, 5000) <> 4 then return 5
+  call body.finish()
+  return 0
+
+streaming_server: class implements .taskwork
+  _ready_reference = .channelvalue
+
+  *: factory
+    arg ready_reference = .channelvalue
+    _ready_reference = ready_reference
+    return
+
+  run: method = .channelvalue
+    arg ignored = .channelvalue, context = .taskcontext
+    server = socketcreate()
+    if server <= 0 then return .channelvalue.integer_value(-1)
+    if socketbind(server, "127.0.0.1", 0) <> 0 then return .channelvalue.integer_value(-2)
+    if socketlisten(server, 2) <> 0 then return .channelvalue.integer_value(-3)
+    local = socketlocal(server)
+    port_text = substr(local, lastpos(":", local) + 1)
+    ready = .byteendpoint.from_reference(_ready_reference)
+    port_wire = '0000000000000000'x as .binary
+    <at..int>(0) port_wire = port_text
+    if endpoint_write(ready, port_wire) <> 8 then return .channelvalue.integer_value(-4)
+    call ready.half_close(2)
+    call ready.close()
+
+    client = socketaccept(server)
+    if client <= 0 then return .channelvalue.integer_value(-5)
+    call sockettimeout client, 10000
+    crlf = "0d0a"x
+
+    fixed_request = read_request(client)
+    if pos("Content-Length: 18", fixed_request) = 0 | pos("fixed-request-body", fixed_request) = 0 then return .channelvalue.integer_value(-11)
+    if pos("Accept-Encoding: identity", fixed_request) = 0 then return .channelvalue.integer_value(-12)
+    response_body = copies("fixed-stream-response-", 1000)
+    head = "HTTP/1.1 200 OK" || crlf || ,
+           "Content-Type: application/json" || crlf || ,
+           "Content-Length: " || binlength(response_body as .binary) || crlf || ,
+           "Connection: keep-alive" || crlf || crlf
+    if socketsend(client, head) <> binlength(head as .binary) then return .channelvalue.integer_value(-13)
+    do offset = 1 to length(response_body) by 127
+      piece_length = length(response_body) - offset + 1
+      if piece_length > 127 then piece_length = 127
+      piece = substr(response_body, offset, piece_length)
+      if socketsend(client, piece) <> binlength(piece as .binary) then return .channelvalue.integer_value(-14)
+    end
+
+    chunked_request = read_request(client)
+    if pos("Transfer-Encoding: chunked", chunked_request) = 0 | decode_chunked_request(chunked_request) <> "chunked-request-body" then return .channelvalue.integer_value(-21)
+    head = "HTTP/1.1 200 OK" || crlf || ,
+           "Content-Type: application/json" || crlf || ,
+           "Transfer-Encoding: chunked" || crlf || ,
+           "Connection: close" || crlf || crlf
+    if socketsend(client, head) <> binlength(head as .binary) then return .channelvalue.integer_value(-22)
+    chunks = "generation-|and-|embedding-|streamed"
+    do index = 1 to 4
+      piece = .string
+      piece = subword(translate(chunks, " ", "|"), index, 1)
+      framed = d2x(binlength(piece as .binary)) || crlf || piece || crlf
+      if socketsend(client, framed) <> binlength(framed as .binary) then return .channelvalue.integer_value(-23)
+    end
+    if socketsend(client, "0" || crlf || "X-Stream-End: yes" || crlf || crlf) <= 0 then return .channelvalue.integer_value(-24)
+    drop_rc = socketclose(client)
+    drop_rc = socketclose(server)
+    return .channelvalue.integer_value(102)
+
+drain_response: procedure = .binary
+  arg response = .httpresponse
+  stream_reference = response.body_reference()
+  endpoint = .byteendpoint.from_encoded_reference(stream_reference)
+  result = ''x as .binary
+  do forever
+    request = endpoint.start_read(257, 5000)
+    completion = request.wait(5000)
+    if completion.available() = 0 | completion.succeeded() = 0 then do
+      say "FAIL: response stream completion" binlength(result) completion.error_code() completion.message()
+      call endpoint.close()
+      return ''x as .binary
+    end
+    chunk = completion.value().as_binary()
+    if binlength(chunk) > 0 then result = binconcat(result, chunk)
+    if completion.details().field("eof").as_boolean() then leave
+  end
+  call endpoint.close()
+  return result
+
+main: procedure = .int
+  errors = 0
+  ready = .byteendpoint.memory(3, 8)
+  server_pool = .taskpool.local(1, 1)
+  server_scope = .taskscope.collectall(server_pool, 60000)
+  server_child = server_scope.submit(task .streaming_server(ready.provider_reference()), .channelvalue.null_value())
+  port_wire = endpoint_read_exact(ready, 8)
+  if binlength(port_wire) <> 8 then return 1
+  port = <at..int>(0) port_wire
+  call ready.close()
+
+  client = .httpclient.pooled("http://127.0.0.1:" || port, 1, 4, 65536)
+  task_pool = .taskpool.local(2, 4)
+  headers = .httpheaders.json()
+
+  fixed_body = .httpbody.fixed(18, 8, 512)
+  fixed_scope = .taskscope.failfast(task_pool, 60000)
+  do parallel using fixed_scope
+    fixed_written = produce_fixed(fixed_body)
+    fixed_response = client.post_stream("/generation", fixed_body, headers, 512)
+  end
+  if fixed_written <> 0 | fixed_response.streaming() = 0 | fixed_response.status() <> 200 then errors = errors + 1
+  if fixed_response.streaming() then fixed_bytes = drain_response(fixed_response)
+  else fixed_bytes = ''x as .binary
+  if binlength(fixed_bytes) <> 22000 | left(fixed_bytes as .string, 22) <> "fixed-stream-response-" then errors = errors + 2
+  call fixed_body.close()
+
+  chunked_body = .httpbody.chunked(5, 512)
+  chunked_scope = .taskscope.failfast(task_pool, 60000)
+  do parallel using chunked_scope
+    chunked_written = produce_chunked(chunked_body)
+    chunked_response = client.post_stream("/embeddings", chunked_body, headers, 512)
+  end
+  if chunked_written <> 0 | chunked_response.streaming() = 0 | chunked_response.status() <> 200 then do
+    say "FAIL: chunked response metadata" chunked_written chunked_response.streaming() chunked_response.status() chunked_response.transport_status() chunked_response.error()
+    errors = errors + 4
+  end
+  if chunked_response.streaming() then chunked_bytes = drain_response(chunked_response)
+  else chunked_bytes = ''x as .binary
+  if chunked_bytes as .string <> "generation-and-embedding-streamed" then do
+    say "FAIL: chunked response bytes" binlength(chunked_bytes) chunked_bytes as .string
+    errors = errors + 8
+  end
+  call chunked_body.close()
+
+  call task_pool.close()
+  call client.close()
+  server_completion = server_child.wait(-1)
+  call server_scope.finish()
+  call server_pool.close()
+  if server_completion.succeeded() = 0 | server_completion.value().as_integer() <> 102 then do
+    say "FAIL: streaming server completion" server_completion.succeeded() server_completion.error_code() server_completion.message()
+    if server_completion.succeeded() then say "FAIL: streaming server result" server_completion.value().as_integer()
+    errors = errors + 16
+  end
+
+  if errors <> 0 then do
+    say "FAIL: rxfnsg HTTP streaming" errors
+    return 1
+  end
+  say "PASS: rxfnsg HTTP fixed and chunked request response streaming with bounded backpressure"
+  return 0
+
+exit main()

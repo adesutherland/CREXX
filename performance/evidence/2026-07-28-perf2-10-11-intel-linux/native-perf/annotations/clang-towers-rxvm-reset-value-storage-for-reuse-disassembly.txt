@@ -1,0 +1,101 @@
+
+/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/rxvm:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.got:
+
+Disassembly of section .text:
+
+00000000000bc9a0 <reset_value_storage_for_reuse>:
+   bc9a0:	48 85 ff             	test   rdi,rdi
+   bc9a3:	0f 84 42 01 00 00    	je     bcaeb <reset_value_storage_for_reuse+0x14b>
+   bc9a9:	41 56                	push   r14
+   bc9ab:	53                   	push   rbx
+   bc9ac:	50                   	push   rax
+   bc9ad:	48 89 fb             	mov    rbx,rdi
+   bc9b0:	48 8b bf 90 00 00 00 	mov    rdi,QWORD PTR [rdi+0x90]
+   bc9b7:	48 85 ff             	test   rdi,rdi
+   bc9ba:	74 1f                	je     bc9db <reset_value_storage_for_reuse+0x3b>
+   bc9bc:	48 c7 83 90 00 00 00 	mov    QWORD PTR [rbx+0x90],0x0
+   bc9c3:	00 00 00 00 
+   bc9c7:	c7 47 0c 00 00 00 00 	mov    DWORD PTR [rdi+0xc],0x0
+   bc9ce:	48 c7 47 18 00 00 00 	mov    QWORD PTR [rdi+0x18],0x0
+   bc9d5:	00 
+   bc9d6:	e8 e5 df 01 00       	call   da9c0 <rxvm_reference_cell_release_slow>
+   bc9db:	48 8b bb 98 00 00 00 	mov    rdi,QWORD PTR [rbx+0x98]
+   bc9e2:	48 85 ff             	test   rdi,rdi
+   bc9e5:	74 10                	je     bc9f7 <reset_value_storage_for_reuse+0x57>
+   bc9e7:	48 c7 83 98 00 00 00 	mov    QWORD PTR [rbx+0x98],0x0
+   bc9ee:	00 00 00 00 
+   bc9f2:	e8 c9 df 01 00       	call   da9c0 <rxvm_reference_cell_release_slow>
+   bc9f7:	48 83 bb c8 00 00 00 	cmp    QWORD PTR [rbx+0xc8],0x0
+   bc9fe:	00 
+   bc9ff:	74 63                	je     bca64 <reset_value_storage_for_reuse+0xc4>
+   bca01:	45 31 f6             	xor    r14d,r14d
+   bca04:	eb 16                	jmp    bca1c <reset_value_storage_for_reuse+0x7c>
+   bca06:	66 2e 0f 1f 84 00 00 	cs nop WORD PTR [rax+rax*1+0x0]
+   bca0d:	00 00 00 
+   bca10:	49 ff c6             	inc    r14
+   bca13:	4c 3b b3 c8 00 00 00 	cmp    r14,QWORD PTR [rbx+0xc8]
+   bca1a:	73 48                	jae    bca64 <reset_value_storage_for_reuse+0xc4>
+   bca1c:	48 8b 83 b0 00 00 00 	mov    rax,QWORD PTR [rbx+0xb0]
+   bca23:	48 85 c0             	test   rax,rax
+   bca26:	75 0c                	jne    bca34 <reset_value_storage_for_reuse+0x94>
+   bca28:	48 8b 83 a8 00 00 00 	mov    rax,QWORD PTR [rbx+0xa8]
+   bca2f:	48 85 c0             	test   rax,rax
+   bca32:	74 dc                	je     bca10 <reset_value_storage_for_reuse+0x70>
+   bca34:	4a 8b 3c f0          	mov    rdi,QWORD PTR [rax+r14*8]
+   bca38:	48 85 ff             	test   rdi,rdi
+   bca3b:	74 05                	je     bca42 <reset_value_storage_for_reuse+0xa2>
+   bca3d:	e8 5e ff ff ff       	call   bc9a0 <reset_value_storage_for_reuse>
+   bca42:	48 8b 83 a8 00 00 00 	mov    rax,QWORD PTR [rbx+0xa8]
+   bca49:	48 85 c0             	test   rax,rax
+   bca4c:	74 c2                	je     bca10 <reset_value_storage_for_reuse+0x70>
+   bca4e:	48 8b 8b b0 00 00 00 	mov    rcx,QWORD PTR [rbx+0xb0]
+   bca55:	48 85 c9             	test   rcx,rcx
+   bca58:	74 b6                	je     bca10 <reset_value_storage_for_reuse+0x70>
+   bca5a:	4a 8b 0c f1          	mov    rcx,QWORD PTR [rcx+r14*8]
+   bca5e:	4a 89 0c f0          	mov    QWORD PTR [rax+r14*8],rcx
+   bca62:	eb ac                	jmp    bca10 <reset_value_storage_for_reuse+0x70>
+   bca64:	48 8b 83 80 00 00 00 	mov    rax,QWORD PTR [rbx+0x80]
+   bca6b:	48 85 c0             	test   rax,rax
+   bca6e:	74 31                	je     bcaa1 <reset_value_storage_for_reuse+0x101>
+   bca70:	48 8b 40 10          	mov    rax,QWORD PTR [rax+0x10]
+   bca74:	48 85 c0             	test   rax,rax
+   bca77:	74 05                	je     bca7e <reset_value_storage_for_reuse+0xde>
+   bca79:	48 89 df             	mov    rdi,rbx
+   bca7c:	ff d0                	call   rax
+   bca7e:	4c 8d 73 60          	lea    r14,[rbx+0x60]
+   bca82:	48 8b 7b 60          	mov    rdi,QWORD PTR [rbx+0x60]
+   bca86:	48 85 ff             	test   rdi,rdi
+   bca89:	74 05                	je     bca90 <reset_value_storage_for_reuse+0xf0>
+   bca8b:	e8 d0 6b f5 ff       	call   13660 <free@plt>
+   bca90:	0f 57 c0             	xorps  xmm0,xmm0
+   bca93:	41 0f 11 46 1c       	movups XMMWORD PTR [r14+0x1c],xmm0
+   bca98:	41 0f 11 46 10       	movups XMMWORD PTR [r14+0x10],xmm0
+   bca9d:	41 0f 11 06          	movups XMMWORD PTR [r14],xmm0
+   bcaa1:	c7 03 00 00 00 00    	mov    DWORD PTR [rbx],0x0
+   bcaa7:	48 c7 83 a0 00 00 00 	mov    QWORD PTR [rbx+0xa0],0x0
+   bcaae:	00 00 00 00 
+   bcab2:	48 c7 43 38 00 00 00 	mov    QWORD PTR [rbx+0x38],0x0
+   bcab9:	00 
+   bcaba:	48 c7 83 c8 00 00 00 	mov    QWORD PTR [rbx+0xc8],0x0
+   bcac1:	00 00 00 00 
+   bcac5:	48 c7 43 20 00 00 00 	mov    QWORD PTR [rbx+0x20],0x0
+   bcacc:	00 
+   bcacd:	0f 57 c0             	xorps  xmm0,xmm0
+   bcad0:	0f 11 43 08          	movups XMMWORD PTR [rbx+0x8],xmm0
+   bcad4:	0f 11 43 48          	movups XMMWORD PTR [rbx+0x48],xmm0
+   bcad8:	48 c7 43 58 00 00 00 	mov    QWORD PTR [rbx+0x58],0x0
+   bcadf:	00 
+   bcae0:	0f 11 43 68          	movups XMMWORD PTR [rbx+0x68],xmm0
+   bcae4:	48 83 c4 08          	add    rsp,0x8
+   bcae8:	5b                   	pop    rbx
+   bcae9:	41 5e                	pop    r14
+   bcaeb:	c3                   	ret
+
+Disassembly of section .fini:

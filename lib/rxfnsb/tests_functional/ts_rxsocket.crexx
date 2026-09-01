@@ -1,4 +1,5 @@
 options levelb
+import rxfnsb
 import rxsocket
 
 host = "127.0.0.1"
@@ -8,29 +9,15 @@ if server <= 0 then do
   exit 1
 end
 
-port = 32164
-last_port = 32204
-bound = 0
-do while port <= last_port
-  if socketbind(server, host, port) = 0 then do
-    bound = 1
-    leave
-  end
-  drop_rc = socketclose(server)
-  server = socketcreate()
-  if server <= 0 then do
-    say "socketcreate retry failed"
-    exit 1
-  end
-  port = port + 1
-end
-
-if bound = 0 then do
+if socketbind(server, host, 0) <> 0 then do
   say "socketbind failed:" socketerror(server)
   exit 1
 end
 
-if socketlocal(server) = "" then do
+local = socketlocal(server)
+colon = lastpos(":", local)
+port = substr(local, colon + 1)
+if colon = 0 | datatype(port, "W") = 0 then do
   say "socketlocal server failed"
   exit 1
 end
@@ -125,6 +112,23 @@ end
 
 if socketstatus(client) <> 0 then do
   say "socketstatus client failed:" socketerror(client)
+  exit 1
+end
+
+if sockettimeout(client, 25) <> 0 then do
+  say "sockettimeout client deadline setup failed:" socketerror(client)
+  exit 1
+end
+
+timed_text = socketrecv(client, 16)
+if timed_text <> "" | socketstatus(client) <> 2 then do
+  say "socketrecv timeout expected empty text and status 2, got ["timed_text"]" socketstatus(client) socketerror(client)
+  exit 1
+end
+
+timed_binary = socketrecvb(client, 16)
+if timed_binary <> ''x | socketstatus(client) <> 2 then do
+  say "socketrecvb timeout expected empty binary and status 2, got" socketstatus(client) socketerror(client)
   exit 1
 end
 

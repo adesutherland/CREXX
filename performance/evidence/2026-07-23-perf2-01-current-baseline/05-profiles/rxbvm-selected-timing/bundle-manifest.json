@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "2495bc2c630e5862368e16dfebc89f459b4e3b5268357dd4aef8ed2ee9af5713",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c.dirty 20260723",
+  "result": "pass",
+  "started_utc": "2026-07-23T18:34:13+0000",
+  "completed_utc": "2026-07-23T18:35:05+0000",
+  "repository": {"branch":"develop","commit":"d5b25a78fd6cd2b5b5962b45e508f3cb2bb782e6","dirty_scope":[" M docs/ai-context/RXVM_INTERPRETER.md"," M docs/books/crexx_programming_guide/profiling.md"," M interpreter/CMakeLists.txt"," M interpreter/rxvminstrument.h"," M interpreter/rxvminstrument_profile.h"," M interpreter/rxvmintp.c"," M interpreter/rxvmmain.c"," M interpreter/rxvmprofile.c"," M interpreter/rxvmprofile.h"," M interpreter/rxvmvars.h"," M interpreter/tests/check_vm_call_census.cmake"," M interpreter/tests/check_vm_profile_csv.cmake"," M interpreter/tests/check_vm_profiling_docs.cmake"," M interpreter/tests/test_rxvmprofile.c"," M performance/README.md"," M performance/ROADMAP.md"," M performance/tools/run_evidence_bundle.crexx","?? performance/PERF2-01-HANDOVER-PROMPT.md","?? performance/PERF2-01-WORKLIST.md","?? performance/ROADMAP-INITIAL-SWEEP-2026-07-23.md","?? performance/TEAM-PERFORMANCE-UPDATE-2026-07-23.md","?? performance/evidence/2026-07-23-perf2-01-current-baseline/","?? performance/tools/run_evidence_bundle.rxas"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/perf2-selected-timing-v1.txt","--release-build","/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release","--profile-build","/private/tmp/crexx-perf2-01-profile-build","--vm","rxbvm","--profile-mode","timing","--output-dir","performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-selected-timing"],
+  "input_manifest": {"path":"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/perf2-selected-timing-v1.txt","sha256":"42ed33942dc6bb01f6f06512fab49cd7be070cd6d43d9bf79b4d3d12d1676684"},
+  "ordinary_release": {"build":"/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","vm":"rxbvm","vm_version":"crexx-1.0.0-beta.3+local.gd5b25a78fd6c (Bytecode Mode)","vm_sha256":"a738271972e52ea8a0cf0981eb86d58179c6f715824595eb8ca576737e360e15"},
+  "profile_release": {"build":"/private/tmp/crexx-perf2-01-profile-build","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","vm":"rxbvm","profile_mode":"timing","vm_version":"crexx-1.0.0-beta.3+local.gd5b25a78fd6c.dirty (Bytecode Mode)","vm_sha256":"66fa1a39f6bb693ba5c2f3359fa5377d9f811a6f25eaa51a1ae0ff0aba39973f","rxseq_sha256":"79413938bf29595387d0842b96fe457bf2ecd0b8a14b94c5d6ca0c3548236308"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release selected VM only","profile_timing":"diagnostic only; never throughput","rxseq":"separate profiling-VM runs for N=2, N=3, and N=4","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-23-perf2-01-current-baseline/05-profiles/rxbvm-selected-timing"
+}

@@ -1,0 +1,9 @@
+artifact,mode,variant,bytes,lines,executable_instructions,native_stem_sites,call_sites,copy_sites,concat_sites,sha256
+nr15_stem_access,opt,before-candidate-a,69433,1444,503,0,25,37,32,44e176743d00959a54a8086d6a159c95a47c10097dcc2b6d5d6037480aac7727
+nr15_stem_access,opt,after-d2-hybrid,66358,1345,417,21,6,31,32,8df1efc055c5ab4e8c88e6924b9cb86bf4bb7e9e29096cf1a60d8816b18c01db
+nr15_stem_access,noopt,before-candidate-a,61794,1332,486,0,39,5,32,50addf7e7727ba16d09aea17a5981159e4f6335643e540ea2dedc973bd5b00ae
+nr15_stem_access,noopt,after-d2-hybrid,59402,1225,381,21,18,5,32,5c7d58af712b0a9a69ec4c89e8ec6d047e95f508d99cdb623e67be4b6b5acac1
+rexxcps_levelb,opt,before-candidate-a,228594,4822,1618,0,89,96,117,6391e96200f52d3752d714ed4f9f929a4b3c1e400ad3e1792fa237cce0f47813
+rexxcps_levelb,opt,after-d2-hybrid,227383,4767,1564,12,77,96,117,335fbf6c36b9a7f929af93e59fd3a2d78c392060a98e4e99072cb0e74c444d8c
+rexxcps_levelb,noopt,before-candidate-a,134171,2818,1039,0,119,47,77,afe7a1c3f556d0791746df691dfe5fd0725d5aa9ea2ce6dacb87b80b79c37d11
+rexxcps_levelb,noopt,after-d2-hybrid,132984,2764,986,12,107,47,77,2dbfb038f48b133460f8024efdce8a066641bf326008f5f9ef8beea7dc8b64f3

@@ -1,0 +1,4 @@
+image,type_count,member_count,assignability_bytes,direct_bound_dispatch_bytes
+runtime-interface-retained,61,43,488,20984
+rexxcps-retained,57,145,456,66120
+rxas-standalone-interface,57,26,456,11856

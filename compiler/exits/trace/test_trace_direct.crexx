@@ -145,8 +145,9 @@ test_modes: procedure = .int
   result = tx.process(tokens)
   if check_equal("trace off process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
   replacement = join_result_lines(result)
-  if check_contains("trace off mode", replacement, 'call _trace_set("OFF")') = 0 then failures = failures + 1
+  if check_contains("trace off mode", replacement, 'if _trace_set_off() <> 0') = 0 then failures = failures + 1
   if check_contains("trace off bpoff", replacement, 'assembler bpoff') = 0 then failures = failures + 1
+  if check_true("trace off avoids current-mode activation", pos("_trace_current_mode", replacement) = 0, replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -154,6 +155,8 @@ test_value_option: procedure = .int
   failures = .int
   tx = .traceexit(3004)
   result = .exitresult
+  plan = .exitplan
+  replacement = .string
   failures = 0
 
   tokens = newtokens()
@@ -165,6 +168,32 @@ test_value_option: procedure = .int
   replacement = join_result_lines(result)
   if check_contains("trace value normalizes", replacement, "call _trace_set(_trace_mode_from_option(setting))") = 0 then failures = failures + 1
   if check_contains("trace value current mode", replacement, "__rxtrace_mode=_trace_current_mode()") = 0 then failures = failures + 1
+
+  tx = .traceexit(3010)
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "_trace_current_mode"
+  call pushbracket tokens, "("
+  call pushbracket tokens, ")"
+  plan = tx.pre_process(tokens)
+  if check_equal("trace current identity helper count", "0", plan.get_helper_count()) = 0 then failures = failures + 1
+  result = tx.process(tokens)
+  if check_equal("trace current identity process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+  if check_equal("trace current identity replacement", "assembler cnop /* rxcp-opt-elide-exact-identity */", join_result_lines(result)) = 0 then failures = failures + 1
+
+  tokens = newtokens()
+  call pushexitkeyword tokens, "TRACE"
+  call pushidentifier tokens, "VALUE"
+  call pushidentifier tokens, "_trace_current_mode"
+  call pushbracket tokens, "("
+  call pushbracket tokens, ")"
+  call pushoperator tokens, "||"
+  call pushstring tokens, "''"
+  result = tx.process(tokens)
+  replacement = join_result_lines(result)
+  if check_contains("trace non-exact expression preserved", replacement, "_trace_mode_from_option") = 0 then failures = failures + 1
+  if check_true("trace non-exact expression is not nop", replacement \= "assembler cnop", replacement) = 0 then failures = failures + 1
 
   return failures
 
@@ -367,6 +396,7 @@ test_errors: procedure = .int
   result = tx.process(tokens)
   if check_equal("trace invalid result-prefix status", "ERROR", result.get_status()) = 0 then failures = failures + 1
   if result.get_diagnostic_count() > 0 then do
+    diagnostic = .rxcp..exitdiagnostic
     diagnostic = result.get_diagnostic(1)
     if check_equal("trace invalid result-prefix code", "TRACE_UNKNOWN_OPTION", diagnostic.get_code()) = 0 then failures = failures + 1
   end

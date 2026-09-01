@@ -1,0 +1,25 @@
+/* Binary fixed-width field example */
+main() .locals=8
+    load r1,0x
+    load r2,16
+    bresize r1,r2
+
+    load r2,0
+    load r3,-42
+    bseti64 r1,r2,r3
+    bgeti64 r4,r1,r2
+    itos r4
+    say r4
+
+    load r2,8
+    load r5,1.5
+    bsetf32 r1,r2,r5
+    bgetf32 r6,r1,r2
+    ftos r6
+    say r6
+
+    load r2,0
+    bgetu32 r7,0x78563412,r2
+    itos r7
+    say r7
+    ret

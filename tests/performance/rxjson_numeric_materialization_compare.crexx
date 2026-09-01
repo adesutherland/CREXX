@@ -1,0 +1,291 @@
+/*
+ * CAP-01-J02 / CRI-13 diagnostic benchmark.
+ *
+ * This workload uses only the current public rxjson and binary-memory surface.
+ * Its headerless little-endian buffers are measurement controls, not a public
+ * packed-vector format or serialization proposal.
+ */
+options levelb comments_dash
+
+import rxfnsb
+import rxjson
+
+arg argv = .string[]
+
+dimension = 3072
+iterations = 10
+if argv[0] >= 1 then dimension = argv[1] as .int
+if argv[0] >= 2 then iterations = argv[2] as .int
+if dimension < 1 then return fail("dimension must be positive")
+if iterations < 1 then return fail("iterations must be positive")
+number = 0 as .float
+integer_value = 0
+
+legacy_dimension = 128
+legacy_json = build_float_payload(legacy_dimension)
+legacy_sum = 0 as .float
+started = time("us")
+do i = 1 to legacy_dimension
+  legacy_sum = legacy_sum + (jsonget(legacy_json, "values." || i) as .float)
+end
+legacy_extract_us = elapsed_us(started)
+if legacy_sum \= 64.0 then return fail("legacy extraction checksum")
+
+float_json = build_float_payload(dimension)
+started = time("us")
+float_document = .jsondocument(float_json)
+float_parse_us = elapsed_us(started)
+if float_document.valid() \= 1 then return fail("float parse")
+float_root = float_document.root()
+float_array = float_document.member(float_root, "values")
+if float_array <= 0 | float_document.node_count(float_array) \= dimension then return fail("float array")
+
+float_element_walk_sum = 0 as .float
+started = time("us")
+do i = .int(1) to dimension
+  node = float_document.element(float_array, i)
+  status = float_document.node_float(node, number)
+  if status \= 0 then return fail("float element walk value")
+  float_element_walk_sum = float_element_walk_sum + number
+end
+float_element_walk_us = elapsed_us(started)
+if float_element_walk_sum \= dimension * 0.5 then return fail("float element walk checksum")
+
+float_nodes = .int[]
+started = time("us")
+float_child_count = float_document.children(float_array, float_nodes)
+float_children_us = elapsed_us(started)
+if float_child_count \= dimension then return fail("float children")
+
+float_traverse_sum = 0 as .float
+started = time("us")
+do repetition = 1 to iterations
+  do i = .int(1) to dimension
+    status = .int
+    status = float_document.node_float(float_nodes[i], number)
+    if status \= 0 then return fail("float traversal value")
+    float_traverse_sum = float_traverse_sum + number
+  end
+end
+float_traverse_us = elapsed_us(started)
+expected_float_sum = dimension * 0.5 * iterations
+if float_traverse_sum \= expected_float_sum then return fail("float traversal checksum")
+
+float_values = .float[]
+started = time("us")
+do i = .int(1) to dimension
+  status = .int
+  status = float_document.node_float(float_nodes[i], number)
+  if status \= 0 then return fail("float materialization value")
+  float_values[i] = number
+end
+float_materialize_us = elapsed_us(started)
+if float_values[0] \= dimension then return fail("float materialization count")
+
+float_copy = .float[]
+started = time("us")
+do i = .int(1) to dimension
+  float_copy[i] = float_values[i]
+end
+float_copy_us = elapsed_us(started)
+if float_copy[dimension] \= 0.5 then return fail("float copy checksum")
+
+float_packed = .binary
+call binresize float_packed, dimension * 4
+started = time("us")
+do i = .int(1) to dimension
+  <at..f32>((i - 1) * 4) float_packed = float_values[i]
+end
+float_pack_us = elapsed_us(started)
+
+production_float_packed = .binary
+projection_error = ""
+started = time("us")
+status = .int
+status = float_document.node_f32_array(float_array, dimension, production_float_packed, projection_error)
+production_float_project_us = elapsed_us(started)
+if status \= 0 then return fail("production float projection: " || projection_error)
+if binlength(production_float_packed) \= dimension * 4 then return fail("production float projection bytes")
+do i = .int(1) to dimension
+  if <at..f32>((i - 1) * 4) production_float_packed \= 0.5 then return fail("production float projection value")
+end
+
+float_packed_sum = 0 as .float
+started = time("us")
+do repetition = .int(1) to iterations
+  do i = .int(1) to dimension
+    float_packed_sum = float_packed_sum + <at..f32>((i - 1) * 4) float_packed
+  end
+end
+float_scan_us = elapsed_us(started)
+if float_packed_sum \= expected_float_sum then return fail("float packed checksum")
+
+integer_json = build_integer_payload(dimension)
+started = time("us")
+integer_document = .jsondocument(integer_json)
+integer_parse_us = elapsed_us(started)
+if integer_document.valid() \= 1 then return fail("integer parse")
+integer_root = integer_document.root()
+integer_array = integer_document.member(integer_root, "values")
+if integer_array <= 0 | integer_document.node_count(integer_array) \= dimension then return fail("integer array")
+
+integer_nodes = .int[]
+started = time("us")
+integer_child_count = integer_document.children(integer_array, integer_nodes)
+integer_children_us = elapsed_us(started)
+if integer_child_count \= dimension then return fail("integer children")
+
+integer_values = .int[]
+started = time("us")
+do i = .int(1) to dimension
+  status = integer_document.node_int(integer_nodes[i], integer_value)
+  if status \= 0 then return fail("integer materialization value")
+  integer_values[i] = integer_value
+end
+integer_materialize_us = elapsed_us(started)
+
+integer_copy = .int[]
+started = time("us")
+do i = .int(1) to dimension
+  integer_copy[i] = integer_values[i]
+end
+integer_copy_us = elapsed_us(started)
+if integer_copy[dimension] \= dimension then return fail("integer copy checksum")
+
+integer_packed = .binary
+call binresize integer_packed, dimension * 8
+started = time("us")
+do i = .int(1) to dimension
+  <at..i64>((i - 1) * 8) integer_packed = integer_values[i]
+end
+integer_pack_us = elapsed_us(started)
+
+production_integer_packed = .binary
+projection_error = ""
+started = time("us")
+status = integer_document.node_i64_array(integer_array, dimension, production_integer_packed, projection_error)
+production_integer_project_us = elapsed_us(started)
+if status \= 0 then return fail("production integer projection: " || projection_error)
+if binlength(production_integer_packed) \= dimension * 8 then return fail("production integer projection bytes")
+do i = .int(1) to dimension
+  if <at..i64>((i - 1) * 8) production_integer_packed \= i then return fail("production integer projection value")
+end
+
+integer_packed_sum = 0
+started = time("us")
+do repetition = .int(1) to iterations
+  do i = .int(1) to dimension
+    integer_packed_sum = integer_packed_sum + <at..i64>((i - 1) * 8) integer_packed
+  end
+end
+integer_scan_us = elapsed_us(started)
+expected_integer_sum = (dimension * (dimension + 1) / 2) * iterations
+if integer_packed_sum \= expected_integer_sum then return fail("integer packed checksum")
+
+encoded_values = .string[]
+started = time("us")
+do i = .int(1) to dimension
+  encoded_values[i] = (<at..f32>((i - 1) * 4) float_packed) as .string
+end
+encoded_json = jsonarray(encoded_values)
+json_encode_us = elapsed_us(started)
+encoded_document = .jsondocument(encoded_json)
+if encoded_document.valid() \= 1 | encoded_document.node_count(encoded_document.root()) \= dimension then return fail("JSON encode")
+
+total_sum = 0 as .float
+started = time("us")
+total_document = .jsondocument(float_json)
+total_array = total_document.member(total_document.root(), "values")
+total_nodes = .int[]
+if total_document.children(total_array, total_nodes) \= dimension then return fail("total children")
+total_packed = .binary
+call binresize total_packed, dimension * 4
+do i = .int(1) to dimension
+  status = total_document.node_float(total_nodes[i], number)
+  if status \= 0 then return fail("total conversion")
+  <at..f32>((i - 1) * 4) total_packed = number
+end
+do i = .int(1) to dimension
+  total_sum = total_sum + <at..f32>((i - 1) * 4) total_packed
+end
+total_us = elapsed_us(started)
+if total_sum \= dimension * 0.5 then return fail("total checksum")
+
+production_total_sum = 0 as .float
+production_error = ""
+started = time("us")
+production_document = .jsondocument(float_json)
+production_array = production_document.member(production_document.root(), "values")
+production_packed = .binary
+status = production_document.node_f32_array(production_array, dimension, production_packed, production_error)
+if status \= 0 then return fail("production total projection: " || production_error)
+do i = .int(1) to dimension
+  production_total_sum = production_total_sum + <at..f32>((i - 1) * 4) production_packed
+end
+production_total_us = elapsed_us(started)
+if production_total_sum \= dimension * 0.5 then return fail("production total checksum")
+
+say "benchmark=rxjson_numeric_materialization_compare"
+say "dimension="dimension
+say "iterations="iterations
+say "legacy_extract_128_us="legacy_extract_us
+say "float_source_bytes="float_document.source_bytes()
+say "float_index_bytes="float_document.index_bytes()
+say "float_first_parse_us="float_parse_us
+say "float_element_walk_control_us="float_element_walk_us
+say "float_children_us="float_children_us
+say "float_repeated_traversal_us="float_traverse_us
+say "float_materialize_us="float_materialize_us
+say "float_typed_copy_us="float_copy_us
+say "float_packed_bytes="binlength(float_packed)
+say "float_pack_us="float_pack_us
+say "production_float_project_us="production_float_project_us
+say "float_direct_scan_us="float_scan_us
+say "integer_source_bytes="integer_document.source_bytes()
+say "integer_index_bytes="integer_document.index_bytes()
+say "integer_first_parse_us="integer_parse_us
+say "integer_children_us="integer_children_us
+say "integer_materialize_us="integer_materialize_us
+say "integer_typed_copy_us="integer_copy_us
+say "integer_packed_bytes="binlength(integer_packed)
+say "integer_pack_us="integer_pack_us
+say "production_integer_project_us="production_integer_project_us
+say "integer_direct_scan_us="integer_scan_us
+say "json_encoded_bytes="binlength(encoded_json as .binary)
+say "json_encode_us="json_encode_us
+say "parse_pack_scan_total_us="total_us
+say "production_parse_project_scan_total_us="production_total_us
+say "float_checksum="float_packed_sum
+say "integer_checksum="integer_packed_sum
+say "production_float_checksum="production_total_sum
+say "PASS: CRI-13 JSON numeric materialization compare"
+return 0
+
+elapsed_us: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+build_float_payload: procedure = .string
+  arg count = .int
+  out = '{"meta":{"kind":"embedding","unicode":"Gràdh 中"},"values":['
+  do i = 1 to count
+    if i > 1 then out = out || ","
+    out = out || "0.5000000000000000"
+  end
+  return out || '],"nullable":null,"empty":[],"nested":{"ok":true}}'
+
+build_integer_payload: procedure = .string
+  arg count = .int
+  out = '{"values":['
+  do i = 1 to count
+    if i > 1 then out = out || ","
+    out = out || i
+  end
+  return out || "]}"
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

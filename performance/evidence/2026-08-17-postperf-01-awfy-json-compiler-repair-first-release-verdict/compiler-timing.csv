@@ -1,0 +1,13 @@
+round,order,role,seconds
+1,control-first,control,1.11
+1,control-first,candidate,1.10
+2,candidate-first,candidate,1.10
+2,candidate-first,control,1.09
+3,control-first,control,1.09
+3,control-first,candidate,1.10
+4,candidate-first,candidate,1.11
+4,candidate-first,control,1.10
+5,control-first,control,1.12
+5,control-first,candidate,1.10
+6,candidate-first,candidate,1.10
+6,candidate-first,control,1.09

@@ -1,0 +1,7 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Permute,rxvm,normalized_work_per_second,12,675.882221,678.852024,-1.918788,-1.049777,0.503075,0.805806,1.756749,0.087117,-0.668678,0.842911,8,12,noisy_inconclusive,no
+Base64,rxvm,normalized_work_per_second,12,1616.516078,1518.847933,-13.428646,-6.091617,-4.036964,-2.319513,34.798075,-1.316960,-9.005968,6.372048,3,12,noisy_inconclusive,yes
+Mandelbrot,rxbvm,normalized_work_per_second,12,2925.328098,2895.712359,-9.307202,-2.274395,-1.121675,-0.686148,-0.021523,-2.525764,-4.574239,-0.477288,0,12,clear_adverse,no
+Towers,rxvm,normalized_work_per_second,12,14.490405,14.588603,-3.245250,-0.709144,-0.373164,1.300077,3.476640,0.064304,-1.076603,1.205211,4,12,noisy_inconclusive,no
+Towers,rxbvm,normalized_work_per_second,12,14.184357,14.257472,-0.800359,0.028834,0.107636,0.843396,5.232657,0.765260,-0.259837,1.790356,10,12,noisy_inconclusive,no
+Storage,rxvm,normalized_work_per_second,12,5.667274,5.698875,-0.488921,0.439150,0.926830,1.914230,3.909701,1.175503,0.338998,2.012008,9,12,clear_favorable,no

@@ -1,0 +1,8 @@
+benchmark=nr15_stem_primitive_control
+mode=get-hit
+family=collision
+size=256
+iterations=200
+elapsed_us=426
+checksum=692
+PASS: NR-15 primitive control

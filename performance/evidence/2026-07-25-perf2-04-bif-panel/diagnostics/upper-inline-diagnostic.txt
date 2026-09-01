@@ -1,0 +1,33 @@
+# Exact B0-R `rxc -d2` UPPER rejection excerpt
+# Full temporary log: /private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps-inline-debug.log
+119427:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:28 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119428:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:28 - failed to bind inline call arguments
+119429:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:28 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119430:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:43 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119431:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:43 - failed to bind inline call arguments
+119432:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:43 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119433:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:55 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119434:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:55 - failed to bind inline call arguments
+119435:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:55 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119436:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:70 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119437:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:70 - failed to bind inline call arguments
+119438:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:70 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119853:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:28 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119854:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:28 - failed to bind inline call arguments
+119855:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:28 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119856:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:43 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119857:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:43 - failed to bind inline call arguments
+119858:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:43 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119859:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:55 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119860:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:55 - failed to bind inline call arguments
+119861:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:55 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+119862:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:70 - rejected: rule=inline.bind.actuals phase=inline.expand root=callee-args+call-actuals priority=100
+119863:DEBUG_INLINE_FAILCLOSED upper rule=inline.expression.block @ rexxcps_levelb.crexx:190:70 - failed to bind inline call arguments
+119864:DEBUG_INLINE_REMAP upper @ rexxcps_levelb.crexx:190:70 - rejected: rule=inline.expression.block phase=inline.callsite root=FUNCTION|MEMBER_CALL|FACTORY_CALL priority=20
+
+# Focused optimized call-shape probe
+20:   call r1,rxfnsb.upper(),r4
+24:   .srcstep 3 3 25 "upper.crexx" 42 3 14 "  result = \"\""
+28:   .srcstep 4 4 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+31:   strupper r6,r3
+41:   call r0,rxfnsb.upper(),r4

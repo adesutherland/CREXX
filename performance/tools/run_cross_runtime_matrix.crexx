@@ -1,0 +1,972 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+/*
+ * Compact formal cross-runtime capture. The manifest must group cells for the
+ * same workload contiguously. Consecutive warmup/recorded rounds use an order
+ * and its reverse, with the base order rotated between pairs. This balances
+ * every pair's relative A/B order even when a workload has more than two
+ * cells. Samples and every output line are consolidated into two files.
+ */
+main: procedure = .int
+  arg args = .string[]
+
+  manifest_path = ""
+  output_dir = ""
+  measurement = "timing"
+  warmups = 2
+  runs = 10
+  self_test_requested = 0
+  summary_only = 0
+  sample_paths = .string[]
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--self-test" then self_test_requested = 1
+    else if option = "--summary-only" then summary_only = 1
+    else if option = "--samples" then do
+      if i = args[0] then return argument_error("missing value after --samples")
+      i = i + 1
+      sample_paths[sample_paths[0] + 1] = args[i]
+    end
+    else if option = "--manifest" then do
+      if i = args[0] then return argument_error("missing value after --manifest")
+      i = i + 1
+      manifest_path = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else if option = "--measurement" then do
+      if i = args[0] then return argument_error("missing value after --measurement")
+      i = i + 1
+      measurement = lower(args[i])
+    end
+    else if option = "--warmups" then do
+      if i = args[0] then return argument_error("missing value after --warmups")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--warmups must be a non-negative integer")
+      warmups = args[i]
+    end
+    else if option = "--runs" then do
+      if i = args[0] then return argument_error("missing value after --runs")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--runs must be a positive integer")
+      runs = args[i]
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if self_test_requested then return self_test()
+  if manifest_path = "" then return argument_error("--manifest is required")
+  if output_dir = "" then return argument_error("--output-dir is required")
+  if measurement <> "timing" & measurement <> "rss" then
+    return argument_error("--measurement must be timing or rss")
+  if runs < 1 then return argument_error("--runs must be positive")
+  if runs <mod> 2 <> 0 then
+    return argument_error("--runs must be even for exact pairwise balance")
+  if summary_only & sample_paths[0] = 0 then
+    return argument_error("--summary-only requires at least one --samples PATH")
+  if measurement = "rss" & warmups <> 0 then
+    return argument_error("RSS capture uses --warmups 0")
+  rss_time_command = ""
+  rss_time_option = ""
+  if measurement = "rss" then do
+    rss_time_command = detect_rss_time_command()
+    rss_time_option = detect_rss_time_option(rss_time_command)
+  end
+
+  manifest_rows = read_input_manifest(manifest_path)
+  if manifest_rows[0] = 0 then return execution_error("manifest has no entries")
+  if validate_manifest(manifest_rows) <> 0 then return 1
+  if make_directory(output_dir) <> 0 then return 1
+
+  if summary_only then do
+    samples = merge_sample_files(sample_paths)
+    if samples[0] = 0 then return execution_error("no sample rows were loaded")
+    if write_summary(output_dir || "/summary.csv", output_dir || "/ratios.csv", ,
+        output_dir || "/geomeans.csv", manifest_rows, samples, measurement) <> 0 then return 1
+    say "PASS: compact cross-runtime" measurement "summary refreshed under" output_dir
+    return 0
+  end
+
+  samples = .string[]
+  samples[1] = "sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit"
+  outputs = .string[]
+  outputs[1] = "sample_id,stream,line_number,text"
+  started = timestamp_utc()
+  manifest_out = output_dir || "/capture-manifest.json"
+  if write_capture_manifest(manifest_out, manifest_path, measurement, warmups, runs, ,
+      started, "", "running") <> 0 then return 1
+
+  group_start = 1
+  do while group_start <= manifest_rows[0]
+    first_fields = split_delimited(manifest_rows[group_start], "|")
+    workload = first_fields[2]
+    group_end = group_start
+    do while group_end < manifest_rows[0]
+      next_fields = split_delimited(manifest_rows[group_end + 1], "|")
+      if next_fields[2] <> workload then leave
+      group_end = group_end + 1
+    end
+
+    if run_group(manifest_rows, group_start, group_end, measurement, rss_time_command, ,
+        rss_time_option, warmups, runs, samples, outputs) <> 0 then do
+      call write_lines output_dir || "/samples.csv", samples
+      call write_lines output_dir || "/outputs.csv", outputs
+      completed = timestamp_utc()
+      call write_capture_manifest manifest_out, manifest_path, measurement, warmups, runs, ,
+          started, completed, "fail"
+      return 1
+    end
+    if write_lines(output_dir || "/samples.csv", samples) <> 0 then return 1
+    if write_lines(output_dir || "/outputs.csv", outputs) <> 0 then return 1
+    group_start = group_end + 1
+  end
+
+  if write_summary(output_dir || "/summary.csv", output_dir || "/ratios.csv", ,
+      output_dir || "/geomeans.csv", manifest_rows, samples, measurement) <> 0 then return 1
+  completed = .string
+  completed = timestamp_utc()
+  if write_capture_manifest(manifest_out, manifest_path, measurement, warmups, runs, ,
+      started, completed, "pass") <> 0 then return 1
+  say "PASS: compact cross-runtime" measurement "matrix retained under" output_dir
+  return 0
+
+usage: procedure = .void
+  say "Usage: run_cross_runtime_matrix [options]"
+  say "  --manifest PATH"
+  say "  --output-dir PATH"
+  say "  --measurement timing|rss"
+  say "  --warmups N"
+  say "  --runs N (positive and even)"
+  say "  --summary-only --samples PATH [--samples PATH ...]"
+  say "  --self-test"
+  return
+
+/* Manifest fields:
+ * id|workload|runtime|vm|variant|tier|aggregate|lifecycle|work|expectation|
+ * metric_prefix|command_argv
+ */
+read_input_manifest: procedure = .string[]
+  arg path = .string
+  rows = .string[]
+  header_seen = 0
+  line_number = 0
+  do while lines(path)
+    line = linein(path)
+    line_number = line_number + 1
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-cross-runtime-matrix|1" then do
+        say "ERROR: expected crexx-cross-runtime-matrix|1 at" path || ":" || line_number
+        call linein path
+        empty_rows = .string[]
+        return empty_rows
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 12 then do
+      say "ERROR: manifest row must have 12 fields at" path || ":" || line_number
+      call linein path
+      empty_rows = .string[]
+      return empty_rows
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  if \header_seen then say "ERROR: manifest header is missing:" path
+  return rows
+
+validate_manifest: procedure = .int
+  arg rows = .string[]
+  ids = .string[]
+  previous_workload = ""
+  closed_workloads = .string[]
+  do row_index = 1 to rows[0]
+    fields = split_delimited(rows[row_index], "|")
+    entry_id = fields[1]
+    workload = fields[2]
+    if entry_id = "" | safe_component(entry_id) <> entry_id then
+      return execution_error("entry id is empty or not path-safe: " || entry_id)
+    if workload = "" then return execution_error("workload is empty for " || entry_id)
+    if fields[3] = "" | fields[4] = "" then
+      return execution_error("runtime/vm is empty for " || entry_id)
+    if fields[7] <> "yes" & fields[7] <> "no" then
+      return execution_error("aggregate must be yes or no for " || entry_id)
+    if fields[7] = "yes" & fields[3] = "crexx" & fields[4] <> "rxvm" & ,
+        fields[4] <> "rxtvm" & fields[4] <> "rxbvm" then
+      return execution_error("cREXX aggregate VM must be rxvm, rxtvm or rxbvm for " || entry_id)
+    if fields[7] = "yes" & (\is_digits(fields[9]) | fields[9] = "0") then
+      return execution_error("aggregate work must be a positive integer for " || entry_id)
+    if fields[10] = "" then return execution_error("expectation is empty for " || entry_id)
+    command = split_list(fields[12])
+    if command[0] = 0 then return execution_error("command is empty for " || entry_id)
+    do prior = 1 to ids[0]
+      if ids[prior] = entry_id then return execution_error("duplicate entry id: " || entry_id)
+    end
+    ids[ids[0] + 1] = entry_id
+
+    if previous_workload <> "" & workload <> previous_workload then
+      closed_workloads[closed_workloads[0] + 1] = previous_workload
+    do closed_index = 1 to closed_workloads[0]
+      if closed_workloads[closed_index] = workload then
+        return execution_error("manifest workload rows must be contiguous: " || workload)
+    end
+    previous_workload = workload
+  end
+  return 0
+
+run_group: procedure = .int
+  arg rows = .string[], group_start = .int, group_end = .int, measurement = .string, ,
+      rss_time_command = .string, rss_time_option = .string, ,
+      warmups = .int, runs = .int, ,
+      expose samples = .string[], expose outputs = .string[]
+  group_count = group_end - group_start + 1
+
+  do phase_index = 1 to 2
+    phase = "warmup"
+    rounds = warmups
+    if phase_index = 2 then do
+      phase = "recorded"
+      rounds = runs
+    end
+    do round_number = 1 to rounds
+      do position = 1 to group_count
+        relative = scheduled_relative(position, round_number, group_count)
+        row_index = group_start + relative
+        fields = split_delimited(rows[row_index], "|")
+        result = capture_entry(fields, measurement, rss_time_command, ,
+            rss_time_option, phase, round_number, position, samples, outputs)
+        if result <> 0 then return result
+      end
+    end
+  end
+  return 0
+
+/*
+ * Return a zero-based row within one workload group. Every odd round's order
+ * is exactly reversed by the following even round, so every unordered cell
+ * pair appears once in each relative order. Advancing the base by two between
+ * pairs spreads cells across absolute positions without weakening that proof.
+ */
+scheduled_relative: procedure = .int
+  arg position = .int, round_number = .int, group_count = .int
+  pair_index = (round_number - 1) <idiv> 2
+  offset = (pair_index * 2) <mod> group_count
+  if round_number <mod> 2 = 1 then
+    return (position + offset - 1) <mod> group_count
+  return (offset + group_count - position) <mod> group_count
+
+capture_entry: procedure = .int
+  arg fields = .string[], measurement = .string, rss_time_command = .string, ,
+      rss_time_option = .string, phase = .string, round_number = .int, position = .int, ,
+      expose samples = .string[], expose outputs = .string[]
+  entry_id = fields[1]
+  workload = fields[2]
+  runtime = fields[3]
+  vm = fields[4]
+  variant = fields[5]
+  tier = fields[6]
+  aggregate = fields[7]
+  lifecycle = fields[8]
+  work = fields[9]
+  expectation = fields[10]
+  metric_prefix = fields[11]
+  command = split_list(fields[12])
+  if measurement = "rss" then do
+    timed_command = .string[]
+    timed_command[1] = rss_time_command
+    if rss_time_command = "powershell.exe" then do
+      timed_command[2] = "-NoLogo"
+      timed_command[3] = "-NoProfile"
+      timed_command[4] = "-ExecutionPolicy"
+      timed_command[5] = "Bypass"
+      timed_command[6] = "-File"
+      timed_command[7] = "performance/tools/windows_peak_rss.ps1"
+    end
+    else timed_command[2] = rss_time_option
+    do command_index = 1 to command[0]
+      timed_command[timed_command[0] + 1] = command[command_index]
+    end
+    command = timed_command
+  end
+
+  child_output = .string[]
+  child_error = .string[]
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+  elapsed_us = ended_us - started_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  elapsed_ns = elapsed_us * 1000
+
+  correctness = "fail"
+  if child_rc = 0 & (has_text(child_output, expectation) | ,
+      has_text(child_error, expectation)) then correctness = "pass"
+  metric_value = ""
+  metric_unit = ""
+  if metric_prefix <> "" then do
+    metric_found = extract_metric(child_output, metric_prefix, metric_value, metric_unit)
+    if \metric_found then
+      call extract_metric child_error, metric_prefix, metric_value, metric_unit
+  end
+  rss_bytes = ""
+  if measurement = "rss" then rss_bytes = extract_rss(child_error)
+
+  sample_id = safe_component(measurement || "-" || workload || "-" || entry_id || ,
+      "-" || phase || "-" || round_number)
+  samples[samples[0] + 1] = csv_field(sample_id) || "," || csv_field(measurement) || ,
+      "," || csv_field(workload) || "," || csv_field(entry_id) || "," || ,
+      csv_field(runtime) || "," || csv_field(vm) || "," || csv_field(variant) || ,
+      "," || csv_field(tier) || "," || csv_field(aggregate) || "," || ,
+      csv_field(lifecycle) || "," || csv_field(phase) || "," || round_number || ,
+      "," || position || "," || csv_field(work) || "," || elapsed_ns || "," || ,
+      rss_bytes || "," || child_rc || "," || csv_field(correctness) || "," || ,
+      csv_field(metric_value) || "," || csv_field(metric_unit)
+  call append_output_rows sample_id, "stdout", child_output, outputs
+  call append_output_rows sample_id, "stderr", child_error, outputs
+  if correctness <> "pass" then do
+    say "ERROR: correctness failed for" sample_id || "; rc=" || child_rc
+    return 1
+  end
+  if metric_prefix <> "" & metric_value = "" then
+    return execution_error("benchmark metric not found for " || sample_id)
+  if measurement = "rss" & rss_bytes = "" then
+    return execution_error("maximum resident set size not found for " || sample_id)
+  return 0
+
+append_output_rows: procedure = .void
+  arg sample_id = .string, stream = .string, text_lines = .string[], ,
+      expose output_rows = .string[]
+  do line_number = 1 to text_lines[0]
+    output_rows[output_rows[0] + 1] = csv_field(sample_id) || "," || ,
+        csv_field(stream) || "," || line_number || "," || csv_field(text_lines[line_number])
+  end
+  return
+
+write_summary: procedure = .int
+  arg summary_path = .string, ratios_path = .string, geomeans_path = .string, ,
+      manifest_rows = .string[], samples = .string[], measurement = .string
+  output = .string[]
+  output[1] = "cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended"
+  summary_ids = .string[]
+  summary_workloads = .string[]
+  summary_runtimes = .string[]
+  summary_vms = .string[]
+  summary_aggregates = .string[]
+  summary_metrics = .string[]
+  summary_medians = .float[]
+
+  do entry_index = 1 to manifest_rows[0]
+    fields = split_delimited(manifest_rows[entry_index], "|")
+    values = .float[]
+    metric_name = "elapsed_ns"
+    if measurement = "rss" then metric_name = "max_rss_bytes"
+    do sample_index = 2 to samples[0]
+      sample_fields = parse_csv_line(samples[sample_index])
+      if sample_fields[4] <> fields[1] | sample_fields[11] <> "recorded" then iterate
+      if sample_fields[18] <> "pass" then iterate
+      value_text = sample_fields[15]
+      if measurement = "rss" then value_text = sample_fields[16]
+      if measurement = "timing" & fields[7] = "yes" then do
+        value_text = normalized_rate(fields[9], sample_fields[15])
+        metric_name = "normalized_work_per_second"
+      end
+      else if measurement = "timing" & sample_fields[19] <> "" then do
+        value_text = sample_fields[19]
+        metric_name = "benchmark_rate"
+      end
+      values[values[0] + 1] = value_text
+    end
+    if values[0] = 0 then return execution_error("no recorded values for " || fields[1])
+    call sort_floats values
+    minimum = values[1]
+    q1 = sample_quantile(values, 1, 4)
+    median = sample_quantile(values, 1, 2)
+    q3 = sample_quantile(values, 3, 4)
+    maximum = values[values[0]]
+    deviations = .float[]
+    do value_index = 1 to values[0]
+      deviations[value_index] = floatabs(values[value_index] - median)
+    end
+    call sort_floats deviations
+    mad = sample_quantile(deviations, 1, 2)
+    relative_mad = 0.0
+    span_percent = 0.0
+    if median <> 0.0 then do
+      relative_mad = (mad * 100.0) / median
+      span_percent = ((maximum - minimum) * 100.0) / median
+    end
+    rerun = "no"
+    if relative_mad > 3.0 | span_percent > 10.0 then rerun = "yes"
+    output[output[0] + 1] = csv_field(fields[1]) || "," || csv_field(fields[2]) || ,
+        "," || csv_field(fields[3]) || "," || csv_field(fields[4]) || "," || ,
+        csv_field(fields[5]) || "," || csv_field(fields[6]) || "," || ,
+        csv_field(fields[7]) || "," || csv_field(fields[8]) || "," || ,
+        csv_field(fields[9]) || "," || csv_field(metric_name) || "," || ,
+        values[0] || "," || float_text(minimum) || "," || float_text(q1) || ,
+        "," || float_text(median) || "," || float_text(q3) || "," || ,
+        float_text(maximum) || "," || float_text(mad) || "," || ,
+        float_text(relative_mad) || "," || float_text(span_percent) || "," || rerun
+
+    next_summary = summary_ids[0] + 1
+    summary_ids[next_summary] = fields[1]
+    summary_workloads[next_summary] = fields[2]
+    summary_runtimes[next_summary] = fields[3]
+    summary_vms[next_summary] = fields[4]
+    summary_aggregates[next_summary] = fields[7]
+    summary_metrics[next_summary] = metric_name
+    summary_medians[next_summary] = median
+  end
+  if write_lines(summary_path, output) <> 0 then return 1
+  if measurement = "rss" then do
+    empty_ratios = .string[]
+    empty_ratios[1] = "comparison,workload,crexx_cell,reference_cell,ratio_higher_is_better"
+    if write_lines(ratios_path, empty_ratios) <> 0 then return 1
+    empty_geomeans = .string[]
+    empty_geomeans[1] = "comparison,n,geometric_mean,membership"
+    return write_lines(geomeans_path, empty_geomeans)
+  end
+  return write_aggregates(ratios_path, geomeans_path, summary_ids, summary_workloads, ,
+      summary_runtimes, summary_vms, summary_aggregates, summary_metrics, summary_medians)
+
+write_aggregates: procedure = .int
+  arg ratios_path = .string, geomeans_path = .string, ids = .string[], ,
+      workloads = .string[], runtimes = .string[], vms = .string[], ,
+      aggregates = .string[], metrics = .string[], medians = .float[]
+  ratios = .string[]
+  ratios[1] = "comparison,workload,crexx_cell,reference_cell,ratio_higher_is_better"
+  comparison_names = .string[]
+  comparison_names[1] = "rxvm/oorexx"
+  comparison_names[2] = "rxvm/netrexx"
+  comparison_names[3] = "rxtvm/oorexx"
+  comparison_names[4] = "rxtvm/netrexx"
+  comparison_names[5] = "rxbvm/oorexx"
+  comparison_names[6] = "rxbvm/netrexx"
+  products = .float[]
+  counts = .int[]
+  memberships = .string[]
+  do comparison_index = 1 to comparison_names[0]
+    products[comparison_index] = 1.0
+    counts[comparison_index] = 0
+    memberships[comparison_index] = ""
+  end
+
+  aggregate_count = 0
+  do summary_index = 1 to ids[0]
+    if aggregates[summary_index] = "yes" & runtimes[summary_index] = "crexx" then
+      aggregate_count = aggregate_count + 1
+  end
+  if aggregate_count = 0 then do
+    if write_lines(ratios_path, ratios) <> 0 then return 1
+    geomeans = .string[]
+    geomeans[1] = "comparison,n,geometric_mean,membership"
+    return write_lines(geomeans_path, geomeans)
+  end
+
+  do summary_index = .int(1) to ids[0]
+    if aggregates[summary_index] <> "yes" | runtimes[summary_index] <> "crexx" then iterate
+    select
+      when vms[summary_index] = "rxvm" then comparison_start = 1
+      when vms[summary_index] = "rxtvm" then comparison_start = 3
+      when vms[summary_index] = "rxbvm" then comparison_start = 5
+      otherwise return execution_error("unsupported cREXX aggregate VM: " || ,
+          vms[summary_index])
+    end
+    do reference_offset = 0 to 1
+      comparison_index = .int
+      comparison_index = comparison_start + reference_offset
+      reference_runtime = "oorexx"
+      if reference_offset = 1 then reference_runtime = "netrexx"
+      reference_index = find_summary(workloads[summary_index], reference_runtime, ,
+          reference_runtime, ids, workloads, runtimes, vms)
+      if reference_index = 0 then
+        return execution_error("missing aggregate reference for " || workloads[summary_index] || ,
+            " " || reference_runtime)
+      if metrics[summary_index] <> metrics[reference_index] then
+        return execution_error("aggregate metrics differ for " || workloads[summary_index])
+      if metrics[summary_index] = "elapsed_ns" then
+        ratio = medians[reference_index] / medians[summary_index]
+      else if metrics[summary_index] = "normalized_work_per_second" | ,
+          metrics[summary_index] = "benchmark_rate" then
+        ratio = medians[summary_index] / medians[reference_index]
+      else return execution_error("unsupported aggregate metric for " || workloads[summary_index])
+      ratios[ratios[0] + 1] = comparison_names[comparison_index] || "," || ,
+          csv_field(workloads[summary_index]) || "," || csv_field(ids[summary_index]) || ,
+          "," || csv_field(ids[reference_index]) || "," || float_text(ratio)
+      products[comparison_index] = products[comparison_index] * ratio
+      counts[comparison_index] = counts[comparison_index] + 1
+      if memberships[comparison_index] <> "" then
+        memberships[comparison_index] = memberships[comparison_index] || ";"
+      memberships[comparison_index] = memberships[comparison_index] || workloads[summary_index]
+    end
+  end
+  if write_lines(ratios_path, ratios) <> 0 then return 1
+  geomeans = .string[]
+  geomeans = format_geomeans(comparison_names, products, counts, memberships)
+  if geomeans[0] = 1 then return execution_error("no cREXX aggregate was produced")
+  return write_lines(geomeans_path, geomeans)
+
+format_geomeans: procedure = .string[]
+  arg comparison_names = .string[], products = .float[], counts = .int[], ,
+      memberships = .string[]
+  geomeans = .string[]
+  geomeans[1] = "comparison,n,geometric_mean,membership"
+  do comparison_index = 1 to comparison_names[0]
+    if counts[comparison_index] = 0 then iterate
+    geometric_mean = nth_root(products[comparison_index], counts[comparison_index])
+    geomeans[geomeans[0] + 1] = comparison_names[comparison_index] || "," || ,
+        counts[comparison_index] || "," || float_text(geometric_mean) || "," || ,
+        csv_field(memberships[comparison_index])
+  end
+  return geomeans
+
+find_summary: procedure = .int
+  arg workload = .string, runtime = .string, vm = .string, ids = .string[], ,
+      workloads = .string[], runtimes = .string[], vms = .string[]
+  do i = 1 to ids[0]
+    if workloads[i] = workload & runtimes[i] = runtime & vms[i] = vm then return i
+  end
+  return 0
+
+nth_root: procedure = .float
+  arg value = .float, degree = .int
+  if degree <= 0 | value <= 0.0 then return 0.0
+  guess = 1.0
+  if value > 1.0 then guess = value / (degree as .float)
+  do iteration = 1 to 80
+    divisor = int_power(guess, degree - 1)
+    if divisor = 0.0 then return 0.0
+    next_guess = (((degree - 1) as .float) * guess + value / divisor) / (degree as .float)
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+int_power: procedure = .float
+  arg base = .float, exponent = .int
+  result = 1.0
+  do i = 1 to exponent
+    result = result * base
+  end
+  return result
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    value = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > value
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = value
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  if values[0] = 0 | denominator <= 0 then return 0.0
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  upper_value = values[lower_zero_index + 2]
+  return lower_value + (upper_value - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+normalized_rate: procedure = .float
+  arg work = .float, elapsed_ns = .float
+  if work <= 0.0 | elapsed_ns <= 0.0 then return 0.0
+  return (work * 1000000000.0) / elapsed_ns
+
+extract_rss: procedure = .string
+  arg text_lines = .string[]
+  do i = 1 to text_lines[0]
+    lowered = lower(text_lines[i])
+    if pos("maximum resident set size", lowered) > 0 then do
+      candidate = word(text_lines[i], 1)
+      if is_digits(candidate) then return candidate
+      candidate = word(text_lines[i], words(text_lines[i]))
+      if is_digits(candidate) & pos("(kbytes)", lowered) > 0 then
+        return candidate * 1024
+    end
+  end
+  return ""
+
+file_exists: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "stat :path" output command_out error command_err
+  return rc = 0
+
+detect_rss_time_command: procedure = .string
+  if file_exists("/usr/bin/time") then return "/usr/bin/time"
+  return "powershell.exe"
+
+detect_rss_time_option: procedure = .string
+  arg time_command = .string
+  if time_command = "powershell.exe" then return ""
+  command = .string[]
+  command[1] = time_command
+  command[2] = "--version"
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  if rc = 0 then return "-v"
+  return "-l"
+
+has_text: procedure = .int
+  arg text_lines = .string[], needle = .string
+  if needle = "" then return 1
+  do i = 1 to text_lines[0]
+    if pos(needle, text_lines[i]) > 0 then return 1
+  end
+  return 0
+
+extract_metric: procedure = .int
+  arg text_lines = .string[], prefix = .string, expose metric_value = .string, ,
+      expose metric_unit = .string
+  do i = 1 to text_lines[0]
+    prefix_at = pos(prefix, text_lines[i])
+    if prefix_at > 0 then do
+      tail = strip(substr(text_lines[i], prefix_at + length(prefix)))
+      if tail = "" then return 0
+      metric_value = changestr(",", word(tail, 1), "")
+      metric_value = changestr("_", metric_value, "")
+      metric_unit = subword(tail, 2)
+      return 1
+    end
+  end
+  return 0
+
+write_capture_manifest: procedure = .int
+  arg path = .string, source_manifest = .string, measurement = .string, ,
+      warmups = .int, runs = .int, started = .string, completed = .string, result = .string
+  output = .string[]
+  output[1] = "{"
+  output[2] = '  "schema": 1,'
+  output[3] = '  "capture_tool": "run_cross_runtime_matrix.crexx",'
+  output[4] = '  "crexx_version": ' || jsonquote(version()) || ","
+  output[5] = '  "source_manifest": ' || jsonquote(source_manifest) || ","
+  output[6] = '  "measurement": ' || jsonquote(measurement) || ","
+  output[7] = '  "warmups": ' || warmups || ","
+  output[8] = '  "recorded_runs": ' || runs || ","
+  output[9] = '  "sampling": "serial-pairwise-balanced-by-workload",'
+  output[10] = '  "started_utc": ' || jsonquote(started)
+  if completed <> "" then do
+    output[10] = output[10] || ","
+    output[11] = '  "completed_utc": ' || jsonquote(completed) || ","
+    output[12] = '  "result": ' || jsonquote(result)
+  end
+  output[output[0] + 1] = "}"
+  return write_lines(path, output)
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+split_list: procedure = .string[]
+  arg value = .string
+  values = .string[]
+  if value = "" then return values
+  return split_delimited(value, ";")
+
+merge_sample_files: procedure = .string[]
+  arg paths = .string[]
+  merged = .string[]
+  expected_header = "sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit"
+  do path_index = 1 to paths[0]
+    path = paths[path_index]
+    if \lines(path) then do
+      say "ERROR: sample file is empty or unreadable:" path
+      call linein path
+      empty = .string[]
+      return empty
+    end
+    header = linein(path)
+    if header <> expected_header then do
+      say "ERROR: unexpected sample header:" path
+      call linein path
+      empty = .string[]
+      return empty
+    end
+    if merged[0] = 0 then merged[1] = expected_header
+    do while lines(path)
+      merged[merged[0] + 1] = linein(path)
+    end
+    call linein path
+  end
+  return merged
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'
+          i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else if character = '"' then quoted = 1
+    else if character = "," then do
+      fields[fields[0] + 1] = field
+      field = ""
+    end
+    else field = field || character
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+safe_component: procedure = .string
+  arg value = .string
+  result = ""
+  allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-"
+  do i = 1 to length(value)
+    character = substr(value, i, 1)
+    if pos(character, allowed) > 0 then result = result || character
+    else result = result || "-"
+  end
+  result = strip(result, "B", "-")
+  if result = "" then return "sample"
+  return result
+
+write_lines: procedure = .int
+  arg path = .string, text_lines = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "rm :path" output out error err
+  if text_lines[0] = 0 then do
+    address crexx "touch :path" output out error err
+    if rc = 0 then return 0
+    return execution_error("could not create output file: " || path)
+  end
+  do i = 1 to text_lines[0]
+    if lineout(path, text_lines[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write output file: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not create directory: " || path)
+
+timestamp_utc: procedure = .string
+  out = .string[]
+  err = .string[]
+  address crexx "now utc" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return date("S") || "T" || time("L")
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1
+
+self_test: procedure = .int
+  pieces = split_delimited("a|b||d", "|")
+  if pieces[0] <> 4 | pieces[3] <> "" | pieces[4] <> "d" then
+    return execution_error("manifest parser self-test failed")
+  csv = parse_csv_line('alpha,"b,c","d""e"')
+  if csv[0] <> 3 | csv[2] <> "b,c" | csv[3] <> 'd"e' then
+    return execution_error("CSV parser self-test failed")
+  values = .float[]
+  values[1] = 9.0
+  values[2] = 1.0
+  values[3] = 5.0
+  values[4] = 3.0
+  call sort_floats values
+  if sample_quantile(values, 1, 2) <> 4.0 then
+    return execution_error("median self-test failed")
+  if sample_quantile(values, 1, 4) <> 2.5 then
+    return execution_error("quartile self-test failed")
+  root = nth_root(32.0, 5)
+  if floatabs(root - 2.0) > 0.000001 then
+    return execution_error("geometric-mean root self-test failed")
+  if safe_component("a b/c") <> "a-b-c" then
+    return execution_error("safe-component self-test failed")
+  if floatabs(normalized_rate(2000.0, 2000000000.0) - 1000.0) > 0.000001 then
+    return execution_error("normalized-rate self-test failed")
+  comparison_names = .string[]
+  comparison_names[1] = "rxvm/oorexx"
+  comparison_names[2] = "rxvm/netrexx"
+  comparison_names[3] = "rxtvm/oorexx"
+  comparison_names[4] = "rxtvm/netrexx"
+  comparison_names[5] = "rxbvm/oorexx"
+  comparison_names[6] = "rxbvm/netrexx"
+  products = .float[]
+  counts = .int[]
+  memberships = .string[]
+  do comparison_index = 1 to comparison_names[0]
+    products[comparison_index] = 1.0
+    counts[comparison_index] = 0
+    memberships[comparison_index] = ""
+  end
+  products[1] = 4.0
+  products[2] = 9.0
+  counts[1] = 2
+  counts[2] = 2
+  memberships[1] = "Sieve;Permute"
+  memberships[2] = "Sieve;Permute"
+  geomeans = format_geomeans(comparison_names, products, counts, memberships)
+  if geomeans[0] <> 3 | pos("rxvm/oorexx,2,2", geomeans[2]) <> 1 | ,
+      pos("rxvm/netrexx,2,3", geomeans[3]) <> 1 then
+    return execution_error("product-only aggregate self-test failed")
+  bsd_rss = .string[]
+  bsd_rss[1] = "12345  maximum resident set size"
+  if extract_rss(bsd_rss) <> "12345" then
+    return execution_error("BSD RSS parser self-test failed")
+  gnu_rss = .string[]
+  gnu_rss[1] = "Maximum resident set size (kbytes): 12345"
+  if extract_rss(gnu_rss) <> "12641280" then
+    return execution_error("GNU RSS parser self-test failed")
+  if pairwise_schedule_self_test() <> 0 then return 1
+  say "PASS: compact cross-runtime matrix tool self-test"
+  return 0
+
+pairwise_schedule_self_test: procedure = .int
+  constant TEST_ROUNDS = 12
+
+  do group_count = 2 to 8
+    directions = .int[]
+    position_counts = .int[]
+    do index = 1 to group_count * group_count
+      directions[index] = 0
+      position_counts[index] = 0
+    end
+
+    do round_number = 1 to TEST_ROUNDS
+      order = .int[]
+      seen = .int[]
+      do index = .int(1) to group_count
+        seen[index] = 0
+      end
+      do position = 1 to group_count
+        relative = scheduled_relative(position, round_number, group_count)
+        if relative < 0 | relative >= group_count then
+          return execution_error("pairwise schedule produced an out-of-range cell")
+        if seen[relative + 1] then
+          return execution_error("pairwise schedule repeated a cell within one round")
+        seen[relative + 1] = 1
+        order[position] = relative
+        slot = relative * group_count + position
+        position_counts[slot] = position_counts[slot] + 1
+      end
+
+      do left_position = 1 to group_count - 1
+        left_cell = order[left_position]
+        do right_position = left_position + 1 to group_count
+          right_cell = order[right_position]
+          slot = .int
+          slot = left_cell * group_count + right_cell + 1
+          directions[slot] = directions[slot] + 1
+        end
+      end
+    end
+
+    do left_cell = .int(0) to group_count - 2
+      do right_cell = .int(left_cell + 1) to group_count - 1
+        left_slot = left_cell * group_count + right_cell + 1
+        right_slot = right_cell * group_count + left_cell + 1
+        if directions[left_slot] <> directions[right_slot] then
+          return execution_error("pairwise schedule did not balance relative order")
+      end
+    end
+
+    /* The standard 12-round formal group sizes also balance every position. */
+    if group_count = 2 | group_count = 3 | group_count = 4 | group_count = 6 then do
+      expected_positions = TEST_ROUNDS <idiv> group_count
+      do index = .int(1) to group_count * group_count
+        if position_counts[index] <> expected_positions then
+          return execution_error("pairwise schedule did not balance absolute position")
+      end
+    end
+  end
+  return 0

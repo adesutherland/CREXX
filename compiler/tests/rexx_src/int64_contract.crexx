@@ -1,0 +1,35 @@
+options levelb
+
+main: procedure = .int
+  maximum = .int
+  minimum = .int
+  maximum = 9223372036854775807
+  minimum = -9223372036854775808
+  say maximum
+  say minimum
+  say classify_boundary(minimum)
+  say classify_boundary(maximum)
+  say -9223372036854775808 < 1
+  say 1 > -9223372036854775808
+  say 9223372036854775807 > -1
+  say -1 < 9223372036854775807
+  say -9223372036854775808 = -9223372036854775808
+  say 9223372036854775807 \= -9223372036854775808
+  return 0
+
+classify_boundary: procedure = .int
+  arg value = .int
+
+  select value
+    when -9223372036854775808 then return 801
+    when -3 then return 802
+    when -2 then return 803
+    when -1 then return 804
+    when 0 then return 805
+    when 1 then return 806
+    when 2 then return 807
+    when 3 then return 808
+    when 9223372036854775807 then return 809
+    otherwise return 0
+  end
+  return -1

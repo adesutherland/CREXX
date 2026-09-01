@@ -1,0 +1,61 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Bounce-bounce-gcc-rxvm-warmup-1,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,warmup,1,1,4200,2383010000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-warmup-2,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,warmup,2,1,4200,2378315000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-1,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,1,1,4200,2629435000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-2,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,2,1,4200,2541475000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-3,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,3,1,4200,2389545000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-4,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,4,1,4200,2402872000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-5,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,5,1,4200,2363308000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-6,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,6,1,4200,2408424000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-7,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,7,1,4200,2368411000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-8,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,8,1,4200,2398088000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-9,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,9,1,4200,2349257000,,0,pass,,
+timing-Bounce-bounce-gcc-rxvm-recorded-10,timing,Bounce,bounce-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,10,1,4200,2362657000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-warmup-1,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,warmup,1,1,100,8648113000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-warmup-2,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,warmup,2,1,100,8257371000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-1,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,1,1,100,8217595000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-2,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,2,1,100,8279325000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-3,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,3,1,100,8335865000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-4,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,4,1,100,8227480000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-5,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,5,1,100,8276712000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-6,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,6,1,100,8237488000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-7,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,7,1,100,8299955000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-8,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,8,1,100,8488480000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-9,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,9,1,100,8345332000,,0,pass,,
+timing-Towers-towers-gcc-rxvm-recorded-10,timing,Towers,towers-gcc-rxvm,crexx-gcc,rxvm,mingw-gcc-15.2-o3,A,no,no,recorded,10,1,100,8240622000,,0,pass,,
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-1,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,warmup,1,1,1000-clauses,1147391000,,0,pass,9019093,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-warmup-1,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,warmup,1,2,1000-clauses,2308630000,,0,pass,17194224,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-warmup-1,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,warmup,1,3,1000-clauses,2254621000,,0,pass,18216413,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-warmup-2,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,warmup,2,1,1000-clauses,2240741000,,0,pass,18428432,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-warmup-2,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,warmup,2,2,1000-clauses,2275238000,,0,pass,17965033,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-warmup-2,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,warmup,2,3,1000-clauses,1158207000,,0,pass,8921578,cREXX clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-1,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,1,1,1000-clauses,1162052000,,0,pass,8927870,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-1,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,1,2,1000-clauses,1262314000,,0,pass,9672503,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-1,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,1,3,1000-clauses,2267220000,,0,pass,18357449,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-2,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,2,1,1000-clauses,2260592000,,0,pass,18196547,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-2,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,2,2,1000-clauses,2234407000,,0,pass,18288425,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-2,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,2,3,1000-clauses,1155264000,,0,pass,8939243,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-3,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,3,1,1000-clauses,2376858000,,0,pass,16668757,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-3,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,3,2,1000-clauses,1146667000,,0,pass,9032461,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-3,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,3,3,1000-clauses,2282308000,,0,pass,16727470,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-4,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,4,1,1000-clauses,1133999000,,0,pass,9114723,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-4,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,4,2,1000-clauses,2291229000,,0,pass,18163161,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-4,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,4,3,1000-clauses,2213964000,,0,pass,18515655,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-5,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,5,1,1000-clauses,2245834000,,0,pass,18101767,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-5,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,5,2,1000-clauses,2212695000,,0,pass,18473411,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-5,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,5,3,1000-clauses,1190866000,,0,pass,8665391,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-6,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,6,1,1000-clauses,2300218000,,0,pass,17840141,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-6,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,6,2,1000-clauses,1176078000,,0,pass,8778552,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-6,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,6,3,1000-clauses,2271677000,,0,pass,18131059,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-7,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,7,1,1000-clauses,1145447000,,0,pass,9034819,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-7,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,7,2,1000-clauses,2335397000,,0,pass,16946906,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-7,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,7,3,1000-clauses,2305214000,,0,pass,17489010,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-8,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,8,1,1000-clauses,2371133000,,0,pass,16354199,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-8,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,8,2,1000-clauses,2296996000,,0,pass,17760923,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-8,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,8,3,1000-clauses,1125818000,,0,pass,9189969,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-9,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,9,1,1000-clauses,2267553000,,0,pass,18027846,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-9,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,9,2,1000-clauses,1143313000,,0,pass,9041902,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-9,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,9,3,1000-clauses,2256308000,,0,pass,18193336,NetRexx clauses per second
+timing-RexxCPS-rexxcps-clang-rxbvm-recorded-10,timing,RexxCPS,rexxcps-clang-rxbvm,crexx-clang,rxbvm,clang-22.1.8-o3,A,no,no,recorded,10,1,1000-clauses,1140015000,,0,pass,9070023,cREXX clauses per second
+timing-RexxCPS-rexxcps-netrexx-ecj-recorded-10,timing,RexxCPS,rexxcps-netrexx-ecj,netrexx-ecj,netrexx-ecj,disclosed-2.2n-ecj,A,no,no,recorded,10,2,1000-clauses,2256519000,,0,pass,18274876,NetRexx clauses per second
+timing-RexxCPS-rexxcps-netrexx-javac-recorded-10,timing,RexxCPS,rexxcps-netrexx-javac,netrexx-javac,netrexx-javac,disclosed-2.2n-javac,A,no,no,recorded,10,3,1000-clauses,2211683000,,0,pass,18542957,NetRexx clauses per second

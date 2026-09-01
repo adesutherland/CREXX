@@ -1,0 +1,59 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(gate_f_channel_local_\(rxbvm\|rxtvm\)\|rxvmmemory_allocator\|rxvmworker_lifecycle\|persistent_worker_executor-\(rxbvml\|rxtvml\)\(-doorbell-stress\|-sparse-owner\|-sparse-owner-stress\|-sparse-progress\|-native-return\)\?\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start 1051: rxvmmemory_allocator
+ 1/16 Test #1051: rxvmmemory_allocator ....................................   Passed    0.42 sec
+      Start 1052: rxvmworker_lifecycle
+ 2/16 Test #1052: rxvmworker_lifecycle ....................................   Passed    0.34 sec
+      Start 1135: gate_f_channel_local_rxbvm
+ 3/16 Test #1135: gate_f_channel_local_rxbvm ..............................   Passed    0.42 sec
+      Start 1136: gate_f_channel_local_rxtvm
+ 4/16 Test #1136: gate_f_channel_local_rxtvm ..............................   Passed    0.41 sec
+      Start 1205: persistent_worker_executor-rxbvml
+ 5/16 Test #1205: persistent_worker_executor-rxbvml .......................   Passed    0.55 sec
+      Start 1206: persistent_worker_executor-rxbvml-doorbell-stress
+ 6/16 Test #1206: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.06 sec
+      Start 1207: persistent_worker_executor-rxbvml-sparse-owner
+ 7/16 Test #1207: persistent_worker_executor-rxbvml-sparse-owner ..........   Passed    0.27 sec
+      Start 1208: persistent_worker_executor-rxbvml-sparse-owner-stress
+ 8/16 Test #1208: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.06 sec
+      Start 1209: persistent_worker_executor-rxbvml-sparse-progress
+ 9/16 Test #1209: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.06 sec
+      Start 1210: persistent_worker_executor-rxbvml-native-return
+10/16 Test #1210: persistent_worker_executor-rxbvml-native-return .........   Passed    0.18 sec
+      Start 1219: persistent_worker_executor-rxtvml
+11/16 Test #1219: persistent_worker_executor-rxtvml .......................   Passed    0.58 sec
+      Start 1220: persistent_worker_executor-rxtvml-doorbell-stress
+12/16 Test #1220: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.06 sec
+      Start 1221: persistent_worker_executor-rxtvml-sparse-owner
+13/16 Test #1221: persistent_worker_executor-rxtvml-sparse-owner ..........   Passed    0.29 sec
+      Start 1222: persistent_worker_executor-rxtvml-sparse-owner-stress
+14/16 Test #1222: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.06 sec
+      Start 1223: persistent_worker_executor-rxtvml-sparse-progress
+15/16 Test #1223: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.06 sec
+      Start 1224: persistent_worker_executor-rxtvml-native-return
+16/16 Test #1224: persistent_worker_executor-rxtvml-native-return .........   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+channels       =   0.83 sec*proc (2 tests)
+e5             =   2.40 sec*proc (12 tests)
+f1b            =   0.83 sec*proc (2 tests)
+fallback       =   1.15 sec*proc (8 tests)
+gate-e         =   2.40 sec*proc (12 tests)
+gate-f         =   0.83 sec*proc (2 tests)
+industrial     =   2.40 sec*proc (12 tests)
+interpreter    =   3.99 sec*proc (16 tests)
+lifecycle      =   1.43 sec*proc (8 tests)
+macos          =   2.40 sec*proc (12 tests)
+memory         =   0.76 sec*proc (2 tests)
+native         =   0.35 sec*proc (2 tests)
+perf3          =   3.23 sec*proc (14 tests)
+private        =   2.40 sec*proc (12 tests)
+race           =   0.25 sec*proc (4 tests)
+sparse         =   1.15 sec*proc (8 tests)
+worker         =   0.34 sec*proc (1 test)
+
+Total Test time (real) =   4.03 sec

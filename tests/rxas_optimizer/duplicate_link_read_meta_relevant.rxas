@@ -1,0 +1,16 @@
+* Optimiser must treat register-token metadata as a use.
+
+main() .locals=5
+    load r0,"payload"
+
+    link r1,r0
+    scopy r2,r1
+    unlink r1
+    .meta "fixture.duplicate_link_read"="first" ".string" r2
+
+    link r3,r0
+    scopy r4,r3
+    unlink r3
+
+    say r4
+    ret

@@ -1,0 +1,22 @@
+options levelg
+
+import rxfnsb
+import rxhash
+
+main: procedure = .int
+  expected = "ef7e301027f931dfba06c7ded4ef305797f43cc115a664f9af9b57d08c3172c2"
+  expected_file = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+  data = "00010200FF"x as .binary
+  if rxhash..sha256hex(data) \= expected then return 1
+  if lower(bin2x(rxhash..sha256(data))) \= expected then return 2
+  state = rxhash..sha256init()
+  state = rxhash..sha256update(state, "0001"x as .binary)
+  state = rxhash..sha256update(state, ''x as .binary)
+  state = rxhash..sha256update(state, "0200FF"x as .binary)
+  if rxhash..sha256finalhex(state) \= expected then return 3
+  if lower(bin2x(rxhash..sha256final(state))) \= expected then return 4
+  path = "rx-hash-installed-fixture.bin"
+  if rxhash..sha256filehex(path) \= expected_file then return 5
+  if lower(bin2x(rxhash..sha256file(path))) \= expected_file then return 6
+  say "PASS: installed rx_hash complete SHA-256 family"
+  return 0

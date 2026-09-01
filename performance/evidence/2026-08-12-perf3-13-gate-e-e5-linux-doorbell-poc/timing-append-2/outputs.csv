@@ -1,0 +1,625 @@
+sample_id,stream,line_number,text
+timing-Sieve-sieve-rxbvm-e4-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-11,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-11,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-11,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-11,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-11,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-11,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-11,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-11,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-poc-recorded-12,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-poc-recorded-12,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-e4-recorded-12,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-e4-recorded-12,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-poc-recorded-12,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-poc-recorded-12,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxtvm-e4-recorded-12,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxtvm-e4-recorded-12,stdout,2,PASS: AWFY Sieve
+timing-Permute-permute-rxtvm-e4-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-1,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-1,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-2,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-2,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-3,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-3,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-4,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-4,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-5,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-5,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-6,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-6,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-7,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-7,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-8,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-8,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-9,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-9,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-10,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-10,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-11,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-11,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-11,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-11,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-poc-recorded-12,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-poc-recorded-12,stdout,2,PASS: AWFY Permute
+timing-Permute-permute-rxtvm-e4-recorded-12,stdout,1,benchmark=awfy_permute repetitions=5000 result=8660
+timing-Permute-permute-rxtvm-e4-recorded-12,stdout,2,PASS: AWFY Permute
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.6 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,8,     Performance: 2812549 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 4.2 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,8,     Performance: 2403521 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 4.3 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,8,     Performance: 2313630 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.1 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,8,     Performance: 1980216 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 4.3 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,8,     Performance: 2338449 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,8,     Performance: 3707320 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,8,     Performance: 3693811 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,8,     Performance: 3666894 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.9 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,8,     Performance: 3430758 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,8,     Performance: 3635414 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,8,     Performance: 3519545 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,8,     Performance: 3593650 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,8,     Performance: 3875201 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,8,     Performance: 3711039 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,8,     Performance: 3672894 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,8,     Performance: 3783097 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.5 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,8,     Performance: 4022390 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,8,     Performance: 3864816 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,8,     Performance: 3849993 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.0 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,8,     Performance: 3372664 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.0 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,8,     Performance: 3322063 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,8,     Performance: 3519827 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 4.0 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,8,     Performance: 2520444 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.7 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,8,     Performance: 2736816 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.6 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,8,     Performance: 2777012 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.2 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,8,     Performance: 3120742 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.4 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,8,     Performance: 4100789 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,8,     Performance: 3748658 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.0 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,8,     Performance: 3359189 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.5 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,8,     Performance: 4001899 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,8,     Performance: 3569793 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.1 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,8,     Performance: 3206654 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.3 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,8,     Performance: 3038787 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.1 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,8,     Performance: 3213964 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,8,     Performance: 3865238 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.9 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,8,     Performance: 3491812 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,8,     Performance: 3681252 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.2 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,8,     Performance: 3156459 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.0 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,8,     Performance: 3381689 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.5 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,8,     Performance: 3970769 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.5 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,8,     Performance: 3940933 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.6 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,8,     Performance: 2805134 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.6 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,8,     Performance: 2775390 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,8,     Performance: 3812895 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.6 s)
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,8,     Performance: 3898091 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-poc-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 3.3 s)
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,7,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,8,     Performance: 3064175 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,9,
+timing-RexxCPS-rexxcps-rxbvm-e4-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.7 s)
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,8,     Performance: 3714659 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-poc-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,2, cREXX version is: linux 64 crexx-1.0.0-beta.3+local.g295a6d886b33 20260812
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,3,       System is: linux
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 2.8 s)
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,7,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,8,     Performance: 3626184 cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,9,
+timing-RexxCPS-rexxcps-rxtvm-e4-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port

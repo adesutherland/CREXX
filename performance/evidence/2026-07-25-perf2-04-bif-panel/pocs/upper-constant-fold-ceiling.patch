@@ -1,0 +1,43 @@
+diff --git a/tests/benchmarks/rexxcps_levelb.crexx b/tests/benchmarks/rexxcps_levelb.crexx
+index 26cf0175a..6be85dcbf 100644
+--- a/tests/benchmarks/rexxcps_levelb.crexx
++++ b/tests/benchmarks/rexxcps_levelb.crexx
+@@ -133,6 +133,10 @@ classic_one_point_one = "1.1" as .decimal
+ classic_two_point_two = "2.2" as .decimal
+ classic_five = "5" as .decimal
+ classic_ninety_nine_point_seven = "99.7" as .decimal
++__perf2_upper_site1_result = ""
++__perf2_upper_site2_result = ""
++__perf2_upper_site3_result = ""
++__perf2_upper_site4_result = ""
+ 
+ /* Calibrate for the empty do-loop. */
+ do i = 1 to averaging
+@@ -188,7 +192,13 @@ do trial = 1 to 2
+         parse value "Foo Bar" with v1 +5 v2 .
+         trace value _trace_current_mode()
+         address value addressenv().environment_name()
+-        call cps_subroutine(upper("with"), upper("2"), upper("args"), upper("(This is the second)" || 1 || "" || 1))
++        __perf2_upper_site1_result = "WITH" /* CAS-L2: upper("with") */
++        __perf2_upper_site2_result = "2" /* CAS-L2: upper("2") */
++        __perf2_upper_site3_result = "ARGS" /* CAS-L2: upper("args") */
++        __perf2_upper_site4_result = "(THIS IS THE SECOND)11" /* CAS-L2: upper("(This is the second)" || 1 || "" || 1) */
++        call cps_subroutine(__perf2_upper_site1_result, ,
++            __perf2_upper_site2_result, __perf2_upper_site3_result, ,
++            __perf2_upper_site4_result)
+         text = "This is an awfully boring program"; parse var text p1 (p0) p5
+         text = "is an awfully boring program This"; parse var text p2 (p0) p6
+         text = "an awfully boring program This is"; parse var text p3 (p0) p7
+@@ -210,6 +220,12 @@ do trial = 1 to 2
+   calibrated = 1
+ end
+ 
++if __perf2_upper_site1_result <> "WITH" | ,
++    __perf2_upper_site2_result <> "2" | ,
++    __perf2_upper_site3_result <> "ARGS" | ,
++    __perf2_upper_site4_result <> "(THIS IS THE SECOND)11" then
++  return fail("constant-folded UPPER result mismatch")
++
+ /* Show the counts. */
+ say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+ say "REXXCPS-EFFECTIVE contract=" || contract ,

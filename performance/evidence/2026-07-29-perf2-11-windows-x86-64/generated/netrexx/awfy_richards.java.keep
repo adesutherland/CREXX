@@ -1,0 +1,265 @@
+/* Generated from 'awfy_richards.nrx' 29 Jul 2026 19:50:58 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+
+public class awfy_richards{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx('/');private static final netrexx.lang.Rexx $03=netrexx.lang.Rexx.toRexx("holds=");private static final java.lang.String $0="awfy_richards.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx repetitions;netrexx.lang.Rexx queueCount;netrexx.lang.Rexx holdCount;netrexx.lang.Rexx iteration=null;RichardsScheduler scheduler=null;
+repetitions=new netrexx.lang.Rexx((byte)1);
+if (new netrexx.lang.Rexx(args.length).OpGtEq(null,$01)) repetitions=netrexx.lang.Rexx.toRexx(args[0]);
+if (repetitions.OpLt(null,$01)) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+queueCount=new netrexx.lang.Rexx((byte)0);
+holdCount=new netrexx.lang.Rexx((byte)0);
+{netrexx.lang.Rexx $1=repetitions;iteration=new netrexx.lang.Rexx((byte)1);iteration:for(;iteration.OpLtEq(null,$1);iteration=iteration.OpAdd(null,new netrexx.lang.Rexx(1))){
+scheduler=new RichardsScheduler();
+if ((scheduler.run()).OpNot(null)) {
+netrexx.lang.RexxIO.Say(((netrexx.lang.Rexx.toRexx("FAIL: expected queue/hold counts 23246/9297, got").OpCcblank(null,scheduler.queueCount())).OpCc(null,$02)).OpCc(null,scheduler.holdCount()));
+{System.exit(1);return;}
+}
+queueCount=scheduler.queueCount();
+holdCount=scheduler.holdCount();
+}}/*iteration*/
+netrexx.lang.RexxIO.Say(((((netrexx.lang.Rexx.toRexx("benchmark=awfy_richards repetitions=").OpCc(null,repetitions)).OpCcblank(null,netrexx.lang.Rexx.toRexx("queue_packets="))).OpCc(null,queueCount)).OpCcblank(null,$03)).OpCc(null,holdCount));
+netrexx.lang.RexxIO.Say("PASS: AWFY Richards NetRexx decimal port");return;}
+
+private awfy_richards(){return;}}class RichardsScheduler{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx((byte)5);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(23246);private static final netrexx.lang.Rexx $04=new netrexx.lang.Rexx(9297);private static final netrexx.lang.Rexx $05=new netrexx.lang.Rexx(0);private static final netrexx.lang.Rexx $06=new netrexx.lang.Rexx(2);private static final netrexx.lang.Rexx $07=new netrexx.lang.Rexx(3);private static final netrexx.lang.Rexx $08=new netrexx.lang.Rexx(4);private static final netrexx.lang.Rexx $09=new netrexx.lang.Rexx(5);private static final netrexx.lang.Rexx $010=new netrexx.lang.Rexx((byte)16);private static final netrexx.lang.Rexx $011=new netrexx.lang.Rexx((byte)3);private static final netrexx.lang.Rexx $012=new netrexx.lang.Rexx(26);private static final netrexx.lang.Rexx $013=new netrexx.lang.Rexx(65);private static final java.lang.String $0="awfy_richards.nrx";
+/* properties private */
+private netrexx.lang.Rexx taskLink[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx taskPriority[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx taskInput[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx taskPending[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx taskWaiting[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx taskHolding[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx handlerWork[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx handlerDevice[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx devicePending[]=new netrexx.lang.Rexx[6];
+private netrexx.lang.Rexx packetLink[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetIdentity[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetKind[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetDatum[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetData0[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetData1[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetData2[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx packetData3[]=new netrexx.lang.Rexx[16];
+private netrexx.lang.Rexx taskList=$01.OpMinus(null);
+private netrexx.lang.Rexx currentTask=$01.OpMinus(null);
+private netrexx.lang.Rexx currentIdentity=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx packetCount=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx queuePacketCount=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx holds=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx idleControl=new netrexx.lang.Rexx((byte)1);
+private netrexx.lang.Rexx idleCount=new netrexx.lang.Rexx((short)10000);
+private netrexx.lang.Rexx workerDestination=new netrexx.lang.Rexx((byte)2);
+private netrexx.lang.Rexx workerCount=new netrexx.lang.Rexx((byte)0);
+
+@SuppressWarnings("unchecked") public RichardsScheduler(){super();netrexx.lang.Rexx i=null;
+{i=new netrexx.lang.Rexx((byte)0);i:for(;i.OpLtEq(null,$02);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+handlerWork[i.toint()]=new netrexx.lang.Rexx((byte)0);
+handlerDevice[i.toint()]=new netrexx.lang.Rexx((byte)0);
+devicePending[i.toint()]=new netrexx.lang.Rexx((byte)0);
+}}/*i*/return;}
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx run(){netrexx.lang.Rexx workQueue;
+createTask(new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)1));
+workQueue=createPacket(workQueue,new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)1));
+createTask(new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((short)1000),workQueue,new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)4),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(workQueue,new netrexx.lang.Rexx((byte)4),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(workQueue,new netrexx.lang.Rexx((byte)4),new netrexx.lang.Rexx((byte)0));
+createTask(new netrexx.lang.Rexx((byte)2),new netrexx.lang.Rexx((short)2000),workQueue,new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)5),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(workQueue,new netrexx.lang.Rexx((byte)5),new netrexx.lang.Rexx((byte)0));
+workQueue=createPacket(workQueue,new netrexx.lang.Rexx((byte)5),new netrexx.lang.Rexx((byte)0));
+createTask(new netrexx.lang.Rexx((byte)3),new netrexx.lang.Rexx((short)3000),workQueue,new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)0));
+createTask(new netrexx.lang.Rexx((byte)4),new netrexx.lang.Rexx((short)4000),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)0));
+createTask(new netrexx.lang.Rexx((byte)5),new netrexx.lang.Rexx((short)5000),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)0),new netrexx.lang.Rexx((byte)1),new netrexx.lang.Rexx((byte)0));
+schedule();
+return new netrexx.lang.Rexx(queuePacketCount.OpEq(null,$03)&holds.OpEq(null,$04));}
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx queueCount(){
+return queuePacketCount;}
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx holdCount(){
+return holds;}
+
+@SuppressWarnings("unchecked") private void createTask(netrexx.lang.Rexx identity,netrexx.lang.Rexx priority,netrexx.lang.Rexx input,netrexx.lang.Rexx pending,netrexx.lang.Rexx waiting,netrexx.lang.Rexx holding){
+taskLink[identity.toint()]=taskList;
+taskPriority[identity.toint()]=priority;
+taskInput[identity.toint()]=input;
+taskPending[identity.toint()]=pending;
+taskWaiting[identity.toint()]=waiting;
+taskHolding[identity.toint()]=holding;
+taskList=identity;return;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx createPacket(netrexx.lang.Rexx link,netrexx.lang.Rexx identity,netrexx.lang.Rexx kind){
+packetCount=packetCount.OpAdd(null,$01);
+packetLink[packetCount.toint()]=link;
+packetIdentity[packetCount.toint()]=identity;
+packetKind[packetCount.toint()]=kind;
+packetDatum[packetCount.toint()]=new netrexx.lang.Rexx((byte)0);
+packetData0[packetCount.toint()]=new netrexx.lang.Rexx((byte)0);
+packetData1[packetCount.toint()]=new netrexx.lang.Rexx((byte)0);
+packetData2[packetCount.toint()]=new netrexx.lang.Rexx((byte)0);
+packetData3[packetCount.toint()]=new netrexx.lang.Rexx((byte)0);
+return packetCount;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx appendPacket(netrexx.lang.Rexx packet,netrexx.lang.Rexx queueHead){netrexx.lang.Rexx mouse;netrexx.lang.Rexx link;
+packetLink[packet.toint()]=new netrexx.lang.Rexx((byte)0);
+if (queueHead.OpEq(null,$05)) return packet;
+mouse=queueHead;
+link=packetLink[mouse.toint()];
+{for(;;){if(!link.OpNotEq(null,$05))break;
+mouse=link;
+link=packetLink[mouse.toint()];
+}}
+packetLink[mouse.toint()]=packet;
+return queueHead;}
+
+@SuppressWarnings("unchecked") private void setRunning(netrexx.lang.Rexx identity){
+taskPending[identity.toint()]=new netrexx.lang.Rexx((byte)0);
+taskWaiting[identity.toint()]=new netrexx.lang.Rexx((byte)0);
+taskHolding[identity.toint()]=new netrexx.lang.Rexx((byte)0);return;}
+
+@SuppressWarnings("unchecked") private void setPacketPending(netrexx.lang.Rexx identity){
+taskPending[identity.toint()]=new netrexx.lang.Rexx((byte)1);
+taskWaiting[identity.toint()]=new netrexx.lang.Rexx((byte)0);
+taskHolding[identity.toint()]=new netrexx.lang.Rexx((byte)0);return;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx isHoldingOrWaiting(netrexx.lang.Rexx identity){
+return new netrexx.lang.Rexx((taskHolding[identity.toint()]).OpOr(null,new netrexx.lang.Rexx((new netrexx.lang.Rexx((taskPending[identity.toint()]).OpNot(null)).OpAnd(null,taskWaiting[identity.toint()])))));}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx isWaitingWithPacket(netrexx.lang.Rexx identity){
+return new netrexx.lang.Rexx((taskPending[identity.toint()]).OpAnd(null,taskWaiting[identity.toint()])&(taskHolding[identity.toint()]).OpNot(null));}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx addInput(netrexx.lang.Rexx identity,netrexx.lang.Rexx packet,netrexx.lang.Rexx oldTask){
+if ((taskInput[identity.toint()]).OpEq(null,$05)) {
+taskInput[identity.toint()]=packet;
+taskPending[identity.toint()]=new netrexx.lang.Rexx((byte)1);
+if ((taskPriority[identity.toint()]).OpGt(null,taskPriority[oldTask.toint()])) return identity;
+}
+else taskInput[identity.toint()]=appendPacket(packet,taskInput[identity.toint()]);
+return oldTask;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx holdSelf(){
+holds=holds.OpAdd(null,$01);
+taskHolding[currentTask.toint()]=new netrexx.lang.Rexx((byte)1);
+return taskLink[currentTask.toint()];}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx markWaiting(){
+taskWaiting[currentTask.toint()]=new netrexx.lang.Rexx((byte)1);
+return currentTask;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx release(netrexx.lang.Rexx identity){
+taskHolding[identity.toint()]=new netrexx.lang.Rexx((byte)0);
+if ((taskPriority[identity.toint()]).OpGt(null,taskPriority[currentTask.toint()])) return identity;
+return currentTask;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx queuePacket(netrexx.lang.Rexx packet){netrexx.lang.Rexx task;
+task=packetIdentity[packet.toint()];
+queuePacketCount=queuePacketCount.OpAdd(null,$01);
+packetLink[packet.toint()]=new netrexx.lang.Rexx((byte)0);
+packetIdentity[packet.toint()]=currentIdentity;
+return addInput(task,packet,currentTask);}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx runTask(netrexx.lang.Rexx identity){netrexx.lang.Rexx message;
+message=new netrexx.lang.Rexx((byte)0);
+if ((isWaitingWithPacket(identity)).toboolean()) {
+message=taskInput[identity.toint()];
+taskInput[identity.toint()]=packetLink[message.toint()];
+if ((taskInput[identity.toint()]).OpEq(null,$05)) setRunning(identity);
+else setPacketPending(identity);
+}
+{/*select*/
+if (identity.OpEq(null,$05))return runIdler();
+else if (identity.OpEq(null,$01))return runWorker(message);
+else if (identity.OpEq(null,$06)|identity.OpEq(null,$07))return runHandler(identity,message);
+else if (identity.OpEq(null,$08)|identity.OpEq(null,$09))return runDevice(identity,message);
+else{return $01.OpMinus(null);}
+}}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx runIdler(){
+idleCount=idleCount.OpSub(null,$01);
+if (idleCount.OpEq(null,$05)) return holdSelf();
+if (idleControl.OpRem(null,$06).OpEq(null,$05)) {
+idleControl=idleControl.OpDivI(null,$06);
+return release(new netrexx.lang.Rexx((byte)4));
+}
+idleControl=xorInt(idleControl.OpDivI(null,$06),new netrexx.lang.Rexx(53256));
+return release(new netrexx.lang.Rexx((byte)5));}
+
+@SuppressWarnings("unchecked") private static netrexx.lang.Rexx xorInt(netrexx.lang.Rexx left,netrexx.lang.Rexx right){netrexx.lang.Rexx result;netrexx.lang.Rexx place;netrexx.lang.Rexx i=null;
+result=new netrexx.lang.Rexx((byte)0);
+place=new netrexx.lang.Rexx((byte)1);
+{i=new netrexx.lang.Rexx((byte)1);i:for(;i.OpLtEq(null,$010);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+if (left.OpRem(null,$06).OpNotEq(null,right.OpRem(null,$06))) result=result.OpAdd(null,place);
+left=left.OpDivI(null,$06);
+right=right.OpDivI(null,$06);
+place=place.OpMult(null,$06);
+}}/*i*/
+return result;}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx runWorker(netrexx.lang.Rexx work){netrexx.lang.Rexx i=null;netrexx.lang.Rexx value=null;
+if (work.OpEq(null,$05)) return markWaiting();
+if (workerDestination.OpEq(null,$06)) workerDestination=new netrexx.lang.Rexx((byte)3);
+else workerDestination=new netrexx.lang.Rexx((byte)2);
+packetIdentity[work.toint()]=workerDestination;
+packetDatum[work.toint()]=new netrexx.lang.Rexx((byte)0);
+{i=new netrexx.lang.Rexx((byte)0);i:for(;i.OpLtEq(null,$011);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+workerCount=workerCount.OpAdd(null,$01);
+if (workerCount.OpGt(null,$012)) workerCount=new netrexx.lang.Rexx((byte)1);
+value=$013.OpAdd(null,workerCount).OpSub(null,$01);
+if (i.OpEq(null,$05)) packetData0[work.toint()]=value;
+else if (i.OpEq(null,$01)) packetData1[work.toint()]=value;
+else if (i.OpEq(null,$06)) packetData2[work.toint()]=value;
+else packetData3[work.toint()]=value;
+}}/*i*/
+return queuePacket(work);}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx runHandler(netrexx.lang.Rexx identity,netrexx.lang.Rexx work){netrexx.lang.Rexx workPacket;netrexx.lang.Rexx count;netrexx.lang.Rexx devicePacket;
+if (work.OpNotEq(null,$05)) {
+if ((packetKind[work.toint()]).OpEq(null,$01)) handlerWork[identity.toint()]=appendPacket(work,handlerWork[identity.toint()]);
+else handlerDevice[identity.toint()]=appendPacket(work,handlerDevice[identity.toint()]);
+}
+workPacket=handlerWork[identity.toint()];
+if (workPacket.OpEq(null,$05)) return markWaiting();
+count=packetDatum[workPacket.toint()];
+if (count.OpGtEq(null,$08)) {
+handlerWork[identity.toint()]=packetLink[workPacket.toint()];
+return queuePacket(workPacket);
+}
+devicePacket=handlerDevice[identity.toint()];
+if (devicePacket.OpEq(null,$05)) return markWaiting();
+handlerDevice[identity.toint()]=packetLink[devicePacket.toint()];
+if (count.OpEq(null,$05)) packetDatum[devicePacket.toint()]=packetData0[workPacket.toint()];
+else if (count.OpEq(null,$01)) packetDatum[devicePacket.toint()]=packetData1[workPacket.toint()];
+else if (count.OpEq(null,$06)) packetDatum[devicePacket.toint()]=packetData2[workPacket.toint()];
+else packetDatum[devicePacket.toint()]=packetData3[workPacket.toint()];
+packetDatum[workPacket.toint()]=count.OpAdd(null,$01);
+return queuePacket(devicePacket);}
+
+@SuppressWarnings("unchecked") private netrexx.lang.Rexx runDevice(netrexx.lang.Rexx identity,netrexx.lang.Rexx work){netrexx.lang.Rexx pending=null;
+if (work.OpEq(null,$05)) {
+pending=devicePending[identity.toint()];
+if (pending.OpEq(null,$05)) return markWaiting();
+devicePending[identity.toint()]=new netrexx.lang.Rexx((byte)0);
+return queuePacket(pending);
+}
+devicePending[identity.toint()]=work;
+return holdSelf();}
+
+@SuppressWarnings("unchecked") private void schedule(){
+currentTask=taskList;
+{for(;;){if(!currentTask.OpGtEq(null,$05))break;
+if ((isHoldingOrWaiting(currentTask)).toboolean()) currentTask=taskLink[currentTask.toint()];
+else {
+currentIdentity=currentTask;
+currentTask=runTask(currentTask);
+}
+}}return;}}

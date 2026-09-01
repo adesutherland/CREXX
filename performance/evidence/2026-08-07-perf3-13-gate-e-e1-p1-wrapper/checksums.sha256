@@ -1,0 +1,12 @@
+0a746c4726e30b115ed5b43012a5f4e57237786502c680b78e475fa1bfaa60d3  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/COMMANDS.md
+33347a30b8f1842b6123ac927c8b9a79a7f3dd287b64ce70d4031ee99563e43a  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/README.md
+eaf8c5574d688a08280c9f76d75a098c01b75ad9b4d3f34a795090a08e406f30  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/artifact-scorecard.csv
+5b03459bfdc754e5056be1c711d22ebf910d52c351ffd32f15a08133b12ca26e  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/core-four-manifest.txt
+2384f2cbcbf39f7ca17f212a9cf874777c1de42eef0bfa555c20fa18c04c8969  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/paired-summary.csv
+f7b278d19c6832714d853431a6b773b6fd9a4ef7be8840df60cb0a97614df6de  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/qa-summary.txt
+c3cbe2a58e7132bfb794a4de7d35a1632118d067e8b3867481cc53b55994fc02  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/capture-manifest.json
+8389bd126cd563a4dc3117e325130711569e64fec5b1c25b4b8ba0e343d5ecc0  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/geomeans.csv
+866a16ea39d752288e1a228698790f9e5d4d01c098826c906578b27a997dda49  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/outputs.csv
+b0bfe8ddba61a3fd67de160f3a01267031070e11e0e90bcd24ac9cc19c3d3f60  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/ratios.csv
+b952ffc4c16e47000e2d1b5f423cf2337aeb973db76c74c1d4bdac09ef35bd45  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/samples.csv
+0093642b2e267d6e56cff570109f2d1c22e79c0125f3cb5bcf09b87e3ee215b9  performance/evidence/2026-08-07-perf3-13-gate-e-e1-p1-wrapper/timing/summary.csv

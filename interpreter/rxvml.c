@@ -32,6 +32,9 @@
 #include "rxvmvars.h"
 #include "rxastree.h"
 #include "rxvmplugin.h"
+#include "rxsignature.h"
+
+#define RXVML_SECTION_MARK "\xc2\xa7"
 
 typedef struct rxvml_registry_entry {
     value* obj;
@@ -110,6 +113,11 @@ enum {
 static const char RXVML_ADDRESS_BINDING_TYPE_NAME[] = "_rxsysb.addressbinding";
 static const char RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME[] = "_rxsysb.standardaddresssandbox";
 static const char RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME[] = "_rxsysb.standardaddressstem";
+static const RxGraphTypeRef RXVML_ADDRESS_BINDING_TYPE = {
+    .name = RXVML_ADDRESS_BINDING_TYPE_NAME,
+    .name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1u,
+    .id = RX_GRAPH_NONE
+};
 
 struct rxvml_context {
     rxvm_context vm;
@@ -120,15 +128,394 @@ struct rxvml_context {
     size_t address_callback_size;
 };
 
-static rxvml_context* rxvml_active_context = NULL;
+static rxvml_context* rxvml_current_context(void) {
+    rxvm_context* vm = rxvm_active_context_current();
+    return vm ? (rxvml_context*)vm->active.rxvml_context : NULL;
+}
 
 /* rxvml_value is defined as an alias to value in the public header */
+
+static void* rxvml_memory_alloc(rxvml_context* ctx, size_t size) {
+    return rxvm_memory_alloc_bytes(
+            ctx ? ctx->vm.worker.memory_worker : NULL, size);
+}
+
+static void* rxvml_memory_calloc(rxvml_context* ctx,
+                                 size_t count,
+                                 size_t size) {
+    return rxvm_memory_calloc_bytes(ctx ? ctx->vm.worker.memory_worker : NULL,
+                                    count, size);
+}
+
+static void* rxvml_memory_resize(rxvml_context* ctx,
+                                 void* pointer,
+                                 size_t copy_size,
+                                 size_t new_size) {
+    rxvm_memory_worker* worker =
+            ctx ? ctx->vm.worker.memory_worker : NULL;
+    rxvm_memory_worker* previous = rxvm_memory_enter(worker);
+    void* resized = rxvm_memory_resize_bytes(worker, pointer,
+                                             copy_size, new_size);
+    rxvm_memory_leave(previous);
+    return resized;
+}
+
+static void rxvml_memory_free(rxvml_context* ctx, void* pointer) {
+    rxvm_memory_worker* previous;
+    if (!pointer) return;
+    previous = rxvm_memory_enter(
+            ctx ? ctx->vm.worker.memory_worker : NULL);
+    (void)rxvm_memory_release(pointer);
+    rxvm_memory_leave(previous);
+}
+
+static string_constant* rxvml_get_string_constant(module* mod, size_t offset) {
+    string_constant* value;
+
+    if (!mod || offset >= mod->segment.const_size) return NULL;
+    value = (string_constant*)(mod->segment.const_pool + offset);
+    if (value->base.type != STRING_CONST) return NULL;
+    return value;
+}
+
+static char* rxvml_ascii_lower_copy(rxvml_context* ctx, const char* value) {
+    char* copy;
+    size_t i;
+
+    if (!value) return NULL;
+    copy = rxvml_memory_alloc(ctx, strlen(value) + 1u);
+    if (!copy) return NULL;
+    memcpy(copy, value, strlen(value) + 1u);
+    for (i = 0; copy[i]; i++) {
+        copy[i] = (char)tolower((unsigned char)copy[i]);
+    }
+    return copy;
+}
+
+static int rxvml_ascii_case_equal(const char* left, const char* right) {
+    size_t i;
+
+    if (!left || !right) return 0;
+    for (i = 0; left[i] && right[i]; i++) {
+        if (tolower((unsigned char)left[i]) != tolower((unsigned char)right[i])) return 0;
+    }
+    return left[i] == right[i];
+}
 
 /* Internal helper to find a procedure by name */
 static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
     proc_runtime* p = NULL;
     if (src_node(ctx->exposed_proc_tree, (char*)name, (size_t*)&p)) {
         return p;
+    }
+    {
+        rxvml_context* library_context = (rxvml_context*)ctx;
+        char* lowered = rxvml_ascii_lower_copy(library_context, name);
+        if (lowered) {
+            if (src_node(ctx->exposed_proc_tree, lowered, (size_t*)&p)) {
+                rxvml_memory_free(library_context, lowered);
+                return p;
+            }
+            rxvml_memory_free(library_context, lowered);
+        }
+    }
+    return NULL;
+}
+
+static int rxvml_member_name_has_section_prefix(const char* member_name) {
+    return member_name &&
+           (unsigned char)member_name[0] == 0xc2 &&
+           (unsigned char)member_name[1] == 0xa7;
+}
+
+static int rxvml_proc_matches_signature(rxvml_context* ctx,
+                                        proc_runtime* proc,
+                                        const rx_callable_signature* expected);
+
+static int rxvml_member_candidate_matches(const char* symbol_name,
+                                          const char* format,
+                                          const char* class_name,
+                                          const char* member_name) {
+    char candidate[1024];
+    int written;
+
+    if (!symbol_name || !format || !class_name || !member_name) return 0;
+    written = snprintf(candidate, sizeof(candidate), format, class_name, member_name);
+    if (written < 0 || (size_t)written >= sizeof(candidate)) return 0;
+    return strcmp(symbol_name, candidate) == 0 || rxvml_ascii_case_equal(symbol_name, candidate);
+}
+
+static int rxvml_member_symbol_matches(const char* symbol_name,
+                                       const char* class_name,
+                                       const char* member_name) {
+    if (rxvml_member_candidate_matches(symbol_name, "%s.%s", class_name, member_name)) return 1;
+    if (rxvml_member_candidate_matches(symbol_name, RXVML_SECTION_MARK "%s.%s", class_name, member_name)) return 1;
+
+    if (!rxvml_member_name_has_section_prefix(member_name)) {
+        if (rxvml_member_candidate_matches(symbol_name, "%s." RXVML_SECTION_MARK "%s", class_name, member_name)) return 1;
+        if (rxvml_member_candidate_matches(symbol_name, RXVML_SECTION_MARK "%s." RXVML_SECTION_MARK "%s", class_name, member_name)) return 1;
+    }
+
+    return 0;
+}
+
+static proc_runtime* rxvml_find_member_procedure_by_metadata(rxvml_context* ctx,
+                                                            const char* class_name,
+                                                            const char* member_name) {
+    size_t mod_index;
+
+    if (!ctx || !class_name || !member_name) return NULL;
+
+    for (mod_index = 0; mod_index < ctx->vm.num_modules; mod_index++) {
+        module* mod = ctx->vm.modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant* func_meta = (meta_func_constant*)meta;
+                string_constant* symbol_name = rxvml_get_string_constant(mod, func_meta->symbol);
+
+                if (symbol_name &&
+                    rxvml_member_symbol_matches(symbol_name->string, class_name, member_name)) {
+                    return rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return NULL;
+}
+
+static proc_runtime* rxvml_find_procedure_by_metadata(rxvml_context* ctx,
+                                                      const rx_callable_signature* expected,
+                                                      int* saw_name) {
+    size_t mod_index;
+
+    if (saw_name) *saw_name = 0;
+    if (!ctx || !expected || !expected->name) return NULL;
+
+    for (mod_index = 0; mod_index < ctx->vm.num_modules; mod_index++) {
+        module* mod = ctx->vm.modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant* func_meta = (meta_func_constant*)meta;
+                string_constant* symbol_name = rxvml_get_string_constant(mod, func_meta->symbol);
+
+                if (symbol_name &&
+                    rxvml_ascii_case_equal(symbol_name->string, expected->name)) {
+                    proc_runtime* p = rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                    if (saw_name) *saw_name = 1;
+                    if (rxvml_proc_matches_signature(ctx, p, expected)) return p;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return NULL;
+}
+
+static char* rxvml_metadata_type_to_contract_name(rxvml_context* ctx,
+                                                  const char* type_name) {
+    size_t in_index;
+    size_t out_index;
+    size_t length;
+    char* normalized;
+
+    if (!type_name || !*type_name || type_name[0] != '.') return NULL;
+
+    length = strlen(type_name);
+    normalized = rxvml_memory_alloc(ctx, length + 1u);
+    if (!normalized) return NULL;
+
+    out_index = 0;
+    for (in_index = 1; in_index < length; in_index++) {
+        if (type_name[in_index] == '.' &&
+            in_index + 1 < length &&
+            type_name[in_index + 1] == '.') {
+            normalized[out_index++] = '.';
+            in_index++;
+        } else {
+            normalized[out_index++] = type_name[in_index];
+        }
+    }
+    normalized[out_index] = '\0';
+
+    return normalized;
+}
+
+static int rxvml_class_implements_interface(rxvm_context* vm,
+                                            const char* class_name,
+                                            const char* interface_name) {
+    size_t mod_index;
+
+    if (!vm || !class_name || !interface_name) return 0;
+
+    for (mod_index = 0; mod_index < vm->num_modules; mod_index++) {
+        module* mod = vm->modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_IMPLEMENTS) {
+                meta_implements_constant* impl_meta = (meta_implements_constant*)meta;
+                string_constant* class_symbol = rxvml_get_string_constant(mod, impl_meta->symbol);
+                string_constant* interface_symbol = rxvml_get_string_constant(mod, impl_meta->interface_symbol);
+
+                if (class_symbol && interface_symbol &&
+                    strcmp(class_symbol->string, class_name) == 0 &&
+                    strcmp(interface_symbol->string, interface_name) == 0) {
+                    return 1;
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static int rxvml_signature_type_assignable(void* userdata,
+                                           const char* actual_type,
+                                           const char* expected_type) {
+    rxvml_context* ctx = (rxvml_context*)userdata;
+    char* actual_contract;
+    char* expected_contract;
+    int result;
+
+    if (!ctx) return 0;
+    actual_contract = rxvml_metadata_type_to_contract_name(ctx, actual_type);
+    expected_contract = rxvml_metadata_type_to_contract_name(ctx, expected_type);
+    if (!actual_contract || !expected_contract) {
+        rxvml_memory_free(ctx, actual_contract);
+        rxvml_memory_free(ctx, expected_contract);
+        return 0;
+    }
+
+    if (strcmp(actual_contract, expected_contract) == 0) {
+        result = 1;
+    } else {
+        result = rxvml_class_implements_interface(&ctx->vm, actual_contract, expected_contract);
+    }
+    rxvml_memory_free(ctx, actual_contract);
+    rxvml_memory_free(ctx, expected_contract);
+    return result;
+}
+
+static int rxvml_proc_matches_signature(rxvml_context* ctx,
+                                        proc_runtime* proc,
+                                        const rx_callable_signature* expected) {
+    size_t mod_index;
+    rx_callable_compare_options options;
+
+    if (!ctx || !proc || !expected) return 0;
+
+    memset(&options, 0, sizeof(options));
+    options.allow_return_covariance = 1;
+    options.type_assignable = rxvml_signature_type_assignable;
+    options.userdata = ctx;
+
+    for (mod_index = 0; mod_index < ctx->vm.num_modules; mod_index++) {
+        module* mod = ctx->vm.modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant* func_meta = (meta_func_constant*)meta;
+                proc_runtime* meta_proc = rxvm_get_module_runtime_procedure(mod, func_meta->func);
+
+                if (meta_proc == proc) {
+                    string_constant* type_symbol = rxvml_get_string_constant(mod, func_meta->type);
+                    string_constant* args_symbol = rxvml_get_string_constant(mod, func_meta->args);
+                    rx_callable_signature actual;
+                    int matches;
+
+                    if (!type_symbol || !args_symbol) return 0;
+                    if (!rx_sig_init_from_parts(&actual,
+                                                expected->name ? expected->name : "",
+                                                type_symbol->string,
+                                                args_symbol->string)) {
+                        return 0;
+                    }
+
+                    matches = rx_sig_matches_contract(expected, &actual, &options);
+                    rx_sig_free(&actual);
+                    return matches;
+                }
+            }
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static proc_runtime* rxvml_find_member_procedure(rxvml_context* ctx,
+                                                 const char* class_name,
+                                                 const char* member_name) {
+    char full_method_name[1024];
+    proc_runtime* p;
+
+    if (!ctx || !class_name || !member_name) return NULL;
+
+    snprintf(full_method_name, sizeof(full_method_name), RXVML_SECTION_MARK "%s.%s", class_name, member_name);
+    p = find_procedure(&ctx->vm, full_method_name);
+    if (p) return p;
+
+    snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, member_name);
+    p = find_procedure(&ctx->vm, full_method_name);
+    if (p) return p;
+
+    snprintf(full_method_name, sizeof(full_method_name), "%s." RXVML_SECTION_MARK "%s", class_name, member_name);
+    p = find_procedure(&ctx->vm, full_method_name);
+    if (p) return p;
+
+    snprintf(full_method_name, sizeof(full_method_name), RXVML_SECTION_MARK "%s." RXVML_SECTION_MARK "%s", class_name, member_name);
+    p = find_procedure(&ctx->vm, full_method_name);
+    if (p) return p;
+
+    return rxvml_find_member_procedure_by_metadata(ctx, class_name, member_name);
+}
+
+static proc_runtime* rxvml_resolve_descriptor_proc(rxvml_context* ctx,
+                                                   const char* descriptor,
+                                                   rx_callable_signature* expected_out) {
+    proc_runtime* p;
+    int saw_name;
+
+    rx_sig_init_empty(expected_out);
+    if (!ctx || !descriptor || !expected_out) return NULL;
+
+    if (!rx_sig_parse_descriptor(descriptor, expected_out)) {
+        ctx->last_error = "Invalid procedure descriptor";
+        return NULL;
+    }
+
+    p = find_procedure(&ctx->vm, expected_out->name);
+    if (p && rxvml_proc_matches_signature(ctx, p, expected_out)) {
+        return p;
+    }
+
+    saw_name = p != NULL;
+    p = rxvml_find_procedure_by_metadata(ctx, expected_out, &saw_name);
+    if (p) return p;
+
+    if (saw_name) {
+        ctx->last_error = "Procedure signature mismatch";
+    } else {
+        ctx->last_error = "Procedure not found";
     }
     return NULL;
 }
@@ -163,7 +550,7 @@ static int rxvml_invoke_external_proc(
     int* run_status_out) {
 
     rxvml_external_call_state saved_state;
-    rxvml_context* previous_active_context;
+    void* previous_active_context;
     value** call_args = NULL;
     value* call_ret;
     char* dummy_argv[1];
@@ -182,14 +569,14 @@ static int rxvml_invoke_external_proc(
 
     if (argc > 0) {
         size_t i;
-        call_args = malloc(sizeof(value*) * argc);
+        call_args = rxvml_memory_alloc(ctx, sizeof(value*) * argc);
         if (!call_args) {
             ctx->last_error = "Failed to allocate rxvml call arguments";
             return -1;
         }
         for (i = 0; i < argc; i++) {
             if (!args[i]) {
-                free(call_args);
+                rxvml_memory_free(ctx, call_args);
                 ctx->last_error = "Null rxvml call argument";
                 return -1;
             }
@@ -197,9 +584,9 @@ static int rxvml_invoke_external_proc(
         }
     }
 
-    call_ret = value_f();
+    call_ret = value_f_in(ctx->vm.worker.memory_worker);
     if (!call_ret) {
-        if (call_args) free(call_args);
+        rxvml_memory_free(ctx, call_args);
         ctx->last_error = "Failed to allocate rxvml return value";
         return -1;
     }
@@ -215,12 +602,26 @@ static int rxvml_invoke_external_proc(
     ctx->vm.ext_args = call_args;
     ctx->vm.ext_ret = call_ret;
 
-    previous_active_context = rxvml_active_context;
-    rxvml_active_context = ctx;
-    rxvm_prepare(&ctx->vm);
+    previous_active_context = ctx->vm.active.rxvml_context;
+    ctx->vm.active.rxvml_context = ctx;
+    {
+        int initialization_rc = ctx->vm.initializer_depth != 0u
+                ? rxvm_ensure_callee_initialized(
+                        &ctx->vm, ctx->vm.current_initializer_module, proc)
+                : rxvm_initialize(&ctx->vm);
+        if (initialization_rc != 0 &&
+            rxvm_ensure_callee_initialized(&ctx->vm, 0, proc) != 0) {
+            ctx->vm.active.rxvml_context = previous_active_context;
+            rxvml_value_free((rxvml_value*)call_ret);
+            rxvml_memory_free(ctx, call_args);
+            rxvml_restore_external_call_state(&ctx->vm, &saved_state);
+            ctx->last_error = "Module initialization failed";
+            return -1;
+        }
+    }
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
     run_status = run(&ctx->vm, 0, dummy_argv);
-    rxvml_active_context = previous_active_context;
+    ctx->vm.active.rxvml_context = previous_active_context;
     if (run_status_out) *run_status_out = run_status;
 
     if (response_out) {
@@ -229,13 +630,16 @@ static int rxvml_invoke_external_proc(
         rxvml_value_free((rxvml_value*)call_ret);
     }
 
-    if (call_args) free(call_args);
+    rxvml_memory_free(ctx, call_args);
     rxvml_restore_external_call_state(&ctx->vm, &saved_state);
     return 0;
 }
 
 int rxvm_link(rxvm_context* ctx);
-void rxvm_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args);
+void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char *name, char *option, char *type, char *args);
+void rxvm_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
 
 static const char* rxvml_value_cstr(value* v) {
     if (!v) return "";
@@ -247,11 +651,17 @@ static int rxvml_set_value_cstr(value* v, const char* s) {
     return set_null_string_validated(v, s ? s : "");
 }
 
+static const char* rxvml_object_type_name(const value* v, size_t* length) {
+    if (length) *length = 0u;
+    if (!v || !v->object_type) return NULL;
+    if (length) *length = v->object_type->name_length;
+    return v->object_type->name;
+}
+
 static int rxvml_populate_address_binding_value(value* binding_value, const rxvml_address_binding* binding) {
     clear_value(binding_value);
     value_init(binding_value);
-    binding_value->object_type_name = RXVML_ADDRESS_BINDING_TYPE_NAME;
-    binding_value->object_type_name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1;
+    binding_value->object_type = &RXVML_ADDRESS_BINDING_TYPE;
     set_num_attributes(binding_value, RXVML_ADDRESS_BINDING_ATTR_COUNT);
 
     if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS], binding ? binding->external_alias : "") != 0) return -1;
@@ -317,19 +727,27 @@ static int rxvml_address_name_equals(const char* left, const char* right) {
 }
 
 static int rxvml_is_standard_address_sandbox(value* sandbox) {
-    if (!sandbox || !sandbox->object_type_name) return 0;
-    return sandbox->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME) - 1 &&
-           memcmp(sandbox->object_type_name,
+    const char *type_name;
+    size_t type_name_length;
+
+    type_name = rxvml_object_type_name(sandbox, &type_name_length);
+    if (!type_name) return 0;
+    return type_name_length == sizeof(RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME) - 1 &&
+           memcmp(type_name,
                   RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME,
-                  sandbox->object_type_name_length) == 0;
+                  type_name_length) == 0;
 }
 
 static int rxvml_is_standard_address_stem(value* stem) {
-    if (!stem || !stem->object_type_name) return 0;
-    return stem->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME) - 1 &&
-           memcmp(stem->object_type_name,
+    const char *type_name;
+    size_t type_name_length;
+
+    type_name = rxvml_object_type_name(stem, &type_name_length);
+    if (!type_name) return 0;
+    return type_name_length == sizeof(RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME) - 1 &&
+           memcmp(type_name,
                   RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME,
-                  stem->object_type_name_length) == 0;
+                  type_name_length) == 0;
 }
 
 static void rxvml_normalize_sandbox_key(const char* name, char* out, size_t out_size) {
@@ -459,6 +877,8 @@ int rxvml_address_sandbox_set(
 
     value* sandbox;
     char class_name[512];
+    const char* object_type_name;
+    size_t object_type_name_length;
     rxvml_value* name_arg;
     rxvml_value* value_arg;
     rxvml_value* args[2];
@@ -477,14 +897,16 @@ int rxvml_address_sandbox_set(
         return rc;
     }
 
-    if (!sandbox->object_type_name || sandbox->object_type_name_length == 0 ||
-        sandbox->object_type_name_length >= sizeof(class_name)) {
+    object_type_name = rxvml_object_type_name(sandbox,
+                                              &object_type_name_length);
+    if (!object_type_name || object_type_name_length == 0 ||
+        object_type_name_length >= sizeof(class_name)) {
         ctx->last_error = "ADDRESS sandbox object has no callable class name";
         return -2;
     }
 
-    memcpy(class_name, sandbox->object_type_name, sandbox->object_type_name_length);
-    class_name[sandbox->object_type_name_length] = 0;
+    memcpy(class_name, object_type_name, object_type_name_length);
+    class_name[object_type_name_length] = 0;
 
     name_arg = rxvml_value_new(ctx);
     value_arg = rxvml_value_new(ctx);
@@ -505,7 +927,13 @@ int rxvml_address_sandbox_set(
 
     args[0] = name_arg;
     args[1] = value_arg;
-    rc = rxvml_call_method(ctx, (rxvml_value*)sandbox, class_name, "set", 2, args, &method_result);
+    rc = rxvml_call_method_descriptor(ctx,
+                                      (rxvml_value*)sandbox,
+                                      class_name,
+                                      "rxsig1|set|.void|name=.string,value=.string",
+                                      2,
+                                      args,
+                                      &method_result);
 
     if (method_result) rxvml_value_free(method_result);
     rxvml_value_free(name_arg);
@@ -520,9 +948,16 @@ static int rxvml_address_emit_to_endpoint(
     int is_error) {
 
     value* endpoint_value = (value*)endpoint;
+    const char* object_type_name;
+    size_t object_type_name_length;
+    char class_name[512];
+    rxvml_value* text_arg = NULL;
+    rxvml_value* method_result = NULL;
+    rxvml_value* args[1];
+    int64_t handled = 0;
+    int call_rc;
     int write_rc;
 
-    (void)ctx;
     if (!text) text = "";
 
 #ifndef NUTF8
@@ -534,8 +969,52 @@ static int rxvml_address_emit_to_endpoint(
     }
 #endif
 
-    if (!endpoint_value || !endpoint_value->binary_value ||
-        endpoint_value->binary_length == 0) {
+    if (endpoint_value && endpoint_value->binary_value &&
+        endpoint_value->binary_length != 0) {
+        /* Transitional compatibility for an already-running host whose
+         * request was created before the Level B adapter migration. */
+        write_rc = redrwriteclose(endpoint_value, text, strlen(text));
+        if (write_rc == 0) return 0;
+        if (write_rc != 1) {
+            if (ctx) ctx->last_error = is_error
+                ? "Failed to emit native ADDRESS error text"
+                : "Failed to emit native ADDRESS output text";
+            return -1;
+        }
+    } else if (endpoint_value && ctx) {
+        object_type_name = rxvml_object_type_name(
+            endpoint_value, &object_type_name_length);
+        if (object_type_name && object_type_name_length > 0 &&
+            object_type_name_length < sizeof(class_name)) {
+            memcpy(class_name, object_type_name, object_type_name_length);
+            class_name[object_type_name_length] = 0;
+            text_arg = rxvml_value_new(ctx);
+            if (!text_arg ||
+                rxvml_set_str(text_arg, text, strlen(text)) != 0) {
+                if (text_arg) rxvml_value_free(text_arg);
+                ctx->last_error = "Failed to allocate ADDRESS redirect text";
+                return -1;
+            }
+            args[0] = text_arg;
+            call_rc = rxvml_call_method_descriptor(
+                ctx, endpoint, class_name,
+                "rxsig1|native_emit|.int|text=.string",
+                1, args, &method_result);
+            rxvml_value_free(text_arg);
+            if (call_rc != 0 || !method_result ||
+                rxvml_to_int(ctx, method_result, &handled) != 0) {
+                if (method_result) rxvml_value_free(method_result);
+                ctx->last_error = is_error
+                    ? "Failed to invoke ADDRESS error adapter"
+                    : "Failed to invoke ADDRESS output adapter";
+                return -1;
+            }
+            rxvml_value_free(method_result);
+            if (handled) return 0;
+        }
+    }
+
+    {
         if (is_error) {
             fputs(text, stderr);
             fflush(stderr);
@@ -544,25 +1023,6 @@ static int rxvml_address_emit_to_endpoint(
         }
         return 0;
     }
-
-    write_rc = redrwriteclose(endpoint_value, text, strlen(text));
-    if (write_rc == 1) {
-        if (is_error) {
-            fputs(text, stderr);
-            fflush(stderr);
-        } else {
-            rxvm_mprintf("%s", text);
-        }
-        return 0;
-    }
-    if (write_rc != 0) {
-        if (ctx) ctx->last_error = is_error
-            ? "Failed to emit native ADDRESS error text"
-            : "Failed to emit native ADDRESS output text";
-        return -1;
-    }
-
-    return 0;
 }
 
 int rxvml_address_emit_output(
@@ -656,6 +1116,8 @@ int rxvml_address_stem_set(
 
     value* stem = (value*)stem_value;
     char class_name[512];
+    const char* object_type_name;
+    size_t object_type_name_length;
     rxvml_value* name_arg;
     rxvml_value* value_arg;
     rxvml_value* args[2];
@@ -673,14 +1135,16 @@ int rxvml_address_stem_set(
         return rc;
     }
 
-    if (!stem->object_type_name || stem->object_type_name_length == 0 ||
-        stem->object_type_name_length >= sizeof(class_name)) {
+    object_type_name = rxvml_object_type_name(stem,
+                                              &object_type_name_length);
+    if (!object_type_name || object_type_name_length == 0 ||
+        object_type_name_length >= sizeof(class_name)) {
         ctx->last_error = "ADDRESS stem object has no callable class name";
         return -2;
     }
 
-    memcpy(class_name, stem->object_type_name, stem->object_type_name_length);
-    class_name[stem->object_type_name_length] = 0;
+    memcpy(class_name, object_type_name, object_type_name_length);
+    class_name[object_type_name_length] = 0;
 
     name_arg = rxvml_value_new(ctx);
     value_arg = rxvml_value_new(ctx);
@@ -701,7 +1165,13 @@ int rxvml_address_stem_set(
 
     args[0] = name_arg;
     args[1] = value_arg;
-    rc = rxvml_call_method(ctx, (rxvml_value*)stem, class_name, "set", 2, args, &method_result);
+    rc = rxvml_call_method_descriptor(ctx,
+                                      (rxvml_value*)stem,
+                                      class_name,
+                                      "rxsig1|set|.void|name=.string,value=.string",
+                                      2,
+                                      args,
+                                      &method_result);
 
     if (method_result) rxvml_value_free(method_result);
     rxvml_value_free(name_arg);
@@ -847,8 +1317,11 @@ static int rxvml_alloc_address_callback_handle(
     {
         size_t old_size = ctx->address_callback_size;
         size_t new_size = old_size == 0 ? 8 : old_size * 2;
-        rxvml_address_callback_entry* new_callbacks =
-            realloc(ctx->address_callbacks, sizeof(rxvml_address_callback_entry) * new_size);
+        rxvml_address_callback_entry* new_callbacks = rxvml_memory_resize(
+            ctx,
+            ctx->address_callbacks,
+            sizeof(rxvml_address_callback_entry) * old_size,
+            sizeof(rxvml_address_callback_entry) * new_size);
         if (!new_callbacks) return 0;
 
         ctx->address_callbacks = new_callbacks;
@@ -880,7 +1353,7 @@ static void rxvml_native_address_execute(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     rxvml_address_request request;
     rxvml_address_response response;
@@ -945,7 +1418,8 @@ static void rxvml_native_address_execute(
     }
 
     if (binding_count > 0) {
-        bindings = calloc(binding_count, sizeof(rxvml_address_binding));
+        bindings = rxvml_memory_calloc(ctx, binding_count,
+                                      sizeof(rxvml_address_binding));
         if (!bindings) {
             rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to allocate native ADDRESS binding view");
             return;
@@ -986,12 +1460,12 @@ static void rxvml_native_address_execute(
 
     if (rxvml_copy_address_response_updates(response_value, &response) != 0) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS response updates");
-        if (bindings) free(bindings);
+        rxvml_memory_free(ctx, bindings);
         return;
     }
 
     if (ret) set_int((value*)ret, (rxinteger)response.rc);
-    if (bindings) free(bindings);
+    rxvml_memory_free(ctx, bindings);
 }
 
 static int rxvml_copy_address_function_response(
@@ -1031,7 +1505,7 @@ static void rxvml_native_address_invoke(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     rxvml_address_function_request request;
     rxvml_address_function_response response;
@@ -1078,7 +1552,8 @@ static void rxvml_native_address_invoke(
     arguments_value = request_value->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_ARGUMENTS];
     if (arguments_value) argument_count = arguments_value->num_attributes;
     if (argument_count > 0) {
-        argument_texts = calloc(argument_count, sizeof(char*));
+        argument_texts = rxvml_memory_calloc(ctx, argument_count,
+                                            sizeof(char*));
         if (!argument_texts) {
             rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to allocate native ADDRESS function argument view");
             return;
@@ -1105,12 +1580,12 @@ static void rxvml_native_address_invoke(
 
     if (rxvml_copy_address_function_response(response_value, &response) != 0) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "failed to copy native ADDRESS function response");
-        if (argument_texts) free(argument_texts);
+        rxvml_memory_free(ctx, argument_texts);
         return;
     }
 
     if (ret) set_int((value*)ret, (rxinteger)response.rc);
-    if (argument_texts) free(argument_texts);
+    rxvml_memory_free(ctx, argument_texts);
 }
 
 static void rxvml_native_address_match(
@@ -1119,7 +1594,7 @@ static void rxvml_native_address_match(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     const char* env_name;
 
     rxvml_reset_native_signal(signal);
@@ -1140,7 +1615,7 @@ static void rxvml_native_address_id(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     rxvml_address_callback_entry* entry;
     const char* env_name;
 
@@ -1161,7 +1636,7 @@ static void rxvml_native_address_handle(
     rxpa_attribute_value ret,
     rxpa_attribute_value signal) {
 
-    rxvml_context* ctx = rxvml_active_context;
+    rxvml_context* ctx = rxvml_current_context();
     const char* env_name;
     int handle = 0;
 
@@ -1178,6 +1653,7 @@ static void rxvml_native_address_handle(
 
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
+    static const char rxvml_address_plugin_id[] = "rxvml-address-bridge";
 
     /* Initialize mandatory plugins */
     CALL_PLUGIN_INITIALIZER(decnumber);
@@ -1185,7 +1661,14 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx = malloc(sizeof(rxvml_context));
     if (!ctx) return NULL;
     rxinimod(&ctx->vm);
-    if (location) ctx->vm.location = strdup(location);
+    if (location) {
+        ctx->vm.location = strdup(location);
+        if (!ctx->vm.location || rxvm_set_provider_path(&ctx->vm, location)) {
+            rxfremod(&ctx->vm);
+            free(ctx);
+            return NULL;
+        }
+    }
     ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
     ctx->registry = NULL;
@@ -1193,11 +1676,27 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx->address_callbacks = NULL;
     ctx->address_callback_size = 0;
 
-    rxvm_addfunc(rxvml_native_address_execute, "_rxsysb._native_address_execute", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_invoke, "_rxsysb._native_address_invoke", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_match, "_rxsysb._native_address_match", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_handle, "_rxsysb._native_address_handle", 0, 0, 0);
-    rxvm_addfunc(rxvml_native_address_id, "_rxsysb._native_address_id", 0, 0, 0);
+    /* These bridges resolve all mutable state through the active RXVML
+     * context. Distinct context-owner threads may therefore enter them at the
+     * same time, including user callbacks that intentionally synchronize. */
+    rxvm_register_static_plugin_capability(
+            rxvml_address_plugin_id,
+            RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_execute,
+                            "_rxsysb._native_address_execute", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_invoke,
+                            "_rxsysb._native_address_invoke", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_match,
+                            "_rxsysb._native_address_match", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_handle,
+                            "_rxsysb._native_address_handle", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_address_id,
+                            "_rxsysb._native_address_id", 0, 0, 0);
     if (rxldmodp(&ctx->vm) == -1) {
         rxfremod(&ctx->vm);
         free(ctx);
@@ -1213,13 +1712,12 @@ void rxvml_destroy(rxvml_context* ctx) {
     if (ctx->registry) {
         for (i = 0; i < ctx->registry_size; i++) {
             if (ctx->registry[i].obj) {
-                clear_value(ctx->registry[i].obj);
-                free(ctx->registry[i].obj);
+                rxvml_value_free((rxvml_value *)ctx->registry[i].obj);
             }
         }
-        free(ctx->registry);
+        rxvml_memory_free(ctx, ctx->registry);
     }
-    if (ctx->address_callbacks) free(ctx->address_callbacks);
+    rxvml_memory_free(ctx, ctx->address_callbacks);
     rxfremod(&ctx->vm);
     free(ctx);
 }
@@ -1233,7 +1731,12 @@ int rxvml_load_module_buffer(rxvml_context* ctx, const void* buf, size_t len) {
 }
 
 rxvml_value* rxvml_value_new(rxvml_context* ctx) {
-    return (rxvml_value*)value_f();
+    value *result = value_f_in(ctx ? ctx->vm.worker.memory_worker : 0);
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_mark_value_origin(
+            result, RXVM_PROFILE_VALUE_ORIGIN_API_NATIVE);
+#endif
+    return (rxvml_value*)result;
 }
 
 void rxvml_set_int(rxvml_value* v, rxinteger i) {
@@ -1241,13 +1744,24 @@ void rxvml_set_int(rxvml_value* v, rxinteger i) {
 }
 
 int rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
+    rxvm_memory_worker *previous;
+    int result;
     if (!v) return -1;
-    return set_string_validated((value*)v, s ? s : "", s ? len : 0);
+    previous = rxvm_memory_enter(rxvm_memory_owner(v));
+    result = set_string_validated((value*)v, s ? s : "", s ? len : 0);
+    rxvm_memory_leave(previous);
+    return result;
 }
 
 int rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
                              const rxvm_native_payload_ops* ops, unsigned int flags) {
-    return set_native_payload((value*)v, payload, len, ops, flags);
+    rxvm_memory_worker *previous;
+    int result;
+    if (!v) return -1;
+    previous = rxvm_memory_enter(rxvm_memory_owner(v));
+    result = set_native_payload((value*)v, payload, len, ops, flags);
+    rxvm_memory_leave(previous);
+    return result;
 }
 
 void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
@@ -1257,24 +1771,36 @@ void* rxvml_get_native_payload(rxvml_value* v, size_t* out_len,
 }
 
 rxvml_value* rxvml_object_new(rxvml_context* ctx, size_t num_attrs) {
+    rxvm_memory_worker *previous =
+            rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker : 0);
     value* v = value_f();
     set_num_attributes(v, num_attrs);
+    rxvm_memory_leave(previous);
     return (rxvml_value*)v;
 }
 
 int rxvml_set_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1, rxvml_value* val) {
     value* v_obj = (value*)obj;
     value* v_val = (value*)val;
+    rxvm_memory_worker *previous;
     if (index1 == 0 || index1 > v_obj->num_attributes) return -1;
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
+                                 rxvm_memory_owner(obj));
     copy_value(v_obj->attributes[index1 - 1], v_val);
+    rxvm_memory_leave(previous);
     return 0;
 }
 
 rxvml_value* rxvml_get_attribute(rxvml_context* ctx, rxvml_value* obj, size_t index1) {
     value* v_obj = (value*)obj;
+    rxvm_memory_worker *previous;
+    value* v_ret;
     if (index1 == 0 || index1 > v_obj->num_attributes) return NULL;
-    value* v_ret = value_f();
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
+                                 rxvm_memory_owner(obj));
+    v_ret = value_f();
     copy_value(v_ret, v_obj->attributes[index1 - 1]);
+    rxvm_memory_leave(previous);
     return (rxvml_value*)v_ret;
 }
 
@@ -1285,19 +1811,25 @@ rxvml_value* rxvml_array_new(rxvml_context* ctx, size_t length) {
 int rxvml_array_set(rxvml_context* ctx, rxvml_value* arr, size_t index1, rxvml_value* elem) {
     value* v_arr = (value*)arr;
     value* v_elem = (value*)elem;
+    rxvm_memory_worker *previous;
     if (index1 == 0 || index1 > v_arr->num_attributes) return -1;
     /* In cREXX, attributes are 0-indexed in C, 1-indexed in Rexx */
     /* link_attribute might be better, but for now we just copy the value pointer or copy the value */
     /* Actually, attributes[i] is a pointer to a value */
     /* Copy into the pre-allocated attribute slot to avoid pointer aliasing */
+    previous = rxvm_memory_enter(ctx ? ctx->vm.worker.memory_worker :
+                                 rxvm_memory_owner(arr));
     copy_value(v_arr->attributes[index1 - 1], v_elem);
+    rxvm_memory_leave(previous);
     return 0;
 }
 
 void rxvml_value_free(rxvml_value* v) {
     if (v) {
-        clear_value((value*)v);
-        free(v);
+        rxvm_memory_worker *previous =
+                rxvm_memory_enter(rxvm_memory_owner(v));
+        value_free((value*)v);
+        rxvm_memory_leave(previous);
     }
 }
 
@@ -1317,7 +1849,11 @@ int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) 
     {
         size_t new_size = ctx->registry_size == 0 ? 8 : ctx->registry_size * 2;
         int idx;
-        rxvml_registry_entry* new_registry = realloc(ctx->registry, sizeof(rxvml_registry_entry) * new_size);
+        rxvml_registry_entry* new_registry = rxvml_memory_resize(
+            ctx,
+            ctx->registry,
+            sizeof(rxvml_registry_entry) * ctx->registry_size,
+            sizeof(rxvml_registry_entry) * new_size);
         if (!new_registry) return -1;
         ctx->registry = new_registry;
         for (i = ctx->registry_size; i < new_size; i++) {
@@ -1337,8 +1873,7 @@ int rxvml_reg_alloc(rxvml_context* ctx, rxvml_value* v, const char* class_name) 
 void rxvml_reg_free(rxvml_context* ctx, int reg_idx) {
     if (reg_idx >= 0 && reg_idx < (int)ctx->registry_size) {
         if (ctx->registry[reg_idx].obj) {
-            clear_value(ctx->registry[reg_idx].obj);
-            free(ctx->registry[reg_idx].obj);
+            rxvml_value_free((rxvml_value *)ctx->registry[reg_idx].obj);
             ctx->registry[reg_idx].obj = NULL;
             ctx->registry[reg_idx].class_name[0] = 0;
         }
@@ -1381,7 +1916,7 @@ int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info*
                         classes[count].class_name[255] = 0;
                         
                         /* Factory name pattern: namespace.classname.§factory */
-                        snprintf(classes[count].factory_proc, 511, "%s.§factory", sc->string);
+                        snprintf(classes[count].factory_proc, 511, "%s." RXVML_SECTION_MARK "factory", sc->string);
                         classes[count].factory_proc[511] = 0;
                         
                         count++;
@@ -1397,23 +1932,34 @@ int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info*
     return 0;
 }
 
-int rxvml_call_procedure(
+int rxvml_call_procedure_descriptor(
     rxvml_context* ctx,
-    const char* proc_name,
+    const char* proc_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out) {
+    rx_callable_signature expected;
+    proc_runtime* p;
+    int rc;
+
+    if (!ctx || !proc_descriptor) {
+        if (ctx) ctx->last_error = "Invalid rxvml procedure call arguments";
+        return -1;
+    }
 
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
-    proc_runtime* p = find_procedure(&ctx->vm, proc_name);
+
+    p = rxvml_resolve_descriptor_proc(ctx, proc_descriptor, &expected);
     if (!p) {
-        ctx->last_error = "Procedure not found";
+        rx_sig_free(&expected);
         return -1;
     }
 
-    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out, NULL);
+    rc = rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out, NULL);
+    rx_sig_free(&expected);
+    return rc;
 }
 
 static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const char* name) {
@@ -1509,46 +2055,53 @@ cleanup:
     return rc;
 }
 
-int rxvml_call_method(
+int rxvml_call_method_descriptor(
     rxvml_context* ctx,
     rxvml_value* obj,
     const char* class_name,
-    const char* method_name,
+    const char* method_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out) {
 
-    char full_method_name[1024];
-    snprintf(full_method_name, sizeof(full_method_name), "§%s.%s", class_name, method_name);
+    rx_callable_signature expected;
+    proc_runtime* p;
+    int rc;
 
+    rx_sig_init_empty(&expected);
+    if (!ctx || !obj || !class_name || !method_descriptor) {
+        if (ctx) ctx->last_error = "Invalid rxvml method call arguments";
+        return -1;
+    }
     if (ctx->vm.num_modules > 0) {
         rxvm_link(&ctx->vm);
     }
-    proc_runtime* p = find_procedure(&ctx->vm, full_method_name);
-    if (!p) {
-        snprintf(full_method_name, sizeof(full_method_name), "%s.%s", class_name, method_name);
-        p = find_procedure(&ctx->vm, full_method_name);
+    if (!rx_sig_parse_descriptor(method_descriptor, &expected)) {
+        ctx->last_error = "Invalid method descriptor";
+        return -1;
     }
-    if (!p) {
-        snprintf(full_method_name, sizeof(full_method_name), "%s.§%s", class_name, method_name);
-        p = find_procedure(&ctx->vm, full_method_name);
-    }
-    if (!p) {
-        snprintf(full_method_name, sizeof(full_method_name), "§%s.§%s", class_name, method_name);
-        p = find_procedure(&ctx->vm, full_method_name);
-    }
+
+    p = rxvml_find_member_procedure(ctx, class_name, expected.name);
     if (!p) {
         ctx->last_error = "Method not found";
+        rx_sig_free(&expected);
+        return -1;
+    }
+
+    if (!rxvml_proc_matches_signature(ctx, p, &expected)) {
+        ctx->last_error = "Method signature mismatch";
+        rx_sig_free(&expected);
         return -1;
     }
 
     {
-        rxvml_value** method_args = malloc(sizeof(rxvml_value*) * (argc + 1));
-        int rc;
+        rxvml_value** method_args = rxvml_memory_alloc(
+            ctx, sizeof(rxvml_value*) * (argc + 1u));
         size_t i;
 
         if (!method_args) {
             ctx->last_error = "Failed to allocate rxvml method arguments";
+            rx_sig_free(&expected);
             return -1;
         }
 
@@ -1564,32 +2117,58 @@ int rxvml_call_method(
             response_out,
             NULL);
 
-        free(method_args);
+        rxvml_memory_free(ctx, method_args);
+        rx_sig_free(&expected);
         return rc;
     }
 }
 
-int rxvml_call_factory(
+int rxvml_call_factory_descriptor(
     rxvml_context* ctx,
     const char* class_name,
+    const char* factory_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out) {
 
-    char factory_proc[1024];
-    snprintf(factory_proc, sizeof(factory_proc), "§%s.§factory", class_name);
+    rx_callable_signature expected;
+    proc_runtime* p;
+    int rc;
 
-    int rc = rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
-    if (rc != 0) {
-        snprintf(factory_proc, sizeof(factory_proc), "%s.§factory", class_name);
-        rc = rxvml_call_procedure(ctx, factory_proc, argc, args, response_out);
+    rx_sig_init_empty(&expected);
+    if (!ctx || !class_name || !factory_descriptor) {
+        if (ctx) ctx->last_error = "Invalid rxvml factory call arguments";
+        return -1;
     }
+    if (ctx->vm.num_modules > 0) {
+        rxvm_link(&ctx->vm);
+    }
+    if (!rx_sig_parse_descriptor(factory_descriptor, &expected)) {
+        ctx->last_error = "Invalid factory descriptor";
+        return -1;
+    }
+
+    p = rxvml_find_member_procedure(ctx, class_name, expected.name);
+    if (!p) {
+        ctx->last_error = "Factory not found";
+        rx_sig_free(&expected);
+        return -1;
+    }
+
+    if (!rxvml_proc_matches_signature(ctx, p, &expected)) {
+        ctx->last_error = "Factory signature mismatch";
+        rx_sig_free(&expected);
+        return -1;
+    }
+
+    rc = rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_factory", response_out, NULL);
+    rx_sig_free(&expected);
     return rc;
 }
 
-static int rxvml_call_int_procedure(
+static int rxvml_call_int_procedure_descriptor(
     rxvml_context* ctx,
-    const char* proc_name,
+    const char* proc_descriptor,
     size_t argc,
     rxvml_value** args,
     int* out_rc) {
@@ -1597,9 +2176,9 @@ static int rxvml_call_int_procedure(
     rxvml_value* response = NULL;
     rxinteger rc_value = 0;
 
-    if (!ctx || !proc_name) return -1;
+    if (!ctx || !proc_descriptor) return -1;
 
-    if (rxvml_call_procedure(ctx, proc_name, argc, args, &response) != 0) {
+    if (rxvml_call_procedure_descriptor(ctx, proc_descriptor, argc, args, &response) != 0) {
         return -1;
     }
 
@@ -1647,7 +2226,12 @@ int rxvml_address_register_environment(
     args[0] = name_arg;
     args[1] = env_obj;
 
-    if (rxvml_call_int_procedure(ctx, "_rxsysb._register_address_environment", 2, args, &rc_value) != 0) {
+    if (rxvml_call_int_procedure_descriptor(
+            ctx,
+            "rxsig1|_rxsysb._register_address_environment|.int|env_name=.string,env_obj=.addressenvironment",
+            2,
+            args,
+            &rc_value) != 0) {
         rxvml_value_free(name_arg);
         return -1;
     }
@@ -1681,7 +2265,12 @@ int rxvml_address_register_callback_environment(
         return -1;
     }
 
-    if (rxvml_call_int_procedure(ctx, "_rxsysb._enable_native_address_environment", 0, NULL, &enable_rc) != 0 ||
+    if (rxvml_call_int_procedure_descriptor(
+            ctx,
+            "rxsig1|_rxsysb._enable_native_address_environment|.int|",
+            0,
+            NULL,
+            &enable_rc) != 0 ||
         enable_rc != 0) {
         rxvml_free_address_callback_handle(ctx, handle);
         if (!ctx->last_error) ctx->last_error = "Failed to enable native address environment provider";
@@ -1732,7 +2321,12 @@ int rxvml_address_create_environment(
     }
     args[0] = name_arg;
 
-    if (rxvml_call_procedure(ctx, RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC, 1, args, env_obj_out) != 0 || !*env_obj_out) {
+    if (rxvml_call_procedure_descriptor(
+            ctx,
+            "rxsig1|_rxsysb._new_address_environment|._rxsysb..addressenvironment|env_name=.string",
+            1,
+            args,
+            env_obj_out) != 0 || !*env_obj_out) {
         rxvml_value_free(name_arg);
         if (!ctx->last_error) ctx->last_error = "Failed to create address environment via interface factory";
         return -1;
@@ -1768,7 +2362,12 @@ int rxvml_address_set_environment(
     }
     args[0] = name_arg;
 
-    if (rxvml_call_int_procedure(ctx, "_rxsysb._set_address_environment", 1, args, &rc_value) != 0) {
+    if (rxvml_call_int_procedure_descriptor(
+            ctx,
+            "rxsig1|_rxsysb._set_address_environment|.int|env_name=.string",
+            1,
+            args,
+            &rc_value) != 0) {
         rxvml_value_free(name_arg);
         return -1;
     }
@@ -1816,4 +2415,9 @@ unsigned int rxvml_get_debug_mode(rxvml_context* ctx) {
 
 void rxvml_set_say_exit(rxvml_say_exit_func say_exit) {
     rxvm_setsayexit((say_exit_func)say_exit);
+}
+
+void rxvml_set_context_say_exit(rxvml_context* ctx,
+                                rxvml_say_exit_func say_exit) {
+    if (ctx) ctx->vm.active.say_exit = (say_exit_func)say_exit;
 }

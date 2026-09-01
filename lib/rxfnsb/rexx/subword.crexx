@@ -22,15 +22,70 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Return a range of whitespace-delimited words.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/subword.md
+ */
 options levelb
 
 namespace rxfnsb expose subword
 
-subword: procedure=.string
-   arg string=.string, wordnum=.int
-   if wordnum<1 then return ''
-   spos=wordindex(string,wordnum)              /* start position of selected word */
-   if spos=0 then return ""
-return substr(string,spos)
+/**
+ * Return words beginning at a positive one-based word number.
+ *
+ * @param string source text
+ * @param wordnum positive one-based first word number
+ * @param wordcount optional non-negative maximum word count
+ * @return selected words without leading or trailing whitespace
+ * @signal INVALID_ARGUMENTS invalid word number or supplied count
+ */
+subword: procedure = .string
+  arg string = .string, wordnum = .int, wordcount = 0
+  count_supplied = ?wordcount
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "SUBWORD start must be positive"
+  if count_supplied & wordcount < 0 then
+    assembler signal "INVALID_ARGUMENTS", "SUBWORD count must be non-negative"
+  if count_supplied & wordcount = 0 then return ""
 
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return ""
+
+  scan = 0
+  current_word = 0
+  selection_start = 0
+  do while scan < string_length
+    assembler fndnblnk selection_start,string,scan
+    if selection_start < 0 then return ""
+    current_word = current_word + 1
+    if current_word = wordnum then leave
+    assembler fndblnk scan,string,selection_start
+    if scan < 0 then return ""
+  end
+
+  selection_end = selection_start
+  selected = 0
+  scan = selection_start
+  word_end = 0
+  next_word = 0
+  do while \count_supplied | selected < wordcount
+    assembler fndblnk word_end,string,scan
+    if word_end < 0 then do
+      selection_end = string_length
+      leave
+    end
+    selection_end = word_end
+    selected = selected + 1
+    if count_supplied & selected = wordcount then leave
+    assembler fndnblnk next_word,string,word_end
+    if next_word < 0 then leave
+    scan = next_word
+  end
+
+  result = ""
+  selection_length = selection_end - selection_start
+  assembler substring result,string,selection_start,selection_length
+  return result

@@ -1,0 +1,468 @@
+phase=warmup round=0 sequence=1 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=129901 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.15
+user 0.13
+sys 0.01
+phase=warmup round=0 sequence=2 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8261 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=warmup round=0 sequence=3 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8317 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=warmup round=0 sequence=4 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124689 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.12
+sys 0.00
+phase=warmup round=0 sequence=5 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8287 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=warmup round=0 sequence=6 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8383 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=1 sequence=7 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=127560 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=1 sequence=8 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8291 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=1 sequence=9 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8418 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=1 sequence=10 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124793 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=1 sequence=11 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8484 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=1 sequence=12 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8517 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=2 sequence=13 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8398 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=2 sequence=14 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8273 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=2 sequence=15 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=125541 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=2 sequence=16 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8489 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=2 sequence=17 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8380 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=2 sequence=18 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=129867 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=3 sequence=19 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=130745 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=3 sequence=20 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8334 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=3 sequence=21 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8419 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=3 sequence=22 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124866 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=3 sequence=23 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8407 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=3 sequence=24 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8694 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=4 sequence=25 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8659 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=4 sequence=26 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8488 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=4 sequence=27 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124570 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=4 sequence=28 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8420 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=4 sequence=29 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8398 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=4 sequence=30 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=128103 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=5 sequence=31 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=137035 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.15
+user 0.14
+sys 0.00
+phase=sample round=5 sequence=32 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8503 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=5 sequence=33 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8552 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=5 sequence=34 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124793 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=5 sequence=35 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8445 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=5 sequence=36 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8431 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=6 sequence=37 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8492 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=6 sequence=38 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8526 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=6 sequence=39 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=125232 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=6 sequence=40 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8529 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=6 sequence=41 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8510 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=6 sequence=42 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=133040 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=7 sequence=43 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=130520 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=7 sequence=44 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8361 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=7 sequence=45 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8501 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=7 sequence=46 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=123247 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=7 sequence=47 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8514 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=7 sequence=48 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8504 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=8 sequence=49 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8479 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=8 sequence=50 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8389 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=8 sequence=51 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=125607 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=8 sequence=52 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8674 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=8 sequence=53 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8518 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=8 sequence=54 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=134330 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=9 sequence=55 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=125433 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=9 sequence=56 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8514 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=9 sequence=57 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8758 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=9 sequence=58 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=123104 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=9 sequence=59 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8450 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=9 sequence=60 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8492 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=10 sequence=61 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8565 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=10 sequence=62 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8531 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=10 sequence=63 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124061 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=10 sequence=64 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8591 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=10 sequence=65 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8407 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=10 sequence=66 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=125424 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=11 sequence=67 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=137161 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.15
+user 0.14
+sys 0.00
+phase=sample round=11 sequence=68 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8657 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=11 sequence=69 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8692 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=11 sequence=70 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=127912 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00
+phase=sample round=11 sequence=71 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8899 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=11 sequence=72 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8731 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=12 sequence=73 vm=rxtvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8737 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=12 sequence=74 vm=rxtvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8591 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=12 sequence=75 vm=rxtvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=124157 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.13
+user 0.12
+sys 0.00
+phase=sample round=12 sequence=76 vm=rxbvm variant=direct
+benchmark=rxvector01 variant=direct rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8570 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=12 sequence=77 vm=rxbvm variant=public
+benchmark=rxvector01 variant=public rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=8455 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.02
+user 0.01
+sys 0.00
+phase=sample round=12 sequence=78 vm=rxbvm variant=pure
+benchmark=rxvector01 variant=pure rows=11684 dimensions=768 requested=10 iterations=1 elapsed_us=134925 checksum=1034.2
+PASS: RXVECTOR-01 exact comparison
+real 0.14
+user 0.13
+sys 0.00

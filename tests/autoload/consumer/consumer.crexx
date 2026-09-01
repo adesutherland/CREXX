@@ -1,0 +1,7 @@
+options levelb
+namespace autoloadapp
+import autoloaddep
+
+main: procedure = .int
+  say autoloaddep..hello()
+  return 0

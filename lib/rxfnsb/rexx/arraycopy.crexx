@@ -22,61 +22,50 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Independent string-array slice copy.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arraycopy.md
+ */
 options levelb
 
 namespace rxfnsb expose arraycopy
-/* ------------------------------------------------------------------
- *  arraycopy
+
+/**
+ * Copy a bounded slice into a new one-based string array.
  *
- *  Copy a slice of a Rexx array (1-based, size in a[0]).
- *
- *  Semantics:
- *    - from  : start position (1-based)
- *              from < 0 counts from the end (-1 = last element)
- *    - count : number of elements to copy
- *              count <= 0 means "copy to end"
- *
- *  Notes:
- *    - Negative FROM only affects the start position.
- *    - COPY direction is always forward (toward higher indices).
- *    - "copy to end" always means up to a[n], never wrap-around.
- *
- *  Behavior:
- *    - Indices are clamped to array bounds
- *    - Out-of-range start results in an empty array
- *    - No errors are raised for invalid ranges
- *
- *  Examples:
- *    arraycopy(a)            -> full array
- *    arraycopy(a, 3)         -> elements 3 .. end
- *    arraycopy(a, 3, 2)      -> elements 3 .. 4
- *    arraycopy(a, -1)        -> last element
- *    arraycopy(a, -3)        -> last 3 elements
- *    arraycopy(a, -3, 2)     -> elements n-2 .. n-1
- *
- * ------------------------------------------------------------------ */
+ * @param array read-only source array using array[0] as its high-water mark
+ * @param from optional first source index; negative values count from the end
+ * @param count optional non-negative maximum length; zero means through end
+ * @return a new independently mutable array containing the selected strings
+ * @signal INVALID_ARGUMENTS count is negative
+ */
 arraycopy: procedure=.string[]
-  arg a=.string[], from=1, count=0
+  arg expose array=.string[], from=1, count=0
 
-  n = a[0]
-  b = .string[]
-/* map negative from to 1-based index */
-  if from < 0 then from = n + from + 1
+  high = array[0]
+  result = .string[]
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYCOPY count must be non-negative"
+  if from < 0 then from = high + from + 1
+  if from < 1 | from > high then return result
 
-  /* out-of-range start -> empty */
-  if from < 1 | from > n then return b
+  available = high - from + 1
+  if count = 0 | count > available then count = available
+  assembler SETATTRS result,count
 
-  /* count <= 0 => copy to end */
-  if count <= 0 then count = n - from + 1
-
-  /* clamp count to available elements */
-  if count > (n - from + 1) then count = n - from + 1
-
-  last = from + count - 1
-  j = 0
-  do i = from to last
-     j = j + 1
-     b[j] = a[i]
+  source_index = from
+  target_index = 1
+  source_value = ""
+  target_value = ""
+  do count
+    assembler linkattr1 source_value,array,source_index
+    assembler linkattr1 target_value,result,target_index
+    assembler scopy target_value,source_value
+    assembler unlink source_value
+    assembler unlink target_value
+    assembler inc source_index
+    assembler inc target_index
   end
-return b
+  return result

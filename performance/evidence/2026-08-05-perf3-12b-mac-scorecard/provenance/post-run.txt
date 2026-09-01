@@ -1,0 +1,97 @@
+Wed Aug  5 08:41:59 BST 2026
+Darwin Adrians-MacBook-Air.local 25.5.0 Darwin Kernel Version 25.5.0: Tue Jun  9 22:28:17 PDT 2026; root:xnu-12377.121.10~1/RELEASE_ARM64_T8142 arm64
+Apple M5
+10
+ProductName:		macOS
+ProductVersion:		26.5.2
+BuildVersion:		25F84
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	84%; charging; 0:54 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+ 8:41  up 22 days,  1:49, 1 user, load averages: 1.40 1.88 2.16
+44d8b6a7ecd7d42bc14ff2b7d6a7ac355abf21c8
+## develop...origin/develop [ahead 7]
+?? performance/evidence/2026-08-05-perf3-12b-mac-scorecard/
+?? performance/manifests/perf3-12b-current-mac-v1.txt
+Processes: 786 total, 2 running, 784 sleeping, 4430 threads
+2026/08/05 08:42:00
+Load Avg: 1.40, 1.88, 2.16
+CPU usage: 3.75% user, 10.32% sys, 85.91% idle
+SharedLibs: 771M resident, 141M data, 107M linkedit.
+MemRegions: 258427 total, 7824M resident, 386M private, 1486M shared.
+PhysMem: 22G used (2264M wired, 3342M compressor), 1374M unused.
+VM: 325T vsize, 6144M framework vsize, 268269(0) swapins, 593642(0) swapouts.
+Networks: packets: 376147655/71G in, 361404012/37G out.
+Disks: 146835304/1328G read, 54920466/1199G written.
+
+PID    %CPU COMMAND
+99817  0.0  node_repl
+99070  0.0  osanalyticshelpe
+98927  0.0  node_repl
+98323  0.0  node_repl
+98230  0.0  MTLCompilerServi
+98044  0.0  jetpackassetd
+97126  0.0  node_repl
+96846  0.0  node_repl
+96816  0.0  intelligentrouti
+96771  0.0  node_repl
+96709  0.0  node_repl
+96469  0.0  node_repl
+96168  0.0  node_repl
+96111  0.0  sysextd
+96110  0.0  nesessionmanager
+Processes: 789 total, 2 running, 787 sleeping, 4481 threads
+2026/08/05 08:42:02
+Load Avg: 1.45, 1.88, 2.16
+CPU usage: 2.60% user, 2.69% sys, 94.70% idle
+SharedLibs: 771M resident, 141M data, 107M linkedit.
+MemRegions: 181 total, 5744K resident, 386M private, 1486M shared.
+PhysMem: 22G used (2328M wired, 3342M compressor), 1340M unused.
+VM: 326T vsize, 6144M framework vsize, 268269(0) swapins, 593642(0) swapouts.
+Networks: packets: 376147688/71G in, 361404014/37G out.
+Disks: 146835304/1328G read, 54920469/1199G written.
+
+PID    %CPU COMMAND
+601    8.8  loginwindow
+55345  4.7  top
+1074   1.8  ChatGPT
+0      1.8  kernel_task
+598    1.6  WindowServer
+1535   1.4  Finder
+832    1.3  mds_stores
+553    0.8  mds
+1088   0.8  Codex (Service)
+1      0.7  launchd
+55144  0.6  mdworker_shared
+55143  0.5  mdworker_shared
+55153  0.5  mdworker_shared
+565    0.5  opendirectoryd
+1135   0.3  Codex (Renderer)

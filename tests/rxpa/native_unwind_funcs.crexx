@@ -1,0 +1,23 @@
+/* Interrupted native calls must restore their compiler call window. */
+
+options levelb
+import rxpatests
+
+value = "preserved"
+caught = 0
+
+do
+  call throw_signal_arg value
+  say "FAIL: native signal did not branch"
+  return 1
+on signal error
+  caught = 1
+end
+
+if caught \= 1 | value \= "preserved" then do
+  say "FAIL: native signal call mapping"
+  return 1
+end
+
+say "PASS: Native Signal Call Mapping"
+return 0

@@ -1,0 +1,12 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-PERF2-04-Base64-native-control-base64-native-warmup-1,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,warmup,1,1,2500,5169000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-warmup-2,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,warmup,2,1,2500,4652000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-1,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,1,1,2500,4581000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-2,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,2,1,2500,4624000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-3,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,3,1,2500,4659000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-4,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,4,1,2500,4389000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-5,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,5,1,2500,4519000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-6,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,6,1,2500,4480000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-7,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,7,1,2500,4414000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-8,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,8,1,2500,4426000,,0,pass,,
+timing-PERF2-04-Base64-native-control-base64-native-recorded-9,timing,PERF2-04 Base64 native control,base64-native,native-c,native,B64-N1-fixed-valid,P,no,no,recorded,9,1,2500,4458000,,0,pass,,

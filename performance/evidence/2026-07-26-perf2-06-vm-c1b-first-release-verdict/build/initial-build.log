@@ -1,0 +1,117 @@
+-- The C compiler identification is AppleClang 21.0.0.21000101
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.ge7090198e450.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260726T174214Z
+-- CREXX Build Commit: e7090198e450
+-- CMake Generator: Ninja
+-- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+-- Performing Test cxxflag__W
+-- Performing Test cxxflag__W - Success
+-- Performing Test cxxflag__Wall
+-- Performing Test cxxflag__Wall - Success
+-- Performing Test cxxflag__Wextra
+-- Performing Test cxxflag__Wextra - Success
+-- Performing Test cxxflag__Weffc__
+-- Performing Test cxxflag__Weffc__ - Success
+-- Performing Test cxxflag__pedantic
+-- Performing Test cxxflag__pedantic - Success
+-- Performing Test cxxflag__Wformat_2
+-- Performing Test cxxflag__Wformat_2 - Success
+-- Performing Test cxxflag__Wredundant_decls
+-- Performing Test cxxflag__Wredundant_decls - Success
+-- Performing Test cxxflag__Wsuggest_attribute_format
+-- Performing Test cxxflag__Wsuggest_attribute_format - Failed
+-- Performing Test cxxflag__Wconversion
+-- Performing Test cxxflag__Wconversion - Success
+-- Performing Test cxxflag__Wsign_conversion
+-- Performing Test cxxflag__Wsign_conversion - Success
+-- Performing Test cxxflag__Werror_return_type
+-- Performing Test cxxflag__Werror_return_type - Success
+-- Performing Test cxxflag__Weverything
+-- Performing Test cxxflag__Weverything - Success
+-- Performing Test cxxflag__fdiagnostics_color_always
+-- Performing Test cxxflag__fdiagnostics_color_always - Success
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Release C compiler flags: -O3 -DNDEBUG
+-- Release C++ compiler flags: -O3 -DNDEBUG
+-- Release linker flags for executables: 
+-- Release linker flags for shared libs: 
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for sys/stat.h
+-- Looking for sys/stat.h - found
+-- Looking for fcntl.h
+-- Looking for fcntl.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - found
+-- Looking for io.h
+-- Looking for io.h - not found
+-- Writing config.h
+-- Fetching SQLite amalgamation 3530200 for native ADDRESS demo
+-- cREXX VM core socket TLS backend: NETWORK
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled, skipping subdirectory.
+-- Configuring done (5.9s)
+-- Generating done (0.4s)
+-- Build files have been written to: /private/tmp/crexx-perf2-06-c1b.gQ4Wvm/candidate-build
+[0/2] Re-checking globbed directories...
+[1/45] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[2/45] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[3/45] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[4/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[5/45] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[6/45] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[7/45] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[8/45] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[9/45] Linking C static library bin/librxvmref.a
+[10/45] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[11/45] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[12/45] Linking C static library bin/libplatform.a
+[13/45] Linking C static library bin/libavl_tree.a
+[14/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/interrupt.c.o
+[15/45] Linking C static library bin/librxvmplugin.a
+[16/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[17/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/exitfunc.c.o
+[18/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmload.c.o
+[19/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvml/rxvm_run.c.o
+[20/45] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[21/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[22/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxpafuncs.c.o
+[23/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxcrexxcmd.c.o
+[24/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxspawn.c.o
+[25/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[26/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[27/45] Building C object interpreter/CMakeFiles/rxvm.dir/rxvmmain.c.o
+[28/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[29/45] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[30/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[31/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[32/45] Linking C static library bin/librxpashim.a
+[33/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[34/45] Linking C static library bin/librxpa.a
+[35/45] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[36/45] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[37/45] Linking C static library bin/librxbin.a
+[38/45] Linking C static library bin/libdecnumber.a
+[39/45] Linking C static library bin/rxvm_mc_decimal_manual.a
+[40/45] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[41/45] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[42/45] Linking C executable bin/rxbvm
+[43/45] Building C object interpreter/CMakeFiles/rxvm_core_objects.dir/rxvmintp.c.o
+[44/45] Linking C executable bin/rxvm

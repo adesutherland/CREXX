@@ -1,0 +1,63 @@
+utc=2026-08-18T17:16:05Z
+{ 1.20 1.80 2.10 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+96698 /bin/zsh -c capacity_root=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-08-18-decimal-01-libmpdec-screen/core-capacity-check
+mkdir -p "$capacity_root"
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  uname -a
+  sysctl -n hw.logicalcpu
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|ctest|cmake --build|ninja|make( |$)' || true
+  shasum -a 256 cmake-build-release-mpd/bin/mpd_decimal_core_comparison performance/manifests/decimal-01-libmpdec-core-capacity-check-mac-v1.txt
+} >"$capacity_root/pre-state.txt" 2>&1
+cmake-build-release/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nocolour --nokeep --args --manifest performance/manifests/decimal-01-libmpdec-core-capacity-check-mac-v1.txt --output-dir "$capacity_root/results" --measurement timing --warmups 1 --runs 4 >"$capacity_root/driver.stdout.txt" 2>"$capacity_root/driver.stderr.txt"
+run_rc=$?
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g custom
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxtvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|ctest|cmake --build|ninja|make( |$)' || true
+} >"$capacity_root/post-state.txt" 2>&1
+print "rc=$run_rc"
+tail -n 60 "$capacity_root/driver.stdout.txt"
+tail -n 60 "$capacity_root/driver.stderr.txt"
+exit $run_rc

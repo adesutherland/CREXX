@@ -1,0 +1,2184 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+import rxfnsb
+
+namespace concurrency expose taskpool taskscope task tasktarget taskarguments taskwork taskcontext completion channel channelrequest channelvalue channelcodec byteendpoint serviceref transferbuffer
+
+/** A bounded task execution provider and its lifecycle owner. */
+taskpool: interface
+  /** Create a bounded in-process worker-thread pool.
+   * @param workers maximum concurrently executing tasks
+   * @param admission_capacity maximum accepted or queued tasks
+   * @return a controller-owned pool
+   */
+  local: factory
+    arg workers = .int, admission_capacity = .int
+  /** Create a bounded isolated worker-process pool.
+   * @param workers maximum concurrently executing tasks
+   * @param admission_capacity maximum accepted or queued tasks
+   * @return a controller-owned pool
+   */
+  process: factory
+    arg workers = .int, admission_capacity = .int
+  /** @return provider type 1 for local or 2 for process execution */
+  provider_type: method = .int
+  /** @return configured worker capacity */
+  capacity: method = .int
+  /** @return configured admission capacity */
+  admission_capacity: method = .int
+  /** Reserved telemetry accessor; currently signals unsupported status 19. */
+  queued: method = .int
+  /** Reserved telemetry accessor; currently signals unsupported status 19. */
+  running: method = .int
+  /** Close the pool after every scope using it has closed. */
+  close: method = .void
+
+/** A structured owner for submitted children, cancellation and joining. */
+taskscope: interface
+  /** Create a collect-all scope over the execution-local default pool.
+   * @return a fresh open task scope
+   */
+  default: factory
+  /** Create a scope that requests sibling cancellation on first failure.
+   * @param pool execution provider retained for the scope lifetime
+   * @param timeout_milliseconds relative deadline, or -1 for none
+   * @return a fresh open task scope
+   */
+  failfast: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+  /** Create a scope that accounts for all children without fail-fast cancellation.
+   * @param pool execution provider retained for the scope lifetime
+   * @param timeout_milliseconds relative deadline, or -1 for none
+   * @return a fresh open task scope
+   */
+  collectall: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+  /** Submit one canonical application request to a sealed target.
+   * @param target compiler-created task target
+   * @param request immutable canonical request value
+   * @return structured child wrapper, including rejected submissions
+   */
+  submit: method = .task
+    arg target = .tasktarget, request = .channelvalue
+  /** Compiler bridge for typed task-call argument documents.
+   * @param target compiler-created task target
+   * @param arguments controller-local generated argument builder
+   * @return structured child wrapper, including rejected submissions
+   */
+  submit_arguments: method = .task
+    arg target = .tasktarget, arguments = .taskarguments
+  /** Reserved service-submission surface; currently signals unsupported status 19.
+   * @param service future logical service reference
+   * @param request immutable canonical request value
+   * @return no usable task in the current implementation
+   */
+  ask: method = .task
+    arg service = .serviceref, request = .channelvalue
+  /** Observe the next child in completion order.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
+  next: method = .completion
+    arg wait_milliseconds = .int
+  /** Account for all accepted children in submission order.
+   * @return one terminal completion per accepted or rejected child
+   */
+  join: method = .completion[]
+  /** Request cooperative cancellation of all unfinished children.
+   * @param reason transferable cancellation reason
+   */
+  cancel: method = .void
+    arg reason = .channelvalue
+  /** Close the scope after every child has been accounted for. */
+  close: method = .void
+  /** Join and close, raising TASK_FAILURE when a child failed. */
+  finish: method = .void
+  /** Cancel, join and close the scope during abnormal controller exit.
+   * @param reason transferable cancellation reason
+   */
+  abort: method = .void
+    arg reason = .channelvalue
+  /** Compiler bridge for a successful integer task result.
+   * @param child child belonging to this scope
+   * @return reconstructed integer result
+   */
+  result_integer: method = .int
+    arg child = .task
+  /** Compiler bridge for a successful string task result.
+   * @param child child belonging to this scope
+   * @return reconstructed string result
+   */
+  result_string: method = .string
+    arg child = .task
+  /** Compiler bridge for a successful binary task result.
+   * @param child child belonging to this scope
+   * @return reconstructed binary result
+   */
+  result_binary: method = .binary
+    arg child = .task
+  /** Compiler bridge for codec-backed typed task results.
+   * @param child task whose canonical ChannelValue result is required
+   * @return the successful canonical task result for controller reconstruction
+   */
+  result_value: method = .channelvalue
+    arg child = .task
+
+/** One child submitted to a task scope. */
+task: interface
+  /** @return scope-local positive request identity */
+  identity: method = .int
+  /** @return true after this child has a terminal completion */
+  terminal: method = .boolean
+  /** Request cooperative cancellation of this child.
+   * @param reason transferable cancellation reason
+   */
+  cancel: method = .void
+    arg reason = .channelvalue
+  /** Wait for this specific child.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  /** Observe this child without waiting.
+   * @return terminal completion or an unavailable sentinel
+   */
+  completion: method = .completion
+
+/** A sealed, statically resolved task work descriptor. */
+tasktarget: interface
+  /** Compiler-reserved construction from an assembler/linker-sealed binding.
+   * @param diagnostic_name source-facing task name used in diagnostics
+   * @param signature source-facing canonical task signature
+   * @param binding fixed 80-byte RXTB v1 relocation result
+   */
+  binding: factory
+    arg diagnostic_name = .string, signature = .string, binding = .binary, ?factory_arguments = .channelvalue[]
+  /** @return source-facing diagnostic target name */
+  name: method = .string
+  /** @return canonical source-facing callable signature */
+  signature: method = .string
+
+/** Advanced receiver-side work implemented by user classes. */
+taskwork: interface
+  /** Execute one advanced canonical request in a worker-owned instance.
+   * @param request immutable application request
+   * @param context receiver-side deadline, cancellation and trace view
+   * @return canonical completion value
+   */
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+
+/** Receiver-side cancellation, deadline, trace and endpoint context. */
+taskcontext: interface
+  /** @return remaining scope budget in milliseconds, or -1 for no deadline */
+  timeout_remaining: method = .int
+  /** @return true after cancellation has been requested */
+  cancellation_requested: method = .boolean
+  /** @return stable trace identity for this invocation */
+  trace_identity: method = .string
+  /** Adapt a transferable provider reference to a worker-local byte endpoint.
+   * The returned adapter is local to the receiving worker; the transferable
+   * provider reference remains the cross-execution value.
+   * @param provider_reference canonical type-4 provider reference
+   * @return worker-local endpoint adapter
+   */
+  endpoint: method = .byteendpoint
+    arg provider_reference = .channelvalue
+
+/** A terminal task/request outcome, or an unavailable observation sentinel. */
+completion: interface
+  /** @return true when this object describes a terminal request */
+  available: method = .boolean
+  /** @return request identity, or zero for an unavailable sentinel */
+  request_identity: method = .int
+  /** @return monotonic provider completion sequence, or zero when unavailable */
+  sequence: method = .int
+  /** @return terminal provider state, or zero when unavailable */
+  state: method = .int
+  /** @return true only for an available successful completion */
+  succeeded: method = .boolean
+  /** @return true when a successful completion carries a value */
+  has_value: method = .boolean
+  /** Return the canonical result.
+   * @return successful value; signals CHANNEL_ERROR when no value is present
+   */
+  value: method = .channelvalue
+  /** @return zero on success or the provider/runtime status code */
+  error_code: method = .int
+  /** @return human-readable failure summary */
+  message: method = .string
+  /** @return structured provider-specific diagnostic details */
+  details: method = .channelvalue
+
+/** Provider-neutral bounded request/completion transport. */
+channel: interface
+  /** Open one core or extension provider.
+   * @param provider_type provider number, such as 1 local tasks or 4 byte endpoints
+   * @param required_capabilities capability bit mask required by the caller
+   * @param configuration canonical provider configuration
+   * @return controller-owned channel
+   */
+  open: factory
+    arg provider_type = .int, required_capabilities = .int, configuration = .channelvalue
+  /** @return provider type selected at open */
+  provider_type: method = .int
+  /** @return capability bits supplied by the opened provider */
+  capabilities: method = .int
+  /** Start one bounded asynchronous provider request.
+   * @param envelope canonical request envelope
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return request wrapper, including immediate rejected completions
+   */
+  start: method = .channelrequest
+    arg envelope = .channelvalue, wait_milliseconds = .int
+  /** Observe the next request in completion order.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  /** Request cancellation of one request owned by this channel.
+   * @param request request wrapper created by this channel
+   * @param reason transferable cancellation reason
+   */
+  cancel: method = .void
+    arg request = .channelrequest, reason = .channelvalue
+  /** Close the channel and invalidate its request capabilities.
+   * @param mode 1 drains accepted work; 2 requests cancellation
+   */
+  close: method = .void
+    arg mode = .int
+
+/** Public non-authority wrapper around one channel request. */
+channelrequest: interface
+  /** @return channel-local positive request identity */
+  identity: method = .int
+  /** @return true after this request has a terminal completion */
+  terminal: method = .boolean
+  /** Request cancellation through the owning channel.
+   * @param reason transferable cancellation reason
+   */
+  cancel: method = .void
+    arg reason = .channelvalue
+  /** Wait for this specific request.
+   * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
+   * @return terminal completion or an unavailable sentinel
+   */
+  wait: method = .completion
+    arg wait_milliseconds = .int
+  /** Observe this request without waiting.
+   * @return terminal completion or an unavailable sentinel
+   */
+  completion: method = .completion
+
+/** Immutable canonical portable value tree used by every channel boundary. */
+channelvalue: interface
+  /** @return the canonical null value */
+  null_value: factory
+  /** Construct a boolean value.
+   * @param item boolean value
+   * @return canonical boolean value
+   */
+  boolean_value: factory
+    arg item = .boolean
+  /** Construct an integer value.
+   * @param item signed integer value
+   * @return canonical integer value
+   */
+  integer_value: factory
+    arg item = .int
+  /** Construct a floating-point value.
+   * @param item binary64 value
+   * @return canonical float value
+   */
+  float_value: factory
+    arg item = .float
+  /** Construct a decimal value.
+   * @param item decimal value
+   * @return canonical normalized decimal value
+   */
+  decimal_value: factory
+    arg item = .decimal
+  /** Construct a string value.
+   * @param item UTF-8 string value
+   * @return canonical string value
+   */
+  string_value: factory
+    arg item = .string
+  /** Construct a binary value.
+   * @param item binary value
+   * @return canonical binary value
+   */
+  binary_value: factory
+    arg item = .binary
+  /** @param items ordered canonical children @return canonical array value */
+  array_value: factory
+    arg items = .channelvalue[]
+  /** Construct a canonical named record.
+   * @param schema application schema name
+   * @param version positive application schema version
+   * @param names unique field names
+   * @param values values corresponding one-for-one with names
+   * @return record with fields in canonical byte-name order
+   */
+  record_value: factory
+    arg schema = .string, version = .int, names = .string[], values = .channelvalue[]
+  /** @return canonical RXCV type code */
+  type_code: method = .int
+  /** @return record schema, or empty string for a non-record */
+  schema: method = .string
+  /** @return record schema version, or zero for a non-record */
+  version: method = .int
+  /** @return child count for an array or record */
+  count: method = .int
+  /** Return a one-based array child.
+   * @param index one-based child index
+   * @return selected canonical child
+   */
+  item: method = .channelvalue
+    arg index = .int
+  /** Return a record child by exact field name.
+   * @param name field name
+   * @return selected canonical child
+   */
+  field: method = .channelvalue
+    arg name = .string
+  /** @return this value decoded as boolean */
+  as_boolean: method = .boolean
+  /** @return this value decoded as signed integer */
+  as_integer: method = .int
+  /** @return this value decoded as binary64 */
+  as_float: method = .float
+  /** @return this value decoded as decimal */
+  as_decimal: method = .decimal
+  /** @return this value decoded as UTF-8 string */
+  as_string: method = .string
+  /** @return this value decoded as binary */
+  as_binary: method = .binary
+  /** @return exact canonical RXCV document bytes */
+  encode: method = .binary
+
+/** Exact application-domain value codec contract. */
+channelcodec: interface
+  /** @return application schema name */
+  schema: method = .string
+  /** @return positive application schema version */
+  version: method = .int
+  /** Encode one application object.
+   * @param item application value owned by the caller
+   * @return canonical transferable value
+   */
+  encode: method = .channelvalue
+    arg item = .object
+  /** Reconstruct one application object.
+   * @param item canonical value matching this codec's schema and version
+   * @return newly owned application value
+   */
+  decode: method = .object
+    arg item = .channelvalue
+
+/** Reusable bounded byte source, sink or duplex endpoint. */
+byteendpoint: interface
+  /** Create a bounded in-memory byte endpoint.
+   * @param direction 1 readable, 2 writable, or 3 duplex
+   * @param capacity maximum buffered bytes
+   * @return controller-owned endpoint adapter
+   */
+  memory: factory
+    arg direction = .int, capacity = .int
+  /** Create an endpoint that discards writes or reports immediate read EOF.
+   * @param direction 1 readable, 2 writable, or 3 duplex
+   * @return controller-owned null endpoint adapter
+   */
+  null_endpoint: factory
+    arg direction = .int
+  /** Attach to a transferable type-4 provider reference.
+   * @param provider_reference canonical provider reference
+   * @return runtime-scoped endpoint adapter
+   */
+  from_reference: factory
+    arg provider_reference = .channelvalue
+  /** Attach an exact encoded type-4 provider reference.
+   * @param encoded canonical 92-byte RXCV type-4 provider-reference document
+   * @return an adapter to the referenced runtime-scoped byte endpoint
+   */
+  from_encoded_reference: factory
+    arg encoded = .binary
+  /** @return transferable canonical reference to this endpoint */
+  provider_reference: method = .channelvalue
+  /** Start one bounded read.
+   * @param maximum_bytes maximum bytes accepted in the completion
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return asynchronous request wrapper
+   */
+  start_read: method = .channelrequest
+    arg maximum_bytes = .int, wait_milliseconds = .int
+  /** Start one bounded write.
+   * @param bytes bytes offered to the endpoint
+   * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
+   * @return request whose value is the accepted byte count
+   */
+  start_write: method = .channelrequest
+    arg bytes = .binary, wait_milliseconds = .int
+  /** Publish EOF in one direction while retaining the other.
+   * @param direction 1 read side or 2 write side
+   */
+  half_close: method = .void
+    arg direction = .int
+  /** Cancel outstanding endpoint requests.
+   * @param reason transferable cancellation reason
+   */
+  cancel: method = .void
+    arg reason = .channelvalue
+  /** Release this endpoint adapter. */
+  close: method = .void
+
+/** Transferable logical identity of a future single-owner service.
+ * This interface is reserved; no concrete public service is implemented.
+ */
+serviceref: interface
+  /** @return future application service type */
+  service_type: method = .string
+  /** @return future transferable provider reference */
+  provider_reference: method = .channelvalue
+
+/** Mutable-owner binary storage with explicit move and immutable seal states. */
+transferbuffer: interface
+  /** Allocate empty mutable storage.
+   * @param capacity maximum byte length
+   * @return controller-owned mutable buffer
+   */
+  allocate: factory
+    arg capacity = .int
+  /** Copy bytes into newly owned mutable storage.
+   * @param bytes initial contents
+   * @return controller-owned mutable buffer
+   */
+  copy_from: factory
+    arg bytes = .binary
+  /** @return current logical byte length */
+  size: method = .int
+  /** @return maximum logical byte length */
+  capacity: method = .int
+  /** @return true while writes and an ownership transfer remain permitted */
+  mutable: method = .boolean
+  /** Replace bytes within the current logical extent.
+   * @param offset zero-based byte offset
+   * @param bytes replacement bytes
+   */
+  write: method = .void
+    arg offset = .int, bytes = .binary
+  /** Copy a byte range.
+   * @param offset zero-based byte offset
+   * @param length number of bytes to copy
+   * @return independent binary value
+   */
+  read: method = .binary
+    arg offset = .int, length = .int
+  /** Move the backing bytes across one channel boundary and invalidate mutation.
+   * @return canonical local-capability transfer value
+   */
+  move_value: method = .channelvalue
+  /** Freeze a stable immutable byte snapshot.
+   * Sealing is not encryption, authentication or a checksum.
+   * @return canonical binary value containing the snapshot
+   */
+  seal: method = .channelvalue
+
+/* RXCV helpers. All byte offsets are zero-based and integers are little-endian. */
+
+_channel_error: procedure
+  arg operation = .string, status = .int
+  message = operation || " status=" || status
+  assembler signal "CHANNEL_ERROR",message
+  return
+
+_channel_require: procedure
+  arg condition = .boolean, operation = .string
+  if condition = 0 then call _channel_error operation, 1
+  return
+
+_task_failure: procedure
+  arg item = .completion
+  message = item.message() || " status=" || item.error_code()
+  assembler signal "TASK_FAILURE",message
+  return
+
+_cv_node: procedure = .binary
+  arg tag = .int, payload = .binary
+  result = '000000000000000000000000'x as .binary
+  payload_length = 0
+  <at..u8>(0) result = tag
+  assembler blen payload_length,payload
+  <at..int>(4) result = payload_length
+  assembler bappend result,payload
+  return result
+
+_cv_merge_flags: procedure = .int
+  arg left_flags = .int, right_flags = .int
+  if right_flags = 0 then return left_flags
+  if left_flags = 0 then return right_flags
+  if left_flags = right_flags then return left_flags
+  return 3
+
+_cv_name_compare: procedure = .int
+  arg left = .string, right = .string
+  left_bytes = left as .binary
+  right_bytes = right as .binary
+  left_length = 0
+  right_length = 0
+  assembler blen left_length,left_bytes
+  assembler blen right_length,right_bytes
+  common = left_length
+  if right_length < common then common = right_length
+  do offset = 0 to common - 1
+    left_byte = 0
+    right_byte = 0
+    assembler getbyte left_byte,left_bytes,offset
+    assembler getbyte right_byte,right_bytes,offset
+    if left_byte < right_byte then return -1
+    if left_byte > right_byte then return 1
+  end
+  if left_length < right_length then return -1
+  if left_length > right_length then return 1
+  return 0
+
+_cv_flags_at: procedure = .int
+  arg bytes = .binary, offset = .int
+  tag = <at..u8>(offset) bytes
+  if tag = 10 then return 1
+  if tag = 11 then return 2
+  if tag = 8 then do
+    count = <at..int>(offset + 12) bytes
+    child = offset + 20
+    flags = 0
+    do i = 1 to count
+      flags = _cv_merge_flags(flags, _cv_flags_at(bytes, child))
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return flags
+  end
+  if tag = 9 then do
+    schema_length = <at..int>(offset + 12) bytes
+    fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
+    child = offset + 32 + schema_length
+    flags = .int
+    flags = 0
+    do i = .int(1) to fields
+      name_length = <at..int>(child) bytes
+      child = child + 8 + name_length
+      flags = _cv_merge_flags(flags, _cv_flags_at(bytes, child))
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return flags
+  end
+  return 0
+
+_cv_depth_at: procedure = .int
+  arg bytes = .binary, offset = .int
+  tag = <at..u8>(offset) bytes
+  if tag = 8 then do
+    count = <at..int>(offset + 12) bytes
+    child = offset + 20
+    maximum = 0
+    do i = 1 to count
+      depth = _cv_depth_at(bytes, child)
+      if depth > maximum then maximum = depth
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return maximum + 1
+  end
+  if tag = 9 then do
+    schema_length = <at..int>(offset + 12) bytes
+    fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
+    child = offset + 32 + schema_length
+    maximum = .int
+    maximum = 0
+    do i = .int(1) to fields
+      name_length = <at..int>(child) bytes
+      child = child + 8 + name_length
+      depth = .int
+      depth = _cv_depth_at(bytes, child)
+      if depth > maximum then maximum = depth
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return maximum + 1
+  end
+  return 1
+
+_cv_members_at: procedure = .int
+  arg bytes = .binary, offset = .int
+  tag = <at..u8>(offset) bytes
+  if tag = 8 then do
+    count = <at..int>(offset + 12) bytes
+    child = offset + 20
+    members = count
+    do i = 1 to count
+      members = members + _cv_members_at(bytes, child)
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return members
+  end
+  if tag = 9 then do
+    schema_length = <at..int>(offset + 12) bytes
+    fields = <at..int>(offset + 24 + schema_length) bytes
+    child = .int
+    child = offset + 32 + schema_length
+    members = .int
+    members = fields
+    do i = .int(1) to fields
+      name_length = <at..int>(child) bytes
+      child = child + 8 + name_length
+      members = members + _cv_members_at(bytes, child)
+      child = child + 12 + <at..int>(child + 4) bytes
+    end
+    return members
+  end
+  return 0
+
+_cv_document: procedure = .binary
+  arg node = .binary
+  result = '52584356010000000000000000000000'x as .binary
+  node_length = 0
+  flags = _cv_flags_at(node, 0)
+  <at..u16>(6) result = flags
+  assembler blen node_length,node
+  call _channel_require node_length <= 16777200, "channelvalue.document.size"
+  call _channel_require _cv_depth_at(node, 0) <= 64, "channelvalue.document.depth"
+  call _channel_require _cv_members_at(node, 0) <= 1048576, "channelvalue.document.members"
+  <at..int>(8) result = 16 + node_length
+  assembler bappend result,node
+  return result
+
+_cv_root_node: procedure = .binary
+  arg document = .binary
+  result = .binary
+  byte_count = <at..int>(20) document + 12
+  start = 16
+  assembler bslice result,document,start,byte_count
+  return result
+
+_cv_from_node: procedure = .channelvalue
+  arg document = .binary, offset = .int
+  node = .binary
+  length = <at..int>(offset + 4) document + 12
+  assembler bslice node,document,offset,length
+  return .channelvalue_impl.from_encoded(_cv_document(node))
+
+_cv_integer: procedure = .channelvalue
+  arg item = .int
+  payload = '0000000000000000'x as .binary
+  <at..int>(0) payload = item
+  return .channelvalue_impl.from_encoded(_cv_document(_cv_node(3, payload)))
+
+_cv_string: procedure = .channelvalue
+  arg item = .string
+  payload = item as .binary
+  return .channelvalue_impl.from_encoded(_cv_document(_cv_node(6, payload)))
+
+_cv_binary: procedure = .channelvalue
+  arg item = .binary
+  return .channelvalue_impl.from_encoded(_cv_document(_cv_node(7, item)))
+
+_cv_array_two: procedure = .channelvalue[]
+  arg first = .channelvalue, second = .channelvalue
+  result = .channelvalue[2]
+  result[1] = first
+  result[2] = second
+  return result
+
+/** Canonical RXCV-backed implementation of `.channelvalue`. */
+channelvalue_impl: class implements .channelvalue
+  _encoded = .binary
+
+  null_value: factory
+    _encoded = _cv_document(_cv_node(0, ''x as .binary))
+    return
+
+  boolean_value: factory
+    arg item = .boolean
+    if item then _encoded = _cv_document(_cv_node(2, ''x as .binary))
+    else _encoded = _cv_document(_cv_node(1, ''x as .binary))
+    return
+
+  integer_value: factory
+    arg item = .int
+    payload = '0000000000000000'x as .binary
+    <at..int>(0) payload = item
+    _encoded = _cv_document(_cv_node(3, payload))
+    return
+
+  float_value: factory
+    arg item = .float
+    if item <> item then payload = '000000000000F87F'x as .binary
+    else do
+      payload = '0000000000000000'x as .binary
+      <at..float>(0) payload = item
+    end
+    _encoded = _cv_document(_cv_node(4, payload))
+    return
+
+  decimal_value: factory
+    arg item = .decimal
+    text = item as .string
+    sign = 0
+    exponent = 0
+    if left(text, 1) = "-" then do
+      sign = 1
+      text = substr(text, 2)
+    end
+    epos = pos("E", translate(text))
+    if epos > 0 then do
+      exponent = substr(text, epos + 1) as .int
+      text = left(text, epos - 1)
+    end
+    point = pos(".", text)
+    if point > 0 then do
+      exponent = exponent - (length(text) - point)
+      text = left(text, point - 1) || substr(text, point + 1)
+    end
+    do while length(text) > 1 & left(text, 1) = "0"
+      text = substr(text, 2)
+    end
+    do while length(text) > 1 & right(text, 1) = "0"
+      text = left(text, length(text) - 1)
+      exponent = exponent + 1
+    end
+    if text = "" | text = "0" then do
+      text = "0"
+      sign = 0
+      exponent = 0
+    end
+    payload = '00000000000000000000000000'x as .binary
+    <at..u8>(0) payload = sign
+    <at..i32>(1) payload = exponent
+    <at..int>(5) payload = length(text)
+    do i = 1 to length(text)
+      digit = d2c(c2d(substr(text, i, 1)) - 48) as .binary
+      assembler bappend payload,digit
+    end
+    _encoded = _cv_document(_cv_node(5, payload))
+    return
+
+  string_value: factory
+    arg item = .string
+    _encoded = _cv_document(_cv_node(6, item as .binary))
+    return
+
+  binary_value: factory
+    arg item = .binary
+    _encoded = _cv_document(_cv_node(7, item))
+    return
+
+  array_value: factory
+    arg items = .channelvalue[]
+    payload = '0000000000000000'x as .binary
+    <at..int>(0) payload = items[0]
+    do i = 1 to items[0]
+      value = items[i] as .channelvalue_impl
+      node = _cv_root_node(value.encode())
+      assembler bappend payload,node
+    end
+    _encoded = _cv_document(_cv_node(8, payload))
+    return
+
+  record_value: factory
+    arg schema = .string, version = .int, names = .string[], values = .channelvalue[]
+    call _channel_require schema <> "", "channelvalue.record.schema"
+    call _channel_require version >= 0 & version <= 4294967295, "channelvalue.record.version"
+    call _channel_require names[0] = values[0], "channelvalue.record.fields"
+    sorted_names = .string[]
+    sorted_values = .channelvalue[]
+    do i = 1 to names[0]
+      call _channel_require names[i] <> "", "channelvalue.record.name"
+      sorted_names[i] = names[i]
+      sorted_values[i] = values[i]
+    end
+    do i = .int(2) to names[0]
+      name = sorted_names[i]
+      value = sorted_values[i]
+      j = i - 1
+      do while j >= 1
+        comparison = _cv_name_compare(sorted_names[j], name)
+        if comparison <= 0 then leave
+        sorted_names[j + 1] = sorted_names[j]
+        sorted_values[j + 1] = sorted_values[j]
+        j = j - 1
+      end
+      sorted_names[j + 1] = name
+      sorted_values[j + 1] = value
+    end
+    payload = '0000000000000000'x as .binary
+    schema_bytes = schema as .binary
+    schema_length = 0
+    assembler blen schema_length,schema_bytes
+    <at..int>(0) payload = schema_length
+    assembler bappend payload,schema_bytes
+    trailer = '000000000000000000000000'x as .binary
+    <at..u32>(0) trailer = version
+    <at..int>(4) trailer = names[0]
+    assembler bappend payload,trailer
+    do i = .int(1) to names[0]
+      if i > 1 then call _channel_require sorted_names[i] <> sorted_names[i - 1], "channelvalue.record.duplicate"
+      name_bytes = sorted_names[i] as .binary
+      name_length = 0
+      assembler blen name_length,name_bytes
+      prefix = '0000000000000000'x as .binary
+      <at..int>(0) prefix = name_length
+      assembler bappend payload,prefix
+      assembler bappend payload,name_bytes
+      value = .channelvalue_impl
+      value = sorted_values[i] as .channelvalue_impl
+      node = _cv_root_node(value.encode())
+      assembler bappend payload,node
+    end
+    _encoded = _cv_document(_cv_node(9, payload))
+    return
+
+  from_encoded: factory
+    arg encoded = .binary
+    _encoded = encoded
+    return
+
+  local_capability: factory
+    arg capability = .int, expected_kind = .int, provider = .int
+    payload = '000000000000000000000000000000000000000000000000'x as .binary
+    <at..int>(0) payload = capability
+    <at..u8>(8) payload = expected_kind
+    <at..int>(16) payload = provider
+    _encoded = _cv_document(_cv_node(11, payload))
+    return
+
+  provider_reference_type: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.type"
+    return <at..int>(28) _encoded
+
+  provider_reference_rights: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.rights"
+    return <at..u32>(40) _encoded
+
+  provider_reference_scope: method = .int
+    call _channel_require type_code() = 10, "channelvalue.provider-reference.scope"
+    return <at..u8>(44) _encoded
+
+  type_code: method = .int
+    return <at..u8>(16) _encoded
+
+  schema: method = .string
+    call _channel_require type_code() = 9, "channelvalue.schema"
+    length = <at..int>(28) _encoded
+    return <at..string>(36, length) _encoded
+
+  version: method = .int
+    call _channel_require type_code() = 9, "channelvalue.version"
+    length = <at..int>(28) _encoded
+    return <at..u32>(36 + length) _encoded
+
+  count: method = .int
+    tag = type_code()
+    if tag = 8 then return <at..int>(28) _encoded
+    if tag = 9 then do
+      length = <at..int>(28) _encoded
+      return <at..int>(40 + length) _encoded
+    end
+    call _channel_error "channelvalue.count", 1
+    return 0
+
+  item: method = .channelvalue
+    arg index = .int
+    call _channel_require type_code() = 8, "channelvalue.item.type"
+    count = <at..int>(28) _encoded
+    call _channel_require index >= 1 & index <= count, "channelvalue.item.index"
+    offset = 36
+    do i = 1 to index - 1
+      offset = offset + 12 + <at..int>(offset + 4) _encoded
+    end
+    return _cv_from_node(_encoded, offset)
+
+  field: method = .channelvalue
+    arg name = .string
+    call _channel_require type_code() = 9, "channelvalue.field.type"
+    schema_length = <at..int>(28) _encoded
+    fields = <at..int>(40 + schema_length) _encoded
+    offset = 48 + schema_length
+    do i = 1 to fields
+      name_length = <at..int>(offset) _encoded
+      current = <at..string>(offset + 8, name_length) _encoded
+      offset = offset + 8 + name_length
+      if current = name then return _cv_from_node(_encoded, offset)
+      offset = offset + 12 + <at..int>(offset + 4) _encoded
+    end
+    call _channel_error "channelvalue.field.missing", 1
+    return .channelvalue.null_value()
+
+  as_boolean: method = .boolean
+    tag = type_code()
+    call _channel_require tag = 1 | tag = 2, "channelvalue.as_boolean"
+    return tag = 2
+
+  as_integer: method = .int
+    call _channel_require type_code() = 3, "channelvalue.as_integer"
+    return <at..int>(28) _encoded
+
+  as_float: method = .float
+    call _channel_require type_code() = 4, "channelvalue.as_float"
+    return <at..float>(28) _encoded
+
+  as_decimal: method = .decimal
+    call _channel_require type_code() = 5, "channelvalue.as_decimal"
+    sign = <at..u8>(28) _encoded
+    exponent = <at..i32>(29) _encoded
+    count = <at..int>(33) _encoded
+    text = ""
+    do i = 1 to count
+      text = text || (<at..u8>(40 + i) _encoded)
+    end
+    if exponent <> 0 then text = text || "E" || exponent
+    if sign then text = "-" || text
+    return text as .decimal
+
+  as_string: method = .string
+    call _channel_require type_code() = 6, "channelvalue.as_string"
+    length = <at..int>(20) _encoded
+    return <at..string>(28, length) _encoded
+
+  as_binary: method = .binary
+    call _channel_require type_code() = 7, "channelvalue.as_binary"
+    result = .binary
+    byte_count = <at..int>(20) _encoded
+    start = 28
+    assembler bslice result,_encoded,start,byte_count
+    return result
+
+  encode: method = .binary
+    return _encoded
+
+/** Copy-first F1 implementation of the TransferBuffer ownership contract. */
+transferbuffer_impl: class implements .transferbuffer
+  _bytes = .binary
+  _size = .int
+  _capacity = .int
+  _state = .int
+  _sealed = .channelvalue_impl
+
+  allocate: factory
+    arg capacity = .int
+    call _channel_require capacity > 0, "transferbuffer.allocate"
+    assembler bresize _bytes,capacity
+    _size = 0
+    _capacity = capacity
+    _state = 0
+    return
+
+  copy_from: factory
+    arg bytes = .binary
+    _bytes = bytes
+    assembler blen _size,_bytes
+    _capacity = _size
+    _state = 0
+    return
+
+  size: method = .int
+    return _size
+
+  capacity: method = .int
+    return _capacity
+
+  mutable: method = .boolean
+    return _state = 0
+
+  write: method = .void
+    arg offset = .int, bytes = .binary
+    call _channel_require _state = 0, "transferbuffer.write.state"
+    length = 0
+    assembler blen length,bytes
+    call _channel_require offset >= 0 & offset <= _capacity & length <= _capacity - offset, "transferbuffer.write.range"
+    assembler bupdate _bytes,offset,bytes
+    if offset + length > _size then _size = offset + length
+    return
+
+  read: method = .binary
+    arg offset = .int, length = .int
+    call _channel_require _state <> 1, "transferbuffer.read.moved"
+    call _channel_require offset >= 0 & length >= 0 & offset <= _size & length <= _size - offset, "transferbuffer.read.range"
+    result = .binary
+    assembler bslice result,_bytes,offset,length
+    return result
+
+  move_value: method = .channelvalue
+    call _channel_require _state = 0, "transferbuffer.move.state"
+    copied = .binary
+    source_bytes = _bytes
+    start = 0
+    byte_count = _size
+    assembler bslice copied,source_bytes,start,byte_count
+    moved_value = .channelvalue.binary_value(copied)
+    _state = 1
+    return moved_value
+
+  seal: method = .channelvalue
+    call _channel_require _state <> 1, "transferbuffer.seal.moved"
+    if _state = 0 then do
+      copied = .binary
+      source_bytes = _bytes
+      start = 0
+      byte_count = _size
+      assembler bslice copied,source_bytes,start,byte_count
+      _sealed = .channelvalue_impl.binary_value(copied)
+      _state = 2
+    end
+    return _sealed
+
+/** Canonical completion implementation. */
+completion_impl: class implements .completion
+  _available = .boolean
+  _identity = .int
+  _sequence = .int
+  _state = .int
+  _result = .channelvalue_impl
+  _error_code = .int
+  _message = .string
+  _details = .channelvalue_impl
+
+  none: factory
+    _available = 0
+    _identity = 0
+    _sequence = 0
+    _state = 0
+    _result = .channelvalue_impl.null_value()
+    _error_code = 0
+    _message = ""
+    _details = .channelvalue_impl.null_value()
+    return
+
+  from_encoded: factory
+    arg encoded = .binary, identity = .int
+    record = .channelvalue_impl.from_encoded(encoded)
+    _available = 1
+    _identity = identity
+    _sequence = record.field("sequence").as_integer()
+    _state = record.field("state").as_integer()
+    _result = record.field("result") as .channelvalue_impl
+    _error_code = record.field("errorCode").as_integer()
+    _message = record.field("message").as_string()
+    _details = record.field("details") as .channelvalue_impl
+    return
+
+  synthetic: factory
+    arg identity = .int, sequence = .int, state = .int, error_code = .int, message = .string, details = .channelvalue
+    _available = 1
+    _identity = identity
+    _sequence = sequence
+    _state = state
+    _result = .channelvalue_impl.null_value()
+    _error_code = error_code
+    _message = message
+    _details = details as .channelvalue_impl
+    return
+
+  available: method = .boolean
+    return _available
+
+  request_identity: method = .int
+    return _identity
+
+  sequence: method = .int
+    return _sequence
+
+  state: method = .int
+    return _state
+
+  succeeded: method = .boolean
+    return _available & _state = 1
+
+  has_value: method = .boolean
+    if _available = 0 then return 0
+    tag = _result.type_code()
+    return tag <> 0
+
+  value: method = .channelvalue
+    call _channel_require has_value(), "completion.value"
+    return _result
+
+  error_code: method = .int
+    return _error_code
+
+  message: method = .string
+    return _message
+
+  details: method = .channelvalue
+    return _details
+
+_channel_wait_microseconds: procedure = .int
+  arg milliseconds = .int
+  call _channel_require milliseconds >= -1, "channel.wait.range"
+  call _channel_require milliseconds <= 9223372036854775, "channel.wait.overflow"
+  if milliseconds < 0 then return -1
+  return milliseconds * 1000
+
+_channel_time_microseconds: procedure = .int
+  result = 0
+  assembler mtime result
+  return result
+
+_channel_elapsed_microseconds: procedure = .int
+  arg started = .int, finished = .int
+  elapsed = finished - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+/** RXAS-ticket wrapper. Raw ticket authority remains private. */
+channelrequest_impl: class implements .channelrequest
+  _owner = reference .channel_impl
+  _ticket = .int
+  _identity = .int
+  _terminal = .boolean
+  _cached = .completion_impl
+
+  new: factory
+    arg owner = reference .channel_impl, ticket = .int, identity = .int
+    _owner = owner
+    _ticket = ticket
+    _identity = identity
+    _terminal = 0
+    _cached = .completion_impl.none()
+    return
+
+  rejected: factory
+    arg owner = reference .channel_impl, identity = .int, sequence = .int, status = .int
+    _owner = owner
+    _ticket = 0
+    _identity = identity
+    _terminal = 1
+    _cached = .completion_impl.synthetic(identity, sequence, 5, status, "task submission rejected", .channelvalue.null_value())
+    return
+
+  identity: method = .int
+    return _identity
+
+  terminal: method = .boolean
+    if _terminal then return 1
+    observed = completion()
+    return observed.available()
+
+  cancel: method = .void
+    arg reason = .channelvalue
+    if _terminal then return
+    owner = dereference _owner
+    call owner.cancel_ticket(_ticket, reason)
+    return
+
+  wait: method = .completion
+    arg wait_milliseconds = .int
+    if _terminal then return _cached
+    owner = dereference _owner
+    item = owner.wait_for(_ticket, wait_milliseconds)
+    if item.available() then call set_completion(item)
+    return item
+
+  completion: method = .completion
+    return wait(0)
+
+  raw_ticket: method = .int
+    return _ticket
+
+  cached: method = .completion_impl
+    return _cached
+
+  set_completion: method = .void
+    arg item = .completion_impl
+    if _terminal = 0 then do
+      _cached = item
+      _terminal = 1
+    end
+    return
+
+/** Level B lifecycle owner for one RXAS channel capability. */
+channel_impl: class implements .channel
+  _provider = .int
+  _capabilities = .int
+  _handle = .int
+  _closed = .boolean
+  _next_identity = .int
+  _tickets = .int[]
+  _identities = .int[]
+  _terminals = .boolean[]
+  _completions = .completion_impl[]
+
+  open: factory
+    arg provider_type = .int, required_capabilities = .int, configuration = .channelvalue
+    config = configuration as .channelvalue_impl
+    encoded = config.encode()
+    status = 0
+    handle = 0
+    assembler chanopen status,handle,provider_type,required_capabilities,encoded
+    if status <> 0 then call _channel_error "chanopen", status
+    _provider = provider_type
+    if provider_type = 1 then _capabilities = 15
+    else _capabilities = required_capabilities
+    _handle = handle
+    _closed = 0
+    _next_identity = 0
+    tickets = .int[1]
+    identities = .int[1]
+    terminals = .boolean[1]
+    completions = .completion_impl[1]
+    tickets[1] = 0
+    identities[1] = 0
+    terminals[1] = 0
+    empty_completion = .completion_impl
+    completions[1] = empty_completion
+    assembler SETATTRS tickets,0
+    assembler SETATTRS identities,0
+    assembler SETATTRS terminals,0
+    assembler SETATTRS completions,0
+    _tickets = tickets
+    _identities = identities
+    _terminals = terminals
+    _completions = completions
+    return
+
+  provider_type: method = .int
+    return _provider
+
+  capabilities: method = .int
+    return _capabilities
+
+  start: method = .channelrequest
+    arg envelope = .channelvalue, wait_milliseconds = .int
+    call _channel_require _closed = 0, "channel.start.closed"
+    value = envelope as .channelvalue_impl
+    encoded = value.encode()
+    wait_microseconds = _channel_wait_microseconds(wait_milliseconds)
+    status = 0
+    ticket = 0
+    assembler chanstart status,ticket,_handle,encoded,wait_microseconds
+    if status <> 0 then call _channel_error "chanstart", status
+    _next_identity = _next_identity + 1
+    request = .channelrequest_impl.new(reference self, ticket, _next_identity)
+    index = _tickets[0] + 1
+    _tickets[index] = ticket
+    _identities[index] = _next_identity
+    _terminals[index] = 0
+    return request
+
+  start_structured: method = .channelrequest_impl
+    arg envelope = .channelvalue
+    call _channel_require _closed = 0, "channel.start.closed"
+    value = envelope as .channelvalue_impl
+    encoded = value.encode()
+    wait_microseconds = -1
+    status = 0
+    ticket = 0
+    _next_identity = _next_identity + 1
+    assembler chanstart status,ticket,_handle,encoded,wait_microseconds
+    if status = 0 then do
+      index = _tickets[0] + 1
+      _tickets[index] = ticket
+      _identities[index] = _next_identity
+      _terminals[index] = 0
+      return .channelrequest_impl.new(reference self, ticket, _next_identity)
+    end
+    return .channelrequest_impl.rejected(reference self, _next_identity, _next_identity, status)
+
+  wait: method = .completion
+    arg wait_milliseconds = .int
+    call _channel_require _closed = 0, "channel.wait.closed"
+    wait_microseconds = _channel_wait_microseconds(wait_milliseconds)
+    status = 0
+    encoded = .binary
+    assembler chanwait status,encoded,_handle,wait_microseconds
+    if status = 10 | status = 11 then return .completion_impl.none()
+    if status <> 0 then call _channel_error "chanwait", status
+    record = .channelvalue_impl.from_encoded(encoded)
+    ticket = record.field("ticket").as_integer()
+    do i = 1 to _tickets[0]
+      if _tickets[i] = ticket then do
+        item = .completion_impl.from_encoded(encoded, _identities[i])
+        _completions[i] = item
+        _terminals[i] = 1
+        return item
+      end
+    end
+    call _channel_error "chanwait.unknown-ticket ticket=" || ticket || " tracked=" || _tickets[0], 15
+    return .completion_impl.none()
+
+  cancel: method = .void
+    arg request = .channelrequest, reason = .channelvalue
+    concrete = request as .channelrequest_impl
+    call cancel_ticket concrete.raw_ticket(), reason
+    return
+
+  close: method = .void
+    arg mode = .int
+    call _channel_require _closed = 0, "channel.close.closed"
+    call _channel_require mode = 1 | mode = 2, "channel.close.mode"
+    status = 0
+    assembler chanclose status,_handle,mode
+    _closed = 1
+    if status <> 0 then call _channel_error "chanclose", status
+    return
+
+  cancel_ticket: method = .void
+    arg ticket = .int, reason = .channelvalue
+    call _channel_require _closed = 0, "channel.cancel.closed"
+    value = reason as .channelvalue_impl
+    encoded = value.encode()
+    status = 0
+    assembler chancancel status,_handle,ticket,encoded
+    if status <> 0 & status <> 16 then call _channel_error "chancancel", status
+    return
+
+  wait_for: method = .completion_impl
+    arg ticket = .int, wait_milliseconds = .int
+    remaining_microseconds = _channel_wait_microseconds(wait_milliseconds)
+    observed = .completion_impl
+    if remaining_microseconds > 0 then started = _channel_time_microseconds()
+    do i = 1 to _tickets[0]
+      if _tickets[i] = ticket then do
+        if _terminals[i] then return _completions[i]
+        leave
+      end
+    end
+    do forever
+      if remaining_microseconds > 0 then do
+        -- Convert the remaining microseconds to a ceiling millisecond wait.
+        -- Subtracting before division keeps the maximum accepted bound safe
+        -- from overflow under the default numeric_common integer semantics.
+        next_wait = ((remaining_microseconds - 1) / 1000) + 1
+        observed = wait(next_wait) as .completion_impl
+      end
+      else observed = wait(wait_milliseconds) as .completion_impl
+      if observed.available() = 0 then return observed
+      do i = .int(1) to _tickets[0]
+        if _tickets[i] = ticket then do
+          if _terminals[i] then return _completions[i]
+          leave
+        end
+      end
+      if wait_milliseconds = 0 then return .completion_impl.none()
+      if remaining_microseconds > 0 then do
+        finished = _channel_time_microseconds()
+        elapsed = _channel_elapsed_microseconds(started, finished)
+        if elapsed < 1 then elapsed = 1
+        remaining_microseconds = remaining_microseconds - elapsed
+        if remaining_microseconds <= 0 then return .completion_impl.none()
+        started = finished
+      end
+    end
+
+  local_capability: method = .channelvalue_impl
+    call _channel_require _closed = 0, "channel.capability.closed"
+    return .channelvalue_impl.local_capability(_handle, 0, _provider)
+
+  open_state: method = .boolean
+    return _closed = 0
+
+  pending: method = .int
+    call poll()
+    result = 0
+    do i = 1 to _tickets[0]
+      if _terminals[i] = 0 then result = result + 1
+    end
+    return result
+
+  poll: method = .void
+    do while _closed = 0
+      observed = wait(0)
+      if observed.available() = 0 then leave
+    end
+    return
+
+  /** Cancel every still-live request owned by this channel.
+   * @param reason transferable cancellation reason
+   */
+  cancel_pending: method = .void
+    arg reason = .channelvalue
+    do i = 1 to _tickets[0]
+      if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
+    end
+    return
+
+  cancel_and_account: method = .void
+    reason = .channelvalue.string_value("owning task pool closing")
+    do i = 1 to _tickets[0]
+      if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
+    end
+    do i = .int(1) to _tickets[0]
+      if _terminals[i] = 0 then completed = wait_for(_tickets[i], -1)
+    end
+    call close(2)
+    return
+
+_byteendpoint_configuration: procedure = .channelvalue
+  arg kind = .int, direction = .int, capacity = .int, provider_reference = .channelvalue
+  names = .string[]
+  values = .channelvalue[]
+  if kind = 1 then do
+    names[1] = "capacity"
+    values[1] = .channelvalue.integer_value(capacity)
+    names[2] = "direction"
+    values[2] = .channelvalue.integer_value(direction)
+    return .channelvalue.record_value("crexx.channel.byte-memory", 1, names, values)
+  end
+  if kind = 2 then do
+    names[1] = "direction"
+    values[1] = .channelvalue.integer_value(direction)
+    return .channelvalue.record_value("crexx.channel.byte-null", 1, names, values)
+  end
+  names[1] = "reference"
+  values[1] = provider_reference
+  return .channelvalue.record_value("crexx.channel.byte-reference", 1, names, values)
+
+_byteendpoint_integer_envelope: procedure = .channelvalue
+  arg schema = .string, field_name = .string, item = .int
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = field_name
+  values[1] = .channelvalue.integer_value(item)
+  return .channelvalue.record_value(schema, 1, names, values)
+
+/** Reusable bounded endpoint implemented solely through the five channel instructions. */
+byteendpoint_impl: class implements .byteendpoint
+  _channel = .channel_impl
+  _direction = .int
+  _open = .boolean
+
+  memory: factory
+    arg direction = .int, capacity = .int
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.memory.direction"
+    call _channel_require capacity >= 1 & capacity <= 16777216, "byteendpoint.memory.capacity"
+    configuration = _byteendpoint_configuration(1, direction, capacity, .channelvalue.null_value())
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    return
+
+  null_endpoint: factory
+    arg direction = .int
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.null.direction"
+    configuration = _byteendpoint_configuration(2, direction, 0, .channelvalue.null_value())
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    return
+
+  from_reference: factory
+    arg provider_reference = .channelvalue
+    reference_value = provider_reference as .channelvalue_impl
+    call _channel_require reference_value.provider_reference_type() = 4, "byteendpoint.reference.provider"
+    call _channel_require reference_value.provider_reference_scope() = 1, "byteendpoint.reference.scope"
+    direction = reference_value.provider_reference_rights()
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.reference.rights"
+    configuration = _byteendpoint_configuration(3, direction, 0, provider_reference)
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = direction
+    _open = 1
+    return
+
+  /** Attach an exact encoded type-4 provider reference.
+   *
+   * This is the fixed-size admission-frame bridge used by redirect, process
+   * and HTTP protocols. It deliberately accepts only the canonical type-4
+   * reference shape; it is not a general unchecked ChannelValue decoder.
+   * @param encoded canonical 92-byte RXCV type-4 provider-reference document
+   * @return an adapter to the referenced runtime-scoped byte endpoint
+   */
+  from_encoded_reference: factory
+    arg encoded = .binary
+    encoded_length = binlength(encoded)
+    call _channel_require encoded_length = 92, "byteendpoint.encoded-reference.length"
+    call _channel_require bincompare(binsubstr(encoded, 1, 4), '52584356'x as .binary) = 0, "byteendpoint.encoded-reference.magic"
+    call _channel_require <at..u8>(4) encoded = 1 & <at..u8>(5) encoded = 0, "byteendpoint.encoded-reference.version"
+    call _channel_require <at..u16>(6) encoded = 1, "byteendpoint.encoded-reference.flags"
+    call _channel_require <at..int>(8) encoded = encoded_length, "byteendpoint.encoded-reference.document-length"
+    call _channel_require <at..u8>(16) encoded = 10 & <at..u8>(17) encoded = 0 & <at..u16>(18) encoded = 0, "byteendpoint.encoded-reference.node"
+    call _channel_require <at..int>(20) encoded = 64, "byteendpoint.encoded-reference.payload-length"
+    call _channel_require <at..int>(28) encoded = 4 & <at..u32>(36) encoded = 1, "byteendpoint.encoded-reference.provider"
+    rights = <at..u32>(40) encoded
+    call _channel_require rights >= 1 & rights <= 3 & <at..u8>(44) encoded = 1, "byteendpoint.encoded-reference.rights"
+    call _channel_require bincompare(binsubstr(encoded, 46, 7), '00000000000000'x as .binary) = 0, "byteendpoint.encoded-reference.reserved"
+    call _channel_require <at..int>(52) encoded = 32, "byteendpoint.encoded-reference.identity-length"
+    reference_value = .channelvalue_impl.from_encoded(encoded)
+    configuration = _byteendpoint_configuration(3, rights, 0, reference_value)
+    _channel = .channel_impl.open(4, 127, configuration)
+    _direction = rights
+    _open = 1
+    return
+
+  provider_reference: method = .channelvalue
+    call _channel_require _open, "byteendpoint.reference.closed"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "requestedRights"
+    values[1] = .channelvalue.integer_value(_direction)
+    names[2] = "requestedScope"
+    values[2] = .channelvalue.integer_value(1)
+    envelope = .channelvalue.record_value("crexx.channel.byte-export-reference", 1, names, values)
+    request = _channel.start(envelope, -1)
+    result = request.wait(-1)
+    if result.succeeded() = 0 then call _channel_error "byteendpoint.reference.export", result.error_code()
+    return result.value()
+
+  start_read: method = .channelrequest
+    arg maximum_bytes = .int, wait_milliseconds = .int
+    call _channel_require _open, "byteendpoint.read.closed"
+    call _channel_require _direction = 1 | _direction = 3, "byteendpoint.read.direction"
+    call _channel_require maximum_bytes >= 1 & maximum_bytes <= 16777216, "byteendpoint.read.maximum"
+    envelope = _byteendpoint_integer_envelope("crexx.channel.byte-read", "maximumBytes", maximum_bytes)
+    return _channel.start(envelope, wait_milliseconds)
+
+  start_write: method = .channelrequest
+    arg bytes = .binary, wait_milliseconds = .int
+    call _channel_require _open, "byteendpoint.write.closed"
+    call _channel_require _direction >= 2, "byteendpoint.write.direction"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "bytes"
+    values[1] = .channelvalue.binary_value(bytes)
+    envelope = .channelvalue.record_value("crexx.channel.byte-write", 1, names, values)
+    return _channel.start(envelope, wait_milliseconds)
+
+  half_close: method = .void
+    arg direction = .int
+    call _channel_require _open, "byteendpoint.half-close.closed"
+    call _channel_require direction >= 1 & direction <= 3, "byteendpoint.half-close.direction"
+    allowed = 0
+    if direction = 1 & (_direction = 1 | _direction = 3) then allowed = 1
+    if direction = 2 & (_direction = 2 | _direction = 3) then allowed = 1
+    if direction = 3 & _direction = 3 then allowed = 1
+    call _channel_require allowed, "byteendpoint.half-close.rights"
+    envelope = _byteendpoint_integer_envelope("crexx.channel.byte-half-close", "direction", direction)
+    request = _channel.start(envelope, -1)
+    result = request.wait(-1)
+    if result.succeeded() = 0 then call _channel_error "byteendpoint.half-close", result.error_code()
+    return
+
+  cancel: method = .void
+    arg reason = .channelvalue
+    call _channel_require _open, "byteendpoint.cancel.closed"
+    call _channel.cancel_pending(reason)
+    return
+
+  close: method = .void
+    call _channel_require _open, "byteendpoint.close.closed"
+    call _channel.cancel_and_account()
+    _open = 0
+    return
+
+/** Compiler-created sealed descriptor. Instances expose diagnostics only. */
+tasktarget_impl: class implements .tasktarget
+  _name = .string
+  _signature = .string
+  _descriptor = .channelvalue_impl
+
+  /** Construct a public task target from the assembler/linker-sealed binding.
+   * @param diagnostic_name source-facing task name used in diagnostics
+   * @param signature source-facing canonical task signature
+   * @param binding fixed 80-byte RXTB v1 relocation result
+   * @return a validated task target descriptor
+   */
+  binding: factory
+    arg diagnostic_name = .string, signature = .string, binding = .binary, ?factory_arguments = .channelvalue[]
+    binding_length = 0
+    assembler blen binding_length,binding
+    call _channel_require binding_length = 80, "tasktarget.binding-length"
+    call _channel_require <at..u8>(0) binding = 82 & <at..u8>(1) binding = 88 & <at..u8>(2) binding = 84 & <at..u8>(3) binding = 66, "tasktarget.binding-magic"
+    call _channel_require <at..u8>(4) binding = 1, "tasktarget.binding-version"
+    call _channel_require <at..u8>(6) binding = 0 & <at..u8>(7) binding = 0, "tasktarget.binding-reserved"
+    kind = <at..u8>(5) binding
+    callable_id = <at..u32>(8) binding
+    adapter_callable_id = <at..u32>(76) binding
+    if kind = 1 then call _channel_require adapter_callable_id = 0, "tasktarget.binding-reserved"
+    if kind = 3 then call _channel_require adapter_callable_id > 0, "tasktarget.binding-adapter"
+    image_digest = .binary
+    signature_digest = .binary
+    start = 12
+    byte_count = 32
+    assembler bslice image_digest,binding,start,byte_count
+    start = 44
+    assembler bslice signature_digest,binding,start,byte_count
+    if ?factory_arguments = 0 then factory_arguments = .channelvalue[]
+    return .tasktarget_impl.sealed(diagnostic_name, signature, kind, image_digest, callable_id, adapter_callable_id, signature_digest, factory_arguments)
+
+  sealed: factory
+    arg diagnostic_name = .string, signature = .string, kind = .int, image_digest = .binary, callable_id = .int, adapter_callable_id = .int, signature_digest = .binary, factory_arguments = .channelvalue[]
+    image_length = 0
+    signature_length = 0
+    assembler blen image_length,image_digest
+    assembler blen signature_length,signature_digest
+    call _channel_require kind >= 1 & kind <= 3, "tasktarget.kind"
+    call _channel_require image_length = 32 & signature_length = 32, "tasktarget.digest"
+    call _channel_require adapter_callable_id >= 0, "tasktarget.adapter-callable"
+    if kind = 1 then call _channel_require adapter_callable_id = 0, "tasktarget.adapter-callable"
+    if kind = 3 then call _channel_require adapter_callable_id > 0, "tasktarget.adapter-callable"
+    if kind <> 3 then call _channel_require factory_arguments[0] = 0, "tasktarget.factory-arguments"
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "kind"
+    values[1] = .channelvalue.integer_value(kind)
+    names[2] = "imageDigest"
+    values[2] = .channelvalue.binary_value(image_digest)
+    names[3] = "callableId"
+    values[3] = .channelvalue.integer_value(callable_id)
+    names[4] = "signatureDigest"
+    values[4] = .channelvalue.binary_value(signature_digest)
+    names[5] = "factoryArguments"
+    values[5] = .channelvalue.array_value(factory_arguments)
+    names[6] = "adapterCallableId"
+    values[6] = .channelvalue.integer_value(adapter_callable_id)
+    _name = diagnostic_name
+    _signature = signature
+    _descriptor = .channelvalue_impl.record_value("crexx.channel.task-target", 1, names, values)
+    return
+
+  name: method = .string
+    return _name
+
+  signature: method = .string
+    return _signature
+
+  descriptor: method = .channelvalue_impl
+    return _descriptor
+
+/** Mutable controller-local builder used by generated task-call lowering.
+ * Typed task calls construct this object automatically; ordinary applications
+ * should prefer task syntax or `.taskscope.submit()` with one ChannelValue.
+ */
+taskarguments: class
+  _values = .channelvalue[]
+  _count = .int
+
+  /** Create an empty compiler argument builder.
+   * @return mutable controller-local builder
+   */
+  empty: factory
+    _count = 0
+    return
+
+  /** Append one already canonical ordinary task argument.
+   * @param value canonical argument value
+   * @return this mutable controller-local builder
+   */
+  add_value: method = .taskarguments
+    arg value = .channelvalue
+    _count = _count + 1
+    _values[_count] = value
+    return self
+
+  /** Compiler-only marker for a value requiring sealed-formal materialization.
+   * @param value canonical value returned by a transferable object's to_channel
+   * @return this mutable controller-local builder
+   */
+  add_channel_value: method = .taskarguments
+    arg value = .channelvalue
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "value"
+    values[1] = value
+    _count = _count + 1
+    _values[_count] = .channelvalue.record_value("crexx.channel.task-value", 1, names, values)
+    return self
+
+  /** Append one boolean task argument.
+   * @param value boolean argument
+   * @return this mutable controller-local builder
+   */
+  add_boolean: method = .taskarguments
+    arg value = .boolean
+    _count = _count + 1
+    _values[_count] = .channelvalue.boolean_value(value)
+    return self
+
+  /** Append one integer task argument.
+   * @param value integer argument
+   * @return this mutable controller-local builder
+   */
+  add_integer: method = .taskarguments
+    arg value = .int
+    _count = _count + 1
+    _values[_count] = .channelvalue.integer_value(value)
+    return self
+
+  /** Append one string task argument.
+   * @param value string argument
+   * @return this mutable controller-local builder
+   */
+  add_string: method = .taskarguments
+    arg value = .string
+    _count = _count + 1
+    _values[_count] = .channelvalue.string_value(value)
+    return self
+
+  /** Append one binary task argument.
+   * @param value binary argument
+   * @return this mutable controller-local builder
+   */
+  add_binary: method = .taskarguments
+    arg value = .binary
+    _count = _count + 1
+    _values[_count] = .channelvalue.binary_value(value)
+    return self
+
+  /** @return generated canonical argument documents in source order */
+  values: method = .channelvalue[]
+    return _values
+
+/** One structured child; its raw channel request never escapes this wrapper. */
+task_impl: class implements .task
+  _scope = reference .taskscope_impl
+  _channel = reference .channel_impl
+  _ticket = .int
+  _identity = .int
+  _terminal = .boolean
+  _cached = .completion_impl
+
+  new: factory
+    arg scope = reference .taskscope_impl, channel = reference .channel_impl, ticket = .int, identity = .int
+    _scope = scope
+    _channel = channel
+    _ticket = ticket
+    _identity = identity
+    _terminal = 0
+    _cached = .completion_impl.none()
+    return
+
+  rejected: factory
+    arg scope = reference .taskscope_impl, channel = reference .channel_impl, identity = .int, cached = .completion_impl
+    _scope = scope
+    _channel = channel
+    _ticket = 0
+    _identity = identity
+    _terminal = 1
+    _cached = cached
+    return
+
+  identity: method = .int
+    return _identity
+
+  terminal: method = .boolean
+    if _terminal then return 1
+    observed = completion()
+    return observed.available()
+
+  cancel: method = .void
+    arg reason = .channelvalue
+    if _terminal then return
+    channel = dereference _channel
+    call channel.cancel_ticket(_ticket, reason)
+    return
+
+  wait: method = .completion
+    arg wait_milliseconds = .int
+    if _terminal then return _cached
+    channel = dereference _channel
+    item = channel.wait_for(_ticket, wait_milliseconds)
+    if item.available() then do
+      _cached = item as .completion_impl
+      _terminal = 1
+    end
+    if item.available() then do
+      scope = dereference _scope
+      call scope.mark_observed(identity())
+    end
+    return item
+
+  completion: method = .completion
+    return wait(0)
+
+/** Task pool implementation backed by a provider channel. */
+_taskpool_configuration: procedure = .channelvalue
+  arg provider = .int, workers = .int, admission_capacity = .int
+  call _channel_require workers >= 1 & workers <= 65535, "taskpool.workers"
+  call _channel_require admission_capacity >= 1 & admission_capacity <= 65535, "taskpool.admission"
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = "workerCount"
+  values[1] = .channelvalue.integer_value(workers)
+  names[2] = "admissionCapacity"
+  values[2] = .channelvalue.integer_value(admission_capacity)
+  if provider = 1 then schema = "crexx.channel.local-task-pool"
+  else schema = "crexx.channel.process-task-pool"
+  return .channelvalue.record_value(schema, 1, names, values)
+
+taskpool_impl: class implements .taskpool
+  _provider = .int
+  _workers = .int
+  _admission = .int
+  _channel = .channel_impl
+  _open = .boolean
+
+  local: factory
+    arg workers = .int, admission_capacity = .int
+    configuration = _taskpool_configuration(1, workers, admission_capacity)
+    _channel = .channel_impl.open(1, 15, configuration)
+    _provider = 1
+    _workers = workers
+    _admission = admission_capacity
+    _open = 1
+    return
+
+  process: factory
+    arg workers = .int, admission_capacity = .int
+    configuration = _taskpool_configuration(2, workers, admission_capacity)
+    _channel = .channel_impl.open(2, 15, configuration)
+    _provider = 2
+    _workers = workers
+    _admission = admission_capacity
+    _open = 1
+    return
+
+  provider_type: method = .int
+    return _provider
+
+  capacity: method = .int
+    return _workers
+
+  admission_capacity: method = .int
+    return _admission
+
+  queued: method = .int
+    call _channel_error "taskpool.queued.unsupported", 19
+    return 0
+
+  running: method = .int
+    call _channel_error "taskpool.running.unsupported", 19
+    return 0
+
+  close: method = .void
+    call _channel_require _open, "taskpool.close.closed"
+    call _channel.close(2)
+    _open = 0
+    return
+
+  pool_channel: method = .channel_impl
+    call _channel_require _open, "taskpool.channel.closed"
+    return _channel
+
+  open_state: method = .boolean
+    return _open
+
+/** Structured scope implementation with fail-fast or collect-all policy. */
+_taskscope_configuration: procedure = .channelvalue
+  arg pool = .taskpool_impl, timeout_milliseconds = .int, policy = .int
+  call _channel_require pool.open_state(), "taskscope.pool.closed"
+  timeout_microseconds = _channel_wait_microseconds(timeout_milliseconds)
+  names = .string[]
+  values = .channelvalue[]
+  names[1] = "failurePolicy"
+  values[1] = .channelvalue.integer_value(policy)
+  names[2] = "pool"
+  values[2] = pool.pool_channel().local_capability()
+  names[3] = "timeoutMicroseconds"
+  values[3] = .channelvalue.integer_value(timeout_microseconds)
+  return .channelvalue.record_value("crexx.channel.task-scope", 1, names, values)
+
+_default_task_pool = .taskpool_impl
+_default_task_pool_ready = .boolean
+
+_task_default_pool: procedure = .taskpool expose _default_task_pool _default_task_pool_ready
+  if _default_task_pool_ready = 0 then do
+    created = .taskpool.local(4, 256)
+    _default_task_pool = created as .taskpool_impl
+    _default_task_pool_ready = 1
+  end
+  return _default_task_pool
+
+taskscope_impl: class implements .taskscope
+  _pool = .taskpool_impl
+  _channel = .channel_impl
+  _policy = .int
+  _open = .boolean
+  _joined = .boolean
+  _children = .task_impl[]
+  _observed = .boolean[]
+  _join_cache = .completion[]
+
+  default: factory
+    pool = _task_default_pool()
+    _pool = pool as .taskpool_impl
+    configuration = _taskscope_configuration(_pool, -1, 1)
+    _channel = .channel_impl.open(_pool.provider_type(), 15, configuration)
+    _policy = 1
+    _open = 1
+    _joined = 0
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
+    _children = children
+    _observed = observed
+    _join_cache = join_cache
+    return
+
+  failfast: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+    _pool = pool as .taskpool_impl
+    configuration = _taskscope_configuration(_pool, timeout_milliseconds, 1)
+    _channel = .channel_impl.open(_pool.provider_type(), 15, configuration)
+    _policy = 1
+    _open = 1
+    _joined = 0
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
+    _children = children
+    _observed = observed
+    _join_cache = join_cache
+    return
+
+  collectall: factory
+    arg pool = .taskpool, timeout_milliseconds = .int
+    _pool = pool as .taskpool_impl
+    configuration = _taskscope_configuration(_pool, timeout_milliseconds, 2)
+    _channel = .channel_impl.open(_pool.provider_type(), 15, configuration)
+    _policy = 2
+    _open = 1
+    _joined = 0
+    children = .task_impl[1]
+    observed = .boolean[1]
+    join_cache = .completion[1]
+    empty_child = .task_impl
+    empty_completion = .completion
+    children[1] = empty_child
+    observed[1] = 0
+    join_cache[1] = empty_completion
+    assembler SETATTRS children,0
+    assembler SETATTRS observed,0
+    assembler SETATTRS join_cache,0
+    _children = children
+    _observed = observed
+    _join_cache = join_cache
+    return
+
+  submit: method = .task
+    arg target = .tasktarget, request = .channelvalue
+    builder = .taskarguments.empty()
+    builder = builder.add_value(request)
+    return submit_arguments(target, builder)
+
+  submit_arguments: method = .task
+    arg target = .tasktarget, arguments = .taskarguments
+    call _channel_require _open, "taskscope.submit.closed"
+    sealed_target = target as .tasktarget_impl
+    names = .string[]
+    values = .channelvalue[]
+    names[1] = "arguments"
+    values[1] = .channelvalue.array_value(arguments.values())
+    names[2] = "target"
+    values[2] = sealed_target.descriptor()
+    envelope = .channelvalue.record_value("crexx.channel.task-invoke", 1, names, values)
+    channel_request = _channel.start_structured(envelope)
+    if channel_request.raw_ticket() = 0 then child = .task_impl.rejected(reference self, reference _channel, channel_request.identity(), channel_request.cached())
+    else child = .task_impl.new(reference self, reference _channel, channel_request.raw_ticket(), channel_request.identity())
+    _children[_children[0] + 1] = child
+    _observed[_observed[0] + 1] = 0
+    return child
+
+  ask: method = .task
+    arg service = .serviceref, request = .channelvalue
+    call _channel_error "taskscope.ask.unsupported", 19
+    unavailable = .task
+    return unavailable
+
+  next: method = .completion
+    arg wait_milliseconds = .int
+    call _channel_require _open | _joined, "taskscope.next.closed"
+    immediate = _channel.wait(0) as .completion_impl
+    if immediate.available() then do
+      call mark_observed immediate.request_identity()
+      return immediate
+    end
+    do i = 1 to _children[0]
+      if _observed[i] = 0 & _children[i].terminal() then do
+        _observed[i] = 1
+        return _children[i].completion()
+      end
+    end
+    if wait_milliseconds = 0 then return .completion_impl.none()
+    observed = _channel.wait(wait_milliseconds) as .completion_impl
+    if observed.available() then call mark_observed observed.request_identity()
+    return observed
+
+  join: method = .completion[]
+    call _channel_require _open | _joined, "taskscope.join.closed"
+    if _joined then return _join_cache
+    do i = 1 to _children[0]
+      item = _children[i].wait(-1)
+      _join_cache[i] = item
+      _observed[i] = 1
+    end
+    _joined = 1
+    return _join_cache
+
+  cancel: method = .void
+    arg reason = .channelvalue
+    call _channel_require _open | _joined, "taskscope.cancel.closed"
+    do i = 1 to _children[0]
+      if _children[i].terminal() = 0 then do
+        child = _children[i]
+        call child.cancel(reason)
+      end
+    end
+    return
+
+  close: method = .void
+    call _channel_require _open, "taskscope.close.closed"
+    if _joined = 0 then do
+      reason = .channelvalue.string_value("task scope closing")
+      call cancel(reason)
+      completed = join()
+    end
+    call _channel.close(1)
+    _open = 0
+    return
+
+  finish: method = .void
+    completed = join()
+    do i = 1 to completed[0]
+      if completed[i].succeeded() = 0 then do
+        failed = completed[i]
+        call close()
+        call _task_failure failed
+      end
+    end
+    call close()
+    return
+
+  abort: method = .void
+    arg reason = .channelvalue
+    if _open = 0 then return
+    call cancel(reason)
+    completed = join()
+    call close()
+    return
+
+  result_integer: method = .int
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_integer()
+
+  result_string: method = .string
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_string()
+
+  result_binary: method = .binary
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value().as_binary()
+
+  /** Return canonical task data for compiler-generated from_channel reconstruction.
+   * @param child task whose terminal result is required
+   * @return successful canonical ChannelValue result
+   */
+  result_value: method = .channelvalue
+    arg child = .task
+    item = child.wait(-1)
+    if item.succeeded() = 0 then call _task_failure item
+    return item.value()
+
+  wait_task: method = .completion_impl
+    arg identity = .int, wait_milliseconds = .int
+    do i = 1 to _children[0]
+      if _children[i].identity() = identity then do
+        item = _children[i].wait(wait_milliseconds) as .completion_impl
+        if item.available() then _observed[i] = 1
+        return item
+      end
+    end
+    call _channel_error "taskscope.wait.unknown", 15
+    return .completion_impl.none()
+
+  mark_observed: method = .void
+    arg identity = .int
+    do i = 1 to _children[0]
+      if _children[i].identity() = identity then do
+        _observed[i] = 1
+        return
+      end
+    end
+    call _channel_error "taskscope.observe.unknown", 15
+    return
+
+  pending: method = .int
+    if _open = 0 then return 0
+    call _channel.poll()
+    result = 0
+    do i = 1 to _children[0]
+      if _children[i].terminal() = 0 then result = result + 1
+    end
+    return result
+
+  open_state: method = .boolean
+    return _open
+
+/** Receiver-side context object created by compiler/runtime adapters. */
+taskcontext_impl: class implements .taskcontext
+  _timeout = .int
+  _cancelled = .boolean
+  _trace = .string
+
+  new: factory
+    arg timeout_remaining = .int, cancellation_requested = .boolean, trace_identity = .string
+    _timeout = timeout_remaining
+    _cancelled = cancellation_requested
+    _trace = trace_identity
+    return
+
+  timeout_remaining: method = .int
+    return _timeout
+
+  cancellation_requested: method = .boolean
+    return _cancelled
+
+  trace_identity: method = .string
+    return _trace
+
+  endpoint: method = .byteendpoint
+    arg provider_reference = .channelvalue
+    return .byteendpoint.from_reference(provider_reference)

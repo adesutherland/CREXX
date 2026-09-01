@@ -2,72 +2,53 @@
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
 
 a = 10
-b = "hello"
 aa = 10.5
+b = "hello"
+blank = " "
+empty = ""
 d = a + 1
-d = d + 0  /* Fool the rather braindead optimiser */
-dd = aa + 1  /* Fool the rather braindead optimiser */
+d = d + 0
+dd = aa + 1
 e = b "there"
-e = e || "" /* Fool the rather braindead optimiser */
-say 1 value('a')
-if value('a') \= 10 then do
-  errors=errors+1
-  say 'VALUE failed in test      1'
-end
-say value('aa')
-if value('aa') \= 10.5 then do
-  errors=errors+1
-  say 'VALUE failed in test      2'
-end
+e = e || ""
+blank = blank || ""
+empty = empty || ""
 
-say value('b')
-if value('b') \= "hello" then do
-  errors=errors+1
-  say 'VALUE failed in test      3'
-end
+errors = errors + check(value("a") = "10", "integer register")
+errors = errors + check(value("A") = "10", "case-insensitive name")
+errors = errors + check(value("aa") = "10.5", "exact longer name")
+errors = errors + check(value("b") = "hello", "string register")
+errors = errors + check(value("c") = "C", "constant metadata")
+errors = errors + check(value("d") = "11", "calculated integer")
+errors = errors + check(value("dd") = "11.5", "calculated float")
+errors = errors + check(value("e") = "hello there", "calculated string")
+errors = errors + check(value("f") = "F", "not-yet-visible variable")
+errors = errors + check(value("g") = "G", "not-yet-visible expression")
+errors = errors + check(c2x(value("blank")) = "20", "blank value")
+errors = errors + check(length(value("empty")) = 0, "empty value")
+errors = errors + check(value("") = "", "empty name")
+errors = errors + check(value("missing") = "MISSING", "missing name")
+errors = errors + check(boundary_probe() = "OUTER_ONLY", "procedure boundary")
 
-say value('c')
-if value('c') \= "C" then do
-  errors=errors+1
-  say 'VALUE failed in test      4'
-end
-
-say value('d')
-if value('d') \= 11 then do
-  errors=errors+1
-  say 'VALUE failed in test      5'
-end
-
-say value('dd')
-if value('dd') \= 11.5 then do
-  errors=errors+1
-  say 'VALUE failed in test      6'
-end
-
-say value('e')
-if value('e') \= "hello there" then do
-  errors=errors+1
-  say 'VALUE failed in test      7'
-end
-
-say value('f')
-if value('f') \= "F" then do
-  errors=errors+1
-  say 'VALUE failed in test      8'
-end
-
-say value('g')
-if value('g') \= "G" then do
-  errors=errors+1
-  say 'VALUE failed in test      9'
-end
-
-/* These are set AFTER the value() calls above */
+/* These enter scope only after the calls above. */
 f = 99
 g = f + 1
 g = g + 1
+outer_only = "must not leak into boundary_probe"
 
-return errors<>0
+if errors = 0 then say "PASS: value"
+return errors <> 0
+
+boundary_probe: procedure = .string
+  local_value = "local"
+  local_value = local_value || ""
+  return value("outer_only")
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: VALUE" label
+  return 1

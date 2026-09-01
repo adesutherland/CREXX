@@ -1,0 +1,17 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start   59: 06_logic_noopt
+    Start   60: 06_logic_opt
+    Start 1161: rxaslogicflowtests
+    Start 1229: rxasconversiontests
+    Start 1230: rxasconversiontests-rxbvm
+    Start 1162: rxaslogicflowtests-rxbvm
+1/6 Test #1161: rxaslogicflowtests ...............   Passed    0.30 sec
+2/6 Test #1229: rxasconversiontests ..............   Passed    0.30 sec
+3/6 Test #1162: rxaslogicflowtests-rxbvm .........   Passed    0.50 sec
+4/6 Test #1230: rxasconversiontests-rxbvm ........   Passed    0.50 sec
+5/6 Test   #60: 06_logic_opt .....................   Passed    0.62 sec
+6/6 Test   #59: 06_logic_noopt ...................   Passed    0.62 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Total Test time (real) =   0.64 sec

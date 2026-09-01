@@ -1,0 +1,4 @@
+workload,procedures,budget_limit,work,retained_bytes,reachable_blocks,unreachable_blocks,predecessor_entries,dominator_iterations,frontier_entries,sccs,cyclic_sccs,irreducible_sccs,backedges,loops,loop_memberships,max_loop_depth,unavailable_procedures
+Richards,24,1695232,322781,304248,1190,52,4227,48,4131,1086,687,0,753,752,856,2,0
+Towers,13,541952,34169,100419,426,33,1239,26,1311,372,160,0,203,203,265,3,0
+RexxCPS,5,1126400,250212,218825,900,10,2941,10,3461,406,259,0,493,488,1345,6,0

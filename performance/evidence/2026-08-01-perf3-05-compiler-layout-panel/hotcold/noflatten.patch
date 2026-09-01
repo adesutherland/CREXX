@@ -1,0 +1,13 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 9b56da524..217fed647 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -4880,7 +4880,7 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
+ #endif
+ 
+ /* Interpreter */
+-RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
++RXVM_LABEL_OWNER int run(rxvm_context *context, int argc, char *argv[]) {
+     proc_runtime *procedure;
+     proc_runtime *step_handler = 0;
+     int rc = 0;

@@ -1,0 +1,128 @@
+* K05 immutable-CFG branch threading: inherited forms and stronger reach.
+
+br_to_brt() .locals=1
+    br br_to_brt_target
+    ret
+br_to_brt_target:
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "br-to-brt" ""
+    brt br_to_brt_true,r0
+    ret
+br_to_brt_true:
+    ret
+
+br_to_brf() .locals=2
+    br br_to_brf_target
+    ret
+br_to_brf_target:
+    brf br_to_brf_false,r1
+    ret
+br_to_brf_false:
+    ret
+
+br_to_brtf() .locals=3
+    br br_to_brtf_target
+    ret
+br_to_brtf_target:
+    brtf br_to_brtf_true,br_to_brtf_false,r2
+br_to_brtf_true:
+    ret
+br_to_brtf_false:
+    ret
+
+brt_to_brt() .locals=4
+    brt brt_to_brt_target,r3
+    ret
+brt_to_brt_target:
+    brt brt_to_brt_true,r3
+    ret
+brt_to_brt_true:
+    ret
+
+brf_to_brf() .locals=5
+    brf brf_to_brf_target,r4
+    ret
+brf_to_brf_target:
+    brf brf_to_brf_false,r4
+    ret
+brf_to_brf_false:
+    ret
+
+brt_to_brf() .locals=6
+    brt brt_to_brf_target,r5
+    ret
+brt_to_brf_target:
+    brf brt_to_brf_false,r5
+    ret
+brt_to_brf_false:
+    ret
+
+brf_to_brt() .locals=7
+    brf brf_to_brt_target,r6
+    ret
+brf_to_brt_target:
+    brt brf_to_brt_true,r6
+    ret
+brf_to_brt_true:
+    ret
+
+long_distance() .locals=1
+    br long_distance_target
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-00" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-01" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-02" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-03" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-04" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-05" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-06" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-07" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-08" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-09" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-10" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-11" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-12" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-13" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-14" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-15" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-16" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-17" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-18" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-19" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-20" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-21" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-22" ""
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "gap-23" ""
+    ret
+long_distance_target:
+    brt long_distance_true,r0
+    ret
+long_distance_true:
+    ret
+
+backward_target() .locals=1
+backward_target_block:
+    brt backward_true,r0
+    ret
+backward_source:
+    br backward_target_block
+    ret
+backward_true:
+    br backward_source
+
+different_condition() .locals=9
+    brt different_condition_target,r7
+    ret
+different_condition_target:
+    brt different_condition_true,r8
+    ret
+different_condition_true:
+    ret
+
+nonleading_target() .locals=2
+    br nonleading_target_block
+    ret
+nonleading_target_block:
+    null r1
+    brt nonleading_true,r0
+    ret
+nonleading_true:
+    ret

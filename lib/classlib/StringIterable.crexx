@@ -22,9 +22,8 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_StringIterable expose StringIterable
-import data_StringIterator
+options levelb comments_dash
+namespace data expose StringIterable
 
 /**
  * StringIterable is the interface which defines the contract

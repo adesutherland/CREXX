@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g3aee597382c9.dirty 20260715",
+  "workload": "base64",
+  "runtime": "crexx",
+  "variant": "preallocated-binary-port",
+  "lifecycle": "process",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: Base64 Roundtrip",
+  "metric_prefix": null,
+  "command": ["cmake-build-release/bin/rxvm","cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin","cmake-build-release/bin/library.rxbin","-a","500"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-15T19:27:44+0000",
+  "completed_utc": "2026-07-15T19:27:45+0000",
+  "result": "pass"
+}

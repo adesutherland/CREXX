@@ -1,0 +1,132 @@
+/* Focused RCC-5C exact integer and precision-preserving decimal tests. */
+options levelb
+
+import numerictestsupport
+import rxint
+import rxdecimal
+
+test_integer_signals: procedure = .int
+  failures = 0
+  do
+    ignored = rxint..isqrt(-1)
+    say "FAIL: RCC-5C ISQRT negative did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = .int
+    ignored = rxint..powmod(2, -1, 5)
+    say "FAIL: RCC-5C POWMOD negative exponent did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = .int
+    ignored = rxint..powmod(2, 3, 0)
+    say "FAIL: RCC-5C POWMOD invalid modulus did not signal"
+    failures = failures + 1
+  on signal invalid_arguments
+    nop
+  end
+  do
+    ignored = .int
+    ignored = rxint..gcd(-9223372036854775807 - 1, 0)
+    say "FAIL: RCC-5C GCD unrepresentable result did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  do
+    ignored = .int
+    ignored = rxint..lcm(-9223372036854775807 - 1, 1)
+    say "FAIL: RCC-5C LCM overflow did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  do
+    ignored = .int
+    ignored = rxint..factorial(21)
+    say "FAIL: RCC-5C FACTORIAL overflow did not signal"
+    failures = failures + 1
+  on signal overflow_underflow
+    nop
+  end
+  return failures
+
+test_decimal_signals: procedure = .int
+  return test_decimal_sqrt_signal() + test_decimal_ln_signal()
+
+test_decimal_sqrt_signal: procedure = .int
+  do
+    ignored = rxdecimal..sqrt(-1)
+    say "FAIL: RCC-5C decimal SQRT negative did not signal"
+  on signal invalid_arguments
+    return 0
+  end
+  return 1
+
+test_decimal_ln_signal: procedure = .int
+  do
+    ignored = rxdecimal..ln(0)
+    say "FAIL: RCC-5C decimal LN zero did not signal"
+  on signal invalid_arguments
+    return 0
+  end
+  return 1
+
+test_decimal_9: procedure = .int
+  numeric digits 9
+  failures = 0
+  failures = failures + numerictestsupport..check_decimal_equal(rxdecimal..sqrt(4), 2, "decimal-9 exact sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2), "1.41421356" as .decimal, "1E-8" as .decimal, 0, "decimal-9 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), "2.71828183" as .decimal, "1E-8" as .decimal, 0, "decimal-9 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-8" as .decimal, 0, "decimal-9 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-8" as .decimal, 0, "decimal-9 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-8" as .decimal, 0, "decimal-9 cos")
+  return failures
+
+test_decimal_18: procedure = .int
+  numeric digits 18
+  failures = 0
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2), "1.41421356237309505" as .decimal, "1E-17" as .decimal, 0, "decimal-18 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), "2.71828182845904524" as .decimal, "1E-17" as .decimal, 0, "decimal-18 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-17" as .decimal, 0, "decimal-18 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-17" as .decimal, 0, "decimal-18 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-17" as .decimal, 0, "decimal-18 cos")
+  return failures
+
+test_decimal_64: procedure = .int
+  numeric digits 64
+  failures = 0
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sqrt(2) * rxdecimal..sqrt(2), 2, "1E-62" as .decimal, 0, "decimal-64 sqrt")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..exp(1), rxdecimal..euler(), "1E-62" as .decimal, 0, "decimal-64 exp")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..ln(rxdecimal..euler()), 1, "1E-62" as .decimal, 0, "decimal-64 ln")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..sin(rxdecimal..pi() / 6), "0.5" as .decimal, "1E-62" as .decimal, 0, "decimal-64 sin")
+  failures = failures + numerictestsupport..check_decimal_close(rxdecimal..cos(rxdecimal..pi()), -1, "1E-62" as .decimal, 0, "decimal-64 cos")
+  return failures
+
+main: procedure = .int
+  failures = 0
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(54, 24), 6, "gcd")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(-54, 24), 6, "gcd signed")
+  failures = failures + numerictestsupport..check_int_equal(rxint..gcd(0, 0), 0, "gcd zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..lcm(-21, 6), 42, "lcm")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(0), 0, "isqrt zero")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(15), 3, "isqrt floor")
+  failures = failures + numerictestsupport..check_int_equal(rxint..isqrt(9223372036854775807), 3037000499, "isqrt rxinteger maximum")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(2, 10, 1000), 24, "powmod")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(-2, 5, 13), 7, "powmod signed base")
+  failures = failures + numerictestsupport..check_int_equal(rxint..powmod(9223372036854775806, 2, 9223372036854775783), 529, "powmod overflow-safe multiply")
+  failures = failures + numerictestsupport..check_int_equal(rxint..factorial(20), 2432902008176640000, "factorial boundary")
+  failures = failures + test_integer_signals()
+  failures = failures + test_decimal_signals()
+  failures = failures + test_decimal_9()
+  failures = failures + test_decimal_18()
+  failures = failures + test_decimal_64()
+
+  if failures > 0 then return 1
+  say "PASS: RCC-5C integer and decimal algorithms"
+  return 0

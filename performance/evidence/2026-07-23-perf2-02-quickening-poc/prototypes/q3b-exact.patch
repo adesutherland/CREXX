@@ -1,0 +1,81 @@
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 54b48d083..f8f99537b 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -7649,14 +7649,61 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+         START_INSTRUCTION(MKREF_REG_REG) VM_ADVANCE(2);
+             DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+             {
++                size_t site_index = VM_CANONICAL_INDEX(pc);
++                const bin_code *pair = 0;
++                int minlinkattr1_pair = 0;
+                 void *owner = 0;
+                 rxvm_ref_owner_kind owner_kind;
+                 rxvm_reference_cell *cell;
+-
+-                owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+-                                                                   REG_IDX(2),
+-                                                                   op2R,
+-                                                                   &owner);
++                int current_frame_owner = 0;
++
++                if (site_index >= 5u) {
++                    pair = current_canonical_base + site_index - 5u;
++                    minlinkattr1_pair =
++                            pair[0].instruction.opcode ==
++                                    OP_MINLINKATTR1_REG_REG_REG_INT &&
++                            pair[0].instruction.no_ops == 4 &&
++                            pair[1].index == REG_IDX(2);
++                }
++
++                if (minlinkattr1_pair) {
++                    size_t root_register = pair[2].index;
++                    size_t index_register = pair[3].index;
++                    rxinteger index;
++                    value *root = 0;
++
++                    if (root_register < (size_t)current_frame->procedure->locals &&
++                        root_register < current_frame->number_locals &&
++                        index_register < current_frame->number_locals &&
++                        rxinteger_checked_add(current_locals[index_register]->int_value,
++                                              pair[4].iconst,
++                                              &index)) {
++                        root = current_locals[root_register];
++                        if (root == current_frame->baselocals[root_register] &&
++                            index >= 1 && (size_t)index <= root->num_attributes &&
++                            root->attributes && root->unlinked_attributes &&
++                            root->attributes[(size_t)index - 1u] == op2R &&
++                            root->unlinked_attributes[(size_t)index - 1u] == op2R) {
++                            owner_kind = RXVM_REF_ATTRIBUTE;
++                            current_frame_owner = 1;
++                        }
++                    }
++                } else if (REG_IDX(2) < (size_t)current_frame->procedure->locals &&
++                           REG_IDX(2) < current_frame->number_locals &&
++                           current_locals[REG_IDX(2)] ==
++                                   current_frame->baselocals[REG_IDX(2)] &&
++                           op2R == current_frame->baselocals[REG_IDX(2)]) {
++                    owner_kind = RXVM_REF_LOCAL;
++                    owner = current_frame;
++                    current_frame_owner = 1;
++                }
++
++                if (!current_frame_owner) {
++                    owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
++                                                                       REG_IDX(2),
++                                                                       op2R,
++                                                                       &owner);
++                }
+                 cell = rxvm_reference_identity_for_context(&context->references,
+                                                            op2R,
+                                                            owner_kind,
+@@ -7668,7 +7715,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                     DISPATCH;
+                 }
+ 
+-                rxvm_mark_reference_lifetime_owner(current_frame, op2R);
++                if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
++                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
+                 clear_value_contents(op1R);
+                 rxvm_reference_value_set_payload(op1R, cell);
+             }

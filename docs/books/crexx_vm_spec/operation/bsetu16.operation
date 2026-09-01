@@ -1,0 +1,10 @@
+`bgetu8`, `bgeti8`, `bgetu16`, `bgeti16`, `bgetu32`, `bgeti32`, `bgeti64`,
+`bgetf32`, and `bgetf64` read fixed-width fields from a binary register or
+binary constant. Multi-byte values use little-endian storage. Signed integer
+forms sign-extend into the destination integer register. Unsigned forms raise
+`OUT_OF_RANGE` if the result cannot be represented by the active VM integer
+type.
+
+`.int` maps to signed 64-bit storage through `bgeti64`. `.f32` is IEEE binary32
+storage and widens to the VM float register. `.float` maps to the current VM
+float representation, which is binary64 for Release 1.

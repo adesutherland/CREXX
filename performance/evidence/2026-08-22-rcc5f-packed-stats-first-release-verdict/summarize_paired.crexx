@@ -1,0 +1,254 @@
+/* RCC-5F packed/boxed/direct first-Release paired evidence reducer. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 2 then do
+  say "Usage: summarize_paired OUTPUT_SUMMARY SAMPLES [SAMPLES ...]"
+  return 2
+end
+
+output_path = argv[1]
+names = .string[]
+before_ids = .string[]
+after_ids = .string[]
+metrics = .string[]
+higher_is_better = .int[]
+before_counts = .int[]
+after_counts = .int[]
+before_values = .float[]
+after_values = .float[]
+
+call add_comparison names, before_ids, after_ids, metrics, higher_is_better, ,
+    "packed-v-boxed-rxbvm", "rxbvm-boxed", "rxbvm-packed", ,
+    "calls_per_second", 1
+call add_comparison names, before_ids, after_ids, metrics, higher_is_better, ,
+    "packed-v-boxed-rxtvm", "rxtvm-boxed", "rxtvm-packed", ,
+    "calls_per_second", 1
+call add_comparison names, before_ids, after_ids, metrics, higher_is_better, ,
+    "packed-v-boxed-offset-rxbvm", "rxbvm-boxed-offset", ,
+    "rxbvm-packed-offset", "calls_per_second", 1
+call add_comparison names, before_ids, after_ids, metrics, higher_is_better, ,
+    "packed-v-boxed-offset-rxtvm", "rxtvm-boxed-offset", ,
+    "rxtvm-packed-offset", "calls_per_second", 1
+
+do input_index = 2 to argv[0]
+  input_path = argv[input_index]
+  line_number = 0
+  do while lines(input_path)
+    line = linein(input_path)
+    line_number = line_number + 1
+    if line_number = 1 then iterate
+    fields = split_delimited(line, ",")
+    if fields[0] <> 20 then return fail("unexpected sample row width")
+    if fields[11] <> "recorded" then iterate
+    if fields[18] <> "pass" then return fail("non-passing recorded sample")
+    cell_id = fields[4]
+    comparison = 0
+    side = 0
+    do candidate = 1 to names[0]
+      if cell_id = before_ids[candidate] then do
+        comparison = candidate
+        side = 1
+        leave
+      end
+      if cell_id = after_ids[candidate] then do
+        comparison = candidate
+        side = 2
+        leave
+      end
+    end
+    if comparison = 0 then iterate
+    sample_value = fields[19]
+    if metrics[comparison] = "elapsed_ns" then sample_value = fields[15]
+    if side = 1 then do
+      before_counts[comparison] = before_counts[comparison] + 1
+      before_values[comparison * 100 + before_counts[comparison]] = sample_value
+    end
+    else do
+      after_counts[comparison] = after_counts[comparison] + 1
+      after_values[comparison * 100 + after_counts[comparison]] = sample_value
+    end
+  end
+  call linein input_path
+end
+
+call remove_output output_path
+header = "comparison,metric,pairs,before_median,after_median,min_percent," || ,
+    "q1_percent,median_percent,q3_percent,max_percent,mean_percent," || ,
+    "mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result," || ,
+    "favorable,total,guard_hit"
+if lineout(output_path, header) <> 0 then return fail("could not create summary")
+
+do comparison = 1 to names[0]
+  if before_counts[comparison] = 0 & after_counts[comparison] = 0 then iterate
+  if before_counts[comparison] <> after_counts[comparison] then
+    return fail("unbalanced pair set for " || names[comparison])
+  count = before_counts[comparison]
+  if count <> 12 & count <> 24 then
+    return fail("expected 12 or 24 retained pairs for " || names[comparison])
+  before = .float[]
+  after = .float[]
+  do pair = 1 to count
+    before[pair] = before_values[comparison * 100 + pair]
+    after[pair] = after_values[comparison * 100 + pair]
+  end
+  if write_summary(output_path, names[comparison], metrics[comparison], ,
+      higher_is_better[comparison], before, after) <> 0 then return 1
+end
+call lineout output_path
+say "PASS: RCC-5F paired summary retained at" output_path
+return 0
+
+add_comparison: procedure = .void
+  arg expose names = .string[], expose before_ids = .string[], ,
+      expose after_ids = .string[], expose metrics = .string[], ,
+      expose higher_is_better = .int[], name = .string, before_id = .string, ,
+      after_id = .string, metric = .string, higher = .int
+  index = names[0] + 1
+  names[index] = name
+  before_ids[index] = before_id
+  after_ids[index] = after_id
+  metrics[index] = metric
+  higher_is_better[index] = higher
+  return
+
+write_summary: procedure = .int
+  arg output_path = .string, name = .string, metric = .string, ,
+      higher_is_better = .int, before = .float[], after = .float[]
+  count = before[0]
+  deltas = .float[]
+  favorable = 0
+  sum = 0.0
+  do pair = 1 to count
+    delta = ((after[pair] - before[pair]) * 100.0) / before[pair]
+    deltas[pair] = delta
+    sum = sum + delta
+    if higher_is_better & delta > 0.0 then favorable = favorable + 1
+    if \higher_is_better & delta < 0.0 then favorable = favorable + 1
+  end
+  mean = sum / (count as .float)
+  sum_squares = 0.0
+  do pair = 1 to count
+    difference = deltas[pair] - mean
+    sum_squares = sum_squares + difference * difference
+  end
+  sample_deviation = square_root(sum_squares / ((count - 1) as .float))
+  t_value = student_t_95(count)
+  margin = t_value * sample_deviation / square_root(count as .float)
+  interval_low = mean - margin
+  interval_high = mean + margin
+  interval_result = "noisy_inconclusive"
+  if higher_is_better then do
+    if interval_low > 0.0 then interval_result = "clear_favorable"
+    else if interval_high < 0.0 then interval_result = "clear_adverse"
+  end
+  else do
+    if interval_high < 0.0 then interval_result = "clear_favorable"
+    else if interval_low > 0.0 then interval_result = "clear_adverse"
+  end
+
+  before_median = median(before)
+  after_median = median(after)
+  guard_hit = "no"
+  if higher_is_better & mean < -3.0 then guard_hit = "yes"
+  if \higher_is_better & mean > 3.0 then guard_hit = "yes"
+  if name = "crexx-driver-help" then do
+    guard_hit = "no"
+    if mean > 5.0 & after_median - before_median > 1000000.0 then guard_hit = "yes"
+  end
+  call sort_floats deltas
+  row = name || "," || metric || "," || count || "," || ,
+      float_text(before_median) || "," || float_text(after_median) || "," || ,
+      float_text(deltas[1]) || "," || float_text(sample_quantile(deltas, 1, 4)) || ,
+      "," || float_text(sample_quantile(deltas, 1, 2)) || "," || ,
+      float_text(sample_quantile(deltas, 3, 4)) || "," || ,
+      float_text(deltas[count]) || "," || float_text(mean) || "," || ,
+      float_text(interval_low) || "," || float_text(interval_high) || "," || ,
+      interval_result || "," || favorable || "," || count || "," || guard_hit
+  if lineout(output_path, row) <> 0 then return fail("could not append summary")
+  return 0
+
+student_t_95: procedure = .float
+  arg count = .int
+  if count = 12 then return 2.200985
+  if count = 22 then return 2.079614
+  if count = 24 then return 2.068658
+  if count = 34 then return 2.034515
+  if count = 36 then return 2.030108
+  return 0.0
+
+median: procedure = .float
+  arg source = .float[]
+  values = .float[]
+  do index = 1 to source[0]
+    values[index] = source[index]
+  end
+  call sort_floats values
+  return sample_quantile(values, 1, 2)
+
+remove_output: procedure = .void
+  arg path = .string
+  remove_out = .string[]
+  remove_err = .string[]
+  address crexx "rm :path" output remove_out error remove_err
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do index = 2 to values[0]
+    item = values[index]
+    prior = index - 1
+    do while prior >= 1 & values[prior] > item
+      values[prior + 1] = values[prior]
+      prior = prior - 1
+    end
+    values[prior + 1] = item
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  return lower_value + (values[lower_zero_index + 2] - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+square_root: procedure = .float
+  arg value = .float
+  if value <= 0.0 then return 0.0
+  guess = value
+  if guess < 1.0 then guess = 1.0
+  do iteration = 1 to 80
+    next_guess = (guess + value / guess) / 2.0
+    if floatabs(next_guess - guess) < 0.000000000001 then return next_guess
+    guess = next_guess
+  end
+  return guess
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

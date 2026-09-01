@@ -1,0 +1,41 @@
+PERF3-13 Gate F F1g-D local closeout
+Date: 2026-08-15
+
+User surface:
+- .httpbody.fixed(contentLength, capacity, responseCapacity)
+- .httpbody.chunked(capacity, responseCapacity)
+- .httpclient.post_stream(path, body, headers, responseCapacity)
+- .httpresponse.body_reference() plus .byteendpoint.from_encoded_reference()
+  for an explicit bounded response endpoint
+- buffered post remains available and adds bounded gzip/deflate decoding
+
+Ownership and transfer:
+- each reusable connection remains owned by one long-lived taskwork instance
+- request and response streams use bounded type-4 endpoint references
+- typed task arguments carry only canonical ChannelValue state and reconstruct
+  the sealed formal class in the worker
+- primitives retain the direct register path
+- explicit taskscope.submit request values reach taskwork.run unchanged
+- cancellation scans the channel-owned bounded pending set; no growing Rexx
+  request registry remains
+
+Integration:
+- loopback fixed-length and HTTP chunked request/response tests
+- gzip, zlib and raw-deflate codec vectors with CRC/Adler/size checks
+- actual crexx-rag /v1/chat/completions and /v1/embeddings shapes
+- authorization and idempotency headers
+- concurrent generation/embedding requests on both VMs, optimized and noopt
+- imported task methods compile, assemble, link and run as linked images
+
+Regression learning:
+- full Debug caught an intermediate taskwork regression after the primitive
+  fast-path rework: an explicit request was wrapped as typed-object metadata
+- the boundary was corrected, all eight affected legacy cells passed, and the
+  complete 2,175-test Debug suite was rerun clean
+- this distinction is now normative in the AI specification
+
+Deferred/out of scope:
+- public provider-plugin ABI and open cross-host protocol remain F2
+- experimental publication remains gated by portable conformance
+- later release hardening may tune the RXVM hot loop without changing this
+  accepted surface or the five mandatory RXAS operations

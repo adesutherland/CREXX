@@ -5,9 +5,9 @@ can compile, assemble, execute, link, and package programs without requiring
 the user to call each toolchain binary by hand.
 
 It is also useful in larger builds because it keeps the release defaults in one
-place: headerless scripts compile as Level B with `rxfnsb` imported, native
-packaging runs through `rxlink` before `rxcpack`, and source/binary import
-paths are passed to the compiler phase consistently.
+place: source-level defaults are delegated to `rxc` by file type, native
+packaging runs through `rxlink` before `rxcpack`, and source/binary import paths
+are passed to the compiler phase consistently.
 
 ## Use cases
 
@@ -44,6 +44,12 @@ The following options are available (single and double dashes work for all optio
 `-exec`
 : Execute the compiled `.rxbin` under `rxvme` (default).
 
+`-args`
+: Stop `crexx` option parsing; all remaining command-line arguments are passed
+to the executed program as separate argv entries. Use this as the final driver
+option when program arguments contain spaces or characters that a shell would
+normally interpret.
+
 `-noexec`
 : Compile only; do not execute the resulting `.rxbin`.
 
@@ -59,8 +65,27 @@ The following options are available (single and double dashes work for all optio
 `-nonative`
 : Disable native packaging.
 
+`-library output`
+: Build the explicit source files as one incrementally maintained library and
+atomically publish `output.rxbin`. Independent compile/assemble actions run in
+parallel; linking starts only after the complete source wave succeeds.
+
+`-program output`
+: Build the explicit source files as one incrementally maintained linked
+program and atomically publish `output.rxbin`. Add `-native` to publish a
+native executable as well.
+
+`-jobs auto|count`
+: Bound parallel compile/assemble work for `-library` and `-program`. `auto` is
+the default: 30 workers on macOS and five elsewhere, capped by the number of
+source actions.
+
+`-rebuild`
+: Bypass the project action keys and rebuild every explicit source plus the
+final link.
+
 `-verbose[0-4]`
-: Report on progress; default verbose0, which only issues error messages when the compile fails. Verbose 2 shows the command lines to the toolchain utilities rxc, rxas and rxvme. Verbose 3 includes options and source listings, while verbose 4 includes the contents of the generated assembly code.
+: Report on progress; default verbose0, which only issues error messages when the compile fails. Verbose 2 shows the rendered argv used for the toolchain utilities rxc, rxas and rxvme. Verbose 3 includes options and source listings, while verbose 4 includes the contents of the generated assembly code.
 
 `-[no]colo[u]r`
 : Enable or disable colourized progress output.
@@ -78,7 +103,11 @@ The following options are available (single and double dashes work for all optio
 : Use decimal arithmetic where the driver has to choose arithmetic mode.
 
 `-l[library path]`
-: Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. Runtime/native library loading is separate from the compiler's `-s` and `-i` import-discovery paths.
+: Load a binary/runtime library. A value containing a directory component is
+used as the exact file path; a bare packaged name remains relative to
+`CREXX_HOME/bin`. This permits applications to name an approved library file
+without searching runtime paths. Runtime/native library loading is separate
+from the compiler's `-s` and `-i` import-discovery paths.
 
 For native packaging, `crexx` now separates `-l` inputs into two groups:
 
@@ -105,22 +134,132 @@ This keeps the direct interpreter path fast while still producing compact native
 `--link-keep-inline`
 : When using `-native`, keep inline-body metadata in the linked intermediate. The native link strips this metadata by default because it is only needed by later compiler imports and debugging/tooling checks.
 
-`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
+`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add user runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
 
-Headerless top-level scripts are still compiled with `--level levelb --import rxfnsb`.
+Source files without an `OPTIONS` clause use the `rxc` file-type defaults:
+`.rexx` defaults to Level C Classic REXX, while `.crexx` and `.crx` default to
+Level G. Explicit `OPTIONS LEVELC` scripts use the normal source header and the
+driver's standard runtime module set, including the Classic compatibility
+runtime `rxfnsc`. Level C compilation is incremental: supported Classic Rexx
+shapes lower and run, while constructs outside the implemented slice are
+rejected with an unsupported-shape diagnostic.
+
+The driver invokes its toolchain phases through the CREXX ADDRESS command
+environment using direct argv dispatch. That avoids platform shell parsing for
+normal compile, assemble, link, pack, native-compile, and execute steps while
+keeping verbose output readable.
+
+## Choosing how to build a program or library
+
+Use the ordinary `crexx source.crexx` form to compile and immediately run a
+program. Use `--program` when several explicitly listed sources form one
+maintained executable product, or when repeat-build speed and safe publication
+matter. Use `--library` for reusable linked code. Projects that also own native
+code, plugins, generators, installation or extensive QA should use CMake.
+
+| Need | Command |
+| --- | --- |
+| Compile and run a program now | `crexx source.crexx` |
+| Compile one program without running it | `crexx source.crexx --noexec` |
+| Build one maintained linked RXBIN incrementally | `crexx --program output sources...` |
+| Build a native version of that linked program | `crexx --program output sources... --native` |
+| Build a reusable linked library incrementally | `crexx --library output sources...` |
+| Build a product with native components, generators, packaging or broad QA | CMake |
+
+An installed Release toolchain therefore supports ordinary REXX program and
+library development without requiring a CMake project:
+
+```bash
+crexx --library build/mylib source1.crexx source2.crexx --jobs auto
+crexx --program build/myprogram main.crexx support.crexx --jobs auto
+crexx --program build/myprogram main.crexx support.crexx --jobs auto --native
+```
+
+These modes optimize REXX bytecode by default. Use `--nooptimize` when checking
+optimizer parity or diagnosing generated code. Existing `-s`, `-i`, `-l`,
+`--import-rxas`, diagnostics and locale options keep their normal meanings.
+Packaged RXBIN imports retain their autoload hints, so a linked program can load a
+separately published dependency from an `rxvm -l` location.
+
+The builder records content keys under `<output>.crexx-build`. A repeat with
+unchanged tools, options, declared sources and explicit library inputs prints
+`SKIP: project current` and does not invoke the compiler or linker. `--rebuild`
+forces the full action set.
+
+The explicit source list is intentionally one safe dependency cohort. A change
+to any member rebuilds that cohort in parallel and relinks it. This is
+conservative because `rxc` may consume sibling source metadata and optimized
+inline bodies; skipping an importer without an exact producer-binding depfile
+would be fragile. Files outside the declared source and import roots do not
+invalidate the cohort. Direct files inside a source import root are
+fingerprinted because one may satisfy an import even when it was not named as
+an output member. The immediate no-op remains limited to those content-key
+checks. Larger generated/native/package projects should use the CMake graph,
+whose declarations provide narrower reverse-dependency closures.
+
+Each member writes only in its private action directory. The link writes a
+private RXBIN and renames it over the public output only after success. A
+compiler, assembler or linker failure therefore leaves the last published
+library/program intact.
 
 ## Examples
 
 ### Just run it
 
-The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will excute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
+The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will execute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
 
 ```rexx <!--crexx-1.crexx-->
+options levelb
+import rxfnsb
+
 say 'hello crexx!'
 say 'today''s date is:' date()
 ```
 
+We will run that with:
+
+```bash
+crexx hello
+```
+
 <!--splice--crexx crexx-1.crexx-->
+
+### Make an executable module
+
+cRexx can make a native executable from a Rexx program. For this, the `rxlink` utility will be called, to arrange the modules into an `.rxbin` library, while insuring that there is no duplication of resources. This `.rxbin` will be processed by the `rxcpack` program, after which the `gcc` or `clang` compilers and the os linkage editor will do their work.
+
+The interesting part here is that all this is accomplished by the `--native` option on the cRexx utility. When we take the previous program and compile it with:
+
+```bash
+crexx hello --native
+```
+
+then we will have a `hello` program (`hello.exe` on windows) which can be executed by specifying its name in the shell, or even by double clicking it in the File Explorer, Finder or equivalent OS GUI interface. This program can be executed on machines without a cRexx installation.
+
+### Compile and run a program with commandline arguments
+
+When using the cRexx compiler driver, commandline arguments as input to the program can be specified with the `--args` option; *this option needs to be the last option on the cRexx command*, because everything that follows will be sent to the program as a string array (`.string[]`) in the execution phase.
+
+Let's say we have called this program *hello2.crexx*:
+
+```rexx <!--hello2.crexx-->
+main: procedure
+   arg sources=.string[]
+   loop i=1 to sources.0
+     say sources.i
+   end
+```
+
+If we execute the above program with the commandline:
+
+```bash <!--callargs.sh-->
+crexx hello2 --args one two three
+```
+
+We will see the following output:
+
+<!--splice--crexx hello2.crexx -args one two three-->
+
 
 ## Verbosity
 
@@ -138,11 +277,11 @@ say 'today it''s' date('w')
 
 ## `--verbose1`
 
-With `--verbose1`, the driver tells in a very condensed way what it did and how it went. When the return codes from the `rxc` and `rxas` are 0, these are displayed with an 'OK' between square brackets.
+With `--verbose1`, the driver tells in a condensed way what it did and how it went. When the return codes from the `rxc` and `rxas` are 0, these are displayed with an 'OK' between square brackets.
 
 <!--splice--crexx hello --verbose1 --nocolor -->
 
-It issues some reassuring messages about the compiler and the assembler running successfully and skips the starting of the runtime engine, because the output of the program follows these messages. 
+When everything works out well, it issues some reassuring messages about the compiler and the assembler running successfully and skips the starting of the runtime engine, because the output of the program follows these messages. When errors occur, these are signalled as in the `-verbose0` setting, with some extra indication in which phase of compilation, link and/or executing the problem took place.
 
 ## `--verbose2`
 
@@ -159,7 +298,9 @@ It starts by identifying the exact release of the crexx version. After this, a n
 | s roots | additional sourcefile lookup locations |
 | i roots | additional binary (.rxbin) lookup locations |
 
-After this, the *simple script defaults* are mentioned: these are the lines that are inserted for scripts that have no explicit `main` procedure.
+Source-level defaults are owned by `rxc`, so the driver does not insert
+language or import flags for headerless files. The verbose output shows the
+exact `rxc` command and the source extension passed to the compiler.
 
 With this verbosity level, the exact invocations of the tools in the toolchain are documented, including the complete paths and arguments. Also, the invocation of the runtime engine, with all libraries explicity named - and this includes the libraries that are not used. With native compiles, the `rxlink` tool will extract the used code from these libraries into the executable. It also shows the `-a` flag as a last option, even if this is unused.
 
@@ -183,4 +324,3 @@ Also, the complete command line to the c-compiler and its linkage editor step is
 
 
 In the following chapters, these tools are documented in detail.
-

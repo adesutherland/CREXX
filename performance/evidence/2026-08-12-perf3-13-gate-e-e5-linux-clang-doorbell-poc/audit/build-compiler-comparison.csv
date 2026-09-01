@@ -1,0 +1,16 @@
+measure,clang_21_1_8,gcc_15_2_0,clang_relative_to_gcc,scope
+configure_wall_seconds,20.16,16.10,+25.22%,fresh frozen E4 Release profile-20 profiling-off
+configure_max_rss_kb,94388,95004,-0.65%,fresh frozen E4 Release profile-20 profiling-off
+two_vm_build_wall_seconds,108.39,351.13,-69.13% (3.240x faster),fresh rxbvm+rxtvm -j6 from same source
+two_vm_build_user_seconds,276.83,790.46,-64.98%,fresh rxbvm+rxtvm -j6 from same source
+two_vm_build_system_seconds,6.47,15.87,-59.23%,fresh rxbvm+rxtvm -j6 from same source
+two_vm_build_max_rss_kb,258744,683840,-62.16%,fresh rxbvm+rxtvm -j6 from same source
+e4_rxbvm_file_bytes,1345728,2031744,-33.76%,same fresh control builds
+e4_rxtvm_file_bytes,1371464,2061536,-33.47%,same fresh control builds
+e4_rxbvm_text_bytes,1230071,1904469,-35.41%,GNU size
+e4_rxtvm_text_bytes,1249575,1929813,-35.25%,GNU size
+poc_rxbvm_file_bytes,1350792,2032992,-33.56%,qualified Clang and accepted GCC candidates
+poc_rxtvm_file_bytes,1372440,2062784,-33.47%,qualified Clang and accepted GCC candidates
+poc_rxbvm_text_bytes,1232903,1907637,-35.37%,GNU size
+poc_rxtvm_text_bytes,1252431,1933173,-35.21%,GNU size
+

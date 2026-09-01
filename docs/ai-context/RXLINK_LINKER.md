@@ -17,25 +17,95 @@ first and then pass that linked image to `rxcpack`.
 
 `rxlink` is not a replacement for the VM loader. The output still contains multiple module records, and `rxvm` still performs the final runtime link/load work.
 
+## Native-provider requirements
+
+Selected `META_PROVIDER` records are preserved and checked against their
+matching `META_FUNC` signatures. `rxlink` rejects the same callable when inputs
+associate it with different stable providers, return types, or argument
+signatures. Requiring-module provenance is retained for diagnostics.
+
+Use `-p requirements-file`, or `PROVIDERS requirements-file` in a control file,
+to write the packaging projection without loading native code:
+
+```text
+CREXX-RXPA-REQUIREMENTS 1
+required<TAB>provider<TAB>callable<TAB>return-type<TAB>arguments<TAB>module
+```
+
+This is the authoritative input to `crexx -native`. Each provider value is the
+canonical artifact stem: native packaging prefers `<provider>.a`/`.lib` and
+falls back to the historical `<provider>_static.a`/`.lib` name. A native
+package therefore does not maintain a second hand-written provider list.
+
+## Packaged bytecode autoload hints
+
+Selected `META_AUTOLOAD` records are runtime convenience metadata. `rxlink`
+remaps and preserves their callable-symbol and packaged-filename-stem
+references, but does not use them to discover linker inputs. Explicit link
+inputs and ordinary symbol/signature selection remain authoritative.
+
+It is safe to retain a hint whose provider has been selected into the linked
+image. At runtime the VM links all explicit and embedded modules first and
+follows only hints attached to callables that are still unresolved. Thus a
+deployable linked image does not reopen or duplicate a dependency merely
+because the original separately compiled consumer recorded its package stem.
+
+## Module initializers
+
+Selected `META_INITIALIZER` records are runtime contract metadata. `rxlink`
+checks that each record names a local `META_FUNC`/procedure with `.void` return
+and no arguments, remaps its symbol and procedure references into the output
+pool, and preserves metadata order. Initializers do not make their procedures
+exports or selection roots.
+
+Linked images retain their individual module records. This is essential for
+the once-per-mutable-module-instance state machine: multiple initializers in
+one module retain declaration order, while the VM can still initialize and
+poison each module overlay independently. Source and inline stripping never
+removes initializer metadata.
+
 ## Output Format
 
-The linker writes a `003`-format record stream:
+RXLINK reads and writes only RXBIN 007. The complete toolchain moved atomically;
+006 inputs are rejected and rebuilt rather than decoded through a compatibility
+path. The format and semantic graph design are in
+[RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
-1. one `RXBIN_RECORD_POOL_SHARED` record containing the shared constant pool
-2. one `RXBIN_RECORD_MODULE_SHARED` record per selected module
+The 007 output is one fixed-width sectioned container with a module directory,
+module instruction ranges, shared constant/canonical metadata data, and one
+image-wide semantic graph. The current shared-pool/module record stream is not
+carried forward.
 
-Each shared-backed module keeps its own instruction stream, header values, and module name/description, but borrows constants from the shared pool.
+Milestone 1 retains metadata-driven module selection. For the selected modules
+RXLINK rebuilds canonical text-backed type/member/callable/factory
+nodes, preserves declaration origin, assigns new image-local dense IDs,
+rewrites graph-bearing instruction references, and rebuilds every adjacency,
+name, declaration, dispatch, callable, factory, and provider index. It never
+concatenates module-local indexes.
+
+Callable imports compiled without their provider may carry `.unknown` in a
+return or parameter type. When the selected defining module is linked, RXLINK
+refines only those unresolved imported fields from the definition. Known types,
+arity, and parameter flags remain strict contracts, and duplicate definitions
+remain errors.
+
+The common `rxbin` graph library owns structural merge, remap, validation, and
+fast rule-neutral traversal. Future language-policy adapters may decide
+inheritance, assignability, override/default conflicts, and provider selection
+without embedding those language rules in RXBIN itself.
 
 ## Selection Model
 
-Inputs are read as a record stream, so one input file may contain multiple module records. Module selection then happens in this order:
+Inputs are read as a container stream, so one input file may contain a linked
+multi-module container or concatenated standalone library containers. Module
+selection then happens in this order:
 
 1. apply `OMIT`
 2. apply `INCLUDE`
 3. apply explicit `ROOT`
 4. if no roots were chosen, select modules containing `main`
 5. if there is still no root, select modules from the first input file
-6. walk imports, `srcfproc` interface references, and interface relationships to pull in required providers
+6. walk imports, `srcfprocsel` interface references, and interface relationships to pull in required providers
 7. reject duplicate selected exports
 
 Selectors match by:
@@ -52,13 +122,34 @@ Selectors match by:
 - `proc_head` is used to find procedures and detect `main`
 - `expose_head` is used to discover imports and exports
 - `meta_head` is scanned for `META_INTERFACE` and `META_IMPLEMENTS` so interface definitions and implementations pull each other in
-- the instruction stream is scanned for `srcfproc` selector strings so modules
-  referenced only through runtime interface-factory lookup are still retained
-- the instruction stream is scanned for `srcmethod` member names. Because the
+- the instruction stream is scanned for `srcfprocsel` descriptor strings so
+  modules referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcmethodsel` member names. Because the
   receiver's concrete class can be known only at runtime, modules that expose
   or declare a matching member name are selected conservatively.
+- selected class/interface contracts are then checked against callable
+  descriptors so a provider with the right name but wrong return or argument
+  signature is rejected before output is written.
 
-The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
+The linker preserves the metadata chain in output because the VM and tooling
+still consume it at runtime. This includes packaged bytecode autoload hints;
+they are transport metadata, not linker discovery instructions.
+
+Task metadata is also runtime contract metadata. `.task1`, `.task2` and
+`.task3` entries carry an 80-byte sealed binding containing image digest,
+callable id, signature digest and the optional adapter callable slot. Because
+RXLINK rebuilds and renumbers the semantic graph, it must regenerate these
+bindings from the linked graph rather than copy module-local bytes. Kind `2`
+relocates the receiver `from_channel` factory and kind `3` relocates the
+`.taskwork.run` method. Missing, malformed, stale or signature-incompatible
+bindings fail the link; they are never weakened to procedure-name dispatch.
+An imported task call contains the deterministic 80-byte relocation
+placeholder but does not duplicate the defining module's `META_TASK_TARGET`.
+The RXBIN writer therefore reseals both the metadata binding and every matching
+placeholder constant across all selected constant pools. This is required for
+separately compiled task-method clients: copying the defining module's old seal
+would retain the wrong final graph digest, while leaving the use-site
+placeholder would fail the `RXTB` magic check.
 
 ## Constant-Pool Rewriting
 
@@ -75,6 +166,11 @@ Structured constants are rewritten into the shared pool with all referenced offs
 - exposed register/procedure entries
 - metadata entries
 - instruction operands that point into the pool
+
+Instruction rewriting derives its operand count and kind from the canonical
+variable-length opcode signature. Linker scans and remaps therefore have no
+three-operand format switch; wide instructions retain every inline operand
+while constant and graph references are rewritten normally.
 
 ## Strip Support
 
@@ -109,6 +205,8 @@ It intentionally does not remove runtime contract metadata such as:
 - `META_INTERFACE`
 - `META_IMPLEMENTS`
 - `META_MEMBER`
+- `META_INITIALIZER`
+- sealed `.task1`/`.task2`/`.task3` bindings
 
 That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing source text/file path payloads and source-level TRACE value metadata.
 
@@ -131,14 +229,21 @@ Supported directives are:
 When changing `rxlink`, keep three layers of coverage in mind:
 
 1. format tests: shared-pool/shared-module record layout
-2. behavioural tests: linked images run correctly in both `rxvm` and `rxbvm`
+2. behavioural tests: linked images run correctly through product `rxvm`; add
+   the concrete `rxbvm`/`rxtvm` dispatch contract only for execution-image or
+   dispatch-sensitive changes
 3. toolchain tests: `rxdas` can still disassemble linked images, including stripped ones
 
 For broader confidence, the runtime `_opt` path is now wired through linked
 images in normal `ctest` coverage. For a focused rerun, use:
 
-- `ctest -L linked_opt --output-on-failure`
+- `cmake --build <build-dir> --target qa-prep-linked-opt-runtime`
+- `ctest --test-dir <build-dir> -L linked_opt --label-exclude
+  '^performance-measurement$' --output-on-failure`
 - `cmake --build <build-dir> --target linked_opt_sweep`
+
+The first two commands expose preparation and execution as separate stages;
+`linked_opt_sweep` is the convenience target that performs both in that order.
 
 Be conservative with stripping. If a proposed change removes anything beyond
 the current source-level debug set (`META_SOURCE_STEP` and `META_TRACE_EVENT`),

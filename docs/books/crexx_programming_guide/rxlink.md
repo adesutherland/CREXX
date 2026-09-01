@@ -1,6 +1,6 @@
 # rxlink - the cRexx Linker
 
-`rxlink` combines one or more `.rxbin` modules into a linked image with a shared constant pool. The result is still a normal `003` format record stream and can be loaded by `rxvm`, `rxbvm`, or passed on to `rxcpack`.
+`rxlink` combines one or more `.rxbin` modules into a linked image with a shared constant pool. The result is still a normal `006` format record stream and can be loaded by `rxvm`, `rxbvm`, or passed on to `rxcpack`.
 
 ## Command Line Options
 
@@ -10,7 +10,7 @@
 \small
 \obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## What It Produces
 
@@ -48,7 +48,7 @@ The linker can be driven from the command line or from a control file.
 - If no root is specified, `rxlink` selects modules containing `main`.
 - If no selected module contains `main`, it falls back to the modules from the first input file.
 
-After roots are chosen, `rxlink` follows exposed imports, `srcfproc`
+After roots are chosen, `rxlink` follows exposed imports, `srcfprocsel`
 interface-factory references, and interface relationships to pull in the
 modules needed by those roots.
 
@@ -154,6 +154,7 @@ OUTPUT build/app_provider_a
 
 This form is useful when you have alternative providers and want to make
 the choice explicitly at packaging time.
+
 
 ### Add A Map File
 

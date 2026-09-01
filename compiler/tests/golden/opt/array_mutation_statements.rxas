@@ -1,0 +1,355 @@
+/*
+ * SOURCE                 : array_mutation_statements.crexx
+ */
+
+.globals=0
+
+main() .locals=7
+   .meta "array_mutation_statements.main"="b" ".void" main() ""
+   numsci 18,1,1
+   .meta "array_mutation_statements.main.ints"="b" ".int[*]" r0
+   .srcstep 1 1 17 "array_mutation_statements.crexx" 26 1 12 "ints = .int[]"
+   null r0
+   .meta "array_mutation_statements.main.strings"="b" ".string[*]" r1
+   .srcstep 2 2 17 "array_mutation_statements.crexx" 3 1 18 "strings = .string[]"
+   null r1
+   .srcstep 3 3 17 "array_mutation_statements.crexx" 4 1 26 "append strings with \"red\""
+   .traceevent "V" 6 "R" "S" "r" 1 3 3 0 "strings" ""
+   load r2,"red"
+   .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
+   getattrs r3,r1,0
+   iadd r3,r3,1
+   insattrs1 r1,r3,1
+   linkattr1 r4,r1,r3
+   scopy r4,r2
+   unlink r4
+   .srcstep 4 4 17 "array_mutation_statements.crexx" 5 1 27 "append strings with \"blue\""
+   .traceevent "V" 6 "R" "S" "r" 1 4 4 0 "strings" ""
+   load r4,"blue"
+   .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
+   getattrs r2,r1,0
+   iadd r2,r2,1
+   insattrs1 r1,r2,1
+   linkattr1 r3,r1,r2
+   scopy r3,r4
+   unlink r3
+   .srcstep 5 5 17 "array_mutation_statements.crexx" 6 1 33 "insert strings with \"green\" at 2"
+   .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "strings" ""
+   load r4,"green"
+   .traceevent "L" 4 "R" "S" "r" 4 5 5 0 "" ""
+   load r3,2
+   .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
+   insattrs1 r1,r3,1
+   linkattr1 r2,r1,r3
+   scopy r2,r4
+   unlink r2
+   .srcstep 6 6 17 "array_mutation_statements.crexx" 7 1 92 "say \"strings1=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2] || \":\" || strings[3]"
+   .traceevent "C" 4 "R" "V" "r" 4 6 6 0 "strings" ""
+   getattrs r3,r1,0
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "strings" ""
+   concat r3,"strings1=",r3
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   concat r3,r3,":"
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   minlinkattr1 r2,r1,1
+   .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "strings" ""
+   concat r3,r3,r2
+   unlink r2
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   concat r3,r3,":"
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   minlinkattr1 r5,r1,2
+   .traceevent "V" 6 "R" "S" "r" 5 6 6 0 "strings" ""
+   concat r3,r3,r5
+   unlink r5
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   concat r3,r3,":"
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   minlinkattr1 r6,r1,3
+   .traceevent "V" 6 "R" "S" "r" 6 6 6 0 "strings" ""
+   concat r3,r3,r6
+   unlink r6
+   .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
+   say r3
+   .srcstep 7 7 17 "array_mutation_statements.crexx" 9 1 20 "remove strings at 2"
+   .traceevent "V" 6 "R" "S" "r" 1 7 7 0 "strings" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 7 7 0 "" ""
+   delattrs1 r1,r6,1
+   .srcstep 8 8 17 "array_mutation_statements.crexx" 10 1 71 "say \"strings2=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2]"
+   .traceevent "C" 4 "R" "V" "r" 6 8 8 0 "strings" ""
+   getattrs r5,r1,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 8 8 0 "strings" ""
+   concat r5,"strings2=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   minlinkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "S" "r" 4 8 8 0 "strings" ""
+   concat r5,r5,r4
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   minlinkattr1 r3,r1,2
+   .traceevent "V" 6 "R" "S" "r" 3 8 8 0 "strings" ""
+   concat r5,r5,r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
+   say r5
+   .srcstep 9 9 17 "array_mutation_statements.crexx" 12 1 27 "append strings with \"gold\""
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "strings" ""
+   load r6,"gold"
+   .traceevent "L" 4 "R" "S" "r" 6 9 9 0 "" ""
+   getattrs r4,r1,0
+   iadd r4,r4,1
+   insattrs1 r1,r4,1
+   linkattr1 r5,r1,r4
+   scopy r5,r6
+   unlink r5
+   .srcstep 10 10 17 "array_mutation_statements.crexx" 13 1 28 "append strings with \"white\""
+   .traceevent "V" 6 "R" "S" "r" 1 10 10 0 "strings" ""
+   load r6,"white"
+   .traceevent "L" 4 "R" "S" "r" 6 10 10 0 "" ""
+   getattrs r4,r1,0
+   iadd r4,r4,1
+   insattrs1 r1,r4,1
+   linkattr1 r5,r1,r4
+   scopy r5,r6
+   unlink r5
+   .srcstep 11 11 17 "array_mutation_statements.crexx" 14 1 26 "remove strings at 2 for 2"
+   .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "strings" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 11 11 0 "" ""
+   load r5,2
+   .traceevent "L" 4 "R" "I" "r" 5 11 11 0 "" ""
+   delattrs1 r1,r6,r5
+   .srcstep 12 12 17 "array_mutation_statements.crexx" 15 1 71 "say \"strings3=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2]"
+   .traceevent "C" 4 "R" "V" "r" 6 12 12 0 "strings" ""
+   getattrs r5,r1,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 12 12 0 "strings" ""
+   concat r5,"strings3=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
+   minlinkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "S" "r" 4 12 12 0 "strings" ""
+   concat r5,r5,r4
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
+   minlinkattr1 r3,r1,2
+   .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "strings" ""
+   concat r5,r5,r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
+   say r5
+   .srcstep 13 13 17 "array_mutation_statements.crexx" 17 1 28 "append strings with \"black\""
+   .traceevent "V" 6 "R" "S" "r" 1 13 13 0 "strings" ""
+   load r6,"black"
+   .traceevent "L" 4 "R" "S" "r" 6 13 13 0 "" ""
+   getattrs r4,r1,0
+   iadd r4,r4,1
+   insattrs1 r1,r4,1
+   linkattr1 r5,r1,r4
+   scopy r5,r6
+   unlink r5
+   .srcstep 14 14 17 "array_mutation_statements.crexx" 18 1 29 "append strings with \"silver\""
+   .traceevent "V" 6 "R" "S" "r" 1 14 14 0 "strings" ""
+   load r6,"silver"
+   .traceevent "L" 4 "R" "S" "r" 6 14 14 0 "" ""
+   getattrs r4,r1,0
+   iadd r4,r4,1
+   insattrs1 r1,r4,1
+   linkattr1 r5,r1,r4
+   scopy r5,r6
+   unlink r5
+   .srcstep 15 15 17 "array_mutation_statements.crexx" 19 1 29 "append strings with \"orange\""
+   .traceevent "V" 6 "R" "S" "r" 1 15 15 0 "strings" ""
+   load r6,"orange"
+   .traceevent "L" 4 "R" "S" "r" 6 15 15 0 "" ""
+   getattrs r4,r1,0
+   iadd r4,r4,1
+   insattrs1 r1,r4,1
+   linkattr1 r5,r1,r4
+   scopy r5,r6
+   unlink r5
+   .srcstep 16 16 17 "array_mutation_statements.crexx" 20 1 25 "remove strings at 2 to 3"
+   .traceevent "V" 6 "R" "S" "r" 1 16 16 0 "strings" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
+   load r5,3
+   .traceevent "L" 4 "R" "I" "r" 5 16 16 0 "" ""
+   isub r3,r5,r6
+   iadd r3,r3,1
+   ilte r4,r3,0
+   brt l95arrayremoveend,r4
+   delattrs1 r1,r6,r3
+l95arrayremoveend:
+   .srcstep 17 17 17 "array_mutation_statements.crexx" 21 1 92 "say \"strings4=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2] || \":\" || strings[3]"
+   .traceevent "C" 4 "R" "V" "r" 6 17 17 0 "strings" ""
+   getattrs r5,r1,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 17 17 0 "strings" ""
+   concat r5,"strings4=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   minlinkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "S" "r" 4 17 17 0 "strings" ""
+   concat r5,r5,r4
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   minlinkattr1 r3,r1,2
+   .traceevent "V" 6 "R" "S" "r" 3 17 17 0 "strings" ""
+   concat r5,r5,r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   minlinkattr1 r2,r1,3
+   .traceevent "V" 6 "R" "S" "r" 2 17 17 0 "strings" ""
+   concat r5,r5,r2
+   unlink r2
+   .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
+   say r5
+   .srcstep 18 18 17 "array_mutation_statements.crexx" 23 1 14 "clear strings"
+   .traceevent "V" 6 "R" "S" "r" 1 18 18 0 "strings" ""
+   setattrs r1,0
+   .srcstep 19 19 17 "array_mutation_statements.crexx" 24 1 29 "say \"strings5=\" || strings[0]"
+   .traceevent "C" 4 "R" "V" "r" 6 19 19 0 "strings" ""
+   getattrs r5,r1,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 19 19 0 "strings" ""
+   concat r5,"strings5=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 19 19 0 "" ""
+   say r5
+   .srcstep 20 20 17 "array_mutation_statements.crexx" 27 1 20 "append ints with 10"
+   .traceevent "V" 6 "R" "I" "r" 0 20 20 0 "ints" ""
+   load r6,10
+   .traceevent "L" 4 "R" "I" "r" 6 20 20 0 "" ""
+   getattrs r4,r0,0
+   iadd r4,r4,1
+   insattrs1 r0,r4,1
+   linkattr1 r5,r0,r4
+   isetunlink r5,r6
+   .srcstep 21 21 17 "array_mutation_statements.crexx" 28 1 20 "append ints with 30"
+   .traceevent "V" 6 "R" "I" "r" 0 21 21 0 "ints" ""
+   load r6,30
+   .traceevent "L" 4 "R" "I" "r" 6 21 21 0 "" ""
+   getattrs r4,r0,0
+   iadd r4,r4,1
+   insattrs1 r0,r4,1
+   linkattr1 r5,r0,r4
+   isetunlink r5,r6
+   .srcstep 22 22 17 "array_mutation_statements.crexx" 29 1 25 "insert ints with 20 at 2"
+   .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "ints" ""
+   load r6,20
+   .traceevent "L" 4 "R" "I" "r" 6 22 22 0 "" ""
+   load r5,2
+   .traceevent "L" 4 "R" "I" "r" 5 22 22 0 "" ""
+   insattrs1 r0,r5,1
+   linkattr1 r4,r0,r5
+   isetunlink r4,r6
+   .srcstep 23 23 17 "array_mutation_statements.crexx" 30 1 17 "remove ints at 1"
+   .traceevent "V" 6 "R" "I" "r" 0 23 23 0 "ints" ""
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 23 23 0 "" ""
+   delattrs1 r0,r6,1
+   .srcstep 24 24 17 "array_mutation_statements.crexx" 31 1 20 "append ints with 40"
+   .traceevent "V" 6 "R" "I" "r" 0 24 24 0 "ints" ""
+   load r6,40
+   .traceevent "L" 4 "R" "I" "r" 6 24 24 0 "" ""
+   getattrs r4,r0,0
+   iadd r4,r4,1
+   insattrs1 r0,r4,1
+   linkattr1 r5,r0,r4
+   isetunlink r5,r6
+   .srcstep 25 25 17 "array_mutation_statements.crexx" 32 1 22 "remove ints at 2 to 1"
+   .traceevent "V" 6 "R" "I" "r" 0 25 25 0 "ints" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 25 25 0 "" ""
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 25 25 0 "" ""
+   isub r3,r5,r6
+   iadd r3,r3,1
+   ilte r4,r3,0
+   brt l148arrayremoveend,r4
+   delattrs1 r0,r6,r3
+l148arrayremoveend:
+   .srcstep 26 26 17 "array_mutation_statements.crexx" 33 1 77 "say \"ints1=\" || ints[0] || \":\" || ints[1] || \":\" || ints[2] || \":\" || ints[3]"
+   .traceevent "C" 4 "R" "V" "r" 6 26 26 0 "ints" ""
+   getattrs r5,r0,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 26 26 0 "ints" ""
+   concat r5,"ints1=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   minlinkattr1 r4,r0,1
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 26 26 0 "ints" ""
+   concat r5,r5,r4
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   minlinkattr1 r3,r0,2
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 26 26 0 "ints" ""
+   concat r5,r5,r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   minlinkattr1 r2,r0,3
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 26 26 0 "ints" ""
+   concat r5,r5,r2
+   unlink r2
+   .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+   say r5
+   .srcstep 27 27 17 "array_mutation_statements.crexx" 35 1 23 "remove ints at 2 for 2"
+   .traceevent "V" 6 "R" "I" "r" 0 27 27 0 "ints" ""
+   load r6,2
+   .traceevent "L" 4 "R" "I" "r" 6 27 27 0 "" ""
+   load r5,2
+   .traceevent "L" 4 "R" "I" "r" 5 27 27 0 "" ""
+   delattrs1 r0,r6,r5
+   .srcstep 28 28 17 "array_mutation_statements.crexx" 36 1 41 "say \"ints2=\" || ints[0] || \":\" || ints[1]"
+   .traceevent "C" 4 "R" "V" "r" 6 28 28 0 "ints" ""
+   getattrs r5,r0,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 28 28 0 "ints" ""
+   concat r5,"ints2=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 28 28 0 "" ""
+   concat r5,r5,":"
+   .traceevent "O" 4 "R" "S" "r" 5 28 28 0 "" ""
+   minlinkattr1 r4,r0,1
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 28 28 0 "ints" ""
+   concat r5,r5,r4
+   unlink r4
+   .traceevent "O" 4 "R" "S" "r" 5 28 28 0 "" ""
+   say r5
+   .srcstep 29 29 17 "array_mutation_statements.crexx" 38 1 11 "clear ints"
+   .traceevent "V" 6 "R" "I" "r" 0 29 29 0 "ints" ""
+   setattrs r0,0
+   .srcstep 30 30 17 "array_mutation_statements.crexx" 39 1 23 "say \"ints3=\" || ints[0]"
+   .traceevent "C" 4 "R" "V" "r" 6 30 30 0 "ints" ""
+   getattrs r5,r0,0
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 30 30 0 "ints" ""
+   concat r5,"ints3=",r5
+   .traceevent "O" 4 "R" "S" "r" 5 30 30 0 "" ""
+   say r5
+   .srcstep 31 31 17 "array_mutation_statements.crexx" 41 1 7 "return"
+   ret
+   .meta "array_mutation_statements.main.ints"
+   .meta "array_mutation_statements.main.strings"

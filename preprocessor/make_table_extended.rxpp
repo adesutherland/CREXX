@@ -1,0 +1,45 @@
+/*
+ * RXPP example: generate related lookup tables from one macro call.
+ */
+options levelb
+import rxfnsb
+
+square = .int[]
+cube = .int[]
+cumulative = .int[]
+label = .string[]
+
+##MACRO MAKE_TABLE square_name, cube_name, total_name, label_name, count, title
+    title = unquote(title)
+    running_total = 0
+
+    .gen &square_name = .int[]
+    .gen &cube_name = .int[]
+    .gen &total_name = .int[]
+    .gen &label_name = .string[]
+
+    do i = 1 to count
+        square_value = i * i
+        cube_value = square_value * i
+        running_total = running_total + square_value
+
+        .gen &square_name[&i] = &square_value
+        .gen &cube_name[&i] = &cube_value
+        .gen &total_name[&i] = &running_total
+        .gen &label_name[&i] = "&title &i"
+        .section report say "&title &i: square=" &square_name[&i] ", cube=" &cube_name[&i] ", total=" &total_name[&i]
+    end
+
+    .gen say "&title has &count generated rows"
+    .tail say "&title table generation complete"
+##MEND
+
+##make_table squares, cubes, totals, names, 5, "Number"
+
+say "row 3:" names[3] squares[3] cubes[3] totals[3]
+say "row 5:" names[5] squares[5] cubes[5] totals[5]
+
+say "Generated report"
+##emit report
+
+exit 0

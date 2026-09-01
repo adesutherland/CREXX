@@ -23,8 +23,7 @@
  */
 
 options levelb comments_dash
-namespace data_StringList expose StringArrayListIterator
-import data_StringIterator
+namespace data expose StringArrayListIterator
 
 /**
  * StringIterator for the StringArrayList class.
@@ -130,6 +129,6 @@ index_ = .int
 
   isLive: method = .int
     if snapshot_ = 1 then return 1
-    if refvalid(values_ref_) & refvalid(count_ref_) then return 1
+    if <refvalid>(values_ref_) & <refvalid>(count_ref_) then return 1
     return 0
     

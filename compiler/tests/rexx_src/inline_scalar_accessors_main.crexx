@@ -1,0 +1,35 @@
+options levelb
+import inline_scalar_accessors_dep
+
+main: procedure = .int
+  integer_box = .inline_scalar_accessors_dep..intbox(1)
+  call integer_box.write(7)
+  if integer_box.read() \= 7 then return fail("integer accessor")
+
+  float_box = .inline_scalar_accessors_dep..floatbox(0.5)
+  call float_box.write(2.5)
+  if float_box.read() \= 2.5 then return fail("float accessor")
+
+  if .inline_scalar_accessors_dep..intbox(9).read() \= 9 then
+    return fail("computed receiver")
+
+  uninitialized_box = .inline_scalar_accessors_dep..intbox
+  caught = 0
+  do
+    ignored = uninitialized_box.read()
+  on signal object_not_initialized
+    caught = 1
+  end
+  if caught \= 1 then return fail("uninitialized receiver signal")
+
+  interface_value = .inline_scalar_accessors_dep..scalarview
+  interface_value = integer_box
+  if interface_value.read() \= 7 then return fail("interface dispatch")
+
+  say "PASS: exact scalar accessor imports"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

@@ -1,0 +1,2 @@
+﻿started_utc=2026-07-29T19:53:10.4126445Z measurement=rss warmups=0 recorded_runs=3 serial=yes rss_tool=performance/tools/windows_peak_rss.ps1 rss_metric=child PeakWorkingSet64 sampled every 10 ms classpath=C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\formal-netrexx;C:\Users\adria\CLionProjects\CREXX\.tmp-windows-runtimes\runtimes\netrexx\runlib\NetRexxR.jar
+completed_utc=2026-07-29T20:24:03.1832500Z result=pass sample_rows=87

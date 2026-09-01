@@ -1,0 +1,4 @@
+candidate,path,bytes,delta_bytes,delta_percent,positive_artifact_guard,sha256
+s0,/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s0/bin/rxbvm,1000936,+0,+0.000000,clear,e4c00ccbf7ea183e2529a3808337786cf4b27fc7a031419e5c97612e994835ed
+s1,/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1/bin/rxbvm,1000936,+0,+0.000000,clear,06af874e57906de0dd4c2806fe6403ff6e39d83bc47194beae6cc6a491dc2d2f
+s1b,/private/tmp/crexx-rxvm-inline.yvLywZ/builds/gatec-c2-s1b/bin/rxbvm,1000936,+0,+0.000000,clear,adaa5370a7d062f288bfd743843530ada9866988a73c2a23d60681aa6979fd1b

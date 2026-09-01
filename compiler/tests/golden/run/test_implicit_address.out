@@ -1,4 +1,4 @@
-Warning in test_implicit_address.crexx @ 6:3 - #IMPLICIT_ADDRESS, "cmd"
+Warning in test_implicit_address.crexx @ 6:3 - #IMPLICIT_ADDRESS severity="warning", "cmd"
 1 warning(s) in source file
 OK1
 OK2

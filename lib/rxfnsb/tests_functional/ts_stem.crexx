@@ -12,6 +12,38 @@ if val \= "" then do
    say 'STEM failed in test 1 expected empty string for new key, got: ' val
 end
 
+defaults = .stem()
+/* `stem.` selects the Classic default setter; `stem[""]` is an empty key. */
+defaults.alpha = "old-alpha"
+defaults.beta = "old-beta"
+defaults. = "default-one"
+if defaults.alpha \= "default-one" | defaults.beta \= "default-one" | defaults.missing \= "default-one" then do
+   errors=errors+1
+   say 'STEM failed default assignment for existing or missing tails'
+end
+default_values = defaults.values()
+if defaults.size() \= 2 | defaults.value(1) \= "default-one" | defaults.valueAt(2) \= "default-one" | default_values[1] \= "default-one" | default_values[2] \= "default-one" then do
+   errors=errors+1
+   say 'STEM failed default assignment through indexed or extracted values'
+end
+default_live = defaults.iterator()
+default_tail = default_live.next()
+if default_live.value() \= "default-one" then do
+   errors=errors+1
+   say 'STEM failed default assignment through live iterator'
+end
+default_snapshot = defaults.snapshotIterator()
+default_tail = default_snapshot.next()
+if default_snapshot.value() \= "default-one" then do
+   errors=errors+1
+   say 'STEM failed default assignment through snapshot iterator'
+end
+defaults[""] = "empty-tail"
+if defaults[""] \= "empty-tail" | defaults.missing \= "default-one" then do
+   errors=errors+1
+   say 'STEM confused an explicit empty key with an omitted default key'
+end
+
 s.mykey = "myvalue"
 val = s.mykey
 if val \= "myvalue" then do
@@ -42,6 +74,21 @@ if s.key2 \= "new_val2" then do
    say 'STEM failed in test 6'
 end
 
+
+/* A later stem-default assignment replaces existing compound-tail values. */
+s. = "default-two"
+if s.mykey \= "default-two" | s.key2 \= "default-two" | s[""] \= "default-two" then do
+   errors=errors+1
+   say 'STEM failed to replace existing tails from default assignment'
+end
+
+/* Restore the fixture values used by the direct-access and iterator checks. */
+s.mykey = "myvalue"
+s.key1 = "val1"
+s.key2 = "new_val2"
+s.key3 = "val3"
+s[""] = "empty-key"
+
 s["€uros"] = "100"
 s["你好"] = "world"
 s["🔥fire"] = "hot"
@@ -62,6 +109,44 @@ end
 if s.key_with_Ü \= "value_Ü" then do
   errors=errors+1
   say 'STEM failed in test 10 expected value_Ü for key_with_Ü, got: ' s.key_with_Ü
+end
+
+/* Empty keys, deliberate polynomial collisions, and direct method surfaces. */
+call s.set("", "empty-key")
+call s.set("Aa", "collision-one")
+call s.set("BB", "collision-two")
+if s.get("") \= "empty-key" | s.get("Aa") \= "collision-one" | s.get("BB") \= "collision-two" then do
+  errors = errors + 1
+  say 'STEM failed empty/collision key lookup'
+end
+if s.hash("Aa") \= s.hash("BB") then do
+  errors = errors + 1
+  say 'STEM collision fixture no longer shares a bucket'
+end
+if s.size() \= 11 then do
+  errors = errors + 1
+  say 'STEM failed distinct-key size expected 11, got:' s.size()
+end
+first_key = s.key(1)
+first_value = s.value(1)
+first_value_at = s.valueAt(1)
+if first_key \= "mykey" | first_value \= "myvalue" | first_value_at \= "myvalue" then do
+  errors = errors + 1
+  say 'STEM failed direct indexed access'
+end
+tails = s.tails()
+values = s.values()
+if tails[0] \= 11 | values[0] \= 11 | tails[1] \= "mykey" | values[1] \= "myvalue" then do
+  errors = errors + 1
+  say 'STEM failed extracted tails/values'
+end
+tails[1] = "changed"
+values[1] = "changed"
+preserved_key = s.key(1)
+preserved_value = s.value(1)
+if preserved_key \= "mykey" | preserved_value \= "myvalue" then do
+  errors = errors + 1
+  say 'STEM extracted arrays were not independent'
 end
 
 iterstem = .stem()
@@ -123,6 +208,7 @@ live_count = 0
 live_beta = 0
 live_gamma = 0
 loop while live.hasNext()
+  tail = .string
   tail = live.next()
   val = live.value()
   live_count = live_count + 1
@@ -160,4 +246,5 @@ if live_count <> 3 | live_beta <> 1 | live_gamma <> 1 then do
   say 'STEM failed in test 21 live iterator did not observe later mutation/append'
 end
 
+if errors = 0 then say "PASS: stem"
 return errors<>0

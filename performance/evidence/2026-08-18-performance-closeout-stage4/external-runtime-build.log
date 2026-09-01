@@ -1,0 +1,31 @@
+canonical_commit=74306fec151070fd07157cefeacf19e7e0bcdc89
+canonical_status=0
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+ 85 +++     loop step=1 to 50
+    +++          ^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+  19 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+ 200 +++     loop i=1 to 16
+     +++          ^
+     +++ [34mWarning[0m: Variable is set but not used
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+ 52 +++     loop i=1 to 10 while result
+    +++          ^
+    +++ [34mWarning[0m: Variable is set but not used
+ 35 +++     queenRows=Rexx[8]
+    +++     ^^^^^^^^^
+    +++ [34mWarning[0m: Private property is defined but not used
+canonical_root=/tmp/crexx-stage4-canonical-final.MknVXt
+netrexx_build=/tmp/crexx-stage4-netrexx-final.RKd5Ck

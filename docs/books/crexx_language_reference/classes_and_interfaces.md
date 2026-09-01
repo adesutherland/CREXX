@@ -15,7 +15,13 @@ Level B implements the core class/interface model:
 
 Level B does **not** currently implement interface inheritance, interface
 attributes/state, interface factory bodies, overloads, singleton declarations,
-or destructor/finalizer syntax.
+class/interface constants, or destructor/finalizer syntax.
+
+Class and interface constants are a Release 2 roadmap item. The expected
+starting point is private constants owned by the class or interface body,
+consistent with the current member privacy model. Whether such constants also
+need a controlled public view should be investigated as part of that Release 2
+design.
 
 ## Core Model
 
@@ -142,12 +148,38 @@ raw_event: class
 ```
 
 The optional suffix after the index is the VM register value view to use for the
-slot. Valid views are `.int`, `.float`, `.string`, and `.object`:
+slot. Valid views are `.int`, `.float`, `.decimal`, `.binary`, `.string`, and
+`.object`:
 
 ```rexx
   _message = .string with register.5.string
   _payload = .object with register.5.object
 ```
+
+System classes can also expose masked status-flag views using  
+`register.N.flags.<partition>`. These views are `.int` attributes over the VM
+status word rather than value-payload views:
+
+```rexx
+  _cache_flags = .int with register.0.flags.library
+  _vm_flags = .int with register.0.flags.vm
+```
+
+The supported partitions are 
+
+- `.vm`, 
+- `.compiler`,
+- `.library`, 
+- `.user`,
+- `.public`, and 
+- `.readable`. 
+
+`.vm`, `.compiler`, and `.readable` are read-only.
+`.library` and `.user` are writable. `.public` is writable but covers only the
+library and user bands, not compiler call-ABI flags. Assigning a writable flag
+view replaces only that masked band; other status-word bits are preserved.
+Flag views must be declared as `.int`; unknown partitions are rejected during
+source validation.
 
 The compiler emits the attribute linking code for methods that read or write
 these attributes. Source code should still access them through methods, not
@@ -156,10 +188,32 @@ more than one typed view over the same physical slot, as shown for a signal
 payload/message slot above. Ordinary application classes should not use explicit
 register mappings unless they are matching a fixed VM or native object layout.
 
+`register.0` is reserved for a typed view of the containing value itself. This
+is a Rexx source-level convention, not RXAS attribute zero. The compiler lowers
+it to a direct receiver/factory link, while `register.1` and above continue to
+name one-based child attributes. `register.0` and duplicate typed mappings to
+the same `register.N` slot are treated as complex attributes: compiler-generated
+reads copy the selected view into a local register before expression code
+manipulates it, and writes copy the selected payload view back through the
+physical slot. Status/cache flag updates for these typed views are explicit
+runtime code, not hidden compiler side effects. This is a low-level
+system-programmer facility for runtime and VM-integration classes; ordinary
+programs should use normal class attributes and methods.
+
+Flag views are the exception to the complex typed-view copy rule: reads access
+the status word directly and do not copy the register's string, binary, numeric,
+or object payload. Writes through writable flag views replace only the selected
+flag partition.
+
 ## Receiver Storage
 
-Inside a method, `self` names the receiver storage. It is mainly useful when a
-method needs to pass or return a live reference to its receiver:
+Inside a method, unqualified attribute and method names are resolved against
+the current receiver where the member exists. For example, `call clear()` calls
+the receiver's `clear` method, and `rc = append(value)` calls the receiver's
+`append` method and stores its result.
+
+`self` names the receiver storage explicitly. It is mainly useful when a method
+needs to pass or return a live reference to its receiver:
 
 ```rexx
 iterator: method = .StringIterator
@@ -167,8 +221,8 @@ iterator: method = .StringIterator
 ```
 
 Bare `self` is not an implicit reference. Use `reference self` when a formal
-requires `reference .Class`, and use an ordinary method call for normal receiver
-access.
+requires `reference .Class`, and use ordinary unqualified attribute access or
+method calls for normal receiver access.
 
 The standard class-library collection direction uses that explicit receiver
 reference for live iterators: `iterator()` returns an unsynchronized live
@@ -280,7 +334,7 @@ say selected.describe()   /* file:log.txt:8 */
 say fallback.describe()   /* cache:memo:1 */
 ```
 
-This complete example is mirrored by the test
+This complete example is mirrored by the test  
 `compiler/tests/rexx_src/interface_showcase_same_module.crexx`.
 
 ## Multiple Interfaces
@@ -487,6 +541,31 @@ These operations are mirrored by:
 
 - `compiler/tests/rexx_src/type_ops_showcase.crexx`
 - `compiler/tests/rexx_src/type_ops_fail.crexx`
+
+## Object Equivalence and Key Strategies
+
+The class library separates canonical object equivalence from collection key
+policy:
+
+- `.ObjectEquatable` is an opt-in object contract. In Level G,
+  `left <eq> right` lowers to `left.equivalent(right as .object)`.
+- `.ObjectKeyStrategy` owns both `hash(key)` and
+  `equivalent(left, right)` for a particular map or set policy.
+- `.ObjectComparator` remains the canonical total-order contract for ordered
+  object collections. The older `.Comparator` name remains for compatibility.
+
+An `ObjectKeyStrategy` must return equal hashes whenever it reports two keys as
+equivalent. It may choose case-sensitive, case-insensitive, namespace-scoped,
+or domain-specific rules; there is deliberately no universal default object
+hash and no raw-address hash.
+
+For a copyable handle to a global resource, keep immutable logical fields such
+as scope, namespace, resource type, value, and generation in the handle. Hash a
+length-framed representation of exactly those fields and compare the same
+fields in `equivalent()`. This identifies the resource across handle copies; it
+does not turn the handle into a live cross-worker reference. See
+`examples/classes/global_object_keys.crexx` for a complete strategy and map
+example.
 
 ## Notes and Current Boundaries
 

@@ -1,7 +1,6 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
  * SOURCE                 : test_implicit_address.crexx
- * BUILT                  : 2026-03-11 17:30:44
  */
 .globals=0
 

@@ -1,0 +1,5 @@
+options levelb
+namespace autoloaddep expose hello
+
+hello: procedure = .string
+  return "PASS: RXBIN autoload"

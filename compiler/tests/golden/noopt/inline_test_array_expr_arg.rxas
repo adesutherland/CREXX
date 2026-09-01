@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_array_expr_arg.crexx
- * BUILT                  : 2026-05-27 17:53:59
  */
 
 .globals=0
@@ -8,18 +7,12 @@
 main() .locals=3
    .meta "inline_test_array_expr_arg.main"="b" ".int" main() ""
    .srcstep 3 3 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_array_expr_arg.crexx" 4 3 25 "  say bumpFirst(makePair())"
-   load r2,0
-   call r1,makePair(),r2
+   call r1,makePair()
    .traceevent "F" 4 "R" "I" "r" 1 1 1 0 "makepair" ""
-   load r0,1
    settp r1,256
-   call r2,bumpFirst(),r0
+   call1 r2,bumpFirst(),r1
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "bumpfirst" ""
    say r2
@@ -29,16 +22,11 @@ main() .locals=3
 bumpFirst() .locals=4
    .meta "inline_test_array_expr_arg.bumpfirst"="b" ".int" bumpFirst() "pair=.int[2]"
    .srcstep 7 7 17 "inline_test_array_expr_arg.crexx" 7 1 28 "bumpFirst: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 4 4 17 "inline_test_array_expr_arg.crexx" 8 7 20 "  arg pair = .int[2]"
    .meta "inline_test_array_expr_arg.bumpfirst.pair"="b" ".int[2]" r0
    brtpandt l14c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l14d
 l14c:
    swap r0,a1
@@ -52,9 +40,8 @@ l14d:
    iadd r3,r2,5
    unlink r2
    .traceevent "O" 4 "R" "I" "r" 3 5 5 0 "" ""
-   icopy r1,r3
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "pair" ""
-   unlink r1
+   isetunlink r1,r3
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "pair" ""
    .srcstep 6 6 17 "inline_test_array_expr_arg.crexx" 10 3 16 "  return pair[1]"
    setattrs r0,2
    linkattr1 r3,r0,1
@@ -65,11 +52,7 @@ l14d:
 makePair() .locals=9
    .meta "inline_test_array_expr_arg.makepair"="b" ".int[2]" makePair() ""
    .srcstep 24 24 17 "inline_test_array_expr_arg.crexx" 12 1 30 "makePair: procedure = .int[2]"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_array_expr_arg.makepair.a"="b" ".int" r0
    .srcstep 8 8 17 "inline_test_array_expr_arg.crexx" 14 3 11 "  a = .int"
    null r0
@@ -125,17 +108,15 @@ makePair() .locals=9
    linkattr1 r7,r6,1
    load r8,7
    .traceevent "L" 4 "R" "I" "r" 8 21 21 0 "" ""
-   icopy r7,r8
-   .traceevent "A" 6 "R" "I" "r" 7 21 21 0 "pair" ""
-   unlink r7
+   isetunlink r7,r8
+   .traceevent "A" 6 "R" "I" "r" 8 21 21 0 "pair" ""
    .srcstep 22 22 17 "inline_test_array_expr_arg.crexx" 27 3 14 "  pair[2] = 9"
    setattrs r6,2
    linkattr1 r8,r6,2
    load r7,9
    .traceevent "L" 4 "R" "I" "r" 7 22 22 0 "" ""
-   icopy r8,r7
-   .traceevent "A" 6 "R" "I" "r" 8 22 22 0 "pair" ""
-   unlink r8
+   isetunlink r8,r7
+   .traceevent "A" 6 "R" "I" "r" 7 22 22 0 "pair" ""
    .srcstep 23 23 17 "inline_test_array_expr_arg.crexx" 28 3 14 "  return pair"
    .traceevent "V" 6 "R" "I" "r" 6 23 23 0 "pair" ""
    ret r6

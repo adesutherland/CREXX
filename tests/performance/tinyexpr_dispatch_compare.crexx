@@ -1,0 +1,53 @@
+/* Observational benchmark for compiler-assisted dispatch in the Level L demo. */
+options levell comments_dash
+import rxfnsb
+import rxfnsl
+
+arg argv = .string[]
+
+iterations = 20000
+if argv[0] >= 1 then iterations = argv[1]
+
+lex_source = "sum + 12*(3-1) - item42/2 + (7*8)"
+eval_source = "12 + 3*(4+5) - 6/2"
+
+start = time("us")
+token_total = 0
+do i = 1 to iterations
+  tokens = tinyexpr_lex(lex_source)
+  token_total = token_total + tinyexpr_token_count(tokens)
+end
+lex_elapsed = time("us") - start
+
+start = time("us")
+value_total = 0
+do i = .int(1) to iterations
+  value_total = value_total + tinyexpr_eval(eval_source)
+end
+eval_elapsed = time("us") - start
+
+start = time("us")
+name_total = 0
+do i = .int(1) to iterations
+  do kind = 0 to 8
+    name_total = name_total + length(tinyexpr_token_name(kind))
+  end
+end
+name_elapsed = time("us") - start
+
+if token_total <= 0 then return fail("token total")
+if value_total \= iterations * 36 then return fail("evaluation total")
+if name_total <= 0 then return fail("name total")
+
+say "benchmark=tinyexpr_dispatch_compare"
+say "iterations="iterations
+say "lex_us="lex_elapsed
+say "eval_us="eval_elapsed
+say "token_name_us="name_elapsed
+say "PASS: tinyexpr dispatch compare"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

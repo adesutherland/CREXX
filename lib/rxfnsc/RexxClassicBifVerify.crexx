@@ -1,0 +1,111 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifverify expose rexxclassicbif_verify
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Find the first matching or non-matching Classic reference character.
+ *
+ * @bif VERIFY
+ * @signature VERIFY(string, reference [,option [,start]])
+ * @checkargs rANY rANY oMN oWHOLE>0
+ * @sandbox pure
+ * @return qualifying 1-based position as a RexxValue, or zero
+ */
+rexxclassicbif_verify: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oMN oWHOLE>0") = 0 then return .RexxValue("")
+
+  option = "N"
+  if context.argumentExists(3) then option = context.argumentText(3)
+  start = 1
+  if context.argumentExists(4) then start = context.argumentText(4) + 0
+  option_index = 0
+  option_code = .int
+  source_length = .int
+  reference_length = .int
+  source_code = .int
+  reference_position = .int
+  want_match = .boolean
+
+  assembler strchar option_code,option,option_index
+  want_match = option_code = 77 | option_code = 109
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    source_bytes = context.argument(1).asBinary()
+    reference_bytes = context.argument(2).asBinary()
+    source_byte = .int
+    reference_byte = .int
+    assembler blen source_length,source_bytes
+    if source_length = 0 | start > source_length then return .RexxValue("0")
+    assembler blen reference_length,reference_bytes
+    if reference_length = 0 then do
+      if want_match then return .RexxValue("0")
+      return .RexxValue(start || "")
+    end
+    do index = start - 1 to source_length - 1
+      assembler getbyte source_byte,source_bytes,index
+      found = 0
+      do reference_index = 0 to reference_length - 1
+        assembler getbyte reference_byte,reference_bytes,reference_index
+        if reference_byte = source_byte then do
+          found = 1
+          leave
+        end
+      end
+      if found = want_match then do
+        position = index + 1
+        return .RexxValue(position || "")
+      end
+    end
+    return .RexxValue("0")
+  end
+
+  string = context.argumentText(1)
+  refchars = context.argumentText(2)
+  assembler strlen source_length,string
+  if source_length = 0 | start > source_length then return .RexxValue("0")
+  assembler strlen reference_length,refchars
+  if reference_length = 0 then do
+    if want_match then return .RexxValue("0")
+    return .RexxValue(start || "")
+  end
+
+  do index = .int(start - 1) to source_length - 1
+    assembler strchar source_code,string,index
+    assembler poschar reference_position,refchars,source_code
+    found = .boolean
+    found = reference_position >= 0 & reference_position < reference_length
+    if found = want_match then do
+      position = .int
+      position = index + 1
+      return .RexxValue(position || "")
+    end
+  end
+  return .RexxValue("0")

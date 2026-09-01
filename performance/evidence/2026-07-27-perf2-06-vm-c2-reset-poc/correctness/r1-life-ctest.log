@@ -1,0 +1,31 @@
+Test project /private/tmp/crexx-perf2-06-reset.0ozeyr/build-r1d-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/8 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.17 sec
+    Start  889: dynamic_load
+    Start  890: dynamic_interface_load_rxvm
+    Start  891: dynamic_interface_load_rxbvm
+    Start  892: dynamic_interface_load_driver
+    Start 1238: reentrancy_check
+    Start 1451: ts_loadmodule_noopt
+    Start 1452: ts_loadmodule_opt
+2/8 Test #1452: ts_loadmodule_opt ....................   Passed    0.14 sec
+3/8 Test #1238: reentrancy_check .....................   Passed    0.56 sec
+4/8 Test  #891: dynamic_interface_load_rxbvm .........   Passed    0.70 sec
+5/8 Test #1451: ts_loadmodule_noopt ..................   Passed    0.70 sec
+6/8 Test  #890: dynamic_interface_load_rxvm ..........   Passed    0.74 sec
+7/8 Test  #889: dynamic_load .........................   Passed    0.84 sec
+8/8 Test  #892: dynamic_interface_load_driver ........   Passed    3.75 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Label Time Summary:
+compiler      =   6.03 sec*proc (4 tests)
+driver        =   3.75 sec*proc (1 test)
+interfaces    =   5.19 sec*proc (3 tests)
+late-load     =   5.19 sec*proc (3 tests)
+linked_opt    =   0.14 sec*proc (1 test)
+smoke         =   1.40 sec*proc (2 tests)
+stage3        =   6.03 sec*proc (4 tests)
+vm            =   1.44 sec*proc (2 tests)
+
+Total Test time (real) =   3.99 sec

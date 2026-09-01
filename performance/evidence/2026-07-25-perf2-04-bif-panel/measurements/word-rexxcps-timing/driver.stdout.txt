@@ -1,0 +1,1 @@
+PASS: compact cross-runtime timing matrix retained under /private/tmp/crexx-perf2-04.3k3Dfw/evidence/word-ceiling/release-timing/matrix

@@ -1,0 +1,998 @@
+/*
+ * SOURCE                 : awfy_bounce.crexx
+ */
+
+.meta "awfy_bounce.awfyrandom"="b" ".unknown" .class
+.meta "awfy_bounce.awfyrandom.seed_value"="b" ".int" .attr 1
+.meta "awfy_bounce.bounceball"="b" ".unknown" .class
+.meta "awfy_bounce.bounceball.x"="b" ".int" .attr 1
+.meta "awfy_bounce.bounceball.x_velocity"="b" ".int" .attr 2
+.meta "awfy_bounce.bounceball.y"="b" ".int" .attr 3
+.meta "awfy_bounce.bounceball.y_velocity"="b" ".int" .attr 4
+.meta "awfy_bounce.bouncebenchmark"="b" ".unknown" .class
+.globals=0
+
+main() .locals=11
+   .meta "awfy_bounce.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_bounce.crexx" 9 5 19 "arg argv = .string[]"
+   .meta "awfy_bounce.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 2 2 17 "awfy_bounce.crexx" 11 1 16 "repetitions = 1"
+   .meta "awfy_bounce.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_bounce.crexx" 12 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   igte r4,r4,1
+   .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+   brf l25iffalse,r4
+   .srcstep 5 5 17 "awfy_bounce.crexx" 12 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_bounce.crexx" 12 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minlinkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   igetunlink r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+l25iffalse:
+   .srcstep 10 10 17 "awfy_bounce.crexx" 13 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+   ilt r5,r1,1
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l32iffalse,r5
+   .srcstep 11 11 17 "awfy_bounce.crexx" 13 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "awfy_bounce.crexx" 13 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 8 8 17 "awfy_bounce.crexx" 13 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_bounce.crexx" 28 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 7 7 17 "awfy_bounce.crexx" 29 3 11 "  return 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r3,r4
+   br l400bexprend
+l400bexprend:
+   ret r3
+l32iffalse:
+   .srcstep 12 12 17 "awfy_bounce.crexx" 15 1 11 "result = 0"
+   .meta "awfy_bounce.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+   .srcstep 28 28 17 "awfy_bounce.crexx" 16 1 3 "do iteration = 1 to repetitions"
+   .srcstep 13 13 17 "awfy_bounce.crexx" 16 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_bounce.main.iteration"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+   .srcstep 14 14 17 "awfy_bounce.crexx" 16 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l36dostart:
+   .srcstep 14 14 17 "awfy_bounce.crexx" 16 18 32 "do iteration = 1 to repetitions"
+   igt r3,r4,r1
+   brt l36doend,r3
+   .srcstep 19 19 17 "awfy_bounce.crexx" 17 3 31 "  benchmark = .BounceBenchmark()"
+   .srcstep 16 16 6 "awfy_bounce.crexx" 85 3 13 "  *: factory"
+   setattrs r6,0
+   .srcstep 17 17 6 "awfy_bounce.crexx" 85 3 13 "  *: factory"
+   setobjtype r6,"awfy_bounce.bouncebenchmark"
+   .srcstep 18 18 33 "awfy_bounce.crexx" 86 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 18 18 0 "§factory" ""
+   copy r5,r6
+   .traceevent "A" 6 "R" "O" "r" 5 18 18 0 "benchmark" ""
+   .srcstep 20 20 17 "awfy_bounce.crexx" 18 3 25 "  result = benchmark.run()"
+   .meta "awfy_bounce.main.benchmark"="b" ".bouncebenchmark" r5
+   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "benchmark" ""
+   settp r5,256
+   call1 r2,§awfy_bounce.bouncebenchmark.run(),r5
+   .traceevent "F" 4 "R" "I" "r" 2 20 20 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "result" ""
+   .srcstep 26 26 17 "awfy_bounce.crexx" 19 3 20 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 26 26 0 "result" ""
+   ine r8,r2,1331
+   .traceevent "O" 4 "R" "B" "r" 8 26 26 0 "" ""
+   brf l62iffalse,r8
+   .srcstep 27 27 17 "awfy_bounce.crexx" 19 21 25 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+   .srcstep 25 25 17 "awfy_bounce.crexx" 19 26 78 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+   .srcstep 24 24 17 "awfy_bounce.crexx" 19 33 37 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+   .srcstep 21 21 33 "awfy_bounce.crexx" 27 7 14 "  arg message = .string"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 21 21 0 "result" ""
+   concat r7,"expected 1331 bounces, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 7 21 21 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 21 21 0 "message" ""
+   .srcstep 22 22 17 "awfy_bounce.crexx" 28 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 7 22 22 0 "message" ""
+   sconcat r9,"FAIL:",r7
+   .traceevent "O" 4 "R" "S" "r" 9 22 22 0 "" ""
+   say r9
+   .srcstep 23 23 17 "awfy_bounce.crexx" 29 3 11 "  return 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 25 25 0 "" ""
+   icopy r10,r9
+   br l646bexprend
+l646bexprend:
+   ret r10
+l62iffalse:
+l36doinc:
+   .srcstep 15 15 17 "awfy_bounce.crexx" 16 4 13 "do iteration = 1 to repetitions"
+   inc r4
+   .srcstep 29 29 17 "awfy_bounce.crexx" 20 1 4 "end"
+   br l36dostart
+l36doend:
+   endlife r5
+   .meta "awfy_bounce.main.benchmark"
+   .meta "awfy_bounce.main.iteration"
+   .srcstep 30 30 17 "awfy_bounce.crexx" 22 1 68 "say \"benchmark=awfy_bounce repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 30 30 0 "repetitions" ""
+   concat r10,"benchmark=awfy_bounce repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   sconcat r10,r10,"result="
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 30 30 0 "result" ""
+   concat r10,r10,r2
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   say r10
+   .srcstep 31 31 17 "awfy_bounce.crexx" 23 1 24 "say \"PASS: AWFY Bounce\""
+   say "PASS: AWFY Bounce"
+   .srcstep 32 32 17 "awfy_bounce.crexx" 24 1 9 "return 0"
+   ret 0
+   .meta "awfy_bounce.main.argv"
+   .meta "awfy_bounce.main.repetitions"
+   .meta "awfy_bounce.main.result"
+
+§awfy_bounce.awfyrandom.§factory() .locals=3
+   .meta "awfy_bounce.awfyrandom.§factory"="b" ".awfy_bounce..awfyrandom" §awfy_bounce.awfyrandom.§factory() ""
+   .srcstep 38 38 17 "awfy_bounce.crexx" 34 3 13 "  *: factory"
+   setattrs r0,2
+   setobjtype r0,"awfy_bounce.awfyrandom"
+   numsci 18,1,1
+   .srcstep 36 36 17 "awfy_bounce.crexx" 35 5 23 "    seed_value = 74755"
+   .meta "awfy_bounce.awfyrandom.§factory.§factory"="b" ".awfyrandom" r0
+   load r2,74755
+   .traceevent "L" 4 "R" "I" "r" 2 36 36 0 "" ""
+   isetattr1 r0,1,r2
+   .srcstep 37 37 17 "awfy_bounce.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 37 37 0 "§factory" ""
+   ret r0
+   .meta "awfy_bounce.awfyrandom.§factory.§factory"
+
+§awfy_bounce.awfyrandom.next() .locals=4
+   .meta "awfy_bounce.awfyrandom.next"="b" ".int" §awfy_bounce.awfyrandom.next() ""
+   .srcstep 41 41 17 "awfy_bounce.crexx" 38 3 22 "  next: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 39 39 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   .meta "awfy_bounce.awfyrandom.next.§this"="b" ".awfyrandom" a1
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "I" "r" 2 39 39 0 "seed_value" ""
+   imult r3,r2,1309
+   unlink r2
+   .traceevent "O" 4 "R" "I" "r" 3 39 39 0 "" ""
+   iadd r3,r3,13849
+   .traceevent "O" 4 "R" "I" "r" 3 39 39 0 "" ""
+   imod r3,r3,65536
+   .traceevent "O" 4 "R" "I" "r" 3 39 39 0 "" ""
+   isetattr1 a1,1,r3
+   .srcstep 40 40 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "I" "r" 3 40 40 0 "seed_value" ""
+   ret r3
+   .meta "awfy_bounce.awfyrandom.next.§this"
+
+§awfy_bounce.bounceball.§factory() .locals=12
+   .meta "awfy_bounce.bounceball.§factory"="b" ".awfy_bounce..bounceball" §awfy_bounce.bounceball.§factory() "random_ref=reference .awfyrandom"
+   .srcstep 73 73 17 "awfy_bounce.crexx" 48 3 13 "  *: factory"
+   setattrs r2,5
+   setobjtype r2,"awfy_bounce.bounceball"
+   numsci 18,1,1
+   .srcstep 42 42 17 "awfy_bounce.crexx" 49 9 43 "    arg random_ref = reference .AwfyRandom"
+   .meta "awfy_bounce.bounceball.§factory.random_ref"="b" "reference .awfyrandom" a1
+   .meta "awfy_bounce.bounceball.§factory.§factory"="b" ".bounceball" r2
+   .srcstep 43 43 17 "awfy_bounce.crexx" 50 5 36 "    random = dereference random_ref"
+   .meta "awfy_bounce.bounceball.§factory.random"="b" ".awfyrandom" r0
+   .traceevent "V" 6 "R" "R" "a" 1 43 43 0 "random_ref" ""
+   unlink r0
+   linkref r0,a1
+   .traceevent "A" 6 "R" "O" "r" 0 43 43 0 "random" ""
+   .srcstep 50 50 17 "awfy_bounce.crexx" 51 5 32 "    x = random.next() <mod> 500"
+   .srcstep 49 49 17 "awfy_bounce.crexx" 51 9 15 "    x = random.next() <mod> 500"
+   .srcstep 44 44 33 "awfy_bounce.crexx" 51 9 15 "    x = random.next() <mod> 500"
+   .traceevent "V" 6 "R" "O" "r" 0 44 44 0 "random" ""
+   .traceevent "A" 6 "R" "O" "r" 0 44 44 0 "§this" ""
+   .srcstep 45 45 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   linkattr1 r7,r0,1
+   .traceevent "V" 6 "R" "I" "r" 7 45 45 0 "seed_value" ""
+   imult r8,r7,1309
+   unlink r7
+   .traceevent "O" 4 "R" "I" "r" 8 45 45 0 "" ""
+   iadd r8,r8,13849
+   .traceevent "O" 4 "R" "I" "r" 8 45 45 0 "" ""
+   imod r8,r8,65536
+   .traceevent "O" 4 "R" "I" "r" 8 45 45 0 "" ""
+   isetattr1 r0,1,r8
+   .srcstep 46 46 33 "awfy_bounce.crexx" 40 12 22 "    return seed_value"
+   linkattr1 r8,r0,1
+   .traceevent "V" 6 "R" "I" "r" 8 46 46 0 "seed_value" ""
+   igetunlink r5,r8
+   .traceevent "A" 6 "R" "I" "r" 5 46 46 0 "__inline_leave_436_435" ""
+   .srcstep 47 47 6 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "O" "r" 0 50 50 0 "§this" ""
+   .srcstep 48 48 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "I" "r" 5 50 50 0 "__inline_leave_436_435" ""
+   br l421bexprend
+l421bexprend:
+   imod r8,r5,500
+   .traceevent "O" 4 "R" "I" "r" 8 50 50 0 "" ""
+   isetattr1 r2,1,r8
+   .srcstep 57 57 17 "awfy_bounce.crexx" 52 5 32 "    y = random.next() <mod> 500"
+   .srcstep 56 56 17 "awfy_bounce.crexx" 52 9 15 "    y = random.next() <mod> 500"
+   .srcstep 51 51 33 "awfy_bounce.crexx" 52 9 15 "    y = random.next() <mod> 500"
+   .traceevent "V" 6 "R" "O" "r" 0 51 51 0 "random" ""
+   .traceevent "A" 6 "R" "O" "r" 0 51 51 0 "§this" ""
+   .srcstep 52 52 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   linkattr1 r6,r0,1
+   .traceevent "V" 6 "R" "I" "r" 6 52 52 0 "seed_value" ""
+   imult r5,r6,1309
+   unlink r6
+   .traceevent "O" 4 "R" "I" "r" 5 52 52 0 "" ""
+   iadd r5,r5,13849
+   .traceevent "O" 4 "R" "I" "r" 5 52 52 0 "" ""
+   imod r5,r5,65536
+   .traceevent "O" 4 "R" "I" "r" 5 52 52 0 "" ""
+   isetattr1 r0,1,r5
+   .srcstep 53 53 33 "awfy_bounce.crexx" 40 12 22 "    return seed_value"
+   linkattr1 r7,r0,1
+   .traceevent "V" 6 "R" "I" "r" 7 53 53 0 "seed_value" ""
+   igetunlink r9,r7
+   .traceevent "A" 6 "R" "I" "r" 9 53 53 0 "__inline_leave_461_460" ""
+   .srcstep 54 54 6 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "O" "r" 0 57 57 0 "§this" ""
+   .srcstep 55 55 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "I" "r" 9 57 57 0 "__inline_leave_461_460" ""
+   br l446bexprend
+l446bexprend:
+   imod r9,r9,500
+   .traceevent "O" 4 "R" "I" "r" 9 57 57 0 "" ""
+   isetattr1 r2,3,r9
+   .srcstep 64 64 17 "awfy_bounce.crexx" 53 5 49 "    x_velocity = (random.next() <mod> 300) - 150"
+   .srcstep 63 63 17 "awfy_bounce.crexx" 53 19 25 "    x_velocity = (random.next() <mod> 300) - 150"
+   .srcstep 58 58 33 "awfy_bounce.crexx" 53 19 25 "    x_velocity = (random.next() <mod> 300) - 150"
+   .traceevent "V" 6 "R" "O" "r" 0 58 58 0 "random" ""
+   .traceevent "A" 6 "R" "O" "r" 0 58 58 0 "§this" ""
+   .srcstep 59 59 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   linkattr1 r7,r0,1
+   .traceevent "V" 6 "R" "I" "r" 7 59 59 0 "seed_value" ""
+   imult r6,r7,1309
+   unlink r7
+   .traceevent "O" 4 "R" "I" "r" 6 59 59 0 "" ""
+   iadd r6,r6,13849
+   .traceevent "O" 4 "R" "I" "r" 6 59 59 0 "" ""
+   imod r6,r6,65536
+   .traceevent "O" 4 "R" "I" "r" 6 59 59 0 "" ""
+   isetattr1 r0,1,r6
+   .srcstep 60 60 33 "awfy_bounce.crexx" 40 12 22 "    return seed_value"
+   linkattr1 r8,r0,1
+   .traceevent "V" 6 "R" "I" "r" 8 60 60 0 "seed_value" ""
+   igetunlink r10,r8
+   .traceevent "A" 6 "R" "I" "r" 10 60 60 0 "__inline_leave_486_485" ""
+   .srcstep 61 61 6 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "O" "r" 0 64 64 0 "§this" ""
+   .srcstep 62 62 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "I" "r" 10 64 64 0 "__inline_leave_486_485" ""
+   br l471bexprend
+l471bexprend:
+   imod r10,r10,300
+   .traceevent "O" 4 "R" "I" "r" 10 64 64 0 "" ""
+   isub r10,r10,150
+   .traceevent "O" 4 "R" "I" "r" 10 64 64 0 "" ""
+   isetattr1 r2,2,r10
+   .srcstep 71 71 17 "awfy_bounce.crexx" 54 5 49 "    y_velocity = (random.next() <mod> 300) - 150"
+   .srcstep 70 70 17 "awfy_bounce.crexx" 54 19 25 "    y_velocity = (random.next() <mod> 300) - 150"
+   .srcstep 65 65 33 "awfy_bounce.crexx" 54 19 25 "    y_velocity = (random.next() <mod> 300) - 150"
+   .traceevent "V" 6 "R" "O" "r" 0 65 65 0 "random" ""
+   .traceevent "A" 6 "R" "O" "r" 0 65 65 0 "§this" ""
+   .srcstep 66 66 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   linkattr1 r8,r0,1
+   .traceevent "V" 6 "R" "I" "r" 8 66 66 0 "seed_value" ""
+   imult r7,r8,1309
+   unlink r8
+   .traceevent "O" 4 "R" "I" "r" 7 66 66 0 "" ""
+   iadd r7,r7,13849
+   .traceevent "O" 4 "R" "I" "r" 7 66 66 0 "" ""
+   imod r7,r7,65536
+   .traceevent "O" 4 "R" "I" "r" 7 66 66 0 "" ""
+   isetattr1 r0,1,r7
+   .srcstep 67 67 33 "awfy_bounce.crexx" 40 12 22 "    return seed_value"
+   linkattr1 r9,r0,1
+   .traceevent "V" 6 "R" "I" "r" 9 67 67 0 "seed_value" ""
+   igetunlink r11,r9
+   .traceevent "A" 6 "R" "I" "r" 11 67 67 0 "__inline_leave_511_510" ""
+   .srcstep 68 68 6 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "O" "r" 0 71 71 0 "§this" ""
+   .srcstep 69 69 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "I" "r" 11 71 71 0 "__inline_leave_511_510" ""
+   br l496bexprend
+l496bexprend:
+   imod r11,r11,300
+   .traceevent "O" 4 "R" "I" "r" 11 71 71 0 "" ""
+   isub r11,r11,150
+   .traceevent "O" 4 "R" "I" "r" 11 71 71 0 "" ""
+   isetattr1 r2,4,r11
+   .srcstep 72 72 17 "awfy_bounce.crexx" 55 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 2 72 72 0 "§factory" ""
+   ret r2
+   .meta "awfy_bounce.bounceball.§factory.random"
+   .meta "awfy_bounce.bounceball.§factory.random_ref"
+   .meta "awfy_bounce.bounceball.§factory.§factory"
+
+§awfy_bounce.bounceball.bounce() .locals=7
+   .meta "awfy_bounce.bounceball.bounce"="b" ".boolean" §awfy_bounce.bounceball.bounce() ""
+   .srcstep 126 126 17 "awfy_bounce.crexx" 57 3 28 "  bounce: method = .boolean"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 74 74 17 "awfy_bounce.crexx" 58 5 16 "    bounced = 0"
+   .meta "awfy_bounce.bounceball.bounce.bounced"="b" ".int" r0
+   .meta "awfy_bounce.bounceball.bounce.§this"="b" ".bounceball" a1
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 74 74 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 74 74 0 "bounced" ""
+   .srcstep 75 75 17 "awfy_bounce.crexx" 59 5 23 "    x = x + x_velocity"
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "I" "r" 3 75 75 0 "x" ""
+   linkattr1 r4,a1,2
+   .traceevent "V" 6 "R" "I" "r" 4 75 75 0 "x_velocity" ""
+   iadd r5,r3,r4
+   unlinkn r4,r3
+   .traceevent "O" 4 "R" "I" "r" 5 75 75 0 "" ""
+   isetattr1 a1,1,r5
+   .srcstep 76 76 17 "awfy_bounce.crexx" 60 5 23 "    y = y + y_velocity"
+   linkattr1 r4,a1,3
+   .traceevent "V" 6 "R" "I" "r" 4 76 76 0 "y" ""
+   linkattr1 r3,a1,4
+   .traceevent "V" 6 "R" "I" "r" 3 76 76 0 "y_velocity" ""
+   iadd r2,r4,r3
+   unlinkn r3,r4
+   .traceevent "O" 4 "R" "I" "r" 2 76 76 0 "" ""
+   isetattr1 a1,3,r2
+   .srcstep 87 87 17 "awfy_bounce.crexx" 62 5 15 "    if x > 500 then do"
+   linkattr1 r5,a1,1
+   .traceevent "V" 6 "R" "I" "r" 5 87 87 0 "x" ""
+   igt r4,r5,500
+   unlink r5
+   .traceevent "O" 4 "R" "B" "r" 4 87 87 0 "" ""
+   brf l202iffalse,r4
+   .srcstep 88 88 17 "awfy_bounce.crexx" 62 16 20 "    if x > 500 then do"
+   .srcstep 77 77 17 "awfy_bounce.crexx" 63 7 14 "      x = 500"
+   load r2,500
+   .traceevent "L" 4 "R" "I" "r" 2 77 77 0 "" ""
+   isetattr1 a1,1,r2
+   .srcstep 85 85 17 "awfy_bounce.crexx" 64 7 42 "      x_velocity = 0 - intabs(x_velocity)"
+   .srcstep 84 84 17 "awfy_bounce.crexx" 64 24 30 "      x_velocity = 0 - intabs(x_velocity)"
+   .meta "awfy_bounce.bounceball.bounce.result"="b" ".int" r2
+   .srcstep 78 78 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r2
+   .srcstep 79 79 33 "awfy_bounce.crexx" 64 30 30 "      x_velocity = 0 - intabs(x_velocity)"
+   linkattr1 r6,a1,2
+   .traceevent "V" 6 "R" "I" "r" 6 79 79 0 "x_velocity" ""
+   igetunlink r3,r6
+   .traceevent "A" 6 "R" "I" "r" 3 79 79 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 3 85 85 0 "number" ""
+   ieq r6,r3,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 6 85 85 0 "" ""
+   brf l529iffalse,r6
+   .srcstep 80 80 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l529iffalse:
+   .traceevent "V" 6 "R" "I" "r" 3 85 85 0 "number" ""
+   ilt r6,r3,0
+   .traceevent "O" 4 "R" "B" "r" 6 85 85 0 "" ""
+   brf l536iffalse,r6
+   .srcstep 81 81 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 2 85 85 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 3 85 85 0 "number" ""
+   isub r2,0,r3
+   .srcstep 82 82 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 2 85 85 0 "result" ""
+   icopy r6,r2
+   br l521bexprend
+l536iffalse:
+   .srcstep 83 83 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 3 85 85 0 "number" ""
+   icopy r6,r3
+   br l521bexprend
+l521bexprend:
+   .meta "awfy_bounce.bounceball.bounce.result"
+   isub r6,0,r6
+   .traceevent "O" 4 "R" "I" "r" 6 85 85 0 "" ""
+   isetattr1 a1,2,r6
+   .srcstep 86 86 17 "awfy_bounce.crexx" 65 7 18 "      bounced = 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 86 86 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 86 86 0 "bounced" ""
+l202iffalse:
+   .srcstep 99 99 17 "awfy_bounce.crexx" 67 5 13 "    if x < 0 then do"
+   linkattr1 r6,a1,1
+   .traceevent "V" 6 "R" "I" "r" 6 99 99 0 "x" ""
+   ilt r5,r6,0
+   unlink r6
+   .traceevent "O" 4 "R" "B" "r" 5 99 99 0 "" ""
+   brf l217iffalse,r5
+   .srcstep 100 100 17 "awfy_bounce.crexx" 67 14 18 "    if x < 0 then do"
+   .srcstep 89 89 17 "awfy_bounce.crexx" 68 7 12 "      x = 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 89 89 0 "" ""
+   isetattr1 a1,1,r3
+   .srcstep 97 97 17 "awfy_bounce.crexx" 69 7 38 "      x_velocity = intabs(x_velocity)"
+   .srcstep 96 96 17 "awfy_bounce.crexx" 69 20 26 "      x_velocity = intabs(x_velocity)"
+   .meta "awfy_bounce.bounceball.bounce.result"="b" ".int" r3
+   .srcstep 90 90 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r3
+   .srcstep 91 91 33 "awfy_bounce.crexx" 69 26 26 "      x_velocity = intabs(x_velocity)"
+   linkattr1 r2,a1,2
+   .traceevent "V" 6 "R" "I" "r" 2 91 91 0 "x_velocity" ""
+   igetunlink r4,r2
+   .traceevent "A" 6 "R" "I" "r" 4 91 91 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 4 97 97 0 "number" ""
+   ieq r2,r4,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 2 97 97 0 "" ""
+   brf l557iffalse,r2
+   .srcstep 92 92 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l557iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 97 97 0 "number" ""
+   ilt r2,r4,0
+   .traceevent "O" 4 "R" "B" "r" 2 97 97 0 "" ""
+   brf l564iffalse,r2
+   .srcstep 93 93 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 3 97 97 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 97 97 0 "number" ""
+   isub r3,0,r4
+   .srcstep 94 94 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 3 97 97 0 "result" ""
+   icopy r2,r3
+   br l549bexprend
+l564iffalse:
+   .srcstep 95 95 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 4 97 97 0 "number" ""
+   icopy r2,r4
+   br l549bexprend
+l549bexprend:
+   .meta "awfy_bounce.bounceball.bounce.result"
+   isetattr1 a1,2,r2
+   .srcstep 98 98 17 "awfy_bounce.crexx" 70 7 18 "      bounced = 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 98 98 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 98 98 0 "bounced" ""
+l217iffalse:
+   .srcstep 111 111 17 "awfy_bounce.crexx" 72 5 15 "    if y > 500 then do"
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 111 111 0 "y" ""
+   igt r5,r6,500
+   unlink r6
+   .traceevent "O" 4 "R" "B" "r" 5 111 111 0 "" ""
+   brf l234iffalse,r5
+   .srcstep 112 112 17 "awfy_bounce.crexx" 72 16 20 "    if y > 500 then do"
+   .srcstep 101 101 17 "awfy_bounce.crexx" 73 7 14 "      y = 500"
+   load r3,500
+   .traceevent "L" 4 "R" "I" "r" 3 101 101 0 "" ""
+   isetattr1 a1,3,r3
+   .srcstep 109 109 17 "awfy_bounce.crexx" 74 7 42 "      y_velocity = 0 - intabs(y_velocity)"
+   .srcstep 108 108 17 "awfy_bounce.crexx" 74 24 30 "      y_velocity = 0 - intabs(y_velocity)"
+   .meta "awfy_bounce.bounceball.bounce.result"="b" ".int" r3
+   .srcstep 102 102 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r3
+   .srcstep 103 103 33 "awfy_bounce.crexx" 74 30 30 "      y_velocity = 0 - intabs(y_velocity)"
+   linkattr1 r2,a1,4
+   .traceevent "V" 6 "R" "I" "r" 2 103 103 0 "y_velocity" ""
+   igetunlink r4,r2
+   .traceevent "A" 6 "R" "I" "r" 4 103 103 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 4 109 109 0 "number" ""
+   ieq r2,r4,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 2 109 109 0 "" ""
+   brf l585iffalse,r2
+   .srcstep 104 104 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l585iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 109 109 0 "number" ""
+   ilt r2,r4,0
+   .traceevent "O" 4 "R" "B" "r" 2 109 109 0 "" ""
+   brf l592iffalse,r2
+   .srcstep 105 105 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 3 109 109 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 109 109 0 "number" ""
+   isub r3,0,r4
+   .srcstep 106 106 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 3 109 109 0 "result" ""
+   icopy r2,r3
+   br l577bexprend
+l592iffalse:
+   .srcstep 107 107 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 4 109 109 0 "number" ""
+   icopy r2,r4
+   br l577bexprend
+l577bexprend:
+   .meta "awfy_bounce.bounceball.bounce.result"
+   isub r4,0,r2
+   .traceevent "O" 4 "R" "I" "r" 4 109 109 0 "" ""
+   isetattr1 a1,4,r4
+   .srcstep 110 110 17 "awfy_bounce.crexx" 75 7 18 "      bounced = 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 110 110 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 110 110 0 "bounced" ""
+l234iffalse:
+   .srcstep 123 123 17 "awfy_bounce.crexx" 77 5 13 "    if y < 0 then do"
+   linkattr1 r6,a1,3
+   .traceevent "V" 6 "R" "I" "r" 6 123 123 0 "y" ""
+   ilt r5,r6,0
+   unlink r6
+   .traceevent "O" 4 "R" "B" "r" 5 123 123 0 "" ""
+   brf l249iffalse,r5
+   .srcstep 124 124 17 "awfy_bounce.crexx" 77 14 18 "    if y < 0 then do"
+   .srcstep 113 113 17 "awfy_bounce.crexx" 78 7 12 "      y = 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 113 113 0 "" ""
+   isetattr1 a1,3,r3
+   .srcstep 121 121 17 "awfy_bounce.crexx" 79 7 38 "      y_velocity = intabs(y_velocity)"
+   .srcstep 120 120 17 "awfy_bounce.crexx" 79 20 26 "      y_velocity = intabs(y_velocity)"
+   .meta "awfy_bounce.bounceball.bounce.result"="b" ".int" r3
+   .srcstep 114 114 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r3
+   .srcstep 115 115 33 "awfy_bounce.crexx" 79 26 26 "      y_velocity = intabs(y_velocity)"
+   linkattr1 r2,a1,4
+   .traceevent "V" 6 "R" "I" "r" 2 115 115 0 "y_velocity" ""
+   igetunlink r4,r2
+   .traceevent "A" 6 "R" "I" "r" 4 115 115 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 4 121 121 0 "number" ""
+   ieq r2,r4,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 2 121 121 0 "" ""
+   brf l613iffalse,r2
+   .srcstep 116 116 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l613iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 121 121 0 "number" ""
+   ilt r2,r4,0
+   .traceevent "O" 4 "R" "B" "r" 2 121 121 0 "" ""
+   brf l620iffalse,r2
+   .srcstep 117 117 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 3 121 121 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 121 121 0 "number" ""
+   isub r3,0,r4
+   .srcstep 118 118 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 3 121 121 0 "result" ""
+   icopy r2,r3
+   br l605bexprend
+l620iffalse:
+   .srcstep 119 119 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 4 121 121 0 "number" ""
+   icopy r2,r4
+   br l605bexprend
+l605bexprend:
+   .meta "awfy_bounce.bounceball.bounce.result"
+   isetattr1 a1,4,r2
+   .srcstep 122 122 17 "awfy_bounce.crexx" 80 7 18 "      bounced = 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 122 122 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 122 122 0 "bounced" ""
+l249iffalse:
+   .srcstep 125 125 17 "awfy_bounce.crexx" 82 5 19 "    return bounced"
+   .traceevent "V" 6 "R" "B" "r" 0 125 125 0 "bounced" ""
+   ret r0
+   .meta "awfy_bounce.bounceball.bounce.bounced"
+   .meta "awfy_bounce.bounceball.bounce.§this"
+
+§awfy_bounce.bouncebenchmark.§factory() .locals=1
+   .meta "awfy_bounce.bouncebenchmark.§factory"="b" ".awfy_bounce..bouncebenchmark" §awfy_bounce.bouncebenchmark.§factory() ""
+   .srcstep 128 128 17 "awfy_bounce.crexx" 85 3 13 "  *: factory"
+   setattrs r0,0
+   setobjtype r0,"awfy_bounce.bouncebenchmark"
+   numsci 18,1,1
+   .srcstep 127 127 17 "awfy_bounce.crexx" 86 5 11 "    return"
+   .meta "awfy_bounce.bouncebenchmark.§factory.§factory"="b" ".bouncebenchmark" r0
+   .traceevent "V" 6 "R" "O" "r" 0 127 127 0 "§factory" ""
+   ret r0
+   .meta "awfy_bounce.bouncebenchmark.§factory.§factory"
+
+§awfy_bounce.bouncebenchmark.run() .locals=20
+   .meta "awfy_bounce.bouncebenchmark.run"="b" ".int" §awfy_bounce.bouncebenchmark.run() ""
+   .srcstep 214 214 17 "awfy_bounce.crexx" 88 3 21 "  run: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .meta "awfy_bounce.bouncebenchmark.run.balls"="b" ".bounceball[*]" r0
+   .srcstep 129 129 17 "awfy_bounce.crexx" 90 5 24 "    balls = .BounceBall[]"
+   null r0
+   .srcstep 134 134 17 "awfy_bounce.crexx" 89 5 25 "    random = .AwfyRandom()"
+   .srcstep 130 130 6 "awfy_bounce.crexx" 34 3 13 "  *: factory"
+   setattrs r4,2
+   .srcstep 131 131 6 "awfy_bounce.crexx" 34 3 13 "  *: factory"
+   setobjtype r4,"awfy_bounce.awfyrandom"
+   .srcstep 132 132 17 "awfy_bounce.crexx" 35 5 23 "    seed_value = 74755"
+   load r6,74755
+   .traceevent "L" 4 "R" "I" "r" 6 132 132 0 "" ""
+   isetattr1 r4,1,r6
+   .srcstep 133 133 33 "awfy_bounce.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 4 133 133 0 "§factory" ""
+   copy r2,r4
+   .traceevent "A" 6 "R" "O" "r" 2 133 133 0 "random" ""
+   .srcstep 139 139 17 "awfy_bounce.crexx" 91 5 7 "    do i = 1 to 100"
+   .srcstep 135 135 17 "awfy_bounce.crexx" 91 8 13 "    do i = 1 to 100"
+   .meta "awfy_bounce.bouncebenchmark.run.i"="b" ".int" r6
+   .meta "awfy_bounce.bouncebenchmark.run.random"="b" ".awfyrandom" r2
+   .meta "awfy_bounce.bouncebenchmark.run.§this"="b" ".bouncebenchmark" a1
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 135 135 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 135 135 0 "i" ""
+   .srcstep 136 136 17 "awfy_bounce.crexx" 91 14 20 "    do i = 1 to 100"
+   load r5,100
+   .traceevent "L" 4 "R" "I" "r" 5 0 0 0 "" ""
+l268dostart:
+   .srcstep 136 136 17 "awfy_bounce.crexx" 91 14 20 "    do i = 1 to 100"
+   igt r7,r6,r5
+   brt l268doend,r7
+   .srcstep 138 138 17 "awfy_bounce.crexx" 92 7 47 "      balls[i] = .BounceBall(reference random)"
+   .traceevent "V" 6 "R" "I" "r" 6 138 138 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 6 138 138 0 "balls" ""
+   minlinkattr1 r8,r0,r6,0
+   .traceevent "V" 6 "R" "O" "r" 2 138 138 0 "random" ""
+   mkref r10,r2
+   settp r10,768
+   call1 r11,§awfy_bounce.bounceball.§factory(),r10
+   .traceevent "F" 4 "R" "O" "r" 11 138 138 0 "§factory" ""
+   copy r8,r11
+   .traceevent "A" 6 "R" "O" "r" 8 138 138 0 "balls" ""
+   unlink r8
+l268doinc:
+   .srcstep 137 137 17 "awfy_bounce.crexx" 91 8 9 "    do i = 1 to 100"
+   inc r6
+   .srcstep 140 140 17 "awfy_bounce.crexx" 93 5 8 "    end"
+   br l268dostart
+l268doend:
+   .meta "awfy_bounce.bouncebenchmark.run.i"
+   .srcstep 141 141 17 "awfy_bounce.crexx" 95 5 16 "    bounces = 0"
+   .meta "awfy_bounce.bouncebenchmark.run.bounces"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 141 141 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 141 141 0 "bounces" ""
+   .srcstep 211 211 17 "awfy_bounce.crexx" 96 5 7 "    do step = 1 to 50"
+   .srcstep 142 142 17 "awfy_bounce.crexx" 96 8 16 "    do step = 1 to 50"
+   .meta "awfy_bounce.bouncebenchmark.run.step"="b" ".int" r11
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 142 142 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 142 142 0 "step" ""
+   .srcstep 143 143 17 "awfy_bounce.crexx" 96 17 22 "    do step = 1 to 50"
+   load r10,50
+   .traceevent "L" 4 "R" "I" "r" 10 0 0 0 "" ""
+l285dostart:
+   .srcstep 143 143 17 "awfy_bounce.crexx" 96 17 22 "    do step = 1 to 50"
+   igt r9,r11,r10
+   brt l285doend,r9
+   .srcstep 209 209 17 "awfy_bounce.crexx" 97 7 9 "      do i = 1 to balls[0]"
+   .srcstep 145 145 17 "awfy_bounce.crexx" 97 10 15 "      do i = 1 to balls[0]"
+   .meta "awfy_bounce.bouncebenchmark.run.i"="b" ".int" r6
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 145 145 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 145 145 0 "i" ""
+   .srcstep 146 146 17 "awfy_bounce.crexx" 97 16 26 "      do i = 1 to balls[0]"
+   .traceevent "C" 4 "R" "V" "r" 5 0 0 0 "balls" ""
+   getattrs r12,r0,0
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "balls" ""
+l292dostart:
+   .srcstep 146 146 17 "awfy_bounce.crexx" 97 16 26 "      do i = 1 to balls[0]"
+   igt r13,r6,r12
+   brt l292doend,r13
+   .srcstep 148 148 17 "awfy_bounce.crexx" 98 9 37 "        ball_ref = reference balls[i]"
+   .meta "awfy_bounce.bouncebenchmark.run.ball_ref"="b" "reference .bounceball" r7
+   .traceevent "V" 6 "R" "I" "r" 6 148 148 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 6 148 148 0 "balls" ""
+   minlinkattr1 r14,r0,r6,0
+   .traceevent "V" 6 "R" "O" "r" 14 148 148 0 "balls" ""
+   mkref r7,r14
+   unlink r14
+   .traceevent "A" 6 "R" "R" "r" 7 148 148 0 "ball_ref" ""
+   .srcstep 149 149 17 "awfy_bounce.crexx" 99 9 36 "        ball = dereference ball_ref"
+   .meta "awfy_bounce.bouncebenchmark.run.ball"="b" ".bounceball" r8
+   .traceevent "V" 6 "R" "R" "r" 7 149 149 0 "ball_ref" ""
+   unlink r8
+   linkref r8,r7
+   .traceevent "A" 6 "R" "O" "r" 8 149 149 0 "ball" ""
+   .srcstep 207 207 17 "awfy_bounce.crexx" 100 9 23 "        if ball.bounce() then bounces = bounces + 1"
+   .srcstep 205 205 17 "awfy_bounce.crexx" 100 12 16 "        if ball.bounce() then bounces = bounces + 1"
+   .srcstep 150 150 33 "awfy_bounce.crexx" 100 12 16 "        if ball.bounce() then bounces = bounces + 1"
+   .traceevent "V" 6 "R" "O" "r" 8 150 150 0 "ball" ""
+   .traceevent "A" 6 "R" "O" "r" 8 150 150 0 "§this" ""
+   .srcstep 151 151 17 "awfy_bounce.crexx" 58 5 16 "    bounced = 0"
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 151 151 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 151 151 0 "bounced" ""
+   .srcstep 152 152 17 "awfy_bounce.crexx" 59 5 23 "    x = x + x_velocity"
+   linkattr1 r16,r8,1
+   .traceevent "V" 6 "R" "I" "r" 16 152 152 0 "x" ""
+   linkattr1 r17,r8,2
+   .traceevent "V" 6 "R" "I" "r" 17 152 152 0 "x_velocity" ""
+   iadd r18,r16,r17
+   unlinkn r17,r16
+   .traceevent "O" 4 "R" "I" "r" 18 152 152 0 "" ""
+   isetattr1 r8,1,r18
+   .srcstep 153 153 17 "awfy_bounce.crexx" 60 5 23 "    y = y + y_velocity"
+   linkattr1 r17,r8,3
+   .traceevent "V" 6 "R" "I" "r" 17 153 153 0 "y" ""
+   linkattr1 r16,r8,4
+   .traceevent "V" 6 "R" "I" "r" 16 153 153 0 "y_velocity" ""
+   iadd r5,r17,r16
+   unlinkn r16,r17
+   .traceevent "O" 4 "R" "I" "r" 5 153 153 0 "" ""
+   isetattr1 r8,3,r5
+   .srcstep 164 164 17 "awfy_bounce.crexx" 62 5 15 "    if x > 500 then do"
+   linkattr1 r18,r8,1
+   .traceevent "V" 6 "R" "I" "r" 18 164 164 0 "x" ""
+   igt r17,r18,500
+   unlink r18
+   .traceevent "O" 4 "R" "B" "r" 17 164 164 0 "" ""
+   brf l677iffalse,r17
+   .srcstep 165 165 17 "awfy_bounce.crexx" 62 16 20 "    if x > 500 then do"
+   .srcstep 154 154 17 "awfy_bounce.crexx" 63 7 14 "      x = 500"
+   load r5,500
+   .traceevent "L" 4 "R" "I" "r" 5 154 154 0 "" ""
+   isetattr1 r8,1,r5
+   .srcstep 162 162 17 "awfy_bounce.crexx" 64 7 42 "      x_velocity = 0 - intabs(x_velocity)"
+   .srcstep 161 161 17 "awfy_bounce.crexx" 64 24 30 "      x_velocity = 0 - intabs(x_velocity)"
+   .meta "awfy_bounce.bouncebenchmark.run.result"="b" ".int" r5
+   .srcstep 155 155 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r5
+   .srcstep 156 156 33 "awfy_bounce.crexx" 64 30 30 "      x_velocity = 0 - intabs(x_velocity)"
+   linkattr1 r19,r8,2
+   .traceevent "V" 6 "R" "I" "r" 19 156 156 0 "x_velocity" ""
+   igetunlink r16,r19
+   .traceevent "A" 6 "R" "I" "r" 16 156 156 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 16 162 162 0 "number" ""
+   ieq r19,r16,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 19 162 162 0 "" ""
+   brf l697iffalse,r19
+   .srcstep 157 157 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l697iffalse:
+   .traceevent "V" 6 "R" "I" "r" 16 162 162 0 "number" ""
+   ilt r19,r16,0
+   .traceevent "O" 4 "R" "B" "r" 19 162 162 0 "" ""
+   brf l704iffalse,r19
+   .srcstep 158 158 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 5 162 162 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 16 162 162 0 "number" ""
+   isub r5,0,r16
+   .srcstep 159 159 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 5 162 162 0 "result" ""
+   icopy r19,r5
+   br l689bexprend
+l704iffalse:
+   .srcstep 160 160 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 16 162 162 0 "number" ""
+   icopy r19,r16
+   br l689bexprend
+l689bexprend:
+   .meta "awfy_bounce.bouncebenchmark.run.result"
+   isub r19,0,r19
+   .traceevent "O" 4 "R" "I" "r" 19 162 162 0 "" ""
+   isetattr1 r8,2,r19
+   .srcstep 163 163 17 "awfy_bounce.crexx" 65 7 18 "      bounced = 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 163 163 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 163 163 0 "bounced" ""
+l677iffalse:
+   .srcstep 176 176 17 "awfy_bounce.crexx" 67 5 13 "    if x < 0 then do"
+   linkattr1 r19,r8,1
+   .traceevent "V" 6 "R" "I" "r" 19 176 176 0 "x" ""
+   ilt r18,r19,0
+   unlink r19
+   .traceevent "O" 4 "R" "B" "r" 18 176 176 0 "" ""
+   brf l720iffalse,r18
+   .srcstep 177 177 17 "awfy_bounce.crexx" 67 14 18 "    if x < 0 then do"
+   .srcstep 166 166 17 "awfy_bounce.crexx" 68 7 12 "      x = 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 166 166 0 "" ""
+   isetattr1 r8,1,r16
+   .srcstep 174 174 17 "awfy_bounce.crexx" 69 7 38 "      x_velocity = intabs(x_velocity)"
+   .srcstep 173 173 17 "awfy_bounce.crexx" 69 20 26 "      x_velocity = intabs(x_velocity)"
+   .meta "awfy_bounce.bouncebenchmark.run.result"="b" ".int" r16
+   .srcstep 167 167 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r16
+   .srcstep 168 168 33 "awfy_bounce.crexx" 69 26 26 "      x_velocity = intabs(x_velocity)"
+   linkattr1 r5,r8,2
+   .traceevent "V" 6 "R" "I" "r" 5 168 168 0 "x_velocity" ""
+   igetunlink r17,r5
+   .traceevent "A" 6 "R" "I" "r" 17 168 168 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 17 174 174 0 "number" ""
+   ieq r5,r17,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 5 174 174 0 "" ""
+   brf l738iffalse,r5
+   .srcstep 169 169 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l738iffalse:
+   .traceevent "V" 6 "R" "I" "r" 17 174 174 0 "number" ""
+   ilt r5,r17,0
+   .traceevent "O" 4 "R" "B" "r" 5 174 174 0 "" ""
+   brf l745iffalse,r5
+   .srcstep 170 170 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 16 174 174 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 17 174 174 0 "number" ""
+   isub r16,0,r17
+   .srcstep 171 171 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 16 174 174 0 "result" ""
+   icopy r5,r16
+   br l730bexprend
+l745iffalse:
+   .srcstep 172 172 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 17 174 174 0 "number" ""
+   icopy r5,r17
+   br l730bexprend
+l730bexprend:
+   .meta "awfy_bounce.bouncebenchmark.run.result"
+   isetattr1 r8,2,r5
+   .srcstep 175 175 17 "awfy_bounce.crexx" 70 7 18 "      bounced = 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 175 175 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 175 175 0 "bounced" ""
+l720iffalse:
+   .srcstep 188 188 17 "awfy_bounce.crexx" 72 5 15 "    if y > 500 then do"
+   linkattr1 r19,r8,3
+   .traceevent "V" 6 "R" "I" "r" 19 188 188 0 "y" ""
+   igt r18,r19,500
+   unlink r19
+   .traceevent "O" 4 "R" "B" "r" 18 188 188 0 "" ""
+   brf l761iffalse,r18
+   .srcstep 189 189 17 "awfy_bounce.crexx" 72 16 20 "    if y > 500 then do"
+   .srcstep 178 178 17 "awfy_bounce.crexx" 73 7 14 "      y = 500"
+   load r16,500
+   .traceevent "L" 4 "R" "I" "r" 16 178 178 0 "" ""
+   isetattr1 r8,3,r16
+   .srcstep 186 186 17 "awfy_bounce.crexx" 74 7 42 "      y_velocity = 0 - intabs(y_velocity)"
+   .srcstep 185 185 17 "awfy_bounce.crexx" 74 24 30 "      y_velocity = 0 - intabs(y_velocity)"
+   .meta "awfy_bounce.bouncebenchmark.run.result"="b" ".int" r16
+   .srcstep 179 179 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r16
+   .srcstep 180 180 33 "awfy_bounce.crexx" 74 30 30 "      y_velocity = 0 - intabs(y_velocity)"
+   linkattr1 r5,r8,4
+   .traceevent "V" 6 "R" "I" "r" 5 180 180 0 "y_velocity" ""
+   igetunlink r17,r5
+   .traceevent "A" 6 "R" "I" "r" 17 180 180 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 17 186 186 0 "number" ""
+   ieq r5,r17,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 5 186 186 0 "" ""
+   brf l781iffalse,r5
+   .srcstep 181 181 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l781iffalse:
+   .traceevent "V" 6 "R" "I" "r" 17 186 186 0 "number" ""
+   ilt r5,r17,0
+   .traceevent "O" 4 "R" "B" "r" 5 186 186 0 "" ""
+   brf l788iffalse,r5
+   .srcstep 182 182 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 16 186 186 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 17 186 186 0 "number" ""
+   isub r16,0,r17
+   .srcstep 183 183 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 16 186 186 0 "result" ""
+   icopy r5,r16
+   br l773bexprend
+l788iffalse:
+   .srcstep 184 184 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 17 186 186 0 "number" ""
+   icopy r5,r17
+   br l773bexprend
+l773bexprend:
+   .meta "awfy_bounce.bouncebenchmark.run.result"
+   isub r17,0,r5
+   .traceevent "O" 4 "R" "I" "r" 17 186 186 0 "" ""
+   isetattr1 r8,4,r17
+   .srcstep 187 187 17 "awfy_bounce.crexx" 75 7 18 "      bounced = 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 187 187 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 187 187 0 "bounced" ""
+l761iffalse:
+   .srcstep 200 200 17 "awfy_bounce.crexx" 77 5 13 "    if y < 0 then do"
+   linkattr1 r19,r8,3
+   .traceevent "V" 6 "R" "I" "r" 19 200 200 0 "y" ""
+   ilt r18,r19,0
+   unlink r19
+   .traceevent "O" 4 "R" "B" "r" 18 200 200 0 "" ""
+   brf l804iffalse,r18
+   .srcstep 201 201 17 "awfy_bounce.crexx" 77 14 18 "    if y < 0 then do"
+   .srcstep 190 190 17 "awfy_bounce.crexx" 78 7 12 "      y = 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 190 190 0 "" ""
+   isetattr1 r8,3,r16
+   .srcstep 198 198 17 "awfy_bounce.crexx" 79 7 38 "      y_velocity = intabs(y_velocity)"
+   .srcstep 197 197 17 "awfy_bounce.crexx" 79 20 26 "      y_velocity = intabs(y_velocity)"
+   .meta "awfy_bounce.bouncebenchmark.run.result"="b" ".int" r16
+   .srcstep 191 191 25 "intabs.crexx" 45 3 16 "  result = .int"
+   null r16
+   .srcstep 192 192 33 "awfy_bounce.crexx" 79 26 26 "      y_velocity = intabs(y_velocity)"
+   linkattr1 r5,r8,4
+   .traceevent "V" 6 "R" "I" "r" 5 192 192 0 "y_velocity" ""
+   igetunlink r17,r5
+   .traceevent "A" 6 "R" "I" "r" 17 192 192 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 17 198 198 0 "number" ""
+   ieq r5,r17,-9223372036854775808
+   .traceevent "O" 4 "R" "B" "r" 5 198 198 0 "" ""
+   brf l822iffalse,r5
+   .srcstep 193 193 25 "intabs.crexx" 47 15 83 "    assembler signal \"OVERFLOW_UNDERFLOW\",\"INTABS cannot represent abs(INT64_MIN)\""
+   signal "OVERFLOW_UNDERFLOW","INTABS cannot represent abs(INT64_MIN)"
+l822iffalse:
+   .traceevent "V" 6 "R" "I" "r" 17 198 198 0 "number" ""
+   ilt r5,r17,0
+   .traceevent "O" 4 "R" "B" "r" 5 198 198 0 "" ""
+   brf l829iffalse,r5
+   .srcstep 194 194 25 "intabs.crexx" 49 15 38 "    assembler isub result,zero,number"
+   .traceevent "V" 6 "R" "I" "r" 16 198 198 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 17 198 198 0 "number" ""
+   isub r16,0,r17
+   .srcstep 195 195 25 "intabs.crexx" 50 5 18 "    return result"
+   .traceevent "V" 6 "R" "I" "r" 16 198 198 0 "result" ""
+   icopy r5,r16
+   br l814bexprend
+l829iffalse:
+   .srcstep 196 196 25 "intabs.crexx" 52 3 16 "  return number"
+   .traceevent "V" 6 "R" "I" "r" 17 198 198 0 "number" ""
+   icopy r5,r17
+   br l814bexprend
+l814bexprend:
+   .meta "awfy_bounce.bouncebenchmark.run.result"
+   isetattr1 r8,4,r5
+   .srcstep 199 199 17 "awfy_bounce.crexx" 80 7 18 "      bounced = 1"
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 199 199 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 199 199 0 "bounced" ""
+l804iffalse:
+   .srcstep 202 202 33 "awfy_bounce.crexx" 82 12 19 "    return bounced"
+   .traceevent "V" 6 "R" "B" "r" 14 202 202 0 "bounced" ""
+   icopy r15,r14
+   .traceevent "A" 6 "R" "I" "r" 15 202 202 0 "__inline_leave_846_845" ""
+   .srcstep 203 203 6 "awfy_bounce.crexx" 82 5 19 "    return bounced"
+   .traceevent "V" 6 "R" "O" "r" 8 207 207 0 "§this" ""
+   .srcstep 204 204 17 "awfy_bounce.crexx" 82 5 19 "    return bounced"
+   .traceevent "V" 6 "R" "I" "r" 15 207 207 0 "__inline_leave_846_845" ""
+   icopy r19,r15
+   br l659bexprend
+l659bexprend:
+   brf l319iffalse,r19
+   .srcstep 208 208 17 "awfy_bounce.crexx" 100 23 24 "        if ball.bounce() then bounces = bounces + 1"
+   .srcstep 206 206 17 "awfy_bounce.crexx" 100 31 52 "        if ball.bounce() then bounces = bounces + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 206 206 0 "bounces" ""
+   iadd r1,r1,1
+   .traceevent "O" 4 "R" "I" "r" 1 206 206 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 206 206 0 "bounces" ""
+l319iffalse:
+l292doinc:
+   .srcstep 147 147 17 "awfy_bounce.crexx" 97 10 11 "      do i = 1 to balls[0]"
+   inc r6
+   .srcstep 210 210 17 "awfy_bounce.crexx" 101 7 10 "      end"
+   br l292dostart
+l292doend:
+   unlink r8
+   endlife r8
+   endlife r7
+   .meta "awfy_bounce.bouncebenchmark.run.ball"
+   .meta "awfy_bounce.bouncebenchmark.run.ball_ref"
+   .meta "awfy_bounce.bouncebenchmark.run.i"
+l285doinc:
+   .srcstep 144 144 17 "awfy_bounce.crexx" 96 8 12 "    do step = 1 to 50"
+   inc r11
+   .srcstep 212 212 17 "awfy_bounce.crexx" 101 7 10 "      end"
+   br l285dostart
+l285doend:
+   .meta "awfy_bounce.bouncebenchmark.run.step"
+   .srcstep 213 213 17 "awfy_bounce.crexx" 103 5 19 "    return bounces"
+   .traceevent "V" 6 "R" "I" "r" 1 213 213 0 "bounces" ""
+   ret r1
+   .meta "awfy_bounce.bouncebenchmark.run.balls"
+   .meta "awfy_bounce.bouncebenchmark.run.bounces"
+   .meta "awfy_bounce.bouncebenchmark.run.random"
+   .meta "awfy_bounce.bouncebenchmark.run.§this"

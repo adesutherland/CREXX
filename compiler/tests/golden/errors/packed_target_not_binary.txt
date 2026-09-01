@@ -1,0 +1,2 @@
+Error in packed_target_not_binary.crexx @ 5:28 - #BINARY_MEMORY_TARGET_NOT_BINARY, "data"
+1 error(s) in source file

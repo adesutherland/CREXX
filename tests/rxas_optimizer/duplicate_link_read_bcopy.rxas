@@ -1,0 +1,15 @@
+* Optimiser duplicate link/bcopy/unlink read coverage.
+
+main() .locals=5
+    load r0,0x4142
+
+    link r1,r0
+    bcopy r2,r1
+    unlink r1
+
+    link r3,r0
+    bcopy r4,r3
+    unlink r3
+
+    blen r0,r4
+    ret

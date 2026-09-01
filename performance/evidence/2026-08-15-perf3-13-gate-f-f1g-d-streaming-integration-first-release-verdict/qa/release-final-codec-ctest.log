@@ -1,0 +1,27 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start    1: linked_opt_runtime_artifacts_build
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.07 sec
+    Start 1713: ts_http_codec_rxbvm_noopt
+    Start 1715: ts_http_codec_rxtvm_noopt
+    Start 1714: ts_http_codec_rxbvm_opt
+    Start 1716: ts_http_codec_rxtvm_opt
+2/5 Test #1715: ts_http_codec_rxtvm_noopt ............   Passed    0.03 sec
+3/5 Test #1713: ts_http_codec_rxbvm_noopt ............   Passed    0.03 sec
+4/5 Test #1714: ts_http_codec_rxbvm_opt ..............   Passed    0.03 sec
+5/5 Test #1716: ts_http_codec_rxtvm_opt ..............   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+compression    =   0.11 sec*proc (4 tests)
+f1g            =   0.11 sec*proc (4 tests)
+gate_f         =   0.11 sec*proc (4 tests)
+http           =   0.11 sec*proc (4 tests)
+levelg         =   0.11 sec*proc (4 tests)
+library        =   0.11 sec*proc (4 tests)
+linked         =   0.06 sec*proc (2 tests)
+linked_opt     =   0.06 sec*proc (2 tests)
+rxbvm          =   0.06 sec*proc (2 tests)
+rxtvm          =   0.06 sec*proc (2 tests)
+
+Total Test time (real) =   0.13 sec

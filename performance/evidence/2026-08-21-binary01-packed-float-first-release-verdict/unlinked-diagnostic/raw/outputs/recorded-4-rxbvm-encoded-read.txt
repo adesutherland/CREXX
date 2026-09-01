@@ -1,0 +1,2 @@
+benchmark=binary_packed_float_compare variant=encoded-read cells=200000 iterations=10 elapsed_us=22964 items_per_second=87092840 checksum=1000000
+PASS: BINARY-01 packed float compare

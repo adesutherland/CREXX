@@ -31,6 +31,7 @@
 
 #include "rxcp_types.h"
 #include "rxcp_token.h"
+#include "rxcp_diag.h"
 
 typedef enum ASTSourceProvenance {
     AST_SOURCE_NONE = 0,
@@ -78,8 +79,13 @@ struct ASTNode {
     char is_const_arg;
     char is_varg;
     char is_compiler_added;
+    char is_select_dispatch;
+    char dispatch_kind;
     char is_implicit_main;
     char is_interface_default_method;
+    char is_task_callable;
+    char is_initializer;
+    char is_equivalence_operator;
     char is_internal_diagnostic;
     char is_source_diagnostic_recorded;
     char mark_internal_diagnostics;
@@ -87,9 +93,16 @@ struct ASTNode {
     char inherit_parent_scope;
     char inherit_parent_reg_scope;
     char suppress_shadow_warnings;
+    char suppress_symbol_metadata;
     char skip_exit_dispatch;
     char emit_primary_reporting_anchor;
     char is_inline_pruned;
+    char inline_receiver_effect_known;
+    char inline_receiver_attribute_write;
+    char flow_skip_arg_copy; /* NR-26: private formal is safely overwritten before its first read */
+    char flow_share_arg_input; /* NR-26: all physical writes are elided; incoming slot stays authoritative */
+    char flow_skip_assignment_store; /* NR-26: RHS/TRACE stay live but the scalar destination is dead */
+    Symbol *flow_substitute_symbol; /* NR-26: read is flow-proved equal to this live symbol */
     ASTNode *free_list;
     SourceNode *source_node;
     char source_provenance;
@@ -104,6 +117,7 @@ struct ASTNode {
     char *node_string;
     size_t node_string_length;
     char free_node_string;
+    RxcpDiagnostic *diagnostic;
     rxinteger int_value;
     int bool_value;
     double float_value;
@@ -120,6 +134,8 @@ struct ASTNode {
     OutputFragment *loopstartchecks; /* Begin Loop exit checks */
     OutputFragment *loopinc;         /* Loop increments */
     OutputFragment *loopendchecks;   /* End Loop exit checks */
+    OutputFragment *branch_cleanup;  /* Detached cleanup copy for non-local control transfers */
+    size_t deferred_register_mark;   /* Register-pass boundary for nested statement temporaries */
     char is_duplicate_warning;
 };
 
@@ -133,6 +149,7 @@ int tokenis(Token *token, const char* value);
 ASTNode* ast_f(Context* context, NodeType type, Token *token); /* ASTNode Factory */
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks */
 ASTNode *ast_fstr(Context* context, Token *token);
+ASTNode *ast_fstr_chain(Context* context, Token *first_token);
 /* ASTNode Factory - adds a DECIMAL token removing the trailing d if it exists */
 ASTNode *ast_fdec(Context* context, Token *token);
 /* ASTNode Factory - With node type*/
@@ -159,7 +176,9 @@ ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node);
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */
 int ast_grft(Context *ctx, ASTNode *target_node, const char *rexx_code);
-int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code, ASTNode **node_map, size_t num_tokens);
+int ast_grft_interpolated(Context *ctx, ASTNode *target_node, const char *rexx_code,
+                          ASTNode **node_map, size_t num_tokens,
+                          int certified_exit_fragment);
 char *ast_interpolate_exit_fragment(const char *prefix, const char *rexx_code, ASTNode **node_map, size_t num_tokens, SourceMap **map_out, size_t *length_out);
 void ast_apply_exit_source_map(ASTNode *tree, SourceMap *map);
 void ast_free_exit_source_map(SourceMap *map);
@@ -177,9 +196,9 @@ void ast_free_exit_source_map(SourceMap *map);
  */
 ASTNode *ast_dup(Context* new_context, ASTNode *node);
 /* Add error node to parent node */
-ASTNode *ast_err(Context* context, char *error_string, Token *token);
+ASTNode *ast_err(Context* context, const char *code, Token *token);
 /* Add warning node to parent node */
-ASTNode *ast_war(Context* context, char *warning_string, Token *token);
+ASTNode *ast_war(Context* context, const char *code, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
 /* Add a duplicate of the tree headed by the source node as a child to dest
@@ -198,11 +217,31 @@ void print_error(ASTNode* node, FILE* stream, char* prefix);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
 /* Add an error child node  - returns node for chaining */
-ASTNode *mknd_err(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_err(ASTNode* node, const char *code);
+ASTNode *mknd_err1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_err2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2);
+ASTNode *mknd_err3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3);
+ASTNode *mknd_err5(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3,
+                   const char *name4, const char *value4, const char *name5, const char *value5);
 /* Add an error child node only if an error with same string doesn't already exist on the node */
-ASTNode *mknd_err_unique(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_err_unique(ASTNode* node, const char *code);
+ASTNode *mknd_err_unique1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_err_unique2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                          const char *name2, const char *value2);
 /* Add a warning child node  - returns node for chaining */
-ASTNode *mknd_war(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_war(ASTNode* node, const char *code);
+ASTNode *mknd_war1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_war2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2);
+ASTNode *mknd_war3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3);
+void ast_set_diagnostic(ASTNode *node, RxcpDiagnostic *diagnostic);
+/* Disconnect every AST node owned by a context from its symbol before either
+ * side of the bidirectional relationship is destroyed. */
+void ast_disconnect_symbols(Context *context);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is

@@ -1,0 +1,278 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicstate expose RexxAddressState RexxTraceState RexxDateTimeState
+import rxfnsb
+
+/**
+ * Per-activation Classic ADDRESS state used by state-query BIFs.
+ *
+ * Connection descriptions follow ANSI X3J18 section 9.5.1 and are returned as
+ * position, type, and resource separated by single blanks. The default NORMAL
+ * resource is null, so the default connection descriptions retain a trailing
+ * blank.
+ */
+RexxAddressState: class
+  environment_name = .string
+  input_position = .string
+  input_type = .string
+  input_resource = .string
+  output_position = .string
+  output_type = .string
+  output_resource = .string
+  error_position = .string
+  error_type = .string
+  error_resource = .string
+
+  *: factory
+    environment_name = "CREXX"
+    input_position = "INPUT"
+    input_type = "NORMAL"
+    input_resource = ""
+    output_position = "REPLACE"
+    output_type = "NORMAL"
+    output_resource = ""
+    error_position = "REPLACE"
+    error_type = "NORMAL"
+    error_resource = ""
+    return
+
+  setEnvironment: method = .void
+    arg name = .string
+    environment_name = name
+    return
+
+  environment: method = .string
+    return environment_name
+
+  setConnection: method = .void
+    arg option = .string, position = .string, type = .string, resource = .string
+    selector = upper(left(strip(option), 1))
+
+    select
+      when selector = "I" then do
+        input_position = position
+        input_type = type
+        input_resource = resource
+      end
+      when selector = "O" then do
+        output_position = position
+        output_type = type
+        output_resource = resource
+      end
+      when selector = "E" then do
+        error_position = position
+        error_type = type
+        error_resource = resource
+      end
+      otherwise return
+    end
+    return
+
+  connection: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+
+    select
+      when selector = "I" then return input_position || " " || input_type || " " || input_resource
+      when selector = "O" then return output_position || " " || output_type || " " || output_resource
+      when selector = "E" then return error_position || " " || error_type || " " || error_resource
+      otherwise return ""
+    end
+    return ""
+
+  position: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_position
+    if selector = "O" then return output_position
+    if selector = "E" then return error_position
+    return ""
+
+  type: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_type
+    if selector = "O" then return output_type
+    if selector = "E" then return error_type
+    return ""
+
+  resource: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_resource
+    if selector = "O" then return output_resource
+    if selector = "E" then return error_resource
+    return ""
+
+/**
+ * Per-activation Classic TRACE BIF state.
+ *
+ * The stored setting is the single Classic option letter. Interactive state
+ * is represented separately and is rendered as the leading `?` required by
+ * TRACE().
+ */
+RexxTraceState: class
+  trace_setting = .string
+  interacting = .boolean
+
+  *: factory
+    trace_setting = "N"
+    interacting = 0
+    return
+
+  current: method = .string
+    if interacting then return "?" || trace_setting
+    return trace_setting
+
+  apply: method = .void
+    arg option = .string
+    option_length = .int
+    index = .int
+    codepoint = .int
+    assembler strlen option_length,option
+
+    if option_length = 0 then interacting = 0
+    index = 0
+    do while index < option_length
+      assembler strchar codepoint,option,index
+      if codepoint <> 63 then leave
+      interacting = \interacting
+      index = index + 1
+    end
+
+    if index >= option_length then trace_setting = "N"
+    else do
+      assembler strchar codepoint,option,index
+      if codepoint >= 97 & codepoint <= 122 then codepoint = codepoint - 32
+      trace_setting = ""
+      assembler appendchar trace_setting,codepoint
+    end
+    if trace_setting = "O" then interacting = 0
+    return
+
+/**
+ * Per-activation Classic DATE/TIME clause clock.
+ *
+ * `beginClause` freezes one platform sample. The compiler's future direct
+ * Level C lowering can call that method at each clause boundary; direct BIF
+ * harnesses use `ensureClause`, and deterministic tests use `injectClause`.
+ * Elapsed/reset state persists across clause samples in the same activation.
+ */
+RexxDateTimeState: class
+  clause_base_day = .int
+  clause_local_microseconds = .int
+  clause_utc_microseconds = .int
+  clause_offset_microseconds = .int
+  elapsed_started = .boolean
+  elapsed_start_microseconds = .int
+
+  *: factory
+    elapsed_started = 0
+    return
+
+  /** Capture and freeze the current local and UTC clock for a new clause. */
+  beginClause: method = .void
+    before_local = .int
+    after_local = .int
+    standard_seconds = .int
+    timezone_seconds = .int
+    utc_seconds = .int
+    standard_day = .int
+    standard_second = .int
+    local_second = .int
+    local_day = .int
+    daylight_adjustment = .int
+    fraction = .int
+
+    assembler mtime before_local
+    assembler time standard_seconds
+    assembler xtime timezone_seconds,"Z"
+    assembler mtime after_local
+    if after_local < before_local then do
+      assembler time standard_seconds
+      assembler xtime timezone_seconds,"Z"
+    end
+
+    utc_seconds = standard_seconds + timezone_seconds
+    standard_day = standard_seconds % 86400
+    standard_second = standard_seconds // 86400
+    if standard_second < 0 then do
+      standard_second = standard_second + 86400
+      standard_day = standard_day - 1
+    end
+
+    local_second = after_local % 1000000
+    fraction = after_local // 1000000
+    daylight_adjustment = local_second - standard_second
+    local_day = standard_day
+    if daylight_adjustment > 43200 then do
+      daylight_adjustment = daylight_adjustment - 86400
+      local_day = local_day - 1
+    end
+    else if daylight_adjustment < -43200 then do
+      daylight_adjustment = daylight_adjustment + 86400
+      local_day = local_day + 1
+    end
+
+    clause_base_day = local_day + 719162
+    clause_local_microseconds = after_local
+    clause_utc_microseconds = utc_seconds * 1000000 + fraction
+    clause_offset_microseconds = (0 - timezone_seconds + daylight_adjustment) * 1000000
+    return
+
+  /** Install a deterministic clause sample for a direct library harness. */
+  injectClause: method = .void
+    arg base_day = .int, local_microseconds = .int, utc_microseconds = .int, offset_microseconds = .int
+    clause_base_day = base_day
+    clause_local_microseconds = local_microseconds
+    clause_utc_microseconds = utc_microseconds
+    clause_offset_microseconds = offset_microseconds
+    return
+
+  baseDay: method = .int
+    return clause_base_day
+
+  localMicroseconds: method = .int
+    return clause_local_microseconds
+
+  utcMicroseconds: method = .int
+    return clause_utc_microseconds
+
+  offsetMicroseconds: method = .int
+    return clause_offset_microseconds
+
+  /** Return elapsed microseconds and optionally reset the elapsed origin. */
+  elapsedMicroseconds: method = .int
+    arg reset = .boolean
+    elapsed = .int
+    if \elapsed_started then do
+      elapsed_start_microseconds = clause_utc_microseconds
+      elapsed_started = 1
+      return 0
+    end
+    elapsed = clause_utc_microseconds - elapsed_start_microseconds
+    if reset then elapsed_start_microseconds = clause_utc_microseconds
+    return elapsed

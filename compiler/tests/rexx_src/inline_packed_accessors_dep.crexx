@@ -1,0 +1,31 @@
+options levelb
+namespace inline_packed_accessors_dep expose packedbox
+import rxfnsb
+
+packedbox: class
+  _data = .binary with register.0.binary
+
+  *: factory
+    arg item_count = .int
+    data = .binary
+    call binresize data, item_count * <sizeof..float>
+    _data = data
+    return
+
+  readFloat: method = .float
+    arg index = .int
+    return <packed..float>(index) _data
+
+  writeFloat: method = .void
+    arg index = .int, value = .float
+    <packed..float>(index) _data = value
+    return
+
+  readInt: method = .int
+    arg index = .int
+    return <packed..int>(index) _data
+
+  writeInt: method = .void
+    arg index = .int, value = .int
+    <packed..int>(index) _data = value
+    return

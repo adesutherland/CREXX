@@ -1,0 +1,101 @@
+/* Focused Level B XRANGE tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + check_string("abcdef", xrange("a", "f"), "ascending ASCII")
+errors = errors + check_string("z", xrange("z", "z"), "equal endpoints")
+
+from = ""
+tos = ""
+codepoint = 254
+assembler appendchar from,codepoint
+codepoint = 1
+assembler appendchar tos,codepoint
+wrapped = xrange(from, tos)
+errors = errors + check_length(4, wrapped, "wrapped length")
+errors = errors + check_codepoint(254, wrapped, 0, "wrapped first")
+errors = errors + check_codepoint(255, wrapped, 1, "wrapped high byte")
+errors = errors + check_codepoint(0, wrapped, 2, "wrapped zero")
+errors = errors + check_codepoint(1, wrapped, 3, "wrapped last")
+errors = errors + check_string_value(from, 254, "from is not mutated")
+errors = errors + check_string_value(tos, 1, "to is not mutated")
+
+zero = ""
+high = ""
+codepoint = 0
+assembler appendchar zero,codepoint
+codepoint = 255
+assembler appendchar high,codepoint
+full = xrange(zero, high)
+errors = errors + check_length(256, full, "full byte domain length")
+errors = errors + check_codepoint(0, full, 0, "full first")
+errors = errors + check_codepoint(127, full, 127, "full ASCII boundary")
+errors = errors + check_codepoint(128, full, 128, "full high boundary")
+errors = errors + check_codepoint(255, full, 255, "full last")
+
+outside = ""
+codepoint = 256
+assembler appendchar outside,codepoint
+invalid_caught = 0
+do
+  ignored = xrange("", "A")
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+do
+  ignored = .string
+  ignored = xrange("AB", "C")
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+do
+  ignored = .string
+  ignored = xrange(outside, "A")
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+do
+  ignored = .string
+  ignored = xrange("A", outside)
+on signal invalid_arguments
+  invalid_caught = invalid_caught + 1
+end
+errors = errors + check_int(4, invalid_caught, "invalid endpoints signal")
+
+if errors = 0 then say "PASS: xrange"
+return errors <> 0
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: XRANGE" label "values differ"
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: XRANGE" label "expected" expected "got" actual
+  return 1
+
+check_length: procedure = .int
+  arg expected = .int, actual = .string, label = .string
+  actual_length = .int
+  assembler strlen actual_length,actual
+  return check_int(expected, actual_length, label)
+
+check_codepoint: procedure = .int
+  arg expected = .int, actual = .string, index = .int, label = .string
+  codepoint = .int
+  assembler strchar codepoint,actual,index
+  return check_int(expected, codepoint, label)
+
+check_string_value: procedure = .int
+  arg actual = .string, expected = .int, label = .string
+  actual_length = .int
+  codepoint = .int
+  index = 0
+  assembler strlen actual_length,actual
+  if actual_length <> 1 then return check_int(1, actual_length, label)
+  assembler strchar codepoint,actual,index
+  return check_int(expected, codepoint, label)

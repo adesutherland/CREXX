@@ -1,0 +1,5 @@
+comparison,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,interval_result,favorable,total,guard_hit
+packed-v-boxed-rxbvm,calls_per_second,12,43186.999656,925182.897540,1994.783989,2006.834751,2054.025122,2080.743318,2231.390611,2057.857296,2015.644854,2100.069737,clear_favorable,12,12,no
+packed-v-boxed-rxtvm,calls_per_second,24,43077.647775,926664.455755,1808.016768,2031.513041,2062.893959,2085.631978,2151.459357,2057.432922,2030.107017,2084.758828,clear_favorable,24,24,no
+packed-v-boxed-offset-rxbvm,calls_per_second,12,42823.567888,917827.863813,1994.324644,2019.713215,2055.092810,2065.956536,2089.849712,2046.312557,2026.890574,2065.734539,clear_favorable,12,12,no
+packed-v-boxed-offset-rxtvm,calls_per_second,24,42232.190271,920475.034488,1939.623811,2051.579616,2080.291122,2120.398409,2409.528461,2100.114203,2059.537238,2140.691167,clear_favorable,24,24,no

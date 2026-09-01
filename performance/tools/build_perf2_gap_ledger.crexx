@@ -1,0 +1,261 @@
+/* cREXX License (MIT)
+ * Copyright (c) 2026 the cREXX contributors
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+/* Same-session PERF2 qualified-gap calculator. */
+main: procedure = .int
+  arg args = .string[]
+  common_summary = ""
+  common_ratios = ""
+  common_geomeans = ""
+  rexxcps_summary = ""
+  output_dir = ""
+  self_test_requested = 0
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "--self-test" then self_test_requested = 1
+    else if option = "--common-summary" then do
+      if i = args[0] then return argument_error("missing common summary")
+      i = i + 1; common_summary = args[i]
+    end
+    else if option = "--common-ratios" then do
+      if i = args[0] then return argument_error("missing common ratios")
+      i = i + 1; common_ratios = args[i]
+    end
+    else if option = "--common-geomeans" then do
+      if i = args[0] then return argument_error("missing common geomeans")
+      i = i + 1; common_geomeans = args[i]
+    end
+    else if option = "--rexxcps-summary" then do
+      if i = args[0] then return argument_error("missing RexxCPS summary")
+      i = i + 1; rexxcps_summary = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing output directory")
+      i = i + 1; output_dir = args[i]
+    end
+    else if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+  if self_test_requested then return self_test()
+  if common_summary = "" | common_ratios = "" | common_geomeans = "" | ,
+      rexxcps_summary = "" | output_dir = "" then
+    return argument_error("all input paths and --output-dir are required")
+
+  root = current_directory()
+  common_summary = absolute_path(root, common_summary)
+  common_ratios = absolute_path(root, common_ratios)
+  common_geomeans = absolute_path(root, common_geomeans)
+  rexxcps_summary = absolute_path(root, rexxcps_summary)
+  output_dir = absolute_path(root, output_dir)
+  if make_directory(output_dir) <> 0 then return 1
+  common_rows = read_csv_rows(common_summary, 20)
+  ratio_rows = read_csv_rows(common_ratios, 5)
+  geomean_rows = read_csv_rows(common_geomeans, 4)
+  cps_rows = read_csv_rows(rexxcps_summary, 20)
+  if common_rows[0] = 0 | ratio_rows[0] = 0 | geomean_rows[0] = 0 | ,
+      cps_rows[0] = 0 then return execution_error("one or more inputs are empty")
+
+  ledger = .string[]
+  ledger[1] = "workload,vm,comparability,crexx_cell,reference_cell,crexx_throughput,reference_throughput,ratio_higher_is_better,gain_to_parity,gain_to_1_50x,status"
+  do i = 1 to ratio_rows[0]
+    fields = parse_csv_line(ratio_rows[i])
+    comparison = fields[1]
+    if comparison <> "rxvm/oorexx" & comparison <> "rxbvm/oorexx" then iterate
+    workload = fields[2]
+    crexx_cell = fields[3]
+    reference_cell = fields[4]
+    ratio = fields[5] as .float
+    crexx_throughput = summary_median(common_rows, crexx_cell)
+    reference_throughput = summary_median(common_rows, reference_cell)
+    if crexx_throughput < 0 | reference_throughput < 0 then
+      return execution_error("missing common summary cell: " || crexx_cell)
+    vm = "rxvm"
+    if left(comparison, 5) = "rxbvm" then vm = "rxbvm"
+    ledger[ledger[0] + 1] = gap_row(workload, vm, "qualified-common", ,
+        crexx_cell, reference_cell, crexx_throughput, reference_throughput, ratio)
+  end
+
+  oorexx_cps = summary_median(cps_rows, "rexxcps-oorexx")
+  do vm_index = 1 to 2
+    vm = "rxvm"
+    cell = "rexxcps-rxvm"
+    if vm_index = 2 then do
+      vm = "rxbvm"
+      cell = "rexxcps-rxbvm"
+    end
+    crexx_cps = summary_median(cps_rows, cell)
+    ratio = crexx_cps / oorexx_cps
+    ledger[ledger[0] + 1] = gap_row("RexxCPS", vm, ,
+        "disclosed-cREXX-2.2d-vs-canonical-Classic-2.2", cell, ,
+        "rexxcps-oorexx", crexx_cps, oorexx_cps, ratio)
+  end
+  if write_lines(output_dir || "/gap-ledger.csv", ledger) <> 0 then return 1
+
+  targets = .string[]
+  targets[1] = "comparison,n,current_geomean,target_geomean,gain_required,membership"
+  do i = 1 to geomean_rows[0]
+    fields = parse_csv_line(geomean_rows[i])
+    if fields[1] <> "rxvm/oorexx" & fields[1] <> "rxbvm/oorexx" then iterate
+    current = fields[3] as .float
+    targets[targets[0] + 1] = csv_field(fields[1]) || "," || fields[2] || ,
+        "," || format_float(current) || ",2.000000," || ,
+        format_float(2.0 / current) || "," || csv_field(fields[4])
+  end
+  if write_lines(output_dir || "/common-geomean-target.csv", targets) <> 0 then return 1
+  say "PASS: built PERF2 same-session gap ledger under" output_dir
+  return 0
+
+gap_row: procedure = .string
+  arg workload = .string, vm = .string, comparability = .string, ,
+      crexx_cell = .string, reference_cell = .string, crexx_value = .float, ,
+      reference_value = .float, ratio = .float
+  parity_gain = 1.0
+  if ratio < 1.0 then parity_gain = 1.0 / ratio
+  strong_gain = 1.0
+  if ratio < 1.5 then strong_gain = 1.5 / ratio
+  status = "below-parity"
+  if ratio >= 1.5 then status = "meets-1.50x"
+  else if ratio >= 1.0 then status = "meets-parity"
+  return csv_field(workload) || "," || csv_field(vm) || "," || ,
+      csv_field(comparability) || "," || csv_field(crexx_cell) || "," || ,
+      csv_field(reference_cell) || "," || format_float(crexx_value) || "," || ,
+      format_float(reference_value) || "," || format_float(ratio) || "," || ,
+      format_float(parity_gain) || "," || format_float(strong_gain) || "," || status
+
+summary_median: procedure = .float
+  arg rows = .string[], cell_id = .string
+  do i = 1 to rows[0]
+    fields = parse_csv_line(rows[i])
+    if fields[1] = cell_id then return fields[14] as .float
+  end
+  return -1.0
+
+read_csv_rows: procedure = .string[]
+  arg path = .string, expected_fields = .int
+  rows = .string[]
+  header_seen = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if fields[0] <> expected_fields then do
+      call linein path
+      empty = .string[]
+      return empty
+    end
+    if \header_seen then do
+      header_seen = 1
+      iterate
+    end
+    rows[rows[0] + 1] = line
+  end
+  call linein path
+  return rows
+
+format_float: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'; i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else do
+      if character = '"' & field = "" then quoted = 1
+      else if character = "," then do
+        fields[fields[0] + 1] = field; field = ""
+      end
+      else field = field || character
+    end
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+current_directory: procedure = .string
+  out = .string[]; err = .string[]
+  address crexx "pwd" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return "unknown"
+
+absolute_path: procedure = .string
+  arg root = .string, path = .string
+  if left(path, 1) = "/" then return path
+  return root || "/" || path
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]; err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not create output directory")
+
+write_lines: procedure = .int
+  arg path = .string, text = .string[]
+  out = .string[]; err = .string[]
+  address crexx "rm :path" output out error err
+  do i = 1 to text[0]
+    if lineout(path, text[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+self_test: procedure = .int
+  row = gap_row("Bounce", "rxvm", "qualified-common", "c", "o", ,
+      1.0, 3.0, 0.333333)
+  fields = parse_csv_line(row)
+  if fields[0] <> 11 | fields[11] <> "below-parity" then
+    return execution_error("gap-row self-test failed")
+  summaries = .string[]
+  summaries[1] = "cell,Workload,runtime,vm,variant,A,yes,no,work,metric,10,1.0,2.0,3.0,4.0,5.0,0.1,1.0,2.0,no"
+  if summary_median(summaries, "cell") <> 3.0 then
+    return execution_error("summary median-column self-test failed")
+  say "PASS: PERF2 gap-ledger self-test"
+  return 0
+
+usage: procedure = .void
+  say "Usage: build_perf2_gap_ledger --common-summary PATH --common-ratios PATH"
+  say "       --common-geomeans PATH --rexxcps-summary PATH --output-dir PATH"
+  say "       build_perf2_gap_ledger --self-test"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  call usage
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

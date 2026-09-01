@@ -1,0 +1,2 @@
+Error in array_mutation_fixed_target.crexx @ 4:1 - #ARRAY_DIMS_MISMATCH, "append ints with 1"
+1 error(s) in source file

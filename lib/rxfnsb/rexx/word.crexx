@@ -22,29 +22,51 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Return one whitespace-delimited word.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/word.md
+ */
 options levelb
 
 namespace rxfnsb expose word
 
-word: procedure=.string
-  arg string=.string, wordnum=.int
-  len = length(string)
-  offset = 0
-  count = 0
-  if wordnum<1 then return ""
-  if len<1 then return ""
+/**
+ * Return a positive one-based word from a string.
+ *
+ * @param string source text
+ * @param wordnum positive one-based word number
+ * @return selected word, or empty when it does not exist
+ * @signal INVALID_ARGUMENTS non-positive word number
+ */
+word: procedure = .string
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORD number must be positive"
 
-  do while offset < len
-     assembler fndnblnk offset,string,offset     /* Find the next non-blank character */
-     if offset < 0 then return ""   /* No more words */
-     count = count + 1
-     wordStart = offset
-     assembler fndblnk offset,string,offset    /* Find the next blank after the word */
-     if count = wordnum then do
-        if offset < 0 then return substr(string, wordStart + 1)
-        else return substr(string, wordStart + 1, offset - wordStart)
-     end
-     if offset < 0 then leave
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return ""
+
+  scan = 0
+  current_word = 0
+  word_start = 0
+  word_end = 0
+  word_length = 0
+  result = ""
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return ""
+    current_word = current_word + 1
+    assembler fndblnk word_end,string,word_start
+    if current_word = wordnum then do
+      if word_end < 0 then word_end = string_length
+      word_length = word_end - word_start
+      assembler substring result,string,word_start,word_length
+      return result
+    end
+    if word_end < 0 then return ""
+    scan = word_end
   end
-return ""  /* wordnum not found */
+  return ""

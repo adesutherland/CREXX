@@ -1,15 +1,24 @@
-/* rexx */
+/* Focused Level B LOWER tests. */
 options levelb
 import rxfnsb
 
-errors=0
-if lower("THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG") \= "the quick brown fox jumps over the lazy dog" then do
-errors=errors+1
-say 'LOWER Failed in test 1'
-end
-if lower("É") \= "é" then do
-errors=errors+1
-say 'LOWER Failed in test 2'
-end
+errors = 0
+source = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG"
 
-return errors<>0
+errors = errors + check(lower(source) = "the quick brown fox jumps over the lazy dog", "ASCII alphabet")
+errors = errors + check(lower("MiXeD 123 !?") = "mixed 123 !?", "mixed text preserves nonletters")
+errors = errors + check(lower("ÄÖÜÉ") = "äöüé", "Unicode cased characters")
+errors = errors + check(lower("already lower") = "already lower", "already lowercase")
+errors = errors + check(lower("") = "", "empty string")
+embedded_nul = "A" || d2c(0) || "B"
+errors = errors + check(lower(embedded_nul) = "a" || d2c(0) || "b", "text after embedded U+0000")
+errors = errors + check(source = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", "source is not exposed or mutated")
+
+if errors = 0 then say "PASS: lower"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: LOWER" label
+  return 1

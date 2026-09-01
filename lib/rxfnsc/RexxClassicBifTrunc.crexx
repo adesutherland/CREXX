@@ -1,0 +1,194 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbiftrunc expose rexxclassicbif_trunc
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Truncate one Classic numeric argument to fixed decimal text.
+ *
+ * @bif TRUNC
+ * @signature TRUNC(number [,digits])
+ * @checkargs rNUM oWHOLE>=0
+ * @sandbox pure
+ * @return fixed, non-exponent text without rounding as a RexxValue
+ */
+rexxclassicbif_trunc: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rNUM oWHOLE>=0") = 0 then return .RexxValue("")
+
+  text = context.argumentText(1)
+  work_text = .string
+  exponent_text = .string
+  digits = ""
+  segment = ""
+  whole = ""
+  fractional = ""
+  padding = ""
+  result = ""
+  work_text = text || ""
+  fraction = 0
+  if context.argumentExists(2) then fraction = context.argumentText(2)
+
+  text_length = .int
+  sign_character = .int
+  sign_offset = .int
+  exponent_position = .int
+  point_position = .int
+  mantissa_end = .int
+  exponent = .int
+  prefix_length = .int
+  tail_length = .int
+  digit_length = .int
+  leading_zeros = .int
+  digit_character = .int
+  significant_length = .int
+  decimal_position = .int
+  padding_count = .int
+  remaining = .int
+  relative_start = .int
+  absolute_start = .int
+  copy_length = .int
+  start = .int
+  zero_character = 48
+  point_character = 46
+  plus_character = 43
+  minus_character = 45
+  upper_e_character = 69
+  lower_e_character = 101
+
+  assembler strlen text_length,work_text
+  start = 0
+  assembler strchar sign_character,work_text,start
+  if sign_character = plus_character | sign_character = minus_character then sign_offset = 1
+  else sign_offset = 0
+
+  exponent_position = -1
+  assembler poschar exponent_position,work_text,upper_e_character
+  if exponent_position < 0 then
+    assembler poschar exponent_position,work_text,lower_e_character
+  point_position = -1
+  assembler poschar point_position,work_text,point_character
+
+  if exponent_position < 0 then mantissa_end = text_length
+  else do
+    mantissa_end = exponent_position
+    start = exponent_position + 1
+    tail_length = text_length - start
+    assembler substring exponent_text,work_text,start,tail_length
+  end
+
+  if point_position < 0 then do
+    prefix_length = mantissa_end - sign_offset
+    digit_length = prefix_length
+    start = sign_offset
+    assembler substring digits,work_text,start,digit_length
+  end
+  else do
+    prefix_length = point_position - sign_offset
+    digit_length = mantissa_end - sign_offset - 1
+    if prefix_length > 0 then do
+      start = sign_offset
+      assembler substring digits,work_text,start,prefix_length
+    end
+    tail_length = mantissa_end - point_position - 1
+    if tail_length > 0 then do
+      start = point_position + 1
+      assembler substring segment,work_text,start,tail_length
+      assembler append digits,segment
+    end
+  end
+
+  leading_zeros = 0
+  do while leading_zeros < digit_length
+    assembler strchar digit_character,digits,leading_zeros
+    if digit_character <> zero_character then leave
+    leading_zeros = leading_zeros + 1
+  end
+
+  if leading_zeros = digit_length then do
+    assembler appendchar result,zero_character
+    if fraction > 0 then do
+      assembler appendchar result,point_character
+      assembler padstr padding,zero_character,fraction
+      assembler append result,padding
+    end
+    return .RexxValue(result)
+  end
+
+  if exponent_position < 0 then exponent = 0
+  else exponent = exponent_text
+  significant_length = digit_length - leading_zeros
+  decimal_position = prefix_length + exponent - leading_zeros
+  if sign_character = minus_character then assembler appendchar result,minus_character
+
+  if decimal_position <= 0 then assembler appendchar result,zero_character
+  else if decimal_position < significant_length then do
+    start = leading_zeros
+    assembler substring whole,digits,start,decimal_position
+    assembler append result,whole
+  end
+  else do
+    start = leading_zeros
+    assembler substring whole,digits,start,significant_length
+    assembler append result,whole
+    padding_count = decimal_position - significant_length
+    if padding_count > 0 then do
+      assembler padstr padding,zero_character,padding_count
+      assembler append result,padding
+    end
+  end
+
+  if fraction = 0 then return .RexxValue(result)
+  assembler appendchar result,point_character
+  remaining = fraction
+  if decimal_position < 0 then do
+    padding_count = 0 - decimal_position
+    if padding_count > remaining then padding_count = remaining
+    if padding_count > 0 then do
+      assembler padstr fractional,zero_character,padding_count
+      remaining = remaining - padding_count
+    end
+    relative_start = 0
+  end
+  else relative_start = decimal_position
+
+  if remaining > 0 & relative_start < significant_length then do
+    copy_length = significant_length - relative_start
+    if copy_length > remaining then copy_length = remaining
+    absolute_start = leading_zeros + relative_start
+    assembler substring segment,digits,absolute_start,copy_length
+    assembler append fractional,segment
+    remaining = remaining - copy_length
+  end
+  if remaining > 0 then do
+    assembler padstr padding,zero_character,remaining
+    assembler append fractional,padding
+  end
+  assembler append result,fractional
+  return .RexxValue(result)

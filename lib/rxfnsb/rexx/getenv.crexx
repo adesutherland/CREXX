@@ -22,11 +22,19 @@
  * SOFTWARE.
  */
 
-/* GetEnv */
 options levelb
 
 namespace rxfnsb expose getenv
 
+/**
+ * Read a process environment variable.
+ *
+ * Missing variables and variables whose value is empty both return the empty
+ * string. Name interpretation is delegated to the host platform.
+ *
+ * @param env_name environment-variable name
+ * @return the variable value, or the empty string when it is unavailable
+ */
 getenv: procedure = .string
     arg env_name = .string
 

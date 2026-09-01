@@ -1,0 +1,257 @@
+/*
+ * NetRexx state-machine port of the Are We Fast Yet? Richards benchmark.
+ * Derived from the SOM/Java Richards benchmark; see ../../THIRD_PARTY_NOTICES.md.
+ * The task-kind dispatch matches the cREXX and ooRexx ports.
+ */
+options binary
+
+class awfy_richards
+  method main(args=String[]) static
+    repetitions=int 1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+    queueCount=int 0
+    holdCount=int 0
+    loop iteration=1 to repetitions
+      scheduler=RichardsScheduler()
+      if \scheduler.run() then do
+        say 'FAIL: expected queue/hold counts 23246/9297, got' scheduler.queueCount()'/'scheduler.holdCount()
+        exit 1
+      end
+      queueCount=scheduler.queueCount()
+      holdCount=scheduler.holdCount()
+    end
+    say 'benchmark=awfy_richards repetitions='repetitions 'queue_packets='queueCount 'holds='holdCount
+    say 'PASS: AWFY Richards NetRexx port'
+
+class RichardsScheduler
+  properties private
+    taskLink=int[6]
+    taskPriority=int[6]
+    taskInput=int[6]
+    taskPending=boolean[6]
+    taskWaiting=boolean[6]
+    taskHolding=boolean[6]
+    handlerWork=int[6]
+    handlerDevice=int[6]
+    devicePending=int[6]
+    packetLink=int[16]
+    packetIdentity=int[16]
+    packetKind=int[16]
+    packetDatum=int[16]
+    packetData0=int[16]
+    packetData1=int[16]
+    packetData2=int[16]
+    packetData3=int[16]
+    taskList=int -1
+    currentTask=int -1
+    currentIdentity=int 0
+    packetCount=int 0
+    queuePacketCount=int 0
+    holds=int 0
+    idleControl=int 1
+    idleCount=int 10000
+    workerDestination=int 2
+    workerCount=int 0
+
+  method run() binary returns boolean
+    createTask(0,0,0,0,0,0)
+    workQueue=int createPacket(0,1,1)
+    workQueue=createPacket(workQueue,1,1)
+    createTask(1,1000,workQueue,1,1,0)
+    workQueue=createPacket(0,4,0)
+    workQueue=createPacket(workQueue,4,0)
+    workQueue=createPacket(workQueue,4,0)
+    createTask(2,2000,workQueue,1,1,0)
+    workQueue=createPacket(0,5,0)
+    workQueue=createPacket(workQueue,5,0)
+    workQueue=createPacket(workQueue,5,0)
+    createTask(3,3000,workQueue,1,1,0)
+    createTask(4,4000,0,0,1,0)
+    createTask(5,5000,0,0,1,0)
+    schedule()
+    return queuePacketCount=23246 & holds=9297
+
+  method queueCount() binary returns int
+    return queuePacketCount
+
+  method holdCount() binary returns int
+    return holds
+
+  method createTask(identity=int,priority=int,input=int,pending=boolean,waiting=boolean,holding=boolean) private binary
+    taskLink[identity]=taskList
+    taskPriority[identity]=priority
+    taskInput[identity]=input
+    taskPending[identity]=pending
+    taskWaiting[identity]=waiting
+    taskHolding[identity]=holding
+    taskList=identity
+
+  method createPacket(link=int,identity=int,kind=int) private binary returns int
+    packetCount=packetCount+1
+    packetLink[packetCount]=link
+    packetIdentity[packetCount]=identity
+    packetKind[packetCount]=kind
+    packetDatum[packetCount]=0
+    packetData0[packetCount]=0
+    packetData1[packetCount]=0
+    packetData2[packetCount]=0
+    packetData3[packetCount]=0
+    return packetCount
+
+  method appendPacket(packet=int,queueHead=int) private binary returns int
+    packetLink[packet]=0
+    if queueHead=0 then return packet
+    mouse=int queueHead
+    link=int packetLink[mouse]
+    loop while link\=0
+      mouse=link
+      link=packetLink[mouse]
+    end
+    packetLink[mouse]=packet
+    return queueHead
+
+  method setRunning(identity=int) private binary
+    taskPending[identity]=0
+    taskWaiting[identity]=0
+    taskHolding[identity]=0
+
+  method setPacketPending(identity=int) private binary
+    taskPending[identity]=1
+    taskWaiting[identity]=0
+    taskHolding[identity]=0
+
+  method isHoldingOrWaiting(identity=int) private binary returns boolean
+    return taskHolding[identity] | (\taskPending[identity] & taskWaiting[identity])
+
+  method isWaitingWithPacket(identity=int) private binary returns boolean
+    return taskPending[identity] & taskWaiting[identity] & \taskHolding[identity]
+
+  method addInput(identity=int,packet=int,oldTask=int) private binary returns int
+    if taskInput[identity]=0 then do
+      taskInput[identity]=packet
+      taskPending[identity]=1
+      if taskPriority[identity]>taskPriority[oldTask] then return identity
+    end
+    else taskInput[identity]=appendPacket(packet,taskInput[identity])
+    return oldTask
+
+  method holdSelf() private binary returns int
+    holds=holds+1
+    taskHolding[currentTask]=1
+    return taskLink[currentTask]
+
+  method markWaiting() private binary returns int
+    taskWaiting[currentTask]=1
+    return currentTask
+
+  method release(identity=int) private binary returns int
+    taskHolding[identity]=0
+    if taskPriority[identity]>taskPriority[currentTask] then return identity
+    return currentTask
+
+  method queuePacket(packet=int) private binary returns int
+    task=int packetIdentity[packet]
+    queuePacketCount=queuePacketCount+1
+    packetLink[packet]=0
+    packetIdentity[packet]=currentIdentity
+    return addInput(task,packet,currentTask)
+
+  method runTask(identity=int) private binary returns int
+    message=int 0
+    if isWaitingWithPacket(identity) then do
+      message=taskInput[identity]
+      taskInput[identity]=packetLink[message]
+      if taskInput[identity]=0 then setRunning(identity)
+      else setPacketPending(identity)
+    end
+    select
+      when identity=0 then return runIdler()
+      when identity=1 then return runWorker(message)
+      when identity=2 | identity=3 then return runHandler(identity,message)
+      when identity=4 | identity=5 then return runDevice(identity,message)
+      otherwise return -1
+    end
+
+  method runIdler() private binary returns int
+    idleCount=idleCount-1
+    if idleCount=0 then return holdSelf()
+    if idleControl//2=0 then do
+      idleControl=idleControl%2
+      return release(4)
+    end
+    idleControl=xorInt(idleControl%2,53256)
+    return release(5)
+
+  method xorInt(left=int,right=int) private static binary returns int
+    result=int 0
+    place=int 1
+    loop i=1 to 16
+      if left//2\=right//2 then result=result+place
+      left=left%2
+      right=right%2
+      place=place*2
+    end
+    return result
+
+  method runWorker(work=int) private binary returns int
+    if work=0 then return markWaiting()
+    if workerDestination=2 then workerDestination=3
+    else workerDestination=2
+    packetIdentity[work]=workerDestination
+    packetDatum[work]=0
+    loop i=0 to 3
+      workerCount=workerCount+1
+      if workerCount>26 then workerCount=1
+      value=int 65+workerCount-1
+      if i=0 then packetData0[work]=value
+      else if i=1 then packetData1[work]=value
+      else if i=2 then packetData2[work]=value
+      else packetData3[work]=value
+    end
+    return queuePacket(work)
+
+  method runHandler(identity=int,work=int) private binary returns int
+    if work\=0 then do
+      if packetKind[work]=1 then handlerWork[identity]=appendPacket(work,handlerWork[identity])
+      else handlerDevice[identity]=appendPacket(work,handlerDevice[identity])
+    end
+    workPacket=int handlerWork[identity]
+    if workPacket=0 then return markWaiting()
+    count=int packetDatum[workPacket]
+    if count>=4 then do
+      handlerWork[identity]=packetLink[workPacket]
+      return queuePacket(workPacket)
+    end
+    devicePacket=int handlerDevice[identity]
+    if devicePacket=0 then return markWaiting()
+    handlerDevice[identity]=packetLink[devicePacket]
+    if count=0 then packetDatum[devicePacket]=packetData0[workPacket]
+    else if count=1 then packetDatum[devicePacket]=packetData1[workPacket]
+    else if count=2 then packetDatum[devicePacket]=packetData2[workPacket]
+    else packetDatum[devicePacket]=packetData3[workPacket]
+    packetDatum[workPacket]=count+1
+    return queuePacket(devicePacket)
+
+  method runDevice(identity=int,work=int) private binary returns int
+    if work=0 then do
+      pending=int devicePending[identity]
+      if pending=0 then return markWaiting()
+      devicePending[identity]=0
+      return queuePacket(pending)
+    end
+    devicePending[identity]=work
+    return holdSelf()
+
+  method schedule() private binary
+    currentTask=taskList
+    loop while currentTask>=0
+      if isHoldingOrWaiting(currentTask) then currentTask=taskLink[currentTask]
+      else do
+        currentIdentity=currentTask
+        currentTask=runTask(currentTask)
+      end
+    end

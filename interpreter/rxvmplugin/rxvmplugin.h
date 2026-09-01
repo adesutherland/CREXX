@@ -72,14 +72,26 @@ struct decplugin {
     void (*number_to_simple_format)(const char *input, char *output);
     // Function to create formated output from coefficient and exponent values
     void (*format_number_components)(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+    /* Tightly coupled host service: allocate/resize the co-allocated decimal
+     * header and payload in the register owner's allocator family. */
+    void *(*reserve_decimal)(value *number, size_t size);
+    /* Host-owned temporary value services keep plugin-created string sidecars
+     * in the same allocator family as VM registers. */
+    void *(*reserve_string)(value *string, size_t size);
+    void (*release_value_storage)(value *value_storage);
 
     // Functions provided by the plugin
     void (*syncNumericContext)(decplugin *plugin); // Sync a numeric context into the plugin (should be called by the client after changing the context)
     size_t (*getDigits)(decplugin *plugin); // Get the number of digits in the rxvmplugin context (maybe smaller than num_context->digits)
-    size_t (*getRequiredStringSize)(decplugin *plugin); // Get the required string size for the rxvmplugin context
+    /* Size a conversion buffer for both the active context and, when supplied,
+     * the stored value. Values can legitimately cross a numeric-context
+     * boundary with more digits than the callee's current precision. */
+    size_t (*getRequiredStringSize)(decplugin *plugin, const value *number);
     void (*decimalFromString)(decplugin *plugin, value *result, const char *input); // Convert a string to a rxvmplugin number
     void (*decimalToString)(decplugin *plugin, const value *input, char *result); // Convert a rxvmplugin number to a string
-    void (*decimalFromInt)(decplugin *plugin, value *result, const rxinteger input); // Convert an int to a rxvmplugin number
+    /* Total for every rxinteger; clears stale plugin diagnostics. Allocation
+     * failure follows the VM panic-on-OOM convention. */
+    void (*decimalFromInt)(decplugin *plugin, value *result, const rxinteger input);
     void (*decimalToInt)(decplugin *plugin, const value *input, rxinteger *result); // Convert a rxvmplugin number to an int
     void (*decimalFromDouble)(decplugin *plugin, value *result, const double input); // Convert a double to a rxvmplugin number
     void (*decimalToDouble)(decplugin *plugin, const value *input, double *result); // Convert a rxvmplugin number to a double
@@ -208,9 +220,9 @@ typedef void (*initializer_function)();
         __pragma(comment(linker,"/include:" p #f "_")) \
         static void f(void) {register_rxvmplugin(plugin_name,factory);}
 #ifdef _WIN64
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"",plugin_name) {
+#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"",plugin_name)
 #else
-#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name) {
+#define INITIALIZER(factory,f,plugin_name) INITIALIZER2_(factory,f,"_",plugin_name)
 #endif
 
 #else // Not _MSC_VER -> GCC/Clang

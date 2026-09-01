@@ -1,0 +1,152 @@
+--- tests/benchmarks/rexxcps_levelb.crexx
++++ candidate-B/rexxcps_levelb.crexx
+@@ -69,0 +70 @@
++numeric digits 9
+@@ -72 +73 @@
+-rexxcps = "2.2c" /* REXXCPS cREXX port version */
++rexxcps = "2.2c-numeric01-B" /* exact-hash digits/type candidate */
+@@ -83 +84 @@
+-contract = "canonical-default"
++contract = "candidate-B-digits-types"
+@@ -122,0 +124,7 @@
++j = .decimal
++classic_one = "1" as .decimal
++classic_two = "2" as .decimal
++classic_one_point_one = "1.1" as .decimal
++classic_two_point_two = "2.2" as .decimal
++classic_five = "5" as .decimal
++classic_ninety_nine_point_seven = "99.7" as .decimal
+@@ -130 +138 @@
+-empty = empty / averaging
++empty = empty / (averaging as .float)
+@@ -148 +156 @@
+-        do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
++        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+@@ -154,3 +162,3 @@
+-          if j < 5 then do /* This path is taken. */
+-            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+-            if j = 2 then leave
++          if j < classic_five then do /* This path is taken. */
++            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
++            if j = classic_two then leave
+@@ -164,2 +172,2 @@
+-          when flag = ((5 + 99.7) as .string) then say "FailedS3"
+-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
++          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say "FailedS3"
++          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+@@ -172 +180 @@
+-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
++          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+@@ -192 +200 @@
+-  if total > 1 | trial = 2 then leave
++  if total > 1.0 | trial = 2 then leave
+@@ -195,2 +203,2 @@
+-  if total = 0 then count = count * 100
+-  else count = (trunc(1 / total) + 1) * count
++  if total = 0.0 then count = count * 100
++  else count = ((trunc(1.0 / total) as .int) + 1) * count
+@@ -209,2 +217,2 @@
+-innertime = total / averaging - empty
+-thousand = innertime / count
++innertime = total / (averaging as .float) - empty
++thousand = innertime / (count as .float)
+@@ -222 +230 @@
+-say "     Performance:" format(1000 / thousand, , 0) "cREXX clauses per second"
++say "     Performance:" format(1000.0 / thousand, , 0) "cREXX clauses per second"
+@@ -224 +232 @@
+-say "PASS: RexxCPS 2.2c cREXX port"
++say "PASS: RexxCPS 2.2c cREXX numeric01 candidate B"
+@@ -229,0 +238 @@
++  numeric digits 9
+@@ -239,0 +249 @@
++  numeric digits 9
+--- tests/benchmarks/rexxcps_levelb_opaque.crexx
++++ candidate-B/rexxcps_levelb_opaque.crexx
+@@ -72,0 +73 @@
++numeric digits 9
+@@ -75 +76 @@
+-rexxcps = "2.2c-opaque" /* diagnostic, not a canonical score */
++rexxcps = "2.2c-opaque-numeric01-B" /* exact-hash digits/type candidate */
+@@ -141,0 +143,7 @@
++j = .decimal
++classic_one = "1" as .decimal
++classic_two = "2" as .decimal
++classic_one_point_one = "1.1" as .decimal
++classic_two_point_two = "2.2" as .decimal
++classic_five = "5" as .decimal
++classic_ninety_nine_point_seven = "99.7" as .decimal
+@@ -149 +157 @@
+-empty = empty / averaging
++empty = empty / (averaging as .float)
+@@ -168 +176 @@
+-        do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
++        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
+@@ -174,3 +182,3 @@
+-          if j < 5 then do /* This path is taken. */
+-            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+-            if j = 2 then leave
++          if j < classic_five then do /* This path is taken. */
++            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
++            if j = classic_two then leave
+@@ -184,2 +192,2 @@
+-          when flag = ((5 + 99.7) as .string) then say "FailedS3"
+-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
++          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say "FailedS3"
++          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+@@ -192 +200 @@
+-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
++          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
+@@ -214 +222 @@
+-  if fixed_counts | total > 1 | trial = 2 then leave
++  if fixed_counts | total > 1.0 | trial = 2 then leave
+@@ -217,2 +225,2 @@
+-  if total = 0 then count = count * 100
+-  else count = (trunc(1 / total) + 1) * count
++  if total = 0.0 then count = count * 100
++  else count = ((trunc(1.0 / total) as .int) + 1) * count
+@@ -225,2 +233,2 @@
+-innertime = total / averaging - empty
+-thousand = innertime / count
++innertime = total / (averaging as .float) - empty
++thousand = innertime / (count as .float)
+@@ -238 +246 @@
+-say "     Performance:" format(1000 / thousand, , 0) "cREXX clauses per second"
++say "     Performance:" format(1000.0 / thousand, , 0) "cREXX clauses per second"
+@@ -249,0 +258 @@
++  numeric digits 9
+@@ -259,0 +269 @@
++  numeric digits 9
+--- candidate-B/rexxcps_levelb.crexx
++++ candidate-C/rexxcps_levelb.crexx
+@@ -73 +73 @@
+-rexxcps = "2.2c-numeric01-B" /* exact-hash digits/type candidate */
++rexxcps = "2.2c-numeric01-C" /* exact-hash typed-BIF candidate */
+@@ -84 +84 @@
+-contract = "candidate-B-digits-types"
++contract = "candidate-C-typed-bifs"
+@@ -204 +204 @@
+-  else count = ((trunc(1.0 / total) as .int) + 1) * count
++  else count = ((floattrunc(1.0 / total) as .int) + 1) * count
+@@ -209 +209 @@
+-say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" format(total, , 1) "s)"
++say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+@@ -230 +230 @@
+-say "     Performance:" format(1000.0 / thousand, , 0) "cREXX clauses per second"
++say "     Performance:" floatformat(1000.0 / thousand, , 0) "cREXX clauses per second"
+@@ -232 +232 @@
+-say "PASS: RexxCPS 2.2c cREXX numeric01 candidate B"
++say "PASS: RexxCPS 2.2c cREXX numeric01 candidate C"
+--- candidate-B/rexxcps_levelb_opaque.crexx
++++ candidate-C/rexxcps_levelb_opaque.crexx
+@@ -76 +76 @@
+-rexxcps = "2.2c-opaque-numeric01-B" /* exact-hash digits/type candidate */
++rexxcps = "2.2c-opaque-numeric01-C" /* exact-hash typed-BIF candidate */
+@@ -226 +226 @@
+-  else count = ((trunc(1.0 / total) as .int) + 1) * count
++  else count = ((floattrunc(1.0 / total) as .int) + 1) * count
+@@ -230 +230 @@
+-say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" format(total, , 1) "s)"
++say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
+@@ -246 +246 @@
+-say "     Performance:" format(1000.0 / thousand, , 0) "cREXX clauses per second"
++say "     Performance:" floatformat(1000.0 / thousand, , 0) "cREXX clauses per second"

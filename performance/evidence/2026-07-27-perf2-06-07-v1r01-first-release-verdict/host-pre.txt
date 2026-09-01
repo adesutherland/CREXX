@@ -1,0 +1,22 @@
+utc=2026-07-27T13:20:40Z
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+ lowpowermode         0
+AC Power:
+ lowpowermode         0
+14:20  up 13 days,  7:28, 1 user, load averages: 2.30 3.21 3.58
+ 40.3 103328 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 19.5  90048 /usr/libexec/avconferenced
+ 13.9 489264 /Applications/ChatGPT.app/Contents/Resources/codex
+ 10.7 136512 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  7.8  45856 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTEncoderXPCService.xpc/Contents/MacOS/VTEncoderXPCService
+  3.8 1119520 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  3.0  34752 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  0.6  40016 /usr/sbin/coreaudiod
+  0.2  51920 /usr/libexec/logd
+  0.1  45856 /System/Library/DriverExtensions/AppleCentauriAlpha.dext/AppleCentauriAlpha
+  0.1  21584 /System/Library/CoreServices/RemoteManagement/screensharingd.bundle/Contents/MacOS/screensharingd
+  0.0 567776 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/150.0.7871.128/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)

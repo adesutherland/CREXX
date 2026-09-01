@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,rxvm,candidate,process,warmup,1,10980280000,0,pass,911639,cREXX clauses per second
+rexxcps,rxvm,candidate,process,recorded,1,11138989000,0,pass,898616,cREXX clauses per second
+rexxcps,rxvm,candidate,process,recorded,2,11229718000,0,pass,891473,cREXX clauses per second
+rexxcps,rxvm,candidate,process,recorded,3,12130473000,0,pass,825144,cREXX clauses per second

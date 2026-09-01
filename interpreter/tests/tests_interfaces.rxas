@@ -28,7 +28,7 @@ main() .locals=10
    load r1,58
    metadecodeinst r2,r1
    linkattr r3,r2,1
-   seq r4,r3,"SRCFPROC_REG_STRING_REG"
+   seq r4,r3,"SRCFPROCSEL_REG_STRING_REG"
    brf fail_opcode_name,r4
    linkattr r3,r2,3
    ieq r4,r3,3
@@ -37,13 +37,13 @@ main() .locals=10
    load r1,1
    load r2,"duo"
    settp r2,768
-   srcfproc r0,"interface_factory_tiebreak.vehicle",r1
+   srcfprocsel r0,"rxsig1|interface_factory_tiebreak.vehicle|.vehicle|name=.string",r1
    dcall r0,r0,r1
 
    load r1,1
    settp r0,256
    swap r2,r0
-   srcmethod r3,r2,"describe"
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
    dcall r3,r3,r1
    swap r0,r2
    seq r4,r3,"car:duo"
@@ -52,26 +52,26 @@ main() .locals=10
    load r1,1
    load r2,"duo"
    settp r2,768
-   srcfproc r0,"interface_factory_tiebreak.vehicle..from_name",r1
+   srcfprocsel r0,"rxsig1|interface_factory_tiebreak.vehicle..from_name|.vehicle|name=.string",r1
    dcall r0,r0,r1
 
    load r1,1
    settp r0,256
    swap r2,r0
-   srcmethod r3,r2,"describe"
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
    dcall r3,r3,r1
    swap r0,r2
    seq r4,r3,"truck:truck:named:duo"
    brf fail_named_tiebreak,r4
 
    load r1,0
-   srcfproc r0,"interface_default_vm.shape",r1
+   srcfprocsel r0,"rxsig1|interface_default_vm.shape|.shape|",r1
    dcall r0,r0,r1
 
    load r1,1
    settp r0,256
    swap r2,r0
-   srcmethod r3,r2,"describe"
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
    dcall r3,r3,r1
    swap r0,r2
    seq r4,r3,"iface:box"
@@ -286,14 +286,14 @@ fail_istype_class:
    load r1,1
    settp a1,256
    swap r2,a1
-   srcmethod r3,r2,"prefix"
+   srcmethodsel r3,r2,"rxsig1|prefix|.string|"
    dcall r3,r3,r1
    swap a1,r2
    concat r3,r3,":"
    load r1,1
    settp a1,256
    swap r2,a1
-   srcmethod r4,r2,"summary"
+   srcmethodsel r4,r2,"rxsig1|summary|.string|"
    dcall r4,r4,r1
    swap a1,r2
    concat r4,r3,r4

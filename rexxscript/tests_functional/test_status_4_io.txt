@@ -1,0 +1,6 @@
+WEB01       Running
+WEB02       Running
+DB01        Running
+MQ01        Stopped
+BATCH01     Maintenance
+BACKUP01    Running

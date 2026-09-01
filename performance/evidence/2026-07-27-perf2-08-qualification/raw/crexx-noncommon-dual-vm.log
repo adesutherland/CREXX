@@ -1,0 +1,132 @@
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=750 result=50
+PASS: AWFY Mandelbrot
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g057592681c0c 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 372 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=372 averaging=100 calibrated=1
+
+     Performance: 38965365 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=750 result=50
+PASS: AWFY Mandelbrot
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g057592681c0c 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 207 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=207 averaging=100 calibrated=1
+
+     Performance: 20815882 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=750 result=50
+PASS: AWFY Mandelbrot
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g057592681c0c 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 342 x 100 iterations of 1000 clauses (over 0.9 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=342 averaging=100 calibrated=1
+
+     Performance: 36638042 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port
+benchmark=awfy_mandelbrot size=1 result=128
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot
+benchmark=awfy_mandelbrot size=750 result=50
+PASS: AWFY Mandelbrot
+benchmark=awfy_towers repetitions=1 result=8191
+PASS: AWFY Towers
+benchmark=awfy_towers repetitions=2 result=8191
+PASS: AWFY Towers
+benchmark=awfy_storage repetitions=1 result=5461
+PASS: AWFY Storage
+benchmark=awfy_storage repetitions=2 result=5461
+PASS: AWFY Storage
+benchmark=awfy_list repetitions=1 result=10
+PASS: AWFY List
+benchmark=awfy_list repetitions=2 result=10
+PASS: AWFY List
+benchmark=json_parser repetitions=1 operations=8
+PASS: JSON Parser
+benchmark=json_parser repetitions=2 operations=8
+PASS: JSON Parser
+----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g057592681c0c 20260727
+       System is: macOS
+REXXCPS-PROVENANCE contract=noncanonical-smoke argv_count=2 initial_count=1 averaging=100
+NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100
+        Averaged: 184 x 100 iterations of 1000 clauses (over 1.0 s)
+REXXCPS-EFFECTIVE contract=noncanonical-smoke initial_count=1 effective_count=184 averaging=100 calibrated=1
+
+     Performance: 18198164 cREXX clauses per second
+
+PASS: RexxCPS 2.2d cREXX port

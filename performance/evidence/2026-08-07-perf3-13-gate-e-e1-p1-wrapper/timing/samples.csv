@@ -1,0 +1,169 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-control-warmup-1,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,warmup,1,1,5500,1045782000,,0,pass,,
+timing-Sieve-sieve-candidate-warmup-1,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,warmup,1,2,5500,1033554000,,0,pass,,
+timing-Sieve-sieve-control-recorded-1,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,1,1,5500,1034651000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-1,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,1,2,5500,1038620000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-2,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,2,1,5500,1033611000,,0,pass,,
+timing-Sieve-sieve-control-recorded-2,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,2,2,5500,1029970000,,0,pass,,
+timing-Sieve-sieve-control-recorded-3,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,3,1,5500,1024813000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-3,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,3,2,5500,1035053000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-4,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,4,1,5500,1031575000,,0,pass,,
+timing-Sieve-sieve-control-recorded-4,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,4,2,5500,1032828000,,0,pass,,
+timing-Sieve-sieve-control-recorded-5,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,5,1,5500,1036101000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-5,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,5,2,5500,1036737000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-6,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,6,1,5500,1034860000,,0,pass,,
+timing-Sieve-sieve-control-recorded-6,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,6,2,5500,1033196000,,0,pass,,
+timing-Sieve-sieve-control-recorded-7,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,7,1,5500,1036742000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-7,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,7,2,5500,1039722000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-8,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,8,1,5500,1040995000,,0,pass,,
+timing-Sieve-sieve-control-recorded-8,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,8,2,5500,1031543000,,0,pass,,
+timing-Sieve-sieve-control-recorded-9,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,9,1,5500,1031159000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-9,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,9,2,5500,1035771000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-10,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,10,1,5500,1044038000,,0,pass,,
+timing-Sieve-sieve-control-recorded-10,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,10,2,5500,1037169000,,0,pass,,
+timing-Sieve-sieve-control-recorded-11,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,11,1,5500,1037135000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-11,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,11,2,5500,1037075000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-12,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,12,1,5500,1035410000,,0,pass,,
+timing-Sieve-sieve-control-recorded-12,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,12,2,5500,1039382000,,0,pass,,
+timing-Sieve-sieve-control-recorded-13,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,13,1,5500,1040578000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-13,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,13,2,5500,1068177000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-14,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,14,1,5500,1035393000,,0,pass,,
+timing-Sieve-sieve-control-recorded-14,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,14,2,5500,1039610000,,0,pass,,
+timing-Sieve-sieve-control-recorded-15,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,15,1,5500,1041915000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-15,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,15,2,5500,1046456000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-16,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,16,1,5500,1039421000,,0,pass,,
+timing-Sieve-sieve-control-recorded-16,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,16,2,5500,1040212000,,0,pass,,
+timing-Sieve-sieve-control-recorded-17,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,17,1,5500,1051874000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-17,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,17,2,5500,1044278000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-18,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,18,1,5500,1043876000,,0,pass,,
+timing-Sieve-sieve-control-recorded-18,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,18,2,5500,1045676000,,0,pass,,
+timing-Sieve-sieve-control-recorded-19,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,19,1,5500,1040329000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-19,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,19,2,5500,1057472000,,0,pass,,
+timing-Sieve-sieve-candidate-recorded-20,timing,Sieve,sieve-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,20,1,5500,1042812000,,0,pass,,
+timing-Sieve-sieve-control-recorded-20,timing,Sieve,sieve-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,20,2,5500,1075982000,,0,pass,,
+timing-Richards-richards-control-warmup-1,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,warmup,1,1,20,2079104000,,0,pass,,
+timing-Richards-richards-candidate-warmup-1,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,warmup,1,2,20,2115407000,,0,pass,,
+timing-Richards-richards-control-recorded-1,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,1,1,20,2171878000,,0,pass,,
+timing-Richards-richards-candidate-recorded-1,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,1,2,20,2141344000,,0,pass,,
+timing-Richards-richards-candidate-recorded-2,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,2,1,20,2166808000,,0,pass,,
+timing-Richards-richards-control-recorded-2,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,2,2,20,2088669000,,0,pass,,
+timing-Richards-richards-control-recorded-3,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,3,1,20,2126600000,,0,pass,,
+timing-Richards-richards-candidate-recorded-3,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,3,2,20,2075575000,,0,pass,,
+timing-Richards-richards-candidate-recorded-4,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,4,1,20,2292120000,,0,pass,,
+timing-Richards-richards-control-recorded-4,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,4,2,20,2110750000,,0,pass,,
+timing-Richards-richards-control-recorded-5,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,5,1,20,2179596000,,0,pass,,
+timing-Richards-richards-candidate-recorded-5,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,5,2,20,2157858000,,0,pass,,
+timing-Richards-richards-candidate-recorded-6,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,6,1,20,2137545000,,0,pass,,
+timing-Richards-richards-control-recorded-6,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,6,2,20,2103634000,,0,pass,,
+timing-Richards-richards-control-recorded-7,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,7,1,20,2087851000,,0,pass,,
+timing-Richards-richards-candidate-recorded-7,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,7,2,20,2092972000,,0,pass,,
+timing-Richards-richards-candidate-recorded-8,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,8,1,20,2161030000,,0,pass,,
+timing-Richards-richards-control-recorded-8,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,8,2,20,2126146000,,0,pass,,
+timing-Richards-richards-control-recorded-9,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,9,1,20,2111501000,,0,pass,,
+timing-Richards-richards-candidate-recorded-9,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,9,2,20,2210669000,,0,pass,,
+timing-Richards-richards-candidate-recorded-10,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,10,1,20,2110492000,,0,pass,,
+timing-Richards-richards-control-recorded-10,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,10,2,20,2105711000,,0,pass,,
+timing-Richards-richards-control-recorded-11,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,11,1,20,2158061000,,0,pass,,
+timing-Richards-richards-candidate-recorded-11,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,11,2,20,2124680000,,0,pass,,
+timing-Richards-richards-candidate-recorded-12,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,12,1,20,2115461000,,0,pass,,
+timing-Richards-richards-control-recorded-12,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,12,2,20,2180843000,,0,pass,,
+timing-Richards-richards-control-recorded-13,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,13,1,20,2106138000,,0,pass,,
+timing-Richards-richards-candidate-recorded-13,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,13,2,20,2105474000,,0,pass,,
+timing-Richards-richards-candidate-recorded-14,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,14,1,20,2176111000,,0,pass,,
+timing-Richards-richards-control-recorded-14,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,14,2,20,2133503000,,0,pass,,
+timing-Richards-richards-control-recorded-15,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,15,1,20,2156453000,,0,pass,,
+timing-Richards-richards-candidate-recorded-15,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,15,2,20,2101491000,,0,pass,,
+timing-Richards-richards-candidate-recorded-16,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,16,1,20,2115997000,,0,pass,,
+timing-Richards-richards-control-recorded-16,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,16,2,20,2105915000,,0,pass,,
+timing-Richards-richards-control-recorded-17,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,17,1,20,2126534000,,0,pass,,
+timing-Richards-richards-candidate-recorded-17,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,17,2,20,2176295000,,0,pass,,
+timing-Richards-richards-candidate-recorded-18,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,18,1,20,2145358000,,0,pass,,
+timing-Richards-richards-control-recorded-18,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,18,2,20,2110256000,,0,pass,,
+timing-Richards-richards-control-recorded-19,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,19,1,20,2285274000,,0,pass,,
+timing-Richards-richards-candidate-recorded-19,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,19,2,20,2111108000,,0,pass,,
+timing-Richards-richards-candidate-recorded-20,timing,Richards,richards-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,20,1,20,2151610000,,0,pass,,
+timing-Richards-richards-control-recorded-20,timing,Richards,richards-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,20,2,20,2148363000,,0,pass,,
+timing-Towers-towers-control-warmup-1,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,warmup,1,1,100,2124839000,,0,pass,,
+timing-Towers-towers-candidate-warmup-1,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,warmup,1,2,100,2093057000,,0,pass,,
+timing-Towers-towers-control-recorded-1,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,1,1,100,2132265000,,0,pass,,
+timing-Towers-towers-candidate-recorded-1,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,1,2,100,2099278000,,0,pass,,
+timing-Towers-towers-candidate-recorded-2,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,2,1,100,2069498000,,0,pass,,
+timing-Towers-towers-control-recorded-2,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,2,2,100,2086252000,,0,pass,,
+timing-Towers-towers-control-recorded-3,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,3,1,100,2087948000,,0,pass,,
+timing-Towers-towers-candidate-recorded-3,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,3,2,100,2108918000,,0,pass,,
+timing-Towers-towers-candidate-recorded-4,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,4,1,100,2119191000,,0,pass,,
+timing-Towers-towers-control-recorded-4,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,4,2,100,2088311000,,0,pass,,
+timing-Towers-towers-control-recorded-5,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,5,1,100,2101406000,,0,pass,,
+timing-Towers-towers-candidate-recorded-5,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,5,2,100,2074131000,,0,pass,,
+timing-Towers-towers-candidate-recorded-6,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,6,1,100,2133517000,,0,pass,,
+timing-Towers-towers-control-recorded-6,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,6,2,100,2123964000,,0,pass,,
+timing-Towers-towers-control-recorded-7,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,7,1,100,2076657000,,0,pass,,
+timing-Towers-towers-candidate-recorded-7,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,7,2,100,2079830000,,0,pass,,
+timing-Towers-towers-candidate-recorded-8,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,8,1,100,2087961000,,0,pass,,
+timing-Towers-towers-control-recorded-8,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,8,2,100,2106063000,,0,pass,,
+timing-Towers-towers-control-recorded-9,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,9,1,100,2079375000,,0,pass,,
+timing-Towers-towers-candidate-recorded-9,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,9,2,100,2124727000,,0,pass,,
+timing-Towers-towers-candidate-recorded-10,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,10,1,100,2091707000,,0,pass,,
+timing-Towers-towers-control-recorded-10,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,10,2,100,2095964000,,0,pass,,
+timing-Towers-towers-control-recorded-11,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,11,1,100,2135121000,,0,pass,,
+timing-Towers-towers-candidate-recorded-11,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,11,2,100,2088934000,,0,pass,,
+timing-Towers-towers-candidate-recorded-12,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,12,1,100,2120720000,,0,pass,,
+timing-Towers-towers-control-recorded-12,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,12,2,100,2077972000,,0,pass,,
+timing-Towers-towers-control-recorded-13,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,13,1,100,2099720000,,0,pass,,
+timing-Towers-towers-candidate-recorded-13,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,13,2,100,2094464000,,0,pass,,
+timing-Towers-towers-candidate-recorded-14,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,14,1,100,2115851000,,0,pass,,
+timing-Towers-towers-control-recorded-14,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,14,2,100,2098320000,,0,pass,,
+timing-Towers-towers-control-recorded-15,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,15,1,100,2103804000,,0,pass,,
+timing-Towers-towers-candidate-recorded-15,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,15,2,100,2106154000,,0,pass,,
+timing-Towers-towers-candidate-recorded-16,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,16,1,100,2126197000,,0,pass,,
+timing-Towers-towers-control-recorded-16,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,16,2,100,2102169000,,0,pass,,
+timing-Towers-towers-control-recorded-17,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,17,1,100,2137564000,,0,pass,,
+timing-Towers-towers-candidate-recorded-17,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,17,2,100,2121150000,,0,pass,,
+timing-Towers-towers-candidate-recorded-18,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,18,1,100,2123389000,,0,pass,,
+timing-Towers-towers-control-recorded-18,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,18,2,100,2110736000,,0,pass,,
+timing-Towers-towers-control-recorded-19,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,19,1,100,2117972000,,0,pass,,
+timing-Towers-towers-candidate-recorded-19,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,19,2,100,2083543000,,0,pass,,
+timing-Towers-towers-candidate-recorded-20,timing,Towers,towers-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,yes,startup-included,recorded,20,1,100,2099098000,,0,pass,,
+timing-Towers-towers-control-recorded-20,timing,Towers,towers-control,pre-E1-19802842,rxbvm,post-EF0-control,A,yes,startup-included,recorded,20,2,100,2078501000,,0,pass,,
+timing-RexxCPS-rexxcps-control-warmup-1,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,warmup,1,1,1000-clauses,1226560000,,0,pass,49698924,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-warmup-1,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,warmup,1,2,1000-clauses,1256432000,,0,pass,48472111,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-1,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,1,1,1000-clauses,1252601000,,0,pass,48663837,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-1,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,1,2,1000-clauses,1268054000,,0,pass,48092414,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-2,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,2,1,1000-clauses,1256479000,,0,pass,48644095,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-2,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,2,2,1000-clauses,1283425000,,0,pass,47220685,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-3,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,3,1,1000-clauses,1248737000,,0,pass,48942164,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-3,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,3,2,1000-clauses,1230146000,,0,pass,49732489,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-4,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,4,1,1000-clauses,1231793000,,0,pass,49608687,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-4,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,4,2,1000-clauses,1244021000,,0,pass,49056448,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-5,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,5,1,1000-clauses,1248535000,,0,pass,48925020,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-5,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,5,2,1000-clauses,1241691000,,0,pass,49162710,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-6,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,6,1,1000-clauses,1259092000,,0,pass,48434078,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-6,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,6,2,1000-clauses,1239995000,,0,pass,49134496,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-7,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,7,1,1000-clauses,1236912000,,0,pass,49294206,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-7,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,7,2,1000-clauses,1262958000,,0,pass,48294994,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-8,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,8,1,1000-clauses,1254815000,,0,pass,48639599,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-8,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,8,2,1000-clauses,1235937000,,0,pass,49427775,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-9,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,9,1,1000-clauses,1245155000,,0,pass,49084814,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-9,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,9,2,1000-clauses,1242510000,,0,pass,49336425,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-10,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,10,1,1000-clauses,1246527000,,0,pass,48939098,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-10,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,10,2,1000-clauses,1236304000,,0,pass,49357659,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-11,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,11,1,1000-clauses,1256218000,,0,pass,48563775,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-11,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,11,2,1000-clauses,1243589000,,0,pass,49123297,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-12,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,12,1,1000-clauses,1258838000,,0,pass,48447594,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-12,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,12,2,1000-clauses,1248903000,,0,pass,48761935,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-13,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,13,1,1000-clauses,1257870000,,0,pass,48494630,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-13,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,13,2,1000-clauses,1249713000,,0,pass,48933303,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-14,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,14,1,1000-clauses,1248336000,,0,pass,48887277,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-14,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,14,2,1000-clauses,1247694000,,0,pass,49054475,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-15,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,15,1,1000-clauses,1246554000,,0,pass,48934404,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-15,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,15,2,1000-clauses,1267299000,,0,pass,48181672,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-16,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,16,1,1000-clauses,1249714000,,0,pass,48787247,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-16,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,16,2,1000-clauses,1271938000,,0,pass,47861867,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-17,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,17,1,1000-clauses,1241839000,,0,pass,49138166,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-17,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,17,2,1000-clauses,1285671000,,0,pass,47256031,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-18,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,18,1,1000-clauses,1245625000,,0,pass,49011631,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-18,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,18,2,1000-clauses,1248679000,,0,pass,48857802,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-19,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,19,1,1000-clauses,1229589000,,0,pass,49715676,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-19,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,19,2,1000-clauses,1243621000,,0,pass,49096960,cREXX clauses per second
+timing-RexxCPS-rexxcps-candidate-recorded-20,timing,RexxCPS,rexxcps-candidate,Gate-E-E1-P1,rxbvm,lifecycle-wrapper,A,no,startup-included,recorded,20,1,1000-clauses,1255270000,,0,pass,48705220,cREXX clauses per second
+timing-RexxCPS-rexxcps-control-recorded-20,timing,RexxCPS,rexxcps-control,pre-E1-19802842,rxbvm,post-EF0-control,A,no,startup-included,recorded,20,2,1000-clauses,1240874000,,0,pass,49210080,cREXX clauses per second

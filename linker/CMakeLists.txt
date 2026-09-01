@@ -3,16 +3,18 @@ cmake_minimum_required(VERSION 3.24)
 project(Linker C)
 
 set(CMAKE_C_STANDARD 99)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
-add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h)
-target_link_libraries(rxlink platform)
+add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
+target_link_libraries(rxlink rxbin platform)
 target_include_directories(rxlink PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ../platform
         ../binutils/include)
 
 add_custom_target(rxlink_test_prereqs ALL
-        DEPENDS rxlink rxas rxvm rxbvm rxdas mc_decimal_dynamic)
+        DEPENDS rxlink rxas rxvm rxdas mc_decimal_dynamic)
 
 add_executable(rxlink_concat_files tests/concat_files.c)
 target_include_directories(rxlink_concat_files PRIVATE
@@ -26,7 +28,7 @@ function(crexx_add_rxas_fixture STEM SOURCE)
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${STEM}.rxbin
             COMMAND $<TARGET_FILE:rxas> -o ${STEM} ${SOURCE}
-            DEPENDS ${SOURCE} rxas rxvm rxbvm mc_decimal_dynamic
+            DEPENDS ${SOURCE} rxas rxvm mc_decimal_dynamic
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             COMMENT "cREXX RXLINK fixture ${STEM} ..."
     )
@@ -34,7 +36,7 @@ function(crexx_add_rxas_fixture STEM SOURCE)
     add_dependencies(${STEM}_fixture rxlink_test_prereqs)
 endfunction()
 
-function(crexx_add_vm_dual_test)
+function(crexx_add_vm_test)
     set(options)
     set(oneValueArgs NAME PASS_REGULAR_EXPRESSION)
     set(multiValueArgs RXVM_ARGS)
@@ -42,17 +44,12 @@ function(crexx_add_vm_dual_test)
 
     add_test(
             NAME ${CREXX_NAME}
-            COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    add_test(
-            NAME ${CREXX_NAME}-rxbvm
-            COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
+            COMMAND ${CREXX_RXVM_EXECUTABLE} ${CREXX_RXVM_ARGS}
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     if(CREXX_PASS_REGULAR_EXPRESSION)
-        set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
+        set_tests_properties(${CREXX_NAME} PROPERTIES
                 PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
     endif()
 endfunction()
@@ -66,6 +63,7 @@ crexx_add_rxas_fixture(tests_link_srcfproc_root ${CMAKE_CURRENT_SOURCE_DIR}/test
 crexx_add_rxas_fixture(tests_link_srcfproc_contract ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcfproc_contract.rxas)
 crexx_add_rxas_fixture(tests_link_srcmethod_root ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_root.rxas)
 crexx_add_rxas_fixture(tests_link_srcmethod_provider ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_provider.rxas)
+crexx_add_rxas_fixture(tests_link_signature_bad_impl ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_signature_bad_impl.rxas)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_success.rxbin
@@ -119,7 +117,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxlink> -o tests_linked_srcfproc tests_link_srcfproc_root.rxbin tests_link_srcfproc_contract.rxbin
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcfproc_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcfproc_contract.rxbin rxlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX RXLINK srcfproc fixture ..."
+        COMMENT "cREXX RXLINK srcfprocsel fixture ..."
 )
 add_custom_target(tests_linked_srcfproc_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcfproc.rxbin)
 
@@ -128,7 +126,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxlink> -o tests_linked_srcmethod tests_link_srcmethod_root.rxbin tests_link_srcmethod_provider.rxbin
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_provider.rxbin rxlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX RXLINK srcmethod fixture ..."
+        COMMENT "cREXX RXLINK srcmethodsel fixture ..."
 )
 add_custom_target(tests_linked_srcmethod_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcmethod.rxbin)
 
@@ -150,43 +148,44 @@ add_custom_command(
 )
 add_custom_target(tests_record_stream_combo_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_record_stream_combo.rxbin)
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_success_run
         RXVM_ARGS tests_linked_success
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_control_run
         RXVM_ARGS tests_linked_omit
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_strip_run
         RXVM_ARGS tests_linked_stripped
         PASS_REGULAR_EXPRESSION "PASS: Provider A[^\r\n]*\r?\nPASS: Root Returned[^\r\n]*\r?\n10"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_interface_run
         RXVM_ARGS tests_linked_interface
         PASS_REGULAR_EXPRESSION "PASS: Interface Linked"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_srcfproc_run
         RXVM_ARGS tests_linked_srcfproc
         PASS_REGULAR_EXPRESSION "PASS: SRCFPROC Linked"
 )
 
-crexx_add_vm_dual_test(
+crexx_add_vm_test(
         NAME rxlink_srcmethod_run
         RXVM_ARGS tests_linked_srcmethod
         PASS_REGULAR_EXPRESSION "PASS: SRCMETHOD Linked"
 )
 
 add_executable(test_linked_format tests/test_linked_format.c)
+target_link_libraries(test_linked_format PRIVATE rxbin)
 target_include_directories(test_linked_format PRIVATE
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include)
@@ -196,6 +195,7 @@ add_custom_command(TARGET test_linked_format POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E rm -f ${CMAKE_BINARY_DIR}/bin/test_linked_format)
 add_dependencies(test_linked_format tests_linked_success_artifact tests_linked_inline_artifact tests_linked_stripped_artifact tests_record_stream_combo_artifact)
 add_test(NAME rxlink_format_check COMMAND test_linked_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+crexx_label_concurrency_tests(SP03 rxlink_format_check)
 
 add_test(
         NAME rxlink_duplicate_provider_error
@@ -231,6 +231,18 @@ add_test(
         -DCONTROL_FILE=${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_conflict.ctl
         "-DINPUTS=tests_link_root.rxbin\;tests_link_provider_a.rxbin"
         -DEXPECT_TEXT=module tests_link_provider_a is both included and omitted
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_expected_failure.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_test(
+        NAME rxlink_signature_mismatch_error
+        COMMAND ${CMAKE_COMMAND}
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+        -DOUTPUT_BASENAME=tests_linked_signature_mismatch
+        "-DINPUTS=tests_link_signature_bad_impl.rxbin"
+        "-DEXPECT_TEXT=ERROR: class link_sig.box does not satisfy interface member link_sig.shape.describe signature"
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_expected_failure.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -277,3 +289,24 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+crexx_label_smoke_tests(
+        rxlink_success_run
+        rxlink_control_run
+        rxlink_interface_run
+        rxlink_format_check
+        rxlink_signature_mismatch_error
+        rxlink_rxdas_inline_preserve_smoke
+        PREP_TARGETS
+            tests_linked_success_artifact
+            tests_linked_omit_artifact
+            tests_linked_interface_artifact
+            test_linked_format
+            tests_link_signature_bad_impl_fixture
+            tests_linked_inline_artifact
+            rxdas
+            rxvm
+            rxlink
+)
+
+crexx_finalize_directory_qa_tiers()

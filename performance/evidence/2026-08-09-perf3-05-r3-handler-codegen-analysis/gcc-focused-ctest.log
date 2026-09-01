@@ -1,0 +1,50 @@
+Test project /private/tmp/crexx-perf3-05-r3.IvLL06/r3-gcc-profile
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/14 Test    #1: linked_opt_runtime_artifacts_build ...   Passed   91.34 sec
+      Start  891: dynamic_interface_load_driver
+ 2/14 Test  #891: dynamic_interface_load_driver ........   Passed    0.26 sec
+      Start 1049: rxvmworker_lifecycle
+ 3/14 Test #1049: rxvmworker_lifecycle .................   Passed    0.01 sec
+      Start 1056: test_signal_mask
+ 4/14 Test #1056: test_signal_mask .....................   Passed    0.00 sec
+      Start 1057: rxassignalstests
+ 5/14 Test #1057: rxassignalstests .....................   Passed    0.28 sec
+      Start 1058: rxvminstrumentedsignaltests
+ 6/14 Test #1058: rxvminstrumentedsignaltests ..........   Passed    0.02 sec
+      Start 1059: rxbvminstrumentedsignaltests
+ 7/14 Test #1059: rxbvminstrumentedsignaltests .........   Passed    0.02 sec
+      Start 1064: rxvminstrumentedbreakpointtests
+ 8/14 Test #1064: rxvminstrumentedbreakpointtests ......   Passed    0.00 sec
+      Start 1065: rxbvminstrumentedbreakpointtests
+ 9/14 Test #1065: rxbvminstrumentedbreakpointtests .....   Passed    0.00 sec
+      Start 1104: rxasdispatchcontract-rxbvm
+10/14 Test #1104: rxasdispatchcontract-rxbvm ...........   Passed    0.25 sec
+      Start 1105: rxasdispatchcontract-rxtvm
+11/14 Test #1105: rxasdispatchcontract-rxtvm ...........   Passed    0.00 sec
+      Start 1170: reentrancy_check
+12/14 Test #1170: reentrancy_check .....................   Passed    0.01 sec
+      Start 1391: ts_loadmodule_noopt
+13/14 Test #1391: ts_loadmodule_noopt ..................   Passed    0.03 sec
+      Start 1392: ts_loadmodule_opt
+14/14 Test #1392: ts_loadmodule_opt ....................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+breakpoint         =   0.00 sec*proc (2 tests)
+compiler           =   0.26 sec*proc (1 test)
+dispatch           =   0.25 sec*proc (2 tests)
+driver             =   0.26 sec*proc (1 test)
+instrumentation    =   0.05 sec*proc (4 tests)
+interfaces         =   0.26 sec*proc (1 test)
+interpreter        =   0.31 sec*proc (8 tests)
+late-load          =   0.26 sec*proc (1 test)
+linked_opt         =   0.02 sec*proc (1 test)
+memory             =   0.01 sec*proc (1 test)
+rxas               =   0.25 sec*proc (2 tests)
+signal             =   0.05 sec*proc (3 tests)
+smoke              =   0.29 sec*proc (2 tests)
+stage3             =   0.26 sec*proc (1 test)
+worker             =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  92.30 sec

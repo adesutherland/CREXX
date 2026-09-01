@@ -1,0 +1,1207 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash numeric_classic
+import data
+import rxfnsb
+
+/*
+ * Deterministic NR-09 decision-ledger builder. It consumes retained RXSEQ
+ * sequence-ranking CSVs; it does not capture profiles or implement fusion.
+ */
+main: procedure = .int expose meta revisions revision_seen workloads workload_seen effects effect_count signals signal_count agg_map agg_count work_map work_count role_agg selected selected_reason selected_count raw_rows identity_by_id sequence_sources ,
+    agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count ,
+    work_revision work_role work_workload work_identity work_stable_id work_pattern work_entry work_mode work_window work_dynamic_count work_sites work_modules work_max_sites work_max_modules work_entry_count work_mode_count
+  arg args = .string[]
+
+  manifest_path = ""
+  output_dir = ""
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--manifest" then do
+      if i = args[0] then return argument_error("missing value after --manifest")
+      i = i + 1
+      manifest_path = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+  if manifest_path = "" then return argument_error("--manifest is required")
+  if output_dir = "" then return argument_error("--output-dir is required")
+
+  root = current_directory()
+  manifest_path = absolute_path(root, manifest_path)
+  output_dir = absolute_path(root, output_dir)
+  if make_directory(output_dir) <> 0 then return 1
+
+  meta = .StringTreeMap()
+  revisions = .string[]
+  revision_seen = .StringTreeMap()
+  workloads = .string[]
+  workload_seen = .StringTreeMap()
+  effects = .StringTreeMap()
+  effect_count = 0
+  signals = .StringTreeMap()
+  signal_count = 0
+  agg_map = .StringTreeMap()
+  agg_count = 0
+  agg_revision = .string[]
+  agg_role = .string[]
+  agg_identity = .string[]
+  agg_stable_id = .string[]
+  agg_pattern = .string[]
+  agg_example_module = .string[]
+  agg_entry = .string[]
+  agg_workload = .string[]
+  agg_mode = .string[]
+  agg_rxseq_status = .string[]
+  agg_evidence = .string[]
+  agg_window = .int[]
+  agg_example_start = .int[]
+  agg_dynamic_count = .int[]
+  agg_sites = .int[]
+  agg_modules = .int[]
+  agg_max_sites = .int[]
+  agg_max_modules = .int[]
+  agg_max_symbols = .int[]
+  agg_entry_count = .int[]
+  agg_workload_count = .int[]
+  agg_mode_count = .int[]
+  work_map = .StringTreeMap()
+  work_count = 0
+  work_revision = .string[]
+  work_role = .string[]
+  work_workload = .string[]
+  work_identity = .string[]
+  work_stable_id = .string[]
+  work_pattern = .string[]
+  work_entry = .string[]
+  work_mode = .string[]
+  work_window = .int[]
+  work_dynamic_count = .int[]
+  work_sites = .int[]
+  work_modules = .int[]
+  work_max_sites = .int[]
+  work_max_modules = .int[]
+  work_entry_count = .int[]
+  work_mode_count = .int[]
+  role_agg = .StringTreeMap()
+  selected = .StringTreeMap()
+  selected_reason = .StringTreeMap()
+  selected_count = 0
+  raw_rows = .StringTreeMap()
+  identity_by_id = .StringTreeMap()
+  sequence_sources = .string[]
+
+  entries_path = ""
+  effects_path = ""
+  signals_path = ""
+  header_seen = 0
+  do while lines(manifest_path)
+    line = linein(manifest_path)
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-nr09-ledger-inputs|1" then do
+        call linein manifest_path
+        return execution_error("unexpected ledger input manifest header")
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 2 then do
+      call linein manifest_path
+      return execution_error("ledger input manifest row must have two fields")
+    end
+    path = absolute_path(root, fields[2])
+    if fields[1] = "entries" then entries_path = path
+    else if fields[1] = "effects" then effects_path = path
+    else if fields[1] = "signals" then signals_path = path
+    else if fields[1] = "sequence" then
+      sequence_sources[sequence_sources[0] + 1] = path
+    else do
+      call linein manifest_path
+      return execution_error("unknown ledger input kind: " || fields[1])
+    end
+  end
+  call linein manifest_path
+  if \header_seen | entries_path = "" | effects_path = "" | ,
+      sequence_sources[0] = 0 then return execution_error("ledger inputs are incomplete")
+  if signals_path = "" then do
+    separator = lastpos("/", effects_path)
+    if separator = 0 then separator = lastpos("\\", effects_path)
+    if separator = 0 then return execution_error("cannot infer opcode signal metadata path")
+    signals_path = left(effects_path, separator) || "rxopsignals.h"
+  end
+
+  if load_entry_metadata(entries_path) <> 0 then return 1
+  say "NR-09: loaded entry metadata"
+  if load_effects(effects_path) <> 0 then return 1
+  say "NR-09: loaded" effect_count "opcode effects"
+  if load_signals(signals_path) <> 0 then return 1
+  say "NR-09: loaded" signal_count "opcode signal contracts"
+  if effect_count <> signal_count then
+    return execution_error("opcode effect/signal row counts disagree")
+  do i = 1 to sequence_sources[0]
+    say "NR-09: loading sequence input" i "of" sequence_sources[0]
+    if load_sequences(sequence_sources[i]) <> 0 then return 1
+  end
+  say "NR-09: aggregated" agg_count "revision-pattern rows"
+
+  global_top = .int[]
+  do i = 1 to agg_count
+    if agg_get_text(i, "role") = "historical" then
+      call insert_global_top i, global_top, 25
+  end
+  do i = 1 to global_top[0]
+    call select_identity agg_get_text(global_top[i], "stable_id"), "global-top-25"
+  end
+
+  workload_top_rows = .string[]
+  do workload_index = 1 to workloads[0]
+    workload = workloads[workload_index]
+    workload_top = .int[]
+    do i = 1 to work_count
+      if work_get_text(i, "role") = "historical" & ,
+          work_get_text(i, "workload") = workload then
+        call insert_workload_top i, workload_top, 10
+    end
+    do rank = 1 to workload_top[0]
+      index = workload_top[rank]
+      stable_id = work_get_text(index, "stable_id")
+      call select_identity stable_id, "workload-top-10:" || workload
+      workload_top_rows[workload_top_rows[0] + 1] = workload || "1f"x || rank || ,
+          "1f"x || work_get_text(index, "stable_id") || "1f"x || ,
+          work_get_num(index, "count") || "1f"x || ,
+          work_get_num(index, "sites") || "1f"x || ,
+          work_get_num(index, "modules") || "1f"x || ,
+          work_get_text(index, "pattern")
+    end
+  end
+  say "NR-09: selected" selected_count "stable pattern identities"
+
+  if write_ledger(output_dir || "/sequence-ledger.csv") <> 0 then return 1
+  say "NR-09: wrote machine-readable ledger"
+  if write_markdown(output_dir || "/decision-view.md", global_top, ,
+      workload_top_rows) <> 0 then return 1
+  if write_run_state(output_dir || "/run-state.txt", manifest_path, ,
+      entries_path, effects_path, signals_path) <> 0 then return 1
+  if write_checksums(output_dir) <> 0 then return 1
+
+  say "PASS: deterministic NR-09 sequence ledger retained under" output_dir
+  return 0
+
+usage: procedure = .void
+  say "Usage: build_sequence_ledger --manifest FILE --output-dir DIRECTORY"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  call usage
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1
+
+current_directory: procedure = .string
+  out = .string[]
+  err = .string[]
+  address crexx "pwd" output out error err
+  if rc = 0 & out[0] > 0 then return out[1]
+  return "unknown"
+
+absolute_path: procedure = .string
+  arg root = .string, path = .string
+  if left(path, 1) = "/" then return path
+  return root || "/" || path
+
+make_directory: procedure = .int
+  arg path = .string
+  out = .string[]
+  err = .string[]
+  address crexx "mkdir -p :path" output out error err
+  if rc = 0 then return 0
+  return execution_error("could not create output directory: " || path)
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+parse_csv_line: procedure = .string[]
+  arg line = .string
+  fields = .string[]
+  field = ""
+  quoted = 0
+  i = 1
+  do while i <= length(line)
+    character = substr(line, i, 1)
+    if quoted then do
+      if character = '"' then do
+        if i < length(line) & substr(line, i + 1, 1) = '"' then do
+          field = field || '"'
+          i = i + 1
+        end
+        else quoted = 0
+      end
+      else field = field || character
+    end
+    else do
+      if character = '"' & field = "" then quoted = 1
+      else if character = "," then do
+        fields[fields[0] + 1] = field
+        field = ""
+      end
+      else field = field || character
+    end
+    i = i + 1
+  end
+  fields[fields[0] + 1] = field
+  return fields
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+key: procedure = .string
+  arg index = .int, field = .string
+  return index || "|" || field
+
+stem_int: procedure = .int
+  arg values = .StringTreeMap, name = .string
+  value = values.get(name)
+  if value = "" then return 0
+  return value as .int
+
+set_int: procedure = .void
+  arg values = .StringTreeMap, name = .string, value = .int
+  call values.put(name, value)
+  return
+
+add_int: procedure = .void
+  arg values = .StringTreeMap, name = .string, value = .int
+  call values.put(name, stem_int(values, name) + value)
+  return
+
+max_int: procedure = .void
+  arg values = .StringTreeMap, name = .string, value = .int
+  if value > stem_int(values, name) then call values.put(name, value)
+  return
+
+append_delimited_unique: procedure = .string
+  arg current = .string, value = .string
+  if value = "" then return current
+  if pos(";" || value || ";", ";" || current || ";") > 0 then return current
+  if current = "" then return value
+  return current || ";" || value
+
+agg_get_text: procedure = .string expose agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence
+  arg index = .int, field = .string
+  if field = "revision" then return agg_revision[index]
+  if field = "role" then return agg_role[index]
+  if field = "identity" then return agg_identity[index]
+  if field = "stable_id" then return agg_stable_id[index]
+  if field = "pattern" then return agg_pattern[index]
+  if field = "example_module" then return agg_example_module[index]
+  if field = "entry" then return agg_entry[index]
+  if field = "workload" then return agg_workload[index]
+  if field = "mode" then return agg_mode[index]
+  if field = "rxseq_status" then return agg_rxseq_status[index]
+  if field = "evidence" then return agg_evidence[index]
+  return ""
+
+agg_set_text: procedure = .void expose agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence
+  arg index = .int, field = .string, value = .string
+  if field = "revision" then agg_revision[index] = value
+  else if field = "role" then agg_role[index] = value
+  else if field = "identity" then agg_identity[index] = value
+  else if field = "stable_id" then agg_stable_id[index] = value
+  else if field = "pattern" then agg_pattern[index] = value
+  else if field = "example_module" then agg_example_module[index] = value
+  else if field = "entry" then agg_entry[index] = value
+  else if field = "workload" then agg_workload[index] = value
+  else if field = "mode" then agg_mode[index] = value
+  else if field = "rxseq_status" then agg_rxseq_status[index] = value
+  else if field = "evidence" then agg_evidence[index] = value
+  return
+
+agg_get_num: procedure = .int expose agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count
+  arg index = .int, field = .string
+  if field = "window" then return agg_window[index]
+  if field = "example_start" then return agg_example_start[index]
+  if field = "count" then return agg_dynamic_count[index]
+  if field = "sites" then return agg_sites[index]
+  if field = "modules" then return agg_modules[index]
+  if field = "max_sites" then return agg_max_sites[index]
+  if field = "max_modules" then return agg_max_modules[index]
+  if field = "max_symbols" then return agg_max_symbols[index]
+  if field = "entry_count" then return agg_entry_count[index]
+  if field = "workload_count" then return agg_workload_count[index]
+  if field = "mode_count" then return agg_mode_count[index]
+  return 0
+
+agg_add_num: procedure = .void expose agg_dynamic_count agg_sites agg_modules
+  arg index = .int, field = .string, value = .int
+  if field = "count" then agg_dynamic_count[index] = agg_dynamic_count[index] + value
+  else if field = "sites" then agg_sites[index] = agg_sites[index] + value
+  else if field = "modules" then agg_modules[index] = agg_modules[index] + value
+  return
+
+agg_initialize_num: procedure = .void expose agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count
+  arg index = .int
+  agg_window[index] = 0
+  agg_example_start[index] = 0
+  agg_dynamic_count[index] = 0
+  agg_sites[index] = 0
+  agg_modules[index] = 0
+  agg_max_sites[index] = 0
+  agg_max_modules[index] = 0
+  agg_max_symbols[index] = 0
+  agg_entry_count[index] = 0
+  agg_workload_count[index] = 0
+  agg_mode_count[index] = 0
+  return
+
+agg_max_num: procedure = .void expose agg_max_sites agg_max_modules agg_max_symbols
+  arg index = .int, field = .string, value = .int
+  if field = "max_sites" & value > agg_max_sites[index] then agg_max_sites[index] = value
+  else if field = "max_modules" & value > agg_max_modules[index] then agg_max_modules[index] = value
+  else if field = "max_symbols" & value > agg_max_symbols[index] then agg_max_symbols[index] = value
+  return
+
+agg_append_unique: procedure = .void expose agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_entry_count agg_workload_count agg_mode_count
+  arg index = .int, field = .string, value = .string
+  if value = "" then return
+  if field = "entry" then do
+    updated = append_delimited_unique(agg_entry[index], value)
+    if updated <> agg_entry[index] then agg_entry_count[index] = agg_entry_count[index] + 1
+    agg_entry[index] = updated
+  end
+  else if field = "workload" then do
+    updated = append_delimited_unique(agg_workload[index], value)
+    if updated <> agg_workload[index] then agg_workload_count[index] = agg_workload_count[index] + 1
+    agg_workload[index] = updated
+  end
+  else if field = "mode" then do
+    updated = append_delimited_unique(agg_mode[index], value)
+    if updated <> agg_mode[index] then agg_mode_count[index] = agg_mode_count[index] + 1
+    agg_mode[index] = updated
+  end
+  else if field = "rxseq_status" then agg_rxseq_status[index] = append_delimited_unique(agg_rxseq_status[index], value)
+  else if field = "evidence" then agg_evidence[index] = append_delimited_unique(agg_evidence[index], value)
+  return
+
+work_get_text: procedure = .string expose work_revision work_role work_workload work_identity work_stable_id work_pattern work_entry work_mode
+  arg index = .int, field = .string
+  if field = "revision" then return work_revision[index]
+  if field = "role" then return work_role[index]
+  if field = "workload" then return work_workload[index]
+  if field = "identity" then return work_identity[index]
+  if field = "stable_id" then return work_stable_id[index]
+  if field = "pattern" then return work_pattern[index]
+  if field = "entry" then return work_entry[index]
+  if field = "mode" then return work_mode[index]
+  return ""
+
+work_set_text: procedure = .void expose work_revision work_role work_workload work_identity work_stable_id work_pattern work_entry work_mode
+  arg index = .int, field = .string, value = .string
+  if field = "revision" then work_revision[index] = value
+  else if field = "role" then work_role[index] = value
+  else if field = "workload" then work_workload[index] = value
+  else if field = "identity" then work_identity[index] = value
+  else if field = "stable_id" then work_stable_id[index] = value
+  else if field = "pattern" then work_pattern[index] = value
+  else if field = "entry" then work_entry[index] = value
+  else if field = "mode" then work_mode[index] = value
+  return
+
+work_get_num: procedure = .int expose work_window work_dynamic_count work_sites work_modules work_max_sites work_max_modules work_entry_count work_mode_count
+  arg index = .int, field = .string
+  if field = "window" then return work_window[index]
+  if field = "count" then return work_dynamic_count[index]
+  if field = "sites" then return work_sites[index]
+  if field = "modules" then return work_modules[index]
+  if field = "max_sites" then return work_max_sites[index]
+  if field = "max_modules" then return work_max_modules[index]
+  if field = "entry_count" then return work_entry_count[index]
+  if field = "mode_count" then return work_mode_count[index]
+  return 0
+
+work_add_num: procedure = .void expose work_dynamic_count work_sites work_modules
+  arg index = .int, field = .string, value = .int
+  if field = "count" then work_dynamic_count[index] = work_dynamic_count[index] + value
+  else if field = "sites" then work_sites[index] = work_sites[index] + value
+  else if field = "modules" then work_modules[index] = work_modules[index] + value
+  return
+
+work_initialize_num: procedure = .void expose work_window work_dynamic_count work_sites work_modules work_max_sites work_max_modules work_entry_count work_mode_count
+  arg index = .int
+  work_window[index] = 0
+  work_dynamic_count[index] = 0
+  work_sites[index] = 0
+  work_modules[index] = 0
+  work_max_sites[index] = 0
+  work_max_modules[index] = 0
+  work_entry_count[index] = 0
+  work_mode_count[index] = 0
+  return
+
+work_max_num: procedure = .void expose work_max_sites work_max_modules
+  arg index = .int, field = .string, value = .int
+  if field = "max_sites" & value > work_max_sites[index] then work_max_sites[index] = value
+  else if field = "max_modules" & value > work_max_modules[index] then work_max_modules[index] = value
+  return
+
+work_append_unique: procedure = .void expose work_entry work_mode work_entry_count work_mode_count
+  arg index = .int, field = .string, value = .string
+  if value = "" then return
+  if field = "entry" then do
+    updated = append_delimited_unique(work_entry[index], value)
+    if updated <> work_entry[index] then work_entry_count[index] = work_entry_count[index] + 1
+    work_entry[index] = updated
+  end
+  else if field = "mode" then do
+    updated = append_delimited_unique(work_mode[index], value)
+    if updated <> work_mode[index] then work_mode_count[index] = work_mode_count[index] + 1
+    work_mode[index] = updated
+  end
+  return
+
+load_entry_metadata: procedure = .int expose meta revisions revision_seen workloads workload_seen
+  arg path = .string
+  header_seen = 0
+  row_count = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" | left(strip(line), 1) = "#" then iterate
+    if \header_seen then do
+      if line <> "crexx-nr09-entry-metadata|1" then do
+        call linein path
+        return execution_error("unexpected entry metadata header")
+      end
+      header_seen = 1
+      iterate
+    end
+    fields = split_delimited(line, "|")
+    if fields[0] <> 10 then do
+      call linein path
+      return execution_error("entry metadata row must have ten fields")
+    end
+    entry = fields[1]
+    if meta.get(entry || "|revision") <> "" then do
+      call linein path
+      return execution_error("duplicate entry metadata: " || entry)
+    end
+    call meta.put(entry || "|revision", fields[2])
+    call meta.put(entry || "|role", fields[3])
+    call meta.put(entry || "|workload", fields[4])
+    call meta.put(entry || "|variant", fields[5])
+    call meta.put(entry || "|mode", fields[6])
+    call meta.put(entry || "|source_trace", fields[7])
+    call meta.put(entry || "|evidence", fields[8])
+    call meta.put(entry || "|image_hash", fields[9])
+    call meta.put(entry || "|module_hashes", fields[10])
+    if revision_seen.get(fields[2]) = "" then do
+      call revision_seen.put(fields[2], fields[3])
+      revisions[revisions[0] + 1] = fields[2]
+    end
+    else if revision_seen.get(fields[2]) <> fields[3] then do
+      call linein path
+      return execution_error("revision role mismatch: " || fields[2])
+    end
+    if workload_seen.get(fields[4]) = "" then do
+      call workload_seen.put(fields[4], "1")
+      workloads[workloads[0] + 1] = fields[4]
+    end
+    row_count = row_count + 1
+  end
+  call linein path
+  if \header_seen | row_count = 0 then return execution_error("entry metadata is empty")
+  return 0
+
+load_effects: procedure = .int expose effects effect_count
+  arg path = .string
+  prefix = "RXOP_EFFECT("
+  do while lines(path)
+    line = strip(linein(path))
+    if left(line, length(prefix)) <> prefix then iterate
+    comma_at = pos(",", line)
+    if comma_at = 0 then do
+      call linein path
+      return execution_error("malformed opcode effect row")
+    end
+    opcode = substr(line, length(prefix) + 1, comma_at - length(prefix) - 1)
+    payload = strip(substr(line, comma_at + 1))
+    open_at = pos("(", payload)
+    if open_at = 0 | right(payload, 2) <> "))" then do
+      call linein path
+      return execution_error("malformed opcode effect payload: " || opcode)
+    end
+    effect_form = left(payload, open_at - 1)
+    if effect_form <> "RXE" & effect_form <> "RXEV" & ,
+        effect_form <> "RXEC" then do
+      call linein path
+      return execution_error("unknown opcode effect form: " || opcode)
+    end
+    payload = substr(payload, open_at + 1, length(payload) - open_at - 2)
+    fields = split_delimited(payload, ",")
+    expected_fields = 7
+    if effect_form = "RXEC" then expected_fields = 10
+    if fields[0] <> expected_fields then do
+      call linein path
+      return execution_error("opcode effect field count mismatch: " || opcode)
+    end
+    call effects.put(opcode || "|class", strip(fields[1]))
+    call effects.put(opcode || "|reads", strip(fields[2]))
+    call effects.put(opcode || "|writes", strip(fields[3]))
+    call effects.put(opcode || "|kills", strip(fields[4]))
+    call effects.put(opcode || "|branch", strip(fields[5]))
+    call effects.put(opcode || "|implicit", strip(fields[6]))
+    call effects.put(opcode || "|semantics", strip(fields[7]))
+    effect_count = effect_count + 1
+  end
+  call linein path
+  if effect_count = 0 then return execution_error("opcode effects are empty")
+  return 0
+
+load_signals: procedure = .int expose signals signal_count
+  arg path = .string
+  prefix = "RXOP_SIGNAL("
+  do while lines(path)
+    line = strip(linein(path))
+    if left(line, length(prefix)) <> prefix then iterate
+    comma_at = pos(",", line)
+    if comma_at = 0 | right(line, 1) <> ")" then do
+      call linein path
+      return execution_error("malformed opcode signal row")
+    end
+    opcode = substr(line, length(prefix) + 1, comma_at - length(prefix) - 1)
+    contract = strip(substr(line, comma_at + 1, length(line) - comma_at - 1))
+    if left(contract, 9) = "RXSC_NONE" then state = "none"
+    else if contract = "RXSC_UNKNOWN" then state = "unknown"
+    else if left(contract, 5) = "RXSC_" then state = "known"
+    else do
+      call linein path
+      return execution_error("unknown opcode signal contract: " || opcode)
+    end
+    call signals.put(opcode || "|state", state)
+    call signals.put(opcode || "|contract", contract)
+    signal_count = signal_count + 1
+  end
+  call linein path
+  if signal_count = 0 then return execution_error("opcode signal contracts are empty")
+  return 0
+
+stable_identity: procedure = .string expose identity_by_id
+  arg window = .int, pattern = .string
+  identity = window || "|" || pattern
+  stable_id = "seq-" || window || "-" || fnv("nr09|" || identity)
+  existing = identity_by_id.get(stable_id)
+  if existing <> "" & existing <> identity then do
+    say "ERROR: stable identity collision:" stable_id
+    return ""
+  end
+  if existing = "" then call identity_by_id.put(stable_id, identity)
+  return stable_id
+
+load_sequences: procedure = .int expose meta agg_map agg_count work_map work_count role_agg raw_rows identity_by_id ,
+    agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count ,
+    work_revision work_role work_workload work_identity work_stable_id work_pattern work_entry work_mode work_window work_dynamic_count work_sites work_modules work_max_sites work_max_modules work_entry_count work_mode_count
+  arg path = .string
+  header_seen = 0
+  row_count = 0
+  do while lines(path)
+    line = linein(path)
+    if line = "" then iterate
+    fields = parse_csv_line(line)
+    if \header_seen then do
+      if fields[0] <> 12 | fields[1] <> "entry" | ,
+          fields[12] <> "example_start" then do
+        call linein path
+        return execution_error("unexpected sequence-ranking header: " || path)
+      end
+      header_seen = 1
+      iterate
+    end
+    if fields[0] <> 12 then do
+      call linein path
+      return execution_error("sequence-ranking field count mismatch: " || path)
+    end
+    entry = fields[1]
+    revision = meta.get(entry || "|revision")
+    if revision = "" then do
+      call linein path
+      return execution_error("sequence entry has no revision metadata: " || entry)
+    end
+    role = meta.get(entry || "|role")
+    workload = meta.get(entry || "|workload")
+    mode = meta.get(entry || "|mode")
+    window = fields[2] as .int
+    pattern = fields[9]
+    identity = window || "|" || pattern
+    stable_id = stable_identity(window, pattern)
+    if stable_id = "" then do
+      call linein path
+      return 1
+    end
+    aggregate_key = revision || "|" || stable_id
+    index_text = agg_map.get(aggregate_key)
+    index = 0
+    if index_text = "" then do
+      agg_count = agg_count + 1
+      index = agg_count
+      call agg_map.put(aggregate_key, index)
+      call agg_initialize_num index
+      call agg_set_text index, "revision", revision
+      call agg_set_text index, "role", role
+      call agg_set_text index, "identity", identity
+      call agg_set_text index, "stable_id", stable_id
+      agg_window[index] = window
+      call agg_set_text index, "pattern", pattern
+      call agg_set_text index, "example_module", fields[11]
+      agg_example_start[index] = fields[12] as .int
+      call role_agg.put(role || "|" || stable_id, index)
+    end
+    else index = index_text as .int
+    call agg_add_num index, "count", fields[4] as .int
+    call agg_add_num index, "sites", fields[5] as .int
+    call agg_add_num index, "modules", fields[6] as .int
+    call agg_max_num index, "max_sites", fields[5] as .int
+    call agg_max_num index, "max_modules", fields[6] as .int
+    call agg_max_num index, "max_symbols", fields[7] as .int
+    call agg_append_unique index, "entry", entry
+    call agg_append_unique index, "workload", workload
+    call agg_append_unique index, "mode", mode
+    call agg_append_unique index, "rxseq_status", fields[8]
+    call agg_append_unique index, "evidence", meta.get(entry || "|evidence")
+
+    work_key = revision || "|" || workload || "|" || stable_id
+    work_index_text = work_map.get(work_key)
+    work_index = 0
+    if work_index_text = "" then do
+      work_count = work_count + 1
+      work_index = work_count
+      call work_map.put(work_key, work_index)
+      call work_initialize_num work_index
+      call work_set_text work_index, "revision", revision
+      call work_set_text work_index, "role", role
+      call work_set_text work_index, "workload", workload
+      call work_set_text work_index, "identity", identity
+      call work_set_text work_index, "stable_id", stable_id
+      work_window[work_index] = window
+      call work_set_text work_index, "pattern", pattern
+    end
+    else work_index = work_index_text as .int
+    call work_add_num work_index, "count", fields[4] as .int
+    call work_add_num work_index, "sites", fields[5] as .int
+    call work_add_num work_index, "modules", fields[6] as .int
+    call work_max_num work_index, "max_sites", fields[5] as .int
+    call work_max_num work_index, "max_modules", fields[6] as .int
+    call work_append_unique work_index, "entry", entry
+    call work_append_unique work_index, "mode", mode
+
+    call add_int raw_rows, revision, 1
+    row_count = row_count + 1
+  end
+  call linein path
+  if \header_seen | row_count = 0 then
+    return execution_error("sequence-ranking input is empty: " || path)
+  return 0
+
+global_better: procedure = .int expose agg_pattern agg_window agg_dynamic_count agg_max_sites agg_max_modules agg_entry_count agg_workload_count agg_mode_count
+  arg left_index = .int, right_index = .int
+  if right_index = 0 then return 1
+  fields = .string[]
+  fields[1] = "workload_count"
+  fields[2] = "entry_count"
+  fields[3] = "mode_count"
+  fields[4] = "max_sites"
+  fields[5] = "max_modules"
+  fields[6] = "count"
+  do i = 1 to fields[0]
+    left_value = agg_get_num(left_index, fields[i])
+    right_value = agg_get_num(right_index, fields[i])
+    if left_value > right_value then return 1
+    if left_value < right_value then return 0
+  end
+  left_window = agg_get_num(left_index, "window")
+  right_window = agg_get_num(right_index, "window")
+  if left_window < right_window then return 1
+  if left_window > right_window then return 0
+  return agg_get_text(left_index, "pattern") < agg_get_text(right_index, "pattern")
+
+insert_global_top: procedure = .void expose agg_pattern agg_window agg_dynamic_count agg_max_sites agg_max_modules agg_entry_count agg_workload_count agg_mode_count
+  arg index = .int, expose top = .int[], limit = .int
+  position = top[0] + 1
+  do i = 1 to top[0]
+    if global_better(index, top[i]) then do
+      position = i
+      leave
+    end
+  end
+  if position > limit then return
+  upper = top[0] + 1
+  if upper > limit then upper = limit
+  do i = upper to position + 1 by -1
+    top[i] = top[i - 1]
+  end
+  top[position] = index
+  return
+
+workload_better: procedure = .int expose work_pattern work_window work_dynamic_count work_max_sites work_max_modules work_entry_count work_mode_count
+  arg left_index = .int, right_index = .int
+  if right_index = 0 then return 1
+  fields = .string[]
+  fields[1] = "mode_count"
+  fields[2] = "entry_count"
+  fields[3] = "max_sites"
+  fields[4] = "max_modules"
+  fields[5] = "count"
+  do i = 1 to fields[0]
+    left_value = work_get_num(left_index, fields[i])
+    right_value = work_get_num(right_index, fields[i])
+    if left_value > right_value then return 1
+    if left_value < right_value then return 0
+  end
+  left_window = work_get_num(left_index, "window")
+  right_window = work_get_num(right_index, "window")
+  if left_window < right_window then return 1
+  if left_window > right_window then return 0
+  return work_get_text(left_index, "pattern") < work_get_text(right_index, "pattern")
+
+insert_workload_top: procedure = .void expose work_pattern work_window work_dynamic_count work_max_sites work_max_modules work_entry_count work_mode_count
+  arg index = .int, expose top = .int[], limit = .int
+  position = top[0] + 1
+  do i = 1 to top[0]
+    if workload_better(index, top[i]) then do
+      position = i
+      leave
+    end
+  end
+  if position > limit then return
+  upper = top[0] + 1
+  if upper > limit then upper = limit
+  do i = upper to position + 1 by -1
+    top[i] = top[i - 1]
+  end
+  top[position] = index
+  return
+
+select_identity: procedure = .void expose selected selected_reason selected_count
+  arg stable_id = .string, reason = .string
+  if selected.get(stable_id) = "" then do
+    call selected.put(stable_id, "1")
+    selected_count = selected_count + 1
+    call selected_reason.put(stable_id, reason)
+  end
+  else if pos(reason, selected_reason.get(stable_id)) = 0 then
+    call selected_reason.put(stable_id, selected_reason.get(stable_id) || ";" || reason)
+  return
+
+review_pattern: procedure = .string[] expose effects signals
+  arg pattern = .string
+  result = .string[]
+  complete = "complete"
+  effect_text = ""
+  control = "no"
+  liveness = "no"
+  alias = "no"
+  reference_risk = "no"
+  exception = "no"
+  interrupt = "needs-proof"
+  opaque = 0
+  opcode = .string
+  effect_class = .string
+  reads = .string
+  writes = .string
+  kills = .string
+  branch = .string
+  implicit = .string
+  semantics = .string
+  signal_state = .string
+  signal_contract = .string
+  detail = .string
+  operations = split_delimited(pattern, " | ")
+  do i = 1 to operations[0]
+    paren_at = pos("(", operations[i])
+    if paren_at = 0 then opcode = operations[i]
+    else opcode = substr(operations[i], 1, paren_at - 1)
+    effect_class = effects.get(opcode || "|class")
+    reads = effects.get(opcode || "|reads")
+    writes = effects.get(opcode || "|writes")
+    kills = effects.get(opcode || "|kills")
+    branch = effects.get(opcode || "|branch")
+    implicit = effects.get(opcode || "|implicit")
+    semantics = effects.get(opcode || "|semantics")
+    signal_state = signals.get(opcode || "|state")
+    signal_contract = signals.get(opcode || "|contract")
+    if effect_class = "" | signal_state = "" then do
+      complete = "missing:" || opcode
+      detail = opcode || "[missing]"
+    end
+    else do
+      if effect_class <> "RXOP_EFFECT_CLASSIFIED" then complete = "incomplete:" || opcode
+      detail = opcode || "[" || effect_class || ";R=" || reads || ";W=" || writes || ,
+          ";K=" || kills || ";B=" || branch || ";I=" || implicit || ,
+          ";S=" || semantics || ";SIG=" || signal_contract || "]"
+      if reads <> "RXOP_OP_NONE" | writes <> "RXOP_OP_NONE" | ,
+          kills <> "RXOP_OP_NONE" | implicit <> "RXOP_IMPLICIT_NONE" then
+        liveness = "needs-proof"
+      if branch <> "RXOP_OP_NONE" | pos("RXOP_SEM_CALL", semantics) > 0 | ,
+          pos("RXOP_SEM_RETURN", semantics) > 0 | ,
+          pos("RXOP_SEM_INDIRECT_BRANCH", semantics) > 0 then control = "yes"
+      if pos("RXOP_SEM_ALIAS_", semantics) > 0 | ,
+          pos("RXOP_SEM_INDIRECT_WRITE", semantics) > 0 then alias = "yes"
+      if pos("RXOP_SEM_REFERENCE_", semantics) > 0 | ,
+          pos("RXOP_SEM_LIFETIME_END", semantics) > 0 then reference_risk = "yes"
+      if signal_state <> "none" then exception = "yes"
+      if pos("RXOP_SEM_OPAQUE", semantics) > 0 then opaque = 1
+      if pos("RXOP_SEM_CALL", semantics) > 0 | ,
+          pos("RXOP_SEM_RETURN", semantics) > 0 | opaque then interrupt = "high"
+    end
+    if effect_text = "" then effect_text = detail
+    else effect_text = effect_text || "; " || detail
+  end
+  if complete = "complete" then semantic_review = "mechanical-complete"
+  else semantic_review = "mechanical-fail-closed"
+  if reference_risk = "yes" | alias = "yes" then owner = "compiler-or-source"
+  else if control = "yes" | opaque then owner = "none-until-runtime-proof"
+  else owner = "compiler-or-rxas"
+  proposal = "none"
+  prerequisite = "instruction-boundary and liveness proof"
+  if complete = "complete" & control = "no" & alias = "no" & ,
+      reference_risk = "no" & exception = "no" & \opaque then do
+    proposal = "peephole or emitter lowering after proof"
+    prerequisite = "liveness, destination, and interrupt-equivalence proof"
+  end
+  result[1] = semantic_review
+  result[2] = complete
+  result[3] = effect_text
+  result[4] = control
+  result[5] = liveness
+  result[6] = alias
+  result[7] = reference_risk
+  result[8] = exception
+  result[9] = interrupt
+  result[10] = owner
+  result[11] = proposal
+  result[12] = prerequisite
+  result[13] = opaque
+  return result
+
+subsumed_disposition: procedure = .string expose role_agg agg_pattern agg_dynamic_count
+  arg stable_id = .string
+  current_index = stem_int(role_agg, "current|" || stable_id)
+  candidate_index = stem_int(role_agg, "candidate|" || stable_id)
+  if current_index = 0 then return ""
+  pattern = agg_get_text(current_index, "pattern")
+  if pos("ENDLIFE_REG", pattern) = 0 then return ""
+  current_count = agg_get_num(current_index, "count")
+  candidate_count = 0
+  if candidate_index > 0 then candidate_count = agg_get_num(candidate_index, "count")
+  if candidate_count >= current_count then return ""
+  return "NR-08 current=" || current_count || ";candidate=" || candidate_count || ,
+      ";delta=" || candidate_count - current_count
+
+ledger_status: procedure = .string expose selected
+  arg stable_id = .string, review = .string[], disposition = .string
+  if disposition <> "" then return "subsumed"
+  if review[2] <> "complete" | review[4] = "yes" | review[6] = "yes" | ,
+      review[7] = "yes" | review[8] = "yes" | review[13] = "1" then return "unsafe"
+  if selected.get(stable_id) <> "" then return "candidate"
+  return "unreviewed"
+
+write_ledger: procedure = .int expose agg_count selected selected_reason role_agg ,
+    agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count
+  arg path = .string
+  output = .string[]
+  output[1] = "ledger_id,pattern_id,revision,role,normalized_pattern,window,dynamic_count,entry_count,workload_count,site_observations,max_sites_per_entry,module_observations,max_modules_per_entry,modes,optimized_occurrence,unoptimized_occurrence,entries,workloads,rxseq_statuses,example_module,example_start,evidence_links,semantic_review_status,opcode_effect_completeness,opcode_effects,control_flow_risk,liveness_risk,alias_risk,reference_risk,exception_risk,interrupt_risk,likely_owner,proposed_lowering,prerequisite,measured_disposition,status,selected,selection_reason"
+  do i = 1 to agg_count
+    identity = agg_get_text(i, "identity")
+    stable_id = agg_get_text(i, "stable_id")
+    revision = agg_get_text(i, "revision")
+    modes = agg_get_text(i, "mode")
+    opt = "no"
+    noopt = "no"
+    delimited_modes = ";" || modes || ";"
+    if pos(";opt;", delimited_modes) > 0 then opt = "yes"
+    if pos(";noopt;", delimited_modes) > 0 then noopt = "yes"
+    review = review_pattern(agg_get_text(i, "pattern"))
+    disposition = subsumed_disposition(stable_id)
+    status = ledger_status(stable_id, review, disposition)
+    selected_value = "no"
+    if selected.get(stable_id) <> "" then selected_value = "yes"
+    row = csv_field(stable_id || "@" || revision) || "," || csv_field(stable_id) || ,
+        "," || csv_field(revision) || "," || csv_field(agg_get_text(i, "role")) || ,
+        "," || csv_field(agg_get_text(i, "pattern")) || "," || ,
+        agg_get_num(i, "window") || "," || agg_get_num(i, "count") || "," || ,
+        agg_get_num(i, "entry_count") || "," || agg_get_num(i, "workload_count") || ,
+        "," || agg_get_num(i, "sites") || "," || agg_get_num(i, "max_sites") || ,
+        "," || agg_get_num(i, "modules") || "," || agg_get_num(i, "max_modules") || ,
+        "," || csv_field(modes) || "," || opt || "," || noopt || "," || ,
+        csv_field(agg_get_text(i, "entry")) || "," || ,
+        csv_field(agg_get_text(i, "workload")) || "," || ,
+        csv_field(agg_get_text(i, "rxseq_status")) || "," || ,
+        csv_field(agg_get_text(i, "example_module")) || "," || ,
+        agg_get_num(i, "example_start") || "," || ,
+        csv_field(agg_get_text(i, "evidence")) || "," || csv_field(review[1]) || ,
+        "," || csv_field(review[2]) || "," || csv_field(review[3]) || "," || ,
+        review[4] || "," || review[5] || "," || review[6] || "," || review[7] || ,
+        "," || review[8] || "," || review[9] || "," || csv_field(review[10]) || ,
+        "," || csv_field(review[11]) || "," || csv_field(review[12]) || "," || ,
+        csv_field(disposition) || "," || status || "," || selected_value || "," || ,
+        csv_field(selected_reason.get(stable_id))
+    output[output[0] + 1] = row
+  end
+  return write_lines(path, output)
+
+markdown_pattern: procedure = .string
+  arg value = .string
+  return changestr("|", value, "\|")
+
+write_markdown: procedure = .int expose agg_count revisions raw_rows selected selected_count role_agg effects ,
+    agg_revision agg_role agg_identity agg_stable_id agg_pattern agg_example_module agg_entry agg_workload agg_mode agg_rxseq_status agg_evidence agg_window agg_example_start agg_dynamic_count agg_sites agg_modules agg_max_sites agg_max_modules agg_max_symbols agg_entry_count agg_workload_count agg_mode_count
+  arg path = .string, global_top = .int[], workload_rows = .string[]
+  unreviewed = 0
+  unsafe = 0
+  subsumed = 0
+  candidates = 0
+  reviewed = 0
+  selected_candidates = .int[]
+  selected_subsumed = .int[]
+  do i = 1 to agg_count
+    stable_id = agg_get_text(i, "stable_id")
+    review = review_pattern(agg_get_text(i, "pattern"))
+    disposition = subsumed_disposition(stable_id)
+    status = ledger_status(stable_id, review, disposition)
+    if status = "unreviewed" then unreviewed = unreviewed + 1
+    else do
+      reviewed = reviewed + 1
+      if status = "unsafe" then unsafe = unsafe + 1
+      else if status = "subsumed" then do
+        subsumed = subsumed + 1
+        if selected.get(stable_id) <> "" & agg_get_text(i, "role") = "historical" then
+          call insert_global_top i, selected_subsumed, 20
+      end
+      else if status = "candidate" then do
+        candidates = candidates + 1
+        if selected.get(stable_id) <> "" & agg_get_text(i, "role") = "historical" then
+          call insert_global_top i, selected_candidates, 12
+      end
+    end
+  end
+
+  output = .string[]
+  output[1] = "# NR-09 RXSEQ candidate decision view"
+  output[2] = ""
+  output[3] = "Deterministic post-processing of revision-labelled retained RXSEQ evidence. Dynamic counts are bounded observations from each exact cell; site/module columns are per-entry observations and maxima, not a guessed cross-image union. No row is an accepted fusion."
+  output[4] = ""
+  output[5] = "## Evidence revisions"
+  output[6] = ""
+  output[7] = "| Revision | Role | Input rows |"
+  output[8] = "|---|---|---:|"
+  do i = 1 to revisions[0]
+    revision = revisions[i]
+    role = "unknown"
+    do j = 1 to agg_count
+      if agg_get_text(j, "revision") = revision then do
+        role = agg_get_text(j, "role")
+        leave
+      end
+    end
+    output[output[0] + 1] = "| " || revision || " | " || role || " | " || ,
+        stem_int(raw_rows, revision) || " |"
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "Unique revision-pattern ledger rows: " || agg_count || ,
+      ". Stable identities selected by global/per-workload deduplication: " || selected_count || "."
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Reviewed | Unreviewed | Unsafe | Subsumed | Candidate |"
+  output[output[0] + 1] = "|---:|---:|---:|---:|---:|"
+  output[output[0] + 1] = "| " || reviewed || " | " || unreviewed || " | " || ,
+      unsafe || " | " || subsumed || " | " || candidates || " |"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "`unsafe` is a mechanical fail-closed classification (unknown/conservative effects or control/alias/reference/throw/opaque risk), not proof that a future transform is impossible. `candidate` still requires the recorded liveness and interrupt-equivalence proof."
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Global top 25"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "Ordering is workload count, entry/mode breadth, maximum per-entry sites/modules, dynamic count, shorter window, then normalized pattern."
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Rank | ID | Workloads | Modes | Max sites | Max modules | Count | Status | Pattern |"
+  output[output[0] + 1] = "|---:|---|---:|---:|---:|---:|---:|---|---|"
+  do rank = 1 to global_top[0]
+    i = global_top[rank]
+    stable_id = agg_get_text(i, "stable_id")
+    review = review_pattern(agg_get_text(i, "pattern"))
+    status = ledger_status(stable_id, review, subsumed_disposition(stable_id))
+    output[output[0] + 1] = "| " || rank || " | " || agg_get_text(i, "stable_id") || ,
+        " | " || agg_get_num(i, "workload_count") || " | " || ,
+        agg_get_num(i, "mode_count") || " | " || agg_get_num(i, "max_sites") || ,
+        " | " || agg_get_num(i, "max_modules") || " | " || ,
+        agg_get_num(i, "count") || " | " || status || " | " || ,
+        markdown_pattern(agg_get_text(i, "pattern")) || " |"
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Top 10 per workload after stable-ID dedup"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Workload | Rank | ID | Count | Site observations | Module observations | Pattern |"
+  output[output[0] + 1] = "|---|---:|---|---:|---:|---:|---|"
+  do i = 1 to workload_rows[0]
+    fields = split_delimited(workload_rows[i], "1f"x)
+    output[output[0] + 1] = "| " || fields[1] || " | " || fields[2] || " | " || ,
+        fields[3] || " | " || fields[4] || " | " || fields[5] || " | " || ,
+        fields[6] || " | " || markdown_pattern(fields[7]) || " |"
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Strongest bounded next candidates"
+  output[output[0] + 1] = ""
+  if selected_candidates[0] = 0 then
+    output[output[0] + 1] = "No selected pattern passed the mechanical prefilter; retain all as unsafe/unreviewed."
+  else do
+    output[output[0] + 1] = "| ID | Revision | Count | Pattern | Required proof |"
+    output[output[0] + 1] = "|---|---|---:|---|---|"
+    limit = selected_candidates[0]
+    if limit > 12 then limit = 12
+    do rank = 1 to limit
+      i = selected_candidates[rank]
+      review = review_pattern(agg_get_text(i, "pattern"))
+      output[output[0] + 1] = "| " || agg_get_text(i, "stable_id") || " | " || ,
+          agg_get_text(i, "revision") || " | " || agg_get_num(i, "count") || ,
+          " | " || markdown_pattern(agg_get_text(i, "pattern")) || " | " || ,
+          review[12] || " |"
+    end
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## NR-08-subsumed sequence families"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "Patterns containing `ENDLIFE_REG` are marked subsumed only when the exact aggregated current 2.2d count is lower in the frozen NR-08 candidate. Remaining candidate occurrences are retained as conservative/reference/generated behavior, not promoted."
+  output[output[0] + 1] = ""
+  if selected_subsumed[0] = 0 then output[output[0] + 1] = "No selected family was demoted by NR-08."
+  else do
+    output[output[0] + 1] = "| ID | Pattern | Measured disposition |"
+    output[output[0] + 1] = "|---|---|---|"
+    limit = selected_subsumed[0]
+    if limit > 20 then limit = 20
+    do rank = 1 to limit
+      i = selected_subsumed[rank]
+      stable_id = agg_get_text(i, "stable_id")
+      output[output[0] + 1] = "| " || agg_get_text(i, "stable_id") || " | " || ,
+          markdown_pattern(agg_get_text(i, "pattern")) || " | " || ,
+          subsumed_disposition(stable_id) || " |"
+    end
+  end
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Production follow-up"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "Use the selected mechanically complete candidates as a review queue only. For one candidate at a time, prove operand liveness/aliasing, exception and VM interrupt-boundary equivalence, decide compiler versus RXAS ownership, add generated structural tests, then run the performance programme's formal Release verdict. No opcode or fusion is authorized by this ledger."
+  return write_lines(path, output)
+
+sha256_file: procedure = .string
+  arg path = .string
+  command = .string[]
+  command[1] = "cmake"
+  command[2] = "-E"
+  command[3] = "sha256sum"
+  command[4] = path
+  out = .string[]
+  err = .string[]
+  address crexx "run :command[]" output out error err
+  if rc <> 0 | out[0] = 0 then return ""
+  return lower(word(out[1], 1))
+
+write_run_state: procedure = .int expose effect_count signal_count agg_count work_count selected_count revisions raw_rows sequence_sources
+  arg path = .string, manifest_path = .string, entries_path = .string, ,
+      effects_path = .string, signals_path = .string
+  output = .string[]
+  output[1] = "schema=2"
+  output[2] = "effect_rows=" || effect_count
+  output[3] = "signal_rows=" || signal_count
+  output[4] = "aggregate_rows=" || agg_count
+  output[5] = "workload_aggregate_rows=" || work_count
+  output[6] = "selected_pattern_ids=" || selected_count
+  output[7] = "manifest_sha256=" || sha256_file(manifest_path)
+  output[8] = "entry_metadata_sha256=" || sha256_file(entries_path)
+  output[9] = "opcode_effects_sha256=" || sha256_file(effects_path)
+  output[10] = "opcode_signals_sha256=" || sha256_file(signals_path)
+  do i = 1 to sequence_sources[0]
+    output[output[0] + 1] = "sequence_input_" || i || "_sha256=" || ,
+        sha256_file(sequence_sources[i])
+  end
+  do i = 1 to revisions[0]
+    output[output[0] + 1] = "revision_rows|" || revisions[i] || "|" || ,
+        stem_int(raw_rows, revisions[i])
+  end
+  return write_lines(path, output)
+
+write_lines: procedure = .int
+  arg path = .string, output = .string[]
+  out = .string[]
+  err = .string[]
+  address crexx "rm :path" output out error err
+  do i = 1 to output[0]
+    if lineout(path, output[i]) <> 0 then do
+      call lineout path
+      return execution_error("could not write output: " || path)
+    end
+  end
+  call lineout path
+  return 0
+
+write_checksums: procedure = .int
+  arg directory = .string
+  names = .string[]
+  names[1] = "decision-view.md"
+  names[2] = "run-state.txt"
+  names[3] = "sequence-ledger.csv"
+  output = .string[]
+  do i = 1 to names[0]
+    hash = sha256_file(directory || "/" || names[i])
+    if hash = "" then return execution_error("could not hash output: " || names[i])
+    output[i] = hash || "  " || names[i]
+  end
+  return write_lines(directory || "/checksums.sha256", output)

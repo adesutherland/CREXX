@@ -1,0 +1,10 @@
+options levelg
+namespace gate_f_dynamic_task_target
+
+worker: task = .int
+  return 1
+
+main: procedure = .int
+  selected = "gate_f_dynamic_task_target.worker"
+  target = task selected
+  return 0

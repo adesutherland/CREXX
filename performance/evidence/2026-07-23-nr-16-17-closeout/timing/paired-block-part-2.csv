@@ -1,0 +1,12 @@
+workload,vm,metric,pairs,before_median,after_median,min_percent,q1_percent,median_percent,q3_percent,max_percent,mean_percent,mean_95_ci_low_percent,mean_95_ci_high_percent,favorable,total,interval_result,guard_hit
+Mandelbrot,rxbvm,normalized_work_per_second,12,2925.500752,2916.787852,-15.108862,-0.809579,-0.474629,0.153511,0.716412,-1.471083,-4.224336,1.282170,4,12,noisy_inconclusive,no
+Towers,rxvm,normalized_work_per_second,12,14.729461,14.574338,-2.276536,-1.292158,-0.737550,-0.111823,1.408232,-0.633728,-1.337779,0.070324,3,12,noisy_inconclusive,no
+Towers,rxbvm,normalized_work_per_second,12,14.355420,14.317201,-2.216016,-1.131319,0.335288,0.610106,1.725294,-0.111575,-0.933373,0.710224,7,12,noisy_inconclusive,no
+Storage,rxvm,normalized_work_per_second,12,5.692061,5.676182,-1.078698,-0.790419,-0.240848,0.108887,1.641878,-0.111853,-0.674341,0.450635,3,12,noisy_inconclusive,no
+Storage,rxbvm,normalized_work_per_second,12,5.635907,5.680219,-1.115947,-0.654340,0.818697,2.116057,3.304514,0.856455,-0.188435,1.901346,7,12,noisy_inconclusive,no
+List,rxvm,normalized_work_per_second,12,509.070374,550.952206,7.189636,7.720142,8.205744,8.693137,11.098596,8.461897,7.712529,9.211264,12,12,clear_favorable,no
+List,rxbvm,normalized_work_per_second,12,440.539309,472.120134,5.165292,6.849318,7.505888,7.738419,13.138041,7.610578,6.392148,8.829007,12,12,clear_favorable,no
+JSON,rxvm,normalized_work_per_second,12,18834.390278,19478.881063,0.266877,1.870879,2.266942,4.175309,7.866921,3.035558,1.711587,4.359529,12,12,clear_favorable,no
+JSON,rxbvm,normalized_work_per_second,12,15355.833721,15934.274313,-0.012550,3.183172,4.030239,4.730975,5.504663,3.731270,2.747559,4.714981,11,12,clear_favorable,no
+RexxCPS,rxvm,benchmark_rate,12,28107878.500000,28877976.000000,0.234974,0.778148,1.846385,3.072933,6.711569,2.384019,1.090469,3.677569,12,12,clear_favorable,no
+RexxCPS,rxbvm,benchmark_rate,12,26234748.500000,26957474.000000,0.341494,1.068881,2.196725,4.398909,13.226357,3.375078,1.123342,5.626814,12,12,clear_favorable,no

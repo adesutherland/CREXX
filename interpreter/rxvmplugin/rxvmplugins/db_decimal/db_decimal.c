@@ -141,9 +141,50 @@ static const long double powers_of_10[] = {
     100000000000000000.0L, 1000000000000000000.0L
 };
 
+static numeric_standard getNumericStandard(decplugin *plugin) {
+    if (plugin->num_context &&
+        plugin->num_context->standard == NUMERIC_STANDARD_CLASSIC) {
+        return NUMERIC_STANDARD_CLASSIC;
+    }
+    return NUMERIC_STANDARD_COMMON;
+}
+
+static size_t getComparisonDigits(decplugin *plugin) {
+    size_t digits = ((dbcontext*)(plugin->base.private_context))->digits;
+    numeric_context *num_context = plugin->num_context;
+
+    if (num_context && num_context->fuzz > 0) {
+        int requested_digits = num_context->digits - num_context->fuzz;
+        if (requested_digits < 1) requested_digits = 1;
+        if ((size_t)requested_digits < digits) digits = (size_t)requested_digits;
+    }
+    return digits;
+}
+
+/* C roundl() is half away from zero.  Common REXX requires half-even, while
+ * Classic REXX retains the half-up/away behavior. */
+static long double round_scaled(long double value, numeric_standard standard) {
+    long double lower;
+    long double fraction;
+
+    if (standard == NUMERIC_STANDARD_CLASSIC) return roundl(value);
+
+    lower = floorl(value);
+    fraction = value - lower;
+    if (fraction < 0.5L) return lower;
+    if (fraction > 0.5L) return lower + 1.0L;
+    if (fmodl(lower, 2.0L) == 0.0L) return lower;
+    return lower + 1.0L;
+}
+
 
 // Rounding a long double to a given number of significant digits
-long double round_decimal(long double value, size_t significant_digits) {
+static long double round_decimal(long double value, size_t significant_digits,
+                                 numeric_standard standard) {
+    // NaN is preserved for the caller's normal decimal signal handling.
+    if (isnan(value)) {
+        return value;
+    }
     // Check for overflow
     if (value == HUGE_VALL || value == LDBL_MAX) {
         return HUGE_VALL;
@@ -183,11 +224,6 @@ long double round_decimal(long double value, size_t significant_digits) {
     }
     int exponent_shift = (int)(significant_digits) - 1 - exponent;
 
-    // Fast path: no rounding needed because we already have the digits requested
-    if (exponent_shift == 0) {
-        return value;
-    }
-
     /* - Clamping seens unecessary
     // Clamping to avoid overflow
 #define CLAMP 4900
@@ -225,39 +261,20 @@ long double round_decimal(long double value, size_t significant_digits) {
     long double scaled = value * multiplier;
 
     // Round to the nearest integer
-    long double rounded = roundl(scaled);
+    long double rounded = round_scaled(scaled, standard);
 
     // Scale back to the original magnitude
     return rounded / multiplier;
 }
 
 /* Ensure that the decNumber is big enough to hold the number */
-static void EnsureCapacity(value *number) {
+static void EnsureCapacity(decplugin *plugin, value *number) {
     size_t size = sizeof(long double);
-    /* If the value has a rxvmplugin buffer already */
-    if (number->decimal_value) {
-
-        /* If the size is bigger than the current size, reallocate the memory */
-        if (size > number->decimal_buffer_length) {
-            /* Allocate the new memory */
-            void *new_value = realloc(number->decimal_value, size);
-
-            /* If the reallocation was unsuccessful, panic as per crexx standard behavior */
-            if (new_value == NULL) {
-                RX_PANIC_OOM("realloc db_decimal value", size, "decimal value");
-            }
-            number->decimal_value = new_value;
-            number->decimal_buffer_length = size;
-        }
-        number->decimal_value_length = size;
-    }
-    else {
-        /* Allocate the memory for the decNumber */
-        number->decimal_value = malloc(size);
-        number->decimal_buffer_length = size;
-        number->decimal_value_length = size;
-    }
+    if (!plugin->reserve_decimal(number, size))
+        RX_PANIC_OOM("reserve db_decimal sidecar payload", size,
+                     "decimal value");
 }
+
 
 /* Definitions the rxvmplugin functions */
 
@@ -266,15 +283,39 @@ static size_t getDigits(decplugin *plugin) {
     return ((dbcontext*)(plugin->base.private_context))->digits;
 }
 
-/* Get the required string size for the rxvmplugin context */
-static size_t getRequiredStringSize(decplugin *plugin) {
-    return plugin->num_context->digits + 14;
+/* Long-double storage has a fixed host precision, but retain the same
+ * value-aware sizing contract as the arbitrary-precision provider. */
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
+    size_t digits = plugin->num_context
+            ? plugin->num_context->digits : DEFAULT_NUMERIC_DIGITS;
+    /* C90 has LDBL_DIG but not the C11 LDBL_DECIMAL_DIG macro. Four extra
+     * significant digits conservatively cover the supported binary long-
+     * double formats; this value sizes storage and does not set precision. */
+    size_t host_digits = (size_t)LDBL_DIG + 4u;
+    (void)number;
+    if (host_digits > digits) digits = host_digits;
+    return digits > SIZE_MAX - 14u ? SIZE_MAX : digits + 14u;
+}
+
+static void decimalExtract(decplugin *plugin, char *coefficient,
+                           rxinteger *exponent, value *decimal);
+
+static void initLocalStringValue(decplugin *plugin, value *local) {
+    size_t capacity = getRequiredStringSize(plugin, NULL);
+    memset(local, 0, sizeof(*local));
+    if (!plugin->reserve_string(local, capacity))
+        RX_PANIC_OOM("reserve db_decimal temporary string sidecar", capacity,
+                     "decimal formatting");
+}
+
+static void freeLocalStringValue(decplugin *plugin, value *local) {
+    plugin->release_value_storage(local);
 }
 
 /* Convert a string to a rxvmplugin number */
 static void decimalFromString(decplugin *plugin, value *result, const char *string) {
     char *endptr;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double *number = result->decimal_value;
     CLEAR_ERRNO;
 
@@ -298,34 +339,51 @@ static void decimalFromString(decplugin *plugin, value *result, const char *stri
     // Convert to double
     *number = strtold(string, &endptr);
     if (endptr == string) *number = NAN;
-    else *number = round_decimal(*number, ((dbcontext*)(plugin->base.private_context))->digits);
+    else *number = round_decimal(*number,
+                                 ((dbcontext*)(plugin->base.private_context))->digits,
+                                 getNumericStandard(plugin));
     check_signal(plugin, *number);
 }
 
 /* Convert a rxvmplugin number to a string */
 /* The string must be allocated by the caller and should be at least
- * getRequiredStringSize() bytes */
+ * getRequiredStringSize(plugin, number) bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
-    long double value = *(long double*)number->decimal_value;
-#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__)) 
-    int digits = (int)((dbcontext*)(plugin->base.private_context))->digits;
-#endif    
-    // Handle special cases
-    if (isnan(value)) {
+    numeric_context default_context = {
+        DEFAULT_NUMERIC_DIGITS, DEFAULT_NUMERIC_FUZZ, DEFAULT_NUMERIC_FORM,
+        DEFAULT_NUMERIC_CASE, NUMERIC_STANDARD_COMMON
+    };
+    numeric_context *num_context = plugin->num_context ?
+                                   plugin->num_context : &default_context;
+    value coefficient_value;
+    value exponent_value;
+    value formatted_value;
+
+    /* Match mc_decimal's total DTOS contract, including logical absence when
+     * lazy backing storage remains allocated with a zero payload length. */
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    if (!number->decimal_value || rxvm_value_decimal_length(number) == 0) {
         strcpy(string, "nan");
         return;
     }
-    if (value == HUGE_VALL || value == LDBL_MAX) {
+    long double decimal_value = *(long double*)number->decimal_value;
+    // Handle special cases
+    if (isnan(decimal_value)) {
+        strcpy(string, "nan");
+        return;
+    }
+    if (decimal_value == HUGE_VALL || decimal_value == LDBL_MAX) {
         strcpy(string, "inf");
         return;
     }
-    if (value == -HUGE_VALL || value == -LDBL_MAX) {
+    if (decimal_value == -HUGE_VALL || decimal_value == -LDBL_MAX) {
         strcpy(string, "-inf");
         return;
     }
-    if (value == 0.0) {
+    if (decimal_value == 0.0) {
         // Handle signed zero
-        if (signbit(value)) {
+        if (signbit(decimal_value)) {
             strcpy(string, "-0");
         }
         else {
@@ -333,27 +391,37 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         }
         return;
     }
-#if defined(__APPLE__) && (defined(__aarch64__) || defined(__arm64__))
-    sprintf(string, "%.*LG", digits, value);
-#else
-    sprintf(string, "%.*LG", plugin->num_context->digits, value);
-#endif    
+    initLocalStringValue(plugin, &coefficient_value);
+    memset(&exponent_value, 0, sizeof(exponent_value));
+    initLocalStringValue(plugin, &formatted_value);
+    decimalExtract(plugin, coefficient_value.string_value,
+                   &exponent_value.int_value, (value*)number);
+    coefficient_value.string_length = strlen(coefficient_value.string_value);
+    plugin->format_number_components(num_context, &coefficient_value,
+                                     &exponent_value, &formatted_value);
+    strcpy(string, formatted_value.string_value);
+    freeLocalStringValue(plugin, &coefficient_value);
+    freeLocalStringValue(plugin, &formatted_value);
 
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
 }
 
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
-    EnsureCapacity(result);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    CLEAR_ERRNO;
+    EnsureCapacity(plugin, result);
     long double *number = result->decimal_value;
     *number = (long double)value;
-    *number = round_decimal(*number, ((dbcontext*)(plugin->base.private_context))->digits);
-    check_signal(plugin, *number);
+    *number = round_decimal(*number,
+                            ((dbcontext*)(plugin->base.private_context))->digits,
+                            getNumericStandard(plugin));
+    CLEAR_ERRNO;
 }
 
 /* Convert a rxvmplugin number to an int */
-
-/* Needed forward declaration */
-static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *exponent, value *decimal);
 
 /* Precompute 10^decimal_digits to avoid repeated computation */
 static const rxinteger int_powers_of_10[] = {
@@ -470,7 +538,7 @@ void decimalFromDouble(decplugin *plugin, value *result, double input) {
     // Otherwise we get lots of trailing "9s" in the result because of double precision limitations.
     // Special case for 0 and -0
     if (input == 0.0) {
-        EnsureCapacity(result);
+        EnsureCapacity(plugin, result);
         long double *number = result->decimal_value;
         if (signbit(input)) {
             *number = -0.0;
@@ -504,11 +572,13 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
 /* Add two rxvmplugin numbers */
 static void decimalAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
 
     number = *(long double*)op1->decimal_value + *(long double*)op2->decimal_value;
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -516,10 +586,12 @@ static void decimalAdd(decplugin *plugin, value *result, const value *op1, const
 /* Subtract two rxvmplugin numbers */
 static void decimalSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value - *(long double*)op2->decimal_value;
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -527,10 +599,12 @@ static void decimalSub(decplugin *plugin, value *result, const value *op1, const
 /* Multiply two rxvmplugin numbers */
 static void decimalMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value * *(long double*)op2->decimal_value;
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -538,10 +612,12 @@ static void decimalMul(decplugin *plugin, value *result, const value *op1, const
 /* Divide two rxvmplugin numbers */
 static void decimalDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = *(long double*)op1->decimal_value / *(long double*)op2->decimal_value;
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -549,10 +625,12 @@ static void decimalDiv(decplugin *plugin, value *result, const value *op1, const
 /* Power two rxvmplugin numbers */
 static void decimalPow(decplugin *plugin, value *result, const value *op1, const value *op2) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number;
     number = powl(*(long double*)op1->decimal_value, *(long double*)op2->decimal_value);
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -561,14 +639,16 @@ static void decimalPow(decplugin *plugin, value *result, const value *op1, const
 static void decimalNeg(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
     if (result->decimal_value != op1->decimal_value)
-        EnsureCapacity(result);
+        EnsureCapacity(plugin, result);
     long double *op = op1->decimal_value;
     long double number;
     if (*op == 0.0L) {
         number = 0.0L;
     } else {
         number = -(*op);
-        number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+        number = round_decimal(number,
+                               ((dbcontext*)(plugin->base.private_context))->digits,
+                               getNumericStandard(plugin));
         check_signal(plugin, number);
     }
     *((long double*)result->decimal_value) = number;
@@ -590,8 +670,10 @@ static int decimalCompare(decplugin *plugin, const value *op1, const value *op2)
     }
 
     // Round numbers to digits
-    number1 = round_decimal(number1, ((dbcontext*)(plugin->base.private_context))->digits);
-    number2 = round_decimal(number2, ((dbcontext*)(plugin->base.private_context))->digits);
+    number1 = round_decimal(number1, getComparisonDigits(plugin),
+                            getNumericStandard(plugin));
+    number2 = round_decimal(number2, getComparisonDigits(plugin),
+                            getNumericStandard(plugin));
 
     if (number1 < number2) return -1;
     if (number1 > number2) return 1;
@@ -637,8 +719,13 @@ static int decimalCompareString(decplugin *plugin, const value *op1, const char 
         return 0;
     }
     // Round numbers to digits
-    number1 = round_decimal(number1, ((dbcontext*)(plugin->base.private_context))->digits);
-    number2 = round_decimal(number2, ((dbcontext*)(plugin->base.private_context))->digits);
+    number1 = round_decimal(number1, getComparisonDigits(plugin),
+                            getNumericStandard(plugin));
+    number2 = round_decimal(number2,
+                            ((dbcontext*)(plugin->base.private_context))->digits,
+                            getNumericStandard(plugin));
+    number2 = round_decimal(number2, getComparisonDigits(plugin),
+                            getNumericStandard(plugin));
     if (number1 < number2) return -1;
     if (number1 > number2) return 1;
     return 0;
@@ -673,7 +760,8 @@ static void trim_numeric_trailing_zeros(char *str) {
 /* Extract the coefficient, exponent and sign from a rxvmplugin number.
  * - `decimal` contains the float value.
  * - `coefficient' will store the coefficient as a string (or nan, inf, -inf).
- *    It must be allocated by the caller and should be at least getRequiredStringSize()
+ *    It must be allocated by the caller and should be at least
+ *    getRequiredStringSize(plugin, decimal)
  *    bytes (too big but simple for the caller)
  * - `exponent` will store the exponent as an integer.
  * Normalized, round to context precision/digits, trim trailing zeros.
@@ -764,11 +852,13 @@ static int decimalIsZero(decplugin *plugin, const value *number) {
 /* Truncate the decimal value to an integer */
 static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number = *(long double*)op1->decimal_value;
     // Truncate the decimal part
     number = truncl(number);
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -776,11 +866,13 @@ static void decimalTruncate(decplugin *plugin, value *result, const value *op1) 
 /* Round the decimal value to the nearest integer */
 static void decimalRound(decplugin *plugin, value *result, const value *op1) {
     CLEAR_ERRNO;
-    EnsureCapacity(result);
+    EnsureCapacity(plugin, result);
     long double number = *(long double*)op1->decimal_value;
     // Round to the nearest integer
     number = roundl(number);
-    number = round_decimal(number, ((dbcontext*)(plugin->base.private_context))->digits);
+    number = round_decimal(number,
+                           ((dbcontext*)(plugin->base.private_context))->digits,
+                           getNumericStandard(plugin));
     check_signal(plugin, number);
     *((long double*)result->decimal_value) = number;
 }
@@ -803,6 +895,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
     plugin->base.type = RXVM_PLUGIN_DECIMAL;
+    plugin->base.signal_number = RXSIGNAL_NONE;
+    plugin->base.signal_string = NULL;
     plugin->base.private_context = context;
     plugin->base.name = "dbdecimal";
     plugin->base.version = "0.1";

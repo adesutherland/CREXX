@@ -1,0 +1,399 @@
+/*
+ * Named execution-local queue example.
+ *
+ * PUSH, QUEUE, PULL, PEEK, and QUEUED never receive a queue name.
+ * They always operate on the queue selected by RXQUEUE.
+ */
+
+options levelb
+import rxfnsb
+
+
+main: procedure = .int
+    arg command = .string[]
+
+    errors = 0
+    case_no = 1
+
+    say "Default queue: " || rxqueue("QUERY")
+
+    call queue "job:alpha"
+    call queue "job:beta"
+    call push  "job:urgent"
+
+    say "SESSION contains " || queued() || " jobs"
+
+    /* Use PEEK to inspect the queue without consuming entries. */
+    say "(-99)" "'"peek(-99)"'"
+    say "(0)"   "'"peek(0)"'"
+    say "()"    "'"peek()"'"
+    say "(1)"   "'"peek(1)"'"
+    say "(2)"   "'"peek(2)"'"
+    say "(3)"   "'"peek(3)"'"
+    say "(99)"  "'"peek(99)"'"
+
+    call rxqueue "CREATE", "WORK"
+    call rxqueue "CREATE", "REPORT"
+
+    /*
+     * Move jobs from SESSION to WORK.
+     * The helper procedure sees the same execution-wide selected queue
+     * as the main program.
+     */
+    call rxqueue "SET", "SESSION"
+    call move_jobs "WORK"
+
+    call rxqueue "SET", "WORK"
+
+    say "Selected queue: " || rxqueue("QUERY")
+    say "WORK contains " || queued() || " jobs"
+
+    /*
+     * PUSH adds an urgent retry at the front while QUEUE appends
+     * normal work at the end.
+     */
+    call push  "job:retry"
+    call queue "job:gamma"
+
+    call process_jobs "REPORT"
+
+    say "REPORT contains " || queued() || " results"
+
+    report_file = "rxqueue_report.txt"
+
+    rc = rxqueue("EXPORT", "REPORT", report_file)
+    say "Exported REPORT to " || report_file || " (status " || rc || ")"
+
+    rc = rxqueue("IMPORT", "ARCHIVE", report_file)
+
+    call rxqueue "SET", "ARCHIVE"
+
+    say "ARCHIVE restored " || queued() || " results"
+
+    do while queued() > 0
+        say "restored ARCHIVE: " || pull()
+    end
+
+
+    /*--------------------------------------------------------*/
+    /* Focused named-queue regression checks.                 */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "CREATE", "SOURCE"
+    call rxqueue "CREATE", "TARGET"
+
+    call rxqueue "SET", "SOURCE"
+
+    call queue "A"
+    call queue "B"
+    call queue "C"
+
+
+    /*--------------------------------------------------------*/
+    /* COPY to an inactive destination replaces its contents. */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "SET", "TARGET"
+    call queue "stale"
+
+    call rxqueue "SET", "SOURCE"
+
+    rc = rxqueue("COPY", "source", "target")
+
+    errors = errors + check_int(case_no, 0, rc, "copy to inactive target")
+    case_no = case_no + 1
+
+    call rxqueue "SET", "TARGET"
+
+    errors = errors + check_int(case_no, 3, queued(), "inactive target replacement depth")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "A", peek(1), "inactive target first")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "C", peek(3), "inactive target last")
+    case_no = case_no + 1
+
+
+    /*--------------------------------------------------------*/
+    /* COPY also replaces an active destination.              */
+    /* Selection must remain unchanged.                       */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "CLEAR", "TARGET"
+    call queue "old-target"
+
+    rc = rxqueue("COPY", "SOURCE", "TARGET")
+
+    errors = errors + check_int(case_no, 0, rc, "copy to active target")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "TARGET", rxqueue("QUERY"),     "active target remains selected")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "A", pull(),  "active target first")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "B", pull(),  "active target second")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "C", pull(),  "active target third")
+    case_no = case_no + 1
+
+
+    /*--------------------------------------------------------*/
+    /* COPY preserves source/destination independence.        */
+    /*--------------------------------------------------------*/
+
+    rc = rxqueue("COPY", "SOURCE", "TARGET")
+
+    errors = errors + check_int(case_no, 0, rc, "copy for independence")
+    case_no = case_no + 1
+
+    call rxqueue "SET", "SOURCE"
+    call push "source-only"
+
+    call rxqueue "SET", "TARGET"
+    call queue "target-only"
+
+    call rxqueue "SET", "SOURCE"
+
+    errors = errors + check(case_no, "source-only", pull(), "source independent entry")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "A", pull(), "source independent first")
+    case_no = case_no + 1
+
+    call rxqueue "SET", "TARGET"
+
+    errors = errors + check(case_no, "A", pull(), "target independent first")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "B", pull(), "target independent second")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "C", pull(), "target independent third")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "target-only", pull(),"target independent entry")
+    case_no = case_no + 1
+
+
+    /*--------------------------------------------------------*/
+    /* COPY after CLEAR replaces destination with empty queue.*/
+    /*--------------------------------------------------------*/
+
+    call rxqueue "SET", "SOURCE"
+    call rxqueue "CLEAR", "SOURCE"
+
+    call rxqueue "SET", "TARGET"
+    call queue "stale-again"
+
+    rc = rxqueue("COPY", "SOURCE", "TARGET")
+
+    errors = errors + check_int(case_no, 0, rc, "copy cleared source")
+    case_no = case_no + 1
+
+    errors = errors + check_int(case_no, 0, queued(), "copy cleared target depth")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "", peek(),"copy cleared target empty")
+    case_no = case_no + 1
+
+
+    /*--------------------------------------------------------*/
+    /* Queue names are case-insensitive.                      */
+    /* Canonical names remain uppercase.                      */
+    /*--------------------------------------------------------*/
+
+    rc = rxqueue("CREATE", "casework")
+
+    errors = errors + check_int(case_no, 0, rc, "create mixed-case queue")
+    case_no = case_no + 1
+
+    errors = errors + check_int(case_no, 4, rxqueue("CREATE", "CASEWORK"), "reject case duplicate")
+    case_no = case_no + 1
+
+    errors = errors + check_int(case_no, 0,rxqueue("SET", "CaSeWoRk"), "set mixed-case queue")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "CASEWORK",rxqueue("QUERY"),"mixed-case query")
+    case_no = case_no + 1
+
+    errors = errors + check(case_no, "NAME=CASEWORK QUEUED=0 CURRENT=1",    rxqueue("INFO", "casework"),    "mixed-case info")
+    case_no = case_no + 1
+
+    call rxqueue "SET", "SOURCE"
+    call queue "case-source"
+
+    errors = errors + check_int(case_no, 0,    rxqueue("COPY", "sOuRcE", "tArGeT"),    "mixed-case copy")
+    case_no = case_no + 1
+
+    call rxqueue "SET", "TARGET"
+
+    errors = errors + check(case_no, "case-source", pull(),    "mixed-case copied entry")
+    case_no = case_no + 1
+
+
+    /*--------------------------------------------------------*/
+    /* Final regression summary.                              */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "SET", "SESSION"
+
+    say
+    say "============================================================"
+
+    if errors = 0 then do
+        say "PASS: named queue regressions"
+        say "Cases executed:" case_no - 1
+    end
+    else do
+        say "FAIL: named queue regressions"
+        say "Cases executed:" case_no - 1
+        say "Failures      :" errors
+    end
+
+    say "============================================================"
+    say
+
+
+    say rxqueue("QUERY")
+    say rxqueue("INFO", "ARCHIVE")
+    say "List of named queues: " rxqueue("LIST")
+
+    say "SESSION remaining: " || queued()
+
+    call rxqueue "SET", "WORK"
+    say "WORK remaining: " || queued()
+
+
+    /*--------------------------------------------------------*/
+    /* Demonstrate whole-queue COPY.                          */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "COPY", "SESSION", "SESSION-2"
+
+    say "SESSION copied to SESSION-2"
+
+    call rxqueue "SET", "SESSION-2"
+
+    say "SESSION-2 contains " || queued() || " jobs"
+
+
+    /*--------------------------------------------------------*/
+    /* Cleanup.                                               */
+    /*--------------------------------------------------------*/
+
+    call rxqueue "DELETE", "WORK"
+    call rxqueue "DELETE", "REPORT"
+    call rxqueue "DELETE", "ARCHIVE"
+    call rxqueue "DELETE", "SOURCE"
+    call rxqueue "DELETE", "TARGET"
+    call rxqueue "DELETE", "CASEWORK"
+
+    call rxqueue "SET", "SESSION"
+    call rxqueue "DELETE", "SESSION-2"
+
+    say "Deleted named queues; current queue: " || rxqueue("QUERY")
+
+    /*
+     * PULL on an empty queue reads one line from the default
+     * input stream.
+     */
+
+return errors <> 0
+
+
+/*------------------------------------------------------------*/
+/* Move all entries from the current queue to destination.    */
+/*------------------------------------------------------------*/
+
+move_jobs: procedure = .void
+    arg destination = .string
+
+    source = rxqueue("QUERY")
+
+    do while queued() > 0
+        job = pull()
+
+        call rxqueue "SET", destination
+        call queue job
+
+        call rxqueue "SET", source
+    end
+
+return
+
+
+/*------------------------------------------------------------*/
+/* Process all jobs from the current queue and append         */
+/* completion records to another named queue.                 */
+/*------------------------------------------------------------*/
+
+process_jobs: procedure = .void
+    arg report_queue = .string
+
+    source = rxqueue("QUERY")
+
+    do while queued() > 0
+        job = pull()
+
+        call rxqueue "SET", report_queue
+        call queue "completed: " || job
+
+        call rxqueue "SET", source
+    end
+
+return
+
+
+/*------------------------------------------------------------*/
+/* Integer assertion helper.                                  */
+/*                                                            */
+/* Reports both successful and failed tests.                  */
+/*------------------------------------------------------------*/
+
+check_int: procedure = .int
+    arg case_no = .int, expected = .int, actual = .int, label = .string
+
+    if expected = actual then do
+        say
+        say "Case" case_no "PASS:" label
+        say "  Expected :" expected
+        say "  Actual   :" actual
+        return 0
+    end
+
+    say
+    say "Case" case_no "FAIL:" label
+    say "  Expected :" expected
+    say "  Actual   :" actual
+
+return 1
+
+
+/*------------------------------------------------------------*/
+/* String assertion helper.                                   */
+/*                                                            */
+/* Quotes expected and actual values so that empty strings    */
+/* and leading/trailing blanks remain visible.                */
+/*------------------------------------------------------------*/
+
+check: procedure = .int
+    arg case_no = .int, expected = .string, actual = .string, label = .string
+
+    if expected == actual then do
+        say
+        say "Case" case_no "PASS:" label
+        say "  Expected : '" || expected || "'"
+        say "  Actual   : '" || actual || "'"
+        return 0
+    end
+
+    say
+    say "Case" case_no "FAIL:" label
+    say "  Expected : '" || expected || "'"
+    say "  Actual   : '" || actual || "'"
+
+return 1

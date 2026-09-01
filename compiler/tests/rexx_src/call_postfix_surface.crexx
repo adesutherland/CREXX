@@ -1,0 +1,35 @@
+options levelb
+namespace call_postfix_surface
+
+main: procedure = .int
+  single = .Box()
+
+  /* Existing direct and classic CALL forms remain valid. */
+  call single.touch()
+  call observe 1
+  call observe(2)
+
+  /* Computed postfix receivers may be factories, function results or chains. */
+  call .Box().touch()
+  call makeBox().touch()
+  call makeBox().copy().touch()
+
+  say "ok"
+  return 0
+
+makeBox: procedure = .Box
+  return .Box()
+
+observe: procedure = .void
+  arg value = .int
+  return
+
+Box: class
+  *: factory
+    return
+
+  copy: method = .Box
+    return self
+
+  touch: method = .void
+    return

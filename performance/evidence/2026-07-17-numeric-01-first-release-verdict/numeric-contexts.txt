@@ -1,0 +1,66 @@
+[A-canonical-noopt workload and generated procedures]
+main()    setnumdgts 18
+cps_subroutine()    setnumdgts 18
+fail()    setnumdgts 18
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[A-canonical-opt workload and generated procedures]
+main()    setnumdgts 18
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[A-opaque-noopt workload and generated procedures]
+main()    setnumdgts 18
+cps_subroutine()    setnumdgts 18
+fail()    setnumdgts 18
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[A-opaque-opt workload and generated procedures]
+main()    setnumdgts 18
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[B-canonical-noopt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[B-canonical-opt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[B-opaque-noopt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[B-opaque-opt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[C-canonical-noopt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[C-canonical-opt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[C-opaque-noopt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+fail()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18
+[C-opaque-opt workload and generated procedures]
+main()    setnumdgts 9
+cps_subroutine()    setnumdgts 9
+__rxtrace_handler()    setnumdgts 18
+__rxtrace_reset_display_state()    setnumdgts 18

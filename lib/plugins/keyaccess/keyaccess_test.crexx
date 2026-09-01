@@ -3,9 +3,15 @@ options levelb
 import keyaccess
 /* Test script for fileio plugin */
 
+arg test_args = .string[]
+
+if test_args.0 > 0 then database_file = "keyaccess_test." || test_args.1 || ".db"
+else database_file = "keyaccess_test.db"
+backup_file = database_file || ".backup"
+
 /* openkey database */
 say "openkeying database..."
-handle = _openkey("test.db", "w+") /* Just put it in the current directory (under the cmakefile, the current bin directory) */
+handle = _openkey(database_file, "w+") /* Use a per-mode fixture so opt/noopt may run in parallel. */
 if handle < 0 then do
     say "Failed to openkey database"
     exit 1
@@ -75,6 +81,15 @@ say "listkeying all keys:"
 count = _listkey(handle)
 say count "keys found"
 
+/* Native traversal remains valid when readkey seeks the shared index file. */
+say "Native traversal with readkey:"
+key = _firstkey(handle)
+say "first key:" key
+say "value:" _readkey(handle, key)
+say "next key after readkey:" _nextkey(handle)
+say "invalid firstkey handle:" _firstkey(0)
+say "invalid nextkey handle:" _nextkey(0)
+
 /* readkey and display values */
 say ""
 say "readkey values:"
@@ -94,6 +109,16 @@ say "Keys after deletion:"
 count = _listkey(handle)
 say count "keys found"
 
+/* Deleted records must not be returned by native traversal. */
+key = _firstkey(handle)
+do while key <> "NOT_FOUND"
+    if key = "Berlin" then do
+        say "ERROR: deleted key returned by firstkey/nextkey"
+        exit 1
+    end
+    key = _nextkey(handle)
+end
+
 /* Show statistics */
 say ""
 say "Database statistics:"
@@ -111,7 +136,7 @@ else
 /* Create backup */
 say ""
 say "Creating backup..."
-call _backup handle, "test.db.backup"
+call _backup handle, backup_file
 
 /* Compact database */
 say ""

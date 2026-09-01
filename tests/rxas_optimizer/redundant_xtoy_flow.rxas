@@ -1,0 +1,168 @@
+* PERF3-11 M01 metadata-driven one-register XTOY repetition proof.
+
+itof_old_floor() .locals=24
+    load r0,3
+    itof r0
+    brt itof_old_floor_left,a0
+    br itof_old_floor_join
+itof_old_floor_left:
+    load r23,1
+itof_old_floor_join:
+    itof r0
+    ret r0
+
+ftos_repeat() .locals=24
+    load r1,1.25
+    ftos r1
+    ftos r1
+    ret r1
+
+ftos_context_write() .locals=24
+    load r2,1.25
+    ftos r2
+    setnumcas 2
+    ftos r2
+    ret r2
+
+dtos_repeat() .locals=24
+    load r3,12d
+    dtos r3
+    dtos r3
+    ret r3
+
+dtos_context_write() .locals=24
+    load r4,12d
+    dtos r4
+    setnumdgts 18
+    dtos r4
+    ret r4
+
+itod_repeat() .locals=24
+    load r5,12
+    itod r5
+    itod r5
+    ret r5
+
+itod_source_write() .locals=24
+    load r6,12
+    itod r6
+    load r6,13
+    itod r6
+    ret r6
+
+itod_context_write() .locals=24
+    load r7,12
+    itod r7
+    setnumdgts 19
+    itod r7
+    ret r7
+
+itod_skip_continuation() .locals=24
+    sigcalla xtoy_skip_signal(),"FAILURE"
+    load r8,12
+    itod r8
+    itod r8
+    ret r8
+
+itod_trace_batch() .locals=24
+    load r9,12
+    itod r9
+    .traceevent "V" 6 "R" "D" "r" 9 1 1 0 "first-decimal" ""
+    itod r9
+    .traceevent "A" 6 "R" "D" "r" 9 1 1 0 "second-decimal" ""
+    ret r9
+
+itod_link_transfer() .locals=24
+    load r10,12
+    itod r10
+    link r11,r10
+    itod r11
+    unlink r11
+    ret r10
+
+btod_repeat() .locals=26
+    load r12,1
+    btod r12
+    btod r12
+    ret r12
+
+btof_repeat() .locals=26
+    load r13,1
+    btof r13
+    btof r13
+    ret r13
+
+btos_repeat() .locals=26
+    load r14,1
+    btos r14
+    btos r14
+    ret r14
+
+ftob_repeat() .locals=26
+    load r15,1.25
+    ftob r15
+    ftob r15
+    ret r15
+
+stob_repeat() .locals=26
+    load r16,"1"
+    stob r16
+    stob r16
+    ret r16
+
+ftoi_signal_path() .locals=26
+    load r17,1.0
+    ftoi r17
+    ftoi r17
+    ret r17
+
+stof_signal_path() .locals=26
+    load r18,"1.25"
+    stof r18
+    stof r18
+    ret r18
+
+stod_signal_path() .locals=26
+    load r19,"12"
+    stod r19
+    stod r19
+    ret r19
+
+dtoi_signal_path() .locals=26
+    load r20,12d
+    dtoi r20
+    dtoi r20
+    ret r20
+
+dtob_signal_path() .locals=26
+    load r21,12d
+    dtob r21
+    dtob r21
+    ret r21
+
+ftod_signal_path() .locals=26
+    load r22,12.0
+    ftod r22
+    ftod r22
+    ret r22
+
+dtof_signal_path() .locals=26
+    load r23,12d
+    dtof r23
+    dtof r23
+    ret r23
+
+btoi_same_component() .locals=26
+    load r24,1
+    btoi r24
+    btoi r24
+    ret r24
+
+itob_same_component() .locals=26
+    load r25,1
+    itob r25
+    itob r25
+    ret r25
+
+xtoy_skip_signal() .locals=0
+    ret "__rxsignal_skip"

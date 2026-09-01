@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+towers,crexx-release-clang-o3,10-repetitions-opt,process,warmup,1,699340000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,warmup,2,759630000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,1,770872000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,2,693970000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,3,775920000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,4,702417000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,5,789646000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,6,701410000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,7,777548000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,8,715296000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,9,788072000,0,pass,,
+towers,crexx-release-clang-o3,10-repetitions-opt,process,recorded,10,760545000,0,pass,,

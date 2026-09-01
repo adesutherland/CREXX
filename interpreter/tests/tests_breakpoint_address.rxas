@@ -28,4 +28,5 @@ trace() .locals=8
     sayx "bp-symbol: "
     say r7
     bpoff
+    say "breakpoint-tests-passed"
     ret 0

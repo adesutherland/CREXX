@@ -1,0 +1,21 @@
+utc=2026-08-01T12:05:28Z
+{ 1.17 1.20 1.20 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+15681 /bin/zsh -c perf3_tmp=$(cat /tmp/crexx-perf3-03-active-dir.txt)
+{
+  date -u '+utc=%Y-%m-%dT%H:%M:%SZ'
+  sysctl -n vm.loadavg
+  pmset -g batt
+  pmset -g therm
+  pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix' || true
+} > "$perf3_tmp/prefilter-append-post-state.txt" 2>&1
+/tmp/crexx-perf3-05.9DY131/build-baseline/bin/crexx performance/tools/run_cross_runtime_matrix.crexx --nokeep --args --summary-only --measurement timing --manifest "$perf3_tmp/prefilter-matrix-v1.txt" --output-dir "$perf3_tmp/prefilter-timing-combined-22" --samples "$perf3_tmp/prefilter-timing/samples.csv" --samples "$perf3_tmp/prefilter-timing-append-01/samples.csv" > "$perf3_tmp/prefilter-combined-runner.stdout.txt" 2> "$perf3_tmp/prefilter-combined-runner.stderr.txt"
+sed -n '1,120p' "$perf3_tmp/prefilter-timing-append-01/summary.csv"
+sed -n '1,160p' "$perf3_tmp/prefilter-timing-combined-22/summary.csv"
+if test -s "$perf3_tmp/prefilter-append-runner.stderr.txt"; then sed -n '1,80p' "$perf3_tmp/prefilter-append-runner.stderr.txt"; else echo 'append runner.stderr: empty'; fi
+if test -s "$perf3_tmp/prefilter-combined-runner.stderr.txt"; then sed -n '1,80p' "$perf3_tmp/prefilter-combined-runner.stderr.txt"; else echo 'combined runner.stderr: empty'; fi
+sed -n '1,80p' "$perf3_tmp/prefilter-append-post-state.txt"

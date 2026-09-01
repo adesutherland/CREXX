@@ -22,14 +22,25 @@
  * SOFTWARE.
  */
 
-/* Explicit runtime module/plugin loader. */
+/**
+ * Explicit runtime module/plugin loader.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/loadmodule.md
+ */
 options levelb
 
 namespace rxfnsb expose loadmodule
 
+/**
+ * Load and immediately link one RXBIN or RXPLUGIN file.
+ *
+ * @param module_name explicit runtime artifact path
+ * @return positive last-loaded module number, or non-positive loader status
+ */
 loadmodule: procedure = .int
   arg module_name = .string
 
-  mod_num = 0
+  mod_num = .int
   assembler metaloadmodule mod_num, module_name
   return mod_num

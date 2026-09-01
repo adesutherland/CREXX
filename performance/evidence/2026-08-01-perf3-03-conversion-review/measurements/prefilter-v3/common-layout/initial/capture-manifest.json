@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g4a3940395980.dirty 20260801",
+  "source_manifest": "/tmp/crexx-perf3-03.TsP0ej/prefilter3-common-zero-v1.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-08-01T12:39:15+0000"
+}

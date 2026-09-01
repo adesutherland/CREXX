@@ -1,99 +1,71 @@
-/* rexx */
+/* Focused Level B SUBSTR tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+source = "René日🙂"
 
-/* SUBSTR */
-/* These from the Rexx book. */
+errors = errors + check(substr("abc", 2) = "bc", "documented omitted length")
+errors = errors + check(substr("abc", 2, 4) = "bc  ", "documented default padding")
+errors = errors + check(substr("abc", 5, 4) = "    ", "documented padding beyond end")
+errors = errors + check(substr("abc", 2, 6, ".") = "bc....", "documented custom padding")
+errors = errors + check(substr("abc", 5, 6, ".") = "......", "custom padding only")
+errors = errors + check(substr("abc", 2, 0) = "", "zero length")
+errors = errors + check(substr("abc", 5) = "", "omitted length beyond end")
+errors = errors + check(substr("abc", 2,, ".") = "bc", "omitted length with pad")
+errors = errors + check(substr("abcdefgh", 1, 8) = "abcdefgh", "whole string")
+errors = errors + check(substr(source, 2, 3) = "ené", "Unicode slice")
+errors = errors + check(substr("12345678", 5, 6, "é") = "5678éé", "Unicode padding")
+embedded_nul = "a" || d2c(0) || "bc"
+errors = errors + check(substr(embedded_nul, 2, 2) = d2c(0) || "b", "slice across embedded U+0000")
+errors = errors + check(source = "René日🙂", "source is not mutated")
 
-if substr('1',2) \= ''            then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 0 '
-  end
+large_source = ""
+x = "x"
+do i = 1 to 1000
+  assembler append large_source,x
+end
+large_expected = ""
+do i = .int(1) to 500
+  assembler append large_expected,x
+end
+dot = "."
+do i = .int(1) to 250
+  assembler append large_expected,dot
+end
+errors = errors + check(substr(large_source, 501, 750, ".") = large_expected, "substantial slice and pad")
 
-if substr('abc',2) \= 'bc'            then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 1 '
-  end
-if substr('abc',2,4) \= 'bc  '        then
-  do errors=errors+1
-    say 'SUBSTR failed in test 2 '
-  end
-if substr('abc',2,6,'.') \= 'bc....'  then
-  do errors=errors+1
-    say 'SUBSTR failed in test 3 '
-  end
-/* These from Mark Hessling. */
-if substr("foobar",2,3) \=   "oob"    then
-  do errors=errors+1
-    say 'SUBSTR failed in test 4 '
-  end
-	/* say '|'substr('foobar',3)'|' */
-if substr("foobar",3) \=   "obar"     then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 5 '
-  end
-if substr("foobar",3,6) \=   "obar  " then
-  do errors=errors+1
-    say 'SUBSTR failed in test 6 '
-  end
-if substr("foobar",3,6,'*') \=   "obar**"  then
-  do errors=errors+1
-    say 'SUBSTR failed in test 7 '
-  end
-if substr("foobar",6,3) \=   "r  "    then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 8 '
-  end
-if substr("foobar",8,3) \=   "   "    then
-  do errors=errors+1
-    say 'SUBSTR failed in test 9 '
-  end
-if substr('1234567890',5) \= '567890' then
-  do errors=errors+1
-    say 'SUBSTR failed in test 10 '
-  end
-/* say '|'substr('1234567890',5)'|' */
-if substr('1234567890',6,6,'.') \= '67890.' then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 11 '
-  end
-if substr('abc',2,4,'.') \= 'bc..'    then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 12 '
-  end
-if substr('abcdefgh',1,2,'.') \= 'ab' then
-  do errors=errors+1
-    say 'SUBSTR failed in test 13 '
-  end
-if substr('abcdefgh',2,3,'é') \= 'bcd' then
-  do errors=errors+1
-    say 'SUBSTR failed in test 14 '
-  end
-if substr("René Vincent Jansen",1,4,".") \= 'René' then
-  do
-    errors=errors+1
-    say 'SUBSTR failed in test 15 '
-  end
-/* if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then */
-/*   do errors=errors+1 */
-/*     say 'SUBSTR failed in test 16 ' */
-/*   end */ /* this is actually a case of Error 40.23:  SUBSTR argument 4 must be a single character; found "". */ 
-if substr("René Vincent Jansen",6,7,"") \= 'Vincent' then
-  do errors=errors+1
-    say 'SUBSTR failed in test 16 '
-  end
-if substr("12345678",5,6,"é") \= '5678éé' then
-  do errors=errors+1
-    say 'SUBSTR failed in test 17 '
-  end
-/* say substr("12345678",10,6,"é") */
-/* if substr("12345678",10,6,"éé") \= 'éééééé' then do errors=errors+1;  say 'need exceptions for this'; end */
-return errors<>0
+caught = 0
+do
+  ignored = substr("abc", 0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = substr("abc", 1, -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = substr("", 1, 0, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = substr("abc", 1, 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "start, length, and pad failures use signals")
+
+if errors = 0 then say "PASS: substr"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: SUBSTR" label
+  return 1

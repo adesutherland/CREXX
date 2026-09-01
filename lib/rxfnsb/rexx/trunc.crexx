@@ -22,62 +22,126 @@
  * SOFTWARE.
  */
 
-/* rexx */
-  options levelb
-
+/**
+ * Level B TRUNC implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/trunc.md
+ */
+options levelb comments_dash numeric_classic
 namespace rxfnsb expose trunc
 
+/**
+ * Truncate a decimal value to a fixed number of fractional digits.
+ *
+ * @param number decimal value
+ * @param fraction non-negative number of fractional digits
+ * @return fixed, non-exponent decimal text without rounding
+ * @signal CONVERSION_ERROR number cannot be converted to decimal
+ * @signal INVALID_ARGUMENTS fraction is negative
+ */
 trunc: procedure = .string
-       arg innum = .string, fraction = 0
-   retnum=""
-   hlen=0
-   i=0
-   ifrac=0
-   dp=0
-   schar='.'
-   char=""
-   assembler strchar schar,schar,i   /* get decimal point */
-   assembler itos schar
+  arg number = .decimal, fraction = 0
+  coefficient = .string
+  formatted = .string
+  digits = ""
+  tail = ""
+  whole = ""
+  fractional = ""
+  segment = ""
+  padding = ""
+  result = ""
+  exponent = .int
+  coefficient_length = .int
+  sign_offset = .int
+  point_position = .int
+  prefix_length = .int
+  tail_length = .int
+  digit_length = .int
+  decimal_position = .int
+  padding_count = .int
+  remaining = .int
+  start = .int
+  copy_length = .int
+  zero_character = 48
+  point_character = 46
+  minus_character = 45
+  negative = .boolean
 
- /*  assembler ftos innum      */        /* translate input from float to string */
- /* translate exponentional format to integer */
-   ppi=pos('E',innum)
-   if ppi>0 then do
-      num=substr(innum,1,ppi-1)
-      exp=substr(innum,ppi+1)
-      assembler stof num
-      assembler stoi exp
-      xnum=num*(10**exp)
-      assembler itos xnum
-      innum=xnum||'.0000000000000000'
-   end
+  if fraction < 0 then
+    assembler signal "INVALID_ARGUMENTS","TRUNC fraction must be non-negative"
 
-   Assembler strlen hlen,innum       /* determine string length              */
+  assembler dextr coefficient,exponent,number
+  formatted = coefficient || ""
+  negative = number < 0
+  assembler strlen coefficient_length,formatted
+  if negative then sign_offset = 1
+  else sign_offset = 0
 
-/* step 1 transfer all digits before decimal point */
-   do i=0 to hlen-1                  /* transfer byte by byte, until decimal point */
-      assembler strchar char,innum,i /* get next input byte  */
-      assembler itos char
-      if char=schar then do          /* is it decimal point  */
-         dp=i                        /* if yes, save offset  */
-         leave                       /* set i hlen, to abort do loop */
-      end
-      else assembler appendchar retnum,char /* if no, transfer byte  */
-   end
-   if i=0 then retnum="0"
-   if fraction=0 then return retnum  /* no fraction digits requested */
-/* step 2 transfer all fraction digits (up to max fraction) */
-   assembler appendchar retnum,schar /* set decimal point   */
-   do i=dp+1 to hlen-1               /* loop through remaining string */
-      assembler strchar char,innum,i /* fetch next char     */
-      assembler itos char
-      assembler appendchar retnum,char /* append return string */
-      ifrac=ifrac+1                    /* increase fraction count */
-      if ifrac>=fraction then leave     /* if limit reached leave loop */
-   end
-/* step 3 add padding bytes (if necessary) */
-    if ifrac< fraction then do
-      retnum=left(retnum,fraction+dp+1,'0')
-   end
+  point_position = -1
+  assembler poschar point_position,formatted,point_character
+  if point_position < 0 then do
+    digit_length = coefficient_length - sign_offset
+    start = sign_offset
+    assembler substring digits,formatted,start,digit_length
+  end
+  else do
+    prefix_length = point_position - sign_offset
+    digit_length = coefficient_length - sign_offset - 1
+    if prefix_length > 0 then do
+      start = sign_offset
+      assembler substring digits,formatted,start,prefix_length
+    end
+    tail_length = coefficient_length - point_position - 1
+    if tail_length > 0 then do
+      start = point_position + 1
+      assembler substring tail,formatted,start,tail_length
+      assembler append digits,tail
+    end
+  end
 
-return retnum
+  decimal_position = exponent + 1
+  if negative then assembler appendchar result,minus_character
+
+  if decimal_position <= 0 then assembler appendchar result,zero_character
+  else if decimal_position < digit_length then do
+    start = 0
+    assembler substring whole,digits,start,decimal_position
+    assembler append result,whole
+  end
+  else do
+    assembler append result,digits
+    padding_count = decimal_position - digit_length
+    if padding_count > 0 then do
+      assembler padstr padding,zero_character,padding_count
+      assembler append result,padding
+    end
+  end
+
+  if fraction = 0 then return result
+  assembler appendchar result,point_character
+  remaining = fraction
+  if decimal_position < 0 then do
+    padding_count = 0 - decimal_position
+    if padding_count > remaining then padding_count = remaining
+    if padding_count > 0 then do
+      assembler padstr fractional,zero_character,padding_count
+      remaining = remaining - padding_count
+    end
+    start = 0
+  end
+  else start = decimal_position
+
+  if remaining > 0 & start < digit_length then do
+    copy_length = digit_length - start
+    if copy_length > remaining then copy_length = remaining
+    assembler substring segment,digits,start,copy_length
+    assembler append fractional,segment
+    remaining = remaining - copy_length
+  end
+  if remaining > 0 then do
+    assembler padstr padding,zero_character,remaining
+    assembler append fractional,padding
+  end
+  assembler append result,fractional
+  return result

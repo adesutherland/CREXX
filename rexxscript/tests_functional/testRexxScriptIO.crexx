@@ -1,0 +1,36 @@
+/* rexx */
+options levelg
+
+import rxfnsb
+/* Host cREXX test */
+
+script = ,
+    "input = 'test_status_4_io.txt'; " || ,
+    "output = 'test_status_4_io.log'; " || ,
+    "call eraseFile(output); " || ,
+    "call lineout(output, 'System Status Report'); " || ,
+    "call lineout(output, copies('-', 50)); " || ,
+    "do while lines(input) > 0; " || ,
+    "   line = strip(linein(input)); " || ,
+    "   if line <> '' then do; " || ,
+    "      code = word(line, 1); " || ,
+    "      status = subword(line, 2); " || ,
+    "      if upper(status) <> 'RUNNING' then " || ,
+    "         status = status || ' *** ATTENTION ***'; " || ,
+    "      call lineout(output, time('l')' 'left(code, 12) || status); " || ,
+    "   end; " || ,
+    "end; " || ,
+    "call lineout(output, copies('-', 50)); "
+
+ result = rexxscript_evaluate(script, 1)
+ out = rexxscript_output()
+
+ if result[1] <> "OK" then do
+   errors = errors + 1
+   say "EVALUATE_EXPOSED status failed:" result[1]
+ end
+
+ do i=1 to out.0
+    say i out.i
+ end
+

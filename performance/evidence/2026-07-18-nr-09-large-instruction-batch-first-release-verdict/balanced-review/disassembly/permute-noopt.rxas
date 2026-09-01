@@ -1,0 +1,315 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_permute-noopt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_permute-noopt.rxas
+
+* CONSTANT POOL - Size 0x4b20.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x19a
+
+.globals=0
+                .meta "awfy_permute.permutebenchmark"="b" ".unknown" .class
+                .meta "awfy_permute.permutebenchmark.count"="b" ".int" .attr 1
+                .meta "awfy_permute.permutebenchmark.values"="b" ".int[0 to 5]" .attr 2
+
+main()          .locals=11
+                .meta "awfy_permute.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_permute.crexx" 8 5 19 "arg argv = .string[]"
+                .meta "awfy_permute.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r12 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r12 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r12 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "awfy_permute.crexx" 10 1 16 "repetitions = 1"
+                .meta "awfy_permute.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "awfy_permute.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_22,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_permute.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "awfy_permute.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r1,r0,1                         * 0x00001e:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 1 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 7 7 17 "awfy_permute.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "repetitions" ""
+lb_22:          ilt r5,r1,1                                  * 0x000022:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""
+                brf lb_37,r5                                 * 0x000026:0026 Branch to op1 if op2 false
+                .srcstep 8 8 17 "awfy_permute.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "awfy_permute.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                load r4,"repetitions must be positive"       * 0x000029:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+                load r3,1                                    * 0x00002c:0001 Load op1 with op2
+                settpcall r6,fail(),r3,r4,768                * 0x00002f:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 6 6 6 0 "fail" ""
+                ret r6                                       * 0x000035:0031 Return op1
+                .srcstep 9 9 17 "awfy_permute.crexx" 14 1 11 "result = 0"
+                .meta "awfy_permute.main.result"="b" ".int" r2
+lb_37:          load r2,0                                    * 0x000037:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "result" ""
+                .srcstep 18 18 17 "awfy_permute.crexx" 15 1 3 "do iteration = 1 to repetitions"
+                .srcstep 10 10 17 "awfy_permute.crexx" 15 4 17 "do iteration = 1 to repetitions"
+                .meta "awfy_permute.main.iteration"="b" ".int" r5
+                load r5,1                                    * 0x00003a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 10 10 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 10 10 0 "iteration" ""
+                .srcstep 11 11 17 "awfy_permute.crexx" 15 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 11 11 17 "awfy_permute.crexx" 15 18 32 "do iteration = 1 to repetitions"
+lb_3d:          igt r4,r5,r1                                 * 0x00003d:0068 Int Greater than op1=(op2>op3)
+                brt lb_71,r4                                 * 0x000041:0025 Branch to op1 if op2 true
+                .srcstep 13 13 17 "awfy_permute.crexx" 16 3 32 "  benchmark = .PermuteBenchmark()"
+                .meta "awfy_permute.main.benchmark"="b" ".permutebenchmark" r6
+                load r3,0                                    * 0x000044:0001 Load op1 with op2
+                call r6,§awfy_permute.permutebenchmark.§factory(),r3 * 0x000047:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "O" "r" 6 13 13 0 "§factory" ""
+                .traceevent "A" 6 "R" "O" "r" 6 13 13 0 "benchmark" ""
+                .srcstep 14 14 17 "awfy_permute.crexx" 17 3 25 "  result = benchmark.run()"
+                .traceevent "V" 6 "R" "O" "r" 6 14 14 0 "benchmark" ""
+                load r7,1                                    * 0x00004b:0001 Load op1 with op2
+                settpswapcall r2,§awfy_permute.permutebenchmark.run(),r7,r6,256,r8 * 0x00004e:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r6,r8                                   * 0x000055:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 2 14 14 0 "run" ""
+                .traceevent "A" 6 "R" "I" "r" 2 14 14 0 "result" ""
+                .srcstep 16 16 17 "awfy_permute.crexx" 18 3 20 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "result" ""
+                ine r8,r2,8660                               * 0x000058:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 8 16 16 0 "" ""
+                brf lb_6e,r8                                 * 0x00005c:0026 Branch to op1 if op2 false
+                .srcstep 17 17 17 "awfy_permute.crexx" 18 21 25 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+                .srcstep 15 15 17 "awfy_permute.crexx" 18 26 76 "  if result <> 8660 then return fail(\"expected 8660 calls, got \" || result)"
+                itosconcat r10,"expected 8660 calls, got ",r2 * 0x00005f:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "result" ""
+                .traceevent "O" 4 "R" "S" "r" 10 15 15 0 "" ""
+                load r9,1                                    * 0x000063:0001 Load op1 with op2
+                settpcall r7,fail(),r9,r10,768               * 0x000066:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 7 15 15 0 "fail" ""
+                ret r7                                       * 0x00006c:0031 Return op1
+                .srcstep 12 12 17 "awfy_permute.crexx" 15 4 13 "do iteration = 1 to repetitions"
+                .srcstep 19 19 17 "awfy_permute.crexx" 19 1 4 "end"
+lb_6e:          bctp lb_3d,r5                                * 0x00006e:015d inc op2; goto op1
+lb_71:          endlife r6                                   * 0x000071:0202 End storage reference lifetime for op1
+                .meta "awfy_permute.main.benchmark"
+                .meta "awfy_permute.main.iteration"
+                .srcstep 20 20 17 "awfy_permute.crexx" 21 1 69 "say \"benchmark=awfy_permute repetitions=\"repetitions \"result=\"result"
+                itosconcat r10,"benchmark=awfy_permute repetitions=",r1 * 0x000073:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 20 20 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                sconcatitos r10,"result=",r2                 * 0x000077:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 20 20 0 "result" ""
+                append r10,r2                                * 0x00007b:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                say r10                                      * 0x00007e:01c2 Say op1
+                .srcstep 21 21 17 "awfy_permute.crexx" 22 1 25 "say \"PASS: AWFY Permute\""
+                say "PASS: AWFY Permute"                     * 0x000080:01c7 Say op1
+                .srcstep 22 22 17 "awfy_permute.crexx" 23 1 9 "return 0"
+                ret 0                                        * 0x000082:0032 Return op1
+                .meta "awfy_permute.main.argv"
+                .meta "awfy_permute.main.repetitions"
+                .meta "awfy_permute.main.result"
+
+fail()          .locals=2
+                .meta "awfy_permute.fail"="b" ".int" fail() "message=.string"
+                .srcstep 26 26 17 "awfy_permute.crexx" 25 1 23 "fail: procedure = .int"
+                numsci 18,1,1                                * 0x000084:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 23 23 17 "awfy_permute.crexx" 26 7 24 "  arg message = .string"
+                .meta "awfy_permute.fail.message"="b" ".string" a1 /* aka r3 */
+                .srcstep 24 24 17 "awfy_permute.crexx" 27 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "a" 1 24 24 0 "message" ""
+                sconcat r1,"FAIL:",a1 /* aka r3 */           * 0x000088:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+                say r1                                       * 0x00008c:01c2 Say op1
+                .srcstep 25 25 17 "awfy_permute.crexx" 28 3 11 "  return 1"
+                ret 1                                        * 0x00008e:0032 Return op1
+                .meta "awfy_permute.fail.message"
+
+§awfy_permute.permutebenchmark.§factory() .locals=3
+                .meta "awfy_permute.permutebenchmark.§factory"="b" ".awfy_permute..permutebenchmark" §awfy_permute.permutebenchmark.§factory() ""
+                .srcstep 29 29 17 "awfy_permute.crexx" 34 3 13 "  *: factory"
+                setattrs r0,3                                * 0x000090:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_permute.permutebenchmark" * 0x000093:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x000096:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 27 27 17 "awfy_permute.crexx" 35 5 14 "    count = 0"
+                .meta "awfy_permute.permutebenchmark.§factory.§factory"="b" ".permutebenchmark" r0
+                load r2,0                                    * 0x00009a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 27 27 0 "" ""
+                isetattr1 r0,1,r2                            * 0x00009d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 28 28 17 "awfy_permute.crexx" 36 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 0 28 28 0 "§factory" ""
+                ret r0                                       * 0x0000a1:0031 Return op1
+                .meta "awfy_permute.permutebenchmark.§factory.§factory"
+
+§awfy_permute.permutebenchmark.run() .locals=5
+                .meta "awfy_permute.permutebenchmark.run"="b" ".int" §awfy_permute.permutebenchmark.run() ""
+                .srcstep 33 33 17 "awfy_permute.crexx" 38 3 21 "  run: method = .int"
+                assertinitialized a1 /* aka r6 */            * 0x0000a3:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000a5:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 30 30 17 "awfy_permute.crexx" 39 5 14 "    count = 0"
+                .meta "awfy_permute.permutebenchmark.run.§this"="b" ".permutebenchmark" a1 /* aka r6 */
+                load r2,0                                    * 0x0000a9:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 30 30 0 "" ""
+                isetattr1 a1 /* aka r6 */,1,r2               * 0x0000ac:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 31 31 17 "awfy_permute.crexx" 40 5 20 "    call permute(6)"
+                .traceevent "V" 6 "R" "O" "a" 1 31 31 0 "§this" ""
+                load r3,6                                    * 0x0000b0:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 31 31 0 "" ""
+                loadsettpswap r1,2,a1 /* aka r6 */,256,r2    * 0x0000b3:010d Load op1, set op3 status flags, then swap op3 and op5
+                call r4,§awfy_permute.permutebenchmark.permute(),r1 * 0x0000b9:002e Call procedure (op1=op2(op3...) )
+                swap a1 /* aka r6 */,r2                      * 0x0000bd:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "V" "r" 4 31 31 0 "permute" ""
+                .srcstep 32 32 17 "awfy_permute.crexx" 41 5 17 "    return count"
+                linkattr1 r3,a1 /* aka r6 */,1               * 0x0000c0:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 32 32 0 "count" ""
+                ret r3                                       * 0x0000c4:0031 Return op1
+                .meta "awfy_permute.permutebenchmark.run.§this"
+
+§awfy_permute.permutebenchmark.permute() .locals=19
+                .meta "awfy_permute.permutebenchmark.permute"="b" ".void" §awfy_permute.permutebenchmark.permute() "n=.int"
+                .srcstep 49 49 17 "awfy_permute.crexx" 43 3 26 "  permute: method = .void"
+                assertinitialized a1 /* aka r20 */           * 0x0000c6:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000c8:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 34 34 17 "awfy_permute.crexx" 44 9 17 "    arg n = .int"
+                .meta "awfy_permute.permutebenchmark.permute.n"="b" ".int" a2 /* aka r21 */
+                .meta "awfy_permute.permutebenchmark.permute.§this"="b" ".permutebenchmark" a1 /* aka r20 */
+                .srcstep 35 35 17 "awfy_permute.crexx" 45 5 22 "    count = count + 1"
+                linkattr1 r3,a1 /* aka r20 */,1              * 0x0000cc:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 35 35 0 "count" ""
+                iadd r4,r3,1                                 * 0x0000d0:0010 Integer Add (op1=op2+op3)
+                unlink r3                                    * 0x0000d4:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 4 35 35 0 "" ""
+                isetattr1 a1 /* aka r20 */,1,r4              * 0x0000d6:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 46 46 17 "awfy_permute.crexx" 46 5 14 "    if n <> 0 then do"
+                .traceevent "V" 6 "R" "I" "a" 2 46 46 0 "n" ""
+                ine r4,a2 /* aka r21 */,0                    * 0x0000da:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 46 46 0 "" ""
+                brf lb_159,r4                                * 0x0000de:0026 Branch to op1 if op2 false
+                .srcstep 47 47 17 "awfy_permute.crexx" 46 15 19 "    if n <> 0 then do"
+                .srcstep 36 36 17 "awfy_permute.crexx" 47 7 17 "      n1 = n - 1"
+                .meta "awfy_permute.permutebenchmark.permute.n1"="b" ".int" r3
+                .traceevent "V" 6 "R" "I" "a" 2 36 36 0 "n" ""
+                isub r3,a2 /* aka r21 */,1                   * 0x0000e1:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 3 36 36 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 36 36 0 "n1" ""
+                .srcstep 37 37 17 "awfy_permute.crexx" 48 7 23 "      call permute(n1)"
+                .traceevent "V" 6 "R" "O" "a" 1 37 37 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "r" 3 37 37 0 "n1" ""
+                loadsettpswap r5,2,a1 /* aka r20 */,256,r6   * 0x0000e5:010d Load op1, set op3 status flags, then swap op3 and op5
+                swapcall r2,§awfy_permute.permutebenchmark.permute(),r5,r3,r7 * 0x0000eb:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn a1 /* aka r20 */,r6,r3,r7              * 0x0000f1:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "V" "r" 2 37 37 0 "permute" ""
+                .srcstep 44 44 17 "awfy_permute.crexx" 49 7 9 "      do i = n1 to 0 by -1"
+                .srcstep 38 38 17 "awfy_permute.crexx" 49 10 16 "      do i = n1 to 0 by -1"
+                .meta "awfy_permute.permutebenchmark.permute.i"="b" ".int" r7
+                .traceevent "V" 6 "R" "I" "r" 3 38 38 0 "n1" ""
+                icopy r7,r3                                  * 0x0000f6:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 7 38 38 0 "i" ""
+                .srcstep 39 39 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+                load r6,0                                    * 0x0000f9:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
+                .srcstep 40 40 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+                load r8,1                                    * 0x0000fc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 0 0 0 "" ""
+                isub r9,0,r8                                 * 0x0000ff:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "P" 4 "R" "I" "r" 9 0 0 0 "" ""
+                .srcstep 39 39 17 "awfy_permute.crexx" 49 17 21 "      do i = n1 to 0 by -1"
+lb_103:         blt lb_10f,r9,0                              * 0x000103:0165 if op2<op3 then goto op1
+                igt r5,r7,r6                                 * 0x000107:0068 Int Greater than op1=(op2>op3)
+                brtf lb_159,lb_116,r5                        * 0x00010b:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_10f:         ilt r5,r7,r6                                 * 0x00010f:006e Int Less than op1=(op2<op3)
+                brt lb_159,r5                                * 0x000113:0025 Branch to op1 if op2 true
+                .srcstep 41 41 17 "awfy_permute.crexx" 50 9 25 "        call swap(n1, i)"
+                .traceevent "V" 6 "R" "O" "a" 1 41 41 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "r" 3 41 41 0 "n1" ""
+                .traceevent "V" 6 "R" "I" "r" 7 41 41 0 "i" ""
+lb_116:         loadsettpswap r10,3,a1 /* aka r20 */,256,r11 * 0x000116:010d Load op1, set op3 status flags, then swap op3 and op5
+                swap r12,r3                                  * 0x00011c:01fe Swap op1 and op2
+                swapcall r14,§awfy_permute.permutebenchmark.swap(),r10,r7,r13 * 0x00011f:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn a1 /* aka r20 */,r11,r3,r12,r7,r13     * 0x000125:0109 Swap three register pairs in operand order
+                .traceevent "F" 4 "R" "V" "r" 14 41 41 0 "swap" ""
+                .srcstep 42 42 17 "awfy_permute.crexx" 51 9 25 "        call permute(n1)"
+                .traceevent "V" 6 "R" "O" "a" 1 42 42 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "r" 3 42 42 0 "n1" ""
+                loadsettpswap r11,2,a1 /* aka r20 */,256,r12 * 0x00012c:010d Load op1, set op3 status flags, then swap op3 and op5
+                swapcall r10,§awfy_permute.permutebenchmark.permute(),r11,r3,r13 * 0x000132:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn a1 /* aka r20 */,r12,r3,r13            * 0x000138:0108 Swap two register pairs in operand order
+                .traceevent "F" 4 "R" "V" "r" 10 42 42 0 "permute" ""
+                .srcstep 43 43 17 "awfy_permute.crexx" 52 9 25 "        call swap(n1, i)"
+                .traceevent "V" 6 "R" "O" "a" 1 43 43 0 "§this" ""
+                .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "n1" ""
+                .traceevent "V" 6 "R" "I" "r" 7 43 43 0 "i" ""
+                loadsettpswap r15,3,a1 /* aka r20 */,256,r16 * 0x00013d:010d Load op1, set op3 status flags, then swap op3 and op5
+                swap r17,r3                                  * 0x000143:01fe Swap op1 and op2
+                swapcall r13,§awfy_permute.permutebenchmark.swap(),r15,r7,r18 * 0x000146:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swapn a1 /* aka r20 */,r16,r3,r17,r7,r18     * 0x00014c:0109 Swap three register pairs in operand order
+                .traceevent "F" 4 "R" "V" "r" 13 43 43 0 "swap" ""
+                .srcstep 40 40 17 "awfy_permute.crexx" 49 22 27 "      do i = n1 to 0 by -1"
+                iadd r7,r9,r7                                * 0x000153:000f Integer Add (op1=op2+op3)
+                .srcstep 45 45 17 "awfy_permute.crexx" 53 7 10 "      end"
+                br lb_103                                    * 0x000157:0024 Branch to op1
+                .meta "awfy_permute.permutebenchmark.permute.i"
+                .meta "awfy_permute.permutebenchmark.permute.n1"
+                .srcstep 48 48 17 "awfy_permute.crexx" 55 5 11 "    return"
+lb_159:         ret                                          * 0x000159:0030 Return VOID
+                .meta "awfy_permute.permutebenchmark.permute.n"
+                .meta "awfy_permute.permutebenchmark.permute.§this"
+
+§awfy_permute.permutebenchmark.swap() .locals=10
+                .meta "awfy_permute.permutebenchmark.swap"="b" ".void" §awfy_permute.permutebenchmark.swap() "i=.int,j=.int"
+                .srcstep 56 56 17 "awfy_permute.crexx" 57 3 23 "  swap: method = .void"
+                assertinitialized a1 /* aka r11 */           * 0x00015a:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x00015c:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 50 50 17 "awfy_permute.crexx" 58 9 17 "    arg i = .int, j = .int"
+                .meta "awfy_permute.permutebenchmark.swap.i"="b" ".int" a2 /* aka r12 */
+                .meta "awfy_permute.permutebenchmark.swap.§this"="b" ".permutebenchmark" a1 /* aka r11 */
+                .srcstep 51 51 17 "awfy_permute.crexx" 58 19 27 "    arg i = .int, j = .int"
+                .meta "awfy_permute.permutebenchmark.swap.j"="b" ".int" a3 /* aka r13 */
+                .srcstep 52 52 17 "awfy_permute.crexx" 59 5 25 "    temporary = values[i]"
+                .meta "awfy_permute.permutebenchmark.swap.temporary"="b" ".int" r2
+                linkattr1 r5,a1 /* aka r11 */,2              * 0x000160:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "a" 2 52 52 0 "i" ""
+                .traceevent "C" 4 "R" "I" "a" 2 52 52 0 "values" ""
+                setlinkattr1 r4,r5,6,a2 /* aka r12 */,1      * 0x000164:0124 Set op2 attribute count then link one-based attribute op4 plus op5 to op1
+                .traceevent "V" 6 "R" "I" "r" 4 52 52 0 "values" ""
+                igetunlink r2,r4                             * 0x00016a:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 2 52 52 0 "temporary" ""
+                unlink r5                                    * 0x00016d:00d5 Unlink op1
+                .srcstep 53 53 17 "awfy_permute.crexx" 60 5 25 "    values[i] = values[j]"
+                linkattr1 r4,a1 /* aka r11 */,2              * 0x00016f:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "a" 2 53 53 0 "i" ""
+                .traceevent "C" 4 "R" "I" "a" 2 53 53 0 "values" ""
+                setlinkattr1 r6,r4,6,a2 /* aka r12 */,1      * 0x000173:0124 Set op2 attribute count then link one-based attribute op4 plus op5 to op1
+                linkattr1 r8,a1 /* aka r11 */,2              * 0x000179:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "a" 3 53 53 0 "j" ""
+                .traceevent "C" 4 "R" "I" "a" 3 53 53 0 "values" ""
+                setlinkattr1 r7,r8,6,a3 /* aka r13 */,1      * 0x00017d:0124 Set op2 attribute count then link one-based attribute op4 plus op5 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 53 53 0 "values" ""
+                igetunlink r6,r7                             * 0x000183:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 6 53 53 0 "values" ""
+                unlinkn r8,r6                                * 0x000186:011b Restore two registers to their frame-owned storage
+                unlink r4                                    * 0x000189:00d5 Unlink op1
+                .srcstep 54 54 17 "awfy_permute.crexx" 61 5 26 "    values[j] = temporary"
+                linkattr1 r7,a1 /* aka r11 */,2              * 0x00018b:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "a" 3 54 54 0 "j" ""
+                .traceevent "C" 4 "R" "I" "a" 3 54 54 0 "values" ""
+                setlinkattr1 r9,r7,6,a3 /* aka r13 */,1      * 0x00018f:0124 Set op2 attribute count then link one-based attribute op4 plus op5 to op1
+                .traceevent "V" 6 "R" "I" "r" 2 54 54 0 "temporary" ""
+                isetunlinkn r9,r2,r7                         * 0x000195:011f Copy integer op2 through alias op1 then unlink op1 and op3
+                .traceevent "A" 6 "R" "I" "r" 9 54 54 0 "values" ""
+                .srcstep 55 55 17 "awfy_permute.crexx" 62 5 11 "    return"
+                ret                                          * 0x000199:0030 Return VOID
+                .meta "awfy_permute.permutebenchmark.swap.i"
+                .meta "awfy_permute.permutebenchmark.swap.j"
+                .meta "awfy_permute.permutebenchmark.swap.temporary"
+                .meta "awfy_permute.permutebenchmark.swap.§this"
+*******************************************************************************
+

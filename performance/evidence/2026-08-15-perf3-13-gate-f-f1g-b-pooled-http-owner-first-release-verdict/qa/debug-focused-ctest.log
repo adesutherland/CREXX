@@ -1,0 +1,29 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/7 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.07 sec
+    Start 1680: testConcurrency_noopt
+    Start 1681: testConcurrency_opt
+    Start 1693: ts_http_pooled_rxbvm_noopt
+    Start 1694: ts_http_pooled_rxbvm_opt
+    Start 1695: ts_http_pooled_rxtvm_noopt
+    Start 1696: ts_http_pooled_rxtvm_opt
+2/7 Test #1681: testConcurrency_opt ..................   Passed    0.83 sec
+3/7 Test #1696: ts_http_pooled_rxtvm_opt .............   Passed    0.89 sec
+4/7 Test #1694: ts_http_pooled_rxbvm_opt .............   Passed    0.89 sec
+5/7 Test #1680: testConcurrency_noopt ................   Passed    3.11 sec
+6/7 Test #1695: ts_http_pooled_rxtvm_noopt ...........   Passed    3.39 sec
+7/7 Test #1693: ts_http_pooled_rxbvm_noopt ...........   Passed    3.40 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+f1g           =   8.56 sec*proc (4 tests)
+gate_f        =   8.56 sec*proc (4 tests)
+http          =   8.56 sec*proc (4 tests)
+levelg        =   8.56 sec*proc (4 tests)
+library       =   8.56 sec*proc (4 tests)
+linked_opt    =   2.61 sec*proc (3 tests)
+rxbvm         =   4.28 sec*proc (2 tests)
+rxtvm         =   4.28 sec*proc (2 tests)
+
+Total Test time (real) =   3.50 sec

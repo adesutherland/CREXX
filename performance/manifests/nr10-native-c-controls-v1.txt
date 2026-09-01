@@ -1,0 +1,4 @@
+# Evidence-only native C ceilings. These are controls, never RexxCPS scores.
+crexx-cross-runtime-matrix|1
+native-c-mechanical|Native-C-mechanical|native-c|native-c|mechanical-scalar-control|control|no|no|1000-nominal-ops|PASS: NR-10 mechanical native C ceiling|Performance:|performance/evidence/2026-07-20-nr-10-formal-baseline/controls/build/rexxcps_mechanical;123456789
+native-c-dynamic|Native-C-dynamic|native-c|native-c|tagged-dynamic-value-control|control|no|no|1000-nominal-ops|PASS: NR-10 dynamic-value native C ceiling|Performance:|performance/evidence/2026-07-20-nr-10-formal-baseline/controls/build/rexxcps_dynamic_value;123456789

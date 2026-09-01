@@ -1,0 +1,197 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassiccharacterscan expose rexxclassic_find_text_blank rexxclassic_find_text_nonblank rexxclassic_find_text_nonblank_reverse rexxclassic_find_byte_blank rexxclassic_find_byte_nonblank rexxclassic_find_byte_nonblank_reverse rexxclassic_byte_slice rexxclassic_byte_equal
+
+/** Find the next Unicode White_Space or configured text blank. */
+rexxclassic_find_text_blank: procedure = .int
+  arg text = .string, start = .int, other_blanks = .string
+  if other_blanks = "" then do
+    result = start
+    assembler fndblnk result,text,start
+    return result
+  end
+
+  text_length = .int
+  codepoint = .int
+  configured_position = .int
+  assembler strlen text_length,text
+  index = start
+  do while index < text_length
+    assembler strchar codepoint,text,index
+    if (codepoint >= 9 & codepoint <= 13) | codepoint = 32 | codepoint = 133 |,
+       codepoint = 160 | codepoint = 5760 | (codepoint >= 8192 & codepoint <= 8202) |,
+       codepoint = 8232 | codepoint = 8233 | codepoint = 8239 | codepoint = 8287 |,
+       codepoint = 12288 then return index
+    assembler poschar configured_position,other_blanks,codepoint
+    if configured_position >= 0 then return index
+    index = index + 1
+  end
+  return -1
+
+/** Find the next codepoint that is not Unicode White_Space/configured blank. */
+rexxclassic_find_text_nonblank: procedure = .int
+  arg text = .string, start = .int, other_blanks = .string
+  if other_blanks = "" then do
+    result = start
+    assembler fndnblnk result,text,start
+    return result
+  end
+
+  text_length = .int
+  codepoint = .int
+  configured_position = .int
+  assembler strlen text_length,text
+  index = start
+  do while index < text_length
+    assembler strchar codepoint,text,index
+    is_blank = (codepoint >= 9 & codepoint <= 13) | codepoint = 32 | codepoint = 133 |,
+               codepoint = 160 | codepoint = 5760 | (codepoint >= 8192 & codepoint <= 8202) |,
+               codepoint = 8232 | codepoint = 8233 | codepoint = 8239 | codepoint = 8287 |,
+               codepoint = 12288
+    if \is_blank then do
+      assembler poschar configured_position,other_blanks,codepoint
+      is_blank = configured_position >= 0
+    end
+    if \is_blank then return index
+    index = index + 1
+  end
+  return -1
+
+/** Find the preceding codepoint that is not Unicode/configured whitespace. */
+rexxclassic_find_text_nonblank_reverse: procedure = .int
+  arg text = .string, end_position = .int, other_blanks = .string
+  codepoint = .int
+  configured_position = .int
+  index = end_position - 1
+  do while index >= 0
+    assembler strchar codepoint,text,index
+    is_blank = (codepoint >= 9 & codepoint <= 13) | codepoint = 32 | codepoint = 133 |,
+               codepoint = 160 | codepoint = 5760 | (codepoint >= 8192 & codepoint <= 8202) |,
+               codepoint = 8232 | codepoint = 8233 | codepoint = 8239 | codepoint = 8287 |,
+               codepoint = 12288
+    if \is_blank & other_blanks <> "" then do
+      assembler poschar configured_position,other_blanks,codepoint
+      is_blank = configured_position >= 0
+    end
+    if \is_blank then return index
+    index = index - 1
+  end
+  return -1
+
+/** Find the next space/configured blank byte. */
+rexxclassic_find_byte_blank: procedure = .int
+  arg bytes = .binary, start = .int, other_blanks = .binary
+  byte_length = .int
+  other_length = .int
+  byte = .int
+  other = .int
+  assembler blen byte_length,bytes
+  assembler blen other_length,other_blanks
+  index = start
+  do while index < byte_length
+    assembler getbyte byte,bytes,index
+    if byte = 32 then return index
+    other_index = 0
+    do while other_index < other_length
+      assembler getbyte other,other_blanks,other_index
+      if byte = other then return index
+      other_index = other_index + 1
+    end
+    index = index + 1
+  end
+  return -1
+
+/** Find the next byte that is not space/configured blank. */
+rexxclassic_find_byte_nonblank: procedure = .int
+  arg bytes = .binary, start = .int, other_blanks = .binary
+  byte_length = .int
+  other_length = .int
+  byte = .int
+  other = .int
+  assembler blen byte_length,bytes
+  assembler blen other_length,other_blanks
+  index = start
+  do while index < byte_length
+    assembler getbyte byte,bytes,index
+    is_blank = byte = 32
+    other_index = 0
+    do while \is_blank & other_index < other_length
+      assembler getbyte other,other_blanks,other_index
+      is_blank = byte = other
+      other_index = other_index + 1
+    end
+    if \is_blank then return index
+    index = index + 1
+  end
+  return -1
+
+/** Find the preceding byte that is not space/configured blank. */
+rexxclassic_find_byte_nonblank_reverse: procedure = .int
+  arg bytes = .binary, end_position = .int, other_blanks = .binary
+  other_length = .int
+  byte = .int
+  other = .int
+  assembler blen other_length,other_blanks
+  index = end_position - 1
+  do while index >= 0
+    assembler getbyte byte,bytes,index
+    is_blank = byte = 32
+    other_index = 0
+    do while \is_blank & other_index < other_length
+      assembler getbyte other,other_blanks,other_index
+      is_blank = byte = other
+      other_index = other_index + 1
+    end
+    if \is_blank then return index
+    index = index - 1
+  end
+  return -1
+
+/** Copy a zero-based byte span. */
+rexxclassic_byte_slice: procedure = .binary
+  arg bytes = .binary, start = .int, count = .int
+  result = .binary
+  if count <= 0 then return result
+  assembler bslice result,bytes,start,count
+  return result
+
+/** Compare two equal-length zero-based byte spans without allocating. */
+rexxclassic_byte_equal: procedure = .boolean
+  arg left = .binary, left_start = .int, right = .binary, right_start = .int, count = .int
+  left_byte = .int
+  right_byte = .int
+  left_index = .int
+  right_index = .int
+  offset = 0
+  do while offset < count
+    left_index = left_start + offset
+    right_index = right_start + offset
+    assembler getbyte left_byte,left,left_index
+    assembler getbyte right_byte,right,right_index
+    if left_byte <> right_byte then return 0
+    offset = offset + 1
+  end
+  return 1

@@ -1,0 +1,166 @@
+options levelb
+namespace select_dispatch_strings expose c_mixed strict_string padded_string numeric_string mixed_string duplicate_padded duplicate_numeric binary_short nan_key
+
+main: procedure = .int
+  say c_padded("beta   ")
+  say c_numeric("02.00")
+  say c_mixed("03.0")
+  say c_mixed("green ")
+  say strict_string("beta")
+  say strict_string("beta ")
+  say padded_string("gamma   ")
+  say numeric_string("003.000")
+  say numeric_string("nan")
+  say mixed_string("02.0")
+  say mixed_string("blue   ")
+  say duplicate_padded("same ")
+  say duplicate_numeric("01.0")
+  say binary_select("fe"x as .binary)
+  say binary_short("fe"x as .binary)
+  say binary_short("fd"x as .binary)
+  say nan_key("2")
+  say padded_two("second ")
+  say numeric_two("02.0")
+  return 0
+
+c_padded: procedure = .int
+  arg value = .string
+
+  select value
+    when "alpha" then return 101
+    when "beta" then return 102
+    when "gamma" then return 103
+    otherwise return -100
+  end
+  return -101
+
+c_numeric: procedure = .int
+  arg value = .string
+
+  select value
+    when "1" then return 201
+    when "2" then return 202
+    when "3" then return 203
+    otherwise return -200
+  end
+  return -201
+
+c_mixed: procedure = .int
+  arg value = .string
+
+  select value
+    when "1" then return 211
+    when "2" then return 212
+    when "3" then return 213
+    when "red" then return 221
+    when "green" then return 222
+    when "blue" then return 223
+    otherwise return -210
+  end
+  return -211
+
+strict_string: procedure = .int
+  arg value = .string
+
+  if value == "alpha" then return 301
+  else if value == "beta" then return 302
+  else if value == "gamma" then return 303
+  else return -300
+  return -301
+
+padded_string: procedure = .int
+  arg value = .string
+
+  if value = "alpha" then return 401
+  else if value = "beta" then return 402
+  else if value = "gamma" then return 403
+  else return -400
+  return -401
+
+numeric_string: procedure = .int
+  arg value = .string
+
+  if value = "1" then return 501
+  else if value = "2.0" then return 502
+  else if value = "3e0" then return 503
+  else return -500
+  return -501
+
+mixed_string: procedure = .int
+  arg value = .string
+
+  if value = "1" then return 601
+  else if value = "2" then return 602
+  else if value = "3" then return 603
+  else if value = "red" then return 611
+  else if value = "green" then return 612
+  else if value = "blue" then return 613
+  else return -600
+  return -601
+
+duplicate_padded: procedure = .int
+  arg value = .string
+
+  if value = "same" then return 701
+  else if value = "same " then return 702
+  else if value = "other" then return 703
+  else return -700
+  return -701
+
+duplicate_numeric: procedure = .int
+  arg value = .string
+
+  if value = "1" then return 801
+  else if value = "01" then return 802
+  else if value = "2" then return 803
+  else return -800
+  return -801
+
+binary_select: procedure = .int
+  arg value = .binary
+
+  select value
+    when "ff"x as .binary then return 901
+    when "fe"x as .binary then return 902
+    when "fd"x as .binary then return 903
+    otherwise return -900
+  end
+  return -901
+
+binary_short: procedure = .int
+  arg value = .binary
+
+  if value = "ff"x as .binary then return 1001
+  else if value = "fe"x as .binary then return 1002
+  else if value <> "00"x as .binary then return 1003
+  else return -1000
+  return -1001
+
+nan_key: procedure = .int
+  arg value = .string
+
+  if value = "nan" then return 1101
+  else if value = "1" then return 1102
+  else if value = "2" then return 1103
+  else return -1100
+  return -1101
+
+padded_two: procedure = .int
+  arg value = .string
+
+  select value
+    when "first" then return 1201
+    when "second" then return 1202
+    otherwise return -1200
+  end
+  return -1201
+
+numeric_two: procedure = .int
+  arg value = .string
+
+  select value
+    when "1" then return 1301
+    when "2" then return 1302
+    otherwise return -1300
+  end
+  return -1301

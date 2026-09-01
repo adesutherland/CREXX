@@ -1,0 +1,6 @@
+crexx-nr05-call-census-manifest|1
+# First-class RexxCPS append to the bounded Clang schema-5 compiler control.
+# Uses the established noncanonical smoke count for deterministic counts-only
+# profiling; canonical default native rate remains in the formal timing lane.
+rexxcps-noopt|rexxcps|RexxCPS|baseline|noopt|/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/tests/benchmarks/benchmark_rexxcps_levelb_noopt.rxbin|/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/library.rxbin|--smoke-count;1|PASS: RexxCPS 2.2d cREXX port|source=tests/benchmarks/rexxcps_levelb.crexx;TRACE=Off;noncanonical_smoke_count=1|0|1|4d92a561d9e241ee6b8fdfe4551400deccabc60710018bb23c7c8bedd86ac5c7|637c816a010255cd33260d86f24f700c8be9b1d62a3eaf0e8d9e9bdcdbdacf9b
+rexxcps-opt|rexxcps|RexxCPS|candidate|opt|/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin|/tmp/crexx-perf2-linux-x64.d5f0827ca/clang-release/bin/library.rxbin|--smoke-count;1|PASS: RexxCPS 2.2d cREXX port|source=tests/benchmarks/rexxcps_levelb.crexx;TRACE=Off;noncanonical_smoke_count=1|0|1|208874392b8f4b41b5627f7e6ddb97a5d79ad6c586d4ab1b8a0d3b3bd6a136c2|637c816a010255cd33260d86f24f700c8be9b1d62a3eaf0e8d9e9bdcdbdacf9b

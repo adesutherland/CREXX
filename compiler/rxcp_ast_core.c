@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
@@ -265,6 +264,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->loopstartchecks = 0;
     node->loopinc = 0;
     node->loopendchecks = 0;
+    node->branch_cleanup = 0;
     node->is_duplicate_warning = 0;
     node->node_type = type;
     node->value_type = TP_UNKNOWN;
@@ -290,6 +290,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
+    node->diagnostic = 0;
     node->int_value = 0;
     node->bool_value = 0;
     node->float_value = 0;
@@ -299,13 +300,19 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->register_type = 'r';
     node->additional_registers = -1;
     node->num_additional_registers = 0;
+    node->deferred_register_mark = 0;
     node->is_ref_arg = 0;
     node->is_const_arg = 0;
     node->is_opt_arg = 0;
     node->is_varg = 0;
     node->is_compiler_added = 0;
+    node->is_select_dispatch = 0;
+    node->dispatch_kind = DISPATCH_NONE;
     node->is_implicit_main = 0;
     node->is_interface_default_method = 0;
+    node->is_task_callable = 0;
+    node->is_initializer = 0;
+    node->is_equivalence_operator = 0;
     node->is_internal_diagnostic = 0;
     node->is_source_diagnostic_recorded = 0;
     node->mark_internal_diagnostics = 0;
@@ -313,9 +320,16 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->inherit_parent_scope = 0;
     node->inherit_parent_reg_scope = 0;
     node->suppress_shadow_warnings = 0;
+    node->suppress_symbol_metadata = 0;
     node->skip_exit_dispatch = 0;
     node->emit_primary_reporting_anchor = 0;
     node->is_inline_pruned = 0;
+    node->inline_receiver_effect_known = 0;
+    node->inline_receiver_attribute_write = 0;
+    node->flow_skip_arg_copy = 0;
+    node->flow_share_arg_input = 0;
+    node->flow_skip_assignment_store = 0;
+    node->flow_substitute_symbol = 0;
     node->free_list = context->free_list;
     node->source_node = 0;
     node->source_provenance = AST_SOURCE_NONE;
@@ -349,8 +363,23 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     ASTNode *node = ast_ft(context, type);
     node->token = token;
     if (token) {
-        node->node_string = token->token_string;
-        node->node_string_length = token->length;
+        if (type == INTEGER && token->length > 2 &&
+            token->token_string[0] == '0' &&
+            (token->token_string[1] == 'x' || token->token_string[1] == 'X')) {
+            char *end = 0;
+            unsigned long long value = strtoull(token->token_string + 2, &end, 16);
+            char buffer[64];
+            (void)end;
+            snprintf(buffer, sizeof(buffer), "%llu", value);
+            node->node_string = malloc(strlen(buffer) + 1);
+            strcpy(node->node_string, buffer);
+            node->node_string_length = strlen(buffer);
+            node->free_node_string = 1;
+            node->int_value = (rxinteger)value;
+        } else {
+            node->node_string = token->token_string;
+            node->node_string_length = token->length;
+        }
     } else {
         node->node_string = "";
         node->node_string_length = 0;
@@ -416,21 +445,34 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->is_const_arg = node->is_const_arg;
     new_node->is_varg = node->is_varg;
     new_node->is_compiler_added = node->is_compiler_added;
+    new_node->is_select_dispatch = node->is_select_dispatch;
+    new_node->dispatch_kind = node->dispatch_kind;
     new_node->is_implicit_main = node->is_implicit_main;
     new_node->is_interface_default_method = node->is_interface_default_method;
+    new_node->is_task_callable = node->is_task_callable;
+    new_node->is_initializer = node->is_initializer;
+    new_node->is_equivalence_operator = node->is_equivalence_operator;
     new_node->is_internal_diagnostic = node->is_internal_diagnostic;
     new_node->mark_internal_diagnostics = node->mark_internal_diagnostics;
     new_node->force_local_scope = node->force_local_scope;
     new_node->inherit_parent_scope = node->inherit_parent_scope;
     new_node->inherit_parent_reg_scope = node->inherit_parent_reg_scope;
     new_node->suppress_shadow_warnings = node->suppress_shadow_warnings;
+    new_node->suppress_symbol_metadata = node->suppress_symbol_metadata;
     new_node->skip_exit_dispatch = node->skip_exit_dispatch;
     new_node->is_inline_pruned = node->is_inline_pruned;
+    new_node->inline_receiver_effect_known = node->inline_receiver_effect_known;
+    new_node->inline_receiver_attribute_write = node->inline_receiver_attribute_write;
+    new_node->flow_skip_arg_copy = 0;
+    new_node->flow_share_arg_input = 0;
+    new_node->flow_skip_assignment_store = 0;
+    new_node->flow_substitute_symbol = 0;
     new_node->source_node = node->source_node;
     new_node->source_provenance = node->source_provenance;
     ast_copy_reporting_anchors(new_node, node);
 
     new_node->token = node->token;
+    new_node->diagnostic = rxcp_diag_clone(node->diagnostic);
     if (node->free_node_string) {
         new_node->node_string = malloc(node->node_string_length + 1);
         memcpy(new_node->node_string, node->node_string, node->node_string_length);
@@ -584,6 +626,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_const_arg = symbol->is_const_arg;
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
                 new_symbol->has_reference_target = symbol->has_reference_target;
+                new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {
@@ -676,6 +719,145 @@ static char *ast_binary_literal_from_bytes(const unsigned char *bytes,
     return processed_string;
 }
 
+static char ast_string_token_suffix(Token *token) {
+    unsigned char separator;
+    char last;
+
+    if (!token || !token->token_string || token->length < 2) return 'n';
+    separator = (unsigned char) token->token_string[0];
+    last = token->token_string[token->length - 1];
+    if ((unsigned char) last == separator) return 'n';
+    if (last == 'x' || last == 'X') return 'x';
+    return 'b';
+}
+
+static size_t ast_string_token_body_length(Token *token) {
+    char suffix;
+
+    if (!token || token->length < 2) return 0;
+    suffix = ast_string_token_suffix(token);
+    if (suffix == 'n') return (size_t) token->length - 2;
+    if (token->length < 3) return 0;
+    return (size_t) token->length - 3;
+}
+
+static size_t ast_string_token_escaped_body_length(Token *token, unsigned char target_separator) {
+    unsigned char source_separator;
+    char *raw;
+    size_t raw_length;
+    size_t i;
+    size_t length;
+
+    if (!token || !token->token_string) return 0;
+    source_separator = (unsigned char) token->token_string[0];
+    raw = token->token_string + 1;
+    raw_length = ast_string_token_body_length(token);
+    length = 0;
+
+    for (i = 0; i < raw_length; i++) {
+        unsigned char ch;
+
+        ch = (unsigned char) raw[i];
+        if (ch == source_separator && i + 1 < raw_length &&
+            (unsigned char) raw[i + 1] == source_separator) {
+            i++;
+        }
+        length += (ch == target_separator) ? 2 : 1;
+    }
+
+    return length;
+}
+
+static void ast_string_token_copy_escaped_body(Token *token, unsigned char target_separator, char **target) {
+    unsigned char source_separator;
+    char *raw;
+    size_t raw_length;
+    size_t i;
+
+    if (!token || !token->token_string || !target || !*target) return;
+    source_separator = (unsigned char) token->token_string[0];
+    raw = token->token_string + 1;
+    raw_length = ast_string_token_body_length(token);
+
+    for (i = 0; i < raw_length; i++) {
+        unsigned char ch;
+
+        ch = (unsigned char) raw[i];
+        if (ch == source_separator && i + 1 < raw_length &&
+            (unsigned char) raw[i + 1] == source_separator) {
+            i++;
+        }
+        *(*target)++ = (char) ch;
+        if (ch == target_separator) *(*target)++ = (char) ch;
+    }
+}
+
+ASTNode *ast_fstr_chain(Context* context, Token *first_token) {
+    ASTNode *node;
+    Token *token;
+    Token *last_token;
+    Token synthetic;
+    char suffix;
+    unsigned char separator;
+    char *combined;
+    char *target;
+    size_t combined_body_length;
+    size_t combined_length;
+    int last_token_number;
+
+    if (!first_token) return ast_ft(context, STRING);
+    if (!first_token->token_subtype) return ast_fstr(context, first_token);
+
+    last_token_number = first_token->token_subtype;
+    last_token = first_token;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        if (token->token_number < last_token_number && ast_string_token_suffix(token) != 'n') {
+            return mknd_err(ast_f(context, STRING, token), "LITERAL_CONTINUATION_SUFFIX");
+        }
+        last_token = token;
+    }
+
+    suffix = ast_string_token_suffix(last_token);
+    separator = first_token && first_token->token_string ? (unsigned char) first_token->token_string[0] : '"';
+    combined_body_length = 0;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        combined_body_length += ast_string_token_escaped_body_length(token, separator);
+    }
+
+    combined_length = 2 + combined_body_length + (suffix == 'n' ? 0 : 1);
+    combined = malloc(combined_length + 1);
+    if (!combined) return mknd_err(ast_f(context, STRING, first_token), "OUT_OF_MEMORY");
+
+    target = combined;
+    *target++ = (char) separator;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        ast_string_token_copy_escaped_body(token, separator, &target);
+    }
+    *target++ = (char) separator;
+    if (suffix != 'n') *target++ = suffix;
+    *target = 0;
+
+    synthetic = *first_token;
+    synthetic.token_string = combined;
+    synthetic.length = (int) combined_length;
+    synthetic.token_type = TK_STRING;
+
+    node = ast_fstr(context, &synthetic);
+    node->token = first_token;
+    node->token_start = first_token;
+    node->token_end = last_token;
+    node->line = first_token ? first_token->line : -1;
+    node->column = first_token ? first_token->column : -1;
+    if (first_token) node->source_start = first_token->token_string;
+    if (last_token) node->source_end = last_token->token_string + last_token->length;
+
+    free(combined);
+    return node;
+}
+
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
  * and decoding / encoding the string nicely - or converting to an error string */
 #define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
@@ -749,7 +931,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate hex string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if ( !( (c >= '0' && c <= '9') ||
                     (c >= 'a' && c <= 'f') ||
                     (c >= 'A' && c <= 'F') ) ) {
@@ -771,7 +953,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         else hex_buffer_len = 0;
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 2) {
@@ -801,7 +983,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate binary string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if (c != '0' && c != '1') {
                 mknd_err(node, "INVALID_BIN");
                 return node;
@@ -819,7 +1001,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 8) {
@@ -886,155 +1068,187 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
     return node;
 }
 
+static ASTNode *ast_make_diagnostic_node(ASTNode *node, NodeType type, RxcpDiagnostic *diagnostic) {
+    ASTNode *diag_node;
+
+    if (!node || !diagnostic) {
+        rxcp_diag_free(diagnostic);
+        return node;
+    }
+
+    diag_node = ast_ft(node->context, type);
+    ast_set_diagnostic(diag_node, diagnostic);
+
+    diag_node->line = node->line;
+    diag_node->column = node->column;
+    diag_node->file_name = node->file_name;
+    diag_node->source_start = node->source_start;
+    diag_node->source_end = node->source_end;
+    diag_node->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
+    if (node->source_node) ast_set_primary_source_node(diag_node, node->source_node, AST_SOURCE_INHERITED);
+
+    add_ast(node, diag_node);
+    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, diag_node);
+
+    return node;
+}
+
+static RxcpDiagnostic *rxcp_diag_from_params(const char *code,
+                                             const char *name1, const char *value1,
+                                             const char *name2, const char *value2,
+                                             const char *name3, const char *value3,
+                                             const char *name4, const char *value4,
+                                             const char *name5, const char *value5) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_create(code);
+    if (!diag) return 0;
+    if (name1 && name1[0]) rxcp_diag_add_param(diag, name1, value1);
+    if (name2 && name2[0]) rxcp_diag_add_param(diag, name2, value2);
+    if (name3 && name3[0]) rxcp_diag_add_param(diag, name3, value3);
+    if (name4 && name4[0]) rxcp_diag_add_param(diag, name4, value4);
+    if (name5 && name5[0]) rxcp_diag_add_param(diag, name5, value5);
+    return diag;
+}
+
+static int ast_has_diagnostic_child(ASTNode *node, RxcpDiagnostic *diagnostic) {
+    ASTNode *child;
+
+    if (!node || !diagnostic) return 0;
+    child = node->child;
+    while (child) {
+        if (child->node_type == ERROR && rxcp_diag_equal(child->diagnostic, diagnostic)) return 1;
+        child = child->sibling;
+    }
+    return 0;
+}
+
 /* Add error node to parent node */
-ASTNode *ast_err(Context* context, char *error_string, Token *token) {
+ASTNode *ast_err(Context* context, const char *code, Token *token) {
     ASTNode *newNode = ast_f(context, TOKEN, token);
-    mknd_err(newNode, error_string);
+    mknd_err(newNode, code);
     return newNode;
 }
 
 /* Add warning node to parent node */
-ASTNode *ast_war(Context* context, char *warning_string, Token *token) {
+ASTNode *ast_war(Context* context, const char *code, Token *token) {
     ASTNode *newNode = ast_f(context, TOKEN, token);
-    mknd_war(newNode, warning_string);
+    mknd_war(newNode, code);
     return newNode;
 }
 
 /* Add an ERROR node to a node - returns node for chaining */
-ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *errNode;
-    ASTNode *target;
-
-    char *buffer = malloc(buffer_size);
-
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
-
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
-    }
-
-    errNode = ast_ft(node->context, ERROR);
-    errNode->node_string = buffer;
-    errNode->node_string_length = strlen(buffer);
-    errNode->free_node_string = 1;
-
-    errNode->line = node->line;
-    errNode->column = node->column;
-    errNode->file_name = node->file_name;
-    errNode->source_start = node->source_start;
-    errNode->source_end = node->source_end;
-    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
-
-    add_ast(node, errNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
-
-    return node;
+ASTNode* mknd_err(ASTNode* node, const char *code) {
+    return ast_make_diagnostic_node(node, ERROR, rxcp_diag_create(code));
 }
 
-/* Add an ERROR node only if it doesn't already exist as a child with the same message */
-ASTNode* mknd_err_unique(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *errNode;
+ASTNode *mknd_err1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0));
+}
 
-    char *buffer = malloc(buffer_size);
+ASTNode *mknd_err2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0));
+}
 
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
+ASTNode *mknd_err3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3, 0, 0, 0, 0));
+}
 
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
+ASTNode *mknd_err5(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3,
+                   const char *name4, const char *value4, const char *name5, const char *value5) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3,
+                                                          name4, value4, name5, value5));
+}
+
+/* Add an ERROR node only if it doesn't already exist as a child with the same diagnostic */
+ASTNode* mknd_err_unique(ASTNode* node, const char *code) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_create(code);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
     }
+    return ast_make_diagnostic_node(node, ERROR, diag);
+}
 
-    /* Check for duplicate */
-    ASTNode *child = node->child;
-    while (child) {
-        if (child->node_type == ERROR && child->node_string_length == strlen(buffer) && 
-            strncmp(child->node_string, buffer, child->node_string_length) == 0) {
-            free(buffer);
-            return node; /* Duplicate found */
-        }
-        child = child->sibling;
+ASTNode* mknd_err_unique1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
     }
+    return ast_make_diagnostic_node(node, ERROR, diag);
+}
 
-    errNode = ast_ft(node->context, ERROR);
-    errNode->node_string = buffer;
-    errNode->node_string_length = strlen(buffer);
-    errNode->free_node_string = 1;
+ASTNode* mknd_err_unique2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                          const char *name2, const char *value2) {
+    RxcpDiagnostic *diag;
 
-    errNode->line = node->line;
-    errNode->column = node->column;
-    errNode->file_name = node->file_name;
-    errNode->source_start = node->source_start;
-    errNode->source_end = node->source_end;
-    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
-
-    add_ast(node, errNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
-
-    return node;
+    diag = rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
+    }
+    return ast_make_diagnostic_node(node, ERROR, diag);
 }
 
 /* Add a WARNING node to a node - returns node for chaining */
-ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *warNode;
-    char *buffer = malloc(buffer_size);
+ASTNode* mknd_war(ASTNode* node, const char *code) {
+    return ast_make_diagnostic_node(node, WARNING, rxcp_diag_create(code));
+}
 
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
+ASTNode *mknd_war1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0));
+}
 
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
+ASTNode *mknd_war2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0));
+}
+
+ASTNode *mknd_war3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3, 0, 0, 0, 0));
+}
+
+void ast_set_diagnostic(ASTNode *node, RxcpDiagnostic *diagnostic) {
+    char *rendered;
+
+    if (!node) {
+        rxcp_diag_free(diagnostic);
+        return;
     }
 
-    warNode = ast_ft(node->context, WARNING);
-    warNode->node_string = buffer;
-    warNode->node_string_length = strlen(buffer);
-    warNode->free_node_string = 1;
+    if (node->diagnostic) rxcp_diag_free(node->diagnostic);
+    node->diagnostic = diagnostic;
 
-    warNode->line = node->line;
-    warNode->column = node->column;
-    warNode->file_name = node->file_name;
-    warNode->source_start = node->source_start;
-    warNode->source_end = node->source_end;
-    warNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(warNode, node->source_node, AST_SOURCE_INHERITED);
+    if (node->free_node_string) free(node->node_string);
 
-    add_ast(node, warNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, warNode);
+    if (!diagnostic) {
+        node->node_string = "";
+        node->node_string_length = 0;
+        node->free_node_string = 0;
+        return;
+    }
 
-    return node;
+    rendered = rxcp_diag_render(diagnostic, diagnostic->code);
+    if (!rendered) rendered = strdup(diagnostic->code ? diagnostic->code : "UNKNOWN_DIAGNOSTIC");
+    node->node_string = rendered;
+    node->node_string_length = rendered ? strlen(rendered) : 0;
+    node->free_node_string = 1;
 }
 
 void ast_str(ASTNode* node, char *string) {
@@ -1102,7 +1316,8 @@ static Token *ast_errh_anchor(Context *context) {
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string) {
     Token *anchor;
-    ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
+    ASTNode *errorAST = ast_ft(context, ERROR);
+    ast_set_diagnostic(errorAST, rxcp_diag_create(error_string));
     anchor = ast_errh_anchor(context);
     if (anchor) add_ast(errorAST, ast_f(context, TOKEN, anchor));
 
@@ -1197,6 +1412,16 @@ const char *ast_ndtp(NodeType type) {
             return "ARGS";
         case ASSIGN:
             return "ASSIGN";
+        case ARRAY_APPEND:
+            return "ARRAY_APPEND";
+        case ARRAY_CLEAR:
+            return "ARRAY_CLEAR";
+        case ARRAY_INSERT:
+            return "ARRAY_INSERT";
+        case ARRAY_REMOVE:
+            return "ARRAY_REMOVE";
+        case ARRAY_REMOVE_RANGE:
+            return "ARRAY_REMOVE_RANGE";
         case ASSEMBLER:
             return "ASSEMBLER";
         case BY:
@@ -1219,6 +1444,8 @@ const char *ast_ndtp(NodeType type) {
             return "DEC_STANDARD";
         case DEFINE:
             return "DEFINE";
+        case CONSTANT_DEF:
+            return "CONSTANT_DEF";
         case DO:
             return "DO";
         case ENVIRONMENT:
@@ -1329,10 +1556,44 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
+        case INTRINSIC:
+            return "INTRINSIC";
+        case INTRINSIC_PATH:
+            return "INTRINSIC_PATH";
+        case INTRINSIC_TYPES:
+            return "INTRINSIC_TYPES";
+        case INTRINSIC_ARGS:
+            return "INTRINSIC_ARGS";
+        case OP_BIT_AND:
+            return "OP_BIT_AND";
+        case OP_BIT_OR:
+            return "OP_BIT_OR";
+        case OP_BIT_XOR:
+            return "OP_BIT_XOR";
+        case OP_BIT_NOT:
+            return "OP_BIT_NOT";
+        case OP_BIT_SHL:
+            return "OP_BIT_SHL";
+        case OP_BIT_SHR:
+            return "OP_BIT_SHR";
+        case OP_FLAG_HAS:
+            return "OP_FLAG_HAS";
         case OP_TYPE_IS:
             return "OP_TYPE_IS";
         case OP_TYPE_CAST:
             return "OP_TYPE_CAST";
+        case OP_BINARY_AT:
+            return "OP_BINARY_AT";
+        case OP_BINARY_FOR:
+            return "OP_BINARY_FOR";
+        case OP_BINARY_LENGTH:
+            return "OP_BINARY_LENGTH";
+        case OP_BINARY_COMPARE:
+            return "OP_BINARY_COMPARE";
+        case OP_PACKED_AT:
+            return "OP_PACKED_AT";
+        case OP_SIZEOF:
+            return "OP_SIZEOF";
         case OP_TYPEOF:
             return "OP_TYPEOF";
         case OP_REFERENCE:
@@ -1343,6 +1604,10 @@ const char *ast_ndtp(NodeType type) {
             return "OP_SNAPSHOT";
         case OP_REFVALID:
             return "OP_REFVALID";
+        case OP_REFSAME:
+            return "OP_REFSAME";
+        case OP_EQ:
+            return "OP_EQ";
         case OP_INITIALIZED:
             return "OP_INITIALIZED";
         case OP_SCONCAT:
@@ -1429,6 +1694,14 @@ const char *ast_ndtp(NodeType type) {
             return "FACTORY_CALL";
         case BLOCK_EXPR:
             return "BLOCK_EXPR";
+        case TASK_DECL:
+            return "TASK_DECL";
+        case TASK_TARGET:
+            return "TASK_TARGET";
+        case PARALLEL_DO:
+            return "PARALLEL_DO";
+        case PARALLEL_BLOCK_EXPR:
+            return "PARALLEL_BLOCK_EXPR";
         case LEAVE_WITH:
             return "LEAVE_WITH";
         case EXIT_EXTENDED:
@@ -1655,6 +1928,18 @@ void ast_del(ASTNode* node) {
     node->sibling = NULL;
 }
 
+void ast_disconnect_symbols(Context *context) {
+    ASTNode *node;
+
+    if (!context) return;
+
+    for (node = context->free_list; node; node = node->free_list) {
+        if (node->symbolNode && node->symbolNode->symbol) {
+            sym_dno(node->symbolNode->symbol, node);
+        }
+    }
+}
+
 void free_ast(Context *context) {
     ASTNode *t = context->free_list;
     ASTNode *n;
@@ -1675,11 +1960,13 @@ void free_ast(Context *context) {
         if (t->target_reference_dim_elements) free(t->target_reference_dim_elements);
         if (t->target_reference_class) free(t->target_reference_class);
         if (t->reporting_source_nodes) free(t->reporting_source_nodes);
+        if (t->diagnostic) rxcp_diag_free(t->diagnostic);
         if (t->output) f_output(t->output);
         if (t->cleanup) f_output(t->cleanup);
         if (t->loopstartchecks) f_output(t->loopstartchecks);
         if (t->loopinc) f_output(t->loopinc);
         if (t->loopendchecks) f_output(t->loopendchecks);
+        if (t->branch_cleanup) f_output(t->branch_cleanup);
         free(t);
         t = n;
     }

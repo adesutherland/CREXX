@@ -104,9 +104,9 @@ if translate('abcdef','123456','aaabbbcc','.') \= '14.def' then do
   say 'TRANSLATE failed in test 21: translate(''abcdef'',''123456'',''aaabbbcc'',''.'')' translate('abcdef','123456','aaabbbcc','.') 'but must be 14.def'
 end
 
-if translate('abcdef ',,,'$') \= '$$$$$$$' then do
+if translate('abcdef ',,,'$') \= 'ABCDEF ' then do
   errors=errors+1
-  say "TRANSLATE failed in test 22: translate('abcdef ',,,'$') " "'"translate('abcdef ',,,'$')"'" "but must be '$$$$$$$' " 
+  say "TRANSLATE failed in test 22: omitted tables must uppercase"
 end
 
 /* if translate('abcdef ',1e+17,'ac','1') \= '1bEdef ' then do */
@@ -149,31 +149,74 @@ if TRANSLATE('4123','abcd','1234') \= 'dabc' then do
   say 'TRANSLATE failed in test 30'
 end
 
+if TRANSLATE('a b',' ',,'*') \= '***' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 31: omitted input uses byte-domain range"
+end
+
+if TRANSLATE('a b','',,'*') \= '***' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 32: TRANSLATE('a b','',,'*') " "'"TRANSLATE('a b','',,'*')"'" "but must be '***'"
+end
+
+if TRANSLATE('a b','X',,'*') \= '***' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 33: omitted input uses byte-domain range"
+end
+
+if TRANSLATE('a b','X',' ') \= 'aXb' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 34: TRANSLATE('a b','X',' ') " "'"TRANSLATE('a b','X',' ')"'" "but must be 'aXb'"
+end
+
 /* TODO THIS NEEDS XRANGE if TRANSLATE('APQRV',XRANGE('00'X,'Q')) \= 'APQ  ' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 31' */
+/*   say 'TRANSLATE failed in test 35' */
 /* end */
 
 
 /* TODO these are ooRexx extensions - decide */
 /* TODO if translate('abc',,,,2) \= 'aBC' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 32' */
+/*   say 'TRANSLATE failed in test 36' */
 /* end */
 
 /* TODO if translate('abc',,,,2,1) \= 'aBc' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 33' */
+/*   say 'TRANSLATE failed in test 37' */
 /* end */
 
 /* TODO if translate('abc',,,,,1) \= 'Abc' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 34' */
+/*   say 'TRANSLATE failed in test 38' */
 /* end */
   
 /* TODO if translate('abcdef','123456','aaabbbcc','.', 2, 3) \= 'a4.def' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 35' */
+/*   say 'TRANSLATE failed in test 39' */
 /* end */
-  
+
+if translate('español élève') \= 'ESPAÑOL ÉLÈVE' then do
+  errors=errors+1
+  say 'TRANSLATE failed Unicode simple uppercase coverage'
+end
+
+caught = 0
+do
+  ignored = translate('abc','ABC','abc','')
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = translate('abc','ABC','abc','..')
+on signal invalid_arguments
+  caught = caught + 1
+end
+if caught \= 2 then do
+  errors=errors+1
+  say 'TRANSLATE failed invalid pad signal coverage'
+end
+
+if errors = 0 then say 'PASS: translate'
 return errors<>0

@@ -1,0 +1,14 @@
+options levelb
+namespace perf2case expose caseupper caselower
+
+caseupper: procedure = .string
+  arg text = .string
+  result = .string
+  assembler strupper result,text
+  return result
+
+caselower: procedure = .string
+  arg text = .string
+  result = .string
+  assembler strlower result,text
+  return result

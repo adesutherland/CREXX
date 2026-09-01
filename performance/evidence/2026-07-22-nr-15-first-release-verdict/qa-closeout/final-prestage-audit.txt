@@ -1,0 +1,44 @@
+branch=develop
+head=240b29f456e995928206f04285a7c319612ff022
+origin_develop=240b29f456e995928206f04285a7c319612ff022
+git_diff_check=pass
+worktree_status_begin
+ M binutils/include/rxbin.h
+ M binutils/include/rxopeffects.h
+ M binutils/include/rxops.h
+ M binutils/rxbin007.c
+ M compiler/rxcp_emit_expr.c
+ M compiler/rxcp_inline_payload.c
+ M compiler/rxcp_inline_rewrite.c
+ M compiler/rxcpbgmr.y
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/golden/noopt/13_stems.rxas
+ M compiler/tests/golden/noopt/repro_multi_tail_stems.rxas
+ M compiler/tests/golden/opt/13_stems.rxas
+ M compiler/tests/golden/opt/repro_multi_tail_stems.rxas
+ M compiler/tests/nr14_frozen_parse_contract.cmake
+ M compiler/tests/nr21_fixed_call_contract.cmake
+ M docs/ai-context/CREXX_LIBS.md
+ M docs/ai-context/RXAS_ASSEMBLER.md
+ M docs/ai-context/RXVM_INTERPRETER.md
+ M docs/reference/rxas/README.md
+ M docs/reference/rxas/instruction-inventory.md
+ M docs/reference/rxas/instructions/08-arrays-attributes-references-and-objects.md
+ M docs/reference/rxas/instructions/README.md
+ M interpreter/CMakeLists.txt
+ M interpreter/rxvmintp.c
+ M interpreter/rxvmvars.h
+ M lib/rxfnsb/rexx/stem.crexx
+ M performance/ROADMAP.md
+ M tests/performance/CMakeLists.txt
+?? compiler/tests/nr15_native_stem_contract.cmake
+?? compiler/tests/nr15_native_stem_contract.rxas
+?? interpreter/rxvmstem.h
+?? interpreter/tests/test_rxvmstem.c
+?? performance/NR-15-WORKLIST.md
+?? performance/evidence/2026-07-22-nr-15-architecture-panel/
+?? performance/evidence/2026-07-22-nr-15-first-release-verdict/
+?? tests/performance/nr15_stem_access_compare.crexx
+?? tests/performance/nr15_stem_classic_semantics.rexx
+?? tests/performance/nr15_stem_semantics.crexx
+worktree_status_end

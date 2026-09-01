@@ -1,0 +1,409 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,warmup,1,15486000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,warmup,2,14831000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,1,15012000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,2,14210000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,3,14183000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,4,14258000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,5,14037000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,6,15541000,0,pass
+sieve-opt-retained-baseline-vm,Sieve-retained-vm,Sieve,baseline,opt-retained-baseline-vm,process,recorded,7,14504000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,warmup,1,14925000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,warmup,2,14792000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,1,14454000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,2,15026000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,3,14663000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,4,14551000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,5,14620000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,6,14736000,0,pass
+sieve-opt-retained-candidate-vm,Sieve-retained-vm,Sieve,candidate,opt-retained-candidate-vm,process,recorded,7,14425000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,warmup,1,14389000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,warmup,2,14219000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,1,14617000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,2,19077000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,3,15309000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,4,14030000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,5,14507000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,6,14089000,0,pass
+sieve-opt-stripped-baseline-vm,Sieve-stripped-vm,Sieve,baseline,opt-stripped-baseline-vm,process,recorded,7,14324000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,warmup,1,16174000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,warmup,2,16198000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,1,16697000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,2,16212000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,3,16199000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,4,15923000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,5,15700000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,6,15913000,0,pass
+sieve-opt-stripped-candidate-vm,Sieve-stripped-vm,Sieve,candidate,opt-stripped-candidate-vm,process,recorded,7,15127000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,warmup,1,89350000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,warmup,2,87123000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,1,106845000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,2,102443000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,3,120694000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,4,104412000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,5,91361000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,6,88990000,0,pass
+permute-opt-retained-baseline-vm,Permute-retained-vm,Permute,baseline,opt-retained-baseline-vm,process,recorded,7,89253000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,warmup,1,96981000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,warmup,2,92956000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,1,92284000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,2,90687000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,3,92002000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,4,91871000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,5,91616000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,6,89313000,0,pass
+permute-opt-retained-candidate-vm,Permute-retained-vm,Permute,candidate,opt-retained-candidate-vm,process,recorded,7,89324000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,warmup,1,87369000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,warmup,2,89999000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,1,90178000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,2,86341000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,3,85304000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,4,84799000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,5,85167000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,6,84791000,0,pass
+permute-opt-stripped-baseline-vm,Permute-stripped-vm,Permute,baseline,opt-stripped-baseline-vm,process,recorded,7,85741000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,warmup,1,92239000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,warmup,2,90363000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,1,91238000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,2,96491000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,3,90574000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,4,89558000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,5,89581000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,6,90132000,0,pass
+permute-opt-stripped-candidate-vm,Permute-stripped-vm,Permute,candidate,opt-stripped-candidate-vm,process,recorded,7,90829000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,warmup,1,177330000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,warmup,2,176112000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,1,174334000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,2,171931000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,3,176070000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,4,179238000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,5,212068000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,6,193672000,0,pass
+mandelbrot-opt-retained-baseline-vm,Mandelbrot-retained-vm,Mandelbrot,baseline,opt-retained-baseline-vm,process,recorded,7,176862000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,warmup,1,176355000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,warmup,2,174342000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,1,174739000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,2,174286000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,3,174789000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,4,182986000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,5,209470000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,6,205797000,0,pass
+mandelbrot-opt-retained-candidate-vm,Mandelbrot-retained-vm,Mandelbrot,candidate,opt-retained-candidate-vm,process,recorded,7,184280000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,warmup,1,171587000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,warmup,2,174712000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,1,173061000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,2,173794000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,3,172757000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,4,181731000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,5,205415000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,6,209793000,0,pass
+mandelbrot-opt-stripped-baseline-vm,Mandelbrot-stripped-vm,Mandelbrot,baseline,opt-stripped-baseline-vm,process,recorded,7,180336000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,warmup,1,174488000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,warmup,2,175649000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,1,174125000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,2,175813000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,3,174278000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,4,183213000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,5,208681000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,6,202071000,0,pass
+mandelbrot-opt-stripped-candidate-vm,Mandelbrot-stripped-vm,Mandelbrot,candidate,opt-stripped-candidate-vm,process,recorded,7,183586000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,warmup,1,684947000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,warmup,2,768262000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,1,730029000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,2,761831000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,3,725243000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,4,782878000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,5,762860000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,6,793208000,0,pass
+towers-opt-retained-baseline-vm,Towers-retained-vm,Towers,baseline,opt-retained-baseline-vm,process,recorded,7,721854000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,warmup,1,716745000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,warmup,2,784725000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,1,737730000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,2,797615000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,3,745807000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,4,781997000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,5,762437000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,6,804388000,0,pass
+towers-opt-retained-candidate-vm,Towers-retained-vm,Towers,candidate,opt-retained-candidate-vm,process,recorded,7,810899000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,warmup,1,721378000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,warmup,2,786255000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,1,747117000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,2,793948000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,3,756200000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,4,800299000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,5,738866000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,6,791685000,0,pass
+towers-opt-stripped-baseline-vm,Towers-stripped-vm,Towers,baseline,opt-stripped-baseline-vm,process,recorded,7,753615000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,warmup,1,747486000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,warmup,2,808562000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,1,741120000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,2,783160000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,3,755387000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,4,795342000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,5,771088000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,6,887465000,0,pass
+towers-opt-stripped-candidate-vm,Towers-stripped-vm,Towers,candidate,opt-stripped-candidate-vm,process,recorded,7,803016000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,warmup,1,396832000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,warmup,2,382149000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,1,374409000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,2,429052000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,3,398452000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,4,435516000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,5,419029000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,6,395645000,0,pass
+bounce-opt-retained-baseline-vm,Bounce-retained-vm,Bounce,baseline,opt-retained-baseline-vm,process,recorded,7,402549000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,warmup,1,436990000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,warmup,2,381935000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,1,414289000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,2,423495000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,3,390476000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,4,414178000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,5,422539000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,6,382217000,0,pass
+bounce-opt-retained-candidate-vm,Bounce-retained-vm,Bounce,candidate,opt-retained-candidate-vm,process,recorded,7,409498000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,warmup,1,455594000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,warmup,2,396880000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,1,437321000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,2,416073000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,3,388524000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,4,451840000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,5,455703000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,6,435115000,0,pass
+bounce-opt-stripped-baseline-vm,Bounce-stripped-vm,Bounce,baseline,opt-stripped-baseline-vm,process,recorded,7,462939000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,warmup,1,468716000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,warmup,2,409641000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,1,465161000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,2,429290000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,3,407986000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,4,442778000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,5,435585000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,6,403311000,0,pass
+bounce-opt-stripped-candidate-vm,Bounce-stripped-vm,Bounce,candidate,opt-stripped-candidate-vm,process,recorded,7,428602000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,warmup,1,2187696000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,warmup,2,1997924000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,1,1997749000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,2,2160043000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,3,2074138000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,4,2006426000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,5,2070103000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,6,2035853000,0,pass
+storage-opt-retained-baseline-vm,Storage-retained-vm,Storage,baseline,opt-retained-baseline-vm,process,recorded,7,2025914000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,warmup,1,2060278000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,warmup,2,2292967000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,1,2015338000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,2,2012265000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,3,2026689000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,4,2049215000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,5,2010793000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,6,2011782000,0,pass
+storage-opt-retained-candidate-vm,Storage-retained-vm,Storage,candidate,opt-retained-candidate-vm,process,recorded,7,2180406000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,warmup,1,2031046000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,warmup,2,2036929000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,1,2030334000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,2,2013936000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,3,2091296000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,4,2228688000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,5,2007079000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,6,2079195000,0,pass
+storage-opt-stripped-baseline-vm,Storage-stripped-vm,Storage,baseline,opt-stripped-baseline-vm,process,recorded,7,2043557000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,warmup,1,1981339000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,warmup,2,2049752000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,1,2181280000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,2,2080751000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,3,2025040000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,4,2047186000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,5,2027286000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,6,2047866000,0,pass
+storage-opt-stripped-candidate-vm,Storage-stripped-vm,Storage,candidate,opt-stripped-candidate-vm,process,recorded,7,2043579000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,warmup,1,238386000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,warmup,2,242213000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,1,237772000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,2,237418000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,3,291237000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,4,290487000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,5,260725000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,6,276381000,0,pass
+list-opt-retained-baseline-vm,List-retained-vm,List,baseline,opt-retained-baseline-vm,process,recorded,7,315032000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,warmup,1,252315000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,warmup,2,251761000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,1,251706000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,2,252037000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,3,306004000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,4,297891000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,5,273697000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,6,308458000,0,pass
+list-opt-retained-candidate-vm,List-retained-vm,List,candidate,opt-retained-candidate-vm,process,recorded,7,327109000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,warmup,1,237436000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,warmup,2,237086000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,1,238335000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,2,236657000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,3,286030000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,4,282198000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,5,254955000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,6,254889000,0,pass
+list-opt-stripped-baseline-vm,List-stripped-vm,List,baseline,opt-stripped-baseline-vm,process,recorded,7,260036000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,warmup,1,247824000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,warmup,2,258655000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,1,247858000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,2,254577000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,3,311949000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,4,285962000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,5,272714000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,6,297134000,0,pass
+list-opt-stripped-candidate-vm,List-stripped-vm,List,candidate,opt-stripped-candidate-vm,process,recorded,7,315144000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,warmup,1,631936000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,warmup,2,705129000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,1,721938000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,2,736076000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,3,695846000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,4,737529000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,5,691475000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,6,730343000,0,pass
+richards-opt-retained-baseline-vm,Richards-retained-vm,Richards,baseline,opt-retained-baseline-vm,process,recorded,7,696368000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,warmup,1,738948000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,warmup,2,838208000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,1,712709000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,2,744621000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,3,697677000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,4,734499000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,5,706086000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,6,734726000,0,pass
+richards-opt-retained-candidate-vm,Richards-retained-vm,Richards,candidate,opt-retained-candidate-vm,process,recorded,7,711366000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,warmup,1,677180000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,warmup,2,719723000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,1,688168000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,2,736825000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,3,704407000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,4,746467000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,5,704593000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,6,733136000,0,pass
+richards-opt-stripped-baseline-vm,Richards-stripped-vm,Richards,baseline,opt-stripped-baseline-vm,process,recorded,7,708242000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,warmup,1,691638000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,warmup,2,733252000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,1,698174000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,2,743699000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,3,701564000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,4,742399000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,5,709034000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,6,748228000,0,pass
+richards-opt-stripped-candidate-vm,Richards-stripped-vm,Richards,candidate,opt-stripped-candidate-vm,process,recorded,7,708210000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,warmup,1,333810000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,warmup,2,318593000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,1,300820000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,2,379827000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,3,357548000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,4,336972000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,5,342272000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,6,385516000,0,pass
+json-opt-retained-baseline-vm,JSON-retained-vm,JSON,baseline,opt-retained-baseline-vm,process,recorded,7,362606000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,warmup,1,336261000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,warmup,2,321295000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,1,318661000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,2,406976000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,3,372505000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,4,389367000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,5,426831000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,6,362932000,0,pass
+json-opt-retained-candidate-vm,JSON-retained-vm,JSON,candidate,opt-retained-candidate-vm,process,recorded,7,381610000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,warmup,1,297807000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,warmup,2,292687000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,1,303848000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,2,346736000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,3,370599000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,4,334510000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,5,332409000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,6,397383000,0,pass
+json-opt-stripped-baseline-vm,JSON-stripped-vm,JSON,baseline,opt-stripped-baseline-vm,process,recorded,7,351229000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,warmup,1,366770000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,warmup,2,339226000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,1,331039000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,2,405120000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,3,366754000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,4,373619000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,5,433943000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,6,365266000,0,pass
+json-opt-stripped-candidate-vm,JSON-stripped-vm,JSON,candidate,opt-stripped-candidate-vm,process,recorded,7,389660000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,warmup,1,396457000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,warmup,2,374866000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,1,389595000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,2,415631000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,3,399736000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,4,311800000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,5,468796000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,6,450763000,0,pass
+base64-opt-retained-baseline-vm,Base64-retained-vm,Base64,baseline,opt-retained-baseline-vm,process,recorded,7,480406000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,warmup,1,380621000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,warmup,2,415101000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,1,424334000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,2,476789000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,3,411326000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,4,539177000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,5,456851000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,6,418467000,0,pass
+base64-opt-retained-candidate-vm,Base64-retained-vm,Base64,candidate,opt-retained-candidate-vm,process,recorded,7,437777000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,warmup,1,450155000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,warmup,2,372873000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,1,367915000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,2,424876000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,3,444039000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,4,439845000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,5,451573000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,6,461349000,0,pass
+base64-opt-stripped-baseline-vm,Base64-stripped-vm,Base64,baseline,opt-stripped-baseline-vm,process,recorded,7,492536000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,warmup,1,423568000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,warmup,2,337874000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,1,391793000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,2,427313000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,3,385391000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,4,428780000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,5,483760000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,6,427459000,0,pass
+base64-opt-stripped-candidate-vm,Base64-stripped-vm,Base64,candidate,opt-stripped-candidate-vm,process,recorded,7,501359000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,warmup,1,143695000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,warmup,2,138873000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,warmup,3,129684000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,1,126402000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,2,125243000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,3,125359000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,4,124322000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,5,138289000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,6,164962000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,7,170299000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,8,147603000,0,pass
+rexxcps-opaque-heavy-retained-baseline-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,baseline,opt-retained-baseline-vm,process,recorded,9,147532000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,warmup,1,133194000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,warmup,2,127189000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,warmup,3,122632000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,1,122879000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,2,120833000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,3,120577000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,4,120856000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,5,146839000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,6,158323000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,7,166756000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,8,148783000,0,pass
+rexxcps-opaque-heavy-retained-candidate-vm,RexxCPS-opaque-heavy-retained-vm,RexxCPS opaque fixed 100,candidate,opt-retained-candidate-vm,process,recorded,9,135850000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,warmup,1,136125000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,warmup,2,129254000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,warmup,3,123739000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,1,122202000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,2,117423000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,3,119790000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,4,119387000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,5,139196000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,6,140926000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,7,157021000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,8,148366000,0,pass
+rexxcps-opaque-heavy-stripped-baseline-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,baseline,opt-stripped-baseline-vm,process,recorded,9,129512000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,warmup,1,149505000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,warmup,2,129145000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,warmup,3,122538000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,1,121142000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,2,120759000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,3,115826000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,4,119163000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,5,143430000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,6,156242000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,7,152371000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,8,148874000,0,pass
+rexxcps-opaque-heavy-stripped-candidate-vm,RexxCPS-opaque-heavy-stripped-vm,RexxCPS opaque fixed 100,candidate,opt-stripped-candidate-vm,process,recorded,9,127593000,0,pass

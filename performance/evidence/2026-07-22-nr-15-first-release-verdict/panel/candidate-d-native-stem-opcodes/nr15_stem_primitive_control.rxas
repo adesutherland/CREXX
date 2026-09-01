@@ -1,0 +1,648 @@
+/*
+ * SOURCE                 : nr15_stem_primitive_control.crexx
+ */
+
+.globals=0
+
+main() .locals=25
+   .meta "nr15_stem_primitive_control.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "nr15_stem_primitive_control.main.keys"="b" ".string[*]" r10
+   .srcstep 1 1 17 "nr15_stem_primitive_control.crexx" 16 1 15 "keys = .string[]"
+   null r10
+   .meta "nr15_stem_primitive_control.main.result"="b" ".string" r12
+   .srcstep 2 2 17 "nr15_stem_primitive_control.crexx" 27 5 21 "    result = .string"
+   null r12
+   .srcstep 3 3 17 "nr15_stem_primitive_control.crexx" 6 5 19 "arg argv = .string[]"
+   .meta "nr15_stem_primitive_control.main.argv"="b" ".string[*]" r4
+   brtpandt l6c,a1,512
+   copy r4,a1
+   br l6d
+l6c:
+   swap r4,a1
+l6d:
+   .srcstep 4 4 17 "nr15_stem_primitive_control.crexx" 7 1 17 "mode = \"get-hit\""
+   .meta "nr15_stem_primitive_control.main.mode"="b" ".string" r11
+   load r11,"get-hit"
+   .traceevent "L" 4 "R" "S" "r" 11 4 4 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 4 4 0 "mode" ""
+   .srcstep 5 5 17 "nr15_stem_primitive_control.crexx" 8 1 10 "size = 64"
+   .meta "nr15_stem_primitive_control.main.size"="b" ".int" r13
+   load r13,64
+   .traceevent "L" 4 "R" "I" "r" 13 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 5 5 0 "size" ""
+   .srcstep 6 6 17 "nr15_stem_primitive_control.crexx" 9 1 19 "iterations = 20000"
+   .meta "nr15_stem_primitive_control.main.iterations"="b" ".int" r8
+   load r8,20000
+   .traceevent "L" 4 "R" "I" "r" 8 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 6 6 0 "iterations" ""
+   .srcstep 7 7 17 "nr15_stem_primitive_control.crexx" 10 1 17 "family = \"ascii\""
+   .meta "nr15_stem_primitive_control.main.family"="b" ".string" r7
+   load r7,"ascii"
+   .traceevent "L" 4 "R" "S" "r" 7 7 7 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 7 7 0 "family" ""
+   .srcstep 9 9 17 "nr15_stem_primitive_control.crexx" 11 1 16 "if argv[0] >= 1 then mode = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 9 9 0 "argv" ""
+   getattrs r2,r4,0
+   .traceevent "V" 6 "R" "I" "r" 2 9 9 0 "argv" ""
+   igte r2,r2,1
+   .traceevent "O" 4 "R" "B" "r" 2 9 9 0 "" ""
+   brf l34iffalse,r2
+   .srcstep 10 10 17 "nr15_stem_primitive_control.crexx" 11 17 21 "if argv[0] >= 1 then mode = argv[1]"
+   .srcstep 8 8 17 "nr15_stem_primitive_control.crexx" 11 22 35 "if argv[0] >= 1 then mode = argv[1]"
+   minlinkattr1 r0,r4,1
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "argv" ""
+   scopy r11,r0
+   .traceevent "A" 6 "R" "S" "r" 11 8 8 0 "mode" ""
+   unlink r0
+l34iffalse:
+   .srcstep 12 12 17 "nr15_stem_primitive_control.crexx" 12 1 16 "if argv[0] >= 2 then size = argv[2]"
+   .traceevent "C" 4 "R" "V" "r" 3 12 12 0 "argv" ""
+   getattrs r2,r4,0
+   .traceevent "V" 6 "R" "I" "r" 2 12 12 0 "argv" ""
+   igte r2,r2,2
+   .traceevent "O" 4 "R" "B" "r" 2 12 12 0 "" ""
+   brf l43iffalse,r2
+   .srcstep 13 13 17 "nr15_stem_primitive_control.crexx" 12 17 21 "if argv[0] >= 2 then size = argv[2]"
+   .srcstep 11 11 17 "nr15_stem_primitive_control.crexx" 12 22 35 "if argv[0] >= 2 then size = argv[2]"
+   minlinkattr1 r0,r4,2
+   stoi r0
+   .traceevent "V" 6 "R" "I" "r" 0 11 11 0 "argv" ""
+   igetunlink r13,r0
+   .traceevent "A" 6 "R" "I" "r" 13 11 11 0 "size" ""
+l43iffalse:
+   .srcstep 15 15 17 "nr15_stem_primitive_control.crexx" 13 1 16 "if argv[0] >= 3 then iterations = argv[3]"
+   .traceevent "C" 4 "R" "V" "r" 3 15 15 0 "argv" ""
+   getattrs r2,r4,0
+   .traceevent "V" 6 "R" "I" "r" 2 15 15 0 "argv" ""
+   igte r2,r2,3
+   .traceevent "O" 4 "R" "B" "r" 2 15 15 0 "" ""
+   brf l52iffalse,r2
+   .srcstep 16 16 17 "nr15_stem_primitive_control.crexx" 13 17 21 "if argv[0] >= 3 then iterations = argv[3]"
+   .srcstep 14 14 17 "nr15_stem_primitive_control.crexx" 13 22 41 "if argv[0] >= 3 then iterations = argv[3]"
+   minlinkattr1 r0,r4,3
+   stoi r0
+   .traceevent "V" 6 "R" "I" "r" 0 14 14 0 "argv" ""
+   igetunlink r8,r0
+   .traceevent "A" 6 "R" "I" "r" 8 14 14 0 "iterations" ""
+l52iffalse:
+   .srcstep 18 18 17 "nr15_stem_primitive_control.crexx" 14 1 16 "if argv[0] >= 4 then family = argv[4]"
+   .traceevent "C" 4 "R" "V" "r" 3 18 18 0 "argv" ""
+   getattrs r2,r4,0
+   .traceevent "V" 6 "R" "I" "r" 2 18 18 0 "argv" ""
+   igte r2,r2,4
+   .traceevent "O" 4 "R" "B" "r" 2 18 18 0 "" ""
+   brf l61iffalse,r2
+   .srcstep 19 19 17 "nr15_stem_primitive_control.crexx" 14 17 21 "if argv[0] >= 4 then family = argv[4]"
+   .srcstep 17 17 17 "nr15_stem_primitive_control.crexx" 14 22 37 "if argv[0] >= 4 then family = argv[4]"
+   minlinkattr1 r0,r4,4
+   .traceevent "V" 6 "R" "S" "r" 0 17 17 0 "argv" ""
+   scopy r7,r0
+   .traceevent "A" 6 "R" "S" "r" 7 17 17 0 "family" ""
+   unlink r0
+l61iffalse:
+   .srcstep 20 20 17 "nr15_stem_primitive_control.crexx" 17 1 15 "target = .stem()"
+   .meta "nr15_stem_primitive_control.main.target"="b" ".stem" r1
+   load r3,0
+   call r1,§rxfnsb.stem.§factory(),r3
+   .traceevent "F" 4 "R" "O" "r" 1 20 20 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 1 20 20 0 "target" ""
+   .srcstep 55 55 17 "nr15_stem_primitive_control.crexx" 18 1 3 "do i = 1 to size"
+   .srcstep 21 21 17 "nr15_stem_primitive_control.crexx" 18 4 9 "do i = 1 to size"
+   .meta "nr15_stem_primitive_control.main.i"="b" ".int" r3
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 21 21 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 21 21 0 "i" ""
+   .srcstep 22 22 17 "nr15_stem_primitive_control.crexx" 18 10 17 "do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "size" ""
+l72dostart:
+   .srcstep 22 22 17 "nr15_stem_primitive_control.crexx" 18 10 17 "do i = 1 to size"
+   igt r2,r3,r13
+   brt l72doend,r2
+   .srcstep 53 53 17 "nr15_stem_primitive_control.crexx" 19 3 32 "  keys[i] = make_key(i, family)"
+   .traceevent "V" 6 "R" "I" "r" 3 53 53 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 53 53 0 "keys" ""
+   minlinkattr1 r0,r10,r3,0
+   .srcstep 52 52 17 "nr15_stem_primitive_control.crexx" 19 13 21 "  keys[i] = make_key(i, family)"
+   .srcstep 24 24 33 "nr15_stem_primitive_control.crexx" 77 7 12 "  arg index = .int, family = .string"
+   .traceevent "V" 6 "R" "I" "r" 3 24 24 0 "i" ""
+   icopy r16,r3
+   .traceevent "A" 6 "R" "I" "r" 16 24 24 0 "index" ""
+   .srcstep 25 25 33 "nr15_stem_primitive_control.crexx" 77 21 27 "  arg index = .int, family = .string"
+   .traceevent "V" 6 "R" "S" "r" 7 25 25 0 "family" ""
+   scopy r15,r7
+   .traceevent "A" 6 "R" "S" "r" 15 25 25 0 "family" ""
+   .srcstep 27 27 17 "nr15_stem_primitive_control.crexx" 78 3 23 "  if family == \"ascii\" then return \"key-\" || index"
+   .traceevent "V" 6 "R" "S" "r" 15 27 27 0 "family" ""
+   seq r17,r15,"ascii"
+   .traceevent "O" 4 "R" "B" "r" 17 27 27 0 "" ""
+   brf l684iffalse,r17
+   .srcstep 28 28 17 "nr15_stem_primitive_control.crexx" 78 24 28 "  if family == \"ascii\" then return \"key-\" || index"
+   .srcstep 26 26 17 "nr15_stem_primitive_control.crexx" 78 29 51 "  if family == \"ascii\" then return \"key-\" || index"
+   itos r16
+   .traceevent "V" 6 "R" "S" "r" 16 53 53 0 "index" ""
+   concat r18,"key-",r16
+   .traceevent "O" 4 "R" "S" "r" 18 53 53 0 "" ""
+   scopy r22,r18
+   br l676bexprend
+l684iffalse:
+   .srcstep 30 30 17 "nr15_stem_primitive_control.crexx" 79 3 25 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   .traceevent "V" 6 "R" "S" "r" 15 30 30 0 "family" ""
+   seq r18,r15,"unicode"
+   .traceevent "O" 4 "R" "B" "r" 18 30 30 0 "" ""
+   brf l692iffalse,r18
+   .srcstep 31 31 17 "nr15_stem_primitive_control.crexx" 79 26 30 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   .srcstep 29 29 17 "nr15_stem_primitive_control.crexx" 79 31 67 "  if family == \"unicode\" then return \"κλειδί-🔥-\" || index"
+   itos r16
+   .traceevent "V" 6 "R" "S" "r" 16 53 53 0 "index" ""
+   concat r17,"\xce\xba\xce\xbb\xce\xb5\xce\xb9\xce\xb4\xce\xaf-\xf0\x9f\x94\xa5-",r16
+   .traceevent "O" 4 "R" "S" "r" 17 53 53 0 "" ""
+   scopy r22,r17
+   br l676bexprend
+l692iffalse:
+   .srcstep 33 33 17 "nr15_stem_primitive_control.crexx" 80 3 22 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   .traceevent "V" 6 "R" "S" "r" 15 33 33 0 "family" ""
+   seq r18,r15,"long"
+   .traceevent "O" 4 "R" "B" "r" 18 33 33 0 "" ""
+   brf l700iffalse,r18
+   .srcstep 34 34 17 "nr15_stem_primitive_control.crexx" 80 23 27 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   .srcstep 32 32 17 "nr15_stem_primitive_control.crexx" 80 28 109 "  if family == \"long\" then return \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-\" || index"
+   itos r16
+   .traceevent "V" 6 "R" "S" "r" 16 53 53 0 "index" ""
+   concat r17,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-",r16
+   .traceevent "O" 4 "R" "S" "r" 17 53 53 0 "" ""
+   scopy r22,r17
+   br l676bexprend
+l700iffalse:
+   .srcstep 49 49 17 "nr15_stem_primitive_control.crexx" 81 3 27 "  if family == \"collision\" then do"
+   .traceevent "V" 6 "R" "S" "r" 15 49 49 0 "family" ""
+   seq r18,r15,"collision"
+   .traceevent "O" 4 "R" "B" "r" 18 49 49 0 "" ""
+   brf l708iffalse,r18
+   .srcstep 50 50 17 "nr15_stem_primitive_control.crexx" 81 28 32 "  if family == \"collision\" then do"
+   .srcstep 35 35 17 "nr15_stem_primitive_control.crexx" 82 5 22 "    value = index - 1"
+   .traceevent "V" 6 "R" "I" "r" 16 35 35 0 "index" ""
+   isub r19,r16,1
+   .traceevent "O" 4 "R" "I" "r" 19 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 35 35 0 "value" ""
+   .srcstep 36 36 17 "nr15_stem_primitive_control.crexx" 83 5 13 "    key = \"\""
+   load r17,""
+   .traceevent "L" 4 "R" "S" "r" 17 36 36 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 17 36 36 0 "key" ""
+   .srcstep 46 46 17 "nr15_stem_primitive_control.crexx" 84 5 7 "    do part = 1 to 10"
+   .srcstep 37 37 17 "nr15_stem_primitive_control.crexx" 84 8 16 "    do part = 1 to 10"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 37 37 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 37 37 0 "part" ""
+   .srcstep 38 38 17 "nr15_stem_primitive_control.crexx" 84 17 22 "    do part = 1 to 10"
+   load r21,10
+   .traceevent "L" 4 "R" "I" "r" 21 53 53 0 "" ""
+l721dostart:
+   .srcstep 38 38 17 "nr15_stem_primitive_control.crexx" 84 17 22 "    do part = 1 to 10"
+   igt r22,r20,r21
+   brt l721doend,r22
+   .srcstep 42 42 17 "nr15_stem_primitive_control.crexx" 85 7 23 "      if value % 2 = 0 then key = key || \"Aa\""
+   .traceevent "V" 6 "R" "I" "r" 19 42 42 0 "value" ""
+   imod r23,r19,2
+   .traceevent "O" 4 "R" "I" "r" 23 42 42 0 "" ""
+   ieq r23,r23,0
+   .traceevent "O" 4 "R" "B" "r" 23 42 42 0 "" ""
+   brf l730iffalse,r23
+   .srcstep 43 43 17 "nr15_stem_primitive_control.crexx" 85 24 28 "      if value % 2 = 0 then key = key || \"Aa\""
+   .srcstep 40 40 17 "nr15_stem_primitive_control.crexx" 85 29 46 "      if value % 2 = 0 then key = key || \"Aa\""
+   .traceevent "V" 6 "R" "S" "r" 17 40 40 0 "key" ""
+   concat r17,r17,"Aa"
+   .traceevent "O" 4 "R" "S" "r" 17 40 40 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 17 40 40 0 "key" ""
+   br l730ifend
+   .srcstep 44 44 17 "nr15_stem_primitive_control.crexx" 86 7 11 "      else key = key || \"BB\""
+l730iffalse:
+   .srcstep 41 41 17 "nr15_stem_primitive_control.crexx" 86 12 29 "      else key = key || \"BB\""
+   .traceevent "V" 6 "R" "S" "r" 17 41 41 0 "key" ""
+   concat r17,r17,"BB"
+   .traceevent "O" 4 "R" "S" "r" 17 41 41 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 17 41 41 0 "key" ""
+l730ifend:
+   .srcstep 45 45 17 "nr15_stem_primitive_control.crexx" 87 7 24 "      value = value / 2"
+   .traceevent "V" 6 "R" "I" "r" 19 45 45 0 "value" ""
+   idiv r19,r19,2
+   .traceevent "O" 4 "R" "I" "r" 19 45 45 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 45 45 0 "value" ""
+l721doinc:
+   .srcstep 39 39 17 "nr15_stem_primitive_control.crexx" 84 8 12 "    do part = 1 to 10"
+   inc r20
+   .srcstep 47 47 17 "nr15_stem_primitive_control.crexx" 88 5 8 "    end"
+   br l721dostart
+l721doend:
+   .srcstep 48 48 17 "nr15_stem_primitive_control.crexx" 89 5 15 "    return key"
+   .traceevent "V" 6 "R" "S" "r" 17 53 53 0 "key" ""
+   scopy r22,r17
+   br l676bexprend
+l708iffalse:
+   .srcstep 51 51 17 "nr15_stem_primitive_control.crexx" 91 3 29 "  return \"unknown-\" || index"
+   itos r16
+   .traceevent "V" 6 "R" "S" "r" 16 53 53 0 "index" ""
+   concat r23,"unknown-",r16
+   .traceevent "O" 4 "R" "S" "r" 23 53 53 0 "" ""
+   scopy r22,r23
+   br l676bexprend
+l676bexprend:
+   scopy r0,r22
+   .traceevent "A" 6 "R" "S" "r" 0 53 53 0 "keys" ""
+   unlink r0
+   .srcstep 54 54 17 "nr15_stem_primitive_control.crexx" 20 3 36 "  call target.set(keys[i], \"v\" || i)"
+   .traceevent "V" 6 "R" "O" "r" 1 54 54 0 "target" ""
+   .traceevent "V" 6 "R" "I" "r" 3 54 54 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 3 54 54 0 "keys" ""
+   minlinkattr1 r19,r10,r3,0
+   .traceevent "V" 6 "R" "S" "r" 19 54 54 0 "keys" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 54 54 0 "i" ""
+   concat r23,"v",r3
+   .traceevent "O" 4 "R" "S" "r" 23 54 54 0 "" ""
+   load r20,3
+   settp r1,256
+   swap r21,r1
+   settp r19,256
+   swap r22,r19
+   settpcall r18,§rxfnsb.stem.set(),r20,r23,768
+   swap r1,r21
+   swap r19,r22
+   unlink r19
+   .traceevent "F" 4 "R" "V" "r" 18 54 54 0 "set" ""
+l72doinc:
+   .srcstep 23 23 17 "nr15_stem_primitive_control.crexx" 18 4 5 "do i = 1 to size"
+   inc r3
+   .srcstep 56 56 17 "nr15_stem_primitive_control.crexx" 20 36 37 "  call target.set(keys[i], \"v\" || i)"
+   br l72dostart
+l72doend:
+   .meta "nr15_stem_primitive_control.main.i"
+   .srcstep 57 57 17 "nr15_stem_primitive_control.crexx" 23 1 13 "checksum = 0"
+   .meta "nr15_stem_primitive_control.main.checksum"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 57 57 0 "checksum" ""
+   .srcstep 58 58 17 "nr15_stem_primitive_control.crexx" 24 1 19 "start = time(\"us\")"
+   .meta "nr15_stem_primitive_control.main.start"="b" ".string" r14
+   load r23,"us"
+   .traceevent "L" 4 "R" "S" "r" 23 58 58 0 "" ""
+   load r22,1
+   settpcall r14,rxfnsb.time(),r22,r23,768
+   .traceevent "F" 4 "R" "S" "r" 14 58 58 0 "time" ""
+   .traceevent "A" 6 "R" "S" "r" 14 58 58 0 "start" ""
+   .srcstep 108 108 6 "nr15_stem_primitive_control.crexx" 25 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 11 0 0 0 "mode" ""
+   .jtable jtable799 auto
+   jumps r11,jtable799
+   br l799dispatchdefault
+l799dispatchcase0: .jcase jtable799 "get-hit"
+   .srcstep 71 71 17 "nr15_stem_primitive_control.crexx" 28 5 7 "    do i = 1 to iterations"
+   .srcstep 59 59 17 "nr15_stem_primitive_control.crexx" 28 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_primitive_control.main.i"="b" ".int" r23
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 59 59 0 "i" ""
+   .srcstep 60 60 17 "nr15_stem_primitive_control.crexx" 28 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "iterations" ""
+l109dostart:
+   .srcstep 60 60 17 "nr15_stem_primitive_control.crexx" 28 14 27 "    do i = 1 to iterations"
+   igt r20,r23,r8
+   brt l109doend,r20
+   .srcstep 62 62 17 "nr15_stem_primitive_control.crexx" 29 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_primitive_control.main.index"="b" ".int" r22
+   .traceevent "V" 6 "R" "I" "r" 23 62 62 0 "i" ""
+   isub r19,r23,1
+   .traceevent "O" 4 "R" "I" "r" 19 62 62 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 13 62 62 0 "size" ""
+   imod r19,r19,r13
+   .traceevent "O" 4 "R" "I" "r" 19 62 62 0 "" ""
+   iadd r22,r19,1
+   .traceevent "O" 4 "R" "I" "r" 22 62 62 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 62 62 0 "index" ""
+   .srcstep 63 63 17 "nr15_stem_primitive_control.crexx" 30 7 23 "      key = keys[index]"
+   .meta "nr15_stem_primitive_control.main.key"="b" ".string" r21
+   .traceevent "V" 6 "R" "I" "r" 22 63 63 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 22 63 63 0 "keys" ""
+   minlinkattr1 r19,r10,r22,0
+   .traceevent "V" 6 "R" "S" "r" 19 63 63 0 "keys" ""
+   scopy r21,r19
+   .traceevent "A" 6 "R" "S" "r" 21 63 63 0 "key" ""
+   unlink r19
+   .srcstep 64 64 17 "nr15_stem_primitive_control.crexx" 31 17 42 "      assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 12 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 21 0 0 0 "key" ""
+   stemget r12,r1,r21
+   .srcstep 70 70 17 "nr15_stem_primitive_control.crexx" 32 7 43 "      checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "I" "r" 5 70 70 0 "checksum" ""
+   .srcstep 69 69 17 "nr15_stem_primitive_control.crexx" 32 29 35 "      checksum = checksum + length(result)"
+   .srcstep 65 65 33 "nr15_stem_primitive_control.crexx" 32 35 35 "      checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "S" "r" 12 65 65 0 "result" ""
+   scopy r17,r12
+   .traceevent "A" 6 "R" "S" "r" 17 65 65 0 "string" ""
+   .srcstep 66 66 25 "length.crexx" 42 3 13 "  result = 0"
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 66 66 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 66 66 0 "result" ""
+   .srcstep 67 67 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 19 70 70 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 17 70 70 0 "string" ""
+   strlen r19,r17
+   .srcstep 68 68 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 19 70 70 0 "result" ""
+   icopy r16,r19
+   br l757bexprend
+l757bexprend:
+   iadd r5,r5,r16
+   .traceevent "O" 4 "R" "I" "r" 5 70 70 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 70 70 0 "checksum" ""
+l109doinc:
+   .srcstep 61 61 17 "nr15_stem_primitive_control.crexx" 28 8 9 "    do i = 1 to iterations"
+   inc r23
+   .srcstep 72 72 17 "nr15_stem_primitive_control.crexx" 33 5 8 "    end"
+   br l109dostart
+l109doend:
+   .meta "nr15_stem_primitive_control.main.i"
+   .meta "nr15_stem_primitive_control.main.index"
+   .meta "nr15_stem_primitive_control.main.key"
+   br l799dispatchend
+l799dispatchcase1: .jcase jtable799 "get-miss"
+   .srcstep 73 73 17 "nr15_stem_primitive_control.crexx" 37 5 31 "    key = \"missing-\" || family"
+   .meta "nr15_stem_primitive_control.main.key"="b" ".string" r9
+   .traceevent "V" 6 "R" "S" "r" 7 73 73 0 "family" ""
+   concat r9,"missing-",r7
+   .traceevent "O" 4 "R" "S" "r" 9 73 73 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 73 73 0 "key" ""
+   .srcstep 81 81 17 "nr15_stem_primitive_control.crexx" 38 5 7 "    do i = 1 to iterations"
+   .srcstep 74 74 17 "nr15_stem_primitive_control.crexx" 38 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_primitive_control.main.i"="b" ".int" r23
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 74 74 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 74 74 0 "i" ""
+   .srcstep 75 75 17 "nr15_stem_primitive_control.crexx" 38 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "iterations" ""
+l154dostart:
+   .srcstep 75 75 17 "nr15_stem_primitive_control.crexx" 38 14 27 "    do i = 1 to iterations"
+   igt r22,r23,r8
+   brt l154doend,r22
+   .srcstep 77 77 17 "nr15_stem_primitive_control.crexx" 39 17 42 "      assembler stemget result,target,key"
+   .traceevent "V" 6 "R" "S" "r" 12 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "key" ""
+   stemget r12,r1,r9
+   .srcstep 79 79 17 "nr15_stem_primitive_control.crexx" 40 7 22 "      if result == \"\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "S" "r" 12 79 79 0 "result" ""
+   seq r21,r12,""
+   .traceevent "O" 4 "R" "B" "r" 21 79 79 0 "" ""
+   brf l174iffalse,r21
+   .srcstep 80 80 17 "nr15_stem_primitive_control.crexx" 40 23 27 "      if result == \"\" then checksum = checksum + 1"
+   .srcstep 78 78 17 "nr15_stem_primitive_control.crexx" 40 28 51 "      if result == \"\" then checksum = checksum + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 78 78 0 "checksum" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 78 78 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 78 78 0 "checksum" ""
+l174iffalse:
+l154doinc:
+   .srcstep 76 76 17 "nr15_stem_primitive_control.crexx" 38 8 9 "    do i = 1 to iterations"
+   inc r23
+   .srcstep 82 82 17 "nr15_stem_primitive_control.crexx" 41 5 8 "    end"
+   br l154dostart
+l154doend:
+   .meta "nr15_stem_primitive_control.main.i"
+   br l799dispatchend
+l799dispatchcase2: .jcase jtable799 "set-existing"
+   .srcstep 91 91 17 "nr15_stem_primitive_control.crexx" 44 5 7 "    do i = 1 to iterations"
+   .srcstep 83 83 17 "nr15_stem_primitive_control.crexx" 44 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_primitive_control.main.i"="b" ".int" r23
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 83 83 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 83 83 0 "i" ""
+   .srcstep 84 84 17 "nr15_stem_primitive_control.crexx" 44 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "iterations" ""
+l179dostart:
+   .srcstep 84 84 17 "nr15_stem_primitive_control.crexx" 44 14 27 "    do i = 1 to iterations"
+   igt r20,r23,r8
+   brt l179doend,r20
+   .srcstep 86 86 17 "nr15_stem_primitive_control.crexx" 45 7 35 "      index = ((i - 1) % size) + 1"
+   .meta "nr15_stem_primitive_control.main.index"="b" ".int" r22
+   .traceevent "V" 6 "R" "I" "r" 23 86 86 0 "i" ""
+   isub r19,r23,1
+   .traceevent "O" 4 "R" "I" "r" 19 86 86 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 13 86 86 0 "size" ""
+   imod r19,r19,r13
+   .traceevent "O" 4 "R" "I" "r" 19 86 86 0 "" ""
+   iadd r22,r19,1
+   .traceevent "O" 4 "R" "I" "r" 22 86 86 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 22 86 86 0 "index" ""
+   .srcstep 87 87 17 "nr15_stem_primitive_control.crexx" 46 7 23 "      key = keys[index]"
+   .traceevent "V" 6 "R" "I" "r" 22 87 87 0 "index" ""
+   .traceevent "C" 4 "R" "I" "r" 22 87 87 0 "keys" ""
+   minlinkattr1 r19,r10,r22,0
+   .traceevent "V" 6 "R" "S" "r" 19 87 87 0 "keys" ""
+   scopy r9,r19
+   .traceevent "A" 6 "R" "S" "r" 9 87 87 0 "key" ""
+   unlink r19
+   .srcstep 88 88 17 "nr15_stem_primitive_control.crexx" 47 7 23 "      value = \"u\" || i"
+   .meta "nr15_stem_primitive_control.main.value"="b" ".string" r21
+   itos r23
+   .traceevent "V" 6 "R" "S" "r" 23 88 88 0 "i" ""
+   concat r21,"u",r23
+   .traceevent "O" 4 "R" "S" "r" 21 88 88 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 21 88 88 0 "value" ""
+   .srcstep 89 89 17 "nr15_stem_primitive_control.crexx" 48 17 41 "      assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 21 0 0 0 "value" ""
+   stemset r1,r9,r21
+   .srcstep 90 90 17 "nr15_stem_primitive_control.crexx" 49 7 34 "      checksum = checksum + index"
+   .traceevent "V" 6 "R" "I" "r" 5 90 90 0 "checksum" ""
+   .traceevent "V" 6 "R" "I" "r" 22 90 90 0 "index" ""
+   iadd r5,r5,r22
+   .traceevent "O" 4 "R" "I" "r" 5 90 90 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 90 90 0 "checksum" ""
+l179doinc:
+   .srcstep 85 85 17 "nr15_stem_primitive_control.crexx" 44 8 9 "    do i = 1 to iterations"
+   inc r23
+   .srcstep 92 92 17 "nr15_stem_primitive_control.crexx" 50 5 8 "    end"
+   br l179dostart
+l179doend:
+   .meta "nr15_stem_primitive_control.main.i"
+   .meta "nr15_stem_primitive_control.main.index"
+   .meta "nr15_stem_primitive_control.main.value"
+   br l799dispatchend
+l799dispatchcase3: .jcase jtable799 "set-new"
+   .srcstep 99 99 17 "nr15_stem_primitive_control.crexx" 53 5 7 "    do i = 1 to iterations"
+   .srcstep 93 93 17 "nr15_stem_primitive_control.crexx" 53 8 13 "    do i = 1 to iterations"
+   .meta "nr15_stem_primitive_control.main.i"="b" ".int" r23
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 93 93 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 93 93 0 "i" ""
+   .srcstep 94 94 17 "nr15_stem_primitive_control.crexx" 53 14 27 "    do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "iterations" ""
+l219dostart:
+   .srcstep 94 94 17 "nr15_stem_primitive_control.crexx" 53 14 27 "    do i = 1 to iterations"
+   igt r21,r23,r8
+   brt l219doend,r21
+   .srcstep 96 96 17 "nr15_stem_primitive_control.crexx" 54 7 41 "      key = \"new-\" || family || \"-\" || i"
+   .traceevent "V" 6 "R" "S" "r" 7 96 96 0 "family" ""
+   concat r20,"new-",r7
+   .traceevent "O" 4 "R" "S" "r" 20 96 96 0 "" ""
+   concat r20,r20,"-"
+   .traceevent "O" 4 "R" "S" "r" 20 96 96 0 "" ""
+   itos r23
+   .traceevent "V" 6 "R" "S" "r" 23 96 96 0 "i" ""
+   concat r9,r20,r23
+   .traceevent "O" 4 "R" "S" "r" 9 96 96 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 96 96 0 "key" ""
+   .srcstep 97 97 17 "nr15_stem_primitive_control.crexx" 55 7 23 "      value = \"n\" || i"
+   .meta "nr15_stem_primitive_control.main.value"="b" ".string" r22
+   itos r23
+   .traceevent "V" 6 "R" "S" "r" 23 97 97 0 "i" ""
+   concat r22,"n",r23
+   .traceevent "O" 4 "R" "S" "r" 22 97 97 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 22 97 97 0 "value" ""
+   .srcstep 98 98 17 "nr15_stem_primitive_control.crexx" 56 17 41 "      assembler stemset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 9 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 22 0 0 0 "value" ""
+   stemset r1,r9,r22
+l219doinc:
+   .srcstep 95 95 17 "nr15_stem_primitive_control.crexx" 53 8 9 "    do i = 1 to iterations"
+   inc r23
+   .srcstep 100 100 17 "nr15_stem_primitive_control.crexx" 57 5 8 "    end"
+   br l219dostart
+l219doend:
+   .meta "nr15_stem_primitive_control.main.i"
+   .meta "nr15_stem_primitive_control.main.value"
+   .srcstep 103 103 17 "nr15_stem_primitive_control.crexx" 58 5 27 "    checksum = target.size()"
+   .srcstep 101 101 33 "nr15_stem_primitive_control.crexx" 58 16 22 "    checksum = target.size()"
+   .traceevent "V" 6 "R" "O" "r" 1 101 101 0 "target" ""
+   copy r24,r1
+   .traceevent "A" 6 "R" "O" "r" 24 101 101 0 "§this" ""
+   .srcstep 102 102 33 "nr15_stem_primitive_control.crexx" 58 22 22 "    checksum = target.size()"
+   linkattr1 r23,r24,2
+   .traceevent "V" 6 "R" "I" "r" 23 102 102 0 "count" ""
+   copy r5,r23
+   .traceevent "A" 6 "R" "I" "r" 5 102 102 0 "checksum" ""
+   unlinkbr r23,l799dispatchend
+l799dispatchdefault:
+   .srcstep 107 107 17 "nr15_stem_primitive_control.crexx" 60 13 32 "  otherwise return fail(\"mode\")"
+   .srcstep 106 106 17 "nr15_stem_primitive_control.crexx" 60 20 24 "  otherwise return fail(\"mode\")"
+   .srcstep 104 104 17 "nr15_stem_primitive_control.crexx" 95 3 36 "  say \"FAIL: NR-15 primitive\" label"
+   say "FAIL: NR-15 primitive mode"
+   .srcstep 105 105 17 "nr15_stem_primitive_control.crexx" 96 3 11 "  return 1"
+   load r23,1
+   .traceevent "L" 4 "R" "I" "r" 23 107 107 0 "" ""
+   icopy r22,r23
+   br l777bexprend
+l777bexprend:
+   ret r22
+l799dispatchend:
+   .srcstep 109 109 17 "nr15_stem_primitive_control.crexx" 63 1 29 "elapsed = time(\"us\") - start"
+   .meta "nr15_stem_primitive_control.main.elapsed"="b" ".float" r6
+   load r23,"us"
+   .traceevent "L" 4 "R" "S" "r" 23 109 109 0 "" ""
+   load r22,1
+   settpcall r21,rxfnsb.time(),r22,r23,768
+   stof r21
+   .traceevent "F" 4 "R" "F" "r" 21 109 109 0 "time" ""
+   stof r14
+   .traceevent "V" 6 "R" "F" "r" 14 109 109 0 "start" ""
+   fsub r6,r21,r14
+   .traceevent "O" 4 "R" "F" "r" 6 109 109 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 6 109 109 0 "elapsed" ""
+   .srcstep 111 111 17 "nr15_stem_primitive_control.crexx" 64 1 15 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 6 111 111 0 "elapsed" ""
+   flt r23,r6,0.0
+   .traceevent "O" 4 "R" "B" "r" 23 111 111 0 "" ""
+   brf l273iffalse,r23
+   .srcstep 112 112 17 "nr15_stem_primitive_control.crexx" 64 16 20 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .srcstep 110 110 17 "nr15_stem_primitive_control.crexx" 64 21 52 "if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 6 110 110 0 "elapsed" ""
+   fadd r6,r6,86400000000.0
+   .traceevent "O" 4 "R" "F" "r" 6 110 110 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 6 110 110 0 "elapsed" ""
+l273iffalse:
+   .srcstep 117 117 17 "nr15_stem_primitive_control.crexx" 65 1 17 "if checksum <= 0 then return fail(\"checksum\")"
+   .traceevent "V" 6 "R" "I" "r" 5 117 117 0 "checksum" ""
+   ilte r23,r5,0
+   .traceevent "O" 4 "R" "B" "r" 23 117 117 0 "" ""
+   brf l280iffalse,r23
+   .srcstep 118 118 17 "nr15_stem_primitive_control.crexx" 65 18 22 "if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 116 116 17 "nr15_stem_primitive_control.crexx" 65 23 46 "if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 115 115 17 "nr15_stem_primitive_control.crexx" 65 30 34 "if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 113 113 17 "nr15_stem_primitive_control.crexx" 95 3 36 "  say \"FAIL: NR-15 primitive\" label"
+   say "FAIL: NR-15 primitive checksum"
+   .srcstep 114 114 17 "nr15_stem_primitive_control.crexx" 96 3 11 "  return 1"
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 116 116 0 "" ""
+   icopy r21,r22
+   br l788bexprend
+l788bexprend:
+   ret r21
+l280iffalse:
+   .srcstep 119 119 17 "nr15_stem_primitive_control.crexx" 66 1 44 "say \"benchmark=nr15_stem_primitive_control\""
+   say "benchmark=nr15_stem_primitive_control"
+   .srcstep 120 120 17 "nr15_stem_primitive_control.crexx" 67 1 16 "say \"mode=\"mode"
+   .traceevent "V" 6 "R" "S" "r" 11 120 120 0 "mode" ""
+   concat r23,"mode=",r11
+   .traceevent "O" 4 "R" "S" "r" 23 120 120 0 "" ""
+   say r23
+   .srcstep 121 121 17 "nr15_stem_primitive_control.crexx" 68 1 20 "say \"family=\"family"
+   .traceevent "V" 6 "R" "S" "r" 7 121 121 0 "family" ""
+   concat r23,"family=",r7
+   .traceevent "O" 4 "R" "S" "r" 23 121 121 0 "" ""
+   say r23
+   .srcstep 122 122 17 "nr15_stem_primitive_control.crexx" 69 1 16 "say \"size=\"size"
+   itos r13
+   .traceevent "V" 6 "R" "S" "r" 13 122 122 0 "size" ""
+   concat r23,"size=",r13
+   .traceevent "O" 4 "R" "S" "r" 23 122 122 0 "" ""
+   say r23
+   .srcstep 123 123 17 "nr15_stem_primitive_control.crexx" 70 1 28 "say \"iterations=\"iterations"
+   itos r8
+   .traceevent "V" 6 "R" "S" "r" 8 123 123 0 "iterations" ""
+   concat r23,"iterations=",r8
+   .traceevent "O" 4 "R" "S" "r" 23 123 123 0 "" ""
+   say r23
+   .srcstep 124 124 17 "nr15_stem_primitive_control.crexx" 71 1 25 "say \"elapsed_us=\"elapsed"
+   ftos r6
+   .traceevent "V" 6 "R" "S" "r" 6 124 124 0 "elapsed" ""
+   concat r23,"elapsed_us=",r6
+   .traceevent "O" 4 "R" "S" "r" 23 124 124 0 "" ""
+   say r23
+   .srcstep 125 125 17 "nr15_stem_primitive_control.crexx" 72 1 24 "say \"checksum=\"checksum"
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 125 125 0 "checksum" ""
+   concat r23,"checksum=",r5
+   .traceevent "O" 4 "R" "S" "r" 23 125 125 0 "" ""
+   say r23
+   .srcstep 126 126 17 "nr15_stem_primitive_control.crexx" 73 1 36 "say \"PASS: NR-15 primitive control\""
+   say "PASS: NR-15 primitive control"
+   .srcstep 127 127 17 "nr15_stem_primitive_control.crexx" 74 1 9 "return 0"
+   ret 0
+   .meta "nr15_stem_primitive_control.main.argv"
+   .meta "nr15_stem_primitive_control.main.checksum"
+   .meta "nr15_stem_primitive_control.main.elapsed"
+   .meta "nr15_stem_primitive_control.main.family"
+   .meta "nr15_stem_primitive_control.main.iterations"
+   .meta "nr15_stem_primitive_control.main.key"
+   .meta "nr15_stem_primitive_control.main.keys"
+   .meta "nr15_stem_primitive_control.main.mode"
+   .meta "nr15_stem_primitive_control.main.result"
+   .meta "nr15_stem_primitive_control.main.size"
+   .meta "nr15_stem_primitive_control.main.start"
+   .meta "nr15_stem_primitive_control.main.target"
+
+/* Imported Declaration from file: time@library.rxbin */
+
+rxfnsb.time() .expose=rxfnsb.time
+   .meta "rxfnsb.time"="b" ".string" rxfnsb.time() "?option=.string"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""
+
+§rxfnsb.stem.set() .expose=rxfnsb.stem.set
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"

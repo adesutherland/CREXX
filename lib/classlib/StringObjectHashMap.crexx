@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,92 +22,170 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_StringObjectHashMap expose StringObjectHashMap
-import treemap
-import data_StringTreeSet
-import data_StringIterable
+options levelb comments_dash
+namespace data expose StringObjectHashMap
+import rxfnsb
 
 /**
- * StringObjectHashMap maps string keys to object values.
+ * Map from string keys to object values.
  *
- * The native stem backend is used only as a string-key index. Object values are
- * stored in a Rexx object array and are addressed by slot id.
+ * The implementation stores string keys and Rexx object values in parallel
+ * arrays while preserving insertion order for arrays and iterators.
+ *
  */
 StringObjectHashMap: class implements .StringIterable
-index_ = .int
+val = .int
+keys_ = .string[]
 values_ = .object[]
-next_slot_ = .int
+count_ = .int
 
+  /**
+   * Create an empty StringObjectHashMap.
+   *
+   * @param expected Expected cardinality hint; accepted for API compatibility.
+   * @return .StringObjectHashMap
+   */
   *: factory
     arg expected = 1024
-    index_ = stemcreate(expected, 'stringobjecthashmap')
-    next_slot_ = 0
+    val = 1
+    count_ = 0
     return
 
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if keys_[i] == key then return i
+    end
+    return 0
+
+  /**
+   * Associates the specified object value with the specified key.
+   *
+   * @param key Key to store.
+   * @param value Object value to associate with the key.
+   * @return .int 0 on success.
+   */
   put: method = .int
     arg key = .string, value = .object
-    if stemcontainskey(index_, key) then do
-      slot = stemget(index_, key)
+    slot = _find(key)
+    if slot > 0 then do
       values_[slot] = value
       return 0
     end
-    next_slot_ = next_slot_ + 1
-    values_[next_slot_] = value
-    return stemput(index_, key, next_slot_)
+    count_ = count_ + 1
+    keys_[count_] = key
+    values_[count_] = value
+    return 0
 
+  /**
+   * Returns the object value to which the specified key is mapped.
+   *
+   * @param key Key to look up.
+   * @return .object Mapped object, or an empty object placeholder if absent.
+   */
   get: method = .object
     arg key = .string
-    if \stemcontainskey(index_, key) then do
+    slot = _find(key)
+    if slot = 0 then do
       none = .object
       return none
     end
-    slot = stemget(index_, key)
     return values_[slot]
 
+  /**
+   * Tests whether this map contains a mapping for the specified key.
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
   containsKey: method = .int
     arg key = .string
-    return stemcontainskey(index_, key)
+    if _find(key) > 0 then return 1
+    return 0
 
+  /**
+   * Removes a mapping from this map.
+   *
+   * @param key Key to remove.
+   * @return .int 0 if removed, 4 if the key was not present.
+   */
   remove: method = .int
     arg key = .string
-    return stemremove(index_, key)
-
-  size: method = .int
-    return stemsize(index_)
-
-  keyArray: method = .string[]
-    keys = .string[]
-    slots = .string[]
-    n = stemiterate(index_, keys, slots)
-    return keys
-
-  valueArray: method = .object[]
-    keys = keyArray()
-    vals = .object[]
-    loop i = 1 to keys[0]
-      vals[i] = get(keys[i])
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      keys_[i] = keys_[i + 1]
+      values_[i] = values_[i + 1]
     end
-    return vals
+    count_ = count_ - 1
+    return 0
 
+  /**
+   * Returns the number of key-value mappings in this map.
+   *
+   * @return .int Number of mappings.
+   */
+  size: method = .int
+    return count_
+
+  /**
+   * Returns the keys in insertion order.
+   *
+   * @return .string[] Array of keys.
+   */
+  keyArray: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = keys_[i]
+    end
+    return result
+
+  /**
+   * Returns the object values in insertion order.
+   *
+   * @return .object[] Array of object values.
+   */
+  valueArray: method = .object[]
+    result = .object[]
+    do i = 1 to count_
+      result[i] = values_[i]
+    end
+    return result
+
+  /**
+   * Returns the keys as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of keys.
+   */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
+  /**
+   * Returns an iterator over keys and object values in insertion order.
+   *
+   * @return .StringObjectHashMapIterator Iterator over this map snapshot.
+   */
   iterator: method = .StringObjectHashMapIterator
-    return .StringObjectHashMapIterator(index_, values_)
+    return .StringObjectHashMapIterator(keyArray(), valueArray())
 
+  /**
+   * Returns the implementation token for this map instance.
+   *
+   * @return .int Implementation token.
+   */
   _indexToken: method = .int
-    return index_
+    return val
 
+  /**
+   * Clears this map and releases its backing arrays.
+   *
+   * @return .int 0 on success.
+   */
   free: method = .int
-    if index_ = 0 then return 0
-    rc = stemfree(index_)
-    index_ = 0
-    none = .object
-    do i = 1 to next_slot_
-      values_[i] = none
-    end
-    next_slot_ = 0
-    return rc
+    call arraydrop keys_
+    call objectarraydrop values_
+    count_ = 0
+    val = 0
+    return 0

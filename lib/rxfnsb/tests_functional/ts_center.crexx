@@ -1,91 +1,49 @@
-/* rexx test center bif */
+/* Focused Level B CENTER tests; CENTRE has a separate selector row. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from TRL */
-abc='ABC'
-##   1234567
-if  '  ABC  ' \= centre(abc,7)             then do
-  errors=errors+1
-  say 'CENTER failed in test 1 "'centre(abc,7)'"'
+errors = 0
+source = "ABC"
+
+errors = errors + check(center(source, 7) = "  ABC  ", "balanced padding")
+errors = errors + check(center(source, 8, "-") = "--ABC---", "odd padding goes right")
+errors = errors + check(center("The blue sky", 8) = "e blue s", "even truncation")
+errors = errors + check(center("The blue sky", 7) = "e blue ", "odd truncation goes right")
+errors = errors + check(center("****", 7, "-") = "-****--", "odd width padding")
+errors = errors + check(center("*****", 8, "-") = "-*****--", "odd difference padding")
+errors = errors + check(center("12345678", 4, "-") = "3456", "even central slice")
+errors = errors + check(center("12345678", 5, "-") = "23456", "odd central slice")
+errors = errors + check(center("same", 4) = "same", "unchanged width")
+errors = errors + check(center("anything", 0) = "", "zero width")
+errors = errors + check(center("", 3, ".") = "...", "empty source")
+errors = errors + check(center("é", 3, "·") = "·é·", "Unicode source and pad")
+errors = errors + check(source = "ABC", "source is not exposed or mutated")
+
+caught = 0
+do
+  ignored = center("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if center(abc,7) \= '  ABC  '              then do
-  errors=errors+1
-  say 'CENTER failed in test 2 "'centre(abc,7)'"'
+do
+  ignored = .string
+  ignored = center("abc", 5, "")
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if center(abc,8,'-') \= '--ABC---'         then do
-  errors=errors+1
-  say 'CENTER failed in test 3 "'center(abc,8,'-')'"'
+do
+  ignored = .string
+  ignored = center("abc", 5, "xy")
+on signal invalid_arguments
+  caught = caught + 1
 end
+errors = errors + check(caught = 3, "width and pad failures use signals")
 
-if center('The blue sky',8) \= 'e blue s'  then do
-  errors=errors+1
-  say 'CENTER failed in test 4 '
-end
+if errors = 0 then say "PASS: center"
+return errors <> 0
 
-if center('The blue sky',7) \= 'e blue '   then do
-  errors=errors+1
-  say 'CENTER failed in test 5 '
-end
-
-/* These from Mark Hessling. */
-if center('****',8,'-')      \='--****--'   then do
-  errors=errors+1
-  say 'CENTER failed in test 6 '
-end
-
-if center('****',7,'-')      \='-****--'    then do
-  errors=errors+1
-  say 'CENTER failed in test 7 '
-end
-
-if center('*****',8,'-')     \='-*****--'   then do
-  errors=errors+1
-  say 'CENTER failed in test 8 '
-end
-
-if center('*****',7,'-')     \='-*****-'    then do
-  errors=errors+1
-  say 'CENTER failed in test 9 '
-end
-
-if center('12345678',4,'-')  \='3456'       then do
-  errors=errors+1
-  say 'CENTER failed in test 10 '
-end
-
-if center('12345678',5,'-')  \='23456'      then do
-  errors=errors+1
-  say 'CENTER failed in test 11 '
-end
-
-if center('1234567',4,'-')   \='2345'       then do
-  errors=errors+1
-  say 'CENTER failed in test 12 '
-end
-
-if center('1234567',5,'-')   \='23456'      then do
-  errors=errors+1
-  say 'CENTER failed in test 13 '
-end
-
-/* 1234567890123456789012345678901234567890123 */
-x='the quick brown fox jumps over the lazy dog'
-                  /* 1234567890123456789012345678901234567890123 */
-if center(x,43,) \= 'the quick brown fox jumps over the lazy dog' then do
-  errors=errors+1
-  say 'CENTER failed in test 14 ""'center(x,43,)'"'
-end
-
-say '|'center(x,43,)'|'
-say "'"center(x,50,"!")"'"
-say "'"center(x,9)"'"
-
-say "'"centre(x,43,)"'"
-say "'"centre(x,50,"!")"'"
-say "'"centre(x,9)"'"
-
-return 0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: CENTER" label
+  return 1

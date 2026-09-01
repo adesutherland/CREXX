@@ -1,0 +1,74 @@
+/*
+ * Source-hoisted diagnostic for the canonical AWFY Mandelbrot benchmark.
+ *
+ * Only the invariant integer-to-float conversion of size is moved out of the
+ * loops. The canonical source remains the portfolio result; this separately
+ * named control measures a generic compiler-hoisting opportunity.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+size = 500
+if argv[0] >= 1 then size = argv[1]
+if size < 1 then return fail("size must be positive")
+
+result = mandelbrot_hoisted(size)
+expected = -1
+if size = 1 then expected = 128
+if size = 500 then expected = 191
+if size = 750 then expected = 50
+if expected = -1 then return fail("no reference checksum for size " || size)
+if result <> expected then return fail("expected " || expected || ", got " || result)
+
+say "benchmark=awfy_mandelbrot_hoisted_control size="size "result="result
+say "PASS: AWFY Mandelbrot hoisted control"
+return 0
+
+mandelbrot_hoisted: procedure = .int
+  arg size = .int
+
+  checksum = 0
+  byte_acc = 0
+  bit_num = 0
+  size_float = size as .float
+
+  do y = 0 to size - 1
+    ci = (2.0 * (y as .float) / size_float) - 1.0
+    do x = 0 to size - 1
+      zrzr = 0.0 as .float
+      zi = 0.0 as .float
+      zizi = 0.0 as .float
+      cr = (2.0 * (x as .float) / size_float) - 1.5
+      escape = 0
+
+      do z = 0 to 49 while escape = 0
+        zr = zrzr - zizi + cr
+        zi = 2.0 * zr * zi + ci
+        zrzr = zr * zr
+        zizi = zi * zi
+        if zrzr + zizi > 4.0 then escape = 1
+      end
+
+      byte_acc = (byte_acc <shl> 1) + escape
+      bit_num = bit_num + 1
+
+      if bit_num = 8 then do
+        checksum = checksum <xor> byte_acc
+        byte_acc = 0
+        bit_num = 0
+      end
+      else if x = size - 1 then do
+        byte_acc = byte_acc <shl> (8 - bit_num)
+        checksum = checksum <xor> byte_acc
+        byte_acc = 0
+        bit_num = 0
+      end
+    end
+  end
+  return checksum
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

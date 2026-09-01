@@ -116,6 +116,9 @@ int rxasinbf(Assembler_Context *scanner) {
         RX_PANIC_OOM("calloc rxas optimiser queue", optimiser_queue_bytes, detail);
     }
     scanner->optimiser_queue_items = 0;
+    scanner->procedure_queue = 0;
+    scanner->procedure_queue_items = 0;
+    scanner->procedure_queue_capacity = 0;
     scanner->optimiser_counter = 0;
 
     scanner->binary.globals = 0;
@@ -147,10 +150,14 @@ int rxasinbf(Assembler_Context *scanner) {
     scanner->decimal_constants_tree = 0;
     scanner->float_constants_tree = 0;
     scanner->binary_constants_tree = 0;
+    scanner->constant_aliases_tree = 0;
     scanner->proc_constants_tree = 0;
     scanner->label_constants_tree = 0;
     scanner->extern_constants_tree = 0;
+    scanner->jump_tables = 0;
     scanner->extern_regs = 0;
+    scanner->current_proc_name = 0;
+    scanner->last_label_token = 0;
     scanner->proc_head = -1;
     scanner->proc_tail = -1;
     scanner->expose_head = -1;
@@ -297,8 +304,19 @@ int rxasoutf(Assembler_Context *scanner) {
         module.description = scanner->file_name;
         module.instructions = pgm->binary;
         module.constant = pgm->const_pool;
-        write_module(&module,outFile);
-        fclose(outFile);
+        if (write_module(&module,outFile) != 0) {
+            fprintf(stderr, "Can't write RXBIN 007 output %s: %s\n",
+                    effective_output_file_name,
+                    rxbin_last_error() ? rxbin_last_error() : "unknown RXBIN error");
+            fclose(outFile);
+            if (allocated_output_file_name) free(allocated_output_file_name);
+            return -1;
+        }
+        if (fclose(outFile) != 0) {
+            fprintf(stderr, "Can't close output file: %s\n", effective_output_file_name);
+            if (allocated_output_file_name) free(allocated_output_file_name);
+            return -1;
+        }
         if (allocated_output_file_name) free(allocated_output_file_name);
     }
     else {
@@ -311,12 +329,24 @@ int rxasoutf(Assembler_Context *scanner) {
 
 /* Clear and Free Assembler Context */
 void rxasclrc(Assembler_Context *scanner) {
+    size_t i;
     /* Deallocate Binary */
     if (scanner->binary.binary) free(scanner->binary.binary);
     if (scanner->binary.const_pool) free(scanner->binary.const_pool);
 
     /* Free Optimiser Queue */
-    if (scanner->optimiser_queue) free(scanner->optimiser_queue);
+    if (scanner->optimiser_queue) {
+        for (i = 0; i < scanner->optimiser_queue_items; i++) {
+            rxas_free_queue_item(&scanner->optimiser_queue[i]);
+        }
+        free(scanner->optimiser_queue);
+    }
+    if (scanner->procedure_queue) {
+        for (i = 0; i < scanner->procedure_queue_items; i++) {
+            rxas_free_queue_item(&scanner->procedure_queue[i]);
+        }
+        free(scanner->procedure_queue);
+    }
 
     /* Free Assembler Work Data */
     freeasbl(scanner);

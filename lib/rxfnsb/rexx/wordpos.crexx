@@ -22,36 +22,114 @@
  * SOFTWARE.
  */
 
-/* rexx wordpos searches for string and returns word position */
+/**
+ * Locate an exact sequence of whitespace-delimited words.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/wordpos.md
+ */
 options levelb
 
 namespace rxfnsb expose wordpos
 
+/**
+ * Return the word position of an exact phrase.
+ *
+ * @param search word phrase to locate
+ * @param string target text
+ * @param start optional positive one-based starting word
+ * @return first matching word number, or zero
+ * @signal INVALID_ARGUMENTS non-positive start
+ */
 wordpos: procedure = .int
   arg search = .string, string = .string, start = 1
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORDPOS start must be positive"
 
-tlen=0
-assembler strlen tlen,string
-if tlen=0 then return 0
-assembler strlen tlen,search
-if tlen=0 then return 0
+  string_length = .int
+  search_length = .int
+  assembler strlen string_length,string
+  assembler strlen search_length,search
+  if string_length = 0 | search_length = 0 then return 0
 
-wnum=words(string)
-if wnum=0 then return 0
-snum=words(search)
-if snum=0 then return 0
+  search_first = 0
+  assembler fndnblnk search_first,search,search_first
+  if search_first < 0 then return 0
 
-search=strip(search)
+  scan = 0
+  candidate_start = 0
+  candidate_word = 0
+  do while candidate_word < start
+    assembler fndnblnk candidate_start,string,scan
+    if candidate_start < 0 then return 0
+    candidate_word = candidate_word + 1
+    if candidate_word = start then leave
+    assembler fndblnk scan,string,candidate_start
+    if scan < 0 then return 0
+  end
 
-startpos=wordindex(string,start)  /* calculate wordpos */
-do i=start to wnum
-   if snum=1 then do
-      if abbrev(word(string,i),search)>0 then return i
-   end
-   else do
-      if pos(search,string,startpos) = startpos then return i
-      startpos=wordindex(string,i+1)
-      if startpos=0 then leave
-   end
-end
-return 0
+  search_word_start = 0
+  search_word_end = 0
+  search_word_length = 0
+  source_word_start = 0
+  source_word_end = 0
+  source_word_length = 0
+  next_search_word = 0
+  next_source_word = 0
+  candidate_end = 0
+  char_offset = 0
+  search_index = 0
+  source_index = 0
+  search_char = 0
+  source_char = 0
+
+  do while candidate_start >= 0
+    search_word_start = search_first
+    source_word_start = candidate_start
+    matched = 1
+
+    do while matched
+      assembler fndblnk search_word_end,search,search_word_start
+      if search_word_end < 0 then search_word_end = search_length
+      assembler fndblnk source_word_end,string,source_word_start
+      if source_word_end < 0 then source_word_end = string_length
+
+      search_word_length = search_word_end - search_word_start
+      source_word_length = source_word_end - source_word_start
+      if search_word_length <> source_word_length then do
+        matched = 0
+        leave
+      end
+
+      char_offset = 0
+      do while char_offset < search_word_length
+        search_index = search_word_start + char_offset
+        source_index = source_word_start + char_offset
+        assembler strchar search_char,search,search_index
+        assembler strchar source_char,string,source_index
+        if search_char <> source_char then do
+          matched = 0
+          leave
+        end
+        char_offset = char_offset + 1
+      end
+      if \matched then leave
+
+      assembler fndnblnk next_search_word,search,search_word_end
+      if next_search_word < 0 then return candidate_word
+      assembler fndnblnk next_source_word,string,source_word_end
+      if next_source_word < 0 then do
+        matched = 0
+        leave
+      end
+      search_word_start = next_search_word
+      source_word_start = next_source_word
+    end
+
+    assembler fndblnk candidate_end,string,candidate_start
+    if candidate_end < 0 then return 0
+    assembler fndnblnk candidate_start,string,candidate_end
+    if candidate_start < 0 then return 0
+    candidate_word = candidate_word + 1
+  end
+  return 0

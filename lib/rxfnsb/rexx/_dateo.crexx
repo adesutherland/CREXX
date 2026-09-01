@@ -22,89 +22,213 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Format a Julian day number using the extended Level B DATE surface. */
 options levelb numeric_classic
-
 namespace _rxsysb expose _dateo
-import rxfnsb
 
-_dateo: Procedure = .string
-  arg jdn = .int, format = .string, osep=""
-  if format='' then format='NORMAL'
+/**
+ * Format a supported Julian day number.
+ *
+ * @param jdn Julian day number for Gregorian year 1 through 9999
+ * @param format documented Level B DATE output format or abbreviation
+ * @param osep optional one-codepoint separator override
+ * @return formatted date; numeric results are strings
+ * @signal INVALID_ARGUMENTS invalid JDN, format, or separator
+ */
+_dateo: procedure = .string
+  arg jdn = .int, format = .string, osep = ""
+  format_code = .int
+  separator_length = .int
+  year = .int
+  month = .int
+  day = .int
+  day_of_year = .int
+  weekday = .int
+  base_day = .int
+  century_start = .int
+  century_day = .int
+  separator = .string
+  year_text = .string
+  short_year = .string
+  month_text = .string
+  day_text = .string
 
-  if fabbreV('BASE',format,1)>0 then return JDN-1721426          /* BASE is REXX Type Format, starting 01.01.0001     */
-  if fabbreV('UNIX',format,2)>0 then return JDN-1721426-719162   /* UNIX Days since 1.1.1970                          */
-  if fabbreV('JDN',format,3)>0 then return JDN                   /* JDN is Julian Day Number starting 24. Nov 4714 BC */
+  format_code = _dateformat(format,1)
+  assembler strlen separator_length,osep
+  if format_code = 0 | separator_length > 1 then call _dateo_fail
+  call _datefromjdn jdn,year,month,day,day_of_year,weekday,base_day
 
-  weekday="Monday Tuesday Wednesday Thursday Friday Saturday Sunday"
-  mlist='January February March April May June July August September October November December'
-
-/* Translate Julian Day Number in Gregorian Date */
-  L=JDN+68569
-  N=4*L%146097
-  L=L-(146097*N+3)%4
-  i=4000*(L+1)%1461001
-  L=L-1461*i%4+31
-  J=80*L%2447
-  dd=L-2447*J%80
-  L=J%11
-  mm=J+2-12*L
-  YY=100*(N-49)+I+L
-  wday=(jdn//7)+1
-
-/* YEAR= yy ; Month=mm ; Day=dd */
-  if fabbreV('JULIAN',format,1) then do
-     daysofyear=JDN-_jdn(1,1,YY)+1
-     return right(YY,4,'0')right(daysofyear,3,'0')
-  end
-  if fabbreV('DAYS',format,1) then do
-     daysofyear=JDN-_jdn(1,1,YY)+1
-     return right(daysofyear,3,'0')
-  end
-  if fabbreV('WEEKDAY',format,1) then return word(weekday,wday)
-
-  if fabbreV('CENTURY',format,1) then do
-     dayscentury=jdn-_jdn(1,1,YY%100*100)+1
-     return dayscentury
-  end
-
-  if fabbreV('EPOCH',format,2) then do
-     return (jdn-_jdn(1,1,1970))*86400
+  select
+    when format_code = 15 then return _date_signed_text(base_day)
+    when format_code = 16 then return _date_signed_text(base_day - 719162)
+    when format_code = 17 then return _date_signed_text((base_day - 719162) * 86400)
+    when format_code = 18 then return _date_signed_text(jdn)
+    when format_code = 14 then return _date_digits(year,4) || _date_digits(day_of_year,3)
+    when format_code = 19 then return _date_digits(day_of_year,3)
+    when format_code = 20 then return _date_weekday_name(weekday)
+    when format_code = 21 then return _date_month_name(month)
+    when format_code = 22 then do
+      century_start = year % 100 * 100
+      if century_start = 0 then century_start = 1
+      century_day = jdn - _jdn(1,1,century_start) + 1
+      return _date_signed_text(century_day)
     end
+    when format_code = 1 then
+      return _date_digits(day,0) || " " || _date_month_abbreviation(month) || " " || _date_digits(year,4)
+    when format_code = 2 then
+      return _date_digits(day,2) || " " || _date_month_name(month) || " " || _date_digits(year,4)
+    when format_code = 3 then
+      return _date_digits(year,4) || _date_digits(month,2) || _date_digits(day,2)
+    when format_code = 13 then
+      return _date_weekday_name(weekday) || ", " || _date_month_name(month) || " " || _date_digits(day,2) || ", " || _date_digits(year,4)
+    otherwise nop
+  end
 
-  if fabbreV('NORMAL',format,1) then return dd' 'substr(word(mlist,mm),1,3)' 'right(YY,4,'0')
-  if fabbreV('XNORMAL',format,2) then return right(dd,2,'0')' 'word(mlist,mm)' 'right(YY,4,'0')  /* extended Normal */
+  year_text = _date_digits(year,4)
+  short_year = _date_digits(year // 100,2)
+  month_text = _date_digits(month,2)
+  day_text = _date_digits(day,2)
 
-  if fabbreV('MONTH',format,1) then return word(mlist,mm)
-  if osep="" then tsep="/"
-     else tsep=osep
-  if fabbreV('EUROPEAN',format,1)   then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,2,'0')
-  if fabbreV('XEUROPEAN',format,2)  then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,4,'0')
-  if fabbreV('USA',format,1)        then return right(mm,2,'0')||tsep||right(dd,2,'0')||tsep||right(YY,4,'0')
-  if fabbreV('XUSA',format,2)       then return right(mm,2,'0')||tsep||right(dd,2,'0')||tsep||right(YY,4,'0')
-  if fabbreV('ORDERED',format,1)    then  return right(YY,2,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
-  if fabbreV('XORDERED',format,2)   then  return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
-  if osep="" then tsep="."
-     else tsep=osep
-  if fabbreV('GERMAN',format,1)     then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,2,'0')
-  if fabbreV('XGERMAN',format,2)    then return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(YY,4,'0')
+  select
+    when format_code = 4 then do
+      separator = _date_output_separator(osep,"/")
+      return short_year || separator || month_text || separator || day_text
+    end
+    when format_code = 5 then do
+      separator = _date_output_separator(osep,"/")
+      return year_text || separator || month_text || separator || day_text
+    end
+    when format_code = 6 then do
+      separator = _date_output_separator(osep,"/")
+      return day_text || separator || month_text || separator || short_year
+    end
+    when format_code = 7 then do
+      separator = _date_output_separator(osep,"/")
+      return day_text || separator || month_text || separator || year_text
+    end
+    when format_code = 8 then do
+      separator = _date_output_separator(osep,".")
+      return day_text || separator || month_text || separator || short_year
+    end
+    when format_code = 9 then do
+      separator = _date_output_separator(osep,".")
+      return day_text || separator || month_text || separator || year_text
+    end
+    when format_code = 10 then do
+      separator = _date_output_separator(osep,"/")
+      return month_text || separator || day_text || separator || short_year
+    end
+    when format_code = 11 then do
+      separator = _date_output_separator(osep,"/")
+      return month_text || separator || day_text || separator || year_text
+    end
+    when format_code = 12 then do
+      separator = _date_output_separator(osep,"-")
+      return year_text || separator || month_text || separator || day_text
+    end
+    when format_code = 23 then do
+      separator = _date_output_separator(osep,"-")
+      return day_text || separator || month_text || separator || short_year
+    end
+    when format_code = 24 then do
+      separator = _date_output_separator(osep,"-")
+      return day_text || separator || month_text || separator || year_text
+    end
+    when format_code = 25 then do
+      separator = osep
+      return year_text || separator || month_text || separator || day_text
+    end
+    otherwise call _dateo_fail
+  end
+  return ""
 
-  if fabbreV('STANDARD',format,2)   then return right(YY,4,'0')right(mm,2,'0')right(dd,2,'0')
+_date_digits: procedure = .string
+  arg value = .int, width = .int
+  divisor = .int
+  digit = .int
+  codepoint = .int
+  result = .string
+  divisor = 1
+  if width > 0 then do index = 2 to width
+    divisor = divisor * 10
+  end
+  else do while value % divisor >= 10
+    divisor = divisor * 10
+  end
+  do while divisor > 0
+    digit = value % divisor
+    codepoint = digit + 48
+    assembler appendchar result,codepoint
+    value = value // divisor
+    divisor = divisor % 10
+  end
+  return result
 
-  if osep="" then tsep=""
-     else tsep=osep
-   if fabbreV('SORTED',format,1)     then return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
-  if osep="" then tsep="-"
-     else tsep=osep
-  if fabbreV('DEC',format,3)        then  return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(yy,2,'0')
-  if fabbreV('XDEC',format,3)       then  return right(dd,2,'0')||tsep||right(mm,2,'0')||tsep||right(yy,4,'0')
-  if fabbreV('INTERNATIONAL',format,3) then  return right(YY,4,'0')||tsep||right(mm,2,'0')||tsep||right(dd,2,'0')
+_date_signed_text: procedure = .string
+  arg value = .int
+  result = .string
+  minus = .int
+  if value < 0 then do
+    minus = 45
+    assembler appendchar result,minus
+    value = 0 - value
+  end
+  return result || _date_digits(value,0)
 
-  if fabbreV('QUALIFIED',format,1) then return word(weekday,wday)', 'word(mlist,mm)' 'right(dd,2,'0')', 'right(YY,4,'0') /* Thursday, December 17, 2020 */
+_date_output_separator: procedure = .string
+  arg override = .string, default_separator = .string
+  if override = "" then return default_separator
+  return override
 
-return right(dd,2,'0')' 'right(mm,2,'0')' 'right(YY,4,'0')
+_date_month_abbreviation: procedure = .string
+  arg month = .int
+  select
+    when month = 1 then return "Jan"
+    when month = 2 then return "Feb"
+    when month = 3 then return "Mar"
+    when month = 4 then return "Apr"
+    when month = 5 then return "May"
+    when month = 6 then return "Jun"
+    when month = 7 then return "Jul"
+    when month = 8 then return "Aug"
+    when month = 9 then return "Sep"
+    when month = 10 then return "Oct"
+    when month = 11 then return "Nov"
+    otherwise return "Dec"
+  end
+  return ""
 
-fabbreV: Procedure = .int
-  arg p0 = .string, p1 = .string, flen = 1
-  if substr(p0,1,flen)=substr(p1,1,flen) then return 1
-return 0
+_date_month_name: procedure = .string
+  arg month = .int
+  select
+    when month = 1 then return "January"
+    when month = 2 then return "February"
+    when month = 3 then return "March"
+    when month = 4 then return "April"
+    when month = 5 then return "May"
+    when month = 6 then return "June"
+    when month = 7 then return "July"
+    when month = 8 then return "August"
+    when month = 9 then return "September"
+    when month = 10 then return "October"
+    when month = 11 then return "November"
+    otherwise return "December"
+  end
+  return ""
+
+_date_weekday_name: procedure = .string
+  arg weekday = .int
+  select
+    when weekday = 1 then return "Monday"
+    when weekday = 2 then return "Tuesday"
+    when weekday = 3 then return "Wednesday"
+    when weekday = 4 then return "Thursday"
+    when weekday = 5 then return "Friday"
+    when weekday = 6 then return "Saturday"
+    otherwise return "Sunday"
+  end
+  return ""
+
+_dateo_fail: procedure
+  assembler signal "INVALID_ARGUMENTS","DATE output format or separator is invalid"
+  return

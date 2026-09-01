@@ -1,0 +1,21 @@
+options levelb
+
+source = "MiXeD äÖ"
+
+say caseupper("literal")
+say caseupper(source)
+say caselower("ÄÖÜÉ")
+say caseupper("a" || "b")
+say source
+
+caseupper: procedure = .string
+  arg text = .string
+  result = .string
+  assembler strupper result,text
+  return result
+
+caselower: procedure = .string
+  arg text = .string
+  result = .string
+  assembler strlower result,text
+  return result

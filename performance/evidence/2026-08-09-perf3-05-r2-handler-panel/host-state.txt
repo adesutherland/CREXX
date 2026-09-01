@@ -1,0 +1,30 @@
+PERF3-05-R2 host and measurement state
+
+Host
+  Darwin 25.5.0 arm64, Apple M5
+  10 logical CPUs
+  L1 instruction cache: 131072 bytes
+  L2 cache: 6291456 bytes
+  Apple clang 21.0.0 (clang-2100.1.1.101)
+  CMake 4.3.2
+  Ninja 1.13.2
+
+Timing launch, 2026-08-09 12:07 Europe/London
+  AC power, battery 80%, attached and not charging
+  load averages: 2.99 6.03 4.79 after the preceding builds had stopped
+  no CPU-heavy process other than the subsequently launched single VM
+  no thermal warning recorded
+  no performance warning recorded
+
+Timing capture
+  started: 2026-08-09T11:07:43+0000
+  completed: 2026-08-09T11:26:54+0000
+  serial one-VM-at-a-time execution; no concurrent build or test
+  intermediate thermal checks reported no thermal/performance warning
+
+Final closeout state, 2026-08-09T12:01:14Z
+  AC power, battery 80%, attached and not charging
+  low-power mode: 0
+  no thermal warning recorded
+  no performance warning recorded
+  load averages: 1.33 2.07 3.65 after final source-sync builds/tests

@@ -1,0 +1,25 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cycles:u'
+# Event count (approx.): 19701485943
+#
+# Overhead  Command  Shared Object  Symbol                                       IPC   [IPC Coverage]
+# ........  .......  .............  ...........................................  ....................
+#
+    94.65%  rxbvm    rxbvm          [.] run                                      -      -            
+     1.17%  rxbvm    libc.so.6      [.] __memmove_evex_unaligned_erms            -      -            
+     1.02%  rxbvm    libc.so.6      [.] __GI_____strtod_l_internal               -      -            
+     0.83%  rxbvm    libc.so.6      [.] __strlen_evex                            -      -            
+     0.77%  rxbvm    libc.so.6      [.] __memcmp_evex_movbe                      -      -            
+     0.42%  rxbvm    libc.so.6      [.] __memchr_evex                            -      -            
+     0.23%  rxbvm    rxbvm          [.] memcpy@plt                               -      -            
+     0.16%  rxbvm    libc.so.6      [.] strlen@plt                               -      -            
+     0.14%  rxbvm    rxbvm          [.] resolve_runtime_procedure                -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

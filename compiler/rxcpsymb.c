@@ -157,6 +157,32 @@ int scp_track_detached(Context *context, Scope *scope) {
     return 1;
 }
 
+/* Remove a speculative scope tree from normal traversal and retain it for
+ * context teardown.  AST nodes are arena-owned by the Context; callers must
+ * disconnect any speculative symbol connectors before abandoning the scope. */
+int scp_abandon(Context *context, Scope *scope) {
+    Scope *parent;
+    dpa *children;
+    size_t i;
+
+    if (!context || !scope || !scope->parent) return 0;
+
+    parent = scope->parent;
+    children = (dpa *)parent->child_array;
+    if (!children) return 0;
+
+    for (i = 0; i < children->size; i++) {
+        if (children->pointers[i] == scope) {
+            dpa_del(children, i);
+            scope->parent = 0;
+            scope->reg_scope = scope;
+            return scp_track_detached(context, scope);
+        }
+    }
+
+    return 0;
+}
+
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload) {
     struct symbol_wrapper *i;
@@ -334,9 +360,46 @@ int get_reg_perm(Scope *scope) {
     return (int)((rs->num_registers)++);
 }
 
-/* Return a no longer used register to the scope */
-void ret_reg(Scope *scope, int reg) {
+static int reg_in_array(dpa *array, int reg);
+
+/* Reserve one exact free register without disturbing other free registers. */
+int take_reg_exact(Scope *scope, int reg) {
+    dpa *free_array;
+    dpa *deferred_array;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
     size_t i;
+
+    if (reg < 0) return 0;
+    free_array = (dpa*)(rs->free_registers_array);
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (reg_in_array(deferred_array, reg)) return 0;
+
+    if (reg == (int)rs->num_registers) {
+        rs->num_registers++;
+        return 1;
+    }
+    if (reg > (int)rs->num_registers) return 0;
+
+    for (i = 0; i < free_array->size; i++) {
+        if (reg == (int)(size_t)free_array->pointers[i]) {
+            dpa_del(free_array, i);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int reg_in_array(dpa *array, int reg) {
+    size_t i;
+
+    if (!array || reg < 0) return 0;
+    for (i=0; i<array->size; i++) {
+        if (reg == (int)(size_t)array->pointers[i]) return 1;
+    }
+    return 0;
+}
+
+static void ret_reg_free(Scope *scope, int reg) {
     dpa *free_array;
     Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
     free_array = (dpa*)(rs->free_registers_array);
@@ -345,12 +408,10 @@ void ret_reg(Scope *scope, int reg) {
         return;
     }
 
-    for (i=0; i<free_array->size; i++) {
-        if (reg == (size_t)free_array->pointers[i]) {
+    if (reg_in_array(free_array, reg)) {
 //            printf("Reg %d already freed - free array remains ", reg);
 //            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
-            return;
-        }
+        return;
     }
     dpa_ado(free_array, (void*)(size_t)reg);
 
@@ -359,36 +420,61 @@ void ret_reg(Scope *scope, int reg) {
 //    printf("\n");
 }
 
-/* Return a linked register later (end of statement) */
-void ret_reg_later(Scope *scope, int reg) {
-    size_t i;
+/* Return a no longer used register to the scope */
+void ret_reg(Scope *scope, int reg) {
     dpa *deferred_array;
     Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+
+    if (reg < 0) {
+        return;
+    }
+
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (reg_in_array(deferred_array, reg)) return;
+    ret_reg_free(rs, reg);
+}
+
+/* Return a linked register later (end of statement) */
+void ret_reg_later(Scope *scope, int reg) {
+    dpa *free_array;
+    dpa *deferred_array;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    free_array = (dpa*)(rs->free_registers_array);
     deferred_array = (dpa*)(rs->deferred_registers_array);
 
     if (reg < 0) {
         return;
     }
 
-    for (i=0; i<deferred_array->size; i++) {
-        if (reg == (size_t)deferred_array->pointers[i]) {
-            return;
-        }
-    }
+    if (reg_in_array(free_array, reg) || reg_in_array(deferred_array, reg)) return;
     dpa_add(deferred_array, (void*)(size_t)reg);
 }
 
-/* Return all deferred registers */
-void ret_reg_all_deferred(Scope *scope) {
+/* Mark the current deferred-register boundary. */
+size_t deferred_reg_mark(Scope *scope) {
+    Scope *rs = scope && scope->reg_scope ? scope->reg_scope : scope;
+    dpa *deferred_array;
+
+    if (!rs) return 0;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    return deferred_array ? deferred_array->size : 0;
+}
+
+/* Return only registers deferred after a nested statement boundary. */
+void ret_reg_deferred_since(Scope *scope, size_t mark) {
     size_t i;
     dpa *deferred_array;
-    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
-    deferred_array = (dpa*)(rs->deferred_registers_array);
+    Scope *rs = scope && scope->reg_scope ? scope->reg_scope : scope;
 
-    for (i=0; i<deferred_array->size; i++) {
-        ret_reg(rs, (int)(size_t)deferred_array->pointers[i]);
+    if (!rs) return;
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (!deferred_array) return;
+    if (mark > deferred_array->size) mark = deferred_array->size;
+
+    for (i=mark; i<deferred_array->size; i++) {
+        ret_reg_free(rs, (int)(size_t)deferred_array->pointers[i]);
     }
-    deferred_array->size = 0;
+    deferred_array->size = mark;
 }
 
 /* Get number of free register from scope - returns the start of a sequence
@@ -536,6 +622,92 @@ void sym_copy_reference_type(Symbol *dest, const Symbol *src) {
                            src->reference_class);
 }
 
+void sym_clear_inline_summary(Symbol *symbol) {
+    if (!symbol || !symbol->inline_summary) return;
+    if (symbol->inline_summary->formals) free(symbol->inline_summary->formals);
+    free(symbol->inline_summary);
+    symbol->inline_summary = NULL;
+}
+
+int sym_copy_inline_summary(Symbol *dest, const InlineCallableSummary *summary) {
+    InlineCallableSummary *copy;
+
+    if (!dest) return 0;
+    sym_clear_inline_summary(dest);
+    if (!summary) return 1;
+    if (summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+        (summary->formal_count && !summary->formals)) return 0;
+
+    copy = malloc(sizeof(*copy));
+    if (!copy) return 0;
+    *copy = *summary;
+    copy->formals = NULL;
+    if (summary->formal_count) {
+        copy->formals = malloc(sizeof(InlineFormalSummary) * summary->formal_count);
+        if (!copy->formals) {
+            free(copy);
+            return 0;
+        }
+        memcpy(copy->formals,
+               summary->formals,
+               sizeof(InlineFormalSummary) * summary->formal_count);
+    }
+    dest->inline_summary = copy;
+    return 1;
+}
+
+void sym_clear_constant_alias(Symbol *symbol) {
+    ConstantAlias *alias;
+
+    if (!symbol || !symbol->constant_alias) return;
+    alias = symbol->constant_alias;
+    symbol->constant_alias = 0;
+    if (--alias->reference_count) return;
+
+    free(alias->name);
+    free(alias->value);
+    free(alias);
+}
+
+int sym_set_constant_alias(Symbol *symbol, const char *name, ValueType type,
+                           const char *value, size_t value_length) {
+    ConstantAlias *alias;
+
+    if (!symbol || !name || !value) return 0;
+
+    alias = calloc(1, sizeof(*alias));
+    if (!alias) return 0;
+    alias->name = strdup(name);
+    alias->value = malloc(value_length + 1);
+    if (!alias->name || !alias->value) {
+        free(alias->name);
+        free(alias->value);
+        free(alias);
+        return 0;
+    }
+    memcpy(alias->value, value, value_length);
+    alias->value[value_length] = 0;
+    alias->type = type;
+    alias->value_length = value_length;
+    alias->reference_count = 1;
+
+    sym_clear_constant_alias(symbol);
+    symbol->constant_alias = alias;
+    return 1;
+}
+
+void sym_copy_constant_alias(Symbol *dest, const Symbol *src) {
+    ConstantAlias *alias;
+
+    if (!dest || !src || dest == src) return;
+    alias = src->constant_alias;
+    if (dest->constant_alias == alias) return;
+    sym_clear_constant_alias(dest);
+    if (!alias) return;
+    alias->reference_count++;
+    dest->constant_alias = alias;
+}
+
 
 /* Returns the type of a symbol as a text string in a malloced buffer */
 char* sym_2tp(Symbol *symbol) {
@@ -638,6 +810,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->symbol_type = UNKNOWN_SYMBOL;
     symbol->status = SYM_STATUS_UNRESOLVED;
     symbol->meta_emitted = 0;
+    symbol->suppress_metadata = 0;
     symbol->init_emitted = 0;
     symbol->fixed_args = 0;
     symbol->has_vargs = 0;
@@ -655,8 +828,14 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->shadowed_symbol = 0;
     symbol->is_global_var = 0;
     symbol->has_reference_target = 0;
+    symbol->flow_skip_default_initiation = 0;
+    symbol->inline_skip_default_initiation = 0;
+    symbol->inline_value_alias = 0;
+    symbol->inline_borrowed_receiver = 0;
+    symbol->inline_summary = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
+    symbol->constant_alias = 0;
     symbol->creation_ordinal = -1;
     symbol->creation_node = 0;
 
@@ -1114,6 +1293,10 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
         sym_copy_reference_type(new_symbol, symbol);
         new_symbol->has_reference_target = symbol->has_reference_target;
+        new_symbol->suppress_metadata = symbol->suppress_metadata;
+        new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
+        (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+        sym_copy_constant_alias(new_symbol, symbol);
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -1134,6 +1317,14 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
             }
         }
         if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
+        if (symbol->suppress_metadata) new_symbol->suppress_metadata = 1;
+        if (symbol->inline_borrowed_receiver) new_symbol->inline_borrowed_receiver = 1;
+        if (!new_symbol->inline_summary && symbol->inline_summary) {
+            (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+        }
+        if (!new_symbol->constant_alias && symbol->constant_alias) {
+            sym_copy_constant_alias(new_symbol, symbol);
+        }
     }
 
     /* Move all the node/symbol connectors */
@@ -1152,6 +1343,8 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
+    sym_clear_inline_summary(symbol);
+    sym_clear_constant_alias(symbol);
     free_dpa(symbol->ast_node_array);
     free(symbol);
 
@@ -1213,12 +1406,17 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_ref_arg = symbol->is_ref_arg;
     new_symbol->is_opt_arg = symbol->is_opt_arg;
     new_symbol->is_const_arg = symbol->is_const_arg;
+    new_symbol->suppress_metadata = symbol->suppress_metadata;
     new_symbol->is_main = symbol->is_main;
     new_symbol->is_implicit_main = symbol->is_implicit_main;
     new_symbol->is_rc = symbol->is_rc;
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;
     new_symbol->has_reference_target = symbol->has_reference_target;
+    new_symbol->inline_skip_default_initiation = symbol->inline_skip_default_initiation;
+    new_symbol->inline_borrowed_receiver = symbol->inline_borrowed_receiver;
+    (void)sym_copy_inline_summary(new_symbol, symbol->inline_summary);
+    sym_copy_constant_alias(new_symbol, symbol);
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;
 
@@ -1262,10 +1460,16 @@ void free_sym(Symbol *symbol) {
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
     sym_clear_reference_type(symbol);
+    sym_clear_inline_summary(symbol);
+    sym_clear_constant_alias(symbol);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {
-        free(((dpa*)(symbol->ast_node_array))->pointers[i]);
+        SymbolNode *connector = ((dpa*)(symbol->ast_node_array))->pointers[i];
+        if (connector->node && connector->node->symbolNode == connector) {
+            connector->node->symbolNode = 0;
+        }
+        free(connector);
     }
     free_dpa(symbol->ast_node_array);
 

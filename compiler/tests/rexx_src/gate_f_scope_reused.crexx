@@ -1,0 +1,17 @@
+options levelg
+namespace gate_f_scope_reused
+
+work: task = .int
+  return 1
+
+main: procedure = .int
+  pool = .taskpool.local(1, 4)
+  scope = .taskscope.failfast(pool, 5000)
+  do parallel using scope
+    first = work()
+  end
+  do parallel using scope
+    second = work()
+  end
+  call pool.close()
+  return first + second

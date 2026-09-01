@@ -1,0 +1,170 @@
+Test project /private/tmp/crexx-perf2-06-reset.0ozeyr/build-r2d-debug
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/78 Test    #1: linked_opt_runtime_artifacts_build ..............   Passed  277.45 sec
+      Start  339: nr21_fixed_call_contract
+      Start  349: reference_source_explicit_rxvm_noopt
+      Start  350: reference_source_explicit_rxvm_opt
+      Start  351: reference_source_explicit_rxbvm_noopt
+      Start  352: reference_source_explicit_rxbvm_opt
+      Start  353: reference_source_contract_rxvm_noopt
+      Start  354: reference_source_contract_rxvm_opt
+      Start  355: reference_source_contract_rxbvm_noopt
+      Start  356: reference_source_contract_rxbvm_opt
+      Start  357: reference_source_iterator_rxvm_noopt
+ 2/78 Test  #350: reference_source_explicit_rxvm_opt ..............   Passed    2.51 sec
+      Start  358: reference_source_iterator_rxvm_opt
+ 3/78 Test  #354: reference_source_contract_rxvm_opt ..............   Passed    2.51 sec
+      Start  359: reference_source_iterator_rxbvm_noopt
+ 4/78 Test  #356: reference_source_contract_rxbvm_opt .............   Passed    2.75 sec
+      Start  360: reference_source_iterator_rxbvm_opt
+ 5/78 Test  #352: reference_source_explicit_rxbvm_opt .............   Passed    2.76 sec
+      Start  361: reference_source_dereference_live_rxvm_noopt
+ 6/78 Test  #349: reference_source_explicit_rxvm_noopt ............   Passed    2.93 sec
+      Start  362: reference_source_dereference_live_rxvm_opt
+ 7/78 Test  #353: reference_source_contract_rxvm_noopt ............   Passed    2.94 sec
+      Start  363: reference_source_dereference_live_rxbvm_noopt
+ 8/78 Test  #357: reference_source_iterator_rxvm_noopt ............   Passed    2.96 sec
+      Start  364: reference_source_dereference_live_rxbvm_opt
+ 9/78 Test  #351: reference_source_explicit_rxbvm_noopt ...........   Passed    3.16 sec
+      Start  365: reference_source_inline_lifetime_rxvm_noopt
+10/78 Test  #355: reference_source_contract_rxbvm_noopt ...........   Passed    3.16 sec
+      Start  366: reference_source_inline_lifetime_rxvm_opt
+11/78 Test  #358: reference_source_iterator_rxvm_opt ..............   Passed    2.67 sec
+      Start  367: reference_source_inline_lifetime_rxbvm_noopt
+12/78 Test  #339: nr21_fixed_call_contract ........................   Passed    5.30 sec
+      Start  368: reference_source_inline_lifetime_rxbvm_opt
+13/78 Test  #359: reference_source_iterator_rxbvm_noopt ...........   Passed    2.83 sec
+      Start  369: reference_source_block_lifetime_rxvm_noopt
+14/78 Test  #360: reference_source_iterator_rxbvm_opt .............   Passed    2.62 sec
+      Start  370: reference_source_block_lifetime_rxvm_opt
+15/78 Test  #362: reference_source_dereference_live_rxvm_opt ......   Passed    2.49 sec
+      Start  371: reference_source_block_lifetime_rxbvm_noopt
+16/78 Test  #364: reference_source_dereference_live_rxbvm_opt .....   Passed    2.46 sec
+      Start  372: reference_source_block_lifetime_rxbvm_opt
+17/78 Test  #361: reference_source_dereference_live_rxvm_noopt ....   Passed    2.75 sec
+      Start  379: repro_array_arg_run_noopt
+18/78 Test  #366: reference_source_inline_lifetime_rxvm_opt .......   Passed    2.48 sec
+      Start  380: repro_array_arg_run_opt
+19/78 Test  #363: reference_source_dereference_live_rxbvm_noopt ...   Passed    2.83 sec
+      Start  387: arg_semantics_scalar_run_noopt
+20/78 Test  #365: reference_source_inline_lifetime_rxvm_noopt .....   Passed    2.77 sec
+      Start  388: arg_semantics_scalar_run_opt
+21/78 Test  #368: reference_source_inline_lifetime_rxbvm_opt ......   Passed    2.19 sec
+      Start  389: arg_semantics_array_run_noopt
+22/78 Test  #370: reference_source_block_lifetime_rxvm_opt ........   Passed    2.13 sec
+      Start  390: arg_semantics_array_run_opt
+23/78 Test  #367: reference_source_inline_lifetime_rxbvm_noopt ....   Passed    2.37 sec
+      Start  393: arg_semantics_object_run_noopt
+24/78 Test  #372: reference_source_block_lifetime_rxbvm_opt .......   Passed    2.15 sec
+      Start  394: arg_semantics_object_run_opt
+25/78 Test  #369: reference_source_block_lifetime_rxvm_noopt ......   Passed    2.30 sec
+      Start  411: repro_args_alias_run_noopt
+26/78 Test  #380: repro_array_arg_run_opt .........................   Passed    2.04 sec
+      Start  412: repro_args_alias_run_opt
+27/78 Test  #371: reference_source_block_lifetime_rxbvm_noopt .....   Passed    2.30 sec
+      Start  429: repro_duplicate_call_argument_run_noopt
+28/78 Test  #379: repro_array_arg_run_noopt .......................   Passed    2.29 sec
+      Start  430: repro_duplicate_call_argument_run_opt
+29/78 Test  #387: arg_semantics_scalar_run_noopt ..................   Passed    2.16 sec
+      Start  431: nr06_call_window_scalar_run_noopt
+30/78 Test  #388: arg_semantics_scalar_run_opt ....................   Passed    2.10 sec
+      Start  432: nr06_call_window_scalar_run_opt
+31/78 Test  #390: arg_semantics_array_run_opt .....................   Passed    1.36 sec
+      Start  455: optional_arg_presence_copy_run_noopt
+32/78 Test  #394: arg_semantics_object_run_opt ....................   Passed    1.34 sec
+      Start  456: optional_arg_presence_copy_run_opt
+33/78 Test  #412: repro_args_alias_run_opt ........................   Passed    1.26 sec
+      Start  670: inline_test_ref_vararg_run_noopt
+34/78 Test  #393: arg_semantics_object_run_noopt ..................   Passed    1.49 sec
+      Start  671: inline_test_ref_vararg_run_opt
+35/78 Test  #389: arg_semantics_array_run_noopt ...................   Passed    1.61 sec
+      Start  672: inline_test_ref_vararg_runtime_run_noopt
+36/78 Test  #430: repro_duplicate_call_argument_run_opt ...........   Passed    1.37 sec
+      Start  673: inline_test_ref_vararg_runtime_run_opt
+37/78 Test  #411: repro_args_alias_run_noopt ......................   Passed    1.57 sec
+      Start  678: inline_test_vararg_run_noopt
+38/78 Test  #429: repro_duplicate_call_argument_run_noopt .........   Passed    1.55 sec
+      Start  679: inline_test_vararg_run_opt
+39/78 Test  #432: nr06_call_window_scalar_run_opt .................   Passed    1.53 sec
+      Start  680: inline_test_vararg_dynamic_run_noopt
+40/78 Test  #431: nr06_call_window_scalar_run_noopt ...............   Passed    1.63 sec
+      Start  681: inline_test_vararg_dynamic_run_opt
+41/78 Test  #456: optional_arg_presence_copy_run_opt ..............   Passed    1.55 sec
+      Start  682: inline_test_vararg_dynamic_loop_run_noopt
+42/78 Test  #671: inline_test_ref_vararg_run_opt ..................   Passed    1.49 sec
+      Start  683: inline_test_vararg_dynamic_loop_run_opt
+43/78 Test  #673: inline_test_ref_vararg_runtime_run_opt ..........   Passed    1.41 sec
+      Start  698: inline_test_multi_return_call_run_noopt
+44/78 Test  #670: inline_test_ref_vararg_run_noopt ................   Passed    1.68 sec
+      Start  699: inline_test_multi_return_call_run_opt
+45/78 Test  #455: optional_arg_presence_copy_run_noopt ............   Passed    1.76 sec
+      Start  716: inline_test_object_writable_arg_run_noopt
+46/78 Test  #679: inline_test_vararg_run_opt ......................   Passed    1.38 sec
+      Start  717: inline_test_object_writable_arg_run_opt
+47/78 Test  #672: inline_test_ref_vararg_runtime_run_noopt ........   Passed    1.61 sec
+      Start  728: attr_array_call_result_lifetime_run_noopt
+48/78 Test  #678: inline_test_vararg_run_noopt ....................   Passed    1.51 sec
+      Start  729: attr_array_call_result_lifetime_run_opt
+49/78 Test  #681: inline_test_vararg_dynamic_run_opt ..............   Passed    1.26 sec
+      Start  732: inline_test_binary_arg_return_run_noopt
+50/78 Test  #680: inline_test_vararg_dynamic_run_noopt ............   Passed    1.41 sec
+      Start  733: inline_test_binary_arg_return_run_opt
+51/78 Test  #683: inline_test_vararg_dynamic_loop_run_opt .........   Passed    1.31 sec
+      Start 1072: rxasreferencetests
+52/78 Test #1072: rxasreferencetests ..............................   Passed    0.01 sec
+      Start 1073: rxasreferencetests-rxbvm
+53/78 Test #1073: rxasreferencetests-rxbvm ........................   Passed    0.01 sec
+      Start 1074: rxasreferencecatchtests
+54/78 Test #1074: rxasreferencecatchtests .........................   Passed    0.01 sec
+      Start 1075: rxasreferencecatchtests-rxbvm
+55/78 Test #1075: rxasreferencecatchtests-rxbvm ...................   Passed    0.01 sec
+      Start 1076: rxasperf2referenceguardtests
+56/78 Test #1076: rxasperf2referenceguardtests ....................   Passed    0.01 sec
+      Start 1077: rxasperf2referenceguardtests-rxbvm
+57/78 Test #1077: rxasperf2referenceguardtests-rxbvm ..............   Passed    0.01 sec
+      Start 1078: rxasperf2partialreferencetests
+58/78 Test #1078: rxasperf2partialreferencetests ..................   Passed    0.01 sec
+      Start 1079: rxasperf2partialreferencetests-rxbvm
+59/78 Test #1079: rxasperf2partialreferencetests-rxbvm ............   Passed    0.01 sec
+      Start 1080: rxasperf2exactrelinktests
+60/78 Test #1080: rxasperf2exactrelinktests .......................   Passed    0.01 sec
+      Start 1081: rxasperf2exactrelinktests-rxbvm
+61/78 Test  #717: inline_test_object_writable_arg_run_opt .........   Passed    1.27 sec
+      Start 1132: rxasnr09superinstructiontests
+62/78 Test  #682: inline_test_vararg_dynamic_loop_run_noopt .......   Passed    1.45 sec
+      Start 1133: rxasnr09superinstructiontests-rxbvm
+63/78 Test #1081: rxasperf2exactrelinktests-rxbvm .................   Passed    0.01 sec
+      Start 1226: rxasinterfacetests
+64/78 Test #1132: rxasnr09superinstructiontests ...................   Passed    0.01 sec
+      Start 1227: rxasinterfacetests-rxbvm
+65/78 Test #1133: rxasnr09superinstructiontests-rxbvm .............   Passed    0.01 sec
+      Start 1232: rxasstresstests
+66/78 Test #1226: rxasinterfacetests ..............................   Passed    0.01 sec
+      Start 1233: rxasstresstests-rxbvm
+67/78 Test #1227: rxasinterfacetests-rxbvm ........................   Passed    0.01 sec
+      Start 1234: rxasinstructiongaptests
+68/78 Test  #699: inline_test_multi_return_call_run_opt ...........   Passed    1.32 sec
+      Start 1235: rxasinstructiongaptests-rxbvm
+69/78 Test #1234: rxasinstructiongaptests .........................   Passed    0.01 sec
+70/78 Test #1232: rxasstresstests .................................   Passed    0.01 sec
+71/78 Test #1233: rxasstresstests-rxbvm ...........................   Passed    0.01 sec
+72/78 Test #1235: rxasinstructiongaptests-rxbvm ...................   Passed    0.01 sec
+73/78 Test  #729: attr_array_call_result_lifetime_run_opt .........   Passed    1.28 sec
+74/78 Test  #698: inline_test_multi_return_call_run_noopt .........   Passed    1.42 sec
+75/78 Test  #716: inline_test_object_writable_arg_run_noopt .......   Passed    1.45 sec
+76/78 Test  #728: attr_array_call_result_lifetime_run_noopt .......   Passed    1.41 sec
+77/78 Test  #733: inline_test_binary_arg_return_run_opt ...........   Passed    1.22 sec
+78/78 Test  #732: inline_test_binary_arg_return_run_noopt .........   Passed    1.40 sec
+
+100% tests passed, 0 tests failed out of 78
+
+Label Time Summary:
+compiler       =  68.31 sec*proc (25 tests)
+linked_opt     =  54.21 sec*proc (29 tests)
+performance    =   5.30 sec*proc (1 test)
+reference      =  63.01 sec*proc (24 tests)
+rxbin          =   5.30 sec*proc (1 test)
+smoke          =   1.77 sec*proc (3 tests)
+source         =  63.01 sec*proc (24 tests)
+
+Total Test time (real) = 289.70 sec

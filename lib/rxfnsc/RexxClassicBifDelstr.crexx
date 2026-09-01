@@ -1,0 +1,103 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifdelstr expose rexxclassicbif_delstr
+import rexxclassicbifs
+import rexxclassiccharacterscan
+import rexxvalue
+
+/**
+ * Delete a Classic character range.
+ *
+ * @bif DELSTR
+ * @signature DELSTR(string, start [,length])
+ * @checkargs rANY rWHOLE>0 oWHOLE>=0
+ * @sandbox pure
+ * @return changed string as a RexxValue
+ */
+rexxclassicbif_delstr: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
+
+  start = .int
+  start = context.argumentText(2) + 0
+  length_supplied = context.argumentExists(3)
+  delete_length = 0
+  if length_supplied then delete_length = context.argumentText(3) + 0
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if start > byte_length then return .RexxValue.fromBinary(bytes)
+    if length_supplied & delete_length = 0 then return .RexxValue.fromBinary(bytes)
+    prefix_length = start - 1
+    available = byte_length - prefix_length
+    if \length_supplied then delete_length = available
+    if delete_length >= available then do
+      result_bytes = rexxclassic_byte_slice(bytes,0,prefix_length)
+      return .RexxValue.fromBinary(result_bytes)
+    end
+    result_bytes = rexxclassic_byte_slice(bytes,0,prefix_length)
+    tail_start = prefix_length + delete_length
+    tail_length = byte_length - tail_start
+    tail_bytes = rexxclassic_byte_slice(bytes,tail_start,tail_length)
+    assembler bappend result_bytes,tail_bytes
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  string_length = .int
+  prefix_length = .int
+  available = .int
+  tail_start = .int
+  tail_length = .int
+  cursor = 0
+  tail = ""
+  result = ""
+
+  assembler strlen string_length,string
+  if start > string_length then return .RexxValue(string)
+  if length_supplied & delete_length = 0 then return .RexxValue(string)
+
+  prefix_length = start - 1
+  available = string_length - prefix_length
+  if \length_supplied then delete_length = available
+  if delete_length >= available then do
+    if prefix_length = 0 then return .RexxValue("")
+    assembler substring result,string,cursor,prefix_length
+    return .RexxValue(result)
+  end
+
+  if prefix_length > 0 then do
+    assembler substring result,string,cursor,prefix_length
+  end
+  tail_start = prefix_length + delete_length
+  tail_length = string_length - tail_start
+  assembler substring tail,string,tail_start,tail_length
+  assembler append result,tail
+  return .RexxValue(result)

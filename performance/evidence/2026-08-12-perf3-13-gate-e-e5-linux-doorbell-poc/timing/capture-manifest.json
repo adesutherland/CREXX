@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "linux 64 crexx-1.0.0-beta.3+local.gb6edf2556f24.dirty 20260812",
+  "source_manifest": "performance/evidence/2026-08-12-perf3-13-gate-e-e5-linux-doorbell-poc/manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-12T12:21:52+0000",
+  "completed_utc": "2026-08-12T12:41:32+0000",
+  "result": "pass"
+}

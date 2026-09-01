@@ -1,0 +1,23 @@
+Base HEAD: b08611179db5ff4257c3be3103f3aeab55ea5b50
+Tracked source/document paths:
+compiler/rxcp_inline_bind.c
+compiler/rxcp_inline_clone.c
+compiler/tests/CMakeLists.txt
+compiler/tests/golden/opt/18_array_class.rxas
+compiler/tests/golden/opt/inline_test_class_methods.rxas
+compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+compiler/tests/run_inline_receiver_nested_this_opt.cmake
+docs/ai-context/CREXX_ARCHITECTURE.md
+docs/ai-context/RXVM_INTERPRETER.md
+interpreter/rxvmintp.c
+interpreter/rxvmvars.h
+performance/PERF2-06-07-HANDOVER-PROMPT.md
+performance/PERF2-06-07-WORKLIST.md
+performance/README.md
+performance/ROADMAP.md
+Untracked source/test paths:
+compiler/tests/perf2_07_v3_representation.cmake
+compiler/tests/rexx_src/perf2_07_v3_representation.crexx
+Public-format/ABI path matches (expected none):
+Conclusion: no language, public RXAS/RXBIN, opcode-number or public ABI surface changed.

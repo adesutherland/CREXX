@@ -1,0 +1,17 @@
+toolchain=LLVM 22.1.8 official portable Windows archive
+release_url=https://github.com/llvm/llvm-project/releases/tag/llvmorg-22.1.8
+archive=clang+llvm-22.1.8-x86_64-pc-windows-msvc.tar.xz
+archive_bytes=862053924
+archive_sha256=d96c2cc1736f4eb7fa43cb9bbdf56d93551a9ae0a9aadb9c99c3c3b2b712a234
+published_sha256_match=yes
+clang_version=22.1.8
+clang_target=x86_64-w64-windows-gnu
+gnu_sysroot=CLion 2026.1.4 bundled MinGW GCC 15.2.0
+cmake_build_tree=cmake-build-clang-release-v2
+build_type=Release
+release_flags=-O3 -DNDEBUG
+crexx_vm_profiling=OFF
+windows_tls=SCHANNEL
+targets=rxvm rxbvm
+parallel_jobs=2
+build_seconds=131.9

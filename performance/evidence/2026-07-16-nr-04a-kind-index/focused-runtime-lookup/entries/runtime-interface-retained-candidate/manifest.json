@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "runtime-interface-retained-candidate",
+  "pair": "runtime-interface-retained-vm",
+  "workload": "Runtime interface lookup",
+  "variant": "candidate",
+  "optimization_mode": "opt-retained-candidate-vm",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-retained.rxbin","sha256":"5e6e953435f85f69a20bc75a79bfeeef1d950303b3f6600c8e0a6a8dc27b16dc"},
+  "modules": [],
+  "arguments": ["1000000","100000"],
+  "correctness_expectation": "PASS: runtime interface lookup compare",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-retained.rxbin","-a","1000000","100000"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/focused-runtime-lookup/entries/runtime-interface-retained-candidate/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-retained.rxbin","-a","1000000","100000"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 106384000
+}

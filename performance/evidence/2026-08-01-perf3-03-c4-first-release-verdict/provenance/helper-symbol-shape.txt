@@ -1,0 +1,8 @@
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxvm
+000000010008bcfc (__TEXT,__text) non-external _rxvm_loose_string2float
+/tmp/crexx-perf3-03-first-verdict.xCMBN2/build-candidate/bin/rxbvm
+000000010008b84c (__TEXT,__text) non-external _rxvm_loose_string2float
+/tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxvm
+000000010008bcfc (__TEXT,__text) non-external _rxvm_loose_string2float
+/tmp/crexx-perf3-03.TsP0ej/prefilter3-build/bin/rxbvm
+000000010008b84c (__TEXT,__text) non-external _rxvm_loose_string2float

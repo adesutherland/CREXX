@@ -1,0 +1,13 @@
+gate,result,detail,log
+release_build,pass,"profiling-off rxc rxas rxvm rxbvm",logs/release-build.log
+release_focused,pass,"11/11 including fixture setup; production ladder, receiver/reference canaries, by-value reuse, Richards/Towers opt/noopt",logs/release-focused-ctest.log
+debug_build,pass,"1184 build actions",logs/debug-build.log
+debug_broad_first,expected_golden_drift,"1965/1972 pass; seven optimized RXAS goldens changed while all seven paired runtime tests passed",logs/debug-broad-first.log
+debug_object_pairs,pass,"16/16 including fixture setup after exact golden refresh",logs/debug-object-pairs.log
+debug_broad_final,pass,"1972/1972",logs/debug-broad-final.log
+r1_replay_integrity,pass,"31/31 checksum entries",../2026-08-01-perf3-02-r1-repanel/checksums.sha256
+richards_selected_image,pass,"ordinary production RXAS equals measured mask 7: ac1737cc7d6d7ba59a1a3771d1c6d977b974f5d5c23fa5f10c032f0d00c259d9",production-identity.csv
+towers_selected_image,pass,"ordinary production RXAS equals measured mask 7: 35ead6d2a0313e64986370c803bf960cc20a73bf5b1813d9c0e8d2ac2a7c3e4e",production-identity.csv
+disposable_mask_absent,pass,"no RXCP_PERF3_RECEIVER or inline_perf3_receiver_option production symbol",production-surface-audit.txt
+broad_negative_absent,pass,"correctness-invalid broad no-write branch removed; replay source retained",production-surface-audit.txt
+protected_lifecycle_images,pass,"5/5 starting identities unchanged",source-identity.csv

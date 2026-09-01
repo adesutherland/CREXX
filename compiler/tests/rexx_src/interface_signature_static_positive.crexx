@@ -1,0 +1,36 @@
+options levelb
+namespace interface_signature_static_positive
+
+main: procedure
+  current = .adder
+
+  current = .calculator("sum")
+  say current.add(2, 5)
+  say current.label("value")
+  return
+
+adder: interface
+  *: factory
+  arg prefix = .string
+
+  add: method = .int
+  arg left = .int, right = .int
+
+  label: method = .string
+  arg text = .string
+
+calculator: class implements .adder
+  _prefix = .string
+
+  *: factory
+    arg prefix = .string
+    _prefix = prefix
+    return
+
+  add: method = .int
+    arg left = .int, right = .int
+    return left + right
+
+  label: method = .string
+    arg text = .string
+    return _prefix || ":" || text

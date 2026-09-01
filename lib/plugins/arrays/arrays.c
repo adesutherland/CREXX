@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
-#include <unistd.h>   // For POSIX systems (Linux/macOS)
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
 #define MAX_VARS 100

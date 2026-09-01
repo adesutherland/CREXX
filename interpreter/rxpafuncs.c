@@ -29,6 +29,7 @@
 #include <string.h>
 
 #include "crexxpa.h"
+#include "rxpacompat.h"
 #include "rxvmintp.h"
 #include "rxvmvars.h"
 
@@ -38,7 +39,20 @@ typedef struct rxpa_pool_node {
     struct rxpa_pool_node* next;
 } rxpa_pool_node;
 
-static rxpa_pool_node* current_pool_head = NULL;
+#if defined(_MSC_VER)
+#define RXPA_THREAD_LOCAL __declspec(thread)
+#else
+#define RXPA_THREAD_LOCAL __thread
+#endif
+
+/* Context-free test shims locate the current call's stack-owned pool slot. */
+static RXPA_THREAD_LOCAL rxpa_pool_node **rxpa_compat_pool_slot;
+
+static rxpa_pool_node **rxpa_current_pool_slot(void) {
+    rxvm_context *context = rxvm_active_context_current();
+    if (context) return (rxpa_pool_node **)&context->active.rxpa_pool_head;
+    return rxpa_compat_pool_slot;
+}
 
 typedef struct rxpa_value_visit_set {
     value** items;
@@ -79,7 +93,11 @@ static int rxpa_visit_value(rxpa_value_visit_set* visited, value* v) {
 
     if (visited->count == visited->capacity) {
         new_capacity = visited->capacity ? visited->capacity * 2 : 16;
-        items = (value**)realloc(visited->items, new_capacity * sizeof(value*));
+        items = (value**)rxvm_memory_resize_bytes(
+            rxvm_memory_current_worker(),
+            visited->items,
+            visited->count * sizeof(value*),
+            new_capacity * sizeof(value*));
         if (!items) return -1;
         visited->items = items;
         visited->capacity = new_capacity;
@@ -105,12 +123,17 @@ static rxpa_utf8_validation_result rxpa_validate_value_tree(
 #ifndef NUTF8
     {
         size_t chars = 0;
+        /* Native code may have written the payload directly without passing
+         * through an RXVM string setter.  Validate the bytes, but never retain
+         * a non-ASCII certificate supplied before that opaque mutation. */
+        clear_string_normalization_certificates(v);
         if (validate_utf8_bytes(v->string_value, v->string_length, &chars) != 0) {
             return RXPA_UTF8_INVALID;
         }
-        v->string_chars = chars;
-        v->string_char_pos = 0;
-        mark_utf8_valid_count(v);
+        rxvm_value_set_string_chars_known(v, chars);
+        string_cache_reset(v);
+        if (chars == v->string_length) mark_ascii_string_valid_count(v);
+        else mark_utf8_valid_count(v);
     }
 #endif
 
@@ -157,7 +180,7 @@ static void rxpa_validate_native_outputs(
         rc = rxpa_validate_value_tree(signal, &visited);
     }
 
-    free(visited.items);
+    (void)rxvm_memory_release(visited.items);
 
     if (rc == RXPA_UTF8_INVALID) {
         rxpa_set_signal(signal, SIGNAL_UNICODE_ERROR, "Invalid UTF-8 returned by native RXPA function");
@@ -166,17 +189,23 @@ static void rxpa_validate_native_outputs(
     }
 }
 
-/* Function to call a native RXPA (CREXX Plugin Architecture) function */
-void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal) {
+void rxvm_callfunc_direct(void* function, int args, value** argv,
+                          value* ret, value* signal) {
     rxpa_libfunc native_function = (rxpa_libfunc)function;
     rxpa_attribute_value* arg_values = (rxpa_attribute_value*)argv;
     rxpa_attribute_value return_value = (rxpa_attribute_value)ret;
     rxpa_attribute_value signal_value = (rxpa_attribute_value)signal;
 
-    /* Save Context */
-    rxpa_pool_node* saved_head = current_pool_head;
-    /* Reset Context */
-    current_pool_head = NULL;
+    rxpa_pool_node **pool_slot = rxpa_current_pool_slot();
+    rxpa_pool_node **saved_compat_slot = rxpa_compat_pool_slot;
+    rxpa_pool_node *local_head = NULL;
+    rxpa_pool_node *saved_head = pool_slot ? *pool_slot : NULL;
+
+    if (!pool_slot) {
+        pool_slot = &local_head;
+        rxpa_compat_pool_slot = pool_slot;
+    }
+    *pool_slot = NULL;
 
     /* Call */
     native_function(args, arg_values, return_value, signal_value);
@@ -184,16 +213,62 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
     rxpa_validate_native_outputs(args, argv, ret, signal);
 
     /* Cleanup */
-    while (current_pool_head) {
-        rxpa_pool_node* next = current_pool_head->next;
-        free(current_pool_head->ptr);
-        free(current_pool_head);
-        current_pool_head = next;
+    while (*pool_slot) {
+        rxpa_pool_node* next = (*pool_slot)->next;
+        (void)rxvm_memory_release((*pool_slot)->ptr);
+        (void)rxvm_memory_release(*pool_slot);
+        *pool_slot = next;
     }
 
-    /* Restore Context */
-    current_pool_head = saved_head;
+    *pool_slot = saved_head;
+    rxpa_compat_pool_slot = saved_compat_slot;
 }
+
+void rxvm_callfunc(void* function, int args, value** argv, value* ret,
+                   value* signal) {
+    rxpa_compatibility_enter();
+    rxvm_callfunc_direct(function, args, argv, ret, signal);
+    rxpa_compatibility_leave();
+}
+
+void rxvm_callfunc_session(void* opaque_binding, int args, value** argv,
+                           value* ret, value* signal) {
+    rxpa_session_call_binding *binding =
+            (rxpa_session_call_binding *)opaque_binding;
+    void *previous = NULL;
+    int enter_rc;
+
+    if (!binding || !binding->function || !binding->instance ||
+        !binding->instance->enter || !binding->instance->leave) {
+        rxpa_set_signal(signal, SIGNAL_FAILURE,
+                        "Invalid RXPA session call binding");
+        return;
+    }
+    enter_rc = binding->instance->enter(
+            binding->instance->session,
+            binding->procedure_capabilities, &previous);
+    if (enter_rc != 0) {
+        rxpa_set_signal(signal, SIGNAL_FAILURE,
+                        "RXPA plugin session entry failed");
+        return;
+    }
+    rxvm_callfunc_direct(binding->function,
+                         args, argv, ret, signal);
+    binding->instance->leave(previous);
+}
+
+/* Direct capability entry retained for focused policy tests. Ordinary VM
+ * handlers use the invoker selected when the native procedure is loaded. */
+void rxvm_callfunc_capabilities(void* function, uint32_t capabilities,
+                                int args, value** argv, value* ret,
+                                value* signal) {
+    if ((capabilities & RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0u) {
+        rxvm_callfunc_direct(function, args, argv, ret, signal);
+    } else {
+        rxvm_callfunc(function, args, argv, ret, signal);
+    }
+}
+
 
 /* Function to get signal text from a signal code  */
 char* rxvm_getsignaltext(rxsignal signal) {
@@ -216,6 +291,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
              return "REFERENCE_INVALID";
          case SIGNAL_OBJECT_NOT_INITIALIZED:
              return "OBJECT_NOT_INITIALIZED";
+         case SIGNAL_RXBIN_CORRUPTION:
+             return "RXBIN_CORRUPTION";
          case SIGNAL_FAILURE:
              return "FAILURE";
          case SIGNAL_HALT:
@@ -249,6 +326,8 @@ char* rxvm_getsignaltext(rxsignal signal) {
             return SIGNAL_OUT_OF_RANGE;
         } else if (strcmp(signalText, "REFERENCE_INVALID") == 0) {
             return SIGNAL_REFERENCE_INVALID;
+        } else if (strcmp(signalText, "RXBIN_CORRUPTION") == 0) {
+            return SIGNAL_RXBIN_CORRUPTION;
         } else if (strcmp(signalText, "FAILURE") == 0) {
             return SIGNAL_FAILURE;
         } else if (strcmp(signalText, "HALT") == 0) {
@@ -274,19 +353,27 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue) {
         printf("Argument String '%s'\n",val->string_value);
 #endif
         /* Copy-Out */
-        ret = malloc(val->string_length + 1);
+        ret = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
+                                      val->string_length + 1u);
         if (ret) {
             memcpy(ret, val->string_value, val->string_length);
             ret[val->string_length] = '\0';
             /* Track in pool */
-            node = malloc(sizeof(rxpa_pool_node));
+            node = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(),
+                                           sizeof(rxpa_pool_node));
             if (node) {
+                rxpa_pool_node **pool_slot = rxpa_current_pool_slot();
                 node->ptr = ret;
-                node->next = current_pool_head;
-                current_pool_head = node;
+                node->next = pool_slot ? *pool_slot : NULL;
+                if (pool_slot) *pool_slot = node;
+                else {
+                    (void)rxvm_memory_release(node);
+                    (void)rxvm_memory_release(ret);
+                    ret = NULL;
+                }
             } else {
-                /* If we can't track it, we're in trouble, but let's at least not leak it now if we can help it */
-                /* In a real system we'd signal an error */
+                (void)rxvm_memory_release(ret);
+                ret = NULL;
             }
         }
         return ret;
@@ -298,7 +385,7 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue) {
 }
 
 /* Set a string in an attribute value */
-void rxvm_setstring(rxpa_attribute_value attributeValue, char* string){
+void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string){
     value* val = (value*)attributeValue;
     if (val) set_null_string(val, string);
 }
@@ -352,6 +439,12 @@ void* rxvm_getnativepayload(rxpa_attribute_value attributeValue,
                             const rxpa_native_payload_ops **out_ops,
                             unsigned int *out_flags) {
     return get_native_payload((value*)attributeValue, out_length, out_ops, out_flags);
+}
+
+/* Test the language-level typed-object initialization flag without raising. */
+int rxvm_isinitialized(rxpa_attribute_value attributeValue) {
+    value* val = (value*)attributeValue;
+    return val && !value_is_uninitialized_object(val);
 }
 
 /* Get the number of child attributes */

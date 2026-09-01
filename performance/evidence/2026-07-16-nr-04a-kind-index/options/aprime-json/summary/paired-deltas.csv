@@ -1,0 +1,2 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+JSON-stripped-A-prime,json-stripped-baseline,json-stripped-aprime,opt-stripped-baseline-second,opt-stripped-candidate-a-prime-first,343494000,335704000,-7790000,-2.268

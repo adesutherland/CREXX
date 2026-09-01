@@ -1,0 +1,6 @@
+crexx-cross-runtime-matrix|1
+# id|workload|runtime|vm|variant|tier|aggregate|lifecycle|work|expectation|metric_prefix|command_argv
+rss-rxvm-before|rexxcps-canonical|crexx|rxvm|before-candidate-a|adapted|no|no|0|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_opt.rxbin
+rss-rxvm-after|rexxcps-canonical|crexx|rxvm|after-d2-hybrid|adapted|no|no|0|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/rexxcps_levelb_d2h_opt_linked.rxbin
+rss-rxbvm-before|rexxcps-canonical|crexx|rxbvm|before-candidate-a|adapted|no|no|0|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;performance/evidence/2026-07-22-nr-15-first-release-verdict/panel/candidate-a-native-hash/images/rexxcps_levelb_opt.rxbin
+rss-rxbvm-after|rexxcps-canonical|crexx|rxbvm|after-d2-hybrid|adapted|no|no|0|PASS: RexxCPS 2.2d cREXX port|Performance:|cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/rexxcps_levelb_d2h_opt_linked.rxbin

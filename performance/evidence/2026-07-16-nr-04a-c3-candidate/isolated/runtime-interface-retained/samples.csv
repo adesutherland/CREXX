@@ -1,0 +1,2 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rxgraph-isolated,rxbin-c3,runtime-interface-retained,process,recorded,1,1395809000,0,pass,,

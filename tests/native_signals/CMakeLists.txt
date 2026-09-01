@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(sigtesttool C)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Set the binary tool binary output directory to /tools
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tools)
@@ -22,17 +23,12 @@ add_custom_command(
 )
 
 # Create a custom target that depends on the custom command's output
-add_custom_target(intr_test ALL DEPENDS intr_test.rxbin rxvm rxbvm signal_tester)
+add_custom_target(intr_test ALL DEPENDS intr_test.rxbin rxvm signal_tester)
 
 function(crexx_add_native_signal_test SIGNAL_NAME SIGNAL_DESC)
     add_test(
             NAME ${SIGNAL_NAME}
-            COMMAND signal_tester ${SIGNAL_NAME} "${SIGNAL_DESC}" 5 $<TARGET_FILE:rxvm> intr_test
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    add_test(
-            NAME ${SIGNAL_NAME}_BYTECODE
-            COMMAND signal_tester ${SIGNAL_NAME} "${SIGNAL_DESC}" 5 $<TARGET_FILE:rxbvm> intr_test
+            COMMAND signal_tester ${SIGNAL_NAME} "${SIGNAL_DESC}" 5 ${CREXX_RXVM_EXECUTABLE} intr_test
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endfunction()
@@ -50,9 +46,9 @@ else()
     crexx_add_native_signal_test(INT "POSIX_INT Signal")
 endif()
 
-set(_native_signal_tests QUIT TERM QUIT_BYTECODE TERM_BYTECODE)
+set(_native_signal_tests QUIT TERM)
 if(NOT WIN32)
-    list(APPEND _native_signal_tests INT INT_BYTECODE)
+    list(APPEND _native_signal_tests INT)
 endif()
 
 set_tests_properties(${_native_signal_tests} PROPERTIES
@@ -60,3 +56,7 @@ set_tests_properties(${_native_signal_tests} PROPERTIES
         RUN_SERIAL TRUE
         TIMEOUT 15
 )
+
+crexx_label_smoke_tests(QUIT INT PREP_TARGETS intr_test)
+
+crexx_finalize_directory_qa_tiers()

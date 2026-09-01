@@ -1,4 +1,4 @@
-# Virtual Machine Instruction Set
+# RXVM Instruction Set
 
 This chapter describes RXVM instructions by functional characteristic. It is a
 reference for RXAS authors and for readers inspecting compiler output.
@@ -11,9 +11,9 @@ and linker.
 
 Most RXVM instructions share these properties:
 
-- logical data flow is written from right to left
-- comparisons write their boolean result into an explicit register
-- there is no separate condition-code register
+- logical data flow is written *from right to left*
+- *comparisons* write their *boolean* result into an explicit *register*
+- there is *no* separate *condition-code register*
 - constants and symbols are represented through the RXBIN constant pool
 - modules carry metadata records for source mapping, imports, classes,
   interfaces, factories, methods, and linker/runtime support

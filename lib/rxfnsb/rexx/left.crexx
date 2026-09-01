@@ -22,30 +22,52 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B LEFT implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/left.md
+ */
 options levelb
-
 namespace rxfnsb expose left
-import _rxsysb
 
-left: procedure=.string
-  arg lstring=.string, leftlen=0, pad=' '
-  llen=0
-  assembler strlen llen,lstring
+/**
+ * Return or pad the leftmost characters to an exact width.
+ *
+ * @param string source text
+ * @param width non-negative result width
+ * @param pad exactly one padding codepoint
+ * @return leftmost text padded on the right to `width`
+ */
+left: procedure = .string
+  arg string = .string, width = .int, pad = " "
+  string_length = .int
+  pad_length = .int
+  padding_length = .int
+  pad_character = .int
+  pad_index = 0
+  cursor = 0
+  padding = ""
+  result = ""
 
-  if leftlen<=0 | llen=0 then return ''     /* one of the length is zero, return empty string */
-  if leftlen = llen then return lstring     /* no length change, return original */
-  if leftlen < llen then do                 /* requested length is < then string length, just cut it off */
-     assembler substcut lstring,leftlen     /* just cut off string */
-     return lstring                         /* and return it */
+  if width < 0 then
+    assembler signal "INVALID_ARGUMENTS","LEFT width must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","LEFT pad must contain exactly one character"
+
+  if width = 0 then return result
+  assembler strlen string_length,string
+  if width = string_length then return string
+
+  if width < string_length then do
+    assembler substring result,string,cursor,width
+    return result
   end
- /* left length > string length, this needs padding */
-  padchar=''
-  padstring=''
-  padlength=0
-  assembler strlen padLength, pad
-  if padLength > 1 then call raise "syntax", "40.23", pad
-  assembler strchar padchar, pad           /* padchar= utf8codepoint(pad) */
-  leftlen=leftlen-llen                     /* how many padding chars needed */
-  assembler padstr padstring, padchar, leftlen  /* create pad string */
-return lstring||padstring                  /* return padded string */
+
+  padding_length = width - string_length
+  assembler strchar pad_character,pad,pad_index
+  assembler padstr padding,pad_character,padding_length
+  assembler scopy result,string
+  assembler append result,padding
+  return result

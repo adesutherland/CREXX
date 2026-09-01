@@ -1,0 +1,2 @@
+﻿started_utc=2026-07-29T20:06:40.5572256Z runs=20 crexx_vm=both phase_model=compile/translate plus load_first_result
+completed_utc=2026-07-29T20:24:03.1842586Z result=pass sample_rows=160

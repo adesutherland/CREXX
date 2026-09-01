@@ -1,0 +1,17 @@
+options levelb
+namespace external_operation expose operationcontract requestcontract resultcontract errorcontract
+
+operationcontract: interface
+  execute: method = .resultcontract
+    arg request = .requestcontract
+
+requestcontract: interface
+  query: method = .string
+
+resultcontract: interface
+  ok: method = .boolean
+  problem: method = .errorcontract
+
+errorcontract: interface
+  code: method = .string
+  message: method = .string

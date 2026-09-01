@@ -78,20 +78,19 @@ static void check_signal(decplugin *plugin) {
     decContext *dec_context = ((decContext*)(plugin->base.private_context));
 
     if (dec_context->status & DEC_Errors) {
+        uint32_t errors = dec_context->status & DEC_Errors;
 
-        switch (dec_context->status) {
-            case DEC_Invalid_operation:
-                plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
-                break;
-            case DEC_Division_by_zero:
-                plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
-                break;
-            case DEC_Overflow:
-            case DEC_Underflow:
-                plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
-                break;
-            default:
-                plugin->base.signal_number = RXSIGNAL_ERROR;
+        if (errors & (DEC_Conversion_syntax | DEC_Invalid_operation)) {
+            plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
+        }
+        else if (errors & DEC_Division_by_zero) {
+            plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
+        }
+        else if (errors & (DEC_Overflow | DEC_Underflow)) {
+            plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
+        }
+        else {
+            plugin->base.signal_number = RXSIGNAL_ERROR;
         }
         strcpy(buffer, "decNumber: ");
         strcat(buffer, decContextStatusToString(dec_context));
@@ -118,34 +117,17 @@ static size_t getRequiredDecNumberSize(size_t digits) {
 }
 
 /* Ensure that the decNumber is big enough to hold the number */
-static void EnsureCapacity(value *number, size_t digits) {
+static void EnsureCapacity(decplugin *plugin, value *number, size_t digits) {
     /* Calculate the size of the decNumber */
     size_t size = getRequiredDecNumberSize(digits);
 
-    /* If the value has a rxvmplugin buffer already */
-    if (number->decimal_value) {
-
-        /* If the size is bigger than the current size, reallocate the memory */
-        if (size > number->decimal_buffer_length) {
-            /* Allocate the new memory */
-            decNumber *new_value = realloc(number->decimal_value, size);
-
-            /* If the reallocation was unsuccessful, panic as per crexx standard behavior */
-            if (new_value == NULL) {
-                RX_PANIC_OOM("realloc mc_decimal decNumber", size, "decimal value");
-            }
-            number->decimal_value = new_value;
-            number->decimal_buffer_length = size;
-        }
-        number->decimal_value_length = size;
-    }
-    else {
-        /* Allocate the memory for the decNumber */
-        number->decimal_value = malloc(size);
-        number->decimal_buffer_length = size;
-        number->decimal_value_length = size;
-    }
+    if (!plugin->reserve_decimal(number, size))
+        RX_PANIC_OOM("reserve mc_decimal sidecar payload", size,
+                     "decimal value");
 }
+
+/* The plugin and VM are a tightly coupled ABI. EnsureCapacity materializes
+ * worker-owned header+payload storage before the arithmetic body uses it. */
 
 /* Definitions the rxvmplugin functions */
 
@@ -154,9 +136,21 @@ static size_t getDigits(decplugin *plugin) {
     return ((decContext*)(plugin->base.private_context))->digits;
 }
 
-/* Get the required string size for the rxvmplugin context */
-static size_t getRequiredStringSize(decplugin *plugin) {
-    return ((decContext*)(plugin->base.private_context))->digits + 14;
+/* Get the required string size for the active context and stored value. A
+ * decimal may have been produced in a wider caller/work context, so sizing
+ * solely from the current context can under-allocate DTOS/DEXTR output. */
+static size_t getRequiredStringSize(decplugin *plugin, const value *number) {
+    decContext *context = (decContext *)plugin->base.private_context;
+    size_t digits = context->digits > 0 ? (size_t)context->digits : 0u;
+
+    if (number && number->decimal_value &&
+        rxvm_value_decimal_length(number) != 0) {
+        const decNumber *dn = (const decNumber *)number->decimal_value;
+        if (dn->digits > 0 && (size_t)dn->digits > digits) {
+            digits = (size_t)dn->digits;
+        }
+    }
+    return digits > SIZE_MAX - 14u ? SIZE_MAX : digits + 14u;
 }
 
 static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *buffer) {
@@ -247,18 +241,22 @@ static void decNumberToCREXXString(decplugin *plugin, decNumber *number, char *b
 /* Convert a string to a rxvmplugin number */
 static void decimalFromString(decplugin *plugin, value *result, const char *string) {
     decContext *context = (decContext*)(plugin->base.private_context);
-    EnsureCapacity(result, context->digits);
+    EnsureCapacity(plugin, result, context->digits);
     decNumberFromString(result->decimal_value, string, context);
     check_signal(plugin);
 }
 
 /* Convert a rxvmplugin number to a string */
 /* The string must be allocated by the caller and should be at least
- * getRequiredStringSize() bytes */
+ * getRequiredStringSize(plugin, number) bytes */
 static void decimalToString(decplugin *plugin, const value *number, char *string) {
     decNumber *dn = number->decimal_value;
 
-    if (!dn) {
+    /* DTOS is total and must not leak a stale or formatting diagnostic. */
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+
+    if (!dn || rxvm_value_decimal_length(number) == 0) {
         strcpy(string, "nan");
         return;
     }
@@ -281,32 +279,25 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
         decNumberToCREXXString(plugin, dn, string);
     }
     check_signal(plugin);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
 }
 
 /* Convert an int to a rxvmplugin number */
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
     decContext *context = (decContext*)(plugin->base.private_context);
-    EnsureCapacity(result, context->digits);
-    /* Is rxinteger 32 bit? */
-    if (IS_RXINTEGER_32BIT) {
-        decNumberFromInt32(result->decimal_value, value);
-    }
-    else {
-        decNumberFromInt64(result->decimal_value, value);
-    }
-    check_signal(plugin);
+    plugin->base.signal_number = 0;
+    plugin->base.signal_string = NULL;
+    context->status = 0;
+    EnsureCapacity(plugin, result, context->digits);
+    decNumberFromInt64(result->decimal_value, value);
+    context->status = 0;
 }
 
 /* Convert a rxvmplugin number to an int */
 void decimalToInt(decplugin *plugin, const value *number, rxinteger *integer) {
     decContext *context = (decContext*)(plugin->base.private_context);
-    /* Is rxinteger 32 bit? */
-    if (IS_RXINTEGER_32BIT) {
-        *integer = decNumberToInt32(number->decimal_value, context);
-    }
-    else {
-        *integer = decNumberToInt64(number->decimal_value, context);
-    }
+    *integer = decNumberToInt64(number->decimal_value, context);
     check_signal(plugin);
 }
 
@@ -314,7 +305,7 @@ void decimalToInt(decplugin *plugin, const value *number, rxinteger *integer) {
 void decimalFromDouble(decplugin *plugin, value *result, double input) {
     char buffer[32]; // Enough to hold a double in scientific notation
     decContext *context = (decContext*)(plugin->base.private_context);
-    EnsureCapacity(result, context->digits);
+    EnsureCapacity(plugin, result, context->digits);
     decNumber *dn = result->decimal_value;
 
     // Handle NaN
@@ -367,7 +358,7 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
     }
 
     // For finite values, convert to string and then to double
-    size_t bufferSize = getRequiredStringSize(plugin);
+    size_t bufferSize = getRequiredStringSize(plugin, input);
     char *buffer = malloc(bufferSize);
     if (buffer == NULL) {
         RX_PANIC_OOM("malloc mc_decimal double conversion buffer", bufferSize, "decimal value");
@@ -381,54 +372,113 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
 
 /* Add two rxvmplugin numbers */
 static void decimalAdd(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberAdd(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
 /* Subtract two rxvmplugin numbers */
 static void decimalSub(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberSubtract(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
 /* Multiply two rxvmplugin numbers */
 static void decimalMul(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberMultiply(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
 /* Divide two rxvmplugin numbers */
 static void decimalDiv(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberDivide(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
 /* Power two rxvmplugin numbers */
 static void decimalPow(decplugin *plugin, value *result, const value *op1, const value *op2) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberPower(result->decimal_value, op1->decimal_value, op2->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
 /* Change the sign of an rxvmplugin number */
 static void decimalNeg(decplugin *plugin, value *result, const value *op1) {
-    if (op1 != result) EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    if (op1 != result) EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     decNumberMinus(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
     check_signal(plugin);
 }
 
-/* Compare two rxvmplugin numbers returning -1, 0, 1 for less than, equal, greater than */
-static int decimalCompare(decplugin *plugin, const value *op1, const value *op2) {
+/* NUMERIC FUZZ affects comparison precision only.  Arithmetic values remain
+ * stored at the ordinary context precision. */
+static size_t getComparisonDigits(decplugin *plugin) {
+    size_t digits = plugin->getDigits(plugin);
+    numeric_context *num_context = plugin->num_context;
+
+    if (num_context && num_context->fuzz > 0) {
+        int requested_digits = num_context->digits - num_context->fuzz;
+        if (requested_digits < 1) requested_digits = 1;
+        if ((size_t)requested_digits < digits) digits = (size_t)requested_digits;
+    }
+    return digits;
+}
+
+static decNumber *comparisonNumber(size_t digits, decNumber *local) {
+    decNumber *number;
+
+    if (digits <= DECNUMDIGITS) return local;
+    number = malloc(getRequiredDecNumberSize(digits));
+    if (!number) {
+        RX_PANIC_OOM("malloc mc_decimal comparison value",
+                     getRequiredDecNumberSize(digits), "decimal comparison value");
+    }
+    return number;
+}
+
+static int decimalCompareNumbers(decplugin *plugin, const decNumber *op1,
+                                 const decNumber *op2) {
     decContext *context = (decContext*)(plugin->base.private_context);
+    int32_t arithmetic_digits = context->digits;
+    size_t comparison_digits = getComparisonDigits(plugin);
+    decNumber left_buffer;
+    decNumber right_buffer;
     decNumber result;
-    decNumberCompare(&result, op1->decimal_value, op2->decimal_value, context);
-    int cmp = decNumberToInt32(&result, context);
+    decNumber *left;
+    decNumber *right;
+    int cmp;
+
+    /* FUZZ zero compares values already prepared at arithmetic precision.
+     * Avoid copying and applying unary plus to both operands in that normal
+     * case; the extra normalization is needed only when FUZZ reduces the
+     * significant digits used by comparison. */
+    if (comparison_digits == (size_t)arithmetic_digits) {
+        decNumberCompare(&result, op1, op2, context);
+        cmp = decNumberToInt32(&result, context);
+        check_signal(plugin);
+        return cmp;
+    }
+
+    left = comparisonNumber(comparison_digits, &left_buffer);
+    right = comparisonNumber(comparison_digits, &right_buffer);
+    context->digits = (int32_t)comparison_digits;
+    decNumberPlus(left, op1, context);
+    decNumberPlus(right, op2, context);
+    decNumberCompare(&result, left, right, context);
+    cmp = decNumberToInt32(&result, context);
+    context->digits = arithmetic_digits;
+
+    if (left != &left_buffer) free(left);
+    if (right != &right_buffer) free(right);
     check_signal(plugin);
     return cmp;
+}
+
+/* Compare two rxvmplugin numbers returning -1, 0, 1 for less than, equal, greater than */
+static int decimalCompare(decplugin *plugin, const value *op1, const value *op2) {
+    return decimalCompareNumbers(plugin, op1->decimal_value, op2->decimal_value);
 }
 
 /* Compare an rxvmplugin number to a string representation of a number returning -1, 0, 1 for less than, equal, greater than */
@@ -445,10 +495,7 @@ static int decimalCompareString(decplugin *plugin, const value *op1, const char 
         op2dn = &buffer;
     }
     decNumberFromString(op2dn, op2, context);
-    decNumber result;
-    decNumberCompare(&result, op1->decimal_value, op2dn, context);
-    int cmp = decNumberToInt32(&result, context);
-    check_signal(plugin);
+    int cmp = decimalCompareNumbers(plugin, op1->decimal_value, op2dn);
     if (op2dn != &buffer) {
         free(op2dn);
     };
@@ -484,10 +531,10 @@ static void trim_numeric_trailing_zeros(char *str) {
 /* Extract the coefficient, exponent and sign from a rxvmplugin number.
  * - `decimal` contains the float value.
  * - `coefficient' will store the coefficient as a string (or nan, inf, -inf).
- *    It must be allocated by the caller and should be at least getRequiredStringSize()
- *    bytes (too big but simple for the caller)
+ *    It must be allocated by the caller and should be at least
+ *    getRequiredStringSize(plugin, decimal) bytes.
  * - `exponent` will store the exponent as an integer.
- * Normalized, round to context precision/digits, trim trailing zeros.
+ * Normalized without discarding stored precision; trailing zeros are trimmed.
  */
 static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *exponent, value *decimal) {
     const Unit *up;
@@ -576,7 +623,7 @@ static int decimalIsZero(decplugin *plugin, const value *number) {
 
 /* Truncate the decimal value to an integer */
 static void decimalTruncate(decplugin *plugin, value *result, const value *op1) {
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
     decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_DOWN); // Set rounding to truncate
     decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
@@ -587,7 +634,7 @@ static void decimalTruncate(decplugin *plugin, value *result, const value *op1) 
 /* Round the decimal value to the nearest integer */
 static void decimalRound(decplugin *plugin, value *result, const value *op1) {
     // TODO Check Rounding Logic & Standard
-    EnsureCapacity(result, ((decContext*)(plugin->base.private_context))->digits);
+    EnsureCapacity(plugin, result, ((decContext*)(plugin->base.private_context))->digits);
     enum rounding rounding_value = decContextGetRounding((decContext*)(plugin->base.private_context));
  //   decContextSetRounding((decContext*)(plugin->base.private_context), DEC_ROUND_HALF_EVEN); // Set rounding to round
     decNumberToIntegralValue(result->decimal_value, op1->decimal_value, (decContext*)(plugin->base.private_context));
@@ -612,6 +659,8 @@ static rxvm_plugin *new_decplugin() {
     /* Allocate memory for the plugin */
     decplugin *plugin = malloc(sizeof(decplugin));
     plugin->base.type = RXVM_PLUGIN_DECIMAL;
+    plugin->base.signal_number = RXSIGNAL_NONE;
+    plugin->base.signal_string = NULL;
     plugin->base.private_context = context;
     plugin->base.name = "mcdecimal";
     plugin->base.version = "Plugin:0.1 Library:3.64";

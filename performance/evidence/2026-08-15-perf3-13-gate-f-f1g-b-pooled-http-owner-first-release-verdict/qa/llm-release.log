@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start    1: linked_opt_runtime_artifacts_build
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.08 sec
+    Start 1689: ts_llm_ollama_noopt
+    Start 1690: ts_llm_ollama_opt
+    Start 1692: ts_llm_providers_opt
+    Start 1691: ts_llm_providers_noopt
+2/5 Test #1691: ts_llm_providers_noopt ...............   Passed    0.05 sec
+3/5 Test #1689: ts_llm_ollama_noopt ..................   Passed    0.06 sec
+4/5 Test #1692: ts_llm_providers_opt .................   Passed    0.20 sec
+5/5 Test #1690: ts_llm_ollama_opt ....................   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+linked_opt    =   0.41 sec*proc (2 tests)
+smoke         =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.32 sec

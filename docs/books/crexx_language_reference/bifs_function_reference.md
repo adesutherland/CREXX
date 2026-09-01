@@ -1,6 +1,16 @@
-# Built-in functions for cRexx strings and binary values
+# Built-in functions
 
-The `.string` type is central to the Rexx language and all its variants. This is true for cRexx and this implementation also contains the expected *built-in-functions*.[^bif] Level B also provides byte-oriented helpers for the `.binary` type.
+These built-in functions work with cREXX strings and binary values. The
+`.string` type lies at the heart of Rexx and its related languages, and cREXX
+provides the built-in functions traditionally associated with it.[^bif]
+Language level B adds byte-oriented functions for values of type `.binary`.
+
+The built-in functions are described here because they have traditionally
+formed an important part of the Rexx language reference. This reflects the
+language's origins as a string-oriented programming language.
+
+The *Library Reference* provides more detailed documentation of the standard
+library, including the forms available at each cREXX language level.
 
 Use of these functions needs import of the `rxfnsb` package:
 ```rexx
@@ -10,46 +20,53 @@ import rxfnsb
 
 | BIF             | Signature                                    |
 |-----------------|----------------------------------------------|
-| ABS             | ABS(x)                                       |
-| FORMAT          | FORMAT(x, n, d)                              |
-| MAX             | MAX(x, y, ...)                               |
-| MIN             | MIN(x, y, ...)                               |
-| SIGN            | SIGN(x)                                      |
-| TRUNC           | TRUNC(x, n)                                  |
+| ABS             | ABS(number)                                  |
+| FORMAT          | FORMAT(number [,before [,after [,expp [,expt]]]]) |
+| MAX             | MAX(number, ...)                             |
+| MIN             | MIN(number, ...)                             |
+| SIGN            | SIGN(number)                                 |
+| TRUNC           | TRUNC(number [,digits])                      |
 | B2X             | B2X(b)                                       |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
-| D2C             | D2C(n)                                       |
-| D2X             | D2X(n)                                       |
+| D2C             | D2C(number [,length])                        |
+| D2X             | D2X(number [,length])                        |
 | X2B             | X2B(x)                                       |
 | X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
-| X2D             | X2D(x)                                       |
-| CENTER          | CENTER(s, n, pad)                            |
-| CENTRE          | CENTRE(s, n, pad)                            |
+| X2D             | X2D(hexadecimal [,length])                   |
+| XRANGE          | XRANGE([start [,end]])                       |
+| CENTER          | CENTER(string, length [,pad])                |
+| CENTRE          | CENTRE(string, length [,pad])                |
+| CHANGESTR       | CHANGESTR(needle, haystack, replacement)     |
+| COMPARE         | COMPARE(left, right [,pad])                  |
 | CHARIN          | CHARIN(name, count)                          |
 | CHAROUT         | CHAROUT(name, string)                        |
-| COPIES          | COPIES(s, n)                                 |
-| DELSTR          | DELSTR(s, start, length)                     |
+| COPIES          | COPIES(string, count)                        |
+| COUNTSTR        | COUNTSTR(needle, haystack)                   |
+| DELSTR          | DELSTR(string, start [,length])              |
 | DELWORD         | DELWORD(s, start, n)                         |
-| INSERT          | INSERT(s, target, position, length, pad)     |
+| INSERT          | INSERT(new, target [,before [,length [,pad]]]) |
 | JUSTIFY         | JUSTIFY(s, width, pad)                       |
-| LEFT            | LEFT(s, n, pad)                              |
-| LENGTH          | LENGTH(s)                                    |
+| LEFT            | LEFT(string, length [,pad])                  |
+| LENGTH          | LENGTH(string)                               |
 | LINEIN          | LINEIN(name)                                 |
 | LINEOUT         | LINEOUT(name, string)                        |
 | LINES           | LINES(name)                                  |
-| LOWER           | LOWER(s)                                     |
-| OVERLAY         | OVERLAY(s, target, position, length, pad)    |
-| POS             | POS(needle, haystack, start)                 |
-| RIGHT           | RIGHT(s, n, pad)                             |
-| SPACE           | SPACE(s, n, pad)                             |
-| STRIP           | STRIP(s, option, char)                       |
-| SUBSTR          | SUBSTR(s, start, length)                     |
+| LOWER           | LOWER(string)                                |
+| OVERLAY         | OVERLAY(new, target [,start [,length [,pad]]]) |
+| POS             | POS(needle, haystack [,start])               |
+| LASTPOS         | LASTPOS(needle, haystack [,start])           |
+| RIGHT           | RIGHT(string, length [,pad])                 |
+| REVERSE         | REVERSE(string)                              |
+| SPACE           | SPACE(string [,count [,pad]])                |
+| STRIP           | STRIP(string [,option [,char]])              |
+| SUBSTR          | SUBSTR(string, start [,length [,pad]])       |
+| SUBSTRO         | SUBSTRO(string, start [,length [,pad]])      |
 | SUBWORD         | SUBWORD(s, start, n)                         |
 | TRANSLATE       | TRANSLATE(s, new, old)                       |
-| UPPER           | UPPER(s)                                     |
-| VERIFY          | VERIFY(s, reference, option, start)          |
+| UPPER           | UPPER(string)                                |
+| VERIFY          | VERIFY(string, reference [,option [,start]]) |
 | WORD            | WORD(s, n)                                   |
 | WORDINDEX       | WORDINDEX(s, n)                              |
 | WORDLENGTH      | WORDLENGTH(s, n)                             |
@@ -76,6 +93,7 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 | DIGITS     | DIGITS()                            |
 | FORM       | FORM()                              |
 | FUZZ       | FUZZ()                              |
+| FNV        | FNV(string)                         |
 | QUEUED     | QUEUED()                            |
 
 Table: Non-SAA Functions. {#tbl:id}
@@ -85,20 +103,18 @@ Table: Non-SAA Functions. {#tbl:id}
 |----------|----------------------------|
 | ARRAYAPPEND | ARRAYAPPEND(array, value [,count]) |
 | ARRAYCONTAINS | ARRAYCONTAINS(array, value [,case]) |
-| ARRAYCOPY | ARRAYCOPY(array, from [, count]) |
+| ARRAYCOPY | ARRAYCOPY(array [, from [, count]]) |
 | ARRAYDELETE | ARRAYDELETE(array, from, count) |
 | ARRAYDROP | ARRAYDROP(array) |
-| ARRAYDUMP | ARRAYDUMP(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
-| ARRAYFIND | ARRAYFIND(find, array[, from[, case]]) |
-| ARRAYFORMAT | ARRAYFORMAT(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
-| ARRAYGET | ARRAYGET(array=, index [, default]) |
+| ARRAYFIND | ARRAYFIND(needle, array [,from [,case_sensitive]]) |
+| ARRAYGET | ARRAYGET(array, index [, default]) |
 | ARRAYHI | ARRAYHI(array[, 'GET' | 'SET'[, new_hi]]) |
-| ARRAYINDEXOF | ARRAYINDEXOF(array, value,[from] ,[case]) |
+| ARRAYINDEXOF | ARRAYINDEXOF(array, value [, from [, case]]) |
 | ARRAYINSERT | ARRAYINSERT(array, from, count[, default]) |
 | ARRAYJOIN | ARRAYJOIN(array, [, separator]) |
 | ARRAYMOVE | ARRAYMOVE(array, from, count, to) |
 | ARRAYPOP | ARRAYPOP(array, [default]) |
-| ARRAYPREPEND | ARRAYPREPEND(array, value [,default]) |
+| ARRAYPREPEND | ARRAYPREPEND(array, value [,count]) |
 | ARRAYREVERSE | ARRAYREVERSE(array) |
 | ARRAYSET | ARRAYSET(array, index, value [, fill]) | 
 | ARRAYSHIFT | ARRAYSHIFT(array [,default]) |
@@ -114,14 +130,24 @@ Table: Non-SAA Functions. {#tbl:id}
 | BINPOS          | BINPOS(needle, haystack, start)              |
 | BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
 | BINSUBSTR       | BINSUBSTR(binary, start, length)             |
-| QEXTRACTALL | QEXTRACTALL(open, close, text [, start])      |
-| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
+| BINAPPEND       | BINAPPEND(dst, src)                          |
+| BINCLEAR        | BINCLEAR(binary)                             |
+| BINCOPY         | BINCOPY(dst, dst_offset, src, src_offset, length) |
+| BINDROP         | BINDROP(binary, offset, length)              |
+| BINFILL         | BINFILL(binary, byte)                        |
+| BINFILLAT       | BINFILLAT(binary, offset, length, byte)      |
+| BINMAKEGAP      | BINMAKEGAP(binary, offset, length)           |
+| BINMEMMOVE      | BINMEMMOVE(binary, dst_offset, src_offset, length) |
+| BINRESIZE       | BINRESIZE(binary, length)                    |
+| BINUPDATE       | BINUPDATE(binary, offset, src)               |
+| QEXTRACTALL | QEXTRACTALL(open, close, text [, start [, mode]]) |
+| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text [, start [, mode]]) |
 | QPOS | QPOS(needle, text [, start]) |
 | QREMOVEALL | QREMOVEALL(open, close, text [, mode])   |
 | QSPLIT | QSPLIT(text, sep) |
-| QSPLITSAFE | QSPLITSAFE(text, sep, start, pairs) |
-| QSTRIPCOMMENT | QSTRIPCOMMENT(open, close, text) |
-| QSUBWORD | QSUBWORD(string,wordnum)|
+| QSPLITSAFE | QSPLITSAFE(text, sep [, start [, pairs]]) |
+| QSTRIPCOMMENT | QSTRIPCOMMENT(open [, close], text) |
+| QSUBWORD | QSUBWORD(string, wordnum [, count]) |
 | QWORD | QWORD(line, wanted) |
 | QWORDINDEX | QWORDINDEX(string,wordnum) |
 | QWORDLENGTH | QWORDLENGTH(string,wordnum) |
@@ -129,7 +155,7 @@ Table: Non-SAA Functions. {#tbl:id}
 | QWORDS | QWORDS(string) |
 | RERADIX | RERADIX(subject, fromradix, toradix) |
 | SEQUENCE | SEQUENCE(from, to) |
-| SPLICE | SPLICE(needle, haystack, at, len) |
+| SPLICE | SPLICE(replacement, source, at, remove_length) |
 | VERSION | VERSION() |
 
 
@@ -153,9 +179,13 @@ normal Level B UTF-8 contract. They are not byte-oriented binary I/O BIFs.
 | `CHARIN(name [, count])` | `.string` | Read up to `count` UTF codepoints from the named text stream; the default count is `1`. |
 | `CHAROUT(name [, string])` | `.int` | With `string`, write text without appending a newline. Without `string`, close the named stream. |
 | `LINES(name)` | `.int` | Return `1` when more text can be read from the stream, otherwise `0`. |
+| `READBINARY(path)` | `.binary` | Read the complete file as exact bytes; I/O failure raises `NOTREADY`. |
+| `WRITEBINARY(path, data)` | `.int` | Replace the file with `.binary` data and return its byte count; I/O failure raises `NOTREADY`. |
 
-Future binary file BIFs should use `.binary` values and the VM byte I/O path.
-Do not use these text BIFs for arbitrary byte payloads.
+`READBINARY` and `WRITEBINARY` use binary file modes and the VM byte I/O path.
+They preserve embedded NUL and invalid UTF-8 without newline translation. They
+are whole-file conveniences rather than incremental streams; callers own the
+memory cost. Do not use the text BIFs for arbitrary byte payloads.
 
 ## Binary byte helpers
 
@@ -183,22 +213,81 @@ The `||` operator also performs byte concatenation when either operand is
 as its exact UTF-8 bytes. Blank concatenation remains a text operation and is
 not for binary payload construction.
 
+## Packed binary memory helpers
+
+The helpers in this section are the Release 1 packed-memory helper surface. They
+are distinct from the older `BIN*` byte helpers above:
+
+- packed-memory helpers use zero-based byte offsets;
+- mutating helpers update the first binary argument through `arg expose`;
+- mutating helpers return the new logical byte length unless stated otherwise;
+- the compiler or inliner may lower selected helpers directly to RXAS;
+- use binary-memory intrinsics, not helpers, for direct reads from binary
+  constants and for zero-copy compare.
+
+Implementation note: Release 1 provides these helpers in `rxfnsb`. Some helpers
+currently use conservative library code and may be direct-lowered by the
+compiler or inliner later.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `BINRESIZE(data, length)` | `.int` | Resize `data` to `length` bytes. Existing bytes are preserved and growth is zero-filled. |
+| `BINCLEAR(data)` | `.int` | Clear `data` to length `0`; returns `0`. |
+| `BINFILL(data, byte)` | `.int` | Fill the whole current logical byte range with `byte`; returns the byte length. |
+| `BINFILLAT(data, offset, length, byte)` | `.int` | Fill a zero-based byte span with `byte`; returns the byte length. |
+| `BINCOPY(dst, dst_offset, src, src_offset, length)` | `.int` | Copy `length` bytes from `src` to `dst`. Use `BINMEMMOVE` for overlapping ranges in the same binary value. |
+| `BINMEMMOVE(data, dst_offset, src_offset, length)` | `.int` | Move `length` bytes within one binary value. Overlapping ranges are safe. |
+| `BINAPPEND(dst, src)` | `.int` | Append all bytes from `src` to `dst`; returns the new byte length. |
+| `BINUPDATE(dst, offset, src)` | `.int` | Overlay all bytes from `src` into `dst` at zero-based `offset`; the write must fit. |
+| `BINMAKEGAP(data, offset, length)` | `.int` | Open a zero-filled gap of `length` bytes at `offset`; returns the new byte length. |
+| `BINDROP(data, offset, length)` | `.int` | Delete `length` bytes at `offset`; returns the new byte length. |
+
+Examples:
+
+```rexx
+call binresize page, 4096
+call binfill page, 0
+call binmemmove page, dst_offset, src_offset, span_len
+call bincopy target, 0, source, source_offset, span_len
+```
+
+Packed-memory helper offsets are intentionally zero-based so they match
+`<at..type>` and the RXAS binary-memory instructions. The older
+`BINBYTE`/`BINSUBSTR`/`BINOVERLAY` compatibility helpers remain 1-based and
+copy-returning.
+
+Invalid packed-memory spans, negative lengths, and byte values outside
+`0..255` raise `OUT_OF_RANGE`. Zero-length spans accept offsets from zero
+through the current logical byte length, inclusive. The complete Level B
+contract and signal examples are in
+[`binary.md`](../../../lib/rxfnsb/rexx/binary.md).
+
 ## Array helpers
 
 Level B arrays use `array[0]` as the high-water mark. User elements are stored
 in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
 `rxfnsb`; mutating helpers take the array by `expose` and update it in place.
-They are the supported array surface for new code. The older native arrays
-plugin is deprecated.
+<!--  They are the supported array surface for new code. The older native arrays -->
+<!-- plugin is deprecated. -->
+
+These helpers operate on `.string[]` arrays. They are not generic array helpers
+and are not the supported surface for typed numeric arrays such as `.int[]`;
+use direct indexing for those arrays until typed helpers are added.
 
 | Function | Result | Notes |
 |----------|--------|-------|
 | `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
 | `ARRAYDROP(array)` | `.int` | Clear the array in place and return `0`. |
-| `ARRAYINSERT(array, from, count, default)` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `ARRAYINSERT(array, from, count [,default])` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `OBJECTARRAYINSERT(array, from, count, value)` | `.int` | Open an object-array gap and fill it with object-value copies. |
+| `OBJECTARRAYDELETE(array, from, count)` | `.int` | Delete an object-array range and return the new high-water mark. |
+| `OBJECTARRAYAPPEND(array, value [,count])` | `.int` | Append object-value copies and return the new high-water mark. |
+| `OBJECTARRAYPREPEND(array, value [,count])` | `.int` | Prepend object-value copies and return the new high-water mark. |
+| `OBJECTARRAYDROP(array)` | `.int` | Clear an object array in place and return zero. |
+| `OBJECTARRAYMOVE(array, from, count, to)` | `.int` | Move an object-array block and preserve its high-water mark. |
 | `ARRAYDELETE(array, from, count)` | `.int` | Delete a range and return the new high-water mark. |
-| `ARRAYAPPEND(array, value, count)` | `.int` | Append `value` `count` times. |
-| `ARRAYPREPEND(array, value, count)` | `.int` | Prepend `value` `count` times. |
+| `ARRAYAPPEND(array, value [,count])` | `.int` | Append `value` `count` times. |
+| `ARRAYPREPEND(array, value [,count])` | `.int` | Prepend `value` `count` times. |
 | `ARRAYPOP(array, default)` | `.string` | Remove and return the last element, or `default` when empty. |
 | `ARRAYSHIFT(array, default)` | `.string` | Remove and return the first element, or `default` when empty. |
 | `ARRAYSET(array, index, value, fill)` | `.int` | Set an element; growing gaps are initialised with `fill`. |
@@ -207,12 +296,10 @@ plugin is deprecated.
 | `ARRAYMOVE(array, from, count, to)` | `.int` | Move a range within the same array. |
 | `ARRAYREVERSE(array)` | `.int` | Reverse the array in place. |
 | `ARRAYSORT(array, offset, order, debug)` | `.int` | Sort strings by a substring key. |
-| `ARRAYFIND(find, array, from, case)` | `.int` | Find the first element containing a substring. |
+| `ARRAYFIND(needle, array [,from [,case_sensitive]])` | `.int` | Find the first element containing a substring. |
 | `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
 | `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
 | `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |
-| `ARRAYFORMAT(array, from, to, flags, hdr, prefix)` | `.string[]` | Return a formatted dump as an array. |
-| `ARRAYDUMP(array, from, to, flags, hdr, prefix)` | `.int` | Print a formatted dump and return the printed count. |
 
 Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
 the VM array attribute instructions, so the pointer array can be adjusted
@@ -221,23 +308,43 @@ Rexx strings and keep the usual copy and lifetime rules.
 
 ## Quote-aware helpers
 
-The `q*` helpers perform string operations while ignoring separators or words
-that appear inside quoted text. They are ordinary `rxfnsb` functions and follow
-the current implementation in `lib/rxfnsb/rexx`.
+The `q*` helpers share one positional Unicode scanner. They are ordinary Level B
+`rxfnsb` functions, not Classic Level C BIFs. Single and double ASCII quotes can
+occur anywhere in a word, matching doubled quotes are escapes, quote delimiters
+remain in returned values, and malformed quote or pair grammar signals
+`INVALID_ARGUMENTS`. Positions and lengths are Unicode codepoints; word
+separation uses Unicode 17.0 `White_Space`.
 
 `QPOS(needle, text [, start])` returns the 1-based position of `needle` outside
-single- or double-quoted regions, or `0` when it is not found. The current
-quote scan treats matching single and double quote characters as delimiters.
+single- or double-quoted regions, or `0` when it is not found. `start` is a
+positive codepoint position.
 
 `QSPLIT(text, sep)` splits `text` on `sep` only when the separator is outside
-quoted regions. It returns a `.string[]` array of parts.
+quoted regions. It returns exact `.string[]` fields, including empty and
+trailing fields, without stripping source whitespace.
 
 `QSPLITSAFE(text, sep, start, pairs)` is the nested-safe splitter. In addition
-to quote tracking, it tracks paired delimiters from the `pairs` string, such as
-the default `()`, and only splits at depth zero.
+to quote tracking, it tracks nested one-codepoint delimiter pairs from `pairs`,
+such as the default `()`, and only splits at depth zero.
+
+`QEXTRACTPAIR` and `QEXTRACTALL` return balanced top-level source spans. Modes
+`X`/`E` return the contents and `I`/`C` include delimiters. `QREMOVEALL` uses the
+same spans; its default inclusive mode removes the complete regions, while
+exclusive mode retains the delimiters. Equal text outside a selected region is
+never removed.
+
+`QSTRIPCOMMENT` removes line comments when `close` is omitted or empty and
+preserves CRLF, LF, and CR endings exactly. With a closer it removes nested
+balanced block comments.
+
+`QWORD`, `QWORDINDEX`, `QWORDLENGTH`, and `QWORDS` use the same word spans.
+`QWORDPOS` matches an exact word sequence. `QSUBWORD` preserves separators
+inside the selected source span; omitted `count` selects through the last word
+and explicit zero returns an empty string. The selector-local pages under
+`lib/rxfnsb/rexx` contain the complete signatures and examples.
 
 
-## ABS(x)
+## ABS(number)
 
 returns the absolute value of *string*, which must be a
 number.
@@ -246,6 +353,14 @@ zero with a digits setting that is either nine or, if greater, the
 number of digits in the mantissa of the number (excluding leading
 insignificant zeros).
 Scientific notation is used, if necessary.
+
+The native Level B function accepts and returns `.decimal`. Its invalid dynamic
+conversion signal is currently tracked as a VM dependency in the programme
+worklist. The standalone Level C BIF accepts Classic numeric text through
+`rNUM`, including the blank-separated leading-sign forms below, and reports
+standard `RXC-LC-40.*` context errors. See the separate
+[Level B ABS](../../../lib/rxfnsb/rexx/abs.md) and
+[Level C ABS](../../../lib/rxfnsc/abs.md) pages for their distinct contracts.
 
 **Examples:**
 ```
@@ -257,114 +372,39 @@ ABS('- 1234567.7654321') == 1234567.7654321
 
 
 
-## FORMAT(x, n, d)
+## FORMAT(number [,before [,after [,expp [,expt]]]])
 
-formats (lays out) *string*, which must be a number.
+`FORMAT` lays out a numeric value under the numeric settings current at the
+invocation. With only `number`, it returns that normalized number.
 
-The number, *string*, is first formatted by adding zero with a
-digits setting that is either nine or, if greater, the number of digits
-in the mantissa of the number (excluding leading insignificant zeros).
-If no arguments are given, the result is precisely that of this
-operation.
+`before` and `after` are optional non-negative whole numbers. `before` is the
+width of the integer part, including a minus sign, and left-pads with blanks.
+If the integer part cannot fit, error 40.38 results. `after` is the exact number
+of digits after the decimal point: missing digits are zero-filled and excess
+digits are rounded half up. A supplied zero removes the decimal point.
 
-The arguments *before* and *after* may be specified to
-control the number of characters to be used for the integer part and
-decimal part of the result respectively.  If either of these is omitted
-(with no arguments specified to its right), or is **null**, the
-number of characters used will be as many as are needed for that part.
+`expp` is the exponent digit width. If it is too small, error 40.38 results; if
+the exponent is zero, a supplied width produces `expp + 2` blanks. A supplied
+zero suppresses exponential notation. `expt` controls when exponent form is
+used; when `expp` is present and `expt` is omitted, the current `NUMERIC DIGITS`
+setting is the trigger. The current `NUMERIC FORM` setting selects scientific
+or engineering layout. `FORMAT` has five arguments; form is not a sixth
+argument.
 
-*before* must be a positive number; if it is larger than is
-needed to contain the integer part, that part is padded on the left with
-blanks to the requested length.
-If *before* is not large enough to contain the integer part
-of the number (including the sign, for negative numbers), an error
-results.
-
-*after* must be a non-negative number; if it is not the same
-size as the decimal part of the number, the number will be rounded (or
-extended with zeros) to fit.  Specifying 0 for *after* will
-cause the number to be rounded to an integer (that is, it will have no
-decimal part or decimal point).
-
-**Examples:**
-```
-FORMAT(' - 12.73')         == '-12.73'
-FORMAT('0.000')            == '0'
-FORMAT('3', 4)             == '   3'
+```rexx
+FORMAT(' - 12.73')          == '-12.73'
 FORMAT('1.73', 4, 0)        == '   2'
-FORMAT('1.73', 4, 3)        == '   1.730'
 FORMAT('-.76', 4, 1)        == '  -0.8'
-FORMAT('3.03', 4)          == '   3.03'
-FORMAT(' - 12.73', null, 4) == '-12.7300'
+FORMAT('12345.73',,,2,2)    == '1.234573E+04'
+FORMAT('1.2345',,3,2,0)     == '1.235    '
 ```
 
-Further arguments may be passed to the format function to control
-the use of exponential notation.
-The full syntax of the function is then:
-
-format([before[,after[,explaces[,exdigits[,exform]]]]])
- The first two arguments are as already described.  The other three
-(*explaces*, *exdigits*, and *exform*)
-control the exponent part of the result.  The default for any of the
-arguments may be selected by omitting them (if there are no arguments to
-be specified to their right) or by using the value **null**.
-
-*explaces* must be a positive number; it sets the number of
-places (digits after the sign of the exponent) to be used for any
-exponent part, the default being to use as many as are needed.
-If *explaces* is specified and is not large enough to contain
-the exponent, an error results.
-If *explaces* is specified and the exponent will be 0,
-then *explaces*+2 blanks are supplied for the exponent
-part of the result.
-
-*exdigits* sets the trigger point for use of exponential
-notation.
-If, after the first formatting, the number of places needed before the
-decimal point exceeds *exdigits*, or if the absolute value of
-the result is less than **0.000001**, then exponential form will
-be used, provided that *exdigits* was specified.
-When *exdigits* is not specified, exponential notation
-will never be used.
-The current setting of numeric digits may be used for
-*exdigits* by specifying the special word
- **digits** %% (see page refswdigit)
- .
-If 0 is specified for *exdigits*, exponential
-notation is always used unless the exponent would be 0.
-
-*exform* sets the form for exponential notation (if needed).
-*exform* may be either **'Scientific'** (the default)
-or **'Engineering'**.  Only the first character of
-*exform* is significant and it may be in uppercase or in
-lowercase.
-The current setting of numeric form may be used by specifying
-the special word  **form** %% (see page refswform)
-.
-If engineering form is in effect, up to three digits (plus sign) may be
-needed for the integer part of the result (*before*).
-
-**Examples:**
-```
-FORMAT('12345.73', null, null, 2, 2) == '1.234573E+04'
-FORMAT('12345.73', null, 3, null, 0) == '1.235E+4'
-FORMAT('1.234573', null, 3, null, 0) == '1.235'
-FORMAT('123.45', null, 3, 2, 0)      == '1.235E+02'
-FORMAT('1234.5', null, 3, 2, 0, 'e')  == '1.235E+03'
-FORMAT('1.2345', null, 3, 2, 0)      == '1.235    '
-FORMAT('12345.73', null, null, 3, 6) == '12345.73     '
-FORMAT('12345e+5', null, 3)        == '1234500000.000'
-```
- **Implementation minimum:** If exponents are supported in an
-implementation, then they must be supported for exponents whose
-absolute value is at least as large as the largest number that can be
-expressed as an exact integer in default precision, *i.e.*, 999999999.
-Therefore, values for *explaces* of up to 9 should also be
-supported.
+See the separate [Level C BIF contract](../../../lib/rxfnsc/format.md) and
+[native Level B typed API](../../../lib/rxfnsb/rexx/format.md).
 
 
 
-## MAX(x, y, ...)
+## MAX(number, ...)
 
 returns the larger of *string* and *number*, which
 must both be numbers.  If they compare equal (that is, when subtracted,
@@ -381,9 +421,15 @@ digits in the mantissa of the number (excluding leading insignificant
 zeros).
 Scientific notation is used, if necessary.
 
+The native Level B function accepts and returns `.decimal` and performs one
+linear scan. The standalone Level C BIF accepts Classic variadic `rNUM...`
+text, preserving the first selected normalized argument representation. See
+the separate [Level B MAX](../../../lib/rxfnsb/rexx/max.md) and
+[Level C MAX](../../../lib/rxfnsc/max.md) pages for their distinct contracts.
+
 **Examples:**
 ```
-0.max(1)          ==1
+MAX(0, 1)          ==1
 MAX('-1', 1)       ==1
 MAX('+1', -1)      ==1
 MAX('1.0', 1.00)   =='1.0'
@@ -394,7 +440,7 @@ MAX('1234567E+5', '123456700000') == '1.234567E+11'
 
 
 
-## MIN(x, y, ...)
+## MIN(number, ...)
 
 returns the smaller of *string* and *number*, which
 must both be numbers.  If they compare equal (that is, when subtracted,
@@ -411,9 +457,15 @@ digits in the mantissa of the number (excluding leading insignificant
 zeros).
 Scientific notation is used, if necessary.
 
+The native Level B function accepts and returns `.decimal` and performs one
+linear scan. The standalone Level C BIF accepts Classic variadic `rNUM...`
+text, preserving the first selected normalized argument representation. See
+the separate [Level B MIN](../../../lib/rxfnsb/rexx/min.md) and
+[Level C MIN](../../../lib/rxfnsc/min.md) pages for their distinct contracts.
+
 **Examples:**
 ```
-0.min(1)          ==0
+MIN(0, 1)          ==0
 MIN('-1', 1)       =='-1'
 MIN('+1', -1)      =='-1'
 MIN('1.0', 1.00)   =='1.0'
@@ -424,7 +476,7 @@ MIN('1234567E+5', '123456700000') == '1.234567E+11'
 
 
 
-## SIGN(x)
+## SIGN(number)
 
 returns a number that indicates the sign of *string*, which
 must be a number.
@@ -442,9 +494,16 @@ SIGN('0.0')     ==  0
 SIGN(' -0.307') == -1
 ```
 
+The native Level B helper accepts a `.decimal` and returns `.int`, preserving
+sign outside binary floating-point range. The standalone Level C BIF accepts
+Classic `rNUM` text and returns a RexxValue integer with standard
+`RXC-LC-40.*` errors. See the separate [Level B SIGN](../../../lib/rxfnsb/rexx/sign.md)
+and [Level C SIGN](../../../lib/rxfnsc/sign.md) pages for their distinct
+contracts.
 
 
-## TRUNC(x, n)
+
+## TRUNC(number [,digits])
 
 returns the integer part of *string*, which must be a
 number, with *n* decimal places (digits after the decimal
@@ -469,12 +528,20 @@ TRUNC('127', 2)       == 127.00
 TRUNC('0', 2)         == 0.00
 ```
 
+The native Level B helper accepts `.decimal` plus a non-negative `.int` and
+signals `INVALID_ARGUMENTS` for a negative digit count. The standalone Level C
+BIF accepts Classic `rNUM` and optional `oWHOLE>=0` RexxValue text with standard
+`RXC-LC-40.*` errors. Both avoid binary floating point. See the separate
+[Level B TRUNC](../../../lib/rxfnsb/rexx/trunc.md) and
+[Level C TRUNC](../../../lib/rxfnsc/trunc.md) pages for their distinct
+contracts and test scope.
+
 
 
 ## B2X(b)
 
 Binary to hexadecimal.
-Converts *string*, a string of at least one binary
+Converts *string*, a string of zero or more binary
 (**0** and/or **1**) digits, to an equivalent string of
 hexadecimal characters.
 The returned string will use uppercase Roman letters for the values A-F,
@@ -482,6 +549,10 @@ and will not include any blanks.
  If the number of binary digits in the string is not a multiple of four,
 then up to three **'0'** digits will be added on the left before
 conversion to make a total that is a multiple of four.
+
+The empty string returns the empty string. Interior blanks may separate groups
+only when a multiple of four binary digits is to their right. Leading/trailing
+blanks, misplaced blanks, and other characters are invalid binary strings.
 
 **Examples:**
 ```
@@ -491,6 +562,9 @@ B2X('0101')      == '5'
 B2X('101')       == '5'
 B2X('111110000') == '1F0'
 ```
+
+See the separate [Level C BIF contract](../../../lib/rxfnsc/b2x.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/b2x.md).
 
 
 ## BINLENGTH(data)
@@ -542,7 +616,8 @@ Binary substring.
 Returns a `.binary` byte slice from `.binary` value *data*, starting at 1-based
 byte position *start*. If *length* is omitted or negative, the slice continues
 to the end of the buffer. If the requested range extends past the end, the
-result is truncated at the end of *data*.
+result is truncated at the end of *data*. A nonpositive *start* raises
+`INVALID_ARGUMENTS`.
 
 **Examples:**
 ```rexx
@@ -599,7 +674,8 @@ BIN2X(BININSERT("abcd"x as .binary, "001122ff"x as .binary, 99)) == "001122FFABC
 Binary delete substring.
 Returns a copy of `.binary` value *target* with a byte range removed. Deletion
 starts at 1-based byte position *start*. If *length* is omitted or `0`, bytes
-from *start* to the end are removed.
+from *start* to the end are removed. A nonpositive *start* or negative *length*
+raises `INVALID_ARGUMENTS`.
 
 **Examples:**
 ```rexx
@@ -614,7 +690,7 @@ Binary position.
 Searches `.binary` value *haystack* for `.binary` value *needle*, starting at
 1-based byte position *start* (default `1`). Returns the 1-based byte position
 of the first match, or `0` if no match is found. A zero-length *needle* returns
-`0`.
+`0`. A nonpositive *start* raises `INVALID_ARGUMENTS`.
 
 **Examples:**
 ```rexx
@@ -661,93 +737,94 @@ BIN2X("α" as .binary)       == "CEB1"
 Hexadecimal to binary bytes.
 Converts hexadecimal text *hex* to a `.binary` byte buffer. Blanks are ignored.
 If there is an odd number of hexadecimal digits, a leading `0` nibble is
-assumed. If any non-blank character is not a hexadecimal digit, the current
-implementation returns an empty `.binary` value.
+assumed. A non-blank character that is not hexadecimal raises
+`INVALID_ARGUMENTS`.
 
 **Examples:**
 ```rexx
 BIN2X(X2BIN("ff 00 aa")) == "FF00AA"
 BIN2X(X2BIN("f"))        == "0F"
-BINLENGTH(X2BIN("zz"))   == 0
 ```
+
+See the stable [Level B binary module contract](../../../lib/rxfnsb/rexx/binary.md).
 
 
 
 ## C2D(s)
 
 Coded character to decimal.
-Converts the Unicode code point of the character in *string* (which must
-be exactly one character) to its decimal representation.
-The returned string will be a non-negative number that represents
-the code point of the character and will not include any sign, blanks,
-insignificant leading zeros, or decimal part.
+The native Level B helper converts the Unicode code point of *string*, which
+must contain exactly one character, to a non-negative `.int`. Empty or
+multi-character input raises `CONVERSION_ERROR`.
 
 **Examples:**
 ```
-C2D('M')  == '77'  -- ASCII or Unicode
-C2D('🔥') == '128293'
-C2D('7')  == '247' -- EBCDIC
-C2D('\textbackslash{}r') == '13'  -- ASCII or Unicode
-C2D('\textbackslash{}0') == '0'
+C2D('M')  == 77
+C2D('α')  == 945
+C2D('🔥') == 128293
+C2D('00'x) == 0
 ```
  The  **c2x** function %% (see page refc2x)
  can be used to
 convert the encoding of a character to a hexadecimal representation.
 
+Classic Level C C2D is a different API with an optional signed-width argument.
+See the separate [Level C BIF contract](../../../lib/rxfnsc/c2d.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/c2d.md).
+
 
 
 ## C2X(s)
 
-Coded character to hexadecimal.
-Converts the encoding of the character in *string* (which must be
-exactly one character) to its hexadecimal representation (unpacks).
-The returned string will use uppercase Roman letters for the values A-F,
-and will not include any blanks.
-Insignificant leading zeros are removed.
+Coded characters to hexadecimal.
+Converts every character in *string* to its established two-digit hexadecimal
+representation. The returned string uses uppercase Roman letters for A-F and
+contains no inserted blanks. The empty string returns the empty string,
+multi-character input is valid, and leading zero digits are retained.
+
+The current Level B implementation preserves RXAS `hexchar` behavior for
+Unicode: a code point beyond the single-byte range contributes its low eight
+bits. Classic Level C C2X instead converts the exact coded bytes selected by
+the call context's BYTE or UTF8 profile.
 
 **Examples:**
 ```
-C2X('M')  == '4D' -- ASCII or Unicode
-C2X('7')  == 'F7' -- EBCDIC
-C2X('\textbackslash{}r') == 'D'  -- ASCII or Unicode
-C2X('\textbackslash{}0') == '0'
+C2X('M')     == '4D'
+C2X('72s')   == '373273' -- ASCII/Unicode build
+C2X('0123'x) == '0123'
+C2X('')      == ''
 ```
  The  **c2d** function %% (see page refc2d)
  can be used to
 convert the encoding of a character to a decimal number.
 
-
-
-## D2C(n)
-
-Decimal to coded character.
-Converts the *string* (a CREXX *number*) to a
-single character, where the number is used as the Unicode code point of the
-character.
-
-*string* must be a non-negative whole number naming a valid Unicode code
-point. An error results if the code point is invalid for Unicode (for example,
-if it is outside the Unicode range or in the surrogate range).
-If *length* is specified under Unicode semantics, it may be **0** or
-**1**. A length of **0** returns the null string; a length of
-**1** is equivalent to omitting it.
-
-**Examples:**
-```
-D2C('77')  == 'M' -- ASCII or Unicode
-D2C('77', 1) == 'M'
-D2C('12', 0) == ''
-D2C('128293') == '🔥'
-D2C('+77') == 'M' -- ASCII or Unicode
-D2C('247') == '7' -- EBCDIC
-D2C('0')   == '\textbackslash 0'
-```
+See the separate [Level C BIF contract](../../../lib/rxfnsc/c2x.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/c2x.md).
 
 
 
-## D2X(n)
+## D2C(number [,length])
 
-Decimal to hexadecimal.
+Classic Level C D2C converts a decimal whole number to
+configuration-coded characters. Without *length*, the number must be
+non-negative and the result uses the minimum encoded width. With a
+non-negative *length*, negative numbers use twos-complement and the result is
+padded or truncated to exactly that many coded characters. The configuration,
+not Unicode code-point numbering, defines those characters.
+
+Level B deliberately provides a different typed helper:
+`d2c(codepoint=.int [,output_length=.int])`. It emits one Unicode scalar value;
+its explicit output length may only be zero or one.
+
+See the separate [Level C BIF contract](../../../lib/rxfnsc/d2c.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/d2c.md). The direct Level C
+implementation returns exact bytes and records valid UTF-8 text when applicable.
+
+
+
+## D2X(number [,length])
+
+Classic Level C decimal to hexadecimal.
 Returns a string of hexadecimal characters of length as needed or of
 length *n*, which is the hexadecimal (unpacked) representation
 of the decimal number.  The returned string will use uppercase
@@ -780,64 +857,63 @@ D2X('-127', 4) == 'FF81'
 D2X('12', 0)   == ''
 ```
 
+The standalone Level C implementation accepts caller-context Rexx whole
+numbers without narrowing them to a native integer. Level B provides a
+separate signed-64-bit typed helper with the same result rules over its smaller
+numeric domain.
+
+See the separate [Level C BIF contract](../../../lib/rxfnsc/d2x.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/d2x.md).
 
 
-## X2B(x)
 
-Hexadecimal to binary.
-Converts *string* (a string of at least one hexadecimal
-characters) to an equivalent string of binary digits.
-Hexadecimal characters may be any decimal digit character (0-9) or any
-of the first six alphabetic characters (a-f), in either lowercase or
-uppercase.
- *string* may be of any length; each hexadecimal character
-with be converted to a string of four binary digits.
-The returned string will have a length that is a multiple of four, and
-will not include any blanks.
+## X2B(hexadecimal)
+
+Hexadecimal to binary. Converts every hexadecimal digit to four binary digits;
+letters are case-insensitive and leading zero nibbles are retained. The empty
+string returns empty.
+
+Interior blanks are ignored only when an even number of hexadecimal digits lies
+to their right. Leading/trailing blanks, mis-grouped blanks, or invalid
+characters are errors. The result contains no blanks and its length is four
+times the number of input digits.
 
 **Examples:**
 ```
 X2B('C3')  == '11000011'
 X2B('7')   == '0111'
-X2B('1C1') == '000111000001'
+X2B('1 C1') == '000111000001'
+X2B('0001') == '0000000000000001'
+X2B('') == ''
 ```
 
-
-
-## X2C(x)
-
-Hexadecimal to coded character.
-Converts the *string* (a string of hexadecimal characters) to
-a single character (packs).
-Hexadecimal characters may be any decimal digit character (0-9) or any
-of the first six alphabetic characters (a-f), in either lowercase or
-uppercase.
-
-*string* must contain at least one hexadecimal character;
-insignificant leading zeros are removed, and the string is then padded
-with leading zeros if necessary to make a sufficient number of
-hexadecimal digits to describe a character encoding for the
-implementation.
-
-An error results if the encoding described does not produce a valid
-character for the implementation (for example, if it has more
-significant bits than the implementation's encoding for characters).
-
-
-**Examples:**
-```
-X2C('004D') == 'M' -- ASCII or Unicode
-X2C('4d')   == 'M' -- ASCII or Unicode
-X2C('A2')   == 's' -- EBCDIC
-X2C('0')    == '\textbackslash 0'
-```
- The  **d2c** function %% (see page refd2c)
- can be used to
-convert a CREXX number to the encoding of a character.
+See the separate [Level C BIF contract](../../../lib/rxfnsc/x2b.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/x2b.md).
 
 
 
-## X2D(x)
+## X2C(hexadecimal)
+
+Classic Level C X2C validates hexadecimal text, removes valid interior
+grouping blanks, left-pads an odd leading nibble, and converts each full byte
+through the implementation's configured coded-character encoding. Empty input
+returns empty and encoded leading zero bytes are retained.
+
+Hexadecimal letters are case-insensitive. Leading/trailing blanks,
+mis-grouped blanks, and non-hexadecimal characters are errors. Because the
+character encoding is configured, the character produced by a byte such as
+`4D` is not portable across ASCII/Unicode and EBCDIC configurations.
+
+Level B deliberately provides a different typed helper that maps every parsed
+byte to Unicode U+0000 through U+00FF.
+
+See the separate [Level C BIF contract](../../../lib/rxfnsc/x2c.md) and
+[native Level B API](../../../lib/rxfnsb/rexx/x2c.md). Direct Level C X2C
+preserves exact configured bytes and records a text view only for valid UTF-8.
+
+
+
+## X2D(hexadecimal [,length])
 
 Hexadecimal to decimal.
 Converts the *string* (a string of hexadecimal characters) to
@@ -884,25 +960,46 @@ X2D('0031', 0) == 0
  can be used to convert
 a character to a decimal representation of its encoding.
 
+Classic Level C accepts standard grouped hexadecimal text and returns an exact
+Rexx whole number subject to the caller's `NUMERIC DIGITS`. Invalid grouping or
+digits report `40.25`; invalid lengths use the standard `40.12`/`40.13`
+errors, and a result too large for the current digits reports `40.35`.
+
+The typed Level B helper instead returns a native signed `.int`. It signals
+`INVALID_ARGUMENTS` for invalid text or length and `OVERFLOW_UNDERFLOW` when
+the selected result is outside the signed-64-bit range. See the separate
+[Level C contract](../../../lib/rxfnsc/x2d.md) and
+[Level B API](../../../lib/rxfnsb/rexx/x2d.md).
 
 
-## CENTER(s, n, pad)
 
-returns a string of length *length* with *string*
+## CENTER(string, length [,pad])
+
+Returns a string of length *length* with *string*
 centered in it, with *pad* characters added as necessary to
 make up the required length.
 *length* must be a non-negative whole number.
-The default *pad* character is blank.
+The default *pad* character is blank, and an explicit *pad* must contain
+exactly one character.
 If the string is longer than *length*, it will be truncated at
 both ends to fit.
 If an odd number of characters are truncated or added, the right hand
 end loses or gains one more character than the left hand end.
 
+The Level B helper types *length* as `.int`; an invalid length or pad signals
+`INVALID_ARGUMENTS`. The standalone Level C BIF accepts Classic whole-number
+text and reports the standard `RXC-LC-40.*` context errors. Level B measures
+Unicode codepoints. Level C measures configured units: octets in the default
+BYTE profile and Unicode codepoints in the opt-in UTF8 profile. See the separate
+[Level B CENTER](../../../lib/rxfnsb/rexx/center.md) and
+[Level C CENTER](../../../lib/rxfnsc/center.md) pages for their distinct
+contracts.
+
 **Examples:**
 ```
-CENTRE('ABC', 7)          == '  ABC  '
-CENTER('ABC', 8, '-')      == '--ABC---'
-CENTRE('The blue sky', 8) == 'e blue s'
+CENTER('ABC', 7)          == '  ABC  '
+CENTER('ABC', 8, '-')     == '--ABC---'
+CENTER('The blue sky', 8) == 'e blue s'
 CENTER('The blue sky', 7) == 'e blue '
 ```
 **Note:** This function may be called either **centre** or **center**,
@@ -911,24 +1008,34 @@ American spellings.
 
 
 
-## CENTRE(s, n, pad)
+## CENTRE(string, length [,pad])
 
-returns a string of length *length* with *string*
+Returns a string of length *length* with *string*
 centered in it, with *pad* characters added as necessary to
 make up the required length.
 *length* must be a non-negative whole number.
-The default *pad* character is blank.
+The default *pad* character is blank, and an explicit *pad* must contain
+exactly one character.
 If the string is longer than *length*, it will be truncated at
 both ends to fit.
 If an odd number of characters are truncated or added, the right hand
 end loses or gains one more character than the left hand end.
 
+The Level B helper types *length* as `.int`; an invalid length or pad signals
+`INVALID_ARGUMENTS`. The standalone Level C BIF accepts Classic whole-number
+text and reports the standard `RXC-LC-40.*` context errors. Level B measures
+Unicode codepoints. Level C measures configured units: octets in the default
+BYTE profile and Unicode codepoints in the opt-in UTF8 profile. See the separate
+[Level B CENTRE](../../../lib/rxfnsb/rexx/centre.md) and
+[Level C CENTRE](../../../lib/rxfnsc/centre.md) pages for their distinct
+contracts.
+
 **Examples:**
 ```
 CENTRE('ABC', 7)          == '  ABC  '
-CENTER('ABC', 8, '-')      == '--ABC---'
+CENTRE('ABC', 8, '-')     == '--ABC---'
 CENTRE('The blue sky', 8) == 'e blue s'
-CENTER('The blue sky', 7) == 'e blue '
+CENTRE('The blue sky', 7) == 'e blue '
 ```
 **Note:** This function may be called either **centre** or **center**,
 which avoids difficulties due to the difference between the British and
@@ -936,11 +1043,71 @@ American spellings.
 
 
 
-## COPIES(s, n)
+## CHANGESTR(needle, haystack, replacement)
 
-returns *n* directly concatenated copies of
-*string*.
-*n* must be positive or 0; if 0, the null string is returned.
+Returns a copy of *haystack* in which every case-sensitive,
+non-overlapping occurrence of *needle* is replaced by *replacement*.
+Searching proceeds from left to right through the original haystack; inserted
+replacement text is not searched again. If *needle* is null or is not found,
+the haystack is returned unchanged. A null replacement deletes each match.
+
+The Level B helper requires three `.string` arguments. The standalone Level C
+BIF accepts any three RexxValue texts and reports standard `RXC-LC-40.*`
+argument-presence errors. Level B finds codepoint-aligned text matches. Level C
+uses exact octet matches in BYTE and codepoint-aligned matches in UTF8. See the
+separate
+[Level B CHANGESTR](../../../lib/rxfnsb/rexx/changestr.md) and
+[Level C CHANGESTR](../../../lib/rxfnsc/changestr.md) pages for their distinct
+contracts and implementation notes.
+
+**Examples:**
+```
+CHANGESTR('the', 'the cat and the dog', 'a') == 'a cat and a dog'
+CHANGESTR('aa', 'aaaaa', 'X')                == 'XXa'
+CHANGESTR('a', 'banana', '')                 == 'bnn'
+CHANGESTR('', 'unchanged', '!')              == 'unchanged'
+```
+
+
+
+## COMPARE(left, right [,pad])
+
+Returns `0` when *left* and *right* compare equal. Otherwise it returns the
+first 1-based character position at which they differ. The shorter string is
+conceptually padded on the right before comparison. *pad* defaults to blank and
+must contain exactly one character.
+
+The Level B helper takes two `.string` arguments, returns `.int`, and signals
+`INVALID_ARGUMENTS` for an invalid pad. The standalone Level C BIF accepts
+RexxValue text and reports standard `RXC-LC-40.*` context errors. Its result
+position and one-unit pad use octets in BYTE and Unicode codepoints in UTF8;
+Level B always uses codepoints. See the
+separate [Level B COMPARE](../../../lib/rxfnsb/rexx/compare.md) and
+[Level C COMPARE](../../../lib/rxfnsc/compare.md) pages.
+
+**Examples:**
+```
+COMPARE('abc', 'abc')        == 0
+COMPARE('abc', 'ak')         == 2
+COMPARE('ab ', 'ab')         == 0
+COMPARE('ab-- ', 'ab', '-')  == 5
+```
+
+
+
+## COPIES(string, count)
+
+Returns *count* directly concatenated copies of *string*.
+*count* must be a non-negative whole number; zero returns the null string.
+
+The Level B helper types *count* as `.int` and signals `INVALID_ARGUMENTS` for
+a negative value. The standalone Level C BIF accepts Classic whole-number text
+and reports standard `RXC-LC-40.*` errors. Level C repeats the exact RexxValue
+bytes and preserves a BYTE result as binary-authoritative; Level B repeats valid
+UTF-8 `.string` text. See the separate
+[Level B COPIES](../../../lib/rxfnsb/rexx/copies.md) and
+[Level C COPIES](../../../lib/rxfnsc/copies.md) pages for their contracts and
+performance notes.
 
 **Examples:**
 ```
@@ -951,23 +1118,53 @@ COPIES('', 2)    == ''
 
 
 
-## DELSTR(s, start, length)
+## COUNTSTR(needle, haystack)
 
-returns a copy of *string* with the sub-string of
-*string* that begins at the **n*th character, and is
+Returns the number of case-sensitive, non-overlapping occurrences of *needle*
+in *haystack*, searching from left to right. A null, absent, or oversized
+needle returns `0`.
+
+The Level B helper takes two `.string` arguments and returns `.int`. The
+standalone Level C BIF accepts any two RexxValue texts and reports standard
+`RXC-LC-40.*` argument-presence errors. Level B matches at codepoint boundaries;
+Level C matches exact octets in BYTE and codepoint-aligned text in UTF8. See the
+separate
+[Level B COUNTSTR](../../../lib/rxfnsb/rexx/countstr.md) and
+[Level C COUNTSTR](../../../lib/rxfnsc/countstr.md) pages.
+
+**Examples:**
+```
+COUNTSTR('bc', 'abcabcabc') == 3
+COUNTSTR('aa', 'aaaaa')     == 2
+COUNTSTR('', 'anything')    == 0
+```
+
+
+
+## DELSTR(string, start [,length])
+
+Returns a copy of *string* with the substring that begins at the *start*
+character and is
 of length *length* characters, deleted.
-If *length* is not specified, or is greater than the number of
-characters from *n* to the end of the string, the rest of the
-string is deleted (including the **n*th character).
-*length* must be a non-negative whole number, and *n*
-must be a positive whole number.  If *n* is greater than the
-length of *string*, the string is returned unchanged.
+If *length* is omitted, or is greater than the number of characters from
+*start* to the end, the rest of the string is deleted. An explicitly supplied
+zero deletes nothing. *length* must be non-negative, and *start* must be a
+positive whole number. A start beyond the string returns it unchanged.
+
+The Level B helper types *start* and *length* as `.int` and signals
+`INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF accepts
+Classic whole-number text and reports standard `RXC-LC-40.*` errors. Level B
+positions and lengths are codepoints. Level C uses octets in BYTE and codepoints
+in UTF8. See the
+separate [Level B DELSTR](../../../lib/rxfnsb/rexx/delstr.md) and
+[Level C DELSTR](../../../lib/rxfnsc/delstr.md) pages.
 
 **Examples:**
 ```
 DELSTR('abcd', 3)    == 'ab'
 DELSTR('abcde', 3, 2) == 'abe'
 DELSTR('abcde', 6)   == 'abcde'
+DELSTR('abcde', 3, 0) == 'abcde'
 ```
 
 
@@ -975,7 +1172,7 @@ DELSTR('abcde', 6)   == 'abcde'
 ## DELWORD(s, start, n)
 
 returns a copy of *string* with the sub-string of
-*string* that starts at the **n*th word, and is of
+*string* that starts at the `n`th word, and is of
 length *length* blank-delimited words, deleted.
 If *length* is not specified, or is greater than number of
 remaining words in the string, it defaults to be the remaining words
@@ -995,18 +1192,27 @@ DELWORD('Now  time', 5)          == 'Now  time'
 
 
 
-## INSERT(s, target, position, length, pad)
+## INSERT(new, target [,before [,length [,pad]]])
 
-inserts the string *new*, padded or truncated to length
-*length*, into a copy of the target *string* after the
-**n*th character; the string with any inserts is returned.
-*length* and *n* must be a non-negative whole numbers.
-If *n* is greater than the length of the target string,
-padding is added before the *new* string also.
-The default value for *n* is 0, which means insert before the
-beginning of the string.  The default value for *length* is
-the length of *new*.  The default *pad* character is
-a blank.
+Returns a copy of *target* with *new* inserted after *before* characters.
+*before* defaults to zero, which inserts before the first target character.
+When *before* is beyond the target, padding extends the target to that
+position.
+
+*length* controls the width of the inserted text. It defaults to the character
+length of *new*; a supplied zero inserts no new text. The insertion is
+truncated or padded to that width. *before* and *length* must be non-negative
+whole numbers. *pad* defaults to blank and a supplied pad must contain exactly
+one character.
+
+The Level B helper uses `.string` text and `.int` position/length values and
+signals `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF
+accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. Level
+B measures codepoints. Level C measures octets in BYTE and codepoints in UTF8,
+including the one-unit pad rule. See
+the separate [Level B INSERT](../../../lib/rxfnsb/rexx/insert.md) and
+[Level C INSERT](../../../lib/rxfnsc/insert.md) pages for their distinct
+contracts and implementation notes.
 
 **Examples:**
 ```
@@ -1015,6 +1221,7 @@ INSERT(' ', 'abcdef', 3)      == 'abc def'
 INSERT('123', 'abc', 5, 6)     == 'abc  123   '
 INSERT('123', 'abc', 5, 6, '+') == 'abc++123+++'
 INSERT('123', 'abc', 0, 5, '-') == '123--abc'
+INSERT('abc', 'def', 2, 1)      == 'deaf'
 ```
 
 
@@ -1024,7 +1231,7 @@ INSERT('123', 'abc', 0, 5, '-') == '123--abc'
 
 
 
-## LEFT(s, n, pad)
+## LEFT(string, length [,pad])
 
 returns a string of length *length* containing the
 left-most *length* characters of *string*.
@@ -1032,9 +1239,15 @@ The string is padded with *pad* characters (or truncated) on
 the right as needed.
 The default *pad* character is a blank.
 *length* must be a non-negative whole number.
-This function is exactly equivalent to
-*string***.substr(1**, *length*
-[, *pad*]**)**.
+A supplied pad must contain exactly one character.
+
+The Level B helper requires `.int` *length* and signals `INVALID_ARGUMENTS` for
+an invalid length or pad. The standalone Level C BIF accepts Classic
+whole-number text and reports standard `RXC-LC-40.*` context errors. Level B
+counts Unicode codepoints. Level C counts exact octets in BYTE and codepoints in
+UTF8. See the separate
+[Level B LEFT](../../../lib/rxfnsb/rexx/left.md) and
+[Level C LEFT](../../../lib/rxfnsc/left.md) pages.
 
 **Examples:**
 ```
@@ -1045,61 +1258,72 @@ LEFT('abc defg', 6)  == 'abc de'
 
 
 
-## LENGTH(s)
+## LENGTH(string)
 
-returns the number of characters in *string*.
+Returns the character-unit length of *string*. Level B returns its Unicode
+codepoint count, not the number of bytes in its UTF-8 representation; a
+combining codepoint is counted separately from the base character it follows.
+Level C returns the exact octet count in BYTE and the codepoint count in UTF8.
+
+The Level B helper accepts `.string` and returns `.int`. The standalone Level C
+BIF accepts RexxValue text and returns the decimal count in a RexxValue, with
+standard `RXC-LC-40.*` argument errors. See the separate
+[Level B LENGTH](../../../lib/rxfnsb/rexx/length.md) and
+[Level C LENGTH](../../../lib/rxfnsc/length.md) pages. The specification's
+`23.1` invalid-character-data case is unreachable after normal cREXX text has
+entered the valid configured `.string` model.
 
 **Examples:**
 ```
 LENGTH('abcdefgh') == 8
 LENGTH('')         == 0
+LENGTH('é日🙂')    == 3
 ```
 
 
 
-## LOWER(s)
+## LOWER(string)
 
-returns a copy of *string* with any uppercase characters in
-the sub-string of *string* that begins at the **n*th
-character, and is of length *length* characters, replaced by
-their lowercase equivalent.
+Returns a copy of *string* after applying Level B's locale-independent, limited
+simple lowercase table. Covered letters are replaced by their lowercase
+equivalents; other codepoints are unchanged. This is deliberately not full
+Unicode case folding. The surface accepts only the string argument; it has no
+substring position or length options.
 
-*n* must be a positive whole number, and defaults to 1 (the
-first character in *string*).  If *n* is greater than
-the length of *string*, the string is returned unchanged.
-
-*length* must be a non-negative whole number.
-If *length* is not specified, or is greater than the number of
-characters from *n* to the end of the string, the rest of the
-string (including the **n*th character) is assumed.
+The helper accepts and returns `.string`, does not modify its argument, performs
+the runtime's limited simple mapping, and has no error branch for valid text. See
+[Level B LOWER](../../../lib/rxfnsb/rexx/lower.md) for its exact contract and
+implementation notes. LOWER is not a required Level C BIF in the repository
+catalog; the existing common-runtime helper is compatibility surface only.
 
 **Examples:**
 ```
-LOWER('SumA')      == 'suma'
-LOWER('SumA', 2)   == 'Suma'
-LOWER('SuMB', 1, 1) == 'suMB'
-LOWER('SUMB', 2, 2) == 'SumB'
-LOWER('')          == ''
+LOWER('SumA') == 'suma'
+LOWER('ÄÖÜÉ') == 'äöüé'
+LOWER('')     == ''
 ```
 
 
 
-## OVERLAY(s, target, position, length, pad)
+## OVERLAY(new, target [,start [,length [,pad]]])
 
-overlays the string *new*, padded or truncated to length
-*length*, onto a copy of the target *string* starting
-at the **n*th character; the string with any overlays is
-returned.  Overlays may extend beyond the end of the original
-*string*.
-If *length* is specified it must be a non-negative whole
-number.
-If *n* is greater than the length of
-the target string, padding is added before the *new* string
-also.
-The default *pad* character is a blank, and the default value
-for *n* is 1.
-*n* must be greater than 0.
-The default value for *length* is the length of *new*.
+Returns a copy of *target* with formatted *new* text written from the 1-based
+character position *start*. The default start is one. If the characters before
+*start* extend beyond the target, padding fills that gap.
+
+When *length* is omitted it is the character length of *new*. A supplied zero
+writes no new text; otherwise *new* is truncated or padded to that width before
+replacing the corresponding target characters. *start* must be positive,
+*length* must be non-negative, and a supplied *pad* must contain exactly one
+character. The default pad is blank.
+
+The Level B helper uses `.string` text and `.int` start/length values and
+signals `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF
+accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. Level
+B measures codepoints. Level C measures octets in BYTE and codepoints in UTF8,
+including the one-unit pad rule. See
+the separate [Level B OVERLAY](../../../lib/rxfnsb/rexx/overlay.md) and
+[Level C OVERLAY](../../../lib/rxfnsc/overlay.md) pages.
 
 **Examples:**
 ```
@@ -1108,11 +1332,12 @@ OVERLAY('.', 'abcdef', 3, 2)    == 'ab. ef'
 OVERLAY('qq', 'abcd')         == 'qqcd'
 OVERLAY('qq', 'abcd', 4)       == 'abcqq'
 OVERLAY('123', 'abc', 5, 6, '+') == 'abc+123+++'
+OVERLAY('foo', 'abcdef', 3, 0) == 'abcdef'
 ```
 
 
 
-## POS(needle, haystack, start)
+## POS(needle, haystack [,start])
 
 returns the position of the string *needle*, in
 *string* (the "haystack"), searching from left to right.
@@ -1125,6 +1350,15 @@ positive whole number), the point at which to start the search; if
 *start* is greater than the length of *string* then 0
 is returned.
 
+The Level B helper types *start* as `.int` and signals `INVALID_ARGUMENTS` for
+a non-positive value. The standalone Level C BIF accepts Classic whole-number
+text and reports standard `RXC-LC-40.*` context errors. Level B returns Unicode
+codepoint positions. Level C returns octet positions in BYTE and codepoint
+positions in UTF8. See the separate
+[Level B POS](../../../lib/rxfnsb/rexx/pos.md) and
+[Level C POS](../../../lib/rxfnsc/pos.md) pages for their contracts and direct
+search implementation.
+
 
 **Examples:**
 ```
@@ -1136,13 +1370,49 @@ POS(' ', 'abc def ghi', 5) == 8
 
 
 
-## RIGHT(s, n, pad)
+## LASTPOS(needle, haystack [,start])
+
+Returns the position of the last occurrence of *needle* whose final character
+unit is at or before *start*. The search is case-sensitive. Level B positions
+are 1-based Unicode codepoints; Level C positions are octets in BYTE and
+codepoints in UTF8. When *start* is omitted, the complete haystack is considered.
+A value beyond the haystack has the same effect as omission. A null or absent
+needle returns `0`.
+
+*start* must be a positive whole number when supplied. The Level B helper types
+it as `.int` and signals `INVALID_ARGUMENTS` for an invalid value. The
+standalone Level C BIF accepts Classic whole-number text and reports standard
+`RXC-LC-40.*` context errors. See the separate
+[Level B LASTPOS](../../../lib/rxfnsb/rexx/lastpos.md) and
+[Level C LASTPOS](../../../lib/rxfnsc/lastpos.md) pages.
+
+**Examples:**
+```
+LASTPOS(' ', 'abc def ghi')    == 8
+LASTPOS(' ', 'abc def ghi', 7) == 4
+LASTPOS('abc', 'abc abc', 6)   == 1
+LASTPOS('aa', 'aaa')           == 2
+LASTPOS('', 'anything')        == 0
+```
+
+
+
+## RIGHT(string, length [,pad])
 
 returns a string of length *length* containing the
 right-most *length* characters of *string* -
 that is, padded with *pad* characters (or truncated) on the
 left as needed.  The default *pad* character is a blank.
 *length* must be a non-negative whole number.
+A supplied pad must contain exactly one character.
+
+The Level B helper requires `.int` *length* and signals `INVALID_ARGUMENTS` for
+an invalid length or pad. The standalone Level C BIF accepts Classic
+whole-number text and reports standard `RXC-LC-40.*` context errors. Level B
+counts Unicode codepoints. Level C counts exact octets in BYTE and codepoints in
+UTF8. See the separate
+[Level B RIGHT](../../../lib/rxfnsb/rexx/right.md) and
+[Level C RIGHT](../../../lib/rxfnsc/right.md) pages.
 
 **Examples:**
 ```
@@ -1153,16 +1423,45 @@ RIGHT('12', 5, '0')  == '00012'
 
 
 
-## SPACE(s, n, pad)
+## REVERSE(string)
 
-returns a copy of *string* with the blank-delimited words in
-*string* formatted with *n* (and only *n*)
-*pad* characters between each word.
-*n* must be a non-negative whole number.
-If *n* is 0, all blanks are removed.
-Leading and trailing blanks are always removed.
-The default for *n* is 1, and the default *pad*
-character is a blank.
+Returns a copy of *string* with its character units in reverse order. Level B
+reverses Unicode codepoints, so combining marks are independent and grapheme
+clusters are not preserved as units. Level C reverses exact octets in BYTE and
+Unicode codepoints in UTF8.
+
+The Level B helper accepts and returns `.string` and has no domain error for
+valid text. The standalone Level C BIF accepts RexxValue text and reports
+standard `RXC-LC-40.*` argument errors. Both use a single reverse pass over
+their active unit representation. See the separate
+[Level B REVERSE](../../../lib/rxfnsb/rexx/reverse.md) and
+[Level C REVERSE](../../../lib/rxfnsc/reverse.md) pages.
+
+**Examples:**
+```
+REVERSE('abc')    == 'cba'
+REVERSE('aé日🙂') == '🙂日éa'
+REVERSE('')       == ''
+```
+
+
+
+## SPACE(string [,count [,pad]])
+
+Returns a copy of *string* with its blank-delimited words joined by exactly
+*count* copies of *pad*. Level B uses Unicode 17.0.0 `White_Space`. Level C BYTE
+uses ASCII space plus configured blank octets; Level C UTF8 uses Unicode
+`White_Space` plus configured blank codepoints. Leading/trailing blanks are
+removed and each internal blank run becomes the requested separator. *count*
+must be non-negative; zero joins words directly. The default count is one and
+the default pad is blank. A supplied pad must contain one active character unit.
+
+The Level B helper takes `.string`, an optional `.int` count, and `.string` pad,
+and signals `INVALID_ARGUMENTS` for an invalid count or pad. The standalone
+Level C BIF accepts RexxValue text and reports standard `RXC-LC-40.*` context
+errors. Both scan the source once. See the separate
+[Level B SPACE](../../../lib/rxfnsb/rexx/space.md) and
+[Level C SPACE](../../../lib/rxfnsc/space.md) pages.
 
 **Examples:**
 ```
@@ -1175,39 +1474,52 @@ SPACE('abc  def  ', 2, '+') == 'abc++def'
 
 
 
-## STRIP(s, option, char)
+## STRIP(string [,option [,char]])
 
-returns a copy of *string* with Leading, Trailing, or Both
-leading and trailing characters removed, when the first character of
-*option* is L, T, or B respectively (these may be given in
-either uppercase or lowercase).  The default is B.
-The second argument, *char*, specifies the character to be
-removed, with the default being a blank.
-If given, *char* must be exactly one character long.
+Returns a copy of *string* with a leading, trailing, or both leading and
+trailing runs removed. The first codepoint of *option* is `L`, `T`, or `B`
+respectively, case-insensitively; the default is `B`.
+
+When *char* is omitted, Level B removes Unicode 17.0.0 `White_Space`; Level C
+BYTE removes ASCII space plus configured blank octets and Level C UTF8 removes
+Unicode `White_Space` plus configured blank codepoints. When supplied, *char*
+must contain exactly one active unit and only that unit is removed. Thus an
+explicit blank differs from omission when other configured whitespace occurs at
+an edge.
+
+The Level B helper accepts strings and signals `INVALID_ARGUMENTS` for an
+invalid option or supplied char. The standalone Level C BIF reports standard
+`RXC-LC-40.*` context errors. Both compute one direct source slice. See the
+separate [Level B STRIP](../../../lib/rxfnsb/rexx/strip.md) and
+[Level C STRIP](../../../lib/rxfnsc/strip.md) pages.
 
 **Examples:**
 ```
 STRIP('  ab c  ')        == 'ab c'
 STRIP('  ab c  ', 'L')   == 'ab c  '
 STRIP('  ab c  ', 't')   == '  ab c'
-STRIP('12.70000', 't', 0) == '12.7'
-STRIP('0012.700', 'b', 0) == '12.7'
+STRIP('12.70000', 't', '0') == '12.7'
+STRIP('0012.700', 'b', '0') == '12.7'
 ```
 
 
 
-## SUBSTR(s, start, length)
+## SUBSTR(string, start [,length [,pad]])
 
-returns the sub-string of *string* that begins at the
-**n*th character, and is of length *length*, padded
-with *pad* characters if necessary.
-*n* must be a positive whole number, and *length* must
-be a non-negative whole number.
-If *n* is greater than *string***.length**,
-then only pad characters can be returned.
- If *length* is omitted it defaults to be the rest of the
-string (or 0 if *n* is greater than the length of the string).
-The default *pad* character is a blank.
+Returns the substring of *string* beginning at the positive 1-based position
+*start*. Level B measures Unicode codepoints. Level C measures exact octets in
+BYTE and codepoints in UTF8. When *length* is omitted, the result continues
+through the end, or is empty when *start* is beyond the source. A supplied
+*length* must be non-negative and fixes the result width; missing source units
+are replaced with *pad*. The default pad is blank and a supplied pad must
+contain exactly one active unit.
+
+The Level B helper requires `.int` start/length values and signals
+`INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF accepts
+Classic whole-number text and reports standard `RXC-LC-40.*` context errors.
+Both leave the source unchanged; their active units differ as described above.
+See the separate [Level B SUBSTR](../../../lib/rxfnsb/rexx/substr.md) and
+[Level C SUBSTR](../../../lib/rxfnsc/substr.md) pages.
 
 **Examples:**
 ```
@@ -1220,6 +1532,14 @@ SUBSTR('abc', 5, 6, '.') == '......'
 **Note:** In some situations the positional (numeric) patterns of parsing
 templates are more convenient for selecting sub-strings, especially if
 more than one sub-string is to be extracted from a string.
+
+
+### SUBSTRO
+
+`SUBSTRO` is a cREXX-specific Level B alternate name with the same typed,
+signal-based slicing behavior as `SUBSTR`. It has a standalone direct VM
+implementation because it remains a bootstrap-library export, but it is not a
+Level C BIF. See [Level B SUBSTRO](../../../lib/rxfnsb/rexx/substro.md).
 
 
 
@@ -1245,7 +1565,7 @@ SUBWORD('Now is the  time', 5)   == ''
 
 
 
-## TRANSLATE(s, new, old)
+## TRANSLATE(string [,outputTable [,inputTable [,pad]]])
 
 returns a copy of *string* with each character in
 *string* either unchanged or translated to another character.
@@ -1264,6 +1584,15 @@ The output table, *tableo*, is padded with *pad* or
 truncated on the right as necessary to be the same length as
 *tablei*.
 The default *pad* is a blank.
+
+When both tables are omitted, TRANSLATE applies the active profile's uppercase
+mapping. When the output table is supplied and the input table is omitted,
+Level B uses its fixed U+0000 through U+00FF codepoint domain and Level C BYTE
+uses its exact `00` through `FF` XRANGE. Level C UTF8 rejects that form because
+Classic XRANGE is not a Unicode range. Level B tables are codepoint based;
+Level C table units follow its BYTE or UTF8 profile. See the separate
+[Level B API](../../../lib/rxfnsb/rexx/translate.md) and
+[Level C BIF contract](../../../lib/rxfnsc/translate.md).
 
 **Examples:**
 ```
@@ -1288,36 +1617,30 @@ characters using the **translate** function.
 
 
 
-## UPPER(s)
+## UPPER(string)
 
-returns a copy of *string* with any lowercase characters in
-the sub-string of *string* that begins at the **n*th
-character, and is of length *length* characters, replaced by
-their uppercase equivalent.
+Returns a copy of *string* after applying Level B's locale-independent, limited
+simple uppercase table. Covered letters are replaced by their uppercase
+equivalents; other codepoints are unchanged. This is deliberately not full
+Unicode case folding. The surface accepts only the string argument; it has no
+substring position or length options.
 
-*n* must be a positive whole number, and defaults to 1 (the
-first character in *string*).  If *n* is greater than
-the length of *string*, the string is returned unchanged.
-
-*length* must be a non-negative whole number.
-If *length* is not specified, or is greater than the number of
-characters from *n* to the end of the string, the rest of the
-string (including the **n*th character) is assumed.
+The helper accepts and returns `.string`, performs the runtime's limited simple
+mapping, and has no error branch for valid text. See
+[Level B UPPER](../../../lib/rxfnsb/rexx/upper.md) for its exact contract and
+implementation notes. UPPER is not a required Level C BIF in the repository
+catalog; the existing common-runtime helper is compatibility surface only.
 
 **Examples:**
 ```
-UPPER('Fou-Baa')        == 'FOU-BAA'
-UPPER('Mad Sheep')      == 'MAD SHEEP'
-UPPER('Mad sheep', 5)   == 'Mad SHEEP'
-UPPER('Mad sheep', 5, 1) == 'Mad Sheep'
-UPPER('Mad sheep', 5, 4) == 'Mad SHEEp'
-UPPER('tinganon', 1, 1)  == 'Tinganon'
-UPPER('')               == ''
+UPPER('Fou-Baa') == 'FOU-BAA'
+UPPER('äöüé')    == 'ÄÖÜÉ'
+UPPER('')        == ''
 ```
 
 
 
-## VERIFY(s, reference, option, start)
+## VERIFY(string, reference [,option [,start]])
 
 verifies that *string* is composed only of characters
 from *reference*, by returning the position of the first
@@ -1343,6 +1666,15 @@ Similarly if *start* is greater than
 is the same as the value used for *start*,
 unless **'Match'** is specified as the *option*, in
 which case 0 is returned.
+
+The Level B helper types *start* as `.int`; an empty or invalid option and a
+non-positive start signal `INVALID_ARGUMENTS`. The standalone Level C BIF
+accepts Classic whole-number text and reports standard `RXC-LC-40.*` context
+errors. Level B reports codepoint positions. Level C reports octet positions in
+BYTE and codepoint positions in UTF8. See the separate
+[Level B VERIFY](../../../lib/rxfnsb/rexx/verify.md) and
+[Level C VERIFY](../../../lib/rxfnsc/verify.md) pages for their distinct
+contracts.
 
 **Examples:**
 ```
@@ -1418,11 +1750,12 @@ WORDS('')                == 0
 
 
 
-## DATATYPE(s, type)
+## DATATYPE(s [,type])
 
-returns 1 if *string* matches the description requested with
-the *option*, or 0 otherwise.
-If *string* is the null string, 0 is always returned.
+With *type* omitted, returns `NUM` for a syntactically valid Level B number and
+`CHAR` otherwise. With *type* present, returns 1 if *string* matches the
+requested description, or 0 otherwise. The null string is valid for the `B`
+and `X` tests and false for the other explicit tests.
 
 Only the first character of *option* is significant, and it may
 be in either uppercase or lowercase.
@@ -1435,7 +1768,7 @@ characters from the ranges "a-z", "A-Z", and "0-9".
 (Binary); returns 1 if *string* only contains the
 characters "0" and/or "1".
 \item[D]
-(Digits); returns 1 if *string* only contains
+(Digits, cREXX Level B extension); returns 1 if *string* only contains
 characters from the range "0-9".
 \item[L]
 (Lowercase); returns 1 if *string* only contains
@@ -1476,24 +1809,49 @@ DATATYPE('3 d', 's')    == 0
 DATATYPE('BCd3', 'X')   == 1
 DATATYPE('BCgd3', 'X')  == 0
 ```
-**Note:** The **datatype** function tests the meaning of the characters
-in a string, independent of the encoding of those characters.  Extra
-letters and Extra digits cause **datatype** to return 0 except
-for the number tests ("**N**" and "**W**"),
-which treat extra digits whose value is in the range 0-9 as though they
-were the corresponding Arabic numeral.
+**Note:** Level B traverses codepoints safely but deliberately uses the listed
+ASCII character classes. Its `W` test is exact and has no floating-point
+tolerance. An explicit empty or unsupported option signals
+`INVALID_ARGUMENTS`. The separate Classic Level C BIF excludes `D` and obtains
+extra letter/digit mappings, B/X blanks, and exponent limits from its call
+configuration; see `lib/rxfnsc/datatype.md`.
 
 
 
 ## RANDOM(min, max, seed)
 
-Returns a pseudo-random integer in the inclusive range `min` through `max`.
-When omitted, `min` defaults to `0`, `max` defaults to `999`, and `seed`
-defaults to `-1`. The current implementation raises a syntax condition for a
-negative minimum or for `min > max`.
+Returns a pseudo-random integer in the selected inclusive range. With no
+arguments the range is `0..999`. One argument is the inclusive maximum, so
+`RANDOM(10)` selects `0..10`. In the positioned three-argument form an omitted
+minimum defaults to `0` and an omitted maximum defaults to `999`.
 
-`seed` is passed to the VM `irand` instruction. The default `-1` asks the
-instruction to choose its normal seed behavior.
+A supplied non-negative seed resets the module-scoped sequence before drawing
+the result; omitted seeding continues that sequence. Negative arguments,
+reversed bounds, and a range wider than `100000` signal `INVALID_ARGUMENTS`.
+
+Level B uses deterministic Park-Miller state and unbiased rejection sampling,
+not the VM-global `irand` instruction. It is suitable for repeatable language-
+level sequences, not cryptography. See the separate
+[Level B contract](../../../lib/rxfnsb/rexx/random.md) and
+[Level C contract](../../../lib/rxfnsc/random.md); Level C owns its state on the
+call configuration and reports the standard `40.31` through `40.33` errors.
+
+
+## FNV(string)
+
+Returns the conventional 32-bit FNV-1a hash of the string's exact UTF-8 byte
+sequence as an integer in `0..4294967295`.
+
+```rexx
+FNV("")    == 2166136261
+FNV("a")   == 3826002220
+FNV("abc") == 440920331
+```
+
+Embedded NUL bytes participate in the hash. FNV does not mutate its input and
+does not signal numeric overflow because modulo-2^32 arithmetic is part of the
+algorithm. It is a Level B library function, not a Level C Classic BIF. See the
+[Level B contract](../../../lib/rxfnsb/rexx/fnv.md).
 
 
 ## TIME(option)
@@ -1517,7 +1875,10 @@ Returns time information. The option is case-insensitive and defaults to `N`.
 | `TS` | Ticks per second. |
 | `ZN` | Time zone name. |
 
-An unsupported option currently returns the string `time invalid option`.
+An unsupported option signals `INVALID_ARGUMENTS`. This typed Level B extension
+is documented separately from the Classic three-argument Level C BIF in the
+[Level B API](../../../lib/rxfnsb/rexx/time.md) and
+[Level C contract](../../../lib/rxfnsc/time.md).
 
 
 ## DATE(oformat, date, iformat, osep, isep)
@@ -1529,6 +1890,9 @@ uses the current local date. Empty `oformat` or `iformat` values default to
 Input formats are matched by abbreviation and currently include `NORMAL`,
 `STANDARD`, `ORDERED`, `EUROPEAN`, `GERMAN`, `USA`, `INTERNATIONAL`,
 `QUALIFIED`, `JULIAN`, `BASE`, `UNIX`, and `EPOCH`.
+`NORMAL` and `QUALIFIED` input dates accept full or abbreviated English month
+names; this month-prefix matching belongs to DATE and does not change the exact
+word matching performed by `WORDPOS`.
 
 Output formats are also matched by abbreviation and currently include
 `NORMAL`, `XNORMAL`, `STANDARD`, `ORDERED`, `XORDERED`, `EUROPEAN`,
@@ -1542,8 +1906,26 @@ Output formats are also matched by abbreviation and currently include
 Returns the sequence of characters from `from` through `to`, using Unicode
 codepoint values. It is the Unicode-capable replacement for byte-oriented
 `XRANGE`; unlike `XRANGE`, it does not wrap around when `from` is greater than
-`to`. The current implementation prints a diagnostic and returns `BAD` for a
-descending range.
+`to`. Both endpoints must be single characters. A descending range or an
+invalid endpoint signals `INVALID_ARGUMENTS`; surrogate code points are skipped
+because they are not Unicode scalar values. See the stable
+[Level B API](../../../lib/rxfnsb/rexx/sequence.md).
+
+
+## XRANGE(start, end)
+
+The typed Level B helper returns the inclusive U+0000 through U+00FF
+byte-domain character range and wraps at U+00FF. Both endpoints are required,
+must contain exactly one character, and invalid endpoints signal
+`INVALID_ARGUMENTS`. It is retained for legacy byte-range use; `SEQUENCE` is
+the non-wrapping Unicode range API.
+
+Classic Level C `XRANGE([start [,end]])` is different. In the default BYTE
+profile it returns the inclusive wrapping exact-byte range, defaulting to
+`00` through `FF`. It is intentionally unavailable in UTF8 because it is not a
+Unicode scalar or grapheme range.
+See the separate [Level B API](../../../lib/rxfnsb/rexx/xrange.md) and
+[Level C contract](../../../lib/rxfnsc/xrange.md).
 
 
 <!-- ## SOURCELINE(n) -->
@@ -1577,9 +1959,46 @@ trace value option
 rules as a static `TRACE` statement. See the `TRACE` statement reference for
 the supported modes, output targets, and namespace suppression controls.
 
+The Level C library now also contains a standalone direct `RexxValue`
+implementation of the Classic `TRACE([option])` query/update contract. It is
+covered through a direct library harness, but normal compiled calls are not yet
+lowered to that entry point; that wiring is intentionally deferred to the later
+bulk Level C lowering change. Its library contract is documented in
+`lib/rxfnsc/trace.md`.
 
 
-<!-- ## VALUE(symbol, newvalue, selector) -->
+
+## VALUE(name, newvalue, pool)
+
+There are two intentionally different library contracts.
+
+The Level B helper is read-only:
+
+```rexx
+import rxfnsb
+count = 12
+say value("count")    /* 12 */
+say value("missing")  /* MISSING */
+```
+
+It accepts one `.string` name, searches only the immediate caller procedure's
+scalar/constant metadata, and returns a `.string`. It does not assign variables
+or implement Classic stems. See `lib/rxfnsb/rexx/value.md`.
+
+The standalone Level C BIF implements `VALUE(name [,newvalue [,pool]])` over
+`RexxValue` and the caller `RexxVariablePool`. The internal form expands
+compound-variable tails, returns the old value, and optionally assigns the new
+value. Invalid internal symbols use error `40.26`.
+
+When a third argument is present, Level C resolves its trimmed,
+case-insensitive name through the external-pool registry on
+`RexxClassicConfig`. The subject name is passed to the selected adapter
+unchanged. External assignment first gets and returns the old value, then sets
+the new value; a missing subject is not implicitly created. Adapter rejection
+reports `40.36`, and a blank or unknown pool reports `40.37`. The exact direct-
+call contract and test scope are documented in
+[the Level C VALUE page](../../../lib/rxfnsc/value.md). Compiler lowering to the
+direct entry point remains part of the later bulk Level C lowering change.
 
 
 ## VERSION()
@@ -1591,20 +2010,24 @@ Returns a string with implementation and build information supplied by the VM
 platform bits crexx-version build-date
 ```
 
-`platform` is one of the VM's compiled platform names, such as `linux`,
-`windows`, `macOS`, `cms`, or `unknown`. `bits` is `32` or `64`. The function
-does not currently expose endianness as a separate field.
+`platform` is one of the VM's compiled platform names: `linux`, `windows`,
+`macOS`, `cms`, or `unknown`. `bits` is `32` or `64`; `crexx-version` starts
+with `crexx-` and may contain build metadata; and `build-date` is `yyyymmdd`.
+The function does not currently expose endianness as a separate field. Its
+selector-local Level B contract is in `lib/rxfnsb/rexx/version.md`.
 
 
 
 ## ABBREV(info, word, length)
 
-returns 1 if *info* is equal to the leading characters of
-*string* and *info* is not less than
+Returns 1 if *word* is equal to the leading characters of
+*info* and *word* is not less than
 the minimum length, *length*; 0 is returned
 if either of these conditions is not met.
 *length* must be a non-negative whole number; the default is
-the length of *info*.
+the length of *word* in the Level C contract. The Level B helper uses an
+integer default of zero, which produces the same result for an omitted minimum
+because the entire candidate must still match.
 
 
 **Examples:**
@@ -1619,6 +2042,11 @@ ABBREV('PRINT', '', 1)    == 0
 **Note:** A null string will always match if a length of 0 (or the default)
 is used.
 This allows a default keyword to be selected automatically if desired.
+
+The typed Level B and direct `RexxValue` contracts are documented separately in
+`lib/rxfnsb/rexx/abbrev.md` and `lib/rxfnsc/abbrev.md`. Level B measures the
+prefix and minimum in codepoints. Level C measures octets in BYTE and codepoints
+in UTF8.
 
 
 **Example:**
@@ -1644,17 +2072,53 @@ select  /* keyword1 is to be the default */
 
 
 
-<!-- ## DIGITS() -->
+## DIGITS()
+
+Returns the positive number of significant decimal digits in the current
+procedure's numeric context. The value is controlled by `NUMERIC DIGITS`; a
+called BIF observes the setting inherited from its immediate caller.
+
+```rexx
+numeric digits 12
+say DIGITS()  /* 12 */
+```
+
+`DIGITS` accepts no arguments. The distinct typed Level B and direct RexxValue
+contracts are documented in [Level B numeric accessors](../../../lib/rxfnsb/rexx/numeric.md)
+and [Level C numeric BIFs](../../../lib/rxfnsc/numeric.md).
 
 
+## FORM()
+
+Returns `SCIENTIFIC` or `ENGINEERING`, identifying the exponential notation
+selected by the current procedure's `NUMERIC FORM` setting.
+
+```rexx
+numeric form engineering
+say FORM()  /* ENGINEERING */
+```
+
+`FORM` accepts no arguments. Level B's typed helper intentionally returns the
+lowercase cREXX name, while the Level C BIF returns the uppercase Classic BIF
+result. See the separate [Level B](../../../lib/rxfnsb/rexx/numeric.md) and
+[Level C](../../../lib/rxfnsc/numeric.md) contracts.
 
 
-<!-- ## FORM() -->
+## FUZZ()
 
+Returns the non-negative number of least-significant digits ignored during
+numeric comparisons in the current procedure. The value is controlled by
+`NUMERIC FUZZ` and is always smaller than `DIGITS()`.
 
+```rexx
+numeric digits 12
+numeric fuzz 2
+say FUZZ()  /* 2 */
+```
 
-
-<!-- ## FUZZ() -->
+`FUZZ` accepts no arguments. Its typed Level B and direct RexxValue contracts
+are documented separately in [Level B numeric accessors](../../../lib/rxfnsb/rexx/numeric.md)
+and [Level C numeric BIFs](../../../lib/rxfnsc/numeric.md).
 
 
 

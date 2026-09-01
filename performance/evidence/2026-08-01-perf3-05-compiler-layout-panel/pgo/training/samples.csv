@@ -1,0 +1,11 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-train-rxvm-recorded-1,timing,Sieve,sieve-train-rxvm,crexx,rxvm,PGO-training,A,no,no,recorded,1,1,5500,1997066000,,0,pass,,
+timing-Sieve-sieve-train-rxbvm-recorded-1,timing,Sieve,sieve-train-rxbvm,crexx,rxbvm,PGO-training,A,no,no,recorded,1,2,5500,1980684000,,0,pass,,
+timing-Base64-base64-train-rxvm-recorded-1,timing,Base64,base64-train-rxvm,crexx,rxvm,PGO-training,A,no,no,recorded,1,1,2500,1836879000,,0,pass,,
+timing-Base64-base64-train-rxbvm-recorded-1,timing,Base64,base64-train-rxbvm,crexx,rxbvm,PGO-training,A,no,no,recorded,1,2,2500,1901287000,,0,pass,,
+timing-Richards-richards-train-rxvm-recorded-1,timing,Richards,richards-train-rxvm,crexx,rxvm,PGO-training,A,no,no,recorded,1,1,20,4018480000,,0,pass,,
+timing-Richards-richards-train-rxbvm-recorded-1,timing,Richards,richards-train-rxbvm,crexx,rxbvm,PGO-training,A,no,no,recorded,1,2,20,4082361000,,0,pass,,
+timing-Towers-towers-train-rxvm-recorded-1,timing,Towers,towers-train-rxvm,crexx,rxvm,PGO-training,A,no,no,recorded,1,1,100,3430643000,,0,pass,,
+timing-Towers-towers-train-rxbvm-recorded-1,timing,Towers,towers-train-rxbvm,crexx,rxbvm,PGO-training,A,no,no,recorded,1,2,100,3489517000,,0,pass,,
+timing-RexxCPS-rexxcps-train-rxvm-recorded-1,timing,RexxCPS,rexxcps-train-rxvm,crexx,rxvm,PGO-training,A,no,no,recorded,1,1,1000-clauses,1394974000,,0,pass,29272148,cREXX clauses per second
+timing-RexxCPS-rexxcps-train-rxbvm-recorded-1,timing,RexxCPS,rexxcps-train-rxbvm,crexx,rxbvm,PGO-training,A,no,no,recorded,1,2,1000-clauses,1407102000,,0,pass,29000750,cREXX clauses per second

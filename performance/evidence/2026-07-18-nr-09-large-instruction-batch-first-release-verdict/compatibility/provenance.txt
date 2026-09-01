@@ -1,0 +1,7 @@
+collected_utc=2026-07-18T17:37:20Z
+old_product_verdict=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict
+ede5ba9f2b4e094c551bc2cebbc885456aa343e16684536618aa22a73116779f  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-lifetime-poc/candidate/artifacts/canonical-noopt.rxbin
+466de7f06414148e4a3f63337e716ce332e1c082363297974240f4b3cc9cabbe  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-lifetime-poc/candidate/artifacts/canonical-opt.rxbin
+6d1ae40af463fd53633f44603a57cc2291aaa3149bb4ef0d04a67511ea04cf13  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-lifetime-poc/candidate/artifacts/library.rxbin
+1f929611364ae02b4d3b797f7f6cbcfdb12e7676d18a0a03ad6b001d530c03cb  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm
+4e5360b6b8e67822737b220559953190bc8ea9105d347e8192deff28b0fc4986  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm

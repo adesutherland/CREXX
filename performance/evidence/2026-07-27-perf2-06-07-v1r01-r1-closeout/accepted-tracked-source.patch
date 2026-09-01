@@ -1,0 +1,878 @@
+diff --git a/compiler/rxcp_inline_bind.c b/compiler/rxcp_inline_bind.c
+index 3a6de5e65..ec5236a6e 100644
+--- a/compiler/rxcp_inline_bind.c
++++ b/compiler/rxcp_inline_bind.c
+@@ -1700,7 +1700,15 @@ static int inline_symbol_has_generated_storage_scope(Symbol *symbol) {
+ /* A real Rexx method call binds the caller's receiver value pointer directly
+  * as a1.  Once an I6 summary reconstructed from the validated method body
+  * proves that this is the method receiver, a direct object symbol can use the
+- * identical storage in the inline instance.  Computed and class-attribute
++ * identical storage in the inline instance.  This also applies to an enclosing
++ * method's direct §this whenever the reconstructed result proof has at most
++ * one explicit return: its a1 mapping, or its already-proved inline alias, is
++ * the same receiver storage across arbitrary internal branches and calls, and
++ * the single-exit/fallthrough rewrite keeps receiver-owned link cleanup on one
++ * path.  Multiple explicit returns remain materialised because the current
++ * summary does not prove that every rewritten exit balances receiver-owned
++ * class-attribute links.  The established ordinary direct-object path does not
++ * need this nested-§this exit restriction.  Computed and class-attribute
+  * receivers still need their existing evaluate-once locator/copyback path. */
+ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+                                                    ASTNode *receiver,
+@@ -1723,12 +1731,16 @@ static int inline_method_receiver_can_share_actual(ASTNode *proc_def,
+     summary = proc_symbol ? proc_symbol->inline_summary : NULL;
+     if (!receiver_symbol || receiver_symbol->symbol_type != VARIABLE_SYMBOL ||
+         receiver_symbol->type != TP_OBJECT || receiver_symbol->value_dims != 0 ||
+-        receiver_symbol->is_this ||
+-        receiver_symbol->is_arg || receiver_symbol->is_ref_arg ||
+-        inline_symbol_has_generated_storage_scope(receiver_symbol) ||
+-        receiver_symbol->inline_value_alias || receiver->flow_substitute_symbol ||
++        receiver_symbol->is_ref_arg ||
++        (!receiver_symbol->is_this &&
++         (receiver_symbol->is_arg ||
++          inline_symbol_has_generated_storage_scope(receiver_symbol) ||
++          receiver_symbol->inline_value_alias)) ||
++        receiver->flow_substitute_symbol ||
+         !summary || summary->schema_version != RXCP_INLINE_CALLABLE_SUMMARY_SCHEMA ||
+-        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER)) {
++        !(summary->control_flags & RXCP_INLINE_CONTROL_METHOD_RECEIVER) ||
++        (receiver_symbol->is_this &&
++         (summary->result_flags & RXCP_INLINE_RESULT_MULTIPLE))) {
+         return 0;
+     }
+ 
+diff --git a/compiler/rxcp_inline_clone.c b/compiler/rxcp_inline_clone.c
+index 32097ff41..a4a476ffe 100644
+--- a/compiler/rxcp_inline_clone.c
++++ b/compiler/rxcp_inline_clone.c
+@@ -84,6 +84,31 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
+         }
+     }
+ 
++    /* A receiver already coalesced by an earlier nested-inline pass denotes
++     * the same storage after its containing body is cloned again. Preserve
++     * that proved relation, remapping the target when it belongs to the body
++     * being cloned and retaining the caller symbol when it does not. */
++    for (i = 0; symbols[i]; i++) {
++        Symbol *old_symbol;
++        Symbol *new_symbol;
++        Symbol *new_alias;
++
++        old_symbol = symbols[i];
++        if (!old_symbol || !old_symbol->is_this || !old_symbol->inline_value_alias) continue;
++        new_symbol = inline_find_mapped_symbol(state, old_symbol);
++        if (!new_symbol) {
++            free(symbols);
++            return 0;
++        }
++        new_alias = inline_find_mapped_symbol(state, old_symbol->inline_value_alias);
++        if (!new_alias) new_alias = old_symbol->inline_value_alias;
++        if (new_alias == new_symbol) {
++            free(symbols);
++            return 0;
++        }
++        new_symbol->inline_value_alias = new_alias;
++    }
++
+     free(symbols);
+     return 1;
+ }
+diff --git a/compiler/tests/CMakeLists.txt b/compiler/tests/CMakeLists.txt
+index a7c6da54d..50272c043 100644
+--- a/compiler/tests/CMakeLists.txt
++++ b/compiler/tests/CMakeLists.txt
+@@ -1282,6 +1282,20 @@ add_test(NAME perf2_05_partial_call
+ set_tests_properties(perf2_05_partial_call PROPERTIES
+         LABELS "compiler;performance;constants;inlining;perf2_05")
+ 
++add_test(NAME perf2_07_v3_representation
++         COMMAND ${CMAKE_COMMAND}
++                 -DRXC=$<TARGET_FILE:rxc>
++                 -DRXAS=$<TARGET_FILE:rxas>
++                 -DRXVM=$<TARGET_FILE:rxvm>
++                 -DRXBVM=$<TARGET_FILE:rxbvm>
++                 -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
++                 -DLIBRARY_DIR=${CMAKE_BINARY_DIR}/bin
++                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/perf2_07_v3_representation.crexx
++                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/perf2_07_v3_representation_ws
++                 -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_07_v3_representation.cmake)
++set_tests_properties(perf2_07_v3_representation PROPERTIES
++        LABELS "compiler;interpreter;representation;reference;performance;perf2_07")
++
+ # Macro to add a run test
+ macro(add_crexx_run_test NAME SOURCE_FILE)
+     set(RUNTIME_MODULES ${ARGN})
+@@ -2512,7 +2526,7 @@ add_test(NAME inline_local_member_scalar_opt
+          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+ set_tests_properties(inline_local_member_scalar_opt PROPERTIES LABELS "linked_opt")
+ 
+-add_test(NAME inline_receiver_nested_this_materialization_opt
++add_test(NAME inline_receiver_nested_this_direct_placement_opt
+          COMMAND ${CMAKE_COMMAND}
+                  -DRXC=$<TARGET_FILE:rxc>
+                  -DRXAS=$<TARGET_FILE:rxas>
+@@ -2523,7 +2537,7 @@ add_test(NAME inline_receiver_nested_this_materialization_opt
+                  -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_nested_this_opt_ws
+                  -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_nested_this_opt.cmake)
+-set_tests_properties(inline_receiver_nested_this_materialization_opt PROPERTIES
++set_tests_properties(inline_receiver_nested_this_direct_placement_opt PROPERTIES
+         LABELS "linked_opt;receiver"
+         FIXTURES_REQUIRED linked_opt_runtime_artifacts)
+ 
+diff --git a/compiler/tests/golden/opt/18_array_class.rxas b/compiler/tests/golden/opt/18_array_class.rxas
+index 8f68315b0..fa2ce089b 100644
+--- a/compiler/tests/golden/opt/18_array_class.rxas
++++ b/compiler/tests/golden/opt/18_array_class.rxas
+@@ -4,7 +4,7 @@
+ 
+ .globals=0
+ 
+-main() .locals=15
++main() .locals=14
+    .meta "18_array_class_main.main"="b" ".int" main() ""
+    numsci 18,1,1
+    .meta "18_array_class_main.main.ary"="b" ".item[1]" r0
+@@ -68,7 +68,7 @@ main() .locals=15
+    .srcstep 15 15 17 "18_array_class_main.crexx" 20 25 34 "    if items.0 < 1 then return \"\""
+    load r9,""
+    .traceevent "L" 4 "R" "S" "r" 9 34 34 0 "" ""
+-   scopy r14,r9
++   scopy r13,r9
+    br l165bexprend
+ l178iffalse:
+    .srcstep 18 18 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
+@@ -80,10 +80,9 @@ l178iffalse:
+    .srcstep 21 21 17 "18_array_class_main.crexx" 23 5 21 "    val = it.get_val()"
+    .srcstep 19 19 33 "18_array_class_main.crexx" 23 11 13 "    val = it.get_val()"
+    .traceevent "V" 6 "R" "O" "r" 3 19 19 0 "it" ""
+-   copy r10,r3
+-   .traceevent "A" 6 "R" "O" "r" 10 19 19 0 "§this" ""
++   .traceevent "A" 6 "R" "O" "r" 3 19 19 0 "§this" ""
+    .srcstep 20 20 33 "18_array_class_main.crexx" 23 13 13 "    val = it.get_val()"
+-   linkattr1 r9,r10,1
++   linkattr1 r9,r3,1
+    .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "val" ""
+    copy r6,r9
+    .traceevent "A" 6 "R" "S" "r" 6 20 20 0 "val" ""
+@@ -94,31 +93,31 @@ l178iffalse:
+    .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
+    .traceevent "A" 6 "R" "I" "r" 9 22 22 0 "i" ""
+    .srcstep 23 23 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
+-   .traceevent "C" 4 "R" "V" "r" 11 34 34 0 "items" ""
+-   getattrs r12,r5,0
+-   .traceevent "V" 6 "R" "I" "r" 12 34 34 0 "items" ""
++   .traceevent "C" 4 "R" "V" "r" 10 34 34 0 "items" ""
++   getattrs r11,r5,0
++   .traceevent "V" 6 "R" "I" "r" 11 34 34 0 "items" ""
+ l196dostart:
+    .srcstep 23 23 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
+-   igt r13,r9,r12
+-   brt l196doend,r13
++   igt r12,r9,r11
++   brt l196doend,r12
+    .srcstep 25 25 17 "18_array_class_main.crexx" 26 9 23 "        it_i = items[i]"
+    .traceevent "V" 6 "R" "I" "r" 9 25 25 0 "i" ""
+    .traceevent "C" 4 "R" "I" "r" 9 25 25 0 "items" ""
+-   minlinkattr1 r14,r5,r9,0
+-   .traceevent "V" 6 "R" "O" "r" 14 25 25 0 "items" ""
+-   copy r8,r14
++   minlinkattr1 r13,r5,r9,0
++   .traceevent "V" 6 "R" "O" "r" 13 25 25 0 "items" ""
++   copy r8,r13
+    .traceevent "A" 6 "R" "O" "r" 8 25 25 0 "it_i" ""
+-   unlink r14
++   unlink r13
+    .srcstep 28 28 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
+    .srcstep 26 26 33 "18_array_class_main.crexx" 27 17 21 "        val_i = it_i.get_val()"
+    .traceevent "V" 6 "R" "O" "r" 8 26 26 0 "it_i" ""
+    .traceevent "A" 6 "R" "O" "r" 8 26 26 0 "§this" ""
+    .srcstep 27 27 33 "18_array_class_main.crexx" 27 21 21 "        val_i = it_i.get_val()"
+-   linkattr1 r14,r8,1
+-   .traceevent "V" 6 "R" "S" "r" 14 27 27 0 "val" ""
+-   copy r7,r14
++   linkattr1 r13,r8,1
++   .traceevent "V" 6 "R" "S" "r" 13 27 27 0 "val" ""
++   copy r7,r13
+    .traceevent "A" 6 "R" "S" "r" 7 27 27 0 "val_i" ""
+-   unlink r14
++   unlink r13
+    .srcstep 29 29 17 "18_array_class_main.crexx" 28 9 18 "        say val_i"
+    .traceevent "V" 6 "R" "S" "r" 7 29 29 0 "val_i" ""
+    say r7
+@@ -131,12 +130,12 @@ l196doend:
+    endlife r8
+    .srcstep 32 32 17 "18_array_class_main.crexx" 30 5 15 "    return val"
+    .traceevent "V" 6 "R" "S" "r" 6 34 34 0 "val" ""
+-   scopy r14,r6
++   scopy r13,r6
+    br l165bexprend
+ l165bexprend:
+    endlife r3
+    endlife r5
+-   say r14
++   say r13
+    .srcstep 35 35 17 "18_array_class_main.crexx" 14 1 11 "say \"Done\""
+    say "Done"
+    .srcstep 36 36 17 "18_array_class_main.crexx" 15 1 9 "return 0"
+diff --git a/compiler/tests/golden/opt/inline_test_class_methods.rxas b/compiler/tests/golden/opt/inline_test_class_methods.rxas
+index daa13f630..a9ccc1e7b 100644
+--- a/compiler/tests/golden/opt/inline_test_class_methods.rxas
++++ b/compiler/tests/golden/opt/inline_test_class_methods.rxas
+@@ -6,7 +6,7 @@
+ .meta "inline_test_class_methods.box.name"="b" ".string" .attr 1
+ .globals=0
+ 
+-main() .locals=20
++main() .locals=18
+    .meta "inline_test_class_methods.main"="b" ".int" main() ""
+    .srcstep 72 72 17 "inline_test_class_methods.crexx" 4 1 23 "main: procedure = .int"
+    numsci 18,1,1
+@@ -73,48 +73,47 @@ l225bexprend:
+    .srcstep 21 21 17 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+    .srcstep 19 19 33 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "§this" ""
+-   copy r7,r0
+-   .traceevent "A" 6 "R" "O" "r" 7 19 19 0 "§this" ""
++   .traceevent "A" 6 "R" "O" "r" 0 19 19 0 "§this" ""
+    .srcstep 20 20 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r6,r7,1
++   linkattr1 r6,r0,1
+    .traceevent "V" 6 "R" "S" "r" 6 26 26 0 "name" ""
+    scopy r5,r6
+    unlinkbr r6,l251bexprend
+ l251bexprend:
+    concat r5,"p:",r5
+    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
+-   scopy r8,r5
++   scopy r7,r5
+    br l241bexprend
+ l241bexprend:
+-   scopy r9,r8
++   scopy r8,r7
+    br l232bexprend
+ l232bexprend:
+-   say r9
++   say r8
+    .srcstep 31 31 17 "inline_test_class_methods.crexx" 10 3 28 "  call update(box, \"gamma\")"
+    .srcstep 30 30 17 "inline_test_class_methods.crexx" 22 3 28 "  call item.setLabel(value)"
+    .srcstep 27 27 33 "inline_test_class_methods.crexx" 22 8 12 "  call item.setLabel(value)"
+    .traceevent "V" 6 "R" "O" "r" 0 27 27 0 "box" ""
+-   copy r11,r0
+-   .traceevent "A" 6 "R" "O" "r" 11 27 27 0 "§this" ""
++   copy r10,r0
++   .traceevent "A" 6 "R" "O" "r" 10 27 27 0 "§this" ""
+    .srcstep 28 28 17 "inline_test_class_methods.crexx" 38 5 16 "    name = next"
+-   load r8,"gamma"
+-   .traceevent "L" 4 "R" "S" "r" 8 28 28 0 "" ""
+-   linkattr1 r9,r11,1
+-   scopy r9,r8
+-   unlink r9
++   load r7,"gamma"
++   .traceevent "L" 4 "R" "S" "r" 7 28 28 0 "" ""
++   linkattr1 r8,r10,1
++   scopy r8,r7
++   unlink r8
+    .srcstep 29 29 6 "inline_test_class_methods.crexx" 22 8 28 "  call item.setLabel(value)"
+-   .traceevent "V" 6 "R" "O" "r" 11 0 0 0 "§this" ""
+-   copy r0,r11
++   .traceevent "V" 6 "R" "O" "r" 10 0 0 0 "§this" ""
++   copy r0,r10
+    .srcstep 35 35 17 "inline_test_class_methods.crexx" 11 3 16 "  say box.label()"
+    .srcstep 34 34 17 "inline_test_class_methods.crexx" 11 7 10 "  say box.label()"
+    .srcstep 32 32 33 "inline_test_class_methods.crexx" 11 7 10 "  say box.label()"
+    .traceevent "V" 6 "R" "O" "r" 0 32 32 0 "box" ""
+    .traceevent "A" 6 "R" "O" "r" 0 32 32 0 "§this" ""
+    .srcstep 33 33 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r9,r0,1
+-   .traceevent "V" 6 "R" "S" "r" 9 35 35 0 "name" ""
+-   scopy r6,r9
+-   unlinkbr r9,l275bexprend
++   linkattr1 r8,r0,1
++   .traceevent "V" 6 "R" "S" "r" 8 35 35 0 "name" ""
++   scopy r6,r8
++   unlinkbr r8,l275bexprend
+ l275bexprend:
+    say r6
+    .srcstep 41 41 17 "inline_test_class_methods.crexx" 12 3 36 "  saved = box.setAndReport(\"delta\")"
+@@ -124,20 +123,20 @@ l275bexprend:
+    .srcstep 37 37 17 "inline_test_class_methods.crexx" 47 5 16 "    name = next"
+    load r6,"delta"
+    .traceevent "L" 4 "R" "S" "r" 6 37 37 0 "" ""
+-   linkattr1 r9,r0,1
+-   scopy r9,r6
+-   unlink r9
++   linkattr1 r8,r0,1
++   scopy r8,r6
++   unlink r8
+    .srcstep 38 38 33 "inline_test_class_methods.crexx" 48 12 16 "    return name"
+-   linkattr1 r9,r0,1
+-   .traceevent "V" 6 "R" "S" "r" 9 38 38 0 "name" ""
+-   scopy r12,r9
+-   .traceevent "A" 6 "R" "S" "r" 12 38 38 0 "__inline_ret_136_137" ""
+-   unlink r9
++   linkattr1 r8,r0,1
++   .traceevent "V" 6 "R" "S" "r" 8 38 38 0 "name" ""
++   scopy r11,r8
++   .traceevent "A" 6 "R" "S" "r" 11 38 38 0 "__inline_ret_136_137" ""
++   unlink r8
+    .srcstep 39 39 6 "inline_test_class_methods.crexx" 12 11 36 "  saved = box.setAndReport(\"delta\")"
+    .traceevent "V" 6 "R" "O" "r" 0 0 0 0 "§this" ""
+    .srcstep 40 40 33 "inline_test_class_methods.crexx" 48 5 11 "    return name"
+-   .traceevent "V" 6 "R" "S" "r" 12 40 40 0 "__inline_ret_136_137" ""
+-   copy r1,r12
++   .traceevent "V" 6 "R" "S" "r" 11 40 40 0 "__inline_ret_136_137" ""
++   copy r1,r11
+    .traceevent "A" 6 "R" "S" "r" 1 40 40 0 "saved" ""
+    .srcstep 42 42 17 "inline_test_class_methods.crexx" 13 3 12 "  say saved"
+    .meta "inline_test_class_methods.main.saved"="b" ".string" r1
+@@ -149,10 +148,10 @@ l275bexprend:
+    .traceevent "V" 6 "R" "O" "r" 0 43 43 0 "box" ""
+    .traceevent "A" 6 "R" "O" "r" 0 43 43 0 "§this" ""
+    .srcstep 44 44 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r9,r0,1
+-   .traceevent "V" 6 "R" "S" "r" 9 46 46 0 "name" ""
+-   scopy r5,r9
+-   unlinkbr r9,l303bexprend
++   linkattr1 r8,r0,1
++   .traceevent "V" 6 "R" "S" "r" 8 46 46 0 "name" ""
++   scopy r5,r8
++   unlinkbr r8,l303bexprend
+ l303bexprend:
+    say r5
+    .srcstep 53 53 17 "inline_test_class_methods.crexx" 15 3 34 "  say box.setAndReport(\"epsilon\")"
+@@ -163,74 +162,73 @@ l303bexprend:
+    .srcstep 48 48 17 "inline_test_class_methods.crexx" 47 5 16 "    name = next"
+    load r5,"epsilon"
+    .traceevent "L" 4 "R" "S" "r" 5 48 48 0 "" ""
+-   linkattr1 r9,r0,1
+-   scopy r9,r5
+-   unlink r9
++   linkattr1 r8,r0,1
++   scopy r8,r5
++   unlink r8
+    .srcstep 49 49 33 "inline_test_class_methods.crexx" 48 12 16 "    return name"
+-   linkattr1 r9,r0,1
+-   .traceevent "V" 6 "R" "S" "r" 9 49 49 0 "name" ""
+-   scopy r13,r9
+-   .traceevent "A" 6 "R" "S" "r" 13 49 49 0 "__inline_leave_322_321" ""
+-   unlink r9
++   linkattr1 r8,r0,1
++   .traceevent "V" 6 "R" "S" "r" 8 49 49 0 "name" ""
++   scopy r12,r8
++   .traceevent "A" 6 "R" "S" "r" 12 49 49 0 "__inline_leave_322_321" ""
++   unlink r8
+    .srcstep 50 50 6 "inline_test_class_methods.crexx" 48 5 16 "    return name"
+    .traceevent "V" 6 "R" "O" "r" 0 53 53 0 "§this" ""
+    .srcstep 51 51 17 "inline_test_class_methods.crexx" 48 5 16 "    return name"
+-   .traceevent "V" 6 "R" "S" "r" 13 53 53 0 "__inline_leave_322_321" ""
++   .traceevent "V" 6 "R" "S" "r" 12 53 53 0 "__inline_leave_322_321" ""
+    br l310bexprend
+ l310bexprend:
+-   say r13
++   say r12
+    .srcstep 57 57 17 "inline_test_class_methods.crexx" 16 3 16 "  say box.label()"
+    .srcstep 56 56 17 "inline_test_class_methods.crexx" 16 7 10 "  say box.label()"
+    .srcstep 54 54 33 "inline_test_class_methods.crexx" 16 7 10 "  say box.label()"
+    .traceevent "V" 6 "R" "O" "r" 0 54 54 0 "box" ""
+    .traceevent "A" 6 "R" "O" "r" 0 54 54 0 "§this" ""
+    .srcstep 55 55 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r13,r0,1
+-   .traceevent "V" 6 "R" "S" "r" 13 57 57 0 "name" ""
+-   scopy r9,r13
+-   unlinkbr r13,l332bexprend
++   linkattr1 r12,r0,1
++   .traceevent "V" 6 "R" "S" "r" 12 57 57 0 "name" ""
++   scopy r8,r12
++   unlinkbr r12,l332bexprend
+ l332bexprend:
+-   say r9
++   say r8
+    .srcstep 70 70 17 "inline_test_class_methods.crexx" 17 3 33 "  say .Box(\"direct\").prefix(\"q\")"
+    .srcstep 69 69 17 "inline_test_class_methods.crexx" 17 7 11 "  say .Box(\"direct\").prefix(\"q\")"
+    .srcstep 62 62 17 "inline_test_class_methods.crexx" 17 7 33 "  say .Box(\"direct\").prefix(\"q\")"
+    .srcstep 58 58 6 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
+-   setattrs r15,2
++   setattrs r14,2
+    .srcstep 59 59 6 "inline_test_class_methods.crexx" 28 3 13 "  *: factory"
+-   setobjtype r15,"inline_test_class_methods.box"
++   setobjtype r14,"inline_test_class_methods.box"
+    .srcstep 60 60 17 "inline_test_class_methods.crexx" 30 5 19 "    name = initial"
+-   load r9,"direct"
+-   .traceevent "L" 4 "R" "S" "r" 9 60 60 0 "" ""
+-   linkattr1 r13,r15,1
+-   scopy r13,r9
+-   unlink r13
++   load r8,"direct"
++   .traceevent "L" 4 "R" "S" "r" 8 60 60 0 "" ""
++   linkattr1 r12,r14,1
++   scopy r12,r8
++   unlink r12
+    .srcstep 61 61 33 "inline_test_class_methods.crexx" 31 5 11 "    return"
+-   .traceevent "V" 6 "R" "O" "r" 15 61 61 0 "§factory" ""
+-   copy r14,r15
+-   .traceevent "A" 6 "R" "O" "r" 14 61 61 0 "§this" ""
++   .traceevent "V" 6 "R" "O" "r" 14 61 61 0 "§factory" ""
++   copy r13,r14
++   .traceevent "A" 6 "R" "O" "r" 13 61 61 0 "§this" ""
+    .srcstep 68 68 17 "inline_test_class_methods.crexx" 43 5 31 "    return tag || \":\" || label()"
+    .srcstep 67 67 17 "inline_test_class_methods.crexx" 43 12 15 "    return tag || \":\" || label()"
+    .srcstep 66 66 33 "inline_test_class_methods.crexx" 43 23 25 "    return tag || \":\" || label()"
+    .srcstep 65 65 17 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+    .srcstep 63 63 33 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+-   .traceevent "V" 6 "R" "O" "r" 14 63 63 0 "§this" ""
+-   copy r16,r14
+-   .traceevent "A" 6 "R" "O" "r" 16 63 63 0 "§this" ""
++   .traceevent "V" 6 "R" "O" "r" 13 63 63 0 "§this" ""
++   .traceevent "A" 6 "R" "O" "r" 13 63 63 0 "§this" ""
+    .srcstep 64 64 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r13,r16,1
+-   .traceevent "V" 6 "R" "S" "r" 13 70 70 0 "name" ""
+-   scopy r17,r13
+-   unlinkbr r13,l359bexprend
++   linkattr1 r12,r13,1
++   .traceevent "V" 6 "R" "S" "r" 12 70 70 0 "name" ""
++   scopy r15,r12
++   unlinkbr r12,l359bexprend
+ l359bexprend:
+-   concat r17,"q:",r17
+-   .traceevent "O" 4 "R" "S" "r" 17 70 70 0 "" ""
+-   scopy r18,r17
++   concat r15,"q:",r15
++   .traceevent "O" 4 "R" "S" "r" 15 70 70 0 "" ""
++   scopy r16,r15
+    br l349bexprend
+ l349bexprend:
+-   scopy r19,r18
++   scopy r17,r16
+    br l339bexprend
+ l339bexprend:
+-   say r19
++   say r17
+    .srcstep 71 71 17 "inline_test_class_methods.crexx" 18 3 11 "  return 0"
+    ret 0
+    .meta "inline_test_class_methods.main.box"
+@@ -286,7 +284,7 @@ l339bexprend:
+    .meta "inline_test_class_methods.box.setlabel.next"
+    .meta "inline_test_class_methods.box.setlabel.§this"
+ 
+-§inline_test_class_methods.box.prefix() .locals=7
++§inline_test_class_methods.box.prefix() .locals=6
+    .meta "inline_test_class_methods.box.prefix"="b" ".string" §inline_test_class_methods.box.prefix() "tag=.string"
+    .srcstep 99 99 17 "inline_test_class_methods.crexx" 41 3 27 "  prefix: method = .string"
+    assertinitialized a1
+@@ -306,20 +304,19 @@ l339bexprend:
+    .srcstep 95 95 17 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+    .srcstep 93 93 33 "inline_test_class_methods.crexx" 43 26 31 "    return tag || \":\" || label()"
+    .traceevent "V" 6 "R" "O" "a" 1 93 93 0 "§this" ""
+-   copy r3,a1
+-   .traceevent "A" 6 "R" "O" "r" 3 93 93 0 "§this" ""
++   .traceevent "A" 6 "R" "O" "a" 1 93 93 0 "§this" ""
+    .srcstep 94 94 17 "inline_test_class_methods.crexx" 34 5 16 "    return name"
+-   linkattr1 r4,r3,1
+-   .traceevent "V" 6 "R" "S" "r" 4 98 98 0 "name" ""
+-   scopy r5,r4
+-   unlinkbr r4,l218bexprend
++   linkattr1 r3,a1,1
++   .traceevent "V" 6 "R" "S" "r" 3 98 98 0 "name" ""
++   scopy r4,r3
++   unlinkbr r3,l218bexprend
+ l218bexprend:
+-   concat r5,r2,r5
+-   .traceevent "O" 4 "R" "S" "r" 5 98 98 0 "" ""
+-   scopy r6,r5
++   concat r4,r2,r4
++   .traceevent "O" 4 "R" "S" "r" 4 98 98 0 "" ""
++   scopy r5,r4
+    br l184bexprend
+ l184bexprend:
+-   ret r6
++   ret r5
+    .meta "inline_test_class_methods.box.prefix.tag"
+    .meta "inline_test_class_methods.box.prefix.§this"
+ 
+diff --git a/compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out b/compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+index d1e5c49e2..ffaa48593 100644
+--- a/compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
++++ b/compiler/tests/golden/run/inline_test_mutating_method_scalar_attr_return.out
+@@ -1,3 +1,11 @@
+ 115
+ 115
+ 15
++111
++212
++111
++212
++13
++14
++115
++16
+diff --git a/compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx b/compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+index 9f46d665b..37bc5e135 100644
+--- a/compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
++++ b/compiler/tests/rexx_src/inline_test_mutating_method_scalar_attr_return.crexx
+@@ -6,6 +6,14 @@ main: procedure = .int
+   say probe.directAttr()
+   say probe.localThenAttr()
+   say probe.callOnly()
++  say probe.branchCaller(1)
++  say probe.branchCaller(0)
++  say probe.localBranchCaller(1)
++  say probe.localBranchCaller(0)
++  say probe.singleExitCaller(1)
++  say probe.singleExitCaller(0)
++  say probe.callingSingleExitCaller()
++  say probe.fallthroughCaller()
+   return 0
+ 
+ Probe: class
+@@ -38,3 +46,49 @@ Probe: class
+     call reset()
+     call changeAndReturnDifferent()
+     return root
++
++  branchAndMutate: method = .int
++    arg choose_first = .boolean
++    if choose_first then do
++      root = root + 1
++      return root + 100
++    end
++    root = root + 2
++    return root + 200
++
++  branchCaller: method = .int
++    arg choose_first = .boolean
++    call reset()
++    return branchAndMutate(choose_first)
++
++  localBranchCaller: method = .int
++    arg choose_first = .boolean
++    other = .Probe()
++    return other.branchAndMutate(choose_first)
++
++  singleExitAndMutate: method = .int
++    arg choose_first = .boolean
++    if choose_first then root = root + 3
++    else root = root + 4
++    return root
++
++  singleExitCaller: method = .int
++    arg choose_first = .boolean
++    call reset()
++    return singleExitAndMutate(choose_first)
++
++  callingSingleExitAndMutate: method = .int
++    call reset()
++    root = changeAndReturnDifferent()
++    return root
++
++  callingSingleExitCaller: method = .int
++    return callingSingleExitAndMutate()
++
++  fallthroughMutate: method = .void
++    root = root + 6
++
++  fallthroughCaller: method = .int
++    call reset()
++    call fallthroughMutate()
++    return root
+diff --git a/compiler/tests/run_inline_receiver_nested_this_opt.cmake b/compiler/tests/run_inline_receiver_nested_this_opt.cmake
+index 5b39c9f8c..90c9a2f9a 100644
+--- a/compiler/tests/run_inline_receiver_nested_this_opt.cmake
++++ b/compiler/tests/run_inline_receiver_nested_this_opt.cmake
+@@ -26,24 +26,83 @@ endif()
+ file(READ "${WORK}/probe.rxas" rxas)
+ set(direct_header "§inline_test_mutating_method_scalar_attr_return.probe.directattr()")
+ set(next_header "§inline_test_mutating_method_scalar_attr_return.probe.localthenattr()")
++set(branch_header "§inline_test_mutating_method_scalar_attr_return.probe.branchcaller()")
++set(local_branch_header "§inline_test_mutating_method_scalar_attr_return.probe.localbranchcaller()")
++set(single_callee_header "§inline_test_mutating_method_scalar_attr_return.probe.singleexitandmutate()")
++set(single_caller_header "§inline_test_mutating_method_scalar_attr_return.probe.singleexitcaller()")
++set(calling_callee_header "§inline_test_mutating_method_scalar_attr_return.probe.callingsingleexitandmutate()")
++set(calling_caller_header "§inline_test_mutating_method_scalar_attr_return.probe.callingsingleexitcaller()")
++set(fallthrough_callee_header "§inline_test_mutating_method_scalar_attr_return.probe.fallthroughmutate()")
++set(fallthrough_caller_header "§inline_test_mutating_method_scalar_attr_return.probe.fallthroughcaller()")
+ string(FIND "${rxas}" "${direct_header}" direct_start)
+ string(FIND "${rxas}" "${next_header}" next_start)
+-if(direct_start LESS 0 OR next_start LESS 0 OR next_start LESS_EQUAL direct_start)
+-  message(FATAL_ERROR "Could not isolate optimized directAttr() body:\n${rxas}")
++string(FIND "${rxas}" "${branch_header}" branch_start)
++string(FIND "${rxas}" "${local_branch_header}" local_branch_start)
++string(FIND "${rxas}" "${single_callee_header}" single_callee_start)
++string(FIND "${rxas}" "${single_caller_header}" single_caller_start)
++string(FIND "${rxas}" "${calling_callee_header}" calling_callee_start)
++string(FIND "${rxas}" "${calling_caller_header}" calling_caller_start)
++string(FIND "${rxas}" "${fallthrough_callee_header}" fallthrough_callee_start)
++string(FIND "${rxas}" "${fallthrough_caller_header}" fallthrough_caller_start)
++if(direct_start LESS 0 OR next_start LESS 0 OR next_start LESS_EQUAL direct_start OR
++   branch_start LESS 0 OR local_branch_start LESS_EQUAL branch_start OR
++   single_callee_start LESS_EQUAL local_branch_start OR
++   single_caller_start LESS_EQUAL single_callee_start OR
++   calling_callee_start LESS_EQUAL single_caller_start OR
++   calling_caller_start LESS_EQUAL calling_callee_start OR
++   fallthrough_callee_start LESS_EQUAL calling_caller_start OR
++   fallthrough_caller_start LESS_EQUAL fallthrough_callee_start)
++  message(FATAL_ERROR "Could not isolate optimized receiver proof bodies:\n${rxas}")
+ endif()
+ math(EXPR direct_length "${next_start} - ${direct_start}")
++math(EXPR branch_length "${local_branch_start} - ${branch_start}")
++math(EXPR local_branch_length "${single_callee_start} - ${local_branch_start}")
++math(EXPR single_caller_length "${calling_callee_start} - ${single_caller_start}")
++math(EXPR calling_caller_length "${fallthrough_callee_start} - ${calling_caller_start}")
+ string(SUBSTRING "${rxas}" ${direct_start} ${direct_length} direct_body)
++string(SUBSTRING "${rxas}" ${branch_start} ${branch_length} branch_body)
++string(SUBSTRING "${rxas}" ${local_branch_start} ${local_branch_length} local_branch_body)
++string(SUBSTRING "${rxas}" ${single_caller_start} ${single_caller_length} single_caller_body)
++string(SUBSTRING "${rxas}" ${calling_caller_start} ${calling_caller_length} calling_caller_body)
++string(SUBSTRING "${rxas}" ${fallthrough_caller_start} -1 fallthrough_caller_body)
+ 
+ if(direct_body MATCHES [=[\n[ \t]*call[ \t]+[^\n]*(reset|changeandreturndifferent)\(\)]=])
+   message(FATAL_ERROR "Nested methods were not inlined:\n${direct_body}")
+ endif()
+-if(NOT direct_body MATCHES "copy[ \t]+r[0-9]+,a1")
++if(direct_body MATCHES "copy[ \t]+r[0-9]+,a1")
+   message(FATAL_ERROR
+-    "Nested §this receiver lost its required materialization boundary:\n${direct_body}")
++    "Proved nested §this receiver retained a materialization copy:\n${direct_body}")
+ endif()
+-if(NOT direct_body MATCHES "copy[ \t]+a1,r[0-9]+")
++if(direct_body MATCHES "copy[ \t]+a1,r[0-9]+")
+   message(FATAL_ERROR
+-    "Nested §this receiver lost its required copyback boundary:\n${direct_body}")
++    "Proved nested §this receiver retained a copyback copy:\n${direct_body}")
++endif()
++if(NOT branch_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
++   NOT branch_body MATCHES "copy[ \t]+a1,r[0-9]+")
++  message(FATAL_ERROR
++    "Multiple-return nested §this receiver lost its conservative copy path:\n${branch_body}")
++endif()
++if(local_branch_body MATCHES [=[\n[ \t]*call[0-9]*[ \t]+[^\n]*branchandmutate\(\)]=] OR
++   local_branch_body MATCHES "copy[ \t]+r[0-9]+,r1")
++  message(FATAL_ERROR
++    "Established ordinary direct-object receiver path regressed:\n${local_branch_body}")
++endif()
++if(NOT single_caller_body MATCHES "brf" OR
++   single_caller_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
++   single_caller_body MATCHES "copy[ \t]+a1,r[0-9]+")
++  message(FATAL_ERROR
++    "Single-return branching nested §this was not directly placed:\n${single_caller_body}")
++endif()
++if(calling_caller_body MATCHES [=[\n[ \t]*call[0-9]*[ \t]+[^\n]*(reset|changeandreturndifferent|callingsingleexitandmutate)\(\)]=] OR
++   calling_caller_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
++   calling_caller_body MATCHES "copy[ \t]+a1,r[0-9]+")
++  message(FATAL_ERROR
++    "Single-return call-bearing nested §this or its cloned aliases were materialized:\n${calling_caller_body}")
++endif()
++if(fallthrough_caller_body MATCHES "copy[ \t]+r[0-9]+,a1" OR
++   fallthrough_caller_body MATCHES "copy[ \t]+a1,r[0-9]+")
++  message(FATAL_ERROR
++    "Fallthrough nested §this was not directly placed:\n${fallthrough_caller_body}")
+ endif()
+ 
+ execute_process(
+@@ -67,7 +126,7 @@ foreach(vm RXVM RXBVM)
+     message(FATAL_ERROR "${vm} failed on nested-this receiver test: ${out}${err}")
+   endif()
+   string(REPLACE "\r\n" "\n" out "${out}")
+-  if(NOT out STREQUAL "115\n115\n15\n")
++  if(NOT out STREQUAL "115\n115\n15\n111\n212\n111\n212\n13\n14\n115\n16\n")
+     message(FATAL_ERROR "${vm} output mismatch: ${out}${err}")
+   endif()
+ endforeach()
+diff --git a/docs/ai-context/CREXX_ARCHITECTURE.md b/docs/ai-context/CREXX_ARCHITECTURE.md
+index ea3847a5c..d110fd932 100644
+--- a/docs/ai-context/CREXX_ARCHITECTURE.md
++++ b/docs/ai-context/CREXX_ARCHITECTURE.md
+@@ -70,6 +70,17 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
+      and leave the downstream emitter with an ordinary validated tree. This is
+      why new inline cases are opened by specific parent/operand shape instead
+      of by globally deciding that a callable is "always inlineable".
++   - A real method call binds the receiver value directly as `a1`. The inliner
++     may therefore place a proved direct-object receiver in that same storage.
++     For a nested call on the enclosing method's direct `§this`, the current
++     summary proof admits arbitrary internal branches and calls, plus
++     fallthrough, when there is no more than one explicit return. Already-proved
++     receiver aliases are remapped or retained through later clone passes.
++     Multiple explicit returns keep the materialise/copyback path because the
++     summary does not yet prove receiver-owned attribute-link balance on every
++     rewritten exit. Computed receivers, class attributes, reference arguments
++     and flow-substituted receivers also retain their evaluate-once/copyback
++     paths. This is a per-site ownership proof, not a general `§this` shortcut.
+    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
+      normal callable metadata. The current `I6` payload begins with a versioned
+      callable summary containing formal read/write/escape and exact-shape
+diff --git a/docs/ai-context/RXVM_INTERPRETER.md b/docs/ai-context/RXVM_INTERPRETER.md
+index d8baa9355..fb1330435 100644
+--- a/docs/ai-context/RXVM_INTERPRETER.md
++++ b/docs/ai-context/RXVM_INTERPRETER.md
+@@ -412,6 +412,19 @@ codepoint count. Any instruction that synthesizes or truncates a string must
+ keep both in sync and reset `string_pos` / `string_char_pos` to the start of
+ the new value.
+ 
++In-place string-byte writers use the private completion helpers rather than
++assigning `string_length` alone. `finish_string_write()` resets both cursors,
++validates/recounts an arbitrary UTF-8 byte span and replaces only the
++VM-private UTF validity bits. `finish_ascii_string_write()` records the exact
++byte/codepoint count for known ASCII output. Both preserve compiler/public
++type flags, other scalar/decimal/binary/object representations, buffer
++capacity and reference identity. This contract applies even when conversion
++materializes a string through a linked value: the referenced storage remains
++the owner, but stale codepoint validity from the previous byte span must never
++survive. The PERF2-07 V3 regression covers `DCOPY; DTOS; STRLEN`, Unicode and
++typed-null destinations, a live reference alias and sibling numeric writers
++on both VMs and both optimization modes.
++
+ The `xtos` family of scalar-to-string conversions is allowed to mutate the
+ destination value to materialize its string representation. This is acceptable
+ for linked values, including object attributes, as representation
+diff --git a/interpreter/rxvmintp.c b/interpreter/rxvmintp.c
+index 1392b5686..b2b2328d4 100644
+--- a/interpreter/rxvmintp.c
++++ b/interpreter/rxvmintp.c
+@@ -6727,7 +6727,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+     extend_string_buffer(op1R, string_size);
+     /* Convert */
+     current_frame->decimal->decimalToString(current_frame->decimal, op1R, op1R->string_value);
+-    op1R->string_length = strlen(op1R->string_value);
++    finish_ascii_string_write(op1R, strlen(op1R->string_value));
+     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
+     DISPATCH;
+ /* ------------------------------------------------------------------------------------
+@@ -7227,7 +7227,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+     prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
+     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
+-    op1R->string_length = strlen(op1R->string_value);
++    finish_ascii_string_write(op1R, strlen(op1R->string_value));
+     DISPATCH;
+ /* ====================================================================================
+  * End of Decimal Plugin instructions
+@@ -8964,8 +8964,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
+                 case 'N':  {
+                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
+-                     op1R->string_length = snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
+-                     op1R->string_pos = 0;
++                     snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,"%s;%s",tzname[0],tzname[1]);
++                     finish_string_write(op1R, strlen(op1R->string_value));
+                      break;  // time zone names
+                 }
+                 case 'U':  {
+@@ -9020,6 +9020,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                 }
+                 op1R->string_length = i;
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -9043,6 +9044,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
+                            op1R->string_length);
+                     null_terminate_string_buffer(op1R);
+                 }
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -10406,12 +10408,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
+             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
+-            op1R->string_length = rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+-            op1R->string_pos = 0;
+-  #ifndef NUTF8
+-            op1R->string_char_pos = 0;
+-            op1R->string_chars = op1R->string_length;
+-  #endif
++            finish_ascii_string_write(op1R,
++                    rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value));
+             DISPATCH;
+ /* ------------------------------------------------------------------------------------
+  * FEXTR_REG_REG_REG Extract float to string coefficient and decimal exponent integer
+@@ -10555,7 +10553,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+ #endif
+                 prep_string_buffer(op1R, 3);
+                 split2hex(ch, 0)                    // split the character into their 2 byte hex presentation
+-                PUTSTRLEN(op1R, 2)                  // hex length is 2
++                finish_ascii_string_write(op1R, 2); // hex length is 2
+                 goto hexdispatch;
+    /* ----- create full UTF8 code -------------- */
+                 hexm2:
+@@ -10573,7 +10571,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     unsigned char b = bytebuf[i];
+                     split2hex(b, i*2)                     // split the character into their 2 byte hex presentation
+                 }
+-                PUTSTRLEN(op1R, 8);
++                finish_ascii_string_write(op1R, 8);
+                 goto hexdispatch;
+     /* ----- add UTF8 code depending on length -------------- */
+             hexm3:
+@@ -10588,7 +10586,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     unsigned char b = start[i];
+                     split2hex(b, i * 2)                     // split the character into their 2 byte hex presentation
+                 }
+-                PUTSTRLEN(op1R, bytelen * 2);
++                finish_ascii_string_write(op1R, (size_t)bytelen * 2);
+             }
+         hexdispatch:
+         DISPATCH;
+@@ -12961,6 +12959,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     op1R->string_length = i;
+                 }
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -12985,6 +12984,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                     if (i > 0) memmove(op1R->string_value, op1R->string_value + i, op1R->string_length);
+                 }
+                 null_terminate_string_buffer(op1R);
++                finish_string_write(op1R, op1R->string_length);
+             }
+             DISPATCH;
+ 
+@@ -13001,6 +13001,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
+                 if (len < op1R->string_length) {
+                     op1R->string_length = len;
+                     null_terminate_string_buffer(op1R);
++                    finish_string_write(op1R, op1R->string_length);
+                 }
+             }
+             DISPATCH;
+diff --git a/interpreter/rxvmvars.h b/interpreter/rxvmvars.h
+index c76999bb3..94c35b9db 100644
+--- a/interpreter/rxvmvars.h
++++ b/interpreter/rxvmvars.h
+@@ -147,6 +147,31 @@ RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
+ }
+ #endif
+ 
++/* Complete an in-place string-byte replacement. Public/compiler type flags and
++ * the value's other representations remain unchanged; VM-private string
++ * validity and cursor state describe only the newly written byte span. */
++RX_INLINE void finish_string_write(value *v, size_t length) {
++    v->string_length = length;
++    v->string_pos = 0;
++#ifndef NUTF8
++    v->string_char_pos = 0;
++    refresh_utf8_flags(v);
++#else
++    clear_vm_private_flags(v);
++#endif
++}
++
++/* Numeric formatting and hex rendering are known to produce ASCII. */
++RX_INLINE void finish_ascii_string_write(value *v, size_t length) {
++    v->string_length = length;
++    v->string_pos = 0;
++#ifndef NUTF8
++    mark_ascii_string_valid_count(v);
++#else
++    clear_vm_private_flags(v);
++#endif
++}
++
+ /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
+ RX_INLINE void clear_binary_payload(value *v) {
+     if (!v) return;

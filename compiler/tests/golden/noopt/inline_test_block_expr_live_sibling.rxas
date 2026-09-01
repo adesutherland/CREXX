@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_block_expr_live_sibling.crexx
- * BUILT                  : 2026-06-12 20:26:09
  */
 
 .meta "inline_test_block_expr_live_sibling.child"="b" ".unknown" .class
@@ -15,27 +14,19 @@
 main() .locals=4
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .srcstep 4 4 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_block_expr_live_sibling.crexx" 4 3 27 "  holder = .Holder(\"seed\")"
    .meta "inline_test_block_expr_live_sibling.main.holder"="b" ".holder" r0
    load r2,"seed"
    .traceevent "L" 4 "R" "S" "r" 2 1 1 0 "" ""
-   load r1,1
    settp r2,768
-   call r0,§inline_test_block_expr_live_sibling.holder.§factory(),r1
+   call1 r0,§inline_test_block_expr_live_sibling.holder.§factory(),r2
    .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "holder" ""
    .srcstep 2 2 17 "inline_test_block_expr_live_sibling.crexx" 5 3 21 "  say holder.summary()"
    .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "holder" ""
-   load r1,1
    settp r0,256
-   swap r2,r0
-   call r3,§inline_test_block_expr_live_sibling.holder.summary(),r1
-   swap r0,r2
+   call1 r3,§inline_test_block_expr_live_sibling.holder.summary(),r0
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "summary" ""
    say r3
    .srcstep 3 3 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
@@ -47,11 +38,7 @@ main() .locals=4
    .srcstep 11 11 17 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
    setattrs r1,5
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 5 5 17 "inline_test_block_expr_live_sibling.crexx" 15 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.holder.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"="b" ".holder" r1
@@ -78,9 +65,8 @@ main() .locals=4
    .traceevent "V" 6 "R" "S" "a" 1 9 9 0 "label" ""
    concat r5,a1,":child"
    .traceevent "O" 4 "R" "S" "r" 5 9 9 0 "" ""
-   load r4,1
    settp r5,768
-   call r2,§inline_test_block_expr_live_sibling.child.§factory(),r4
+   call1 r2,§inline_test_block_expr_live_sibling.child.§factory(),r5
    .traceevent "F" 4 "R" "O" "r" 2 9 9 0 "§factory" ""
    linkattr1 r3,r1,1
    copy r3,r2
@@ -95,11 +81,7 @@ main() .locals=4
    .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() ""
    .srcstep 13 13 17 "inline_test_block_expr_live_sibling.crexx" 22 3 28 "  summary: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    linkattr1 r1,a1,3
    .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "name" ""
@@ -116,11 +98,8 @@ main() .locals=4
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"="b" ".holder" a1
    linkattr1 r6,a1,1
    .traceevent "V" 6 "R" "O" "r" 6 12 12 0 "child" ""
-   load r4,1
    settp r6,256
-   swap r5,r6
-   call r7,§inline_test_block_expr_live_sibling.child.getname(),r4
-   swap r6,r5
+   call1 r7,§inline_test_block_expr_live_sibling.child.getname(),r6
    unlink r6
    .traceevent "F" 4 "R" "S" "r" 7 12 12 0 "getname" ""
    concat r7,r2,r7
@@ -140,11 +119,7 @@ main() .locals=4
    .srcstep 17 17 17 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_block_expr_live_sibling.child"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_block_expr_live_sibling.crexx" 29 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.child.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.child.§factory.§factory"="b" ".child" r1
@@ -163,11 +138,7 @@ main() .locals=4
    .meta "inline_test_block_expr_live_sibling.child.getname"="b" ".string" §inline_test_block_expr_live_sibling.child.getname() ""
    .srcstep 19 19 17 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 18 18 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
    .meta "inline_test_block_expr_live_sibling.child.getname.§this"="b" ".child" a1
    linkattr1 r1,a1,1

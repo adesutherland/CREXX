@@ -1,0 +1,3 @@
+benchmark=base64_roundtrip repetitions=500 encoded_length=1368 checksum=130560
+PASS: Base64 Roundtrip
+VM_C2_RESET_STATS,vm=rxvm,mode=1,result=0,prepared_procedures=704,may_rebind_procedures=0,proved_clean_procedures=0,unknown_fallback_procedures=0,instructions_scanned=0,fresh_activations=2,reused_activations=499,eligible_core_slots=19461,core_reset_activations=499,core_reset_slots=19461,core_reset_bytes=155688,static_skip_activations=0,static_skip_slots=0,zero_core_activations=0,reused_a0_resets=499

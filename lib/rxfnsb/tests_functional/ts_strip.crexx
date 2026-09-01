@@ -1,66 +1,68 @@
-/* rexx */
+/* Focused Level B STRIP tests. */
 options levelb
 import rxfnsb
 
-/* say "'"strip("   The quick brown fox jumps over the lazy dog  ")"'" */
-/* say "'"strip("   The quick brown fox jumps over the lazy dog  ",'L')"'" */
-/* say "'"strip("   The quick brown fox jumps over the lazy dog  ",'t')"'" */
-/* say "'"strip("-----The quick brown fox jumps over the lazy dog---",,'-')"'" */
-/* say "'"strip("-----The quick brown fox jumps over the lazy dog---",'B','-')"'" */
-/* say "'"strip("-----The quick brown fox jumps over the lazy dog---",'l','-')"'" */
-/* say "'"strip("-----The quick brown fox jumps over the lazy dog---",'t','-')"'" */
+errors = 0
+source = "  ab c  "
 
-/* STRIP */
-errors=0
-/* These from the Rexx book. */
-if strip(' ab c ') \= 'ab c' then do
-  errors=errors+1
-  say 'STRIP failed in test 1 '
-end
-if strip(' ab c ','L') \= 'ab c ' then do
-  errors=errors+1
-  say 'STRIP failed in test 2 '
-end
-if strip(' ab c ','t') \= ' ab c' then do
-  errors=errors+1
-  say 'STRIP failed in test 3 '
-end
-if strip('12.7000',,0) \= '12.7' then do
-  errors=errors+1
-  say 'STRIP failed in test 4 '
-end
-if strip('0012.7000',,0) \= '12.7' then do
-  errors=errors+1
-  say 'STRIP failed in test 5 '
-end
-/* These from Mark Hessling. */
-if strip(" foo bar ") \= "foo bar" then do
-  errors=errors+1
-  say 'STRIP failed in test 6 '
-end
-if strip(" foo bar ",'L') \= "foo bar " then do
-  errors=errors+1
-  say 'STRIP failed in test 7 '
-end
-if strip(" foo bar ",'T') \= " foo bar" then do
-  errors=errors+1
-  say 'STRIP failed in test 8 '
-end
-if strip(" foo bar ",'B') \= "foo bar" then do
-  errors=errors+1
-  say 'STRIP failed in test 9 '
-end
-if strip(" foo bar ",'B','*') \= " foo bar " then do
-  errors=errors+1
-  say 'STRIP failed in test 10 '
-end
-if strip(" foo bar",,'r') \= " foo ba" then do
-  errors=errors+1
-  say 'STRIP failed in test 11 '
-end
-if strip('') \= '' then do
-  errors=errors+1
-  say 'STRIP failed in test 12'
-end
+errors = errors + check(strip(source) = "ab c", "documented both")
+errors = errors + check(strip(source, "Leading") = "ab c  ", "option first character")
+errors = errors + check(strip(source, "t") = "  ab c", "lowercase trailing")
+errors = errors + check(strip("12.7000",, "0") = "12.7", "custom trailing character")
+errors = errors + check(strip("0012.7000",, "0") = "12.7", "custom both")
+errors = errors + check(strip(" foo bar ", "B", "*") = " foo bar ", "absent custom character")
+errors = errors + check(strip(" foo bar",, "r") = " foo ba", "omitted option with char")
+errors = errors + check(strip("　ab c　") = "ab c", "default Unicode whitespace")
+errors = errors + check(strip(" x　",, " ") = "x　", "explicit blank only")
+errors = errors + check(strip("🙂🙂x🙂", "B", "🙂") = "x", "Unicode custom character")
+errors = errors + check(strip("　　") = "", "all whitespace")
+errors = errors + check(strip("....",, ".") = "", "all custom characters")
+errors = errors + check(strip("") = "", "empty string")
+errors = errors + check(source = "  ab c  ", "source is not mutated")
 
-return errors<>0
+edge = ""
+dot = "."
+do i = 1 to 1000
+  assembler append edge,dot
+end
+large = ""
+center = "center"
+assembler append large,edge
+assembler append large,center
+assembler append large,edge
+errors = errors + check(strip(large,, ".") = center, "substantial input")
+
+caught = 0
+do
+  ignored = strip("", "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = strip("", "X")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = strip("",, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = strip("x",, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "option and char failures use signals")
+
+if errors = 0 then say "PASS: strip"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: STRIP" label
+  return 1

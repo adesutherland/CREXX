@@ -4,7 +4,6 @@
 */
 options levelb
 import rxfnsb
-import system
 
 arg parms = .string[]
 if parms[1] = '' then limit = 1000

@@ -4,5 +4,5 @@ values = .string[]
 values[1] = "hello"
 i = 1
 
-address command
-'printf "%s\n" ' || values[i]
+address crexx
+'echo ' || values[i]

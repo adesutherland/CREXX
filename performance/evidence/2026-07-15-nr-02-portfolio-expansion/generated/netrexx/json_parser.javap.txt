@@ -1,0 +1,102 @@
+Compiled from "json_parser.java"
+public class json_parser {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: aconst_null
+         4: astore        5
+         6: aconst_null
+         7: astore        6
+         9: iconst_1
+        10: istore_1
+        11: aload_0
+        12: arraylength
+        13: iconst_1
+        14: if_icmplt     27
+        17: aload_0
+        18: iconst_0
+        19: aaload
+        20: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        23: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        26: istore_1
+        27: iload_1
+        28: iconst_1
+        29: if_icmpge     43
+        32: ldc           #11                 // String FAIL: repetitions must be positive
+        34: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        37: pop
+        38: iconst_1
+        39: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        42: return
+        43: ldc           #25                 // String {\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":[[\"destroy\",\"w54\"],[\"set\",\"w2\",{\"activeControl\":\"w99\"}],[\"set\",\"w21\",{\"customVariant\":\"variant_navigation\"}],[\"create\",\"w95\",\"rwt.widgets.Composite\",{\"parent\":\"w53\",\"bounds\":[0,0,1008,586],\"children\":[\"w96\",\"w97\"],\"tabIndex\":-1}],[\"create\",\"w96\",\"rwt.widgets.Label\",{\"parent\":\"w95\",\"bounds\":[10,30,112,26],\"text\":\"TableViewer\"}],[\"listen\",\"w98\",{\"KeyDown\":true,\"Modify\":true}],[\"set\",\"w99\",{\"itemCount\":118,\"headerVisible\":true,\"selection\":[\"w108\"]}],[\"call\",\"rwt.client.BrowserNavigation\",\"addToHistory\",{\"entries\":[[\"tableviewer\",\"TableViewer\"]]}]]}
+        45: astore_2
+        46: iconst_0
+        47: istore_3
+        48: iload_1
+        49: istore        7
+        51: iconst_1
+        52: istore        4
+        54: iload         4
+        56: iload         7
+        58: if_icmpgt     139
+        61: new           #27                 // class JsonDomParser
+        64: dup
+        65: aload_2
+        66: invokespecial #29                 // Method JsonDomParser."<init>":(Ljava/lang/String;)V
+        69: invokevirtual #33                 // Method JsonDomParser.parse:()Ljava/lang/Object;
+        72: checkcast     #37                 // class java/util/Map
+        75: astore        5
+        77: aload         5
+        79: ldc           #39                 // String operations
+        81: invokeinterface #41,  2           // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+        86: checkcast     #45                 // class java/util/List
+        89: astore        6
+        91: aload         6
+        93: invokeinterface #47,  1           // InterfaceMethod java/util/List.size:()I
+        98: istore_3
+        99: iload_3
+       100: bipush        8
+       102: if_icmpeq     133
+       105: new           #50                 // class java/lang/StringBuilder
+       108: dup
+       109: invokespecial #52                 // Method java/lang/StringBuilder."<init>":()V
+       112: ldc           #55                 // String FAIL: expected 8 operations, got
+       114: invokevirtual #57                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       117: iload_3
+       118: invokevirtual #61                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       121: invokevirtual #64                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       124: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       127: pop
+       128: iconst_1
+       129: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       132: return
+       133: iinc          4, 1
+       136: goto          54
+       139: new           #50                 // class java/lang/StringBuilder
+       142: dup
+       143: invokespecial #52                 // Method java/lang/StringBuilder."<init>":()V
+       146: ldc           #68                 // String benchmark=json_parser repetitions=
+       148: invokevirtual #57                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       151: iload_1
+       152: invokevirtual #61                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       155: ldc           #70                 // String  operations=
+       157: invokevirtual #57                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       160: iload_3
+       161: invokevirtual #61                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       164: invokevirtual #64                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       167: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       170: pop
+       171: ldc           #72                 // String PASS: JSON Parser NetRexx port
+       173: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       176: pop
+       177: return
+
+  private json_parser();
+    Code:
+         0: aload_0
+         1: invokespecial #74                 // Method java/lang/Object."<init>":()V
+         4: return
+}

@@ -1,0 +1,2 @@
+Error in packed_missing_index.crexx @ 5:11 - #PACKED_INDEX_REQUIRED, "<packed..int>() data"
+1 error(s) in source file

@@ -1,7 +1,7 @@
 # Running cRexx on Linux, macOS, and Windows
 
-cRexx programs are compiled before they run. The compiler emits RXAS
-assembly, the assembler emits RXBIN bytecode, and a VM executable runs the
+cRexx programs are compiled before they run. The compiler emits *rxas*
+assembly, the assembler emits *rxbin* bytecode, and a VM executable runs this
 bytecode.
 
 For most users, the `crexx` driver is the simplest entry point.
@@ -53,7 +53,10 @@ rxas hello.rxas
 rxvme hello.rxbin
 ```
 
-`rxvme` includes the standard library image used by common Level B programs.
+`rxvme` includes the shipped core bytecode images used by Level B, Level C,
+and Level G programs: the base and class libraries, native-provider
+declarations, the Classic compatibility library, the Level G library, and
+RexxScript. Application libraries remain explicit runtime inputs.
 The base `rxvm` can also run bytecode, but programs that call library functions
 need the relevant library image or linked modules available.
 
@@ -65,6 +68,45 @@ rxvme hello.rxbin -a first second third
 
 The VM also accepts multiple bytecode files when a program is split across
 modules.
+
+### Profiling VM execution
+
+A VM configured with `-DCREXX_VM_PROFILING=ON` supports instruction,
+transition, procedure/method, native-call, and interrupt timing:
+
+```bash
+rxvme --profile hello.rxbin
+rxvme --profile-output hello-profile.txt hello.rxbin
+rxvme --profile-output hello-profile.csv hello.rxbin
+```
+
+The default report is a table on standard error. It includes instruction and
+transition timing plus per-procedure/method call counts, elapsed time,
+inclusive body time, self time, and measured VM entry/exit mechanics. Native
+plugin calls are included with call count and total time only. A profile output
+filename ending in `.csv` (case-insensitive) selects CSV; other filenames use
+the table format. Profiling support and its command-line options are absent
+from normal builds.
+
+The profiling build also supports a separate dynamic instruction-sequence
+extractor. It records the volume of sequential two-, three-, or
+four-instruction windows in a compact, sparse binary `.rxseq` file:
+
+```bash
+rxvm --sequence-count=3 --sequence-output hello.rxseq hello.rxbin
+rxseq hello.rxseq hello.rxbin --output hello-candidates.csv
+```
+
+Pass `rxseq` the same complete RXBIN module set used by `rxvm`; it verifies
+module names and content hashes before decoding. The candidate report groups
+patterns by register/constant reuse and sums loop execution counts. Candidate
+patterns may contain any number of distinct encoded symbols; the report is
+input to later safety and optimizer review, not an automatic bytecode
+transformation.
+
+The complete build instructions, report-field definitions, measurement
+boundaries, tested example, CSV schema, sequence semantics, and troubleshooting
+guide are in [Profiling cREXX VM Execution](profiling.md).
 
 ## Imports and Libraries
 
@@ -80,6 +122,13 @@ At compile time, `rxc -s` adds source import roots and `rxc -i` adds binary
 import roots. With the `crexx` driver, `-s[path]` and `-i[path]` affect the
 compiler phase only. Runtime/native loading still uses the runtime library path
 controlled by `-l`.
+
+For a specific external library, pass an explicit path such as
+`-l /approved/runtime/contracts.rxbin` or `-l ./contracts.rxbin`. The driver
+uses paths containing a directory component exactly; only bare packaged names
+are resolved below `CREXX_HOME/bin`. Runtime code that calls `loadmodule()`
+should likewise receive the intended module filename explicitly rather than
+searching user-controlled directories.
 
 The source file's directory is not an implicit binary import root. If a local
 `.rxbin` is meant to provide compile-time signatures or class/interface

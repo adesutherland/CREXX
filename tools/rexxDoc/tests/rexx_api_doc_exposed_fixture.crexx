@@ -1,0 +1,16 @@
+options levelb
+
+namespace apidoc_fixture expose first second
+
+first: interface
+  alpha: method = .int
+  launch: task = .string
+    arg value = .int
+  _private_first: method = .int
+
+hidden: class
+  hidden_only: method = .int
+
+second: class
+  beta: method = .string
+  _private_second: task = .int

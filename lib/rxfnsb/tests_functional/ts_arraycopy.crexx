@@ -1,0 +1,67 @@
+/* Focused Level B ARRAYCOPY tests. */
+options levelb
+import rxfnsb
+
+source = load("ABCDE")
+errors = 0
+errors = errors + check("A|B|C|D|E", join(arraycopy(source)), "full omitted")
+errors = errors + check("C|D|E", join(arraycopy(source, 3)), "positive start")
+errors = errors + check("B|C", join(arraycopy(source, 2, 2)), "bounded count")
+errors = errors + check("C|D|E", join(arraycopy(source, 3, 0)), "explicit zero count")
+errors = errors + check("D|E", join(arraycopy(source, 4, 99)), "count clamps")
+errors = errors + check("E", join(arraycopy(source, -1)), "last from end")
+errors = errors + check("C|D", join(arraycopy(source, -3, 2)), "negative start bounded")
+errors = errors + check("", join(arraycopy(source, 0)), "zero start empty")
+errors = errors + check("", join(arraycopy(source, 6)), "high start empty")
+errors = errors + check("", join(arraycopy(source, -6)), "low negative start empty")
+
+empty = .string[]
+errors = errors + check("", join(arraycopy(empty)), "empty source")
+
+copy = arraycopy(source, 2, 2)
+copy[1] = "X"
+errors = errors + check("X|C", join(copy), "result mutable")
+errors = errors + check("A|B|C|D|E", join(source), "source independent")
+errors = errors + test_invalid_count()
+
+if errors = 0 then say "PASS: arraycopy"
+return errors <> 0
+
+test_invalid_count: procedure = .int
+  values = load("AB")
+  do
+    ignored = arraycopy(values, 1, -1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYCOPY negative count"
+  return 1
+
+load: procedure = .string[]
+  arg data = .string
+  result = .string[]
+  data_length = .int
+  codepoint = .int
+  assembler strlen data_length,data
+  do index = 0 to data_length - 1
+    value = ""
+    assembler strchar codepoint,data,index
+    assembler appendchar value,codepoint
+    result[index + 1] = value
+  end
+  return result
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do index = 1 to array[0]
+    if index > 1 then result = result || "|"
+    result = result || array[index]
+  end
+  return result
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYCOPY" label "expected" expected "got" actual
+  return 1

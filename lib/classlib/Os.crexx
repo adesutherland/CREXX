@@ -23,121 +23,170 @@
  */
 
 options levelb comments_dash
-namespace system_os expose os
-import system
+namespace system expose os
+import rxfs
+import rxplatform
 
 /**
- * class os is comprised of methods for which interaction with
- * the operating system is necessary. It is is backed by the
- * system plugin which does so in a platform independent way. 
+ * Operating-system services backed by the narrow rxfs and rxplatform
+ * providers.
  */
 os: class
 
 /** 
- * the factory method returns an instance of the os class
- * @ return .os
+ * Create an os object.
+ *
+ * @return .os New os instance.
  */
   *: factory
     return
 
     /** 
-     * method uptime returns the system uptime in seconds
-     * @return .string uptime
+     * Returns the system uptime in seconds.
+     *
+     * @return .string System uptime in seconds.
      */
   uptime: method = .string
-    return sysuptime()
+    return rxplatform..uptime()
     
     /** 
-     * method user returns the logged on userid
-     * @return .string userid tsk
+     * Returns the current user id.
+     *
+     * @return .string Current user id.
      */
   user: method = .string
-    return userid()  
+    return rxplatform..user()
 
     /** 
-     * method getLoadPath returns the path from which
-     * the program is run
-     * @return .string loadpath
+     * Returns the path from which the program is running.
+     *
+     * @return .string Runtime load path.
      */
   loadpath: method = .string
-    return getLoadPath()
+    return rxfs..loadpath()
     
     /**
      * Returns the operating system name.
      *
-     * @return Operating system name
+     * @return .string Operating system name.
      */
   osname: method = .string
-    return opsys()
+    return rxplatform..osname()
     
     /**
      * Appends one binary file to another.
      *
      * @param source Source file
      * @param target Target file
-     * @return       1 on success, 0 on failure
+     * @return .int Number of bytes appended, or negative error code.
      */
   appendBinaryFile: method = .int
     arg source = .string, target = .string
-    return append(source, target)
+    return rxfs..append(source, target)
     
     /**
      * Returns the host or computer name.
      *
-     * @return Host name
+     * @return .string Host name.
      */
   getHost: method = .string
-    return host()
-    
-    /**
-     * Emits a beep.
-     *
-     * @return 1 on success, 0 on failure
-     */
-  beep: method = .int
-    say 'TODO: beep is not fully implemented'
-    return _beep()
+    return rxplatform..host()
     
     /**
      * Waits for a number of milliseconds.
      *
-     * @param time 
-     * @return     1 on success, 0 on failure
+     * @param time Time to wait, in milliseconds.
+     * @return .int 0 on success.
     */
   wait: method = .int
     arg time = .int
-    return _wait(time)
+    return rxplatform..sleep(time)
 
     /**
-     * Lists modules in an rxbin source.
+     * Lists the files in a directory.
      *
-     * @param source rxbin file
-     * @return       Status code or count, depending on native implementation
-     */
-  rxbinModules: method = .int
-    arg source = .string
-    return lmodules(source)
-
-    /**
-     * method listDir returns the files in a directory
-     * @parm .string file directory name
-     * @ return .string[]
+     * @param file Directory path.
+     * @param entries Output array receiving directory entries.
+     * @return .int Status code from the native implementation.
      */
   listDir: method = .int
     arg file = .string, entries = .string[]
-    say 'TODO: listdir needs to be tested'
-    return _listdir(file,entries)
+    return rxfs..listdir(file,entries)
 
     /**
-     * method getEnv
-     * returns the contents of an environment variable
-     * @parm .string name
-     * @return .string content
-     * note: this duplicates the getenv() bif.
+     * Returns the contents of an environment variable.
+     *
+     * @param env_name Environment variable name.
+     * @return .string Environment variable value.
+     * Note: this duplicates the getenv() BIF.
      */
   getEnv: method = .string
     arg env_name = .string
     value = ""
     assembler getenv value,env_name
     return value
+
+    /**
+     * Displays an informational message to the user.
+     *
+     * The native platform provider determines how the message is
+     * presented to the user.
+     *
+     * @param message Message text to display.
+     * @return .int 0 on success.
+     */
+  message: method = .int
+    arg message = .string
+    return rxplatform..message(message)
+
+    /**
+     * Displays a warning message to the user.
+     *
+     * @param message Warning text to display.
+     * @return .int 0 on success.
+     */
+  warning: method = .int
+    arg message = .string
+    return rxplatform..message("Warning: " || message)
+
+    /**
+     * Displays an error message to the user.
+     *
+     * @param message Error text to display.
+     * @return .int 0 on success.
+     */
+  error: method = .int
+    arg message = .string
+    return rxplatform..message("Error: " || message)
+
+    /**
+     * Requests confirmation from the user.
+     *
+     * The native platform provider presents a Yes/No confirmation.
+     *
+     * @param message Message text to display.
+     * @return .int 1 if the user confirms, otherwise 0.
+     */
+  confirm: method = .int
+    arg message = .string
+    return rxplatform..confirm(message)
     
+   /**
+     * Requests text input from the user.
+     *
+     *
+     * @param message Message text to display.
+     * @return .string Entered text, or an empty string if cancelled.
+  */
+  input: method = .string
+    arg message = .string
+    return rxplatform..input(message)
+
+  directory: method = .string
+    arg message = .string, initial = ""
+    return rxplatform..directory(message, initial)
+
+  file: method = .string
+    arg message = .string, save = 0, initial = ""
+    return rxplatform..file(message, save, initial)
+

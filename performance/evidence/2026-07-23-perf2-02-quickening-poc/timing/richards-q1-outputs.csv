@@ -1,0 +1,33 @@
+sample_id,stream,line_number,text
+timing-Richards-q0-richards-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxbvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxbvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxbvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxbvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-q1-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q1-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxvm-recorded-3,stdout,2,PASS: AWFY Richards
+timing-Richards-q0-richards-rxbvm-recorded-3,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-q0-richards-rxbvm-recorded-3,stdout,2,PASS: AWFY Richards

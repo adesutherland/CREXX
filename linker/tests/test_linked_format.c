@@ -4,12 +4,47 @@
 
 #include "platform.h"
 #include "rxbin.h"
+#include "rxgraph.h"
 
-static int skip_record_payload(FILE *fp, const module_header *header) {
-    size_t skip = header->name_size + header->description_size +
-                  header->instruction_stored_size + header->constant_stored_size;
-    if (!skip) return 1;
-    return fseek(fp, (long)skip, SEEK_CUR) == 0;
+static uint32_t read_u32le(const unsigned char *bytes) {
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8u) |
+           ((uint32_t)bytes[2] << 16u) |
+           ((uint32_t)bytes[3] << 24u);
+}
+
+static uint64_t read_u64le(const unsigned char *bytes) {
+    uint64_t value = 0u;
+    unsigned int i;
+    for (i = 0u; i < 8u; i++) value |= (uint64_t)bytes[i] << (i * 8u);
+    return value;
+}
+
+static int check_007_header(FILE *fp, uint32_t expected_modules) {
+    unsigned char header[RXBIN007_HEADER_SIZE];
+    unsigned char directory[RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE];
+    uint32_t i;
+
+    if (fread(header, 1u, sizeof(header), fp) != sizeof(header) ||
+        memcmp(header, RXBIN007_MAGIC, 8u) != 0 ||
+        read_u32le(header + 8u) != RXBIN007_HEADER_SIZE ||
+        read_u32le(header + 24u) != RXBIN007_SECTION_COUNT ||
+        read_u32le(header + 28u) != expected_modules ||
+        read_u64le(header + 32u) != RXBIN007_HEADER_SIZE ||
+        fread(directory, 1u, sizeof(directory), fp) != sizeof(directory)) return 0;
+    for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
+        const unsigned char *row = directory + (size_t)i * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        uint32_t flags = read_u32le(row + 4u);
+        uint64_t stored_size = read_u64le(row + 24u);
+        uint64_t expanded_size = read_u64le(row + 32u);
+        if (read_u32le(row) != i + 1u ||
+            (flags != 0u && flags != RXBIN007_SECTION_LZSS) ||
+            read_u32le(row + 8u) != 8u || read_u32le(row + 12u) != 0u ||
+            (flags == RXBIN007_SECTION_LZSS
+                ? stored_size >= expanded_size
+                : stored_size != expanded_size)) return 0;
+    }
+    return 1;
 }
 
 static void free_loaded_modules(module_file **modules, size_t count) {
@@ -56,17 +91,80 @@ static int module_has_inline_metadata(const module_file *module) {
     return 0;
 }
 
+static int module_task_binding(const module_file *module,
+                               const char *expected_symbol,
+                               unsigned char binding_out[RX_GRAPH_TASK_BINDING_SIZE]) {
+    int meta = module->header.meta_head;
+
+    while (meta != -1) {
+        const meta_entry *entry = (const meta_entry *)(module->constant + meta);
+        if (entry->base.type == META_TASK_TARGET) {
+            const meta_task_target_constant *target =
+                (const meta_task_target_constant *)entry;
+            const string_constant *symbol =
+                (const string_constant *)(module->constant + target->symbol);
+            const string_constant *binding =
+                (const string_constant *)(module->constant + target->binding);
+            RxCallableId callable;
+            unsigned int kind;
+            RxGraphCallableView view;
+            if (symbol->base.type != STRING_CONST ||
+                binding->base.type != BINARY_CONST ||
+                binding->string_len != RX_GRAPH_TASK_BINDING_SIZE ||
+                symbol->string_len != strlen(expected_symbol) ||
+                memcmp(symbol->string, expected_symbol, symbol->string_len) != 0 ||
+                !rx_graph_task_binding_validate(module->semantic_graph,
+                                                (const unsigned char *)binding->string,
+                                                &callable,
+                                                &kind) ||
+                kind != 1u ||
+                !rx_graph_callable(module->semantic_graph, callable, &view) ||
+                strcmp(view.symbol, expected_symbol) != 0) return 0;
+            if (binding_out) {
+                memcpy(binding_out,
+                       binding->string,
+                       RX_GRAPH_TASK_BINDING_SIZE);
+            }
+            return 1;
+        }
+        meta = entry->next;
+    }
+    return 0;
+}
+
+static int read_standalone_task_binding(
+        unsigned char binding_out[RX_GRAPH_TASK_BINDING_SIZE]) {
+    FILE *fp;
+    rxbin_reader reader;
+    module_file *module = 0;
+    int ok;
+
+    fp = fopen("tests_link_provider_a.rxbin", "rb");
+    if (!fp) return 0;
+    rxbin_reader_init_file(&reader, fp);
+    ok = rxbin_reader_next_module(&reader, &module) == 0 &&
+         module_task_binding(module, "linktest.helper", binding_out);
+    rxbin_reader_close(&reader);
+    fclose(fp);
+    free_module(module);
+    return ok;
+}
+
 static int check_linked_success_format(void) {
     FILE *fp;
-    module_header header;
-    module_header second;
-    module_header third;
     rxbin_reader reader;
     module_file *module_a = 0;
     module_file *module_b = 0;
     int rc = 1;
     expose_proc_constant *imported_expose;
     proc_constant *imported_proc;
+    unsigned char standalone_binding[RX_GRAPH_TASK_BINDING_SIZE];
+    unsigned char linked_binding[RX_GRAPH_TASK_BINDING_SIZE];
+
+    if (!read_standalone_task_binding(standalone_binding)) {
+        fprintf(stderr, "Standalone image has an invalid sealed task binding\n");
+        return 0;
+    }
 
     fp = fopen("tests_linked_success.rxbin", "rb");
     if (!fp) {
@@ -74,30 +172,8 @@ static int check_linked_success_format(void) {
         return 0;
     }
 
-    if (fread(&header, sizeof(header), 1, fp) != 1) {
-        fprintf(stderr, "Failed to read first linked record header\n");
-        goto done;
-    }
-    if (header.record_type != RXBIN_RECORD_POOL_SHARED || header.instruction_size != 0 || header.constant_size == 0) {
-        fprintf(stderr, "First linked record is not a shared pool\n");
-        goto done;
-    }
-    if (!skip_record_payload(fp, &header)) {
-        fprintf(stderr, "Failed to skip shared pool payload\n");
-        goto done;
-    }
-
-    if (fread(&second, sizeof(second), 1, fp) != 1 || second.record_type != RXBIN_RECORD_MODULE_SHARED) {
-        fprintf(stderr, "Second linked record is not a shared-backed module\n");
-        goto done;
-    }
-    if (!skip_record_payload(fp, &second)) {
-        fprintf(stderr, "Failed to skip first module payload\n");
-        goto done;
-    }
-
-    if (fread(&third, sizeof(third), 1, fp) != 1 || third.record_type != RXBIN_RECORD_MODULE_SHARED) {
-        fprintf(stderr, "Third linked record is not a shared-backed module\n");
+    if (!check_007_header(fp, 2u)) {
+        fprintf(stderr, "Linked image is not a canonical two-module RXBIN 007 container\n");
         goto done;
     }
 
@@ -121,6 +197,11 @@ static int check_linked_success_format(void) {
         fprintf(stderr, "Linked modules do not share the same pool in memory\n");
         goto done;
     }
+    if (!module_a->semantic_graph ||
+        module_a->semantic_graph != module_b->semantic_graph) {
+        fprintf(stderr, "Linked modules do not share the image semantic graph\n");
+        goto done;
+    }
 
     imported_expose = (expose_proc_constant *)(module_a->constant + module_a->header.expose_head);
     if (imported_expose->base.type != EXPOSE_PROC_CONST || !imported_expose->imported) {
@@ -138,6 +219,17 @@ static int check_linked_success_format(void) {
     }
     if (!module_has_trace_event_metadata(module_a)) {
         fprintf(stderr, "Default linked image lost trace-event metadata\n");
+        goto done;
+    }
+    if (!(module_task_binding(module_a, "linktest.helper", linked_binding) ||
+          module_task_binding(module_b, "linktest.helper", linked_binding))) {
+        fprintf(stderr, "Linked image has an invalid sealed task binding\n");
+        goto done;
+    }
+    if (memcmp(standalone_binding + 12u,
+               linked_binding + 12u,
+               32u) == 0) {
+        fprintf(stderr, "Linker did not reseal the task binding for the linked graph\n");
         goto done;
     }
 
@@ -258,8 +350,9 @@ static int check_record_stream_concatenation(void) {
         goto done;
     }
 
-    if (modules[0]->shared_constant_pool || modules[3]->shared_constant_pool) {
-        fprintf(stderr, "Local records unexpectedly reused a shared pool\n");
+    if (!modules[0]->shared_constant_pool || !modules[3]->shared_constant_pool ||
+        modules[0]->shared_constant_pool == modules[3]->shared_constant_pool) {
+        fprintf(stderr, "Standalone RXBIN 007 containers did not retain distinct pool ownership\n");
         goto done;
     }
 
@@ -275,6 +368,12 @@ static int check_record_stream_concatenation(void) {
 
     if (modules[1]->shared_constant_pool == modules[4]->shared_constant_pool) {
         fprintf(stderr, "Concatenated linked images incorrectly reused the previous shared pool\n");
+        goto done;
+    }
+    if (modules[1]->semantic_graph != modules[2]->semantic_graph ||
+        modules[4]->semantic_graph != modules[5]->semantic_graph ||
+        modules[1]->semantic_graph == modules[4]->semantic_graph) {
+        fprintf(stderr, "Concatenated RXBIN 007 containers have invalid graph ownership boundaries\n");
         goto done;
     }
 

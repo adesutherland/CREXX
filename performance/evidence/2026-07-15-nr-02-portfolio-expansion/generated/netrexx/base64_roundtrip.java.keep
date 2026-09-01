@@ -1,0 +1,106 @@
+/* Generated from 'base64_roundtrip.nrx' 15 Jul 2026 20:15:53 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+public class base64_roundtrip{private static final java.lang.String $0="base64_roundtrip.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;byte input[];int offset=0;int value=0;java.lang.String encoded;byte decoded[]=null;int iteration=0;int checksum;byte encodedByte=0;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+input=new byte[1024];
+{offset=0;offset:for(;offset<=1023;offset++){
+value=(((offset*31)+7))%256;
+if (value>127) value=value-256;
+input[offset]=(new netrexx.lang.Rexx(value)).tobyte();
+}}/*offset*/
+
+encoded="";
+
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+encoded=encode(input);
+decoded=decode(encoded);
+}}/*iteration*/
+
+if ((encoded.length())!=1368) {
+netrexx.lang.RexxIO.Say("FAIL: expected encoded length 1368, got"+" "+(encoded.length()));
+{System.exit(1);return;}
+}
+if ((!(java.util.Arrays.equals(input,decoded)))) {
+netrexx.lang.RexxIO.Say("FAIL: decoded bytes differ from input");
+{System.exit(1);return;}
+}
+checksum=0;
+{int $4=0;byte[] $3=new byte[decoded.length];synchronized(decoded){for(;;){if($4==$3.length)break;$3[$4]=decoded[decoded.length-1-$4];$4++;}}encodedByte:for(;;){if(--$4<0)break;encodedByte=(byte)$3[$4];
+checksum=checksum+(java.lang.Byte.toUnsignedInt(encodedByte));
+}}/*encodedByte*/
+if (checksum!=130560) {
+netrexx.lang.RexxIO.Say("FAIL: expected checksum 130560, got"+" "+checksum);
+{System.exit(1);return;}
+}
+netrexx.lang.RexxIO.Say("benchmark=base64_roundtrip repetitions="+repetitions+" "+"encoded_length="+(encoded.length())+" "+"checksum="+checksum);
+netrexx.lang.RexxIO.Say("PASS: Base64 Roundtrip NetRexx port");return;}
+
+@SuppressWarnings("unchecked") public static java.lang.String encode(byte data[]){java.lang.String alphabet;java.lang.StringBuilder result;int offset;int remaining=0;int byte1=0;int byte2=0;int byte3=0;int digit1=0;int digit2=0;int digit3=0;int digit4=0;
+alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+result=new java.lang.StringBuilder();
+offset=0;
+{for(;;){if(!(offset<data.length))break;
+remaining=data.length-offset;
+byte1=java.lang.Byte.toUnsignedInt(data[offset]);
+byte2=0;
+byte3=0;
+if (remaining>1) byte2=java.lang.Byte.toUnsignedInt(data[offset+1]);
+if (remaining>2) byte3=java.lang.Byte.toUnsignedInt(data[offset+2]);
+digit1=byte1/4;
+digit2=(((byte1%4))*16)+(byte2/16);
+digit3=(((byte2%16))*4)+(byte3/64);
+digit4=byte3%64;
+result.append(alphabet.substring(digit1,digit1+1));
+result.append(alphabet.substring(digit2,digit2+1));
+if (remaining>1) result.append(alphabet.substring(digit3,digit3+1));
+else result.append('=');
+if (remaining>2) result.append(alphabet.substring(digit4,digit4+1));
+else result.append('=');
+offset=offset+3;
+}}
+return result.toString();}
+
+@SuppressWarnings("unchecked") public static byte[] decode(java.lang.String encoded){java.lang.String alphabet;int padding;byte result[];int inputOffset;int outputOffset;int digit1=0;int digit2=0;int char3=0;int char4=0;int digit3=0;int digit4=0;int value=0;
+alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+padding=0;
+if ((encoded.codePointAt((encoded.length())-1))==61) padding++;
+if ((encoded.codePointAt((encoded.length())-2))==61) padding++;
+result=new byte[((((encoded.length())/4))*3)-padding];
+inputOffset=0;
+outputOffset=0;
+{for(;;){if(!(inputOffset<(encoded.length())))break;
+digit1=alphabet.indexOf(encoded.codePointAt(inputOffset));
+digit2=alphabet.indexOf(encoded.codePointAt(inputOffset+1));
+char3=encoded.codePointAt(inputOffset+2);
+char4=encoded.codePointAt(inputOffset+3);
+digit3=0;
+digit4=0;
+if (char3!=61) digit3=alphabet.indexOf(char3);
+if (char4!=61) digit4=alphabet.indexOf(char4);
+value=(digit1*4)+(digit2/16);
+if (value>127) value=value-256;
+result[outputOffset]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset++;
+if (char3!=61) {
+value=(((digit2%16))*16)+(digit3/4);
+if (value>127) value=value-256;
+result[outputOffset]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset++;
+}
+if (char4!=61) {
+value=(((digit3%4))*64)+digit4;
+if (value>127) value=value-256;
+result[outputOffset]=(new netrexx.lang.Rexx(value)).tobyte();
+outputOffset++;
+}
+inputOffset=inputOffset+4;
+}}
+return result;}private base64_roundtrip(){return;}}

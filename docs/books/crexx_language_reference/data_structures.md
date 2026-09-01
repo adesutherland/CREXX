@@ -36,5 +36,5 @@ look like a hierarchical stem.
 Related references:
 
 * `bifs_function_reference.md` documents the current array helper functions.
-* `lib/plugins/precomp/rxpp-Users-Guide.md` documents RXPP preprocessing.
+* `preprocessor/rxpp-Users-Guide.md` documents RXPP preprocessing.
 * `lib/plugins/map/Compounds.md` describes the current stem-processing model.

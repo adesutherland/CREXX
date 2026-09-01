@@ -1,0 +1,2058 @@
+*******************************************************************************
+* MODULE - benchmark_base64_roundtrip_opt
+* DESCRIPTION - benchmark_base64_roundtrip_opt
+
+* CONSTANT POOL - Size 0x1e220.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x7fb
+
+.globals=0
+
+main()          .locals=43
+                .meta "base64_roundtrip.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .meta "base64_roundtrip.main.decoded"="b" ".binary" r4
+                .srcstep 1 1 17 "base64_roundtrip.crexx" 19 1 18 "decoded = .binary"
+                null r4                                      * 0x000004:000e Null (clear) op1
+                .srcstep 2 2 17 "base64_roundtrip.crexx" 11 5 19 "arg argv = .string[]"
+                .meta "base64_roundtrip.main.argv"="b" ".string[*]" a1 /* aka r44 */
+                .srcstep 3 3 17 "base64_roundtrip.crexx" 13 1 16 "repetitions = 1"
+                .meta "base64_roundtrip.main.repetitions"="b" ".int" r6
+                load r6,1                                    * 0x000006:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 3 3 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 6 3 3 0 "repetitions" ""
+                .srcstep 5 5 17 "base64_roundtrip.crexx" 14 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 0 5 5 0 "argv" ""
+                getattrs r7,a1 /* aka r44 */,0               * 0x000009:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 7 5 5 0 "argv" ""
+                igte r7,r7,1                                 * 0x00000d:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 7 5 5 0 "" ""
+                brf lb_1d,r7                                 * 0x000011:0026 Branch to op1 if op2 false
+                .srcstep 6 6 17 "base64_roundtrip.crexx" 14 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 4 4 17 "base64_roundtrip.crexx" 14 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minlinkattr1 r8,a1 /* aka r44 */,1           * 0x000014:0125 Ensure op2 has op3 attributes then link one-based attribute op3 to op1
+                stoi r8                                      * 0x000018:00ed Set register int value from its string value
+                .traceevent "V" 6 "R" "I" "r" 8 4 4 0 "argv" ""
+                igetunlink r6,r8                             * 0x00001a:011d Copy integer from alias op2 to op1 then unlink op2
+                .traceevent "A" 6 "R" "I" "r" 6 4 4 0 "repetitions" ""
+                .srcstep 11 11 17 "base64_roundtrip.crexx" 15 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "repetitions" ""
+lb_1d:          ilt r8,r6,1                                  * 0x00001d:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 8 11 11 0 "" ""
+                brf lb_30,r8                                 * 0x000021:0026 Branch to op1 if op2 false
+                .srcstep 12 12 17 "base64_roundtrip.crexx" 15 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 10 10 17 "base64_roundtrip.crexx" 15 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 9 9 17 "base64_roundtrip.crexx" 15 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 7 7 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+                say "FAIL: repetitions must be positive"     * 0x000024:01c7 Say op1
+                .srcstep 8 8 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+                load r7,1                                    * 0x000026:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 10 10 0 "" ""
+                icopy r0,r7                                  * 0x000029:0009 Copy Integer op2 to op1
+                br lb_2e                                     * 0x00002c:0024 Branch to op1
+lb_2e:          ret r0                                       * 0x00002e:0031 Return op1
+                .srcstep 26 26 17 "base64_roundtrip.crexx" 17 1 19 "input = make_input()"
+                .meta "base64_roundtrip.main.data"="b" ".binary" r9
+                .srcstep 13 13 17 "base64_roundtrip.crexx" 36 3 17 "  data = .binary"
+lb_30:          null r9                                      * 0x000030:000e Null (clear) op1
+                .srcstep 18 18 17 "base64_roundtrip.crexx" 37 3 28 "  call binresize data, 1024"
+                .srcstep 14 14 33 "base64_roundtrip.crexx" 37 28 28 "  call binresize data, 1024"
+                load r12,1024                                * 0x000032:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 14 14 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 12 14 14 0 "length" ""
+                .srcstep 15 15 25 "binary.crexx" 249 3 13 "  result = 0"
+                load r13,0                                   * 0x000035:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 15 15 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 13 15 15 0 "result" ""
+                .srcstep 16 16 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+                .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "length" ""
+                bresize r9,r12                               * 0x000038:0246 Resize binary op1 to op2 bytes, zero-fill growth
+                .srcstep 17 17 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+                .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+                blen r13,r9                                  * 0x00003b:00b8 Binary byte length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "result" ""
+                .traceevent "A" 6 "R" "I" "r" 13 0 0 0 "__inline_unused_889" ""
+                .srcstep 23 23 17 "base64_roundtrip.crexx" 38 3 5 "  do offset = 0 to 1023"
+                .srcstep 19 19 17 "base64_roundtrip.crexx" 38 6 16 "  do offset = 0 to 1023"
+                load r8,0                                    * 0x00003e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 19 19 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 19 19 0 "offset" ""
+                .srcstep 20 20 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+                load r7,1023                                 * 0x000041:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+                .srcstep 20 20 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+lb_44:          igt r0,r8,r7                                 * 0x000044:0068 Int Greater than op1=(op2>op3)
+                brt lb_5e,r0                                 * 0x000048:0025 Branch to op1 if op2 true
+                .srcstep 22 22 17 "base64_roundtrip.crexx" 39 5 56 "    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256"
+                .traceevent "V" 6 "R" "X" "r" 9 22 22 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 8 22 22 0 "offset" ""
+                .traceevent "V" 6 "R" "I" "r" 8 22 22 0 "offset" ""
+                imult r14,r8,31                              * 0x00004b:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+                iadd r14,r14,7                               * 0x00004f:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+                imod r14,r14,256                             * 0x000053:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+                bsetu8 r9,r8,r14                             * 0x000057:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 21 21 17 "base64_roundtrip.crexx" 38 6 12 "  do offset = 0 to 1023"
+                .srcstep 24 24 17 "base64_roundtrip.crexx" 40 3 6 "  end"
+                bctp lb_44,r8                                * 0x00005b:015d inc op2; goto op1
+                .srcstep 25 25 6 "base64_roundtrip.crexx" 17 1 6 "input = make_input()"
+                .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+lb_5e:          copy r5,r9                                   * 0x00005e:0008 Copy op2 to op1
+                .srcstep 27 27 17 "base64_roundtrip.crexx" 18 1 13 "encoded = \"\""
+                .meta "base64_roundtrip.main.encoded"="b" ".string" r1
+                .meta "base64_roundtrip.main.input"="b" ".binary" r5
+                load r1,""                                   * 0x000061:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 1 27 27 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 1 27 27 0 "encoded" ""
+                .srcstep 80 80 17 "base64_roundtrip.crexx" 20 1 3 "do iteration = 1 to repetitions"
+                .srcstep 28 28 17 "base64_roundtrip.crexx" 20 4 17 "do iteration = 1 to repetitions"
+                .meta "base64_roundtrip.main.iteration"="b" ".int" r14
+                load r14,1                                   * 0x000064:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 14 28 28 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 28 28 0 "iteration" ""
+                .srcstep 29 29 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "repetitions" ""
+                .srcstep 29 29 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+lb_67:          igt r8,r14,r6                                * 0x000067:0068 Int Greater than op1=(op2>op3)
+                brt lb_162,r8                                * 0x00006b:0025 Branch to op1 if op2 true
+                .srcstep 78 78 17 "base64_roundtrip.crexx" 21 3 33 "  encoded = base64_encode(input)"
+                .meta "base64_roundtrip.main.result"="b" ".binary" r21
+                .srcstep 31 31 17 "base64_roundtrip.crexx" 48 3 19 "  result = .binary"
+                null r21                                     * 0x00006e:000e Null (clear) op1
+                .srcstep 32 32 6 "base64_roundtrip.crexx" 44 7 11 "  arg data = .binary"
+                .traceevent "V" 6 "R" "X" "r" 5 0 0 0 "input" ""
+                copy r16,r5                                  * 0x000070:0008 Copy op2 to op1
+                .srcstep 33 33 17 "base64_roundtrip.crexx" 45 3 91 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\" as .binary"
+                load r15,0x4142434445464748494a4b4c4d4e4f505152535455565758595a6162636465666768696a6b6c6d6e6f707172737475767778797a303132333435363738392b2f * 0x000073:00b7 Load binary literal op2 into op1
+                .traceevent "L" 4 "R" "X" "r" 15 33 33 0 "" ""
+                .traceevent "A" 6 "R" "X" "r" 15 33 33 0 "alphabet" ""
+                .srcstep 37 37 17 "base64_roundtrip.crexx" 46 3 33 "  input_length = binlength(data)"
+                .srcstep 34 34 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+                .traceevent "V" 6 "R" "X" "r" 16 0 0 0 "data" ""
+                copy r22,r16                                 * 0x000076:0008 Copy op2 to op1
+                .srcstep 35 35 25 "binary.crexx" 45 3 10 "  len = 0"
+                load r23,0                                   * 0x000079:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 23 35 35 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 23 35 35 0 "len" ""
+                .srcstep 36 36 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+                .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "len" ""
+                .traceevent "V" 6 "R" "X" "r" 22 0 0 0 "data" ""
+                blen r23,r22                                 * 0x00007c:00b8 Binary byte length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "len" ""
+                .traceevent "A" 6 "R" "I" "r" 23 0 0 0 "input_length" ""
+                .srcstep 38 38 17 "base64_roundtrip.crexx" 47 3 53 "  encoded_length = ((input_length + 2) <idiv> 3) * 4"
+                .traceevent "V" 6 "R" "I" "r" 23 38 38 0 "input_length" ""
+                iadd r7,r23,2                                * 0x00007f:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 7 38 38 0 "" ""
+                idiv r7,r7,3                                 * 0x000083:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 7 38 38 0 "" ""
+                imult r17,r7,4                               * 0x000087:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 17 38 38 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 17 38 38 0 "encoded_length" ""
+                .srcstep 43 43 17 "base64_roundtrip.crexx" 49 3 40 "  call binresize result, encoded_length"
+                .srcstep 39 39 33 "base64_roundtrip.crexx" 49 40 40 "  call binresize result, encoded_length"
+                .traceevent "V" 6 "R" "I" "r" 17 39 39 0 "encoded_length" ""
+                icopy r26,r17                                * 0x00008b:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 26 39 39 0 "length" ""
+                .srcstep 40 40 25 "binary.crexx" 249 3 13 "  result = 0"
+                load r27,0                                   * 0x00008e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 27 40 40 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 27 40 40 0 "result" ""
+                .srcstep 41 41 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+                .traceevent "V" 6 "R" "X" "r" 21 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 26 0 0 0 "length" ""
+                bresize r21,r26                              * 0x000091:0246 Resize binary op1 to op2 bytes, zero-fill growth
+                .srcstep 42 42 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+                .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "X" "r" 21 0 0 0 "result" ""
+                blen r27,r21                                 * 0x000094:00b8 Binary byte length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+                .traceevent "A" 6 "R" "I" "r" 27 0 0 0 "__inline_unused_889" ""
+                .srcstep 44 44 17 "base64_roundtrip.crexx" 50 3 19 "  input_offset = 0"
+                load r19,0                                   * 0x000097:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 44 44 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 19 44 44 0 "input_offset" ""
+                .srcstep 45 45 17 "base64_roundtrip.crexx" 51 3 20 "  output_offset = 0"
+                load r20,0                                   * 0x00009a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 20 45 45 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 20 45 45 0 "output_offset" ""
+                .srcstep 75 75 17 "base64_roundtrip.crexx" 52 3 5 "  do while input_offset < input_length"
+                .srcstep 46 46 17 "base64_roundtrip.crexx" 52 6 39 "  do while input_offset < input_length"
+                .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "input_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "input_length" ""
+lb_9d:          ilt r34,r19,r23                              * 0x00009d:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 34 0 0 0 "" ""
+                brf lb_153,r34                               * 0x0000a1:0026 Branch to op1 if op2 false
+                .srcstep 47 47 17 "base64_roundtrip.crexx" 53 5 44 "    remaining = input_length - input_offset"
+                .traceevent "V" 6 "R" "I" "r" 23 47 47 0 "input_length" ""
+                .traceevent "V" 6 "R" "I" "r" 19 47 47 0 "input_offset" ""
+                isub r33,r23,r19                             * 0x0000a4:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 33 47 47 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 33 47 47 0 "remaining" ""
+                .srcstep 48 48 17 "base64_roundtrip.crexx" 54 5 40 "    byte1 = <at..u8>(input_offset) data"
+                .traceevent "V" 6 "R" "X" "r" 16 48 48 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 19 48 48 0 "input_offset" ""
+                bgetu8 r7,r16,r19                            * 0x0000a8:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 7 48 48 0 "byte1" ""
+                .srcstep 49 49 17 "base64_roundtrip.crexx" 55 5 14 "    byte2 = 0"
+                load r0,0                                    * 0x0000ac:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 49 49 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 49 49 0 "byte2" ""
+                .srcstep 50 50 17 "base64_roundtrip.crexx" 56 5 14 "    byte3 = 0"
+                load r28,0                                   * 0x0000af:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 28 50 50 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 28 50 50 0 "byte3" ""
+                .srcstep 52 52 17 "base64_roundtrip.crexx" 57 5 21 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .traceevent "V" 6 "R" "I" "r" 33 52 52 0 "remaining" ""
+                igt r35,r33,1                                * 0x0000b2:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 35 52 52 0 "" ""
+                brf lb_c1,r35                                * 0x0000b6:0026 Branch to op1 if op2 false
+                .srcstep 53 53 17 "base64_roundtrip.crexx" 57 22 26 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .srcstep 51 51 17 "base64_roundtrip.crexx" 57 27 66 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+                .traceevent "V" 6 "R" "X" "r" 16 51 51 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 19 51 51 0 "input_offset" ""
+                iadd r36,r19,1                               * 0x0000b9:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 36 51 51 0 "" ""
+                bgetu8 r0,r16,r36                            * 0x0000bd:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 0 51 51 0 "byte2" ""
+                .srcstep 55 55 17 "base64_roundtrip.crexx" 58 5 21 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .traceevent "V" 6 "R" "I" "r" 33 55 55 0 "remaining" ""
+lb_c1:          ble lb_cd,r33,2                              * 0x0000c1:0167 if op2<=op3 then goto op1
+                .srcstep 56 56 17 "base64_roundtrip.crexx" 58 22 26 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .srcstep 54 54 17 "base64_roundtrip.crexx" 58 27 66 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+                .traceevent "V" 6 "R" "X" "r" 16 54 54 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 19 54 54 0 "input_offset" ""
+                iadd r35,r19,2                               * 0x0000c5:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 35 54 54 0 "" ""
+                bgetu8 r28,r16,r35                           * 0x0000c9:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                .traceevent "A" 6 "R" "I" "r" 28 54 54 0 "byte3" ""
+                .srcstep 57 57 17 "base64_roundtrip.crexx" 60 5 28 "    digit1 = byte1 <idiv> 4"
+                .traceevent "V" 6 "R" "I" "r" 7 57 57 0 "byte1" ""
+lb_cd:          idiv r29,r7,4                                * 0x0000cd:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 29 57 57 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 29 57 57 0 "digit1" ""
+                .srcstep 58 58 17 "base64_roundtrip.crexx" 61 5 52 "    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16"
+                .traceevent "V" 6 "R" "I" "r" 7 58 58 0 "byte1" ""
+                imod r36,r7,4                                * 0x0000d1:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 36 58 58 0 "" ""
+                imult r36,r36,16                             * 0x0000d5:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 36 58 58 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 0 58 58 0 "byte2" ""
+                idiv r35,r0,16                               * 0x0000d9:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 35 58 58 0 "" ""
+                iadd r30,r36,r35                             * 0x0000dd:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 30 58 58 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 30 58 58 0 "digit2" ""
+                .srcstep 59 59 17 "base64_roundtrip.crexx" 62 5 52 "    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64"
+                .traceevent "V" 6 "R" "I" "r" 0 59 59 0 "byte2" ""
+                imod r36,r0,16                               * 0x0000e1:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 36 59 59 0 "" ""
+                imult r36,r36,4                              * 0x0000e5:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 36 59 59 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 28 59 59 0 "byte3" ""
+                idiv r35,r28,64                              * 0x0000e9:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 35 59 59 0 "" ""
+                iadd r31,r36,r35                             * 0x0000ed:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 31 59 59 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 31 59 59 0 "digit3" ""
+                .srcstep 60 60 17 "base64_roundtrip.crexx" 63 5 28 "    digit4 = byte3 <mod> 64"
+                .traceevent "V" 6 "R" "I" "r" 28 60 60 0 "byte3" ""
+                imod r32,r28,64                              * 0x0000f1:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 32 60 60 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 32 60 60 0 "digit4" ""
+                .srcstep 61 61 17 "base64_roundtrip.crexx" 65 5 63 "    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 21 61 61 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 61 61 0 "output_offset" ""
+                .traceevent "V" 6 "R" "X" "r" 15 61 61 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 29 61 61 0 "digit1" ""
+                bgetu8 r36,r15,r29                           * 0x0000f5:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r21,r20,r36                           * 0x0000f9:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 62 62 17 "base64_roundtrip.crexx" 66 5 67 "    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 21 62 62 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 62 62 0 "output_offset" ""
+                iadd r36,r20,1                               * 0x0000fd:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 36 62 62 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 15 62 62 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 30 62 62 0 "digit2" ""
+                bgetu8 r35,r15,r30                           * 0x000101:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r21,r36,r35                           * 0x000105:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 65 65 17 "base64_roundtrip.crexx" 67 5 21 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .traceevent "V" 6 "R" "I" "r" 33 65 65 0 "remaining" ""
+                igt r36,r33,1                                * 0x000109:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 36 65 65 0 "" ""
+                brf lb_11e,r36                               * 0x00010d:0026 Branch to op1 if op2 false
+                .srcstep 66 66 17 "base64_roundtrip.crexx" 67 22 26 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .srcstep 63 63 17 "base64_roundtrip.crexx" 67 27 89 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 21 63 63 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 63 63 0 "output_offset" ""
+                iadd r35,r20,2                               * 0x000110:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 35 63 63 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 15 63 63 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 31 63 63 0 "digit3" ""
+                bgetu8 r37,r15,r31                           * 0x000114:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r21,r35,r37                           * 0x000118:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                br lb_129                                    * 0x00011c:0024 Branch to op1
+                .srcstep 64 64 17 "base64_roundtrip.crexx" 68 10 49 "    else <at..u8>(output_offset + 2) result = 61"
+                .traceevent "V" 6 "R" "X" "r" 21 64 64 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 64 64 0 "output_offset" ""
+lb_11e:         iadd r38,r20,2                               * 0x00011e:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 38 64 64 0 "" ""
+                load r39,61                                  * 0x000122:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 64 64 0 "" ""
+                bsetu8 r21,r38,r39                           * 0x000125:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 70 70 17 "base64_roundtrip.crexx" 69 5 21 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .traceevent "V" 6 "R" "I" "r" 33 70 70 0 "remaining" ""
+lb_129:         igt r39,r33,2                                * 0x000129:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 39 70 70 0 "" ""
+                brf lb_13e,r39                               * 0x00012d:0026 Branch to op1 if op2 false
+                .srcstep 71 71 17 "base64_roundtrip.crexx" 69 22 26 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .srcstep 68 68 17 "base64_roundtrip.crexx" 69 27 89 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+                .traceevent "V" 6 "R" "X" "r" 21 68 68 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 68 68 0 "output_offset" ""
+                iadd r38,r20,3                               * 0x000130:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 38 68 68 0 "" ""
+                .traceevent "V" 6 "R" "X" "r" 15 68 68 0 "alphabet" ""
+                .traceevent "V" 6 "R" "I" "r" 32 68 68 0 "digit4" ""
+                bgetu8 r37,r15,r32                           * 0x000134:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                bsetu8 r21,r38,r37                           * 0x000138:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                br lb_149                                    * 0x00013c:0024 Branch to op1
+                .srcstep 69 69 17 "base64_roundtrip.crexx" 70 10 49 "    else <at..u8>(output_offset + 3) result = 61"
+                .traceevent "V" 6 "R" "X" "r" 21 69 69 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 20 69 69 0 "output_offset" ""
+lb_13e:         iadd r36,r20,3                               * 0x00013e:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 36 69 69 0 "" ""
+                load r35,61                                  * 0x000142:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 35 69 69 0 "" ""
+                bsetu8 r21,r36,r35                           * 0x000145:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 73 73 17 "base64_roundtrip.crexx" 71 5 36 "    input_offset = input_offset + 3"
+                .traceevent "V" 6 "R" "I" "r" 19 73 73 0 "input_offset" ""
+lb_149:         iadd r19,r19,3                               * 0x000149:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 19 73 73 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 19 73 73 0 "input_offset" ""
+                .srcstep 74 74 17 "base64_roundtrip.crexx" 72 5 38 "    output_offset = output_offset + 4"
+                .traceevent "V" 6 "R" "I" "r" 20 74 74 0 "output_offset" ""
+                iadd r20,r20,4                               * 0x00014d:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 20 74 74 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 20 74 74 0 "output_offset" ""
+                .srcstep 76 76 17 "base64_roundtrip.crexx" 73 3 6 "  end"
+                br lb_9d                                     * 0x000151:0024 Branch to op1
+                .srcstep 77 77 33 "base64_roundtrip.crexx" 74 3 9 "  return result as .string"
+                .traceevent "V" 6 "R" "X" "r" 21 77 77 0 "result" ""
+lb_153:         bcopy r1,r21                                 * 0x000153:0245 Copy Binary op2 to op1
+                bintos r1                                    * 0x000156:00c1 Convert binary register bytes to string bytes after UTF-8 validation
+                .traceevent "A" 6 "R" "S" "r" 1 77 77 0 "encoded" ""
+                .srcstep 79 79 17 "base64_roundtrip.crexx" 22 3 35 "  decoded = base64_decode(encoded)"
+                .traceevent "V" 6 "R" "S" "r" 1 79 79 0 "encoded" ""
+                settp r1,256                                 * 0x000158:0205 sets externally writable register status flags, preserving VM-private flags
+                call1 r4,base64_decode(),r1                  * 0x00015b:0191 Direct bytecode call with one explicit argument register
+                .traceevent "F" 4 "R" "X" "r" 4 79 79 0 "base64_decode" ""
+                .traceevent "A" 6 "R" "X" "r" 4 79 79 0 "decoded" ""
+                .srcstep 30 30 17 "base64_roundtrip.crexx" 20 4 13 "do iteration = 1 to repetitions"
+                .srcstep 81 81 17 "base64_roundtrip.crexx" 23 1 4 "end"
+                bctp lb_67,r14                               * 0x00015f:015d inc op2; goto op1
+                .meta "base64_roundtrip.main.iteration"
+                .srcstep 97 97 17 "base64_roundtrip.crexx" 25 1 27 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 86 86 17 "base64_roundtrip.crexx" 25 4 10 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 82 82 33 "base64_roundtrip.crexx" 25 10 10 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .traceevent "V" 6 "R" "S" "r" 1 82 82 0 "encoded" ""
+lb_162:         scopy r38,r1                                 * 0x000162:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 38 82 82 0 "string" ""
+                .srcstep 83 83 25 "length.crexx" 42 3 13 "  result = 0"
+                load r39,0                                   * 0x000165:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 83 83 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 83 83 0 "result" ""
+                .srcstep 84 84 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+                .traceevent "V" 6 "R" "I" "r" 39 97 97 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 38 97 97 0 "string" ""
+                strlen r39,r38                               * 0x000168:0095 String Length op1 = length(op2)
+                .srcstep 85 85 25 "length.crexx" 44 3 16 "  return result"
+                .traceevent "V" 6 "R" "I" "r" 39 97 97 0 "result" ""
+                icopy r37,r39                                * 0x00016b:0009 Copy Integer op2 to op1
+                br lb_170                                    * 0x00016e:0024 Branch to op1
+lb_170:         ine r39,r37,1368                             * 0x000170:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 39 97 97 0 "" ""
+                brf lb_19b,r39                               * 0x000174:0026 Branch to op1 if op2 false
+                .srcstep 98 98 17 "base64_roundtrip.crexx" 25 28 32 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 96 96 17 "base64_roundtrip.crexx" 25 33 101 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 95 95 17 "base64_roundtrip.crexx" 25 40 44 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 92 92 33 "base64_roundtrip.crexx" 128 7 14 "  arg message = .string"
+                .srcstep 91 91 17 "base64_roundtrip.crexx" 25 85 91 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .srcstep 87 87 33 "base64_roundtrip.crexx" 25 91 91 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+                .traceevent "V" 6 "R" "S" "r" 1 87 87 0 "encoded" ""
+                scopy r36,r1                                 * 0x000177:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 36 87 87 0 "string" ""
+                .srcstep 88 88 25 "length.crexx" 42 3 13 "  result = 0"
+                load r37,0                                   * 0x00017a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 88 88 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 37 88 88 0 "result" ""
+                .srcstep 89 89 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+                .traceevent "V" 6 "R" "I" "r" 37 92 92 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 36 92 92 0 "string" ""
+                strlen r37,r36                               * 0x00017d:0095 String Length op1 = length(op2)
+                .srcstep 90 90 25 "length.crexx" 44 3 16 "  return result"
+                .traceevent "V" 6 "R" "I" "r" 37 92 92 0 "result" ""
+                icopy r35,r37                                * 0x000180:0009 Copy Integer op2 to op1
+                br lb_185                                    * 0x000183:0024 Branch to op1
+lb_185:         itos r35                                     * 0x000185:00e5 Set register string value from its int value
+                concat r38,"expected encoded length 1368, got ",r35 * 0x000187:0088 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 38 92 92 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 38 92 92 0 "message" ""
+                .srcstep 93 93 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 38 93 93 0 "message" ""
+                sconcat r37,"FAIL:",r38                      * 0x00018b:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 37 93 93 0 "" ""
+                say r37                                      * 0x00018f:01c2 Say op1
+                .srcstep 94 94 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+                load r37,1                                   * 0x000191:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 96 96 0 "" ""
+                icopy r36,r37                                * 0x000194:0009 Copy Integer op2 to op1
+                br lb_199                                    * 0x000197:0024 Branch to op1
+lb_199:         ret r36                                      * 0x000199:0031 Return op1
+                .srcstep 124 124 17 "base64_roundtrip.crexx" 26 1 35 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 119 119 17 "base64_roundtrip.crexx" 26 4 14 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 99 99 14 "binary.crexx" 219 7 11 "  arg left = .binary, right = .binary"
+                .traceevent "V" 6 "R" "X" "r" 5 124 124 0 "input" ""
+lb_19b:         copy r39,r5                                  * 0x00019b:0008 Copy op2 to op1
+                .srcstep 100 100 14 "binary.crexx" 219 23 28 "  arg left = .binary, right = .binary"
+                .traceevent "V" 6 "R" "X" "r" 4 124 124 0 "decoded" ""
+                copy r37,r4                                  * 0x00019e:0008 Copy op2 to op1
+                .srcstep 101 101 25 "binary.crexx" 220 3 15 "  left_len = 0"
+                load r38,0                                   * 0x0001a1:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 101 101 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 38 101 101 0 "left_len" ""
+                .srcstep 102 102 25 "binary.crexx" 221 3 16 "  right_len = 0"
+                load r36,0                                   * 0x0001a4:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 36 102 102 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 36 102 102 0 "right_len" ""
+                .srcstep 103 103 25 "binary.crexx" 222 13 31 "  assembler blen left_len,left"
+                .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+                .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+                blen r38,r39                                 * 0x0001a7:00b8 Binary byte length op1 = length(op2)
+                .srcstep 104 104 25 "binary.crexx" 223 13 33 "  assembler blen right_len,right"
+                .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+                .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+                blen r36,r37                                 * 0x0001aa:00b8 Binary byte length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+                .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+                ieq r34,r38,r36                              * 0x0001ad:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 34 124 124 0 "" ""
+                brf lb_1ca,r34                               * 0x0001b1:0026 Branch to op1 if op2 false
+                .srcstep 105 105 25 "binary.crexx" 225 5 19 "    comparison = 0"
+                load r33,0                                   * 0x0001b4:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 33 105 105 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 33 105 105 0 "comparison" ""
+                .srcstep 106 106 25 "binary.crexx" 226 15 42 "    assembler bcmpb comparison,left,right"
+                .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "comparison" ""
+                .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+                .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+                bcmpb r33,r39,r37                            * 0x0001b7:026f Compare binary register op2 slice at offset op1 with binary register op3
+                .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "comparison" ""
+                ieq r32,r33,0                                * 0x0001bb:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 32 124 124 0 "" ""
+                brf lb_1ca,r32                               * 0x0001bf:0026 Branch to op1 if op2 false
+                .srcstep 107 107 25 "binary.crexx" 227 28 36 "    if comparison = 0 then return 0"
+                load r31,0                                   * 0x0001c2:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 31 124 124 0 "" ""
+                icopy r33,r31                                * 0x0001c5:0009 Copy Integer op2 to op1
+                br lb_21b                                    * 0x0001c8:0024 Branch to op1
+                .srcstep 108 108 25 "binary.crexx" 229 3 22 "  scan_len = left_len"
+                .traceevent "V" 6 "R" "I" "r" 38 108 108 0 "left_len" ""
+lb_1ca:         icopy r35,r38                                * 0x0001ca:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 35 108 108 0 "scan_len" ""
+                .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+                .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+                ilt r34,r36,r35                              * 0x0001cd:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 34 124 124 0 "" ""
+                brf lb_1d7,r34                               * 0x0001d1:0026 Branch to op1 if op2 false
+                .srcstep 109 109 25 "binary.crexx" 230 32 52 "  if right_len < scan_len then scan_len = right_len"
+                .traceevent "V" 6 "R" "I" "r" 36 109 109 0 "right_len" ""
+                icopy r35,r36                                * 0x0001d4:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 35 109 109 0 "scan_len" ""
+                .srcstep 110 110 25 "binary.crexx" 231 6 16 "  do offset = 0 to scan_len - 1"
+lb_1d7:         load r33,0                                   * 0x0001d7:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 33 110 110 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 33 110 110 0 "offset" ""
+                .srcstep 111 111 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+                .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+                isub r31,r35,1                               * 0x0001da:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 31 124 124 0 "" ""
+                .srcstep 111 111 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+lb_1de:         igt r30,r33,r31                              * 0x0001de:0068 Int Greater than op1=(op2>op3)
+                brt lb_206,r30                               * 0x0001e2:0025 Branch to op1 if op2 true
+                .srcstep 112 112 25 "binary.crexx" 232 5 18 "    left_byte = 0"
+                load r34,0                                   * 0x0001e5:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 112 112 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 34 112 112 0 "left_byte" ""
+                .srcstep 113 113 25 "binary.crexx" 233 5 19 "    right_byte = 0"
+                load r32,0                                   * 0x0001e8:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 32 113 113 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 32 113 113 0 "right_byte" ""
+                .srcstep 114 114 25 "binary.crexx" 234 15 44 "    assembler getbyte left_byte,left,offset"
+                .traceevent "V" 6 "R" "I" "r" 34 124 124 0 "left_byte" ""
+                .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+                .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+                getbyte r34,r39,r33                          * 0x0001eb:00a7 get byte  (op1=op2(op3)
+                .srcstep 115 115 25 "binary.crexx" 235 15 46 "    assembler getbyte right_byte,right,offset"
+                .traceevent "V" 6 "R" "I" "r" 32 124 124 0 "right_byte" ""
+                .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+                .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+                getbyte r32,r37,r33                          * 0x0001ef:00a7 get byte  (op1=op2(op3)
+                .traceevent "V" 6 "R" "I" "r" 34 124 124 0 "left_byte" ""
+                .traceevent "V" 6 "R" "I" "r" 32 124 124 0 "right_byte" ""
+                ine r29,r34,r32                              * 0x0001f3:0066 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 29 124 124 0 "" ""
+                brf lb_203,r29                               * 0x0001f7:0026 Branch to op1 if op2 false
+                .srcstep 116 116 25 "binary.crexx" 236 37 54 "    if left_byte <> right_byte then return offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+                iadd r28,r33,1                               * 0x0001fa:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 28 124 124 0 "" ""
+                icopy r33,r28                                * 0x0001fe:0009 Copy Integer op2 to op1
+                br lb_21b                                    * 0x000201:0024 Branch to op1
+lb_203:         bctp lb_1de,r33                              * 0x000203:015d inc op2; goto op1
+                .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+                .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+lb_206:         ine r34,r38,r36                              * 0x000206:0066 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 34 124 124 0 "" ""
+                brf lb_213,r34                               * 0x00020a:0026 Branch to op1 if op2 false
+                .srcstep 117 117 25 "binary.crexx" 238 33 52 "  if left_len <> right_len then return scan_len + 1"
+                .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+                iadd r33,r35,1                               * 0x00020d:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 33 124 124 0 "" ""
+                br lb_21b                                    * 0x000211:0024 Branch to op1
+                .srcstep 118 118 25 "binary.crexx" 239 3 11 "  return 0"
+lb_213:         load r34,0                                   * 0x000213:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 124 124 0 "" ""
+                icopy r33,r34                                * 0x000216:0009 Copy Integer op2 to op1
+                br lb_21b                                    * 0x000219:0024 Branch to op1
+lb_21b:         endlife r39                                  * 0x00021b:0202 End storage reference lifetime for op1
+                endlife r37                                  * 0x00021d:0202 End storage reference lifetime for op1
+                ine r39,r33,0                                * 0x00021f:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 39 124 124 0 "" ""
+                brf lb_232,r39                               * 0x000223:0026 Branch to op1 if op2 false
+                .srcstep 125 125 17 "base64_roundtrip.crexx" 26 36 40 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 123 123 17 "base64_roundtrip.crexx" 26 41 87 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 122 122 17 "base64_roundtrip.crexx" 26 48 52 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+                .srcstep 120 120 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+                say "FAIL: decoded bytes differ from input"  * 0x000226:01c7 Say op1
+                .srcstep 121 121 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+                load r38,1                                   * 0x000228:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 123 123 0 "" ""
+                icopy r37,r38                                * 0x00022b:0009 Copy Integer op2 to op1
+                br lb_230                                    * 0x00022e:0024 Branch to op1
+lb_230:         ret r37                                      * 0x000230:0031 Return op1
+                .srcstep 140 140 17 "base64_roundtrip.crexx" 28 1 34 "checksum = byte_checksum(decoded)"
+                .srcstep 126 126 6 "base64_roundtrip.crexx" 120 7 11 "  arg data = .binary"
+                .traceevent "V" 6 "R" "X" "r" 4 0 0 0 "decoded" ""
+lb_232:         copy r41,r4                                  * 0x000232:0008 Copy op2 to op1
+                .srcstep 127 127 17 "base64_roundtrip.crexx" 121 3 15 "  checksum = 0"
+                load r40,0                                   * 0x000235:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 40 127 127 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 40 127 127 0 "checksum" ""
+                .srcstep 137 137 17 "base64_roundtrip.crexx" 122 3 5 "  do offset = 0 to binlength(data) - 1"
+                .srcstep 128 128 17 "base64_roundtrip.crexx" 122 6 16 "  do offset = 0 to binlength(data) - 1"
+                load r39,0                                   * 0x000238:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 128 128 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 128 128 0 "offset" ""
+                .srcstep 134 134 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+                .srcstep 133 133 17 "base64_roundtrip.crexx" 122 20 29 "  do offset = 0 to binlength(data) - 1"
+                .srcstep 129 129 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+                .traceevent "V" 6 "R" "X" "r" 41 0 0 0 "data" ""
+                copy r38,r41                                 * 0x00023b:0008 Copy op2 to op1
+                .srcstep 130 130 25 "binary.crexx" 45 3 10 "  len = 0"
+                load r37,0                                   * 0x00023e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 130 130 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 37 130 130 0 "len" ""
+                .srcstep 131 131 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+                .traceevent "V" 6 "R" "I" "r" 37 0 0 0 "len" ""
+                .traceevent "V" 6 "R" "X" "r" 38 0 0 0 "data" ""
+                blen r37,r38                                 * 0x000241:00b8 Binary byte length op1 = length(op2)
+                .srcstep 132 132 25 "binary.crexx" 47 3 13 "  return len"
+                .traceevent "V" 6 "R" "I" "r" 37 0 0 0 "len" ""
+                icopy r36,r37                                * 0x000244:0009 Copy Integer op2 to op1
+                br lb_249                                    * 0x000247:0024 Branch to op1
+lb_249:         endlife r38                                  * 0x000249:0202 End storage reference lifetime for op1
+                isub r38,r36,1                               * 0x00024b:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 38 0 0 0 "" ""
+                .srcstep 134 134 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+lb_24f:         igt r37,r39,r38                              * 0x00024f:0068 Int Greater than op1=(op2>op3)
+                brt lb_261,r37                               * 0x000253:0025 Branch to op1 if op2 true
+                .srcstep 136 136 17 "base64_roundtrip.crexx" 123 5 48 "    checksum = checksum + <at..u8>(offset) data"
+                .traceevent "V" 6 "R" "I" "r" 40 136 136 0 "checksum" ""
+                .traceevent "V" 6 "R" "X" "r" 41 136 136 0 "data" ""
+                .traceevent "V" 6 "R" "I" "r" 39 136 136 0 "offset" ""
+                bgetu8 r36,r41,r39                           * 0x000256:0249 Unsigned 8-bit little-endian binary read op1=op2[op3]
+                iadd r40,r40,r36                             * 0x00025a:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 40 136 136 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 40 136 136 0 "checksum" ""
+                .srcstep 135 135 17 "base64_roundtrip.crexx" 122 6 12 "  do offset = 0 to binlength(data) - 1"
+                .srcstep 138 138 17 "base64_roundtrip.crexx" 124 3 6 "  end"
+                bctp lb_24f,r39                              * 0x00025e:015d inc op2; goto op1
+                .srcstep 139 139 33 "base64_roundtrip.crexx" 125 3 9 "  return checksum"
+                .traceevent "V" 6 "R" "I" "r" 40 139 139 0 "checksum" ""
+lb_261:         copy r3,r40                                  * 0x000261:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 3 139 139 0 "checksum" ""
+                .srcstep 146 146 17 "base64_roundtrip.crexx" 29 1 22 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .traceevent "V" 6 "R" "I" "r" 40 146 146 0 "checksum" ""
+                ine r39,r40,130560                           * 0x000264:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 39 146 146 0 "" ""
+                brf lb_281,r39                               * 0x000268:0026 Branch to op1 if op2 false
+                .srcstep 147 147 17 "base64_roundtrip.crexx" 29 23 27 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .srcstep 145 145 17 "base64_roundtrip.crexx" 29 28 85 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .meta "base64_roundtrip.main.checksum"="b" ".int" r3
+                .srcstep 144 144 17 "base64_roundtrip.crexx" 29 35 39 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+                .srcstep 141 141 33 "base64_roundtrip.crexx" 128 7 14 "  arg message = .string"
+                itos r3                                      * 0x00026b:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 3 141 141 0 "checksum" ""
+                concat r38,"expected checksum 130560, got ",r3 * 0x00026d:0088 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 38 141 141 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 38 141 141 0 "message" ""
+                .srcstep 142 142 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 38 142 142 0 "message" ""
+                sconcat r37,"FAIL:",r38                      * 0x000271:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 37 142 142 0 "" ""
+                say r37                                      * 0x000275:01c2 Say op1
+                .srcstep 143 143 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+                load r37,1                                   * 0x000277:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 37 145 145 0 "" ""
+                icopy r36,r37                                * 0x00027a:0009 Copy Integer op2 to op1
+                br lb_27f                                    * 0x00027d:0024 Branch to op1
+lb_27f:         ret r36                                      * 0x00027f:0031 Return op1
+                .srcstep 156 156 17 "base64_roundtrip.crexx" 31 1 110 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+                .srcstep 155 155 17 "base64_roundtrip.crexx" 31 5 46 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+                .srcstep 148 148 33 "base64_roundtrip.crexx" 31 90 90 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+lb_281:         itos r6                                      * 0x000281:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 6 148 148 0 "repetitions" ""
+                concat r39,"benchmark=base64_roundtrip repetitions=",r6 * 0x000283:0088 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 39 148 148 0 "" ""
+                sconcat r42,r39,"encoded_length="            * 0x000287:008a String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 42 148 148 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 42 148 148 0 "__inline_lhs_96_99" ""
+                .srcstep 154 154 33 "base64_roundtrip.crexx" 31 90 90 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+                .traceevent "V" 6 "R" "S" "r" 42 156 156 0 "__inline_lhs_96_99" ""
+                .srcstep 153 153 17 "base64_roundtrip.crexx" 31 75 81 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+                .srcstep 149 149 33 "base64_roundtrip.crexx" 31 81 81 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+                .traceevent "V" 6 "R" "S" "r" 1 149 149 0 "encoded" ""
+                scopy r38,r1                                 * 0x00028b:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 38 149 149 0 "string" ""
+                .srcstep 150 150 25 "length.crexx" 42 3 13 "  result = 0"
+                load r39,0                                   * 0x00028e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 150 150 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 150 150 0 "result" ""
+                .srcstep 151 151 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+                .traceevent "V" 6 "R" "I" "r" 39 156 156 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 38 156 156 0 "string" ""
+                strlen r39,r38                               * 0x000291:0095 String Length op1 = length(op2)
+                .srcstep 152 152 25 "length.crexx" 44 3 16 "  return result"
+                .traceevent "V" 6 "R" "I" "r" 39 156 156 0 "result" ""
+                icopy r37,r39                                * 0x000294:0009 Copy Integer op2 to op1
+                br lb_299                                    * 0x000297:0024 Branch to op1
+lb_299:         itos r37                                     * 0x000299:00e5 Set register string value from its int value
+                concat r39,r42,r37                           * 0x00029b:0086 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 39 156 156 0 "" ""
+                scopy r38,r39                                * 0x00029f:000b Copy String op2 to op1
+                br lb_2a4                                    * 0x0002a2:0024 Branch to op1
+lb_2a4:         sconcat r38,r38,"checksum="                  * 0x0002a4:008a String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 38 156 156 0 "" ""
+                itos r3                                      * 0x0002a8:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 3 156 156 0 "checksum" ""
+                append r38,r3                                * 0x0002aa:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 38 156 156 0 "" ""
+                say r38                                      * 0x0002ad:01c2 Say op1
+                .srcstep 157 157 17 "base64_roundtrip.crexx" 32 1 29 "say \"PASS: Base64 Roundtrip\""
+                say "PASS: Base64 Roundtrip"                 * 0x0002af:01c7 Say op1
+                .srcstep 158 158 17 "base64_roundtrip.crexx" 33 1 9 "return 0"
+                ret 0                                        * 0x0002b1:0032 Return op1
+                .meta "base64_roundtrip.main.argv"
+                .meta "base64_roundtrip.main.checksum"
+                .meta "base64_roundtrip.main.decoded"
+                .meta "base64_roundtrip.main.encoded"
+                .meta "base64_roundtrip.main.input"
+                .meta "base64_roundtrip.main.repetitions"
+
+base64_decode() .locals=40
+                .meta "base64_roundtrip.base64_decode"="b" ".binary" base64_decode() "encoded=.string"
+                .srcstep 501 501 17 "base64_roundtrip.crexx" 76 1 35 "base64_decode: procedure = .binary"
+                numsci 18,1,1                                * 0x0002b3:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 219 219 17 "base64_roundtrip.crexx" 77 7 24 "  arg encoded = .string"
+                .meta "base64_roundtrip.base64_decode.encoded"="b" ".string" a1 /* aka r41 */
+                .meta "base64_roundtrip.base64_decode.result"="b" ".binary" r6
+                .srcstep 220 220 17 "base64_roundtrip.crexx" 84 3 19 "  result = .binary"
+                null r6                                      * 0x0002b7:000e Null (clear) op1
+                .srcstep 224 224 17 "base64_roundtrip.crexx" 79 3 35 "  encoded_length = length(encoded)"
+                .srcstep 221 221 33 "base64_roundtrip.crexx" 79 35 35 "  encoded_length = length(encoded)"
+                .traceevent "V" 6 "R" "S" "a" 1 221 221 0 "encoded" ""
+                scopy r8,a1 /* aka r41 */                    * 0x0002b9:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 8 221 221 0 "string" ""
+                .srcstep 222 222 25 "length.crexx" 42 3 13 "  result = 0"
+                load r7,0                                    * 0x0002bc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 222 222 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 222 222 0 "result" ""
+                .srcstep 223 223 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+                .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 8 0 0 0 "string" ""
+                strlen r7,r8                                 * 0x0002bf:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+                copy r1,r7                                   * 0x0002c2:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+                .srcstep 225 225 17 "base64_roundtrip.crexx" 80 3 14 "  padding = 0"
+                .meta "base64_roundtrip.base64_decode.alphabet"="b" ".string" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+                .meta "base64_roundtrip.base64_decode.encoded_length"="b" ".int" r1
+                .meta "base64_roundtrip.base64_decode.padding"="b" ".int" r5
+                load r5,0                                    * 0x0002c5:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 225 225 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 225 225 0 "padding" ""
+                .srcstep 256 256 17 "base64_roundtrip.crexx" 81 3 46 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .srcstep 254 254 17 "base64_roundtrip.crexx" 81 6 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r9
+                .srcstep 226 226 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r10
+                .srcstep 227 227 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r12
+                .srcstep 228 228 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r14
+                .srcstep 229 229 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+                nulln r9,r10,r12,r14                         * 0x0002c8:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r15
+                .srcstep 230 230 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r18
+                .srcstep 231 231 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r20
+                .srcstep 232 232 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r15,r18,r20                            * 0x0002cd:0113 Clear three registers
+                .srcstep 233 233 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "S" "a" 1 233 233 0 "encoded" ""
+                scopy r19,a1 /* aka r41 */                   * 0x0002d1:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 19 233 233 0 "string" ""
+                .srcstep 234 234 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 1 234 234 0 "encoded_length" ""
+                icopy r17,r1                                 * 0x0002d4:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 17 234 234 0 "start" ""
+                .srcstep 235 235 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                load r11," "                                 * 0x0002d7:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 11 235 235 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 11 235 235 0 "pad" ""
+                .srcstep 236 236 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r13,0                                   * 0x0002da:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 236 236 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 13 236 236 0 "pad_index" ""
+                .srcstep 237 237 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r16,""                                  * 0x0002dd:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 16 237 237 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 16 237 237 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 17 256 256 0 "start" ""
+                ilt r21,r17,1                                * 0x0002e0:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 21 256 256 0 "" ""
+                brf lb_2ea,r21                               * 0x0002e4:0026 Branch to op1 if op2 false
+                .srcstep 238 238 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x0002e7:01e9 Signal type op1 (message op2)
+                .srcstep 239 239 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 14 256 256 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 11 256 256 0 "pad" ""
+lb_2ea:         strlen r14,r11                               * 0x0002ea:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 14 256 256 0 "pad_length" ""
+                ine r21,r14,1                                * 0x0002ed:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 21 256 256 0 "" ""
+                brf lb_2f7,r21                               * 0x0002f1:0026 Branch to op1 if op2 false
+                .srcstep 240 240 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x0002f4:01e9 Signal type op1 (message op2)
+                .srcstep 241 241 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+lb_2f7:         strlen r20,r19                               * 0x0002f7:0095 String Length op1 = length(op2)
+                .srcstep 242 242 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 17 242 242 0 "start" ""
+                isub r18,r17,1                               * 0x0002fa:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 18 242 242 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 18 242 242 0 "start_offset" ""
+                .srcstep 243 243 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 20 243 243 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 18 243 243 0 "start_offset" ""
+                isub r9,r20,r18                              * 0x0002fe:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 9 243 243 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 243 243 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 9 256 256 0 "available" ""
+                bge lb_309,r9,0                              * 0x000302:0163 if op2>=op3 then goto op1
+                .srcstep 244 244 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r9,0                                    * 0x000306:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 9 244 244 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 244 244 0 "available" ""
+                .srcstep 245 245 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_309:         load r10,1                                   * 0x000309:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 10 245 245 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 10 245 245 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 9 256 256 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+                bge lb_313,r9,r10                            * 0x00030c:0162 if op2>=op3 then goto op1
+                .srcstep 246 246 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 9 246 246 0 "available" ""
+                icopy r10,r9                                 * 0x000310:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 10 246 246 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+lb_313:         igt r21,r10,0                                * 0x000313:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 21 256 256 0 "" ""
+                brf lb_342,r21                               * 0x000317:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 18 256 256 0 "start_offset" ""
+                ieq r22,r18,0                                * 0x00031a:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+                brf lb_325,r22                               * 0x00031e:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+                ieq r22,r10,r20                              * 0x000321:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+lb_325:         brf lb_330,r22                               * 0x000325:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+                ieq r23,r20,1                                * 0x000328:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+                brtf lb_336,lb_33b,r23                       * 0x00032c:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_330:         load r23,0                                   * 0x000330:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+                brf lb_33b,r23                               * 0x000333:0026 Branch to op1 if op2 false
+                .srcstep 247 247 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+lb_336:         scopy r23,r19                                * 0x000336:000b Copy String op2 to op1
+                br lb_357                                    * 0x000339:0024 Branch to op1
+                .srcstep 248 248 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 18 256 256 0 "start_offset" ""
+lb_33b:         setstrpos r19,r18                            * 0x00033b:009a Set String (op1) charpos set to op2
+                .srcstep 249 249 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+                substring r16,r19,r10                        * 0x00033e:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 250 250 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 10 250 250 0 "copy_length" ""
+lb_342:         isub r15,1,r10                               * 0x000342:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 15 250 250 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 15 250 250 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 15 256 256 0 "padding_length" ""
+                ble lb_352,r15,0                             * 0x000346:0167 if op2<=op3 then goto op1
+                .srcstep 251 251 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 12 256 256 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 11 256 256 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 13 256 256 0 "pad_index" ""
+                strchar r12,r11,r13                          * 0x00034a:0096 op1 (as int) = op2[op3]
+                .srcstep 252 252 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 12 256 256 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 15 256 256 0 "padding_length" ""
+                padstr r16,r12,r15                           * 0x00034e:00a3 set op1=op2[repeated op3 times]
+                .srcstep 253 253 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+lb_352:         scopy r23,r16                                * 0x000352:000b Copy String op2 to op1
+                br lb_357                                    * 0x000355:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_357:         req r23,r23,"="                              * 0x000357:0234 Loose REXX Equals op1=(op2=op3)
+                .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+                brf lb_362,r23                               * 0x00035b:0026 Branch to op1 if op2 false
+                .srcstep 257 257 17 "base64_roundtrip.crexx" 81 47 51 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .srcstep 255 255 17 "base64_roundtrip.crexx" 81 52 73 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 5 255 255 0 "padding" ""
+                iadd r5,r5,1                                 * 0x00035e:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 255 255 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 255 255 0 "padding" ""
+                .srcstep 288 288 17 "base64_roundtrip.crexx" 82 3 50 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .srcstep 286 286 17 "base64_roundtrip.crexx" 82 6 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r23
+                .srcstep 258 258 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r21
+                .srcstep 259 259 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r19
+                .srcstep 260 260 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r17
+                .srcstep 261 261 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+lb_362:         nulln r23,r21,r19,r17                        * 0x000362:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r16
+                .srcstep 262 262 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r13
+                .srcstep 263 263 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r11
+                .srcstep 264 264 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r16,r13,r11                            * 0x000367:0113 Clear three registers
+                .srcstep 265 265 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "S" "a" 1 265 265 0 "encoded" ""
+                scopy r12,a1 /* aka r41 */                   * 0x00036b:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 12 265 265 0 "string" ""
+                .srcstep 266 266 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 1 266 266 0 "encoded_length" ""
+                isub r14,r1,1                                * 0x00036e:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 14 266 266 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 266 266 0 "start" ""
+                .srcstep 267 267 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                load r20," "                                 * 0x000372:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 20 267 267 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 20 267 267 0 "pad" ""
+                .srcstep 268 268 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r18,0                                   * 0x000375:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 18 268 268 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 18 268 268 0 "pad_index" ""
+                .srcstep 269 269 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r15,""                                  * 0x000378:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 15 269 269 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 15 269 269 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 14 288 288 0 "start" ""
+                ilt r10,r14,1                                * 0x00037b:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 10 288 288 0 "" ""
+                brf lb_385,r10                               * 0x00037f:0026 Branch to op1 if op2 false
+                .srcstep 270 270 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x000382:01e9 Signal type op1 (message op2)
+                .srcstep 271 271 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 17 288 288 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 20 288 288 0 "pad" ""
+lb_385:         strlen r17,r20                               * 0x000385:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 17 288 288 0 "pad_length" ""
+                ine r10,r17,1                                * 0x000388:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 10 288 288 0 "" ""
+                brf lb_392,r10                               * 0x00038c:0026 Branch to op1 if op2 false
+                .srcstep 272 272 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x00038f:01e9 Signal type op1 (message op2)
+                .srcstep 273 273 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+lb_392:         strlen r11,r12                               * 0x000392:0095 String Length op1 = length(op2)
+                .srcstep 274 274 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 14 274 274 0 "start" ""
+                isub r13,r14,1                               * 0x000395:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 13 274 274 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 13 274 274 0 "start_offset" ""
+                .srcstep 275 275 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 11 275 275 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 13 275 275 0 "start_offset" ""
+                isub r23,r11,r13                             * 0x000399:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 23 275 275 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 23 275 275 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 23 288 288 0 "available" ""
+                bge lb_3a4,r23,0                             * 0x00039d:0163 if op2>=op3 then goto op1
+                .srcstep 276 276 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r23,0                                   * 0x0003a1:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 23 276 276 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 23 276 276 0 "available" ""
+                .srcstep 277 277 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_3a4:         load r21,1                                   * 0x0003a4:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 21 277 277 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 21 277 277 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 23 288 288 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+                bge lb_3ae,r23,r21                           * 0x0003a7:0162 if op2>=op3 then goto op1
+                .srcstep 278 278 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 23 278 278 0 "available" ""
+                icopy r21,r23                                * 0x0003ab:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 21 278 278 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+lb_3ae:         igt r10,r21,0                                * 0x0003ae:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 10 288 288 0 "" ""
+                brf lb_3dd,r10                               * 0x0003b2:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 13 288 288 0 "start_offset" ""
+                ieq r9,r13,0                                 * 0x0003b5:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+                brf lb_3c0,r9                                * 0x0003b9:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+                ieq r9,r21,r11                               * 0x0003bc:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+lb_3c0:         brf lb_3cb,r9                                * 0x0003c0:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+                ieq r24,r11,1                                * 0x0003c3:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+                brtf lb_3d1,lb_3d6,r24                       * 0x0003c7:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_3cb:         load r24,0                                   * 0x0003cb:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+                brf lb_3d6,r24                               * 0x0003ce:0026 Branch to op1 if op2 false
+                .srcstep 279 279 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+lb_3d1:         scopy r24,r12                                * 0x0003d1:000b Copy String op2 to op1
+                br lb_3f2                                    * 0x0003d4:0024 Branch to op1
+                .srcstep 280 280 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 13 288 288 0 "start_offset" ""
+lb_3d6:         setstrpos r12,r13                            * 0x0003d6:009a Set String (op1) charpos set to op2
+                .srcstep 281 281 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+                substring r15,r12,r21                        * 0x0003d9:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 282 282 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 21 282 282 0 "copy_length" ""
+lb_3dd:         isub r16,1,r21                               * 0x0003dd:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 16 282 282 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 16 282 282 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 16 288 288 0 "padding_length" ""
+                ble lb_3ed,r16,0                             * 0x0003e1:0167 if op2<=op3 then goto op1
+                .srcstep 283 283 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 19 288 288 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 20 288 288 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 18 288 288 0 "pad_index" ""
+                strchar r19,r20,r18                          * 0x0003e5:0096 op1 (as int) = op2[op3]
+                .srcstep 284 284 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 19 288 288 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 16 288 288 0 "padding_length" ""
+                padstr r15,r19,r16                           * 0x0003e9:00a3 set op1=op2[repeated op3 times]
+                .srcstep 285 285 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+lb_3ed:         scopy r24,r15                                * 0x0003ed:000b Copy String op2 to op1
+                br lb_3f2                                    * 0x0003f0:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_3f2:         req r24,r24,"="                              * 0x0003f2:0234 Loose REXX Equals op1=(op2=op3)
+                .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+                brf lb_3fd,r24                               * 0x0003f6:0026 Branch to op1 if op2 false
+                .srcstep 289 289 17 "base64_roundtrip.crexx" 82 51 55 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .srcstep 287 287 17 "base64_roundtrip.crexx" 82 56 77 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+                .traceevent "V" 6 "R" "I" "r" 5 287 287 0 "padding" ""
+                iadd r5,r5,1                                 * 0x0003f9:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 5 287 287 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 287 287 0 "padding" ""
+                .srcstep 290 290 17 "base64_roundtrip.crexx" 83 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+                .meta "base64_roundtrip.base64_decode.output_length"="b" ".int" r3
+                .traceevent "V" 6 "R" "I" "r" 1 290 290 0 "encoded_length" ""
+lb_3fd:         idiv r24,r1,4                                * 0x0003fd:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 24 290 290 0 "" ""
+                imult r24,r24,3                              * 0x000401:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 24 290 290 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 5 290 290 0 "padding" ""
+                isub r3,r24,r5                               * 0x000405:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 3 290 290 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 290 290 0 "output_length" ""
+                .srcstep 295 295 17 "base64_roundtrip.crexx" 85 3 39 "  call binresize result, output_length"
+                .srcstep 291 291 33 "base64_roundtrip.crexx" 85 39 39 "  call binresize result, output_length"
+                .traceevent "V" 6 "R" "I" "r" 3 291 291 0 "output_length" ""
+                icopy r27,r3                                 * 0x000409:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 27 291 291 0 "length" ""
+                .srcstep 292 292 25 "binary.crexx" 249 3 13 "  result = 0"
+                load r28,0                                   * 0x00040c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 28 292 292 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 28 292 292 0 "result" ""
+                .srcstep 293 293 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+                .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "length" ""
+                bresize r6,r27                               * 0x00040f:0246 Resize binary op1 to op2 bytes, zero-fill growth
+                .srcstep 294 294 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+                .traceevent "V" 6 "R" "I" "r" 28 0 0 0 "result" ""
+                .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+                blen r28,r6                                  * 0x000412:00b8 Binary byte length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 28 0 0 0 "result" ""
+                .traceevent "A" 6 "R" "I" "r" 28 0 0 0 "__inline_unused_889" ""
+                .srcstep 296 296 17 "base64_roundtrip.crexx" 87 3 19 "  input_offset = 1"
+                .meta "base64_roundtrip.base64_decode.input_offset"="b" ".int" r2
+                load r2,1                                    * 0x000415:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 296 296 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 296 296 0 "input_offset" ""
+                .srcstep 297 297 17 "base64_roundtrip.crexx" 88 3 20 "  output_offset = 0"
+                .meta "base64_roundtrip.base64_decode.output_offset"="b" ".int" r4
+                load r4,0                                    * 0x000418:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 297 297 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 297 297 0 "output_offset" ""
+                .srcstep 498 498 17 "base64_roundtrip.crexx" 89 3 5 "  do while input_offset <= encoded_length"
+                .srcstep 298 298 17 "base64_roundtrip.crexx" 89 6 42 "  do while input_offset <= encoded_length"
+                .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "input_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+lb_41b:         ilte r17,r2,r1                               * 0x00041b:0071 Int Less than equals op1=(op2<=op3)
+                .traceevent "O" 4 "R" "B" "r" 17 0 0 0 "" ""
+                brf lb_7f9,r17                               * 0x00041f:0026 Branch to op1 if op2 false
+                .srcstep 343 343 17 "base64_roundtrip.crexx" 90 5 70 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.digit1"="b" ".int" r21
+                .srcstep 342 342 17 "base64_roundtrip.crexx" 90 14 26 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .srcstep 328 328 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+                .srcstep 327 327 17 "base64_roundtrip.crexx" 90 27 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r14
+                .srcstep 299 299 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r13
+                .srcstep 300 300 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r11
+                .srcstep 301 301 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r29
+                .srcstep 302 302 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+                nulln r14,r13,r11,r29                        * 0x000422:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r30
+                .srcstep 303 303 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r33
+                .srcstep 304 304 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r35
+                .srcstep 305 305 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r30,r33,r35                            * 0x000427:0113 Clear three registers
+                .srcstep 306 306 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .traceevent "V" 6 "R" "S" "a" 1 306 306 0 "encoded" ""
+                scopy r34,a1 /* aka r41 */                   * 0x00042b:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 34 306 306 0 "string" ""
+                .srcstep 307 307 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                .traceevent "V" 6 "R" "I" "r" 2 307 307 0 "input_offset" ""
+                icopy r32,r2                                 * 0x00042e:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 32 307 307 0 "start" ""
+                .srcstep 308 308 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+                load r12," "                                 * 0x000431:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 12 308 308 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 12 308 308 0 "pad" ""
+                .srcstep 309 309 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r10,0                                   * 0x000434:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 10 309 309 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 10 309 309 0 "pad_index" ""
+                .srcstep 310 310 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r31,""                                  * 0x000437:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 31 310 310 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 31 310 310 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 32 328 328 0 "start" ""
+                ilt r36,r32,1                                * 0x00043a:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 36 328 328 0 "" ""
+                brf lb_444,r36                               * 0x00043e:0026 Branch to op1 if op2 false
+                .srcstep 311 311 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x000441:01e9 Signal type op1 (message op2)
+                .srcstep 312 312 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 29 328 328 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 12 328 328 0 "pad" ""
+lb_444:         strlen r29,r12                               * 0x000444:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 29 328 328 0 "pad_length" ""
+                ine r36,r29,1                                * 0x000447:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 36 328 328 0 "" ""
+                brf lb_451,r36                               * 0x00044b:0026 Branch to op1 if op2 false
+                .srcstep 313 313 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x00044e:01e9 Signal type op1 (message op2)
+                .srcstep 314 314 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+lb_451:         strlen r35,r34                               * 0x000451:0095 String Length op1 = length(op2)
+                .srcstep 315 315 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 32 315 315 0 "start" ""
+                isub r33,r32,1                               * 0x000454:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 33 315 315 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 33 315 315 0 "start_offset" ""
+                .srcstep 316 316 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 35 316 316 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 33 316 316 0 "start_offset" ""
+                isub r14,r35,r33                             * 0x000458:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 14 316 316 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 316 316 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 14 328 328 0 "available" ""
+                bge lb_463,r14,0                             * 0x00045c:0163 if op2>=op3 then goto op1
+                .srcstep 317 317 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r14,0                                   * 0x000460:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 14 317 317 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 317 317 0 "available" ""
+                .srcstep 318 318 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_463:         load r13,1                                   * 0x000463:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 318 318 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 13 318 318 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 14 328 328 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+                bge lb_46d,r14,r13                           * 0x000466:0162 if op2>=op3 then goto op1
+                .srcstep 319 319 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 14 319 319 0 "available" ""
+                icopy r13,r14                                * 0x00046a:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 13 319 319 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+lb_46d:         igt r36,r13,0                                * 0x00046d:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 36 328 328 0 "" ""
+                brf lb_49c,r36                               * 0x000471:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 33 328 328 0 "start_offset" ""
+                ieq r37,r33,0                                * 0x000474:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+                brf lb_47f,r37                               * 0x000478:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+                ieq r37,r13,r35                              * 0x00047b:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+lb_47f:         brf lb_48a,r37                               * 0x00047f:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+                ieq r38,r35,1                                * 0x000482:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 38 328 328 0 "" ""
+                brtf lb_490,lb_495,r38                       * 0x000486:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_48a:         load r38,0                                   * 0x00048a:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 38 328 328 0 "" ""
+                brf lb_495,r38                               * 0x00048d:0026 Branch to op1 if op2 false
+                .srcstep 320 320 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+lb_490:         scopy r38,r34                                * 0x000490:000b Copy String op2 to op1
+                br lb_4b1                                    * 0x000493:0024 Branch to op1
+                .srcstep 321 321 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 33 328 328 0 "start_offset" ""
+lb_495:         setstrpos r34,r33                            * 0x000495:009a Set String (op1) charpos set to op2
+                .srcstep 322 322 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+                substring r31,r34,r13                        * 0x000498:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 323 323 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 13 323 323 0 "copy_length" ""
+lb_49c:         isub r30,1,r13                               * 0x00049c:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 30 323 323 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 30 323 323 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 30 328 328 0 "padding_length" ""
+                ble lb_4ac,r30,0                             * 0x0004a0:0167 if op2<=op3 then goto op1
+                .srcstep 324 324 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 11 328 328 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 12 328 328 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 10 328 328 0 "pad_index" ""
+                strchar r11,r12,r10                          * 0x0004a4:0096 op1 (as int) = op2[op3]
+                .srcstep 325 325 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 11 328 328 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 30 328 328 0 "padding_length" ""
+                padstr r31,r11,r30                           * 0x0004a8:00a3 set op1=op2[repeated op3 times]
+                .srcstep 326 326 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+lb_4ac:         scopy r38,r31                                * 0x0004ac:000b Copy String op2 to op1
+                br lb_4b1                                    * 0x0004af:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_4b1:         scopy r16,r38                                * 0x0004b1:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 16 328 328 0 "character" ""
+                .srcstep 337 337 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+                .srcstep 336 336 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+                .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r38
+                .srcstep 329 329 25 "pos.crexx" 44 3 24 "  found_position = .int"
+                null r38                                     * 0x0004b4:000e Null (clear) op1
+                .srcstep 330 330 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                .traceevent "V" 6 "R" "S" "r" 16 330 330 0 "character" ""
+                scopy r35,r16                                * 0x0004b6:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 35 330 330 0 "needle" ""
+                .srcstep 331 331 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                load r36,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x0004b9:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 36 331 331 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 36 331 331 0 "haystack" ""
+                .traceevent "V" 6 "R" "S" "r" 35 337 337 0 "needle" ""
+                seq r34,r35,""                               * 0x0004bc:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+                brt lb_4c7,r34                               * 0x0004c0:0025 Branch to op1 if op2 true
+                .traceevent "V" 6 "R" "S" "r" 36 337 337 0 "haystack" ""
+                seq r34,r36,""                               * 0x0004c3:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+lb_4c7:         brf lb_4d2,r34                               * 0x0004c7:0026 Branch to op1 if op2 false
+                .srcstep 332 332 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+                load r33,0                                   * 0x0004ca:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 33 337 337 0 "" ""
+                icopy r34,r33                                * 0x0004cd:0009 Copy Integer op2 to op1
+                br lb_4de                                    * 0x0004d0:0024 Branch to op1
+                .srcstep 333 333 25 "pos.crexx" 50 3 25 "  found_position = start"
+lb_4d2:         load r38,1                                   * 0x0004d2:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 333 333 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 38 333 333 0 "found_position" ""
+                .srcstep 334 334 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+                .traceevent "V" 6 "R" "I" "r" 38 337 337 0 "found_position" ""
+                .traceevent "V" 6 "R" "S" "r" 35 337 337 0 "needle" ""
+                .traceevent "V" 6 "R" "S" "r" 36 337 337 0 "haystack" ""
+                strpos r38,r35,r36                           * 0x0004d5:00a4 op1 is position of op2 in op3
+                .srcstep 335 335 25 "pos.crexx" 52 3 24 "  return found_position"
+                .traceevent "V" 6 "R" "I" "r" 38 337 337 0 "found_position" ""
+                icopy r34,r38                                * 0x0004d9:0009 Copy Integer op2 to op1
+                br lb_4de                                    * 0x0004dc:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.found_position"
+lb_4de:         isub r15,r34,1                               * 0x0004de:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 15 337 337 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 15 337 337 0 "digit" ""
+                .srcstep 339 339 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+                .traceevent "V" 6 "R" "I" "r" 15 339 339 0 "digit" ""
+                bge lb_4ee,r15,0                             * 0x0004e2:0163 if op2>=op3 then goto op1
+                .srcstep 340 340 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+                .srcstep 338 338 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+                load r36,0                                   * 0x0004e6:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 36 343 343 0 "" ""
+                icopy r38,r36                                * 0x0004e9:0009 Copy Integer op2 to op1
+                br lb_4f3                                    * 0x0004ec:0024 Branch to op1
+                .srcstep 341 341 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+                .traceevent "V" 6 "R" "I" "r" 15 343 343 0 "digit" ""
+lb_4ee:         icopy r38,r15                                * 0x0004ee:0009 Copy Integer op2 to op1
+                br lb_4f3                                    * 0x0004f1:0024 Branch to op1
+lb_4f3:         icopy r21,r38                                * 0x0004f3:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 21 343 343 0 "digit1" ""
+                .srcstep 388 388 17 "base64_roundtrip.crexx" 91 5 74 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.digit2"="b" ".int" r20
+                .srcstep 387 387 17 "base64_roundtrip.crexx" 91 14 26 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .srcstep 373 373 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+                .srcstep 372 372 17 "base64_roundtrip.crexx" 91 27 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r35
+                .srcstep 344 344 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r34
+                .srcstep 345 345 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r32
+                .srcstep 346 346 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r30
+                .srcstep 347 347 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+                nulln r35,r34,r32,r30                        * 0x0004f6:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r29
+                .srcstep 348 348 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r14
+                .srcstep 349 349 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r12
+                .srcstep 350 350 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r29,r14,r12                            * 0x0004fb:0113 Clear three registers
+                .srcstep 351 351 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .traceevent "V" 6 "R" "S" "a" 1 351 351 0 "encoded" ""
+                scopy r13,a1 /* aka r41 */                   * 0x0004ff:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 13 351 351 0 "string" ""
+                .srcstep 352 352 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                .traceevent "V" 6 "R" "I" "r" 2 352 352 0 "input_offset" ""
+                iadd r15,r2,1                                * 0x000502:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 15 352 352 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 15 352 352 0 "start" ""
+                .srcstep 353 353 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+                load r33," "                                 * 0x000506:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 33 353 353 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 33 353 353 0 "pad" ""
+                .srcstep 354 354 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r31,0                                   * 0x000509:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 31 354 354 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 31 354 354 0 "pad_index" ""
+                .srcstep 355 355 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r16,""                                  * 0x00050c:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 16 355 355 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 16 355 355 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 15 373 373 0 "start" ""
+                ilt r11,r15,1                                * 0x00050f:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 11 373 373 0 "" ""
+                brf lb_519,r11                               * 0x000513:0026 Branch to op1 if op2 false
+                .srcstep 356 356 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x000516:01e9 Signal type op1 (message op2)
+                .srcstep 357 357 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 30 373 373 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 33 373 373 0 "pad" ""
+lb_519:         strlen r30,r33                               * 0x000519:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 30 373 373 0 "pad_length" ""
+                ine r11,r30,1                                * 0x00051c:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 11 373 373 0 "" ""
+                brf lb_526,r11                               * 0x000520:0026 Branch to op1 if op2 false
+                .srcstep 358 358 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x000523:01e9 Signal type op1 (message op2)
+                .srcstep 359 359 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+lb_526:         strlen r12,r13                               * 0x000526:0095 String Length op1 = length(op2)
+                .srcstep 360 360 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 15 360 360 0 "start" ""
+                isub r14,r15,1                               * 0x000529:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 14 360 360 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 360 360 0 "start_offset" ""
+                .srcstep 361 361 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 12 361 361 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 14 361 361 0 "start_offset" ""
+                isub r35,r12,r14                             * 0x00052d:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 35 361 361 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 35 361 361 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 35 373 373 0 "available" ""
+                bge lb_538,r35,0                             * 0x000531:0163 if op2>=op3 then goto op1
+                .srcstep 362 362 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r35,0                                   * 0x000535:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 35 362 362 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 35 362 362 0 "available" ""
+                .srcstep 363 363 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_538:         load r34,1                                   * 0x000538:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 363 363 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 34 363 363 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 35 373 373 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+                bge lb_542,r35,r34                           * 0x00053b:0162 if op2>=op3 then goto op1
+                .srcstep 364 364 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 35 364 364 0 "available" ""
+                icopy r34,r35                                * 0x00053f:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 34 364 364 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+lb_542:         igt r11,r34,0                                * 0x000542:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 11 373 373 0 "" ""
+                brf lb_571,r11                               * 0x000546:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 14 373 373 0 "start_offset" ""
+                ieq r10,r14,0                                * 0x000549:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+                brf lb_554,r10                               * 0x00054d:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+                ieq r10,r34,r12                              * 0x000550:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+lb_554:         brf lb_55f,r10                               * 0x000554:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+                ieq r39,r12,1                                * 0x000557:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 39 373 373 0 "" ""
+                brtf lb_565,lb_56a,r39                       * 0x00055b:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_55f:         load r39,0                                   * 0x00055f:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 39 373 373 0 "" ""
+                brf lb_56a,r39                               * 0x000562:0026 Branch to op1 if op2 false
+                .srcstep 365 365 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+lb_565:         scopy r39,r13                                * 0x000565:000b Copy String op2 to op1
+                br lb_586                                    * 0x000568:0024 Branch to op1
+                .srcstep 366 366 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 14 373 373 0 "start_offset" ""
+lb_56a:         setstrpos r13,r14                            * 0x00056a:009a Set String (op1) charpos set to op2
+                .srcstep 367 367 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+                substring r16,r13,r34                        * 0x00056d:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 368 368 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 34 368 368 0 "copy_length" ""
+lb_571:         isub r29,1,r34                               * 0x000571:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 29 368 368 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 29 368 368 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 29 373 373 0 "padding_length" ""
+                ble lb_581,r29,0                             * 0x000575:0167 if op2<=op3 then goto op1
+                .srcstep 369 369 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 32 373 373 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 33 373 373 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 31 373 373 0 "pad_index" ""
+                strchar r32,r33,r31                          * 0x000579:0096 op1 (as int) = op2[op3]
+                .srcstep 370 370 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 32 373 373 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 29 373 373 0 "padding_length" ""
+                padstr r16,r32,r29                           * 0x00057d:00a3 set op1=op2[repeated op3 times]
+                .srcstep 371 371 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+lb_581:         scopy r39,r16                                * 0x000581:000b Copy String op2 to op1
+                br lb_586                                    * 0x000584:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_586:         scopy r38,r39                                * 0x000586:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 38 373 373 0 "character" ""
+                .srcstep 382 382 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+                .srcstep 381 381 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+                .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r39
+                .srcstep 374 374 25 "pos.crexx" 44 3 24 "  found_position = .int"
+                null r39                                     * 0x000589:000e Null (clear) op1
+                .srcstep 375 375 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                .traceevent "V" 6 "R" "S" "r" 38 375 375 0 "character" ""
+                scopy r34,r38                                * 0x00058b:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 34 375 375 0 "needle" ""
+                .srcstep 376 376 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                load r35,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x00058e:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 35 376 376 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 35 376 376 0 "haystack" ""
+                .traceevent "V" 6 "R" "S" "r" 34 382 382 0 "needle" ""
+                seq r33,r34,""                               * 0x000591:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+                brt lb_59c,r33                               * 0x000595:0025 Branch to op1 if op2 true
+                .traceevent "V" 6 "R" "S" "r" 35 382 382 0 "haystack" ""
+                seq r33,r35,""                               * 0x000598:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+lb_59c:         brf lb_5a7,r33                               * 0x00059c:0026 Branch to op1 if op2 false
+                .srcstep 377 377 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+                load r32,0                                   * 0x00059f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 32 382 382 0 "" ""
+                icopy r33,r32                                * 0x0005a2:0009 Copy Integer op2 to op1
+                br lb_5b3                                    * 0x0005a5:0024 Branch to op1
+                .srcstep 378 378 25 "pos.crexx" 50 3 25 "  found_position = start"
+lb_5a7:         load r39,1                                   * 0x0005a7:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 378 378 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 378 378 0 "found_position" ""
+                .srcstep 379 379 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+                .traceevent "V" 6 "R" "I" "r" 39 382 382 0 "found_position" ""
+                .traceevent "V" 6 "R" "S" "r" 34 382 382 0 "needle" ""
+                .traceevent "V" 6 "R" "S" "r" 35 382 382 0 "haystack" ""
+                strpos r39,r34,r35                           * 0x0005aa:00a4 op1 is position of op2 in op3
+                .srcstep 380 380 25 "pos.crexx" 52 3 24 "  return found_position"
+                .traceevent "V" 6 "R" "I" "r" 39 382 382 0 "found_position" ""
+                icopy r33,r39                                * 0x0005ae:0009 Copy Integer op2 to op1
+                br lb_5b3                                    * 0x0005b1:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.found_position"
+lb_5b3:         isub r36,r33,1                               * 0x0005b3:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 36 382 382 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 36 382 382 0 "digit" ""
+                .srcstep 384 384 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+                .traceevent "V" 6 "R" "I" "r" 36 384 384 0 "digit" ""
+                bge lb_5c3,r36,0                             * 0x0005b7:0163 if op2>=op3 then goto op1
+                .srcstep 385 385 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+                .srcstep 383 383 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+                load r35,0                                   * 0x0005bb:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 35 388 388 0 "" ""
+                icopy r39,r35                                * 0x0005be:0009 Copy Integer op2 to op1
+                br lb_5c8                                    * 0x0005c1:0024 Branch to op1
+                .srcstep 386 386 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+                .traceevent "V" 6 "R" "I" "r" 36 388 388 0 "digit" ""
+lb_5c3:         icopy r39,r36                                * 0x0005c3:0009 Copy Integer op2 to op1
+                br lb_5c8                                    * 0x0005c6:0024 Branch to op1
+lb_5c8:         icopy r20,r39                                * 0x0005c8:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 20 388 388 0 "digit2" ""
+                .srcstep 418 418 17 "base64_roundtrip.crexx" 92 5 49 "    char3 = substr(encoded, input_offset + 2, 1)"
+                .meta "base64_roundtrip.base64_decode.char3"="b" ".string" r24
+                .srcstep 417 417 17 "base64_roundtrip.crexx" 92 13 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r39
+                .srcstep 389 389 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r38
+                .srcstep 390 390 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r35
+                .srcstep 391 391 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r33
+                .srcstep 392 392 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+                nulln r39,r38,r35,r33                        * 0x0005cb:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r32
+                .srcstep 393 393 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r29
+                .srcstep 394 394 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r15
+                .srcstep 395 395 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r32,r29,r15                            * 0x0005d0:0113 Clear three registers
+                .srcstep 396 396 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+                .traceevent "V" 6 "R" "S" "a" 1 396 396 0 "encoded" ""
+                scopy r16,a1 /* aka r41 */                   * 0x0005d4:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 16 396 396 0 "string" ""
+                .srcstep 397 397 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+                .traceevent "V" 6 "R" "I" "r" 2 397 397 0 "input_offset" ""
+                iadd r30,r2,2                                * 0x0005d7:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 30 397 397 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 30 397 397 0 "start" ""
+                .srcstep 398 398 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+                load r36," "                                 * 0x0005db:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 36 398 398 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 36 398 398 0 "pad" ""
+                .srcstep 399 399 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r34,0                                   * 0x0005de:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 399 399 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 34 399 399 0 "pad_index" ""
+                .srcstep 400 400 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r31,""                                  * 0x0005e1:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 31 400 400 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 31 400 400 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 30 418 418 0 "start" ""
+                ilt r14,r30,1                                * 0x0005e4:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 14 418 418 0 "" ""
+                brf lb_5ee,r14                               * 0x0005e8:0026 Branch to op1 if op2 false
+                .srcstep 401 401 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x0005eb:01e9 Signal type op1 (message op2)
+                .srcstep 402 402 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 33 418 418 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 36 418 418 0 "pad" ""
+lb_5ee:         strlen r33,r36                               * 0x0005ee:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 33 418 418 0 "pad_length" ""
+                ine r14,r33,1                                * 0x0005f1:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 14 418 418 0 "" ""
+                brf lb_5fb,r14                               * 0x0005f5:0026 Branch to op1 if op2 false
+                .srcstep 403 403 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x0005f8:01e9 Signal type op1 (message op2)
+                .srcstep 404 404 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+lb_5fb:         strlen r15,r16                               * 0x0005fb:0095 String Length op1 = length(op2)
+                .srcstep 405 405 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 30 405 405 0 "start" ""
+                isub r29,r30,1                               * 0x0005fe:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 29 405 405 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 29 405 405 0 "start_offset" ""
+                .srcstep 406 406 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 15 406 406 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 29 406 406 0 "start_offset" ""
+                isub r39,r15,r29                             * 0x000602:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 39 406 406 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 406 406 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 39 418 418 0 "available" ""
+                bge lb_60d,r39,0                             * 0x000606:0163 if op2>=op3 then goto op1
+                .srcstep 407 407 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r39,0                                   * 0x00060a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 407 407 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 407 407 0 "available" ""
+                .srcstep 408 408 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_60d:         load r38,1                                   * 0x00060d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 408 408 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 38 408 408 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 39 418 418 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+                bge lb_617,r39,r38                           * 0x000610:0162 if op2>=op3 then goto op1
+                .srcstep 409 409 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 39 409 409 0 "available" ""
+                icopy r38,r39                                * 0x000614:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 38 409 409 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+lb_617:         igt r14,r38,0                                * 0x000617:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 14 418 418 0 "" ""
+                brf lb_646,r14                               * 0x00061b:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 29 418 418 0 "start_offset" ""
+                ieq r13,r29,0                                * 0x00061e:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+                brf lb_629,r13                               * 0x000622:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+                ieq r13,r38,r15                              * 0x000625:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+lb_629:         brf lb_634,r13                               * 0x000629:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+                ieq r12,r15,1                                * 0x00062c:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 12 418 418 0 "" ""
+                brtf lb_63a,lb_63f,r12                       * 0x000630:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_634:         load r12,0                                   * 0x000634:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 12 418 418 0 "" ""
+                brf lb_63f,r12                               * 0x000637:0026 Branch to op1 if op2 false
+                .srcstep 410 410 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+lb_63a:         scopy r14,r16                                * 0x00063a:000b Copy String op2 to op1
+                br lb_65b                                    * 0x00063d:0024 Branch to op1
+                .srcstep 411 411 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 29 418 418 0 "start_offset" ""
+lb_63f:         setstrpos r16,r29                            * 0x00063f:009a Set String (op1) charpos set to op2
+                .srcstep 412 412 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+                substring r31,r16,r38                        * 0x000642:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 413 413 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 38 413 413 0 "copy_length" ""
+lb_646:         isub r32,1,r38                               * 0x000646:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 32 413 413 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 32 413 413 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 32 418 418 0 "padding_length" ""
+                ble lb_656,r32,0                             * 0x00064a:0167 if op2<=op3 then goto op1
+                .srcstep 414 414 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 35 418 418 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 36 418 418 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 34 418 418 0 "pad_index" ""
+                strchar r35,r36,r34                          * 0x00064e:0096 op1 (as int) = op2[op3]
+                .srcstep 415 415 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 35 418 418 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 32 418 418 0 "padding_length" ""
+                padstr r31,r35,r32                           * 0x000652:00a3 set op1=op2[repeated op3 times]
+                .srcstep 416 416 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+lb_656:         scopy r14,r31                                * 0x000656:000b Copy String op2 to op1
+                br lb_65b                                    * 0x000659:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_65b:         scopy r24,r14                                * 0x00065b:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 24 418 418 0 "char3" ""
+                .srcstep 448 448 17 "base64_roundtrip.crexx" 93 5 49 "    char4 = substr(encoded, input_offset + 3, 1)"
+                .meta "base64_roundtrip.base64_decode.char4"="b" ".string" r23
+                .srcstep 447 447 17 "base64_roundtrip.crexx" 93 13 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+                .meta "base64_roundtrip.base64_decode.available"="b" ".int" r39
+                .srcstep 419 419 25 "substr.crexx" 51 3 19 "  available = .int"
+                .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r38
+                .srcstep 420 420 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+                .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r35
+                .srcstep 421 421 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+                .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r33
+                .srcstep 422 422 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+                nulln r39,r38,r35,r33                        * 0x00065e:0114 Clear four registers
+                .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r32
+                .srcstep 423 423 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+                .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r29
+                .srcstep 424 424 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+                .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r15
+                .srcstep 425 425 25 "substr.crexx" 46 3 23 "  string_length = .int"
+                nulln r32,r29,r15                            * 0x000663:0113 Clear three registers
+                .srcstep 426 426 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+                .traceevent "V" 6 "R" "S" "a" 1 426 426 0 "encoded" ""
+                scopy r16,a1 /* aka r41 */                   * 0x000667:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 16 426 426 0 "string" ""
+                .srcstep 427 427 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+                .traceevent "V" 6 "R" "I" "r" 2 427 427 0 "input_offset" ""
+                iadd r30,r2,3                                * 0x00066a:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 30 427 427 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 30 427 427 0 "start" ""
+                .srcstep 428 428 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+                load r36," "                                 * 0x00066e:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 36 428 428 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 36 428 428 0 "pad" ""
+                .srcstep 429 429 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+                load r34,0                                   * 0x000671:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 429 429 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 34 429 429 0 "pad_index" ""
+                .srcstep 430 430 25 "substr.crexx" 54 3 14 "  result = \"\""
+                load r31,""                                  * 0x000674:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 31 430 430 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 31 430 430 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 30 448 448 0 "start" ""
+                ilt r14,r30,1                                * 0x000677:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 14 448 448 0 "" ""
+                brf lb_681,r14                               * 0x00067b:0026 Branch to op1 if op2 false
+                .srcstep 431 431 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+                signal "INVALID_ARGUMENTS","SUBSTR start must be positive" * 0x00067e:01e9 Signal type op1 (message op2)
+                .srcstep 432 432 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+                .traceevent "V" 6 "R" "I" "r" 33 448 448 0 "pad_length" ""
+                .traceevent "V" 6 "R" "S" "r" 36 448 448 0 "pad" ""
+lb_681:         strlen r33,r36                               * 0x000681:0095 String Length op1 = length(op2)
+                .traceevent "V" 6 "R" "I" "r" 33 448 448 0 "pad_length" ""
+                ine r14,r33,1                                * 0x000684:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 14 448 448 0 "" ""
+                brf lb_68e,r14                               * 0x000688:0026 Branch to op1 if op2 false
+                .srcstep 433 433 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+                signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character" * 0x00068b:01e9 Signal type op1 (message op2)
+                .srcstep 434 434 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+                .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+                .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+lb_68e:         strlen r15,r16                               * 0x00068e:0095 String Length op1 = length(op2)
+                .srcstep 435 435 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+                .traceevent "V" 6 "R" "I" "r" 30 435 435 0 "start" ""
+                isub r29,r30,1                               * 0x000691:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 29 435 435 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 29 435 435 0 "start_offset" ""
+                .srcstep 436 436 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+                .traceevent "V" 6 "R" "I" "r" 15 436 436 0 "string_length" ""
+                .traceevent "V" 6 "R" "I" "r" 29 436 436 0 "start_offset" ""
+                isub r39,r15,r29                             * 0x000695:0011 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 39 436 436 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 436 436 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 39 448 448 0 "available" ""
+                bge lb_6a0,r39,0                             * 0x000699:0163 if op2>=op3 then goto op1
+                .srcstep 437 437 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+                load r39,0                                   * 0x00069d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 39 437 437 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 39 437 437 0 "available" ""
+                .srcstep 438 438 25 "substr.crexx" 78 3 23 "  copy_length = length"
+lb_6a0:         load r38,1                                   * 0x0006a0:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 38 438 438 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 38 438 438 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 39 448 448 0 "available" ""
+                .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+                bge lb_6aa,r39,r38                           * 0x0006a3:0162 if op2>=op3 then goto op1
+                .srcstep 439 439 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+                .traceevent "V" 6 "R" "I" "r" 39 439 439 0 "available" ""
+                icopy r38,r39                                * 0x0006a7:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 38 439 439 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+lb_6aa:         igt r14,r38,0                                * 0x0006aa:0069 Int Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 14 448 448 0 "" ""
+                brf lb_6d9,r14                               * 0x0006ae:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 29 448 448 0 "start_offset" ""
+                ieq r12,r29,0                                * 0x0006b1:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+                brf lb_6bc,r12                               * 0x0006b5:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+                .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+                ieq r12,r38,r15                              * 0x0006b8:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+lb_6bc:         brf lb_6c7,r12                               * 0x0006bc:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+                ieq r11,r15,1                                * 0x0006bf:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 11 448 448 0 "" ""
+                brtf lb_6cd,lb_6d2,r11                       * 0x0006c3:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_6c7:         load r11,0                                   * 0x0006c7:0001 Load op1 with op2
+                .traceevent "O" 4 "R" "B" "r" 11 448 448 0 "" ""
+                brf lb_6d2,r11                               * 0x0006ca:0026 Branch to op1 if op2 false
+                .srcstep 440 440 25 "substr.crexx" 82 7 20 "      return string"
+                .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+lb_6cd:         scopy r14,r16                                * 0x0006cd:000b Copy String op2 to op1
+                br lb_6ee                                    * 0x0006d0:0024 Branch to op1
+                .srcstep 441 441 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+                .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 29 448 448 0 "start_offset" ""
+lb_6d2:         setstrpos r16,r29                            * 0x0006d2:009a Set String (op1) charpos set to op2
+                .srcstep 442 442 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+                .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+                .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+                .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+                substring r31,r16,r38                        * 0x0006d5:00a1 set op1=substr(op2,op3) remaining string
+                .srcstep 443 443 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+                .traceevent "V" 6 "R" "I" "r" 38 443 443 0 "copy_length" ""
+lb_6d9:         isub r32,1,r38                               * 0x0006d9:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 32 443 443 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 32 443 443 0 "padding_length" ""
+                .traceevent "V" 6 "R" "I" "r" 32 448 448 0 "padding_length" ""
+                ble lb_6e9,r32,0                             * 0x0006dd:0167 if op2<=op3 then goto op1
+                .srcstep 444 444 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+                .traceevent "V" 6 "R" "I" "r" 35 448 448 0 "pad_character" ""
+                .traceevent "V" 6 "R" "S" "r" 36 448 448 0 "pad" ""
+                .traceevent "V" 6 "R" "I" "r" 34 448 448 0 "pad_index" ""
+                strchar r35,r36,r34                          * 0x0006e1:0096 op1 (as int) = op2[op3]
+                .srcstep 445 445 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+                .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 35 448 448 0 "pad_character" ""
+                .traceevent "V" 6 "R" "I" "r" 32 448 448 0 "padding_length" ""
+                padstr r31,r35,r32                           * 0x0006e5:00a3 set op1=op2[repeated op3 times]
+                .srcstep 446 446 25 "substr.crexx" 92 3 16 "  return result"
+                .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+lb_6e9:         scopy r14,r31                                * 0x0006e9:000b Copy String op2 to op1
+                br lb_6ee                                    * 0x0006ec:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.available"
+                .meta "base64_roundtrip.base64_decode.copy_length"
+                .meta "base64_roundtrip.base64_decode.pad_character"
+                .meta "base64_roundtrip.base64_decode.pad_length"
+                .meta "base64_roundtrip.base64_decode.padding_length"
+                .meta "base64_roundtrip.base64_decode.start_offset"
+                .meta "base64_roundtrip.base64_decode.string_length"
+lb_6ee:         scopy r23,r14                                * 0x0006ee:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 23 448 448 0 "char4" ""
+                .srcstep 449 449 17 "base64_roundtrip.crexx" 94 5 15 "    digit3 = 0"
+                .meta "base64_roundtrip.base64_decode.digit3"="b" ".int" r19
+                load r19,0                                   * 0x0006f1:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 19 449 449 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 19 449 449 0 "digit3" ""
+                .srcstep 450 450 17 "base64_roundtrip.crexx" 95 5 15 "    digit4 = 0"
+                .meta "base64_roundtrip.base64_decode.digit4"="b" ".int" r18
+                load r18,0                                   * 0x0006f4:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 18 450 450 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 18 450 450 0 "digit4" ""
+                .srcstep 467 467 17 "base64_roundtrip.crexx" 96 5 20 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 24 467 467 0 "char3" ""
+                rne r39,r24,"="                              * 0x0006f7:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 39 467 467 0 "" ""
+                brf lb_743,r39                               * 0x0006fb:0026 Branch to op1 if op2 false
+                .srcstep 468 468 17 "base64_roundtrip.crexx" 96 21 25 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .srcstep 466 466 17 "base64_roundtrip.crexx" 96 26 64 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .srcstep 465 465 17 "base64_roundtrip.crexx" 96 35 47 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+                .srcstep 451 451 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+                .traceevent "V" 6 "R" "S" "r" 24 451 451 0 "char3" ""
+                scopy r38,r24                                * 0x0006fe:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 38 451 451 0 "character" ""
+                .srcstep 460 460 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+                .srcstep 459 459 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+                .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r35
+                .srcstep 452 452 25 "pos.crexx" 44 3 24 "  found_position = .int"
+                null r35                                     * 0x000701:000e Null (clear) op1
+                .srcstep 453 453 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                .traceevent "V" 6 "R" "S" "r" 38 453 453 0 "character" ""
+                scopy r33,r38                                * 0x000703:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 33 453 453 0 "needle" ""
+                .srcstep 454 454 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                load r34,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x000706:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 34 454 454 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 34 454 454 0 "haystack" ""
+                .traceevent "V" 6 "R" "S" "r" 33 460 460 0 "needle" ""
+                seq r32,r33,""                               * 0x000709:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+                brt lb_714,r32                               * 0x00070d:0025 Branch to op1 if op2 true
+                .traceevent "V" 6 "R" "S" "r" 34 460 460 0 "haystack" ""
+                seq r32,r34,""                               * 0x000710:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+lb_714:         brf lb_71f,r32                               * 0x000714:0026 Branch to op1 if op2 false
+                .srcstep 455 455 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+                load r31,0                                   * 0x000717:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 31 460 460 0 "" ""
+                icopy r32,r31                                * 0x00071a:0009 Copy Integer op2 to op1
+                br lb_72b                                    * 0x00071d:0024 Branch to op1
+                .srcstep 456 456 25 "pos.crexx" 50 3 25 "  found_position = start"
+lb_71f:         load r35,1                                   * 0x00071f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 35 456 456 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 35 456 456 0 "found_position" ""
+                .srcstep 457 457 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+                .traceevent "V" 6 "R" "I" "r" 35 460 460 0 "found_position" ""
+                .traceevent "V" 6 "R" "S" "r" 33 460 460 0 "needle" ""
+                .traceevent "V" 6 "R" "S" "r" 34 460 460 0 "haystack" ""
+                strpos r35,r33,r34                           * 0x000722:00a4 op1 is position of op2 in op3
+                .srcstep 458 458 25 "pos.crexx" 52 3 24 "  return found_position"
+                .traceevent "V" 6 "R" "I" "r" 35 460 460 0 "found_position" ""
+                icopy r32,r35                                * 0x000726:0009 Copy Integer op2 to op1
+                br lb_72b                                    * 0x000729:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.found_position"
+lb_72b:         isub r36,r32,1                               * 0x00072b:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 36 460 460 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 36 460 460 0 "digit" ""
+                .srcstep 462 462 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+                .traceevent "V" 6 "R" "I" "r" 36 462 462 0 "digit" ""
+                bge lb_73b,r36,0                             * 0x00072f:0163 if op2>=op3 then goto op1
+                .srcstep 463 463 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+                .srcstep 461 461 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+                load r34,0                                   * 0x000733:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 466 466 0 "" ""
+                icopy r35,r34                                * 0x000736:0009 Copy Integer op2 to op1
+                br lb_740                                    * 0x000739:0024 Branch to op1
+                .srcstep 464 464 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+                .traceevent "V" 6 "R" "I" "r" 36 466 466 0 "digit" ""
+lb_73b:         icopy r35,r36                                * 0x00073b:0009 Copy Integer op2 to op1
+                br lb_740                                    * 0x00073e:0024 Branch to op1
+lb_740:         icopy r19,r35                                * 0x000740:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 19 466 466 0 "digit3" ""
+                .srcstep 485 485 17 "base64_roundtrip.crexx" 97 5 20 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .traceevent "V" 6 "R" "S" "r" 23 485 485 0 "char4" ""
+lb_743:         rne r39,r23,"="                              * 0x000743:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 39 485 485 0 "" ""
+                brf lb_78f,r39                               * 0x000747:0026 Branch to op1 if op2 false
+                .srcstep 486 486 17 "base64_roundtrip.crexx" 97 21 25 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .srcstep 484 484 17 "base64_roundtrip.crexx" 97 26 64 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .srcstep 483 483 17 "base64_roundtrip.crexx" 97 35 47 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+                .srcstep 469 469 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+                .traceevent "V" 6 "R" "S" "r" 23 469 469 0 "char4" ""
+                scopy r38,r23                                * 0x00074a:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 38 469 469 0 "character" ""
+                .srcstep 478 478 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+                .srcstep 477 477 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+                .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r35
+                .srcstep 470 470 25 "pos.crexx" 44 3 24 "  found_position = .int"
+                null r35                                     * 0x00074d:000e Null (clear) op1
+                .srcstep 471 471 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                .traceevent "V" 6 "R" "S" "r" 38 471 471 0 "character" ""
+                scopy r33,r38                                * 0x00074f:000b Copy String op2 to op1
+                .traceevent "A" 6 "R" "S" "r" 33 471 471 0 "needle" ""
+                .srcstep 472 472 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+                load r34,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" * 0x000752:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 34 472 472 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 34 472 472 0 "haystack" ""
+                .traceevent "V" 6 "R" "S" "r" 33 478 478 0 "needle" ""
+                seq r32,r33,""                               * 0x000755:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+                brt lb_760,r32                               * 0x000759:0025 Branch to op1 if op2 true
+                .traceevent "V" 6 "R" "S" "r" 34 478 478 0 "haystack" ""
+                seq r32,r34,""                               * 0x00075c:0075 String Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+lb_760:         brf lb_76b,r32                               * 0x000760:0026 Branch to op1 if op2 false
+                .srcstep 473 473 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+                load r31,0                                   * 0x000763:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 31 478 478 0 "" ""
+                icopy r32,r31                                * 0x000766:0009 Copy Integer op2 to op1
+                br lb_777                                    * 0x000769:0024 Branch to op1
+                .srcstep 474 474 25 "pos.crexx" 50 3 25 "  found_position = start"
+lb_76b:         load r35,1                                   * 0x00076b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 35 474 474 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 35 474 474 0 "found_position" ""
+                .srcstep 475 475 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+                .traceevent "V" 6 "R" "I" "r" 35 478 478 0 "found_position" ""
+                .traceevent "V" 6 "R" "S" "r" 33 478 478 0 "needle" ""
+                .traceevent "V" 6 "R" "S" "r" 34 478 478 0 "haystack" ""
+                strpos r35,r33,r34                           * 0x00076e:00a4 op1 is position of op2 in op3
+                .srcstep 476 476 25 "pos.crexx" 52 3 24 "  return found_position"
+                .traceevent "V" 6 "R" "I" "r" 35 478 478 0 "found_position" ""
+                icopy r32,r35                                * 0x000772:0009 Copy Integer op2 to op1
+                br lb_777                                    * 0x000775:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.found_position"
+lb_777:         isub r36,r32,1                               * 0x000777:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 36 478 478 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 36 478 478 0 "digit" ""
+                .srcstep 480 480 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+                .traceevent "V" 6 "R" "I" "r" 36 480 480 0 "digit" ""
+                bge lb_787,r36,0                             * 0x00077b:0163 if op2>=op3 then goto op1
+                .srcstep 481 481 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+                .srcstep 479 479 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+                load r34,0                                   * 0x00077f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 34 484 484 0 "" ""
+                icopy r35,r34                                * 0x000782:0009 Copy Integer op2 to op1
+                br lb_78c                                    * 0x000785:0024 Branch to op1
+                .srcstep 482 482 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+                .traceevent "V" 6 "R" "I" "r" 36 484 484 0 "digit" ""
+lb_787:         icopy r35,r36                                * 0x000787:0009 Copy Integer op2 to op1
+                br lb_78c                                    * 0x00078a:0024 Branch to op1
+lb_78c:         icopy r18,r35                                * 0x00078c:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 18 484 484 0 "digit4" ""
+                .srcstep 487 487 17 "base64_roundtrip.crexx" 99 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+                .traceevent "V" 6 "R" "X" "r" 6 487 487 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 4 487 487 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 21 487 487 0 "digit1" ""
+lb_78f:         imult r39,r21,4                              * 0x00078f:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 39 487 487 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 20 487 487 0 "digit2" ""
+                idiv r38,r20,16                              * 0x000793:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 38 487 487 0 "" ""
+                iadd r39,r39,r38                             * 0x000797:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 39 487 487 0 "" ""
+                bsetu8 r6,r4,r39                             * 0x00079b:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 488 488 17 "base64_roundtrip.crexx" 100 5 38 "    output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 4 488 488 0 "output_offset" ""
+                iadd r4,r4,1                                 * 0x00079f:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 4 488 488 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 488 488 0 "output_offset" ""
+                .srcstep 491 491 17 "base64_roundtrip.crexx" 101 5 56 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+                .traceevent "V" 6 "R" "I" "r" 4 491 491 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 3 491 491 0 "output_length" ""
+                iadd r39,r3,1                                * 0x0007a3:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 39 491 491 0 "" ""
+                ilt r39,r4,r39                               * 0x0007a7:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+                brf lb_7b2,r39                               * 0x0007ab:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "S" "r" 24 491 491 0 "char3" ""
+                rne r39,r24,"="                              * 0x0007ae:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+lb_7b2:         brf lb_7cd,r39                               * 0x0007b2:0026 Branch to op1 if op2 false
+                .srcstep 492 492 17 "base64_roundtrip.crexx" 101 57 61 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+                .srcstep 489 489 17 "base64_roundtrip.crexx" 102 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+                .traceevent "V" 6 "R" "X" "r" 6 489 489 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 4 489 489 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 20 489 489 0 "digit2" ""
+                imod r38,r20,16                              * 0x0007b5:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+                imult r38,r38,16                             * 0x0007b9:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 19 489 489 0 "digit3" ""
+                idiv r36,r19,4                               * 0x0007bd:0017 Integer Divide (op1=op2/op3)
+                .traceevent "O" 4 "R" "I" "r" 36 489 489 0 "" ""
+                iadd r38,r38,r36                             * 0x0007c1:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+                bsetu8 r6,r4,r38                             * 0x0007c5:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 490 490 17 "base64_roundtrip.crexx" 103 7 40 "      output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 4 490 490 0 "output_offset" ""
+                iadd r4,r4,1                                 * 0x0007c9:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 4 490 490 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 490 490 0 "output_offset" ""
+                .srcstep 495 495 17 "base64_roundtrip.crexx" 105 5 56 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+                .traceevent "V" 6 "R" "I" "r" 4 495 495 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 3 495 495 0 "output_length" ""
+lb_7cd:         iadd r39,r3,1                                * 0x0007cd:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 39 495 495 0 "" ""
+                ilt r39,r4,r39                               * 0x0007d1:006e Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+                brf lb_7dc,r39                               * 0x0007d5:0026 Branch to op1 if op2 false
+                .traceevent "V" 6 "R" "S" "r" 23 495 495 0 "char4" ""
+                rne r39,r23,"="                              * 0x0007d8:0237 Loose REXX Not equals op1=(op2<>op3)
+                .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+                .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+lb_7dc:         brf lb_7f3,r39                               * 0x0007dc:0026 Branch to op1 if op2 false
+                .srcstep 496 496 17 "base64_roundtrip.crexx" 105 57 61 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+                .srcstep 493 493 17 "base64_roundtrip.crexx" 106 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+                .traceevent "V" 6 "R" "X" "r" 6 493 493 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 4 493 493 0 "output_offset" ""
+                .traceevent "V" 6 "R" "I" "r" 19 493 493 0 "digit3" ""
+                imod r38,r19,4                               * 0x0007df:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+                imult r38,r38,64                             * 0x0007e3:0015 Integer Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 18 493 493 0 "digit4" ""
+                iadd r38,r38,r18                             * 0x0007e7:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+                bsetu8 r6,r4,r38                             * 0x0007eb:0250 Unsigned 8-bit little-endian binary write op1[op2]=op3
+                .srcstep 494 494 17 "base64_roundtrip.crexx" 107 7 40 "      output_offset = output_offset + 1"
+                .traceevent "V" 6 "R" "I" "r" 4 494 494 0 "output_offset" ""
+                iadd r4,r4,1                                 * 0x0007ef:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 4 494 494 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 494 494 0 "output_offset" ""
+                .srcstep 497 497 17 "base64_roundtrip.crexx" 109 5 36 "    input_offset = input_offset + 4"
+                .traceevent "V" 6 "R" "I" "r" 2 497 497 0 "input_offset" ""
+lb_7f3:         iadd r2,r2,4                                 * 0x0007f3:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 2 497 497 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 497 497 0 "input_offset" ""
+                .srcstep 499 499 17 "base64_roundtrip.crexx" 110 3 6 "  end"
+                br lb_41b                                    * 0x0007f7:0024 Branch to op1
+                .meta "base64_roundtrip.base64_decode.char3"
+                .meta "base64_roundtrip.base64_decode.char4"
+                .meta "base64_roundtrip.base64_decode.digit1"
+                .meta "base64_roundtrip.base64_decode.digit2"
+                .meta "base64_roundtrip.base64_decode.digit3"
+                .meta "base64_roundtrip.base64_decode.digit4"
+                .srcstep 500 500 17 "base64_roundtrip.crexx" 111 3 16 "  return result"
+                .traceevent "V" 6 "R" "X" "r" 6 500 500 0 "result" ""
+lb_7f9:         ret r6                                       * 0x0007f9:0031 Return op1
+                .meta "base64_roundtrip.base64_decode.alphabet"
+                .meta "base64_roundtrip.base64_decode.encoded"
+                .meta "base64_roundtrip.base64_decode.encoded_length"
+                .meta "base64_roundtrip.base64_decode.input_offset"
+                .meta "base64_roundtrip.base64_decode.output_length"
+                .meta "base64_roundtrip.base64_decode.output_offset"
+                .meta "base64_roundtrip.base64_decode.padding"
+                .meta "base64_roundtrip.base64_decode.result"
+*******************************************************************************
+

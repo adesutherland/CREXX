@@ -1,0 +1,14 @@
+utc=2026-07-25T16:18:04Z
+local=2026-07-25T17:18:04+0100
+uptime=17:18 up 11 days, 10:26, 1 user
+load_averages=2.39 2.08 1.89
+power=AC Power; battery 80%; AC attached; not charging
+lowpowermode_ac=0
+lowpowermode_battery=0
+thermal=No thermal warning level has been recorded
+performance_warning=No performance warning level has been recorded
+cpu_power_warning=No CPU power status has been recorded
+concurrent_benchmark_or_build_processes=none observed
+capture_started_utc=2026-07-25T16:17:04+0000
+capture_completed_utc=2026-07-25T16:17:56+0000
+capture_result=pass

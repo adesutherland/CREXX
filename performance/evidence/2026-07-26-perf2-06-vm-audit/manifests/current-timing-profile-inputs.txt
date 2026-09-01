@@ -1,0 +1,9 @@
+crexx-perf2-profile-inputs|1
+permute|rxvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxvm-permute-opt.csv
+list|rxvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxvm-list-opt.csv
+base64|rxvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxvm-base64-opt.csv
+rexxcps|rxvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxvm-rexxcps-opt.csv
+permute|rxbvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxbvm-permute-opt.csv
+list|rxbvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxbvm-list-opt.csv
+base64|rxbvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxbvm-base64-opt.csv
+rexxcps|rxbvm|opt|/private/tmp/crexx-perf2-06.Pn88uJ/timing-profiles/rxbvm-rexxcps-opt.csv

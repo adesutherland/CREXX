@@ -1,0 +1,18 @@
+candidate_header_magic=cReXx007
+candidate_feature_word=0x00000001
+baseline_feature_word=0x00000000
+
+saved-old-rxdas candidate:
+RXBIN 007 container validation failed
+
+saved-old-rxvm candidate:
+RXBIN 007 container validation failed
+
+new-rxdas candidate-with-feature-bit-cleared:
+RXBIN 007 opcode 401 requires feature flag 0x00000001
+
+new-rxdas candidate-with-unknown-feature-bit-1:
+RXBIN 007 has unsupported feature flags 0x00000002
+
+new-rxdas baseline-zero-feature:
+accepted

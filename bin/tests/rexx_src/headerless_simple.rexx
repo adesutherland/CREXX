@@ -1,1 +1,0 @@
-say upper('hello')

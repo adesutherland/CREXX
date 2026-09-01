@@ -1,0 +1,27 @@
+===== size-output.txt =====
+== struct sizes ==
+-- baseline HEAD --
+module_size=216
+-- Q7 --
+module_size=240
+record_size=56
+module_requested_field_bytes=17
+== normal product image file sizes ==
+/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxvm|982264
+/private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxbvm|982392
+/private/tmp/crexx-perf2-02.kJ5sZT/q7-core/cmake-build-perf2-release/bin/rxvm|998776
+/private/tmp/crexx-perf2-02.kJ5sZT/q7-core/cmake-build-perf2-release/bin/rxbvm|998952
+== normal product __text sizes ==
+-- /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxvm
+	Section __text: 806300
+-- /private/tmp/crexx-perf2-01-product.dbLYqo/cmake-build-perf2-release/bin/rxbvm
+	Section __text: 799132
+-- /private/tmp/crexx-perf2-02.kJ5sZT/q7-core/cmake-build-perf2-release/bin/rxvm
+	Section __text: 812620
+-- /private/tmp/crexx-perf2-02.kJ5sZT/q7-core/cmake-build-perf2-release/bin/rxbvm
+	Section __text: 807760
+===== static-record-counts.txt =====
+image|copy_reg_reg|mkref_reg_reg|records
+bounce-opt|14|2|16
+richards-opt|128|0|128
+library|925|2|927

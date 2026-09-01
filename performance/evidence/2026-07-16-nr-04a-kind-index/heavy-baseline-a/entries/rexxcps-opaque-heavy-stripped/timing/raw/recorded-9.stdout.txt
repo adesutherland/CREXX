@@ -1,0 +1,9 @@
+----- REXXCPS 2.2c-opaque -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g6a064499f327.dirty 20260716
+       System is: macOS
+        Averaged: 100 x 1 iterations of 1000 clauses (over 0.1 s)
+
+     Performance: 737088 cREXX clauses per second
+
+OBSERVED: A|1|69|1.22694
+PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic

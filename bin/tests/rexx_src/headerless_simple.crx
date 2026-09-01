@@ -1,0 +1,5 @@
+namespace headerless_simple
+
+main: procedure
+  say 'HELLO'
+  return

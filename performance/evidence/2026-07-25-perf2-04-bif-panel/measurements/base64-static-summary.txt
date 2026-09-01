@@ -1,0 +1,5 @@
+procedure|locals|instructions|code_bytes|strlen|setstrpos|substring|strpos|strchar|poschar|scopy|copy|call
+main|46|262|823|3|0|0|0|0|0|5|10|3
+base64_decode_current|40|404|1349|13|6|6|4|6|0|28|1|0
+base64_decode_codepoint_poschar|28|90|322|1|0|0|0|6|4|2|0|0
+base64_decode_codepoint_arithmetic|36|209|691|1|0|0|0|6|0|2|0|0

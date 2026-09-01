@@ -1,0 +1,5 @@
+benchmark=awfy_richards repetitions=1 queue_packets=23246 holds=9297
+PASS: AWFY Richards
+real 1.04
+user 1.03
+sys 0.00

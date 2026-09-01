@@ -22,17 +22,172 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Validated proleptic-Gregorian calendar primitives for the DATE cluster.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/_jdn.md
+ */
 options levelb numeric_classic
+namespace _rxsysb expose _jdn _datefromjdn _datevalid _leapyear _daysinmonth _dateformat
 
-namespace _rxsysb expose _jdn
-
-/* Translate date dd mm yy into Julian Day Number */
-_jdn: Procedure = .int
+/**
+ * Convert a valid Gregorian date to its Julian day number.
+ *
+ * @param day day of month
+ * @param month month 1 through 12
+ * @param year year 1 through 9999
+ * @return Julian day number, with 0001-01-01 equal to 1721426
+ * @signal INVALID_ARGUMENTS date is outside the supported calendar
+ */
+_jdn: procedure = .int
   arg day = .int, month = .int, year = .int
-  a=(14-month)%12
-  m=month+12*a-3
-  y=year+4800-a
-  jdn=day+(153*m+2)%5+365*y
-  jdn=jdn+y%4-y%100+y%400-32045
-return jdn
+  if \_datevalid(day,month,year) then
+    assembler signal "INVALID_ARGUMENTS","_JDN date must be valid Gregorian year 1 through 9999"
+  return _jdn_unchecked(day,month,year)
+
+/** Return whether the supplied fields identify a supported Gregorian date. */
+_datevalid: procedure = .boolean
+  arg day = .int, month = .int, year = .int
+  if year < 1 | year > 9999 then return 0
+  if month < 1 | month > 12 then return 0
+  return day >= 1 & day <= _daysinmonth(month,year)
+
+/** Return whether a supported Gregorian year is a leap year. */
+_leapyear: procedure = .boolean
+  arg year = .int
+  return year // 4 = 0 & (year // 100 <> 0 | year // 400 = 0)
+
+/** Return the number of days in a supported year/month, or zero if invalid. */
+_daysinmonth: procedure = .int
+  arg month = .int, year = .int
+  if year < 1 | year > 9999 | month < 1 | month > 12 then return 0
+  if month = 2 then return 28 + _leapyear(year)
+  if month = 4 | month = 6 | month = 9 | month = 11 then return 30
+  return 31
+
+/**
+ * Resolve one documented extended Level B DATE format abbreviation.
+ *
+ * Codes are private to the DATE cluster. `output_format` distinguishes the
+ * historical single-letter input `S` (STANDARD) from output `S` (SORTED).
+ * Zero means the supplied name is not a documented abbreviation.
+ */
+_dateformat: procedure = .int
+  arg format = .string, output_format = .boolean
+  normalized = .string
+  assembler strupper normalized,format
+  if normalized = "" then return 1
+
+  if _date_abbrev("XNORMAL",normalized,2) then return 2
+  if _date_abbrev("XORDERED",normalized,2) then return 5
+  if _date_abbrev("XEUROPEAN",normalized,2) then return 7
+  if _date_abbrev("XGERMAN",normalized,2) then return 9
+  if _date_abbrev("XUSA",normalized,2) then return 11
+  if _date_abbrev("XDEC",normalized,3) then return 24
+
+  if _date_abbrev("JDN",normalized,3) then return 18
+  if _date_abbrev("EPOCH",normalized,2) then return 17
+  if _date_abbrev("EUROPEAN",normalized,1) then return 6
+  if _date_abbrev("UNIX",normalized,2) then return 16
+  if _date_abbrev("USA",normalized,1) then return 10
+  if _date_abbrev("DEC",normalized,3) then return 23
+  if _date_abbrev("INTERNATIONAL",normalized,2) then return 12
+  if _date_abbrev("QUALIFIED",normalized,2) then return 13
+  if _date_abbrev("STANDARD",normalized,2) then return 3
+  if _date_abbrev("SORTED",normalized,1) then do
+    if output_format then return 25
+  end
+  if normalized = "S" then do
+    if output_format then return 25
+    return 3
+  end
+
+  if _date_abbrev("NORMAL",normalized,1) then return 1
+  if _date_abbrev("ORDERED",normalized,1) then return 4
+  if _date_abbrev("GERMAN",normalized,1) then return 8
+  if _date_abbrev("JULIAN",normalized,1) then return 14
+  if _date_abbrev("BASE",normalized,1) then return 15
+  if _date_abbrev("DAYS",normalized,1) then return 19
+  if _date_abbrev("WEEKDAY",normalized,1) then return 20
+  if _date_abbrev("MONTH",normalized,1) then return 21
+  if _date_abbrev("CENTURY",normalized,1) then return 22
+  return 0
+
+/**
+ * Convert a supported Julian day number to Gregorian fields.
+ *
+ * Output scalars are assigned only after the input has been validated and all
+ * fields have been computed.
+ *
+ * @param jdn Julian day number 1721426 through 5373484
+ * @param year exposed output year
+ * @param month exposed output month
+ * @param day exposed output day
+ * @param day_of_year exposed output day 1 through 366
+ * @param weekday exposed output Monday=1 through Sunday=7
+ * @param base_day exposed output days since 0001-01-01
+ * @signal INVALID_ARGUMENTS JDN is outside the supported calendar
+ */
+_datefromjdn: procedure
+  arg jdn = .int, expose year = .int, expose month = .int, expose day = .int, expose day_of_year = .int, expose weekday = .int, expose base_day = .int
+  constant JDN_MIN = 1721426
+  constant JDN_MAX = 5373484
+  local_year = .int
+  local_month = .int
+  local_day = .int
+  local_day_of_year = .int
+  local_weekday = .int
+  local_base_day = .int
+  l = .int
+  n = .int
+  i = .int
+  j = .int
+
+  if jdn < JDN_MIN | jdn > JDN_MAX then
+    assembler signal "INVALID_ARGUMENTS","DATE Julian day number is outside year 1 through 9999"
+
+  l = jdn + 68569
+  n = 4 * l % 146097
+  l = l - (146097 * n + 3) % 4
+  i = 4000 * (l + 1) % 1461001
+  l = l - 1461 * i % 4 + 31
+  j = 80 * l % 2447
+  local_day = l - 2447 * j % 80
+  l = j % 11
+  local_month = j + 2 - 12 * l
+  local_year = 100 * (n - 49) + i + l
+  local_day_of_year = jdn - _jdn_unchecked(1,1,local_year) + 1
+  local_weekday = jdn // 7 + 1
+  local_base_day = jdn - JDN_MIN
+
+  year = local_year
+  month = local_month
+  day = local_day
+  day_of_year = local_day_of_year
+  weekday = local_weekday
+  base_day = local_base_day
+  return
+
+_jdn_unchecked: procedure = .int
+  arg day = .int, month = .int, year = .int
+  a = (14 - month) % 12
+  m = month + 12 * a - 3
+  y = year + 4800 - a
+  return day + (153 * m + 2) % 5 + 365 * y + y % 4 - y % 100 + y % 400 - 32045
+
+_date_abbrev: procedure = .boolean
+  arg canonical = .string, candidate = .string, minimum = .int
+  canonical_length = .int
+  candidate_length = .int
+  canonical_code = .int
+  candidate_code = .int
+  assembler strlen canonical_length,canonical
+  assembler strlen candidate_length,candidate
+  if candidate_length < minimum | candidate_length > canonical_length then return 0
+  do index = 0 to candidate_length - 1
+    assembler strchar canonical_code,canonical,index
+    assembler strchar candidate_code,candidate,index
+    if canonical_code <> candidate_code then return 0
+  end
+  return 1

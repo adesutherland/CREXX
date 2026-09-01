@@ -1,0 +1,28 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start  338: nr06_codegen_contract
+1/6 Test  #338: nr06_codegen_contract ............   Passed    0.26 sec
+    Start  339: nr21_fixed_call_contract
+2/6 Test  #339: nr21_fixed_call_contract .........   Passed    0.30 sec
+    Start  347: perf2_04_certified_call
+3/6 Test  #347: perf2_04_certified_call ..........   Passed    2.39 sec
+    Start  348: perf2_05_partial_call
+4/6 Test  #348: perf2_05_partial_call ............   Passed    0.07 sec
+    Start 1146: rxasstringtests
+5/6 Test #1146: rxasstringtests ..................   Passed    0.00 sec
+    Start 1147: rxasstringtests-rxbvm
+6/6 Test #1147: rxasstringtests-rxbvm ............   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+compiler       =   3.01 sec*proc (4 tests)
+constants      =   2.46 sec*proc (2 tests)
+imports        =   2.39 sec*proc (1 test)
+inlining       =   0.07 sec*proc (1 test)
+perf2_04       =   2.39 sec*proc (1 test)
+perf2_05       =   0.07 sec*proc (1 test)
+performance    =   3.01 sec*proc (4 tests)
+rxbin          =   0.30 sec*proc (1 test)
+smoke          =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   3.05 sec

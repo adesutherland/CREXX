@@ -1,76 +1,46 @@
-/* rexx test abs bif */
+/* Focused Level B COMPARE tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* say "test abbrev" */
-/* say '---1---' */
-/* /\*                     12345  *\/ */
-/* say compare('quicker','quick') */
-/* say '---2---' */
-/* say compare('quicker','quicker') */
-/* say '---3---' */
-/* say compare('quicker!','quicker',"!") */
-/* say '---4---' */
-/* say compare('quicker','fast') */
+errors = 0
+left = "ab-- "
+right = "ab"
 
-/* COMPARE */
-say "Look for  OK"
-/* These from the Rexx book. */
-if compare('abc','abc') \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 1 '
+errors = errors + check(compare("abc", "abc") = 0, "equal")
+errors = errors + check(compare("abc", "ak") = 2, "internal mismatch")
+errors = errors + check(compare("ab ", "ab") = 0, "default blank padding")
+errors = errors + check(compare("ab ", "ab", " ") = 0, "explicit blank padding")
+errors = errors + check(compare("ab ", "ab", "x") = 3, "nonblank pad mismatch")
+errors = errors + check(compare(left, right, "-") = 5, "first tail mismatch")
+errors = errors + check(compare("foo", "bar") = 1, "first-position mismatch")
+errors = errors + check(compare(" ", "") = 0, "blank equals default padding")
+errors = errors + check(compare("", "x") = 1, "right side longer")
+errors = errors + check(compare("x", "") = 1, "left side longer")
+errors = errors + check(compare("foo", "f", "o") = 0, "nonblank virtual padding")
+errors = errors + check(compare("foobar", "foobag") = 6, "last-position mismatch")
+errors = errors + check(compare("aé", "aê") = 2, "Unicode mismatch position")
+errors = errors + check(compare("é", "é·", "·") = 0, "Unicode pad")
+errors = errors + check(left = "ab-- " & right = "ab", "arguments are not mutated")
+
+caught = 0
+do
+  ignored = compare("a", "b", "")
+on signal invalid_arguments
+  caught = caught + 1
 end
-
-if compare('abc','ak') \= 2 then do
-  errors=errors+1
-  say 'COMPARE failed in test 2 '
+do
+  ignored = .int
+  ignored = compare("a", "b", "xy")
+on signal invalid_arguments
+  caught = caught + 1
 end
+errors = errors + check(caught = 2, "invalid pads use signals")
 
-if compare('ab ','ab') \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 3 '
-end
+if errors = 0 then say "PASS: compare"
+return errors <> 0
 
-if compare('ab ','ab',' ') \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 4 '
-end
-
-if compare('ab ','ab','x') \= 3 then do
-  errors=errors+1
-  say 'COMPARE failed in test 5 '
-end
-
-if compare('ab-- ','ab','-') \= 5 then do
-  errors=errors+1
-  say 'COMPARE failed in test 6 '
-end
-
-/* These from Mark Hessling. */
-if compare("foo", "bar") \= 1 then do
-  errors=errors+1
-  say 'COMPARE failed in test 7 '
-end
-
-if compare("foo", "foo") \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 8 '
-end
-
-if compare(" ", "" ) \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 9 '
-end
-
-if compare("foo", "f", "o") \= 0 then do
-  errors=errors+1
-  say 'COMPARE failed in test 10 '
-end
-
-if compare("foobar", "foobag") \= 6 then do
-  errors=errors+1
-  say 'COMPARE failed in test 11 '
-end
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: COMPARE" label
+  return 1

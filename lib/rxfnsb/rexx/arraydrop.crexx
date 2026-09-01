@@ -22,30 +22,22 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place string-array clear.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arraydrop.md
+ */
 options levelb
 
 namespace rxfnsb expose arraydrop
 
-/* ------------------------------------------------------------------
- *  arraydrop
+/**
+ * Clear every logical element from a string array.
  *
- *  Remove all elements from a Rexx array.
- *
- *  Behavior:
- *    - Clears the array in place by resetting its size to zero
- *    - All existing elements become inaccessible
- *    - The array variable itself remains valid
- *
- *  Notes:
- *    - This function modifies the passed array directly
- *    - Intended for arrays using a[0] as element count
- *
- *  Returns:
- *    0 on success
- *
- * ------------------------------------------------------------------ */
-
+ * @param array exposed string array using array[0] as its high-water mark
+ * @return zero, the new high-water mark
+ */
 arraydrop: procedure=.int
   arg expose array=.string[]
   assembler SETATTRS array,0

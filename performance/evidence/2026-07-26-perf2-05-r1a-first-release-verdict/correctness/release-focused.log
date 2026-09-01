@@ -1,0 +1,9 @@
+Test project /tmp/crexx-perf2-05-r1a.xbBPgs/candidate-release-v2
+    Start 1080: rxasperf2exactrelinktests
+1/2 Test #1080: rxasperf2exactrelinktests .........   Passed    0.26 sec
+    Start 1081: rxasperf2exactrelinktests-rxbvm
+2/2 Test #1081: rxasperf2exactrelinktests-rxbvm ...   Passed    0.23 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.51 sec

@@ -1,0 +1,38 @@
+utc=2026-08-05T21:36:56Z
+{ 1.23 1.27 1.31 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+83559 /bin/zsh -lc (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/{samples.csv,summary.csv,capture-manifest.json}) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-post-state.txt 2>&1
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-driver.stdout.txt
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-driver.stderr.txt
+awk -F',' '
+function base(w){sub(/-(rxvm|rxbvm)$/,"",w);return w}
+NR==FNR{if(NR>1&&$5=="F1A1-control"){c[$2]=$14;m[$2]=$10}next}
+FNR==1{next}$5=="F1S-selective"{w=base($2);ratio=(m[$2]=="benchmark_rate")?$14/c[$2]:c[$2]/$14;printf "%s|%s|effect=%+.3f%%|control=%.6f|F1S=%.6f|rMAD=%.3f%%|rerun=%s\n",w,$4,(ratio-1)*100,c[$2],$14,$18,$20;if(w!="Base64"){s[$4]+=log(ratio);n[$4]++}if(w=="Sieve"||w=="Permute"||w=="Bounce"||w=="Richards"){s4[$4]+=log(ratio);n4[$4]++}}
+END{for(v in s)printf "GEOMEAN|%s|stable_common4=%+.3f%%|stable_six=%+.3f%%\n",v,(exp(s4[v]/n4[v])-1)*100,(exp(s[v]/n[v])-1)*100}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/summary.csv /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/summary.csv | sort -t'|' -k2,2 -k1,1
+printf '%s\n' '--- paired metric-aware ---'
+awk -F',' '
+NR==1{next}$11=="recorded"{key=$3 SUBSEP $12;value=($3~/^RexxCPS-/)?$19:$15;if($7=="F1A1-control")ctl[key]=value;else if($7=="F1S-selective"){cand[key]=value;groups[$3]=1}}
+END{for(g in groups){split("",v);n=0;pos=0;neg=0;ls=0;min=1e99;max=-1e99;for(r=1;r<=12;r++){key=g SUBSEP r;ratio=(g~/^RexxCPS-/)?cand[key]/ctl[key]:ctl[key]/cand[key];e=(ratio-1)*100;v[++n]=e;ls+=log(ratio);if(e>0)pos++;else if(e<0)neg++;if(e<min)min=e;if(e>max)max=e}for(i=2;i<=n;i++){x=v[i];j=i-1;while(j>=1&&v[j]>x){v[j+1]=v[j];j--}v[j+1]=x}med=(v[6]+v[7])/2;w=g;sub(/-(rxvm|rxbvm)$/,"",w);vm=g;sub(/^.*-/,"",vm);printf "%s|%s|paired_median=%+.3f%%|paired_geo=%+.3f%%|wins=%d|losses=%d|min=%+.3f%%|max=%+.3f%%\n",w,vm,med,(exp(ls/n)-1)*100,pos,neg,min,max}}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/samples.csv | sort -t'|' -k2,2 -k1,1
+83566 /bin/zsh -lc (date -u '+utc=%Y-%m-%dT%H:%M:%SZ'; sysctl -n vm.loadavg; pmset -g batt; pmset -g therm; pgrep -fal '(^|/)(rxvm|rxbvm|crexx)( |$)|run_cross_runtime_matrix|cmake|ninja|ctest' || true; shasum -a 256 /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/{samples.csv,summary.csv,capture-manifest.json}) > /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-post-state.txt 2>&1
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-driver.stdout.txt
+cat /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-driver.stderr.txt
+awk -F',' '
+function base(w){sub(/-(rxvm|rxbvm)$/,"",w);return w}
+NR==FNR{if(NR>1&&$5=="F1A1-control"){c[$2]=$14;m[$2]=$10}next}
+FNR==1{next}$5=="F1S-selective"{w=base($2);ratio=(m[$2]=="benchmark_rate")?$14/c[$2]:c[$2]/$14;printf "%s|%s|effect=%+.3f%%|control=%.6f|F1S=%.6f|rMAD=%.3f%%|rerun=%s\n",w,$4,(ratio-1)*100,c[$2],$14,$18,$20;if(w!="Base64"){s[$4]+=log(ratio);n[$4]++}if(w=="Sieve"||w=="Permute"||w=="Bounce"||w=="Richards"){s4[$4]+=log(ratio);n4[$4]++}}
+END{for(v in s)printf "GEOMEAN|%s|stable_common4=%+.3f%%|stable_six=%+.3f%%\n",v,(exp(s4[v]/n4[v])-1)*100,(exp(s[v]/n[v])-1)*100}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/summary.csv /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/summary.csv | sort -t'|' -k2,2 -k1,1
+printf '%s\n' '--- paired metric-aware ---'
+awk -F',' '
+NR==1{next}$11=="recorded"{key=$3 SUBSEP $12;value=($3~/^RexxCPS-/)?$19:$15;if($7=="F1A1-control")ctl[key]=value;else if($7=="F1S-selective"){cand[key]=value;groups[$3]=1}}
+END{for(g in groups){split("",v);n=0;pos=0;neg=0;ls=0;min=1e99;max=-1e99;for(r=1;r<=12;r++){key=g SUBSEP r;ratio=(g~/^RexxCPS-/)?cand[key]/ctl[key]:ctl[key]/cand[key];e=(ratio-1)*100;v[++n]=e;ls+=log(ratio);if(e>0)pos++;else if(e<0)neg++;if(e<min)min=e;if(e>max)max=e}for(i=2;i<=n;i++){x=v[i];j=i-1;while(j>=1&&v[j]>x){v[j+1]=v[j];j--}v[j+1]=x}med=(v[6]+v[7])/2;w=g;sub(/-(rxvm|rxbvm)$/,"",w);vm=g;sub(/^.*-/,"",vm);printf "%s|%s|paired_median=%+.3f%%|paired_geo=%+.3f%%|wins=%d|losses=%d|min=%+.3f%%|max=%+.3f%%\n",w,vm,med,(exp(ls/n)-1)*100,pos,neg,min,max}}
+' /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/samples.csv | sort -t'|' -k2,2 -k1,1
+525c7f81024de01e65813bf7ab3591d3a8ee2438c984828fae5af6c8a2658232  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/samples.csv
+ddc0f7201eac53b14beaaeabf8eae062cded0b10239f39017b25a5d2d1d92e5f  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/summary.csv
+d167ceeefff49c0d0266ee0a6efad0f5685481e2cfb5d7e99f4d325dd449ebec  /tmp/crexx-rxvm-inline.yvLywZ/results/formal-selective-timing/capture-manifest.json

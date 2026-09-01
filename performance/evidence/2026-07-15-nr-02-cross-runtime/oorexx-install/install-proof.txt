@@ -1,0 +1,17 @@
+Command:
+  /Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx -v
+
+Output:
+  Open Object Rexx Version 5.1.0 r12973
+  Build date: May  2 2025
+  Addressing mode: 64
+
+Binary inspection:
+  Mach-O universal binary with x86_64 and arm64 architectures
+
+Command:
+  /Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx performance/evidence/2026-07-15-nr-02-cross-runtime/oorexx-install/hello.rex
+
+Output:
+  hello from ooRexx
+  REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025

@@ -32,14 +32,27 @@
 #include "rxcp_val.h"
 #include "rxcpdary.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_emit.h"
+#include "rxcp_util.h"
+#include "rxcp_task_lower.h"
+#include "rxcp_remap_build.h"
 
 /* Suppress errors and warnings unless it is the final pass */
 #undef mknd_err
 #undef mknd_err_unique
 #undef mknd_war
 #define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err1)((n), __VA_ARGS__) : (n))
+#define mknd_err2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err2)((n), __VA_ARGS__) : (n))
+#define mknd_err3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err3)((n), __VA_ARGS__) : (n))
+#define mknd_err5(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err5)((n), __VA_ARGS__) : (n))
 #define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique1)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique2)((n), __VA_ARGS__) : (n))
 #define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+#define mknd_war1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war1)((n), __VA_ARGS__) : (n))
+#define mknd_war2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war2)((n), __VA_ARGS__) : (n))
+#define mknd_war3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war3)((n), __VA_ARGS__) : (n))
 
 /* Common Helpers */
 
@@ -95,6 +108,8 @@ static void rxcp_insert_program_import(Context *context, ASTNode *program_file, 
     literal_node = ast_ft(context, LITERAL);
     ast_copy_str(literal_node, (char*)namespace_name);
     add_ast(import_node, literal_node);
+    import_node->is_compiler_added = 1;
+    literal_node->is_compiler_added = 1;
 
     insert_after = 0;
     child = program_file->child;
@@ -164,6 +179,278 @@ static void rxcp_inject_signal_imports(Context *context) {
         }
         program_file = program_file->sibling;
     }
+}
+
+static int rxcp_subtree_needs_concurrency(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (node->is_task_callable || node->node_type == TASK_DECL ||
+        node->node_type == TASK_TARGET || node->node_type == PARALLEL_DO ||
+        node->node_type == PARALLEL_BLOCK_EXPR) return 1;
+    for (child = node->child; child; child = child->sibling) {
+        if (rxcp_subtree_needs_concurrency(child)) return 1;
+    }
+    return 0;
+}
+
+static void rxcp_inject_concurrency_imports(Context *context) {
+    ASTNode *program_file;
+
+    if (!context || !context->ast) return;
+    for (program_file = context->ast->child;
+         program_file;
+         program_file = program_file->sibling) {
+        if (program_file->node_type == PROGRAM_FILE &&
+            rxcp_subtree_needs_concurrency(program_file) &&
+            !rxcp_program_has_import(program_file, "concurrency")) {
+            rxcp_insert_program_import(context, program_file, "concurrency");
+        }
+    }
+}
+
+/*
+ * Resolve the source-facing `task name` expression through the ordinary
+ * callable symbol table, then lower it to the private Level B binding factory.
+ * Keeping this after resolve_functions_walker is important: task targets obey
+ * exactly the same namespace, import and shadowing rules as normal calls.
+ */
+static ASTNode *rxcp_task_callable_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        ASTNode *definition = link ? link->node : 0;
+        if (definition && definition->is_task_callable &&
+            (definition->node_type == PROCEDURE ||
+             definition->node_type == METHOD ||
+             definition->node_type == FACTORY)) {
+            return definition;
+        }
+    }
+    return 0;
+}
+
+static ASTNode *rxcp_task_binding_argument(Context *context,
+                                           NodeType type,
+                                           const char *value,
+                                           ASTNode *anchor) {
+    ASTNode *argument;
+    char *copy;
+
+    if (!context || !value) return 0;
+    copy = strdup(value);
+    if (!copy) return 0;
+    argument = ast_ftt(context, type, copy);
+    if (!argument) {
+        free(copy);
+        return 0;
+    }
+    argument->free_node_string = 1;
+    if (anchor) ast_copy_source_anchor(argument, anchor, AST_SOURCE_INHERITED);
+    return argument;
+}
+
+static ASTNode *rxcp_task_factory_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != FUNCTION_SYMBOL) return 0;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+        ASTNode *definition = link ? link->node : 0;
+        if (definition && definition->node_type == FACTORY) return definition;
+    }
+    return 0;
+}
+
+static int rxcp_taskwork_factory_valid(Context *context,
+                                       ASTNode *definition) {
+    ASTNode *class_node;
+    char *class_name;
+    int valid;
+
+    if (!context || !definition || definition->node_type != FACTORY ||
+        !(class_node = definition->parent) ||
+        class_node->node_type != CLASS_DEF ||
+        !class_node->symbolNode || !class_node->symbolNode->symbol) {
+        return 0;
+    }
+    class_name = sym_frnm(class_node->symbolNode->symbol);
+    if (!class_name) return 0;
+    valid = symbol_name_assignable_to(
+            context, class_name, "concurrency.taskwork");
+    free(class_name);
+    return valid;
+}
+
+/* NULL means either not yet typed or not transferable; final-pass callers
+ * distinguish those cases before issuing the stable transfer diagnostic. */
+static const char *rxcp_task_factory_argument_method(Context *context,
+                                                      ASTNode *argument) {
+    if (!context || !argument || argument->value_dims ||
+        argument->value_reference_type != TP_UNKNOWN) return 0;
+    switch (argument->value_type) {
+        case TP_BOOLEAN: return "add_boolean";
+        case TP_INTEGER: return "add_integer";
+        case TP_STRING: return "add_string";
+        case TP_BINARY: return "add_binary";
+        case TP_OBJECT:
+            if (argument->value_class &&
+                symbol_name_assignable_to(context, argument->value_class,
+                                          "concurrency.channelvalue")) {
+                return "add_value";
+            }
+            return 0;
+        default:
+            return 0;
+    }
+}
+
+static ASTNode *rxcp_task_factory_argument_values(Context *context,
+                                                   ASTNode *target,
+                                                   ASTNode *factory) {
+    ASTNode *builder;
+    ASTNode *association;
+    ASTNode *argument;
+
+    builder = rxcp_remap_create_factory_call(
+            context, target, "concurrency.taskarguments", 0, 0);
+    association = rxcp_remap_create_named_ref(
+            context, target, VAR_SYMBOL, "empty");
+    if (!builder || !association) return 0;
+    builder->association = association;
+    builder->scope = target->scope;
+
+    while ((argument = factory->child) != 0) {
+        const char *method;
+        ASTNode *arguments[1];
+        ASTNode *next;
+
+        if (argument->node_type == NOVAL) {
+            ast_del(argument);
+            continue;
+        }
+        method = rxcp_task_factory_argument_method(context, argument);
+        if (!method) return 0;
+        ast_del(argument);
+        arguments[0] = argument;
+        next = rxcp_remap_create_member_call(
+                context, target, builder, method, arguments, 1u);
+        if (!next) return 0;
+        next->scope = target->scope;
+        builder = next;
+    }
+    builder = rxcp_remap_create_member_call(
+            context, target, builder, "values", 0, 0);
+    if (builder) builder->scope = target->scope;
+    return builder;
+}
+
+static walker_result rxcp_task_target_lowering_walker(walker_direction direction,
+                                                       ASTNode *node,
+                                                       void *payload) {
+    Context *context = (Context *)payload;
+    ASTNode *reference;
+    ASTNode *definition;
+    ASTNode *name_argument;
+    ASTNode *signature_argument;
+    ASTNode *binding_argument;
+    ASTNode *factory_arguments = 0;
+    ASTNode *association;
+    Symbol *symbol;
+    char *fqn;
+    char *return_type;
+    char *arguments;
+    char *signature;
+    char *placeholder;
+
+    if (direction != out || !node || node->node_type != TASK_TARGET) {
+        return result_normal;
+    }
+    if (ast_chld(node, ERROR, 0)) return result_normal;
+
+    reference = node->child;
+    if (!reference) return result_normal;
+    if (reference->node_type == FACTORY_CALL) {
+        ASTNode *argument;
+
+        symbol = reference->symbolNode ? reference->symbolNode->symbol : 0;
+        definition = rxcp_task_factory_definition(symbol);
+        if (!definition || !rxcp_taskwork_factory_valid(context, definition)) {
+            if (context->is_final_pass && !ast_chld(node, ERROR, 0)) {
+                mknd_err(node, "TASKWORK_ADAPTER_REQUIRED");
+            }
+            return result_normal;
+        }
+        for (argument = reference->child; argument; argument = argument->sibling) {
+            if (argument->node_type == NOVAL) continue;
+            if (argument->value_type == TP_UNKNOWN) return result_normal;
+            if (!rxcp_task_factory_argument_method(context, argument)) {
+                if (context->is_final_pass && !ast_chld(node, ERROR, 0)) {
+                    mknd_err(node, "TASK_NONTRANSFERABLE_TYPE");
+                }
+                return result_normal;
+            }
+        }
+        factory_arguments = rxcp_task_factory_argument_values(
+                context, node, reference);
+        if (!factory_arguments) {
+            if (context->is_final_pass && !ast_chld(node, ERROR, 0)) {
+                mknd_err(node, "OUT_OF_MEMORY");
+            }
+            return result_normal;
+        }
+    } else if (reference->node_type == FUNC_SYMBOL) {
+        symbol = reference->symbolNode ? reference->symbolNode->symbol : 0;
+        definition = rxcp_task_callable_definition(symbol);
+        if (!definition) {
+            if (context->is_final_pass && !ast_chld(node, ERROR, 0)) {
+                mknd_err(node, "TASK_TARGET_REQUIRED");
+            }
+            return result_normal;
+        }
+    } else {
+        if (context->is_final_pass && !ast_chld(node, ERROR, 0)) {
+            mknd_err(node, "TASK_DYNAMIC_TARGET");
+        }
+        return result_normal;
+    }
+
+    fqn = sym_frnm(symbol);
+    return_type = callable_effective_return_type(definition);
+    arguments = meta_narg(ast_chld(definition, ARGS, 0));
+    signature = mprintf("%s %s(%s)", return_type, fqn, arguments);
+    placeholder = rxcp_task_placeholder_hex(fqn);
+    name_argument = rxcp_task_binding_argument(context, STRING, fqn, node);
+    signature_argument = rxcp_task_binding_argument(context, STRING, signature, node);
+    binding_argument = rxcp_task_binding_argument(context, BINARY, placeholder, node);
+    association = rxcp_task_binding_argument(context, VAR_SYMBOL, "binding", node);
+
+    free(return_type);
+    free(arguments);
+    free(signature);
+    free(placeholder);
+    free(fqn);
+
+    if (!name_argument || !signature_argument || !binding_argument || !association) {
+        mknd_err(node, "OUT_OF_MEMORY");
+        return result_normal;
+    }
+
+    if (reference->symbolNode) sym_dno(reference->symbolNode->symbol, reference);
+    while (node->child) ast_del(node->child);
+
+    node->node_type = FACTORY_CALL;
+    ast_sstr(node, strdup("concurrency.tasktarget"),
+             strlen("concurrency.tasktarget"));
+    node->association = association;
+    add_ast(node, name_argument);
+    add_ast(node, signature_argument);
+    add_ast(node, binding_argument);
+    if (factory_arguments) add_ast(node, factory_arguments);
+    context->changed_flags |= FLAG_VAL_SYM | FLAG_VAL_TYPE | FLAG_ORCH;
+    return result_normal;
 }
 
 /* Convert a node (i.e. type INTEGER) to an integer - no error correction as the lexer will have done that */
@@ -633,7 +920,14 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
         return TP_VOID;
     }
 
-    if (node->value_type != TP_UNKNOWN) {
+    /* A source-imported TYPE_REFERENCE can arrive after the outer TP_REFERENCE
+     * has been established but before its referent fields converge.  Do not
+     * treat that partial state as a completed type: reconstruct both reference
+     * shapes from the validated child on the next fixed-point pass. */
+    if (node->value_type != TP_UNKNOWN &&
+        !(node->node_type == TYPE_REFERENCE &&
+          (node->value_reference_type == TP_UNKNOWN ||
+           node->target_reference_type == TP_UNKNOWN))) {
         /* The Node Type has already been determined */
         local_dims = node->value_dims;
 
@@ -880,11 +1174,67 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
     }
 }
 
+/* An ordinary dotted literal defaults to binary float when it has no expected
+ * type.  Once the surrounding typed surface establishes a decimal result,
+ * preserve the source spelling instead of rounding through binary64 and then
+ * emitting FTOD.  Numeric expression nodes are retargeted only when they
+ * contain such a source literal; explicit casts/constructors are deliberate
+ * representation boundaries and are therefore not traversed here.
+ *
+ * OPTIONS FLOATS_BINARY remains an explicit request for binary treatment.
+ * OPTIONS FLOATS_DECIMAL is handled earlier by float2decimal_walker(). */
+int rxcp_contextualize_exact_decimal_literals(Context *context,
+                                               ASTNode *node) {
+    ASTNode *child;
+    int changed;
+
+    if (!context || !node || context->floats_binary) return 0;
+
+    if (node->node_type == FLOAT) {
+        node->node_type = DECIMAL;
+        ast_set_value_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+        ast_set_target_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+        return 1;
+    }
+
+    switch (node->node_type) {
+        case OP_PLUS:
+        case OP_NEG:
+        case OP_ADD:
+        case OP_MINUS:
+        case OP_MULT:
+        case OP_POWER:
+        case OP_DIV:
+        case OP_IDIV:
+        case OP_MOD:
+            break;
+        default:
+            return 0;
+    }
+
+    changed = 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (rxcp_contextualize_exact_decimal_literals(context, child)) changed = 1;
+    }
+    if (!changed) return 0;
+
+    ast_set_value_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+    ast_set_target_type(0, node, TP_DECIMAL, 0, 0, 0, 0);
+    for (child = node->child; child; child = child->sibling) {
+        ast_set_target_type(0, child, TP_DECIMAL, 0, 0, 0, 0);
+    }
+    return 1;
+}
+
 /* Validates a node promotion is correct adding error nodes if not */
 void validate_node_promotion(Context *context, ASTNode* node) {
     size_t i;
     if (node->target_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the target is set */
     if (node->value_type == TP_UNKNOWN) return; /* Can't validate yet - will be done later after the value is set */
+
+    if (node->target_type == TP_DECIMAL && node->target_dims == 0) {
+        rxcp_contextualize_exact_decimal_literals(context, node);
+    }
 
     /* Ignore error nodes */
     if (node->node_type == ERROR) return;
@@ -927,12 +1277,26 @@ void validate_node_promotion(Context *context, ASTNode* node) {
     else if (node->value_dims) {
         /* Check Dimension base/values */
         for (i = 0; i<node->value_dims; i++) {
-            if (node->value_dim_base[i] != node->target_dim_base[i])
-                mknd_err(node, "INCOMPATIBLE_DIM_BASE dim=%d from=%d to=%d",
-                         (int)i + 1, node->value_dim_base[i], node->target_dim_base[i]);
-            else if (node->value_dim_elements[i] != node->target_dim_elements[i] && node->target_dim_elements[i])
-                mknd_err(node, "INCOMPATIBLE_DIM_SIZE dim=%d from=%d to=%d",
-                         (int)i + 1, node->value_dim_elements[i], node->target_dim_elements[i]);
+            if (node->value_dim_base[i] != node->target_dim_base[i]) {
+                char *dim_text = rxcp_diag_int_string((int)i + 1);
+                char *from_text = rxcp_diag_int_string(node->value_dim_base[i]);
+                char *to_text = rxcp_diag_int_string(node->target_dim_base[i]);
+                mknd_err3(node, "INCOMPATIBLE_DIM_BASE",
+                          "dim", dim_text, "from", from_text, "to", to_text);
+                free(dim_text);
+                free(from_text);
+                free(to_text);
+            }
+            else if (node->value_dim_elements[i] != node->target_dim_elements[i] && node->target_dim_elements[i]) {
+                char *dim_text = rxcp_diag_int_string((int)i + 1);
+                char *from_text = rxcp_diag_int_string(node->value_dim_elements[i]);
+                char *to_text = rxcp_diag_int_string(node->target_dim_elements[i]);
+                mknd_err3(node, "INCOMPATIBLE_DIM_SIZE",
+                          "dim", dim_text, "from", from_text, "to", to_text);
+                free(dim_text);
+                free(from_text);
+                free(to_text);
+            }
         }
     }
 
@@ -1047,12 +1411,19 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                     if (sym_nond(shadowed) > 0) {
                         ASTNode *def = sym_trnd(shadowed, 0)->node;
                         if (def && def->line != -1) {
-                            mknd_war(node, "SHADOWING, original definition \"%s\" @ %d:%d", fqn, def->line + 1, def->column + 1);
+                            char *line_text = rxcp_diag_int_string(def->line + 1);
+                            char *column_text = rxcp_diag_int_string(def->column + 1);
+                            mknd_war3(node, "SHADOWING",
+                                      "original", fqn,
+                                      "line", line_text,
+                                      "column", column_text);
+                            free(line_text);
+                            free(column_text);
                         } else {
-                            mknd_war(node, "SHADOWING, original definition \"%s\" is global", fqn);
+                            mknd_war2(node, "SHADOWING", "original", fqn, "global", "1");
                         }
                     } else {
-                        mknd_war(node, "SHADOWING, shadows \"%s\"", fqn);
+                        mknd_war1(node, "SHADOWING", "shadows", fqn);
                     }
                     free(fqn);
                 } else {
@@ -1087,10 +1458,14 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
             Symbol *symbol = node->symbolNode ? node->symbolNode->symbol : NULL;
             if (symbol && symbol->creation_node == node) {
                 /* This is the first mention of this symbol in this scope */
-                /* Look for same named symbol in disjoint branches of the same procedure */
-                /* Skip if parent is ASSIGN or DEFINE as requested */
-                if (node->parent && (node->parent->node_type == ASSIGN || node->parent->node_type == DEFINE)) {
-                    /* No warning needed for explicit assignments/definitions */
+                /* Look for the same name in an earlier disjoint scope.  An
+                 * implicit assignment is legal, but is still likely to be an
+                 * accidental attempt to use the earlier local.  Only an
+                 * explicit declaration makes the new binding unambiguous. */
+                if (node->parent &&
+                    (node->parent->node_type == DEFINE ||
+                     node->parent->node_type == CONSTANT_DEF)) {
+                    /* Explicit declaration: the separate binding is intentional. */
                 } else {
                     ASTNode *proc = ast_proc(node);
                     if (proc && proc->scope) {
@@ -1103,9 +1478,17 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
                                     disjoint->creation_ordinal < node->high_ordinal) {
                                     ASTNode *dnode = disjoint->creation_node;
                                     if (dnode) {
-                                        mknd_war(node, "#NOT_IN_SAME_SCOPE, original definition @ %d:%d", dnode->line + 1, dnode->column + 1);
+                                        char *line_text = rxcp_diag_int_string(dnode->line + 1);
+                                        char *column_text = rxcp_diag_int_string(dnode->column + 1);
+                                        mknd_war2(node, "NOT_IN_SAME_SCOPE",
+                                                  "line", line_text,
+                                                  "column", column_text);
+                                        free(line_text);
+                                        free(column_text);
                                     } else {
-                                        mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                                        mknd_war2(node, "NOT_IN_SAME_SCOPE",
+                                                  "line", "unknown",
+                                                  "column", "unknown");
                                     }
                                     break;
                                 }
@@ -1383,6 +1766,7 @@ static void unused_import_add_entry(dpa *entries, ASTNode *import_node) {
     char *namespace_name;
 
     if (!entries || !import_node || import_node->node_type != IMPORT ||
+        import_node->is_compiler_added ||
         !import_node->child || !unused_import_node_has_source(import_node->child)) {
         return;
     }
@@ -1529,6 +1913,7 @@ void validate_ast(Context *context) {
     context->ast = context->work_ast;
     rxcp_inject_cli_imports(context);
     rxcp_inject_signal_imports(context);
+    rxcp_inject_concurrency_imports(context);
     context->current_scope = 0;
     context->in_factory = 0;
     ast_wlkr(context->ast, ast_work_structure_walker, (void *) context);
@@ -1624,6 +2009,11 @@ void validate_ast(Context *context) {
          */
         context->current_scope = 0;
         ast_wlkr(context->ast, rewrite_constructor_walker, (void *) context);
+
+        /* Lower the closed Level G object-equivalence operator before symbol
+         * resolution. The lowered call retains an explicit validation marker. */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rewrite_equivalence_walker, (void *) context);
 
         /* Re-write EXIT Instructions
          * Progress: rewrite_exit_walker is idempotent. Mutates EXIT to CALL.
@@ -1741,6 +2131,14 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
+        /*
+         * Lower sealed task references after callable arguments and returns
+         * have canonical types, but before ordinary factory type resolution.
+         */
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rxcp_task_target_lowering_walker, (void *) context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+
         /* Set Node Types
          * Progress: set_node_types_walker is idempotent. Type setting is guarded by TP_UNKNOWN check.
          */
@@ -1756,6 +2154,16 @@ void validate_ast(Context *context) {
             ast_wlkr(context->ast, set_node_types_walker, (void *) context);
             rxcp_validate_ast_and_symbols(context->ast);
         }
+
+        /* Build implicit structured task scopes from fully typed expressions. */
+        rxcp_validate_task_scope_reuse(context);
+        context->current_scope = 0;
+        ast_wlkr(context->ast, rxcp_task_calls_walker, (void *) context);
+        rxcp_inject_signal_imports(context);
+        if (context->debug_mode >= 2) rxcp_validate_ast_and_symbols(context->ast);
+
+        /* Explicit constants are language semantics, not just optimiser hints. */
+        propagate_explicit_constants(context);
 
         /* Syntactic Sugar
          * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
@@ -1808,11 +2216,24 @@ void validate_ast(Context *context) {
     ordinal_counter = 0;
     ast_wlkr(context->ast, set_node_ordinals_walker, (void *) &ordinal_counter);
 
-    /* Type Safety checks */
-    ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
+    /*
+     * Give unresolved sealed task targets one final validation pass while
+     * their inferred callable/factory types are still available.  This keeps
+     * the task-specific diagnostics ahead of the generic UNKNOWN_TYPE check.
+     */
     context->is_final_pass = 1;
     context->current_scope = 0;
+    ast_wlkr(context->ast, rxcp_task_target_lowering_walker, (void *) context);
+
+    /* Type Safety checks */
+    ast_wlkr(context->ast, clear_node_types_walker, (void *) context);
+    context->current_scope = 0;
     ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+    propagate_explicit_constants(context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, assembler_validation_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, type_safety_walker, (void *)context);
 

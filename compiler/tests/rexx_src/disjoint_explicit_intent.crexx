@@ -1,0 +1,15 @@
+options levelb
+
+main: procedure
+  do
+    i = 1
+  end
+  i = .int
+  i = 2
+
+  parent = 3
+  do
+    parent = 4
+  end
+  say i parent
+  return

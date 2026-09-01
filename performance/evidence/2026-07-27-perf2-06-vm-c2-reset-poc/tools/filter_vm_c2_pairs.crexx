@@ -1,0 +1,70 @@
+/* VM-C2 PoC: select one candidate from the three-way balanced sample set and
+ * map its labels onto the retained PERF2-06 paired summarizer contract. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 3 then do
+  say "Usage: filter_vm_c2_pairs INPUT OUTPUT CANDIDATE_VARIANT"
+  return 2
+end
+
+input_path = argv[1]
+output_path = argv[2]
+candidate_variant = argv[3]
+remove_out = .string[]
+remove_err = .string[]
+address crexx "rm :output_path" output remove_out error remove_err
+
+line_number = 0
+kept = 0
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 then do
+    if lineout(output_path, line) <> 0 then return fail("could not create output")
+    iterate
+  end
+  fields = split_delimited(line, ",")
+  if fields[0] <> 20 then return fail("unexpected sample row width")
+  if fields[7] = "accepted-current" then fields[7] = "current-inline-interrupts"
+  else if fields[7] = candidate_variant then fields[7] = "cow-interrupt-table"
+  else iterate
+  if lineout(output_path, join_delimited(fields, ",")) <> 0 then
+    return fail("could not append output")
+  kept = kept + 1
+end
+call linein input_path
+call lineout output_path
+if kept = 0 then return fail("no candidate rows selected")
+say "PASS: VM-C2 paired rows retained at" output_path
+return 0
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+join_delimited: procedure = .string
+  arg fields = .string[], delimiter = .string
+  joined = ""
+  do i = 1 to fields[0]
+    if i > 1 then joined = joined || delimiter
+    joined = joined || fields[i]
+  end
+  return joined
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

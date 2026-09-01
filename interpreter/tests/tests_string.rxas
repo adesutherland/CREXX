@@ -78,40 +78,35 @@ strlen_pass:
     say "PASS: STRLEN"
 strlen_end:
 
-    /* SUBSTR - using SETSTRPOS */
+    /* SUBSTRING uses an explicit zero-based character start and length. */
     load r1, "Hello World"
     load r2, 6 /* 0-based character offset for 'W' */
-    setstrpos r1, r2
     load r3, 5 /* Length */
-    substr r4, r1, r3
+    substring r4, r1, r2, r3
     seq r0, r4, "World"
     brt substr_pass, r0
-    say "FAIL: SUBSTR"
+    say "FAIL: SUBSTRING"
     br substr_end
 	substr_pass:
-	    say "PASS: SUBSTR"
+	    say "PASS: SUBSTRING"
 	substr_end:
 
-	    /* SCOPY must copy logical string contents with a reset cursor. */
+	    /* SCOPY copies only logical string contents. */
 	    load r1, "Hello World"
-	    load r2, 6
-	    setstrpos r1, r2
 	    scopy r4, r1
-	    getstrpos r5, r4
-	    ieq r0, r5, 0
-	    brt scopy_cursor_pass, r0
-	    say "FAIL: SCOPY cursor reset"
-	    br scopy_cursor_end
-	scopy_cursor_pass:
-	    say "PASS: SCOPY cursor reset"
-	scopy_cursor_end:
+	    seq r0, r4, "Hello World"
+	    brt scopy_value_pass, r0
+	    say "FAIL: SCOPY logical value"
+	    br scopy_value_end
+	scopy_value_pass:
+	    say "PASS: SCOPY logical value"
+	scopy_value_end:
 
-	    /* UTF8 SUBSTR regression: one codepoint substring must keep correct char count. */
+	    /* UTF8 SUBSTRING regression: one codepoint substring must keep correct char count. */
 	    load r1, "🔥fire"
     load r2, 0
-    setstrpos r1, r2
     load r3, 1
-    substr r4, r1, r3
+    substring r4, r1, r2, r3
     load r5, ""
     strlen r7, r4
     ieq r0, r7, 1
@@ -137,36 +132,46 @@ strlen_end:
     seq r0, r5, "00"
     brf utf_substr_fail, r0
 
-    /* UTF8 SUBSTR from an interior cursor must use codepoint lengths, not byte lengths. */
+    /* UTF8 SUBSTRING must use codepoint positions and lengths, not bytes. */
     load r1, "A🔥éZ"
     load r2, 1
-    setstrpos r1, r2
     load r3, 2
-    substr r4, r1, r3
+    substring r4, r1, r2, r3
     seq r0, r4, "🔥é"
     brf utf_substr_fail, r0
     strlen r7, r4
     ieq r0, r7, 2
     brf utf_substr_fail, r0
 
-    /* Same-register SUBSTR must remain safe. */
+    /* Negative starts clip to zero; non-positive lengths produce empty. */
+    load r1, "A🔥éZ"
+    load r2, -1
+    load r3, 2
+    substring r4, r1, r2, r3
+    seq r0, r4, "A🔥"
+    brf utf_substr_fail, r0
+    load r2, 1
+    load r3, -1
+    substring r4, r1, r2, r3
+    seq r0, r4, ""
+    brf utf_substr_fail, r0
+
+    /* Same-register SUBSTRING must remain safe. */
     load r1, "A🔥éZ"
     load r2, 1
-    setstrpos r1, r2
     load r3, 2
-    substr r1, r1, r3
+    substring r1, r1, r2, r3
     seq r0, r1, "🔥é"
     brf utf_substr_fail, r0
     strlen r7, r1
     ieq r0, r7, 2
     brf utf_substr_fail, r0
 
-    /* Length is clipped to remaining codepoints from the current cursor. */
+    /* Length is clipped to remaining codepoints from the explicit start. */
     load r1, "A🔥éZ"
     load r2, 2
-    setstrpos r1, r2
     load r3, 9
-    substr r4, r1, r3
+    substring r4, r1, r2, r3
     seq r0, r4, "éZ"
     brf utf_substr_fail, r0
     strlen r7, r4
@@ -278,6 +283,38 @@ strpos_utf_end:
 fndblnk_pass:
     say "PASS: FNDBLNK"
 fndblnk_end:
+
+    /* Explicit character positions have no observable hidden source state. */
+    load r1, "AéZ"
+    load r2, 1
+    load r3, 1
+    substring r4, r1, r2, r3
+    seq r0, r4, "é"
+    brf explicit_position_fail, r0
+    seq r0, r1, "AéZ"
+    brf explicit_position_fail, r0
+
+    strchar r3, r1, r2
+    ieq r0, r3, 233
+    brf explicit_position_fail, r0
+
+    /* Unicode scans also leave the source logical value unchanged. */
+    load r1, "é Alpha"
+    load r2, 0
+    fndblnk r3, r1, r2
+    ieq r0, r3, 1
+    brf explicit_position_fail, r0
+    load r2, 1
+    fndnblnk r3, r1, r2
+    ieq r0, r3, 2
+    brf explicit_position_fail, r0
+    seq r0, r1, "é Alpha"
+    brf explicit_position_fail, r0
+    say "PASS: explicit string positions"
+    br explicit_position_end
+explicit_position_fail:
+    say "FAIL: explicit string positions"
+explicit_position_end:
 
     /* Robustness: Whitespace-only strings */
     load r1, "   "

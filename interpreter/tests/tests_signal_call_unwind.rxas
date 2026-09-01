@@ -1,0 +1,94 @@
+/*
+ * Caught branch signals must restore compiler-style call-window swaps while
+ * preserving the values and active links that were passed to the discarded
+ * frames.
+ */
+
+.globals=0
+
+main() .locals=16
+    load r1,"scalar"
+
+    setattrs r2,1
+    linkattr1 r3,r2,1
+    load r3,"attribute"
+
+    load r4,"referent"
+    mkref r5,r4
+    linkref r6,r5
+
+    load r7,3
+    sigbr caught,"INVALID_ARGUMENTS"
+    swap r8,r1
+    swap r9,r3
+    swap r10,r6
+    call r0,forward(),r7
+    swap r1,r8
+    swap r3,r9
+    swap r6,r10
+    signal "FAILURE","nested signal did not branch"
+
+caught:
+    seq r0,r1,"scalar"
+    brf fail_scalar,r0
+
+    load r3,"attribute-updated"
+    unlink r3
+    linkattr1 r11,r2,1
+    seq r0,r11,"attribute-updated"
+    unlink r11
+    brf fail_attribute,r0
+
+    load r6,"referent-updated"
+    unlink r6
+    seq r0,r4,"referent-updated"
+    brf fail_reference,r0
+
+    load r12,1
+    load r13,"nested-argument"
+    call r14,nested_argument_window(),r12
+    brf fail_nested_argument,r14
+
+    say "PASS: Signal Call Mapping Unwind"
+    ret 0
+
+fail_scalar:
+    say "FAIL: scalar call mapping"
+    ret 1
+
+fail_attribute:
+    say "FAIL: linked attribute call mapping"
+    ret 1
+
+fail_reference:
+    say "FAIL: linked reference call mapping"
+    ret 1
+
+fail_nested_argument:
+    say "FAIL: nested argument-slot call mapping"
+    ret 1
+
+forward() .locals=5
+    load r0,3
+    swap r1,a1
+    swap r2,a2
+    swap r3,a3
+    call r4,fail(),r0
+    swap a1,r1
+    swap a2,r2
+    swap a3,r3
+    ret
+
+fail() .locals=0
+    signal "INVALID_ARGUMENTS","unwind call mappings"
+    ret
+
+nested_argument_window() .locals=1
+    sigbr nested_argument_caught,"INVALID_ARGUMENTS"
+    load a0,1
+    call r0,fail(),a0
+    ret 0
+
+nested_argument_caught:
+    seq r0,a1,"nested-argument"
+    ret r0

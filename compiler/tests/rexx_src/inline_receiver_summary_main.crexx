@@ -1,0 +1,8 @@
+options levelb
+import inline_cross_file_dep
+
+main: procedure = .int
+  value = .inline_cross_file_dep..box("seed")
+  call value.setName("after")
+  say value.getName()
+  return 0

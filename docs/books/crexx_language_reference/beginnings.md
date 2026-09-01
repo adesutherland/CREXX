@@ -24,9 +24,9 @@ With the roots of the Rexx language (when it still went with one less 'x' at the
 options levelb
 /* rexx: welcoming the world */
 say 'hello world!'
-'date'
+address system 'date'
 ```
 
 <!--splice--crexx helloaddress.rexx-->
 
-As ```system``` is the standard environment before we change it (by specifying something else on the \code{address} statement), this is sent to this environment, most of the time the shell under which your program executes. If this has a ```date``` command, the output of it will be returned. The I/O to the environment using the ```address``` statement can also be redirected using *stem variables*. In fact, sending commands to an environment is one of the examples of Object Orientation using Classic Rexx; the same message can be sent to different objects, as long as these are implemented in the environment, and will potentially yield different answers.
+As ```crexx``` is the standard environment before we change it (by specifying something else on the \code{address} statement), this is sent to this environment, which executes it. The `crexx` environment enables issueing commands in a system independent manner, including the commands which are shell builtins, which can be tricky to address in programs that need to be system independent (see [The Address Statement](adress) on page \pageref{address} in the Reference section for all available commands. The `address system` command adresses the shell under which your program executes. If this has a ```date``` command, the output of it will be returned. The I/O to the environment using the ```address``` statement can also be redirected using *stem variables*. In fact, sending commands to an environment is one of the examples of Object Orientation using Classic Rexx; the same message can be sent to different objects, as long as these are implemented in the environment, and will potentially yield different answers.

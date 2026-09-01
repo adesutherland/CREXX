@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g51c93c421bf4.dirty 20260818",
+  "source_manifest": "performance/manifests/decimal-01-d2-grid-calibration-mac-v1.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 8,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-18T17:55:02+0000",
+  "completed_utc": "2026-08-18T18:00:42+0000",
+  "result": "pass"
+}

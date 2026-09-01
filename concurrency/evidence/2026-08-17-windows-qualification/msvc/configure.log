@@ -1,0 +1,70 @@
+-- The C compiler identification is MSVC 19.44.35228.0
+-- The CXX compiler identification is MSVC 19.44.35228.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- CMake Version: 3.31.6-msvc6
+-- CREXX Version: crexx-1.0.0-beta.3+local.g2b793c81e098
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260817T180732Z
+-- CREXX Build Commit: 2b793c81e098
+-- CMake Generator: Ninja
+-- Performing Test cxxflag__W3
+-- Performing Test cxxflag__W3 - Success
+-- Performing Test cxxflag__EHsc
+-- Performing Test cxxflag__EHsc - Success
+-- C compiler flags: /DWIN32 /D_WINDOWS
+-- C++ compiler flags: /DWIN32 /D_WINDOWS /EHsc  /W3 /wd4068 -D_CRT_SECURE_NO_WARNINGS /EHsc
+-- Linker flags for executables: /machine:x64
+-- Linker flags for shared libs: /machine:x64
+-- MinSizeRel C compiler flags: /O1 /Ob1 /DNDEBUG
+-- MinSizeRel C++ compiler flags: /O1 /Ob1 /DNDEBUG
+-- MinSizeRel linker flags for executables: /INCREMENTAL:NO
+-- MinSizeRel linker flags for shared libs: /INCREMENTAL:NO
+-- Looking for sys/types.h
+-- Looking for sys/types.h - found
+-- Looking for sys/stat.h
+-- Looking for sys/stat.h - found
+-- Looking for fcntl.h
+-- Looking for fcntl.h - found
+-- Looking for unistd.h
+-- Looking for unistd.h - not found
+-- Looking for io.h
+-- Looking for io.h - found
+-- Writing config.h
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - not found
+-- Found Threads: TRUE
+-- Fetching SQLite amalgamation 3530200 for native ADDRESS demo
+-- Smoke test 'rxc_help_syntaxhighlight' is not present in this configuration; skipping
+-- Smoke test 'syntaxhighlight_trace_keywords' is not present in this configuration; skipping
+-- Smoke test 'source_semantics' is not present in this configuration; skipping
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: SCHANNEL
+-- cREXX product VM: rxvm -> rxbvm (MSVC)
+-- Smoke test 'rxpp_sh_tokens' is not present in this configuration; skipping
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Skipping INT_SIGNAL native signal test on Windows
+-- Smoke test 'INT' is not present in this configuration; skipping
+-- Configuring done (11.5s)
+-- Generating done (4.4s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CREXX_FORCE_SYSTEM_OPENSSL
+
+
+-- Build files have been written to: C:/crexx-qa/windows-msvc-2b793c81e-build

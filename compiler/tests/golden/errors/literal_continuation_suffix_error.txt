@@ -1,0 +1,2 @@
+Error in literal_continuation_suffix_error.crexx @ 5:13 - #LITERAL_CONTINUATION_SUFFIX, "\"41\"x"
+1 error(s) in source file

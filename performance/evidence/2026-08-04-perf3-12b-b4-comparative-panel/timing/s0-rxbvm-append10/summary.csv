@@ -1,0 +1,2 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+rexxcps-s0-rxbvm,RexxCPS,crexx-s0,rxbvm,common-f1-control,A,no,no,1000-clauses,benchmark_rate,10,45047237.000000,45449961.250000,45701953.000000,45813416.500000,46016829.000000,246702.500000,0.539807,2.121555,no

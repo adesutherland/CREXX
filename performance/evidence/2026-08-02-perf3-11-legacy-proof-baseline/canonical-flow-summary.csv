@@ -1,0 +1,4 @@
+workload,unreachable_removed,typed_copy_removed,producer_forwarded,redundant_load,redundant_null,redundant_conversion,remaining_legacy_value_accepts
+Richards,5,0,0,0,0,0,0
+Towers,7,0,0,0,0,0,0
+RexxCPS,0,0,0,0,0,5,0

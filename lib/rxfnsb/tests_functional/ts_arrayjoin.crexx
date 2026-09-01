@@ -1,0 +1,38 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+errors = 0
+empty = .string[]
+errors = errors + check("", arrayjoin(empty, ","), "empty")
+
+one = .string[]
+one[1] = "🙂"
+errors = errors + check("🙂", arrayjoin(one, "ignored"), "single")
+
+values = .string[]
+values[1] = "A"
+values[2] = ""
+values[3] = "β"
+values[4] = "D"
+errors = errors + check("A||β|D", arrayjoin(values, "|"), "separator and empty")
+errors = errors + check("AβD", arrayjoin(values), "omitted separator")
+errors = errors + check("A🙂🙂β🙂D", arrayjoin(values, "🙂"), "Unicode separator")
+errors = errors + check_int(4, values[0], "high-water unchanged")
+errors = errors + check("", values[2], "empty element unchanged")
+errors = errors + check("β", values[3], "Unicode element unchanged")
+
+if errors = 0 then say "PASS: arrayjoin"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYJOIN" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYJOIN" label "expected" expected "got" actual
+  return 1

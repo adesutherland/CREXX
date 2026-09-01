@@ -1,0 +1,40 @@
+options levelb
+namespace operation_contract_invalid expose operationcontract resultcontract concretepayload badmembercontract defaultcontract factorycontract
+
+operationcontract: interface
+  classinput: method = .resultcontract
+    arg request = .concretepayload
+  refinput: method = .resultcontract
+    arg expose request = .string
+  vararginput: method = .resultcontract
+    arg ... = .string
+  fixedinput: method = .resultcontract
+    arg values = .string[4]
+  multidiminput: method = .resultcontract
+    arg values = .string[2, 3]
+  objectinput: method = .resultcontract
+    arg value = .object
+  badmemberresult: method = .badmembercontract
+  defaultresult: method = .defaultcontract
+  factoryresult: method = .factorycontract
+  defaultoperation: method = .string
+    return "default"
+
+resultcontract: interface
+  ok: method = .boolean
+
+concretepayload: class
+  value: method = .string
+    return "value"
+
+badmembercontract: interface
+  value: method = .string
+    arg format = .string
+
+defaultcontract: interface
+  value: method = .string
+    return "default"
+
+factorycontract: interface
+  *: factory
+  value: method = .string

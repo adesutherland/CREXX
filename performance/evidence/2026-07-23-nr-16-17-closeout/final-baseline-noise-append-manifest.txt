@@ -1,0 +1,12 @@
+# Policy-required timing append for the nine cells flagged by the initial
+# absolute-baseline noise gate. The product, work and commands are unchanged.
+crexx-cross-runtime-matrix|1
+sieve-rxbvm-final|Sieve|crexx|rxbvm|nr16-nr17-final|A|no|no|5500|PASS: AWFY Sieve||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_sieve_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5500
+base64-rxvm-final|Base64|crexx|rxvm|nr16-nr17-final|A|no|no|2500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+base64-rxbvm-final|Base64|crexx|rxbvm|nr16-nr17-final|A|no|no|2500|PASS: Base64 Roundtrip||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_base64_roundtrip_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;2500
+mandelbrot-rxvm-final|Mandelbrot|crexx|rxvm|nr16-nr17-final|A|no|no|500|PASS: AWFY Mandelbrot||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+mandelbrot-rxbvm-final|Mandelbrot|crexx|rxbvm|nr16-nr17-final|A|no|no|500|PASS: AWFY Mandelbrot||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;500
+list-rxvm-final|List|crexx|rxvm|nr16-nr17-final|A|no|no|100|PASS: AWFY List||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_awfy_list_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;100
+list-rxbvm-final|List|crexx|rxbvm|nr16-nr17-final|A|no|no|100|PASS: AWFY List||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_awfy_list_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;100
+json-rxvm-final|JSON|crexx|rxvm|nr16-nr17-final|A|no|no|5000|PASS: JSON Parser||cmake-build-release/bin/rxvm;cmake-build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000
+json-rxbvm-final|JSON|crexx|rxbvm|nr16-nr17-final|A|no|no|5000|PASS: JSON Parser||cmake-build-release/bin/rxbvm;cmake-build-release/tests/benchmarks/benchmark_json_parser_opt.rxbin;cmake-build-release/bin/library.rxbin;-a;5000

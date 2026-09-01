@@ -1,0 +1,7 @@
+2026-08-16 18:41:42 +0100 Assertions          	Summary- [System: PrevIdle DeclUser kDisp] Using Batt(Charge: 69)          
+2026-08-16 18:41:42 +0100 Assertions          	PID 67620(ChatGPT) Released NoIdleSleepAssertion "Electron" 00:19:20  id:0x0x100009594 [System: PrevIdle DeclUser kDisp]          
+2026-08-16 18:43:13 +0100 Assertions          	Summary- [System: PrevIdle DeclUser kDisp] Using Batt(Charge: 69)          
+2026-08-16 19:07:16 +0100 Assertions          	PID 85708(caffeinate) ClientDied PreventUserIdleSystemSleep "caffeinate command-line tool" 00:10:05  id:0x0x10000969a [System: PrevIdle DeclUser kDisp]          
+2026-08-16 19:18:19 +0100 Assertions          	PID 87781(caffeinate) ClientDied PreventUserIdleSystemSleep "caffeinate command-line tool" 00:09:45  id:0x0x1000096d7 [System: PrevIdle DeclUser kDisp]          
+2026-08-16 19:29:02 +0100 Assertions          	PID 88592(caffeinate) ClientDied PreventUserIdleSystemSleep "caffeinate command-line tool" 00:10:43  id:0x0x100009702 [System: PrevIdle DeclUser kDisp]          
+2026-08-16 19:30:30 +0100 Assertions          	PID 89572(caffeinate) ClientDied PreventUserIdleSystemSleep "caffeinate command-line tool" 00:00:59  id:0x0x10000971a [System: PrevIdle DeclUser kDisp]          

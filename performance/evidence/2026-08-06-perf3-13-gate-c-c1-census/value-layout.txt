@@ -1,0 +1,30 @@
+sizeof(value)=240 align=8
+status                         0   4
+int_value                      8   8
+float_value                   16   8
+decimal_value                 24   8
+decimal_value_length          32   8
+decimal_buffer_length         40   8
+string_value                  48   8
+string_length                 56   8
+string_buffer_length          64   8
+string_chars                  72   8
+string_cache_byte_pos         80   8
+string_cache_char_pos         88   8
+binary_value                  96   8
+binary_length                104   8
+binary_buffer_length         112   8
+native_payload_ops           120   8
+native_payload_flags         128   4
+reference_identity           136   8
+reference_payload            144   8
+object_type                  152   8
+attributes                   160   8
+unlinked_attributes          168   8
+attribute_buffers            176   8
+max_num_attributes           184   8
+num_attributes               192   8
+num_attribute_buffers        200   8
+small_string_buffer          208  32
+V1=208 V2a=192 V2b=160 V3=120
+V3 offsets string=24 binary=32 refs=40 object=56 attrs=64 sidecars=72/80 binary_length=88 string_length=96 num_attributes=112 classes=116/117

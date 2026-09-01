@@ -3,7 +3,9 @@
 The cRexx standard library is built from a mix of Level B source, rxas, and
 native support. The release model is explicit: source imports name the
 namespace to use, and runtime images or linked artifacts provide the bytecode
-and native pieces needed by the VM.
+and native pieces needed by the VM. The complete content of the library is documented
+in the *Library Reference*; here is a short impression of how to use it and what it
+offers in addition to the classic set of built-in functions.
 
 ## Core Level B Library: `rxfnsb`
 
@@ -76,11 +78,46 @@ work:
   objects
 - `rxsocket`: VM-backed TCP sockets with optional TLS depending on build
   configuration
-- `rxhttp`: HTTP client support layered on `rxsocket`
 
-These modules are intentionally modest. They provide enough transport and JSON
-support for current demos and integrations without claiming to be complete web
-frameworks.
+The private Level B `_rxhttpcore` module provides binary HTTP framing, parsing
+and codecs for higher layers; it is not a user client. User-facing HTTP belongs
+to `rxfnsg`: its initial Level G client provides pooled task requests,
+policy, buffered content decoding and bounded response streaming, while its
+bounded server dispatches complete request values to task classes. The Level G
+LLM providers use the same client and private backend. See
+[Concurrent HTTP client and server](../crexx_library_reference/concurrent_http.md)
+for the complete surface and examples.
+
+## Binary SHA-256
+
+The standard/default native provider `rx_hash` exposes one-shot,
+canonical-lowercase-hexadecimal, immutable incremental-state, and synchronous
+bounded-memory file SHA-256 procedures to both Level B and Level G. Binary
+digest results are 32 raw bytes; hexadecimal results are 64 lowercase
+characters. The versioned serialized state is pointer-free and transferable,
+and malformed states signal before hashing. Import `rxhash` directly; no Rexx
+wrapper is needed. The compiler records the native provider dependency,
+ordinary VMs discover the installed provider, and native packaging selects its
+static archive automatically. See [Binary hashing with
+`rxhash`](../crexx_library_reference/rxhash.md) for every exact signature,
+state layout, file/error contract, and examples.
+
+## Mathematics
+
+The Level G standard mathematics family separates native scalar `rxfloat`,
+checked `rxint`, and precision-preserving `rxdecimal`. Provider metadata makes
+the native float library automatic for interpreted and native packaging; the
+integer and decimal modules are Level-B-authored library code. See
+[Mathematics](../crexx_library_reference/mathematics.md) for the complete
+surface and availability boundary.
+
+## Packed vectors
+
+The Level G standard/default `rxvector` native provider supplies explicit
+`f32le` conversion, exact cosine similarity, and deterministic bounded top-k
+search over `.packedfloat` and `.packedint` owners. Portable persistence stays
+separate from host-native computation. See
+[Packed vectors](../crexx_library_reference/rxvector.md).
 
 ## ADDRESS and Trace Support
 
@@ -100,15 +137,59 @@ smoke-tested debugging aid, not as a supported full debugger contract.
 ## Class Library
 
 `classlib` is loaded by the `crexx` driver by default and is part of the beta
-surface, but its public contract should stay small until class-library tests
-and examples are expanded. Prefer documenting concrete, tested classes rather
-than broad promises.
+surface. Its initial concurrency classes include `.taskpool`,
+`.taskscope`, `.task`, `.completion`, `.tasktarget`, `.taskwork`, `.channel`,
+`.channelvalue`, `.byteendpoint` and `.transferbuffer`. They provide explicit
+control beneath Level G syntax while preserving one provider-neutral contract.
+See [Concurrency classes](../crexx_library_reference/concurrency.md) for
+lifecycle rules and examples. Unsupported telemetry and service declarations
+fail explicitly; they do not return invented values.
 
-## Level G and LLM Work
+## RexxScript
 
-`rxfnsg` contains early Level G class-shaped library work, including the LLM
-client modules used by demos. This is useful and real, but Level G itself is
-not the baseline user language for the Release 1 beta line.
+RexxScript is delivered as a first-class runtime product with
+`bin/rexxscript.rxbin` and the standalone `bin/rexxscript` runner. It is an
+interpreted, sandboxed Rexx-family scripting surface for rules and generated
+code execution, not the Level C compiler path.
+
+The product documentation lives with the runtime source:
+
+- [RexxScript user guide](../../../rexxscript/doc/user-guide.md)
+- [RexxScript developer guide](../../../rexxscript/doc/developer-guide.md)
+
+## Level G Libraries
+
+`rxfnsg` contains the LLM client modules used by demos and the initial
+concurrent HTTP client/server implementation. Level G task/parallel syntax and
+the classlib concurrency surface are implemented and tested on the current development
+baseline, but they are not the stable Level B contract. Start with the
+[concurrent programming guide](../crexx_programming_guide/concurrency.md),
+which includes complete checked examples and explains when ordinary work stays
+on the controlling execution.
+
+The `rxunicode` module supplies Unicode 17.0.0 normalization and predicates,
+full default upper/lower conversion, full/simple/Turkic case folding, default
+extended grapheme-cluster operations, and strict-by-default typed codecs between
+`.string` and `.binary`. Supported codecs include UTF-8, explicit-endian
+UTF-16/UTF-32, ASCII, ISO-8859-1, Windows-1252, IBM437, IBM850, and IBM1047.
+It does not change ordinary `.string` equality or codepoint indexing. Level B
+`readbinary` and `writebinary` provide complete-file byte I/O for explicit codec
+composition. See [Unicode text services](../crexx_library_reference/unicode.md)
+for the exact surface and its relationship to TUTOR.
+
+## Level L Generated-Output Work
+
+`rxfnsl` contains early Level L language-engineering examples. The first module
+is `tinyexpr`, a tiny arithmetic lexer/parser written in the shape that a future
+generator might emit. It uses packed binary constants, fixed-size binary token
+records, an exposed declaration procedure for token/layout constants, direct
+`<at..type>` reads/writes, and zero-copy source-slice compare to test whether
+the binary-memory surface is pleasant enough for generated language tooling.
+
+This is intentionally not a public parser-generator API yet. Its job is to
+teach the project what emitted Rexx/RXAS should look like before deciding
+whether to port re2c, alter a generator backend, or design a narrower Level L
+generator.
 
 ## Native Plugins
 

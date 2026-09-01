@@ -1,0 +1,126 @@
+/* Summarize retained internal telemetry from the bounded HTTP server fixture. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] <> 2 then do
+  say "Usage: summarize_server OUTPUTS_CSV SUMMARY_CSV"
+  return 2
+end
+
+input_path = argv[1]
+output_path = argv[2]
+names = .string[]
+counts = .int[]
+elapsed_values = .int[]
+scan_values = .int[]
+idle_values = .int[]
+group_count = 0
+line_number = 0
+
+do while lines(input_path)
+  line = linein(input_path)
+  line_number = line_number + 1
+  if line_number = 1 | pos("SERVER_METRICS", line) = 0 then iterate
+  fields = split_delimited(line, ",")
+  if fields[0] <> 4 then return fail("unexpected server output row")
+  sample_id = fields[1]
+  if pos("-recorded-", sample_id) = 0 then iterate
+  name = server_mode(sample_id)
+  if name = "" then return fail("could not identify server mode")
+  group = find_group(names, group_count, name)
+  if group = 0 then do
+    group_count = group_count + 1
+    group = group_count
+    names[group] = name
+  end
+  counts[group] = counts[group] + 1
+  index = group * 100 + counts[group]
+  elapsed_values[index] = metric_value(fields[4], "elapsed_us")
+  scan_values[index] = metric_value(fields[4], "scans")
+  idle_values[index] = metric_value(fields[4], "idle_scans")
+end
+call linein input_path
+
+if lineout(output_path, "mode,samples,elapsed_us_min,elapsed_us_median,elapsed_us_max,scans_median,idle_scans_median,idle_scan_percent") <> 0 then return fail("could not create server summary")
+do group = 1 to group_count
+  if counts[group] <> 12 then return fail("incomplete 12-sample server mode")
+  elapsed = .int[]
+  scans = .int[]
+  idle = .int[]
+  do sample = 1 to counts[group]
+    index = group * 100 + sample
+    elapsed[sample] = elapsed_values[index]
+    scans[sample] = scan_values[index]
+    idle[sample] = idle_values[index]
+  end
+  call sort_ints elapsed
+  call sort_ints scans
+  call sort_ints idle
+  median_elapsed = (elapsed[6] + elapsed[7]) <idiv> 2
+  median_scans = (scans[6] + scans[7]) <idiv> 2
+  median_idle = (idle[6] + idle[7]) <idiv> 2
+  idle_percent = (median_idle as .float) * 100.0 / (median_scans as .float)
+  row = names[group] || ",12," || elapsed[1] || "," || median_elapsed || "," || elapsed[12] || "," || median_scans || "," || median_idle || "," || strip(floatformat(idle_percent, , 3))
+  if lineout(output_path, row) <> 0 then return fail("could not append server summary")
+end
+call lineout output_path
+say "PASS: HTTP server telemetry summary retained at" output_path
+return 0
+
+server_mode: procedure = .string
+  arg sample_id = .string
+  if pos("server-rxbvm-noopt", sample_id) > 0 then return "rxbvm-noopt"
+  if pos("server-rxbvm-opt", sample_id) > 0 then return "rxbvm-opt"
+  if pos("server-rxtvm-noopt", sample_id) > 0 then return "rxtvm-noopt"
+  if pos("server-rxtvm-opt", sample_id) > 0 then return "rxtvm-opt"
+  return ""
+
+metric_value: procedure = .int
+  arg text = .string, wanted = .string
+  do i = 1 to words(text)
+    item = word(text, i)
+    equals = pos("=", item)
+    if equals > 1 & left(item, equals - 1) = wanted then return substr(item, equals + 1)
+  end
+  return -1
+
+find_group: procedure = .int
+  arg names = .string[], group_count = .int, wanted = .string
+  do group = 1 to group_count
+    if names[group] = wanted then return group
+  end
+  return 0
+
+sort_ints: procedure = .void
+  arg expose values = .int[]
+  do i = 2 to values[0]
+    item = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > item
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = item
+  end
+  return
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

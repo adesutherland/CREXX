@@ -1,0 +1,104 @@
+meta	locale	C
+meta	integer_bits	64
+contract	int	current	empty	0	1	1234605616436508552	1	1	0
+contract	int	bounded	empty	0	1	1234605616436508552	0	0	0
+contract	int	current	space	1	1	1234605616436508552	1	2	1
+contract	int	bounded	space	1	1	1234605616436508552	0	0	0
+contract	int	current	zero	1	0	0	1	2	1
+contract	int	bounded	zero	1	0	0	0	0	0
+contract	int	current	negative_zero	2	0	0	1	3	2
+contract	int	bounded	negative_zero	2	0	0	0	0	0
+contract	int	current	plus	3	0	42	1	4	3
+contract	int	bounded	plus	3	0	42	0	0	0
+contract	int	current	whitespace	7	0	-42	1	8	7
+contract	int	bounded	whitespace	7	0	-42	0	0	0
+contract	int	current	leading_zero	4	0	12	1	5	4
+contract	int	bounded	leading_zero	4	0	12	0	0	0
+contract	int	current	hex_like	4	1	1234605616436508552	1	5	4
+contract	int	bounded	hex_like	4	1	1234605616436508552	0	0	0
+contract	int	current	trailing_junk	3	1	1234605616436508552	1	4	3
+contract	int	bounded	trailing_junk	3	1	1234605616436508552	0	0	0
+contract	int	current	max	19	0	9223372036854775807	1	20	19
+contract	int	bounded	max	19	0	9223372036854775807	0	0	0
+contract	int	current	min	20	0	-9223372036854775808	1	21	20
+contract	int	bounded	min	20	0	-9223372036854775808	0	0	0
+contract	int	current	overflow	19	1	1234605616436508552	1	20	19
+contract	int	bounded	overflow	19	1	1234605616436508552	0	0	0
+contract	int	current	underflow	20	1	1234605616436508552	1	21	20
+contract	int	bounded	underflow	20	1	1234605616436508552	0	0	0
+contract	int	current	embedded_nul	4	0	42	1	5	4
+contract	int	bounded	embedded_nul	4	1	1234605616436508552	0	0	0
+contract	float	current	empty	0	1	3ff3c0ca428c59dd	0	0	0
+contract	float	c_locale_copy	empty	0	1	3ff3c0ca428c59dd	0	0	0
+contract	float	from_chars	empty	0	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	space	1	1	3ff3c0ca428c59dd	0	0	1
+contract	float	c_locale_copy	space	1	1	3ff3c0ca428c59dd	0	0	1
+contract	float	from_chars	space	1	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	zero	1	0	0000000000000000	0	0	1
+contract	float	c_locale_copy	zero	1	0	0000000000000000	0	0	1
+contract	float	from_chars	zero	1	0	0000000000000000	0	0	0
+contract	float	current	negative_zero	2	0	8000000000000000	0	0	2
+contract	float	c_locale_copy	negative_zero	2	0	8000000000000000	0	0	2
+contract	float	from_chars	negative_zero	2	0	8000000000000000	0	0	0
+contract	float	current	plus	4	0	3ff8000000000000	0	0	4
+contract	float	c_locale_copy	plus	4	0	3ff8000000000000	0	0	4
+contract	float	from_chars	plus	4	0	3ff8000000000000	0	0	0
+contract	float	current	whitespace	8	0	bff8000000000000	0	0	8
+contract	float	c_locale_copy	whitespace	8	0	bff8000000000000	0	0	8
+contract	float	from_chars	whitespace	8	0	bff8000000000000	0	0	0
+contract	float	current	decimal_point	3	0	3ff8000000000000	0	0	3
+contract	float	c_locale_copy	decimal_point	3	0	3ff8000000000000	0	0	3
+contract	float	from_chars	decimal_point	3	0	3ff8000000000000	0	0	0
+contract	float	current	decimal_comma	3	1	3ff3c0ca428c59dd	0	0	3
+contract	float	c_locale_copy	decimal_comma	3	1	3ff3c0ca428c59dd	0	0	3
+contract	float	from_chars	decimal_comma	3	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	hex_float	5	0	4010000000000000	0	0	5
+contract	float	c_locale_copy	hex_float	5	0	4010000000000000	0	0	5
+contract	float	from_chars	hex_float	5	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	infinity	3	0	7ff0000000000000	0	0	3
+contract	float	c_locale_copy	infinity	3	0	7ff0000000000000	0	0	3
+contract	float	from_chars	infinity	3	0	7ff0000000000000	0	0	0
+contract	float	current	negative_infinity	9	0	fff0000000000000	0	0	9
+contract	float	c_locale_copy	negative_infinity	9	0	fff0000000000000	0	0	9
+contract	float	from_chars	negative_infinity	9	0	fff0000000000000	0	0	0
+contract	float	current	nan	3	0	7ff8000000000000	0	0	3
+contract	float	c_locale_copy	nan	3	0	7ff8000000000000	0	0	3
+contract	float	from_chars	nan	3	0	7ff8000000000000	0	0	0
+contract	float	current	nan_payload	8	0	7ff800000000007b	0	0	8
+contract	float	c_locale_copy	nan_payload	8	0	7ff800000000007b	0	0	8
+contract	float	from_chars	nan_payload	8	0	7ff8000000000000	0	0	0
+contract	float	current	min_normal	23	0	0010000000000000	0	0	23
+contract	float	c_locale_copy	min_normal	23	0	0010000000000000	0	0	23
+contract	float	from_chars	min_normal	23	0	0010000000000000	0	0	0
+contract	float	current	min_subnormal	23	1	3ff3c0ca428c59dd	0	0	23
+contract	float	c_locale_copy	min_subnormal	23	1	3ff3c0ca428c59dd	0	0	23
+contract	float	from_chars	min_subnormal	23	0	0000000000000001	0	0	0
+contract	float	current	underflow_zero	6	1	3ff3c0ca428c59dd	0	0	6
+contract	float	c_locale_copy	underflow_zero	6	1	3ff3c0ca428c59dd	0	0	6
+contract	float	from_chars	underflow_zero	6	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	max_finite	22	0	7fefffffffffffff	0	0	22
+contract	float	c_locale_copy	max_finite	22	0	7fefffffffffffff	0	0	22
+contract	float	from_chars	max_finite	22	0	7fefffffffffffff	0	0	0
+contract	float	current	overflow	22	1	3ff3c0ca428c59dd	0	0	22
+contract	float	c_locale_copy	overflow	22	1	3ff3c0ca428c59dd	0	0	22
+contract	float	from_chars	overflow	22	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	halfway_even	55	0	3ff0000000000000	0	0	55
+contract	float	c_locale_copy	halfway_even	55	0	3ff0000000000000	0	0	55
+contract	float	from_chars	halfway_even	55	0	3ff0000000000000	0	0	0
+contract	float	current	trailing_junk	4	1	3ff3c0ca428c59dd	0	0	4
+contract	float	c_locale_copy	trailing_junk	4	1	3ff3c0ca428c59dd	0	0	4
+contract	float	from_chars	trailing_junk	4	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	embedded_nul	5	0	3ff8000000000000	0	0	5
+contract	float	c_locale_copy	embedded_nul	5	0	3ff8000000000000	0	0	5
+contract	float	from_chars	embedded_nul	5	1	3ff3c0ca428c59dd	0	0	0
+contract	float	current	long_fraction	192	0	3fe0000000000000	1	193	192
+contract	float	c_locale_copy	long_fraction	192	0	3fe0000000000000	1	193	192
+contract	float	from_chars	long_fraction	192	0	3fe0000000000000	0	0	0
+timing	int	current	1000000	27418000	1000000	11750000	10750000	1000000
+timing	int	bounded	1000000	5291000	0	0	0	750000
+timing	float	current_short	1000000	17033000	0	0	12250000	1000000
+timing	float	c_locale_copy_short	1000000	16487000	0	0	12250000	1000000
+timing	float	from_chars_short	1000000	18975000	0	0	0	1000000
+timing	float	current_long	250000	45916000	250000	48250000	48000000	250000
+timing	float	c_locale_copy_long	250000	45691000	250000	48250000	48000000	250000
+timing	float	from_chars_long	250000	862776000	0	0	0	250000

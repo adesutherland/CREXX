@@ -1,0 +1,373 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_mandelbrot-opt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_mandelbrot-opt.rxas
+
+* CONSTANT POOL - Size 0x5d58.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x16a
+
+.globals=0
+
+main()          .locals=26
+                .meta "awfy_mandelbrot.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_mandelbrot.crexx" 8 5 19 "arg argv = .string[]"
+                .meta "awfy_mandelbrot.main.argv"="b" ".string[*]" a1 /* aka r27 */
+                .srcstep 2 2 17 "awfy_mandelbrot.crexx" 10 1 11 "size = 500"
+                .meta "awfy_mandelbrot.main.size"="b" ".int" r3
+                load r3,500                                  * 0x000004:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 2 2 0 "size" ""
+                .srcstep 4 4 17 "awfy_mandelbrot.crexx" 11 1 16 "if argv[0] >= 1 then size = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 4 4 4 0 "argv" ""
+                getattrs r5,a1 /* aka r27 */,0               * 0x000007:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 5 4 4 0 "argv" ""
+                igte r5,r5,1                                 * 0x00000b:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 5 4 4 0 "" ""
+                brf lb_16,r5                                 * 0x00000f:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_mandelbrot.crexx" 11 17 21 "if argv[0] >= 1 then size = argv[1]"
+                .srcstep 3 3 17 "awfy_mandelbrot.crexx" 11 22 35 "if argv[0] >= 1 then size = argv[1]"
+                minstoiattr1 r3,a1 /* aka r27 */,1           * 0x000012:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 3 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "size" ""
+                .srcstep 10 10 17 "awfy_mandelbrot.crexx" 12 1 12 "if size < 1 then return fail(\"size must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "size" ""
+lb_16:          ilt r6,r3,1                                  * 0x000016:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 6 10 10 0 "" ""
+                brf lb_29,r6                                 * 0x00001a:0026 Branch to op1 if op2 false
+                .srcstep 11 11 17 "awfy_mandelbrot.crexx" 12 13 17 "if size < 1 then return fail(\"size must be positive\")"
+                .srcstep 9 9 17 "awfy_mandelbrot.crexx" 12 18 54 "if size < 1 then return fail(\"size must be positive\")"
+                .srcstep 8 8 17 "awfy_mandelbrot.crexx" 12 25 29 "if size < 1 then return fail(\"size must be positive\")"
+                .srcstep 6 6 17 "awfy_mandelbrot.crexx" 70 3 22 "  say \"FAIL:\" message"
+                say "FAIL: size must be positive"            * 0x00001d:01c7 Say op1
+                .srcstep 7 7 17 "awfy_mandelbrot.crexx" 71 3 11 "  return 1"
+                load r5,1                                    * 0x00001f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 9 9 0 "" ""
+                icopy r4,r5                                  * 0x000022:0009 Copy Integer op2 to op1
+                br lb_27                                     * 0x000025:0024 Branch to op1
+lb_27:          ret r4                                       * 0x000027:0031 Return op1
+                .srcstep 60 60 17 "awfy_mandelbrot.crexx" 14 1 26 "result = mandelbrot(size)"
+                .srcstep 12 12 33 "awfy_mandelbrot.crexx" 27 7 11 "  arg size = .int"
+                .traceevent "V" 6 "R" "I" "r" 3 12 12 0 "size" ""
+lb_29:          icopy r10,r3                                 * 0x000029:0009 Copy Integer op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 10 12 12 0 "size" ""
+                .srcstep 13 13 17 "awfy_mandelbrot.crexx" 29 3 15 "  checksum = 0"
+                load r9,0                                    * 0x00002c:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 9 13 13 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 13 13 0 "checksum" ""
+                .srcstep 14 14 17 "awfy_mandelbrot.crexx" 30 3 15 "  byte_acc = 0"
+                load r8,0                                    * 0x00002f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 14 14 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 14 14 0 "byte_acc" ""
+                .srcstep 15 15 17 "awfy_mandelbrot.crexx" 31 3 14 "  bit_num = 0"
+                load r7,0                                    * 0x000032:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 15 15 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 15 15 0 "bit_num" ""
+                .srcstep 57 57 17 "awfy_mandelbrot.crexx" 33 3 5 "  do y = 0 to size - 1"
+                .srcstep 16 16 17 "awfy_mandelbrot.crexx" 33 6 11 "  do y = 0 to size - 1"
+                load r5,0                                    * 0x000035:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 16 16 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 16 16 0 "y" ""
+                .srcstep 17 17 17 "awfy_mandelbrot.crexx" 33 12 23 "  do y = 0 to size - 1"
+                .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "size" ""
+                isub r4,r10,1                                * 0x000038:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 4 0 0 0 "" ""
+                .srcstep 17 17 17 "awfy_mandelbrot.crexx" 33 12 23 "  do y = 0 to size - 1"
+lb_3c:          igt r11,r5,r4                                * 0x00003c:0068 Int Greater than op1=(op2>op3)
+                brt lb_fe,r11                                * 0x000040:0025 Branch to op1 if op2 true
+                .srcstep 19 19 17 "awfy_mandelbrot.crexx" 34 5 56 "    ci = (2.0 * (y as .float) / (size as .float)) - 1.0"
+                .traceevent "V" 6 "R" "I" "r" 5 19 19 0 "y" ""
+                itof r12,r5                                  * 0x000043:0127 Convert integer op2 directly to float op1
+                fmult r12,r12,2.0                            * 0x000046:0132 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 12 19 19 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 10 19 19 0 "size" ""
+                itof r13,r10                                 * 0x00004a:0127 Convert integer op2 directly to float op1
+                fdivsub r6,r12,r13,1.0                       * 0x00004d:0129 Set op3 to op2 divided by op3, then set op1 to op3 minus op4
+                .traceevent "O" 4 "R" "F" "r" 13 19 19 0 "" ""
+                .traceevent "O" 4 "R" "F" "r" 6 19 19 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 6 19 19 0 "ci" ""
+                .srcstep 55 55 17 "awfy_mandelbrot.crexx" 35 5 7 "    do x = 0 to size - 1"
+                .srcstep 20 20 17 "awfy_mandelbrot.crexx" 35 8 13 "    do x = 0 to size - 1"
+                load r14,0                                   * 0x000052:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 14 20 20 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 14 20 20 0 "x" ""
+                .srcstep 21 21 17 "awfy_mandelbrot.crexx" 35 14 25 "    do x = 0 to size - 1"
+                .traceevent "V" 6 "R" "I" "r" 10 0 0 0 "size" ""
+                isub r18,r10,1                               * 0x000055:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 18 0 0 0 "" ""
+                .srcstep 21 21 17 "awfy_mandelbrot.crexx" 35 14 25 "    do x = 0 to size - 1"
+lb_59:          igt r19,r14,r18                              * 0x000059:0068 Int Greater than op1=(op2>op3)
+                brt lb_fb,r19                                * 0x00005d:0025 Branch to op1 if op2 true
+                .srcstep 23 23 17 "awfy_mandelbrot.crexx" 36 7 27 "      zrzr = 0.0 as .float"
+                load r17,0.0                                 * 0x000060:0002 Load op1 with op2
+                .traceevent "L" 4 "R" "F" "r" 17 23 23 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 17 23 23 0 "zrzr" ""
+                .srcstep 24 24 17 "awfy_mandelbrot.crexx" 37 7 25 "      zi = 0.0 as .float"
+                load r15,0.0                                 * 0x000063:0002 Load op1 with op2
+                .traceevent "L" 4 "R" "F" "r" 15 24 24 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 15 24 24 0 "zi" ""
+                .srcstep 25 25 17 "awfy_mandelbrot.crexx" 38 7 27 "      zizi = 0.0 as .float"
+                load r16,0.0                                 * 0x000066:0002 Load op1 with op2
+                .traceevent "L" 4 "R" "F" "r" 16 25 25 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 16 25 25 0 "zizi" ""
+                .srcstep 26 26 17 "awfy_mandelbrot.crexx" 39 7 58 "      cr = (2.0 * (x as .float) / (size as .float)) - 1.5"
+                .traceevent "V" 6 "R" "I" "r" 14 26 26 0 "x" ""
+                itof r20,r14                                 * 0x000069:0127 Convert integer op2 directly to float op1
+                fmult r20,r20,2.0                            * 0x00006c:0132 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 20 26 26 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 10 26 26 0 "size" ""
+                itof r21,r10                                 * 0x000070:0127 Convert integer op2 directly to float op1
+                fdivsub r13,r20,r21,1.5                      * 0x000073:0129 Set op3 to op2 divided by op3, then set op1 to op3 minus op4
+                .traceevent "O" 4 "R" "F" "r" 21 26 26 0 "" ""
+                .traceevent "O" 4 "R" "F" "r" 13 26 26 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 13 26 26 0 "cr" ""
+                .srcstep 27 27 17 "awfy_mandelbrot.crexx" 40 7 17 "      escape = 0"
+                load r12,0                                   * 0x000078:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 27 27 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 12 27 27 0 "escape" ""
+                .srcstep 39 39 17 "awfy_mandelbrot.crexx" 42 7 9 "      do z = 0 to 49 while escape = 0"
+                .srcstep 28 28 17 "awfy_mandelbrot.crexx" 42 10 15 "      do z = 0 to 49 while escape = 0"
+                load r21,0                                   * 0x00007b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 21 28 28 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 21 28 28 0 "z" ""
+                .srcstep 29 29 17 "awfy_mandelbrot.crexx" 42 16 21 "      do z = 0 to 49 while escape = 0"
+                load r22,49                                  * 0x00007e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 22 0 0 0 "" ""
+                .srcstep 29 29 17 "awfy_mandelbrot.crexx" 42 16 21 "      do z = 0 to 49 while escape = 0"
+lb_81:          igt r23,r21,r22                              * 0x000081:0068 Int Greater than op1=(op2>op3)
+                brt lb_bc,r23                                * 0x000085:0025 Branch to op1 if op2 true
+                .srcstep 30 30 17 "awfy_mandelbrot.crexx" 42 22 38 "      do z = 0 to 49 while escape = 0"
+                .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "escape" ""
+                ieq r24,r12,0                                * 0x000088:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 24 0 0 0 "" ""
+                brf lb_bc,r24                                * 0x00008c:0026 Branch to op1 if op2 false
+                .srcstep 32 32 17 "awfy_mandelbrot.crexx" 43 9 30 "        zr = zrzr - zizi + cr"
+                .traceevent "V" 6 "R" "F" "r" 17 32 32 0 "zrzr" ""
+                .traceevent "V" 6 "R" "F" "r" 16 32 32 0 "zizi" ""
+                fsub r25,r17,r16                             * 0x00008f:012e Float Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "F" "r" 25 32 32 0 "" ""
+                .traceevent "V" 6 "R" "F" "r" 13 32 32 0 "cr" ""
+                fadd r20,r25,r13                             * 0x000093:012c Float Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "F" "r" 20 32 32 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 20 32 32 0 "zr" ""
+                .srcstep 33 33 17 "awfy_mandelbrot.crexx" 44 9 32 "        zi = 2.0 * zr * zi + ci"
+                .traceevent "V" 6 "R" "F" "r" 20 33 33 0 "zr" ""
+                fmult r25,r20,2.0                            * 0x000097:0132 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 25 33 33 0 "" ""
+                .traceevent "V" 6 "R" "F" "r" 15 33 33 0 "zi" ""
+                fmult r25,r25,r15                            * 0x00009b:0131 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 25 33 33 0 "" ""
+                .traceevent "V" 6 "R" "F" "r" 6 33 33 0 "ci" ""
+                fadd r15,r25,r6                              * 0x00009f:012c Float Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "F" "r" 15 33 33 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 15 33 33 0 "zi" ""
+                .srcstep 34 34 17 "awfy_mandelbrot.crexx" 45 9 23 "        zrzr = zr * zr"
+                .traceevent "V" 6 "R" "F" "r" 20 34 34 0 "zr" ""
+                .traceevent "V" 6 "R" "F" "r" 20 34 34 0 "zr" ""
+                fmult r17,r20,r20                            * 0x0000a3:0131 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 17 34 34 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 17 34 34 0 "zrzr" ""
+                .srcstep 35 35 17 "awfy_mandelbrot.crexx" 46 9 23 "        zizi = zi * zi"
+                .traceevent "V" 6 "R" "F" "r" 15 35 35 0 "zi" ""
+                .traceevent "V" 6 "R" "F" "r" 15 35 35 0 "zi" ""
+                fmult r16,r15,r15                            * 0x0000a7:0131 Float Multiply (op1=op2*op3)
+                .traceevent "O" 4 "R" "F" "r" 16 35 35 0 "" ""
+                .traceevent "A" 6 "R" "F" "r" 16 35 35 0 "zizi" ""
+                .srcstep 37 37 17 "awfy_mandelbrot.crexx" 47 9 29 "        if zrzr + zizi > 4.0 then escape = 1"
+                .traceevent "V" 6 "R" "F" "r" 17 37 37 0 "zrzr" ""
+                .traceevent "V" 6 "R" "F" "r" 16 37 37 0 "zizi" ""
+                fadd r25,r17,r16                             * 0x0000ab:012c Float Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "F" "r" 25 37 37 0 "" ""
+                fgt r25,r25,4.0                              * 0x0000af:0141 Float Greater than op1=(op2>op3)
+                .traceevent "O" 4 "R" "B" "r" 25 37 37 0 "" ""
+                brf lb_b9,r25                                * 0x0000b3:0026 Branch to op1 if op2 false
+                .srcstep 38 38 17 "awfy_mandelbrot.crexx" 47 30 34 "        if zrzr + zizi > 4.0 then escape = 1"
+                .srcstep 36 36 17 "awfy_mandelbrot.crexx" 47 35 45 "        if zrzr + zizi > 4.0 then escape = 1"
+                load r12,1                                   * 0x0000b6:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 36 36 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 12 36 36 0 "escape" ""
+                .srcstep 31 31 17 "awfy_mandelbrot.crexx" 42 10 11 "      do z = 0 to 49 while escape = 0"
+                .srcstep 40 40 17 "awfy_mandelbrot.crexx" 48 7 10 "      end"
+lb_b9:          bctp lb_81,r21                               * 0x0000b9:015d inc op2; goto op1
+                .srcstep 41 41 17 "awfy_mandelbrot.crexx" 50 7 45 "      byte_acc = (byte_acc <shl> 1) + escape"
+                .traceevent "V" 6 "R" "I" "r" 8 41 41 0 "byte_acc" ""
+lb_bc:          ishl r25,r8,1                                * 0x0000bc:00af bit wise shift logical left of integer (op1=op2<<op3)
+                .traceevent "O" 4 "R" "I" "r" 25 41 41 0 "" ""
+                .traceevent "V" 6 "R" "I" "r" 12 41 41 0 "escape" ""
+                iadd r8,r25,r12                              * 0x0000c0:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 8 41 41 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 41 41 0 "byte_acc" ""
+                .srcstep 42 42 17 "awfy_mandelbrot.crexx" 51 7 28 "      bit_num = bit_num + 1"
+                .traceevent "V" 6 "R" "I" "r" 7 42 42 0 "bit_num" ""
+                iadd r7,r7,1                                 * 0x0000c4:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 7 42 42 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 42 42 0 "bit_num" ""
+                .srcstep 52 52 17 "awfy_mandelbrot.crexx" 53 7 21 "      if bit_num = 8 then do"
+                .traceevent "V" 6 "R" "I" "r" 7 52 52 0 "bit_num" ""
+                ieq r25,r7,8                                 * 0x0000c8:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 25 52 52 0 "" ""
+                brf lb_db,r25                                * 0x0000cc:0026 Branch to op1 if op2 false
+                .srcstep 53 53 17 "awfy_mandelbrot.crexx" 53 22 26 "      if bit_num = 8 then do"
+                .srcstep 43 43 17 "awfy_mandelbrot.crexx" 54 9 43 "        checksum = checksum <xor> byte_acc"
+                .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "checksum" ""
+                .traceevent "V" 6 "R" "I" "r" 8 43 43 0 "byte_acc" ""
+                ixor r9,r9,r8                                * 0x0000cf:00ac bit wise exclusive OR of 2 integers (op1=op2^op3)
+                .traceevent "O" 4 "R" "I" "r" 9 43 43 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 43 43 0 "checksum" ""
+                .srcstep 44 44 17 "awfy_mandelbrot.crexx" 55 9 21 "        byte_acc = 0"
+                load r8,0                                    * 0x0000d3:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 44 44 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 44 44 0 "byte_acc" ""
+                .srcstep 45 45 17 "awfy_mandelbrot.crexx" 56 9 20 "        bit_num = 0"
+                load r7,0                                    * 0x0000d6:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 45 45 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 45 45 0 "bit_num" ""
+                br lb_f8                                     * 0x0000d9:0024 Branch to op1
+                .srcstep 54 54 17 "awfy_mandelbrot.crexx" 57 7 10 "      end"
+                .srcstep 50 50 17 "awfy_mandelbrot.crexx" 58 12 27 "      else if x = size - 1 then do"
+                .traceevent "V" 6 "R" "I" "r" 14 50 50 0 "x" ""
+                .traceevent "V" 6 "R" "I" "r" 10 50 50 0 "size" ""
+lb_db:          isub r24,r10,1                               * 0x0000db:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 24 50 50 0 "" ""
+                ieq r24,r14,r24                              * 0x0000df:0064 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 24 50 50 0 "" ""
+                brf lb_f8,r24                                * 0x0000e3:0026 Branch to op1 if op2 false
+                .srcstep 51 51 17 "awfy_mandelbrot.crexx" 58 28 32 "      else if x = size - 1 then do"
+                .srcstep 46 46 17 "awfy_mandelbrot.crexx" 59 9 48 "        byte_acc = byte_acc <shl> (8 - bit_num)"
+                .traceevent "V" 6 "R" "I" "r" 8 46 46 0 "byte_acc" ""
+                .traceevent "V" 6 "R" "I" "r" 7 46 46 0 "bit_num" ""
+                isub r23,8,r7                                * 0x0000e6:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 23 46 46 0 "" ""
+                ishl r8,r8,r23                               * 0x0000ea:00ae bit wise shift logical left of integer (op1=op2<<op3)
+                .traceevent "O" 4 "R" "I" "r" 8 46 46 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 46 46 0 "byte_acc" ""
+                .srcstep 47 47 17 "awfy_mandelbrot.crexx" 60 9 43 "        checksum = checksum <xor> byte_acc"
+                .traceevent "V" 6 "R" "I" "r" 9 47 47 0 "checksum" ""
+                .traceevent "V" 6 "R" "I" "r" 8 47 47 0 "byte_acc" ""
+                ixor r9,r9,r8                                * 0x0000ee:00ac bit wise exclusive OR of 2 integers (op1=op2^op3)
+                .traceevent "O" 4 "R" "I" "r" 9 47 47 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 9 47 47 0 "checksum" ""
+                .srcstep 48 48 17 "awfy_mandelbrot.crexx" 61 9 21 "        byte_acc = 0"
+                load r8,0                                    * 0x0000f2:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 48 48 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 8 48 48 0 "byte_acc" ""
+                .srcstep 49 49 17 "awfy_mandelbrot.crexx" 62 9 20 "        bit_num = 0"
+                load r7,0                                    * 0x0000f5:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 49 49 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 49 49 0 "bit_num" ""
+                .srcstep 22 22 17 "awfy_mandelbrot.crexx" 35 8 9 "    do x = 0 to size - 1"
+                .srcstep 56 56 17 "awfy_mandelbrot.crexx" 63 7 10 "      end"
+lb_f8:          bctp lb_59,r14                               * 0x0000f8:015d inc op2; goto op1
+                .srcstep 18 18 17 "awfy_mandelbrot.crexx" 33 6 7 "  do y = 0 to size - 1"
+                .srcstep 58 58 17 "awfy_mandelbrot.crexx" 63 7 10 "      end"
+lb_fb:          bctp lb_3c,r5                                * 0x0000fb:015d inc op2; goto op1
+                .srcstep 59 59 33 "awfy_mandelbrot.crexx" 66 3 9 "  return checksum"
+                .traceevent "V" 6 "R" "I" "r" 9 59 59 0 "checksum" ""
+lb_fe:          copy r2,r9                                   * 0x0000fe:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 2 59 59 0 "result" ""
+                .srcstep 61 61 17 "awfy_mandelbrot.crexx" 15 1 14 "expected = -1"
+                .meta "awfy_mandelbrot.main.expected"="b" ".int" r1
+                .meta "awfy_mandelbrot.main.result"="b" ".int" r2
+                load r1,-1                                   * 0x000101:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 61 61 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 61 61 0 "expected" ""
+                .srcstep 63 63 17 "awfy_mandelbrot.crexx" 16 1 12 "if size = 1 then expected = 128"
+                .traceevent "V" 6 "R" "I" "r" 3 63 63 0 "size" ""
+                bne lb_10b,r3,1                              * 0x000104:002b if op2!=op3 then goto op1
+                .srcstep 64 64 17 "awfy_mandelbrot.crexx" 16 13 17 "if size = 1 then expected = 128"
+                .srcstep 62 62 17 "awfy_mandelbrot.crexx" 16 18 32 "if size = 1 then expected = 128"
+                load r1,128                                  * 0x000108:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 62 62 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 62 62 0 "expected" ""
+                .srcstep 66 66 17 "awfy_mandelbrot.crexx" 17 1 14 "if size = 500 then expected = 191"
+                .traceevent "V" 6 "R" "I" "r" 3 66 66 0 "size" ""
+lb_10b:         bne lb_112,r3,500                            * 0x00010b:002b if op2!=op3 then goto op1
+                .srcstep 67 67 17 "awfy_mandelbrot.crexx" 17 15 19 "if size = 500 then expected = 191"
+                .srcstep 65 65 17 "awfy_mandelbrot.crexx" 17 20 34 "if size = 500 then expected = 191"
+                load r1,191                                  * 0x00010f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 65 65 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 65 65 0 "expected" ""
+                .srcstep 69 69 17 "awfy_mandelbrot.crexx" 18 1 14 "if size = 750 then expected = 50"
+                .traceevent "V" 6 "R" "I" "r" 3 69 69 0 "size" ""
+lb_112:         bne lb_119,r3,750                            * 0x000112:002b if op2!=op3 then goto op1
+                .srcstep 70 70 17 "awfy_mandelbrot.crexx" 18 15 19 "if size = 750 then expected = 50"
+                .srcstep 68 68 17 "awfy_mandelbrot.crexx" 18 20 33 "if size = 750 then expected = 50"
+                load r1,50                                   * 0x000116:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 68 68 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 68 68 0 "expected" ""
+                .srcstep 76 76 17 "awfy_mandelbrot.crexx" 19 1 17 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+                .traceevent "V" 6 "R" "I" "r" 1 76 76 0 "expected" ""
+lb_119:         ieq r25,r1,-1                                * 0x000119:0065 Int Equals op1=(op2==op3)
+                .traceevent "O" 4 "R" "B" "r" 25 76 76 0 "" ""
+                brf lb_134,r25                               * 0x00011d:0026 Branch to op1 if op2 false
+                .srcstep 77 77 17 "awfy_mandelbrot.crexx" 19 18 22 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+                .srcstep 75 75 17 "awfy_mandelbrot.crexx" 19 23 77 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+                .srcstep 74 74 17 "awfy_mandelbrot.crexx" 19 30 34 "if expected = -1 then return fail(\"no reference checksum for size \" || size)"
+                .srcstep 71 71 33 "awfy_mandelbrot.crexx" 69 7 14 "  arg message = .string"
+                itosconcat r24,"no reference checksum for size ",r3 * 0x000120:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 3 71 71 0 "size" ""
+                .traceevent "O" 4 "R" "S" "r" 24 71 71 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 24 71 71 0 "message" ""
+                .srcstep 72 72 17 "awfy_mandelbrot.crexx" 70 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 24 72 72 0 "message" ""
+                sconcat r23,"FAIL:",r24                      * 0x000124:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 23 72 72 0 "" ""
+                say r23                                      * 0x000128:01c2 Say op1
+                .srcstep 73 73 17 "awfy_mandelbrot.crexx" 71 3 11 "  return 1"
+                load r23,1                                   * 0x00012a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 23 75 75 0 "" ""
+                icopy r22,r23                                * 0x00012d:0009 Copy Integer op2 to op1
+                br lb_132                                    * 0x000130:0024 Branch to op1
+lb_132:         ret r22                                      * 0x000132:0031 Return op1
+                .srcstep 83 83 17 "awfy_mandelbrot.crexx" 20 1 22 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 83 83 0 "result" ""
+                .traceevent "V" 6 "R" "I" "r" 1 83 83 0 "expected" ""
+lb_134:         ine r25,r2,r1                                * 0x000134:0066 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 25 83 83 0 "" ""
+                brf lb_159,r25                               * 0x000138:0026 Branch to op1 if op2 false
+                .srcstep 84 84 17 "awfy_mandelbrot.crexx" 20 23 27 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+                .srcstep 82 82 17 "awfy_mandelbrot.crexx" 20 28 86 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+                .srcstep 81 81 17 "awfy_mandelbrot.crexx" 20 35 39 "if result <> expected then return fail(\"expected \" || expected || \", got \" || result)"
+                .srcstep 78 78 33 "awfy_mandelbrot.crexx" 69 7 14 "  arg message = .string"
+                itosconcat r23,"expected ",r1                * 0x00013b:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 78 78 0 "expected" ""
+                .traceevent "O" 4 "R" "S" "r" 23 78 78 0 "" ""
+                concat r23,r23,", got "                      * 0x00013f:0087 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 23 78 78 0 "" ""
+                itos r2                                      * 0x000143:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 2 78 78 0 "result" ""
+                concat r24,r23,r2                            * 0x000145:0086 String Concat (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 24 78 78 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 24 78 78 0 "message" ""
+                .srcstep 79 79 17 "awfy_mandelbrot.crexx" 70 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 24 79 79 0 "message" ""
+                sconcat r23,"FAIL:",r24                      * 0x000149:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 23 79 79 0 "" ""
+                say r23                                      * 0x00014d:01c2 Say op1
+                .srcstep 80 80 17 "awfy_mandelbrot.crexx" 71 3 11 "  return 1"
+                load r23,1                                   * 0x00014f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 23 82 82 0 "" ""
+                icopy r22,r23                                * 0x000152:0009 Copy Integer op2 to op1
+                br lb_157                                    * 0x000155:0024 Branch to op1
+lb_157:         ret r22                                      * 0x000157:0031 Return op1
+                .srcstep 85 85 17 "awfy_mandelbrot.crexx" 22 1 58 "say \"benchmark=awfy_mandelbrot size=\"size \"result=\"result"
+lb_159:         itosconcat r25,"benchmark=awfy_mandelbrot size=",r3 * 0x000159:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 3 85 85 0 "size" ""
+                .traceevent "O" 4 "R" "S" "r" 25 85 85 0 "" ""
+                sconcatitos r25,"result=",r2                 * 0x00015d:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 25 85 85 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 85 85 0 "result" ""
+                append r25,r2                                * 0x000161:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 25 85 85 0 "" ""
+                say r25                                      * 0x000164:01c2 Say op1
+                .srcstep 86 86 17 "awfy_mandelbrot.crexx" 23 1 28 "say \"PASS: AWFY Mandelbrot\""
+                say "PASS: AWFY Mandelbrot"                  * 0x000166:01c7 Say op1
+                .srcstep 87 87 17 "awfy_mandelbrot.crexx" 24 1 9 "return 0"
+                ret 0                                        * 0x000168:0032 Return op1
+                .meta "awfy_mandelbrot.main.argv"
+                .meta "awfy_mandelbrot.main.expected"
+                .meta "awfy_mandelbrot.main.result"
+                .meta "awfy_mandelbrot.main.size"
+*******************************************************************************
+

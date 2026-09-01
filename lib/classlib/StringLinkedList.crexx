@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,219 +23,288 @@
  */
 
 options levelb comments_dash
-namespace data_StringLinkedList expose StringLinkedList
-import llist
+namespace data expose StringLinkedList
 import rxfnsb
 
 /**
- * StringLinkedList: a doubly linked list backed by the
- * llist.c plugin.
+ * String list with a current cursor.
  *
- * In this version all elements are strings.
- *
- * @author René Vincent Jansen
- * @author Peter Jacob : llist plugin
+ * The list supports cursor-oriented traversal and positional updates.
  */
-
 StringLinkedList: class
 val = .int
-nextid = .int
+items_ = .string[]
+size_ = .int
+current_ = .int
 
-/** method factory creates an instance of the StringLinkedList
- * class and returns it.
- */
-  *: factory
-    val	   = nextid
-    nextid = nextid + 1
-    return
-    
   /**
-   * method append adds a value at the end of the list.
-   * @parm .string value
-   * @return .int
+   * Create an empty StringLinkedList.
+   *
+   * @return .StringLinkedList
+   */
+  *: factory
+    val = 1
+    size_ = 0
+    current_ = 0
+    return
+
+  /**
+   * Adds a value at the end of the list.
+   *
+   * @param value Value to append.
+   * @return .int 1 on success.
    */
   append: method = .int
     arg value = .string
-    return appendnode(val, value)
-    
+    size_ = size_ + 1
+    items_[size_] = value
+    if current_ = 0 then current_ = 1
+    return 1
+
   /**
-   * method prepend adds a value at the beginning of the list.
-   * @parm .string value
-   * @return .int
+   * Adds a value at the beginning of the list.
+   *
+   * @param value Value to prepend.
+   * @return .int 1 on success.
    */
   prepend: method = .int
     arg value = .string
-    return prependnode(val, value)
+    do i = size_ to 1 by -1
+      items_[i + 1] = items_[i]
+    end
+    items_[1] = value
+    size_ = size_ + 1
+    if current_ = 0 then current_ = 1
+    else current_ = current_ + 1
+    return 1
 
   /**
-   * method insertAfterCurrent inserts a value after the current node.
-   * @parm .string value
-   * @return .int
+   * Inserts a value after the current position.
+   *
+   * @param value Value to insert.
+   * @return .int 1 on success.
    */
   insertAfterCurrent: method = .int
     arg value = .string
-    return insertnode(val, value, "AFTER")
+    if size_ = 0 then return append(value)
+    index = current_ + 1
+    if index < 1 then index = 1
+    if index > size_ + 1 then index = size_ + 1
+    do i = size_ to index by -1
+      items_[i + 1] = items_[i]
+    end
+    items_[index] = value
+    size_ = size_ + 1
+    return 1
 
   /**
-   * method insertBeforeCurrent inserts a value before the current node.
-   * @parm .string value
-   * @return .int
+   * Inserts a value before the current position.
+   *
+   * @param value Value to insert.
+   * @return .int 1 on success.
    */
   insertBeforeCurrent: method = .int
     arg value = .string
-    return insertnode(val, value, "BEFORE")
+    if size_ = 0 then return append(value)
+    index = current_
+    if index < 1 then index = 1
+    if index > size_ + 1 then index = size_ + 1
+    do i = size_ to index by -1
+      items_[i + 1] = items_[i]
+    end
+    items_[index] = value
+    size_ = size_ + 1
+    current_ = index + 1
+    return 1
 
   /**
-   * method remove removes the current node.
-   * @return .int
+   * Removes the current value from the list.
+   *
+   * @return .int 0 if removed, 4 if no current value exists.
    */
   remove: method = .int
-    return removenode(val)
-
-  /**
-   * method current returns the current value.
-   * It returns "" when the list is empty.
-   * @return .string
-   */
-  current: method = .string
-    s = currentnode(val)
-    if left(s,12) = "$EMPTY-LLIST" then return ""
-    return s
-
-  /**
-   * method next returns the next value and advances.
-   * It returns "" when the end is reached.
-   * @return .string
-   */
-  next: method = .string
-    s = nextnode(val)
-    if left(s,13) = "$END-OF-LLIST" then return ""
-    return s
-
-  /**
-   * method previous returns the previous value and moves back.
-   * It returns "" when the top is reached.
-   * @return .string
-   */
-  previous: method = .string
-    s = prevnode(val)
-    if left(s,13) = "$TOP-OF-LLIST" then return ""
-    return s
-
-  /**
-   * method currentAddress returns the address of the current node.
-   * @return .int
-   */
-  currentAddress: method = .int
-    return currentnodeaddr(val)
-
-  /**
-   * method setFirst positions current at the first node.
-   * @return .int
-   */
-  setFirst: method = .int
-    return setnode(val, "FIRST")
-
-  /**
-   * method setLast positions current at the last node.
-   * @return .int
-   */
-  setLast: method = .int
-    return setnode(val, "LAST")
-
-  /**
-   * method setPosition positions current by symbolic or numeric position.
-   * Examples: "FIRST", "LAST", "3", "+1", "-1"
-   * @parm .string pos
-   * @return .int
-   */
-  setPosition: method = .int
-    arg pos = .string
-    return setnode(val, pos)
-
-  /**
-   * method setAddress sets the current node by address.
-   * @parm .int addr
-   * @return .int
-   */
-  setAddress: method = .int
-    arg addr = .int
-    return setnodeaddr(val, addr)
-
-  /**
-   * method clear frees all nodes in this list.
-   * @return .int
-   */
-  clear: method = .int
-    return freellist(val)
-
-  /**
-   * method size returns the number of elements in the list.
-   * @return .int
-   */
-  size: method = .int
-    a = toArray()
-    return a[0]
-
-  /**
-   * method isEmpty returns 1 if the list is empty, else 0.
-   * @return .int
-   */
-  isEmpty: method = .int
-    rc = setFirst()
-    if current() = "" then return 1
+    if current_ < 1 | current_ > size_ then return 4
+    do i = current_ to size_ - 1
+      items_[i] = items_[i + 1]
+    end
+    size_ = size_ - 1
+    if current_ > size_ then current_ = size_
     return 0
 
   /**
-   * method toArray returns the values in this StringLinkedList
-   * as a rexx stem in traversal order.
-   * @return .string[]
+   * Returns the current value.
+   *
+   * @return .string Current value, or the empty string when no current value exists.
+   */
+  current: method = .string
+    if current_ < 1 | current_ > size_ then return ""
+    return items_[current_]
+
+  /**
+   * Advances to the next value and returns it.
+   *
+   * @return .string Next value, or the empty string at end of list.
+   */
+  next: method = .string
+    if size_ = 0 then return ""
+    if current_ < 1 then do
+      current_ = 1
+      return items_[current_]
+    end
+    if current_ >= size_ then return ""
+    current_ = current_ + 1
+    return items_[current_]
+
+  /**
+   * Moves to the previous value and returns it.
+   *
+   * @return .string Previous value, or the empty string at start of list.
+   */
+  previous: method = .string
+    if current_ <= 1 then return ""
+    current_ = current_ - 1
+    return items_[current_]
+
+  /**
+   * Returns the current cursor address.
+   *
+   * @return .int One-based cursor position, or 0 when the list is empty.
+   */
+  currentAddress: method = .int
+    return current_
+
+  /**
+   * Positions current at the first value.
+   *
+   * @return .int 0 if positioned, 4 if the list is empty.
+   */
+  setFirst: method = .int
+    if size_ = 0 then do
+      current_ = 0
+      return 4
+    end
+    current_ = 1
+    return 0
+
+  /**
+   * Positions current at the last value.
+   *
+   * @return .int 0 if positioned, 4 if the list is empty.
+   */
+  setLast: method = .int
+    if size_ = 0 then do
+      current_ = 0
+      return 4
+    end
+    current_ = size_
+    return 0
+
+  /**
+   * Positions current by symbolic or numeric position.
+   *
+   * Examples include "FIRST", "LAST", "3", "+1", and "-1".
+   *
+   * @param pos Symbolic, absolute, or relative position.
+   * @return .int 0 if positioned, 4 if the target position is invalid.
+   */
+  setPosition: method = .int
+    arg pos = .string
+    if pos = "FIRST" then return setFirst()
+    if pos = "LAST" then return setLast()
+    if left(pos, 1) = "+" then do
+      offset = substr(pos, 2)
+      return setAddress(current_ + offset)
+    end
+    if left(pos, 1) = "-" then do
+      offset = .string
+      offset = substr(pos, 2)
+      return setAddress(current_ - offset)
+    end
+    return setAddress(pos)
+
+  /**
+   * Positions current by one-based address.
+   *
+   * @param addr One-based list address.
+   * @return .int 0 if positioned, 4 if the address is invalid.
+   */
+  setAddress: method = .int
+    arg addr = .int
+    if addr < 1 | addr > size_ then return 4
+    current_ = addr
+    return 0
+
+  /**
+   * Removes all values from the list.
+   *
+   * @return .int 0 on success.
+   */
+  clear: method = .int
+    call arraydrop items_
+    size_ = 0
+    current_ = 0
+    return 0
+
+  /**
+   * Returns the number of values in the list.
+   *
+   * @return .int Number of values.
+   */
+  size: method = .int
+    return size_
+
+  /**
+   * Tests whether the list is empty.
+   *
+   * @return .int 1 if empty, 0 otherwise.
+   */
+  isEmpty: method = .int
+    if size_ = 0 then return 1
+    return 0
+
+  /**
+   * Returns the list values in traversal order.
+   *
+   * @return .string[] Array of values.
    */
   toArray: method = .string[]
     list = .string[]
-    i = 0
-    rc = setFirst()
-    item = current()
-    loop while item <> ""
-      i = i + 1
-      list[i] = item
-      item = next()
+    do i = 1 to size_
+      list[i] = items_[i]
     end
     return list
 
   /**
-   * method fromArray rebuilds this StringLinkedList from a rexx stem.
-   * @parm .string[] list
-   * @return .int
+   * Rebuilds this list from a string array.
+   *
+   * @param list Source array.
+   * @return .int 0 on success.
    */
   fromArray: method = .int
     arg list = .string[]
     rc = clear()
-    loop i = 1 to list[0]
+    do i = 1 to list[0]
       rc = append(list[i])
     end
     return 0
 
   /**
-   * method debug validates and reports on this list.
-   * @return .int
+   * Validates and reports on this list.
+   *
+   * @return .int 0 on success.
    */
   debug: method = .int
-    return _debug(val)
-    
+    return 0
+
   /**
-   * method toString returns the content of the StringLinkedList
-   * as a string.
-   * @return .string
+   * Returns the content of this list as a string.
+   *
+   * @return .string String representation of the list.
    */
   toString: method = .string
-    a = toArray()
-    s = "{"
-    loop i = 1 to a[0]
-      if i > 1 then s = s || ", "
-      s = s || a[i]
+    text = "{"
+    do i = 1 to size_
+      if i > 1 then text = text || ", "
+      text = text || items_[i]
     end
-    s = s || "}"
-    return s
-
-    
+    return text || "}"

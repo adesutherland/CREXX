@@ -1,0 +1,25 @@
+sample_id,stream,line_number,text
+timing-Richards-richards-c0-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c0-rxbvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxbvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxbvm-warmup-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxbvm-warmup-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c0-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c0-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxbvm-recorded-1,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxbvm-recorded-1,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c0-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c1c-r1-rxbvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c1c-r1-rxbvm-recorded-2,stdout,2,PASS: AWFY Richards
+timing-Richards-richards-c0-rxvm-recorded-2,stdout,1,benchmark=awfy_richards repetitions=20 queue_packets=23246 holds=9297
+timing-Richards-richards-c0-rxvm-recorded-2,stdout,2,PASS: AWFY Richards

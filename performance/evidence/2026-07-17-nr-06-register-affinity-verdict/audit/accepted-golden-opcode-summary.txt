@@ -1,0 +1,15 @@
+Optimized compiler golden opcode-count comparison against HEAD
+HEAD=5e5e3b397be81424cf943c959722b79dd6a83be3
+
+fixture                                      baseline_swaps  accepted_swaps  removed
+address_expose                                            8               6        2
+13_stems                                                 24              20        4
+repro_multi_tail_stems                                   48               0       48
+arg_semantics_object                                      4               0        4
+inline_test_named_factory_selector                        4               2        2
+inline_test_ref_vararg                                     2               0        2
+inline_test_ref_vararg_runtime                            26               2       24
+total                                                    116              30       86
+
+For every fixture, all non-SWAP opcode counts are identical between the HEAD
+golden and the accepted optimized golden. Matching runnable fixtures pass.

@@ -1,0 +1,6 @@
+Test Suite: Reference RXAS Operations
+caught-reference-invalid-deref
+caught-reference-invalid-linkref
+caught-reference-invalid-setref
+caught-reference-invalid-nonref
+PASS: Reference RXAS Ops

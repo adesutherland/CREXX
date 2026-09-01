@@ -107,6 +107,9 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     '.traceevent' { return(KW_TRACEEVENT); }
     '.srcstep' { return(KW_SRCSTEP); }
     '.meta' { return(KW_META); }
+    '.const' { return(KW_CONST); }
+    '.jtable' { return(KW_JTABLE); }
+    '.jcase' { return(KW_JCASE); }
     '.class' { return(KW_CLASS); }
     '.attr' { return(KW_ATTR); }
     '.interface' { return(KW_INTERFACE); }

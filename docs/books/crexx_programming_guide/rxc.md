@@ -7,7 +7,7 @@
 \small
 \obeylines \splice{rxc -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Import Search Roots
 
@@ -21,7 +21,8 @@ The recommended source extensions are:
 - `.crexx`: canonical cRexx source, defaulting to Level G when no
   `options level...` clause is present
 - `.crx`: short cRexx source alias, also defaulting to Level G
-- `.rexx`: compatibility/classic source, defaulting to Level C
+- `.rexx`: compatibility/classic source, defaulting to incremental Level C
+  lowering
 
 An initial source file may also use another extension, such as `.the` for an
 editor macro integration. That extension is added to source-root discovery for
@@ -43,6 +44,11 @@ Binary roots are controlled separately with `-i`. The compiler always
 includes the executable directory in the binary-root set so deployed
 libraries remain visible without adding them explicitly. `-i` can be
 repeated, and repeated `-s` options are accumulated in the same way.
+Toolchain and library self-builds can pass `--no-exe-import` to suppress that
+implicit root and use only their explicit binary dependencies; this prevents a
+previous installed or build-tree library image from competing with current
+source interfaces. Normal application compilation retains the executable-root
+default.
 The source file's directory is not automatically treated as a binary root; pass
 `-i .` or `-i build-dir` when a sibling or build-output `.rxbin` is an intended
 compile-time dependency.
@@ -81,7 +87,7 @@ module stem, the compiler keeps only the freshest candidate. If
 timestamps tie, `.rxbin` wins over `.rxas`.
 
  \section{Inline Assembler}
- On page \pageref{inlineAssembly} the inline assembler function of
+ On page \pageref{in-line-assembly} the inline assembler function of
  the cRexx compiler is discussed. This enables the incorporation
  of \code{rxas} assembler instructions into a \textsc{Rexx} source
  file.

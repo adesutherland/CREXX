@@ -1,0 +1,5 @@
+options levelb
+
+import signature_probe
+
+say bad_trailing_component(1)

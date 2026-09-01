@@ -1,0 +1,123 @@
+options levelb
+import rxfnsb
+
+errors = 0
+
+parts = qsplit('a,"b,c",,d,',',')
+errors = errors + check(5,parts[0],"qsplit field count")
+errors = errors + check_string('a',parts[1],"qsplit first")
+errors = errors + check_string('"b,c"',parts[2],"qsplit quoted")
+errors = errors + check_string('',parts[3],"qsplit empty")
+errors = errors + check_string('',parts[5],"qsplit trailing")
+parts = qsplit('aaaa','aa')
+errors = errors + check(3,parts[0],"qsplit non-overlapping count")
+errors = errors + check_string('',parts[2],"qsplit adjacent separator")
+parts = qsplit('a' || d2c(0) || 'b' || d2c(0) || 'c',d2c(0))
+errors = errors + check_string('b',parts[2],"qsplit embedded U+0000 separator")
+
+parts = qsplitsafe('a,(b,[c,d]),e',',',1,'()[]')
+errors = errors + check(3,parts[0],"qsplitsafe count")
+errors = errors + check_string('(b,[c,d])',parts[2],"qsplitsafe nested")
+parts = qsplitsafe('prefix,a,b',',',8,'()')
+errors = errors + check_string('prefix,a',parts[1],"qsplitsafe retained prefix")
+
+source = 'x(one (two) "ignored)")y(three)z'
+errors = errors + check_string('one (two) "ignored)"',qextractpair('(',')',source),"qextractpair exclusive")
+errors = errors + check_string('(one (two) "ignored)")',qextractpair('(',')',source,1,'I'),"qextractpair inclusive")
+parts = qextractall('(',')',source,1,'X')
+errors = errors + check(2,parts[0],"qextractall count")
+errors = errors + check_string('three',parts[2],"qextractall second")
+errors = errors + check_string('x()y()z',qremoveall('(',')',source,'X'),"qremoveall exclusive")
+errors = errors + check_string('xyz',qremoveall('(',')',source),"qremoveall inclusive")
+
+lines = 'a -- one' || '0D0A'x || 'b "-- two" -- three' || '0A'x || 'c -- four' || '0D'x || 'd'
+expected_lines = 'a ' || '0D0A'x || 'b "-- two" ' || '0A'x || 'c ' || '0D'x || 'd'
+errors = errors + check_string(expected_lines,qstripcomment('--','',lines),"qstripcomment line endings")
+errors = errors + check_string('ab',qstripcomment('/*','*/','a/*x/*y*/z*/b'),"qstripcomment nested block")
+
+words_source = 'one' || ' ' || 'pre"two three"post' || '　' || "'four''five'"
+errors = errors + check(3,qwords(words_source),"qwords")
+errors = errors + check_string('pre"two three"post',qword(words_source,2),"qword embedded quote")
+errors = errors + check(5,qwordindex(words_source,2),"qwordindex codepoint")
+errors = errors + check(18,qwordlength(words_source,2),"qwordlength")
+errors = errors + check_string('pre"two three"post' || '　' || "'four''five'",qsubword(words_source,2),"qsubword omitted count")
+errors = errors + check_string('pre"two three"post',qsubword(words_source,2,1),"qsubword count")
+errors = errors + check_string('',qsubword(words_source,2,0),"qsubword zero")
+errors = errors + check(2,qwordpos('pre"two three"post ' || "'four''five'",words_source),"qwordpos phrase")
+errors = errors + check(0,qwordpos('two',words_source),"qwordpos exact")
+
+caught = 0
+do
+  ignored = qsplit('a,b','')
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qsplit empty separator signal")
+
+caught = 0
+do
+  ignored_parts = qsplitsafe('a,(b,c],d',',',1,'()[]')
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qsplitsafe mismatch signal")
+
+caught = 0
+do
+  ignored = .string
+  ignored = qextractpair('(',')','a(b',1,'X')
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qextractpair unclosed signal")
+
+caught = 0
+do
+  ignored = .string
+  ignored = qextractpair('(',')','a)b',1,'X')
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qextractpair mismatched closer signal")
+
+caught = 0
+do
+  ignored = .string
+  ignored = qremoveall('(',')','a(b)c','bad')
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qremoveall mode signal")
+
+caught = 0
+do
+  ignored = .string
+  ignored = qword("one 'two",1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qword unmatched quote signal")
+
+caught = 0
+do
+  ignored = .string
+  ignored = qsubword('one two',1,-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(1,caught,"qsubword count signal")
+
+if errors = 0 then say "PASS: quote-aware library"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL:" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL:" label "expected ["expected"] got ["actual"]"
+  return 1

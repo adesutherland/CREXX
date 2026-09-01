@@ -20,7 +20,7 @@ loop:
    
    /* Syntax Errors */
    invalid_instruction r1,r2
-   copy r1, r2, r3, r4, r5 /* too many args */
+   copy r1, r2, r3, r4, r5 /* unsupported operand signature */
    
 break:
    ret r6

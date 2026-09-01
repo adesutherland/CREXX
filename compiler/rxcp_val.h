@@ -41,12 +41,15 @@ int is_node_string(ASTNode* node, const char* value);
 int node_to_integer(ASTNode* node);
 void node_to_dims(Context *context, ASTNode* node, size_t *dims, int** dim_base, int** dim_elements);
 ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_base, int **dim_elements, char **class_name);
+int rxcp_task_result_contract_valid(Context *context, Scope *scope,
+                                    const char *class_name);
 void rxcp_set_symbol_reference_type_from_node(Symbol *symbol, ASTNode *type_node);
 void rxcp_set_node_value_reference_type_from_node(ASTNode *node, ASTNode *type_node);
 int rxcp_same_reference_value_and_target_type(ASTNode *node);
 int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right);
 void promote_symbol_from_target(Context *context, ASTNode *node);
 void validate_node_promotion(Context *context, ASTNode* node);
+int rxcp_contextualize_exact_decimal_literals(Context *context, ASTNode *node);
 void validate_node_promotion_for_ref(Context *context, ASTNode* node);
 
 /* Monotonic Gatekeepers */
@@ -74,6 +77,7 @@ walker_result exposed_symbols_walker(walker_direction direction, ASTNode* node, 
 void validate_symbols(Context *context, Scope *scope);
 int ast_hoist_var(Context* ctx, ASTNode* current_node, const char* var_name, int levels);
 int ast_hoist_var_typed(Context* ctx, ASTNode* current_node, const char* var_name, int levels, const char* type_name, size_t dims);
+int ast_hoist_internal_var_typed(Context* ctx, ASTNode* current_node, const char* var_name, int levels, const char* type_name, size_t dims);
 
 /* type */
 walker_result clear_node_types_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -82,9 +86,11 @@ walker_result type_safety_walker(walker_direction direction, ASTNode* node, void
 walker_result func_type_safety_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result float2decimal_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal2float_walker(walker_direction direction, ASTNode* node, void *payload);
+void propagate_explicit_constants(Context *context);
 
 /* trans */
 walker_result rewrite_constructor_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result rewrite_equivalence_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_exit_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result rewrite_implicit_cmd_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_sugar_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -100,6 +106,7 @@ walker_result ast_work_structure_walker(walker_direction direction, ASTNode* nod
 walker_result ast_structure_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result source_location_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_validation_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result assembler_validation_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_plan_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -107,7 +114,11 @@ walker_result exit_plan_walker(walker_direction direction, ASTNode* node, void *
 /* inline */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result inline_procedure_walker(walker_direction direction, ASTNode* node, void *payload);
+void rxcp_inline_prepare(Context *context);
+void rxcp_inline_prepare_quiet(Context *context);
 int rxcp_inline_pass(Context *context);
+int rxcp_inline_prepared_pass(Context *context);
+int rxcp_inline_scalar_accessor_pass(Context *context);
 void rxcp_inline_prune(Context *context, ASTNode *tree);
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable);
 int rxcp_inline_payload_is_supported(const char *payload);

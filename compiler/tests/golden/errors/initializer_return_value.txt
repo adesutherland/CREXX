@@ -1,0 +1,2 @@
+Error in initializer_return_value.crexx @ 5:10 - #EXTRANEOUS_RETVAL, "1"
+1 error(s) in source file

@@ -1,0 +1,558 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+
+/*
+ * Capture compile/translation and cold load-to-first-result phases for the
+ * deliberately tiny lifecycle probes. The combined load_first_result phase is
+ * used because none of the three public command-line surfaces exposes a
+ * portable "loaded but do not execute" boundary.  --summarize-only also
+ * accepts phase rows captured by a native diagnostic harness when an activity
+ * establishes a narrower internal lifecycle boundary.
+ */
+main: procedure = .int
+  arg args = .string[]
+
+  runtime = "all"
+  crexx_vm = "rxbvm"
+  runs = 3
+  repo_root = "."
+  build_dir = "cmake-build-release"
+  output_dir = "performance/evidence/lifecycle"
+  output_path = ""
+  oorexx_home = "/Users/adrian/.local/opt/oorexx/5.1.0-12973"
+  netrexx_home = "/Users/adrian/.local/opt/netrexx/5.10-GA"
+  append_requested = 0
+  summarize_only = 0
+  self_test_requested = 0
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--runtime" then do
+      if i = args[0] then return argument_error("missing value after --runtime")
+      i = i + 1
+      runtime = lower(args[i])
+    end
+    else if option = "--runs" then do
+      if i = args[0] then return argument_error("missing value after --runs")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--runs must be a positive integer")
+      runs = args[i]
+    end
+    else if option = "--crexx-vm" then do
+      if i = args[0] then return argument_error("missing value after --crexx-vm")
+      i = i + 1
+      crexx_vm = lower(args[i])
+    end
+    else if option = "--repo-root" then do
+      if i = args[0] then return argument_error("missing value after --repo-root")
+      i = i + 1
+      repo_root = args[i]
+    end
+    else if option = "--build-dir" then do
+      if i = args[0] then return argument_error("missing value after --build-dir")
+      i = i + 1
+      build_dir = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else if option = "--output" then do
+      if i = args[0] then return argument_error("missing value after --output")
+      i = i + 1
+      output_path = args[i]
+    end
+    else if option = "--oorexx-home" then do
+      if i = args[0] then return argument_error("missing value after --oorexx-home")
+      i = i + 1
+      oorexx_home = args[i]
+    end
+    else if option = "--netrexx-home" then do
+      if i = args[0] then return argument_error("missing value after --netrexx-home")
+      i = i + 1
+      netrexx_home = args[i]
+    end
+    else if option = "--append" then append_requested = 1
+    else if option = "--summarize-only" then summarize_only = 1
+    else if option = "--self-test" then self_test_requested = 1
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if self_test_requested then return self_test()
+  if runtime <> "all" & runtime <> "crexx" & runtime <> "oorexx" & runtime <> "netrexx" then
+    return argument_error("--runtime must be all, crexx, oorexx or netrexx")
+  if crexx_vm <> "rxtvm" & crexx_vm <> "rxbvm" & crexx_vm <> "both" then
+    return argument_error("--crexx-vm must be rxtvm, rxbvm or both")
+  if runs < 1 then return argument_error("--runs must be positive")
+  if \is_absolute_path(build_dir) then build_dir = current_directory() || "/" || build_dir
+  if output_path = "" then output_path = output_dir || "/samples.csv"
+
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "mkdir -p :output_dir" output command_out error command_err
+  if rc <> 0 then return execution_error("could not create output directory " || output_dir)
+
+  if summarize_only then do
+    rows = read_text_lines(output_path)
+    if rows[0] = 0 then return execution_error("summary input is empty or unreadable")
+    if rows[1] <> "runtime,vm,lifecycle,phase,sequence,elapsed_ns,correctness" then
+      return execution_error("summary input header is not recognized")
+    if write_summary(output_dir || "/summary.csv", rows) <> 0 then return 1
+    say "PASS: summarized" rows[0] - 1 "lifecycle phase samples from" output_path
+    return 0
+  end
+
+  rows = .string[]
+  sequence_offset = 0
+  if append_requested then do
+    rows = read_text_lines(output_path)
+    if rows[0] = 0 then return execution_error("append sample file is empty or unreadable")
+    if rows[1] <> "runtime,vm,lifecycle,phase,sequence,elapsed_ns,correctness" then
+      return execution_error("append sample header is not recognized")
+    sequence_offset = max_sequence(rows)
+  end
+  else rows[1] = "runtime,vm,lifecycle,phase,sequence,elapsed_ns,correctness"
+  if runtime = "all" | runtime = "crexx" then do
+    result = capture_crexx(repo_root, build_dir, output_dir, runs, sequence_offset, crexx_vm, rows)
+    if result <> 0 then return result
+  end
+  if runtime = "all" | runtime = "oorexx" then do
+    result = .int
+    result = capture_oorexx(repo_root, oorexx_home, output_dir, runs, sequence_offset, rows)
+    if result <> 0 then return result
+  end
+  if runtime = "all" | runtime = "netrexx" then do
+    result = .int
+    result = capture_netrexx(repo_root, netrexx_home, output_dir, runs, sequence_offset, rows)
+    if result <> 0 then return result
+  end
+
+  if write_lines(output_path, rows) <> 0 then return 1
+  if write_summary(output_dir || "/summary.csv", rows) <> 0 then return 1
+  say "PASS: retained" rows[0] - 1 "lifecycle phase samples in" output_path
+  return 0
+
+capture_crexx: procedure = .int
+  arg repo_root = .string, build_dir = .string, output_dir = .string, runs = .int, ,
+      sequence_offset = .int, crexx_vm = .string, expose rows = .string[]
+  runtime_dir = output_dir || "/crexx"
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.crexx"
+  output_stem = runtime_dir || "/lifecycle_probe"
+  rxc_path = build_dir || "/bin/rxc"
+  if file_exists(rxc_path || ".exe") then rxc_path = rxc_path || ".exe"
+  rxas_path = build_dir || "/bin/rxas"
+  if file_exists(rxas_path || ".exe") then rxas_path = rxas_path || ".exe"
+
+  do local_sequence = 1 to runs
+    sequence = sequence_offset + local_sequence
+    command = .string[]
+    command[1] = rxc_path
+    command[2] = "-x"
+    command[3] = "-o"
+    command[4] = output_stem
+    command[5] = source
+    if capture_phase("crexx", "shared", "compile", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = "cmake"
+    command[2] = "-E"
+    command[3] = "chdir"
+    command[4] = runtime_dir
+    command[5] = rxas_path
+    command[6] = "-o"
+    command[7] = "lifecycle_probe"
+    command[8] = "lifecycle_probe"
+    if capture_phase("crexx", "shared", "assemble", sequence, command, "", rows) <> 0 then return 1
+
+    do vm_index = 1 to 2
+      vm = "rxtvm"
+      if vm_index = 2 then vm = "rxbvm"
+      if crexx_vm <> "both" & crexx_vm <> vm then iterate
+      vm_command = .string[]
+      vm_path = build_dir || "/bin/" || vm
+      if file_exists(vm_path || ".exe") then vm_path = vm_path || ".exe"
+      vm_command[1] = vm_path
+      vm_command[2] = output_stem || ".rxbin"
+      vm_command[3] = "-a"
+      if capture_phase("crexx", vm, "load_first_result", sequence, vm_command, ,
+          "PASS: Lifecycle Probe", rows) <> 0 then return 1
+    end
+  end
+  return 0
+
+capture_oorexx: procedure = .int
+  arg repo_root = .string, oorexx_home = .string, output_dir = .string, runs = .int, ,
+      sequence_offset = .int, expose rows = .string[]
+  runtime_dir = output_dir || "/oorexx"
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.rex"
+  image = runtime_dir || "/lifecycle_probe.orx"
+  rexxc_path = oorexx_home || "/bin/rexxc"
+  if file_exists(rexxc_path || ".exe") then rexxc_path = rexxc_path || ".exe"
+  rexx_path = oorexx_home || "/bin/rexx"
+  if file_exists(rexx_path || ".exe") then rexx_path = rexx_path || ".exe"
+
+  do local_sequence = 1 to runs
+    sequence = sequence_offset + local_sequence
+    command = .string[]
+    command[1] = rexxc_path
+    command[2] = source
+    command[3] = image
+    if capture_phase("oorexx", "oorexx", "translate", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    if file_exists(oorexx_home || "/rxenv.sh") then do
+      command[1] = oorexx_home || "/rxenv.sh"
+      command[2] = "rexx"
+      command[3] = image
+    end
+    else do
+      command[1] = rexx_path
+      command[2] = image
+    end
+    if capture_phase("oorexx", "oorexx", "load_first_result", sequence, command, ,
+        "PASS: Lifecycle Probe", rows) <> 0 then return 1
+  end
+  return 0
+
+capture_netrexx: procedure = .int
+  arg repo_root = .string, netrexx_home = .string, output_dir = .string, runs = .int, ,
+      sequence_offset = .int, expose rows = .string[]
+  runtime_dir = output_dir || "/netrexx"
+  windows_host = is_windows_host()
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.nrx"
+  local_source = runtime_dir || "/lifecycle_probe.nrx"
+  copy_command = .string[]
+  copy_command[1] = "cmake"
+  copy_command[2] = "-E"
+  copy_command[3] = "copy"
+  copy_command[4] = source
+  copy_command[5] = local_source
+  if run_setup(copy_command) <> 0 then return execution_error("could not stage NetRexx lifecycle source")
+
+  do local_sequence = 1 to runs
+    sequence = sequence_offset + local_sequence
+    command = .string[]
+    if windows_host then do
+      command[1] = "cmd.exe"
+      command[2] = "/d"
+      command[3] = "/c"
+      command[4] = netrexx_home || "/bin/NetRexxC.bat"
+      command[5] = "-keep"
+      command[6] = "-sourcedir"
+      command[7] = local_source
+    end
+    else do
+      command[1] = netrexx_home || "/bin/NetRexxC.sh"
+      command[2] = "-keep"
+      command[3] = "-sourcedir"
+      command[4] = local_source
+    end
+    if capture_phase("netrexx", "netrexx", "compile", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = "java"
+    command[2] = "-cp"
+    classpath_separator = ":"
+    if windows_host then classpath_separator = ";"
+    command[3] = runtime_dir || classpath_separator || netrexx_home || "/runlib/NetRexxR.jar"
+    command[4] = "lifecycle_probe"
+    if capture_phase("netrexx", "netrexx", "load_first_result", sequence, command, ,
+        "PASS: Lifecycle Probe", rows) <> 0 then return 1
+  end
+  return 0
+
+is_windows_host: procedure = .int
+  platform_out = .string[]
+  platform_err = .string[]
+  address crexx "platform" output platform_out error platform_err
+  if rc <> 0 | platform_out[0] = 0 then return 0
+  platform = lower(platform_out[1])
+  if pos("windows", platform) > 0 | pos("mingw", platform) > 0 | ,
+      pos("msys", platform) > 0 then return 1
+  return 0
+
+capture_phase: procedure = .int
+  arg runtime = .string, vm = .string, phase = .string, sequence = .int, ,
+      command = .string[], expectation = .string, expose rows = .string[]
+  child_output = .string[]
+  child_error = .string[]
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+  elapsed_us = ended_us - started_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  elapsed_ns = elapsed_us * 1000
+  correct = child_rc = 0
+  if expectation <> "" then correct = correct & (has_text(child_output, expectation) | has_text(child_error, expectation))
+  correctness = "pass"
+  if \correct then correctness = "fail"
+  rows[rows[0] + 1] = runtime || "," || vm || ",compile-load-first-result," || ,
+      phase || "," || sequence || "," || elapsed_ns || "," || correctness
+  if correct then return 0
+
+  say "ERROR:" runtime phase "failed; rc="child_rc
+  call show_lines "stdout", child_output
+  call show_lines "stderr", child_error
+  return 1
+
+run_setup: procedure = .int
+  arg command = .string[]
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  return rc
+
+make_directory: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "mkdir -p :path" output command_out error command_err
+  if rc = 0 then return 0
+  say "ERROR: could not create directory" path
+  return 1
+
+file_exists: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "stat :path" output command_out error command_err
+  return rc = 0
+
+has_text: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+show_lines: procedure = .void
+  arg label = .string, lines = .string[]
+  say label || ":"
+  if lines[0] = 0 then say "  <empty>"
+  else do i = 1 to lines[0]
+    if i <= 20 then say "  " || lines[i]
+  end
+  return
+
+write_lines: procedure = .int
+  arg path = .string, lines = .string[]
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "rm :path" output command_out error command_err
+  do i = 1 to lines[0]
+    if lineout(path, lines[i]) <> 0 then do
+      call lineout path
+      say "ERROR: could not write output file:" path
+      return 1
+    end
+  end
+  call lineout path
+  return 0
+
+write_summary: procedure = .int
+  arg path = .string, rows = .string[]
+  keys = .string[]
+  do row_index = 2 to rows[0]
+    fields = split_delimited(rows[row_index], ",")
+    key = fields[1] || "|" || fields[2] || "|" || fields[4]
+    found = 0
+    do key_index = 1 to keys[0]
+      if keys[key_index] = key then found = 1
+    end
+    if \found then keys[keys[0] + 1] = key
+  end
+
+  output = .string[]
+  output[1] = "runtime,vm,phase,n,min_ns,q1_ns,median_ns,q3_ns,max_ns,mad_ns,relative_mad_percent,span_percent,rerun_recommended"
+  do key_index = .int(1) to keys[0]
+    key_fields = split_delimited(keys[key_index], "|")
+    values = .float[]
+    do row_index = .int(2) to rows[0]
+      fields = .string[]
+      fields = split_delimited(rows[row_index], ",")
+      if fields[1] = key_fields[1] & fields[2] = key_fields[2] & ,
+          fields[4] = key_fields[3] & fields[7] = "pass" then
+        values[values[0] + 1] = fields[6]
+    end
+    call sort_floats values
+    minimum = values[1]
+    q1 = sample_quantile(values, 1, 4)
+    median = sample_quantile(values, 1, 2)
+    q3 = sample_quantile(values, 3, 4)
+    maximum = values[values[0]]
+    deviations = .float[]
+    do value_index = 1 to values[0]
+      deviations[value_index] = floatabs(values[value_index] - median)
+    end
+    call sort_floats deviations
+    mad = sample_quantile(deviations, 1, 2)
+    relative_mad = 0.0
+    span_percent = 0.0
+    if median <> 0.0 then do
+      relative_mad = mad * 100.0 / median
+      span_percent = (maximum - minimum) * 100.0 / median
+    end
+    rerun = "no"
+    if relative_mad > 3.0 | span_percent > 10.0 then rerun = "yes"
+    output[output[0] + 1] = key_fields[1] || "," || key_fields[2] || "," || ,
+        key_fields[3] || "," || values[0] || "," || float_text(minimum) || "," || ,
+        float_text(q1) || "," || float_text(median) || "," || float_text(q3) || ,
+        "," || float_text(maximum) || "," || float_text(mad) || "," || ,
+        float_text(relative_mad) || "," || float_text(span_percent) || "," || rerun
+  end
+  return write_lines(path, output)
+
+split_delimited: procedure = .string[]
+  arg value = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, value, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(value, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(value, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+sort_floats: procedure = .void
+  arg expose values = .float[]
+  do i = 2 to values[0]
+    value = values[i]
+    j = i - 1
+    do while j >= 1 & values[j] > value
+      values[j + 1] = values[j]
+      j = j - 1
+    end
+    values[j + 1] = value
+  end
+  return
+
+sample_quantile: procedure = .float
+  arg values = .float[], numerator = .int, denominator = .int
+  scaled = (values[0] - 1) * numerator
+  lower_zero_index = scaled <idiv> denominator
+  remainder = scaled <mod> denominator
+  lower_value = values[lower_zero_index + 1]
+  if remainder = 0 then return lower_value
+  upper_value = values[lower_zero_index + 2]
+  return lower_value + (upper_value - lower_value) * ,
+      ((remainder as .float) / (denominator as .float))
+
+float_text: procedure = .string
+  arg value = .float
+  return strip(floatformat(value, , 6))
+
+read_text_lines: procedure = .string[]
+  arg path = .string
+  result = .string[]
+  do while lines(path)
+    result[result[0] + 1] = linein(path)
+  end
+  call linein path
+  return result
+
+max_sequence: procedure = .int
+  arg rows = .string[]
+  maximum = 0
+  do row_index = 2 to rows[0]
+    fields = split_delimited(rows[row_index], ",")
+    if fields[5] > maximum then maximum = fields[5]
+  end
+  return maximum
+
+current_directory: procedure = .string
+  cwd_out = .string[]
+  cwd_err = .string[]
+  address crexx "pwd" output cwd_out error cwd_err
+  if rc = 0 & cwd_out[0] > 0 then return cwd_out[1]
+  return "unknown"
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+is_absolute_path: procedure = .int
+  arg path = .string
+  if substr(path, 1, 1) = "/" then return 1
+  if length(path) >= 2 & substr(path, 2, 1) = ":" then return 1
+  return 0
+
+usage: procedure = .void
+  say "Usage: run_lifecycle [options]"
+  say "  --runtime all|crexx|oorexx|netrexx"
+  say "  --crexx-vm rxtvm|rxbvm|both"
+  say "  --runs N"
+  say "  --repo-root PATH"
+  say "  --build-dir PATH"
+  say "  --output-dir PATH"
+  say "  --output PATH"
+  say "  --oorexx-home PATH"
+  say "  --netrexx-home PATH"
+  say "  --append"
+  say "  --summarize-only      Summarize an existing --output phase-row file"
+  say "  --self-test"
+  return
+
+self_test: procedure = .int
+  fields = split_delimited("a,b,c", ",")
+  if fields[0] <> 3 | fields[2] <> "b" then
+    return execution_error("lifecycle parser self-test failed")
+  values = .float[]
+  values[1] = 9.0
+  values[2] = 1.0
+  values[3] = 5.0
+  values[4] = 3.0
+  call sort_floats values
+  if sample_quantile(values, 1, 2) <> 4.0 then
+    return execution_error("lifecycle median self-test failed")
+  say "PASS: lifecycle tool self-test"
+  return 0
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

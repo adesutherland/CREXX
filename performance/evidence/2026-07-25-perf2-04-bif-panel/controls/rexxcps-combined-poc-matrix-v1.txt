@@ -1,0 +1,9 @@
+# PERF2-04 ordinary profiling-off Release cumulative RexxCPS ceiling.
+# CF-COMB1 combines the independently proved exact-site constant ceilings for
+# UPPER (CAS-L2), SUBSTR (SLC-CF1) and WORD (WRD-CF1). It is scratch-only and
+# cannot reproduce the original imported BIF TRACE/source-step topology.
+crexx-cross-runtime-matrix|1
+combined-current-rxvm|PERF2-04 combined RexxCPS|crexx|rxvm|CF-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+combined-current-rxbvm|PERF2-04 combined RexxCPS|crexx|rxbvm|CF-C0-current|P|no|no|1000-clauses|PASS: RexxCPS 2.2d cREXX port|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+combined-ceiling-rxvm|PERF2-04 combined RexxCPS|crexx|rxvm|CF-COMB1|P|no|no|1000-clauses|PERF2-04-COMBINED-GUARD PASS|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps-combined/rexxcps_combined_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a
+combined-ceiling-rxbvm|PERF2-04 combined RexxCPS|crexx|rxbvm|CF-COMB1|P|no|no|1000-clauses|PERF2-04-COMBINED-GUARD PASS|Performance:|/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/rxbvm;/private/tmp/crexx-perf2-04.3k3Dfw/evidence/rexxcps-combined/rexxcps_combined_ceiling.rxbin;/private/tmp/crexx-perf2-04.3k3Dfw/build-release/bin/library.rxbin;-a

@@ -1,0 +1,11 @@
+gate,result,detail,evidence
+red_trace_batch,pass,"T0 failed 4/4 before implementation; T1 passed 4/4 after implementation",performance/PERF3-10-WORKLIST.md
+minimum_first_verdict,pass,"53/53 focused checks",performance/PERF3-10-WORKLIST.md
+release_build,pass,"ordinary profiling-off Release build",logs/release-build.log
+release_timing,pass,"72/72 executions; 68 recorded; no samples removed",timing/initial/samples.csv
+debug_build,pass,"affected Debug product rebuilt",logs/debug-build.log
+focused_closeout,pass,"59/59",logs/focused-ctest.log
+broad_debug_first,reviewed,"1981/1982; legacy intermediate TRACE expectation omitted the newly delivered same-boundary assignment event",logs/broad-ctest-first.log
+trace_stem_expectation,pass,"updated expected ordered event; serial retry 1/1",logs/trace-stem-retry.log
+broad_debug_final,pass,"1982/1982",logs/broad-ctest-final.log
+protected_lifecycle_images,pass,"five pre-existing untracked RXBIN hashes unchanged",protected-lifecycle-hashes.csv

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "linux 64 crexx-1.0.0-beta.3+local.gd5f0827ca270 20260728",
+  "source_manifest": "/home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/manifests/perf2-11-linux-x86-64-clang-timing-noise-append-v1.txt",
+  "measurement": "timing",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-28T21:09:41+0000"
+}

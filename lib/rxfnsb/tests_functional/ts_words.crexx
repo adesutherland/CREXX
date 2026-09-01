@@ -1,10 +1,21 @@
-/* WORDS */
+/* Focused Level B WORDS tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if words('The quick brown fox jumps over the lazy dog') \=  9 then do
-  errors=errors+1
-  say 'WORD failed in test 1 '
-  end
+errors = 0
+errors = errors + check(9, words("The quick brown fox jumps over the lazy dog"), "book sentence")
+errors = errors + check(4, words("Now is the time"), "four words")
+errors = errors + check(0, words(""), "empty")
+errors = errors + check(0, words("    "), "blank only")
+errors = errors + check(3, words("  one   two three  "), "mixed blanks")
+errors = errors + check(3, words("one two　three"), "Unicode blanks")
+errors = errors + check(1, words("solo"), "single word")
+
+if errors = 0 then say "PASS: words"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: WORDS" label "expected" expected "got" actual
+  return 1

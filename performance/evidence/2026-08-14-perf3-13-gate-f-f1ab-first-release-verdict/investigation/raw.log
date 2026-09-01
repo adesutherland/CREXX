@@ -1,0 +1,234 @@
+round=warmup position=1 cell=spin-w1 variant=accepted
+E5_RATE: 1506.024096386 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=169984000 checksum=16777216 max_parallel=1
+round=warmup position=2 cell=spin-w1 variant=hybrid
+E5_RATE: 1533.668823388 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166920000 checksum=16777216 max_parallel=1
+round=warmup position=3 cell=spin-w1 variant=candidate
+E5_RATE: 1380.768483959 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=185404000 checksum=16777216 max_parallel=1
+round=warmup position=4 cell=spin-w4 variant=accepted
+E5_RATE: 4517.381330510 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=56670000 checksum=16777216 max_parallel=4
+round=warmup position=5 cell=spin-w4 variant=hybrid
+E5_RATE: 4417.448923247 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=57952000 checksum=16777216 max_parallel=4
+round=warmup position=6 cell=spin-w4 variant=candidate
+E5_RATE: 4268.302849426 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=59977000 checksum=16777216 max_parallel=4
+round=1 position=7 cell=spin-w1 variant=accepted
+E5_RATE: 1510.146295422 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=169520000 checksum=16777216 max_parallel=1
+round=1 position=8 cell=spin-w1 variant=hybrid
+E5_RATE: 1427.440309576 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=179342000 checksum=16777216 max_parallel=1
+round=1 position=9 cell=spin-w1 variant=candidate
+E5_RATE: 1402.094378478 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182584000 checksum=16777216 max_parallel=1
+round=1 position=10 cell=spin-w4 variant=accepted
+E5_RATE: 4436.203580155 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=57707000 checksum=16777216 max_parallel=4
+round=1 position=11 cell=spin-w4 variant=hybrid
+E5_RATE: 4317.905815679 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=59288000 checksum=16777216 max_parallel=4
+round=1 position=12 cell=spin-w4 variant=candidate
+E5_RATE: 4162.940076429 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61495000 checksum=16777216 max_parallel=4
+round=2 position=13 cell=spin-w4 variant=hybrid
+E5_RATE: 4203.543455772 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=60901000 checksum=16777216 max_parallel=4
+round=2 position=14 cell=spin-w4 variant=candidate
+E5_RATE: 4114.035933533 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62226000 checksum=16777216 max_parallel=4
+round=2 position=15 cell=spin-w4 variant=accepted
+E5_RATE: 4191.156005959 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61081000 checksum=16777216 max_parallel=4
+round=2 position=16 cell=spin-w1 variant=hybrid
+E5_RATE: 1538.461538462 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166400000 checksum=16777216 max_parallel=1
+round=2 position=17 cell=spin-w1 variant=candidate
+E5_RATE: 1403.039553658 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182461000 checksum=16777216 max_parallel=1
+round=2 position=18 cell=spin-w1 variant=accepted
+E5_RATE: 1514.828753343 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=168996000 checksum=16777216 max_parallel=1
+round=3 position=19 cell=spin-w1 variant=candidate
+E5_RATE: 1399.610733265 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182908000 checksum=16777216 max_parallel=1
+round=3 position=20 cell=spin-w1 variant=accepted
+E5_RATE: 1542.112935677 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166006000 checksum=16777216 max_parallel=1
+round=3 position=21 cell=spin-w1 variant=hybrid
+E5_RATE: 1520.063652665 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=168414000 checksum=16777216 max_parallel=1
+round=3 position=22 cell=spin-w4 variant=candidate
+E5_RATE: 4280.363830926 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=59808000 checksum=16777216 max_parallel=4
+round=3 position=23 cell=spin-w4 variant=accepted
+E5_RATE: 4248.962655602 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=60250000 checksum=16777216 max_parallel=4
+round=3 position=24 cell=spin-w4 variant=hybrid
+E5_RATE: 4166.395416965 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61444000 checksum=16777216 max_parallel=4
+round=4 position=25 cell=spin-w4 variant=accepted
+E5_RATE: 4176.455233620 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61296000 checksum=16777216 max_parallel=4
+round=4 position=26 cell=spin-w4 variant=candidate
+E5_RATE: 4038.937885553 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63383000 checksum=16777216 max_parallel=4
+round=4 position=27 cell=spin-w4 variant=hybrid
+E5_RATE: 4103.484756195 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62386000 checksum=16777216 max_parallel=4
+round=4 position=28 cell=spin-w1 variant=accepted
+E5_RATE: 1536.909850632 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166568000 checksum=16777216 max_parallel=1
+round=4 position=29 cell=spin-w1 variant=candidate
+E5_RATE: 1401.879394563 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182612000 checksum=16777216 max_parallel=1
+round=4 position=30 cell=spin-w1 variant=hybrid
+E5_RATE: 1537.528303133 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166501000 checksum=16777216 max_parallel=1
+round=5 position=31 cell=spin-w1 variant=candidate
+E5_RATE: 1401.334552202 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182683000 checksum=16777216 max_parallel=1
+round=5 position=32 cell=spin-w1 variant=hybrid
+E5_RATE: 1521.717162711 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=168231000 checksum=16777216 max_parallel=1
+round=5 position=33 cell=spin-w1 variant=accepted
+E5_RATE: 1438.978325389 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=177904000 checksum=16777216 max_parallel=1
+round=5 position=34 cell=spin-w4 variant=candidate
+E5_RATE: 4208.380595420 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=60831000 checksum=16777216 max_parallel=4
+round=5 position=35 cell=spin-w4 variant=hybrid
+E5_RATE: 4174.344089879 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61327000 checksum=16777216 max_parallel=4
+round=5 position=36 cell=spin-w4 variant=accepted
+E5_RATE: 4104.405823126 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62372000 checksum=16777216 max_parallel=4
+round=6 position=37 cell=spin-w4 variant=hybrid
+E5_RATE: 4068.787946216 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62918000 checksum=16777216 max_parallel=4
+round=6 position=38 cell=spin-w4 variant=accepted
+E5_RATE: 4051.081607140 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63193000 checksum=16777216 max_parallel=4
+round=6 position=39 cell=spin-w4 variant=candidate
+E5_RATE: 3919.887303240 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65308000 checksum=16777216 max_parallel=4
+round=6 position=40 cell=spin-w1 variant=hybrid
+E5_RATE: 1428.077339313 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=179262000 checksum=16777216 max_parallel=1
+round=6 position=41 cell=spin-w1 variant=accepted
+E5_RATE: 1436.773545407 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178177000 checksum=16777216 max_parallel=1
+round=6 position=42 cell=spin-w1 variant=candidate
+E5_RATE: 1386.789744256 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=184599000 checksum=16777216 max_parallel=1
+round=7 position=43 cell=spin-w1 variant=accepted
+E5_RATE: 1434.229913778 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178493000 checksum=16777216 max_parallel=1
+round=7 position=44 cell=spin-w1 variant=hybrid
+E5_RATE: 1538.341355543 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166413000 checksum=16777216 max_parallel=1
+round=7 position=45 cell=spin-w1 variant=candidate
+E5_RATE: 1390.103117415 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=184159000 checksum=16777216 max_parallel=1
+round=7 position=46 cell=spin-w4 variant=accepted
+E5_RATE: 4238.129925171 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=60404000 checksum=16777216 max_parallel=4
+round=7 position=47 cell=spin-w4 variant=hybrid
+E5_RATE: 4181.298489179 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61225000 checksum=16777216 max_parallel=4
+round=7 position=48 cell=spin-w4 variant=candidate
+E5_RATE: 4036.517872629 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63421000 checksum=16777216 max_parallel=4
+round=8 position=49 cell=spin-w4 variant=hybrid
+E5_RATE: 4023.133014835 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63632000 checksum=16777216 max_parallel=4
+round=8 position=50 cell=spin-w4 variant=candidate
+E5_RATE: 3909.053428820 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65489000 checksum=16777216 max_parallel=4
+round=8 position=51 cell=spin-w4 variant=accepted
+E5_RATE: 3921.208222283 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65286000 checksum=16777216 max_parallel=4
+round=8 position=52 cell=spin-w1 variant=hybrid
+E5_RATE: 1516.273284568 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=168835000 checksum=16777216 max_parallel=1
+round=8 position=53 cell=spin-w1 variant=candidate
+E5_RATE: 1392.318318776 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=183866000 checksum=16777216 max_parallel=1
+round=8 position=54 cell=spin-w1 variant=accepted
+E5_RATE: 1438.937883974 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=177909000 checksum=16777216 max_parallel=1
+round=9 position=55 cell=spin-w1 variant=candidate
+E5_RATE: 1403.524161449 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182398000 checksum=16777216 max_parallel=1
+round=9 position=56 cell=spin-w1 variant=accepted
+E5_RATE: 1433.643582765 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178566000 checksum=16777216 max_parallel=1
+round=9 position=57 cell=spin-w1 variant=hybrid
+E5_RATE: 1425.889927981 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=179537000 checksum=16777216 max_parallel=1
+round=9 position=58 cell=spin-w4 variant=candidate
+E5_RATE: 4162.060219809 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=61508000 checksum=16777216 max_parallel=4
+round=9 position=59 cell=spin-w4 variant=accepted
+E5_RATE: 4079.551249363 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62752000 checksum=16777216 max_parallel=4
+round=9 position=60 cell=spin-w4 variant=hybrid
+E5_RATE: 4046.854992965 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63259000 checksum=16777216 max_parallel=4
+round=10 position=61 cell=spin-w4 variant=accepted
+E5_RATE: 4000.062500977 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63999000 checksum=16777216 max_parallel=4
+round=10 position=62 cell=spin-w4 variant=candidate
+E5_RATE: 3885.499195580 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65886000 checksum=16777216 max_parallel=4
+round=10 position=63 cell=spin-w4 variant=hybrid
+E5_RATE: 3906.965386729 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65524000 checksum=16777216 max_parallel=4
+round=10 position=64 cell=spin-w1 variant=accepted
+E5_RATE: 1536.144397573 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=166651000 checksum=16777216 max_parallel=1
+round=10 position=65 cell=spin-w1 variant=candidate
+E5_RATE: 1401.802630570 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182622000 checksum=16777216 max_parallel=1
+round=10 position=66 cell=spin-w1 variant=hybrid
+E5_RATE: 1436.692912502 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178187000 checksum=16777216 max_parallel=1
+round=11 position=67 cell=spin-w1 variant=candidate
+E5_RATE: 1405.311638835 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=182166000 checksum=16777216 max_parallel=1
+round=11 position=68 cell=spin-w1 variant=hybrid
+E5_RATE: 1424.097283646 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=179763000 checksum=16777216 max_parallel=1
+round=11 position=69 cell=spin-w1 variant=accepted
+E5_RATE: 1432.817108732 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178669000 checksum=16777216 max_parallel=1
+round=11 position=70 cell=spin-w4 variant=candidate
+E5_RATE: 4085.606217782 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=62659000 checksum=16777216 max_parallel=4
+round=11 position=71 cell=spin-w4 variant=hybrid
+E5_RATE: 4045.767747645 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=63276000 checksum=16777216 max_parallel=4
+round=11 position=72 cell=spin-w4 variant=accepted
+E5_RATE: 3980.037623793 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=64321000 checksum=16777216 max_parallel=4
+round=12 position=73 cell=spin-w4 variant=hybrid
+E5_RATE: 3899.110515414 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65656000 checksum=16777216 max_parallel=4
+round=12 position=74 cell=spin-w4 variant=accepted
+E5_RATE: 3887.741465193 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65848000 checksum=16777216 max_parallel=4
+round=12 position=75 cell=spin-w4 variant=candidate
+E5_RATE: 3931.022833715 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor4 workload=spin workers=4 jobs=256 iterations=65536 elapsed_ns=65123000 checksum=16777216 max_parallel=4
+round=12 position=76 cell=spin-w1 variant=hybrid
+E5_RATE: 1521.156554343 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=168293000 checksum=16777216 max_parallel=1
+round=12 position=77 cell=spin-w1 variant=accepted
+E5_RATE: 1430.775077687 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=178924000 checksum=16777216 max_parallel=1
+round=12 position=78 cell=spin-w1 variant=candidate
+E5_RATE: 1379.384665122 jobs_per_second
+E5_BENCHMARK result=PASS mode=executor1 workload=spin workers=1 jobs=256 iterations=65536 elapsed_ns=185590000 checksum=16777216 max_parallel=1

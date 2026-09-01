@@ -1,0 +1,95 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start 508: gate_f_levelg_rxbvm_noopt
+      Start 540: signal_control_unwind_rxtvm_noopt
+      Start 541: signal_control_unwind_rxtvm_opt
+      Start 537: gate_f_contextual_levelb
+      Start 538: signal_control_unwind_rxbvm_noopt
+      Start 539: signal_control_unwind_rxbvm_opt
+      Start 523: gate_f_pending_reference
+      Start 520: gate_f_bad_scope
+      Start 522: gate_f_pending_return
+      Start 521: gate_f_pending_mutation
+ 1/35 Test #540: signal_control_unwind_rxtvm_noopt .......   Passed    0.32 sec
+      Start 529: gate_f_scope_reused
+ 2/35 Test #523: gate_f_pending_reference ................   Passed    0.33 sec
+      Start 528: gate_f_dynamic_task_target
+ 3/35 Test #537: gate_f_contextual_levelb ................   Passed    0.33 sec
+      Start 524: gate_f_nested_task_wait
+ 4/35 Test #538: signal_control_unwind_rxbvm_noopt .......   Passed    0.33 sec
+      Start 536: gate_f_taskwork_factory_arg
+ 5/35 Test #539: signal_control_unwind_rxbvm_opt .........   Passed    0.35 sec
+      Start 535: gate_f_taskwork_required
+ 6/35 Test #541: signal_control_unwind_rxtvm_opt .........   Passed    0.35 sec
+      Start 530: gate_f_task_levelb
+ 7/35 Test #522: gate_f_pending_return ...................   Passed    0.35 sec
+      Start 533: gate_f_task_target_levelb
+ 8/35 Test #521: gate_f_pending_mutation .................   Passed    0.35 sec
+      Start 527: gate_f_task_receiver
+ 9/35 Test #520: gate_f_bad_scope ........................   Passed    0.35 sec
+      Start 532: gate_f_parallel_expr_levelb
+10/35 Test #527: gate_f_task_receiver ....................   Passed    0.08 sec
+      Start 534: gate_f_task_factory_target_levelb
+11/35 Test #530: gate_f_task_levelb ......................   Passed    0.09 sec
+      Start 525: gate_f_task_exposed_arg
+12/35 Test #533: gate_f_task_target_levelb ...............   Passed    0.09 sec
+      Start 526: gate_f_task_reference_arg
+13/35 Test #532: gate_f_parallel_expr_levelb .............   Passed    0.09 sec
+      Start 531: gate_f_parallel_levelb
+14/35 Test #525: gate_f_task_exposed_arg .................   Passed    0.08 sec
+      Start 507: gate_f_levelb_contract
+15/35 Test #534: gate_f_task_factory_target_levelb .......   Passed    0.09 sec
+16/35 Test #526: gate_f_task_reference_arg ...............   Passed    0.08 sec
+17/35 Test #531: gate_f_parallel_levelb ..................   Passed    0.08 sec
+18/35 Test #529: gate_f_scope_reused .....................   Passed    0.27 sec
+19/35 Test #536: gate_f_taskwork_factory_arg .............   Passed    0.26 sec
+20/35 Test #524: gate_f_nested_task_wait .................   Passed    0.26 sec
+21/35 Test #528: gate_f_dynamic_task_target ..............   Passed    0.27 sec
+22/35 Test #535: gate_f_taskwork_required ................   Passed    0.26 sec
+23/35 Test #507: gate_f_levelb_contract ..................   Passed    0.20 sec
+24/35 Test #508: gate_f_levelg_rxbvm_noopt ...............   Passed    0.84 sec
+      Start 511: gate_f_levelg_rxtvm_opt
+25/35 Test #511: gate_f_levelg_rxtvm_opt .................   Passed    0.77 sec
+      Start 516: gate_f_taskwork_import_rxbvm_noopt
+26/35 Test #516: gate_f_taskwork_import_rxbvm_noopt ......   Passed    0.64 sec
+      Start 515: gate_f_task_method_import_rxtvm_opt
+27/35 Test #515: gate_f_task_method_import_rxtvm_opt .....   Passed    0.61 sec
+      Start 513: gate_f_task_method_import_rxbvm_opt
+28/35 Test #513: gate_f_task_method_import_rxbvm_opt .....   Passed    0.61 sec
+      Start 509: gate_f_levelg_rxbvm_opt
+29/35 Test #509: gate_f_levelg_rxbvm_opt .................   Passed    0.86 sec
+      Start 514: gate_f_task_method_import_rxtvm_noopt
+30/35 Test #514: gate_f_task_method_import_rxtvm_noopt ...   Passed    0.61 sec
+      Start 512: gate_f_task_method_import_rxbvm_noopt
+31/35 Test #512: gate_f_task_method_import_rxbvm_noopt ...   Passed    0.78 sec
+      Start 517: gate_f_taskwork_import_rxbvm_opt
+32/35 Test #517: gate_f_taskwork_import_rxbvm_opt ........   Passed    0.85 sec
+      Start 518: gate_f_taskwork_import_rxtvm_noopt
+33/35 Test #518: gate_f_taskwork_import_rxtvm_noopt ......   Passed    0.74 sec
+      Start 519: gate_f_taskwork_import_rxtvm_opt
+34/35 Test #519: gate_f_taskwork_import_rxtvm_opt ........   Passed    0.70 sec
+      Start 510: gate_f_levelg_rxtvm_noopt
+35/35 Test #510: gate_f_levelg_rxtvm_noopt ...............   Passed    0.62 sec
+
+100% tests passed, 0 tests failed out of 35
+
+Label Time Summary:
+compiler        =  13.89 sec*proc (35 tests)
+concurrency     =  12.54 sec*proc (31 tests)
+contextual      =   0.33 sec*proc (1 test)
+control_flow    =   1.35 sec*proc (4 tests)
+f1f             =  12.34 sec*proc (30 tests)
+gate_f          =  13.89 sec*proc (35 tests)
+import          =   5.54 sec*proc (8 tests)
+levelb          =   0.54 sec*proc (2 tests)
+levelg          =  12.01 sec*proc (29 tests)
+linked          =   8.63 sec*proc (12 tests)
+method          =   2.61 sec*proc (4 tests)
+negative        =   3.37 sec*proc (17 tests)
+noopt           =   4.88 sec*proc (8 tests)
+opt             =   5.09 sec*proc (8 tests)
+rxbvm           =   5.26 sec*proc (8 tests)
+rxtvm           =   4.71 sec*proc (8 tests)
+signals         =   1.35 sec*proc (4 tests)
+taskwork        =   2.93 sec*proc (4 tests)
+
+Total Test time (real) =   8.68 sec

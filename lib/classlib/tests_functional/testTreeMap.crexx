@@ -1,0 +1,115 @@
+options levelb comments_dash
+import data
+
+failures = 0
+
+comparator = .NamedKeyComparator()
+map = .TreeMap(comparator)
+
+rc = map.put(.NamedKey("c") as .object, .NamedValue("see") as .object)
+rc = map.put(.NamedKey("a") as .object, .NamedValue("aye") as .object)
+rc = map.put(.NamedKey("b") as .object, .NamedValue("bee") as .object)
+
+failures = failures + check_int("size", map.size(), 3)
+failures = failures + check_value("get b", map.get(.NamedKey("b") as .object), "bee")
+failures = failures + check_int("contains a", map.containsKey(.NamedKey("a") as .object), 1)
+failures = failures + check_int("contains x", map.containsKey(.NamedKey("x") as .object), 0)
+
+keys = .object[]
+keys = map.keyArray()
+failures = failures + check_key("ordered key 1", keys[1], "a")
+failures = failures + check_key("ordered key 2", keys[2], "b")
+failures = failures + check_key("ordered key 3", keys[3], "c")
+
+-- Comparator equality, not object identity, defines an existing key.
+rc = map.put(.NamedKey("b") as .object, .NamedValue("BEE") as .object)
+failures = failures + check_int("replacement size", map.size(), 3)
+failures = failures + check_value("replacement value", map.get(.NamedKey("b") as .object), "BEE")
+
+first = map.firstKey() as .NamedKey
+last = map.lastKey() as .NamedKey
+failures = failures + check_string("first key", first.name(), "a")
+failures = failures + check_string("last key", last.name(), "c")
+
+it = map.iterator()
+failures = failures + check_key("iterator key 1", it.next(), "a")
+failures = failures + check_value("iterator value 1", it.value(), "aye")
+failures = failures + check_key("iterator key 2", it.next(), "b")
+failures = failures + check_value("iterator value 2", it.value(), "BEE")
+failures = failures + check_key("iterator key 3", it.next(), "c")
+failures = failures + check_value("iterator value 3", it.value(), "see")
+failures = failures + check_int("iterator end", it.hasNext(), 0)
+
+rc = map.remove(.NamedKey("b") as .object)
+failures = failures + check_int("remove rc", rc, 0)
+failures = failures + check_int("remove size", map.size(), 2)
+failures = failures + check_int("remove contains", map.containsKey(.NamedKey("b") as .object), 0)
+
+if failures <> 0 then do
+  say "TreeMap failures:" failures
+  exit 1
+end
+
+say "PASS: TreeMap"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_key: procedure=.int
+  arg label=.string, actual=.object, expected=.string
+  key = actual as .NamedKey
+return check_string(label, key.name(), expected)
+
+check_value: procedure=.int
+  arg label=.string, actual=.object, expected=.string
+  value = actual as .NamedValue
+return check_string(label, value.name(), expected)
+
+NamedKey: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+NamedValue: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+NamedKeyComparator: class implements .Comparator
+
+  *: factory
+    return
+
+  compare: method = .int
+    arg left = .object, right = .object
+    left_key = left as .NamedKey
+    right_key = right as .NamedKey
+    if left_key.name() < right_key.name() then return -1
+    if left_key.name() > right_key.name() then return 1
+    return 0

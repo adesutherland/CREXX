@@ -69,6 +69,9 @@
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"
 #include "rxcp_util.h"
+#include "rxcp_constant.h"
+#include "rxcp_partial_call.h"
+#include "rxcp_remap_build.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
@@ -79,6 +82,7 @@ typedef struct Payload {
     Context *context;
     Scope *current_scope;
     char changed;
+    char explicit_constants_only;
 } Payload;
 
 static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length);
@@ -89,6 +93,10 @@ static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int val
 static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
 static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
+
+static walker_result partial_call_walker(walker_direction direction,
+                                         ASTNode *node,
+                                         void *pload);
 
 static int semantic_context_is_internal_operand(ASTNode *node) {
     return ast_semantic_context_kind(node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
@@ -174,24 +182,24 @@ static value* node_to_value(ASTNode* node) {
         case TP_DECIMAL:
             // v.status.type_decimal = 1;
             if (node->decimal_value) {
-                v.decimal_value = malloc(strlen(node->decimal_value)+1);
-                strcpy(v.decimal_value, node->decimal_value);
-                v.decimal_value_length = strlen(node->decimal_value);
-                v.decimal_buffer_length = v.decimal_value_length;
+                size_t decimal_length = strlen(node->decimal_value);
+                void *decimal = rxvm_value_reserve_decimal(
+                        &v, decimal_length + 1u);
+                if (!decimal) RX_PANIC_OOM(
+                        "reserve compiler decimal sidecar",
+                        decimal_length + 1u, "constant value");
+                strcpy(decimal, node->decimal_value);
+                rxvm_value_set_decimal_length(&v, decimal_length);
             }
             break;
         case TP_STRING:
             // v.status.type_string = 1;
             if (node->node_string && node->node_string_length) {
-                v.string_value = malloc(node->node_string_length+1);
-                memcpy(v.string_value, node->node_string, node->node_string_length);
-                v.string_value[node->node_string_length] = 0; /* Null terminate */
-                v.string_length = node->node_string_length;
-                v.string_buffer_length = v.string_length;
-                v.string_pos = 0;
-#ifdef NUTF8
-                v.string_chars = utf8nlen(v.string_value, v.string_length); /* SLOW! */
-                v.string_char_pos = 0;
+                set_string(&v, node->node_string, node->node_string_length);
+                null_terminate_string_buffer(&v);
+#ifndef NUTF8
+                rxvm_value_set_string_chars_known(
+                        &v, utf8nlen(v.string_value, v.string_length)); /* SLOW! */
 #endif
             }
             break;
@@ -218,11 +226,7 @@ static void update_string(ASTNode* node) {
 
         case TP_BOOLEAN:
             buffer = malloc(32); /* Large enough for any int */
-#ifdef __32BIT__
-            length = snprintf(buffer,32,"%ld",node->int_value);
-#else
-            length = snprintf(buffer,32,"%lld",node->int_value);
-#endif
+            length = snprintf(buffer, 32, "%" RXINTEGER_PRI, node->int_value);
             /* Update the node's string - this also takes ownership of the memory */
             ast_sstr(node, buffer, length);
             return;
@@ -273,7 +277,7 @@ static void update_string(ASTNode* node) {
                 decplugin->syncNumericContext(decplugin);
                 value* value = value_f();
                 decplugin->decimalFromString(decplugin, value, node->decimal_value);
-                char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                 decplugin->decimalToString(decplugin, value, result_string);
                 /* Update the node's string - this also takes ownership of the memory */
                 ast_sstr(node, result_string, strlen(result_string));
@@ -301,9 +305,9 @@ static void opt_append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
     buffer[(*pos)++] = hex[byte & 0x0f];
 }
 
-static unsigned char *rxas_escaped_string_to_bytes(const char *string,
-                                                   size_t length,
-                                                   size_t *byte_length) {
+unsigned char *rxcp_constant_string_decode(const char *string,
+                                           size_t length,
+                                           size_t *byte_length) {
     unsigned char *buffer;
     size_t i;
     size_t out = 0;
@@ -380,9 +384,9 @@ static char *rxas_escaped_string_to_binary_literal(ASTNode *node,
     size_t byte_length = 0;
     char *literal;
 
-    bytes = rxas_escaped_string_to_bytes(node->node_string,
-                                         node->node_string_length,
-                                         &byte_length);
+    bytes = rxcp_constant_string_decode(node->node_string,
+                                        node->node_string_length,
+                                        &byte_length);
     if (!bytes) return 0;
 
     literal = bytes_to_binary_literal(bytes, byte_length, literal_length);
@@ -416,9 +420,9 @@ static unsigned char *binary_literal_to_bytes(ASTNode *node, size_t *byte_length
     return bytes;
 }
 
-static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
-                                          size_t byte_length,
-                                          size_t *string_length) {
+char *rxcp_constant_string_encode(const unsigned char *bytes,
+                                  size_t byte_length,
+                                  size_t *string_length) {
     char *buffer;
     char *out;
     size_t i;
@@ -438,6 +442,17 @@ static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
 
     *out = 0;
     return buffer;
+}
+
+static int is_rxinteger_min_magnitude_literal(ASTNode *node) {
+    static const char magnitude[] = "9223372036854775808";
+    Token *token;
+
+    if (!node) return 0;
+    token = node->token;
+    return token &&
+           token->length == sizeof(magnitude) - 1 &&
+           memcmp(token->token_string, magnitude, sizeof(magnitude) - 1) == 0;
 }
 
 /* Convert a CONSTANT node from a STRING to new_type */
@@ -480,14 +495,27 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                 node->value_type = new_type;
                 node->target_type = new_type;
                 if (string2integer(&node->int_value,node->node_string,node->node_string_length)) {
+                    if (node->parent &&
+                        node->parent->node_type == OP_NEG &&
+                        node->parent->child == node &&
+                        is_rxinteger_min_magnitude_literal(node)) {
+                        node->int_value = RXINTEGER_MIN;
+                        return;
+                    }
                     /* Check if it is an int in float format */
                     if (string2float(&f,node->node_string,node->node_string_length)) {
                         mknd_err(node, "BAD_CONVERSION");
+                        return;
                     }
                     floor_val = floor(f);
                     /* Less than an "EPSILON" above the floor? */
                     if (f - floor_val < 1e-015 ) {
                         /* Yes - so and integer */
+                        if (floor_val < -9223372036854775808.0 ||
+                            floor_val >= 9223372036854775808.0) {
+                            mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            return;
+                        }
                         node->int_value = (rxinteger)floor_val;
                         return;
                     }
@@ -495,6 +523,11 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     floor_val += 1.0;
                     if (floor_val - f < 1e-015 ) {
                         /* Yes - so and integer */
+                        if (floor_val < -9223372036854775808.0 ||
+                            floor_val >= 9223372036854775808.0) {
+                            mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            return;
+                        }
                         node->int_value = (rxinteger)floor_val;
                         return;
                     }
@@ -554,7 +587,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     }
                 }
 #endif
-                buffer = bytes_to_rxas_escaped_string(bytes, byte_length, &length);
+                buffer = rxcp_constant_string_encode(bytes, byte_length, &length);
                 free(bytes);
                 if (!buffer) {
                     mknd_err(node, "BAD_CONVERSION");
@@ -706,17 +739,15 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 /* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
-    rxinteger idiff;
     int cmp;
 
     if (node1->value_type == TP_INTEGER) {
-        idiff = node1->int_value - node2->int_value;
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+        return (node1->int_value > node2->int_value) -
+               (node1->int_value < node2->int_value);
     }
 
     if (node1->value_type == TP_BOOLEAN) {
-        idiff = (node1->int_value != 0) - (node2->int_value != 0); /* Weird */
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+        return (node1->int_value != 0) - (node2->int_value != 0);
     }
 
     if (node1->value_type == TP_FLOAT) {
@@ -747,10 +778,8 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
                      node2->node_string_length));
     if (cmp != 0)
         return cmp > 0 ? 1 : -1;
-    else {
-        idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
-    }
+    return (node1->node_string_length > node2->node_string_length) -
+           (node1->node_string_length < node2->node_string_length);
 }
 
 static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {
@@ -827,7 +856,7 @@ static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {
                 plugin->num_context = &(node->scope->num_context);
                 plugin->syncNumericContext(plugin);
                 plugin->decimalFromString(plugin, value, node->decimal_value);
-                result_string = malloc(plugin->getRequiredStringSize(plugin));
+                result_string = malloc(plugin->getRequiredStringSize(plugin, NULL));
                 if (result_string) {
                     plugin->decimalToString(plugin, value, result_string);
                     if (length) *length = strlen(result_string);
@@ -975,11 +1004,15 @@ static int is_comparison_operator(NodeType type) {
 static int can_code_fold(ASTNode* node, int children) {
     ASTNode *child1 = 0, *child2 = 0, *child3 = 0;
 
+    if (ast_hase(node)) return 0;
     if (node->node_type == CONSTANT) return 1; /* A constant IS folded */
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     if (child2) child3 = child2->sibling;
+    if ((child1 && ast_hase(child1)) ||
+        (child2 && ast_hase(child2)) ||
+        (child3 && ast_hase(child3))) return 0;
 
     /* Arity Check: Are any of the required children missing or NOT CONSTANT? */
     if (children >= 1) {
@@ -1314,11 +1347,19 @@ static walker_result opt1_walker(walker_direction direction,
                                 child1->node_string_length +
                                 child2->node_string_length + 1;
                         buffer = malloc(buffer_length);
-                        memcpy(buffer, child1->node_string,
-                               child1->node_string_length);
+                        if (!buffer) {
+                            mknd_err(node, "OUT_OF_MEMORY");
+                            break;
+                        }
+                        if (child1->node_string_length) {
+                            memcpy(buffer, child1->node_string,
+                                   child1->node_string_length);
+                        }
                         buffer[child1->node_string_length] = ' ';
-                        memcpy(buffer + child1->node_string_length + 1,
-                               child2->node_string, child2->node_string_length);
+                        if (child2->node_string_length) {
+                            memcpy(buffer + child1->node_string_length + 1,
+                                   child2->node_string, child2->node_string_length);
+                        }
                         rewrite_to_string_constant(node, payload, buffer,
                                                    buffer_length);
                         break;
@@ -1328,11 +1369,19 @@ static walker_result opt1_walker(walker_direction direction,
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length;
-                        buffer = malloc(buffer_length);
-                        memcpy(buffer, child1->node_string,
-                               child1->node_string_length);
-                        memcpy(buffer + child1->node_string_length,
-                               child2->node_string, child2->node_string_length);
+                        buffer = malloc(buffer_length ? buffer_length : 1);
+                        if (!buffer) {
+                            mknd_err(node, "OUT_OF_MEMORY");
+                            break;
+                        }
+                        if (child1->node_string_length) {
+                            memcpy(buffer, child1->node_string,
+                                   child1->node_string_length);
+                        }
+                        if (child2->node_string_length) {
+                            memcpy(buffer + child1->node_string_length,
+                                   child2->node_string, child2->node_string_length);
+                        }
                         rewrite_to_string_constant(node, payload, buffer,
                                                    buffer_length);
                         break;
@@ -1355,7 +1404,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalAdd(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1368,9 +1417,11 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value +
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_add(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1392,7 +1443,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalSub(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1404,9 +1455,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value -
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_sub(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1428,7 +1481,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalMul(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1440,9 +1493,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value *
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_mul(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1464,7 +1519,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalPow(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1476,11 +1531,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        (rxinteger) pow(
-                                                                (double)child1->int_value,
-                                                                (double)child2->int_value));
-                            if (!node->int_value) mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            rxinteger folded;
+                            if (rxinteger_checked_pow(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1502,7 +1557,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalFromString(decplugin, val2, child2->decimal_value);
                             decplugin->decimalDiv(decplugin, result, val1, val2);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1515,9 +1570,12 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Never Happens */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value /
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value / child2->int_value);
                         }
                         break;
 
@@ -1542,7 +1600,7 @@ static walker_result opt1_walker(walker_direction direction,
                             // Truncate the result to an integer
                             decplugin->decimalTruncate(decplugin, result, result);
                             // Convert to String
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             clear_value(val1);
@@ -1554,9 +1612,12 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result_string);
                         }
                         else { /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value /
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value / child2->int_value);
                         }
                         break;
 
@@ -1584,7 +1645,7 @@ static walker_result opt1_walker(walker_direction direction,
                             // Now calculate the modulo
                             decplugin->decimalMul(decplugin, result, val2, result);
                             decplugin->decimalSub(decplugin, result, val1, result);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, result, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1597,10 +1658,42 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value %
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value % child2->int_value);
                         }
+                        break;
+
+                    case OP_BIT_AND:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value &
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_OR:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value |
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_XOR:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value ^
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_NOT:
+                        rewrite_to_integer_constant(node, payload,
+                                                    ~child1->int_value);
+                        break;
+
+                    case OP_FLAG_HAS:
+                        rewrite_to_boolean_constant(node, payload,
+                                                    (child1->int_value &
+                                                     child2->int_value) != 0);
                         break;
 
                     case OP_NOT:
@@ -1648,7 +1741,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
                             decplugin->decimalNeg(decplugin, val1, val1);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, val1, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1656,8 +1749,14 @@ static walker_result opt1_walker(walker_direction direction,
                             free(val1);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                            -child1->int_value);
+                            rxinteger folded;
+                            if (is_rxinteger_min_magnitude_literal(child1)) {
+                                rewrite_to_integer_constant(node, payload, RXINTEGER_MIN);
+                            }
+                            else if (rxinteger_checked_neg(child1->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1675,7 +1774,7 @@ static walker_result opt1_walker(walker_direction direction,
                             decplugin->num_context = &(node->scope->num_context);
                             decplugin->syncNumericContext(decplugin);
                             decplugin->decimalFromString(decplugin, val1, child1->decimal_value);
-                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin) );
+                            char* result_string = malloc(decplugin->getRequiredStringSize(decplugin, NULL) );
                             decplugin->decimalToString(decplugin, val1, result_string);
                             rewrite_to_decimal_constant(node, payload, result_string);
                             free(result_string);
@@ -1785,6 +1884,362 @@ static walker_result opt1_walker(walker_direction direction,
     return result_normal;
 }
 
+/* Evaluate proved Level B bodies before inlining destroys their callable
+ * identity. Actual expressions are reduced with the ordinary typed constant
+ * folder first; the bounded evaluator then accepts only an all-constant,
+ * non-signalling path through admitted language and RXAS semantics. Any
+ * rejection leaves the complete Level B call for normal inlining/fallback. */
+static walker_result partial_call_walker(walker_direction direction,
+                                         ASTNode *node,
+                                         void *pload) {
+    Payload *payload;
+    ASTNode *actual;
+    RxcpPartialCallResult result;
+
+    if (direction == in || !node || node->node_type != FUNCTION) return result_normal;
+
+    payload = (Payload *)pload;
+    for (actual = node->child; actual; actual = actual->sibling) {
+        if (actual->node_type != NOVAL) ast_wlkr(actual, opt1_walker, payload);
+    }
+
+    if (!rxcp_partial_call_evaluate(payload->context, node, &result)) {
+        return result_normal;
+    }
+
+    /* Validate the complete replacement before detaching the proved call. A
+     * future evaluator extension must never turn an unsupported representation
+     * into an empty or partially rewritten AST node. */
+    if ((result.type == TP_STRING && !result.string_value) ||
+        (result.type == TP_DECIMAL && !result.decimal_value) ||
+        (result.type != TP_STRING && result.type != TP_INTEGER &&
+         result.type != TP_BOOLEAN && result.type != TP_FLOAT &&
+         result.type != TP_DECIMAL)) {
+        rxcp_partial_call_result_clear(&result);
+        return result_normal;
+    }
+
+    rxcp_remap_disconnect_subtree_symbols(node);
+    node->association = 0;
+    switch (result.type) {
+        case TP_STRING:
+            rewrite_to_string_constant(node, payload,
+                                       result.string_value,
+                                       result.string_length);
+            result.string_value = 0;
+            break;
+        case TP_INTEGER:
+            rewrite_to_integer_constant(node, payload, result.int_value);
+            break;
+        case TP_BOOLEAN:
+            rewrite_to_boolean_constant(node, payload,
+                                        result.int_value != 0);
+            break;
+        case TP_FLOAT:
+            rewrite_to_float_constant(node, payload, result.float_value);
+            break;
+        case TP_DECIMAL:
+            rewrite_to_decimal_constant(node, payload, result.decimal_value);
+            break;
+        default:
+            /* Guarded above; retained for compiler exhaustiveness. */
+            break;
+    }
+    rxcp_partial_call_result_clear(&result);
+    return result_normal;
+}
+
+
+static int constant_definition_for_symbol(Symbol *symbol, ASTNode **target_out, ASTNode **value_out) {
+    size_t i;
+
+    if (target_out) *target_out = 0;
+    if (value_out) *value_out = 0;
+    if (!symbol) return 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *node = sym_trnd(symbol, i)->node;
+        if (node && node->node_type == VAR_TARGET &&
+            node->parent && node->parent->node_type == CONSTANT_DEF) {
+            if (target_out) *target_out = node;
+            if (value_out) *value_out = node->sibling;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int can_capture_constant_value(ASTNode *node) {
+    if (!node) return 0;
+    if (node->value_type == TP_UNKNOWN || node->value_type == TP_VOID) return 0;
+
+    switch (node->node_type) {
+        case CONSTANT:
+        case STRING:
+        case BINARY:
+        case FLOAT:
+        case DECIMAL:
+        case INTEGER:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static int constant_symbol_use_keeps_identifier(ASTNode *node) {
+    return node &&
+           (node->node_type == INSTRUCTIONS ||
+            (node->parent && node->parent->node_type == EXPOSED));
+}
+
+static OperandType constant_substitution_assembler_operand_type(ASTNode *node,
+                                                                Symbol *symbol,
+                                                                ValueType replacement_type) {
+    ValueType type;
+
+    if (node && node->symbolNode && node->symbolNode->symbol == symbol) {
+        type = replacement_type;
+    } else if (node && node->node_type == CONSTANT) {
+        type = node->target_type != TP_UNKNOWN ? node->target_type : node->value_type;
+    } else if (node) {
+        switch (node->node_type) {
+            case INTEGER: return OP_INT;
+            case FLOAT: return OP_FLOAT;
+            case DECIMAL: return OP_DECIMAL;
+            case STRING: return OP_STRING;
+            case BINARY: return OP_BINARY;
+            case FUNC_SYMBOL: return OP_FUNC;
+            default: return OP_REG;
+        }
+    } else {
+        return OP_NONE;
+    }
+
+    switch (type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER: return OP_INT;
+        case TP_FLOAT: return OP_FLOAT;
+        case TP_DECIMAL: return OP_DECIMAL;
+        case TP_STRING: return OP_STRING;
+        case TP_BINARY: return OP_BINARY;
+        default: return OP_REG;
+    }
+}
+
+/* Inlining introduces ordinary assignments after the final assembler
+ * validation pass. Constant propagation may remove one of those assignments,
+ * but only when every affected assembler statement has a legal immediate
+ * form. A read-only RXAS operand is not necessarily an immediate operand. */
+static int constant_substitution_preserves_assembler_forms(Symbol *symbol,
+                                                           ValueType replacement_type) {
+    size_t i;
+
+    if (!symbol) return 1;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *use = sym_trnd(symbol, i)->node;
+        ASTNode *assembler;
+        ASTNode *child;
+        OperandType *types;
+        size_t operand_count;
+        size_t operand_index;
+        char *name;
+        char *cursor;
+        int legal;
+
+        if (!use || !use->parent || use->parent->node_type != ASSEMBLER) continue;
+        assembler = use->parent;
+
+        operand_count = 0;
+        for (child = assembler->child; child; child = child->sibling) operand_count++;
+        types = operand_count ? malloc(operand_count * sizeof(*types)) : 0;
+        if (operand_count && !types) return 0;
+
+        operand_index = 0;
+        for (child = assembler->child; child; child = child->sibling) {
+            types[operand_index++] = constant_substitution_assembler_operand_type(
+                child, symbol, replacement_type);
+        }
+
+        name = malloc(assembler->node_string_length + 1);
+        if (!name) {
+            free(types);
+            return 0;
+        }
+        memcpy(name, assembler->node_string, assembler->node_string_length);
+        name[assembler->node_string_length] = 0;
+        for (cursor = name; *cursor; cursor++) *cursor = (char)tolower((unsigned char)*cursor);
+
+        legal = src_instv(name, types, operand_count) != 0;
+        free(name);
+        free(types);
+        if (!legal) return 0;
+    }
+
+    return 1;
+}
+
+static void copy_string_payload_to_node(ASTNode *node, const char *string, size_t length) {
+    char *buffer;
+
+    buffer = malloc(length ? length : 1);
+    if (!buffer) return;
+    if (length) memcpy(buffer, string, length);
+    else buffer[0] = 0;
+    ast_sstr(node, buffer, length);
+}
+
+static void prepare_explicit_binary_constant_alias(Symbol *symbol, ASTNode *value_node) {
+    char *alias_name;
+
+    if (!symbol || !value_node || symbol->constant_alias ||
+        value_node->value_type != TP_BINARY || !value_node->node_string ||
+        symbol->creation_ordinal < 0) {
+        return;
+    }
+
+    alias_name = mprintf("\xc2\xa7rxc.const.%d.%s",
+                         symbol->creation_ordinal, symbol->name);
+    if (!sym_set_constant_alias(symbol, alias_name, TP_BINARY,
+                                value_node->node_string,
+                                value_node->node_string_length)) {
+        free(alias_name);
+        RX_PANIC_OOM("capture explicit binary constant alias",
+                     value_node->node_string_length + 1, 0);
+    }
+    free(alias_name);
+}
+
+static void borrow_constant_alias_payload(ASTNode *node, ConstantAlias *alias) {
+    if (!node || !alias) return;
+    if (node->free_node_string) free(node->node_string);
+    node->node_string = alias->value;
+    node->node_string_length = alias->value_length;
+    node->free_node_string = 0;
+}
+
+static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload, ASTNode *value_node) {
+    ValueType value_type;
+    rxinteger int_value;
+    int bool_value;
+    double float_value;
+    char *decimal_value;
+    char *node_string;
+    size_t node_string_length;
+    size_t i;
+
+    value_type = value_node->value_type;
+    int_value = value_node->int_value;
+    bool_value = value_node->bool_value;
+    float_value = value_node->float_value;
+    decimal_value = value_node->decimal_value;
+    node_string = value_node->node_string;
+    node_string_length = value_node->node_string_length;
+
+    symbol->symbol_type = CONSTANT_SYMBOL;
+    payload->changed = 1;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *n = sym_trnd(symbol, i)->node;
+
+        if (constant_symbol_use_keeps_identifier(n)) continue;
+
+        n->node_type = CONSTANT;
+        n->value_type = value_type;
+        if (n->target_type == TP_UNKNOWN) n->target_type = value_type;
+        n->int_value = int_value;
+        n->float_value = float_value;
+        n->bool_value = bool_value;
+
+        if (decimal_value) {
+            if (n->decimal_value) free(n->decimal_value);
+            n->decimal_value = malloc(strlen(decimal_value) + 1);
+            strcpy(n->decimal_value, decimal_value);
+        }
+        else {
+            if (n->decimal_value) {
+                free(n->decimal_value);
+                n->decimal_value = 0;
+            }
+        }
+
+        if (symbol->constant_alias &&
+            symbol->constant_alias->type == value_type &&
+            n->target_type == value_type) {
+            borrow_constant_alias_payload(n, symbol->constant_alias);
+        }
+        else if (node_string) copy_string_payload_to_node(n, node_string, node_string_length);
+        else if (n->free_node_string) {
+            free(n->node_string);
+            n->node_string = 0;
+            n->node_string_length = 0;
+            n->free_node_string = 0;
+        }
+
+        if (!(n->target_type == TP_STRING &&
+              n->value_type != TP_STRING &&
+              strict_string_compare_operand(n))) {
+            if (n->value_type == TP_BINARY) binary_to_type(n, n->target_type);
+            else string_to_type(n, n->target_type);
+        }
+        update_string(n);
+        payload->changed = 1;
+    }
+}
+
+static int symbol_has_non_declaration_write(Symbol *symbol, ASTNode *declaration_target, Context *context) {
+    size_t i;
+    int found = 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *symbol_node = sym_trnd(symbol, i);
+        if (!symbol_node || !symbol_node->writeUsage) continue;
+        if (symbol_node->node == declaration_target) continue;
+        found = 1;
+        if (context && context->is_final_pass) {
+            mknd_err(symbol_node->node, "UPDATING_TAKEN_CONSTANT");
+        }
+    }
+
+    return found;
+}
+
+static void explicit_constant_in_scope(Symbol *symbol, Payload *payload) {
+    ASTNode *target_node;
+    ASTNode *value_node;
+
+    if (symbol->symbol_type == CONSTANT_SYMBOL) return;
+    if (!constant_definition_for_symbol(symbol, &target_node, &value_node)) return;
+    if (!value_node) return;
+
+    if (symbol_has_non_declaration_write(symbol, target_node, payload->context)) {
+        return;
+    }
+
+    if (symbol->value_dims ||
+        symbol->type == TP_OBJECT ||
+        symbol->type == TP_REFERENCE) {
+        if (payload->context && payload->context->is_final_pass && !ast_hase(target_node)) {
+            mknd_err(target_node, "CONSTANT_REQUIRES_CONSTANT_EXPRESSION");
+        }
+        return;
+    }
+
+    ast_wlkr(value_node, opt1_walker, payload);
+    value_node = target_node->sibling;
+
+    if (!can_capture_constant_value(value_node)) {
+        if (payload->context && payload->context->is_final_pass) {
+            mknd_err(target_node->parent, "CONSTANT_REQUIRES_CONSTANT_EXPRESSION");
+        }
+        return;
+    }
+
+    prepare_explicit_binary_constant_alias(symbol, value_node);
+    copy_constant_value_to_symbol_nodes(symbol, payload, value_node);
+    ast_prun(target_node->parent);
+}
 
 /* Propagate constant symbols handler */
 static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
@@ -1802,11 +2257,24 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     char *node_string;
     size_t node_string_length;
 
+    if (payload->explicit_constants_only) {
+        explicit_constant_in_scope(symbol, payload);
+        return;
+    }
+
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
     if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return; /* Attributes must not be optimized away */
     if (symbol->has_reference_target) return; /* Referenced storage is alias-observable */
     if (symbol->value_dims) return; /* Arrays are never constants */
     if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE) return; /* Binary, objects and references are never constants */
+    /* Decimal immediate operands are not pre-decoded constants in the VM.
+     * Each execution allocates a temporary value, parses the literal through
+     * the selected provider, and then clears and frees the value.  Replacing a
+     * single-assignment decimal register therefore turns one conversion into
+     * repeated work when the use is inside a loop.  Preserve the register and
+     * its one-time initialization.  Explicit language constants have already
+     * taken the separate explicit_constants_only path above. */
+    if (symbol->type == TP_DECIMAL) return;
     if (!sym_nond(symbol)) return; /* No nodes - weird - return */
 
 
@@ -1825,6 +2293,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
         decimal_value = value_node->decimal_value; /* Memory management is owned by the node */
         node_string = value_node->node_string;
         node_string_length = value_node->node_string_length;
+
+        if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
 
         /* Prune the original assignment from the tree */
         ast_prun(n->parent);
@@ -1853,6 +2323,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
                 decimal_value = value_node->decimal_value; /* Memory management is owned by the node */
                 node_string = value_node->node_string;
                 node_string_length = value_node->node_string_length;
+
+                if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
 
                 /* Remove the assign */
                 ast_prun(m->parent);
@@ -1889,6 +2361,8 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
                 node_string_length = 1;
             }
 
+            if (!constant_substitution_preserves_assembler_forms(symbol, value_type)) return;
+
             /* Remove the define */
             m = sym_trnd(symbol,0)->node->parent;
             ast_prun(m);
@@ -1902,6 +2376,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     payload->changed = 1;
     for (i=0; i<sym_nond(symbol); i++) {
         n = sym_trnd(symbol, i)->node;
+        if (constant_symbol_use_keeps_identifier(n)) continue;
         n->node_type = CONSTANT;
         n->value_type = value_type;
         n->int_value = int_value;
@@ -1945,6 +2420,36 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
     scp_4all(scope, constant_symbols_in_scope, payload);
     for (i=0; i < scp_noch(scope); i++) {
         propagete_constant_symbols(scp_chd(scope, i), payload);
+    }
+}
+
+static void fold_and_propagate_constants(Context *context, Payload *payload) {
+    if (!context || !context->ast || !payload) return;
+    do {
+        payload->changed = 0;
+        ast_wlkr(context->ast, opt1_walker, (void *)payload);
+        propagete_constant_symbols(context->ast->scope, payload);
+    } while (payload->changed);
+}
+
+void propagate_explicit_constants(Context *context) {
+    Payload payload;
+    char changed = 0;
+
+    if (!context || !context->ast || !context->ast->scope) return;
+
+    payload.current_scope = 0;
+    payload.context = context;
+    payload.explicit_constants_only = 1;
+
+    do {
+        payload.changed = 0;
+        propagete_constant_symbols(context->ast->scope, &payload);
+        if (payload.changed) changed = 1;
+    } while (payload.changed);
+
+    if (changed) {
+        context->changed_flags |= FLAG_VAL_TRANS;
     }
 }
 
@@ -2005,6 +2510,8 @@ void mark_const_args(Context *context) {
 
     payload.current_scope = 0;
     payload.context = context;
+    payload.changed = 0;
+    payload.explicit_constants_only = 0;
     /* This pass is intentionally callable outside optimise() so no-opt builds
      * use the same semantic copy-elision rule as optimised builds. */
     ast_wlkr(context->ast, opt2_walker, (void *) &payload);
@@ -2016,13 +2523,56 @@ void optimise(Context *context) {
 
     payload.current_scope = 0;
     payload.context = context;
+    payload.changed = 0;
+    payload.explicit_constants_only = 0;
+
+    /* Expose the same ordinary constant facts used by the mature optimizer
+     * before body evaluation. A single-assignment value such as a loop-local
+     * string can feed any proved body without a callable-specific recognizer. */
+    fold_and_propagate_constants(context, &payload);
+
+    /* Body evaluation retains resolved callable identity and therefore
+     * precedes general inlining. Exact local/source bodies use their validated
+     * callable scope directly; transported binary bodies still require the
+     * normal reconstructed I6/template proof. */
+    ast_wlkr(context->ast, partial_call_walker, (void *) &payload);
+
+    /* An evaluated value may make its ordinary consumer constant too (for
+     * example WORD("Key Bee", 1) = "?").  Fold that consumer before
+     * inlining so the proved call reaches the zero-runtime-work ceiling. */
+    fold_and_propagate_constants(context, &payload);
 
     /* Inlining Pass */
     if (context->optimise) {
         int inline_pass;
+        int scalar_accessor_changed;
+        int scalar_accessor_pass_changed;
+
+        /* Exact register-scalar accessors are independent of the general
+         * nesting-depth budget.  A successful rewrite removes one exact
+         * accessor call and its recognized body contains no call, so this
+         * fixed point is strictly decreasing and terminates without raising
+         * INLINE_MAX_PASSES for unrelated bodies. */
+        rxcp_inline_prepare(context);
+        scalar_accessor_changed = 0;
+        while ((scalar_accessor_pass_changed =
+                    rxcp_inline_scalar_accessor_pass(context)) != 0) {
+            scalar_accessor_changed = 1;
+        }
+        if (scalar_accessor_changed) {
+            /* Scalar rewrites can occur inside another callable's template.
+             * Refresh its summary before general inlining, but do not emit a
+             * duplicate debug eligibility census for this internal refresh. */
+            rxcp_inline_prepare_quiet(context);
+        }
 
         for (inline_pass = 0; inline_pass < INLINE_MAX_PASSES; inline_pass++) {
-            if (!rxcp_inline_pass(context)) break;
+            int changed;
+
+            changed = inline_pass == 0 ?
+                      rxcp_inline_prepared_pass(context) :
+                      rxcp_inline_pass(context);
+            if (!changed) break;
         }
 
         rxcp_inline_prune(context, context->ast);
@@ -2030,17 +2580,7 @@ void optimise(Context *context) {
 
     payload.changed = 0;
 
-    while (1) {
-        payload.changed = 0;
-
-        /* Constant Folding */
-        ast_wlkr(context->ast, opt1_walker, (void *) &payload);
-
-        /* Propagate constant symbols  */
-        propagete_constant_symbols(context->ast->scope, &payload);
-
-        if (!payload.changed) break;
-    }
+    fold_and_propagate_constants(context, &payload);
 
     /* Mark read-only by-value formals for semantic copy elision. */
     mark_const_args(context);

@@ -1,0 +1,132 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifspace expose rexxclassicbif_space
+import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
+import rexxvalue
+
+/**
+ * Normalize Classic whitespace-delimited words.
+ *
+ * @bif SPACE
+ * @signature SPACE(string [,count [,pad]])
+ * @checkargs rANY oWHOLE>=0 oPAD
+ * @sandbox pure
+ * @return words joined by count copies of pad as a RexxValue
+ */
+rexxclassicbif_space: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
+
+  count = 1
+  if context.argumentExists(2) then count = context.argumentText(2) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(3) then pad_bytes = context.argument(3).asBinary()
+    else pad_bytes = " " as .binary
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    pad_byte = .int
+    pad_offset = 0
+    scan = 0
+    have_word = 0
+    separator_ready = 0
+    result_bytes = .binary
+    separator_bytes = .binary
+    assembler blen byte_length,bytes
+    assembler getbyte pad_byte,pad_bytes,pad_offset
+    do while scan < byte_length
+      word_start = rexxclassic_find_byte_nonblank(bytes,scan,other_blanks)
+      if word_start < 0 then leave
+      word_end = rexxclassic_find_byte_blank(bytes,word_start,other_blanks)
+      if word_end < 0 then word_end = byte_length
+      if have_word & count > 0 then do
+        if \separator_ready then do
+          separator_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,count,pad_byte)
+          separator_ready = 1
+        end
+        assembler bappend result_bytes,separator_bytes
+      end
+      word_length = word_end - word_start
+      segment_bytes = rexxclassic_byte_slice(bytes,word_start,word_length)
+      assembler bappend result_bytes,segment_bytes
+      have_word = 1
+      scan = word_end
+    end
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  pad = " "
+  if context.argumentExists(3) then pad = context.argumentText(3)
+  other_blanks_text = config.textOtherBlanks()
+  string_length = .int
+  pad_character = .int
+  pad_index = 0
+  scan = .int
+  scan = 0
+  word_start = .int
+  word_end = .int
+  word_length = .int
+  have_word = .int
+  have_word = 0
+  separator_ready = .int
+  separator_ready = 0
+  separator = ""
+  segment = ""
+  result = ""
+
+  assembler strlen string_length,string
+  if string_length = 0 then return .RexxValue(result)
+
+  do while scan < string_length
+    word_start = rexxclassic_find_text_nonblank(string,scan,other_blanks_text)
+    if word_start < 0 then leave
+    word_end = rexxclassic_find_text_blank(string,word_start,other_blanks_text)
+    if word_end < 0 then word_end = string_length
+
+    if have_word & count > 0 then do
+      if \separator_ready then do
+        assembler strchar pad_character,pad,pad_index
+        assembler padstr separator,pad_character,count
+        separator_ready = 1
+      end
+      assembler append result,separator
+    end
+
+    word_length = word_end - word_start
+    assembler substring segment,string,word_start,word_length
+    assembler append result,segment
+    have_word = 1
+    scan = word_end
+  end
+  return .RexxValue(result)

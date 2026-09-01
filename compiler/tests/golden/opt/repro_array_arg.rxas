@@ -1,90 +1,82 @@
 /*
  * SOURCE                 : repro_array_arg.crexx
- * BUILT                  : 2026-06-13 15:11:36
  */
 
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "repro_array_arg.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "repro_array_arg.main.s"="b" ".string[*]" r1
    .srcstep 1 1 17 "repro_array_arg.crexx" 4 1 14 "s.1 = \"first\""
    null r1
    .srcstep 2 2 17 "repro_array_arg.crexx" 4 1 14 "s.1 = \"first\""
-   minattrs r1,1
-   linkattr1 r4,r1,1
-   load r5,"first"
-   .traceevent "L" 4 "R" "S" "r" 5 2 2 0 "" ""
-   scopy r4,r5
-   .traceevent "A" 6 "R" "S" "r" 4 2 2 0 "s" ""
-   unlink r4
+   minlinkattr1 r2,r1,1
+   load r3,"first"
+   .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
+   scopy r2,r3
+   .traceevent "A" 6 "R" "S" "r" 2 2 2 0 "s" ""
+   unlink r2
    .srcstep 3 3 17 "repro_array_arg.crexx" 6 1 22 "say \"Before: [\"s.i\"]\""
    .meta "repro_array_arg.main.i"="b" ".int" "1"
-   minattrs r1,1
-   linkattr1 r5,r1,1
-   .traceevent "V" 6 "R" "S" "r" 5 3 3 0 "s" ""
-   concat r4,"Before: [",r5
-   unlink r5
-   .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
-   concat r4,r4,"]"
-   .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
-   say r4
-   .srcstep 6 6 17 "repro_array_arg.crexx" 8 1 15 "c = upper(s.i)"
-   .srcstep 4 4 25 "upper.crexx" 33 3 12 "  newstr=\"\""
-   load r2,""
-   .traceevent "L" 4 "R" "S" "r" 2 4 4 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 2 4 4 0 "newstr" ""
-   .srcstep 5 5 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "newstr" ""
-   minattrs r1,1
-   linkattr1 r5,r1,1
-   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "s" ""
-   strupper r2,r5
-   unlink r5
-   .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "newstr" ""
-   copy r0,r2
+   minlinkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 3 3 0 "s" ""
+   concat r2,"Before: [",r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 3 3 0 "" ""
+   concat r2,r2,"]"
+   .traceevent "O" 4 "R" "S" "r" 2 3 3 0 "" ""
+   say r2
+   .srcstep 7 7 17 "repro_array_arg.crexx" 8 1 15 "c = upper(s.i)"
+   .meta "repro_array_arg.main.result"="b" ".string" r4
+   .srcstep 4 4 25 "upper.crexx" 42 3 19 "  result = .string"
+   .srcstep 5 5 33 "repro_array_arg.crexx" 8 15 15 "c = upper(s.i)"
+   minlinkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "s" ""
+   scopy r5,r3
+   .traceevent "A" 6 "R" "S" "r" 5 5 5 0 "string" ""
+   unlink r3
+   .srcstep 6 6 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "string" ""
+   strupper r4,r5
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "result" ""
+   copy r0,r4
    .traceevent "A" 6 "R" "S" "r" 0 0 0 0 "c" ""
-   .srcstep 7 7 17 "repro_array_arg.crexx" 9 1 20 "say \"Upper:  [\"c\"]\""
+   .srcstep 8 8 17 "repro_array_arg.crexx" 9 1 20 "say \"Upper:  [\"c\"]\""
    .meta "repro_array_arg.main.c"="b" ".string" r0
-   .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "c" ""
-   concat r4,"Upper:  [",r0
-   .traceevent "O" 4 "R" "S" "r" 4 7 7 0 "" ""
-   concat r4,r4,"]"
-   .traceevent "O" 4 "R" "S" "r" 4 7 7 0 "" ""
-   say r4
-   .srcstep 8 8 17 "repro_array_arg.crexx" 10 1 22 "say \"After:  [\"s.i\"]\""
-   minattrs r1,1
-   linkattr1 r4,r1,1
-   .traceevent "V" 6 "R" "S" "r" 4 8 8 0 "s" ""
-   concat r6,"After:  [",r4
-   unlink r4
-   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
-   concat r6,r6,"]"
-   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
-   say r6
-   .srcstep 11 11 17 "repro_array_arg.crexx" 12 1 18 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
-   minattrs r1,1
-   linkattr1 r6,r1,1
-   .traceevent "V" 6 "R" "S" "r" 6 11 11 0 "s" ""
-   rne r4,r6,"first"
-   unlink r6
-   .traceevent "O" 4 "R" "B" "r" 4 11 11 0 "" ""
-   brf l46iffalse,r4
-   .srcstep 12 12 17 "repro_array_arg.crexx" 12 19 23 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
-   .srcstep 9 9 17 "repro_array_arg.crexx" 12 24 65 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "c" ""
+   concat r3,"Upper:  [",r0
+   .traceevent "O" 4 "R" "S" "r" 3 8 8 0 "" ""
+   concat r3,r3,"]"
+   .traceevent "O" 4 "R" "S" "r" 3 8 8 0 "" ""
+   say r3
+   .srcstep 9 9 17 "repro_array_arg.crexx" 10 1 22 "say \"After:  [\"s.i\"]\""
+   minlinkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "s" ""
+   concat r2,"After:  [",r3
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
+   concat r2,r2,"]"
+   .traceevent "O" 4 "R" "S" "r" 2 9 9 0 "" ""
+   say r2
+   .srcstep 12 12 17 "repro_array_arg.crexx" 12 1 18 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
+   minlinkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "s" ""
+   rne r2,r3,"first"
+   unlink r3
+   .traceevent "O" 4 "R" "B" "r" 2 12 12 0 "" ""
+   brf l46iffalse,r2
+   .srcstep 13 13 17 "repro_array_arg.crexx" 12 19 23 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
+   .srcstep 10 10 17 "repro_array_arg.crexx" 12 24 65 "if s.i \\= \"first\" then say \"BUG: original stem element changed!\""
    say "BUG: original stem element changed!"
    br l46ifend
-   .srcstep 13 13 17 "repro_array_arg.crexx" 13 1 5 "else say \"OK: stem element preserved\""
+   .srcstep 14 14 17 "repro_array_arg.crexx" 13 1 5 "else say \"OK: stem element preserved\""
 l46iffalse:
-   .srcstep 10 10 17 "repro_array_arg.crexx" 13 6 38 "else say \"OK: stem element preserved\""
+   .srcstep 11 11 17 "repro_array_arg.crexx" 13 6 38 "else say \"OK: stem element preserved\""
    say "OK: stem element preserved"
 l46ifend:
-   .srcstep 14 14 17 "repro_array_arg.crexx" 15 1 9 "return 0"
+   .srcstep 15 15 17 "repro_array_arg.crexx" 15 1 9 "return 0"
    ret 0
    .meta "repro_array_arg.main.c"
    .meta "repro_array_arg.main.i"

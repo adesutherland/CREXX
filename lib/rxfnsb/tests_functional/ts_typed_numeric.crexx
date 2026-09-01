@@ -1,0 +1,188 @@
+/* Focused Level B native integer/float numeric-family tests. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+numeric digits 18
+arg test_args = .string[]
+errors = 0
+
+/* Native integer value families. */
+errors = errors + check_bool(intabs(-42) = 42, "intabs negative")
+errors = errors + check_bool(intabs(0) = 0, "intabs zero")
+errors = errors + check_bool(intabs(42) = 42, "intabs positive")
+errors = errors + check_bool(intmin(9, -2, 7, -2) = -2, "intmin variadic")
+errors = errors + check_bool(intmin(9) = 9, "intmin single")
+errors = errors + check_bool(intmax(-9, 2, -7, 2) = 2, "intmax variadic")
+errors = errors + check_bool(intmax(-9) = -9, "intmax single")
+errors = errors + check_bool(intsign(-9) = -1, "intsign negative")
+errors = errors + check_bool(intsign(0) = 0, "intsign zero")
+errors = errors + check_bool(intsign(9) = 1, "intsign positive")
+
+minimum = -9223372036854775807 - 1
+caught = 0
+do
+  ignored_int = intabs(minimum)
+on signal overflow_underflow
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "intabs INT64_MIN overflow")
+
+/* Native binary64 value families, including special values and zero signs. */
+nan_value = dynamic_float("nan", test_args)
+positive_infinity = dynamic_float("inf", test_args)
+negative_infinity = dynamic_float("-inf", test_args)
+negative_zero = -1.0 / positive_infinity
+positive_zero = 0.0
+
+errors = errors + check_bool(floatabs(-12.5) = 12.5, "floatabs negative")
+errors = errors + check_bool(floatabs(positive_infinity) = positive_infinity, "floatabs infinity")
+propagated_nan = floatabs(nan_value)
+errors = errors + check_bool(propagated_nan <> propagated_nan, "floatabs NaN propagation")
+positive_zero_reciprocal = 1.0 / floatabs(negative_zero)
+errors = errors + check_bool(positive_zero_reciprocal = positive_infinity, "floatabs negative zero canonicalization")
+
+errors = errors + check_bool(floatmin(9.5, -2.5, 7.5) = -2.5, "floatmin variadic")
+errors = errors + check_bool(floatmin(positive_infinity, 1.0) = 1.0, "floatmin infinity")
+errors = errors + check_bool(floatmin(negative_infinity, 1.0) = negative_infinity, "floatmin negative infinity")
+errors = errors + check_bool((1.0 / floatmin(negative_zero,positive_zero)) = negative_infinity, "floatmin first zero sign")
+errors = errors + check_bool((1.0 / floatmin(positive_zero,negative_zero)) = positive_infinity, "floatmin second zero sign")
+
+errors = errors + check_bool(floatmax(-9.5, 2.5, -7.5) = 2.5, "floatmax variadic")
+errors = errors + check_bool(floatmax(negative_infinity, 1.0) = 1.0, "floatmax negative infinity")
+errors = errors + check_bool(floatmax(positive_infinity, 1.0) = positive_infinity, "floatmax infinity")
+errors = errors + check_bool((1.0 / floatmax(negative_zero,positive_zero)) = negative_infinity, "floatmax first zero sign")
+errors = errors + check_bool((1.0 / floatmax(positive_zero,negative_zero)) = positive_infinity, "floatmax second zero sign")
+
+errors = errors + check_bool(floatsign(-9.5) = -1, "floatsign negative")
+errors = errors + check_bool(floatsign(negative_zero) = 0, "floatsign negative zero")
+errors = errors + check_bool(floatsign(positive_infinity) = 1, "floatsign positive infinity")
+errors = errors + check_bool(floatsign(negative_infinity) = -1, "floatsign negative infinity")
+
+caught = 0
+do
+  ignored_float = floatmin(1.0,nan_value)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floatmin NaN signal")
+
+caught = 0
+do
+  ignored_float = .float
+  ignored_float = floatmax(nan_value,1.0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floatmax NaN signal")
+
+caught = 0
+do
+  ignored_int = .int
+  ignored_int = floatsign(nan_value)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floatsign NaN signal")
+
+/* Native text families and numeric-context interaction. */
+errors = errors + check_text("12", floattrunc(12.75), "floattrunc default")
+errors = errors + check_text("12.75", floattrunc(12.759,2), "floattrunc fraction")
+errors = errors + check_text("-0.12", floattrunc(-0.125,2), "floattrunc negative near zero")
+errors = errors + check_text("0.000", floattrunc(negative_zero,3), "floattrunc signed zero")
+errors = errors + check_text("  12.00", intformat(12,4,2), "intformat fixed")
+errors = errors + check_text("-9223372036854775810", intformat(minimum,,0,0), "intformat INT64_MIN under digits 18")
+errors = errors + check_text("  12.75", floatformat(12.75,4,2), "floatformat fixed")
+errors = errors + check_text("0", floatformat(-0.4,,0), "floatformat rounded negative zero")
+errors = errors + test_engineering()
+
+caught = 0
+do
+  ignored_text = floattrunc(1.0,-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floattrunc negative fraction signal")
+
+caught = 0
+do
+  ignored_text = .string
+  ignored_text = floattrunc(positive_infinity)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floattrunc infinity signal")
+
+caught = 0
+do
+  ignored_text = .string
+  ignored_text = floatformat(nan_value)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "floatformat NaN signal")
+
+caught = 0
+do
+  ignored_text = .string
+  ignored_text = intformat(12,-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "intformat negative control signal")
+
+bad_number = "not-a-"
+bad_number = bad_number || "number"
+caught = 0
+do
+  ignored_int = .int
+  ignored_int = intabs(bad_number)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "integer conversion signal")
+
+caught = 0
+do
+  ignored_float = .float
+  ignored_float = floatabs(bad_number)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "float conversion signal")
+
+caught = 0
+do
+  ignored_text = .string
+  ignored_text = floatformat(1.0,,bad_number)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check_bool(caught = 1, "format control conversion signal")
+
+if errors = 0 then say "PASS: typed numeric Level B families"
+return errors <> 0
+
+dynamic_float: procedure = .float
+  arg text = .string, test_args = .string[]
+  if test_args[0] > 1000 then text = test_args[1000]
+  return text
+
+test_engineering: procedure = .int
+  numeric digits 18
+  numeric form engineering
+  errors = 0
+  errors = errors + check_text("12.000E+003", intformat(12000,,3,3,0), "intformat engineering")
+  errors = errors + check_text("12.750E+003", floatformat(12750.0,,3,3,0), "floatformat engineering")
+  return errors
+
+check_bool: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: TYPED NUMERIC" label
+  return 1
+
+check_text: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if actual = expected then return 0
+  say "FAIL: TYPED NUMERIC" label "expected [" || expected || "] got [" || actual || "]"
+  return 1

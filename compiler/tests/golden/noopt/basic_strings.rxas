@@ -1,17 +1,12 @@
 /*
  * SOURCE                 : basic_strings.crexx
- * BUILT                  : 2026-05-27 17:53:11
  */
 
 .globals=0
 
 main() .locals=10
    .meta "basic_strings.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "basic_strings.crexx" 3 1 12 "a = \"Hello\""
    .meta "basic_strings.main.a"="b" ".string" r0
    load r0,"Hello"
@@ -49,8 +44,7 @@ main() .locals=10
    .srcstep 7 7 17 "basic_strings.crexx" 11 1 14 "say length(c)"
    .traceevent "V" 6 "R" "S" "r" 2 7 7 0 "c" ""
    load r4,1
-   swap r5,r2
-   call r6,rxfnsb.length(),r4
+   settpswapcall r6,rxfnsb.length(),r4,r2,256,r5
    swap r2,r5
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 7 7 0 "length" ""
@@ -65,8 +59,7 @@ main() .locals=10
    settp r2,256
    swap r5,r2
    settp r7,256
-   settp r8,512
-   call r9,rxfnsb.substr(),r4
+   settpcall r9,rxfnsb.substr(),r4,r8,512
    swap r2,r5
    .traceevent "F" 4 "R" "S" "r" 9 8 8 0 "substr" ""
    say r9
@@ -78,8 +71,7 @@ main() .locals=10
    settp r7,768
    settp r2,256
    swap r8,r2
-   settp r9,0
-   call r5,rxfnsb.pos(),r6
+   settpcall r5,rxfnsb.pos(),r6,r9,0
    swap r2,r8
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 9 9 0 "pos" ""
@@ -94,14 +86,17 @@ main() .locals=10
 /* Imported Declaration from file: length@library.rxbin */
 
 rxfnsb.length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string"
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+   .meta "rxfnsb.length"=".autoload" "library"
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 rxfnsb.substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string"
+   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,?length=.int,?pad=.string"
+   .meta "rxfnsb.substr"=".autoload" "library"
 
 /* Imported Declaration from file: pos@library.rxbin */
 
 rxfnsb.pos() .expose=rxfnsb.pos
    .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"
+   .meta "rxfnsb.pos"=".autoload" "library"

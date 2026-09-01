@@ -1,0 +1,84 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifaddress
+import rexxvalue
+import rexxpool
+
+errors = 0
+
+errors = errors + check_address("CREXX")
+errors = errors + check_address("INPUT NORMAL ", "input")
+errors = errors + check_address("REPLACE NORMAL ", "output")
+errors = errors + check_address("REPLACE NORMAL ", "error")
+errors = errors + check_error("RXC-LC-40.21", "")
+errors = errors + check_error("RXC-LC-40.28", "Q")
+errors = errors + check_error("RXC-LC-40.4", "I", "O")
+
+pool = .RexxVariablePool()
+call pool.setAddressEnvironment("CMS")
+call pool.setAddressConnection("I", "INPUT", "STEM", "IN.")
+call pool.setAddressConnection("O", "APPEND", "STREAM", "LOG")
+call pool.setAddressConnection("E", "REPLACE", "STEM", "ERR.")
+
+custom_args = .RexxValue[]
+custom_exists = .int[]
+custom_args[1] = .RexxValue("o")
+custom_exists[1] = 1
+custom_context = .RexxBifCallContext("ADDRESS")
+call custom_context.setArguments(custom_args, custom_exists)
+call custom_context.setCallerPool(reference pool)
+custom_result = rexxclassicbif_address(reference custom_context)
+errors = errors + check(\custom_context.hasError() & custom_result.asString() = "APPEND STREAM LOG", "ADDRESS reads caller state")
+
+child_pool = .RexxVariablePool()
+call child_pool.inheritAddressState(reference pool)
+errors = errors + check(child_pool.addressEnvironment() = "CMS", "ADDRESS state inheritance")
+errors = errors + check(child_pool.addressConnection("E") = "REPLACE STEM ERR.", "ADDRESS connection inheritance")
+
+omitted_args = .RexxValue[]
+omitted_exists = .int[]
+omitted_args[1] = .RexxValue("")
+omitted_exists[1] = 0
+omitted_context = .RexxBifCallContext("ADDRESS")
+call omitted_context.setArguments(omitted_args, omitted_exists)
+omitted_result = rexxclassicbif_address(reference omitted_context)
+errors = errors + check(\omitted_context.hasError() & omitted_result.asString() = "CREXX", "ADDRESS omitted option defaults to N")
+
+if errors = 0 then say "PASS: Level C ADDRESS BIF"
+return errors <> 0
+
+check_address: procedure = .int
+  arg expected = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("ADDRESS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_address(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: ADDRESS expected" expected "got" result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg expected_code = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("ADDRESS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_address(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: ADDRESS expected error" expected_code "got" result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL:" label
+  return 1

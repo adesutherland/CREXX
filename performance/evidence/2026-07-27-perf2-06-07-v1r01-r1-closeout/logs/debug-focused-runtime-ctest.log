@@ -1,0 +1,16 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 659: inline_test_computed_receiver_copyback_run_noopt
+1/4 Test #659: inline_test_computed_receiver_copyback_run_noopt ...........   Passed    0.65 sec
+    Start 660: inline_test_computed_receiver_copyback_run_opt
+2/4 Test #660: inline_test_computed_receiver_copyback_run_opt .............   Passed    0.58 sec
+    Start 661: inline_test_mutating_method_scalar_attr_return_run_noopt
+3/4 Test #661: inline_test_mutating_method_scalar_attr_return_run_noopt ...   Passed    0.65 sec
+    Start 662: inline_test_mutating_method_scalar_attr_return_run_opt
+4/4 Test #662: inline_test_mutating_method_scalar_attr_return_run_opt .....   Passed    0.59 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+linked_opt    =   1.17 sec*proc (2 tests)
+
+Total Test time (real) =   2.50 sec

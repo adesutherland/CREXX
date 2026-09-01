@@ -1,0 +1,7 @@
+* bcheckrange remains an optimiser barrier even with an exact guard contract.
+
+main() .locals=3
+    swap r1,r2
+    bcheckrange r0,r1,r2
+    swap r1,r2
+    ret

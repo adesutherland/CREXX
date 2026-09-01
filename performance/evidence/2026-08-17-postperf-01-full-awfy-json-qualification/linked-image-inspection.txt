@@ -1,0 +1,15 @@
+source_opt_instructions=194
+source_noopt_instructions=173
+source_opt_stobin=3
+source_opt_blen=3
+source_opt_binlength_calls=0
+source_noopt_stobin=3
+source_noopt_binlength_calls=3
+source_opt_jsondocument_factory_calls=1
+source_opt_jsondocument_method_calls=7
+linked_opt_instructions=11796
+linked_opt_stobin=30
+linked_opt_blen=56
+linked_opt_binlength_calls=0
+linked_main_stobin=3
+linked_main_blen=3

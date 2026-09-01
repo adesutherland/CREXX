@@ -1,0 +1,34 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260815-194255-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260815-194255-ctest/ctest.log
+==> ctest passed
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^ts_http_tls_live_\(rxbvm\|rxtvm\)_\(noopt\|opt\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start    1: linked_opt_runtime_artifacts_build
+1/5 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    8.77 sec
+    Start 1697: ts_http_tls_live_rxbvm_noopt
+2/5 Test #1697: ts_http_tls_live_rxbvm_noopt .........   Passed    3.21 sec
+    Start 1698: ts_http_tls_live_rxbvm_opt
+3/5 Test #1698: ts_http_tls_live_rxbvm_opt ...........   Passed    1.71 sec
+    Start 1699: ts_http_tls_live_rxtvm_noopt
+4/5 Test #1699: ts_http_tls_live_rxtvm_noopt .........   Passed    3.08 sec
+    Start 1700: ts_http_tls_live_rxtvm_opt
+5/5 Test #1700: ts_http_tls_live_rxtvm_opt ...........   Passed    1.76 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+f1g           =   9.77 sec*proc (4 tests)
+gate_f        =   9.77 sec*proc (4 tests)
+http          =   9.77 sec*proc (4 tests)
+levelg        =   9.77 sec*proc (4 tests)
+library       =   9.77 sec*proc (4 tests)
+linked_opt    =   3.48 sec*proc (2 tests)
+rxbvm         =   4.93 sec*proc (2 tests)
+rxtvm         =   4.84 sec*proc (2 tests)
+tls           =   9.77 sec*proc (4 tests)
+
+Total Test time (real) =  18.57 sec
+ASan run complete: cmake-build-debugasan/asan-logs/20260815-194255-ctest

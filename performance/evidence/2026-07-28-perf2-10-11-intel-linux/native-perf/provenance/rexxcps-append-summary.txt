@@ -1,0 +1,15 @@
+captured_utc=2026-07-29T09:23:11Z
+policy=RexxCPS first-class separate community lane
+product_builds_invoked=0
+active_cmake_ninja_processes=none
+clang_append_manifest_sha256=753192f7e51e4e3ac48892af94e18295d600c5f73417501dc4818037ac404823
+clang_summary_manifest_sha256=ba9017f3669db1f5c1b34cc61435aebce82f128f4b81142ba402fa9e2f72e9bb
+gcc_profile_cells=44
+clang_profile_cells=28
+native_stat_files=154
+native_stat_complete_cells=28
+native_cycle_complete_profiles=16
+rexxcps_normalization_rows=22
+stat_summary_rows=28
+compiler_comparison_rows=14
+hot_symbol_rows=136

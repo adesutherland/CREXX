@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "base64-opt-retained",
+  "pair": "base64-opt-metadata",
+  "workload": "Base64",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/base64-retained.rxbin","sha256":"ed8b685a46f6b1232aa42ec4bd7a5b78261ef380fd97236951b2a8799679b1f2"},
+  "modules": [],
+  "arguments": ["500"],
+  "correctness_expectation": "PASS: Base64 Roundtrip",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/base64-retained.rxbin","-a","500"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/candidate/entries/base64-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/base64-retained.rxbin","-a","500"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 409078000
+}

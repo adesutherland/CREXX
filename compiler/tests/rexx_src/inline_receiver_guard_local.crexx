@@ -1,0 +1,105 @@
+options levelb
+namespace inline_receiver_guard_local
+
+main: procedure = .int
+  probe = .Probe()
+  identity = 1
+  say probe.positiveCaller(identity)
+  say probe.callCaller(identity)
+  say probe.writeCaller(identity)
+  say probe.nonGuardCaller(identity)
+  say probe.loopCaller(identity)
+  say probe.referenceCaller(identity)
+  say probe.nestedCaller(identity)
+  say probe.signalCaller(identity)
+  return 0
+
+Probe: class
+  flags = .boolean[0 to 1]
+
+  *: factory
+    flags[0] = 0
+    flags[1] = 1
+    return
+
+  positiveGuard: method = .boolean
+    arg identity = .int
+    if flags[identity] then return 1
+    return 0
+
+  positiveCaller: method = .boolean
+    arg identity = .int
+    return positiveGuard(identity)
+
+  booleanIdentity: method = .boolean
+    arg value = .boolean
+    return value
+
+  callGuard: method = .boolean
+    arg identity = .int
+    if booleanIdentity(flags[identity]) then return 1
+    return 0
+
+  callCaller: method = .boolean
+    arg identity = .int
+    return callGuard(identity)
+
+  writeGuard: method = .boolean
+    arg identity = .int
+    flags[identity] = flags[identity]
+    if flags[identity] then return 1
+    return 0
+
+  writeCaller: method = .boolean
+    arg identity = .int
+    return writeGuard(identity)
+
+  nonGuardRead: method = .boolean
+    arg identity = .int
+    value = flags[identity]
+    if value then return 1
+    return 0
+
+  nonGuardCaller: method = .boolean
+    arg identity = .int
+    return nonGuardRead(identity)
+
+  loopGuard: method = .boolean
+    arg identity = .int
+    do i = 0 to 0
+      if flags[identity] then return 1
+    end
+    return 0
+
+  loopCaller: method = .boolean
+    arg identity = .int
+    return loopGuard(identity)
+
+  referenceGuard: method = .boolean
+    arg expose identity = .int
+    if flags[identity] then return 1
+    return 0
+
+  referenceCaller: method = .boolean
+    arg identity = .int
+    return referenceGuard(identity)
+
+  nestedGuard: method = .boolean
+    arg identity = .int
+    if flags[identity] then do
+      return 1
+    end
+    return 0
+
+  nestedCaller: method = .boolean
+    arg identity = .int
+    return nestedGuard(identity)
+
+  signalCaller: method = .boolean
+    arg identity = .int
+    do
+      if positiveGuard(identity) then return 1
+    on signal out_of_range
+      return 0
+    end
+    return 0

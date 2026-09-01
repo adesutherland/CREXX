@@ -1,0 +1,26 @@
+options levelb
+
+import arrayformatdemo
+
+errors = 0
+values = .string[]
+values[1] = "alpha"
+values[2] = ""
+
+formatted = .string[]
+formatted = arrayformat(values, 1, 2, "IQ", "Demo", "> ")
+if formatted[0] \= 2 then errors = errors + failed("arrayformat count")
+if formatted[1] \= ">      1 'alpha'" then errors = errors + failed("arrayformat first line")
+if formatted[2] \= ">      2 ''" then errors = errors + failed("arrayformat second line")
+
+printed = .int
+printed = arraydump(values, 1, 2, "IQ", "Demo", "> ")
+if printed \= 2 then errors = errors + failed("arraydump count")
+
+if errors = 0 then say "PASS: array formatting example"
+return errors <> 0
+
+failed: procedure = .int
+  arg message = .string
+  say "FAIL: " || message
+return 1

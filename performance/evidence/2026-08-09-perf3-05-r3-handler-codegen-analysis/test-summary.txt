@@ -1,0 +1,26 @@
+PERF3-05-R3 validation summary, 2026-08-09
+
+Final focused profiling-off Release validation
+  Clang profile-30: 14/14 passed
+  GCC profile-30: 14/14 passed
+  Clang all-outline: 14/14 passed after complete-tree build
+  GCC all-outline: 14/14 passed after complete-tree build
+  Coverage: linked artifacts, dynamic interface load, worker lifecycle,
+  signal masks, RXAS signals, both instrumented VMs, both breakpoint VMs,
+  both dispatch contracts, reentrancy and late load with/without optimization.
+
+Final broad profiling-off Release validation
+  Clang profile-30: 2002/2002 passed, 76.70 s
+  GCC profile-30: 2002/2002 passed, 78.30 s
+
+Final formal timing matrix
+  84 cells: seven workloads, six build shapes and two concrete engines
+  2 warmups plus 12 recorded rounds per cell
+  1176/1176 executions passed exact output checks
+  1008/1008 recorded samples retained
+  zero discarded or incorrect sample; runner stderr empty
+
+Bounded diagnostics
+  98 direct diagnostic executions passed
+  compiler-split pilot: 288/288 executions passed
+  hot-private pilot: 192/192 executions passed

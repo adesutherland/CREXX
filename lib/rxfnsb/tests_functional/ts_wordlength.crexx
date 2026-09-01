@@ -1,55 +1,34 @@
-/* /\* rexx test abs bif *\/ */
+/* Focused Level B WORDLENGTH tests. */
 options levelb
 import rxfnsb
 
-/* x='the quick brown fox jumps over the lazy dog' */
-/* wrds=words(x) */
-/* do i=1 to wrds */
-/*    say word(x,i) wordlength(x,i) */
-/* end */
-/* return */
-/* WORDLENGTH */
-errors=0
-/* These from the Rexx book. */
-if wordlength('Now is the time',2) \=2 then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 1 '
-end
-if wordlength('Now comes the time',2) \=5 then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 2 '
-end
-if wordlength('Now is the time',6) \=0 then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 3 '
-end
-/* These from Mark Hessling. */
-if wordlength('This is certainly a test',1) \= '4' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 4 '
-end
-if wordlength('This is certainly a test',2) \= '2' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 5 '
-end
-if wordlength('This is certainly a test',5) \= '4' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 6 '
-end
-if wordlength('This is certainly a test ',5) \= '4' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 7 '
-end
-if wordlength('This is certainly a test',6) \= '0' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 8 '
-end
-if wordlength('',1) \= '0' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 9 '
-end
-if wordlength('',10) \= '0' then do
-  errors=errors+1
-  say 'WORDLENGTH failed in test 10 '
-end
-return errors<>0
+errors = 0
+errors = errors + check(2, wordlength("Now is the time", 2), "book short")
+errors = errors + check(5, wordlength("Now comes the time", 2), "book long")
+errors = errors + check(0, wordlength("Now is the time", 6), "absent")
+errors = errors + check(4, wordlength("This is a test", 1), "first")
+errors = errors + check(4, wordlength("This is a test  ", 4), "last trailing")
+errors = errors + check(2, wordlength("one é日 three", 2), "Unicode word")
+errors = errors + check(0, wordlength("", 1), "empty")
+errors = errors + check(0, wordlength("    ", 1), "blank only")
+errors = errors + invalid_wordnum(0)
+errors = errors + invalid_wordnum(-1)
+
+if errors = 0 then say "PASS: wordlength"
+return errors <> 0
+
+invalid_wordnum: procedure = .int
+  arg wordnum = .int
+  do
+    ignored = wordlength("one two", wordnum)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: WORDLENGTH invalid number did not signal" wordnum
+  return 1
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: WORDLENGTH" label "expected" expected "got" actual
+  return 1

@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_ref_stem.crexx
- * BUILT                  : 2026-05-27 17:53:34
  */
 
 .globals=2
@@ -9,16 +8,11 @@ g1 .expose=refstem.outbuf
 
 main() .locals=4
    .meta "refstem.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_stem.crexx" 4 1 39 "say \"Starting stem ref inline test...\""
    say "Starting stem ref inline test..."
    .srcstep 2 2 17 "inline_test_ref_stem.crexx" 6 1 24 "outbuf[2] = \"untouched\""
-   minattrs g1,2
-   linkattr1 r0,g1,2
+   minlinkattr1 r0,g1,2
    load r1,"untouched"
    .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
    scopy r0,r1
@@ -31,27 +25,21 @@ main() .locals=4
    .srcstep 4 4 17 "inline_test_ref_stem.crexx" 9 1 27 "call fillSlot(outbuf.lino)"
    .traceevent "V" 6 "R" "I" "g" 0 4 4 0 "lino" ""
    .traceevent "C" 4 "R" "I" "g" 0 4 4 0 "outbuf" ""
-   minattrs g1,g0,0
-   linkattr1 r2,g1,g0
+   minlinkattr1 r2,g1,g0,0
    .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "outbuf" ""
-   load r0,1
-   swap r1,r2
-   call r3,fillSlot(),r0
-   swap r2,r1
+   call1 r3,fillSlot(),r2
    unlink r2
    .traceevent "F" 4 "R" "V" "r" 3 4 4 0 "fillslot" ""
    .srcstep 5 5 17 "inline_test_ref_stem.crexx" 10 1 13 "say outbuf[1]"
-   minattrs g1,1
-   linkattr1 r2,g1,1
-   .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "outbuf" ""
-   say r2
-   unlink r2
+   minlinkattr1 r3,g1,1
+   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "outbuf" ""
+   say r3
+   unlink r3
    .srcstep 6 6 17 "inline_test_ref_stem.crexx" 11 1 13 "say outbuf[2]"
-   minattrs g1,2
-   linkattr1 r2,g1,2
-   .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "outbuf" ""
-   say r2
-   unlink r2
+   minlinkattr1 r3,g1,2
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "outbuf" ""
+   say r3
+   unlink r3
    .srcstep 7 7 17 "inline_test_ref_stem.crexx" 12 1 37 "say \"Stem ref inline test finished.\""
    say "Stem ref inline test finished."
    .srcstep 8 8 17 "inline_test_ref_stem.crexx" 13 1 9 "return 0"
@@ -60,11 +48,7 @@ main() .locals=4
 fillSlot() .locals=1
    .meta "refstem.fillslot"="b" ".void" fillSlot() "expose slot=.string"
    .srcstep 13 13 17 "inline_test_ref_stem.crexx" 15 1 28 "fillSlot: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 9 9 17 "inline_test_ref_stem.crexx" 16 7 28 "  arg expose slot = .string"
    .meta "refstem.fillslot.slot"="b" ".string" a1
    .srcstep 10 10 17 "inline_test_ref_stem.crexx" 17 3 18 "  lino = lino + 1"

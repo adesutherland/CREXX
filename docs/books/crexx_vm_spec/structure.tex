@@ -1,46 +1,18 @@
 \mainmatter
 \input{about}
 \input{lowlevel}
-\input{rexx-considerations}
-\part{Instructions}
-
-
+\input{facilities}
+\part{Reference}
 \input{instruction_characteristics}
-\clearpage
 \input{instruction_chapter}
 \input{decimal_variants}
-\part{Assembler Guide and Reference}
-%% \input{rxas_programming_guide}
-\chapter{\crexx{} Assembler}
-The current RXAS guide is maintained in the \crexx{} Programming Guide,
-chapter ``Assembler Programming Guide''. The older generated
-\texttt{REXX-Assembler.tex} notes are retained in the repository as historical
-source material, but they are not part of the Release 1 beta VM specification.
-%% \input{options}
+\fontspec{IBM Plex Mono}[Scale=0.7] \splice{stdbuf -o0 crexx byOpCode}
+\fontspec{IBM Plex Mono}[Scale=0.7] \splice{stdbuf -o0 crexx byMnemonic}
+\normalfont
+\part{Appendices}
 \appendix
+\input{CREXX_ARCHITECTURE}
+\input{unicode_algorithms}
 \input{platform_considerations}
 
-\chapter{Notices}
-
-\part{Appendices and References}
-
-\chapter{Instructions by Mnemonic}
-\begin{longtable}{lll}
-  \toprule
-  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
-  \input{../../../crexx_reference_cards/mnemonic.tex}
-\end{longtable}
-
-
-\chapter{Instructions by Opcode}
-\begin{longtable}{lll}
-  \toprule
-  \texttt{Opcode} & \texttt{Instruction} & \texttt{parameters} \\
-  \input{../../../crexx_reference_cards/opcodes.tex}
-\end{longtable}
-
-\backmatter
-\listoftables
-%\listoffigures
-%\lstlistoflistings
-\printindex
+\printbibliography[heading=bibintoc]

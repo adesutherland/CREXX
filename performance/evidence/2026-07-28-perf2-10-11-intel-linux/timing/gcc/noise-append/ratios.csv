@@ -1,0 +1,9 @@
+comparison,workload,crexx_cell,reference_cell,ratio_higher_is_better
+rxvm/oorexx,Sieve,sieve-rxvm,sieve-oorexx,6.493345
+rxvm/netrexx,Sieve,sieve-rxvm,sieve-netrexx,1.705588
+rxbvm/oorexx,Sieve,sieve-rxbvm,sieve-oorexx,6.535224
+rxbvm/netrexx,Sieve,sieve-rxbvm,sieve-netrexx,1.716588
+rxvm/oorexx,Permute,permute-rxvm,permute-oorexx,8.619772
+rxvm/netrexx,Permute,permute-rxvm,permute-netrexx,0.546001
+rxbvm/oorexx,Permute,permute-rxbvm,permute-oorexx,8.026156
+rxbvm/netrexx,Permute,permute-rxbvm,permute-netrexx,0.508400

@@ -1,0 +1,15 @@
+source_commit=c4470635048e497417c4db92c03ecbcd79eaa750
+source_state=clean detached worktree
+build_type=Release
+c_flags_release=-O3 -DNDEBUG
+crexx_vm_profiling=OFF
+generator=Ninja 1.13.2
+cmake=4.3.2
+compiler=Apple clang 21.0.0
+host=Apple M5; Darwin 25.5.0 arm64; macOS 26.5.2 25F84; 10 logical CPUs
+campaign_start_utc=2026-08-04T09:28:47Z
+power=AC attached; battery 98 percent
+low_power_mode=0
+thermal=No thermal or performance warning recorded
+sampling=serial-rotated-by-workload
+load_average=1.55 initial one-minute load after build; no active build/test/VM process

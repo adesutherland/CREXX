@@ -1,0 +1,35 @@
+/* Focused Level B C2D tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+source = "🔥"
+errors = errors + check(77, c2d("M"), "documented ASCII code point")
+errors = errors + check(945, c2d("α"), "documented two-byte Unicode code point")
+errors = errors + check(128293, c2d(source), "documented four-byte Unicode code point")
+errors = errors + check(0, c2d("00"x), "zero code point")
+errors = errors + check(10, c2d("0A"x), "control code point")
+errors = errors + check(128293, c2d(source), "source is not mutated")
+
+caught = 0
+do
+  ignored = c2d("")
+on signal conversion_error
+  caught = caught + 1
+end
+do
+  ignored = .int
+  ignored = c2d("AB")
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check(2, caught, "empty and multi-character inputs signal")
+
+if errors = 0 then say "PASS: c2d"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: C2D" label "expected" expected "got" actual
+  return 1

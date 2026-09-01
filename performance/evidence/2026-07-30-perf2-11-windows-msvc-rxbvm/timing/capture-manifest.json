@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729",
+  "source_manifest": "performance/evidence/2026-07-30-perf2-11-windows-msvc-rxbvm/manifests/windows-rxbvm-three-compiler-rexxcps-v1.txt",
+  "measurement": "timing",
+  "warmups": 2,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-30T09:34:50GMT Standard Time",
+  "completed_utc": "2026-07-30T09:37:05GMT Standard Time",
+  "result": "pass"
+}

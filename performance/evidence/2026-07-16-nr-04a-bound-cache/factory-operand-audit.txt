@@ -1,0 +1,7 @@
+tool=cmake-build-release/bin/rxgraph_bench
+old_image=performance/evidence/2026-07-16-nr-04a-rxbin-007-early-baseline/images/runtime-interface-retained.rxbin
+old_graph=types:61,members:43,factories:25,providers:24
+old_instruction_graph_operands=type_sites:26,member_sites:2,factory_sites:2,providerless_factory_sites:2,invalid_sites:0
+rebuilt_image=performance/evidence/2026-07-16-nr-04a-bound-cache/images/runtime-interface-retained.rxbin
+rebuilt_graph=types:60,members:42,factories:24,providers:24
+rebuilt_instruction_graph_operands=type_sites:26,member_sites:2,factory_sites:2,providerless_factory_sites:0,invalid_sites:0

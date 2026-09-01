@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729",
+  "source_manifest": ".tmp-windows-runtimes\\rss-windows-pilot-manifest.txt",
+  "measurement": "rss",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-29T19:52:15GMT Standard Time",
+  "completed_utc": "2026-07-29T19:52:42GMT Standard Time",
+  "result": "pass"
+}

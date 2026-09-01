@@ -30,27 +30,14 @@
 
 #include "crexx_version.h"
 #include <stddef.h>
+#include <stdint.h>
+#include "../platform/rxinteger.h"
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
 // #define pluginDEBUG 0
 
 // Plugin Support Functions and Macros
-
-// Define rxinteger type
-#ifndef RXINTEGER_T
-#define RXINTEGER_T
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
-#include <stdint.h>
-typedef intmax_t rxinteger;
-#else
-#ifdef __32BIT__
-typedef long rxinteger;
-#else
-typedef long long rxinteger;
-#endif
-#endif
-#endif //RXINTEGER_T
 
 // Typedef for attribute value which is an opaque pointer
 typedef void* rxpa_attribute_value;
@@ -75,6 +62,62 @@ typedef rxvm_native_payload_ops rxpa_native_payload_ops;
 //void myfunc(rxinteger _numargs, rxpa_attribute_value* _arg, rxpa_attribute_value _return, rxpa_attribute_value _signal)
 typedef void (*rxpa_libfunc)(rxinteger, rxpa_attribute_value*, rxpa_attribute_value, rxpa_attribute_value);
 
+/*
+ * Optional plugin capability query.  The initializer ABI remains unchanged;
+ * old hosts simply ignore the additional exported query symbol.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V1 1u
+#define RXPA_PLUGIN_CAP_PROCESS_REENTRANT 0x00000001u
+#define RXPA_PLUGIN_CAP_KNOWN_V1 RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PLUGIN_QUERY_SYMBOL_V1 "_rxpa_query_v1"
+
+typedef struct rxpa_plugin_manifest_v1 {
+    size_t struct_size;
+    uint32_t abi_version;
+    uint32_t capabilities;
+    const char *plugin_id;
+} rxpa_plugin_manifest_v1;
+
+typedef const rxpa_plugin_manifest_v1 *(*rxpa_plugin_query_v1)(void);
+
+/*
+ * Optional procedure/session query.  V2 is a separate symbol rather than an
+ * extension of rxpa_initctx, so existing hosts continue to load a new dynamic
+ * plugin through _initfuncs and conservatively treat every procedure as
+ * legacy.  A V2-aware host binds the returned procedure flags once at load.
+ */
+#define RXPA_PLUGIN_MANIFEST_ABI_V2 2u
+#define RXPA_PROCEDURE_CAP_PROCESS_REENTRANT \
+    RXPA_PLUGIN_CAP_PROCESS_REENTRANT
+#define RXPA_PROCEDURE_CAP_SESSION_AFFINE 0x00000002u
+#define RXPA_PROCEDURE_CAP_KNOWN_V2 \
+    (RXPA_PROCEDURE_CAP_PROCESS_REENTRANT | \
+     RXPA_PROCEDURE_CAP_SESSION_AFFINE)
+#define RXPA_PLUGIN_QUERY_SYMBOL_V2 "_rxpa_query_v2"
+
+typedef uint32_t (*rxpa_procedure_capability_query_v2)(
+        const char *procedure_name);
+typedef void *(*rxpa_session_create_v2)(void);
+typedef void (*rxpa_session_destroy_v2)(void *session);
+/* Return zero on success and place the nested-restoration cookie in previous. */
+typedef int (*rxpa_session_enter_v2)(void *session,
+                                     uint32_t procedure_capabilities,
+                                     void **previous);
+typedef void (*rxpa_session_leave_v2)(void *previous);
+
+typedef struct rxpa_plugin_manifest_v2 {
+    size_t struct_size;
+    uint32_t abi_version;
+    const char *plugin_id;
+    rxpa_procedure_capability_query_v2 procedure_capabilities;
+    rxpa_session_create_v2 session_create;
+    rxpa_session_destroy_v2 session_destroy;
+    rxpa_session_enter_v2 session_enter;
+    rxpa_session_leave_v2 session_leave;
+} rxpa_plugin_manifest_v2;
+
+typedef const rxpa_plugin_manifest_v2 *(*rxpa_plugin_query_v2)(void);
+
 // Enumeration of Signal Codes
 // These are used to indicate the status of the REXX program
 // NOTE These need to sync with the interpreter rxsignal.h file (they are separate to isolate the plugin from the interpreter)
@@ -88,6 +131,7 @@ typedef enum rxsignal {
     SIGNAL_OUT_OF_RANGE = 8,         /* Triggered when the REXX program attempts to access an array element that is out of range */
     SIGNAL_REFERENCE_INVALID = 14,   /* Triggered when a reference value no longer points to live storage */
     SIGNAL_OBJECT_NOT_INITIALIZED = 16, /* Triggered when a typed object value is used before an instance is initialized */
+    SIGNAL_RXBIN_CORRUPTION = 17,    /* Triggered when bytecode or a packed runtime constant is malformed */
     SIGNAL_FAILURE = 2,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
     SIGNAL_HALT = 20,                /* Triggered when the REXX program receives an external request to halt (term) its execution */
     SIGNAL_NOTREADY = 15,            /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */
@@ -107,7 +151,9 @@ typedef void (*rxpa_func_addimplements)(char* name, char* interface_name); /* Ad
 typedef void (*rxpa_func_addmember)(char* owner, char* kind, char* member,
                                     char* type, char* args); /* Add class/interface member metadata */
 typedef char* (*rxpa_func_getstring)(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
-typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+/* The text is copied during the call; the callback does not mutate or retain it. */
+typedef void (*rxpa_func_setstring)(rxpa_attribute_value attributeValue,
+                                    const char* string); /* Set a string in an attribute value */
 typedef void (*rxpa_func_setint)(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 typedef rxinteger (*rxpa_func_getint)(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 typedef void (*rxpa_func_setfloat)(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
@@ -121,6 +167,7 @@ typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
                                             size_t *out_length,
                                             const rxpa_native_payload_ops **out_ops,
                                             unsigned int *out_flags); /* Get a native binary payload */
+typedef int (*rxpa_func_isinitialized)(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
 
 // Array / Object Functions - these access the child attributes of an attribute value
 /* Get the number of child attributes */
@@ -142,8 +189,14 @@ typedef void (*rxpa_set_say_exit)(say_exit_func sayExitFunc); /* Set Say exit fu
 typedef void (*rxpa_reset_say_exit)(); /* Set Say exit function */
 
 // The initialization context struct
-typedef struct rxpa_initctxptr* rxpa_initctxptr;
-struct rxpa_initctxptr {
+#ifdef __cplusplus
+#define RXPA_INITCTX_TAG rxpa_initctx
+#else
+#define RXPA_INITCTX_TAG rxpa_initctxptr
+#endif
+typedef struct RXPA_INITCTX_TAG rxpa_initctx;
+typedef rxpa_initctx* rxpa_initctxptr;
+struct RXPA_INITCTX_TAG {
     rxpa_func_addfunc addfunc;
     rxpa_func_addclass addclass;
     rxpa_func_addinterface addinterface;
@@ -166,7 +219,23 @@ struct rxpa_initctxptr {
     // Exit Function Management
     rxpa_set_say_exit setsayexit;
     rxpa_reset_say_exit resetsayexit;
+    /* Appended so existing initializer-field offsets remain stable. */
+    rxpa_func_isinitialized isinitialized;
 };
+#undef RXPA_INITCTX_TAG
+
+// Give PLUGIN_ID a default value
+#ifndef PLUGIN_ID
+#define PLUGIN_ID rxplugin
+#endif
+
+// Force macro expansion before concatenation or stringification.
+#define CONCATENATE(a, b) a##b
+#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
+#define RXPA_STRINGIFY_INNER(value) #value
+#define RXPA_STRINGIFY(value) RXPA_STRINGIFY_INNER(value)
+#define RXPA_PLUGIN_MANIFEST_V2_NAME(plugin_id) \
+    EXPAND_AND_CONCATENATE(plugin_id, _manifest_v2)
 
 // Are we building a statically linked library?
 #ifdef BUILD_DLL
@@ -175,7 +244,7 @@ struct rxpa_initctxptr {
 #include <string.h>
 
 // Global context variable declaration
-static struct rxpa_initctxptr _rxpa_initctx;
+static rxpa_initctx _rxpa_initctx;
 static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 // Macro is used to register a procedure - dynamic linkage
 #define ADDPROC(func, name, option, type, args) _rxpa_context->addfunc((func),(name),(option),(type),(args))
@@ -216,6 +285,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define GETFARRAY(pnum,index) GETFLOAT(GETATTR(pnum, index))
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) _rxpa_context->isinitialized((attr))
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
 #define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
@@ -230,9 +300,11 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // The plugin is being built as a DLL
 // INITIALIZER is redefined to be a simple function
-#define INITIALIZER(f) \
-    void f(rxpa_initctxptr context); \
-    void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
+#ifdef __cplusplus
+#define RXPA_EXTERN_C extern "C"
+#else
+#define RXPA_EXTERN_C
+#endif
 // Define EXPORT appropriately for windows
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
@@ -243,10 +315,57 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #else
 #define EXPORT
 #endif
-#define LOADFUNCS EXPORT INITIALIZER(_initfuncs)
+#define INITIALIZER(f) \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context); \
+    RXPA_EXTERN_C EXPORT void f(rxpa_initctxptr context) { memcpy(&_rxpa_initctx, context, sizeof(_rxpa_initctx));
+#define RXPA_PLUGIN_MANIFEST_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _manifest_v1)
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    static const rxpa_plugin_manifest_v1 RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v1), RXPA_PLUGIN_MANIFEST_ABI_V1, \
+        RXPA_PLUGIN_CAP_PROCESS_REENTRANT, RXPA_STRINGIFY(PLUGIN_ID) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v1 *_rxpa_query_v1(void) { \
+        return &RXPA_PLUGIN_MANIFEST_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function) \
+    }; \
+    RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
+        return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
+    }
+#define LOADFUNCS INITIALIZER(_initfuncs)
+#if defined(_MSC_VER)
+#pragma section(".CRT$XTU",read)
+#define RXPA_C_FINALIZER2_(f,p) \
+    static void f(void); \
+    __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+    __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+    static void f(void)
+#ifdef _WIN64
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"") {
+#else
+#define FINALIZER(f) RXPA_C_FINALIZER2_(f,"_") {
+#endif
+#else
 #define FINALIZER(f) \
     static void f(void) __attribute__((destructor)); \
     static void f(void) {
+#endif
 
 #else
 
@@ -254,21 +373,31 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 
 // With thanks to this Initializer/finalizer sample for MSVC and GCC/Clang. 2010-2016 Joe Lowe. Released into the public domain.
 #ifdef __cplusplus
-#define INITIALIZER(f) \
+#define RXPA_CPP_INITIALIZER_EXPANDED(f) \
         static void f(void); \
         struct f##_t_ { f##_t_(void) { f(); } }; static f##_t_ f##_; \
-        static void f(void)
+        static void f(void) {
+#define RXPA_CPP_INITIALIZER(f) RXPA_CPP_INITIALIZER_EXPANDED(f)
+#define INITIALIZER(f) RXPA_CPP_INITIALIZER(f)
 #elif defined(_MSC_VER)
 #pragma section(".CRT$XCU",read)
+#pragma section(".CRT$XTU",read)
 #define INITIALIZER2_(f,p) \
         static void f(void); \
         __declspec(allocate(".CRT$XCU")) void (*f##_)(void) = f; \
         __pragma(comment(linker,"/include:" p #f "_")) \
         static void f(void)
+#define FINALIZER2_(f,p) \
+        static void f(void); \
+        __declspec(allocate(".CRT$XTU")) void (*f##_finalizer_)(void) = f; \
+        __pragma(comment(linker,"/include:" p #f "_finalizer_")) \
+        static void f(void)
 #ifdef _WIN64
 #define INITIALIZER(f) INITIALIZER2_(f,"") {
+#define FINALIZER(f) FINALIZER2_(f,"") {
 #else
 #define INITIALIZER(f) INITIALIZER2_(f,"_") {
+#define FINALIZER(f) FINALIZER2_(f,"_") {
 #endif
 #else
 #define INITIALIZER(f) \
@@ -279,32 +408,38 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
         static void f(void) {
 #endif
 
-// Give PLUGIN_ID a default value
-#ifndef PLUGIN_ID
-#define PLUGIN_ID rxplugin
-#endif
-
 // The LOADFUNCS macro is used to define the initialization function for the library.
 // Create a function name based on the PLUGIN_ID
 // These are designed to force the expansion of macros before concatenation
 // and be compatible with both GCC and MSVC
-#define CONCATENATE(a, b) a##b
-#define EXPAND_AND_CONCATENATE(a, b) CONCATENATE(a, b)
 // Now create the function name
 #define UNIQUE_INIT_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _init)
 // Create a unique anchor symbol name for static libraries
 #define UNIQUE_ANCHOR_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _anchor)
+#define UNIQUE_CAPABILITY_FUNCTION_NAME(plugin_id) EXPAND_AND_CONCATENATE(plugin_id, _capability_init)
 // Define the LOADFUNCS macro (function prologue)
 #define LOADFUNCS INITIALIZER(UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID))
 
 // Helper functions provided by the REXX interpreter
-void rxpa_addfunc(rxpa_libfunc func, char* name, __attribute__((unused)) char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+#ifdef __cplusplus
+extern "C" {
+#endif
+void rxpa_addfunc(rxpa_libfunc func, char* name, char* option, char* type, char* args); /* Add a function to the REXX interpreter */
+void rxpa_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
+                             char* name, char* option, char* type, char* args);
+#ifndef DECL_ONLY
+void rxpa_register_static_plugin_capability(const char *plugin_id,
+                                            uint32_t capabilities);
+void rxpa_register_static_plugin_manifest_v2(
+        const rxpa_plugin_manifest_v2 *manifest);
+#endif
 void rxpa_addclass(char* name, char* option, char* type); /* Add class metadata */
 void rxpa_addinterface(char* name, char* option, char* type); /* Add interface metadata */
 void rxpa_addimplements(char* name, char* interface_name); /* Add class/interface implementation metadata */
 void rxpa_addmember(char* owner, char* kind, char* member, char* type, char* args); /* Add class/interface member metadata */
 char* rxpa_getstring(rxpa_attribute_value attributeValue); /* Get a string from an attribute value */
-void rxpa_setstring(rxpa_attribute_value attributeValue, char* string); /* Set a string in an attribute value */
+void rxpa_setstring(rxpa_attribute_value attributeValue,
+                    const char* string); /* Copies string into the attribute value */
 void rxpa_setint(rxpa_attribute_value attributeValue, rxinteger value); /* Set an integer in an attribute value */
 rxinteger rxpa_getint(rxpa_attribute_value attributeValue); /* Get an integer from an attribute value */
 void rxpa_setfloat(rxpa_attribute_value attributeValue, double value); /* Set a float in an attribute value */
@@ -314,6 +449,7 @@ int rxpa_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops,
                             unsigned int *out_flags); /* Get a native binary payload */
+int rxpa_isinitialized(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
@@ -324,12 +460,54 @@ void rxpa_swapattrs(rxpa_attribute_value attributeValue, rxinteger index1, rxint
 // Exit Functions
 void rxpa_setsayexit(say_exit_func sayExitFunc); /* Set Say exit function */
 void rxpa_resetsayexit(); /* Set Say exit function */
+#ifdef __cplusplus
+}
+#endif
+
+#ifndef DECL_ONLY
+#define RXPA_PLUGIN_PROCESS_REENTRANT \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_capability( \
+            RXPA_STRINGIFY(PLUGIN_ID), RXPA_PLUGIN_CAP_PROCESS_REENTRANT); \
+    }
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function) \
+    static const rxpa_plugin_manifest_v2 \
+            RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
+        sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
+        (destroy_function), (enter_function), (leave_function) \
+    }; \
+    INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
+        rxpa_register_static_plugin_manifest_v2( \
+            &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID)); \
+    }
+#else
+#define RXPA_PLUGIN_PROCESS_REENTRANT
+#define RXPA_PLUGIN_PROCEDURE_CAPABILITIES(query_function)
+#define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
+                                  enter_function, leave_function, \
+                                  query_function)
+#endif
 
 // Macro is used to register a procedure - static linkage
 #ifndef DECL_ONLY
-#define ADDPROC(func, name, option, type, args) rxpa_addfunc((func),(name),(option),(type),(args))
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),(func),(name),(option),(type),(args))
 #else
-#define ADDPROC(func, name, option, type, args) rxpa_addfunc(0,(name),(option),(type),(args))
+#define ADDPROC(func, name, option, type, args) \
+    rxpa_addfunc_for_plugin(RXPA_STRINGIFY(PLUGIN_ID),0,(name),(option),(type),(args))
 #endif
 #define ADDCLASS(name) rxpa_addclass((name),"b",".unknown")
 #define ADDCLASSX(name, option, type) rxpa_addclass((name),(option),(type))
@@ -350,6 +528,7 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define GETFLOAT(attr) rxpa_getfloat((attr))
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
+#define ISINITIALIZED(attr) rxpa_isinitialized((attr))
 #define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
 #define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
 #define GETATTR(attr, index) rxpa_getattr((attr),(index))

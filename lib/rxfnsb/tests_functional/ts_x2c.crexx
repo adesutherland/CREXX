@@ -1,54 +1,71 @@
-/* rexx */
-options levelb numeric_classic
+/* Focused Level B Unicode-byte X2C tests. */
+options levelb
 import rxfnsb
 
-/* X2C */
-errors=0
-/* These from the Rexx book. */
-/* if x2c('F7F2 A2') \= '72s' then say 'X2C failed in test EBCDIC */
-/* if x2c('F7F2a2') \= '72s' then do
-   errors=errors+1
-   say 'X2C failed in test EBCDIC */
-if tx2c('F') \= '0F' then do
-  errors=errors+1
-  say 'X2C failed in test 3 '
-end
-/* These from Mark Hessling. */
-/* if x2c("416263") \= "Abc" then do
-   errors=errors+1
-   say 'X2C failed in test 4 ' probably also EBCDIC */
-if tx2c("DeadBeef") \= "DEADBEEF" then do
-  errors=errors+1
-  say 'X2C failed in test 5 '
-end
-if tx2c("1 02 03") \= "010203" then do
-  errors=errors+1
-  say 'X2C failed in test 6 '
-end
-if tx2c("11 0222 3333 044444") \= "1102223333044444" then do
-  errors=errors+1
-  say 'X2C failed in test 7 '
-end
-if tx2c("") \= "" then do
-  errors=errors+1
-  say 'X2C failed in test 8 '
-end
-if tx2c("2") \= "02" then do
-  errors=errors+1
-  say 'X2C failed in test 9 '
-end
-if tx2c("1 02 03") \= "010203" then do
-  errors=errors+1
-  say 'X2C failed in test 10 '
-end
+errors = 0
+source = "DeadBeef"
+errors = errors + check("Abc", x2c("416263"), "ASCII bytes")
+errors = errors + check("0F"x, x2c("F"), "odd leading nibble")
+errors = errors + check("004D"x, x2c("004D"), "leading zero byte retained")
+errors = errors + check("C280"x, x2c("80"), "U+0080 boundary")
+errors = errors + check("C3BF"x, x2c("FF"), "U+00FF boundary")
+errors = errors + check("C39EC2ADC2BEC3AF"x, x2c(source), "mixed-case U+00xx bytes")
+errors = errors + check("DeadBeef", source, "source is not mutated")
+errors = errors + check("010203"x, x2c("1  02 03"), "consecutive valid group blanks")
+errors = errors + check("010203"x, x2c("102 03"), "uneven left group")
+errors = errors + check("", x2c(""), "empty input")
 
-return errors<>0
+large_hex = ""
+large_expected = ""
+do 64
+  large_hex = large_hex || "41"
+  large_expected = large_expected || "A"
+end
+errors = errors + check(large_expected, x2c(large_hex), "64-byte input")
 
-tx2c: procedure = .string
-arg hex = .string
-slen=0
-str=x2c(hex)
-str2=c2x(str)  /* 2 half bytes translated into 2 bytes */
-assembler strlen slen,str2
-if slen//2=1 then str2='0'str2
-return str2
+caught = 0
+do
+  ignored = x2c(" A")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = x2c("A ")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = x2c("1 0")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = x2c("0G")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = x2c("0" || "09"x || "0")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_int(5, caught, "invalid blank placement and characters signal")
+
+if errors = 0 then say "PASS: x2c"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: X2C" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: X2C" label "expected" expected "got" actual
+  return 1

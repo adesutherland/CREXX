@@ -1,0 +1,20 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+options levelb comments_dash
+namespace data expose ObjectComparator
+
+/**
+ * Defines a total ordering for object keys.
+ *
+ * compare(left, right) must return a negative integer when left precedes
+ * right, zero when both objects represent the same map key, and a positive
+ * integer when left follows right. ObjectComparator is the canonical object
+ * ordering contract for new code.
+ */
+ObjectComparator: interface
+  compare: method = .int
+    arg left = .object, right = .object

@@ -1,0 +1,224 @@
+/*
+ * Non-representative BINARY-01 Release diagnostic.
+ *
+ * Compare the explicit Level G packed numeric owner classes with direct
+ * Level B packed access, and compare packed integer access with encoded i64.
+ * All reported times cover only the item loop; allocation and initialization
+ * remain outside the timed kernel.
+ */
+options levelb comments_dash
+
+import rxfnsg
+import rxfnsb
+
+arg argv = .string[]
+
+cells = 200000
+iterations = 20
+variant = "wrapper-float-read"
+if argv[0] >= 1 then cells = argv[1] as .int
+if argv[0] >= 2 then iterations = argv[2] as .int
+if argv[0] >= 3 then variant = argv[3]
+
+if cells < 1 then return fail("cells must be positive")
+if iterations < 1 then return fail("iterations must be positive")
+
+if variant = "wrapper-float-read" then return wrapperFloatRead(cells, iterations, variant)
+if variant = "direct-float-read" then return directFloatRead(cells, iterations, variant)
+if variant = "wrapper-float-write" then return wrapperFloatWrite(cells, iterations, variant)
+if variant = "direct-float-write" then return directFloatWrite(cells, iterations, variant)
+if variant = "wrapper-int-read" then return wrapperIntRead(cells, iterations, variant)
+if variant = "direct-int-read" then return directIntRead(cells, iterations, variant)
+if variant = "encoded-int-read" then return encodedIntRead(cells, iterations, variant)
+if variant = "wrapper-int-write" then return wrapperIntWrite(cells, iterations, variant)
+if variant = "direct-int-write" then return directIntWrite(cells, iterations, variant)
+if variant = "encoded-int-write" then return encodedIntWrite(cells, iterations, variant)
+return fail("unknown variant")
+
+wrapperFloatRead: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .packedfloat(cells)
+  call values.fill(0.5)
+  checksum = 0.0
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      checksum = checksum + values.get(index)
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations * 0.5 then return fail("wrapper float read checksum")
+  return reportFloat(variant, cells, iterations, elapsed_us, checksum)
+
+directFloatRead: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * <sizeof..float>
+  do index = 0 to cells - 1
+    <packed..float>(index) values = 0.5
+  end
+  checksum = 0.0
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      checksum = checksum + <packed..float>(index) values
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations * 0.5 then return fail("direct float read checksum")
+  return reportFloat(variant, cells, iterations, elapsed_us, checksum)
+
+wrapperFloatWrite: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .packedfloat(cells)
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      call values.set(index, index + repetition)
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = values.get(0) + values.get(cells - 1)
+  if checksum <> cells - 1 + iterations * 2 then return fail("wrapper float write checksum")
+  return reportFloat(variant, cells, iterations, elapsed_us, checksum)
+
+directFloatWrite: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * <sizeof..float>
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      <packed..float>(index) values = index + repetition
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = <packed..float>(0) values + <packed..float>(cells - 1) values
+  if checksum <> cells - 1 + iterations * 2 then return fail("direct float write checksum")
+  return reportFloat(variant, cells, iterations, elapsed_us, checksum)
+
+wrapperIntRead: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .packedint(cells)
+  call values.fill(1)
+  checksum = 0
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      checksum = checksum + values.get(index)
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations then return fail("wrapper integer read checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+directIntRead: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * <sizeof..int>
+  do index = 0 to cells - 1
+    <packed..int>(index) values = 1
+  end
+  checksum = 0
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      checksum = checksum + <packed..int>(index) values
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations then return fail("direct integer read checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+encodedIntRead: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * 8
+  do index = 0 to cells - 1
+    <at..i64>(index * 8) values = 1
+  end
+  checksum = 0
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      checksum = checksum + <at..i64>(index * 8) values
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations then return fail("encoded integer read checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+wrapperIntWrite: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .packedint(cells)
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      call values.set(index, index + repetition)
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = values.get(0) + values.get(cells - 1)
+  if checksum <> cells - 1 + iterations * 2 then return fail("wrapper integer write checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+directIntWrite: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * <sizeof..int>
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      <packed..int>(index) values = index + repetition
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = <packed..int>(0) values + <packed..int>(cells - 1) values
+  if checksum <> cells - 1 + iterations * 2 then return fail("direct integer write checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+encodedIntWrite: procedure = .int
+  arg cells = .int, iterations = .int, variant = .string
+  values = .binary
+  call binresize values, cells * 8
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = 0 to cells - 1
+      <at..i64>(index * 8) values = index + repetition
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = <at..i64>(0) values + <at..i64>((cells - 1) * 8) values
+  if checksum <> cells - 1 + iterations * 2 then return fail("encoded integer write checksum")
+  return reportInt(variant, cells, iterations, elapsed_us, checksum)
+
+reportFloat: procedure = .int
+  arg variant = .string, cells = .int, iterations = .int, elapsed_us = .int, checksum = .float
+  say "benchmark=packed_numeric_class_compare variant=" || variant ,
+      "cells=" || cells "iterations=" || iterations ,
+      "elapsed_us=" || elapsed_us ,
+      "items_per_second=" || (cells * iterations * 1000000 / elapsed_us) ,
+      "checksum=" || checksum
+  say "PASS: BINARY-01 packed numeric class compare"
+  return 0
+
+reportInt: procedure = .int
+  arg variant = .string, cells = .int, iterations = .int, elapsed_us = .int, checksum = .int
+  say "benchmark=packed_numeric_class_compare variant=" || variant ,
+      "cells=" || cells "iterations=" || iterations ,
+      "elapsed_us=" || elapsed_us ,
+      "items_per_second=" || (cells * iterations * 1000000 / elapsed_us) ,
+      "checksum=" || checksum
+  say "PASS: BINARY-01 packed numeric class compare"
+  return 0
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

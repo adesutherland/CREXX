@@ -498,8 +498,12 @@ atomLen=_pass_variable_content.3
   end
   else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type atomLen */
+_pass_variable = .string[]
+_pass_variable_content = .string[]
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
+   _string2Parse = .string
    _string2Parse=__readClass(p,j)
+   _parsetemplate = .string
    _parsetemplate='atom type atomLen'
    call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,0,0
 ## ---------- set parse variables ----------
@@ -567,8 +571,12 @@ type=_pass_variable_content.2
   end
   else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type . */
+_pass_variable = .string[]
+_pass_variable_content = .string[]
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
+   _string2Parse = .string
    _string2Parse=__readClass(p,j)
+_parsetemplate = .string
 _parsetemplate='atom type .'
    call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,0,0
 ## ---------- set parse variables ----------
@@ -730,8 +738,10 @@ __classHas: PROCEDURE=.int
      end
   end
   else do
-    do i = 1 to length(pairs) by 2
+    do i = .int(1) to length(pairs) by 2
+       lo = .string
        lo = substr(pairs, i, 1)
+       hi = .string
        hi = substr(pairs, i+1,1)
        if ch >= lo & ch <= hi then do; hit = 1; leave; end
     end
@@ -764,8 +774,12 @@ type=_pass_variable_content.2
   end
   else if c == '[' then do
 /* PARSE value __readClass(p,j) with atom type . */
+_pass_variable = .string[]
+_pass_variable_content = .string[]
 _pass_variable.1='' ; _pass_variable_content.1='' /* init array for PARSE function */
+   _string2Parse = .string
    _string2Parse=__readClass(p,j)
+_parsetemplate = .string
 _parsetemplate='atom type .'
    call parse _string2parse,_parsetemplate,_pass_variable,_pass_variable_content,0,0
 ## ---------- set parse variables ----------

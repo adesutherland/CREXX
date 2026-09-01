@@ -1,20 +1,15 @@
 /*
  * SOURCE                 : inline_test_object_return_assign.crexx
- * BUILT                  : 2026-06-12 20:26:05
  */
 
 .meta "inline_test_object_return_assign.box"="b" ".unknown" .class
 .meta "inline_test_object_return_assign.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=22
+main() .locals=14
    .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
-   .srcstep 40 40 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   .srcstep 43 43 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_return_assign.crexx" 4 3 53 "  say \"Starting object return assign inline test...\""
    say "Starting object return assign inline test..."
    .srcstep 8 8 17 "inline_test_object_return_assign.crexx" 5 3 25 "  box = buildBox(\"seed\")"
@@ -24,11 +19,11 @@ main() .locals=22
    .srcstep 3 3 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
    setobjtype r3,"inline_test_object_return_assign.box"
    .srcstep 4 4 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
-   load r14,"seed"
-   .traceevent "L" 4 "R" "S" "r" 14 4 4 0 "" ""
-   linkattr1 r13,r3,1
-   scopy r13,r14
-   unlink r13
+   load r5,"seed"
+   .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
+   linkattr1 r4,r3,1
+   scopy r4,r5
+   unlink r4
    .srcstep 5 5 33 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 3 5 5 0 "§factory" ""
    copy r2,r3
@@ -37,144 +32,136 @@ main() .locals=22
    .traceevent "V" 6 "R" "O" "r" 2 7 7 0 "value" ""
    copy r0,r2
    .traceevent "A" 6 "R" "O" "r" 0 7 7 0 "box" ""
-   .srcstep 14 14 17 "inline_test_object_return_assign.crexx" 6 3 23 "  say describeBox(box)"
+   .srcstep 15 15 17 "inline_test_object_return_assign.crexx" 6 3 23 "  say describeBox(box)"
    .meta "inline_test_object_return_assign.main.box"="b" ".box" r0
-   .srcstep 13 13 17 "inline_test_object_return_assign.crexx" 6 7 18 "  say describeBox(box)"
-   .srcstep 12 12 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
-   .srcstep 11 11 17 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
+   .srcstep 14 14 17 "inline_test_object_return_assign.crexx" 6 7 18 "  say describeBox(box)"
+   .srcstep 13 13 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
+   .srcstep 12 12 17 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
    .srcstep 9 9 33 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "box" ""
-   copy r5,r0
-   .traceevent "A" 6 "R" "O" "r" 5 9 9 0 "§this" ""
-   .srcstep 10 10 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
-   linkattr1 r13,r5,1
-   .traceevent "V" 6 "R" "S" "r" 13 14 14 0 "name" ""
-   scopy r15,r13
-   acopy r15,r13
-   unlink r13
-   br l168bexprend
-l168bexprend:
-   scopy r16,r15
-   acopy r16,r15
-   br l165bexprend
-l165bexprend:
-   say r16
-   .srcstep 21 21 17 "inline_test_object_return_assign.crexx" 7 3 27 "  other = buildBox(\"temp\")"
-   .srcstep 19 19 17 "inline_test_object_return_assign.crexx" 16 3 24 "  value = .Box(initial)"
-   .srcstep 15 15 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
-   setattrs r7,2
+   copy r4,r0
+   .traceevent "A" 6 "R" "O" "r" 4 9 9 0 "§this" ""
+   .srcstep 10 10 6 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "§this" ""
+   assertinitialized r4
+   .srcstep 11 11 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
+   linkattr1 r6,r4,1
+   .traceevent "V" 6 "R" "S" "r" 6 15 15 0 "name" ""
+   scopy r7,r6
+   unlink r6
+l170bexprend:
+   scopy r8,r7
+l167bexprend:
+   endlife r4
+   say r8
+   .srcstep 22 22 17 "inline_test_object_return_assign.crexx" 7 3 27 "  other = buildBox(\"temp\")"
+   .srcstep 20 20 17 "inline_test_object_return_assign.crexx" 16 3 24 "  value = .Box(initial)"
    .srcstep 16 16 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
-   setobjtype r7,"inline_test_object_return_assign.box"
-   .srcstep 17 17 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
-   load r17,"temp"
-   .traceevent "L" 4 "R" "S" "r" 17 17 17 0 "" ""
-   linkattr1 r16,r7,1
-   scopy r16,r17
-   unlink r16
-   .srcstep 18 18 33 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 7 18 18 0 "§factory" ""
-   copy r6,r7
-   .traceevent "A" 6 "R" "O" "r" 6 18 18 0 "value" ""
-   .srcstep 20 20 33 "inline_test_object_return_assign.crexx" 17 3 9 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 6 20 20 0 "value" ""
-   copy r1,r6
-   .traceevent "A" 6 "R" "O" "r" 1 20 20 0 "other" ""
-   .srcstep 27 27 17 "inline_test_object_return_assign.crexx" 8 3 25 "  say describeBox(other)"
+   setattrs r10,2
+   .srcstep 17 17 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
+   setobjtype r10,"inline_test_object_return_assign.box"
+   .srcstep 18 18 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
+   load r7,"temp"
+   .traceevent "L" 4 "R" "S" "r" 7 18 18 0 "" ""
+   linkattr1 r8,r10,1
+   scopy r8,r7
+   unlink r8
+   .srcstep 19 19 33 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 10 19 19 0 "§factory" ""
+   copy r9,r10
+   .traceevent "A" 6 "R" "O" "r" 9 19 19 0 "value" ""
+   .srcstep 21 21 33 "inline_test_object_return_assign.crexx" 17 3 9 "  return value"
+   .traceevent "V" 6 "R" "O" "r" 9 21 21 0 "value" ""
+   copy r1,r9
+   .traceevent "A" 6 "R" "O" "r" 1 21 21 0 "other" ""
+   .srcstep 29 29 17 "inline_test_object_return_assign.crexx" 8 3 25 "  say describeBox(other)"
    .meta "inline_test_object_return_assign.main.other"="b" ".box" r1
-   .srcstep 26 26 17 "inline_test_object_return_assign.crexx" 8 7 18 "  say describeBox(other)"
-   .srcstep 25 25 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
-   .srcstep 24 24 17 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
-   .srcstep 22 22 33 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
-   .traceevent "V" 6 "R" "O" "r" 1 22 22 0 "other" ""
-   copy r9,r1
-   .traceevent "A" 6 "R" "O" "r" 9 22 22 0 "§this" ""
-   .srcstep 23 23 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
-   linkattr1 r16,r9,1
-   .traceevent "V" 6 "R" "S" "r" 16 27 27 0 "name" ""
-   scopy r18,r16
-   acopy r18,r16
-   unlink r16
-   br l201bexprend
-l201bexprend:
-   scopy r19,r18
-   acopy r19,r18
-   br l198bexprend
-l198bexprend:
-   say r19
-   .srcstep 33 33 17 "inline_test_object_return_assign.crexx" 9 3 26 "  call replaceBoxRef(box)"
-   .srcstep 32 32 17 "inline_test_object_return_assign.crexx" 25 3 22 "  value = .Box(\"ref\")"
-   .srcstep 28 28 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
-   setattrs r11,2
-   .srcstep 29 29 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
-   setobjtype r11,"inline_test_object_return_assign.box"
-   .srcstep 30 30 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
-   load r20,"ref"
-   .traceevent "L" 4 "R" "S" "r" 20 30 30 0 "" ""
-   linkattr1 r19,r11,1
-   scopy r19,r20
-   unlink r19
-   .srcstep 31 31 33 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 11 31 31 0 "§factory" ""
-   copy r0,r11
-   .traceevent "A" 6 "R" "O" "r" 0 31 31 0 "box" ""
-   .srcstep 37 37 17 "inline_test_object_return_assign.crexx" 10 3 18 "  say box.getName()"
-   .srcstep 36 36 17 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
-   .srcstep 34 34 33 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
-   .traceevent "V" 6 "R" "O" "r" 0 34 34 0 "box" ""
-   copy r12,r0
-   .traceevent "A" 6 "R" "O" "r" 12 34 34 0 "§this" ""
-   .srcstep 35 35 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
-   linkattr1 r19,r12,1
-   .traceevent "V" 6 "R" "S" "r" 19 37 37 0 "name" ""
-   scopy r21,r19
-   acopy r21,r19
-   unlink r19
-   br l225bexprend
-l225bexprend:
-   say r21
-   .srcstep 38 38 17 "inline_test_object_return_assign.crexx" 11 3 51 "  say \"Object return assign inline test finished.\""
+   .srcstep 28 28 17 "inline_test_object_return_assign.crexx" 8 7 18 "  say describeBox(other)"
+   .srcstep 27 27 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
+   .srcstep 26 26 17 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
+   .srcstep 23 23 33 "inline_test_object_return_assign.crexx" 21 10 15 "  return value.getName()"
+   .traceevent "V" 6 "R" "O" "r" 1 23 23 0 "other" ""
+   copy r8,r1
+   .traceevent "A" 6 "R" "O" "r" 8 23 23 0 "§this" ""
+   .srcstep 24 24 6 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 8 29 29 0 "§this" ""
+   assertinitialized r8
+   .srcstep 25 25 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
+   linkattr1 r6,r8,1
+   .traceevent "V" 6 "R" "S" "r" 6 29 29 0 "name" ""
+   scopy r4,r6
+   unlink r6
+l205bexprend:
+   scopy r11,r4
+l202bexprend:
+   endlife r8
+   say r11
+   .srcstep 35 35 17 "inline_test_object_return_assign.crexx" 9 3 26 "  call replaceBoxRef(box)"
+   .srcstep 34 34 17 "inline_test_object_return_assign.crexx" 25 3 22 "  value = .Box(\"ref\")"
+   .srcstep 30 30 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
+   setattrs r13,2
+   .srcstep 31 31 6 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
+   setobjtype r13,"inline_test_object_return_assign.box"
+   .srcstep 32 32 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
+   load r8,"ref"
+   .traceevent "L" 4 "R" "S" "r" 8 32 32 0 "" ""
+   linkattr1 r11,r13,1
+   scopy r11,r8
+   unlink r11
+   .srcstep 33 33 33 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 13 33 33 0 "§factory" ""
+   copy r0,r13
+   .traceevent "A" 6 "R" "O" "r" 0 33 33 0 "box" ""
+   .srcstep 40 40 17 "inline_test_object_return_assign.crexx" 10 3 18 "  say box.getName()"
+   .srcstep 39 39 17 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
+   .srcstep 36 36 33 "inline_test_object_return_assign.crexx" 10 7 10 "  say box.getName()"
+   .traceevent "V" 6 "R" "O" "r" 0 36 36 0 "box" ""
+   .traceevent "A" 6 "R" "O" "r" 0 36 36 0 "§this" ""
+   .srcstep 37 37 6 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
+   .traceevent "V" 6 "R" "O" "r" 0 40 40 0 "§this" ""
+   assertinitialized r0
+   .srcstep 38 38 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
+   linkattr1 r11,r0,1
+   .traceevent "V" 6 "R" "S" "r" 11 40 40 0 "name" ""
+   scopy r6,r11
+   unlink r11
+l231bexprend:
+   say r6
+   .srcstep 41 41 17 "inline_test_object_return_assign.crexx" 11 3 51 "  say \"Object return assign inline test finished.\""
    say "Object return assign inline test finished."
-   .srcstep 39 39 17 "inline_test_object_return_assign.crexx" 12 3 11 "  return 0"
+   .srcstep 42 42 17 "inline_test_object_return_assign.crexx" 12 3 11 "  return 0"
    ret 0
    .meta "inline_test_object_return_assign.main.box"
    .meta "inline_test_object_return_assign.main.other"
 
 §inline_test_object_return_assign.box.§factory() .locals=3
    .meta "inline_test_object_return_assign.box.§factory"="b" ".inline_test_object_return_assign..box" §inline_test_object_return_assign.box.§factory() "initial=.string"
-   .srcstep 64 64 17 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
+   .srcstep 68 68 17 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .srcstep 61 61 17 "inline_test_object_return_assign.crexx" 32 9 26 "    arg initial = .string"
+   numsci 18,1,1
+   .srcstep 65 65 17 "inline_test_object_return_assign.crexx" 32 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_assign.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_assign.box.§factory.§factory"="b" ".box" r1
-   .srcstep 62 62 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
-   .traceevent "V" 6 "R" "S" "a" 1 62 62 0 "initial" ""
+   .srcstep 66 66 17 "inline_test_object_return_assign.crexx" 33 5 19 "    name = initial"
+   .traceevent "V" 6 "R" "S" "a" 1 66 66 0 "initial" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .srcstep 63 63 17 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 63 63 0 "§factory" ""
+   .srcstep 67 67 17 "inline_test_object_return_assign.crexx" 34 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 67 67 0 "§factory" ""
    ret r1
    .meta "inline_test_object_return_assign.box.§factory.initial"
    .meta "inline_test_object_return_assign.box.§factory.§factory"
 
 §inline_test_object_return_assign.box.getname() .locals=2
    .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
-   .srcstep 66 66 17 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
+   .srcstep 70 70 17 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
-   .srcstep 65 65 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
+   numsci 18,1,1
+   .srcstep 69 69 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
    .meta "inline_test_object_return_assign.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 65 65 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 69 69 0 "name" ""
    ret r1
    .meta "inline_test_object_return_assign.box.getname.§this"

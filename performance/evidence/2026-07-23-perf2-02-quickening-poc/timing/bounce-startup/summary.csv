@@ -1,0 +1,9 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+q0-rxvm,Bounce-first-result,crexx-q0,rxvm,canonical,A,no,process-load-first-result,1,elapsed_ns,20,16985000.000000,17327500.000000,17507500.000000,17746250.000000,28381000.000000,227500.000000,1.299443,65.092103,yes
+q0-rxbvm,Bounce-first-result,crexx-q0,rxbvm,canonical,A,no,process-load-first-result,1,elapsed_ns,20,17336000.000000,17396000.000000,17456500.000000,17831750.000000,23958000.000000,99500.000000,0.569988,37.934294,yes
+q3-rxvm,Bounce-first-result,crexx-q3,rxvm,direct-one-level,A,no,process-load-first-result,1,elapsed_ns,20,14656000.000000,15033750.000000,15313500.000000,15968250.000000,24150000.000000,296000.000000,1.932935,61.997584,yes
+q3-rxbvm,Bounce-first-result,crexx-q3,rxbvm,direct-one-level,A,no,process-load-first-result,1,elapsed_ns,20,14808000.000000,15133750.000000,15363500.000000,16178000.000000,17754000.000000,421000.000000,2.740261,19.175318,yes
+q4-rxvm,Bounce-first-result,crexx-q4,rxvm,eager-private-handler,A,no,process-load-first-result,1,elapsed_ns,20,14884000.000000,15065500.000000,15199500.000000,15853250.000000,18924000.000000,169500.000000,1.115168,26.579822,yes
+q4-rxbvm,Bounce-first-result,crexx-q4,rxbvm,eager-private-handler,A,no,process-load-first-result,1,elapsed_ns,20,14635000.000000,15055500.000000,15190500.000000,15589750.000000,19172000.000000,233000.000000,1.533853,29.867351,yes
+q7-rxvm,Bounce-first-result,crexx-q7,rxvm,shared-record-core,A,no,process-load-first-result,1,elapsed_ns,20,14769000.000000,15082750.000000,15219500.000000,15487250.000000,19034000.000000,190000.000000,1.248398,28.023260,yes
+q7-rxbvm,Bounce-first-result,crexx-q7,rxbvm,shared-record-core,A,no,process-load-first-result,1,elapsed_ns,20,14913000.000000,15174250.000000,15358000.000000,15620250.000000,20972000.000000,193500.000000,1.259930,39.451752,yes

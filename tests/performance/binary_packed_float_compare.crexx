@@ -1,0 +1,97 @@
+/*
+ * Non-representative BINARY-01 Release diagnostic.
+ *
+ * Compare the selected host-native packed float primitive with the existing
+ * canonical f64 binary-field route for the same zero-based logical items.
+ */
+options levelb comments_dash
+
+import rxfnsb
+
+arg argv = .string[]
+
+cells = 200000
+iterations = 20
+variant = "packed-read"
+if argv[0] >= 1 then cells = argv[1] as .int
+if argv[0] >= 2 then iterations = argv[2] as .int
+if argv[0] >= 3 then variant = argv[3]
+
+if cells < 1 then return fail("cells must be positive")
+if iterations < 1 then return fail("iterations must be positive")
+
+values = .binary
+call binresize values, cells * 8
+
+do index = 0 to cells - 1
+  <packed..float>(index) values = 0.5
+end
+
+checksum = 0.0
+elapsed_us = 0
+
+if variant = "packed-read" then do
+  started = time("us")
+  do repetition = 1 to iterations
+    do index = .int(0) to cells - 1
+      checksum = checksum + <packed..float>(index) values
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations * 0.5 then return fail("packed read checksum")
+end
+else if variant = "encoded-read" then do
+  started = .string
+  started = time("us")
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
+      checksum = checksum + <at..f64>(index * 8) values
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  if checksum <> cells * iterations * 0.5 then return fail("encoded read checksum")
+end
+else if variant = "packed-write" then do
+  started = .string
+  started = time("us")
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
+      <packed..float>(index) values = index + repetition
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = <packed..float>(0) values + <packed..float>(cells - 1) values
+  if checksum <> cells - 1 + iterations * 2 then return fail("packed write checksum")
+end
+else if variant = "encoded-write" then do
+  started = .string
+  started = time("us")
+  do repetition = .int(1) to iterations
+    do index = .int(0) to cells - 1
+      <at..f64>(index * 8) values = index + repetition
+    end
+  end
+  elapsed_us = elapsedUs(started)
+  checksum = <at..f64>(0) values + <at..f64>((cells - 1) * 8) values
+  if checksum <> cells - 1 + iterations * 2 then return fail("encoded write checksum")
+end
+else return fail("unknown variant")
+
+say "benchmark=binary_packed_float_compare variant=" || variant ,
+    "cells=" || cells "iterations=" || iterations ,
+    "elapsed_us=" || elapsed_us ,
+    "items_per_second=" || (cells * iterations * 1000000 / elapsed_us) ,
+    "checksum=" || checksum
+say "PASS: BINARY-01 packed float compare"
+return 0
+
+elapsedUs: procedure = .int
+  arg started = .int
+  elapsed = time("us") - started
+  if elapsed < 0 then elapsed = elapsed + 86400000000
+  return elapsed
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

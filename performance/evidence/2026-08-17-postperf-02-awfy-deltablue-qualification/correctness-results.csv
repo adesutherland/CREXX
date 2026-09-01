@@ -1,0 +1,11 @@
+surface,tree,mode,vm,size,rc,result
+benchmark,release,opt,rxvm,10,0,PASS full chain and projection contract
+benchmark,release,opt,rxtvm,10,0,PASS full chain and projection contract
+benchmark,release,opt,rxbvm,10,0,PASS full chain and projection contract
+benchmark,release,noopt,rxvm,10,0,PASS full chain and projection contract
+benchmark,release,noopt,rxtvm,10,0,PASS full chain and projection contract
+benchmark,release,noopt,rxbvm,10,0,PASS full chain and projection contract
+runner,debug,opt,rxvm,500,0,PASS process-smoke result row
+runner,debug,noopt,rxvm,500,0,PASS process-smoke result row
+runner,release,opt,rxvm,500,0,PASS process-smoke result row
+runner,release,noopt,rxvm,500,0,PASS process-smoke result row

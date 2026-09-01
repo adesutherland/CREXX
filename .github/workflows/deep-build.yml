@@ -1,0 +1,364 @@
+name: Deep Build QA
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  assurance-gate:
+    name: Check for an unqualified develop change
+    runs-on: ubuntu-24.04
+    outputs:
+      should_run: ${{ steps.decision.outputs.should_run }}
+      target_sha: ${{ steps.target.outputs.target_sha }}
+
+    steps:
+      - name: Resolve the commit to qualify
+        id: target
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          target_sha="${GITHUB_SHA}"
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+            target_sha="$(
+              gh api --method GET \
+                "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" \
+                --jq '.object.sha'
+            )"
+          fi
+          echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Look for successful deep assurance of this develop commit
+        id: qualified
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-assurance/deep-qualified-sha
+          key: crexx-deep-qualified-${{ steps.target.outputs.target_sha }}
+          lookup-only: true
+
+      - name: Decide whether deep assurance is required
+        id: decision
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Explicit deep-assurance runs are unconditional." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "${{ steps.qualified.outputs.cache-hit }}" = "true" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping deep QA: develop ${{ steps.target.outputs.target_sha }} already passed the scheduled deep workflow." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Running deep QA: develop ${{ steps.target.outputs.target_sha }} has not passed a scheduled deep workflow." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  comprehensive:
+    name: Comprehensive ${{ matrix.name }}
+    needs: assurance-gate
+    if: needs.assurance-gate.outputs.should_run == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-24.04
+            platform: linux
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: ""
+          - name: Windows x64
+            os: windows-2025
+            platform: windows
+            build_jobs: 4
+            test_jobs: 2
+            cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
+          - name: macOS arm64
+            os: macos-15
+            platform: macos
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+          - name: macOS x86_64
+            os: macos-15-intel
+            platform: macos
+            build_jobs: 2
+            test_jobs: 5
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.assurance-gate.outputs.target_sha }}
+
+      - name: Update toolchain (MSYS2)
+        if: matrix.platform == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            git
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
+            openssl:p
+            pkgconf:p
+
+      - name: Configure Release qualification build
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
+            -DCREXX_BUILD_CHANNEL=nightly \
+            -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            ${{ matrix.cmake_args }}
+
+      - name: Configure Release qualification build
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
+            -DCREXX_BUILD_CHANNEL=nightly \
+            -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
+            ${{ matrix.cmake_args }}
+
+      - name: Run comprehensive correctness QA
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-comprehensive \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run comprehensive correctness QA
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-comprehensive \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run install/package/external-consumer qualification
+        if: matrix.platform != 'windows'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-qualification \
+            --parallel ${{ matrix.build_jobs }}
+
+      - name: Run install/package/external-consumer qualification
+        if: matrix.platform == 'windows'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/qualification" \
+            --target qa-qualification \
+            --parallel ${{ matrix.build_jobs }}
+
+  parallel-product:
+    name: Release product jobs ${{ matrix.jobs }}
+    needs: assurance-gate
+    if: needs.assurance-gate.outputs.should_run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: [1, 5, 30]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.assurance-gate.outputs.target_sha }}
+
+      - name: Configure reproducible Release graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/deep-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_BUILD_CHANNEL=deep \
+            -DCREXX_BUILD_TIMESTAMP=19700101T000000Z \
+            -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
+            -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+
+      - name: Clean product build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target stage-product \
+            --parallel ${{ matrix.jobs }}
+
+      - name: Prove immediate no-op
+        shell: bash
+        run: |
+          set -euo pipefail
+          no_op_log="${RUNNER_TEMP}/stage-product-no-op.log"
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target stage-product \
+            --parallel ${{ matrix.jobs }} | tee "$no_op_log"
+          if ! grep -q 'ninja: no work to do\.' "$no_op_log"; then
+            echo "The immediate stage-product repeat was not a true Ninja no-op" >&2
+            exit 1
+          fi
+
+      - name: Check generated-file dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing_log="${RUNNER_TEMP}/stage-product-missingdeps.log"
+          ninja -C "${RUNNER_TEMP}/deep-build" \
+            -t missingdeps stage-product | tee "$missing_log"
+          if grep -q '^Missing dep:' "$missing_log"; then
+            echo "Ninja found a generated output without an ordering dependency" >&2
+            exit 1
+          fi
+
+      - name: Exercise incremental REXX change closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target crexx rxvme \
+            --parallel ${{ matrix.jobs }}
+          ctest --test-dir "${RUNNER_TEMP}/deep-build" \
+            --output-on-failure \
+            --no-tests=error \
+            -R '^crexx_project_build_contract$'
+
+      - name: Record deterministic RXBIN manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="${RUNNER_TEMP}/rxbin-j${{ matrix.jobs }}.sha256"
+          cd "${RUNNER_TEMP}/deep-build"
+          find bin -type f -name '*.rxbin' -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > "$manifest"
+          if [ ! -s "$manifest" ]; then
+            echo "No product RXBIN files were found" >&2
+            exit 1
+          fi
+
+      - name: Upload deep-build evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: deep-build-j${{ matrix.jobs }}
+          path: |
+            ${{ runner.temp }}/rxbin-j${{ matrix.jobs }}.sha256
+            ${{ runner.temp }}/stage-product-no-op.log
+            ${{ runner.temp }}/stage-product-missingdeps.log
+          if-no-files-found: error
+          retention-days: 30
+
+  compare-products:
+    name: Compare Release RXBIN outputs
+    needs: parallel-product
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download manifests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: deep-build-j*
+          path: ${{ runner.temp }}/deep-evidence
+          merge-multiple: true
+
+      - name: Compare jobs 1, 5 and 30
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="${RUNNER_TEMP}/deep-evidence"
+          diff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j5.sha256"
+          diff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j30.sha256"
+
+  stress:
+    name: Isolated Debug stress QA
+    needs: assurance-gate
+    if: needs.assurance-gate.outputs.should_run == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.assurance-gate.outputs.target_sha }}
+
+      - name: Configure Debug stress graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/stress-build" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+
+      - name: Run stress separately from correctness and performance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/stress-build" \
+            --target qa-stress \
+            --parallel 5
+
+  record-assurance:
+    name: Record qualified develop commit
+    needs:
+      - assurance-gate
+      - comprehensive
+      - parallel-product
+      - compare-products
+      - stress
+    if: >-
+      always() &&
+      github.event_name == 'schedule' &&
+      needs.assurance-gate.outputs.should_run == 'true' &&
+      needs.comprehensive.result == 'success' &&
+      needs.parallel-product.result == 'success' &&
+      needs.compare-products.result == 'success' &&
+      needs.stress.result == 'success'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Write assurance marker
+        shell: bash
+        run: |
+          mkdir -p .ci-assurance
+          echo "${{ needs.assurance-gate.outputs.target_sha }}" \
+            > .ci-assurance/deep-qualified-sha
+
+      - name: Retain assurance marker
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-assurance/deep-qualified-sha
+          key: crexx-deep-qualified-${{ needs.assurance-gate.outputs.target_sha }}

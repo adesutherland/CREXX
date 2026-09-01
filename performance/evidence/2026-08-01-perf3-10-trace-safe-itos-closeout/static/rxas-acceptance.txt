@@ -1,0 +1,4 @@
+NR27 accept procedure=main candidate=472:ITOS_REG reason=redundant-storage-component-conversion redirects=0
+NR27 accept procedure=main candidate=561:ITOS_REG reason=redundant-storage-component-conversion redirects=0
+NR27 accept procedure=main candidate=565:ITOS_REG reason=redundant-storage-component-conversion redirects=0
+NR27 flow procedure=main blocks=101 registers=107 instructions=378->375 unreachable=0 dead=0 typed-copy=0 compare-prep=0 full-copy=0 redundant-load=0 redundant-init=0 redundant-conversion=3 producer-forward=0 redirects=0 reject-live=0 reject-trace=60 reject-tainted=27 reject-effect=3

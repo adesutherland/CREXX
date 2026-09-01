@@ -1,0 +1,103 @@
+/* VM-C2 PoC deterministic operation-count identity checker. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+if argv[0] < 5 | ((argv[0] - 1) <mod> 4) <> 0 then do
+  say "Usage: compare_vm_c2_profiles OUTPUT ID R0 R1 R2 [ID R0 R1 R2 ...]"
+  return 2
+end
+
+output_path = argv[1]
+remove_out = .string[]
+remove_err = .string[]
+address crexx "rm :output_path" output remove_out error remove_err
+if lineout(output_path, "profile,section,r0_count,r1_count,r2_count,exact_rows") <> 0 then
+  return fail("could not create output")
+
+sections = .string[]
+sections[1] = "instruction"
+sections[2] = "call"
+sections[3] = "branch"
+sections[4] = "value_operation"
+
+arg_at = 2
+do while arg_at <= argv[0]
+  profile_id = argv[arg_at]
+  r0_path = argv[arg_at + 1]
+  r1_path = argv[arg_at + 2]
+  r2_path = argv[arg_at + 3]
+  r0_rows = selected_rows(r0_path)
+  r1_rows = selected_rows(r1_path)
+  r2_rows = selected_rows(r2_path)
+  if r0_rows[0] = 0 then return fail(profile_id || " has no selected rows")
+  if \same_rows(r0_rows, r1_rows) then return fail(profile_id || " R1 rows differ")
+  if \same_rows(r0_rows, r2_rows) then return fail(profile_id || " R2 rows differ")
+  do section_at = 1 to sections[0]
+    section = sections[section_at]
+    r0_count = section_count_rows(r0_rows, section)
+    r1_count = section_count_rows(r1_rows, section)
+    r2_count = section_count_rows(r2_rows, section)
+    if r0_count <> r1_count | r0_count <> r2_count then
+      return fail(profile_id || " " || section || " totals differ")
+    row = profile_id || "," || section || "," || r0_count || "," || ,
+        r1_count || "," || r2_count || ",yes"
+    if lineout(output_path, row) <> 0 then return fail("could not append output")
+  end
+  arg_at = arg_at + 4
+end
+call lineout output_path
+say "PASS: VM-C2 deterministic operation rows are exact at" output_path
+return 0
+
+selected_rows: procedure = .string[]
+  arg path = .string
+  selected = .string[]
+  do while lines(path)
+    line = linein(path)
+    section_end = pos(",", line)
+    if section_end = 0 then iterate
+    section = substr(line, 1, section_end - 1)
+    if section = "instruction" | section = "call" | section = "branch" | ,
+        section = "value_operation" then selected[selected[0] + 1] = line
+  end
+  call linein path
+  return selected
+
+same_rows: procedure = .int
+  arg left = .string[], right = .string[]
+  if left[0] <> right[0] then return 0
+  do row = 1 to left[0]
+    if left[row] <> right[row] then return 0
+  end
+  return 1
+
+section_count_rows: procedure = .int
+  arg rows = .string[], wanted = .string
+  total = 0
+  do row = 1 to rows[0]
+    fields = split_delimited(rows[row], ",")
+    if fields[0] >= 5 & fields[1] = wanted then
+      total = total + (fields[5] as .int)
+  end
+  return total
+
+split_delimited: procedure = .string[]
+  arg text = .string, delimiter = .string
+  fields = .string[]
+  start = 1
+  do forever
+    delimiter_at = pos(delimiter, text, start)
+    if delimiter_at = 0 then do
+      fields[fields[0] + 1] = substr(text, start)
+      leave
+    end
+    fields[fields[0] + 1] = substr(text, start, delimiter_at - start)
+    start = delimiter_at + length(delimiter)
+  end
+  return fields
+
+fail: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

@@ -1,0 +1,3 @@
+`bintos rReg` validates the register's current binary bytes as UTF-8 and copies
+them into its string slot. Invalid UTF-8 raises `UNICODE_ERROR`.
+

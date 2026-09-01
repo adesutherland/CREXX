@@ -21,6 +21,11 @@ Common options:
 - `--level level`: default source level when the source omits one
 - `--import ns`: inject a file-level import; repeatable
 - `--import-rxas`: allow `.rxas` import scanning in binary roots
+- `--autoload`: emit runtime hints for retained imports resolved from packaged
+  `.rxbin` files; this is the default
+- `--no-autoload`: omit packaged-RXBIN runtime hints
+- `--no-exe-import`: omit the compiler executable directory from binary roots;
+  intended for toolchain and library self-builds with an explicit dependency set
 - `-o output_stem`: RXAS output stem or `.rxas` file
 - `-n`: disable optimisation
 - `-x`: disable compiler exits; explicit certified-exit statements such as
@@ -109,14 +114,31 @@ Common options:
 - `-c`: copyright and licence details
 - `-d`: debug mode
 - `-l location`: working location
+- `--autoload`: load hinted packaged RXBIN dependencies; this is the default
+- `--no-autoload`: leave hinted dependencies unresolved unless they were
+  supplied explicitly or are already present in a linked/embedded image
 - `-v`: version
 
 The VM executables include:
 
-- `rxvm`: threaded interpreter
-- `rxbvm`: bytecode-dispatch interpreter
-- `rxvme`: threaded interpreter with the standard library image
-- `rxbvme`: bytecode-dispatch interpreter with the standard library image
+- `rxvm`: stable product entry point; selects `rxbvm` for Clang/AppleClang and
+  `rxtvm` for GCC
+- `rxbvm`: portable switch-dispatch interpreter
+- `rxtvm`: explicit direct-threaded interpreter on GNU/Clang-family compilers;
+  not built by MSVC
+- `rxvme`: compiler-selected interpreter with the shipped core bytecode library images
+- `rxbvme`: explicit switch-dispatch interpreter with the shipped core bytecode library images
+
+Autoload hints are exact packaged filename stems, not paths or namespace-to-file
+rules. For example, a hint for `rxfnsg` asks the VM to find `rxfnsg.rxbin` in
+the normal `-l` module roots. The VM first links everything supplied explicitly
+or embedded in the selected executable, and follows a hint only while its
+associated callable remains unresolved. Source and RXAS imports do not create
+these hints.
+
+On Unix-like systems `rxvm` is a relative link to the selected concrete VM. On
+Windows it is a copied executable so ordinary callers always use the same
+product name.
 
 ## Disassembler: `rxdas`
 
@@ -132,6 +154,24 @@ Common options:
 - `-p`: print all constant-pool details
 - `-l location`: working location
 - `-o output_file`: output file; stdout by default
+
+## Operation contract exporter: `crexx-contract`
+
+```bash
+crexx-contract --rxbin input.rxbin \
+  --operation namespace.interface.method \
+  --contract-version 1.0.0 \
+  --output operation.rxcontract.json
+```
+
+The exporter validates a compiled Level B interface operation and writes the
+deterministic public `crexx.operation-contract/1` JSON artifact. Repeatable
+`--nullable TYPE.FIELD`, `--optional-field TYPE.FIELD`, and `--error TYPE`
+options supply facts that are deliberately not inferred from naming. An
+optional `--previous FILE` rejects changes not permitted by the declared
+semantic-version increase. See [Operation Contracts](../crexx_programming_guide/operation_contracts.md)
+for the source convention, type mapping, evolution rules, and installed CMake
+helper.
 
 ## Packager: `rxcpack`
 
@@ -156,9 +196,12 @@ crexx in_file_specification... [--option]...
 ```
 
 The driver wraps the usual compile, assemble, execute, link, and native package
-steps. Headerless top-level scripts are compiled with `--level levelb --import
-rxfnsb`; explicit modules should still declare their own `options` and
-imports.
+steps. It delegates source-level defaults to `rxc`: source files without an
+`OPTIONS` clause default by file type, with `.rexx` as Level C Classic REXX and
+`.crexx` / `.crx` as Level G. Explicit `OPTIONS LEVELC` modules use the active
+Level C lowering subset and the standard runtime module set, including
+`rxfnsc`. Explicit modules should still declare their own `options` and imports
+when they need a specific language level or library namespace.
 
 Common driver options:
 
@@ -179,7 +222,7 @@ Common driver options:
 - `-link-keep-inline` / `-link-strip-inline`: preserve or strip inline-body
   metadata from linked images
 - `-args`: stop driver option parsing; remaining arguments are passed to the
-  executed program
+  executed program as separate argv entries
 
 If the input filename ends in `.rxpp`, the driver runs RXPP first and then
 compiles the generated `.crexx` source. `CREXX_HOME`, when set, is used as the
@@ -189,6 +232,9 @@ otherwise the driver derives that root from its load path.
 The driver does not have its own `-o` option. It derives the compile and
 assemble output stem from each input path, preserving the input directory and
 turning dots in the basename into underscores after removing the source suffix.
+Its toolchain phases use direct argv dispatch through the CREXX ADDRESS command
+environment, so paths and program arguments with spaces do not need shell
+quoting.
 
 Native packaging links the program with the standard library image, runs
 `rxcpack`, and invokes a platform C compiler. The lower-level `crxc.rexx`

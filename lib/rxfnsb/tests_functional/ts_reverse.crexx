@@ -1,23 +1,34 @@
-/* rexx test abs bif */
+/* Focused Level B REVERSE tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+source = "the quick brown fox jumps over the lazy dog"
 
-x='the quick brown fox jumps over the lazy dog'
-if reverse(x) \= 'god yzal eht revo spmuj xof nworb kciuq eht' then do
-  errors=errors+1
-  say 'REVERSE failed in test 1'
-end
+errors = errors + check(reverse(source) = "god yzal eht revo spmuj xof nworb kciuq eht", "sentence")
+errors = errors + check(reverse(reverse(source)) = source, "involution")
+errors = errors + check(reverse("") = "", "empty string")
+errors = errors + check(reverse("x") = "x", "one character")
+errors = errors + check(reverse("aé日🙂") = "🙂日éa", "Unicode codepoints")
+embedded_nul = "a" || d2c(0) || "b"
+errors = errors + check(reverse(embedded_nul) = "b" || d2c(0) || "a", "embedded U+0000")
+errors = errors + check(source = "the quick brown fox jumps over the lazy dog", "source is not mutated")
 
-if reverse('god yzal eht revo spmuj xof nworb kciuq eht') \= 'the quick brown fox jumps over the lazy dog' then do
-  errors=errors+1
-  say 'REVERSE failed in test 2'
+large = ""
+large_expected = ""
+pair = "ab"
+reverse_pair = "ba"
+do i = 1 to 500
+  assembler append large,pair
+  assembler append large_expected,reverse_pair
 end
+errors = errors + check(reverse(large) = large_expected, "substantial input")
 
-if reverse("") \= '' then do
-  errors=errors+1
-  say 'REVERSE failed in test 3'
-end
-  
-return errors<>0
+if errors = 0 then say "PASS: reverse"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: REVERSE" label
+  return 1

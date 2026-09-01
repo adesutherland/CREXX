@@ -1,0 +1,41 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1219: persistent_worker_executor-rxtvml
+      Start 1220: persistent_worker_executor-rxtvml-doorbell-stress
+      Start 1205: persistent_worker_executor-rxbvml
+      Start 1222: persistent_worker_executor-rxtvml-sparse-owner-stress
+      Start 1208: persistent_worker_executor-rxbvml-sparse-owner-stress
+      Start 1206: persistent_worker_executor-rxbvml-doorbell-stress
+      Start 1209: persistent_worker_executor-rxbvml-sparse-progress
+      Start 1223: persistent_worker_executor-rxtvml-sparse-progress
+      Start 1135: gate_f_channel_local_rxbvm
+      Start 1136: gate_f_channel_local_rxtvm
+ 1/10 Test #1135: gate_f_channel_local_rxbvm ..............................   Passed    0.02 sec
+ 2/10 Test #1136: gate_f_channel_local_rxtvm ..............................   Passed    0.02 sec
+ 3/10 Test #1209: persistent_worker_executor-rxbvml-sparse-progress .......   Passed    0.31 sec
+ 4/10 Test #1208: persistent_worker_executor-rxbvml-sparse-owner-stress ...   Passed    0.31 sec
+ 5/10 Test #1206: persistent_worker_executor-rxbvml-doorbell-stress .......   Passed    0.31 sec
+ 6/10 Test #1205: persistent_worker_executor-rxbvml .......................   Passed    0.40 sec
+ 7/10 Test #1223: persistent_worker_executor-rxtvml-sparse-progress .......   Passed    0.52 sec
+ 8/10 Test #1222: persistent_worker_executor-rxtvml-sparse-owner-stress ...   Passed    0.53 sec
+ 9/10 Test #1220: persistent_worker_executor-rxtvml-doorbell-stress .......   Passed    0.53 sec
+10/10 Test #1219: persistent_worker_executor-rxtvml .......................   Passed    0.60 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+channels       =   0.03 sec*proc (2 tests)
+e5             =   3.50 sec*proc (8 tests)
+f1b            =   0.03 sec*proc (2 tests)
+fallback       =   1.67 sec*proc (4 tests)
+gate-e         =   3.50 sec*proc (8 tests)
+gate-f         =   0.03 sec*proc (2 tests)
+industrial     =   3.50 sec*proc (8 tests)
+interpreter    =   3.54 sec*proc (10 tests)
+lifecycle      =   1.71 sec*proc (6 tests)
+macos          =   3.50 sec*proc (8 tests)
+perf3          =   3.54 sec*proc (10 tests)
+private        =   3.50 sec*proc (8 tests)
+race           =   1.68 sec*proc (4 tests)
+sparse         =   1.67 sec*proc (4 tests)
+
+Total Test time (real) =   0.63 sec

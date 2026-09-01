@@ -1,0 +1,6 @@
+.globals=0
+
+main() .locals=2
+    load r1,"if"
+    jumps r1,missing_table
+    ret 0

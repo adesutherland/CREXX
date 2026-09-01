@@ -1,0 +1,21 @@
+Test project C:/crexx-qa/windows-gcc-2b793c81e-build
+  Test  #344: gate_f_channel_contract
+  Test #1096: rxvmchannel_provider_registry
+  Test #1165: rxasdispatchcontract-rxbvm
+  Test #1166: rxasdispatchcontract-rxtvm
+  Test #1181: gate_f_channel_local_rxbvm
+  Test #1182: gate_f_channel_local_rxtvm
+  Test #1186: retired_process_opcode_466_rxbvm
+  Test #1187: retired_process_opcode_466_rxtvm
+  Test #1188: retired_process_opcode_467_rxbvm
+  Test #1189: retired_process_opcode_467_rxtvm
+  Test #1190: retired_process_opcode_468_rxbvm
+  Test #1191: retired_process_opcode_468_rxtvm
+  Test #1192: retired_process_opcode_469_rxbvm
+  Test #1193: retired_process_opcode_469_rxtvm
+  Test #1194: retired_process_opcode_470_rxbvm
+  Test #1195: retired_process_opcode_470_rxtvm
+  Test #1196: retired_process_opcode_471_rxbvm
+  Test #1197: retired_process_opcode_471_rxtvm
+
+Total Tests: 18

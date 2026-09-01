@@ -1,0 +1,121 @@
+/* Assertion coverage for the validated Level B Gregorian/JDN core. */
+options levelb
+import _rxsysb
+
+errors = 0
+errors = errors + test_known_dates()
+errors = errors + test_calendar_rules()
+errors = errors + test_round_trips()
+errors = errors + test_invalid_dates()
+
+if errors = 0 then say "PASS: date core"
+return errors <> 0
+
+test_known_dates: procedure = .int
+  errors = 0
+  errors = errors + check(_jdn(1,1,1) = 1721426,"base JDN")
+  errors = errors + check(_jdn(10,3,1962) = 2437734,"1962 JDN")
+  errors = errors + check(_jdn(1,1,1970) = 2440588,"Unix epoch JDN")
+  errors = errors + check(_jdn(31,12,9999) = 5373484,"maximum JDN")
+
+  year = 0
+  month = 0
+  day = 0
+  day_of_year = 0
+  weekday = 0
+  base_day = 0
+  call _datefromjdn 2437734,year,month,day,day_of_year,weekday,base_day
+  errors = errors + check(year = 1962 & month = 3 & day = 10,"known inverse")
+  errors = errors + check(day_of_year = 69 & weekday = 6 & base_day = 716308,"known derived fields")
+  return errors
+
+test_calendar_rules: procedure = .int
+  errors = 0
+  errors = errors + check(_leapyear(2000) & \_leapyear(1900) & _leapyear(2024),"Gregorian leap rules")
+  errors = errors + check(_daysinmonth(2,2000) = 29 & _daysinmonth(2,1900) = 28,"February lengths")
+  errors = errors + check(_daysinmonth(4,2024) = 30 & _daysinmonth(12,2024) = 31,"month lengths")
+  errors = errors + check(_datevalid(29,2,2000) & \_datevalid(29,2,1900),"leap date validity")
+  errors = errors + check(\_datevalid(1,1,0) & \_datevalid(1,1,10000),"year bounds")
+  return errors
+
+test_round_trips: procedure = .int
+  errors = 0
+  years = .int[]
+  years[1] = 1
+  years[2] = 4
+  years[3] = 100
+  years[4] = 400
+  years[5] = 1900
+  years[6] = 2000
+  years[7] = 2024
+  years[8] = 9999
+
+  do item = 1 to years[0]
+    source_year = years[item]
+    source_month = 2
+    source_day = _daysinmonth(source_month,source_year)
+    jdn = _jdn(source_day,source_month,source_year)
+    year = 0
+    month = 0
+    day = 0
+    day_of_year = 0
+    weekday = 0
+    base_day = 0
+    call _datefromjdn jdn,year,month,day,day_of_year,weekday,base_day
+    errors = errors + check(year = source_year & month = source_month & day = source_day,"round trip year " || source_year)
+  end
+  return errors
+
+test_invalid_dates: procedure = .int
+  errors = 0
+  caught = 0
+  year = 7
+  month = 8
+  day = 9
+  day_of_year = 10
+  weekday = 11
+  base_day = 12
+
+  do
+    ignored = _jdn(29,2,1900)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = _jdn(31,4,2024)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = _jdn(1,13,2024)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = .int
+    ignored = _jdn(1,1,0)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    call _datefromjdn 1721425,year,month,day,day_of_year,weekday,base_day
+  on signal invalid_arguments
+    caught = caught + 1
+    errors = errors + check(year = 7 & month = 8 & day = 9 & day_of_year = 10 & weekday = 11 & base_day = 12,"inverse signal preserves outputs")
+  end
+  do
+    call _datefromjdn 5373485,year,month,day,day_of_year,weekday,base_day
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  errors = errors + check(caught = 6,"all date-core signals caught")
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: date core" label
+  return 1

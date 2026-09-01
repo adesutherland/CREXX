@@ -1,0 +1,22 @@
+*******************************************************************************
+* MODULE - performance/evidence/2026-07-17-nr-06-register-affinity-verdict/audit/swap-microbenchmark/control.rxas
+* DESCRIPTION - performance/evidence/2026-07-17-nr-06-register-affinity-verdict/audit/swap-microbenchmark/control.rxas
+
+* CONSTANT POOL - Size 0x30.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x19
+
+.globals=0
+
+main()          .locals=4
+                load r0,0                                    * 0x000000:0001 Load op1 with op2
+                load r1,100000000                            * 0x000003:0001 Load op1 with op2
+                load r2,1                                    * 0x000006:0001 Load op1 with op2
+                load r3,2                                    * 0x000009:0001 Load op1 with op2
+lb_c:           iadd r0,r0,1                                 * 0x00000c:0010 Integer Add (op1=op2+op3)
+                blt lb_c,r0,r1                               * 0x000010:0164 if op2<op3 then goto op1
+                load r0,0                                    * 0x000014:0001 Load op1 with op2
+                ret r0                                       * 0x000017:0031 Return op1
+*******************************************************************************
+

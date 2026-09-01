@@ -1,0 +1,122 @@
+/* Rexx padded and numeric string jump-table dispatch. */
+
+.globals=0
+
+main() .locals=20
+    .jtable padded_words openhash
+    br padded_cases_end
+padded_alpha: .jcase padded_words "alpha   "
+    load r10,1
+    br padded_hit
+padded_beta: .jcase padded_words "beta"
+    load r10,2
+    br padded_hit
+padded_lead: .jcase padded_words "  lead"
+    load r10,3
+    br padded_hit
+padded_cases_end:
+    load r1,"alpha"
+    jumpr r1,padded_words
+    br fail_padded
+padded_hit:
+    ieq r0,r10,1
+    brf fail_padded_target,r0
+
+    .jtable numeric_words acph
+    br numeric_cases_end
+numeric_one: .jcase numeric_words "1"
+    brt numeric_nan_hit,r12
+    load r11,10
+    br numeric_hit
+numeric_two: .jcase numeric_words "2.5"
+    load r11,25
+    br numeric_hit
+numeric_zero: .jcase numeric_words "-0"
+    ieq r0,r12,2
+    brt numeric_zero_hit,r0
+    load r11,30
+    br numeric_hit
+numeric_inf: .jcase numeric_words "inf"
+    ieq r0,r12,3
+    brt numeric_inf_hit,r0
+    load r11,40
+    br numeric_hit
+numeric_cases_end:
+    load r12,0
+    load r2,"01.000"
+    jumpn r2,numeric_words
+    br fail_numeric
+numeric_hit:
+    ieq r0,r11,10
+    brf fail_numeric_target,r0
+
+    load r2,"not-a-number"
+    jumpn r2,numeric_words
+    br numeric_miss_ok
+    br fail_numeric_miss
+numeric_miss_ok:
+
+    load r12,2
+    load r2,"0.0"
+    jumpn r2,numeric_words
+    br fail_numeric_zero
+numeric_zero_hit:
+
+    load r12,3
+    load r2,"infinity"
+    jumpn r2,numeric_words
+    br fail_numeric_inf
+numeric_inf_hit:
+
+    load r2,"nan"
+    load r12,1
+    jumpn r2,numeric_words
+    br fail_numeric_nan
+
+numeric_nan_hit:
+
+    load r3,0xfe
+    load r4,0xfe
+    bineq r0,r3,r4
+    brf fail_binary_equal,r0
+    bineq r0,r3,0xfe
+    brf fail_binary_equal,r0
+    load r4,0xff
+    binne r0,r3,r4
+    brf fail_binary_not_equal,r0
+    binne r0,r3,0xff
+    brf fail_binary_not_equal,r0
+
+    say "PASS: Jump Table Rexx String Ops"
+    ret 0
+
+fail_padded:
+    say "FAIL: jumpr did not branch"
+    ret 1
+fail_padded_target:
+    say "FAIL: jumpr wrong target"
+    ret 1
+fail_numeric:
+    say "FAIL: jumpn did not branch"
+    ret 1
+fail_numeric_target:
+    say "FAIL: jumpn wrong target"
+    ret 1
+fail_numeric_miss:
+    say "FAIL: jumpn miss did not fall through"
+    ret 1
+fail_numeric_nan:
+    say "FAIL: jumpn NaN did not preserve first match"
+    ret 1
+fail_numeric_zero:
+    say "FAIL: jumpn signed zero canonicalization"
+    ret 1
+fail_numeric_inf:
+    say "FAIL: jumpn infinity canonicalization"
+    ret 1
+fail_binary_equal:
+    say "FAIL: bineq whole-value comparison"
+    ret 1
+fail_binary_not_equal:
+    say "FAIL: binne whole-value comparison"
+    ret 1

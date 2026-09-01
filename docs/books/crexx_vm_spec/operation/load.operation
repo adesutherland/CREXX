@@ -1,0 +1,3 @@
+`load rDst,0x...` materializes a whole binary constant into the binary slot of
+`rDst`. It is useful for small values and tests, but large lookup tables should
+be read directly through the constant-source forms below.

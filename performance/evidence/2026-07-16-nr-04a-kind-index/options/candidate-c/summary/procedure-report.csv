@@ -1,0 +1,181 @@
+entry,rank,name,metric,module,kind,count,total_ns,average_ns,completed,unwound,return_type,args,status
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,elapsed,runtime_interface_lookup_compare_opt,procedure,1,711218125,711218125,1,0,.int,,complete
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,inclusive_body,runtime_interface_lookup_compare_opt,procedure,1,711215417,711215417,1,0,.int,,complete
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,self,runtime_interface_lookup_compare_opt,procedure,1,322663352,322663352,1,0,.int,,complete
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,native_child,runtime_interface_lookup_compare_opt,procedure,1,0,0,1,0,.int,,complete
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,entry_overhead,runtime_interface_lookup_compare_opt,procedure,1,2542,2542,1,0,.int,,complete
+runtime-interface-retained-c,1,runtime_interface_lookup_compare.main,exit_overhead,runtime_interface_lookup_compare_opt,procedure,1,166,166,1,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,elapsed,runtime_interface_lookup_compare_opt,method,1100000,361000656,328,1100000,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,inclusive_body,runtime_interface_lookup_compare_opt,method,1100000,178978572,162,1100000,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,self,runtime_interface_lookup_compare_opt,method,1100000,178978572,162,1100000,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,native_child,runtime_interface_lookup_compare_opt,method,1100000,0,0,1100000,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,entry_overhead,runtime_interface_lookup_compare_opt,method,1100000,128034182,116,1100000,0,.int,,complete
+runtime-interface-retained-c,2,runtime_interface_lookup_compare.lookup24impl.value,exit_overhead,runtime_interface_lookup_compare_opt,method,1100000,53987902,49,1100000,0,.int,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,elapsed,runtime_interface_lookup_compare_opt,factory,100001,27228285,272,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,inclusive_body,runtime_interface_lookup_compare_opt,factory,100001,17622572,176,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,self,runtime_interface_lookup_compare_opt,factory,100001,17622572,176,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,native_child,runtime_interface_lookup_compare_opt,factory,100001,0,0,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,entry_overhead,runtime_interface_lookup_compare_opt,factory,100001,4893728,48,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,exit_overhead,runtime_interface_lookup_compare_opt,factory,100001,4711985,47,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-c,4,rxfnsb.time,elapsed,time,procedure,4,323124,80781,4,0,.string,?option=.string,complete
+runtime-interface-retained-c,4,rxfnsb.time,inclusive_body,time,procedure,4,315584,78896,4,0,.string,?option=.string,complete
+runtime-interface-retained-c,4,rxfnsb.time,self,time,procedure,4,315584,78896,4,0,.string,?option=.string,complete
+runtime-interface-retained-c,4,rxfnsb.time,native_child,time,procedure,4,0,0,4,0,.string,?option=.string,complete
+runtime-interface-retained-c,4,rxfnsb.time,entry_overhead,time,procedure,4,6207,1551,4,0,.string,?option=.string,complete
+runtime-interface-retained-c,4,rxfnsb.time,exit_overhead,time,procedure,4,1333,333,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,elapsed,runtime_interface_lookup_compare_opt,procedure,1,735689500,735689500,1,0,.int,,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,inclusive_body,runtime_interface_lookup_compare_opt,procedure,1,735686958,735686958,1,0,.int,,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,self,runtime_interface_lookup_compare_opt,procedure,1,337260765,337260765,1,0,.int,,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,native_child,runtime_interface_lookup_compare_opt,procedure,1,0,0,1,0,.int,,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,entry_overhead,runtime_interface_lookup_compare_opt,procedure,1,2458,2458,1,0,.int,,complete
+runtime-interface-retained-baseline,1,runtime_interface_lookup_compare.main,exit_overhead,runtime_interface_lookup_compare_opt,procedure,1,84,84,1,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,elapsed,runtime_interface_lookup_compare_opt,method,1100000,366478296,333,1100000,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,inclusive_body,runtime_interface_lookup_compare_opt,method,1100000,187303254,170,1100000,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,self,runtime_interface_lookup_compare_opt,method,1100000,187303254,170,1100000,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,native_child,runtime_interface_lookup_compare_opt,method,1100000,0,0,1100000,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,entry_overhead,runtime_interface_lookup_compare_opt,method,1100000,132277562,120,1100000,0,.int,,complete
+runtime-interface-retained-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,exit_overhead,runtime_interface_lookup_compare_opt,method,1100000,46897480,42,1100000,0,.int,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,elapsed,runtime_interface_lookup_compare_opt,factory,100001,31629105,316,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,inclusive_body,runtime_interface_lookup_compare_opt,factory,100001,20273641,202,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,self,runtime_interface_lookup_compare_opt,factory,100001,20273641,202,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,native_child,runtime_interface_lookup_compare_opt,factory,100001,0,0,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,entry_overhead,runtime_interface_lookup_compare_opt,factory,100001,5928588,59,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,exit_overhead,runtime_interface_lookup_compare_opt,factory,100001,5426876,54,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,elapsed,time,procedure,4,318792,79698,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,inclusive_body,time,procedure,4,309375,77343,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,self,time,procedure,4,309375,77343,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,native_child,time,procedure,4,0,0,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,entry_overhead,time,procedure,4,7708,1927,4,0,.string,?option=.string,complete
+runtime-interface-retained-baseline,4,rxfnsb.time,exit_overhead,time,procedure,4,1709,427,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,elapsed,runtime_interface_lookup_compare_opt,procedure,1,778659917,778659917,1,0,.int,,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,inclusive_body,runtime_interface_lookup_compare_opt,procedure,1,778656791,778656791,1,0,.int,,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,self,runtime_interface_lookup_compare_opt,procedure,1,352682586,352682586,1,0,.int,,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,native_child,runtime_interface_lookup_compare_opt,procedure,1,0,0,1,0,.int,,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,entry_overhead,runtime_interface_lookup_compare_opt,procedure,1,2959,2959,1,0,.int,,complete
+runtime-interface-stripped-c,1,runtime_interface_lookup_compare.main,exit_overhead,runtime_interface_lookup_compare_opt,procedure,1,167,167,1,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,elapsed,runtime_interface_lookup_compare_opt,method,1100000,394339650,358,1100000,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,inclusive_body,runtime_interface_lookup_compare_opt,method,1100000,196460917,178,1100000,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,self,runtime_interface_lookup_compare_opt,method,1100000,196460917,178,1100000,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,native_child,runtime_interface_lookup_compare_opt,method,1100000,0,0,1100000,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,entry_overhead,runtime_interface_lookup_compare_opt,method,1100000,147229218,133,1100000,0,.int,,complete
+runtime-interface-stripped-c,2,runtime_interface_lookup_compare.lookup24impl.value,exit_overhead,runtime_interface_lookup_compare_opt,method,1100000,50649515,46,1100000,0,.int,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,elapsed,runtime_interface_lookup_compare_opt,factory,100001,31305681,313,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,inclusive_body,runtime_interface_lookup_compare_opt,factory,100001,20508194,205,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,self,runtime_interface_lookup_compare_opt,factory,100001,20508194,205,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,native_child,runtime_interface_lookup_compare_opt,factory,100001,0,0,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,entry_overhead,runtime_interface_lookup_compare_opt,factory,100001,5542964,55,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,3,runtime_interface_lookup_compare.lookup24impl.§factory,exit_overhead,runtime_interface_lookup_compare_opt,factory,100001,5254523,52,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-c,4,rxfnsb.time,elapsed,time,procedure,4,328874,82218,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,4,rxfnsb.time,inclusive_body,time,procedure,4,322208,80552,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,4,rxfnsb.time,self,time,procedure,4,322208,80552,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,4,rxfnsb.time,native_child,time,procedure,4,0,0,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,4,rxfnsb.time,entry_overhead,time,procedure,4,4249,1062,4,0,.string,?option=.string,complete
+runtime-interface-stripped-c,4,rxfnsb.time,exit_overhead,time,procedure,4,2417,604,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,elapsed,runtime_interface_lookup_compare_opt,procedure,1,744235292,744235292,1,0,.int,,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,inclusive_body,runtime_interface_lookup_compare_opt,procedure,1,744232334,744232334,1,0,.int,,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,self,runtime_interface_lookup_compare_opt,procedure,1,350382179,350382179,1,0,.int,,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,native_child,runtime_interface_lookup_compare_opt,procedure,1,0,0,1,0,.int,,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,entry_overhead,runtime_interface_lookup_compare_opt,procedure,1,2750,2750,1,0,.int,,complete
+runtime-interface-stripped-baseline,1,runtime_interface_lookup_compare.main,exit_overhead,runtime_interface_lookup_compare_opt,procedure,1,208,208,1,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,elapsed,runtime_interface_lookup_compare_opt,method,1100000,359957350,327,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,inclusive_body,runtime_interface_lookup_compare_opt,method,1100000,181946621,165,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,self,runtime_interface_lookup_compare_opt,method,1100000,181946621,165,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,native_child,runtime_interface_lookup_compare_opt,method,1100000,0,0,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,entry_overhead,runtime_interface_lookup_compare_opt,method,1100000,129626634,117,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,2,runtime_interface_lookup_compare.lookup24impl.value,exit_overhead,runtime_interface_lookup_compare_opt,method,1100000,48384095,43,1100000,0,.int,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,elapsed,runtime_interface_lookup_compare_opt,factory,100001,33540096,335,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,inclusive_body,runtime_interface_lookup_compare_opt,factory,100001,21217002,212,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,self,runtime_interface_lookup_compare_opt,factory,100001,21217002,212,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,native_child,runtime_interface_lookup_compare_opt,factory,100001,0,0,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,entry_overhead,runtime_interface_lookup_compare_opt,factory,100001,6417143,64,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,3,runtime_interface_lookup_compare.lookup24impl.§factory,exit_overhead,runtime_interface_lookup_compare_opt,factory,100001,5905951,59,100001,0,.runtime_interface_lookup_compare..lookup24impl,,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,elapsed,time,procedure,4,352709,88177,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,inclusive_body,time,procedure,4,344624,86156,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,self,time,procedure,4,344624,86156,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,native_child,time,procedure,4,0,0,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,entry_overhead,time,procedure,4,6416,1604,4,0,.string,?option=.string,complete
+runtime-interface-stripped-baseline,4,rxfnsb.time,exit_overhead,time,procedure,4,1669,417,4,0,.string,?option=.string,complete
+lifecycle-retained-c,1,lifecycle_probe.main,elapsed,lifecycle_probe,procedure,1,52750,52750,1,0,.int,,complete
+lifecycle-retained-c,1,lifecycle_probe.main,inclusive_body,lifecycle_probe,procedure,1,49250,49250,1,0,.int,,complete
+lifecycle-retained-c,1,lifecycle_probe.main,self,lifecycle_probe,procedure,1,49250,49250,1,0,.int,,complete
+lifecycle-retained-c,1,lifecycle_probe.main,native_child,lifecycle_probe,procedure,1,0,0,1,0,.int,,complete
+lifecycle-retained-c,1,lifecycle_probe.main,entry_overhead,lifecycle_probe,procedure,1,2625,2625,1,0,.int,,complete
+lifecycle-retained-c,1,lifecycle_probe.main,exit_overhead,lifecycle_probe,procedure,1,875,875,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,elapsed,lifecycle_probe,procedure,1,51416,51416,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,inclusive_body,lifecycle_probe,procedure,1,48084,48084,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,self,lifecycle_probe,procedure,1,48084,48084,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,native_child,lifecycle_probe,procedure,1,0,0,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,entry_overhead,lifecycle_probe,procedure,1,2416,2416,1,0,.int,,complete
+lifecycle-retained-baseline,1,lifecycle_probe.main,exit_overhead,lifecycle_probe,procedure,1,916,916,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,elapsed,lifecycle_probe,procedure,1,53833,53833,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,inclusive_body,lifecycle_probe,procedure,1,50375,50375,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,self,lifecycle_probe,procedure,1,50375,50375,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,native_child,lifecycle_probe,procedure,1,0,0,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,entry_overhead,lifecycle_probe,procedure,1,2500,2500,1,0,.int,,complete
+lifecycle-stripped-c,1,lifecycle_probe.main,exit_overhead,lifecycle_probe,procedure,1,958,958,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,elapsed,lifecycle_probe,procedure,1,49500,49500,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,inclusive_body,lifecycle_probe,procedure,1,46417,46417,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,self,lifecycle_probe,procedure,1,46417,46417,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,native_child,lifecycle_probe,procedure,1,0,0,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,entry_overhead,lifecycle_probe,procedure,1,2167,2167,1,0,.int,,complete
+lifecycle-stripped-baseline,1,lifecycle_probe.main,exit_overhead,lifecycle_probe,procedure,1,916,916,1,0,.int,,complete
+json-stripped-c,1,rxjson._json_parse_value,elapsed,rxjson,procedure,655000,13593229174,20753,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,1,rxjson._json_parse_value,inclusive_body,rxjson,procedure,655000,13385042088,20435,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,1,rxjson._json_parse_value,self,rxjson,procedure,655000,2958381461,4516,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,1,rxjson._json_parse_value,native_child,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,1,rxjson._json_parse_value,entry_overhead,rxjson,procedure,655000,170525819,260,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,1,rxjson._json_parse_value,exit_overhead,rxjson,procedure,655000,37661267,57,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,elapsed,rxjson,procedure,80000,4639968846,57999,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,inclusive_body,rxjson,procedure,80000,4613723963,57671,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,self,rxjson,procedure,80000,1113256141,13915,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,native_child,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,entry_overhead,rxjson,procedure,80000,21221324,265,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,2,rxjson._json_parse_object,exit_overhead,rxjson,procedure,80000,5023559,62,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-c,3,json_parser.main,elapsed,benchmark_json_parser_opt,procedure,1,4548176000,4548176000,1,0,.int,,complete
+json-stripped-c,3,json_parser.main,inclusive_body,benchmark_json_parser_opt,procedure,1,4548172792,4548172792,1,0,.int,,complete
+json-stripped-c,3,json_parser.main,self,benchmark_json_parser_opt,procedure,1,2384401,2384401,1,0,.int,,complete
+json-stripped-c,3,json_parser.main,native_child,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-stripped-c,3,json_parser.main,entry_overhead,benchmark_json_parser_opt,procedure,1,3041,3041,1,0,.int,,complete
+json-stripped-c,3,json_parser.main,exit_overhead,benchmark_json_parser_opt,procedure,1,167,167,1,0,.int,,complete
+json-stripped-c,4,rxjson.jsoncount,elapsed,rxjson,procedure,5000,4545788391,909157,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,4,rxjson.jsoncount,inclusive_body,rxjson,procedure,5000,4543687375,908737,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,4,rxjson.jsoncount,self,rxjson,procedure,5000,106163520,21232,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,4,rxjson.jsoncount,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,4,rxjson.jsoncount,entry_overhead,rxjson,procedure,5000,1361893,272,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,4,rxjson.jsoncount,exit_overhead,rxjson,procedure,5000,739123,147,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-c,5,rxjson._json_parse_path,elapsed,rxjson,procedure,5000,131454284,26290,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-c,5,rxjson._json_parse_path,inclusive_body,rxjson,procedure,5000,129261917,25852,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-c,5,rxjson._json_parse_path,self,rxjson,procedure,5000,129261917,25852,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-c,5,rxjson._json_parse_path,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-c,5,rxjson._json_parse_path,entry_overhead,rxjson,procedure,5000,1858922,371,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-c,5,rxjson._json_parse_path,exit_overhead,rxjson,procedure,5000,333445,66,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,1,rxjson._json_parse_value,elapsed,rxjson,procedure,655000,13083961658,19975,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,1,rxjson._json_parse_value,inclusive_body,rxjson,procedure,655000,12898513288,19692,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,1,rxjson._json_parse_value,self,rxjson,procedure,655000,2864587172,4373,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,1,rxjson._json_parse_value,native_child,rxjson,procedure,655000,0,0,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,1,rxjson._json_parse_value,entry_overhead,rxjson,procedure,655000,150057822,229,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,1,rxjson._json_parse_value,exit_overhead,rxjson,procedure,655000,35390548,54,655000,0,.int,"data=.binary,len=.int,expose p=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,elapsed,rxjson,procedure,80000,4471129882,55889,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,inclusive_body,rxjson,procedure,80000,4446281949,55578,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,self,rxjson,procedure,80000,1080415219,13505,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,native_child,rxjson,procedure,80000,0,0,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,entry_overhead,rxjson,procedure,80000,19990926,249,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,2,rxjson._json_parse_object,exit_overhead,rxjson,procedure,80000,4857007,60,80000,0,.int,"data=.binary,len=.int,expose p=.int,start=.int,active=.int,segment_count=.int,segment_kind=.int[*],segment_text=.string[*],segment_index=.int[*],segment_bin=.binary[*],expose found=.int,expose found_kind=.int,expose found_start=.int,expose found_after=.int",complete
+json-stripped-baseline,3,json_parser.main,elapsed,benchmark_json_parser_opt,procedure,1,4385445250,4385445250,1,0,.int,,complete
+json-stripped-baseline,3,json_parser.main,inclusive_body,benchmark_json_parser_opt,procedure,1,4385440792,4385440792,1,0,.int,,complete
+json-stripped-baseline,3,json_parser.main,self,benchmark_json_parser_opt,procedure,1,1874174,1874174,1,0,.int,,complete
+json-stripped-baseline,3,json_parser.main,native_child,benchmark_json_parser_opt,procedure,1,0,0,1,0,.int,,complete
+json-stripped-baseline,3,json_parser.main,entry_overhead,benchmark_json_parser_opt,procedure,1,4291,4291,1,0,.int,,complete
+json-stripped-baseline,3,json_parser.main,exit_overhead,benchmark_json_parser_opt,procedure,1,167,167,1,0,.int,,complete
+json-stripped-baseline,4,rxjson.jsoncount,elapsed,rxjson,procedure,5000,4383566618,876713,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,4,rxjson.jsoncount,inclusive_body,rxjson,procedure,5000,4381987892,876397,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,4,rxjson.jsoncount,self,rxjson,procedure,5000,101403561,20280,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,4,rxjson.jsoncount,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,4,rxjson.jsoncount,entry_overhead,rxjson,procedure,5000,1021948,204,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,4,rxjson.jsoncount,exit_overhead,rxjson,procedure,5000,556778,111,5000,0,.int,"json=.string,path=.string",complete
+json-stripped-baseline,5,rxjson._json_parse_path,elapsed,rxjson,procedure,5000,125285637,25057,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,5,rxjson._json_parse_path,inclusive_body,rxjson,procedure,5000,123335995,24667,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,5,rxjson._json_parse_path,self,rxjson,procedure,5000,123335995,24667,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,5,rxjson._json_parse_path,native_child,rxjson,procedure,5000,0,0,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,5,rxjson._json_parse_path,entry_overhead,rxjson,procedure,5000,1638351,327,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete
+json-stripped-baseline,5,rxjson._json_parse_path,exit_overhead,rxjson,procedure,5000,311291,62,5000,0,.int,"path=.string,expose segment_kind=.int[*],expose segment_text=.string[*],expose segment_index=.int[*],expose segment_bin=.binary[*]",complete

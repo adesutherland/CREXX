@@ -7,7 +7,7 @@ main: procedure = .int
 
   scalar = 7
   scalar_ref = reference scalar
-  if \refvalid(scalar_ref) then return fail("scalar ref invalid")
+  if <refvalid>(scalar_ref) = 0 then return fail("scalar ref invalid")
   if snapshot scalar_ref <> 7 then return fail("scalar deref initial")
 
   scalar = 11
@@ -31,7 +31,7 @@ main: procedure = .int
   items[1] = 10
   items[2] = 20
   items_ref = reference items
-  if \refvalid(items_ref) then return fail("array ref invalid")
+  if <refvalid>(items_ref) = 0 then return fail("array ref invalid")
 
   items_snapshot = snapshot items_ref
   items[1] = 30
@@ -40,7 +40,7 @@ main: procedure = .int
 
   box = .Box(4)
   box_ref = box.selfRef()
-  if \refvalid(box_ref) then return fail("self ref invalid")
+  if <refvalid>(box_ref) = 0 then return fail("self ref invalid")
   box_snapshot = snapshot box_ref
   call box.setValue(9)
   if box_snapshot.getValue() <> 4 then return fail("self snapshot")
@@ -50,6 +50,15 @@ main: procedure = .int
   if snapshot attr_ref <> 9 then return fail("attr ref initial")
   call box.setValue(12)
   if readInt(attr_ref) <> 12 then return fail("attr ref live")
+
+  register_zero = .RegisterZeroInt(5)
+  register_zero_ref = register_zero.valueRef()
+  if <refvalid>(register_zero_ref) = 0 then return fail("register-zero ref invalid")
+  register_zero_live = dereference register_zero_ref
+  register_zero_live = 8
+  if register_zero.getValue() <> 8 then return fail("register-zero ref write")
+  call register_zero.setValue(13)
+  if snapshot register_zero_ref <> 13 then return fail("register-zero ref live")
 
   say "PASS: Reference Source Explicit"
   return 0
@@ -88,6 +97,25 @@ Box: class
 
   selfRef: method = reference .Box
     return reference self
+
+  valueRef: method = reference .int
+    return reference value
+
+  setValue: method = .void
+    arg next = .int
+    value = next
+    return
+
+  getValue: method = .int
+    return value
+
+RegisterZeroInt: class
+  value = .int with register.0.int
+
+  *: factory
+    arg seed = .int
+    value = seed
+    return
 
   valueRef: method = reference .int
     return reference value

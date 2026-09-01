@@ -1,0 +1,16 @@
+/*
+ * One table may only be declared once per procedure.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable words linear
+    .jtable words auto
+    br done
+word_key: .jcase words "if"
+    ret 0
+done:
+    load r0,"if"
+    jumps r0,words
+    ret 0

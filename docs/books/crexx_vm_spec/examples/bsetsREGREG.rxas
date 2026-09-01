@@ -1,0 +1,16 @@
+/* Binary text-field and string constant extraction example */
+main() .locals=5
+    load r1,0x
+    load r2,16
+    bresize r1,r2
+
+    load r2,0
+    bsets r1,r2,"index"
+    bgets r3,r1,r2
+    say r3
+
+    load r4,"xxxxx"
+    load r2,6
+    sget r4,"hello world",r2
+    say r4
+    ret

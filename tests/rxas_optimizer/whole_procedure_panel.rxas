@@ -1,0 +1,207 @@
+* NR-27 completed-panel structural proofs and fail-closed controls.
+
+typed_float_compare() .locals=12
+    load r10,7.5
+    fcopy r11,r10
+    feq r9,r11,7.5
+    ret r9
+
+typed_string_compare() .locals=14
+    load r12,"alpha"
+    scopy r13,r12
+    seq r9,r13,"alpha"
+    ret r9
+
+typed_decimal_deferred() .locals=16
+    load r14,7d
+    dcopy r15,r14
+    deq r9,r15,7d
+    ret r9
+
+full_copy_identity() .locals=17
+    copy r16,r16
+    ieq r9,r16,0
+    ret r9
+
+full_copy_ownership_negative() .locals=19
+    null r17
+    null r18
+    load r17,71
+    copy r18,r17
+    ieq r9,r18,71
+    ret r9
+
+redundant_null_join() .locals=21
+    null r20
+    brt redundant_null_left,a0
+    br redundant_null_join
+redundant_null_left:
+    br redundant_null_join
+redundant_null_join:
+    null r20
+    ret
+
+null_intervening_write() .locals=22
+    null r21
+    load r21,1
+    ieq r9,r21,1
+    null r21
+    ret r9
+
+redundant_conversion_join() .locals=23
+    load r22,3
+    itof r22
+    brt redundant_conversion_left,a0
+    br redundant_conversion_join
+redundant_conversion_left:
+    br redundant_conversion_join
+redundant_conversion_join:
+    itof r22
+    feq r9,r22,3.0
+    ret r9
+
+conversion_intervening_write() .locals=24
+    load r23,3
+    itof r23
+    feq r8,r23,3.0
+    load r23,4
+    itof r23
+    feq r9,r23,4.0
+    iadd r9,r9,r8
+    ret r9
+
+signed_zero_distinct() .locals=25
+    load r24,-0.0
+    feq r8,r24,-0.0
+    load r24,0.0
+    feq r9,r24,0.0
+    iadd r9,r9,r8
+    ret r9
+
+copy_loop_mixed_entry() .locals=28
+    load r25,77
+copy_loop_mixed_header:
+    ieq r27,r26,77
+    icopy r26,r25
+    brt copy_loop_mixed_header,a0
+    ret r27
+
+copy_loop_dominated() .locals=31
+    load r28,79
+copy_loop_dominated_header:
+    icopy r29,r28
+    ieq r30,r29,79
+    brt copy_loop_dominated_header,a0
+    ret r30
+
+trace_keeps_dead_load() .locals=32
+    load r31,99
+    .traceevent "L" 4 "R" "I" "r" 31 0 0 0 "trace-keeps-load" ""
+    ret
+
+unreachable_trace_cleanup() .locals=33
+    br unreachable_trace_reachable
+    load r32,88
+    .traceevent "L" 4 "R" "I" "r" 32 0 0 0 "unreachable-trace" ""
+unreachable_trace_reachable:
+    ret
+
+unreachable_source_step_cleanup() .locals=34
+    br unreachable_source_step_reachable
+    .srcstep 1 1 17 "nr27-dead.rxas" 1 1 23 "unreachable-source-step"
+    load r33,87
+unreachable_source_step_reachable:
+    ret
+
+endlife_then_independent() .locals=39
+    endlife r36
+    load r37,83
+    icopy r38,r37
+    ieq r9,r38,83
+    ret r9
+
+copy_before_endlife() .locals=43
+    load r39,89
+    icopy r40,r39
+    endlife r41
+    ieq r42,r40,89
+    ret r42
+
+relevant_register_metadata() .locals=46
+    load r43,97
+    icopy r44,r43
+    .meta "nr27.relevant"="b" ".int" r44
+    ieq r45,r44,97
+    ret r45
+    .meta "nr27.relevant"
+
+unrelated_register_metadata() .locals=49
+    load r46,101
+    icopy r47,r46
+    .meta "nr27.unrelated"="b" ".int" r48
+    ieq r45,r47,101
+    ret r45
+    .meta "nr27.unrelated"
+
+signal_handler_edge() .locals=50
+    sigbr signal_handler_edge_caught,"FAILURE"
+    br signal_handler_edge_done
+signal_handler_edge_caught:
+    load r49,107
+    ret r49
+signal_handler_edge_done:
+    ret 0
+
+signal_async_value_edge() .locals=52
+    sigbr signal_async_value_caught,"FAILURE"
+    load r50,109
+    br signal_async_value_done
+signal_async_value_caught:
+    ieq r51,r50,109
+    ret r51
+signal_async_value_done:
+    ret 0
+
+trace_after_label() .locals=53
+    copy r52,r52
+trace_after_label_anchor:
+    .traceevent "V" 4 "R" "I" "r" 52 0 0 0 "trace-after-label" ""
+    ret
+
+copy_across_unobserved_throw() .locals=57
+    load r53,111
+    icopy r54,r53
+    load r55,1
+    iadd r55,r55,1
+    ieq r56,r54,111
+    ret r56
+
+copy_observed_by_throw_handler() .locals=61
+    sigbr copy_observed_by_throw_caught,"FAILURE"
+    load r57,113
+    icopy r58,r57
+    load r59,1
+    iadd r59,r59,1
+    ret 0
+copy_observed_by_throw_caught:
+    ieq r60,r58,113
+    ret r60
+
+dead_result_hidden_lifetime() .locals=64
+    copy r61,a0
+    load r62,1
+    ieq r61,r62,1
+    ret 0
+
+indirect_control_flow_fail_closed() .locals=64
+    .jtable nr27_indirect_words linear
+    br nr27_indirect_after_cases
+nr27_indirect_hit: .jcase nr27_indirect_words "hit"
+    ret 1
+nr27_indirect_after_cases:
+    load r61,127
+    icopy r62,r61
+    ieq r63,r62,127
+    load r0,"miss"
+    jumpr r0,nr27_indirect_words
+    ret r63

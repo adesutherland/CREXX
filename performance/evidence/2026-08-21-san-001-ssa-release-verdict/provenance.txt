@@ -1,0 +1,42 @@
+head=298f412dc0e40ef12b4957df4b5f8b57a8a14d9f
+branch=develop
+worktree=deliberately dirty
+cmake_build_type=Release
+crexx_vm_profiling=OFF
+control_binary_mtime=2026-08-20 20:31:53 BST
+control_binary_origin=existing pre-fix cmake-build-release tree
+candidate_build_target=rxas
+temporary_evidence_dir=/private/tmp/crexx-san001-release-verdict.FkyUC9
+
+[host-pre]
+utc=2026-08-21T09:28:10Z
+Darwin 25.5.0 arm64
+Apple M5
+10
+25769803776
+{ 2.54 2.48 2.27 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+ lowpowermode         0
+ lowpowermode         0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+cmake version 4.3.2
+1.13.2
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+
+[host-post]
+utc=2026-08-21T09:30:43Z
+Darwin 25.5.0 arm64
+Apple M5
+10
+25769803776
+{ 2.30 2.41 2.27 }
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+ lowpowermode         0
+ lowpowermode         0
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded

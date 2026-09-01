@@ -1,0 +1,47 @@
+/* Level B ARRAYSORT signal and caller-preservation tests. */
+options levelb
+import rxfnsb
+
+values = .string[]
+values[1] = "B"
+values[2] = "A"
+errors = 0
+
+caught = 0
+do
+  ignored = arraysort(values, 0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & unchanged(values), "offset")
+
+caught = 0
+do
+  ignored = .int
+  ignored = arraysort(values, 1, "SIDEWAYS")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & unchanged(values), "order")
+
+caught = 0
+do
+  ignored = .int
+  ignored = arraysort(values, 1, "ASC", 2)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 1 & unchanged(values), "debug")
+
+if errors = 0 then say "PASS: arraysort errors"
+return errors <> 0
+
+unchanged: procedure = .boolean
+  arg values = .string[]
+  return values[0] = 2 & values[1] == "B" & values[2] == "A"
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: ARRAYSORT" label "signal or caller preservation"
+  return 1

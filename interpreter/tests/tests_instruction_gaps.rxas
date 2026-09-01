@@ -100,9 +100,24 @@ test_data_movement() .locals=20
     seq r0,r2,"moved"
     brf data_fail, r0
 
+    load r1,0x0041ff
+    loadsettp r2,999,16711680
+    bcopy r2,r1
+    blen r3,r2
+    ieq r0,r3,3
+    brf data_fail,r0
+    load r4,2
+    getbyte r3,r2,r4
+    ieq r0,r3,255
+    brf data_fail,r0
+    getandtp r3,r2,16711680
+    ieq r0,r3,16711680
+    brf data_fail,r0
+
     loadsettp r1,7,256
     erase r1
-    gettp r2,r1
+    /* ERASE leaves the empty string's protected normalization facts known. */
+    getandtp r2,r1,2147418880
     ieq r0,r2,0
     brf data_fail, r0
     ieq r0,r1,0
@@ -251,9 +266,8 @@ test_string_misc() .locals=30
 
     load r1,"abcdef"
     load r2,2
-    setstrpos r1,r2
     load r3,3
-    substring r4,r1,r3
+    substring r4,r1,r2,r3
     seq r0,r4,"cde"
     brf string_fail, r0
 
@@ -500,7 +514,22 @@ test_system_misc() .locals=30
     load r2,"abc"
     load r3,3
     rxhash r1,r2,r3
-    igt r0,r1,0
+    ieq r0,r1,440920331
+    brf system_fail, r0
+
+    load r3,2
+    rxhash r1,r2,r3
+    ieq r0,r1,1294271946
+    brf system_fail, r0
+
+    load r3,99
+    rxhash r1,r2,r3
+    ieq r0,r1,440920331
+    brf system_fail, r0
+
+    load r3,0
+    rxhash r1,r2,r3
+    ieq r0,r1,2166136261
     brf system_fail, r0
 
     load r1,"test_instruction_gaps_io.tmp"

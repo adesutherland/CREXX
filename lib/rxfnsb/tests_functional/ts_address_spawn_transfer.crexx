@@ -1,0 +1,129 @@
+/* PERF3-13 EF-0 spawn ownership and explicit byte-transfer contract. */
+options levelb
+import rxfnsb
+
+arg test_args = .string[]
+
+fixture = test_args[1]
+failures = 0
+newline = "0a"x
+capture_length = 80 * 306
+
+argv = .string[]
+argv[1] = fixture
+argv[2] = "capture"
+
+output_text = .string
+error_text = .string
+address crexx "run :argv[]" output output_text error error_text
+failures = failures + check_int("large scalar capture rc", rc, 0)
+failures = failures + check_int("large stdout length", length(output_text), capture_length)
+failures = failures + check_int("large stderr length", length(error_text), capture_length)
+failures = failures + check_int("large stdout lines", countstr(newline, output_text), 80)
+failures = failures + check_int("large stderr lines", countstr(newline, error_text), 80)
+failures = failures + check_str("large stdout prefix", left(output_text, 5), "O000:")
+failures = failures + check_str("large stderr prefix", left(error_text, 5), "E000:")
+
+output_lines = .string[]
+error_lines = .string[]
+address crexx "run :argv[]" output output_lines error error_lines
+failures = failures + check_int("large array capture rc", rc, 0)
+failures = failures + check_int("large stdout array count", output_lines.0, 80)
+failures = failures + check_int("large stderr array count", error_lines.0, 80)
+failures = failures + check_int("large stdout line length", length(output_lines[1]), 305)
+failures = failures + check_int("large stderr line length", length(error_lines[80]), 305)
+failures = failures + check_str("large stdout last prefix", left(output_lines[80], 5), "O079:")
+failures = failures + check_str("large stderr last prefix", left(error_lines[80], 5), "E079:")
+
+argv[2] = "empty"
+empty_output = .string[]
+empty_error = .string[]
+address crexx "run :argv[]" output empty_output error empty_error
+failures = failures + check_int("empty rc", rc, 0)
+failures = failures + check_int("empty stdout", empty_output.0, 0)
+failures = failures + check_int("empty stderr", empty_error.0, 0)
+
+argv[2] = "echo"
+input_text = "string input Gràdh 中 😀"
+echo_text = .string
+echo_error = .string
+address crexx "run :argv[]" input input_text output echo_text error echo_error
+failures = failures + check_int("string input rc", rc, 0)
+failures = failures + check_str("string input transfer", echo_text, input_text || newline)
+failures = failures + check_str("string input stderr", echo_error, "")
+
+input_lines = .string[]
+input_lines[1] = "array one"
+input_lines[2] = ""
+input_lines[3] = "array three"
+echo_lines = .string[]
+echo_errors = .string[]
+address crexx "run :argv[]" input input_lines output echo_lines error echo_errors
+failures = failures + check_int("array input rc", rc, 0)
+failures = failures + check_int("array input output count", echo_lines.0, 3)
+failures = failures + check_str("array input first", echo_lines[1], input_lines[1])
+failures = failures + check_str("array input empty", echo_lines[2], "")
+failures = failures + check_str("array input last", echo_lines[3], input_lines[3])
+failures = failures + check_int("array input stderr", echo_errors.0, 0)
+
+argv[2] = "duplex"
+duplex_input = .string[]
+do i = 1 to 48
+  duplex_input[i] = "I" || copies("x", 300)
+end
+duplex_output = .string[]
+duplex_error = .string[]
+address crexx "run :argv[]" input duplex_input output duplex_output error duplex_error
+failures = failures + check_int("duplex rc", rc, 0)
+failures = failures + check_int("duplex stdout count", duplex_output.0, 48)
+failures = failures + check_int("duplex stderr count", duplex_error.0, 48)
+failures = failures + check_str("duplex stdout first", left(duplex_output[1], 5), "OUT:I")
+failures = failures + check_str("duplex stderr last", left(duplex_error[48], 5), "ERR:I")
+
+argv[2] = "fail"
+failure_output = .string[]
+failure_error = .string[]
+address crexx "run :argv[]" output failure_output error failure_error
+failures = failures + check_int("non-zero child rc", rc, 7)
+failures = failures + check_int("partial stdout count", failure_output.0, 1)
+failures = failures + check_int("partial stderr count", failure_error.0, 1)
+failures = failures + check_str("partial stdout", failure_output[1], "partial-out")
+failures = failures + check_str("partial stderr", failure_error[1], "partial-error")
+
+argv[2] = "early"
+early_input = .string[]
+do i = .int(1) to 128
+  early_input[i] = copies("b", 300)
+end
+early_output = .string[]
+early_error = .string[]
+address crexx "run :argv[]" input early_input output early_output error early_error
+failures = failures + check_int("broken pipe early exit rc", rc, 0)
+failures = failures + check_int("broken pipe stdout", early_output.0, 0)
+failures = failures + check_int("broken pipe stderr", early_error.0, 0)
+
+argv[2] = "empty"
+do i = .int(1) to 12
+  address crexx "run :argv[]" output empty_output error empty_error
+  failures = failures + check_int("repeated cleanup rc", rc, 0)
+end
+
+if failures <> 0 then do
+  say "EF-0 spawn transfer failures:" failures
+  return 1
+end
+
+say "PASS: EF-0 spawn transfer contract"
+return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual = expected then return 0
+  say label || ": expected " || expected || " got " || actual
+  return 1
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual = expected then return 0
+  say label || ": expected [" || expected || "] got [" || actual || "]"
+  return 1

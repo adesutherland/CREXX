@@ -1,0 +1,25 @@
+start sieve-rxvm Sieve rxvm
+complete sieve-rxvm elapsed=16s
+start sieve-rxbvm Sieve rxbvm
+complete sieve-rxbvm elapsed=17s
+start permute-rxvm Permute rxvm
+complete permute-rxvm elapsed=31s
+start permute-rxbvm Permute rxbvm
+complete permute-rxbvm elapsed=28s
+start bounce-rxvm Bounce rxvm
+complete bounce-rxvm elapsed=17s
+start bounce-rxbvm Bounce rxbvm
+complete bounce-rxbvm elapsed=17s
+start richards-rxvm Richards rxvm
+complete richards-rxvm elapsed=98s
+start richards-rxbvm Richards rxbvm
+complete richards-rxbvm elapsed=104s
+start base64-rxvm Base64 rxvm
+complete base64-rxvm elapsed=24s
+start base64-rxbvm Base64 rxbvm
+complete base64-rxbvm elapsed=25s
+start towers-rxvm Towers rxvm
+complete towers-rxvm elapsed=47s
+start towers-rxbvm Towers rxbvm
+complete towers-rxbvm elapsed=48s
+matrix complete new_cells=12 elapsed=472s

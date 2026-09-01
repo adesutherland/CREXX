@@ -22,28 +22,39 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B COUNTSTR implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/countstr.md
+ */
 options levelb
 
 namespace rxfnsb expose countstr
 
-/* countstr(needle,haystack) returns number occurrences of needle in haystack */
+/**
+ * Count non-overlapping occurrences of a string.
+ *
+ * @param needle case-sensitive text to find
+ * @param haystack text to search
+ * @return number of non-overlapping matches
+ */
 countstr: procedure = .int
-  arg expose needle = .string, expose haystack = .string /* Pass by reference */
-  count=0
-  offset=1   ## strpos is 1-based offset for best performance
-  nlen=0
-  hlen=0
-  assembler strlen nlen,needle
-  if nlen<1 then return 0   /* empty needle, nothing to count */
-  assembler strlen hlen,haystack
-  if hlen<1 then return 0   /* empty haystack, nothing to count */
-
+  arg needle = .string, haystack = .string
+  count = 0
+  position = 1
+  found = .int
+  needle_length = .int
+  haystack_length = .int
+  assembler strlen needle_length,needle
+  assembler strlen haystack_length,haystack
+  if needle_length = 0 | needle_length > haystack_length then return 0
 
   do forever
-     assembler strpos offset,needle,haystack
-     if offset<=0 then return count
-     offset=offset+nlen
-     count=count+1
+    found = position
+    assembler strpos found,needle,haystack
+    if found = 0 then leave
+    count = count + 1
+    position = found + needle_length
   end
-return count
+  return count

@@ -1,0 +1,58 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Deterministically generate the constant-backed Level G rxunicode case-fold
+ * module from the pinned Unicode 17.0.0 CaseFolding.txt source.
+ */
+
+options levelb
+
+import rxfnsb
+import _rxunicodebuild
+
+arg argv = .string[]
+if argv[0] \= 3 then do
+  say "usage: generate_casefold CaseFolding.txt unicode_casefold.crexx.in output.crexx"
+  return 2
+end
+
+tables = casefold_compile(argv[1], "17.0.0")
+if tables.status() \= 0 then do
+  say "FAIL: CaseFolding line" tables.error_line() || ":" || tables.error()
+  return 1
+end
+if tables.byte_length() \= 4501380 | tables.record_count() \= 1585 |,
+   tables.component_count() \= 1707 | tables.common_count() \= 1481 |,
+   tables.simple_count() \= 31 | tables.full_count() \= 104 |,
+   tables.turkic_count() \= 2 | tables.max_mapping() \= 3 then do
+  say "FAIL: Unicode 17 case-fold prepared-image audit"
+  return 1
+end
+
+template = readlines(argv[2])
+if template[0] <= 0 then do
+  say "FAIL: rxunicode case-fold template is empty or unreadable"
+  return 1
+end
+
+path = argv[3]
+if erasefile(path) \= 0 then return 1
+marker_count = 0
+do line_number = 1 to template[0]
+  line = template[line_number]
+  if strip(line) = "/* @RXUNICODE_CASEFOLD_DATA@ */" then do
+    marker_count = marker_count + 1
+    if charout(path, "  constant UNICODE_CASEFOLD_DATA = '") \= 0 then return 1
+    if charout(path, bin2x(tables.image())) \= 0 then return 1
+    if charout(path, "'x as .binary" || "0a"x) \= 0 then return 1
+  end
+  else if charout(path, line || "0a"x) \= 0 then return 1
+end
+if charout(path) \= 0 then return 1
+if marker_count \= 1 then do
+  ignored = erasefile(path)
+  say "FAIL: rxunicode case-fold template must contain exactly one data marker"
+  return 1
+end
+
+return 0

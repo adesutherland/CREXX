@@ -47,14 +47,13 @@ typedef struct {
     Token *token;
 } FallbackFrame;
 
-static int has_diagnostic(Context *context, Token *token, const char *message) {
+static int has_diagnostic(Context *context, Token *token, RxcpDiagnostic *diagnostic) {
     ASTNode *diag = (ASTNode*)context->diagnostics_list;
-    size_t message_len = strlen(message);
+    if (!context || !diagnostic) return 0;
     while (diag) {
         if (diag->node_type == ERROR &&
             diag->token == token &&
-            diag->node_string_length == message_len &&
-            strncmp(diag->node_string, message, message_len) == 0) {
+            rxcp_diag_equal(diag->diagnostic, diagnostic)) {
             return 1;
         }
         diag = diag->sibling;
@@ -65,12 +64,18 @@ static int has_diagnostic(Context *context, Token *token, const char *message) {
 static void append_diagnostic(Context *context, Token *token, const char *message) {
     ASTNode *diag;
     ASTNode *tail;
+    RxcpDiagnostic *diagnostic;
 
     if (!context || !message) return;
-    if (has_diagnostic(context, token, message)) return;
+    diagnostic = rxcp_diag_create(message);
+    if (!diagnostic) return;
+    if (has_diagnostic(context, token, diagnostic)) {
+        rxcp_diag_free(diagnostic);
+        return;
+    }
 
     diag = ast_ft(context, ERROR);
-    ast_copy_str(diag, (char*)message);
+    ast_set_diagnostic(diag, diagnostic);
     diag->token = token;
     diag->file_name = context->file_name;
     if (token) {

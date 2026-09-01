@@ -1,0 +1,7 @@
+benchmark,vm,mode,lifecycle,phase,sequence,elapsed_ns,platform,crexx_version,vm_role,result_role
+awfy-json,rxvm,opt,process,warmup,1,97954000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke
+awfy-json,rxvm,opt,process,recorded,1,96923000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke
+awfy-json,rxvm,opt,process,recorded,2,97783000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke
+awfy-json,rxvm,opt,process,recorded,3,98736000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke
+awfy-json,rxvm,opt,process,recorded,4,99269000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke
+awfy-json,rxvm,opt,process,recorded,5,96693000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g110e298af8ea.dirty 20260817,product,process-smoke

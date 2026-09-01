@@ -25,7 +25,7 @@ readTail: procedure = .int
 
 hasTail: procedure = .int
   arg which = .int, expose ... = .int
-  return arg(which, "E")
+  return <argexists>(which)
 
 bumpOne: procedure = .int
   arg expose value = .int

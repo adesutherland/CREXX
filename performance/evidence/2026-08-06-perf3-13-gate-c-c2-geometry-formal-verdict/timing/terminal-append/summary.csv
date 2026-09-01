@@ -1,0 +1,16 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+permute-s0,Permute,S0,rxvm,v0-r0-64-16,A,yes,startup-included,5000,normalized_work_per_second,12,2664.550658,2754.917165,2766.822703,2802.784584,2861.341672,32.205619,1.163993,7.112527,no
+permute-s1,Permute,S1,rxvm,v0-r0-64-8,A,yes,startup-included,5000,normalized_work_per_second,12,2465.972052,2752.351578,2760.676534,2828.981520,2841.248103,37.821221,1.369998,13.593626,yes
+permute-s1b,Permute,S1b,rxvm,v0-r0-128-16,A,yes,startup-included,5000,normalized_work_per_second,12,2718.747723,2729.737710,2755.633450,2832.460361,2853.312896,32.261220,1.170737,4.883275,no
+bounce-s0,Bounce,S0,rxvm,v0-r0-64-16,A,yes,startup-included,4200,normalized_work_per_second,12,3735.996684,3771.778364,3779.622797,3801.576724,3832.151753,19.303328,0.510721,2.544039,no
+bounce-s1,Bounce,S1,rxvm,v0-r0-64-8,A,yes,startup-included,4200,normalized_work_per_second,12,3683.202492,3716.071203,3745.472044,3792.081758,3829.946718,37.750552,1.007898,3.917910,no
+bounce-s1b,Bounce,S1b,rxvm,v0-r0-128-16,A,yes,startup-included,4200,normalized_work_per_second,12,3241.028332,3727.462198,3757.094894,3770.685571,3824.666366,24.402073,0.649493,15.534290,yes
+richards-s0,Richards,S0,rxvm,v0-r0-64-16,A,yes,startup-included,20,normalized_work_per_second,12,7.753907,8.365548,8.407287,8.475011,8.541530,0.056088,0.667139,9.368337,no
+richards-s1,Richards,S1,rxvm,v0-r0-64-8,A,yes,startup-included,20,normalized_work_per_second,12,8.183021,8.300627,8.416572,8.499935,8.533876,0.102948,1.223160,4.168614,no
+richards-s1b,Richards,S1b,rxvm,v0-r0-128-16,A,yes,startup-included,20,normalized_work_per_second,12,8.343582,8.435029,8.502937,8.522144,8.573168,0.043462,0.511137,2.700075,no
+towers-s0,Towers,S0,rxvm,v0-r0-64-16,A,yes,startup-included,100,normalized_work_per_second,12,43.454134,43.707901,43.844942,43.929593,44.197449,0.122026,0.278312,1.695327,no
+towers-s1,Towers,S1,rxvm,v0-r0-64-8,A,yes,startup-included,100,normalized_work_per_second,12,42.324495,43.503009,43.773014,43.930910,44.046751,0.190975,0.436285,3.934516,no
+towers-s1b,Towers,S1b,rxvm,v0-r0-128-16,A,yes,startup-included,100,normalized_work_per_second,12,40.525371,43.950711,44.065316,44.203246,44.488419,0.172696,0.391908,8.993576,no
+rexxcps-s0,RexxCPS,S0,rxvm,v0-r0-64-16,A,no,startup-included,1000-clauses,benchmark_rate,12,47766806.000000,48302079.250000,48381845.500000,48665348.750000,49263074.000000,224903.500000,0.464851,3.092623,no
+rexxcps-s1,RexxCPS,S1,rxvm,v0-r0-64-8,A,no,startup-included,1000-clauses,benchmark_rate,12,41639566.000000,47820606.250000,48000777.500000,48361607.500000,48979560.000000,236264.000000,0.492209,15.291406,yes
+rexxcps-s1b,RexxCPS,S1b,rxvm,v0-r0-128-16,A,no,startup-included,1000-clauses,benchmark_rate,12,47222246.000000,48258130.250000,48560450.500000,48849704.500000,49358195.000000,298050.500000,0.613772,4.398536,no

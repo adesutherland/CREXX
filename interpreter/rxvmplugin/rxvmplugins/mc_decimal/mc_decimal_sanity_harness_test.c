@@ -4,7 +4,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "platform.h"
+#include "rxbin.h"
 #include "rxvmplugin_framework.h"
+#include "rxvmvars.h"
 
 int main(int argc, char *argv[]) {
     value a, b, result;
@@ -47,11 +50,11 @@ int main(int argc, char *argv[]) {
     plugin->syncNumericContext(plugin);
 
     /* Make a string buffer to hold the result */
-    char* string = malloc(plugin->getRequiredStringSize(plugin));
+    char* string = malloc(plugin->getRequiredStringSize(plugin, NULL));
 
-    a.decimal_value = NULL;
-    b.decimal_value = NULL;
-    result.decimal_value = NULL;
+    value_init(&a);
+    value_init(&b);
+    value_init(&result);
 
     // Convert the arguments to rxvmplugin numbers
     plugin->decimalFromString(plugin, &a, argv[2]);
@@ -78,17 +81,12 @@ int main(int argc, char *argv[]) {
     printf("DIV:%s:\n", string);
 
     // Free the memory
-    if (a.decimal_value) {
-        free(a.decimal_value);
-    }
-    if (b.decimal_value) {
-        free(b.decimal_value);
-    }
-    if (result.decimal_value) {
-        free(result.decimal_value);
-    }
+    clear_value(&a);
+    clear_value(&b);
+    clear_value(&result);
     free(string);
 
     plugin->base.free((rxvm_plugin*)plugin);
+    printf("DECIMAL TEST PASSED\n");
     return 0;
 } // main

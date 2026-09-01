@@ -1,0 +1,107 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbiftrunc
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("12", "12.3")
+errors = errors + check_fraction("127.097", "127.09782", "3")
+errors = errors + check_fraction("127.100", "00127.1", "3")
+errors = errors + check_value("-1234", " - 1234.5678")
+errors = errors + check_fraction("0.0012", ".00127", "4")
+errors = errors + check_fraction("-0.0012", "-.00127", "4")
+errors = errors + check_value("100", "1E2")
+errors = errors + check_fraction("120.00", "12e1", "2")
+errors = errors + check_fraction("0.000000000001", "1E-12", "12")
+errors = errors + check_fraction("9007199254740993123456789.987", "9007199254740993123456789.98765", "3")
+errors = errors + check_fraction("0.00", "-0E999999999", "2")
+errors = errors + check_omitted_fraction()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_required()
+errors = errors + check_error("RXC-LC-40.11", "not-a-number", "0", 1)
+errors = errors + check_error("RXC-LC-40.12", "1.2", "x", 1)
+errors = errors + check_error("RXC-LC-40.13", "1.2", "-1", 1)
+
+if errors = 0 then say "PASS: Level C TRUNC BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, number = .string
+  return run_value(expected, number, "", 0)
+
+check_fraction: procedure = .int
+  arg expected = .string, number = .string, fraction = .string
+  return run_value(expected, number, fraction, 1)
+
+run_value: procedure = .int
+  arg expected = .string, number = .string, fraction = .string, fraction_supplied = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  if fraction_supplied then do
+    args[2] = .RexxValue(fraction)
+    exists[2] = 1
+  end
+  context = .RexxBifCallContext("TRUNC")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftrunc..rexxclassicbif_trunc(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = number then return 0
+  say "FAIL: TRUNC" number "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_fraction: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("12.9")
+  args[2] = .RexxValue("99")
+  exists[1] = 1
+  exists[2] = 0
+  context = .RexxBifCallContext("TRUNC")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftrunc..rexxclassicbif_trunc(reference context)
+  if \context.hasError() & result.asString() = "12" then return 0
+  say "FAIL: TRUNC omitted fraction got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_error: procedure = .int
+  arg expected_code = .string, number = .string, fraction = .string, fraction_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  args[2] = .RexxValue(fraction)
+  exists[1] = 1
+  exists[2] = fraction_exists
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("TRUNC")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftrunc..rexxclassicbif_trunc(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: TRUNC expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

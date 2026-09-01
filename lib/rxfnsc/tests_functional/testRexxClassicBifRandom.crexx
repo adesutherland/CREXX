@@ -1,0 +1,97 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifrandom
+import rexxclassicconfig
+import rexxvalue
+
+errors = 0
+config_one = .RexxClassicConfig()
+config_two = .RexxClassicConfig()
+
+errors = errors + check_call(config_one,"270","1","1","0","999","1")
+errors = errors + check_call(config_one,"793","0","1","0","999","")
+errors = errors + check_call(config_two,"270","1","1","0","999","1")
+errors = errors + check_call(config_one,"885","0","1","0","999","")
+errors = errors + check_call(config_two,"793","0","1","0","999","")
+errors = errors + check_call(config_one,"0","1","0","0","","")
+errors = errors + check_call(config_one,"270","0","0","","","1")
+errors = errors + check_range_call(config_one,0,10,"","10","1")
+errors = errors + check_range_call(config_one,10,999,"10","","1")
+
+errors = errors + check_error(config_one,"RXC-LC-40.13","-1","10")
+errors = errors + check_error(config_one,"RXC-LC-40.31","100001")
+errors = errors + check_error(config_one,"RXC-LC-40.32","0","100001")
+errors = errors + check_error(config_one,"RXC-LC-40.33","10","5")
+errors = errors + check_error(config_one,"RXC-LC-40.12","1.5","10")
+errors = errors + check_too_many(config_one)
+
+if errors = 0 then say "PASS: Level C RANDOM BIF"
+return errors <> 0
+
+check_call: procedure = .int
+  arg config = .RexxClassicConfig, expected = .string, first_exists = .boolean, second_exists = .boolean, first = .string, second = .string, third = .string
+  context = make_context(config,first_exists,second_exists,third <> "",first,second,third)
+  result = rexxclassicbif_random(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: Level C RANDOM expected" expected "got" result.asString() context.errorCode()
+  return 1
+
+check_range_call: procedure = .int
+  arg config = .RexxClassicConfig, minimum = .int, maximum = .int, first = .string, second = .string, third = .string
+  context = make_context(config,first <> "",second <> "",third <> "",first,second,third)
+  result = rexxclassicbif_random(reference context)
+  value = result.asString() + 0
+  if \context.hasError() & value >= minimum & value <= maximum then return 0
+  say "FAIL: Level C RANDOM expected range" minimum maximum "got" result.asString() context.errorCode()
+  return 1
+
+check_error: procedure = .int
+  arg config = .RexxClassicConfig, expected = .string, ... = .string
+  first = ""
+  second = ""
+  third = ""
+  if arg[0] >= 1 then first = arg[1]
+  if arg[0] >= 2 then second = arg[2]
+  if arg[0] >= 3 then third = arg[3]
+  context = make_context(config,arg[0] >= 1,arg[0] >= 2,arg[0] >= 3,first,second,third)
+  ignored = rexxclassicbif_random(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: Level C RANDOM expected error" expected "got" context.errorCode() context.errorMessage()
+  return 1
+
+make_context: procedure = .RexxBifCallContext
+  arg config = .RexxClassicConfig, first_exists = .boolean, second_exists = .boolean, third_exists = .boolean, first = .string, second = .string, third = .string
+  args = .RexxValue[]
+  exists = .int[]
+  if first_exists | second_exists | third_exists then do
+    args[1] = .RexxValue(first)
+    exists[1] = first_exists
+  end
+  if second_exists | third_exists then do
+    args[2] = .RexxValue(second)
+    exists[2] = second_exists
+  end
+  if third_exists then do
+    args[3] = .RexxValue(third)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("RANDOM")
+  call context.setArguments(args,exists)
+  call context.setConfig(reference config)
+  return context
+
+check_too_many: procedure = .int
+  arg config = .RexxClassicConfig
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 4
+    args[i] = .RexxValue(i || "")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("RANDOM")
+  call context.setArguments(args,exists)
+  call context.setConfig(reference config)
+  ignored = rexxclassicbif_random(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.4" then return 0
+  say "FAIL: Level C RANDOM expected error RXC-LC-40.4 got" context.errorCode()
+  return 1

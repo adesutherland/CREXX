@@ -1,0 +1,2299 @@
+/*
+ * SOURCE                 : base64_roundtrip.crexx
+ */
+
+.globals=0
+
+main() .locals=43
+   .meta "base64_roundtrip.main"="b" ".int" main() ""
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "base64_roundtrip.main.decoded"="b" ".binary" r4
+   .srcstep 1 1 17 "base64_roundtrip.crexx" 19 1 18 "decoded = .binary"
+   null r4
+   .srcstep 2 2 17 "base64_roundtrip.crexx" 11 5 19 "arg argv = .string[]"
+   .meta "base64_roundtrip.main.argv"="b" ".string[*]" a1
+   .srcstep 3 3 17 "base64_roundtrip.crexx" 13 1 16 "repetitions = 1"
+   .meta "base64_roundtrip.main.repetitions"="b" ".int" r6
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 3 3 0 "repetitions" ""
+   .srcstep 5 5 17 "base64_roundtrip.crexx" 14 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 0 5 5 0 "argv" ""
+   getattrs r7,a1,0
+   .traceevent "V" 6 "R" "I" "r" 7 5 5 0 "argv" ""
+   blt l25iffalse,r7,1
+   .srcstep 6 6 17 "base64_roundtrip.crexx" 14 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 4 4 17 "base64_roundtrip.crexx" 14 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minattrs a1,1
+   linkattr1 r8,a1,1
+   stoi r8
+   .traceevent "V" 6 "R" "I" "r" 8 4 4 0 "argv" ""
+   icopy r6,r8
+   .traceevent "A" 6 "R" "I" "r" 6 4 4 0 "repetitions" ""
+   unlink r8
+l25iffalse:
+   .srcstep 11 11 17 "base64_roundtrip.crexx" 15 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "repetitions" ""
+   bge l32iffalse,r6,1
+   .srcstep 12 12 17 "base64_roundtrip.crexx" 15 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 10 10 17 "base64_roundtrip.crexx" 15 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "base64_roundtrip.crexx" 15 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 7 7 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 8 8 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 10 10 0 "" ""
+   icopy r0,r7
+   br l1185bexprend
+l1185bexprend:
+   ret r0
+l32iffalse:
+   .srcstep 26 26 17 "base64_roundtrip.crexx" 17 1 19 "input = make_input()"
+   .meta "base64_roundtrip.main.data"="b" ".binary" r9
+   .srcstep 13 13 17 "base64_roundtrip.crexx" 36 3 17 "  data = .binary"
+   null r9
+   .srcstep 18 18 17 "base64_roundtrip.crexx" 37 3 28 "  call binresize data, 1024"
+   .srcstep 14 14 33 "base64_roundtrip.crexx" 37 28 28 "  call binresize data, 1024"
+   load r12,1024
+   .traceevent "L" 4 "R" "I" "r" 12 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 14 14 0 "length" ""
+   .srcstep 15 15 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 15 15 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 15 15 0 "result" ""
+   .srcstep 16 16 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "length" ""
+   bresize r9,r12
+   .srcstep 17 17 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+   blen r13,r9
+   .traceevent "V" 6 "R" "I" "r" 13 0 0 0 "result" ""
+   copy r10,r13
+   .traceevent "A" 6 "R" "I" "r" 10 0 0 0 "__inline_unused_889" ""
+   .srcstep 23 23 17 "base64_roundtrip.crexx" 38 3 5 "  do offset = 0 to 1023"
+   .srcstep 19 19 17 "base64_roundtrip.crexx" 38 6 16 "  do offset = 0 to 1023"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 19 19 0 "offset" ""
+   .srcstep 20 20 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+   load r7,1023
+   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+l1204dostart:
+   .srcstep 20 20 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+   igt r0,r8,r7
+   brt l1204doend,r0
+   .srcstep 22 22 17 "base64_roundtrip.crexx" 39 5 56 "    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256"
+   .traceevent "V" 6 "R" "X" "r" 9 22 22 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 8 22 22 0 "offset" ""
+   .traceevent "V" 6 "R" "I" "r" 8 22 22 0 "offset" ""
+   imult r14,r8,31
+   .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+   iadd r14,r14,7
+   .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+   imod r14,r14,256
+   .traceevent "O" 4 "R" "I" "r" 14 22 22 0 "" ""
+   bsetu8 r9,r8,r14
+l1204doinc:
+   .srcstep 21 21 17 "base64_roundtrip.crexx" 38 6 12 "  do offset = 0 to 1023"
+   inc r8
+   .srcstep 24 24 17 "base64_roundtrip.crexx" 40 3 6 "  end"
+   br l1204dostart
+l1204doend:
+   endlife r8
+   .srcstep 25 25 6 "base64_roundtrip.crexx" 17 1 6 "input = make_input()"
+   .traceevent "V" 6 "R" "X" "r" 9 0 0 0 "data" ""
+   copy r5,r9
+   .srcstep 27 27 17 "base64_roundtrip.crexx" 18 1 13 "encoded = \"\""
+   .meta "base64_roundtrip.main.encoded"="b" ".string" r1
+   .meta "base64_roundtrip.main.input"="b" ".binary" r5
+   load r1,""
+   .traceevent "L" 4 "R" "S" "r" 1 27 27 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 27 27 0 "encoded" ""
+   .srcstep 80 80 17 "base64_roundtrip.crexx" 20 1 3 "do iteration = 1 to repetitions"
+   .srcstep 28 28 17 "base64_roundtrip.crexx" 20 4 17 "do iteration = 1 to repetitions"
+   .meta "base64_roundtrip.main.iteration"="b" ".int" r14
+   load r14,1
+   .traceevent "L" 4 "R" "I" "r" 14 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 28 28 0 "iteration" ""
+   .srcstep 29 29 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "repetitions" ""
+l43dostart:
+   .srcstep 29 29 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+   igt r8,r14,r6
+   brt l43doend,r8
+   .srcstep 78 78 17 "base64_roundtrip.crexx" 21 3 33 "  encoded = base64_encode(input)"
+   .meta "base64_roundtrip.main.result"="b" ".binary" r21
+   .srcstep 31 31 17 "base64_roundtrip.crexx" 48 3 19 "  result = .binary"
+   null r21
+   .srcstep 32 32 6 "base64_roundtrip.crexx" 44 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 5 0 0 0 "input" ""
+   copy r16,r5
+   .srcstep 33 33 17 "base64_roundtrip.crexx" 45 3 91 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\" as .binary"
+   load r15,0x4142434445464748494a4b4c4d4e4f505152535455565758595a6162636465666768696a6b6c6d6e6f707172737475767778797a303132333435363738392b2f
+   .traceevent "L" 4 "R" "X" "r" 15 33 33 0 "" ""
+   .traceevent "A" 6 "R" "X" "r" 15 33 33 0 "alphabet" ""
+   .srcstep 37 37 17 "base64_roundtrip.crexx" 46 3 33 "  input_length = binlength(data)"
+   .srcstep 34 34 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 16 0 0 0 "data" ""
+   copy r22,r16
+   .srcstep 35 35 25 "binary.crexx" 45 3 10 "  len = 0"
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 35 35 0 "len" ""
+   .srcstep 36 36 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "len" ""
+   .traceevent "V" 6 "R" "X" "r" 22 0 0 0 "data" ""
+   blen r23,r22
+   .traceevent "V" 6 "R" "I" "r" 23 0 0 0 "len" ""
+   copy r18,r23
+   .traceevent "A" 6 "R" "I" "r" 18 0 0 0 "input_length" ""
+   .srcstep 38 38 17 "base64_roundtrip.crexx" 47 3 53 "  encoded_length = ((input_length + 2) <idiv> 3) * 4"
+   .traceevent "V" 6 "R" "I" "r" 18 38 38 0 "input_length" ""
+   iadd r7,r18,2
+   .traceevent "O" 4 "R" "I" "r" 7 38 38 0 "" ""
+   idiv r7,r7,3
+   .traceevent "O" 4 "R" "I" "r" 7 38 38 0 "" ""
+   imult r17,r7,4
+   .traceevent "O" 4 "R" "I" "r" 17 38 38 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 38 38 0 "encoded_length" ""
+   .srcstep 43 43 17 "base64_roundtrip.crexx" 49 3 40 "  call binresize result, encoded_length"
+   .srcstep 39 39 33 "base64_roundtrip.crexx" 49 40 40 "  call binresize result, encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 17 39 39 0 "encoded_length" ""
+   icopy r26,r17
+   .traceevent "A" 6 "R" "I" "r" 26 39 39 0 "length" ""
+   .srcstep 40 40 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r27,0
+   .traceevent "L" 4 "R" "I" "r" 27 40 40 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 27 40 40 0 "result" ""
+   .srcstep 41 41 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 21 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 26 0 0 0 "length" ""
+   bresize r21,r26
+   .srcstep 42 42 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 21 0 0 0 "result" ""
+   blen r27,r21
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "result" ""
+   copy r24,r27
+   .traceevent "A" 6 "R" "I" "r" 24 0 0 0 "__inline_unused_889" ""
+   .srcstep 44 44 17 "base64_roundtrip.crexx" 50 3 19 "  input_offset = 0"
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 44 44 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 44 44 0 "input_offset" ""
+   .srcstep 45 45 17 "base64_roundtrip.crexx" 51 3 20 "  output_offset = 0"
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 45 45 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 45 45 0 "output_offset" ""
+   .srcstep 75 75 17 "base64_roundtrip.crexx" 52 3 5 "  do while input_offset < input_length"
+l1395dostart:
+   .srcstep 46 46 17 "base64_roundtrip.crexx" 52 6 39 "  do while input_offset < input_length"
+   .traceevent "V" 6 "R" "I" "r" 19 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 18 0 0 0 "input_length" ""
+   bge l1395doend,r19,r18
+   .srcstep 47 47 17 "base64_roundtrip.crexx" 53 5 44 "    remaining = input_length - input_offset"
+   .traceevent "V" 6 "R" "I" "r" 18 47 47 0 "input_length" ""
+   .traceevent "V" 6 "R" "I" "r" 19 47 47 0 "input_offset" ""
+   isub r33,r18,r19
+   .traceevent "O" 4 "R" "I" "r" 33 47 47 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 47 47 0 "remaining" ""
+   .srcstep 48 48 17 "base64_roundtrip.crexx" 54 5 40 "    byte1 = <at..u8>(input_offset) data"
+   .traceevent "V" 6 "R" "X" "r" 16 48 48 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 19 48 48 0 "input_offset" ""
+   bgetu8 r7,r16,r19
+   .traceevent "A" 6 "R" "I" "r" 7 48 48 0 "byte1" ""
+   .srcstep 49 49 17 "base64_roundtrip.crexx" 55 5 14 "    byte2 = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 49 49 0 "byte2" ""
+   .srcstep 50 50 17 "base64_roundtrip.crexx" 56 5 14 "    byte3 = 0"
+   load r28,0
+   .traceevent "L" 4 "R" "I" "r" 28 50 50 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 50 50 0 "byte3" ""
+   .srcstep 52 52 17 "base64_roundtrip.crexx" 57 5 21 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "I" "r" 33 52 52 0 "remaining" ""
+   ble l1419iffalse,r33,1
+   .srcstep 53 53 17 "base64_roundtrip.crexx" 57 22 26 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .srcstep 51 51 17 "base64_roundtrip.crexx" 57 27 66 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "X" "r" 16 51 51 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 19 51 51 0 "input_offset" ""
+   iadd r36,r19,1
+   .traceevent "O" 4 "R" "I" "r" 36 51 51 0 "" ""
+   bgetu8 r0,r16,r36
+   .traceevent "A" 6 "R" "I" "r" 0 51 51 0 "byte2" ""
+l1419iffalse:
+   .srcstep 55 55 17 "base64_roundtrip.crexx" 58 5 21 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "I" "r" 33 55 55 0 "remaining" ""
+   ble l1431iffalse,r33,2
+   .srcstep 56 56 17 "base64_roundtrip.crexx" 58 22 26 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .srcstep 54 54 17 "base64_roundtrip.crexx" 58 27 66 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "X" "r" 16 54 54 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 19 54 54 0 "input_offset" ""
+   iadd r35,r19,2
+   .traceevent "O" 4 "R" "I" "r" 35 54 54 0 "" ""
+   bgetu8 r28,r16,r35
+   .traceevent "A" 6 "R" "I" "r" 28 54 54 0 "byte3" ""
+l1431iffalse:
+   .srcstep 57 57 17 "base64_roundtrip.crexx" 60 5 28 "    digit1 = byte1 <idiv> 4"
+   .traceevent "V" 6 "R" "I" "r" 7 57 57 0 "byte1" ""
+   idiv r29,r7,4
+   .traceevent "O" 4 "R" "I" "r" 29 57 57 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 57 57 0 "digit1" ""
+   .srcstep 58 58 17 "base64_roundtrip.crexx" 61 5 52 "    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16"
+   .traceevent "V" 6 "R" "I" "r" 7 58 58 0 "byte1" ""
+   imod r36,r7,4
+   .traceevent "O" 4 "R" "I" "r" 36 58 58 0 "" ""
+   imult r36,r36,16
+   .traceevent "O" 4 "R" "I" "r" 36 58 58 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 0 58 58 0 "byte2" ""
+   idiv r35,r0,16
+   .traceevent "O" 4 "R" "I" "r" 35 58 58 0 "" ""
+   iadd r30,r36,r35
+   .traceevent "O" 4 "R" "I" "r" 30 58 58 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 58 58 0 "digit2" ""
+   .srcstep 59 59 17 "base64_roundtrip.crexx" 62 5 52 "    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64"
+   .traceevent "V" 6 "R" "I" "r" 0 59 59 0 "byte2" ""
+   imod r36,r0,16
+   .traceevent "O" 4 "R" "I" "r" 36 59 59 0 "" ""
+   imult r36,r36,4
+   .traceevent "O" 4 "R" "I" "r" 36 59 59 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 28 59 59 0 "byte3" ""
+   idiv r35,r28,64
+   .traceevent "O" 4 "R" "I" "r" 35 59 59 0 "" ""
+   iadd r31,r36,r35
+   .traceevent "O" 4 "R" "I" "r" 31 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 31 59 59 0 "digit3" ""
+   .srcstep 60 60 17 "base64_roundtrip.crexx" 63 5 28 "    digit4 = byte3 <mod> 64"
+   .traceevent "V" 6 "R" "I" "r" 28 60 60 0 "byte3" ""
+   imod r32,r28,64
+   .traceevent "O" 4 "R" "I" "r" 32 60 60 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 60 60 0 "digit4" ""
+   .srcstep 61 61 17 "base64_roundtrip.crexx" 65 5 63 "    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 21 61 61 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 61 61 0 "output_offset" ""
+   .traceevent "V" 6 "R" "X" "r" 15 61 61 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 29 61 61 0 "digit1" ""
+   bgetu8 r36,r15,r29
+   bsetu8 r21,r20,r36
+   .srcstep 62 62 17 "base64_roundtrip.crexx" 66 5 67 "    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 21 62 62 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 62 62 0 "output_offset" ""
+   iadd r36,r20,1
+   .traceevent "O" 4 "R" "I" "r" 36 62 62 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 15 62 62 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 30 62 62 0 "digit2" ""
+   bgetu8 r35,r15,r30
+   bsetu8 r21,r36,r35
+   .srcstep 65 65 17 "base64_roundtrip.crexx" 67 5 21 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 33 65 65 0 "remaining" ""
+   ble l1495iffalse,r33,1
+   .srcstep 66 66 17 "base64_roundtrip.crexx" 67 22 26 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .srcstep 63 63 17 "base64_roundtrip.crexx" 67 27 89 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 21 63 63 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 63 63 0 "output_offset" ""
+   iadd r35,r20,2
+   .traceevent "O" 4 "R" "I" "r" 35 63 63 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 15 63 63 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 31 63 63 0 "digit3" ""
+   bgetu8 r37,r15,r31
+   bsetu8 r21,r35,r37
+   br l1495ifend
+   .srcstep 67 67 17 "base64_roundtrip.crexx" 68 5 9 "    else <at..u8>(output_offset + 2) result = 61"
+l1495iffalse:
+   .srcstep 64 64 17 "base64_roundtrip.crexx" 68 10 49 "    else <at..u8>(output_offset + 2) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 21 64 64 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 64 64 0 "output_offset" ""
+   iadd r38,r20,2
+   .traceevent "O" 4 "R" "I" "r" 38 64 64 0 "" ""
+   load r39,61
+   .traceevent "L" 4 "R" "I" "r" 39 64 64 0 "" ""
+   bsetu8 r21,r38,r39
+l1495ifend:
+   .srcstep 70 70 17 "base64_roundtrip.crexx" 69 5 21 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 33 70 70 0 "remaining" ""
+   ble l1518iffalse,r33,2
+   .srcstep 71 71 17 "base64_roundtrip.crexx" 69 22 26 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .srcstep 68 68 17 "base64_roundtrip.crexx" 69 27 89 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 21 68 68 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 68 68 0 "output_offset" ""
+   iadd r38,r20,3
+   .traceevent "O" 4 "R" "I" "r" 38 68 68 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 15 68 68 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 32 68 68 0 "digit4" ""
+   bgetu8 r37,r15,r32
+   bsetu8 r21,r38,r37
+   br l1518ifend
+   .srcstep 72 72 17 "base64_roundtrip.crexx" 70 5 9 "    else <at..u8>(output_offset + 3) result = 61"
+l1518iffalse:
+   .srcstep 69 69 17 "base64_roundtrip.crexx" 70 10 49 "    else <at..u8>(output_offset + 3) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 21 69 69 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 20 69 69 0 "output_offset" ""
+   iadd r36,r20,3
+   .traceevent "O" 4 "R" "I" "r" 36 69 69 0 "" ""
+   load r35,61
+   .traceevent "L" 4 "R" "I" "r" 35 69 69 0 "" ""
+   bsetu8 r21,r36,r35
+l1518ifend:
+   .srcstep 73 73 17 "base64_roundtrip.crexx" 71 5 36 "    input_offset = input_offset + 3"
+   .traceevent "V" 6 "R" "I" "r" 19 73 73 0 "input_offset" ""
+   iadd r19,r19,3
+   .traceevent "O" 4 "R" "I" "r" 19 73 73 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 73 73 0 "input_offset" ""
+   .srcstep 74 74 17 "base64_roundtrip.crexx" 72 5 38 "    output_offset = output_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 20 74 74 0 "output_offset" ""
+   iadd r20,r20,4
+   .traceevent "O" 4 "R" "I" "r" 20 74 74 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 74 74 0 "output_offset" ""
+l1395doinc:
+   .srcstep 76 76 17 "base64_roundtrip.crexx" 73 3 6 "  end"
+   br l1395dostart
+l1395doend:
+   endlife r7
+   endlife r0
+   endlife r28
+   endlife r29
+   endlife r30
+   endlife r31
+   endlife r32
+   endlife r33
+   .srcstep 77 77 33 "base64_roundtrip.crexx" 74 3 9 "  return result as .string"
+   .traceevent "V" 6 "R" "X" "r" 21 77 77 0 "result" ""
+   bcopy r1,r21
+   bintos r1
+   .traceevent "A" 6 "R" "S" "r" 1 77 77 0 "encoded" ""
+   .srcstep 79 79 17 "base64_roundtrip.crexx" 22 3 35 "  decoded = base64_decode(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 1 79 79 0 "encoded" ""
+   load r0,1
+   settp r1,256
+   call r4,base64_decode(),r0
+   .traceevent "F" 4 "R" "X" "r" 4 79 79 0 "base64_decode" ""
+   .traceevent "A" 6 "R" "X" "r" 4 79 79 0 "decoded" ""
+l43doinc:
+   .srcstep 30 30 17 "base64_roundtrip.crexx" 20 4 13 "do iteration = 1 to repetitions"
+   inc r14
+   .srcstep 81 81 17 "base64_roundtrip.crexx" 23 1 4 "end"
+   br l43dostart
+l43doend:
+   endlife r14
+   .meta "base64_roundtrip.main.iteration"
+   .srcstep 97 97 17 "base64_roundtrip.crexx" 25 1 27 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 86 86 17 "base64_roundtrip.crexx" 25 4 10 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 82 82 33 "base64_roundtrip.crexx" 25 10 10 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .traceevent "V" 6 "R" "S" "r" 1 82 82 0 "encoded" ""
+   scopy r38,r1
+   .traceevent "A" 6 "R" "S" "r" 38 82 82 0 "string" ""
+   .srcstep 83 83 25 "length.crexx" 42 3 13 "  result = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 83 83 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 83 83 0 "result" ""
+   .srcstep 84 84 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 39 97 97 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 38 97 97 0 "string" ""
+   strlen r39,r38
+   .srcstep 85 85 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 39 97 97 0 "result" ""
+   icopy r37,r39
+   br l1556bexprend
+l1556bexprend:
+   endlife r39
+   endlife r38
+   beq l69iffalse,r37,1368
+   .srcstep 98 98 17 "base64_roundtrip.crexx" 25 28 32 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 96 96 17 "base64_roundtrip.crexx" 25 33 101 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 95 95 17 "base64_roundtrip.crexx" 25 40 44 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 92 92 33 "base64_roundtrip.crexx" 128 7 14 "  arg message = .string"
+   .srcstep 91 91 17 "base64_roundtrip.crexx" 25 85 91 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 87 87 33 "base64_roundtrip.crexx" 25 91 91 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .traceevent "V" 6 "R" "S" "r" 1 87 87 0 "encoded" ""
+   scopy r36,r1
+   .traceevent "A" 6 "R" "S" "r" 36 87 87 0 "string" ""
+   .srcstep 88 88 25 "length.crexx" 42 3 13 "  result = 0"
+   load r37,0
+   .traceevent "L" 4 "R" "I" "r" 37 88 88 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 88 88 0 "result" ""
+   .srcstep 89 89 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 37 92 92 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 36 92 92 0 "string" ""
+   strlen r37,r36
+   .srcstep 90 90 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 37 92 92 0 "result" ""
+   icopy r35,r37
+   br l1588bexprend
+l1588bexprend:
+   endlife r37
+   endlife r36
+   itos r35
+   concat r38,"expected encoded length 1368, got ",r35
+   .traceevent "O" 4 "R" "S" "r" 38 92 92 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 92 92 0 "message" ""
+   .srcstep 93 93 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 38 93 93 0 "message" ""
+   sconcat r37,"FAIL:",r38
+   .traceevent "O" 4 "R" "S" "r" 37 93 93 0 "" ""
+   say r37
+   .srcstep 94 94 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 96 96 0 "" ""
+   icopy r36,r37
+   br l1582bexprend
+l1582bexprend:
+   endlife r38
+   ret r36
+l69iffalse:
+   .srcstep 124 124 17 "base64_roundtrip.crexx" 26 1 35 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 119 119 17 "base64_roundtrip.crexx" 26 4 14 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 99 99 14 "binary.crexx" 219 7 11 "  arg left = .binary, right = .binary"
+   .traceevent "V" 6 "R" "X" "r" 5 124 124 0 "input" ""
+   copy r39,r5
+   .srcstep 100 100 14 "binary.crexx" 219 23 28 "  arg left = .binary, right = .binary"
+   .traceevent "V" 6 "R" "X" "r" 4 124 124 0 "decoded" ""
+   copy r37,r4
+   .srcstep 101 101 25 "binary.crexx" 220 3 15 "  left_len = 0"
+   load r38,0
+   .traceevent "L" 4 "R" "I" "r" 38 101 101 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 101 101 0 "left_len" ""
+   .srcstep 102 102 25 "binary.crexx" 221 3 16 "  right_len = 0"
+   load r36,0
+   .traceevent "L" 4 "R" "I" "r" 36 102 102 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 102 102 0 "right_len" ""
+   .srcstep 103 103 25 "binary.crexx" 222 13 31 "  assembler blen left_len,left"
+   .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+   .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+   blen r38,r39
+   .srcstep 104 104 25 "binary.crexx" 223 13 33 "  assembler blen right_len,right"
+   .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+   .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+   blen r36,r37
+   .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+   .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+   bne l1633iffalse,r38,r36
+   .srcstep 105 105 25 "binary.crexx" 225 5 19 "    comparison = 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 105 105 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 105 105 0 "comparison" ""
+   .srcstep 106 106 25 "binary.crexx" 226 15 42 "    assembler bcmpb comparison,left,right"
+   .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "comparison" ""
+   .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+   .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+   bcmpb r33,r39,r37
+   .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "comparison" ""
+   bne l1645iffalse,r33,0
+   .srcstep 107 107 25 "binary.crexx" 227 28 36 "    if comparison = 0 then return 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 124 124 0 "" ""
+   icopy r33,r31
+   br l1607bexprend
+l1645iffalse:
+   endlife r33
+l1633iffalse:
+   .srcstep 108 108 25 "binary.crexx" 229 3 22 "  scan_len = left_len"
+   .traceevent "V" 6 "R" "I" "r" 38 108 108 0 "left_len" ""
+   icopy r35,r38
+   .traceevent "A" 6 "R" "I" "r" 35 108 108 0 "scan_len" ""
+   .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+   .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+   bge l1654iffalse,r36,r35
+   .srcstep 109 109 25 "binary.crexx" 230 32 52 "  if right_len < scan_len then scan_len = right_len"
+   .traceevent "V" 6 "R" "I" "r" 36 109 109 0 "right_len" ""
+   icopy r35,r36
+   .traceevent "A" 6 "R" "I" "r" 35 109 109 0 "scan_len" ""
+l1654iffalse:
+   .srcstep 110 110 25 "binary.crexx" 231 6 16 "  do offset = 0 to scan_len - 1"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 110 110 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 110 110 0 "offset" ""
+   .srcstep 111 111 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+   .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+   isub r31,r35,1
+   .traceevent "O" 4 "R" "I" "r" 31 124 124 0 "" ""
+l1661dostart:
+   .srcstep 111 111 25 "binary.crexx" 231 17 32 "  do offset = 0 to scan_len - 1"
+   igt r30,r33,r31
+   brt l1661doend,r30
+   .srcstep 112 112 25 "binary.crexx" 232 5 18 "    left_byte = 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 112 112 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 112 112 0 "left_byte" ""
+   .srcstep 113 113 25 "binary.crexx" 233 5 19 "    right_byte = 0"
+   load r32,0
+   .traceevent "L" 4 "R" "I" "r" 32 113 113 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 113 113 0 "right_byte" ""
+   .srcstep 114 114 25 "binary.crexx" 234 15 44 "    assembler getbyte left_byte,left,offset"
+   .traceevent "V" 6 "R" "I" "r" 34 124 124 0 "left_byte" ""
+   .traceevent "V" 6 "R" "X" "r" 39 124 124 0 "left" ""
+   .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+   getbyte r34,r39,r33
+   .srcstep 115 115 25 "binary.crexx" 235 15 46 "    assembler getbyte right_byte,right,offset"
+   .traceevent "V" 6 "R" "I" "r" 32 124 124 0 "right_byte" ""
+   .traceevent "V" 6 "R" "X" "r" 37 124 124 0 "right" ""
+   .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+   getbyte r32,r37,r33
+   .traceevent "V" 6 "R" "I" "r" 34 124 124 0 "left_byte" ""
+   .traceevent "V" 6 "R" "I" "r" 32 124 124 0 "right_byte" ""
+   beq l1686iffalse,r34,r32
+   .srcstep 116 116 25 "binary.crexx" 236 37 54 "    if left_byte <> right_byte then return offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 33 124 124 0 "offset" ""
+   iadd r28,r33,1
+   .traceevent "O" 4 "R" "I" "r" 28 124 124 0 "" ""
+   icopy r33,r28
+   br l1607bexprend
+l1686iffalse:
+l1661doinc:
+   inc r33
+   br l1661dostart
+l1661doend:
+   endlife r34
+   endlife r33
+   endlife r32
+   .traceevent "V" 6 "R" "I" "r" 38 124 124 0 "left_len" ""
+   .traceevent "V" 6 "R" "I" "r" 36 124 124 0 "right_len" ""
+   beq l1694iffalse,r38,r36
+   .srcstep 117 117 25 "binary.crexx" 238 33 52 "  if left_len <> right_len then return scan_len + 1"
+   .traceevent "V" 6 "R" "I" "r" 35 124 124 0 "scan_len" ""
+   iadd r33,r35,1
+   .traceevent "O" 4 "R" "I" "r" 33 124 124 0 "" ""
+   br l1607bexprend
+l1694iffalse:
+   .srcstep 118 118 25 "binary.crexx" 239 3 11 "  return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 124 124 0 "" ""
+   icopy r33,r34
+   br l1607bexprend
+l1607bexprend:
+   endlife r39
+   endlife r38
+   endlife r37
+   endlife r36
+   endlife r35
+   beq l78iffalse,r33,0
+   .srcstep 125 125 17 "base64_roundtrip.crexx" 26 36 40 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 123 123 17 "base64_roundtrip.crexx" 26 41 87 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 122 122 17 "base64_roundtrip.crexx" 26 48 52 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 120 120 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+   say "FAIL: decoded bytes differ from input"
+   .srcstep 121 121 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+   load r38,1
+   .traceevent "L" 4 "R" "I" "r" 38 123 123 0 "" ""
+   icopy r37,r38
+   br l1704bexprend
+l1704bexprend:
+   ret r37
+l78iffalse:
+   .srcstep 140 140 17 "base64_roundtrip.crexx" 28 1 34 "checksum = byte_checksum(decoded)"
+   .srcstep 126 126 6 "base64_roundtrip.crexx" 120 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 4 0 0 0 "decoded" ""
+   copy r41,r4
+   .srcstep 127 127 17 "base64_roundtrip.crexx" 121 3 15 "  checksum = 0"
+   load r40,0
+   .traceevent "L" 4 "R" "I" "r" 40 127 127 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 40 127 127 0 "checksum" ""
+   .srcstep 137 137 17 "base64_roundtrip.crexx" 122 3 5 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 128 128 17 "base64_roundtrip.crexx" 122 6 16 "  do offset = 0 to binlength(data) - 1"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 128 128 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 128 128 0 "offset" ""
+   .srcstep 134 134 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 133 133 17 "base64_roundtrip.crexx" 122 20 29 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 129 129 14 "binary.crexx" 44 7 11 "  arg data = .binary"
+   .traceevent "V" 6 "R" "X" "r" 41 0 0 0 "data" ""
+   copy r38,r41
+   .srcstep 130 130 25 "binary.crexx" 45 3 10 "  len = 0"
+   load r37,0
+   .traceevent "L" 4 "R" "I" "r" 37 130 130 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 37 130 130 0 "len" ""
+   .srcstep 131 131 25 "binary.crexx" 46 13 26 "  assembler blen len,data"
+   .traceevent "V" 6 "R" "I" "r" 37 0 0 0 "len" ""
+   .traceevent "V" 6 "R" "X" "r" 38 0 0 0 "data" ""
+   blen r37,r38
+   .srcstep 132 132 25 "binary.crexx" 47 3 13 "  return len"
+   .traceevent "V" 6 "R" "I" "r" 37 0 0 0 "len" ""
+   icopy r36,r37
+   br l1732bexprend
+l1732bexprend:
+   endlife r38
+   endlife r37
+   isub r38,r36,1
+   .traceevent "O" 4 "R" "I" "r" 38 0 0 0 "" ""
+l1725dostart:
+   .srcstep 134 134 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+   igt r37,r39,r38
+   brt l1725doend,r37
+   .srcstep 136 136 17 "base64_roundtrip.crexx" 123 5 48 "    checksum = checksum + <at..u8>(offset) data"
+   .traceevent "V" 6 "R" "I" "r" 40 136 136 0 "checksum" ""
+   .traceevent "V" 6 "R" "X" "r" 41 136 136 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 39 136 136 0 "offset" ""
+   bgetu8 r36,r41,r39
+   iadd r40,r40,r36
+   .traceevent "O" 4 "R" "I" "r" 40 136 136 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 40 136 136 0 "checksum" ""
+l1725doinc:
+   .srcstep 135 135 17 "base64_roundtrip.crexx" 122 6 12 "  do offset = 0 to binlength(data) - 1"
+   inc r39
+   .srcstep 138 138 17 "base64_roundtrip.crexx" 124 3 6 "  end"
+   br l1725dostart
+l1725doend:
+   endlife r39
+   .srcstep 139 139 33 "base64_roundtrip.crexx" 125 3 9 "  return checksum"
+   .traceevent "V" 6 "R" "I" "r" 40 139 139 0 "checksum" ""
+   copy r3,r40
+   .traceevent "A" 6 "R" "I" "r" 3 139 139 0 "checksum" ""
+   .srcstep 146 146 17 "base64_roundtrip.crexx" 29 1 22 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .traceevent "V" 6 "R" "I" "r" 3 146 146 0 "checksum" ""
+   beq l91iffalse,r3,130560
+   .srcstep 147 147 17 "base64_roundtrip.crexx" 29 23 27 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .srcstep 145 145 17 "base64_roundtrip.crexx" 29 28 85 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .meta "base64_roundtrip.main.checksum"="b" ".int" r3
+   .srcstep 144 144 17 "base64_roundtrip.crexx" 29 35 39 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .srcstep 141 141 33 "base64_roundtrip.crexx" 128 7 14 "  arg message = .string"
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 141 141 0 "checksum" ""
+   concat r38,"expected checksum 130560, got ",r3
+   .traceevent "O" 4 "R" "S" "r" 38 141 141 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 38 141 141 0 "message" ""
+   .srcstep 142 142 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 38 142 142 0 "message" ""
+   sconcat r37,"FAIL:",r38
+   .traceevent "O" 4 "R" "S" "r" 37 142 142 0 "" ""
+   say r37
+   .srcstep 143 143 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+   load r37,1
+   .traceevent "L" 4 "R" "I" "r" 37 145 145 0 "" ""
+   icopy r36,r37
+   br l2163bexprend
+l2163bexprend:
+   endlife r38
+   ret r36
+l91iffalse:
+   .srcstep 156 156 17 "base64_roundtrip.crexx" 31 1 110 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   .srcstep 155 155 17 "base64_roundtrip.crexx" 31 5 46 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   .srcstep 148 148 33 "base64_roundtrip.crexx" 31 90 90 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   itos r6
+   .traceevent "V" 6 "R" "S" "r" 6 148 148 0 "repetitions" ""
+   concat r39,"benchmark=base64_roundtrip repetitions=",r6
+   .traceevent "O" 4 "R" "S" "r" 39 148 148 0 "" ""
+   sconcat r42,r39,"encoded_length="
+   .traceevent "O" 4 "R" "S" "r" 42 148 148 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 42 148 148 0 "__inline_lhs_96_99" ""
+   .srcstep 154 154 33 "base64_roundtrip.crexx" 31 90 90 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   .traceevent "V" 6 "R" "S" "r" 42 156 156 0 "__inline_lhs_96_99" ""
+   .srcstep 153 153 17 "base64_roundtrip.crexx" 31 75 81 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   .srcstep 149 149 33 "base64_roundtrip.crexx" 31 81 81 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   .traceevent "V" 6 "R" "S" "r" 1 149 149 0 "encoded" ""
+   scopy r38,r1
+   .traceevent "A" 6 "R" "S" "r" 38 149 149 0 "string" ""
+   .srcstep 150 150 25 "length.crexx" 42 3 13 "  result = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 150 150 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 150 150 0 "result" ""
+   .srcstep 151 151 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 39 156 156 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 38 156 156 0 "string" ""
+   strlen r39,r38
+   .srcstep 152 152 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 39 156 156 0 "result" ""
+   icopy r37,r39
+   br l3498bexprend
+l3498bexprend:
+   endlife r39
+   endlife r38
+   itos r37
+   concat r39,r42,r37
+   .traceevent "O" 4 "R" "S" "r" 39 156 156 0 "" ""
+   scopy r38,r39
+   br l2176bexprend
+l2176bexprend:
+   sconcat r38,r38,"checksum="
+   .traceevent "O" 4 "R" "S" "r" 38 156 156 0 "" ""
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 156 156 0 "checksum" ""
+   concat r38,r38,r3
+   .traceevent "O" 4 "R" "S" "r" 38 156 156 0 "" ""
+   say r38
+   .srcstep 157 157 17 "base64_roundtrip.crexx" 32 1 29 "say \"PASS: Base64 Roundtrip\""
+   say "PASS: Base64 Roundtrip"
+   .srcstep 158 158 17 "base64_roundtrip.crexx" 33 1 9 "return 0"
+   ret 0
+   .meta "base64_roundtrip.main.argv"
+   .meta "base64_roundtrip.main.checksum"
+   .meta "base64_roundtrip.main.decoded"
+   .meta "base64_roundtrip.main.encoded"
+   .meta "base64_roundtrip.main.input"
+   .meta "base64_roundtrip.main.repetitions"
+
+base64_decode() .locals=40
+   .meta "base64_roundtrip.base64_decode"="b" ".binary" base64_decode() "encoded=.string"
+   .srcstep 501 501 17 "base64_roundtrip.crexx" 76 1 35 "base64_decode: procedure = .binary"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 219 219 17 "base64_roundtrip.crexx" 77 7 24 "  arg encoded = .string"
+   .meta "base64_roundtrip.base64_decode.encoded"="b" ".string" a1
+   .meta "base64_roundtrip.base64_decode.result"="b" ".binary" r6
+   .srcstep 220 220 17 "base64_roundtrip.crexx" 84 3 19 "  result = .binary"
+   null r6
+   .srcstep 224 224 17 "base64_roundtrip.crexx" 79 3 35 "  encoded_length = length(encoded)"
+   .srcstep 221 221 33 "base64_roundtrip.crexx" 79 35 35 "  encoded_length = length(encoded)"
+   .traceevent "V" 6 "R" "S" "a" 1 221 221 0 "encoded" ""
+   scopy r8,a1
+   .traceevent "A" 6 "R" "S" "r" 8 221 221 0 "string" ""
+   .srcstep 222 222 25 "length.crexx" 42 3 13 "  result = 0"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 222 222 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 222 222 0 "result" ""
+   .srcstep 223 223 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 8 0 0 0 "string" ""
+   strlen r7,r8
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "result" ""
+   copy r1,r7
+   .traceevent "A" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+   .srcstep 225 225 17 "base64_roundtrip.crexx" 80 3 14 "  padding = 0"
+   .meta "base64_roundtrip.base64_decode.alphabet"="b" ".string" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .meta "base64_roundtrip.base64_decode.encoded_length"="b" ".int" r1
+   .meta "base64_roundtrip.base64_decode.padding"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 225 225 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 225 225 0 "padding" ""
+   .srcstep 256 256 17 "base64_roundtrip.crexx" 81 3 46 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .srcstep 254 254 17 "base64_roundtrip.crexx" 81 6 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r9
+   .srcstep 226 226 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r9
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r10
+   .srcstep 227 227 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r10
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r12
+   .srcstep 228 228 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r12
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r14
+   .srcstep 229 229 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r14
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r15
+   .srcstep 230 230 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r15
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r18
+   .srcstep 231 231 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r18
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r20
+   .srcstep 232 232 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r20
+   .srcstep 233 233 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 233 233 0 "encoded" ""
+   scopy r19,a1
+   .traceevent "A" 6 "R" "S" "r" 19 233 233 0 "string" ""
+   .srcstep 234 234 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 234 234 0 "encoded_length" ""
+   icopy r17,r1
+   .traceevent "A" 6 "R" "I" "r" 17 234 234 0 "start" ""
+   .srcstep 235 235 33 "base64_roundtrip.crexx" 81 12 12 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   load r11," "
+   .traceevent "L" 4 "R" "S" "r" 11 235 235 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 11 235 235 0 "pad" ""
+   .srcstep 236 236 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r13,0
+   .traceevent "L" 4 "R" "I" "r" 13 236 236 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 236 236 0 "pad_index" ""
+   .srcstep 237 237 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 237 237 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 237 237 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 17 256 256 0 "start" ""
+   bge l1819iffalse,r17,1
+   .srcstep 238 238 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l1819iffalse:
+   .srcstep 239 239 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 14 256 256 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 11 256 256 0 "pad" ""
+   strlen r14,r11
+   .traceevent "V" 6 "R" "I" "r" 14 256 256 0 "pad_length" ""
+   beq l1838iffalse,r14,1
+   .srcstep 240 240 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l1838iffalse:
+   .srcstep 241 241 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+   strlen r20,r19
+   .srcstep 242 242 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 17 242 242 0 "start" ""
+   isub r18,r17,1
+   .traceevent "O" 4 "R" "I" "r" 18 242 242 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 242 242 0 "start_offset" ""
+   .srcstep 243 243 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 20 243 243 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 18 243 243 0 "start_offset" ""
+   isub r9,r20,r18
+   .traceevent "O" 4 "R" "I" "r" 9 243 243 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 243 243 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 9 256 256 0 "available" ""
+   bge l1858iffalse,r9,0
+   .srcstep 244 244 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r9,0
+   .traceevent "L" 4 "R" "I" "r" 9 244 244 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 244 244 0 "available" ""
+l1858iffalse:
+   .srcstep 245 245 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 245 245 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 245 245 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 9 256 256 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+   bge l1899iffalse,r9,r10
+   .srcstep 246 246 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 9 246 246 0 "available" ""
+   icopy r10,r9
+   .traceevent "A" 6 "R" "I" "r" 10 246 246 0 "copy_length" ""
+l1899iffalse:
+   .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+   ble l1906iffalse,r10,0
+   .traceevent "V" 6 "R" "I" "r" 18 256 256 0 "start_offset" ""
+   ieq r22,r18,0
+   .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+   brf l1913andend,r22
+   .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+   ieq r22,r10,r20
+   .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+l1913andend:
+   .traceevent "O" 4 "R" "B" "r" 22 256 256 0 "" ""
+   brf l1912andfalse,r22
+   .traceevent "V" 6 "R" "I" "r" 20 256 256 0 "string_length" ""
+   ieq r23,r20,1
+   .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+   br l1912andend
+l1912andfalse:
+   load r23,0
+l1912andend:
+   .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+   brf l1911iffalse,r23
+   .srcstep 247 247 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+   scopy r23,r19
+   br l1775bexprend
+l1911iffalse:
+   .srcstep 248 248 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 18 256 256 0 "start_offset" ""
+   setstrpos r19,r18
+   .srcstep 249 249 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 19 256 256 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 10 256 256 0 "copy_length" ""
+   substring r16,r19,r10
+l1906iffalse:
+   .srcstep 250 250 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 10 250 250 0 "copy_length" ""
+   isub r15,1,r10
+   .traceevent "O" 4 "R" "I" "r" 15 250 250 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 250 250 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 256 256 0 "padding_length" ""
+   ble l1937iffalse,r15,0
+   .srcstep 251 251 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 12 256 256 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 11 256 256 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 13 256 256 0 "pad_index" ""
+   strchar r12,r11,r13
+   .srcstep 252 252 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 12 256 256 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 15 256 256 0 "padding_length" ""
+   padstr r16,r12,r15
+l1937iffalse:
+   .srcstep 253 253 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 16 256 256 0 "result" ""
+   scopy r23,r16
+   br l1775bexprend
+l1775bexprend:
+   endlife r9
+   endlife r10
+   endlife r11
+   endlife r12
+   endlife r13
+   endlife r14
+   endlife r15
+   endlife r16
+   endlife r17
+   endlife r18
+   endlife r19
+   endlife r20
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   req r23,r23,"="
+   .traceevent "O" 4 "R" "B" "r" 23 256 256 0 "" ""
+   brf l434iffalse,r23
+   .srcstep 257 257 17 "base64_roundtrip.crexx" 81 47 51 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .srcstep 255 255 17 "base64_roundtrip.crexx" 81 52 73 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 255 255 0 "padding" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 255 255 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 255 255 0 "padding" ""
+l434iffalse:
+   .srcstep 288 288 17 "base64_roundtrip.crexx" 82 3 50 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .srcstep 286 286 17 "base64_roundtrip.crexx" 82 6 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r23
+   .srcstep 258 258 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r23
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r21
+   .srcstep 259 259 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r21
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r19
+   .srcstep 260 260 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r19
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r17
+   .srcstep 261 261 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r17
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r16
+   .srcstep 262 262 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r16
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r13
+   .srcstep 263 263 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r13
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r11
+   .srcstep 264 264 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r11
+   .srcstep 265 265 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 265 265 0 "encoded" ""
+   scopy r12,a1
+   .traceevent "A" 6 "R" "S" "r" 12 265 265 0 "string" ""
+   .srcstep 266 266 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 1 266 266 0 "encoded_length" ""
+   isub r14,r1,1
+   .traceevent "O" 4 "R" "I" "r" 14 266 266 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 266 266 0 "start" ""
+   .srcstep 267 267 33 "base64_roundtrip.crexx" 82 12 12 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   load r20," "
+   .traceevent "L" 4 "R" "S" "r" 20 267 267 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 20 267 267 0 "pad" ""
+   .srcstep 268 268 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 268 268 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 268 268 0 "pad_index" ""
+   .srcstep 269 269 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r15,""
+   .traceevent "L" 4 "R" "S" "r" 15 269 269 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 15 269 269 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 14 288 288 0 "start" ""
+   bge l1998iffalse,r14,1
+   .srcstep 270 270 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l1998iffalse:
+   .srcstep 271 271 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 17 288 288 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 20 288 288 0 "pad" ""
+   strlen r17,r20
+   .traceevent "V" 6 "R" "I" "r" 17 288 288 0 "pad_length" ""
+   beq l2017iffalse,r17,1
+   .srcstep 272 272 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2017iffalse:
+   .srcstep 273 273 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+   strlen r11,r12
+   .srcstep 274 274 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 14 274 274 0 "start" ""
+   isub r13,r14,1
+   .traceevent "O" 4 "R" "I" "r" 13 274 274 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 274 274 0 "start_offset" ""
+   .srcstep 275 275 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 11 275 275 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 13 275 275 0 "start_offset" ""
+   isub r23,r11,r13
+   .traceevent "O" 4 "R" "I" "r" 23 275 275 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 275 275 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 23 288 288 0 "available" ""
+   bge l2037iffalse,r23,0
+   .srcstep 276 276 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r23,0
+   .traceevent "L" 4 "R" "I" "r" 23 276 276 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 23 276 276 0 "available" ""
+l2037iffalse:
+   .srcstep 277 277 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r21,1
+   .traceevent "L" 4 "R" "I" "r" 21 277 277 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 277 277 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 23 288 288 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+   bge l2078iffalse,r23,r21
+   .srcstep 278 278 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 23 278 278 0 "available" ""
+   icopy r21,r23
+   .traceevent "A" 6 "R" "I" "r" 21 278 278 0 "copy_length" ""
+l2078iffalse:
+   .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+   ble l2085iffalse,r21,0
+   .traceevent "V" 6 "R" "I" "r" 13 288 288 0 "start_offset" ""
+   ieq r9,r13,0
+   .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+   brf l2092andend,r9
+   .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+   ieq r9,r21,r11
+   .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+l2092andend:
+   .traceevent "O" 4 "R" "B" "r" 9 288 288 0 "" ""
+   brf l2091andfalse,r9
+   .traceevent "V" 6 "R" "I" "r" 11 288 288 0 "string_length" ""
+   ieq r24,r11,1
+   .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+   br l2091andend
+l2091andfalse:
+   load r24,0
+l2091andend:
+   .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+   brf l2090iffalse,r24
+   .srcstep 279 279 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+   scopy r24,r12
+   br l1952bexprend
+l2090iffalse:
+   .srcstep 280 280 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 13 288 288 0 "start_offset" ""
+   setstrpos r12,r13
+   .srcstep 281 281 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 12 288 288 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 21 288 288 0 "copy_length" ""
+   substring r15,r12,r21
+l2085iffalse:
+   .srcstep 282 282 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 21 282 282 0 "copy_length" ""
+   isub r16,1,r21
+   .traceevent "O" 4 "R" "I" "r" 16 282 282 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 16 282 282 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 16 288 288 0 "padding_length" ""
+   ble l2116iffalse,r16,0
+   .srcstep 283 283 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 19 288 288 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 20 288 288 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 18 288 288 0 "pad_index" ""
+   strchar r19,r20,r18
+   .srcstep 284 284 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 19 288 288 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 16 288 288 0 "padding_length" ""
+   padstr r15,r19,r16
+l2116iffalse:
+   .srcstep 285 285 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 15 288 288 0 "result" ""
+   scopy r24,r15
+   br l1952bexprend
+l1952bexprend:
+   endlife r23
+   endlife r21
+   endlife r20
+   endlife r19
+   endlife r18
+   endlife r17
+   endlife r16
+   endlife r15
+   endlife r14
+   endlife r13
+   endlife r12
+   endlife r11
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   req r24,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 24 288 288 0 "" ""
+   brf l448iffalse,r24
+   .srcstep 289 289 17 "base64_roundtrip.crexx" 82 51 55 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .srcstep 287 287 17 "base64_roundtrip.crexx" 82 56 77 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 287 287 0 "padding" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 287 287 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 287 287 0 "padding" ""
+l448iffalse:
+   .srcstep 290 290 17 "base64_roundtrip.crexx" 83 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+   .meta "base64_roundtrip.base64_decode.output_length"="b" ".int" r3
+   .traceevent "V" 6 "R" "I" "r" 1 290 290 0 "encoded_length" ""
+   idiv r24,r1,4
+   .traceevent "O" 4 "R" "I" "r" 24 290 290 0 "" ""
+   imult r24,r24,3
+   .traceevent "O" 4 "R" "I" "r" 24 290 290 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 5 290 290 0 "padding" ""
+   isub r3,r24,r5
+   .traceevent "O" 4 "R" "I" "r" 3 290 290 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 290 290 0 "output_length" ""
+   .srcstep 295 295 17 "base64_roundtrip.crexx" 85 3 39 "  call binresize result, output_length"
+   .srcstep 291 291 33 "base64_roundtrip.crexx" 85 39 39 "  call binresize result, output_length"
+   .traceevent "V" 6 "R" "I" "r" 3 291 291 0 "output_length" ""
+   icopy r27,r3
+   .traceevent "A" 6 "R" "I" "r" 27 291 291 0 "length" ""
+   .srcstep 292 292 25 "binary.crexx" 249 3 13 "  result = 0"
+   load r28,0
+   .traceevent "L" 4 "R" "I" "r" 28 292 292 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 28 292 292 0 "result" ""
+   .srcstep 293 293 25 "binary.crexx" 250 13 32 "  assembler bresize data,length"
+   .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 27 0 0 0 "length" ""
+   bresize r6,r27
+   .srcstep 294 294 25 "binary.crexx" 251 13 29 "  assembler blen result,data"
+   .traceevent "V" 6 "R" "I" "r" 28 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "X" "r" 6 0 0 0 "result" ""
+   blen r28,r6
+   .traceevent "V" 6 "R" "I" "r" 28 0 0 0 "result" ""
+   copy r25,r28
+   .traceevent "A" 6 "R" "I" "r" 25 0 0 0 "__inline_unused_889" ""
+   .srcstep 296 296 17 "base64_roundtrip.crexx" 87 3 19 "  input_offset = 1"
+   .meta "base64_roundtrip.base64_decode.input_offset"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 296 296 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 296 296 0 "input_offset" ""
+   .srcstep 297 297 17 "base64_roundtrip.crexx" 88 3 20 "  output_offset = 0"
+   .meta "base64_roundtrip.base64_decode.output_offset"="b" ".int" r4
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 297 297 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 297 297 0 "output_offset" ""
+   .srcstep 498 498 17 "base64_roundtrip.crexx" 89 3 5 "  do while input_offset <= encoded_length"
+l471dostart:
+   .srcstep 298 298 17 "base64_roundtrip.crexx" 89 6 42 "  do while input_offset <= encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "encoded_length" ""
+   bgt l471doend,r2,r1
+   .srcstep 343 343 17 "base64_roundtrip.crexx" 90 5 70 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.digit1"="b" ".int" r21
+   .srcstep 342 342 17 "base64_roundtrip.crexx" 90 14 26 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .srcstep 328 328 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+   .srcstep 327 327 17 "base64_roundtrip.crexx" 90 27 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r14
+   .srcstep 299 299 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r14
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r13
+   .srcstep 300 300 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r13
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r11
+   .srcstep 301 301 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r11
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r29
+   .srcstep 302 302 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r29
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r30
+   .srcstep 303 303 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r30
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r33
+   .srcstep 304 304 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r33
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r35
+   .srcstep 305 305 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r35
+   .srcstep 306 306 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .traceevent "V" 6 "R" "S" "a" 1 306 306 0 "encoded" ""
+   scopy r34,a1
+   .traceevent "A" 6 "R" "S" "r" 34 306 306 0 "string" ""
+   .srcstep 307 307 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .traceevent "V" 6 "R" "I" "r" 2 307 307 0 "input_offset" ""
+   icopy r32,r2
+   .traceevent "A" 6 "R" "I" "r" 32 307 307 0 "start" ""
+   .srcstep 308 308 33 "base64_roundtrip.crexx" 90 33 33 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   load r12," "
+   .traceevent "L" 4 "R" "S" "r" 12 308 308 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 12 308 308 0 "pad" ""
+   .srcstep 309 309 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r10,0
+   .traceevent "L" 4 "R" "I" "r" 10 309 309 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 309 309 0 "pad_index" ""
+   .srcstep 310 310 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r31,""
+   .traceevent "L" 4 "R" "S" "r" 31 310 310 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 31 310 310 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 32 328 328 0 "start" ""
+   bge l2415iffalse,r32,1
+   .srcstep 311 311 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2415iffalse:
+   .srcstep 312 312 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 29 328 328 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 12 328 328 0 "pad" ""
+   strlen r29,r12
+   .traceevent "V" 6 "R" "I" "r" 29 328 328 0 "pad_length" ""
+   beq l2434iffalse,r29,1
+   .srcstep 313 313 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2434iffalse:
+   .srcstep 314 314 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+   strlen r35,r34
+   .srcstep 315 315 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 32 315 315 0 "start" ""
+   isub r33,r32,1
+   .traceevent "O" 4 "R" "I" "r" 33 315 315 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 33 315 315 0 "start_offset" ""
+   .srcstep 316 316 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 35 316 316 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 33 316 316 0 "start_offset" ""
+   isub r14,r35,r33
+   .traceevent "O" 4 "R" "I" "r" 14 316 316 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 316 316 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 14 328 328 0 "available" ""
+   bge l2454iffalse,r14,0
+   .srcstep 317 317 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 317 317 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 317 317 0 "available" ""
+l2454iffalse:
+   .srcstep 318 318 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 318 318 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 318 318 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 14 328 328 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+   bge l2495iffalse,r14,r13
+   .srcstep 319 319 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 14 319 319 0 "available" ""
+   icopy r13,r14
+   .traceevent "A" 6 "R" "I" "r" 13 319 319 0 "copy_length" ""
+l2495iffalse:
+   .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+   ble l2502iffalse,r13,0
+   .traceevent "V" 6 "R" "I" "r" 33 328 328 0 "start_offset" ""
+   ieq r37,r33,0
+   .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+   brf l2509andend,r37
+   .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+   ieq r37,r13,r35
+   .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+l2509andend:
+   .traceevent "O" 4 "R" "B" "r" 37 328 328 0 "" ""
+   brf l2508andfalse,r37
+   .traceevent "V" 6 "R" "I" "r" 35 328 328 0 "string_length" ""
+   ieq r38,r35,1
+   .traceevent "O" 4 "R" "B" "r" 38 328 328 0 "" ""
+   br l2508andend
+l2508andfalse:
+   load r38,0
+l2508andend:
+   .traceevent "O" 4 "R" "B" "r" 38 328 328 0 "" ""
+   brf l2507iffalse,r38
+   .srcstep 320 320 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+   scopy r38,r34
+   br l2371bexprend
+l2507iffalse:
+   .srcstep 321 321 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 33 328 328 0 "start_offset" ""
+   setstrpos r34,r33
+   .srcstep 322 322 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 34 328 328 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 13 328 328 0 "copy_length" ""
+   substring r31,r34,r13
+l2502iffalse:
+   .srcstep 323 323 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 13 323 323 0 "copy_length" ""
+   isub r30,1,r13
+   .traceevent "O" 4 "R" "I" "r" 30 323 323 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 323 323 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 30 328 328 0 "padding_length" ""
+   ble l2533iffalse,r30,0
+   .srcstep 324 324 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 11 328 328 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 12 328 328 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 10 328 328 0 "pad_index" ""
+   strchar r11,r12,r10
+   .srcstep 325 325 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 11 328 328 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 30 328 328 0 "padding_length" ""
+   padstr r31,r11,r30
+l2533iffalse:
+   .srcstep 326 326 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 31 328 328 0 "result" ""
+   scopy r38,r31
+   br l2371bexprend
+l2371bexprend:
+   endlife r14
+   endlife r13
+   endlife r12
+   endlife r11
+   endlife r10
+   endlife r29
+   endlife r30
+   endlife r31
+   endlife r32
+   endlife r33
+   endlife r34
+   endlife r35
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   scopy r16,r38
+   .traceevent "A" 6 "R" "S" "r" 16 328 328 0 "character" ""
+   .srcstep 337 337 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 336 336 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r38
+   .srcstep 329 329 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r38
+   .srcstep 330 330 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 16 330 330 0 "character" ""
+   scopy r35,r16
+   .traceevent "A" 6 "R" "S" "r" 35 330 330 0 "needle" ""
+   .srcstep 331 331 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   load r36,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 36 331 331 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 36 331 331 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 35 337 337 0 "needle" ""
+   seq r34,r35,""
+   .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+   brt l2576orend,r34
+   .traceevent "V" 6 "R" "S" "r" 36 337 337 0 "haystack" ""
+   seq r34,r36,""
+   .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+l2576orend:
+   .traceevent "O" 4 "R" "B" "r" 34 337 337 0 "" ""
+   brf l2575iffalse,r34
+   .srcstep 332 332 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r33,0
+   .traceevent "L" 4 "R" "I" "r" 33 337 337 0 "" ""
+   icopy r34,r33
+   br l2554bexprend
+l2575iffalse:
+   .srcstep 333 333 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r38,1
+   .traceevent "L" 4 "R" "I" "r" 38 333 333 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 333 333 0 "found_position" ""
+   .srcstep 334 334 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 38 337 337 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 35 337 337 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 36 337 337 0 "haystack" ""
+   strpos r38,r35,r36
+   .srcstep 335 335 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 38 337 337 0 "found_position" ""
+   icopy r34,r38
+   br l2554bexprend
+l2554bexprend:
+   endlife r38
+   endlife r36
+   endlife r35
+   .meta "base64_roundtrip.base64_decode.found_position"
+   isub r15,r34,1
+   .traceevent "O" 4 "R" "I" "r" 15 337 337 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 337 337 0 "digit" ""
+   .srcstep 339 339 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 15 339 339 0 "digit" ""
+   bge l2595iffalse,r15,0
+   .srcstep 340 340 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+   .srcstep 338 338 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+   load r36,0
+   .traceevent "L" 4 "R" "I" "r" 36 343 343 0 "" ""
+   icopy r38,r36
+   br l2367bexprend
+l2595iffalse:
+   .srcstep 341 341 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 15 343 343 0 "digit" ""
+   icopy r38,r15
+   br l2367bexprend
+l2367bexprend:
+   endlife r16
+   endlife r15
+   icopy r21,r38
+   .traceevent "A" 6 "R" "I" "r" 21 343 343 0 "digit1" ""
+   .srcstep 388 388 17 "base64_roundtrip.crexx" 91 5 74 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.digit2"="b" ".int" r20
+   .srcstep 387 387 17 "base64_roundtrip.crexx" 91 14 26 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .srcstep 373 373 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+   .srcstep 372 372 17 "base64_roundtrip.crexx" 91 27 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r35
+   .srcstep 344 344 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r35
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r34
+   .srcstep 345 345 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r34
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r32
+   .srcstep 346 346 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r32
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r30
+   .srcstep 347 347 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r30
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r29
+   .srcstep 348 348 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r29
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r14
+   .srcstep 349 349 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r14
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r12
+   .srcstep 350 350 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r12
+   .srcstep 351 351 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .traceevent "V" 6 "R" "S" "a" 1 351 351 0 "encoded" ""
+   scopy r13,a1
+   .traceevent "A" 6 "R" "S" "r" 13 351 351 0 "string" ""
+   .srcstep 352 352 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .traceevent "V" 6 "R" "I" "r" 2 352 352 0 "input_offset" ""
+   iadd r15,r2,1
+   .traceevent "O" 4 "R" "I" "r" 15 352 352 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 352 352 0 "start" ""
+   .srcstep 353 353 33 "base64_roundtrip.crexx" 91 33 33 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   load r33," "
+   .traceevent "L" 4 "R" "S" "r" 33 353 353 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 33 353 353 0 "pad" ""
+   .srcstep 354 354 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 354 354 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 31 354 354 0 "pad_index" ""
+   .srcstep 355 355 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r16,""
+   .traceevent "L" 4 "R" "S" "r" 16 355 355 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 16 355 355 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 15 373 373 0 "start" ""
+   bge l2832iffalse,r15,1
+   .srcstep 356 356 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l2832iffalse:
+   .srcstep 357 357 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 30 373 373 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 33 373 373 0 "pad" ""
+   strlen r30,r33
+   .traceevent "V" 6 "R" "I" "r" 30 373 373 0 "pad_length" ""
+   beq l2851iffalse,r30,1
+   .srcstep 358 358 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l2851iffalse:
+   .srcstep 359 359 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+   strlen r12,r13
+   .srcstep 360 360 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 15 360 360 0 "start" ""
+   isub r14,r15,1
+   .traceevent "O" 4 "R" "I" "r" 14 360 360 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 360 360 0 "start_offset" ""
+   .srcstep 361 361 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 12 361 361 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 14 361 361 0 "start_offset" ""
+   isub r35,r12,r14
+   .traceevent "O" 4 "R" "I" "r" 35 361 361 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 361 361 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 35 373 373 0 "available" ""
+   bge l2871iffalse,r35,0
+   .srcstep 362 362 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r35,0
+   .traceevent "L" 4 "R" "I" "r" 35 362 362 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 362 362 0 "available" ""
+l2871iffalse:
+   .srcstep 363 363 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r34,1
+   .traceevent "L" 4 "R" "I" "r" 34 363 363 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 363 363 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 35 373 373 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+   bge l2912iffalse,r35,r34
+   .srcstep 364 364 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 35 364 364 0 "available" ""
+   icopy r34,r35
+   .traceevent "A" 6 "R" "I" "r" 34 364 364 0 "copy_length" ""
+l2912iffalse:
+   .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+   ble l2919iffalse,r34,0
+   .traceevent "V" 6 "R" "I" "r" 14 373 373 0 "start_offset" ""
+   ieq r10,r14,0
+   .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+   brf l2926andend,r10
+   .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+   ieq r10,r34,r12
+   .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+l2926andend:
+   .traceevent "O" 4 "R" "B" "r" 10 373 373 0 "" ""
+   brf l2925andfalse,r10
+   .traceevent "V" 6 "R" "I" "r" 12 373 373 0 "string_length" ""
+   ieq r39,r12,1
+   .traceevent "O" 4 "R" "B" "r" 39 373 373 0 "" ""
+   br l2925andend
+l2925andfalse:
+   load r39,0
+l2925andend:
+   .traceevent "O" 4 "R" "B" "r" 39 373 373 0 "" ""
+   brf l2924iffalse,r39
+   .srcstep 365 365 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+   scopy r39,r13
+   br l2786bexprend
+l2924iffalse:
+   .srcstep 366 366 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 14 373 373 0 "start_offset" ""
+   setstrpos r13,r14
+   .srcstep 367 367 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 13 373 373 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 34 373 373 0 "copy_length" ""
+   substring r16,r13,r34
+l2919iffalse:
+   .srcstep 368 368 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 34 368 368 0 "copy_length" ""
+   isub r29,1,r34
+   .traceevent "O" 4 "R" "I" "r" 29 368 368 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 368 368 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 29 373 373 0 "padding_length" ""
+   ble l2950iffalse,r29,0
+   .srcstep 369 369 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 32 373 373 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 33 373 373 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 31 373 373 0 "pad_index" ""
+   strchar r32,r33,r31
+   .srcstep 370 370 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 32 373 373 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 29 373 373 0 "padding_length" ""
+   padstr r16,r32,r29
+l2950iffalse:
+   .srcstep 371 371 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 16 373 373 0 "result" ""
+   scopy r39,r16
+   br l2786bexprend
+l2786bexprend:
+   endlife r35
+   endlife r34
+   endlife r33
+   endlife r32
+   endlife r31
+   endlife r30
+   endlife r29
+   endlife r16
+   endlife r15
+   endlife r14
+   endlife r13
+   endlife r12
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   scopy r38,r39
+   .traceevent "A" 6 "R" "S" "r" 38 373 373 0 "character" ""
+   .srcstep 382 382 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 381 381 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r39
+   .srcstep 374 374 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r39
+   .srcstep 375 375 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 38 375 375 0 "character" ""
+   scopy r34,r38
+   .traceevent "A" 6 "R" "S" "r" 34 375 375 0 "needle" ""
+   .srcstep 376 376 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   load r35,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 35 376 376 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 35 376 376 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 34 382 382 0 "needle" ""
+   seq r33,r34,""
+   .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+   brt l2993orend,r33
+   .traceevent "V" 6 "R" "S" "r" 35 382 382 0 "haystack" ""
+   seq r33,r35,""
+   .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+l2993orend:
+   .traceevent "O" 4 "R" "B" "r" 33 382 382 0 "" ""
+   brf l2992iffalse,r33
+   .srcstep 377 377 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r32,0
+   .traceevent "L" 4 "R" "I" "r" 32 382 382 0 "" ""
+   icopy r33,r32
+   br l2971bexprend
+l2992iffalse:
+   .srcstep 378 378 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r39,1
+   .traceevent "L" 4 "R" "I" "r" 39 378 378 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 378 378 0 "found_position" ""
+   .srcstep 379 379 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 39 382 382 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 34 382 382 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 35 382 382 0 "haystack" ""
+   strpos r39,r34,r35
+   .srcstep 380 380 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 39 382 382 0 "found_position" ""
+   icopy r33,r39
+   br l2971bexprend
+l2971bexprend:
+   endlife r39
+   endlife r35
+   endlife r34
+   .meta "base64_roundtrip.base64_decode.found_position"
+   isub r36,r33,1
+   .traceevent "O" 4 "R" "I" "r" 36 382 382 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 382 382 0 "digit" ""
+   .srcstep 384 384 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 36 384 384 0 "digit" ""
+   bge l3012iffalse,r36,0
+   .srcstep 385 385 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+   .srcstep 383 383 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+   load r35,0
+   .traceevent "L" 4 "R" "I" "r" 35 388 388 0 "" ""
+   icopy r39,r35
+   br l2782bexprend
+l3012iffalse:
+   .srcstep 386 386 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 36 388 388 0 "digit" ""
+   icopy r39,r36
+   br l2782bexprend
+l2782bexprend:
+   endlife r38
+   endlife r36
+   icopy r20,r39
+   .traceevent "A" 6 "R" "I" "r" 20 388 388 0 "digit2" ""
+   .srcstep 418 418 17 "base64_roundtrip.crexx" 92 5 49 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .meta "base64_roundtrip.base64_decode.char3"="b" ".string" r24
+   .srcstep 417 417 17 "base64_roundtrip.crexx" 92 13 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r39
+   .srcstep 389 389 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r39
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r38
+   .srcstep 390 390 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r38
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r35
+   .srcstep 391 391 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r35
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r33
+   .srcstep 392 392 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r33
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r32
+   .srcstep 393 393 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r32
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r29
+   .srcstep 394 394 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r29
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r15
+   .srcstep 395 395 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r15
+   .srcstep 396 396 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .traceevent "V" 6 "R" "S" "a" 1 396 396 0 "encoded" ""
+   scopy r16,a1
+   .traceevent "A" 6 "R" "S" "r" 16 396 396 0 "string" ""
+   .srcstep 397 397 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .traceevent "V" 6 "R" "I" "r" 2 397 397 0 "input_offset" ""
+   iadd r30,r2,2
+   .traceevent "O" 4 "R" "I" "r" 30 397 397 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 397 397 0 "start" ""
+   .srcstep 398 398 33 "base64_roundtrip.crexx" 92 19 19 "    char3 = substr(encoded, input_offset + 2, 1)"
+   load r36," "
+   .traceevent "L" 4 "R" "S" "r" 36 398 398 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 36 398 398 0 "pad" ""
+   .srcstep 399 399 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 399 399 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 399 399 0 "pad_index" ""
+   .srcstep 400 400 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r31,""
+   .traceevent "L" 4 "R" "S" "r" 31 400 400 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 31 400 400 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 30 418 418 0 "start" ""
+   bge l3066iffalse,r30,1
+   .srcstep 401 401 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3066iffalse:
+   .srcstep 402 402 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 33 418 418 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 36 418 418 0 "pad" ""
+   strlen r33,r36
+   .traceevent "V" 6 "R" "I" "r" 33 418 418 0 "pad_length" ""
+   beq l3085iffalse,r33,1
+   .srcstep 403 403 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3085iffalse:
+   .srcstep 404 404 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+   strlen r15,r16
+   .srcstep 405 405 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 30 405 405 0 "start" ""
+   isub r29,r30,1
+   .traceevent "O" 4 "R" "I" "r" 29 405 405 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 405 405 0 "start_offset" ""
+   .srcstep 406 406 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 15 406 406 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 29 406 406 0 "start_offset" ""
+   isub r39,r15,r29
+   .traceevent "O" 4 "R" "I" "r" 39 406 406 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 406 406 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 39 418 418 0 "available" ""
+   bge l3105iffalse,r39,0
+   .srcstep 407 407 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 407 407 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 407 407 0 "available" ""
+l3105iffalse:
+   .srcstep 408 408 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r38,1
+   .traceevent "L" 4 "R" "I" "r" 38 408 408 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 408 408 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 39 418 418 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+   bge l3146iffalse,r39,r38
+   .srcstep 409 409 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 39 409 409 0 "available" ""
+   icopy r38,r39
+   .traceevent "A" 6 "R" "I" "r" 38 409 409 0 "copy_length" ""
+l3146iffalse:
+   .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+   ble l3153iffalse,r38,0
+   .traceevent "V" 6 "R" "I" "r" 29 418 418 0 "start_offset" ""
+   ieq r13,r29,0
+   .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+   brf l3160andend,r13
+   .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+   ieq r13,r38,r15
+   .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+l3160andend:
+   .traceevent "O" 4 "R" "B" "r" 13 418 418 0 "" ""
+   brf l3159andfalse,r13
+   .traceevent "V" 6 "R" "I" "r" 15 418 418 0 "string_length" ""
+   ieq r12,r15,1
+   .traceevent "O" 4 "R" "B" "r" 12 418 418 0 "" ""
+   br l3159andend
+l3159andfalse:
+   load r12,0
+l3159andend:
+   .traceevent "O" 4 "R" "B" "r" 12 418 418 0 "" ""
+   brf l3158iffalse,r12
+   .srcstep 410 410 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+   scopy r14,r16
+   br l3020bexprend
+l3158iffalse:
+   .srcstep 411 411 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 29 418 418 0 "start_offset" ""
+   setstrpos r16,r29
+   .srcstep 412 412 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 16 418 418 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 38 418 418 0 "copy_length" ""
+   substring r31,r16,r38
+l3153iffalse:
+   .srcstep 413 413 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 38 413 413 0 "copy_length" ""
+   isub r32,1,r38
+   .traceevent "O" 4 "R" "I" "r" 32 413 413 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 413 413 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 32 418 418 0 "padding_length" ""
+   ble l3184iffalse,r32,0
+   .srcstep 414 414 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 35 418 418 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 36 418 418 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 34 418 418 0 "pad_index" ""
+   strchar r35,r36,r34
+   .srcstep 415 415 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 35 418 418 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 32 418 418 0 "padding_length" ""
+   padstr r31,r35,r32
+l3184iffalse:
+   .srcstep 416 416 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 31 418 418 0 "result" ""
+   scopy r14,r31
+   br l3020bexprend
+l3020bexprend:
+   endlife r39
+   endlife r38
+   endlife r36
+   endlife r35
+   endlife r34
+   endlife r33
+   endlife r32
+   endlife r31
+   endlife r30
+   endlife r29
+   endlife r16
+   endlife r15
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   scopy r24,r14
+   .traceevent "A" 6 "R" "S" "r" 24 418 418 0 "char3" ""
+   .srcstep 448 448 17 "base64_roundtrip.crexx" 93 5 49 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .meta "base64_roundtrip.base64_decode.char4"="b" ".string" r23
+   .srcstep 447 447 17 "base64_roundtrip.crexx" 93 13 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .meta "base64_roundtrip.base64_decode.available"="b" ".int" r39
+   .srcstep 419 419 25 "substr.crexx" 51 3 19 "  available = .int"
+   null r39
+   .meta "base64_roundtrip.base64_decode.copy_length"="b" ".int" r38
+   .srcstep 420 420 25 "substr.crexx" 52 3 21 "  copy_length = .int"
+   null r38
+   .meta "base64_roundtrip.base64_decode.pad_character"="b" ".int" r35
+   .srcstep 421 421 25 "substr.crexx" 48 3 23 "  pad_character = .int"
+   null r35
+   .meta "base64_roundtrip.base64_decode.pad_length"="b" ".int" r33
+   .srcstep 422 422 25 "substr.crexx" 47 3 20 "  pad_length = .int"
+   null r33
+   .meta "base64_roundtrip.base64_decode.padding_length"="b" ".int" r32
+   .srcstep 423 423 25 "substr.crexx" 53 3 24 "  padding_length = .int"
+   null r32
+   .meta "base64_roundtrip.base64_decode.start_offset"="b" ".int" r29
+   .srcstep 424 424 25 "substr.crexx" 50 3 22 "  start_offset = .int"
+   null r29
+   .meta "base64_roundtrip.base64_decode.string_length"="b" ".int" r15
+   .srcstep 425 425 25 "substr.crexx" 46 3 23 "  string_length = .int"
+   null r15
+   .srcstep 426 426 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .traceevent "V" 6 "R" "S" "a" 1 426 426 0 "encoded" ""
+   scopy r16,a1
+   .traceevent "A" 6 "R" "S" "r" 16 426 426 0 "string" ""
+   .srcstep 427 427 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .traceevent "V" 6 "R" "I" "r" 2 427 427 0 "input_offset" ""
+   iadd r30,r2,3
+   .traceevent "O" 4 "R" "I" "r" 30 427 427 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 30 427 427 0 "start" ""
+   .srcstep 428 428 33 "base64_roundtrip.crexx" 93 19 19 "    char4 = substr(encoded, input_offset + 3, 1)"
+   load r36," "
+   .traceevent "L" 4 "R" "S" "r" 36 428 428 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 36 428 428 0 "pad" ""
+   .srcstep 429 429 25 "substr.crexx" 49 3 16 "  pad_index = 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 429 429 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 34 429 429 0 "pad_index" ""
+   .srcstep 430 430 25 "substr.crexx" 54 3 14 "  result = \"\""
+   load r31,""
+   .traceevent "L" 4 "R" "S" "r" 31 430 430 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 31 430 430 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 30 448 448 0 "start" ""
+   bge l3245iffalse,r30,1
+   .srcstep 431 431 25 "substr.crexx" 57 15 73 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR start must be positive\""
+   signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+l3245iffalse:
+   .srcstep 432 432 25 "substr.crexx" 60 13 34 "  assembler strlen pad_length,pad"
+   .traceevent "V" 6 "R" "I" "r" 33 448 448 0 "pad_length" ""
+   .traceevent "V" 6 "R" "S" "r" 36 448 448 0 "pad" ""
+   strlen r33,r36
+   .traceevent "V" 6 "R" "I" "r" 33 448 448 0 "pad_length" ""
+   beq l3264iffalse,r33,1
+   .srcstep 433 433 25 "substr.crexx" 62 15 89 "    assembler signal \"INVALID_ARGUMENTS\",\"SUBSTR pad must contain exactly one character\""
+   signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+l3264iffalse:
+   .srcstep 434 434 25 "substr.crexx" 64 13 40 "  assembler strlen string_length,string"
+   .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+   .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+   strlen r15,r16
+   .srcstep 435 435 25 "substr.crexx" 65 3 27 "  start_offset = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 30 435 435 0 "start" ""
+   isub r29,r30,1
+   .traceevent "O" 4 "R" "I" "r" 29 435 435 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 435 435 0 "start_offset" ""
+   .srcstep 436 436 25 "substr.crexx" 66 3 43 "  available = string_length - start_offset"
+   .traceevent "V" 6 "R" "I" "r" 15 436 436 0 "string_length" ""
+   .traceevent "V" 6 "R" "I" "r" 29 436 436 0 "start_offset" ""
+   isub r39,r15,r29
+   .traceevent "O" 4 "R" "I" "r" 39 436 436 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 436 436 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 39 448 448 0 "available" ""
+   bge l3284iffalse,r39,0
+   .srcstep 437 437 25 "substr.crexx" 67 25 38 "  if available < 0 then available = 0"
+   load r39,0
+   .traceevent "L" 4 "R" "I" "r" 39 437 437 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 39 437 437 0 "available" ""
+l3284iffalse:
+   .srcstep 438 438 25 "substr.crexx" 78 3 23 "  copy_length = length"
+   load r38,1
+   .traceevent "L" 4 "R" "I" "r" 38 438 438 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 38 438 438 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 39 448 448 0 "available" ""
+   .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+   bge l3325iffalse,r39,r38
+   .srcstep 439 439 25 "substr.crexx" 79 35 58 "  if available < copy_length then copy_length = available"
+   .traceevent "V" 6 "R" "I" "r" 39 439 439 0 "available" ""
+   icopy r38,r39
+   .traceevent "A" 6 "R" "I" "r" 38 439 439 0 "copy_length" ""
+l3325iffalse:
+   .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+   ble l3332iffalse,r38,0
+   .traceevent "V" 6 "R" "I" "r" 29 448 448 0 "start_offset" ""
+   ieq r12,r29,0
+   .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+   brf l3339andend,r12
+   .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+   .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+   ieq r12,r38,r15
+   .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+l3339andend:
+   .traceevent "O" 4 "R" "B" "r" 12 448 448 0 "" ""
+   brf l3338andfalse,r12
+   .traceevent "V" 6 "R" "I" "r" 15 448 448 0 "string_length" ""
+   ieq r11,r15,1
+   .traceevent "O" 4 "R" "B" "r" 11 448 448 0 "" ""
+   br l3338andend
+l3338andfalse:
+   load r11,0
+l3338andend:
+   .traceevent "O" 4 "R" "B" "r" 11 448 448 0 "" ""
+   brf l3337iffalse,r11
+   .srcstep 440 440 25 "substr.crexx" 82 7 20 "      return string"
+   .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+   scopy r14,r16
+   br l3199bexprend
+l3337iffalse:
+   .srcstep 441 441 25 "substr.crexx" 83 15 44 "    assembler setstrpos string,start_offset"
+   .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 29 448 448 0 "start_offset" ""
+   setstrpos r16,r29
+   .srcstep 442 442 25 "substr.crexx" 84 15 50 "    assembler substring result,string,copy_length"
+   .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 16 448 448 0 "string" ""
+   .traceevent "V" 6 "R" "I" "r" 38 448 448 0 "copy_length" ""
+   substring r31,r16,r38
+l3332iffalse:
+   .srcstep 443 443 25 "substr.crexx" 87 3 40 "  padding_length = length - copy_length"
+   .traceevent "V" 6 "R" "I" "r" 38 443 443 0 "copy_length" ""
+   isub r32,1,r38
+   .traceevent "O" 4 "R" "I" "r" 32 443 443 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 32 443 443 0 "padding_length" ""
+   .traceevent "V" 6 "R" "I" "r" 32 448 448 0 "padding_length" ""
+   ble l3363iffalse,r32,0
+   .srcstep 444 444 25 "substr.crexx" 89 15 50 "    assembler strchar pad_character,pad,pad_index"
+   .traceevent "V" 6 "R" "I" "r" 35 448 448 0 "pad_character" ""
+   .traceevent "V" 6 "R" "S" "r" 36 448 448 0 "pad" ""
+   .traceevent "V" 6 "R" "I" "r" 34 448 448 0 "pad_index" ""
+   strchar r35,r36,r34
+   .srcstep 445 445 25 "substr.crexx" 90 15 57 "    assembler padstr result,pad_character,padding_length"
+   .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 35 448 448 0 "pad_character" ""
+   .traceevent "V" 6 "R" "I" "r" 32 448 448 0 "padding_length" ""
+   padstr r31,r35,r32
+l3363iffalse:
+   .srcstep 446 446 25 "substr.crexx" 92 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 31 448 448 0 "result" ""
+   scopy r14,r31
+   br l3199bexprend
+l3199bexprend:
+   endlife r39
+   endlife r38
+   endlife r36
+   endlife r35
+   endlife r34
+   endlife r33
+   endlife r32
+   endlife r31
+   endlife r30
+   endlife r29
+   endlife r16
+   endlife r15
+   .meta "base64_roundtrip.base64_decode.available"
+   .meta "base64_roundtrip.base64_decode.copy_length"
+   .meta "base64_roundtrip.base64_decode.pad_character"
+   .meta "base64_roundtrip.base64_decode.pad_length"
+   .meta "base64_roundtrip.base64_decode.padding_length"
+   .meta "base64_roundtrip.base64_decode.start_offset"
+   .meta "base64_roundtrip.base64_decode.string_length"
+   scopy r23,r14
+   .traceevent "A" 6 "R" "S" "r" 23 448 448 0 "char4" ""
+   .srcstep 449 449 17 "base64_roundtrip.crexx" 94 5 15 "    digit3 = 0"
+   .meta "base64_roundtrip.base64_decode.digit3"="b" ".int" r19
+   load r19,0
+   .traceevent "L" 4 "R" "I" "r" 19 449 449 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 449 449 0 "digit3" ""
+   .srcstep 450 450 17 "base64_roundtrip.crexx" 95 5 15 "    digit4 = 0"
+   .meta "base64_roundtrip.base64_decode.digit4"="b" ".int" r18
+   load r18,0
+   .traceevent "L" 4 "R" "I" "r" 18 450 450 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 18 450 450 0 "digit4" ""
+   .srcstep 467 467 17 "base64_roundtrip.crexx" 96 5 20 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 24 467 467 0 "char3" ""
+   rne r39,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 39 467 467 0 "" ""
+   brf l525iffalse,r39
+   .srcstep 468 468 17 "base64_roundtrip.crexx" 96 21 25 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .srcstep 466 466 17 "base64_roundtrip.crexx" 96 26 64 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .srcstep 465 465 17 "base64_roundtrip.crexx" 96 35 47 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .srcstep 451 451 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+   .traceevent "V" 6 "R" "S" "r" 24 451 451 0 "char3" ""
+   scopy r38,r24
+   .traceevent "A" 6 "R" "S" "r" 38 451 451 0 "character" ""
+   .srcstep 460 460 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 459 459 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r35
+   .srcstep 452 452 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r35
+   .srcstep 453 453 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 38 453 453 0 "character" ""
+   scopy r33,r38
+   .traceevent "A" 6 "R" "S" "r" 33 453 453 0 "needle" ""
+   .srcstep 454 454 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   load r34,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 34 454 454 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 34 454 454 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 33 460 460 0 "needle" ""
+   seq r32,r33,""
+   .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+   brt l3411orend,r32
+   .traceevent "V" 6 "R" "S" "r" 34 460 460 0 "haystack" ""
+   seq r32,r34,""
+   .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+l3411orend:
+   .traceevent "O" 4 "R" "B" "r" 32 460 460 0 "" ""
+   brf l3410iffalse,r32
+   .srcstep 455 455 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 460 460 0 "" ""
+   icopy r32,r31
+   br l3389bexprend
+l3410iffalse:
+   .srcstep 456 456 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r35,1
+   .traceevent "L" 4 "R" "I" "r" 35 456 456 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 456 456 0 "found_position" ""
+   .srcstep 457 457 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 35 460 460 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 33 460 460 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 34 460 460 0 "haystack" ""
+   strpos r35,r33,r34
+   .srcstep 458 458 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 35 460 460 0 "found_position" ""
+   icopy r32,r35
+   br l3389bexprend
+l3389bexprend:
+   endlife r35
+   endlife r34
+   endlife r33
+   .meta "base64_roundtrip.base64_decode.found_position"
+   isub r36,r32,1
+   .traceevent "O" 4 "R" "I" "r" 36 460 460 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 460 460 0 "digit" ""
+   .srcstep 462 462 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 36 462 462 0 "digit" ""
+   bge l3430iffalse,r36,0
+   .srcstep 463 463 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+   .srcstep 461 461 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 466 466 0 "" ""
+   icopy r35,r34
+   br l3378bexprend
+l3430iffalse:
+   .srcstep 464 464 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 36 466 466 0 "digit" ""
+   icopy r35,r36
+   br l3378bexprend
+l3378bexprend:
+   endlife r38
+   endlife r36
+   icopy r19,r35
+   .traceevent "A" 6 "R" "I" "r" 19 466 466 0 "digit3" ""
+l525iffalse:
+   .srcstep 485 485 17 "base64_roundtrip.crexx" 97 5 20 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 23 485 485 0 "char4" ""
+   rne r39,r23,"="
+   .traceevent "O" 4 "R" "B" "r" 39 485 485 0 "" ""
+   brf l534iffalse,r39
+   .srcstep 486 486 17 "base64_roundtrip.crexx" 97 21 25 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .srcstep 484 484 17 "base64_roundtrip.crexx" 97 26 64 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .srcstep 483 483 17 "base64_roundtrip.crexx" 97 35 47 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .srcstep 469 469 33 "base64_roundtrip.crexx" 114 7 16 "  arg character = .string, alphabet = .string"
+   .traceevent "V" 6 "R" "S" "r" 23 469 469 0 "char4" ""
+   scopy r38,r23
+   .traceevent "A" 6 "R" "S" "r" 38 469 469 0 "character" ""
+   .srcstep 478 478 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+   .srcstep 477 477 17 "base64_roundtrip.crexx" 115 11 14 "  digit = pos(character, alphabet) - 1"
+   .meta "base64_roundtrip.base64_decode.found_position"="b" ".int" r35
+   .srcstep 470 470 25 "pos.crexx" 44 3 24 "  found_position = .int"
+   null r35
+   .srcstep 471 471 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   .traceevent "V" 6 "R" "S" "r" 38 471 471 0 "character" ""
+   scopy r33,r38
+   .traceevent "A" 6 "R" "S" "r" 33 471 471 0 "needle" ""
+   .srcstep 472 472 33 "base64_roundtrip.crexx" 115 14 14 "  digit = pos(character, alphabet) - 1"
+   load r34,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 34 472 472 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 34 472 472 0 "haystack" ""
+   .traceevent "V" 6 "R" "S" "r" 33 478 478 0 "needle" ""
+   seq r32,r33,""
+   .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+   brt l3471orend,r32
+   .traceevent "V" 6 "R" "S" "r" 34 478 478 0 "haystack" ""
+   seq r32,r34,""
+   .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+l3471orend:
+   .traceevent "O" 4 "R" "B" "r" 32 478 478 0 "" ""
+   brf l3470iffalse,r32
+   .srcstep 473 473 25 "pos.crexx" 48 41 49 "  if needle == \"\" | haystack == \"\" then return 0"
+   load r31,0
+   .traceevent "L" 4 "R" "I" "r" 31 478 478 0 "" ""
+   icopy r32,r31
+   br l3449bexprend
+l3470iffalse:
+   .srcstep 474 474 25 "pos.crexx" 50 3 25 "  found_position = start"
+   load r35,1
+   .traceevent "L" 4 "R" "I" "r" 35 474 474 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 35 474 474 0 "found_position" ""
+   .srcstep 475 475 25 "pos.crexx" 51 13 50 "  assembler strpos found_position,needle,haystack"
+   .traceevent "V" 6 "R" "I" "r" 35 478 478 0 "found_position" ""
+   .traceevent "V" 6 "R" "S" "r" 33 478 478 0 "needle" ""
+   .traceevent "V" 6 "R" "S" "r" 34 478 478 0 "haystack" ""
+   strpos r35,r33,r34
+   .srcstep 476 476 25 "pos.crexx" 52 3 24 "  return found_position"
+   .traceevent "V" 6 "R" "I" "r" 35 478 478 0 "found_position" ""
+   icopy r32,r35
+   br l3449bexprend
+l3449bexprend:
+   endlife r35
+   endlife r34
+   endlife r33
+   .meta "base64_roundtrip.base64_decode.found_position"
+   isub r36,r32,1
+   .traceevent "O" 4 "R" "I" "r" 36 478 478 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 36 478 478 0 "digit" ""
+   .srcstep 480 480 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 36 480 480 0 "digit" ""
+   bge l3490iffalse,r36,0
+   .srcstep 481 481 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+   .srcstep 479 479 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+   load r34,0
+   .traceevent "L" 4 "R" "I" "r" 34 484 484 0 "" ""
+   icopy r35,r34
+   br l3438bexprend
+l3490iffalse:
+   .srcstep 482 482 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 36 484 484 0 "digit" ""
+   icopy r35,r36
+   br l3438bexprend
+l3438bexprend:
+   endlife r38
+   endlife r36
+   icopy r18,r35
+   .traceevent "A" 6 "R" "I" "r" 18 484 484 0 "digit4" ""
+l534iffalse:
+   .srcstep 487 487 17 "base64_roundtrip.crexx" 99 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+   .traceevent "V" 6 "R" "X" "r" 6 487 487 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 487 487 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 21 487 487 0 "digit1" ""
+   imult r39,r21,4
+   .traceevent "O" 4 "R" "I" "r" 39 487 487 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 20 487 487 0 "digit2" ""
+   idiv r38,r20,16
+   .traceevent "O" 4 "R" "I" "r" 38 487 487 0 "" ""
+   iadd r39,r39,r38
+   .traceevent "O" 4 "R" "I" "r" 39 487 487 0 "" ""
+   bsetu8 r6,r4,r39
+   .srcstep 488 488 17 "base64_roundtrip.crexx" 100 5 38 "    output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 488 488 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 488 488 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 488 488 0 "output_offset" ""
+   .srcstep 491 491 17 "base64_roundtrip.crexx" 101 5 56 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 4 491 491 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 491 491 0 "output_length" ""
+   iadd r39,r3,1
+   .traceevent "O" 4 "R" "I" "r" 39 491 491 0 "" ""
+   ilt r39,r4,r39
+   .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+   brf l565andend,r39
+   .traceevent "V" 6 "R" "S" "r" 24 491 491 0 "char3" ""
+   rne r39,r24,"="
+   .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+l565andend:
+   .traceevent "O" 4 "R" "B" "r" 39 491 491 0 "" ""
+   brf l591iffalse,r39
+   .srcstep 492 492 17 "base64_roundtrip.crexx" 101 57 61 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .srcstep 489 489 17 "base64_roundtrip.crexx" 102 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+   .traceevent "V" 6 "R" "X" "r" 6 489 489 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 489 489 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 20 489 489 0 "digit2" ""
+   imod r38,r20,16
+   .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+   imult r38,r38,16
+   .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 19 489 489 0 "digit3" ""
+   idiv r36,r19,4
+   .traceevent "O" 4 "R" "I" "r" 36 489 489 0 "" ""
+   iadd r38,r38,r36
+   .traceevent "O" 4 "R" "I" "r" 38 489 489 0 "" ""
+   bsetu8 r6,r4,r38
+   .srcstep 490 490 17 "base64_roundtrip.crexx" 103 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 490 490 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 490 490 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 490 490 0 "output_offset" ""
+l591iffalse:
+   .srcstep 495 495 17 "base64_roundtrip.crexx" 105 5 56 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 4 495 495 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 495 495 0 "output_length" ""
+   iadd r39,r3,1
+   .traceevent "O" 4 "R" "I" "r" 39 495 495 0 "" ""
+   ilt r39,r4,r39
+   .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+   brf l600andend,r39
+   .traceevent "V" 6 "R" "S" "r" 23 495 495 0 "char4" ""
+   rne r39,r23,"="
+   .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+l600andend:
+   .traceevent "O" 4 "R" "B" "r" 39 495 495 0 "" ""
+   brf l624iffalse,r39
+   .srcstep 496 496 17 "base64_roundtrip.crexx" 105 57 61 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .srcstep 493 493 17 "base64_roundtrip.crexx" 106 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+   .traceevent "V" 6 "R" "X" "r" 6 493 493 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 493 493 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 19 493 493 0 "digit3" ""
+   imod r38,r19,4
+   .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+   imult r38,r38,64
+   .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 18 493 493 0 "digit4" ""
+   iadd r38,r38,r18
+   .traceevent "O" 4 "R" "I" "r" 38 493 493 0 "" ""
+   bsetu8 r6,r4,r38
+   .srcstep 494 494 17 "base64_roundtrip.crexx" 107 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 4 494 494 0 "output_offset" ""
+   iadd r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 494 494 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 494 494 0 "output_offset" ""
+l624iffalse:
+   .srcstep 497 497 17 "base64_roundtrip.crexx" 109 5 36 "    input_offset = input_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 2 497 497 0 "input_offset" ""
+   iadd r2,r2,4
+   .traceevent "O" 4 "R" "I" "r" 2 497 497 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 497 497 0 "input_offset" ""
+l471doinc:
+   .srcstep 499 499 17 "base64_roundtrip.crexx" 110 3 6 "  end"
+   br l471dostart
+l471doend:
+   endlife r24
+   endlife r23
+   endlife r21
+   endlife r20
+   endlife r19
+   endlife r18
+   .meta "base64_roundtrip.base64_decode.char3"
+   .meta "base64_roundtrip.base64_decode.char4"
+   .meta "base64_roundtrip.base64_decode.digit1"
+   .meta "base64_roundtrip.base64_decode.digit2"
+   .meta "base64_roundtrip.base64_decode.digit3"
+   .meta "base64_roundtrip.base64_decode.digit4"
+   .srcstep 500 500 17 "base64_roundtrip.crexx" 111 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 6 500 500 0 "result" ""
+   ret r6
+   .meta "base64_roundtrip.base64_decode.alphabet"
+   .meta "base64_roundtrip.base64_decode.encoded"
+   .meta "base64_roundtrip.base64_decode.encoded_length"
+   .meta "base64_roundtrip.base64_decode.input_offset"
+   .meta "base64_roundtrip.base64_decode.output_length"
+   .meta "base64_roundtrip.base64_decode.output_offset"
+   .meta "base64_roundtrip.base64_decode.padding"
+   .meta "base64_roundtrip.base64_decode.result"

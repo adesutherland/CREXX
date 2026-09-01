@@ -1,0 +1,14 @@
+source_commit=fa1450221efc9f51157e686472e88e34e894a1bf
+source_state=dirty only for approved default-selection closeout
+default_build_type=Release
+default_profiling=off
+default_handler_panel=profile-20
+explicit_handler_panel=profile-20
+rxtvm_binary_identical=yes
+rxtvm_sha256=c2d50abe7bdb4eb8c8caf4cbefb6edc9ef2cf894f83ca9c567059808e265e21b
+rxbvm_binary_identical=yes
+rxbvm_sha256=ab6f491bb1181cbae7184f36180f337380348e6628ccd5cf2e90576a3802b5c3
+rxtvm_bounce_oracle=PASS
+rxbvm_bounce_oracle=PASS
+timing_verdict=reuse retained formal profile-20 timing because the products are byte-identical
+all_inline_control=retained and explicitly selectable

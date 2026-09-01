@@ -1,0 +1,16 @@
+Internal ctest changing into directory: C:/crexx-qa/windows-msvc-2b793c81e-build
+Test project C:/crexx-qa/windows-msvc-2b793c81e-build
+  Test    #1: linked_opt_runtime_artifacts_build
+  Test #1538: classlib_rexxdoc_coverage
+  Test #1539: rexx_api_doc_exposed_regression
+  Test #1540: gate_f_levelb_bridge_inspection
+  Test #1586: docs_concurrency_basic_rxbvm_noopt
+  Test #1587: docs_concurrency_basic_rxbvm_opt
+  Test #1588: docs_concurrency_providers_rxbvm_noopt
+  Test #1589: docs_concurrency_providers_rxbvm_opt
+  Test #1590: docs_concurrency_transferable_objects_rxbvm_noopt
+  Test #1591: docs_concurrency_transferable_objects_rxbvm_opt
+  Test #1592: docs_concurrency_taskwork_rxbvm_noopt
+  Test #1593: docs_concurrency_taskwork_rxbvm_opt
+
+Total Tests: 12

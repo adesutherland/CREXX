@@ -1,0 +1,3 @@
+sizeof(value)=240
+alignof(value)=8
+source=retained C1 exact compiler layout; no rxvalue.h or value field changed in C2

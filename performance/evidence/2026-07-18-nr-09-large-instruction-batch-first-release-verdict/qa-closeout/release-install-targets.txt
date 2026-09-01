@@ -1,0 +1,7 @@
+command=cmake --build cmake-build-release --target help
+install/local: phony
+install/strip: phony
+package_target=absent
+CPackConfig.cmake=absent
+CPackSourceConfig.cmake=absent
+interpretation=isolated install-tree execution is the applicable packaging proof

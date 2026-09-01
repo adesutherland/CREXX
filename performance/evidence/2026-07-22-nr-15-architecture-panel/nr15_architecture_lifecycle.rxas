@@ -1,0 +1,821 @@
+/*
+ * SOURCE                 : nr15_architecture_lifecycle.crexx
+ */
+
+.meta "nr15_architecture_lifecycle.nr15panelstem"="b" ".unknown" .class
+.globals=0
+
+main() .locals=37
+   .meta "nr15_architecture_lifecycle.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "nr15_architecture_lifecycle.crexx" 5 5 19 "arg argv = .string[]"
+   .meta "nr15_architecture_lifecycle.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 2 2 17 "nr15_architecture_lifecycle.crexx" 6 1 17 "candidate = \"d1\""
+   .meta "nr15_architecture_lifecycle.main.candidate"="b" ".string" r1
+   load r1,"d1"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 2 2 0 "candidate" ""
+   .srcstep 3 3 17 "nr15_architecture_lifecycle.crexx" 7 1 10 "size = 64"
+   .meta "nr15_architecture_lifecycle.main.size"="b" ".int" r4
+   load r4,64
+   .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 3 3 0 "size" ""
+   .srcstep 4 4 17 "nr15_architecture_lifecycle.crexx" 8 1 18 "iterations = 1000"
+   .meta "nr15_architecture_lifecycle.main.iterations"="b" ".int" r2
+   load r2,1000
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "iterations" ""
+   .srcstep 6 6 17 "nr15_architecture_lifecycle.crexx" 9 1 16 "if argv[0] >= 1 then candidate = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 5 6 6 0 "argv" ""
+   getattrs r6,r0,0
+   .traceevent "V" 6 "R" "I" "r" 6 6 6 0 "argv" ""
+   igte r6,r6,1
+   .traceevent "O" 4 "R" "B" "r" 6 6 6 0 "" ""
+   brf l31iffalse,r6
+   .srcstep 7 7 17 "nr15_architecture_lifecycle.crexx" 9 17 21 "if argv[0] >= 1 then candidate = argv[1]"
+   .srcstep 5 5 17 "nr15_architecture_lifecycle.crexx" 9 22 40 "if argv[0] >= 1 then candidate = argv[1]"
+   minlinkattr1 r7,r0,1
+   .traceevent "V" 6 "R" "S" "r" 7 5 5 0 "argv" ""
+   scopy r1,r7
+   .traceevent "A" 6 "R" "S" "r" 1 5 5 0 "candidate" ""
+   unlink r7
+l31iffalse:
+   .srcstep 9 9 17 "nr15_architecture_lifecycle.crexx" 10 1 16 "if argv[0] >= 2 then size = argv[2]"
+   .traceevent "C" 4 "R" "V" "r" 7 9 9 0 "argv" ""
+   getattrs r6,r0,0
+   .traceevent "V" 6 "R" "I" "r" 6 9 9 0 "argv" ""
+   igte r6,r6,2
+   .traceevent "O" 4 "R" "B" "r" 6 9 9 0 "" ""
+   brf l40iffalse,r6
+   .srcstep 10 10 17 "nr15_architecture_lifecycle.crexx" 10 17 21 "if argv[0] >= 2 then size = argv[2]"
+   .srcstep 8 8 17 "nr15_architecture_lifecycle.crexx" 10 22 35 "if argv[0] >= 2 then size = argv[2]"
+   minlinkattr1 r5,r0,2
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 8 8 0 "argv" ""
+   igetunlink r4,r5
+   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "size" ""
+l40iffalse:
+   .srcstep 12 12 17 "nr15_architecture_lifecycle.crexx" 11 1 16 "if argv[0] >= 3 then iterations = argv[3]"
+   .traceevent "C" 4 "R" "V" "r" 7 12 12 0 "argv" ""
+   getattrs r6,r0,0
+   .traceevent "V" 6 "R" "I" "r" 6 12 12 0 "argv" ""
+   igte r6,r6,3
+   .traceevent "O" 4 "R" "B" "r" 6 12 12 0 "" ""
+   brf l49iffalse,r6
+   .srcstep 13 13 17 "nr15_architecture_lifecycle.crexx" 11 17 21 "if argv[0] >= 3 then iterations = argv[3]"
+   .srcstep 11 11 17 "nr15_architecture_lifecycle.crexx" 11 22 41 "if argv[0] >= 3 then iterations = argv[3]"
+   minlinkattr1 r5,r0,3
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 11 11 0 "argv" ""
+   igetunlink r2,r5
+   .traceevent "A" 6 "R" "I" "r" 2 11 11 0 "iterations" ""
+l49iffalse:
+   .srcstep 191 191 6 "nr15_architecture_lifecycle.crexx" 13 1 7 "select"
+   .traceevent "V" 6 "R" "S" "r" 1 0 0 0 "candidate" ""
+   .jtable jtable1635 auto
+   jumps r1,jtable1635
+   br l1635dispatchdefault
+l1635dispatchcase0: .jcase jtable1635 "d1"
+   .srcstep 69 69 17 "nr15_architecture_lifecycle.crexx" 14 31 61 "  when candidate == \"d1\" then rc = copy_d1(size, iterations)"
+   .meta "nr15_architecture_lifecycle.main.result"="b" ".string" r11
+   .srcstep 14 14 17 "nr15_architecture_lifecycle.crexx" 30 3 19 "  result = .string"
+   null r11
+   .srcstep 15 15 33 "nr15_architecture_lifecycle.crexx" 22 7 11 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 4 15 15 0 "size" ""
+   icopy r12,r4
+   .traceevent "A" 6 "R" "I" "r" 12 15 15 0 "size" ""
+   .srcstep 16 16 33 "nr15_architecture_lifecycle.crexx" 22 20 30 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "iterations" ""
+   icopy r9,r2
+   .traceevent "A" 6 "R" "I" "r" 9 16 16 0 "iterations" ""
+   .srcstep 17 17 17 "nr15_architecture_lifecycle.crexx" 23 3 17 "  target = .stem()"
+   load r7,0
+   call r14,§rxfnsb.stem.§factory(),r7
+   .traceevent "F" 4 "R" "O" "r" 14 17 17 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 14 17 17 0 "target" ""
+   .srcstep 24 24 17 "nr15_architecture_lifecycle.crexx" 24 3 5 "  do i = 1 to size"
+   .srcstep 18 18 17 "nr15_architecture_lifecycle.crexx" 24 6 11 "  do i = 1 to size"
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 18 18 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 18 18 0 "i" ""
+   .srcstep 19 19 17 "nr15_architecture_lifecycle.crexx" 24 12 19 "  do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "size" ""
+l702dostart:
+   .srcstep 19 19 17 "nr15_architecture_lifecycle.crexx" 24 12 19 "  do i = 1 to size"
+   igt r15,r7,r12
+   brt l702doend,r15
+   .srcstep 21 21 17 "nr15_architecture_lifecycle.crexx" 25 5 22 "    key = \"key-\" || i"
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 21 21 0 "i" ""
+   concat r6,"key-",r7
+   .traceevent "O" 4 "R" "S" "r" 6 21 21 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 21 21 0 "key" ""
+   .srcstep 22 22 17 "nr15_architecture_lifecycle.crexx" 26 5 26 "    value = \"value-\" || i"
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 22 22 0 "i" ""
+   concat r5,"value-",r7
+   .traceevent "O" 4 "R" "S" "r" 5 22 22 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 5 22 22 0 "value" ""
+   .srcstep 23 23 17 "nr15_architecture_lifecycle.crexx" 27 15 41 "    assembler nr15d1set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 14 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 6 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 5 0 0 0 "value" ""
+   nr15d1set r14,r6,r5
+l702doinc:
+   .srcstep 20 20 17 "nr15_architecture_lifecycle.crexx" 24 6 7 "  do i = 1 to size"
+   inc r7
+   .srcstep 25 25 17 "nr15_architecture_lifecycle.crexx" 28 3 6 "  end"
+   br l702dostart
+l702doend:
+   .srcstep 26 26 17 "nr15_architecture_lifecycle.crexx" 29 3 23 "  key = \"key-\" || size"
+   itos r12
+   .traceevent "V" 6 "R" "S" "r" 12 26 26 0 "size" ""
+   concat r10,"key-",r12
+   .traceevent "O" 4 "R" "S" "r" 10 26 26 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 10 26 26 0 "key" ""
+   .srcstep 27 27 17 "nr15_architecture_lifecycle.crexx" 31 3 15 "  checksum = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 27 27 0 "checksum" ""
+   .srcstep 28 28 17 "nr15_architecture_lifecycle.crexx" 32 3 21 "  start = time(\"us\")"
+   load r16,"us"
+   .traceevent "L" 4 "R" "S" "r" 16 28 28 0 "" ""
+   load r15,1
+   settpcall r13,rxfnsb.time(),r15,r16,768
+   .traceevent "F" 4 "R" "S" "r" 13 28 28 0 "time" ""
+   .traceevent "A" 6 "R" "S" "r" 13 28 28 0 "start" ""
+   .srcstep 40 40 17 "nr15_architecture_lifecycle.crexx" 33 3 5 "  do i = 1 to iterations"
+   .srcstep 29 29 17 "nr15_architecture_lifecycle.crexx" 33 6 11 "  do i = 1 to iterations"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 29 29 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 29 29 0 "i" ""
+   .srcstep 30 30 17 "nr15_architecture_lifecycle.crexx" 33 12 25 "  do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 9 0 0 0 "iterations" ""
+l740dostart:
+   .srcstep 30 30 17 "nr15_architecture_lifecycle.crexx" 33 12 25 "  do i = 1 to iterations"
+   igt r7,r15,r9
+   brt l740doend,r7
+   .srcstep 32 32 17 "nr15_architecture_lifecycle.crexx" 34 5 18 "    copy = target"
+   .traceevent "V" 6 "R" "O" "r" 14 32 32 0 "target" ""
+   copy r16,r14
+   .traceevent "A" 6 "R" "O" "r" 16 32 32 0 "copy" ""
+   .srcstep 33 33 17 "nr15_architecture_lifecycle.crexx" 35 15 40 "    assembler nr15d1get result,copy,key"
+   .traceevent "V" 6 "R" "S" "r" 11 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 16 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 10 0 0 0 "key" ""
+   nr15d1get r11,r16,r10
+   .srcstep 39 39 17 "nr15_architecture_lifecycle.crexx" 36 5 41 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "I" "r" 8 39 39 0 "checksum" ""
+   .srcstep 38 38 17 "nr15_architecture_lifecycle.crexx" 36 27 33 "    checksum = checksum + length(result)"
+   .srcstep 34 34 33 "nr15_architecture_lifecycle.crexx" 36 33 33 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "S" "r" 11 34 34 0 "result" ""
+   scopy r5,r11
+   .traceevent "A" 6 "R" "S" "r" 5 34 34 0 "string" ""
+   .srcstep 35 35 25 "length.crexx" 42 3 13 "  result = 0"
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 35 35 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 35 35 0 "result" ""
+   .srcstep 36 36 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 6 39 39 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 5 39 39 0 "string" ""
+   strlen r6,r5
+   .srcstep 37 37 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 6 39 39 0 "result" ""
+   icopy r17,r6
+   br l908bexprend
+l908bexprend:
+   iadd r8,r8,r17
+   .traceevent "O" 4 "R" "I" "r" 8 39 39 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 39 39 0 "checksum" ""
+l740doinc:
+   .srcstep 31 31 17 "nr15_architecture_lifecycle.crexx" 33 6 7 "  do i = 1 to iterations"
+   inc r15
+   .srcstep 41 41 17 "nr15_architecture_lifecycle.crexx" 37 3 6 "  end"
+   br l740dostart
+l740doend:
+   endlife r16
+   .srcstep 68 68 33 "nr15_architecture_lifecycle.crexx" 38 3 9 "  return report(\"d1\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 67 67 17 "nr15_architecture_lifecycle.crexx" 38 10 16 "  return report(\"d1\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 42 42 33 "nr15_architecture_lifecycle.crexx" 85 28 32 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 12 42 42 0 "size" ""
+   icopy r7,r12
+   .traceevent "A" 6 "R" "I" "r" 7 42 42 0 "size" ""
+   .srcstep 43 43 33 "nr15_architecture_lifecycle.crexx" 85 41 51 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "iterations" ""
+   icopy r15,r9
+   .traceevent "A" 6 "R" "I" "r" 15 43 43 0 "iterations" ""
+   .srcstep 51 51 33 "nr15_architecture_lifecycle.crexx" 85 60 67 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .srcstep 50 50 17 "nr15_architecture_lifecycle.crexx" 38 41 51 "  return report(\"d1\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 44 44 33 "nr15_architecture_lifecycle.crexx" 79 7 12 "  arg start = .int"
+   stoi r13
+   .traceevent "V" 6 "R" "I" "r" 13 44 44 0 "start" ""
+   icopy r5,r13
+   .traceevent "A" 6 "R" "I" "r" 5 44 44 0 "start" ""
+   .srcstep 45 45 17 "nr15_architecture_lifecycle.crexx" 80 3 31 "  elapsed = time(\"us\") - start"
+   load r19,"us"
+   .traceevent "L" 4 "R" "S" "r" 19 45 45 0 "" ""
+   load r18,1
+   settpcall r20,rxfnsb.time(),r18,r19,768
+   stof r20
+   .traceevent "F" 4 "R" "F" "r" 20 45 45 0 "time" ""
+   itof r5
+   .traceevent "V" 6 "R" "F" "r" 5 45 45 0 "start" ""
+   fsub r6,r20,r5
+   .traceevent "O" 4 "R" "F" "r" 6 45 45 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 6 45 45 0 "elapsed" ""
+   .srcstep 47 47 17 "nr15_architecture_lifecycle.crexx" 81 3 17 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 6 47 47 0 "elapsed" ""
+   flt r20,r6,0.0
+   .traceevent "O" 4 "R" "B" "r" 20 47 47 0 "" ""
+   brf l967iffalse,r20
+   .srcstep 48 48 17 "nr15_architecture_lifecycle.crexx" 81 18 22 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .srcstep 46 46 17 "nr15_architecture_lifecycle.crexx" 81 23 54 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 6 46 46 0 "elapsed" ""
+   fadd r6,r6,86400000000.0
+   .traceevent "O" 4 "R" "F" "r" 6 46 46 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 6 46 46 0 "elapsed" ""
+l967iffalse:
+   .srcstep 49 49 17 "nr15_architecture_lifecycle.crexx" 82 3 17 "  return elapsed"
+   ftoi r6
+   .traceevent "V" 6 "R" "I" "r" 6 51 51 0 "elapsed" ""
+   icopy r20,r6
+   br l956bexprend
+l956bexprend:
+   icopy r16,r20
+   .traceevent "A" 6 "R" "I" "r" 16 51 51 0 "elapsed" ""
+   .srcstep 52 52 33 "nr15_architecture_lifecycle.crexx" 85 76 84 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 8 52 52 0 "checksum" ""
+   icopy r17,r8
+   .traceevent "A" 6 "R" "I" "r" 17 52 52 0 "checksum" ""
+   .srcstep 57 57 17 "nr15_architecture_lifecycle.crexx" 86 3 19 "  if checksum <= 0 then return fail(\"checksum\")"
+   .traceevent "V" 6 "R" "I" "r" 17 57 57 0 "checksum" ""
+   ilte r20,r17,0
+   .traceevent "O" 4 "R" "B" "r" 20 57 57 0 "" ""
+   brf l981iffalse,r20
+   .srcstep 58 58 17 "nr15_architecture_lifecycle.crexx" 86 20 24 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 56 56 17 "nr15_architecture_lifecycle.crexx" 86 25 48 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 55 55 17 "nr15_architecture_lifecycle.crexx" 86 32 36 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 53 53 17 "nr15_architecture_lifecycle.crexx" 98 3 49 "  say \"FAIL: NR-15 architecture lifecycle\" label"
+   say "FAIL: NR-15 architecture lifecycle checksum"
+   .srcstep 54 54 17 "nr15_architecture_lifecycle.crexx" 99 3 11 "  return 1"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 68 68 0 "" ""
+   icopy r18,r19
+   br l986bexprend
+l986bexprend:
+   icopy r19,r18
+   br l943bexprend
+l981iffalse:
+   .srcstep 59 59 17 "nr15_architecture_lifecycle.crexx" 87 3 46 "  say \"benchmark=nr15_architecture_lifecycle\""
+   say "benchmark=nr15_architecture_lifecycle"
+   .srcstep 60 60 17 "nr15_architecture_lifecycle.crexx" 88 3 28 "  say \"candidate=\"candidate"
+   say "candidate=d1"
+   .srcstep 61 61 17 "nr15_architecture_lifecycle.crexx" 89 3 18 "  say \"size=\"size"
+   itos r7
+   .traceevent "V" 6 "R" "S" "r" 7 61 61 0 "size" ""
+   concat r20,"size=",r7
+   .traceevent "O" 4 "R" "S" "r" 20 61 61 0 "" ""
+   say r20
+   .srcstep 62 62 17 "nr15_architecture_lifecycle.crexx" 90 3 30 "  say \"iterations=\"iterations"
+   itos r15
+   .traceevent "V" 6 "R" "S" "r" 15 62 62 0 "iterations" ""
+   concat r20,"iterations=",r15
+   .traceevent "O" 4 "R" "S" "r" 20 62 62 0 "" ""
+   say r20
+   .srcstep 63 63 17 "nr15_architecture_lifecycle.crexx" 91 3 27 "  say \"elapsed_us=\"elapsed"
+   itos r16
+   .traceevent "V" 6 "R" "S" "r" 16 63 63 0 "elapsed" ""
+   concat r20,"elapsed_us=",r16
+   .traceevent "O" 4 "R" "S" "r" 20 63 63 0 "" ""
+   say r20
+   .srcstep 64 64 17 "nr15_architecture_lifecycle.crexx" 92 3 26 "  say \"checksum=\"checksum"
+   itos r17
+   .traceevent "V" 6 "R" "S" "r" 17 64 64 0 "checksum" ""
+   concat r20,"checksum=",r17
+   .traceevent "O" 4 "R" "S" "r" 20 64 64 0 "" ""
+   say r20
+   .srcstep 65 65 17 "nr15_architecture_lifecycle.crexx" 93 3 43 "  say \"PASS: NR-15 architecture lifecycle\""
+   say "PASS: NR-15 architecture lifecycle"
+   .srcstep 66 66 17 "nr15_architecture_lifecycle.crexx" 94 3 11 "  return 0"
+   load r20,0
+   .traceevent "L" 4 "R" "I" "r" 20 68 68 0 "" ""
+   icopy r19,r20
+   br l943bexprend
+l943bexprend:
+   copy r3,r19
+   .traceevent "A" 6 "R" "I" "r" 3 68 68 0 "rc" ""
+   br l1635dispatchend
+l1635dispatchcase1: .jcase jtable1635 "d2"
+   .srcstep 128 128 17 "nr15_architecture_lifecycle.crexx" 15 31 61 "  when candidate == \"d2\" then rc = copy_d2(size, iterations)"
+   .meta "nr15_architecture_lifecycle.main.result"="b" ".string" r24
+   .srcstep 70 70 17 "nr15_architecture_lifecycle.crexx" 49 3 19 "  result = .string"
+   null r24
+   .srcstep 71 71 33 "nr15_architecture_lifecycle.crexx" 41 7 11 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 4 71 71 0 "size" ""
+   icopy r25,r4
+   .traceevent "A" 6 "R" "I" "r" 25 71 71 0 "size" ""
+   .srcstep 72 72 33 "nr15_architecture_lifecycle.crexx" 41 20 30 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 2 72 72 0 "iterations" ""
+   icopy r22,r2
+   .traceevent "A" 6 "R" "I" "r" 22 72 72 0 "iterations" ""
+   .srcstep 76 76 17 "nr15_architecture_lifecycle.crexx" 42 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 73 73 6 "nr15_architecture_lifecycle.crexx" 102 3 13 "  *: factory"
+   setattrs r28,0
+   .srcstep 74 74 6 "nr15_architecture_lifecycle.crexx" 102 3 13 "  *: factory"
+   setobjtype r28,"nr15_architecture_lifecycle.nr15panelstem"
+   .srcstep 75 75 33 "nr15_architecture_lifecycle.crexx" 103 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 28 75 75 0 "§factory" ""
+   copy r27,r28
+   .traceevent "A" 6 "R" "O" "r" 27 75 75 0 "target" ""
+   .srcstep 83 83 17 "nr15_architecture_lifecycle.crexx" 43 3 5 "  do i = 1 to size"
+   .srcstep 77 77 17 "nr15_architecture_lifecycle.crexx" 43 6 11 "  do i = 1 to size"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 77 77 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 77 77 0 "i" ""
+   .srcstep 78 78 17 "nr15_architecture_lifecycle.crexx" 43 12 19 "  do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 25 0 0 0 "size" ""
+l1040dostart:
+   .srcstep 78 78 17 "nr15_architecture_lifecycle.crexx" 43 12 19 "  do i = 1 to size"
+   igt r17,r20,r25
+   brt l1040doend,r17
+   .srcstep 80 80 17 "nr15_architecture_lifecycle.crexx" 44 5 22 "    key = \"key-\" || i"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 80 80 0 "i" ""
+   concat r19,"key-",r20
+   .traceevent "O" 4 "R" "S" "r" 19 80 80 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 19 80 80 0 "key" ""
+   .srcstep 81 81 17 "nr15_architecture_lifecycle.crexx" 45 5 26 "    value = \"value-\" || i"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 81 81 0 "i" ""
+   concat r18,"value-",r20
+   .traceevent "O" 4 "R" "S" "r" 18 81 81 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 18 81 81 0 "value" ""
+   .srcstep 82 82 17 "nr15_architecture_lifecycle.crexx" 46 15 41 "    assembler nr15d2set target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 27 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 19 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 18 0 0 0 "value" ""
+   nr15d2set r27,r19,r18
+l1040doinc:
+   .srcstep 79 79 17 "nr15_architecture_lifecycle.crexx" 43 6 7 "  do i = 1 to size"
+   inc r20
+   .srcstep 84 84 17 "nr15_architecture_lifecycle.crexx" 47 3 6 "  end"
+   br l1040dostart
+l1040doend:
+   .srcstep 85 85 17 "nr15_architecture_lifecycle.crexx" 48 3 23 "  key = \"key-\" || size"
+   itos r25
+   .traceevent "V" 6 "R" "S" "r" 25 85 85 0 "size" ""
+   concat r23,"key-",r25
+   .traceevent "O" 4 "R" "S" "r" 23 85 85 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 23 85 85 0 "key" ""
+   .srcstep 86 86 17 "nr15_architecture_lifecycle.crexx" 50 3 15 "  checksum = 0"
+   load r21,0
+   .traceevent "L" 4 "R" "I" "r" 21 86 86 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 86 86 0 "checksum" ""
+   .srcstep 87 87 17 "nr15_architecture_lifecycle.crexx" 51 3 21 "  start = time(\"us\")"
+   load r20,"us"
+   .traceevent "L" 4 "R" "S" "r" 20 87 87 0 "" ""
+   load r19,1
+   settpcall r26,rxfnsb.time(),r19,r20,768
+   .traceevent "F" 4 "R" "S" "r" 26 87 87 0 "time" ""
+   .traceevent "A" 6 "R" "S" "r" 26 87 87 0 "start" ""
+   .srcstep 99 99 17 "nr15_architecture_lifecycle.crexx" 52 3 5 "  do i = 1 to iterations"
+   .srcstep 88 88 17 "nr15_architecture_lifecycle.crexx" 52 6 11 "  do i = 1 to iterations"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 88 88 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 88 88 0 "i" ""
+   .srcstep 89 89 17 "nr15_architecture_lifecycle.crexx" 52 12 25 "  do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 22 0 0 0 "iterations" ""
+l1078dostart:
+   .srcstep 89 89 17 "nr15_architecture_lifecycle.crexx" 52 12 25 "  do i = 1 to iterations"
+   igt r18,r19,r22
+   brt l1078doend,r18
+   .srcstep 91 91 17 "nr15_architecture_lifecycle.crexx" 53 5 18 "    copy = target"
+   .traceevent "V" 6 "R" "O" "r" 27 91 91 0 "target" ""
+   copy r20,r27
+   .traceevent "A" 6 "R" "O" "r" 20 91 91 0 "copy" ""
+   .srcstep 92 92 17 "nr15_architecture_lifecycle.crexx" 54 15 40 "    assembler nr15d2get result,copy,key"
+   .traceevent "V" 6 "R" "S" "r" 24 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 20 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 23 0 0 0 "key" ""
+   nr15d2get r24,r20,r23
+   .srcstep 98 98 17 "nr15_architecture_lifecycle.crexx" 55 5 41 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "I" "r" 21 98 98 0 "checksum" ""
+   .srcstep 97 97 17 "nr15_architecture_lifecycle.crexx" 55 27 33 "    checksum = checksum + length(result)"
+   .srcstep 93 93 33 "nr15_architecture_lifecycle.crexx" 55 33 33 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "S" "r" 24 93 93 0 "result" ""
+   scopy r16,r24
+   .traceevent "A" 6 "R" "S" "r" 16 93 93 0 "string" ""
+   .srcstep 94 94 25 "length.crexx" 42 3 13 "  result = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 94 94 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 94 94 0 "result" ""
+   .srcstep 95 95 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 17 98 98 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 16 98 98 0 "string" ""
+   strlen r17,r16
+   .srcstep 96 96 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 17 98 98 0 "result" ""
+   icopy r15,r17
+   br l1339bexprend
+l1339bexprend:
+   iadd r21,r21,r15
+   .traceevent "O" 4 "R" "I" "r" 21 98 98 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 21 98 98 0 "checksum" ""
+l1078doinc:
+   .srcstep 90 90 17 "nr15_architecture_lifecycle.crexx" 52 6 7 "  do i = 1 to iterations"
+   inc r19
+   .srcstep 100 100 17 "nr15_architecture_lifecycle.crexx" 56 3 6 "  end"
+   br l1078dostart
+l1078doend:
+   endlife r20
+   .srcstep 127 127 33 "nr15_architecture_lifecycle.crexx" 57 3 9 "  return report(\"d2\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 126 126 17 "nr15_architecture_lifecycle.crexx" 57 10 16 "  return report(\"d2\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 101 101 33 "nr15_architecture_lifecycle.crexx" 85 28 32 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 25 101 101 0 "size" ""
+   icopy r17,r25
+   .traceevent "A" 6 "R" "I" "r" 17 101 101 0 "size" ""
+   .srcstep 102 102 33 "nr15_architecture_lifecycle.crexx" 85 41 51 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 22 102 102 0 "iterations" ""
+   icopy r18,r22
+   .traceevent "A" 6 "R" "I" "r" 18 102 102 0 "iterations" ""
+   .srcstep 110 110 33 "nr15_architecture_lifecycle.crexx" 85 60 67 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .srcstep 109 109 17 "nr15_architecture_lifecycle.crexx" 57 41 51 "  return report(\"d2\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 103 103 33 "nr15_architecture_lifecycle.crexx" 79 7 12 "  arg start = .int"
+   stoi r26
+   .traceevent "V" 6 "R" "I" "r" 26 103 103 0 "start" ""
+   icopy r15,r26
+   .traceevent "A" 6 "R" "I" "r" 15 103 103 0 "start" ""
+   .srcstep 104 104 17 "nr15_architecture_lifecycle.crexx" 80 3 31 "  elapsed = time(\"us\") - start"
+   load r7,"us"
+   .traceevent "L" 4 "R" "S" "r" 7 104 104 0 "" ""
+   load r6,1
+   settpcall r5,rxfnsb.time(),r6,r7,768
+   stof r5
+   .traceevent "F" 4 "R" "F" "r" 5 104 104 0 "time" ""
+   itof r15
+   .traceevent "V" 6 "R" "F" "r" 15 104 104 0 "start" ""
+   fsub r16,r5,r15
+   .traceevent "O" 4 "R" "F" "r" 16 104 104 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 104 104 0 "elapsed" ""
+   .srcstep 106 106 17 "nr15_architecture_lifecycle.crexx" 81 3 17 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 16 106 106 0 "elapsed" ""
+   flt r7,r16,0.0
+   .traceevent "O" 4 "R" "B" "r" 7 106 106 0 "" ""
+   brf l1398iffalse,r7
+   .srcstep 107 107 17 "nr15_architecture_lifecycle.crexx" 81 18 22 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .srcstep 105 105 17 "nr15_architecture_lifecycle.crexx" 81 23 54 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 16 105 105 0 "elapsed" ""
+   fadd r16,r16,86400000000.0
+   .traceevent "O" 4 "R" "F" "r" 16 105 105 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 105 105 0 "elapsed" ""
+l1398iffalse:
+   .srcstep 108 108 17 "nr15_architecture_lifecycle.crexx" 82 3 17 "  return elapsed"
+   ftoi r16
+   .traceevent "V" 6 "R" "I" "r" 16 110 110 0 "elapsed" ""
+   icopy r7,r16
+   br l1387bexprend
+l1387bexprend:
+   icopy r19,r7
+   .traceevent "A" 6 "R" "I" "r" 19 110 110 0 "elapsed" ""
+   .srcstep 111 111 33 "nr15_architecture_lifecycle.crexx" 85 76 84 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 21 111 111 0 "checksum" ""
+   icopy r20,r21
+   .traceevent "A" 6 "R" "I" "r" 20 111 111 0 "checksum" ""
+   .srcstep 116 116 17 "nr15_architecture_lifecycle.crexx" 86 3 19 "  if checksum <= 0 then return fail(\"checksum\")"
+   .traceevent "V" 6 "R" "I" "r" 20 116 116 0 "checksum" ""
+   ilte r16,r20,0
+   .traceevent "O" 4 "R" "B" "r" 16 116 116 0 "" ""
+   brf l1412iffalse,r16
+   .srcstep 117 117 17 "nr15_architecture_lifecycle.crexx" 86 20 24 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 115 115 17 "nr15_architecture_lifecycle.crexx" 86 25 48 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 114 114 17 "nr15_architecture_lifecycle.crexx" 86 32 36 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 112 112 17 "nr15_architecture_lifecycle.crexx" 98 3 49 "  say \"FAIL: NR-15 architecture lifecycle\" label"
+   say "FAIL: NR-15 architecture lifecycle checksum"
+   .srcstep 113 113 17 "nr15_architecture_lifecycle.crexx" 99 3 11 "  return 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 127 127 0 "" ""
+   icopy r7,r15
+   br l1417bexprend
+l1417bexprend:
+   icopy r15,r7
+   br l1374bexprend
+l1412iffalse:
+   .srcstep 118 118 17 "nr15_architecture_lifecycle.crexx" 87 3 46 "  say \"benchmark=nr15_architecture_lifecycle\""
+   say "benchmark=nr15_architecture_lifecycle"
+   .srcstep 119 119 17 "nr15_architecture_lifecycle.crexx" 88 3 28 "  say \"candidate=\"candidate"
+   say "candidate=d2"
+   .srcstep 120 120 17 "nr15_architecture_lifecycle.crexx" 89 3 18 "  say \"size=\"size"
+   itos r17
+   .traceevent "V" 6 "R" "S" "r" 17 120 120 0 "size" ""
+   concat r16,"size=",r17
+   .traceevent "O" 4 "R" "S" "r" 16 120 120 0 "" ""
+   say r16
+   .srcstep 121 121 17 "nr15_architecture_lifecycle.crexx" 90 3 30 "  say \"iterations=\"iterations"
+   itos r18
+   .traceevent "V" 6 "R" "S" "r" 18 121 121 0 "iterations" ""
+   concat r16,"iterations=",r18
+   .traceevent "O" 4 "R" "S" "r" 16 121 121 0 "" ""
+   say r16
+   .srcstep 122 122 17 "nr15_architecture_lifecycle.crexx" 91 3 27 "  say \"elapsed_us=\"elapsed"
+   itos r19
+   .traceevent "V" 6 "R" "S" "r" 19 122 122 0 "elapsed" ""
+   concat r16,"elapsed_us=",r19
+   .traceevent "O" 4 "R" "S" "r" 16 122 122 0 "" ""
+   say r16
+   .srcstep 123 123 17 "nr15_architecture_lifecycle.crexx" 92 3 26 "  say \"checksum=\"checksum"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 123 123 0 "checksum" ""
+   concat r16,"checksum=",r20
+   .traceevent "O" 4 "R" "S" "r" 16 123 123 0 "" ""
+   say r16
+   .srcstep 124 124 17 "nr15_architecture_lifecycle.crexx" 93 3 43 "  say \"PASS: NR-15 architecture lifecycle\""
+   say "PASS: NR-15 architecture lifecycle"
+   .srcstep 125 125 17 "nr15_architecture_lifecycle.crexx" 94 3 11 "  return 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 127 127 0 "" ""
+   icopy r15,r16
+   br l1374bexprend
+l1374bexprend:
+   copy r3,r15
+   .traceevent "A" 6 "R" "I" "r" 3 127 127 0 "rc" ""
+   br l1635dispatchend
+l1635dispatchcase2: .jcase jtable1635 "d2h"
+   .srcstep 187 187 17 "nr15_architecture_lifecycle.crexx" 16 32 63 "  when candidate == \"d2h\" then rc = copy_d2h(size, iterations)"
+   .meta "nr15_architecture_lifecycle.main.result"="b" ".string" r32
+   .srcstep 129 129 17 "nr15_architecture_lifecycle.crexx" 68 3 19 "  result = .string"
+   null r32
+   .srcstep 130 130 33 "nr15_architecture_lifecycle.crexx" 60 7 11 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 4 130 130 0 "size" ""
+   icopy r33,r4
+   .traceevent "A" 6 "R" "I" "r" 33 130 130 0 "size" ""
+   .srcstep 131 131 33 "nr15_architecture_lifecycle.crexx" 60 20 30 "  arg size = .int, iterations = .int"
+   .traceevent "V" 6 "R" "I" "r" 2 131 131 0 "iterations" ""
+   icopy r30,r2
+   .traceevent "A" 6 "R" "I" "r" 30 131 131 0 "iterations" ""
+   .srcstep 135 135 17 "nr15_architecture_lifecycle.crexx" 61 3 26 "  target = .Nr15PanelStem()"
+   .srcstep 132 132 6 "nr15_architecture_lifecycle.crexx" 102 3 13 "  *: factory"
+   setattrs r36,0
+   .srcstep 133 133 6 "nr15_architecture_lifecycle.crexx" 102 3 13 "  *: factory"
+   setobjtype r36,"nr15_architecture_lifecycle.nr15panelstem"
+   .srcstep 134 134 33 "nr15_architecture_lifecycle.crexx" 103 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 36 134 134 0 "§factory" ""
+   copy r35,r36
+   .traceevent "A" 6 "R" "O" "r" 35 134 134 0 "target" ""
+   .srcstep 142 142 17 "nr15_architecture_lifecycle.crexx" 62 3 5 "  do i = 1 to size"
+   .srcstep 136 136 17 "nr15_architecture_lifecycle.crexx" 62 6 11 "  do i = 1 to size"
+   load r20,1
+   .traceevent "L" 4 "R" "I" "r" 20 136 136 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 20 136 136 0 "i" ""
+   .srcstep 137 137 17 "nr15_architecture_lifecycle.crexx" 62 12 19 "  do i = 1 to size"
+   .traceevent "V" 6 "R" "I" "r" 33 0 0 0 "size" ""
+l1471dostart:
+   .srcstep 137 137 17 "nr15_architecture_lifecycle.crexx" 62 12 19 "  do i = 1 to size"
+   igt r17,r20,r33
+   brt l1471doend,r17
+   .srcstep 139 139 17 "nr15_architecture_lifecycle.crexx" 63 5 22 "    key = \"key-\" || i"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 139 139 0 "i" ""
+   concat r19,"key-",r20
+   .traceevent "O" 4 "R" "S" "r" 19 139 139 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 19 139 139 0 "key" ""
+   .srcstep 140 140 17 "nr15_architecture_lifecycle.crexx" 64 5 26 "    value = \"value-\" || i"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 140 140 0 "i" ""
+   concat r18,"value-",r20
+   .traceevent "O" 4 "R" "S" "r" 18 140 140 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 18 140 140 0 "value" ""
+   .srcstep 141 141 17 "nr15_architecture_lifecycle.crexx" 65 15 42 "    assembler nr15d2hset target,key,value"
+   .traceevent "V" 6 "R" "O" "r" 35 0 0 0 "target" ""
+   .traceevent "V" 6 "R" "S" "r" 19 0 0 0 "key" ""
+   .traceevent "V" 6 "R" "S" "r" 18 0 0 0 "value" ""
+   nr15d2hset r35,r19,r18
+l1471doinc:
+   .srcstep 138 138 17 "nr15_architecture_lifecycle.crexx" 62 6 7 "  do i = 1 to size"
+   inc r20
+   .srcstep 143 143 17 "nr15_architecture_lifecycle.crexx" 66 3 6 "  end"
+   br l1471dostart
+l1471doend:
+   .srcstep 144 144 17 "nr15_architecture_lifecycle.crexx" 67 3 23 "  key = \"key-\" || size"
+   itos r33
+   .traceevent "V" 6 "R" "S" "r" 33 144 144 0 "size" ""
+   concat r31,"key-",r33
+   .traceevent "O" 4 "R" "S" "r" 31 144 144 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 31 144 144 0 "key" ""
+   .srcstep 145 145 17 "nr15_architecture_lifecycle.crexx" 69 3 15 "  checksum = 0"
+   load r29,0
+   .traceevent "L" 4 "R" "I" "r" 29 145 145 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 145 145 0 "checksum" ""
+   .srcstep 146 146 17 "nr15_architecture_lifecycle.crexx" 70 3 21 "  start = time(\"us\")"
+   load r20,"us"
+   .traceevent "L" 4 "R" "S" "r" 20 146 146 0 "" ""
+   load r19,1
+   settpcall r34,rxfnsb.time(),r19,r20,768
+   .traceevent "F" 4 "R" "S" "r" 34 146 146 0 "time" ""
+   .traceevent "A" 6 "R" "S" "r" 34 146 146 0 "start" ""
+   .srcstep 158 158 17 "nr15_architecture_lifecycle.crexx" 71 3 5 "  do i = 1 to iterations"
+   .srcstep 147 147 17 "nr15_architecture_lifecycle.crexx" 71 6 11 "  do i = 1 to iterations"
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 147 147 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 19 147 147 0 "i" ""
+   .srcstep 148 148 17 "nr15_architecture_lifecycle.crexx" 71 12 25 "  do i = 1 to iterations"
+   .traceevent "V" 6 "R" "I" "r" 30 0 0 0 "iterations" ""
+l1509dostart:
+   .srcstep 148 148 17 "nr15_architecture_lifecycle.crexx" 71 12 25 "  do i = 1 to iterations"
+   igt r18,r19,r30
+   brt l1509doend,r18
+   .srcstep 150 150 17 "nr15_architecture_lifecycle.crexx" 72 5 18 "    copy = target"
+   .traceevent "V" 6 "R" "O" "r" 35 150 150 0 "target" ""
+   copy r20,r35
+   .traceevent "A" 6 "R" "O" "r" 20 150 150 0 "copy" ""
+   .srcstep 151 151 17 "nr15_architecture_lifecycle.crexx" 73 15 41 "    assembler nr15d2hget result,copy,key"
+   .traceevent "V" 6 "R" "S" "r" 32 0 0 0 "result" ""
+   .traceevent "V" 6 "R" "O" "r" 20 0 0 0 "copy" ""
+   .traceevent "V" 6 "R" "S" "r" 31 0 0 0 "key" ""
+   nr15d2hget r32,r20,r31
+   .srcstep 157 157 17 "nr15_architecture_lifecycle.crexx" 74 5 41 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "I" "r" 29 157 157 0 "checksum" ""
+   .srcstep 156 156 17 "nr15_architecture_lifecycle.crexx" 74 27 33 "    checksum = checksum + length(result)"
+   .srcstep 152 152 33 "nr15_architecture_lifecycle.crexx" 74 33 33 "    checksum = checksum + length(result)"
+   .traceevent "V" 6 "R" "S" "r" 32 152 152 0 "result" ""
+   scopy r16,r32
+   .traceevent "A" 6 "R" "S" "r" 16 152 152 0 "string" ""
+   .srcstep 153 153 25 "length.crexx" 42 3 13 "  result = 0"
+   load r17,0
+   .traceevent "L" 4 "R" "I" "r" 17 153 153 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 17 153 153 0 "result" ""
+   .srcstep 154 154 25 "length.crexx" 43 13 33 "  assembler strlen result,string"
+   .traceevent "V" 6 "R" "I" "r" 17 157 157 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 16 157 157 0 "string" ""
+   strlen r17,r16
+   .srcstep 155 155 25 "length.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 17 157 157 0 "result" ""
+   icopy r15,r17
+   br l1529bexprend
+l1529bexprend:
+   iadd r29,r29,r15
+   .traceevent "O" 4 "R" "I" "r" 29 157 157 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 29 157 157 0 "checksum" ""
+l1509doinc:
+   .srcstep 149 149 17 "nr15_architecture_lifecycle.crexx" 71 6 7 "  do i = 1 to iterations"
+   inc r19
+   .srcstep 159 159 17 "nr15_architecture_lifecycle.crexx" 75 3 6 "  end"
+   br l1509dostart
+l1509doend:
+   endlife r20
+   .srcstep 186 186 33 "nr15_architecture_lifecycle.crexx" 76 3 9 "  return report(\"d2h\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 185 185 17 "nr15_architecture_lifecycle.crexx" 76 10 16 "  return report(\"d2h\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 160 160 33 "nr15_architecture_lifecycle.crexx" 85 28 32 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 33 160 160 0 "size" ""
+   icopy r17,r33
+   .traceevent "A" 6 "R" "I" "r" 17 160 160 0 "size" ""
+   .srcstep 161 161 33 "nr15_architecture_lifecycle.crexx" 85 41 51 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 30 161 161 0 "iterations" ""
+   icopy r18,r30
+   .traceevent "A" 6 "R" "I" "r" 18 161 161 0 "iterations" ""
+   .srcstep 169 169 33 "nr15_architecture_lifecycle.crexx" 85 60 67 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .srcstep 168 168 17 "nr15_architecture_lifecycle.crexx" 76 42 52 "  return report(\"d2h\", size, iterations, elapsed_us(start), checksum)"
+   .srcstep 162 162 33 "nr15_architecture_lifecycle.crexx" 79 7 12 "  arg start = .int"
+   stoi r34
+   .traceevent "V" 6 "R" "I" "r" 34 162 162 0 "start" ""
+   icopy r15,r34
+   .traceevent "A" 6 "R" "I" "r" 15 162 162 0 "start" ""
+   .srcstep 163 163 17 "nr15_architecture_lifecycle.crexx" 80 3 31 "  elapsed = time(\"us\") - start"
+   load r7,"us"
+   .traceevent "L" 4 "R" "S" "r" 7 163 163 0 "" ""
+   load r6,1
+   settpcall r5,rxfnsb.time(),r6,r7,768
+   stof r5
+   .traceevent "F" 4 "R" "F" "r" 5 163 163 0 "time" ""
+   itof r15
+   .traceevent "V" 6 "R" "F" "r" 15 163 163 0 "start" ""
+   fsub r16,r5,r15
+   .traceevent "O" 4 "R" "F" "r" 16 163 163 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 163 163 0 "elapsed" ""
+   .srcstep 165 165 17 "nr15_architecture_lifecycle.crexx" 81 3 17 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 16 165 165 0 "elapsed" ""
+   flt r7,r16,0.0
+   .traceevent "O" 4 "R" "B" "r" 7 165 165 0 "" ""
+   brf l1568iffalse,r7
+   .srcstep 166 166 17 "nr15_architecture_lifecycle.crexx" 81 18 22 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .srcstep 164 164 17 "nr15_architecture_lifecycle.crexx" 81 23 54 "  if elapsed < 0 then elapsed = elapsed + 86400000000"
+   .traceevent "V" 6 "R" "F" "r" 16 164 164 0 "elapsed" ""
+   fadd r16,r16,86400000000.0
+   .traceevent "O" 4 "R" "F" "r" 16 164 164 0 "" ""
+   .traceevent "A" 6 "R" "F" "r" 16 164 164 0 "elapsed" ""
+l1568iffalse:
+   .srcstep 167 167 17 "nr15_architecture_lifecycle.crexx" 82 3 17 "  return elapsed"
+   ftoi r16
+   .traceevent "V" 6 "R" "I" "r" 16 169 169 0 "elapsed" ""
+   icopy r7,r16
+   br l1557bexprend
+l1557bexprend:
+   icopy r19,r7
+   .traceevent "A" 6 "R" "I" "r" 19 169 169 0 "elapsed" ""
+   .srcstep 170 170 33 "nr15_architecture_lifecycle.crexx" 85 76 84 "  arg candidate = .string, size = .int, iterations = .int, elapsed = .int, checksum = .int"
+   .traceevent "V" 6 "R" "I" "r" 29 170 170 0 "checksum" ""
+   icopy r20,r29
+   .traceevent "A" 6 "R" "I" "r" 20 170 170 0 "checksum" ""
+   .srcstep 175 175 17 "nr15_architecture_lifecycle.crexx" 86 3 19 "  if checksum <= 0 then return fail(\"checksum\")"
+   .traceevent "V" 6 "R" "I" "r" 20 175 175 0 "checksum" ""
+   ilte r16,r20,0
+   .traceevent "O" 4 "R" "B" "r" 16 175 175 0 "" ""
+   brf l1582iffalse,r16
+   .srcstep 176 176 17 "nr15_architecture_lifecycle.crexx" 86 20 24 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 174 174 17 "nr15_architecture_lifecycle.crexx" 86 25 48 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 173 173 17 "nr15_architecture_lifecycle.crexx" 86 32 36 "  if checksum <= 0 then return fail(\"checksum\")"
+   .srcstep 171 171 17 "nr15_architecture_lifecycle.crexx" 98 3 49 "  say \"FAIL: NR-15 architecture lifecycle\" label"
+   say "FAIL: NR-15 architecture lifecycle checksum"
+   .srcstep 172 172 17 "nr15_architecture_lifecycle.crexx" 99 3 11 "  return 1"
+   load r15,1
+   .traceevent "L" 4 "R" "I" "r" 15 186 186 0 "" ""
+   icopy r7,r15
+   br l1587bexprend
+l1587bexprend:
+   icopy r15,r7
+   br l1544bexprend
+l1582iffalse:
+   .srcstep 177 177 17 "nr15_architecture_lifecycle.crexx" 87 3 46 "  say \"benchmark=nr15_architecture_lifecycle\""
+   say "benchmark=nr15_architecture_lifecycle"
+   .srcstep 178 178 17 "nr15_architecture_lifecycle.crexx" 88 3 28 "  say \"candidate=\"candidate"
+   say "candidate=d2h"
+   .srcstep 179 179 17 "nr15_architecture_lifecycle.crexx" 89 3 18 "  say \"size=\"size"
+   itos r17
+   .traceevent "V" 6 "R" "S" "r" 17 179 179 0 "size" ""
+   concat r16,"size=",r17
+   .traceevent "O" 4 "R" "S" "r" 16 179 179 0 "" ""
+   say r16
+   .srcstep 180 180 17 "nr15_architecture_lifecycle.crexx" 90 3 30 "  say \"iterations=\"iterations"
+   itos r18
+   .traceevent "V" 6 "R" "S" "r" 18 180 180 0 "iterations" ""
+   concat r16,"iterations=",r18
+   .traceevent "O" 4 "R" "S" "r" 16 180 180 0 "" ""
+   say r16
+   .srcstep 181 181 17 "nr15_architecture_lifecycle.crexx" 91 3 27 "  say \"elapsed_us=\"elapsed"
+   itos r19
+   .traceevent "V" 6 "R" "S" "r" 19 181 181 0 "elapsed" ""
+   concat r16,"elapsed_us=",r19
+   .traceevent "O" 4 "R" "S" "r" 16 181 181 0 "" ""
+   say r16
+   .srcstep 182 182 17 "nr15_architecture_lifecycle.crexx" 92 3 26 "  say \"checksum=\"checksum"
+   itos r20
+   .traceevent "V" 6 "R" "S" "r" 20 182 182 0 "checksum" ""
+   concat r16,"checksum=",r20
+   .traceevent "O" 4 "R" "S" "r" 16 182 182 0 "" ""
+   say r16
+   .srcstep 183 183 17 "nr15_architecture_lifecycle.crexx" 93 3 43 "  say \"PASS: NR-15 architecture lifecycle\""
+   say "PASS: NR-15 architecture lifecycle"
+   .srcstep 184 184 17 "nr15_architecture_lifecycle.crexx" 94 3 11 "  return 0"
+   load r16,0
+   .traceevent "L" 4 "R" "I" "r" 16 186 186 0 "" ""
+   icopy r15,r16
+   br l1544bexprend
+l1544bexprend:
+   copy r3,r15
+   .traceevent "A" 6 "R" "I" "r" 3 186 186 0 "rc" ""
+   br l1635dispatchend
+l1635dispatchdefault:
+   .srcstep 190 190 17 "nr15_architecture_lifecycle.crexx" 17 13 35 "  otherwise rc = fail(\"candidate\")"
+   .srcstep 188 188 17 "nr15_architecture_lifecycle.crexx" 98 3 49 "  say \"FAIL: NR-15 architecture lifecycle\" label"
+   say "FAIL: NR-15 architecture lifecycle candidate"
+   .srcstep 189 189 33 "nr15_architecture_lifecycle.crexx" 99 3 9 "  return 1"
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 189 189 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 189 189 0 "rc" ""
+l1635dispatchend:
+   .srcstep 192 192 17 "nr15_architecture_lifecycle.crexx" 19 1 10 "return rc"
+   .meta "nr15_architecture_lifecycle.main.rc"="b" ".int" r3
+   .traceevent "V" 6 "R" "I" "r" 3 192 192 0 "rc" ""
+   ret r3
+   .meta "nr15_architecture_lifecycle.main.argv"
+   .meta "nr15_architecture_lifecycle.main.candidate"
+   .meta "nr15_architecture_lifecycle.main.iterations"
+   .meta "nr15_architecture_lifecycle.main.rc"
+   .meta "nr15_architecture_lifecycle.main.size"
+
+§nr15_architecture_lifecycle.nr15panelstem.§factory() .locals=1
+   .meta "nr15_architecture_lifecycle.nr15panelstem.§factory"="b" ".nr15_architecture_lifecycle..nr15panelstem" §nr15_architecture_lifecycle.nr15panelstem.§factory() ""
+   .srcstep 390 390 17 "nr15_architecture_lifecycle.crexx" 102 3 13 "  *: factory"
+   setattrs r0,0
+   setobjtype r0,"nr15_architecture_lifecycle.nr15panelstem"
+   numsci 18,1,1
+   .srcstep 389 389 17 "nr15_architecture_lifecycle.crexx" 103 5 11 "    return"
+   .meta "nr15_architecture_lifecycle.nr15panelstem.§factory.§factory"="b" ".nr15panelstem" r0
+   .traceevent "V" 6 "R" "O" "r" 0 389 389 0 "§factory" ""
+   ret r0
+   .meta "nr15_architecture_lifecycle.nr15panelstem.§factory.§factory"
+
+/* Imported Declaration from file: time@library.rxbin */
+
+rxfnsb.time() .expose=rxfnsb.time
+   .meta "rxfnsb.time"="b" ".string" rxfnsb.time() "?option=.string"
+
+/* Imported Declaration from file: stem@library.rxbin */
+
+§rxfnsb.stem.§factory() .expose=rxfnsb.stem.§factory
+   .meta "rxfnsb.stem.§factory"="b" ".rxfnsb..stem" §rxfnsb.stem.§factory() ""

@@ -1,0 +1,19 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cycles:u'
+# Event count (approx.): 62785866855
+#
+# Overhead;Command;Shared Object;Symbol                                     ;IPC   [IPC Coverage]
+ 77.15% ;rxvm   ;rxvm         ;[.] copy_value                             ;-      -            
+ 16.54% ;rxvm   ;rxvm         ;[.] maybe_trim_attribute_storage           ;-      -            
+ 5.44%  ;rxvm   ;rxvm         ;[.] run                                    ;-      -            
+ 0.40%  ;rxvm   ;rxvm         ;[.] clear_value_contents                   ;-      -            
+ 0.17%  ;rxvm   ;libc.so.6    ;[.] malloc                                 ;-      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

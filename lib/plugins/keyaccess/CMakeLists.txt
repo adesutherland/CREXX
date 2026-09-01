@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.24)
 project(keyaccess_plugin C)
 
-set(CMAKE_C_STANDARD 90)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -16,6 +18,7 @@ add_static_plugin_target(_keyaccess keyaccess.c)
 
 add_custom_target(keyaccess_test ALL)
 crexx_add_rexx_opt_matrix(
+        PASS_TEST_NAME_ARGUMENT
         NAME keyaccess_test
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/keyaccess_test.crexx
         TARGET_GROUP keyaccess_test
@@ -25,3 +28,4 @@ crexx_add_rexx_opt_matrix(
 )
 
 enable_testing()
+crexx_label_smoke_tests(keyaccess_test_noopt)

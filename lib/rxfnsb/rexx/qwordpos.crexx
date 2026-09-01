@@ -22,30 +22,41 @@
  * SOFTWARE.
  */
 
-/* rexx qwordpos searches for string and returns word position */
+/** Find an exact sequence of Unicode quote-aware words. */
 options levelb
-
 namespace rxfnsb expose qwordpos
 
+/**
+ * @param search quote-aware word sequence
+ * @param string source text
+ * @param start optional positive one-based source word number
+ * @return first matching word number, or zero
+ * @signal INVALID_ARGUMENTS invalid start or unmatched quote
+ */
 qwordpos: procedure = .int
   arg search = .string, string = .string, start = 1
-
-  tlen=0
-  assembler strlen tlen,string
-  if tlen=0 then return 0
-  assembler strlen tlen,search
-  if tlen=0 then return 0
-
-  wnum=qwords(string)
-  if wnum=0 then return 0
-  snum=qwords(search)
-  if snum=0 then return 0
-
-  search=strip(search)
-
-  startpos=qwordindex(string,start)  /* calculate wordpos */
-  do i=start to wnum
-     ppi=pos(search,qword(string,i))
-     if ppi=1 | ppi=2 then return i
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "QWORDPOS start must be positive"
+  search_spans = qscan_word_spans(search)
+  text_spans = qscan_word_spans(string)
+  search_count = .int
+  text_count = .int
+  assembler idiv search_count,search_spans[0],2
+  assembler idiv text_count,text_spans[0],2
+  if search_count = 0 | start > text_count then return 0
+  last_start = text_count - search_count + 1
+  do candidate = start to last_start
+    matched = 1
+    do offset = 0 to search_count - 1
+      search_base = offset * 2
+      text_base = (candidate + offset - 1) * 2
+      search_word = substr(search,search_spans[search_base + 1] + 1,search_spans[search_base + 2])
+      text_word = substr(string,text_spans[text_base + 1] + 1,text_spans[text_base + 2])
+      if search_word <> text_word then do
+        matched = 0
+        leave
+      end
+    end
+    if matched then return candidate
   end
-return 0
+  return 0

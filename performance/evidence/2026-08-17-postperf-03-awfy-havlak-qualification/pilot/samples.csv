@@ -1,0 +1,3 @@
+benchmark,vm,mode,lifecycle,phase,sequence,elapsed_ns,platform,crexx_version,vm_role,result_role
+havlak,rxvm,noopt,process,recorded,1,42057878000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.ge06c19a2e284.dirty 20260817,product,process-smoke
+havlak,rxvm,opt,process,recorded,1,37861901000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.ge06c19a2e284.dirty 20260817,product,process-smoke

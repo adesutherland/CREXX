@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "windows 64 crexx-1.0.0-beta.3+local.gd78c6fcfa81e.dirty 20260729",
+  "source_manifest": "C:\\Users\\adria\\CLionProjects\\CREXX\\performance\\evidence\\2026-07-29-perf2-11-windows-x86-64\\manifests\\perf2-11-windows-x86-64-mingw-baseline-v1.txt",
+  "measurement": "timing",
+  "warmups": 2,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-29T18:58:10GMT Standard Time",
+  "completed_utc": "2026-07-29T19:36:16GMT Standard Time",
+  "result": "pass"
+}

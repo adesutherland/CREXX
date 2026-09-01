@@ -1,0 +1,140 @@
+/*
+ * Version-2 deterministic RFC 4648 Base64 encode/decode workload.
+ *
+ * Version 1 remains unchanged for historical scorecards. This source uses the
+ * fastest current portable Level B byte surfaces in both directions: owning
+ * pre-sized .binary buffers, direct unsigned-byte access and arithmetic Base64
+ * digit decoding without one-character strings or alphabet searches.
+ */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+input = make_input()
+encoded = ""
+decoded = .binary
+do iteration = 1 to repetitions
+  encoded = base64_encode(input)
+  decoded = base64_decode(encoded)
+end
+
+if length(encoded) <> 1368 then return fail("expected encoded length 1368, got " || length(encoded))
+if bincompare(input, decoded) <> 0 then return fail("decoded bytes differ from input")
+
+checksum = byte_checksum(decoded)
+if checksum <> 130560 then return fail("expected checksum 130560, got " || checksum)
+
+say "benchmark=base64_roundtrip_v2 repetitions="repetitions "encoded_length="length(encoded) "checksum="checksum
+say "PASS: Base64 Roundtrip v2"
+return 0
+
+make_input: procedure = .binary
+  data = .binary
+  call binresize data, 1024
+  do offset = 0 to 1023
+    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256
+  end
+  return data
+
+base64_encode: procedure = .string
+  arg data = .binary
+  alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" as .binary
+  input_length = binlength(data)
+  encoded_length = ((input_length + 2) <idiv> 3) * 4
+  result = .binary
+  call binresize result, encoded_length
+  input_offset = 0
+  output_offset = 0
+  do while input_offset < input_length
+    remaining = input_length - input_offset
+    byte1 = <at..u8>(input_offset) data
+    byte2 = 0
+    byte3 = 0
+    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data
+    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data
+
+    digit1 = byte1 <idiv> 4
+    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16
+    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64
+    digit4 = byte3 <mod> 64
+
+    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet
+    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet
+    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet
+    else <at..u8>(output_offset + 2) result = 61
+    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet
+    else <at..u8>(output_offset + 3) result = 61
+    input_offset = input_offset + 3
+    output_offset = output_offset + 4
+  end
+  return result as .string
+
+base64_decode: procedure = .binary
+  arg encoded = .string
+  bytes = encoded as .binary
+  encoded_length = binlength(bytes)
+  padding = 0
+  if <at..u8>(encoded_length - 1) bytes = 61 then padding = padding + 1
+  if <at..u8>(encoded_length - 2) bytes = 61 then padding = padding + 1
+  output_length = (encoded_length <idiv> 4) * 3 - padding
+  result = .binary
+  call binresize result, output_length
+
+  input_offset = 0
+  output_offset = 0
+  do while input_offset < encoded_length
+    byte1 = <at..u8>(input_offset) bytes
+    byte2 = <at..u8>(input_offset + 1) bytes
+    byte3 = <at..u8>(input_offset + 2) bytes
+    byte4 = <at..u8>(input_offset + 3) bytes
+    digit1 = base64_digit(byte1)
+    digit2 = base64_digit(byte2)
+    digit3 = 0
+    digit4 = 0
+    if byte3 <> 61 then digit3 = base64_digit(byte3)
+    if byte4 <> 61 then digit4 = base64_digit(byte4)
+    if digit1 < 0 | digit2 < 0 | digit3 < 0 | digit4 < 0 then do
+      invalid = .binary
+      return invalid
+    end
+
+    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16
+    output_offset = output_offset + 1
+    if byte3 <> 61 then do
+      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4
+      output_offset = output_offset + 1
+    end
+    if byte4 <> 61 then do
+      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4
+      output_offset = output_offset + 1
+    end
+    input_offset = input_offset + 4
+  end
+  return result
+
+base64_digit: procedure = .int
+  arg byte = .int
+  if byte >= 65 & byte <= 90 then return byte - 65
+  if byte >= 97 & byte <= 122 then return byte - 97 + 26
+  if byte >= 48 & byte <= 57 then return byte - 48 + 52
+  if byte = 43 then return 62
+  if byte = 47 then return 63
+  return -1
+
+byte_checksum: procedure = .int
+  arg data = .binary
+  checksum = 0
+  do offset = 0 to binlength(data) - 1
+    checksum = checksum + <at..u8>(offset) data
+  end
+  return checksum
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

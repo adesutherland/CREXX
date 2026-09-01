@@ -1,0 +1,102 @@
+options levelb
+
+say user_length("é日🙂")
+say user_substr("René日🙂", 5, 2, "🙂")
+say user_substr("a", 1, 3, "🙂")
+say user_word("  Alpha Beta", 2)
+say user_word(" é日　🙂", 1)
+say user_char("AéZ", 1)
+
+/* These are intentionally ordinary user procedures. No callable name or BIF
+ * membership admits them; the optimizer must prove their actual bodies. */
+user_length: procedure = .int
+  arg string = .string
+  result = 0
+  assembler strlen result,string
+  return result
+
+user_substr: procedure = .string
+  arg string = .string, start = .int, length = 0, pad = " "
+  length_supplied = ?length
+  string_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  start_offset = .int
+  available = .int
+  copy_length = .int
+  padding_length = .int
+  result = ""
+
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+  if length_supplied & length < 0 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR length must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
+
+  assembler strlen string_length,string
+  start_offset = start - 1
+  available = string_length - start_offset
+  if available < 0 then available = 0
+
+  if \length_supplied then do
+    if available = 0 then return result
+    if start_offset = 0 then return string
+    assembler substring result,string,start_offset,available
+    return result
+  end
+
+  if length = 0 then return result
+  copy_length = length
+  if available < copy_length then copy_length = available
+  if copy_length > 0 then do
+    if start_offset = 0 & copy_length = string_length & length = string_length then
+      return string
+    assembler substring result,string,start_offset,copy_length
+  end
+
+  padding_length = length - copy_length
+  if padding_length > 0 then do
+    assembler strchar pad_character,pad,pad_index
+    assembler padstr result,pad_character,padding_length
+  end
+  return result
+
+user_word: procedure = .string
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORD number must be positive"
+
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return ""
+
+  scan = 0
+  current_word = 0
+  word_start = 0
+  word_end = 0
+  word_length = 0
+  result = ""
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return ""
+    current_word = current_word + 1
+    assembler fndblnk word_end,string,word_start
+    if current_word = wordnum then do
+      if word_end < 0 then word_end = string_length
+      word_length = word_end - word_start
+      assembler substring result,string,word_start,word_length
+      return result
+    end
+    if word_end < 0 then return ""
+    scan = word_end
+  end
+  return ""
+
+user_char: procedure = .int
+  arg string = .string, position = .int
+  result = .int
+  assembler strchar result,string,position
+  return result

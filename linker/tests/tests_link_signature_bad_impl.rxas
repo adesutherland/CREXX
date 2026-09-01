@@ -1,0 +1,20 @@
+/*
+ * linker/tests/tests_link_signature_bad_impl.rxas
+ */
+
+.meta "link_sig.shape"="b" ".unknown" .interface
+.meta "link_sig.shape"="method" "describe" ".string" "" .member
+.meta "link_sig.box"="b" ".unknown" .class
+.meta "link_sig.box"="link_sig.shape" .implements
+
+.globals=0
+
+main() .locals=1
+   ret 0
+
+§link_sig.box.describe() .locals=2
+   .meta "link_sig.box.describe"="b" ".int" §link_sig.box.describe() ""
+   .meta "link_sig.box.describe.§this"="b" ".box" a1
+   load r1,7
+   ret r1
+   .meta "link_sig.box.describe.§this"

@@ -1,0 +1,4 @@
+`bslice rDst,rSrc,rOffset,rLen` copies up to `rLen` bytes from `rSrc`, starting
+at the explicit zero-based byte offset `rOffset`, into `rDst`. A negative offset
+is clamped to zero, a slice extending beyond the source is truncated, and a
+negative length raises `OUT_OF_RANGE`. Binary values have no logical cursor.

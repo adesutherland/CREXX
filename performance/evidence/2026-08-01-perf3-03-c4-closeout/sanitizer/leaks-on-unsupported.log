@@ -1,0 +1,16 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure --stop-on-failure -R \^\(06_logic_\(noopt\|opt\)\|rxaslogicflowtests\(-rxbvm\)\?\|rxasconversiontests\(-rxbvm\)\?\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=1
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start   59: 06_logic_noopt
+1/6 Test   #59: 06_logic_noopt ...................Subprocess aborted***Exception:   0.27 sec
+==41603==AddressSanitizer: detect_leaks is not supported on this platform.
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.30 sec
+
+The following tests FAILED:
+	 59 - 06_logic_noopt (Subprocess aborted)
+Errors while running CTest

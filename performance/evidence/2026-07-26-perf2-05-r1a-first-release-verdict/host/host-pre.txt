@@ -1,0 +1,20 @@
+utc=2026-07-26T13:47:57Z
+Darwin 25.5.0 arm64
+26.5.2
+Mac17,3
+10
+25769803776
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35258467)	80%; AC attached; not charging present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+14:47  up 12 days,  7:55, 1 user, load averages: 2.10 6.55 6.34
+cmake version 4.3.2
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+1.13.2
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+Target: arm64-apple-darwin25.5.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin

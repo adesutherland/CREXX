@@ -61,6 +61,7 @@
 #include "rxcpmain.h"
 #include "rxcp_highlight_controller.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
 #include "rxcp_val.h"
 #include "rxcpbgmr.h"
 #include "rxcp_exit.h"
@@ -83,6 +84,7 @@
 
 typedef struct HighlightTokenCursor {
     Context *context;
+    const struct HighlightProjection *projection;
     Token *token;
     const char *last_source_ptr;
     size_t last_source_pos;
@@ -90,6 +92,9 @@ typedef struct HighlightTokenCursor {
     size_t semantic_token_count;
     size_t semantic_token_capacity;
     size_t semantic_token_index;
+    struct HighlightProjectedToken *projected_tokens;
+    size_t projected_token_count;
+    int projected_tokens_ready;
 } HighlightTokenCursor;
 
 typedef struct HighlightSemanticTokenOwner {
@@ -97,6 +102,12 @@ typedef struct HighlightSemanticTokenOwner {
     SourceNode *source_node;
     size_t depth;
 } HighlightSemanticTokenOwner;
+
+typedef struct HighlightProjectedToken {
+    Token *token;
+    size_t pos;
+    size_t len;
+} HighlightProjectedToken;
 
 typedef struct HighlightWatchedPath {
     char *path;
@@ -133,6 +144,18 @@ typedef struct HighlightDocumentInfo {
     char *search_path_key;
     int disable_exits;
 } HighlightDocumentInfo;
+
+typedef struct HighlightProjection {
+    CodeBuffer *editor_cb;
+    const char *mapped_file_name;
+    const char *editor_source;
+    size_t editor_source_len;
+    const RxcpSrcMapRawMapping *raw_srcmap_mapping;
+    const CB_UTF8PositionIndex *source_position_index;
+    const CB_UTF8PositionIndex *editor_position_index;
+    int map_diagnostics_to_editor_buffer;
+    int suppress_generated_tokens;
+} HighlightProjection;
 
 static HighlightRetainedState g_highlight_state;
 
@@ -707,7 +730,17 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_MOD:
         case TK_IDIV:
         case TK_POWER_L:
-        case TK_POWER_R: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_POWER_R:
+        case TK_NAMED_MULT_OPERATOR: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_NAMED_SHIFT_OPERATOR:
+        case TK_NAMED_AND_OPERATOR:
+        case TK_NAMED_XOR_OPERATOR:
+        case TK_NAMED_OR_OPERATOR:
+        case TK_INTRINSIC_LT:
+        case TK_INTRINSIC_PREFIX_LT:
+        case TK_INTRINSIC_NAME:
+        case TK_INTRINSIC_GENERIC_OPEN:
+        case TK_NAMED_OPERATOR: return LEXER_OPERATOR;
         case TK_EQUAL: return LEXER_OPERATOR_ASSIGN;
         case TK_NEQ:
         case TK_GT:
@@ -735,129 +768,234 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
     }
 }
 
-static int token_span_utf8(Context *context, Token *token, size_t *pos, size_t *len) {
+static int context_byte_span_to_cb_span(Context *context,
+                                        const char *start,
+                                        size_t byte_length,
+                                        const HighlightProjection *projection,
+                                        size_t *pos,
+                                        size_t *len) {
+    size_t source_byte_length;
     size_t byte_offset;
+    size_t byte_end;
+    size_t raw_start;
+    size_t raw_end;
+    const RxcpSrcMapRawMapping *raw_map;
 
-    if (!context || !token || !pos || !len) return 0;
-    if (!token->token_string || token->length <= 0) return 0;
-    if (token->token_string < context->buff_start) return 0;
+    if (!context || !start || !pos || !len) return 0;
+    if (!context->buff_start || !context->buff_end) return 0;
+    if (start < context->buff_start || start > context->buff_end) return 0;
 
-    byte_offset = (size_t)(token->token_string - context->buff_start);
-    *pos = utf8nlen(context->buff_start, byte_offset);
-    *len = utf8nlen(token->token_string, token->length);
+    source_byte_length = (size_t)(context->buff_end - context->buff_start);
+    byte_offset = (size_t)(start - context->buff_start);
+    raw_map = projection ? projection->raw_srcmap_mapping : 0;
+    if (raw_map && projection->editor_source) {
+        if (byte_length == 0 || byte_offset >= raw_map->cleaned_len) return 0;
+        byte_end = byte_offset + byte_length;
+        if (byte_end < byte_offset || byte_end > raw_map->cleaned_len) return 0;
+        raw_start = raw_map->cleaned_to_raw_start[byte_offset];
+        raw_end = raw_map->cleaned_to_raw_end[byte_end - 1];
+        if (raw_end < raw_start || raw_end > projection->editor_source_len) return 0;
+        if (projection->editor_position_index) {
+            return cb_utf8_position_index_span(projection->editor_position_index,
+                                               raw_start,
+                                               raw_end - raw_start,
+                                               pos,
+                                               len) && *len > 0;
+        }
+        return cb_utf8_byte_span_to_codepoint_span(projection->editor_source,
+                                                    projection->editor_source_len,
+                                                    raw_start,
+                                                    raw_end - raw_start,
+                                                    pos,
+                                                    len) && *len > 0;
+    }
+
+    if (projection && projection->source_position_index) {
+        if (!cb_utf8_position_index_span(projection->source_position_index,
+                                         byte_offset,
+                                         byte_length,
+                                         pos,
+                                         len)) {
+            return 0;
+        }
+    } else if (!cb_utf8_byte_span_to_codepoint_span(context->buff_start,
+                                                    source_byte_length,
+                                                    byte_offset,
+                                                    byte_length,
+                                                    pos,
+                                                    len)) {
+        return 0;
+    }
     return *len > 0;
 }
 
-static int source_node_span_utf8(Context *context, SourceNode *node, size_t *pos, size_t *len) {
-    size_t start_offset;
+static int token_span_utf8(Context *context,
+                           Token *token,
+                           const HighlightProjection *projection,
+                           size_t *pos,
+                           size_t *len) {
+    if (!context || !token || !pos || !len) return 0;
+    if (!token->token_string || token->length <= 0) return 0;
+
+    return context_byte_span_to_cb_span(context,
+                                        token->token_string,
+                                        (size_t)token->length,
+                                        projection,
+                                        pos,
+                                        len);
+}
+
+static size_t highlight_context_byte_span_length(Context *context,
+                                                 const char *source_start,
+                                                 size_t byte_length,
+                                                 const HighlightProjection *projection) {
+    size_t pos;
+    size_t len;
+
+    if (!context_byte_span_to_cb_span(context, source_start, byte_length, projection, &pos, &len)) return 1;
+    (void)pos;
+    if (len == 0) return 1;
+    return len;
+}
+
+static int highlight_file_matches(const char *left, const char *right) {
+    if (!right || right[0] == 0) return 1;
+    if (!left) return 0;
+    return strcmp(left, right) == 0;
+}
+
+static int highlight_mapped_diagnostic_span(SourceDiagnostic *diag,
+                                            const HighlightProjection *projection,
+                                            size_t *pos,
+                                            size_t *len) {
+    size_t byte_length;
+    int has_source_span;
+
+    if (!diag || !projection || !projection->map_diagnostics_to_editor_buffer) return 0;
+    if (!highlight_file_matches(diag->file_name, projection->mapped_file_name)) return 0;
+    if (!projection->editor_cb || diag->line < 0 || diag->column < 0) return 0;
+
+    byte_length = 0;
+    has_source_span = 0;
+    if (diag->source_start && diag->source_end && diag->source_end >= diag->source_start) {
+        byte_length = (size_t)(diag->source_end - diag->source_start) + 1;
+        has_source_span = 1;
+    }
+    if (!cb_line_byte_span_to_codepoint_span(projection->editor_cb,
+                                             (size_t)diag->line,
+                                             (size_t)diag->column,
+                                             byte_length,
+                                             pos,
+                                             len)) {
+        return 0;
+    }
+    if (!has_source_span && *len == 0) *len = 1;
+    return *len > 0;
+}
+
+static int source_node_span_utf8(Context *context,
+                                 SourceNode *node,
+                                 const HighlightProjection *projection,
+                                 size_t *pos,
+                                 size_t *len) {
     size_t byte_length;
 
     if (!context || !node || !pos || !len) return 0;
     if (node->source_start && node->source_end &&
         node->source_start >= context->buff_start &&
         node->source_end >= node->source_start) {
-        start_offset = (size_t)(node->source_start - context->buff_start);
         byte_length = (size_t)(node->source_end - node->source_start) + 1;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->source_start, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->source_start, byte_length, projection, pos, len);
     }
 
     if (node->token_start && node->token_end &&
         node->token_start->token_string && node->token_end->token_string &&
         node->token_start->token_string >= context->buff_start &&
         node->token_end->token_string >= node->token_start->token_string) {
-        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
         byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
                       (size_t)node->token_end->length;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->token_start->token_string, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->token_start->token_string, byte_length, projection, pos, len);
     }
 
-    if (token_span_utf8(context, node->token, pos, len)) return 1;
-    if (node->parent) return source_node_span_utf8(context, node->parent, pos, len);
+    if (token_span_utf8(context, node->token, projection, pos, len)) return 1;
+    if (node->parent) return source_node_span_utf8(context, node->parent, projection, pos, len);
     return 0;
 }
 
-static int source_node_own_span_utf8(Context *context, SourceNode *node, size_t *pos, size_t *len) {
-    size_t start_offset;
+static int source_node_own_span_utf8(Context *context,
+                                     SourceNode *node,
+                                     const HighlightProjection *projection,
+                                     size_t *pos,
+                                     size_t *len) {
     size_t byte_length;
 
     if (!context || !node || !pos || !len) return 0;
     if (node->source_start && node->source_end &&
         node->source_start >= context->buff_start &&
         node->source_end >= node->source_start) {
-        start_offset = (size_t)(node->source_start - context->buff_start);
         byte_length = (size_t)(node->source_end - node->source_start) + 1;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->source_start, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->source_start, byte_length, projection, pos, len);
     }
 
     if (node->token_start && node->token_end &&
         node->token_start->token_string && node->token_end->token_string &&
         node->token_start->token_string >= context->buff_start &&
         node->token_end->token_string >= node->token_start->token_string) {
-        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
         byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
                       (size_t)node->token_end->length;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->token_start->token_string, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->token_start->token_string, byte_length, projection, pos, len);
     }
 
-    return token_span_utf8(context, node->token, pos, len);
+    return token_span_utf8(context, node->token, projection, pos, len);
 }
 
-static int source_diagnostic_span_utf8(Context *context, SourceDiagnostic *diag, size_t *pos, size_t *len) {
-    size_t start_offset;
+static int source_diagnostic_span_utf8(Context *context,
+                                       SourceDiagnostic *diag,
+                                       const HighlightProjection *projection,
+                                       size_t *pos,
+                                       size_t *len) {
     size_t byte_length;
 
     if (!context || !diag || !pos || !len) return 0;
+    if (highlight_mapped_diagnostic_span(diag, projection, pos, len)) return 1;
+
     if (diag->source_start && diag->source_end &&
         diag->source_start >= context->buff_start &&
         diag->source_end >= diag->source_start) {
-        start_offset = (size_t)(diag->source_start - context->buff_start);
         byte_length = (size_t)(diag->source_end - diag->source_start) + 1;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(diag->source_start, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, diag->source_start, byte_length, projection, pos, len);
     }
 
-    if (diag->owner) return source_node_span_utf8(context, diag->owner, pos, len);
+    if (diag->owner) return source_node_span_utf8(context, diag->owner, projection, pos, len);
     return 0;
 }
 
-static int ast_node_span_utf8(Context *context, ASTNode *node, size_t *pos, size_t *len) {
-    size_t start_offset;
+static int ast_node_span_utf8(Context *context,
+                              ASTNode *node,
+                              const HighlightProjection *projection,
+                              size_t *pos,
+                              size_t *len) {
     size_t byte_length;
 
     if (!context || !node || !pos || !len) return 0;
     if (node->source_start && node->source_end &&
         node->source_start >= context->buff_start &&
         node->source_end >= node->source_start) {
-        start_offset = (size_t)(node->source_start - context->buff_start);
         byte_length = (size_t)(node->source_end - node->source_start) + 1;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->source_start, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->source_start, byte_length, projection, pos, len);
     }
 
     if (node->token_start && node->token_end &&
         node->token_start->token_string && node->token_end->token_string &&
         node->token_start->token_string >= context->buff_start &&
         node->token_end->token_string >= node->token_start->token_string) {
-        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
         byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
                       (size_t)node->token_end->length;
-        *pos = utf8nlen(context->buff_start, start_offset);
-        *len = utf8nlen(node->token_start->token_string, byte_length);
-        return *len > 0;
+        return context_byte_span_to_cb_span(context, node->token_start->token_string, byte_length, projection, pos, len);
     }
 
-    if (token_span_utf8(context, node->token, pos, len)) return 1;
-    if (node->parent) return ast_node_span_utf8(context, node->parent, pos, len);
+    if (token_span_utf8(context, node->token, projection, pos, len)) return 1;
+    if (node->parent) return ast_node_span_utf8(context, node->parent, projection, pos, len);
     return 0;
 }
 
@@ -970,6 +1108,102 @@ static void highlight_free_semantic_tokens(HighlightTokenCursor *cursor) {
     cursor->semantic_token_count = 0;
     cursor->semantic_token_capacity = 0;
     cursor->semantic_token_index = 0;
+}
+
+static int highlight_projected_token_compare(const void *lhs, const void *rhs) {
+    const HighlightProjectedToken *left = (const HighlightProjectedToken *)lhs;
+    const HighlightProjectedToken *right = (const HighlightProjectedToken *)rhs;
+
+    if (left->pos < right->pos) return -1;
+    if (left->pos > right->pos) return 1;
+    if (left->token->token_number < right->token->token_number) return -1;
+    if (left->token->token_number > right->token->token_number) return 1;
+    return 0;
+}
+
+static void highlight_prepare_projected_tokens(HighlightTokenCursor *cursor) {
+    HighlightProjectedToken *projected_tokens;
+    Token *token;
+    size_t capacity;
+    size_t pos;
+    size_t len;
+    int sorted;
+
+    if (!cursor || !cursor->context) return;
+    cursor->projected_tokens = 0;
+    cursor->projected_token_count = 0;
+    cursor->projected_tokens_ready = 0;
+
+    capacity = 0;
+    token = cursor->context->token_head;
+    while (token) {
+        capacity++;
+        token = token->token_next;
+    }
+    if (capacity == 0) {
+        cursor->projected_tokens_ready = 1;
+        return;
+    }
+
+    projected_tokens = malloc(sizeof(*projected_tokens) * capacity);
+    if (!projected_tokens) return;
+
+    sorted = 1;
+    token = cursor->context->token_head;
+    while (token) {
+        if (token_span_utf8(cursor->context, token, cursor->projection, &pos, &len)) {
+            if (cursor->projected_token_count > 0 &&
+                projected_tokens[cursor->projected_token_count - 1].pos > pos) {
+                sorted = 0;
+            }
+            projected_tokens[cursor->projected_token_count].token = token;
+            projected_tokens[cursor->projected_token_count].pos = pos;
+            projected_tokens[cursor->projected_token_count].len = len;
+            cursor->projected_token_count++;
+        }
+        token = token->token_next;
+    }
+
+    if (!sorted && cursor->projected_token_count > 1) {
+        qsort(projected_tokens,
+              cursor->projected_token_count,
+              sizeof(*projected_tokens),
+              highlight_projected_token_compare);
+    }
+    cursor->projected_tokens = projected_tokens;
+    cursor->projected_tokens_ready = 1;
+}
+
+static void highlight_free_projected_tokens(HighlightTokenCursor *cursor) {
+    if (!cursor) return;
+    if (cursor->projected_tokens) free(cursor->projected_tokens);
+    cursor->projected_tokens = 0;
+    cursor->projected_token_count = 0;
+    cursor->projected_tokens_ready = 0;
+}
+
+static Token *highlight_projected_token_at_pos(HighlightTokenCursor *cursor,
+                                               size_t pos,
+                                               size_t *len) {
+    size_t low;
+    size_t high;
+    size_t mid;
+
+    if (len) *len = 0;
+    if (!cursor || !cursor->projected_tokens_ready || !len) return 0;
+    low = 0;
+    high = cursor->projected_token_count;
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        if (cursor->projected_tokens[mid].pos < pos) low = mid + 1;
+        else high = mid;
+    }
+    if (low >= cursor->projected_token_count ||
+        cursor->projected_tokens[low].pos != pos) {
+        return 0;
+    }
+    *len = cursor->projected_tokens[low].len;
+    return cursor->projected_tokens[low].token;
 }
 
 static SourceNode *highlight_source_node_for_token(HighlightTokenCursor *cursor, Token *token) {
@@ -1187,7 +1421,7 @@ static void emit_tokens_until(CB_ParseTree *tb, HighlightTokenCursor *cursor, si
     size_t len;
 
     while (cursor && cursor->token) {
-        if (!token_span_utf8(cursor->context, cursor->token, &pos, &len)) {
+        if (!token_span_utf8(cursor->context, cursor->token, cursor->projection, &pos, &len)) {
             cursor->token = cursor->token->token_next;
             continue;
         }
@@ -1213,7 +1447,7 @@ static void emit_source_projection(CB_ParseTree *tb,
     while (child) {
         if (child->node_type != RXCP_ERROR && child->node_type != RXCP_WARNING &&
             source_container_type(child, &child_type) &&
-            source_node_own_span_utf8(context, child, &child_pos, &child_len)) {
+            source_node_own_span_utf8(context, child, cursor ? cursor->projection : 0, &child_pos, &child_len)) {
             emit_tokens_until(tb, cursor, child_pos);
             child_node = cb_create_node(child_type, child_pos, child_len);
             cb_add_child_node(tb, child_node);
@@ -1230,37 +1464,47 @@ static void emit_source_projection(CB_ParseTree *tb,
 
 static char *format_source_diagnostic_message(SourceDiagnostic *diag) {
     char *message;
+    char *rendered;
 
     if (!diag) return strdup("Syntax Error");
+    rendered = rxcp_diag_render(diag->diagnostic, diag->message ? diag->message : "Syntax Error");
+    if (!rendered) rendered = strdup(diag->message ? diag->message : "Syntax Error");
+    if (!rendered) return strdup("Syntax Error");
     if (!diag->is_internal) {
-        return strdup(diag->message ? diag->message : "Syntax Error");
+        return rendered;
     }
 
     if (diag->severity == SOURCE_DIAG_WARNING) {
         message = mprintf("Internal generated-code warning: %s",
-                          diag->message ? diag->message : "Warning");
+                          rendered ? rendered : "Warning");
     } else {
         message = mprintf("Internal generated-code error: %s",
-                          diag->message ? diag->message : "Syntax Error");
+                          rendered ? rendered : "Syntax Error");
     }
+    if (rendered) free(rendered);
     return message;
 }
 
 static char *format_ast_diagnostic_message(ASTNode *diag) {
     char *message;
+    char *rendered;
 
     if (!diag) return strdup("Syntax Error");
+    rendered = rxcp_diag_render(diag->diagnostic, diag->node_string ? diag->node_string : "Syntax Error");
+    if (!rendered) rendered = strdup(diag->node_string ? diag->node_string : "Syntax Error");
+    if (!rendered) return strdup("Syntax Error");
     if (!diag->is_internal_diagnostic) {
-        return strdup(diag->node_string ? diag->node_string : "Syntax Error");
+        return rendered;
     }
 
     if (diag->node_type == RXCP_WARNING) {
         message = mprintf("Internal generated-code warning: %s",
-                          diag->node_string ? diag->node_string : "Warning");
+                          rendered ? rendered : "Warning");
     } else {
         message = mprintf("Internal generated-code error: %s",
-                          diag->node_string ? diag->node_string : "Syntax Error");
+                          rendered ? rendered : "Syntax Error");
     }
+    if (rendered) free(rendered);
     return message;
 }
 
@@ -1283,6 +1527,11 @@ typedef struct HighlightDiagnosticSelection {
     size_t pos;
     size_t len;
 } HighlightDiagnosticSelection;
+
+typedef struct HighlightDiagnosticOverlay {
+    Context *context;
+    const HighlightProjection *projection;
+} HighlightDiagnosticOverlay;
 
 static int highlight_spans_overlap(size_t left_pos,
                                    size_t left_len,
@@ -1312,6 +1561,7 @@ static int highlight_should_replace_diagnostic_match(const HighlightDiagnosticSe
 
 static int highlight_select_diagnostic_for_leaf(Context *context,
                                                 CB_Node *node,
+                                                const HighlightProjection *projection,
                                                 HighlightDiagnosticSelection *selection) {
     SourceDiagnostic *source_diag;
     ASTNode *ast_diag;
@@ -1324,7 +1574,7 @@ static int highlight_select_diagnostic_for_leaf(Context *context,
 
     source_diag = context->source_diagnostics_list;
     while (source_diag) {
-        if (source_diagnostic_span_utf8(context, source_diag, &pos, &len) &&
+        if (source_diagnostic_span_utf8(context, source_diag, projection, &pos, &len) &&
             highlight_spans_overlap(node->pos, node->length, pos, len) &&
             highlight_should_replace_diagnostic_match(selection,
                                                      source_diag->severity == SOURCE_DIAG_WARNING ? CB_WARNING : CB_ERROR,
@@ -1344,7 +1594,7 @@ static int highlight_select_diagnostic_for_leaf(Context *context,
     ast_diag = (ASTNode *)context->diagnostics_list;
     while (ast_diag) {
         if ((ast_diag->node_type == RXCP_ERROR || ast_diag->node_type == RXCP_WARNING) &&
-            ast_node_span_utf8(context, ast_diag, &pos, &len) &&
+            ast_node_span_utf8(context, ast_diag, projection, &pos, &len) &&
             highlight_spans_overlap(node->pos, node->length, pos, len) &&
             highlight_should_replace_diagnostic_match(selection,
                                                      ast_diag->node_type == RXCP_WARNING ? CB_WARNING : CB_ERROR,
@@ -1365,15 +1615,17 @@ static int highlight_select_diagnostic_for_leaf(Context *context,
 static void highlight_overlay_diagnostic_on_leaf(CB_Node *node,
                                                  size_t depth,
                                                  void *user_data) {
+    HighlightDiagnosticOverlay *overlay;
     Context *context;
     HighlightDiagnosticSelection selection;
 
     (void)depth;
 
-    context = (Context *)user_data;
+    overlay = (HighlightDiagnosticOverlay *)user_data;
+    context = overlay ? overlay->context : 0;
     if (!context || !node || node->child) return;
     if (node->type == SYNTAX_ERROR || node->type == INTERNAL_ERROR) return;
-    if (!highlight_select_diagnostic_for_leaf(context, node, &selection)) return;
+    if (!highlight_select_diagnostic_for_leaf(context, node, overlay ? overlay->projection : 0, &selection)) return;
     if (node->severity > selection.severity) return;
     if (node->severity == selection.severity && node->message) return;
 
@@ -1389,13 +1641,21 @@ static void highlight_overlay_diagnostic_on_leaf(CB_Node *node,
     }
 }
 
-static void highlight_overlay_diagnostics_on_tree(CB_ParseTree *tb, Context *context) {
+static void highlight_overlay_diagnostics_on_tree(CB_ParseTree *tb,
+                                                  Context *context,
+                                                  const HighlightProjection *projection) {
+    HighlightDiagnosticOverlay overlay;
+
     if (!tb || !context) return;
     if (!context->source_diagnostics_list && !context->diagnostics_list) return;
-    cb_walk_tree_top_down(tb, highlight_overlay_diagnostic_on_leaf, context);
+    overlay.context = context;
+    overlay.projection = projection;
+    cb_walk_tree_top_down(tb, highlight_overlay_diagnostic_on_leaf, &overlay);
 }
 
-static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *context) {
+static void emit_diagnostics_from_source_state(CB_ParseTree *tb,
+                                               Context *context,
+                                               const HighlightProjection *projection) {
     SourceDiagnostic *diag;
     size_t pos;
     size_t len;
@@ -1403,7 +1663,7 @@ static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *contex
 
     diag = context ? context->source_diagnostics_list : 0;
     while (diag) {
-        if (source_diagnostic_span_utf8(context, diag, &pos, &len)) {
+        if (source_diagnostic_span_utf8(context, diag, projection, &pos, &len)) {
             diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
             diag_node.severity = (diag->severity == SOURCE_DIAG_WARNING) ? CB_WARNING : CB_ERROR;
             diag_node.message = format_source_diagnostic_message(diag);
@@ -1422,7 +1682,7 @@ static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *contex
 
     while (diag) {
         if ((diag->node_type == RXCP_ERROR || diag->node_type == RXCP_WARNING) &&
-            ast_node_span_utf8(context, diag, &pos, &len)) {
+            ast_node_span_utf8(context, diag, 0, &pos, &len)) {
             diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
             diag_node.severity = (diag->node_type == RXCP_WARNING) ? CB_WARNING : CB_ERROR;
             diag_node.message = format_ast_diagnostic_message(diag);
@@ -1434,27 +1694,83 @@ static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *contex
     }
 }
 
+static const char *highlight_cursor_source_start(HighlightTokenCursor *cursor) {
+    if (!cursor || !cursor->context) return 0;
+    if (cursor->projection &&
+        cursor->projection->raw_srcmap_mapping &&
+        cursor->projection->editor_source) {
+        return cursor->projection->editor_source;
+    }
+    return cursor->context->buff_start;
+}
+
+static const char *highlight_cursor_source_end(HighlightTokenCursor *cursor) {
+    if (!cursor || !cursor->context) return 0;
+    if (cursor->projection &&
+        cursor->projection->raw_srcmap_mapping &&
+        cursor->projection->editor_source) {
+        return cursor->projection->editor_source + cursor->projection->editor_source_len;
+    }
+    return cursor->context->buff_end;
+}
+
+static size_t highlight_cursor_byte_span_length(HighlightTokenCursor *cursor,
+                                                const char *start,
+                                                size_t byte_length) {
+    const char *source_start;
+    const char *source_end;
+    size_t pos;
+    size_t len;
+
+    if (!cursor || !start) return 1;
+    source_start = highlight_cursor_source_start(cursor);
+    source_end = highlight_cursor_source_end(cursor);
+    if (source_start && source_end && start >= source_start && start <= source_end &&
+        cursor->projection && cursor->projection->raw_srcmap_mapping) {
+        if (!cb_utf8_byte_span_to_codepoint_span(source_start,
+                                                 (size_t)(source_end - source_start),
+                                                 (size_t)(start - source_start),
+                                                 byte_length,
+                                                 &pos,
+                                                 &len)) {
+            return 1;
+        }
+        (void)pos;
+        return len ? len : 1;
+    }
+
+    return highlight_context_byte_span_length(cursor->context, start, byte_length, cursor->projection);
+}
+
 static const char *highlight_source_ptr_for_pos(HighlightTokenCursor *cursor, size_t pos) {
+    const char *source_start;
+    const char *source_end;
     const char *ptr;
     size_t current_pos;
     utf8_int32_t codepoint;
 
     if (!cursor || !cursor->context || !cursor->context->buff_start) return 0;
+    source_start = highlight_cursor_source_start(cursor);
+    source_end = highlight_cursor_source_end(cursor);
+    if (!source_start || !source_end) return 0;
 
-    if (!cursor->last_source_ptr || pos < cursor->last_source_pos) {
-        ptr = cursor->context->buff_start;
+    if (!cursor->last_source_ptr ||
+        cursor->last_source_ptr < source_start ||
+        cursor->last_source_ptr > source_end ||
+        pos < cursor->last_source_pos) {
+        ptr = source_start;
         current_pos = 0;
     } else {
         ptr = cursor->last_source_ptr;
         current_pos = cursor->last_source_pos;
     }
 
-    while (ptr && *ptr && current_pos < pos) {
+    while (ptr && ptr < source_end && current_pos < pos) {
         ptr = utf8codepoint(ptr, &codepoint);
         current_pos++;
     }
 
-    if (!ptr || current_pos != pos) return 0;
+    if (!ptr || ptr > source_end || current_pos != pos) return 0;
 
     cursor->last_source_ptr = ptr;
     cursor->last_source_pos = current_pos;
@@ -1468,6 +1784,7 @@ static int highlight_comment_span(HighlightTokenCursor *cursor,
                                   CB_Node *node_out) {
     Context *context;
     const char *start;
+    const char *scan_end;
     const char *ptr;
     size_t byte_length;
     size_t char_length;
@@ -1478,18 +1795,20 @@ static int highlight_comment_span(HighlightTokenCursor *cursor,
     if (!context) return 0;
 
     start = highlight_source_ptr_for_pos(cursor, pos);
-    if (!start || start >= context->buff_end) return 0;
+    if (!start) return 0;
+    scan_end = highlight_cursor_source_end(cursor);
+    if (!scan_end || start >= scan_end) return 0;
 
-    if ((size_t)(context->buff_end - start) >= 2 && start[0] == '/' && start[1] == '*') {
+    if ((size_t)(scan_end - start) >= 2 && start[0] == '/' && start[1] == '*') {
         depth = 1;
         ptr = start + 2;
-        while (ptr < context->buff_end) {
-            if ((size_t)(context->buff_end - ptr) >= 2 && ptr[0] == '/' && ptr[1] == '*') {
+        while (ptr < scan_end) {
+            if ((size_t)(scan_end - ptr) >= 2 && ptr[0] == '/' && ptr[1] == '*') {
                 depth++;
                 ptr += 2;
                 continue;
             }
-            if ((size_t)(context->buff_end - ptr) >= 2 && ptr[0] == '*' && ptr[1] == '/') {
+            if ((size_t)(scan_end - ptr) >= 2 && ptr[0] == '*' && ptr[1] == '/') {
                 depth--;
                 ptr += 2;
                 if (depth == 0) break;
@@ -1499,7 +1818,7 @@ static int highlight_comment_span(HighlightTokenCursor *cursor,
         }
 
         byte_length = (size_t)(ptr - start);
-        char_length = utf8nlen(start, byte_length);
+        char_length = highlight_cursor_byte_span_length(cursor, start, byte_length);
         if (char_length == 0) char_length = 1;
         *node_out = cb_create_node(LEXER_COMMENT, pos, char_length);
         return 1;
@@ -1508,23 +1827,102 @@ static int highlight_comment_span(HighlightTokenCursor *cursor,
     if (context->comments_hash && start[0] == '#') {
         ptr = start + 1;
     } else if (context->comments_dash &&
-               (size_t)(context->buff_end - start) >= 2 &&
+               (size_t)(scan_end - start) >= 2 &&
                start[0] == '-' && start[1] == '-') {
         ptr = start + 2;
     } else if (context->comments_slash &&
-               (size_t)(context->buff_end - start) >= 2 &&
+               (size_t)(scan_end - start) >= 2 &&
                start[0] == '/' && start[1] == '/') {
         ptr = start + 2;
     } else {
         return 0;
     }
 
-    while (ptr < context->buff_end && *ptr != '\n' && *ptr != '\r') ptr++;
+    while (ptr < scan_end && *ptr != '\n' && *ptr != '\r') ptr++;
 
     byte_length = (size_t)(ptr - start);
-    char_length = utf8nlen(start, byte_length);
+    char_length = highlight_cursor_byte_span_length(cursor, start, byte_length);
     if (char_length == 0) char_length = 1;
     *node_out = cb_create_node(LEXER_COMMENT, pos, char_length);
+    return 1;
+}
+
+static int highlight_is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+static const char *highlight_skip_srcmap_quoted(const char *ptr, const char *end) {
+    if (!ptr || ptr >= end || *ptr != '"') return ptr;
+    ptr++;
+    while (ptr < end) {
+        if (*ptr == '\\' && ptr + 1 < end) {
+            ptr += 2;
+            continue;
+        }
+        if (*ptr == '"') {
+            ptr++;
+            break;
+        }
+        ptr++;
+    }
+    return ptr;
+}
+
+static const char *highlight_skip_srcmap_signed_number(const char *ptr, const char *end) {
+    const char *digits;
+
+    if (!ptr || ptr >= end) return 0;
+    if (*ptr == '+' || *ptr == '-') ptr++;
+    digits = ptr;
+    while (ptr < end && highlight_is_digit(*ptr)) ptr++;
+    return ptr > digits ? ptr : 0;
+}
+
+static int highlight_raw_srcmap_marker_span(HighlightTokenCursor *cursor,
+                                            size_t pos,
+                                            CB_Node *node_out) {
+    const char *start;
+    const char *ptr;
+    const char *end;
+    size_t marker_len;
+
+    if (!cursor || !node_out || !cursor->projection ||
+        !cursor->projection->raw_srcmap_mapping) {
+        return 0;
+    }
+
+    start = highlight_source_ptr_for_pos(cursor, pos);
+    end = highlight_cursor_source_end(cursor);
+    if (!start || !end || start >= end || *start != '@') return 0;
+    ptr = start + 1;
+    if (ptr >= end) return 0;
+
+    if (*ptr == '@' || *ptr == '}') {
+        ptr++;
+    } else if (*ptr == '"') {
+        ptr = highlight_skip_srcmap_quoted(ptr, end);
+    } else {
+        ptr = highlight_skip_srcmap_signed_number(ptr, end);
+        if (!ptr || ptr >= end) return 0;
+        if (*ptr == 'l') {
+            ptr++;
+            if (ptr < end && *ptr == '"') ptr = highlight_skip_srcmap_quoted(ptr, end);
+        } else if (*ptr == 'c') {
+            ptr++;
+        } else if (*ptr == '+') {
+            ptr++;
+            ptr = highlight_skip_srcmap_signed_number(ptr, end);
+            if (!ptr || ptr >= end || *ptr != '{') return 0;
+            ptr++;
+        } else {
+            return 0;
+        }
+    }
+
+    if (ptr <= start) return 0;
+    marker_len = utf8nlen(start, (size_t)(ptr - start));
+    if (marker_len == 0) marker_len = 1;
+    *node_out = cb_create_node(LEXER_PREPROCESSOR, pos, marker_len);
     return 1;
 }
 
@@ -1537,14 +1935,26 @@ static CB_Node compiler_get_token_callback(void *user_data,
     size_t token_pos;
     size_t token_len;
     CB_Node comment_node;
+    CB_Node marker_node;
 
     cursor = (HighlightTokenCursor *)user_data;
-    token = cursor ? cursor->context->token_head : 0;
-    while (token) {
-        if (token_span_utf8(cursor->context, token, &token_pos, &token_len) && token_pos == pos) {
-            return highlight_cb_node_for_token(cursor, token, pos, token_len);
+    token = highlight_projected_token_at_pos(cursor, pos, &token_len);
+    if (token) {
+        return highlight_cb_node_for_token(cursor, token, pos, token_len);
+    }
+    if (cursor && !cursor->projected_tokens_ready) {
+        token = cursor->context->token_head;
+        while (token) {
+            if (token_span_utf8(cursor->context, token, cursor->projection, &token_pos, &token_len) &&
+                token_pos == pos) {
+                return highlight_cb_node_for_token(cursor, token, pos, token_len);
+            }
+            token = token->token_next;
         }
-        token = token->token_next;
+    }
+
+    if (highlight_raw_srcmap_marker_span(cursor, pos, &marker_node)) {
+        return marker_node;
     }
 
     if (highlight_comment_span(cursor, pos, &comment_node)) {
@@ -1582,36 +1992,68 @@ static void emit_flat_tokens(CB_ParseTree *tb, Context *context) {
 
     token = context->token_head;
     while (token) {
-        if (token_span_utf8(context, token, &pos, &len)) {
+        if (token_span_utf8(context, token, 0, &pos, &len)) {
             cb_add_child_node(tb, cb_create_node(map_c_token_to_cb_type(token->token_type), pos, len));
         }
         token = token->token_next;
     }
 }
 
-void rxc_highlight_controller_parse(CodeBuffer *cb) {
-    char *source_code;
+static void rxc_highlight_controller_parse_owned(CodeBuffer *cb,
+                                                 char *source_code,
+                                                 const char *source_name,
+                                                 const HighlightProjection *projection) {
+    char *parse_code;
+    char *raw_source_code;
+    char *srcmap_cleaned;
     size_t source_len;
+    size_t raw_source_len;
+    size_t output_len;
+    size_t parse_len;
+    size_t srcmap_cleaned_len;
+    RxcpSrcMapRawMapping raw_srcmap_mapping;
     Context *context;
     Context *root_context;
     CB_ParseTree *tb;
     CB_Node root_node;
     HighlightTokenCursor cursor;
     HighlightDocumentInfo doc_info;
+    HighlightProjection raw_projection;
+    HighlightProjection indexed_projection;
+    const HighlightProjection *active_projection;
+    CB_UTF8PositionIndex source_position_index;
+    CB_UTF8PositionIndex editor_position_index;
     int have_doc_info;
+    int suppress_generated_tokens;
+    int using_srcmap_cleaned;
+    int have_indexed_projection;
 
     if (!cb) return;
-
-    source_code = get_code_buffer_source(cb);
     if (!source_code) return;
     source_len = strlen(source_code);
+    raw_source_code = source_code;
+    raw_source_len = source_len;
+    output_len = projection && projection->editor_cb ? get_code_buffer_length(projection->editor_cb) : get_code_buffer_length(cb);
+    parse_code = source_code;
+    parse_len = source_len;
+    srcmap_cleaned = 0;
+    srcmap_cleaned_len = 0;
+    memset(&raw_srcmap_mapping, 0, sizeof(raw_srcmap_mapping));
+    memset(&raw_projection, 0, sizeof(raw_projection));
+    memset(&indexed_projection, 0, sizeof(indexed_projection));
+    memset(&source_position_index, 0, sizeof(source_position_index));
+    memset(&editor_position_index, 0, sizeof(editor_position_index));
+    active_projection = projection;
+    suppress_generated_tokens = projection && projection->suppress_generated_tokens;
+    using_srcmap_cleaned = 0;
     memset(&cursor, 0, sizeof(cursor));
     have_doc_info = highlight_build_document_info(cb, &doc_info);
     root_context = highlight_prepare_root_cache(cb);
 
     context = cntx_f();
     context->master_context = root_context ? root_context : context;
-    context->file_name = strdup(have_doc_info && doc_info.document_name ? doc_info.document_name : "dsl_buffer.rexx");
+    context->file_name = strdup(source_name ? source_name :
+                                (have_doc_info && doc_info.document_name ? doc_info.document_name : "dsl_buffer.rexx"));
     context->debug_mode = 0;
     context->stop_after_parse = 1;
     context->optimise = 0;
@@ -1622,7 +2064,43 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     opt_pars(context);
     free_ast(context);
     free_tok(context);
-    cntx_buf(context, source_code, source_len);
+    if (context->source_has_srcmap) {
+        if (projection) {
+            if (rxcp_srcmap_preprocess(context, &srcmap_cleaned, &srcmap_cleaned_len) == 0) {
+                parse_code = srcmap_cleaned;
+                parse_len = srcmap_cleaned_len;
+                using_srcmap_cleaned = 1;
+            }
+        } else if (rxcp_srcmap_preprocess_with_raw_map(context,
+                                                       &srcmap_cleaned,
+                                                       &srcmap_cleaned_len,
+                                                       &raw_srcmap_mapping) == 0) {
+            parse_code = srcmap_cleaned;
+            parse_len = srcmap_cleaned_len;
+            using_srcmap_cleaned = 1;
+            raw_projection.editor_cb = cb;
+            raw_projection.editor_source = raw_source_code;
+            raw_projection.editor_source_len = raw_source_len;
+            raw_projection.raw_srcmap_mapping = &raw_srcmap_mapping;
+            active_projection = &raw_projection;
+        }
+    }
+    cntx_buf(context, parse_code, parse_len);
+    if (active_projection) indexed_projection = *active_projection;
+    have_indexed_projection = active_projection != 0;
+    if (cb_utf8_position_index_init(&source_position_index, parse_code, parse_len)) {
+        indexed_projection.source_position_index = &source_position_index;
+        have_indexed_projection = 1;
+    }
+    if (active_projection && active_projection->raw_srcmap_mapping &&
+        active_projection->editor_source &&
+        cb_utf8_position_index_init(&editor_position_index,
+                                    active_projection->editor_source,
+                                    active_projection->editor_source_len)) {
+        indexed_projection.editor_position_index = &editor_position_index;
+        have_indexed_projection = 1;
+    }
+    if (have_indexed_projection) active_projection = &indexed_projection;
     if (!root_context) {
         configure_parser_import_locations(context);
         if (!context->disable_exits) rxcp_init_exits(context);
@@ -1650,34 +2128,44 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     }
 
     tb = cb_create_token_buffer();
-    root_node = cb_create_node(PARSE_TREE_FILE, 0, source_len);
+    root_node = cb_create_node(PARSE_TREE_FILE, 0, output_len);
     cb_add_child_node(tb, root_node);
     cb_set_current_parent_to_root_node(tb);
 
-    if (context->source_tree) {
+    if (context->source_tree && !suppress_generated_tokens) {
         cursor.context = context;
+        cursor.projection = active_projection;
         cursor.token = context->token_head;
-        cursor.last_source_ptr = context->buff_start;
+        cursor.last_source_ptr = highlight_cursor_source_start(&cursor);
         cursor.last_source_pos = 0;
         highlight_prepare_semantic_tokens(&cursor, context->source_tree);
+        highlight_prepare_projected_tokens(&cursor);
         emit_source_projection(tb, context, context->source_tree->child, &cursor);
-        emit_tokens_until(tb, &cursor, source_len);
-        emit_diagnostics_from_source_state(tb, context);
+        emit_tokens_until(tb, &cursor, output_len);
+        emit_diagnostics_from_source_state(tb, context, active_projection);
+    } else if (context->source_tree) {
+        emit_diagnostics_from_source_state(tb, context, active_projection);
     } else {
-        emit_flat_tokens(tb, context);
-        emit_diagnostics_from_detached_ast(tb, context, (ASTNode *)context->diagnostics_list);
+        if (!suppress_generated_tokens) {
+            emit_flat_tokens(tb, context);
+            emit_diagnostics_from_detached_ast(tb, context, (ASTNode *)context->diagnostics_list);
+        }
     }
 
     cb_order_tree(tb);
     cursor.context = context;
+    cursor.projection = active_projection;
     cursor.token = context->token_head;
-    cursor.last_source_ptr = context->buff_start;
+    cursor.last_source_ptr = highlight_cursor_source_start(&cursor);
     cursor.last_source_pos = 0;
     if (!cursor.semantic_tokens && context->source_tree) highlight_prepare_semantic_tokens(&cursor, context->source_tree);
-    cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
+    if (!cursor.projected_tokens_ready) highlight_prepare_projected_tokens(&cursor);
+    if (suppress_generated_tokens) cb_add_missing_tokens(tb, cb, cb_default_get_token_callback, NULL);
+    else cb_add_missing_tokens(tb, cb, compiler_get_token_callback, &cursor);
     cb_tweak_tree_positions(tb);
-    highlight_overlay_diagnostics_on_tree(tb, context);
+    highlight_overlay_diagnostics_on_tree(tb, context, active_projection);
     cb_validate_tree(tb);
+    highlight_free_projected_tokens(&cursor);
     highlight_free_semantic_tokens(&cursor);
 
     if (context->master_context != context) {
@@ -1685,8 +2173,42 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     }
     if (context->file_name) free(context->file_name);
     fre_cntx(context);
+    cb_utf8_position_index_free(&editor_position_index);
+    cb_utf8_position_index_free(&source_position_index);
+    if (using_srcmap_cleaned) free(raw_source_code);
+    rxcp_srcmap_raw_mapping_free(&raw_srcmap_mapping);
     if (have_doc_info) highlight_free_document_info(&doc_info);
     cb->parse_tree = tb;
+}
+
+void rxc_highlight_controller_parse(CodeBuffer *cb) {
+    char *source_code;
+
+    if (!cb) return;
+
+    source_code = get_code_buffer_source(cb);
+    rxc_highlight_controller_parse_owned(cb, source_code, 0, 0);
+}
+
+void rxc_highlight_controller_parse_mapped_source(CodeBuffer *cb,
+                                                  const char *source_code,
+                                                  const char *source_name,
+                                                  const char *mapped_file_name) {
+    HighlightProjection projection;
+    char *owned_source;
+
+    if (!cb || !source_code) return;
+
+    owned_source = strdup(source_code);
+    if (!owned_source) return;
+
+    memset(&projection, 0, sizeof(projection));
+    projection.editor_cb = cb;
+    projection.mapped_file_name = mapped_file_name;
+    projection.map_diagnostics_to_editor_buffer = 1;
+    projection.suppress_generated_tokens = 1;
+
+    rxc_highlight_controller_parse_owned(cb, owned_source, source_name, &projection);
 }
 
 #endif

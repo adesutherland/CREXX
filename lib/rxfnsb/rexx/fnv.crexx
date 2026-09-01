@@ -23,16 +23,26 @@
  */
 
 /* rexx */
-options levelb
+/**
+ * Return the conventional 32-bit FNV-1a hash of a text value's exact UTF-8
+ * bytes.
+ *
+ * @param input_value text to hash
+ * @return unsigned 32-bit hash as an integer in 0..4294967295
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/fnv.md
+ */
+options levelb numeric_classic
 
 namespace rxfnsb expose fnv
 
 fnv: procedure = .int
-arg input_value = .string
+  arg input_value = .string
 
-len=0
-hashr=0
+  bytes = input_value as .binary
+  len = 0
+  hashr = 0
 
-assembler strlen len,input_value
-assembler rxhash hashr,input_value,len
-return hashr
+  assembler blen len,bytes
+  assembler rxhash hashr,input_value,len
+  return hashr

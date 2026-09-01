@@ -89,8 +89,8 @@ It can then be invoked with `./hello.crexx` from the current directory.
 |---|---|---|
 | default |multiline |```/*``` ```*/```   | 
 | default |single line |```#```   | 
-| `options comments-dash`  | single line  | `--`  | 
-| `options comments-slash`  | single line  | `//`  | 
+| options comments_dash  | single line  | `--`  | 
+| options comments_slash  | single line  | `//`  | 
 
 Table: Comment options. {#tbl:id}
 

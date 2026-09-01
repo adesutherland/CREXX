@@ -1,0 +1,2 @@
+missing=0 count=2
+PASS: inline loop-bound early-return cleanup

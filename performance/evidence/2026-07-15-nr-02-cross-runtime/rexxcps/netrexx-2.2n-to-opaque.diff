@@ -1,0 +1,111 @@
+--- tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2n.nrx	2026-07-15 16:21:49
++++ tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2n_opaque.nrx	2026-07-15 16:23:20
+@@ -10,6 +10,9 @@
+ /*                                                                  */
+ /* This adaptation is not the bundled canonical 2.1n source. See    */
+ /* performance/NR-02-WORKLIST.md for provenance and equivalence.    */
++/*                                                                  */
++/* NR-02 opaque-input/result-observation diagnostic. This separately */
++/* named source is not a quotable canonical RexxCPS implementation.  */
+ options nobinary
+ numeric digits 20
+ /* This measure of REXX execution speed is based on an analysis of   */
+@@ -51,12 +54,32 @@
+ 
+ 
+ parse version  myversion
++parse arg variant
++if variant='' then variant='A'
++select
++  when variant='A' then do
++    opaqueZero=0; opaqueOne=1; opaqueMarker='b'
++    opaqueKey='Key Bee'; opaqueDigits='12345678'
++    opaqueFailure='foobar'; opaqueNine=9; opaqueQuestion='?'
++    opaqueFooBar='Foo Bar'; opaqueWith='with'; opaqueArgs='args'
++  end
++  when variant='B' then do
++    opaqueZero=0; opaqueOne=1; opaqueMarker='b'
++    opaqueKey='Key Dee'; opaqueDigits='92345678'
++    opaqueFailure='foobaz'; opaqueNine=8; opaqueQuestion='!'
++    opaqueFooBar='Zoo Bar'; opaqueWith='WITH'; opaqueArgs='ARGS'
++  end
++  otherwise do
++    say 'FAIL: variant must be A or B'
++    exit 2
++  end
++end
+ dstats=1
+ count=100
+ /* Repetition count */
+ averaging=100
+ /* Averaging-over count */
+-rexxcps='2.2n'      /* disclosed NetRexx adaptation version */
++rexxcps='2.2n-opaque' /* diagnostic, not a canonical score */
+ say '----- REXXCPS' rexxcps '-- Measuring NetRexx clauses/second -----'
+ say ' NetRexx version is:' myversion
+ say '          System is:' opsystem
+@@ -79,18 +102,18 @@
+     start=System.nanoTime()
+     loop for count
+       /* -----  This is first of the 1000 clauses ----- */
+-      flag=0; p0='b'
++      flag=opaqueZero; p0=opaqueMarker
+       loop lvar=1 to 14
+ 	/* This is the "block" comment in lvar */
+-	key1='Key Bee'; acompound=''
+-	acompound[key1,lvar]=(1234"5678").substr(6,2)
++	key1=opaqueKey; acompound=''
++	acompound[key1,lvar]=opaqueDigits.substr(6,2)
+ 	if flag=acompound[key1,lvar] then say 'Failed1'
+ 	loop j=1.1 to 2.2 by 1.1   /* executed 28 times */
+           if j>acompound[key1,lvar] then say 'Failed2'
+           if 17<key1.length-1       then say 'Failed3'
+-          if j='foobar'             then say 'Failed4'
+-          if key1.substr(1,1)=9     then say 'Failed5'
+-          if key1.word(1)='?'       then say 'Failed6'
++	          if j=opaqueFailure         then say 'Failed4'
++	          if key1.substr(1,1)=opaqueNine then say 'Failed5'
++	          if key1.word(1)=opaqueQuestion then say 'Failed6'
+           if j<5 then do   /* This path taken */
+ 	    acompound[key1,lvar]=acompound[key1,lvar]+1
+ 	    if j=2 then leave /* never */
+@@ -105,17 +128,17 @@
+           when flag           then avar[1,2]=avar[1,2]*1.1
+           when flag==0       then flag=0
+         end
+-	if 1 then flag=1
++	if opaqueOne then flag=opaqueOne
+ 	select
+           when flag=='ring'   then say 'FailedT1'
+           when avar[flag,3]=0 then say 'FailedT2'
+           when flag           then avar[1,2]=avar[1,2]*1.1
+           when flag==0        then flag=1
+         end
+-	parse 'Foo Bar' v1 +5 v2 .
++	parse opaqueFooBar v1 +5 v2 .
+ 	address=digits
+ 	address=address
+-	subroutine('with' 2 'args', '(This is the second)'1''1)
++	subroutine(opaqueWith 2 opaqueArgs, '(This is the second)'opaqueOne''opaqueOne)
+ 	rc='This is an awfully boring program'; parse rc p1 (p0) p5
+ 	rc='is an awfully boring program This'; parse rc p2 (p0) p6
+ 	rc='an awfully boring program This is'; parse rc p3 (p0) p7
+@@ -153,7 +176,17 @@
+   say'                (' cps.format(null,3,null,0,'e') 'cps)'
+   say
+   p1=p1;p2=p2;p3=p3;p4=p4;p5=p5;p6=p6;p7=p7;p8=p8;v1=v1;v2=v2
+-  say 'PASS: RexxCPS 2.2n NetRexx disclosed adaptation'
++  observed=variant'|'flag'|'acompound[opaqueKey,14]'|'avar[1,2]
++  say 'OBSERVED:' observed
++  if flag\=opaqueOne then do
++    say 'FAIL: final flag was not observed as one'
++    exit 1
++  end
++  if acompound[opaqueKey,14]\=69 then do
++    say 'FAIL: final compound value was not 69'
++    exit 1
++  end
++  say 'PASS: RexxCPS 2.2n NetRexx opaque/result-observation diagnostic'
+   exit
+ 
+ 

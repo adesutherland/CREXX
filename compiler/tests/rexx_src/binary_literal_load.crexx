@@ -2,6 +2,7 @@ options levelb
 
 main: procedure = .int
   data = .binary
+  bitbin = .binary
   textbin = .binary
   castbin = .binary
   alphabin = .binary
@@ -15,7 +16,12 @@ main: procedure = .int
   idx1 = 1
   idx2 = 2
 
-  data = '00ff41'x
+  returned_binary = binary_constant_return(1)
+  if returned_binary <> 'aabb'x as .binary then return 1
+  returned_decimal = decimal_constant_return(1)
+  if returned_decimal <> 12.5d then return 2
+
+  data = '00 ff	41'x
   assembler blen len,data
   assembler getbyte b0,data,idx0
   assembler getbyte b1,data,idx1
@@ -24,6 +30,14 @@ main: procedure = .int
   if b0 <> 0 then return 11
   if b1 <> 255 then return 12
   if b2 <> 65 then return 13
+
+  bitbin = '0100 0001	0100 0010'b
+  assembler blen len,bitbin
+  assembler getbyte b0,bitbin,idx0
+  assembler getbyte b1,bitbin,idx1
+  if len <> 2 then return 14
+  if b0 <> 65 then return 15
+  if b1 <> 66 then return 16
 
   textbin = "ABC"
   assembler blen len,textbin
@@ -60,3 +74,13 @@ main: procedure = .int
 
   say "ok"
   return 0
+
+binary_constant_return: procedure = .binary
+  arg depth = .int
+  if depth > 0 then return binary_constant_return(depth - 1)
+  return 'aabb'x as .binary
+
+decimal_constant_return: procedure = .decimal
+  arg depth = .int
+  if depth > 0 then return decimal_constant_return(depth - 1)
+  return 12.5d

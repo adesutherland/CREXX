@@ -1,0 +1,5 @@
+[0/2] Re-checking globbed directories...
+[1/5] Building C object lib/plugins/llist/CMakeFiles/_llist.dir/llist.c.o
+[2/5] Linking C shared module bin/rx_llist.rxplugin
+[3/5] Building C object lib/plugins/treemap/CMakeFiles/_treemap.dir/treemap.c.o
+[4/5] Linking C shared module bin/rx_treemap.rxplugin

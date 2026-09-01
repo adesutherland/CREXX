@@ -1,0 +1,12 @@
+flat record start clang richards-rxvm
+flat record complete clang richards-rxvm elapsed=27s size=225944
+flat record start clang richards-rxbvm
+flat record complete clang richards-rxbvm elapsed=26s size=225144
+flat record start clang base64-rxvm
+flat record complete clang base64-rxvm elapsed=7s size=72624
+flat record start clang base64-rxbvm
+flat record complete clang base64-rxbvm elapsed=6s size=62064
+flat record start clang towers-rxvm
+flat record complete clang towers-rxvm elapsed=13s size=112744
+flat record start clang towers-rxbvm
+flat record complete clang towers-rxbvm elapsed=12s size=117264

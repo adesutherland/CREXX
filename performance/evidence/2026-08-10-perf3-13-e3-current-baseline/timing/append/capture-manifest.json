@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g6d12cd921cdb 20260810",
+  "source_manifest": "/private/tmp/crexx-perf3-13-e3-baseline.Oc9sa7/noise-append-manifest.txt",
+  "measurement": "timing",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial-pairwise-balanced-by-workload",
+  "started_utc": "2026-08-10T11:25:34+0000",
+  "completed_utc": "2026-08-10T11:26:42+0000",
+  "result": "pass"
+}

@@ -1,0 +1,71 @@
+options levelb
+namespace nr07_direct_compare_branch
+
+nr07_direct_compare_branch_constants: procedure expose NR07_NO_INLINE
+  constant NR07_NO_INLINE = 0
+  return
+
+main: procedure = .int
+  left = runtimeInt(2)
+  right = runtimeInt(4)
+
+  if left < right then say "if-lt"
+  else say "bad-if-lt"
+
+  if 5 > right then say "if-constant-left"
+  else say "bad-if-constant-left"
+
+  if left >= 2 then say "if-gte"
+  else say "bad-if-gte"
+
+  if left = 2 then say "if-eq"
+  else say "bad-if-eq"
+
+  if left <> right then say "if-ne"
+  else say "bad-if-ne"
+
+  if left <= right then say "if-lte"
+  else say "bad-if-lte"
+
+  if right > left then say "if-gt"
+  else say "bad-if-gt"
+
+  if left == 2 then say "if-strict-eq"
+  else say "bad-if-strict-eq"
+
+  if right >> left then say "if-strict-gt"
+  else say "bad-if-strict-gt"
+
+  current = 0
+  do while current < 2
+    say "while" current
+    current = current + 1
+  end
+
+  do until current >= 4
+    say "until" current
+    current = current + 1
+  end
+
+  retained = left < right
+  if retained then say "retained-bool"
+
+  floatValue = runtimeFloat(1.5)
+  if floatValue < 2.0 then say "float-fallback"
+
+  text = runtimeString("a")
+  if text << "b" then say "string-fallback"
+
+  return 0
+
+runtimeInt: procedure = .int expose NR07_NO_INLINE
+  arg value = .int
+  return value
+
+runtimeFloat: procedure = .float expose NR07_NO_INLINE
+  arg value = .float
+  return value
+
+runtimeString: procedure = .string expose NR07_NO_INLINE
+  arg value = .string
+  return value

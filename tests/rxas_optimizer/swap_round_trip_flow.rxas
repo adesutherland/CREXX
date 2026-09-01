@@ -1,0 +1,157 @@
+* PERF3-11 K01 sparse storage-permutation proof and fail-closed controls.
+
+adjacent_encoded_round_trip() .locals=3
+    swap r0,r1
+    swap r0,r1
+    ret
+
+reversed_round_trip() .locals=3
+    swap r0,r1
+    load r2,1
+    swap r1,r0
+    ret
+
+beyond_legacy_window() .locals=3
+    swap r0,r1
+    load r2,1
+    load r2,2
+    load r2,3
+    load r2,4
+    load r2,5
+    load r2,6
+    load r2,7
+    load r2,8
+    load r2,9
+    load r2,10
+    load r2,11
+    load r2,12
+    load r2,13
+    load r2,14
+    load r2,15
+    load r2,16
+    load r2,17
+    load r2,18
+    load r2,19
+    load r2,20
+    load r2,21
+    load r2,22
+    load r2,23
+    load r2,24
+    load r2,25
+    swap r0,r1
+    ret
+
+explicit_read_observes() .locals=3
+    swap r0,r1
+    icopy r2,r0
+    swap r0,r1
+    ret
+
+explicit_write_observes() .locals=2
+    swap r0,r1
+    load r0,1
+    swap r0,r1
+    ret
+
+register_metadata_observes() .locals=3
+    swap r0,r1
+    .meta "fixture.swap"="relevant" ".string" r0
+    swap r0,r1
+    ret
+
+unrelated_register_metadata() .locals=3
+    swap r0,r1
+    .meta "fixture.swap"="unrelated" ".string" r2
+    swap r0,r1
+    ret
+
+trace_register_observes() .locals=3
+    swap r0,r1
+    .traceevent "V" 6 "R" "S" "r" 0 0 0 0 "relevant" ""
+    swap r0,r1
+    ret
+
+unrelated_trace_register() .locals=3
+    swap r0,r1
+    .traceevent "V" 6 "R" "S" "r" 2 0 0 0 "unrelated" ""
+    swap r0,r1
+    ret
+
+unrelated_external_effect() .locals=3
+    swap r0,r1
+    say r2
+    swap r0,r1
+    ret
+
+opaque_effect_observes() .locals=4
+    swap r0,r1
+    metaloadmodule r2,r3
+    swap r0,r1
+    ret
+
+call_window_observes() .locals=6
+    load r2,1
+    swap r3,r4
+    load r0,0
+    call r5,swap_helper(),r2
+    swap r3,r4
+    ret
+
+mapping_not_restored() .locals=3
+    swap r0,r1
+    link r0,r2
+    swap r0,r1
+    ret
+
+inherited_signal_discards_mapping() .locals=5
+    swap r3,r4
+    inc0
+    swap r3,r4
+    ret
+
+local_signal_handler_observes() .locals=6
+    sigbr local_signal_handler,"OVERFLOW_UNDERFLOW"
+    swap r3,r4
+    inc0
+    swap r3,r4
+    ret
+local_signal_handler:
+    icopy r5,r3
+    ret
+
+asynchronous_handler_observes() .locals=6
+    sigbr asynchronous_handler,"BREAKPOINT"
+    swap r3,r4
+    load r0,1
+    swap r3,r4
+    ret
+asynchronous_handler:
+    icopy r5,r3
+    ret
+
+control_split_observes() .locals=4
+    swap r0,r1
+    brt control_split_taken,r2
+    load r3,1
+control_split_taken:
+    swap r0,r1
+    ret
+
+same_storage_is_identity() .locals=3
+    link r1,r0
+    swap r0,r1
+    load r0,1
+    swap r1,r0
+    unlink r1
+    ret
+
+disjoint_permutation_is_irrelevant() .locals=5
+    swap r0,r1
+    load r4,1
+    swap r2,r3
+    load r4,2
+    swap r0,r1
+    ret
+
+swap_helper() .locals=0
+    ret

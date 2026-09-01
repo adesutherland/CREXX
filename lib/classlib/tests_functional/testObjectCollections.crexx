@@ -1,9 +1,10 @@
 options levelb comments_dash
 import rexx
-import data_ObjectList
-import data_ObjectStack
-import data_ObjectLinkedList
-import data_ObjectIterable
+import data
+-- import data_ObjectList
+-- import data_ObjectStack
+-- import data_ObjectLinkedList
+-- import data_ObjectIterable
 
 failures = 0
 
@@ -27,6 +28,7 @@ failures = failures + check_int("bare object list signal", bare_signal, 1)
 
 dups = .ObjectArrayList()
 same = .box("dup")
+rc = .int
 rc = dups.add(same as .object)
 rc = dups.add(same as .Object)
 rc = dups.add(.box("second") as .object)

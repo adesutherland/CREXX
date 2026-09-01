@@ -1,0 +1,10 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,warmup,1,48239000,0,pass,36083,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,warmup,2,47930000,0,pass,35888,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,1,48018000,0,pass,36148,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,2,48198000,0,pass,36307,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,3,48533000,0,pass,36357,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,4,48832000,0,pass,36872,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,5,47730000,0,pass,36081,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,6,47408000,0,pass,35805,
+runtime-interface-lookup,rxvm-007-bound-cache-remap,retained,process,recorded,7,47581000,0,pass,35950,

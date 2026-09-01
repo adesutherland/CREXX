@@ -1,0 +1,6 @@
+classification=test setup error; not a product or test failure
+attempted_target=tests_procedure_profile
+ninja_result=unknown target 'tests_procedure_profile'
+consequence=profile executables were not built and CTest reported six missing-executable failures
+correct_target=run_tests_procedure_profile
+corrected_result=6/6 focused profile and documentation tests passed

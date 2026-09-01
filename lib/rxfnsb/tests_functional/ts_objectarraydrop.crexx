@@ -1,0 +1,46 @@
+/* Focused Level B OBJECTARRAYDROP tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+array = .object[]
+
+errors = errors + check(0, objectarraydrop(array), "empty return")
+errors = errors + check(0, array[0], "empty high-water")
+
+array[1] = .box("A") as .object
+array[2] = .box("B") as .object
+errors = errors + check(0, objectarraydrop(array), "populated return")
+errors = errors + check(0, array[0], "populated high-water")
+
+array[1] = .box("C") as .object
+item = array[1] as .box
+errors = errors + check_string("C", item.name(), "reuse after clear")
+errors = errors + check(0, objectarraydrop(array), "second clear return")
+errors = errors + check(0, array[0], "second clear high-water")
+
+if errors = 0 then say "PASS: objectarraydrop"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: OBJECTARRAYDROP" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: OBJECTARRAYDROP" label "expected" expected "got" actual
+  return 1
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_

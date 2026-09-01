@@ -1,7 +1,9 @@
 options levelb comments_dash
-import data_StringObjectHashMap
-import data_StringObjectTreeMap
-import data_StringIterable
+import data
+-- import data_StringObjectHashMap
+-- import data_StringObjectTreeMap
+-- import data_StringIterable
+import rxfnsb
 
 failures = 0
 
@@ -31,6 +33,7 @@ failures = failures + check_int("hash object map update size", h.size(), 2)
 failures = failures + check_box("hash object map update", h.get("b"), "BEE")
 
 it = h.iterator()
+rc = h.put("c", .box("see") as .object)
 seen = 0
 loop while it.hasNext()
   key = it.next()
@@ -43,8 +46,13 @@ loop while it.hasNext()
     failures = failures + check_string("hash iterator b", item.name(), "BEE")
     seen = seen + 1
   end
+  if key = "c" then do
+    say "hash iterator unexpectedly saw later add"
+    failures = failures + 1
+  end
 end
 failures = failures + check_int("hash iterator count", seen, 2)
+failures = failures + check_int("hash object map size after iterator add", h.size(), 3)
 
 hash_next_value = h.iterator()
 first_hash_key = hash_next_value.next()
@@ -59,14 +67,40 @@ if first_hash_key <> "a" & first_hash_key <> "b" then do
   say "hash nextValue unexpected key:" first_hash_key
   failures = failures + 1
 end
-failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 2)
+failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 3)
+
+empty_h = .StringObjectHashMap()
+rc = empty_h.put("", .box("empty-key") as .object)
+rc = empty_h.put(" ", .box("blank-key") as .object)
+failures = failures + check_int("hash empty/blank key size", empty_h.size(), 2)
+empty_h_seen_empty = 0
+empty_h_seen_blank = 0
+empty_h_it = empty_h.iterator()
+loop while empty_h_it.hasNext()
+  empty_h_key = empty_h_it.next()
+  empty_h_item = empty_h_it.value() as .box
+  if length(empty_h_key) = 0 then do
+    failures = failures + check_string("hash empty key value", empty_h_item.name(), "empty-key")
+    empty_h_seen_empty = 1
+  end
+  else if length(empty_h_key) = 1 & empty_h_key = " " then do
+    failures = failures + check_string("hash blank key value", empty_h_item.name(), "blank-key")
+    empty_h_seen_blank = 1
+  end
+end
+failures = failures + check_int("hash empty key seen", empty_h_seen_empty, 1)
+failures = failures + check_int("hash blank key seen", empty_h_seen_blank, 1)
 
 values = .object[]
 values = h.valueArray()
-failures = failures + check_int("hash values count", values[0], 2)
+failures = failures + check_int("hash values count", values[0], 3)
 rc = h.remove("a")
-failures = failures + check_int("hash remove size", h.size(), 1)
+failures = failures + check_int("hash remove size", h.size(), 2)
 failures = failures + check_int("hash remove contains", h.containsKey("a"), 0)
+failures = failures + check_int("hash free rc", h.free(), 0)
+failures = failures + check_int("hash free size", h.size(), 0)
+rc = h.put("again", .box("ok") as .object)
+failures = failures + check_box("hash reuse after free", h.get("again"), "ok")
 
 t = .StringObjectTreeMap()
 rc = t.put("b", .box("bee") as .object)
@@ -91,6 +125,7 @@ failures = failures + check_box("tree value second", vals[2], "bee")
 failures = failures + check_box("tree value third", vals[3], "see")
 
 tree_it = t.iterator()
+rc = t.put("d", .box("dee") as .object)
 failures = failures + check_string("tree iterator first key", tree_it.next(), "a")
 failures = failures + check_box("tree iterator first value", tree_it.value(), "aye")
 failures = failures + check_string("tree iterator second key", tree_it.next(), "b")
@@ -98,12 +133,35 @@ failures = failures + check_box("tree iterator second value", tree_it.value(), "
 failures = failures + check_string("tree iterator third key", tree_it.next(), "c")
 failures = failures + check_box("tree iterator third value", tree_it.value(), "see")
 failures = failures + check_int("tree iterator end", tree_it.hasNext(), 0)
+failures = failures + check_int("tree object map size after iterator add", t.size(), 4)
 
 tree_next_value = t.iterator()
 failures = failures + check_box("tree nextValue advances first value", tree_next_value.nextValue(), "aye")
 failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
 failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
-failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 4)
+
+empty_t = .StringObjectTreeMap()
+rc = empty_t.put("", .box("empty-key") as .object)
+rc = empty_t.put(" ", .box("blank-key") as .object)
+failures = failures + check_int("tree empty/blank key size", empty_t.size(), 2)
+empty_t_seen_empty = 0
+empty_t_seen_blank = 0
+empty_t_it = empty_t.iterator()
+loop while empty_t_it.hasNext()
+  empty_t_key = empty_t_it.next()
+  empty_t_item = empty_t_it.value() as .box
+  if length(empty_t_key) = 0 then do
+    failures = failures + check_string("tree empty key value", empty_t_item.name(), "empty-key")
+    empty_t_seen_empty = 1
+  end
+  else if length(empty_t_key) = 1 & empty_t_key = " " then do
+    failures = failures + check_string("tree blank key value", empty_t_item.name(), "blank-key")
+    empty_t_seen_blank = 1
+  end
+end
+failures = failures + check_int("tree empty key seen", empty_t_seen_empty, 1)
+failures = failures + check_int("tree blank key seen", empty_t_seen_blank, 1)
 
 call_t = .StringObjectTreeMap()
 call call_t.put("a", .box("aye") as .object)
@@ -115,6 +173,180 @@ failures = failures + check_box("call tree iterator first value", call_t_it.valu
 failures = failures + check_string("call tree iterator second key", call_t_it.next(), "b")
 failures = failures + check_box("call tree iterator second value", call_t_it.value(), "bee")
 failures = failures + check_int("call tree iterator end", call_t_it.hasNext(), 0)
+failures = failures + check_int("tree free rc", t.free(), 0)
+failures = failures + check_int("tree free size", t.size(), 0)
+rc = t.put("again", .box("ok") as .object)
+failures = failures + check_box("tree reuse after free", t.get("again"), "ok")
+
+
+-- AVL insertion rotations. Public ordering and key/value alignment verify that
+-- each rotation preserves the binary-search-tree structure.
+avl_ll = .StringObjectTreeMap()
+rc = avl_ll.put("c", .box("C") as .object)
+rc = avl_ll.put("b", .box("B") as .object)
+rc = avl_ll.put("a", .box("A") as .object)
+avl_ll_keys = .string[]
+avl_ll_keys = avl_ll.keyArray()
+avl_ll_vals = .object[]
+avl_ll_vals = avl_ll.valueArray()
+failures = failures + check_int("AVL LL size", avl_ll.size(), 3)
+failures = failures + check_string("AVL LL key 1", avl_ll_keys[1], "a")
+failures = failures + check_string("AVL LL key 2", avl_ll_keys[2], "b")
+failures = failures + check_string("AVL LL key 3", avl_ll_keys[3], "c")
+failures = failures + check_box("AVL LL value 1", avl_ll_vals[1], "A")
+failures = failures + check_box("AVL LL value 2", avl_ll_vals[2], "B")
+failures = failures + check_box("AVL LL value 3", avl_ll_vals[3], "C")
+
+avl_rr = .StringObjectTreeMap()
+rc = avl_rr.put("a", .box("A") as .object)
+rc = avl_rr.put("b", .box("B") as .object)
+rc = avl_rr.put("c", .box("C") as .object)
+avl_rr_keys = .string[]
+avl_rr_keys = avl_rr.keyArray()
+failures = failures + check_int("AVL RR size", avl_rr.size(), 3)
+failures = failures + check_string("AVL RR key 1", avl_rr_keys[1], "a")
+failures = failures + check_string("AVL RR key 2", avl_rr_keys[2], "b")
+failures = failures + check_string("AVL RR key 3", avl_rr_keys[3], "c")
+failures = failures + check_box("AVL RR get a", avl_rr.get("a"), "A")
+failures = failures + check_box("AVL RR get b", avl_rr.get("b"), "B")
+failures = failures + check_box("AVL RR get c", avl_rr.get("c"), "C")
+
+avl_lr = .StringObjectTreeMap()
+rc = avl_lr.put("c", .box("C") as .object)
+rc = avl_lr.put("a", .box("A") as .object)
+rc = avl_lr.put("b", .box("B") as .object)
+avl_lr_keys = .string[]
+avl_lr_keys = avl_lr.keyArray()
+failures = failures + check_int("AVL LR size", avl_lr.size(), 3)
+failures = failures + check_string("AVL LR key 1", avl_lr_keys[1], "a")
+failures = failures + check_string("AVL LR key 2", avl_lr_keys[2], "b")
+failures = failures + check_string("AVL LR key 3", avl_lr_keys[3], "c")
+failures = failures + check_box("AVL LR get a", avl_lr.get("a"), "A")
+failures = failures + check_box("AVL LR get b", avl_lr.get("b"), "B")
+failures = failures + check_box("AVL LR get c", avl_lr.get("c"), "C")
+
+avl_rl = .StringObjectTreeMap()
+rc = avl_rl.put("a", .box("A") as .object)
+rc = avl_rl.put("c", .box("C") as .object)
+rc = avl_rl.put("b", .box("B") as .object)
+avl_rl_keys = .string[]
+avl_rl_keys = avl_rl.keyArray()
+failures = failures + check_int("AVL RL size", avl_rl.size(), 3)
+failures = failures + check_string("AVL RL key 1", avl_rl_keys[1], "a")
+failures = failures + check_string("AVL RL key 2", avl_rl_keys[2], "b")
+failures = failures + check_string("AVL RL key 3", avl_rl_keys[3], "c")
+failures = failures + check_box("AVL RL get a", avl_rl.get("a"), "A")
+failures = failures + check_box("AVL RL get b", avl_rl.get("b"), "B")
+failures = failures + check_box("AVL RL get c", avl_rl.get("c"), "C")
+
+-- Replacement must not change cardinality and must update both direct lookup
+-- and ordered value snapshots.
+avl_replace = .StringObjectTreeMap()
+rc = avl_replace.put("b", .box("old") as .object)
+rc = avl_replace.put("a", .box("A") as .object)
+rc = avl_replace.put("c", .box("C") as .object)
+rc = avl_replace.put("b", .box("new") as .object)
+avl_replace_values = .object[]
+avl_replace_values = avl_replace.valueArray()
+failures = failures + check_int("AVL replacement rc", rc, 0)
+failures = failures + check_int("AVL replacement size", avl_replace.size(), 3)
+failures = failures + check_box("AVL replacement get", avl_replace.get("b"), "new")
+failures = failures + check_box("AVL replacement ordered value", avl_replace_values[2], "new")
+
+-- Removal cases: leaf, node with one child, node with two children, root,
+-- absent key, and complete drain to an empty tree.
+avl_remove = .StringObjectTreeMap()
+rc = avl_remove.put("d", .box("D") as .object)
+rc = avl_remove.put("b", .box("B") as .object)
+rc = avl_remove.put("f", .box("F") as .object)
+rc = avl_remove.put("a", .box("A") as .object)
+rc = avl_remove.put("c", .box("C") as .object)
+rc = avl_remove.put("e", .box("E") as .object)
+rc = avl_remove.put("g", .box("G") as .object)
+rc = avl_remove.remove("a")
+failures = failures + check_int("AVL remove leaf rc", rc, 0)
+failures = failures + check_int("AVL remove leaf absent", avl_remove.containsKey("a"), 0)
+failures = failures + check_int("AVL remove leaf size", avl_remove.size(), 6)
+rc = avl_remove.remove("b")
+failures = failures + check_int("AVL remove one-child rc", rc, 0)
+failures = failures + check_int("AVL remove one-child absent", avl_remove.containsKey("b"), 0)
+failures = failures + check_box("AVL remove one-child survivor", avl_remove.get("c"), "C")
+rc = avl_remove.remove("f")
+failures = failures + check_int("AVL remove two-child rc", rc, 0)
+failures = failures + check_int("AVL remove two-child absent", avl_remove.containsKey("f"), 0)
+failures = failures + check_box("AVL remove two-child left survivor", avl_remove.get("e"), "E")
+failures = failures + check_box("AVL remove two-child right survivor", avl_remove.get("g"), "G")
+rc = avl_remove.remove("d")
+failures = failures + check_int("AVL remove root rc", rc, 0)
+failures = failures + check_int("AVL remove root absent", avl_remove.containsKey("d"), 0)
+failures = failures + check_string("AVL first after removals", avl_remove.firstKey(), "c")
+failures = failures + check_string("AVL last after removals", avl_remove.lastKey(), "g")
+avl_remove_keys = .string[]
+avl_remove_keys = avl_remove.keyArray()
+failures = failures + check_int("AVL removal ordered count", avl_remove_keys[0], 3)
+failures = failures + check_string("AVL removal key 1", avl_remove_keys[1], "c")
+failures = failures + check_string("AVL removal key 2", avl_remove_keys[2], "e")
+failures = failures + check_string("AVL removal key 3", avl_remove_keys[3], "g")
+rc = avl_remove.remove("missing")
+failures = failures + check_int("AVL remove absent rc", rc, 4)
+failures = failures + check_int("AVL remove absent size unchanged", avl_remove.size(), 3)
+rc = avl_remove.remove("c")
+rc = avl_remove.remove("e")
+rc = avl_remove.remove("g")
+failures = failures + check_int("AVL complete drain size", avl_remove.size(), 0)
+failures = failures + check_int("AVL complete drain contains", avl_remove.containsKey("g"), 0)
+
+-- Deleted slots are reused internally. The public regression is that repeated
+-- remove/reinsert cycles retain all values and ordering.
+avl_reuse = .StringObjectTreeMap()
+rc = avl_reuse.put("b", .box("B1") as .object)
+rc = avl_reuse.put("a", .box("A1") as .object)
+rc = avl_reuse.put("c", .box("C1") as .object)
+rc = avl_reuse.remove("b")
+rc = avl_reuse.put("d", .box("D1") as .object)
+rc = avl_reuse.remove("a")
+rc = avl_reuse.put("b", .box("B2") as .object)
+avl_reuse_keys = .string[]
+avl_reuse_keys = avl_reuse.keyArray()
+failures = failures + check_int("AVL slot reuse size", avl_reuse.size(), 3)
+failures = failures + check_string("AVL slot reuse key 1", avl_reuse_keys[1], "b")
+failures = failures + check_string("AVL slot reuse key 2", avl_reuse_keys[2], "c")
+failures = failures + check_string("AVL slot reuse key 3", avl_reuse_keys[3], "d")
+failures = failures + check_box("AVL slot reuse replacement", avl_reuse.get("b"), "B2")
+failures = failures + check_box("AVL slot reuse survivor", avl_reuse.get("c"), "C1")
+failures = failures + check_box("AVL slot reuse new", avl_reuse.get("d"), "D1")
+
+-- A larger monotonic insertion sequence is a useful AVL regression because an
+-- unbalanced binary-search tree would degenerate under exactly this workload.
+avl_many = .StringObjectTreeMap()
+rc = avl_many.put("01", .box("V01") as .object)
+rc = avl_many.put("02", .box("V02") as .object)
+rc = avl_many.put("03", .box("V03") as .object)
+rc = avl_many.put("04", .box("V04") as .object)
+rc = avl_many.put("05", .box("V05") as .object)
+rc = avl_many.put("06", .box("V06") as .object)
+rc = avl_many.put("07", .box("V07") as .object)
+rc = avl_many.put("08", .box("V08") as .object)
+rc = avl_many.put("09", .box("V09") as .object)
+rc = avl_many.put("10", .box("V10") as .object)
+rc = avl_many.put("11", .box("V11") as .object)
+rc = avl_many.put("12", .box("V12") as .object)
+rc = avl_many.put("13", .box("V13") as .object)
+rc = avl_many.put("14", .box("V14") as .object)
+rc = avl_many.put("15", .box("V15") as .object)
+failures = failures + check_int("AVL monotonic size", avl_many.size(), 15)
+failures = failures + check_string("AVL monotonic first", avl_many.firstKey(), "01")
+failures = failures + check_string("AVL monotonic last", avl_many.lastKey(), "15")
+failures = failures + check_box("AVL monotonic middle", avl_many.get("08"), "V08")
+rc = avl_many.remove("08")
+rc = avl_many.remove("04")
+rc = avl_many.remove("12")
+failures = failures + check_int("AVL monotonic post-remove size", avl_many.size(), 12)
+failures = failures + check_int("AVL monotonic removed 04", avl_many.containsKey("04"), 0)
+failures = failures + check_int("AVL monotonic removed 08", avl_many.containsKey("08"), 0)
+failures = failures + check_int("AVL monotonic removed 12", avl_many.containsKey("12"), 0)
+failures = failures + check_box("AVL monotonic survivor 07", avl_many.get("07"), "V07")
+failures = failures + check_box("AVL monotonic survivor 09", avl_many.get("09"), "V09")
 
 if failures <> 0 then do
   say "String object map failures:" failures

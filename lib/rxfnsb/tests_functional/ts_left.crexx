@@ -1,46 +1,51 @@
-/* rexx */
+/* Focused Level B LEFT tests. */
 options levelb
 import rxfnsb
 
-/* These from TRL */
-errors=0
-if left('abc d',8) \= 'abc d   '  then do
-  errors=errors+1
-  say 'LEFT failed in test          1 '
-end
+errors = 0
+source = "foobar"
 
-if left('abc d',8,'.') \= 'abc d...'  then do
-  errors=errors+1
-  say 'LEFT failed in test          2 '
-end
-if left('abc  def',7) \= 'abc  de'  then do
-  errors=errors+1
-  say 'LEFT failed in test          3 '
-  /* These from Mark Hessling. */
-end
-if left("foobar",1) \=      "f"            then do
-  errors=errors+1
-  say 'LEFT failed in test          4 '
-end
-if left("foobar",0) \=      ""             then do
-  errors=errors+1
-  say 'LEFT failed in test          5 '
-end
-if left("foobar",6) \=      "foobar"       then do
-  errors=errors+1
-  say 'LEFT failed in test          6 '
-end
-if left("foobar",8) \=      "foobar  "     then do
-  errors=errors+1
-  say 'LEFT failed in test          7 '
-end
-if left("foobar",8,'*') \=  "foobar**"     then do
-  errors=errors+1
-  say 'LEFT failed in test          8 '
-end
-if left("foobar",1,'*') \=  "f"            then do
-  errors=errors+1
-  say 'LEFT failed in test          9 '
-end
+errors = errors + check(left("abc d", 8) = "abc d   ", "documented blank padding")
+errors = errors + check(left("abc d", 8, ".") = "abc d...", "documented explicit padding")
+errors = errors + check(left("abc  def", 7) = "abc  de", "documented truncation")
+errors = errors + check(left(source, 1) = "f", "single-character truncation")
+errors = errors + check(left(source, 0) = "", "zero width")
+errors = errors + check(left(source, 6) = source, "equal width")
+errors = errors + check(left(source, 8, "*") = "foobar**", "padded width")
+errors = errors + check(left("aé日", 2) = "aé", "Unicode truncation")
+errors = errors + check(left("é", 3, "·") = "é··", "Unicode padding")
+errors = errors + check(source = "foobar", "source is not mutated")
 
-return errors<>0
+wide = left("x", 1000, ".")
+wide_length = .int
+assembler strlen wide_length,wide
+errors = errors + check(wide_length = 1000, "substantial direct padding")
+
+caught = 0
+do
+  ignored = left("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = left("abc", 3, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = left("abc", 3, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 3, "width and pad failures use signals")
+
+if errors = 0 then say "PASS: left"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: LEFT" label
+  return 1

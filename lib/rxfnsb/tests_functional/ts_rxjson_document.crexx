@@ -1,0 +1,196 @@
+/* Functional contract for the CRI-09 immutable indexed JSON surface. */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+failures = 0
+
+payload = '{"plain":"value","a.b":{"[x]":7},"items":[true,false,null,1,1.0,1e3,1.5,9223372036854775807,-9223372036854775808,"\ud83d\ude00"],"dup":1,"dup":2,"empty":[],"object":{}}'
+document = .jsondocument(payload)
+
+failures = failures + check_int("document valid", document.valid(), 1)
+failures = failures + check_str("valid code", document.error_code(), "none")
+failures = failures + check_int("valid position", document.error_position(), 0)
+failures = failures + check_str("valid error", document.error(), "")
+failures = failures + check_str("source retained", document.source(), payload)
+failures = failures + check_int("source bytes", document.source_bytes(), binlength(payload as .binary))
+failures = failures + check_true("index bytes", document.index_bytes() > 0)
+failures = failures + check_true("document node count", document.node_count() > 10)
+
+root = document.root()
+failures = failures + check_true("root node", root > 0)
+failures = failures + check_str("root type", document.node_type(root), "object")
+failures = failures + check_int("root child count", document.node_count(root), 7)
+failures = failures + check_str("path compatibility", document.get("a.b.[x]"), "")
+failures = failures + check_str("legacy duplicate first match", document.get("dup"), "1")
+failures = failures + check_str("missing path", document.type("absent"), "missing")
+failures = failures + check_str("invalid path", document.type("items[bad]"), "error")
+
+dotted = document.member(root, "a.b")
+failures = failures + check_true("arbitrary dotted key", dotted > 0)
+bracketed = document.member(dotted, "[x]")
+failures = failures + check_str("arbitrary bracket key", document.node_get(bracketed), "7")
+failures = failures + check_str("object child name", document.node_name(dotted), "a.b")
+failures = failures + check_int("member wrong container", document.member(bracketed, "x"), -2)
+failures = failures + check_int("missing exact member", document.member(root, "missing"), 0)
+
+items = document.member(root, "items")
+failures = failures + check_int("items count", document.node_count(items), 10)
+children = .int[]
+failures = failures + check_int("children count", document.children(items, children), 10)
+failures = failures + check_str("array child name", document.node_name(children[7]), "7")
+failures = failures + check_int("array missing element", document.element(items, 99), 0)
+failures = failures + check_int("element wrong container", document.element(root, 1), -2)
+
+boolean_value = 0
+failures = failures + check_int("boolean success", document.node_boolean(children[1], boolean_value), 0)
+failures = failures + check_int("boolean value", boolean_value, 1)
+failures = failures + check_int("boolean false success", document.node_boolean(children[2], boolean_value), 0)
+failures = failures + check_int("boolean false value", boolean_value, 0)
+failures = failures + check_int("boolean wrong type", document.node_boolean(children[3], boolean_value), -2)
+
+integer_value = 0
+failures = failures + check_int("integer token", document.node_int(children[4], integer_value), 0)
+failures = failures + check_int("integer token value", integer_value, 1)
+failures = failures + check_int("integral decimal", document.node_int(children[5], integer_value), 0)
+failures = failures + check_int("integral decimal value", integer_value, 1)
+failures = failures + check_int("integral exponent", document.node_int(children[6], integer_value), 0)
+failures = failures + check_int("integral exponent value", integer_value, 1000)
+failures = failures + check_int("non-integral number", document.node_int(children[7], integer_value), -3)
+failures = failures + check_int("signed maximum", document.node_int(children[8], integer_value), 0)
+failures = failures + check_int("signed maximum value", integer_value, 9223372036854775807)
+failures = failures + check_int("signed minimum", document.node_int(children[9], integer_value), 0)
+failures = failures + check_int("signed minimum value", integer_value, -9223372036854775807 - 1)
+failures = failures + check_int("integer wrong type", document.node_int(children[1], integer_value), -2)
+
+string_value = ""
+failures = failures + check_int("string success", document.node_string(children[10], string_value), 0)
+failures = failures + check_str("surrogate pair decoded", string_value, "😀")
+failures = failures + check_int("string invalid node", document.node_string(99999, string_value), -1)
+
+float_value = 0 as .float
+failures = failures + check_int("float success", document.node_float(children[7], float_value), 0)
+failures = failures + check_true("float value", float_value = ("1.5" as .float))
+
+range_document = .jsondocument('[9223372036854775808,-9223372036854775809,1e999,1e-999]')
+range_root = range_document.root()
+range_nodes = .int[]
+range_count = range_document.children(range_root, range_nodes)
+failures = failures + check_int("range children", range_count, 4)
+failures = failures + check_int("integer positive range", range_document.node_int(range_nodes[1], integer_value), -4)
+failures = failures + check_int("integer negative range", range_document.node_int(range_nodes[2], integer_value), -4)
+failures = failures + check_int("float overflow", range_document.node_float(range_nodes[3], float_value), -4)
+failures = failures + check_int("float underflow", range_document.node_float(range_nodes[4], float_value), -4)
+
+names = .string[]
+failures = failures + check_int("members count", document.members("", names), 7)
+failures = failures + check_str("members order", names[1], "plain")
+failures = failures + check_str("array path numeric", document.get("items.4"), "1")
+failures = failures + check_str("array path bracket", document.get("items[10]"), "😀")
+
+truncated = .jsondocument('{"name":"Gràdh 中"')
+failures = failures + check_int("truncated invalid", truncated.valid(), 0)
+failures = failures + check_str("truncated code", truncated.error_code(), "truncated")
+failures = failures + check_int("truncated position", truncated.error_position(), length(truncated.source()) + 1)
+failures = failures + check_true("truncated diagnostic", length(truncated.error()) > 0)
+
+malformed_text = '{"é":}'
+malformed = .jsondocument(malformed_text)
+failures = failures + check_str("syntax code", malformed.error_code(), "syntax")
+failures = failures + check_int("Unicode character position", malformed.error_position(), pos("}", malformed_text))
+trailing = .jsondocument('{"ok":true} x')
+failures = failures + check_str("trailing code", trailing.error_code(), "trailing")
+failures = failures + check_int("trailing position", trailing.error_position(), pos("x", trailing.source()))
+
+failures = failures + check_int("unpaired high invalid", jsonvalid('"\ud83d"'), 0)
+failures = failures + check_int("unpaired low invalid", jsonvalid('"\ude00"'), 0)
+failures = failures + check_int("invalid surrogate invalid", jsonvalid('"\ud83d\u0041"'), 0)
+failures = failures + check_str("paired surrogate unquote", jsonunquote('"\ud83d\ude00"'), "😀")
+
+/* Exercise every accepting number-DFA state and its incomplete transitions. */
+valid_numbers = .string[]
+valid_numbers[1] = "0"
+valid_numbers[2] = "-0"
+valid_numbers[3] = "10"
+valid_numbers[4] = "-12.5"
+valid_numbers[5] = "1e2"
+valid_numbers[6] = "1E+2"
+valid_numbers[7] = "1e-2"
+valid_numbers[8] = " 0.25 "
+do i = 1 to valid_numbers.0
+  failures = failures + check_int("valid number token " || i, jsonvalid(valid_numbers[i]), 1)
+end
+
+invalid_numbers = .string[]
+invalid_numbers[1] = "+1"
+invalid_numbers[2] = ".1"
+invalid_numbers[3] = "01"
+invalid_numbers[4] = "1."
+invalid_numbers[5] = "1e"
+invalid_numbers[6] = "1e+"
+invalid_numbers[7] = "--1"
+invalid_numbers[8] = "NaN"
+invalid_numbers[9] = "truex"
+do i = .int(1) to invalid_numbers.0
+  failures = failures + check_int("invalid number token " || i, jsonvalid(invalid_numbers[i]), 0)
+end
+
+/* Legacy paths retain first-duplicate selection even when it misses deeper. */
+failures = failures + check_str("duplicate subtree first match", jsonget('{"dup":{},"dup":{"value":2}}', "dup.value"), "")
+
+prefix = "Préface 中: "
+noisy = prefix || payload || " done"
+scanned = .jsondocument("")
+scan_start = 0
+scan_after = 0
+failures = failures + check_int("scan noisy container", jsonscancontainer(noisy, 1, scanned, scan_start, scan_after), 1)
+failures = failures + check_int("scan character start", scan_start, length(prefix) + 1)
+failures = failures + check_int("scan character after", scan_after, length(prefix) + length(payload) + 1)
+failures = failures + check_str("scan source", scanned.source(), payload)
+failures = failures + check_str("scan retained traversal", scanned.get("items.10"), "😀")
+
+quoted_delimiters = 'before {"text":"} ] { [","nested":[{"ok":true}]} after'
+failures = failures + check_int("scan quoted delimiters", jsonscancontainer(quoted_delimiters, 1, scanned, scan_start, scan_after), 1)
+failures = failures + check_str("scan nested value", scanned.get("nested.1.ok"), "true")
+
+ambiguous = 'first {"incidental":true} then {"wanted":2}'
+failures = failures + check_int("scan first", jsonscancontainer(ambiguous, 1, scanned, scan_start, scan_after), 1)
+failures = failures + check_str("scan first source", scanned.source(), '{"incidental":true}')
+failures = failures + check_int("scan continue", jsonscancontainer(ambiguous, scan_after, scanned, scan_start, scan_after), 1)
+failures = failures + check_str("scan second source", scanned.source(), '{"wanted":2}')
+failures = failures + check_int("scan scalar absent", jsonscancontainer("before 42 after", 1, scanned, scan_start, scan_after), 0)
+failures = failures + check_int("scan truncated absent", jsonscancontainer('before {"x":1', 1, scanned, scan_start, scan_after), 0)
+failures = failures + check_int("scan malformed absent", jsonscancontainer('before {"x":}', 1, scanned, scan_start, scan_after), 0)
+failures = failures + check_int("scan invalid from normalized", jsonscancontainer('[]', 0, scanned, scan_start, scan_after), 1)
+
+if failures \= 0 then do
+  say "rxjson document failures:" failures
+  exit 1
+end
+
+say "PASS: rxjson document contract"
+exit 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual \= expected then do
+    say label || ": expected " || expected || " got " || actual
+    return 1
+  end
+  return 0
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual \= expected then do
+    say label || ": expected [" || expected || "] got [" || actual || "]"
+    return 1
+  end
+  return 0
+
+check_true: procedure = .int
+  arg label = .string, actual = .int
+  if actual = 0 then do
+    say label || ": expected true"
+    return 1
+  end
+  return 0

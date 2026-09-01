@@ -1,0 +1,806 @@
+/*
+ * Copyright (c) 2001-2010, Purdue University. All rights reserved.
+ * Copyright (C) 2015 Apple Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Purdue University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Level B port of the Are We Fast Yet? CD benchmark.
+ * Derived from upstream commit 74306fec151070fd07157cefeacf19e7e0bcdc89;
+ * see THIRD_PARTY_NOTICES.md. Vector, aircraft and motion records retain value
+ * semantics. Benchmark-private indexed red/black trees preserve the upstream
+ * ordered-map algorithm while stable integer handles lower object identity.
+ * The rxmath compatibility sin, cos and sqrt declarations resolve to the
+ * disclosed native rxfloat provider.
+ */
+options levelb comments_dash
+import rxfnsb
+import rxmath
+
+arg argv = .string[]
+
+aircraft_count = 10
+if argv[0] >= 1 then aircraft_count = argv[1]
+expected = expectedCollisions(aircraft_count)
+if expected < 0 then
+  return fail("no reference collision count for " || aircraft_count)
+
+simulator = .CDSimulator(aircraft_count)
+detector = .CDDetector()
+actual = 0
+do frame_number = 0 to 199
+  frame = simulator.simulate(frame_number / 10.0)
+  collisions = detector.handleNewFrame(frame)
+  actual = actual + collisions.size()
+end
+
+if actual <> expected then
+  return fail("expected " || expected || " collisions, got " || actual)
+
+say "benchmark=awfy_cd aircraft="aircraft_count "frames=200 collisions="actual,
+    "adaptation=indexed-red-black-tree-native-math"
+say "PASS: AWFY CD"
+return 0
+
+expectedCollisions: procedure = .int
+  arg aircraft_count = .int
+  select
+    when aircraft_count = 2 then return 42
+    when aircraft_count = 10 then return 390
+    when aircraft_count = 100 then return 4305
+    when aircraft_count = 200 then return 8655
+    when aircraft_count = 250 then return 10830
+    when aircraft_count = 500 then return 14484
+    when aircraft_count = 1000 then return 14484
+    otherwise return -1
+  end
+  return -1
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+/** Three-dimensional value vector used by aircraft and motion records. */
+CDVector3: class
+  x_ = .float
+  y_ = .float
+  z_ = .float
+
+  *: factory
+    arg initial_x = .float, initial_y = .float, initial_z = .float
+    x_ = initial_x
+    y_ = initial_y
+    z_ = initial_z
+    return
+
+  x: method = .float
+    return x_
+
+  y: method = .float
+    return y_
+
+  z: method = .float
+    return z_
+
+/** Aircraft value record for one simulator frame. */
+CDAircraft: class
+  callsign_ = .int
+  position_ = .CDVector3
+
+  *: factory
+    arg callsign = .int, position = .CDVector3
+    callsign_ = callsign
+    position_ = position
+    return
+
+  callsign: method = .int
+    return callsign_
+
+  position: method = .CDVector3
+    return position_
+
+/** Contiguous value collection for a simulator frame. */
+CDFrame: class
+  aircraft_ = .CDAircraft[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  append: method = .void
+    arg aircraft = .CDAircraft
+    count_ = count_ + 1
+    aircraft_[count_] = aircraft
+    return
+
+  size: method = .int
+    return count_
+
+  at: method = .CDAircraft
+    arg index = .int
+    return aircraft_[index]
+
+/** The exact AWFY paired-aircraft simulator. */
+CDSimulator: class
+  callsigns_ = .int[]
+  count_ = .int
+
+  *: factory
+    arg aircraft_count = .int
+    count_ = aircraft_count
+    do index = 1 to count_
+      callsigns_[index] = index - 1
+    end
+    return
+
+  simulate: method = .CDFrame
+    arg time = .float
+    frame = .CDFrame()
+    do index = 1 to count_ by 2
+      pair_offset = index - 1
+      call frame.append(.CDAircraft(callsigns_[index], ,
+          .CDVector3(time, cos(time) * 2.0 + pair_offset * 3.0, 10.0)))
+      call frame.append(.CDAircraft(callsigns_[index + 1], ,
+          .CDVector3(time, sin(time) * 2.0 + pair_offset * 3.0, 10.0)))
+    end
+    return frame
+
+/** Aircraft motion value record between two consecutive frames. */
+CDMotion: class
+  callsign_ = .int
+  first_ = .CDVector3
+  second_ = .CDVector3
+  intersection_x_ = .float
+  intersection_y_ = .float
+  intersection_z_ = .float
+
+  *: factory
+    arg callsign = .int, first = .CDVector3, second = .CDVector3
+    callsign_ = callsign
+    first_ = first
+    second_ = second
+    intersection_x_ = 0.0
+    intersection_y_ = 0.0
+    intersection_z_ = 0.0
+    return
+
+  callsign: method = .int
+    return callsign_
+
+  first: method = .CDVector3
+    return first_
+
+  second: method = .CDVector3
+    return second_
+
+  intersectionPosition: method = .CDVector3
+    return .CDVector3(intersection_x_, intersection_y_, intersection_z_)
+
+  /** Apply the upstream moving-point quadratic and reporting bounds. */
+  intersects: method = .int
+    arg other = .CDMotion
+    other_first = other.first()
+    other_second = other.second()
+
+    x1 = first_.x()
+    y1 = first_.y()
+    z1 = first_.z()
+    x2 = other_first.x()
+    y2 = other_first.y()
+    z2 = other_first.z()
+    vx1 = second_.x() - x1
+    vy1 = second_.y() - y1
+    vz1 = second_.z() - z1
+    vx2 = other_second.x() - x2
+    vy2 = other_second.y() - y2
+    vz2 = other_second.z() - z2
+
+    dvx = vx2 - vx1
+    dvy = vy2 - vy1
+    dvz = vz2 - vz1
+    a = dvx * dvx + dvy * dvy + dvz * dvz
+
+    if a <> 0.0 then do
+      dix = x1 - x2
+      diy = y1 - y2
+      diz = z1 - z2
+      b = 2.0 * (dix * (vx1 - vx2) + diy * (vy1 - vy2) + ,
+          diz * (vz1 - vz2))
+      c = -1.0 + (x2 - x1) * (x2 - x1) + ,
+          (y2 - y1) * (y2 - y1) + (z2 - z1) * (z2 - z1)
+      discriminant = b * b - 4.0 * a * c
+      if discriminant < 0.0 then return 0
+
+      first_time = (-b - sqrt(discriminant)) / (2.0 * a)
+      second_time = (-b + sqrt(discriminant)) / (2.0 * a)
+      overlaps_frame = first_time <= second_time & ,
+          ((first_time <= 1.0 & 1.0 <= second_time) | ,
+           (first_time <= 0.0 & 0.0 <= second_time) | ,
+           (0.0 <= first_time & second_time <= 1.0))
+      if \overlaps_frame then return 0
+
+      report_time = first_time
+      if first_time <= 0.0 then report_time = 0.0
+      report_x = ((x1 + vx1 * report_time) + ,
+          (x2 + vx2 * report_time)) * 0.5
+      report_y = ((y1 + vy1 * report_time) + ,
+          (y2 + vy2 * report_time)) * 0.5
+      report_z = ((z1 + vz1 * report_time) + ,
+          (z2 + vz2 * report_time)) * 0.5
+      in_bounds = report_x >= 0.0 & report_x <= 1000.0 & ,
+          report_y >= 0.0 & report_y <= 1000.0 & ,
+          report_z >= 0.0 & report_z <= 10.0
+      if \in_bounds then return 0
+      intersection_x_ = report_x
+      intersection_y_ = report_y
+      intersection_z_ = report_z
+      return 1
+    end
+
+    dx = x2 - x1
+    dy = y2 - y1
+    dz = z2 - z1
+    if sqrt(dx * dx + dy * dy + dz * dz) > 1.0 then return 0
+    intersection_x_ = (x1 + x2) * 0.5
+    intersection_y_ = (y1 + y2) * 0.5
+    intersection_z_ = (z1 + z2) * 0.5
+    return 1
+
+/** Collision value retained to preserve the upstream collision allocation. */
+CDCollision: class
+  first_callsign_ = .int
+  second_callsign_ = .int
+  position_ = .CDVector3
+
+  *: factory
+    arg first_callsign = .int, second_callsign = .int, position = .CDVector3
+    first_callsign_ = first_callsign
+    second_callsign_ = second_callsign
+    position_ = position
+    return
+
+/** Per-frame collision collection. */
+CDCollisionList: class
+  values_ = .CDCollision[]
+  count_ = .int
+
+  *: factory
+    count_ = 0
+    return
+
+  append: method = .void
+    arg collision = .CDCollision
+    count_ = count_ + 1
+    values_[count_] = collision
+    return
+
+  size: method = .int
+    return count_
+
+/**
+ * Benchmark-private ordered map backed by stable indexed red/black nodes.
+ * Keys are lexicographically ordered float pairs: callsigns use (id, 0), and
+ * voxel maps use (x, y). Values provide one integer slot and one vector slot.
+ */
+CDRedBlackTree: class
+  root_ = .int
+  count_ = .int
+  left_ = .int[]
+  right_ = .int[]
+  parent_ = .int[]
+  color_ = .int[]
+  key_x_ = .float[]
+  key_y_ = .float[]
+  int_value_ = .int[]
+  value_x_ = .float[]
+  value_y_ = .float[]
+  value_z_ = .float[]
+
+  *: factory
+    root_ = 0
+    count_ = 0
+    return
+
+  reset: method = .void
+    root_ = 0
+    count_ = 0
+    return
+
+  isRed: method = .int
+    arg node = .int
+    if node = 0 then return 0
+    return color_[node] = 1
+
+  isBlack: method = .int
+    arg node = .int
+    if node = 0 then return 1
+    return color_[node] = 0
+
+  compare: method = .int
+    arg x = .float, y = .float, node = .int
+    if x < key_x_[node] then return -1
+    if x > key_x_[node] then return 1
+    if y < key_y_[node] then return -1
+    if y > key_y_[node] then return 1
+    return 0
+
+  find: method = .int
+    arg x = .float, y = .float
+    current = root_
+    do while current <> 0
+      ordering = compare(x, y, current)
+      if ordering = 0 then return current
+      if ordering < 0 then current = left_[current]
+      else current = right_[current]
+    end
+    return 0
+
+  put: method = .int
+    arg x = .float, y = .float, int_value = .int, ,
+        value_x = .float, value_y = .float, value_z = .float
+    ancestor = 0
+    current = root_
+    ordering = 0
+    do while current <> 0
+      ancestor = current
+      ordering = compare(x, y, current)
+      if ordering = 0 then do
+        int_value_[current] = int_value
+        value_x_[current] = value_x
+        value_y_[current] = value_y
+        value_z_[current] = value_z
+        return current
+      end
+      if ordering < 0 then current = left_[current]
+      else current = right_[current]
+    end
+
+    count_ = count_ + 1
+    node = count_
+    left_[node] = 0
+    right_[node] = 0
+    parent_[node] = ancestor
+    color_[node] = 1
+    key_x_[node] = x
+    key_y_[node] = y
+    int_value_[node] = int_value
+    value_x_[node] = value_x
+    value_y_[node] = value_y
+    value_z_[node] = value_z
+    if ancestor = 0 then root_ = node
+    else do
+      if compare(x, y, ancestor) < 0 then left_[ancestor] = node
+      else right_[ancestor] = node
+    end
+    call insertFixup(node)
+    return node
+
+  insertFixup: method = .void
+    arg node = .int
+    current = node
+    do while current <> root_
+      if \isRed(parent_[current]) then leave
+      parent = parent_[current]
+      grandparent = parent_[parent]
+      if parent = left_[grandparent] then do
+        uncle = right_[grandparent]
+        if isRed(uncle) then do
+          color_[parent] = 0
+          color_[uncle] = 0
+          color_[grandparent] = 1
+          current = grandparent
+        end
+        else do
+          if current = right_[parent] then do
+            current = parent
+            call leftRotate(current)
+            parent = parent_[current]
+            grandparent = parent_[parent]
+          end
+          color_[parent] = 0
+          color_[grandparent] = 1
+          call rightRotate(grandparent)
+        end
+      end
+      else do
+        uncle = .int
+        uncle = left_[grandparent]
+        if isRed(uncle) then do
+          color_[parent] = 0
+          color_[uncle] = 0
+          color_[grandparent] = 1
+          current = grandparent
+        end
+        else do
+          if current = left_[parent] then do
+            current = parent
+            call rightRotate(current)
+            parent = parent_[current]
+            grandparent = parent_[parent]
+          end
+          color_[parent] = 0
+          color_[grandparent] = 1
+          call leftRotate(grandparent)
+        end
+      end
+    end
+    color_[root_] = 0
+    return
+
+  leftRotate: method = .void
+    arg node = .int
+    pivot = right_[node]
+    right_[node] = left_[pivot]
+    if left_[pivot] <> 0 then parent_[left_[pivot]] = node
+    parent_[pivot] = parent_[node]
+    if parent_[node] = 0 then root_ = pivot
+    else do
+      if node = left_[parent_[node]] then left_[parent_[node]] = pivot
+      else right_[parent_[node]] = pivot
+    end
+    left_[pivot] = node
+    parent_[node] = pivot
+    return
+
+  rightRotate: method = .void
+    arg node = .int
+    pivot = left_[node]
+    left_[node] = right_[pivot]
+    if right_[pivot] <> 0 then parent_[right_[pivot]] = node
+    parent_[pivot] = parent_[node]
+    if parent_[node] = 0 then root_ = pivot
+    else do
+      if node = right_[parent_[node]] then right_[parent_[node]] = pivot
+      else left_[parent_[node]] = pivot
+    end
+    right_[pivot] = node
+    parent_[node] = pivot
+    return
+
+  minimum: method = .int
+    arg node = .int
+    current = node
+    do while current <> 0 & left_[current] <> 0
+      current = left_[current]
+    end
+    return current
+
+  first: method = .int
+    return minimum(root_)
+
+  successor: method = .int
+    arg node = .int
+    if right_[node] <> 0 then return minimum(right_[node])
+    current = node
+    ancestor = parent_[current]
+    do while ancestor <> 0 & current = right_[ancestor]
+      current = ancestor
+      ancestor = parent_[ancestor]
+    end
+    return ancestor
+
+  keyX: method = .float
+    arg node = .int
+    return key_x_[node]
+
+  intValue: method = .int
+    arg node = .int
+    return int_value_[node]
+
+  setIntValue: method = .void
+    arg node = .int, value = .int
+    int_value_[node] = value
+    return
+
+  valueVector: method = .CDVector3
+    arg node = .int
+    return .CDVector3(value_x_[node], value_y_[node], value_z_[node])
+
+  remove: method = .int
+    arg x = .float, y = .float
+    target = find(x, y)
+    if target = 0 then return 0
+    removed = target
+    if left_[target] <> 0 & right_[target] <> 0 then
+      removed = successor(target)
+    child = right_[removed]
+    if left_[removed] <> 0 then child = left_[removed]
+    child_parent = parent_[removed]
+    if child <> 0 then do
+      parent_[child] = parent_[removed]
+      child_parent = parent_[child]
+    end
+    if parent_[removed] = 0 then root_ = child
+    else do
+      if removed = left_[parent_[removed]] then
+        left_[parent_[removed]] = child
+      else right_[parent_[removed]] = child
+    end
+
+    if removed <> target then do
+      if color_[removed] = 0 then call removeFixup(child, child_parent)
+      parent_[removed] = parent_[target]
+      color_[removed] = color_[target]
+      left_[removed] = left_[target]
+      right_[removed] = right_[target]
+      if left_[target] <> 0 then parent_[left_[target]] = removed
+      if right_[target] <> 0 then parent_[right_[target]] = removed
+      if parent_[target] = 0 then root_ = removed
+      else do
+        if target = left_[parent_[target]] then
+          left_[parent_[target]] = removed
+        else right_[parent_[target]] = removed
+      end
+    end
+    else if color_[removed] = 0 then call removeFixup(child, child_parent)
+    return int_value_[target]
+
+  removeFixup: method = .void
+    arg node = .int, supplied_parent = .int
+    current = node
+    current_parent = supplied_parent
+    do while current <> root_
+      if \isBlack(current) then leave
+      if current = left_[current_parent] then do
+        sibling = right_[current_parent]
+        if isRed(sibling) then do
+          color_[sibling] = 0
+          color_[current_parent] = 1
+          call leftRotate(current_parent)
+          sibling = right_[current_parent]
+        end
+        if isBlack(left_[sibling]) & isBlack(right_[sibling]) then do
+          color_[sibling] = 1
+          current = current_parent
+          current_parent = parent_[current]
+        end
+        else do
+          if isBlack(right_[sibling]) then do
+            if left_[sibling] <> 0 then color_[left_[sibling]] = 0
+            color_[sibling] = 1
+            call rightRotate(sibling)
+            sibling = right_[current_parent]
+          end
+          color_[sibling] = color_[current_parent]
+          color_[current_parent] = 0
+          if right_[sibling] <> 0 then color_[right_[sibling]] = 0
+          call leftRotate(current_parent)
+          current = root_
+          current_parent = 0
+        end
+      end
+      else do
+        sibling = .int
+        sibling = left_[current_parent]
+        if isRed(sibling) then do
+          color_[sibling] = 0
+          color_[current_parent] = 1
+          call rightRotate(current_parent)
+          sibling = left_[current_parent]
+        end
+        if isBlack(right_[sibling]) & isBlack(left_[sibling]) then do
+          color_[sibling] = 1
+          current = current_parent
+          current_parent = parent_[current]
+        end
+        else do
+          if isBlack(left_[sibling]) then do
+            if right_[sibling] <> 0 then color_[right_[sibling]] = 0
+            color_[sibling] = 1
+            call leftRotate(sibling)
+            sibling = left_[current_parent]
+          end
+          color_[sibling] = color_[current_parent]
+          color_[current_parent] = 0
+          if left_[sibling] <> 0 then color_[left_[sibling]] = 0
+          call rightRotate(current_parent)
+          current = root_
+          current_parent = 0
+        end
+      end
+    end
+    if current <> 0 then color_[current] = 0
+    return
+
+/** Exact AWFY collision detector with indexed maps and occurrence lists. */
+CDDetector: class
+  state_ = .CDRedBlackTree
+  seen_callsigns_ = .CDRedBlackTree
+  voxel_map_ = .CDRedBlackTree
+  voxel_seen_ = .CDRedBlackTree
+  motions_ = .CDMotion[]
+  motion_count_ = .int
+  occurrence_motion_ = .int[]
+  occurrence_next_ = .int[]
+  occurrence_count_ = .int
+
+  *: factory
+    state_ = .CDRedBlackTree()
+    seen_callsigns_ = .CDRedBlackTree()
+    voxel_map_ = .CDRedBlackTree()
+    voxel_seen_ = .CDRedBlackTree()
+    motion_count_ = 0
+    occurrence_count_ = 0
+    return
+
+  handleNewFrame: method = .CDCollisionList
+    arg frame = .CDFrame
+    call seen_callsigns_.reset()
+    motion_count_ = 0
+    do index = 1 to frame.size()
+      aircraft = frame.at(index)
+      callsign = aircraft.callsign()
+      new_position = aircraft.position()
+      old_node = state_.find(callsign, 0.0)
+      old_position = new_position
+      if old_node <> 0 then old_position = state_.valueVector(old_node)
+      state_node = state_.put(callsign, 0.0, 1, new_position.x(), ,
+          new_position.y(), new_position.z())
+      seen_node = seen_callsigns_.put(callsign, 0.0, 1, 0.0, 0.0, 0.0)
+      motion_count_ = motion_count_ + 1
+      motions_[motion_count_] = .CDMotion(callsign, old_position, new_position)
+    end
+
+    remove_count = 0
+    remove_callsigns = .int[]
+    state_node = .int
+    state_node = state_.first()
+    do while state_node <> 0
+      callsign = .int
+      callsign = state_.keyX(state_node) as .int
+      if seen_callsigns_.find(callsign, 0.0) = 0 then do
+        remove_count = remove_count + 1
+        remove_callsigns[remove_count] = callsign
+      end
+      state_node = state_.successor(state_node)
+    end
+    do index = .int(1) to remove_count
+      removed_value = state_.remove(remove_callsigns[index], 0.0)
+    end
+
+    call voxel_map_.reset()
+    occurrence_count_ = 0
+    do motion_index = 1 to motion_count_
+      call drawMotion(motion_index)
+    end
+
+    collisions = .CDCollisionList()
+    voxel_node = voxel_map_.first()
+    do while voxel_node <> 0
+      first_occurrence = voxel_map_.intValue(voxel_node)
+      first_cursor = first_occurrence
+      do while first_cursor <> 0
+        first_motion_index = occurrence_motion_[first_cursor]
+        second_cursor = occurrence_next_[first_cursor]
+        do while second_cursor <> 0
+          second_motion_index = occurrence_motion_[second_cursor]
+          first_motion = motions_[first_motion_index]
+          second_motion = motions_[second_motion_index]
+          if first_motion.intersects(second_motion) then
+            call collisions.append(.CDCollision(first_motion.callsign(), ,
+                second_motion.callsign(), first_motion.intersectionPosition()))
+          second_cursor = occurrence_next_[second_cursor]
+        end
+        first_cursor = occurrence_next_[first_cursor]
+      end
+      voxel_node = voxel_map_.successor(voxel_node)
+    end
+    return collisions
+
+  drawMotion: method = .void
+    arg motion_index = .int
+    motion = motions_[motion_index]
+    first = motion.first()
+    voxel_x = floattrunc(first.x() / 2.0) as .int
+    voxel_y = floattrunc(first.y() / 2.0) as .int
+    hash_x = voxel_x * 2.0
+    hash_y = voxel_y * 2.0
+    if first.x() < 0.0 then hash_x = hash_x - 2.0
+    if first.y() < 0.0 then hash_y = hash_y - 2.0
+    call voxel_seen_.reset()
+    call visitVoxel(hash_x, hash_y, motion_index)
+    return
+
+  visitVoxel: method = .void
+    arg voxel_x = .float, voxel_y = .float, motion_index = .int
+    if \isInVoxel(voxel_x, voxel_y, motion_index) then return
+    if voxel_seen_.find(voxel_x, voxel_y) <> 0 then return
+    seen_node = voxel_seen_.put(voxel_x, voxel_y, 1, 0.0, 0.0, 0.0)
+
+    map_node = voxel_map_.find(voxel_x, voxel_y)
+    if map_node = 0 then
+      map_node = voxel_map_.put(voxel_x, voxel_y, 0, 0.0, 0.0, 0.0)
+    occurrence_count_ = occurrence_count_ + 1
+    occurrence_motion_[occurrence_count_] = motion_index
+    occurrence_next_[occurrence_count_] = voxel_map_.intValue(map_node)
+    call voxel_map_.setIntValue(map_node, occurrence_count_)
+
+    call visitVoxel(voxel_x - 2.0, voxel_y, motion_index)
+    call visitVoxel(voxel_x + 2.0, voxel_y, motion_index)
+    call visitVoxel(voxel_x, voxel_y - 2.0, motion_index)
+    call visitVoxel(voxel_x, voxel_y + 2.0, motion_index)
+    call visitVoxel(voxel_x - 2.0, voxel_y - 2.0, motion_index)
+    call visitVoxel(voxel_x - 2.0, voxel_y + 2.0, motion_index)
+    call visitVoxel(voxel_x + 2.0, voxel_y - 2.0, motion_index)
+    call visitVoxel(voxel_x + 2.0, voxel_y + 2.0, motion_index)
+    return
+
+  isInVoxel: method = .int
+    arg voxel_x = .float, voxel_y = .float, motion_index = .int
+    if voxel_x > 1000.0 | voxel_x < 0.0 | ,
+        voxel_y > 1000.0 | voxel_y < 0.0 then return 0
+
+    motion = motions_[motion_index]
+    first = motion.first()
+    second = motion.second()
+    x0 = first.x()
+    y0 = first.y()
+    xv = second.x() - x0
+    yv = second.y() - y0
+    radius = 0.5
+
+    x_ok = 0
+    low_x = 0.0
+    high_x = 0.0
+    if xv = 0.0 then
+      x_ok = voxel_x <= x0 + radius & x0 - radius <= voxel_x + 2.0
+    else do
+      low_x = (voxel_x - radius - x0) / xv
+      high_x = (voxel_x + 2.0 + radius - x0) / xv
+      if xv < 0.0 then do
+        swap = low_x
+        low_x = high_x
+        high_x = swap
+      end
+      x_ok = (low_x <= 1.0 & 1.0 <= high_x) | ,
+          (low_x <= 0.0 & 0.0 <= high_x) | ,
+          (0.0 <= low_x & high_x <= 1.0)
+    end
+    if \x_ok then return 0
+
+    y_ok = 0
+    low_y = 0.0
+    high_y = 0.0
+    if yv = 0.0 then
+      y_ok = voxel_y <= y0 + radius & y0 - radius <= voxel_y + 2.0
+    else do
+      low_y = (voxel_y - radius - y0) / yv
+      high_y = (voxel_y + 2.0 + radius - y0) / yv
+      if yv < 0.0 then do
+        swap = .float
+        swap = low_y
+        low_y = high_y
+        high_y = swap
+      end
+      y_ok = (low_y <= 1.0 & 1.0 <= high_y) | ,
+          (low_y <= 0.0 & 0.0 <= high_y) | ,
+          (0.0 <= low_y & high_y <= 1.0)
+    end
+    if \y_ok then return 0
+
+    if xv = 0.0 | yv = 0.0 then return 1
+    return (low_y <= high_x & high_x <= high_y) | ,
+        (low_y <= low_x & low_x <= high_y) | ,
+        (low_x <= low_y & high_y <= high_x)

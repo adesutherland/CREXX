@@ -1,0 +1,295 @@
+Test project /tmp/crexx-rxvm-inline.yvLywZ/builds/vm-default-clang-debug
+        Start    1: linked_opt_runtime_artifacts_build
+  1/129 Test    #1: linked_opt_runtime_artifacts_build ...........   Passed    0.07 sec
+        Start  900: rxc_diagnostic_catalogs
+        Start  892: crexxsaa_status
+        Start 1794: benchmark_runner_opt
+        Start 1886: crexx_headerless_simple_smoke
+        Start 1177: rxpp_sh_tokens
+        Start  891: crexxsaa_variables
+        Start  896: trace_stem_sugar
+        Start  894: rxc_srcmap
+        Start  515: interface_source_import_run_noopt
+        Start 1174: rxpp_srcmap
+  2/129 Test  #891: crexxsaa_variables ...........................   Passed    0.33 sec
+        Start 1173: rxpp_smoke
+  3/129 Test #1177: rxpp_sh_tokens ...............................   Passed    1.01 sec
+        Start   25: rxc_constants_levelb
+  4/129 Test #1794: benchmark_runner_opt .........................   Passed    1.52 sec
+        Start  872: levelc_slice6_expressions
+  5/129 Test #1174: rxpp_srcmap ..................................   Passed    2.18 sec
+        Start   40: 03_calc_opt
+  6/129 Test #1173: rxpp_smoke ...................................   Passed    1.91 sec
+        Start   66: 08_select_opt
+  7/129 Test  #515: interface_source_import_run_noopt ............   Passed    2.31 sec
+        Start   35: 01_assign_noopt
+  8/129 Test  #892: crexxsaa_status ..............................   Passed    2.64 sec
+        Start   63: 07_loops_noopt
+  9/129 Test  #894: rxc_srcmap ...................................   Passed    2.91 sec
+        Start   85: 10_procs_noopt
+ 10/129 Test   #25: rxc_constants_levelb .........................   Passed    1.93 sec
+        Start  787: syntaxhighlight_trace_keywords
+ 11/129 Test  #896: trace_stem_sugar .............................   Passed    2.94 sec
+        Start 1789: benchmark_rexxcps_levelb_noopt
+ 12/129 Test   #40: 03_calc_opt ..................................   Passed    0.88 sec
+        Start 1022: rxlink_rxdas_inline_preserve_smoke
+ 13/129 Test #1022: rxlink_rxdas_inline_preserve_smoke ...........   Passed    0.01 sec
+        Start  893: source_provenance
+ 14/129 Test  #893: source_provenance ............................   Passed    0.01 sec
+        Start  858: levelc_slice1_pool_say
+ 15/129 Test   #66: 08_select_opt ................................   Passed    0.87 sec
+        Start  112: 15_imports_opt
+ 16/129 Test   #35: 01_assign_noopt ..............................   Passed    0.93 sec
+        Start 1164: db_decimal_archive_link
+ 17/129 Test #1164: db_decimal_archive_link ......................   Passed    0.01 sec
+        Start  477: interface_runtime_dispatch_multi_run_noopt
+ 18/129 Test #1886: crexx_headerless_simple_smoke ................   Passed    3.44 sec
+        Start 1892: crexx_status_diagnostics
+ 19/129 Test   #63: 07_loops_noopt ...............................   Passed    0.86 sec
+        Start  447: optional_arg_presence_copy_run_noopt
+ 20/129 Test  #872: levelc_slice6_expressions ....................   Passed    1.99 sec
+        Start 1854: rxpa_classdecl_static_compile_opt
+ 21/129 Test   #85: 10_procs_noopt ...............................   Passed    0.93 sec
+        Start  393: basic_arrays_run_noopt
+ 22/129 Test  #112: 15_imports_opt ...............................   Passed    1.11 sec
+        Start  377: repro_opt_args_run_noopt
+ 23/129 Test  #477: interface_runtime_dispatch_multi_run_noopt ...   Passed    1.18 sec
+        Start  425: 13_stems_run_noopt
+ 24/129 Test #1854: rxpa_classdecl_static_compile_opt ............   Passed    0.97 sec
+        Start 1163: reentrancy_check
+ 25/129 Test #1163: reentrancy_check .............................   Passed    0.01 sec
+        Start  553: source_import_contract_stub_implements
+ 26/129 Test  #787: syntaxhighlight_trace_keywords ...............   Passed    1.59 sec
+        Start  116: err_01_type_fail
+ 27/129 Test #1789: benchmark_rexxcps_levelb_noopt ...............   Passed    1.60 sec
+        Start  120: err_06_missing_method_fail
+ 28/129 Test  #447: optional_arg_presence_copy_run_noopt .........   Passed    1.16 sec
+        Start 1790: benchmark_rexxcps_levelb_opt
+ 29/129 Test  #858: levelc_slice1_pool_say .......................   Passed    1.58 sec
+        Start  898: source_semantics
+ 30/129 Test  #898: source_semantics .............................   Passed    0.03 sec
+        Start  554: source_import_optional_factory_arg
+ 31/129 Test  #393: basic_arrays_run_noopt .......................   Passed    1.16 sec
+        Start 1776: benchmark_awfy_storage_opt
+ 32/129 Test  #377: repro_opt_args_run_noopt .....................   Passed    1.13 sec
+        Start 1151: rxasdecimaltests-mc
+ 33/129 Test #1151: rxasdecimaltests-mc ..........................   Passed    0.01 sec
+        Start 1016: rxlink_format_check
+ 34/129 Test #1016: rxlink_format_check ..........................   Passed    0.00 sec
+        Start  192: unused_import_warn
+ 35/129 Test  #120: err_06_missing_method_fail ...................   Passed    0.93 sec
+        Start 1178: rxpp_diagnostics
+ 36/129 Test  #116: err_01_type_fail .............................   Passed    0.97 sec
+        Start 1024: rxdas_roundtrip_basic
+ 37/129 Test #1024: rxdas_roundtrip_basic ........................   Passed    0.04 sec
+        Start  888: dynamic_load
+ 38/129 Test  #425: 13_stems_run_noopt ...........................   Passed    1.17 sec
+        Start 1029: rxdas_graph_error
+ 39/129 Test #1029: rxdas_graph_error ............................   Passed    0.01 sec
+        Start 1107: compact_format_check
+ 40/129 Test #1107: compact_format_check .........................   Passed    0.00 sec
+        Start 1030: rxdas_roundtrip_interfaces
+ 41/129 Test  #553: source_import_contract_stub_implements .......   Passed    1.15 sec
+        Start 1037: rxdas_dump_support
+ 42/129 Test #1037: rxdas_dump_support ...........................   Passed    0.00 sec
+        Start 1780: benchmark_awfy_richards_opt
+ 43/129 Test #1030: rxdas_roundtrip_interfaces ...................   Passed    0.05 sec
+        Start 1647: testRexxScriptRuntime_noopt
+ 44/129 Test  #554: source_import_optional_factory_arg ...........   Passed    1.05 sec
+        Start 1649: testRexxScriptCompat_noopt
+ 45/129 Test  #888: dynamic_load .................................   Passed    0.33 sec
+        Start 1046: rxpa_utf_validation
+ 46/129 Test #1046: rxpa_utf_validation ..........................   Passed    0.00 sec
+        Start  887: address_callback_host
+ 47/129 Test #1790: benchmark_rexxcps_levelb_opt .................   Passed    1.30 sec
+        Start  117: err_02_syntax_fail
+ 48/129 Test  #887: address_callback_host ........................   Passed    0.18 sec
+        Start 1539: testRexxClassicBifs_noopt
+ 49/129 Test #1776: benchmark_awfy_storage_opt ...................   Passed    1.11 sec
+        Start 1537: testRexxRuntimePools_noopt
+ 50/129 Test #1780: benchmark_awfy_richards_opt ..................   Passed    0.60 sec
+        Start 1535: testRexxValue_noopt
+ 51/129 Test #1647: testRexxScriptRuntime_noopt ..................   Passed    0.60 sec
+        Start  881: address_bridge
+ 52/129 Test  #192: unused_import_warn ...........................   Passed    0.99 sec
+        Start 1844: rxpa_staticlink_run_noopt
+ 53/129 Test #1649: testRexxScriptCompat_noopt ...................   Passed    0.63 sec
+        Start 1503: testStringHashMap_noopt
+ 54/129 Test  #117: err_02_syntax_fail ...........................   Passed    0.43 sec
+        Start 1515: testObjectCollections_noopt
+ 55/129 Test #1178: rxpp_diagnostics .............................   Passed    0.98 sec
+        Start 1044: crexxsaa_cache_tool_location
+ 56/129 Test #1044: crexxsaa_cache_tool_location .................   Passed    0.01 sec
+        Start 1501: testStringArrayList_noopt
+ 57/129 Test #1844: rxpa_staticlink_run_noopt ....................   Passed    0.21 sec
+        Start 1527: testJSON_noopt
+ 58/129 Test  #881: address_bridge ...............................   Passed    0.32 sec
+        Start 1651: rexxscript_cli_smoke
+ 59/129 Test #1539: testRexxClassicBifs_noopt ....................   Passed    0.55 sec
+        Start    5: test_rxas_01_init
+ 60/129 Test  #900: rxc_diagnostic_catalogs ......................   Passed    6.63 sec
+        Start    8: test_rxas_04_errors
+ 61/129 Test #1537: testRexxRuntimePools_noopt ...................   Passed    0.52 sec
+        Start    7: test_rxas_03_token_types
+ 62/129 Test    #5: test_rxas_01_init ............................   Passed    0.06 sec
+        Start 1796: nr03_evidence_tool_selftest_opt
+ 63/129 Test    #8: test_rxas_04_errors ..........................   Passed    0.06 sec
+        Start 1772: benchmark_awfy_towers_opt
+ 64/129 Test    #7: test_rxas_03_token_types .....................   Passed    0.06 sec
+        Start   20: rxc_function_lookup_diagnostic
+ 65/129 Test #1651: rexxscript_cli_smoke .........................   Passed    0.12 sec
+        Start 1855: rxpa_signal_funcs_dynamic_noopt
+ 66/129 Test #1535: testRexxValue_noopt ..........................   Passed    0.52 sec
+        Start 1463: ts_llm_providers_noopt
+ 67/129 Test #1503: testStringHashMap_noopt ......................   Passed    0.41 sec
+        Start 1798: nr10_cross_runtime_matrix_selftest_opt
+ 68/129 Test #1515: testObjectCollections_noopt ..................   Passed    0.42 sec
+        Start 1490: map_test_noopt
+ 69/129 Test #1501: testStringArrayList_noopt ....................   Passed    0.40 sec
+        Start 1424: ts_rxjson_noopt
+ 70/129 Test #1527: testJSON_noopt ...............................   Passed    0.36 sec
+        Start 1883: rxpa_mult_test_noopt
+ 71/129 Test #1855: rxpa_signal_funcs_dynamic_noopt ..............   Passed    0.22 sec
+        Start 1466: ts_tinyexpr_noopt
+ 72/129 Test #1796: nr03_evidence_tool_selftest_opt ..............   Passed    0.28 sec
+        Start 1533: testOS_noopt
+ 73/129 Test #1463: ts_llm_providers_noopt .......................   Passed    0.25 sec
+        Start 1480: keyaccess_test_noopt
+ 74/129 Test #1772: benchmark_awfy_towers_opt ....................   Passed    0.32 sec
+        Start 1842: rxpa_dynlink_run_noopt
+ 75/129 Test #1490: map_test_noopt ...............................   Passed    0.22 sec
+        Start 1879: rxpa_native_unwind_funcs_dynamic_noopt
+ 76/129 Test #1798: nr10_cross_runtime_matrix_selftest_opt .......   Passed    0.25 sec
+        Start 1476: strings_test_noopt
+ 77/129 Test #1424: ts_rxjson_noopt ..............................   Passed    0.22 sec
+        Start 1802: nr10_artifact_inventory_selftest_opt
+ 78/129 Test #1466: ts_tinyexpr_noopt ............................   Passed    0.17 sec
+        Start 1472: stack_test_noopt
+ 79/129 Test #1533: testOS_noopt .................................   Passed    0.19 sec
+        Start 1800: nr10_lifecycle_tool_selftest_opt
+ 80/129 Test #1883: rxpa_mult_test_noopt .........................   Passed    0.23 sec
+        Start 1190: ts_address_noopt
+ 81/129 Test   #20: rxc_function_lookup_diagnostic ...............   Passed    0.44 sec
+        Start 1875: rxpa_native_payload_funcs_dynamic_noopt
+ 82/129 Test #1480: keyaccess_test_noopt .........................   Passed    0.22 sec
+        Start 1422: ts_stem_noopt
+ 83/129 Test #1842: rxpa_dynlink_run_noopt .......................   Passed    0.22 sec
+        Start 1470: math_test_noopt
+ 84/129 Test #1879: rxpa_native_unwind_funcs_dynamic_noopt .......   Passed    0.22 sec
+        Start 1320: ts_parse_noopt
+ 85/129 Test #1476: strings_test_noopt ...........................   Passed    0.21 sec
+        Start 1432: ts_rxsocket_noopt
+ 86/129 Test #1802: nr10_artifact_inventory_selftest_opt .........   Passed    0.19 sec
+        Start 1792: benchmark_rexxcps_levelb_opaque_opt
+ 87/129 Test #1892: crexx_status_diagnostics .....................   Passed    3.86 sec
+        Start 1902: crexx_native_explicit_header_smoke
+ 88/129 Test #1472: stack_test_noopt .............................   Passed    0.21 sec
+        Start 1782: benchmark_json_parser_opt
+ 89/129 Test #1800: nr10_lifecycle_tool_selftest_opt .............   Passed    0.21 sec
+        Start 1047: ts_regvalue_tester
+ 90/129 Test #1047: ts_regvalue_tester ...........................   Passed    0.00 sec
+        Start 1784: benchmark_base64_roundtrip_opt
+ 91/129 Test #1875: rxpa_native_payload_funcs_dynamic_noopt ......   Passed    0.21 sec
+        Start 1770: benchmark_awfy_mandelbrot_opt
+ 92/129 Test #1792: benchmark_rexxcps_levelb_opaque_opt ..........   Passed    0.14 sec
+        Start 1786: benchmark_parse_frozen_opt
+ 93/129 Test #1190: ts_address_noopt .............................   Passed    0.26 sec
+        Start 1774: benchmark_awfy_bounce_opt
+ 94/129 Test #1422: ts_stem_noopt ................................   Passed    0.20 sec
+        Start 1778: benchmark_awfy_list_opt
+ 95/129 Test #1470: math_test_noopt ..............................   Passed    0.21 sec
+        Start 1766: benchmark_awfy_sieve_opt
+ 96/129 Test #1782: benchmark_json_parser_opt ....................   Passed    0.12 sec
+        Start 1768: benchmark_awfy_permute_opt
+ 97/129 Test #1784: benchmark_base64_roundtrip_opt ...............   Passed    0.10 sec
+        Start    9: rxas_reject_non_source_mnemonics
+ 98/129 Test #1770: benchmark_awfy_mandelbrot_opt ................   Passed    0.10 sec
+        Start 1050: rxassignalstests
+ 99/129 Test #1320: ts_parse_noopt ...............................   Passed    0.21 sec
+        Start 1668: rxas_optimizer_copy_acopy_opt
+100/129 Test #1432: ts_rxsocket_noopt ............................   Passed    0.21 sec
+        Start   10: rxas_constant_aliases
+101/129 Test #1668: rxas_optimizer_copy_acopy_opt ................   Passed    0.02 sec
+        Start   11: rxc_help_syntaxhighlight
+102/129 Test #1050: rxassignalstests .............................   Passed    0.02 sec
+        Start 1020: rxlink_signature_mismatch_error
+103/129 Test #1020: rxlink_signature_mismatch_error ..............   Passed    0.01 sec
+        Start 1096: rxasbasictests
+104/129 Test   #10: rxas_constant_aliases ........................   Passed    0.02 sec
+        Start   14: rxas_invalid_diagnostic
+105/129 Test #1096: rxasbasictests ...............................   Passed    0.00 sec
+        Start 1064: rxasreferencetests
+106/129 Test   #11: rxc_help_syntaxhighlight .....................   Passed    0.01 sec
+        Start 1010: rxlink_success_run
+107/129 Test #1064: rxasreferencetests ...........................   Passed    0.00 sec
+        Start 1013: rxlink_interface_run
+108/129 Test #1010: rxlink_success_run ...........................   Passed    0.00 sec
+        Start 1108: rxasstringtests
+109/129 Test #1013: rxlink_interface_run .........................   Passed    0.00 sec
+110/129 Test #1108: rxasstringtests ..............................   Passed    0.00 sec
+        Start 1011: rxlink_control_run
+        Start 1156: rxasinterfacetests
+111/129 Test   #14: rxas_invalid_diagnostic ......................   Passed    0.01 sec
+        Start 1059: rxasregisterflagtests
+112/129 Test    #9: rxas_reject_non_source_mnemonics .............   Passed    0.05 sec
+        Start 1060: rxasutfflagtests
+113/129 Test #1059: rxasregisterflagtests ........................   Passed    0.00 sec
+114/129 Test #1774: benchmark_awfy_bounce_opt ....................   Passed    0.09 sec
+115/129 Test #1011: rxlink_control_run ...........................   Passed    0.00 sec
+116/129 Test #1156: rxasinterfacetests ...........................   Passed    0.00 sec
+117/129 Test #1060: rxasutfflagtests .............................   Passed    0.00 sec
+118/129 Test #1786: benchmark_parse_frozen_opt ...................   Passed    0.10 sec
+119/129 Test #1778: benchmark_awfy_list_opt ......................   Passed    0.09 sec
+120/129 Test #1768: benchmark_awfy_permute_opt ...................   Passed    0.07 sec
+121/129 Test #1766: benchmark_awfy_sieve_opt .....................   Passed    0.08 sec
+122/129 Test #1902: crexx_native_explicit_header_smoke ...........   Passed    1.13 sec
+        Start 1890: crexx_rexxscript_smoke
+123/129 Test #1890: crexx_rexxscript_smoke .......................   Passed    1.14 sec
+        Start 1889: crexx_args_smoke
+124/129 Test #1889: crexx_args_smoke .............................   Passed    1.08 sec
+        Start 1904: crexx_native_default_link_strip
+125/129 Test #1904: crexx_native_default_link_strip ..............   Passed    0.77 sec
+        Start 1898: crexx_source_root_compile_only
+126/129 Test #1898: crexx_source_root_compile_only ...............   Passed    0.68 sec
+        Start 1885: crexx_help_smoke
+127/129 Test #1885: crexx_help_smoke .............................   Passed    0.02 sec
+        Start 1760: QUIT
+128/129 Test #1760: QUIT .........................................   Passed    0.09 sec
+        Start 1762: INT
+129/129 Test #1762: INT ..........................................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 129
+
+Label Time Summary:
+benchmark               =   8.24 sec*proc (19 tests)
+canonical-contract      =   1.52 sec*proc (1 test)
+classlib                =   0.19 sec*proc (1 test)
+compiler                =  24.13 sec*proc (17 tests)
+diagnostics             =  10.96 sec*proc (4 tests)
+imports                 =   2.19 sec*proc (2 tests)
+interpreter             =   0.00 sec*proc (1 test)
+language                =   5.81 sec*proc (14 tests)
+levelc                  =   3.57 sec*proc (2 tests)
+linked_opt              =   6.65 sec*proc (18 tests)
+native-adapter          =   0.19 sec*proc (1 test)
+native_signal           =   0.18 sec*proc (2 tests)
+noncanonical            =   2.90 sec*proc (2 tests)
+optimizer               =   0.02 sec*proc (1 test)
+optimizer-resistance    =   0.14 sec*proc (1 test)
+performance             =   0.92 sec*proc (4 tests)
+preprocessor            =   1.98 sec*proc (2 tests)
+rexxcps-smoke           =   2.90 sec*proc (2 tests)
+runner                  =   2.44 sec*proc (5 tests)
+rxas                    =   0.02 sec*proc (1 test)
+rxpa                    =   0.00 sec*proc (1 test)
+smoke                   =  78.16 sec*proc (127 tests)
+srcmap                  =   2.91 sec*proc (1 test)
+stage0                  =   1.59 sec*proc (1 test)
+stage2                  =   0.01 sec*proc (1 test)
+stage3                  =   3.80 sec*proc (5 tests)
+stage4                  =   2.94 sec*proc (1 test)
+stage5                  =   0.03 sec*proc (1 test)
+syntax_highlighting     =   2.64 sec*proc (4 tests)
+utf                     =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  12.40 sec

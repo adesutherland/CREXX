@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gd5b25a78fd6c 20260723",
+  "source_manifest": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-23-perf2-02-quickening-poc/manifests/guard-noise-append.txt",
+  "measurement": "timing",
+  "warmups": 0,
+  "recorded_runs": 10,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-23T21:40:07+0000",
+  "completed_utc": "2026-07-23T21:42:06+0000",
+  "result": "pass"
+}

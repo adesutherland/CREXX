@@ -1,0 +1,149 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifword
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("the", "Now is the time", "3")
+errors = errors + check_value("", "Now is the time", "5")
+errors = errors + check_value("This", "  This is a test", "1")
+errors = errors + check_value("test", "This is a test  ", "4")
+errors = errors + check_value("is", "This   is a test", "2")
+errors = errors + check_value("two", "one two three", "2", "UTF8")
+errors = errors + check_value("", "", "1")
+errors = errors + check_value("", "   ", "1", "UTF8")
+errors = errors + check_value("one|two", "one|two", "1")
+errors = errors + check_value("two", "one|two", "2", "BYTE_BAR")
+errors = errors + check_binary_byte_mode()
+errors = errors + check_binary_utf8_error()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_wordnum_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_wordnum_error("RXC-LC-40.12", "1.5")
+errors = errors + check_wordnum_error("RXC-LC-40.14", "0")
+errors = errors + check_wordnum_error("RXC-LC-40.14", "-1")
+
+if errors = 0 then say "PASS: Level C WORD BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, string = .string, wordnum = .string, profile = "BYTE"
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(wordnum)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORD")
+  call configure_profile context, profile
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  if \context.hasError() & result.asString() == expected & args[1].asString() == string then return 0
+  say "FAIL: WORD expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+configure_profile: procedure
+  arg context = .RexxBifCallContext, profile = .string
+  if profile = "UTF8" then call context.useUtf8Profile()
+  else if profile = "BYTE_BAR" then do
+    blanks = .binary
+    blanks = "7C"x
+    call context.setByteOtherBlanks(blanks)
+  end
+  return
+
+check_binary_byte_mode: procedure = .int
+  raw = .binary
+  raw = "FF2078"x
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(raw)
+  args[2] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORD")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  result_bytes = .binary
+  result_bytes = result.asBinary()
+  result_length = .int
+  result_byte = .int
+  first_offset = 0
+  assembler blen result_length,result_bytes
+  assembler getbyte result_byte,result_bytes,first_offset
+  if \context.hasError() & result.hasBinary() & \result.hasText(),
+      & result_length = 1 & result_byte = 255 & args[1].binaryLength() = 3 then return 0
+  say "FAIL: WORD BYTE profile did not preserve arbitrary octets"
+  return 1
+
+check_binary_utf8_error: procedure = .int
+  raw = .binary
+  raw = "FF2078"x
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(raw)
+  args[2] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORD")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-23.1" then return 0
+  say "FAIL: WORD UTF8 profile expected RXC-LC-23.1 got",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("WORD")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORD expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("WORD")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: WORD omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_wordnum_error: procedure = .int
+  arg expected_code = .string, wordnum = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("one two")
+  args[2] = .RexxValue(wordnum)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORD")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifword..rexxclassicbif_word(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORD number expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

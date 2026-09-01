@@ -1,0 +1,3 @@
+vm,baseline_median,candidate_median,median_delta_percent,paired_mean_percent,paired_ci_low_percent,paired_ci_high_percent
+rxbvm,0.973712325,0.969355464,-0.447448480,-0.352637294,-1.881549093,1.176274505
+rxtvm,0.973719954,0.979417443,0.585126039,0.179163326,-0.775134085,1.133460737

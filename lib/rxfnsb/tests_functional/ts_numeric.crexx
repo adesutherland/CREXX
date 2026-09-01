@@ -1,11 +1,10 @@
 /* Test Numeric Access Functions: digits(), fuzz(), form(), numcase(), and standard() */
-options levelb
+options levelb comments_dash
 import rxfnsb
 
-rc = test1()
-if rc \= 0 then return rc
-rc = test2()
-return rc
+errors = test1() + test2()
+if errors = 0 then say "PASS: numeric"
+return errors <> 0
 
 /* Test 1 with one set of numeric options */
 test1: procedure = .int
@@ -15,27 +14,13 @@ test1: procedure = .int
     numeric form engineering
     numeric standard classic
 
-    if standard() \= "classic" then do
-        say "Error: standard() expected classic but got" standard()
-        return 1
-    end
-    if form() \= "engineering" then do
-        say "Error: form() expected engineering but got" form()
-        return 1
-    end
-    if numcase() \= "upper" then do
-        say "Error: numcase() expected upper but got" numcase()
-        return 1
-    end
-    if digits() \= 6 then do
-        say "Error: digits() expected 6 but got" digits()
-        return 1
-    end
-    if fuzz() \= 2 then do
-        say "Error: fuzz() expected 2 but got" fuzz()
-        return 1
-    end
-    return 0
+    errors = 0
+    errors = errors + check_string("classic", standard(), "standard classic")
+    errors = errors + check_string("engineering", form(), "form engineering")
+    errors = errors + check_string("upper", numcase(), "case upper")
+    errors = errors + check_int(6, digits(), "digits 6")
+    errors = errors + check_int(2, fuzz(), "fuzz 2")
+    return errors
 
 /* Test 2 with another set of numeric options */
 test2: procedure = .int
@@ -44,24 +29,22 @@ test2: procedure = .int
     numeric fuzz 0
     numeric form scientific
     numeric standard common
-    if standard() \= "common" then do
-        say "Error: standard() expected common but got" standard()
-        return 1
-    end
-    if form() \= "scientific" then do
-        say "Error: form() expected scientific but got" form()
-        return 1
-    end
-    if numcase() \= "lower" then do
-        say "Error: numcase() expected lower but got" numcase()
-        return 1
-    end
-    if digits() \= 10 then do
-        say "Error: digits() expected 10 but got" digits()
-        return 1
-    end
-    if fuzz() \= 0 then do
-        say "Error: fuzz() expected 0 but got" fuzz()
-        return 1
-    end
-    return 0
+    errors = 0
+    errors = errors + check_string("common", standard(), "standard common")
+    errors = errors + check_string("scientific", form(), "form scientific")
+    errors = errors + check_string("lower", numcase(), "case lower")
+    errors = errors + check_int(10, digits(), "digits 10")
+    errors = errors + check_int(0, fuzz(), "fuzz 0")
+    return errors
+
+check_string: procedure = .int
+    arg expected = .string, actual = .string, label = .string
+    if actual = expected then return 0
+    say "FAIL:" label "expected" expected "got" actual
+    return 1
+
+check_int: procedure = .int
+    arg expected = .int, actual = .int, label = .string
+    if actual = expected then return 0
+    say "FAIL:" label "expected" expected "got" actual
+    return 1

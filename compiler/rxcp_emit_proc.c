@@ -26,12 +26,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 
 static int node_is_inside_imported_file(ASTNode *node) {
     while (node) {
@@ -42,12 +42,76 @@ static int node_is_inside_imported_file(ASTNode *node) {
     return 0;
 }
 
+static int node_is_taskwork_factory(ASTNode *node) {
+    ASTNode *class_node;
+    char *class_name;
+    int result;
+
+    if (!node || node->node_type != FACTORY ||
+        !(class_node = node->parent) ||
+        class_node->node_type != CLASS_DEF ||
+        !class_node->symbolNode || !class_node->symbolNode->symbol) {
+        return 0;
+    }
+    class_name = sym_frnm(class_node->symbolNode->symbol);
+    if (!class_name) return 0;
+    result = symbol_name_assignable_to(
+            node->context, class_name, "concurrency.taskwork");
+    free(class_name);
+    return result;
+}
+
+static int node_is_taskwork_run_method(ASTNode *node) {
+    ASTNode *class_node;
+    char *class_name;
+    char *method_name;
+    int result;
+
+    if (!node || node->node_type != METHOD ||
+        !(class_node = node->parent) ||
+        class_node->node_type != CLASS_DEF ||
+        !class_node->symbolNode || !class_node->symbolNode->symbol ||
+        !node->symbolNode || !node->symbolNode->symbol) {
+        return 0;
+    }
+    method_name = sym_frnm(node->symbolNode->symbol);
+    if (!method_name || strlen(method_name) < sizeof(".run") - 1u ||
+        strcmp(method_name + strlen(method_name) - (sizeof(".run") - 1u),
+               ".run") != 0) {
+        free(method_name);
+        return 0;
+    }
+    free(method_name);
+
+    class_name = sym_frnm(class_node->symbolNode->symbol);
+    if (!class_name) return 0;
+    result = symbol_name_assignable_to(
+            node->context, class_name, "concurrency.taskwork");
+    free(class_name);
+    return result;
+}
+
 static int node_is_runtime_callable_reference(ASTNode *node) {
     if (!node) return 0;
     return node->node_type == FUNCTION ||
            node->node_type == MEMBER_CALL ||
            node->node_type == FACTORY_CALL ||
            node->node_type == FUNC_SYMBOL;
+}
+
+static int numeric_context_can_use_combined_setup(const numeric_context *context) {
+    if (!context) return 0;
+
+    /* NUMSCI/NUMENG have a historical digits >= 5 contract, while the
+       individual setter accepts every compiler-valid positive value. */
+    return context->digits >= 5 &&
+           context->fuzz == 0 &&
+           (context->form == NUMERIC_FORM_SCIENTIFIC ||
+            context->form == NUMERIC_FORM_ENGINEERING) &&
+           (context->casetype == CASE_LOWER ||
+            context->casetype == CASE_UPPER) &&
+           (context->standard == NUMERIC_STANDARD_COMMON ||
+            context->standard == NUMERIC_STANDARD_CLASSIC);
 }
 
 static int imported_declaration_has_runtime_reference(ASTNode *node) {
@@ -68,13 +132,124 @@ static int imported_declaration_has_runtime_reference(ASTNode *node) {
     return 0;
 }
 
+static int class_attribute_register_index(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return -1;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+static int class_attribute_count(ASTNode *class_node) {
+    int n_attrs = 0;
+    Scope *class_scope = 0;
+
+    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+        class_scope = class_node->symbolNode->symbol->defines_scope;
+    }
+    if (!class_scope && class_node) class_scope = class_node->scope;
+
+    if (class_scope) {
+        Symbol **symbols = scp_syms(class_scope);
+        if (symbols) {
+            int i;
+
+            for (i = 0; symbols[i]; i++) {
+                Symbol *s = symbols[i];
+                int index;
+
+                if (s->symbol_type != VARIABLE_SYMBOL) continue;
+                index = class_attribute_register_index(s);
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= n_attrs) n_attrs = index + 1;
+                else if (index == -1) n_attrs++;
+            }
+            free(symbols);
+            return n_attrs;
+        }
+    }
+
+    if (class_node) {
+        ASTNode *attr = class_node->child;
+        while (attr) {
+            if (attr->node_type == DEFINE) {
+                int index = -1;
+                ASTNode *nr = ast_chld(attr, NODE_REGISTER, 0);
+                if (nr) {
+                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                    if (idx) index = node_to_integer(idx);
+                    else if (nr->int_value) index = (int)nr->int_value;
+                    else if (nr->child && nr->child->token) index = (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= n_attrs) n_attrs = index + 1;
+                else if (index == -1) n_attrs++;
+            }
+            attr = attr->sibling;
+        }
+    }
+
+    return n_attrs;
+}
+
+static void emit_constant_alias(Symbol *symbol, void *payload) {
+    OutputFragment *output = (OutputFragment *)payload;
+    ConstantAlias *alias;
+    char *prefix;
+
+    if (!symbol || !output) return;
+    alias = symbol->constant_alias;
+    if (!alias || !alias->used || alias->emitted) return;
+    if (alias->type != TP_BINARY) return;
+
+    prefix = mprintf(".const %s binary ", alias->name);
+    output_append_text(output, prefix);
+    output_append_text(output, alias->value);
+    output_append_text(output, "\n");
+    free(prefix);
+    alias->emitted = 1;
+}
+
+static void emit_constant_aliases(Scope *scope, OutputFragment *output) {
+    size_t i;
+
+    if (!scope || !output) return;
+    scp_4all(scope, emit_constant_alias, output);
+    for (i = 0; i < scp_noch(scope); i++) {
+        emit_constant_aliases(scp_chd(scope, i), output);
+    }
+}
+
 void emit_proc(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
     char *temp1;
     char *comment_meta;
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -89,11 +264,9 @@ void emit_proc(ASTNode *node, void *pl) {
         {
             char *buf = mprintf("/*\n"
                                 " * SOURCE                 : %s\n"
-                                " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                 " */\n"
                                 "\n",
-                                payload->context->file_name,
-                                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+                                payload->context->file_name);
 
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
@@ -126,6 +299,11 @@ void emit_proc(ASTNode *node, void *pl) {
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
             free(buf);
+
+            /* Explicit binary language constants are module-scoped RXAS
+             * aliases. Operand emission has already marked the aliases that
+             * survived folding, so write each payload exactly once here. */
+            emit_constant_aliases(node->scope, node->output);
 
             /* Add exposed global variables */
             add_exposed_global_variable(node);
@@ -175,7 +353,9 @@ void emit_proc(ASTNode *node, void *pl) {
                 /* A declaration - external */
                 /* Imported declarations are consumer snapshots; emit only callables the generated RXAS still references. */
                 if (node_is_inside_imported_file(node) &&
-                    !imported_declaration_has_runtime_reference(node)) {
+                    !imported_declaration_has_runtime_reference(node) &&
+                    !node_is_taskwork_factory(node) &&
+                    !node_is_taskwork_run_method(node)) {
                     if (!node->output) node->output = output_f();
                     break;
                 }
@@ -202,6 +382,54 @@ void emit_proc(ASTNode *node, void *pl) {
                               proc_label,
                               args
                 );
+                {
+                    imported_func *imported = 0;
+                    if (src_fqfu(payload->context, 0, proc_fqn, &imported) &&
+                        imported && imported->provider_id &&
+                        *imported->provider_id) {
+                        char *with_provider = mprintf(
+                                "%s   .meta \"%s\"=\".provider\" \"%s\"\n",
+                                buf, proc_fqn, imported->provider_id);
+                        if (with_provider) {
+                            free(buf);
+                            buf = with_provider;
+                        }
+                    }
+                    if (payload->context->emit_autoload_hints && imported &&
+                        imported->autoload_stem && *imported->autoload_stem) {
+                        char *with_autoload = mprintf(
+                                "%s   .meta \"%s\"=\".autoload\" \"%s\"\n",
+                                buf, proc_fqn, imported->autoload_stem);
+                        if (with_autoload) {
+                            free(buf);
+                            buf = with_autoload;
+                        }
+                    }
+                }
+                if (node->is_task_callable || node_is_taskwork_factory(node)) {
+                    char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
+                    const char *task_option = node_is_taskwork_factory(node)
+                            ? ".task3"
+                            : (node->node_type == METHOD ? ".task2" : ".task1");
+                    char *with_task = placeholder
+                        ? mprintf("%s   .meta \"%s\"=\"%s\" %s\n",
+                                  buf, proc_fqn, task_option, placeholder)
+                        : 0;
+                    free(placeholder);
+                    if (with_task) {
+                        free(buf);
+                        buf = with_task;
+                    }
+                }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
+                    }
+                }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -267,6 +495,30 @@ void emit_proc(ASTNode *node, void *pl) {
                     free(buf);
                     buf = with_payload;
                 }
+                if (node->is_task_callable || node_is_taskwork_factory(node)) {
+                    char *placeholder = rxcp_task_placeholder_hex(proc_fqn);
+                    const char *task_option = node_is_taskwork_factory(node)
+                            ? ".task3"
+                            : (node->node_type == METHOD ? ".task2" : ".task1");
+                    char *with_task = placeholder
+                        ? mprintf("%s   .meta \"%s\"=\"%s\" %s\n",
+                                  buf, proc_fqn, task_option, placeholder)
+                        : 0;
+                    free(placeholder);
+                    if (with_task) {
+                        free(buf);
+                        buf = with_task;
+                    }
+                }
+                if (node->is_initializer) {
+                    char *with_initializer = mprintf(
+                            "%s   .meta \"%s\"=\".initializer\" \".void\" %s() \"\"\n",
+                            buf, proc_fqn, proc_label);
+                    if (with_initializer) {
+                        free(buf);
+                        buf = with_initializer;
+                    }
+                }
                 if (node->output) output_prepend_text(buf, node->output);
                 else node->output = output_fs(buf);
                 free(type);
@@ -289,41 +541,12 @@ void emit_proc(ASTNode *node, void *pl) {
 
                 /* Level B Class Preamble */
                 if (node->node_type == FACTORY) {
-                    int n_attrs = 0;
+                    int n_attrs;
                     char *class_fq = 0;
                     ASTNode *cls = node->parent;
                     /* Ensure we are looking at the CLASS_DEF */
                     while (cls && cls->node_type != CLASS_DEF) cls = cls->parent;
-                    if (cls) {
-                        ASTNode *attr = cls->child;
-                        while (attr) {
-                            if (attr->node_type == DEFINE) {
-                                int index = -1;
-                                ASTNode *nr = ast_chld(attr, NODE_REGISTER, 0);
-                                if (nr) {
-                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                    if (idx) {
-                                        /* Basic inline node_to_integer logic */
-                                        char *s = idx->node_string;
-                                        size_t l = idx->node_string_length;
-                                        if (s && l) {
-                                            while (l && (*s == '.' || *s == ' ')) { s++; l--; }
-                                            if (l) {
-                                                char *buffer = malloc(l + 1);
-                                                memcpy(buffer, s, l); buffer[l] = 0;
-                                                index = atoi(buffer);
-                                                free(buffer);
-                                            }
-                                        }
-                                    }
-                                    else if (nr->int_value) index = (int)nr->int_value;
-                                }
-                                if (index >= n_attrs) n_attrs = index + 1;
-                                else if (index == -1) n_attrs++;
-                            }
-                            attr = attr->sibling;
-                        }
-                    }
+                    n_attrs = class_attribute_count(cls);
 
                     /* Assign r_this from symbol §factory */
                     ASTNode star_node;
@@ -351,34 +574,50 @@ void emit_proc(ASTNode *node, void *pl) {
                     free(temp1);
                 }
 
-                /* If numeric options have non-inherited values, set them */
-                if (node->scope->num_context.digits > -1) {
-                    temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
+                /* Use the existing complete fuzz-zero setup only when every
+                   effective field is a compatible compile-time constant. */
+                if (numeric_context_can_use_combined_setup(&node->scope->num_context)) {
+                    const char *instruction =
+                            node->scope->num_context.form == NUMERIC_FORM_SCIENTIFIC
+                            ? "numsci" : "numeng";
+                    temp1 = mprintf("   %s %d,%d,%d\n",
+                                    instruction,
+                                    node->scope->num_context.digits,
+                                    node->scope->num_context.casetype,
+                                    node->scope->num_context.standard);
                     output_append_text(node->output, temp1);
                     free(temp1);
                 }
-                if (node->scope->num_context.fuzz > -1) {
-                    temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.form > 0) {
-                    /* 1 = SCIENTIFIC, 2 = ENGINEERING */
-                    temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.casetype > 0) {
-                    /* 1 = LOWER, 2 = UPPER */
-                    temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.standard > 0) {
-                    /* 1 = COMMON, 2 = CLASSIC[REXX] */
-                    temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
+                else {
+                    /* If numeric options have non-inherited values, set them. */
+                    if (node->scope->num_context.digits > -1) {
+                        temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.fuzz > -1) {
+                        temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.form > 0) {
+                        /* 1 = SCIENTIFIC, 2 = ENGINEERING */
+                        temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.casetype > 0) {
+                        /* 1 = LOWER, 2 = UPPER */
+                        temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.standard > 0) {
+                        /* 1 = COMMON, 2 = CLASSIC[REXX] */
+                        temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
                 }
 
                 n = child2;

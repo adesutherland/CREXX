@@ -1,0 +1,181 @@
+sample_id,stream,line_number,text
+timing-Sieve-sieve-rxbvm-final-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-1,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-2,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-3,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-4,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-5,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-6,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-7,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-8,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-9,stdout,2,PASS: AWFY Sieve
+timing-Sieve-sieve-rxbvm-final-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=5500 result=669
+timing-Sieve-sieve-rxbvm-final-recorded-10,stdout,2,PASS: AWFY Sieve
+timing-Base64-base64-rxvm-final-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-final-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-final-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-final-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=2500 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-final-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-1,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-1,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-1,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-1,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-2,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-2,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-2,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-2,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-3,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-3,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-3,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-3,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-4,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-4,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-4,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-4,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-5,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-5,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-5,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-5,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-6,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-6,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-6,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-6,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-7,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-7,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-7,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-7,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-8,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-8,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-8,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-8,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-9,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-9,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-9,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-9,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-10,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxbvm-final-recorded-10,stdout,2,PASS: AWFY Mandelbrot
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-10,stdout,1,benchmark=awfy_mandelbrot size=500 result=191
+timing-Mandelbrot-mandelbrot-rxvm-final-recorded-10,stdout,2,PASS: AWFY Mandelbrot
+timing-List-list-rxvm-final-recorded-1,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-1,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-1,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-1,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-2,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-2,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-2,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-3,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-3,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-3,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-3,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-4,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-4,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-4,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-4,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-5,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-5,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-5,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-5,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-6,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-6,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-6,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-6,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-7,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-7,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-7,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-7,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-8,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-8,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-8,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-8,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-9,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-9,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-9,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-9,stdout,2,PASS: AWFY List
+timing-List-list-rxbvm-final-recorded-10,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxbvm-final-recorded-10,stdout,2,PASS: AWFY List
+timing-List-list-rxvm-final-recorded-10,stdout,1,benchmark=awfy_list repetitions=100 result=10
+timing-List-list-rxvm-final-recorded-10,stdout,2,PASS: AWFY List
+timing-JSON-json-rxvm-final-recorded-1,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-1,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-1,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-1,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-2,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-2,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-2,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-2,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-3,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-3,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-3,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-3,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-4,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-4,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-4,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-4,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-5,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-5,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-5,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-5,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-6,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-6,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-6,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-6,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-7,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-7,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-7,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-7,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-8,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-8,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-8,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-8,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-9,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-9,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-9,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-9,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxbvm-final-recorded-10,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxbvm-final-recorded-10,stdout,2,PASS: JSON Parser
+timing-JSON-json-rxvm-final-recorded-10,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-rxvm-final-recorded-10,stdout,2,PASS: JSON Parser

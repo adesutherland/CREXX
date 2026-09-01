@@ -1,0 +1,2 @@
+iterate=3 leave=1 outer=3 inner=2
+PASS: structured exits clean crossed loops

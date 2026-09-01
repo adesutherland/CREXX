@@ -1,0 +1,13 @@
+options levelb
+
+import arrayformatdemo
+
+main: procedure
+  lines = .string[]
+  do i = 1 to 11
+    lines[i] = "Line " || i
+  end
+
+  pprint lines,3,9
+  say "PASS: pprint exit example"
+return

@@ -5,8 +5,9 @@ case "$(uname -s 2>/dev/null)" in
     MINGW*|MSYS*|CYGWIN*) socket_libs=-lws2_32 ;;
 esac
 gcc  \
-    -lrxvml -lavl_tree -lplatform -lm ${socket_libs} \
+    -lrxvml -lavl_tree -lrxbin -lplatform -lm ${socket_libs} \
     -L$thisdir/interpreter \
     -L$thisdir/avl_tree \
+    -L$thisdir/binutils \
     -L$thisdir/platform \
     ${filename}

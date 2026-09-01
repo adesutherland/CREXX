@@ -1,0 +1,113 @@
+diff --git a/compiler/rxcp_emit_flow.c b/compiler/rxcp_emit_flow.c
+index 19c5c77fe..fcbbaf34c 100644
+--- a/compiler/rxcp_emit_flow.c
++++ b/compiler/rxcp_emit_flow.c
+@@ -203,12 +203,55 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
+ 
+ static int flow_symbol_owns_scope_lifetime(Symbol *symbol) {
+     if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+-    if (symbol->exposed || symbol->is_arg || symbol->is_this || symbol->is_factory) return 0;
++    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
++        symbol->is_this || symbol->is_factory) return 0;
+     if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
+     if (symbol->name && strncmp(symbol->name, "__inline", 8) == 0) return 0;
+     return 1;
+ }
+ 
++static int flow_scope_is_generated_lifetime_boundary(Scope *scope) {
++    Scope *current;
++
++    for (current = scope; current; current = current->parent) {
++        if (current->type != SCOPE_PROCEDURE) continue;
++        if (!current->name) return 0;
++        return strncmp(current->name, "__inline", 8) == 0 ||
++               strncmp(current->name, "__rxtrace", 9) == 0;
++    }
++    return 0;
++}
++
++static int flow_symbol_is_reference_lifetime_free_scalar(Symbol *symbol) {
++    size_t i;
++
++    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
++    if (!symbol->scope || symbol->scope->type != SCOPE_LOCAL) return 0;
++    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
++        symbol->is_this || symbol->is_factory) return 0;
++    if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
++    if (symbol->has_reference_target || symbol->value_dims != 0) return 0;
++    if (flow_scope_is_generated_lifetime_boundary(symbol->scope)) return 0;
++    if (symbol->name && (strncmp(symbol->name, "__inline", 8) == 0 ||
++                         strncmp(symbol->name, "__rxtrace", 9) == 0)) return 0;
++
++    /* A dereference local is an alias even when its resolved value type is scalar. */
++    for (i = 0; i < scp_dereference_symbol_count(symbol->scope); i++) {
++        if (scp_dereference_symbol_at(symbol->scope, i) == symbol) return 0;
++    }
++
++    switch (symbol->type) {
++        case TP_BOOLEAN:
++        case TP_INTEGER:
++        case TP_FLOAT:
++        case TP_DECIMAL:
++        case TP_STRING:
++            return 1;
++        default:
++            return 0;
++    }
++}
++
+ void emit_scope_reference_lifetimes(ASTNode *node) {
+     Symbol **symbols;
+     size_t i;
+@@ -223,6 +266,7 @@ void emit_scope_reference_lifetimes(ASTNode *node) {
+         char *line;
+ 
+         if (!flow_symbol_owns_scope_lifetime(symbol)) continue;
++        if (flow_symbol_is_reference_lifetime_free_scalar(symbol)) continue;
+ 
+         line = mprintf("   endlife %c%d\n", symbol->register_type, symbol->register_num);
+         output_append_text(node->output, line);
+diff --git a/compiler/tests/CMakeLists.txt b/compiler/tests/CMakeLists.txt
+index ed9c59016..97cf95faa 100644
+--- a/compiler/tests/CMakeLists.txt
++++ b/compiler/tests/CMakeLists.txt
+@@ -725,11 +725,36 @@ foreach(_mode IN ITEMS noopt)
+            "list(LENGTH left_meta_entries left_meta_count)\n"
+            "if(NOT left_meta_count EQUAL 2)\n"
+            "  message(FATAL_ERROR \"Expected definition and clear metadata records for left scoped local in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+-           "endif()\n"
+-           "if(NOT rxas_${_mode}_out MATCHES \"endlife r${RXAS_DIAG_DOLLAR}{left_reg}\")\n"
+-           "  message(FATAL_ERROR \"Scoped local reference lifetime cleanup missing before register reuse in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+            "endif()\n")
+ endforeach()
++string(APPEND RXC_SCOPED_REGISTER_REUSE_CONTENT
++       "function(assert_scope_lifetime symbol reg expected)\n"
++       "  set(definition \".meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"=\\\"b\\\"\")\n"
++       "  set(clear \"\\n   .meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"\\n\")\n"
++       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{definition}\" scope_start)\n"
++       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{clear}\" scope_end)\n"
++       "  if(scope_start EQUAL -1 OR scope_end EQUAL -1 OR NOT scope_end GREATER scope_start)\n"
++       "    message(FATAL_ERROR \"Could not isolate scoped lifetime block for ${RXAS_DIAG_DOLLAR}{symbol}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\")\n"
++       "  endif()\n"
++       "  math(EXPR scope_length \"${RXAS_DIAG_DOLLAR}{scope_end} - ${RXAS_DIAG_DOLLAR}{scope_start}\")\n"
++       "  string(SUBSTRING \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" ${RXAS_DIAG_DOLLAR}{scope_start} ${RXAS_DIAG_DOLLAR}{scope_length} scope_block)\n"
++       "  string(FIND \"${RXAS_DIAG_DOLLAR}{scope_block}\" \"endlife r${RXAS_DIAG_DOLLAR}{reg}\" endlife_pos)\n"
++       "  if(expected STREQUAL \"absent\" AND NOT endlife_pos EQUAL -1)\n"
++       "    message(FATAL_ERROR \"Reference-lifetime-free scalar ${RXAS_DIAG_DOLLAR}{symbol} retained endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
++       "  elseif(expected STREQUAL \"present\" AND endlife_pos EQUAL -1)\n"
++       "    message(FATAL_ERROR \"Reference-capable scoped local ${RXAS_DIAG_DOLLAR}{symbol} lost endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
++       "  endif()\n"
++       "endfunction()\n"
++       "assert_scope_lifetime(left ${RXAS_DIAG_DOLLAR}{left_reg} absent)\n"
++       "assert_scope_lifetime(right ${RXAS_DIAG_DOLLAR}{right_reg} absent)\n"
++       "assert_scope_lifetime(object_left ${RXAS_DIAG_DOLLAR}{object_left_reg} present)\n"
++       "assert_scope_lifetime(object_right ${RXAS_DIAG_DOLLAR}{object_right_reg} present)\n"
++       "assert_scope_lifetime(reference_left ${RXAS_DIAG_DOLLAR}{reference_left_reg} present)\n"
++       "assert_scope_lifetime(reference_right ${RXAS_DIAG_DOLLAR}{reference_right_reg} present)\n"
++       "assert_scope_lifetime(binary_left ${RXAS_DIAG_DOLLAR}{binary_left_reg} present)\n"
++       "assert_scope_lifetime(binary_right ${RXAS_DIAG_DOLLAR}{binary_right_reg} present)\n"
++       "assert_scope_lifetime(array_left ${RXAS_DIAG_DOLLAR}{array_left_reg} present)\n"
++       "assert_scope_lifetime(array_right ${RXAS_DIAG_DOLLAR}{array_right_reg} present)\n")
+ file(GENERATE OUTPUT "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}" CONTENT "${RXC_SCOPED_REGISTER_REUSE_CONTENT}")
+ 
+ add_test(NAME rxc_scoped_register_reuse

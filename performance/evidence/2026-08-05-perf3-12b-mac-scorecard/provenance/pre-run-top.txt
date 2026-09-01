@@ -1,0 +1,54 @@
+Processes: 784 total, 2 running, 782 sleeping, 4414 threads
+2026/08/05 08:24:31
+Load Avg: 3.23, 2.99, 2.12
+CPU usage: 5.28% user, 11.38% sys, 83.33% idle
+SharedLibs: 768M resident, 140M data, 107M linkedit.
+MemRegions: 258111 total, 7981M resident, 379M private, 1219M shared.
+PhysMem: 22G used (2968M wired, 3351M compressor), 1649M unused.
+VM: 324T vsize, 6144M framework vsize, 268261(0) swapins, 593642(0) swapouts.
+Networks: packets: 376089473/71G in, 361367755/37G out.
+Disks: 146634301/1327G read, 54894726/1199G written.
+
+PID    %CPU COMMAND
+99817  0.0  node_repl
+99070  0.0  osanalyticshelpe
+98927  0.0  node_repl
+98323  0.0  node_repl
+98230  0.0  MTLCompilerServi
+98044  0.0  jetpackassetd
+97126  0.0  node_repl
+96846  0.0  node_repl
+96816  0.0  intelligentrouti
+96771  0.0  node_repl
+96709  0.0  node_repl
+96469  0.0  node_repl
+96168  0.0  node_repl
+96111  0.0  sysextd
+96110  0.0  nesessionmanager
+Processes: 785 total, 2 running, 783 sleeping, 4431 threads
+2026/08/05 08:24:33
+Load Avg: 3.21, 2.99, 2.13
+CPU usage: 5.74% user, 4.50% sys, 89.75% idle
+SharedLibs: 768M resident, 140M data, 107M linkedit.
+MemRegions: 46 total, 1408K resident, 379M private, 1219M shared.
+PhysMem: 22G used (2955M wired, 3351M compressor), 1637M unused.
+VM: 324T vsize, 6144M framework vsize, 268261(0) swapins, 593642(0) swapouts.
+Networks: packets: 376089533/71G in, 361367781/37G out.
+Disks: 146634348/1327G read, 54894733/1199G written.
+
+PID    %CPU COMMAND
+598    40.1 WindowServer
+1088   12.3 Codex (Service)
+0      8.4  kernel_task
+1137   7.1  Codex (Renderer)
+53594  4.6  top
+1074   3.0  ChatGPT
+25390  2.7  coreduetd
+1113   1.6  codex
+576    0.7  dasd
+1535   0.5  Finder
+1135   0.5  Codex (Renderer)
+1      0.3  launchd
+747    0.2  AppleCentauriAlp
+565    0.2  opendirectoryd
+600    0.2  cfprefsd

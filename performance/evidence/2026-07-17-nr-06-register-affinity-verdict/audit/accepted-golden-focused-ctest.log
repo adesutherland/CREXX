@@ -1,0 +1,42 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  50: address_expose_opt
+      Start  90: 13_stems_opt
+      Start  92: repro_multi_tail_stems_opt
+      Start 205: arg_semantics_object_opt
+      Start 261: inline_test_named_factory_selector_opt
+      Start 271: inline_test_ref_vararg_opt
+      Start 273: inline_test_ref_vararg_runtime_opt
+      Start 336: nr06_codegen_contract
+      Start 651: inline_test_ref_vararg_runtime_run_opt
+      Start 382: arg_semantics_object_run_opt
+      Start 424: repro_multi_tail_stems_run_opt
+      Start 422: 13_stems_run_opt
+      Start 649: inline_test_ref_vararg_run_opt
+      Start 633: inline_test_named_factory_selector_run_opt
+      Start 419: nr06_call_window_scalar_run_noopt
+      Start 420: nr06_call_window_scalar_run_opt
+ 1/16 Test  #92: repro_multi_tail_stems_opt ...................   Passed    1.84 sec
+ 2/16 Test #205: arg_semantics_object_opt .....................   Passed    1.84 sec
+ 3/16 Test #273: inline_test_ref_vararg_runtime_opt ...........   Passed    1.88 sec
+ 4/16 Test  #90: 13_stems_opt .................................   Passed    1.91 sec
+ 5/16 Test #261: inline_test_named_factory_selector_opt .......   Passed    1.93 sec
+ 6/16 Test  #50: address_expose_opt ...........................   Passed    1.94 sec
+ 7/16 Test #271: inline_test_ref_vararg_opt ...................   Passed    1.96 sec
+ 8/16 Test #424: repro_multi_tail_stems_run_opt ...............   Passed    2.03 sec
+ 9/16 Test #633: inline_test_named_factory_selector_run_opt ...   Passed    2.02 sec
+10/16 Test #382: arg_semantics_object_run_opt .................   Passed    2.11 sec
+11/16 Test #422: 13_stems_run_opt .............................   Passed    2.11 sec
+12/16 Test #649: inline_test_ref_vararg_run_opt ...............   Passed    2.11 sec
+13/16 Test #651: inline_test_ref_vararg_runtime_run_opt .......   Passed    2.13 sec
+14/16 Test #420: nr06_call_window_scalar_run_opt ..............   Passed    2.12 sec
+15/16 Test #419: nr06_call_window_scalar_run_noopt ............   Passed    2.21 sec
+16/16 Test #336: nr06_codegen_contract ........................   Passed    2.68 sec
+
+100% tests passed, 0 tests failed out of 16
+
+Label Time Summary:
+compiler       =   2.68 sec*proc (1 test)
+linked_opt     =  14.63 sec*proc (7 tests)
+performance    =   2.68 sec*proc (1 test)
+
+Total Test time (real) =   2.71 sec

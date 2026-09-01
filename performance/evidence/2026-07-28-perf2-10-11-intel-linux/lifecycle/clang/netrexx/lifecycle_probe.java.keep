@@ -1,0 +1,18 @@
+/* Generated from 'lifecycle_probe.nrx' 28 Jul 2026 22:35:10 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Sourcedir Trace2 Verbose3 */
+
+
+public class lifecycle_probe{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx((byte)20);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(6765);private static final netrexx.lang.Rexx $03=netrexx.lang.Rexx.toRexx("result=");private static final java.lang.String $0="lifecycle_probe.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx left;netrexx.lang.Rexx right;netrexx.lang.Rexx index=null;netrexx.lang.Rexx next=null;
+left=new netrexx.lang.Rexx((byte)0);
+right=new netrexx.lang.Rexx((byte)1);
+{index=new netrexx.lang.Rexx((byte)1);index:for(;index.OpLtEq(null,$01);index=index.OpAdd(null,new netrexx.lang.Rexx(1))){
+next=left.OpAdd(null,right);
+left=right;
+right=next;
+}}/*index*/
+if (left.OpNotEq(null,$02)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected 6765, got").OpCcblank(null,left));
+{System.exit(1);return;}
+}
+netrexx.lang.RexxIO.Say($03.OpCc(null,left));
+netrexx.lang.RexxIO.Say("PASS: Lifecycle Probe NetRexx decimal");return;}private lifecycle_probe(){return;}}

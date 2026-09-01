@@ -22,17 +22,47 @@
  * SOFTWARE.
  */
 
-/* rexx wordlength finds length of certain word */
+/**
+ * Return the character length of one word.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/wordlength.md
+ */
 options levelb
 
 namespace rxfnsb expose wordlength
 
-wordlength: procedure = .string
-  arg expose string = .string, wordnum = .int
-wlen=0
-wordstr=word(string,wordnum)
-if wrdstr="" then return 0
-assembler strlen wlen,wordstr
-return wlen
+/**
+ * Return the Unicode character length of a positive one-based word.
+ *
+ * @param string source text
+ * @param wordnum positive one-based word number
+ * @return word length, or zero when absent
+ * @signal INVALID_ARGUMENTS non-positive word number
+ */
+wordlength: procedure = .int
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "WORDLENGTH number must be positive"
 
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return 0
 
+  scan = 0
+  current_word = 0
+  word_start = 0
+  word_end = 0
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return 0
+    current_word = current_word + 1
+    assembler fndblnk word_end,string,word_start
+    if current_word = wordnum then do
+      if word_end < 0 then word_end = string_length
+      return word_end - word_start
+    end
+    if word_end < 0 then return 0
+    scan = word_end
+  end
+  return 0

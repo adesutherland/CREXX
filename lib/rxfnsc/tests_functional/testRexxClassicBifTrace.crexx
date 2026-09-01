@@ -1,0 +1,85 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbiftrace
+import rexxvalue
+import rexxpool
+
+errors = 0
+pool = .RexxVariablePool()
+
+errors = errors + check_trace(reference pool, "N", 0, "")
+errors = errors + check_trace(reference pool, "N", 1, "results")
+errors = errors + check_trace(reference pool, "R", 0, "")
+errors = errors + check_trace(reference pool, "R", 1, "?i")
+errors = errors + check_trace(reference pool, "?I", 0, "")
+errors = errors + check_trace(reference pool, "?I", 1, "??commands")
+errors = errors + check_trace(reference pool, "?C", 0, "")
+errors = errors + check_trace(reference pool, "?C", 1, "")
+errors = errors + check_trace(reference pool, "N", 1, "???")
+errors = errors + check_trace(reference pool, "?N", 1, "off")
+errors = errors + check_trace(reference pool, "O", 0, "")
+
+call pool.setTraceOption("?R")
+child = .RexxVariablePool()
+call child.inheritTraceState(reference pool)
+errors = errors + check_trace(reference child, "?R", 0, "")
+errors = errors + check_trace(reference child, "?R", 1, "failure")
+errors = errors + check_trace(reference pool, "?R", 0, "")
+
+errors = errors + check_omitted(reference pool)
+errors = errors + check_error(reference pool, "RXC-LC-40.4", 2, "R")
+errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, "scan")
+errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, "!R")
+errors = errors + check_error(reference pool, "RXC-LC-40.28", 1, " R")
+
+if errors = 0 then say "PASS: Level C TRACE BIF"
+return errors <> 0
+
+check_trace: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, supplied = .boolean, option = .string
+  args = .RexxValue[]
+  exists = .int[]
+  if supplied then do
+    args[1] = .RexxValue(option)
+    exists[1] = 1
+  end
+  context = .RexxBifCallContext("TRACE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_trace(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: TRACE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted: procedure = .int
+  arg pool_ref = reference .RexxVariablePool
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("R")
+  exists[1] = 0
+  context = .RexxBifCallContext("TRACE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_trace(reference context)
+  if \context.hasError() & result.asString() = "?R" then return 0
+  say "FAIL: TRACE omitted expected ?R got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected_code = .string, count = .int, value = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue(value)
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("TRACE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_trace(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: TRACE expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

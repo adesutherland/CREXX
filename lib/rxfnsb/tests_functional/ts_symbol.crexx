@@ -1,52 +1,30 @@
-/* rexx */
 options levelb
 import rxfnsb
 
-errors=0
-mary=10
-bert="Fred"
-J=3
-/* following: Drop A.3; J=3 */
-if  SYMBOL('J') <> 'VAR' then do /* -> 'VAR' */
-  errors=errors+1
-  say 'SYMBOL failed in test      1'
-end
+errors = 0
+mary = 10
+bert = "Fred"
+j = 3
 
-if SYMBOL(J) <> 'LIT' then do /* -> 'LIT' /\* has tested "3" *\/ */
-  errors=errors+1
-  say 'SYMBOL failed in test      2'
-end
+errors = errors + check(symbol("J") = "VAR", "named integer variable")
+errors = errors + check(symbol(j) = "LIT", "variable value is a literal symbol")
+errors = errors + check(symbol(2) = "LIT", "numeric literal")
+errors = errors + check(symbol("mary") = "VAR", "lowercase integer variable")
+errors = errors + check(symbol("BERT") = "VAR", "uppercase string variable")
+errors = errors + check(symbol("cccc") = "LIT", "unused valid name")
+errors = errors + check(symbol("dress") = "LIT", "keyword suffix is not reserved")
+errors = errors + check(symbol("IF") = "BAD", "Level B reserved word")
+errors = errors + check(symbol("0.23.4") = "LIT", "Level B dotted constant")
+errors = errors + check(symbol("a_b") = "LIT", "underscore name")
+errors = errors + check(symbol("") = "BAD", "empty name")
+errors = errors + check(symbol("cc*cc") = "BAD", "invalid character")
+errors = errors + check(symbol("has blank") = "BAD", "embedded blank")
 
-/* if SYMBOL('a.j') /\* -> 'LIT' /\\* has tested A.3 *\\/ *\/ */
+if errors = 0 then say "PASS: Level B symbol"
+return errors <> 0
 
-if SYMBOL(2) <> 'LIT' then do /* -> 'LIT' /\* a constant symbol *\/ */
-    errors=errors+1
-  say 'SYMBOL failed in test      3'
-end
-
-if SYMBOL('*') <> 'BAD' then do /* -> 'BAD' /\* not a valid symbol *\/ */
-  errors=errors+1
-  say 'SYMBOL failed in test      4'
-end
-
-if symbol('mary') <> 'VAR' then do
-  errors=errors+1
-  say 'SYMBOL failed in test      5'
-end
-
-if symbol('bert') <> 'VAR' then do 
-  errors=errors+1
-  say 'SYMBOL failed in test      6'
-end
-
-if symbol('cccc') <> 'LIT' then do
-  errors=errors+1
-  say 'SYMBOL failed in test      7'
-end
-
-if symbol('cc*cc') <> 'BAD' then do 
-    errors=errors+1
-  say 'SYMBOL failed in test      8'
-end
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL:" label
+  return 1

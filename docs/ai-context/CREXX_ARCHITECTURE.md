@@ -1,36 +1,51 @@
-# cREXX Architecture
+# cRexx Architecture
 
-`crexx` is a custom REXX-to-bytecode toolchain that translates Classic REXX semantics into an optimized bytecode format executed by a specialized VM. The process happens through four main binaries:
+`crexx` is a custom Rexx-to-bytecode toolchain that translates Classic Rexx semantics into an optimized bytecode format executed by a specialized VM. The core bytecode path happens through four main binaries:
+
 1. `rxc` - The Compiler
 2. `rxas` - The Assembler
 3. `rxlink` - The Linker
 4. `rxvm` - The Virtual Machine (Interpreter)
 
+`rxpp` is a first-class preprocessor component for `.rxpp` sources. It runs
+before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
+does not run RXPP internally.
+
 ## The Compilation Pipeline
 
-The pipeline of transforming REXX source code into executable bytecode is structured as follows:
+The pipeline of transforming Rexx source code into executable bytecode is structured as follows:
+
+0. **RXPP Preprocessor (optional)**
+   - Lives in the root `preprocessor/` component and builds the `rxpp` tool plus
+     its native `precomp` helper.
+   - Expands `.rxpp` macro/directive source into generated CREXX source.
+   - Emits `options ... srcmap` and raw `@` source-map markers by default so
+     `rxc` diagnostics and source-step metadata can point back to the original
+     `.rxpp` file. `##CFLAG nosrcmap` is the explicit legacy escape hatch for
+     plain generated CREXX.
 
 1. **re2c (Lexical Analyzer)**
-   - Used to generate the scanner/lexer from `.re` rules (e.g., `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
-   - Converts the raw REXX source text into a stream of discrete tokens (`Token` structs).
+   - Used to generate the scanner/lexer from `.re` rules (e.g.,  
+   `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
+   - Converts the raw Rexx source text into a stream of discrete tokens (`Token` structs).
 
 2. **Lemon (Parser Generator)**
    - The token stream is parsed using a grammar defined in `Lemon` (e.g., `compiler/rxcpbgmr.y` and `compiler/rxcpopgr.y`).
-   - Lemon applies the grammar rules to recognize the syntactic structures of the REXX language and translates them into an Abstract Syntax Tree (AST).
+   - Lemon applies the grammar rules to recognize the syntactic structures of the Rexx language and translates them into an Abstract Syntax Tree (AST).
    - `DO ... END` is overloaded: statement-leading `DO` remains the normal grouped/loop form, while expression-position `DO ... END` becomes `BLOCK_EXPR`. The grammar resolves the command-start ambiguity by routing top-level command expressions through a restricted `command_expression` spine while leaving the general expression grammar free to accept block expressions.
 
 3. **AST (Abstract Syntax Tree) & Compiler Exits**
    - The primary data structure bridging the parser and the code emitter.
    - Built using a hierarchical structure of `ASTNode` C structs that capture operations, scopes, typing, and tree associations.
-   - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose REXX comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
+   - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose Rexx comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
    - String comparison operators (`==`, `>>`, `<<`, `>>=`, `<<=`) are carried as a distinct `OP_COMPARE_S_*` family. During type validation both operands are retargeted to `TP_STRING`, but the optimiser still preserves intrinsic numeric constant types long enough to stringify from value rather than source spelling. That keeps folded behaviour aligned with runtime cases like `01 == 1`.
    - Inline cloning must preserve the callee scope's numeric context when it builds replacement scopes. Without that, folded float/decimal string comparisons can silently drift from runtime behaviour under local `NUMERIC DIGITS` / `FORM` / `CASE` settings.
    - Expression-level control flow is supported through `BLOCK_EXPR` (`DO ... END` used as an expression) and `LEAVE_WITH` (`LEAVE WITH expr`). The `association` pointer links each `LEAVE_WITH` back to its owning `BLOCK_EXPR`, similar to how loop `LEAVE` / `ITERATE` link to `DO`.
    - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints. Compiler-exit dispatch is keyed by the first source token in the instruction, not by the first marshalled AST node; this matters for command-position member calls such as `x.add(...)`, whose AST node token is the member name but whose command head is `x`. A non-implicit exit that returns `REJECT` falls through to the certified implicit ADDRESS exit; `ERROR` remains a compiler error.
-   - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret classic `arg()` / `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
+   - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
    - **Exit Fragment Scope Lifecycle**: replacement fragments from exits are parsed and structurally normalized before grafting, but any new lexical block scopes created by structured replacements are finalized later during symbol structuring/build. Nested `DO` / `IF` / `INSTRUCTIONS` emitted by exits are therefore a supported shape, and debug validation is staged after that scope rebuild so the validator sees the stabilized tree rather than the transient pre-scope fragment form.
-   - **Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures.
-   - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. It then automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
+   - **Expose and Initializer Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures. `name: initialiser [expose var ...]` creates a private zero-argument `.void` lifecycle procedure. Multiple initializers are retained in declaration order; the compiler rejects calls to them, namespace exposure, arguments, and returned values, then emits dedicated `.initializer` metadata.
+   - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. `register.0` is the source-level convention for a typed view of the containing value itself; `register.1` and above are one-based child attribute slots. `register.0` and duplicate typed views of the same physical `register.N` slot are complex attributes: ordinary emitted reads copy the linked physical payload view into a local register before expression manipulation, and writes copy the selected payload view back through the physical slot. A bounded packed or encoded binary-memory operation is the narrow exception: exact `register.0.binary` storage is passed directly as the operation's receiver, while a child binary attribute may be linked only until that one operation consumes it. This compiler-managed borrow cannot escape, and ordinary binary-value reads still detach with `bcopy`. The compiler does not copy status flags as hidden cache maintenance for these typed views; runtime classes such as `RexxValue` own their library/user flag protocol explicitly. Register flag views are direct masked status-word views, with VM/compiler/readable partitions validated as read-only source views and writable source partitions lowered through `settpmask`. The compiler automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
 
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
@@ -55,23 +70,66 @@ The pipeline of transforming REXX source code into executable bytecode is struct
      and leave the downstream emitter with an ordinary validated tree. This is
      why new inline cases are opened by specific parent/operand shape instead
      of by globally deciding that a callable is "always inlineable".
+   - A real method call binds the receiver value directly as `a1`. The inliner
+     may therefore place a proved direct-object receiver in that same storage.
+     For a nested call on the enclosing method's direct `§this`, the current
+     summary proof admits arbitrary internal branches and calls, plus
+     fallthrough, when there is no more than one explicit return. Already-proved
+     receiver aliases are remapped or retained through later clone passes.
+     Multiple explicit returns keep the materialise/copyback path because the
+     summary does not yet prove receiver-owned attribute-link balance on every
+     rewritten exit. Computed receivers, class attributes, reference arguments
+     and flow-substituted receivers also retain their evaluate-once/copyback
+     paths. This is a per-site ownership proof, not a general `§this` shortcut.
+     Exact scalar accessors add two bounded optimizations to that rule. A
+     single direct final packed load may donate its register to the surrounding
+     `BLOCK_EXPR` and fall through to the next block-end label. The ordinary
+     method-entry initialization check may be omitted only for a direct factory
+     receiver or a non-aliased local with one dominating factory binding;
+     arguments, replacement writes, aliases, labels and dynamic `SIGNAL`
+     retain `assertinitialized`.
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
-     normal callable metadata. Libraries preserve this metadata for downstream
-     `rxc` optimisation; final linked images strip it by default.
+     normal callable metadata. The current `I6` payload begins with a versioned
+     callable summary containing formal read/write/escape and exact-shape
+     facts, result/control/context facts, and structural cost. The reader
+     reconstructs those facts from the body and checks the result shape against
+     the separately parsed callable declaration. Only exact agreement opens the
+     imported template and summary-backed binding; older, missing, malformed,
+     or mismatched summaries retain the ordinary call. This is an evidence
+     gate, not a permanent exclusion: when a currently closed transformation
+     gains a complete mathematical proof and regression coverage, open that
+     case narrowly rather than leaving the conservative fallback in place.
+     Import attachment also distinguishes the explicit callable from any
+     compiler-created implicit `main`; class-factory evidence is attached to
+     the synthesized `FACTORY` contract node rather than its semantically
+     different generic registry procedure.
+     Libraries preserve this metadata for downstream `rxc` optimisation; final
+     linked images strip it by default.
+   - Suitable `SELECT` and equality ladders are lowered through a dedicated
+     dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
+     profitability thresholds, and regression invariants are documented in
+     [RXC_DISPATCH_OPTIMIZATION.md](RXC_DISPATCH_OPTIMIZATION.md).
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.
    - Translates human-readable IR assembly into packed binary format (`rxbin` bytecode).
+   - Validates `.initializer` metadata against its local `.void`, zero-argument
+     bytecode procedure and sets the RXBIN 007 initializer feature bit.
    - Generates the final executable bytecode file.
 
 6. **Linker (`rxlink`, optional)**
    - Combines one or more `.rxbin` modules into a single linked image with one shared constant-pool record and one shared-backed module record per selected module.
    - Resolves imports and interface-provider relationships up front, while preserving the module boundaries needed by the VM loader.
+   - Remaps and preserves ordered initializer metadata without turning the
+     private lifecycle procedures into exports.
    - Can strip source-level debug metadata (`META_SOURCE_STEP` and `META_TRACE_EVENT`) for smaller deployable artifacts without removing runtime contract metadata.
 
 7. **Interpreter (`rxvm`)**
    - `rxvm` reads and executes the `rxbin` bytecode.
    - Modules are loaded via `rxldmod`.
+   - Provider resolution and linking precede execution-image preparation;
+     `rxvm_initialize()` then advances each mutable module overlay through its
+     once-only initializer state before `main` or a public call can enter it.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
 ## Text, UTF-8, and Binary Data
@@ -79,15 +137,17 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 In normal UTF builds, `.string` register data is stored as UTF-8 bytes while
 the VM exposes character operations as codepoint operations. A VM `value`
 tracks `string_length` as the byte length and, in UTF builds, also tracks
-`string_chars` plus a byte/codepoint cursor pair (`string_pos` and
-`string_char_pos`). Instructions such as `strlen`, `strchar`,
-`setstrpos`/`getstrpos`, `substr`, `strpos`, `appendchar`, `fndblnk`, and
-`fndnblnk` operate in codepoint space and use helpers such as
-`string_set_byte_pos()`, `string_slice_from_cursor()`, and
-`string_concat_char()` to walk or synthesize the underlying UTF-8 bytes. Some
-scan paths have ASCII fast paths when byte length and codepoint count match.
-These string instructions assume valid UTF-8 in the register payload. NUTF8
-builds collapse this model back to byte positions and byte lengths.
+`string_chars`. The UTF VM may privately cache one byte/codepoint lookup pair
+(`string_cache_byte_pos` and `string_cache_char_pos`), but that cache is not
+RXAS-visible value state and is never copied, traced, or modelled by flow
+analysis. Instructions such as `strlen`, indexed `strchar`, explicit
+`substring destination,source,start,length`, `strpos`, `appendchar`,
+`fndblnk`, and `fndnblnk` operate in codepoint space and use helpers such as
+`string_cache_seek_char()`, `string_slice_at()`, and `string_concat_char()` to
+walk or synthesize the underlying UTF-8 bytes. Some scan paths have ASCII fast
+paths when byte length and codepoint count match. These string instructions
+assume valid UTF-8 in the register payload. NUTF8 builds collapse this model
+back to byte positions and byte lengths without private UTF cache fields.
 
 Numeric-to-string promotion opcodes such as `itos`, `btos`, `ftos`, and `dtos`
 may mutate the target VM value to materialize its string representation. That is
@@ -101,6 +161,10 @@ potential performance improvement rather than current behaviour.
 
 Hex and binary suffixed source strings now split by decoded byte content.
 `ast_fstr()` validates the hex or binary digit syntax and decodes the bytes.
+`ast_fstr_chain()` handles adjacent string literal tokens separated by a
+physical line break, joining the raw chunk bodies before normal decoding; only
+the final chunk may carry an `x` or `b` suffix, and the line break contributes no
+byte or character.
 When the decoded span is valid UTF-8, the literal remains a `STRING` AST node
 and follows the normal escaped RXAS string path. When the decoded span is not
 valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`
@@ -119,14 +183,15 @@ invalid constant binary-to-string casts are rejected as `CANNOT_CAST_BINARY` and
 invalid runtime binary values raise `UNICODE_ERROR` through `bintos`.
 
 `.binary` is present in the Level B surface and compiler metadata as
-`TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
-`binary_pos`, and `binary_buffer_length` slot. Copies and moves preserve that
-slot, socket and file byte operations use it (`socksendb`, `sockrecvb`,
+`TP_BINARY`. The VM `value` has separate `binary_value`, `binary_length`, and
+`binary_buffer_length` slots. Socket and file byte operations use them
+(`socksendb`, `sockrecvb`,
 `freadb`, `fwriteb`), and native payloads reuse it with
 `rxvm_native_payload_ops`. The VM has shared binary buffer helpers for
 reserve/set/append/concat/slice operations. `GETBYTE` reads a zero-based byte
 index and returns `-1` when the requested byte is outside the current binary
-length. `FREADB` and socket binary receive reuse the binary buffer growth
+length. `BSLICE destination,source,start,length` uses an explicit zero-based
+byte start and does not mutate its source. `FREADB` and socket binary receive reuse the binary buffer growth
 machinery instead of reallocating to exact byte counts.
 
 At the Level B source surface, `||` is byte concatenation when either operand is
@@ -148,8 +213,8 @@ operands are constant-pool binary records. `load rN,0x...` lowers to
 string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
 `0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
 lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
-single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
-fixed-size overlay update, `stobin` string-byte conversion, and `bintos`
+single-byte update, concat, append, explicit-offset slice, fixed-size overlay
+update, `stobin` string-byte conversion, and `bintos`
 binary-to-string conversion. Binary-buffer instructions never validate UTF-8 and
 clear VM-private UTF cache flags on the destination. `bintos` is the exception:
 it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
@@ -157,16 +222,18 @@ are not valid text. Most character and string opcodes still take string operands
 and assume valid UTF-8 in UTF builds.
 
 Level C text and binary behavior should be treated as design space, not as
-settled current compiler behavior. Classic REXX is byte-oriented and commonly
+settled current compiler behavior. Classic Rexx is byte-oriented and commonly
 stores binary data in the same text values used for strings, while current
 Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
 compatibility mode therefore has to choose where Classic byte-text semantics
 map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
-as `bytetext`. Classic REXX BIFs will need to be audited against that decision.
-Level G and library work have a separate Unicode extension path for grapheme,
-word, and sentence boundaries, normalization, and case operations through the
-Unicode plugin hooks; those features sit above the core codepoint-level VM
-string contract.
+as `bytetext`. Classic Rexx BIFs will need to be audited against that decision.
+Level G and library work use the explicit `rxunicode` extension path above the
+core codepoint-level VM string contract. The current Unicode 17.0.0 baseline
+provides normalization, full default case mapping, case folding, default
+extended grapheme clusters, and typed byte/text codecs. Word/sentence
+boundaries, properties, locale services, and collation remain separate future
+contracts.
 
 ### Locked Direction
 
@@ -176,14 +243,13 @@ The architecture direction is:
 - `.binary` means arbitrary bytes.
 - Level B keeps those surfaces strict and typed; invalid byte streams should not
   silently become `.string` values.
-- Level C may provide Classic REXX byte-text compatibility through an explicit
+- Level C may provide Classic Rexx byte-text compatibility through an explicit
   compatibility mode such as `bytetext`, but that mode must not weaken the
   Level B/G `.string` contract.
-- Level G should build richer Unicode services through the existing Unicode
-  plugin hooks. `utf8proc` is the preferred first implementation candidate for
-  normalization, case folding, Unicode property checks, and grapheme/word/
-  sentence segmentation because it is a small C library under MIT expat plus
-  Unicode data license terms.
+- Level G's `rxunicode` module owns richer Unicode services. Its production
+  executors are Level B codepoint algorithms over pinned, generated Unicode
+  17.0.0 constants; they do not require an external Unicode provider or make
+  provider choice part of application semantics.
 
 Trust boundaries for `.string` validation are compiler/assembler string
 constants, RXVML string setters, CREXXSAA ADDRESS variable setters, RXPA native
@@ -209,38 +275,73 @@ attributes and is enabled by default; developers can temporarily opt out with
 must stay on the binary path (`.binary`, `freadb`, `fwriteb`, `sockrecvb`, and
 `socksendb`) until it is decoded explicitly.
 
-The VM register/value status word is a `uint32_t` field partitioned in
+The VM register/value status word is a `uint32_t` field partitioned in  
 `binutils/include/rxflags.h` instead of adding a second flag field:
 
 - `0x000000FF`: VM-private, externally readable but not writable through RXAS
-  flag instructions. This band is reserved first for UTF-8 validity/count and
-  Unicode normalization-form cache bits.
-- `0x0000FF00`: compiler call ABI flags. The current bits are `REGTP_VAL`
+  flag instructions. This band currently carries UTF-8 validity/count and
+  object-lifecycle state.
+- `0x00000300`: compiler call ABI flags. The current bits are `REGTP_VAL`
   (`0x00000100`) and `REGTP_NOTSYM` (`0x00000200`).
+- `0x0000FC00`: protected language metadata. `0x00003C00` currently carries
+  independent positive NFC, NFD, NFKC and NFKD certificates; `0x0000C000`
+  remains reserved.
 - `0x00FF0000`: stable library/runtime ABI flags.
 - `0x7F000000`: user/experimental flags.
 - `0x80000000`: reserved to avoid signed integer ambiguity.
 
 `SETTP`, `SETORTP`, and `LOADSETTP` mask external writes so VM-private bits are
-preserved or cleared only by VM internals. `GETTP`, `GETANDTP`, and explicit
-`BRTPANDT` masks may observe readable VM-private bits; unmasked `BRTPT` only
-tests public/external flag bands so VM cache bits do not change old branch
-semantics.
+preserved or cleared only by VM internals. Trusted RXAS may explicitly assert
+language certificates, but compiler ABI writes preserve that separate band and
+`SETTP reg,0` does not clear it. Level B exposes `.flags.language` as read-only.
+Non-zero writes replace only the requested public bands. This lets compiler
+call-ABI setup update `REGTP_*` without destroying protected language facts or
+runtime/library flags stored on the same value.
+`GETTP`, `GETANDTP`, and explicit `BRTPANDT` masks may observe readable
+VM-private and language bits; unmasked `BRTPT` excludes both bands so cached
+facts do not change old branch semantics.
 
-RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
-to the 32-bit flag word before applying the partition.
+The four normalization bits are positive certificates about the current whole
+`.string` byte span: absence means unknown, not false. Exact whole-string copy
+and owner-local move preserve them. Logical string mutation clears all four;
+empty and known-ASCII production sets all four. A successful normalization
+predicate certifies its source, and normalization certifies its result. NFKD
+also certifies NFD, while NFKC also certifies NFC. Native post-call validation
+conservatively drops non-ASCII certificates because an RXPA plugin may have
+mutated bytes directly. Cross-worker non-ASCII materialization starts unknown;
+the channel format does not carry certificates.
+
+RXAS/RXBIN integer operands remain `rxinteger`. The canonical definition is
+`platform/rxinteger.h`, and Release 1 fixes it to signed 64-bit across the
+compiler, assembler, VM, and RXPA ABI. Host pointer width is not the language
+integer width. Status instructions cast masks to the 32-bit flag word before
+applying the partition.
+Level B flag-view assignments use `SETTPMASK`, a masked replacement operation
+restricted to the source-writable library/user bands, so `.flags.compiler` and
+`.flags.language` remain read-only to source code while generated call setup
+and trusted language algorithms maintain their respective bands.
 
 Regression coverage for the partition and UTF cache contract lives in
-`interpreter/tests/tests_register_flags.rxas`,
-`interpreter/tests/tests_utf_flags.rxas`, and
-`interpreter/tests/ts_regvalue_tester.c`.
+
+- `interpreter/tests/tests_register_flags.rxas`,
+- `interpreter/tests/tests_utf_flags.rxas`, and
+- `interpreter/tests/ts_regvalue_tester.c`.
+
 Compiler and runtime regression coverage for `.string`/`.binary` coexistence
-lives in `compiler/tests/rexx_src/binary_literal_load.crexx`,
-`compiler/tests/rexx_src/scalar_type_casts.crexx`, and the generated negative
-tests in `compiler/tests/CMakeLists.txt`. Boundary regressions include direct
-RXAS invalid string constants, `compiler/tests/src/test_rxvml_utf_boundaries.c`,
-and `interpreter/tests/tests_utf_freadline_boundary.rxas` /
-`interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
+lives in 
+
+- `compiler/tests/rexx_src/binary_literal_load.crexx`,
+- `compiler/tests/rexx_src/scalar_type_casts.crexx`,
+
+and the generated negative
+tests in `compiler/tests/CMakeLists.txt`. 
+
+Boundary regressions include direct
+RXAS invalid string constants, 
+
+- `compiler/tests/src/test_rxvml_utf_boundaries.c`,
+- `interpreter/tests/tests_utf_freadline_boundary.rxas` /
+- `interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
 
 The completed UTF baseline is:
 
@@ -251,7 +352,7 @@ The completed UTF baseline is:
 3. The register status word is partitioned in `rxflags.h`; VM-private UTF cache
    bits are preserved from external writes.
 4. `.binary` has growable buffer helpers plus RXAS/VM literal load, length,
-   byte get/set, append, concat, cursor, slice, and overlay instructions.
+   byte get/set, append, concat, explicit-offset slice, and overlay instructions.
 5. Explicit `.string`/`.binary` coexistence is first class in Level B:
    `as .binary` stores exact UTF-8 bytes through `stobin`, `as .string`
    validates bytes through `bintos`, and valid constant casts fold in both
@@ -268,18 +369,20 @@ The completed UTF baseline is:
    and socket text receive reports an invalid text status. Character-walking
    opcodes require valid UTF cache state before using codepoint iterators.
 
-The open work has moved to its owning levels:
+The remaining work has moved to its owning levels:
 
-- Level G owns normalization cache semantics and richer Unicode services. The
-  VM-private status band reserves space for normalization knowledge, but NFC,
-  NFD, NFKC, and NFKD bits should only become meaningful when Level G
-  normalization APIs set and consume them. The preferred first Unicode plugin
-  candidate is `utf8proc`, subject to vendoring/build work and carrying its MIT
-  expat plus Unicode data license notices. Initial coverage should target
-  normalization, case folding, Unicode property checks, and grapheme/word/
-  sentence segmentation. There is also room for a Level B cREXX proof of
-  concept of UTF helper libraries while Level G remains design work.
-- Level C owns Classic REXX migration and byte-text compatibility. Classic
+- Level G's implemented `rxunicode` baseline owns explicit normalization,
+  default casing/folding, grapheme segmentation, and codecs. Four positive
+  normalization certificates are stored in the VM value/register status word
+  because the VM owns copy and mutation, but they occupy the protected
+  language-owned band (`0x00003C00`), not the VM-private low byte. Trusted
+  generated RXAS may assert a proved certificate; the VM preserves it on exact
+  whole-string copies and clears it on content mutation. Incremental encoded
+  streams, typed properties/names, caseless-normalized profiles, security,
+  further segmentation, locale services, and collation remain separately
+  designed follow-on work. See `CREXX_UNICODE.md` and
+  `performance/UNICODE-CERT-01-WORKLIST.md`.
+- Level C owns Classic Rexx migration and byte-text compatibility. Classic
   byte-text behavior should be isolated behind an explicit compatibility option
   such as `bytetext`; Classic BIFs then need auditing so users can choose UTF
   text semantics, byte semantics, or explicit `.binary` operations predictably.
@@ -313,6 +416,25 @@ import candidate.
 
 Within a binary root, same-stem artifacts are collapsed to the freshest
 candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
+Directory entries are sorted by name, and discovery prefers two consecutive
+scans with the same entry set. If a root stays active, discovery merges a
+bounded number of scans and drops entries that no longer exist. This prevents
+native filesystem enumeration order or concurrent generated-library
+publication from silently changing the imported contract set without letting
+continuous unrelated activity block compilation.
+
+`rxc --import-resolution-report <path>` writes an observe-only JSON record of
+those discovery decisions. The v1 report records ordered logical roots,
+candidate kinds and mtimes, admission/rejection/replacement reasons, content
+digests, executable-directory visibility, and the post-collapse candidate
+set. Logical identifiers (`@primary-source/0`, `@source/N`, `@binary/N`, and
+`@executable/0`) keep reports independent of the checkout path; the build
+manifest maps them to physical roots. Publication uses a temporary sibling and
+an atomic replacement. This initial report deliberately leaves
+`provider_bindings` empty: candidate admission is not proof that a namespace
+or symbol was ultimately supplied by that file. It is evidence of current
+selection behaviour only and does not enforce an expected provider or alter
+the timestamp/tie-break policy.
 
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
@@ -321,6 +443,14 @@ surface. The provider artifact's exports and metadata remain definitive. When
 that the generated instruction stream still needs for linking or runtime
 lookup. If optimization or inlining removes every runtime reference to an
 imported file, the imported declaration block is suppressed entirely.
+
+For each retained callable that was actually reconstructed from a packaged
+`.rxbin`, `rxc` also emits an `.autoload` metadata hint containing that
+package's filename stem. It deliberately emits no hint for source or RXAS
+imports: those inputs do not prove a distributable runtime filename. The hint
+is enabled by default and can be suppressed with `--no-autoload`. It is a
+deployment convenience, not a build dependency mechanism and not an alternate
+symbol contract; the callable name and signature remain authoritative.
 
 ## Level B Classes and Interfaces
 
@@ -339,7 +469,7 @@ The source surface includes:
 - optional class-side same-named `match`
 - checked casts with `expr as .type`
 - boolean type tests with `expr is .type`
-- concrete type introspection with `typeof(expr)`
+- concrete type introspection with `<typeof>(expr)`
 - namespace-qualified contracts such as `.pkg..thing()`
 
 Interface methods with bodies are emitted as final/default methods. The class
@@ -362,26 +492,37 @@ That metadata is sufficient for import reconstruction of class/interface
 headers without parsing procedure bodies. Imported stubs are not re-exported as
 new local contracts, and richer imported stubs replace poorer duplicates.
 
+Dynamic RXPA discovery stages initializer callbacks before reconstructing any
+declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
+and class/interface callbacks only collect their metadata at that point. After
+the initializer returns and releases the mutex, `rxc` imports class/interface
+metadata first and then parses the procedure declarations while the provider
+remains open. This ordering permits a native procedure to return a namespaced
+Rexx class such as `.rxstats..linearfit` without recursively reopening the
+provider or deadlocking the loader.
+
 ### Runtime dispatch
 
 Created objects carry their concrete class identity. The VM then resolves
 contract calls through load/link-time registries:
 
-- a method registry keyed by concrete class plus member name
+- a method registry keyed by concrete class plus method descriptor
 - a factory-provider registry keyed by interface plus factory member name
 
-`srcmethod` resolves the effective method for an interface/class receiver. The
-registry prefers a concrete class method and otherwise falls back to a final
-interface default method.
+`srcmethodsel` resolves the effective method for an interface/class receiver.
+The registry prefers a concrete class method and otherwise falls back to a
+final interface default method. The selector is a callable descriptor
+(`rxsig1|name|return_type|args`), and the resolved procedure metadata must
+match it.
 
-`srcfproc` resolves interface factories. Every candidate provider is evaluated
-through its effective `match`; omitted `match` behaves as score `1`, scores
-`<= 0` reject, highest positive score wins, and tied scores are broken
-alphabetically by concrete class name.
+`srcfprocsel` resolves interface factories from the same descriptor form. Every
+candidate provider is evaluated through its effective `match`; omitted `match`
+behaves as score `1`, scores `<= 0` reject, highest positive score wins, and
+tied scores are broken alphabetically by concrete class name.
 
 ## Source Tree and Parser Mode
 
-cREXX now has an explicit split between the user-facing source model and the
+cRexx now has an explicit split between the user-facing source model and the
 mutable compiler tree.
 
 - After the early source-shaping and source-location work, the compiler builds
@@ -389,6 +530,15 @@ mutable compiler tree.
 - `context->source_tree` is the canonical user-facing tree for authored
   structure, diagnostics, semantic sidecars, metadata anchors, and editor
   projection.
+- Compiler diagnostics carry a stable `RxcpDiagnostic` payload: a message code
+  plus named parameters. `node_string` and `SourceDiagnostic.message` are
+  rendered fallbacks, not the diagnostic identity.
+- Diagnostic rendering defaults to localized text. `CREXX_DIAGNOSTICS=raw`
+  selects the machine-readable `CODE name="value"` form used by golden tests.
+  `CREXX_DIAGNOSTIC_LOCALE` overrides locale selection; otherwise the renderer
+  uses the platform locale environment and falls back to `en_GB`. Message
+  catalogs are UTF-8 files in `messages/`, currently including `en_GB`,
+  `en_US`, `de_DE`, and `nl_NL`, and are loaded lazily per process.
 - `context->ast` / `work_ast` remains the mutable compiler tree for import
   loading, exit dispatch, fixed-point rewrites, optimization, and emission.
 - `ASTNode` instances keep explicit links back to the source tree so later
@@ -405,6 +555,9 @@ For the compiler-side build order and tree-split details, see
 
 For the DSLSH/editor mapping and parser-mode contract, see
 [cREXX DSLSH Integration](../../compiler/docs/dslsh_integration.md).
+
+For RXPP build shape, wrapper role, and source-map marker rules, see
+[RXPP Preprocessor](RXPP_PREPROCESSOR.md).
 
 ## Core Data Structures
 
@@ -484,5 +637,9 @@ do(G)         ::= tk_doloop(T) dorep(R) TK_EOC instruction_list(I) TK_END.
 5. **Association**: The AST node also uses the `association` pointer to link commands like `LEAVE` or `ITERATE` directly back to the target enclosing `DO` loop node.
 
 ## Execution and the VM
-Once compilation via `rxc` and `rxas` is complete, `rxvm` handles the execution. 
-Modules are ingested into memory mapping via functions like `rxldmod`. The VM spins up its contexts, loading dynamically or statically linked extensions, and invokes `rxvm_run` to march through and execute the virtual CPU instructions matching the loaded byte sequence.
+Once compilation via `rxc` and `rxas` is complete, `rxvm` handles the execution.
+Modules are ingested into memory mapping via functions like `rxldmod`. The VM
+spins up its contexts, resolves dynamically or statically linked providers,
+links and prepares the modules, runs each declared initializer once for that
+context's mutable module overlay, and only then invokes the requested program
+entry through `rxvm_run`/`rxvm_call`.

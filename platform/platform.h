@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include "crexx_license.h"
+#include "rxinteger.h"
 
 #if defined(__clang__) || defined(__GNUC__)
 # ifdef NDEBUG  // RELEASE
@@ -56,7 +57,7 @@
 # endif
 #else
 # define RX_INLINE static
-#  define RX_MOSTLYINLINE static
+# define RX_MOSTLYINLINE static
 # define RX_FLATTEN
 # warning "Functions may not be inlined as intended"
 #endif
@@ -64,24 +65,6 @@
 /* Load Platform Specific Headers */
 #ifdef __CMS__
 #include "cms.h"
-#endif
-
-#ifndef RXINTEGER_T
-#define RXINTEGER_T
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
-#include <stdint.h>
-typedef intmax_t rxinteger;
-#else
-#ifdef __32BIT__
-typedef long rxinteger;
-#else
-typedef long long rxinteger;
-#endif
-#endif
-#endif //RXINTEGER_T
-
-#ifndef IS_RXINTEGER_32BIT
-#define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
 #endif
 
 #if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
@@ -175,7 +158,10 @@ int has_any_extension(const char *name);
 char *strip_rightmost_extension_if(const char *name, const char *ext);
 
 /*
- * Terminal management functions for ensuring sane terminal state on exit/crash
+ * Terminal management functions for ensuring sane terminal state on exit or
+ * crash.  A snapshot is bound to the foreground terminal endpoint and owning
+ * process that saved it.  Restore never applies that snapshot to a replacement
+ * stdin and safely abandons it if the terminal has disconnected.
  */
 void platform_term_save(void);
 void platform_term_restore(void);

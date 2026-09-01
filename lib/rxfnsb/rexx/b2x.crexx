@@ -22,27 +22,72 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb numeric_classic
+/**
+ * Level B B2X implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/b2x.md
+ */
+options levelb comments_dash numeric_classic
 namespace rxfnsb expose b2x
-import _rxsysb
 
+/**
+ * Convert standard binary text to uppercase hexadecimal text.
+ *
+ * @param binary zero or more binary digits with standard nibble-group blanks
+ * @return one hexadecimal digit for each four input bits, including a partial
+ *         leading group
+ */
 b2x: procedure = .string
-  arg bin = .string
-  bin = space(bin, 0)
+  arg binary = .string
+  table = "0123456789ABCDEF"
+  result = ""
+  binary_length = .int
+  bit_count = 0
+  group_size = .int
+  group_count = 0
+  value = 0
+  codepoint = .int
+  hexadecimal = .int
+  index = 0
+  blank_character = 32
+  zero_character = 48
+  one_character = 49
 
-  if verify(bin, '01') \= 0 then
-    return ''
+  assembler strlen binary_length,binary
+  if binary_length = 0 then return result
 
-  if bin = '' then
-    return ''
+  assembler strchar codepoint,binary,index
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS","B2X binary text must not start with a blank"
+  last = binary_length - 1
+  assembler strchar codepoint,binary,last
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS","B2X binary text must not end with a blank"
 
-  hexlen = (length(bin) + 3) % 4
+  do i = binary_length - 1 to 0 by -1
+    assembler strchar codepoint,binary,i
+    if codepoint = blank_character then do
+      if bit_count // 4 <> 0 then
+        assembler signal "INVALID_ARGUMENTS","B2X blank must precede a four-bit group"
+    end
+    else if codepoint = zero_character | codepoint = one_character then bit_count = bit_count + 1
+    else assembler signal "INVALID_ARGUMENTS","B2X accepts only 0, 1, and blank"
+  end
 
-  pad = length(bin) // 4
-  if pad \= 0 then
-    bin = copies('0', 4 - pad) || bin
-
-  hex = translate(reradix(bin, 2, 16))
-  return right(hex, hexlen, '0')
-
+  group_size = bit_count // 4
+  if group_size = 0 then group_size = 4
+  do i = .int(0) to binary_length - 1
+    assembler strchar codepoint,binary,i
+    if codepoint = blank_character then iterate
+    value = value * 2 + codepoint - zero_character
+    group_count = group_count + 1
+    if group_count = group_size then do
+      assembler strchar hexadecimal,table,value
+      assembler appendchar result,hexadecimal
+      group_size = 4
+      group_count = 0
+      value = 0
+    end
+  end
+  return result

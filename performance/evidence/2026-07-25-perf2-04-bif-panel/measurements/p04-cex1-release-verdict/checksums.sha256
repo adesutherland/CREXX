@@ -1,0 +1,11 @@
+48b8798c75440f4cb30986077ac81e584ba1cd8361728e9c6e50cb14c45e422d  ./append-capture-manifest.json
+29e84743bdb515fbdb9474de57d4ecab795692fadd94fe6e32c277fb86a6dfe4  ./append-outputs.csv
+aeb8e9d8b7a00f420dd89f58b8cdd27312413c7d64f52102b3ea96662c2f950d  ./append-samples.csv
+7454ae27d3f1c34cf1ac863b6d9511a0cac450cb8c76bd4d4dbe73ba949ef028  ./artifact-comparison.txt
+8e821ef04444205de688acb65cb92b976b93bb2e354116a3965bdb1df7752183  ./first-block-capture-manifest.json
+3bf05a5de11c66ef1a9014c99526f98ec3730438fd48d4ba0daa04844ef70039  ./first-block-outputs.csv
+47e49e654f08b9993641bdc79879e80ee55bffa39e97feddc1f71f50a1483e20  ./first-block-samples.csv
+2d7bbf38ba6a4581c624749d0a367f510bda82635ab31f47d096160995fcce54  ./post-state.txt
+ed0f852ad3d8012c81e6b4626c7301deb1f1b3259b4febb188bb47152e4c3711  ./pre-state.txt
+a22a598b76caad7653eba2518423a1788253045c4af2958ff95f127099d2f946  ./summary.csv
+d17dc575bd806c28d172b33312dc91366b028cd83a5fd34fa50fbad3b157c6f9  ./verdict.md

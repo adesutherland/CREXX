@@ -1,0 +1,57 @@
+options levelb
+namespace nr09_numeric_context
+import rxfnsb
+
+nr09_numeric_context_constants: procedure expose NR09_NO_INLINE
+  constant NR09_NO_INLINE = 0
+  return
+
+main: procedure = .int
+  say "default" digits() fuzz() form() numcase() standard()
+  call scientificContext
+  call engineeringContext
+  call nonzeroFuzzContext
+  call inheritedDigitsContext
+  call smallDigitsContext
+  return 0
+
+scientificContext: procedure = .void expose NR09_NO_INLINE
+  numeric digits 9
+  numeric fuzz 0
+  numeric form scientific
+  numeric case upper
+  numeric standard classic
+  say "scientific" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
+  return
+
+engineeringContext: procedure = .void expose NR09_NO_INLINE
+  numeric digits 6
+  numeric fuzz 0
+  numeric form engineering
+  numeric case lower
+  numeric standard common
+  say "engineering" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
+  return
+
+nonzeroFuzzContext: procedure = .void expose NR09_NO_INLINE
+  numeric digits 6
+  numeric fuzz 2
+  numeric form scientific
+  numeric case lower
+  numeric standard common
+  say "nonzero-fuzz" digits() fuzz() form() numcase() standard()
+  return
+
+inheritedDigitsContext: procedure = .void expose NR09_NO_INLINE
+  numeric digits inherited
+  say "inherited-digits" digits() fuzz() form() numcase() standard()
+  return
+
+smallDigitsContext: procedure = .void expose NR09_NO_INLINE
+  numeric digits 4
+  numeric fuzz 0
+  numeric form scientific
+  numeric case lower
+  numeric standard common
+  say "small-digits" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
+  return

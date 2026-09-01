@@ -1,0 +1,47 @@
+Test project /Users/adrian/CLionProjects/CREXX-parse-planning-poc/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/17 Test    #1: linked_opt_runtime_artifacts_build .....   Passed    0.74 sec
+      Start  935: test_parse_bin_build
+ 2/17 Test  #935: test_parse_bin_build ...................   Passed    0.07 sec
+      Start  933: test_parse_noopt
+ 3/17 Test  #933: test_parse_noopt .......................   Passed    0.33 sec
+      Start  934: test_parse_opt
+ 4/17 Test  #934: test_parse_opt .........................   Passed    0.03 sec
+      Start  938: test_parse_direct_bin_build
+ 5/17 Test  #938: test_parse_direct_bin_build ............   Passed    0.08 sec
+      Start  936: test_parse_direct_noopt
+ 6/17 Test  #936: test_parse_direct_noopt ................   Passed    0.06 sec
+      Start  937: test_parse_direct_opt
+ 7/17 Test  #937: test_parse_direct_opt ..................   Passed    0.06 sec
+      Start 1324: ts_parse_noopt
+ 8/17 Test #1324: ts_parse_noopt .........................   Passed    0.02 sec
+      Start 1325: ts_parse_opt
+ 9/17 Test #1325: ts_parse_opt ...........................   Passed    0.02 sec
+      Start 1326: ts_parseexec_noopt
+10/17 Test #1326: ts_parseexec_noopt .....................   Passed    0.02 sec
+      Start 1327: ts_parseexec_opt
+11/17 Test #1327: ts_parseexec_opt .......................   Passed    0.02 sec
+      Start 1794: benchmark_parse_frozen_noopt
+12/17 Test #1794: benchmark_parse_frozen_noopt ...........   Passed    0.01 sec
+      Start 1795: benchmark_parse_frozen_opt
+13/17 Test #1795: benchmark_parse_frozen_opt .............   Passed    0.02 sec
+      Start 1796: benchmark_parse_frozen_generic_noopt
+14/17 Test #1796: benchmark_parse_frozen_generic_noopt ...   Passed    0.01 sec
+      Start 1797: benchmark_parse_frozen_generic_opt
+15/17 Test #1797: benchmark_parse_frozen_generic_opt .....   Passed    0.02 sec
+      Start 1798: benchmark_rexxcps_levelb_noopt
+16/17 Test #1798: benchmark_rexxcps_levelb_noopt .........   Passed    1.18 sec
+      Start 1799: benchmark_rexxcps_levelb_opt
+17/17 Test #1799: benchmark_rexxcps_levelb_opt ...........   Passed    1.13 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+benchmark        =   2.37 sec*proc (6 tests)
+language         =   2.37 sec*proc (6 tests)
+linked_opt       =   1.21 sec*proc (5 tests)
+noncanonical     =   2.31 sec*proc (2 tests)
+rexxcps-smoke    =   2.31 sec*proc (2 tests)
+smoke            =   1.16 sec*proc (3 tests)
+
+Total Test time (real) =   3.83 sec

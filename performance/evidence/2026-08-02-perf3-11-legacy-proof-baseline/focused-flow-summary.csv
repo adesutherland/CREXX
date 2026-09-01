@@ -1,0 +1,4 @@
+fixture,unreachable_removed,typed_copy_removed,full_copy_removed,producer_forwarded,redundant_load,redundant_null,redundant_conversion
+whole_procedure_flow,2,5,0,2,1,0,0
+whole_procedure_panel,2,9,1,2,0,1,1
+nr18_flow_harvest,0,8,0,8,0,0,0

@@ -1,0 +1,14 @@
+﻿captured_utc=2026-07-29T20:28:51.3648559Z head=d78c6fcfa81ef03fdbea65ff9cc39ed99e8716bf branch=develop status:
+ M bin/tests/CMakeLists.txt
+ M compiler/tests/CMakeLists.txt
+ M compiler/tests/nr14_frozen_parse_contract.cmake
+ M compiler/tests/perf2_04_certified_call.cmake
+ M compiler/tests/perf2_04_inline_assembler_effects.cmake
+ M compiler/tests/perf2_04_inline_assembler_imports.cmake
+ M compiler/tests/perf2_05_partial_call.cmake
+ M performance/README.md
+ M performance/ROADMAP.md
+ M performance/tools/run_cross_runtime_matrix.crexx
+ M performance/tools/run_lifecycle.crexx
+?? performance/evidence/2026-07-29-perf2-11-windows-x86-64/
+?? performance/tools/windows_peak_rss.ps1

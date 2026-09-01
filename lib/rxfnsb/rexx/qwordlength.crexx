@@ -22,17 +22,24 @@
  * SOFTWARE.
  */
 
-/* rexx wordlength finds length of certain word */
+/** Measure a Unicode quote-aware word. */
 options levelb
-
 namespace rxfnsb expose qwordlength
 
-qwordlength: procedure = .string
-  arg expose string = .string, wordnum = .int
-  wlen=0
-  wordstr=qword(string,wordnum)
-  if wrdstr="" then return 0
-  assembler strlen wlen,wordstr
-return wlen
-
-
+/**
+ * @param string source text
+ * @param wordnum positive one-based word number
+ * @return codepoint length including quote delimiters, or zero when absent
+ * @signal INVALID_ARGUMENTS invalid index or unmatched quote
+ */
+qwordlength: procedure = .int
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "QWORDLENGTH word number must be positive"
+  spans = qscan_word_spans(string)
+  current_word = 0
+  do length_index = 2 to spans[0] by 2
+    current_word = current_word + 1
+    if current_word = wordnum then return spans[length_index]
+  end
+  return 0

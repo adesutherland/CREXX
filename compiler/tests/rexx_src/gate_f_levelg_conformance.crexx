@@ -1,0 +1,173 @@
+options levelg
+namespace gate_f_levelg_conformance
+
+first: task = .int
+  return 10
+
+second: task = .int
+  return 20
+
+third: task = .int
+  arg value = .int
+  return value + 1
+
+twice: task = .int
+  arg value = .int
+  return value * 2
+
+plusone: task = .int
+  arg value = .int
+  return value + 1
+
+noisy: task = .boolean
+  arg text = .string
+  say text
+  return 1
+
+writer: task
+  arg text = .string
+  say text
+  return
+
+factorial: task = .int
+  arg value = .int
+  if value <= 1 then return 1
+  return value * factorial(value - 1)
+
+ordinary: procedure = .int
+  say "ordinary"
+  return 1
+
+workbox: class
+  _base = .int
+
+  *: factory
+    arg base = .int
+    _base = base
+    return
+
+  from_channel: factory
+    arg encoded = .channelvalue
+    _base = encoded.as_integer()
+    return
+
+  to_channel: method = .channelvalue
+    return .channelvalue.integer_value(_base)
+
+  increment: task = .int
+    arg value = .int
+    return _base + value
+
+imagework: class implements .taskwork
+  _delta = .int
+
+  *: factory
+    arg delta = .int
+    _delta = delta
+    return
+
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    if context.cancellation_requested() then return .channelvalue.null_value()
+    if context.timeout_remaining() <> -1 then return .channelvalue.null_value()
+    return .channelvalue.integer_value(request.as_integer() + _delta)
+
+main: procedure = .int
+  errors = 0
+
+  if third(first()) + second() <> 31 then errors = errors + 1
+  if ordinary() + first() <> 11 then errors = errors + 1
+  explicit_target = task first
+  if explicit_target.name() <> "gate_f_levelg_conformance.first" then errors = errors + 1
+  worker = .workbox(40)
+  if worker.increment(2) <> 42 then errors = errors + 1
+
+  do parallel
+    skipped = 0 & noisy("BAD")
+    taken = 1 & noisy("GOOD")
+    left = twice(20)
+    right = plusone(1)
+    if skipped <> 0 then errors = errors + 1
+    if taken <> 1 then errors = errors + 1
+    if left <> 40 then errors = errors + 1
+  end
+  if right <> 2 then errors = errors + 1
+
+  answer = do parallel
+    block_left = twice(20)
+    block_right = plusone(1)
+    leave with block_left + block_right
+  end
+  if answer <> 42 then errors = errors + 1
+
+  pool = .taskpool.local(1, 8)
+  malformed_scope = .taskscope.collectall(pool, 60000)
+  malformed_arguments = .taskarguments.empty()
+  malformed_arguments = malformed_arguments.add_channel_value(.channelvalue.integer_value(1))
+  malformed_child = malformed_scope.submit_arguments(explicit_target, malformed_arguments)
+  malformed_completion = malformed_child.wait(-1)
+  call malformed_scope.close()
+  if malformed_completion.succeeded() then do
+    say "FAIL: extra typed task argument accepted"
+    errors = errors + 1
+  end
+
+  scope = .taskscope.failfast(pool, 60000)
+  serial_answer = do parallel using scope
+    serial_left = twice(20)
+    serial_right = plusone(1)
+    leave with serial_left + serial_right
+  end
+  if serial_answer <> 42 then errors = errors + 1
+
+  scope = .taskscope.failfast(pool, 60000)
+  rebound_answer = do parallel using scope
+    leave with plusone(41)
+  end
+  if rebound_answer <> 42 then errors = errors + 1
+
+  taskwork_target = task .imagework(2)
+  taskwork_scope = .taskscope.collectall(pool, 60000)
+  taskwork_child = taskwork_scope.submit(taskwork_target, .channelvalue.integer_value(40))
+  taskwork_completion = taskwork_child.wait(-1)
+  call taskwork_scope.finish()
+  if taskwork_completion.succeeded() = 0 then do
+    say "FAIL: local taskwork completion" taskwork_completion.error_code() taskwork_completion.message()
+    errors = errors + 1
+  end
+  else if taskwork_completion.value().as_integer() <> 42 then errors = errors + 1
+  call pool.close()
+
+  process_pool = .taskpool.process(1, 2)
+  process_scope = .taskscope.failfast(process_pool, 60000)
+  process_answer = do parallel using process_scope
+    leave with worker.increment(3)
+  end
+  if process_answer <> 43 then do
+    say "FAIL: process task method" process_answer
+    errors = errors + 1
+  end
+  process_taskwork_target = task .imagework(3)
+  process_taskwork_scope = .taskscope.collectall(process_pool, 60000)
+  process_taskwork_child = process_taskwork_scope.submit(process_taskwork_target, .channelvalue.integer_value(39))
+  process_taskwork_completion = process_taskwork_child.wait(-1)
+  call process_taskwork_scope.finish()
+  if process_taskwork_completion.succeeded() = 0 then do
+    say "FAIL: process taskwork completion" process_taskwork_completion.error_code() process_taskwork_completion.message()
+    errors = errors + 1
+  end
+  else if process_taskwork_completion.value().as_integer() <> 42 then errors = errors + 1
+  call process_pool.close()
+
+  do parallel
+    call writer "writer-a"
+    call writer "writer-b"
+  end
+
+  if factorial(5) <> 120 then errors = errors + 1
+  if errors <> 0 then do
+    say "FAIL: Gate F Level G conformance" errors
+    return 1
+  end
+  say "PASS: Gate F Level G conformance"
+  return 0

@@ -1,62 +1,71 @@
-/* D2C */
-options levelb numeric_classic
+/* Focused Level B Unicode D2C tests. */
+options levelb
 import rxfnsb
 
-errors=0
-say "Look for D2C OK"
-if d2c(77) \= 'M' then do
-  errors=errors+1
-  say 'D2C failed in test 1'
-end
+errors = 0
+source = 128293
+errors = errors + check("M", d2c(77), "documented ASCII code point")
+errors = errors + check("M", d2c(77, 1), "explicit one-character length")
+errors = errors + check("", d2c(12, 0), "zero output length")
+errors = errors + check("", d2c(-1, 0), "zero length does not encode input")
+errors = errors + check("00"x, d2c(0), "NUL code point")
+errors = errors + check("0A"x, d2c(10), "control code point")
+errors = errors + check("α", d2c(945), "two-byte Unicode code point")
+errors = errors + check("🔥", d2c(source), "four-byte Unicode code point")
+errors = errors + check("ED9FBF"x, d2c(55295), "scalar before surrogate range")
+errors = errors + check("EE8080"x, d2c(57344), "scalar after surrogate range")
+errors = errors + check("F48FBFBF"x, d2c(1114111), "maximum Unicode scalar")
+errors = errors + check_int(128293, source, "source is not mutated")
 
-if d2c(77,1) \= 'M' then do
-  errors=errors+1
-  say 'D2C failed in test 2'
+caught = 0
+do
+  ignored = d2c(77, -1)
+on signal conversion_error
+  caught = caught + 1
 end
-
-if d2c(12,0) \= '' then do
-  errors=errors+1
-  say 'D2C failed in test 3'
+do
+  ignored = .string
+  ignored = d2c(77, 2)
+on signal conversion_error
+  caught = caught + 1
 end
-
-if c2d(d2c(9)) \= 9 then do
-  errors=errors+1
-  say 'D2C failed in test 4'
+do
+  ignored = .string
+  ignored = d2c(-1)
+on signal conversion_error
+  caught = caught + 1
 end
-
-if c2d(d2c(945)) \= 945 then do
-  errors=errors+1
-  say 'D2C failed in test 5'
+do
+  ignored = .string
+  ignored = d2c(1114112)
+on signal conversion_error
+  caught = caught + 1
 end
-
-if d2c(945) \= 'α' then do
-  errors=errors+1
-  say 'D2C failed in test 6'
+do
+  ignored = .string
+  ignored = d2c(55296)
+on signal conversion_error
+  caught = caught + 1
 end
-
-if c2d(d2c(128293)) \= 128293 then do
-  errors=errors+1
-  say 'D2C failed in test 7'
+do
+  ignored = .string
+  ignored = d2c(57343)
+on signal conversion_error
+  caught = caught + 1
 end
+errors = errors + check_int(6, caught, "invalid lengths and scalars signal")
 
-if d2c(128293) \= '🔥' then do
-  errors=errors+1
-  say 'D2C failed in test 8'
-end
+if errors = 0 then say "PASS: d2c"
+return errors <> 0
 
-if c2d('M') \= 77 then do
-  errors=errors+1
-  say 'C2D failed in test 9'
-end
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: D2C" label "expected" expected "got" actual
+  return 1
 
-if c2d('α') \= 945 then do
-  errors=errors+1
-  say 'C2D failed in test 10'
-end
-
-if c2d('🔥') \= 128293 then do
-  errors=errors+1
-  say 'C2D failed in test 11'
-end
-
-return errors<>0
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: D2C" label "expected" expected "got" actual
+  return 1

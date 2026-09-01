@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure = .int
+  payload = .binary
+  payload = "41"x
+            "42" as .binary
+  return 0

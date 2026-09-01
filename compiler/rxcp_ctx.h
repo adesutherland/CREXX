@@ -33,6 +33,7 @@
 #include "rxcp_token.h"
 #include "rxcp_ast.h"
 #include "rxcp_sym.h"
+#include "rxcp_import_report.h"
 #include <stdint.h>
 #include <time.h>
 
@@ -58,6 +59,10 @@ struct Context {
     char import_locations_owns_buffer;
     char** source_import_locations;
     char source_import_locations_owns_buffer;
+    char *import_resolution_report_path;
+    RxcpImportReport *import_resolution_report;
+    char executable_import_included;
+    size_t executable_import_root_index;
     importable_file **importable_file_list;
     FILE *file_pointer;
     FILE *traceFile;
@@ -65,6 +70,7 @@ struct Context {
     char *buff_end;
     char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
     char lexer_stem_mode; /* 1 if lexing a stem */
+    char lexer_intrinsic_mode; /* 1 if lexing the head of an angle intrinsic */
     int line;
     int token_counter;
     Token* token_head;
@@ -99,6 +105,7 @@ struct Context {
     char is_final_pass;
     char processedOptions;
     char source_has_options;
+    char source_has_srcmap;
     RexxLevel level;
     RexxLevel cli_level_override;
     RexxLevel cli_default_level;
@@ -125,6 +132,11 @@ struct Context {
     char in_exit_bridge;
     char disable_exits;
     char auto_import_rxas;
+    char emit_autoload_hints;
+    /* Contract-stub parsing validates declarations before the complete class
+     * registry exists. Imported inline bodies are attached later, when the
+     * stub enters a real consumer compilation context. */
+    char defer_imported_inline_attachments;
     void *exit_registry; /* Pointer to the list of registered exits (primary and additional keywords) */
     void *exit_additional_keywords; /* Pointer to the list of all additional keywords across all exits */
     void *exit_helper_registry; /* Pointer to per-file helper definitions injected by exits */
@@ -143,6 +155,13 @@ struct Context {
 
     /* Diagnostics list (collected from AST for safe emission) */
     void *diagnostics_list;
+
+    /* Generated source to original source map for preprocessed input. */
+    RxcpSrcMap *srcmap;
+
+    /* Rebuildable typed control/data-flow overlay. It owns no AST, Symbol or
+     * Scope object and is released before those objects. */
+    RxcpFlowProgram *flow_program;
 };
 
 #include "rxcp_emit.h"
@@ -157,10 +176,24 @@ struct imported_func {
     char *type;
     char *args;
     char *implementation;
+    char *provider_id; /* Stable RXPA provider ID, or NULL for bytecode/legacy imports. */
+    char *autoload_stem; /* Packaged RXBIN provider stem, or NULL for source/RXAS imports. */
     Context *context;
     char is_variable; /* 0=function, 1=global variable */
+    char is_task_callable; /* Sealed Gate F callable contract. */
     char *error_state; /* Pointer to a constant string with error code (or null). Not malloced/freed */
+    const char *error_field; /* Constant metadata field name for structured import diagnostics */
+    const char *error_detail; /* Constant reason for structured import diagnostics */
     struct imported_func *duplicate;
+};
+
+/* Superseded parsed class contracts remain reachable by active recursive
+ * import/validation frames.  Keep the Context and its shared file-name storage
+ * together until the owning imported-class registry record is destroyed. */
+struct retained_imported_class_context {
+    Context *context;
+    char *file_name;
+    struct retained_imported_class_context *next;
 };
 
 /*  Importable Classes */
@@ -174,6 +207,7 @@ struct imported_class {
     NodeType contract_type;
     char **implements_fqnames;
     size_t implements_count;
+    struct retained_imported_class_context *retained_contexts;
 };
 
 /*  Importable Files */
@@ -187,6 +221,8 @@ struct importable_file {
     time_t mtime;
     char *namespace_name;
     char header_scanned;
+    RxcpImportRootKind root_kind;
+    size_t root_index;
 };
 
 /* RXC Main Function */
@@ -223,14 +259,6 @@ int rexbpars(Context *context);
 int rexcscan(Context* s);
 int rexcpars(Context *context);
 void rxcp_levelc_prepare_source_ast(Context *context);
-char *rxcp_levelc_diag_format(const char *standard_code,
-                              const char *insert_name,
-                              const char *insert_value);
-char *rxcp_levelc_diag_format2(const char *standard_code,
-                               const char *insert_name1,
-                               const char *insert_value1,
-                               const char *insert_name2,
-                               const char *insert_value2);
 ASTNode *rxcp_levelc_ast_error(Context *context,
                                const char *standard_code,
                                Token *token);
@@ -280,6 +308,13 @@ int sym_is_imcls(Context *context, ASTNode *node);
 Symbol *sym_imcls(Context *context, ASTNode *node);
 /* Try and import an external class by name - return its symbol if successful */
 Symbol *ensure_class_imported(Context *context, const char *class_name, size_t class_name_length);
+/* Exact fully-qualified dependency lookup for sealed imported inline bodies.
+ * Unlike ordinary source lookup, this does not require the consumer source to
+ * import the producer's dependency namespace independently. */
+imported_func *rxcp_find_imported_function_exact(Context *context, const char *fqname);
+Symbol *ensure_function_imported_exact(Context *context,
+                                       const char *fqname,
+                                       size_t fqname_length);
 int sym_is_interface_symbol(Symbol *symbol);
 int sym_is_class_contract_symbol(Symbol *symbol);
 int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name);
@@ -338,7 +373,7 @@ char* mprintf(const char* format, ...);
 
 /* imported_func factory - returns null if the function is not in an applicable namespace */
 imported_func *rximpf_f(Context*  context, char* file_name, char *fqname, char *options, char *type, char *args,
-                        char *implementation, char is_variable);
+                       char *implementation, char is_variable, char is_task_callable);
 
 /* Free Func Tree and functions */
 void fre_ftre(Context *context);
@@ -361,6 +396,7 @@ char *meta_narg(ASTNode *node);
 
 /* Static Linked Plugin Support */
 struct static_linked_function {
+    char *provider_id;
     char *name;
     char *option;
     char *type;

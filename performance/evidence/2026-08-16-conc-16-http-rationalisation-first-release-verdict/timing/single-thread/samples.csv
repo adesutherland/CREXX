@@ -1,0 +1,105 @@
+sample_id,measurement,workload,cell_id,runtime,vm,variant,tier,aggregate,lifecycle,phase,round,position,work,elapsed_ns,max_rss_bytes,exit_code,correctness,benchmark_metric,benchmark_unit
+timing-Sieve-sieve-rxtvm-control-warmup-1,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,warmup,1,1,5500,1382589000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-warmup-1,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,warmup,1,2,5500,1374081000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-warmup-1,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,warmup,1,3,5500,1370122000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-warmup-1,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,warmup,1,4,5500,1350042000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-1,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,1,1,5500,1088753000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-1,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,1,2,5500,1074218000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-1,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,1,3,5500,1060441000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-1,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,1,4,5500,1070245000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-2,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,2,1,5500,1073350000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-2,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,2,2,5500,1062644000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-2,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,2,3,5500,1081440000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-2,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,2,4,5500,1073422000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-3,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,3,1,5500,1068030000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-3,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,3,2,5500,1065935000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-3,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,3,3,5500,1083444000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-3,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,3,4,5500,1088471000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-4,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,4,1,5500,1082359000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-4,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,4,2,5500,1076622000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-4,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,4,3,5500,1063180000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-4,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,4,4,5500,1063417000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-5,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,5,1,5500,1077859000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-5,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,5,2,5500,1080695000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-5,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,5,3,5500,1060837000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-5,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,5,4,5500,1070479000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-6,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,6,1,5500,1058773000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-6,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,6,2,5500,1065920000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-6,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,6,3,5500,1089075000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-6,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,6,4,5500,1095287000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-7,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,7,1,5500,1062678000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-7,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,7,2,5500,1068287000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-7,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,7,3,5500,1081944000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-7,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,7,4,5500,1091045000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-8,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,8,1,5500,1081161000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-8,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,8,2,5500,1072322000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-8,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,8,3,5500,1065505000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-8,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,8,4,5500,1068739000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-9,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,9,1,5500,1079476000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-9,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,9,2,5500,1069896000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-9,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,9,3,5500,1065857000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-9,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,9,4,5500,1069047000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-10,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,10,1,5500,1062330000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-10,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,10,2,5500,1067425000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-10,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,10,3,5500,1091462000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-10,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,10,4,5500,1088543000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-11,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,11,1,5500,1069597000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-11,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,11,2,5500,1064513000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-11,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,11,3,5500,1073981000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-11,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,11,4,5500,1075364000,,0,pass,,
+timing-Sieve-sieve-rxtvm-candidate-recorded-12,timing,Sieve,sieve-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,12,1,5500,1077897000,,0,pass,,
+timing-Sieve-sieve-rxtvm-control-recorded-12,timing,Sieve,sieve-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,12,2,5500,1067567000,,0,pass,,
+timing-Sieve-sieve-rxbvm-candidate-recorded-12,timing,Sieve,sieve-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,12,3,5500,1054301000,,0,pass,,
+timing-Sieve-sieve-rxbvm-control-recorded-12,timing,Sieve,sieve-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,12,4,5500,1061414000,,0,pass,,
+timing-RexxCPS-rexxcps-rxtvm-control-warmup-1,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,warmup,1,1,1000-clauses,1377581000,,0,pass,44496179,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-warmup-1,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,warmup,1,2,1000-clauses,1401777000,,0,pass,43920521,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-warmup-1,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,warmup,1,3,1000-clauses,1378197000,,0,pass,44327106,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-warmup-1,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,warmup,1,4,1000-clauses,1402990000,,0,pass,43786250,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-1,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,1,1,1000-clauses,1386503000,,0,pass,44095016,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-1,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,1,2,1000-clauses,1398309000,,0,pass,43607110,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-1,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,1,3,1000-clauses,1383971000,,0,pass,44383688,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-1,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,1,4,1000-clauses,1377367000,,0,pass,44560976,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-2,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,2,1,1000-clauses,1372981000,,0,pass,44782603,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-2,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,2,2,1000-clauses,1373011000,,0,pass,44906966,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-2,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,2,3,1000-clauses,1376779000,,0,pass,44555894,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-2,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,2,4,1000-clauses,1404804000,,0,pass,43821171,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-3,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,3,1,1000-clauses,1364086000,,0,pass,44873636,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-3,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,3,2,1000-clauses,1370882000,,0,pass,44501406,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-3,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,3,3,1000-clauses,1385452000,,0,pass,44299771,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-3,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,3,4,1000-clauses,1400767000,,0,pass,43809691,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-4,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,4,1,1000-clauses,1391057000,,0,pass,43871618,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-4,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,4,2,1000-clauses,1398169000,,0,pass,44018037,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-4,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,4,3,1000-clauses,1384004000,,0,pass,44258559,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-4,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,4,4,1000-clauses,1383873000,,0,pass,44223171,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-5,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,5,1,1000-clauses,1382634000,,0,pass,44562843,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-5,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,5,2,1000-clauses,1399743000,,0,pass,43628380,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-5,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,5,3,1000-clauses,1385256000,,0,pass,44101939,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-5,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,5,4,1000-clauses,1416111000,,0,pass,43286183,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-6,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,6,1,1000-clauses,1376769000,,0,pass,44339763,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-6,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,6,2,1000-clauses,1371885000,,0,pass,44611868,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-6,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,6,3,1000-clauses,1393439000,,0,pass,44016603,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-6,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,6,4,1000-clauses,1405922000,,0,pass,43810151,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-7,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,7,1,1000-clauses,1380914000,,0,pass,44569397,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-7,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,7,2,1000-clauses,1370488000,,0,pass,44603272,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-7,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,7,3,1000-clauses,1381837000,,0,pass,44351799,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-7,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,7,4,1000-clauses,1380837000,,0,pass,44330250,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-8,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,8,1,1000-clauses,1372985000,,0,pass,44611112,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-8,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,8,2,1000-clauses,1376006000,,0,pass,44522646,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-8,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,8,3,1000-clauses,1424019000,,0,pass,42869955,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-8,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,8,4,1000-clauses,1386710000,,0,pass,44409036,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-9,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,9,1,1000-clauses,1405458000,,0,pass,43854225,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-9,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,9,2,1000-clauses,1414090000,,0,pass,43330710,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-9,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,9,3,1000-clauses,1380215000,,0,pass,44511469,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-9,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,9,4,1000-clauses,1386289000,,0,pass,44228492,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-10,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,10,1,1000-clauses,1387476000,,0,pass,44312688,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-10,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,10,2,1000-clauses,1372662000,,0,pass,44766445,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-10,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,10,3,1000-clauses,1377167000,,0,pass,44249432,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-10,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,10,4,1000-clauses,1379095000,,0,pass,44652306,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-11,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,11,1,1000-clauses,1378912000,,0,pass,44346331,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-11,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,11,2,1000-clauses,1387620000,,0,pass,44281959,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-11,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,11,3,1000-clauses,1395700000,,0,pass,43907986,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-11,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,11,4,1000-clauses,1389447000,,0,pass,43932793,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-candidate-recorded-12,timing,RexxCPS,rexxcps-rxtvm-candidate,crexx,rxtvm,unified-http,A,no,startup-included,recorded,12,1,1000-clauses,1376004000,,0,pass,44512578,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxtvm-control-recorded-12,timing,RexxCPS,rexxcps-rxtvm-control,crexx,rxtvm,pre-http-control,A,no,startup-included,recorded,12,2,1000-clauses,1364896000,,0,pass,36711798,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-candidate-recorded-12,timing,RexxCPS,rexxcps-rxbvm-candidate,crexx,rxbvm,unified-http,A,no,startup-included,recorded,12,3,1000-clauses,1383811000,,0,pass,44351130,cREXX clauses per second
+timing-RexxCPS-rexxcps-rxbvm-control-recorded-12,timing,RexxCPS,rexxcps-rxbvm-control,crexx,rxbvm,pre-http-control,A,no,startup-included,recorded,12,4,1000-clauses,1373635000,,0,pass,44590583,cREXX clauses per second

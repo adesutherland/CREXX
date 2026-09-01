@@ -1,0 +1,9 @@
+options levelb
+
+import signature_probe
+
+if valid_zero() <> 42 then exit 1
+if valid_one(7) <> 42 then exit 2
+if valid_multi(20, 22) <> 42 then exit 3
+
+say "RXPA_SIGNATURE_VALID_OK"

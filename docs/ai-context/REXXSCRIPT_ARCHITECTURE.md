@@ -1,12 +1,17 @@
 # RexxScript Step 1 Architecture
 
+Status: maintainer/agent architecture context. The RexxScript product master
+documentation is in `rexxscript/doc/`. Keep user-facing and developer-facing
+product docs there, and use this file for operational architecture notes that
+agents and maintainers need while working in the repo.
+
 ## Purpose
 
 This document describes the architecture, design goals, and planned evolution of RexxScript.
 
-RexxScript is exposed to CREXX applications through the `REXXSCRIPT` command and provides a lightweight scripting environment for configurable business rules, calculations, decision logic, and generated code execution.
+RexxScript is exposed to cRexx applications through the `REXXSCRIPT` command and provides a lightweight scripting environment for configurable business rules, calculations, decision logic, and generated code execution.
 
-The current implementation is built upon an execution engine that evolved from the original `EVALUATE()` prototype. While that implementation remains important internally, RexxScript should be viewed as the primary architectural concept and user-facing feature.
+The current implementation is built upon an execution engine that evolved from the original `EVALUATE()` prototype. RexxScript now owns that engine as a first-class runtime product; `EVALUATE()` is a compatibility facade.
 
 The intent is evolutionary rather than revolutionary: build on the current working implementation, gain practical experience, and introduce additional capabilities only when there is a demonstrated requirement.
 
@@ -16,11 +21,48 @@ This document focuses on architectural decisions and implementation direction. F
 
 ## Current Status
 
-RexxScript is now a working structured execution environment integrated into CREXX through the `REXXSCRIPT` command.
+RexxScript is now a working structured execution environment integrated into cRexx through the `REXXSCRIPT` command and through a direct runtime namespace.
 
-The implementation supports structured control flow, local variable management, intrinsic functions, output capture, and host variable exchange through explicit exposure semantics.
+The implementation supports structured control flow, local variable management,
+shared intrinsic functions, output capture, and host variable exchange through
+explicit exposure semantics.
 
-Internally, the runtime evolved from the original `EVALUATE()` prototype, but the primary architectural focus is now RexxScript as a language feature rather than the underlying implementation entry point.
+The runtime lives under `rexxscript/` and builds `bin/rexxscript.rxbin`. Its primary namespace is `rexxscript`, exposing:
+
+```text
+rexxscript_evaluate
+rexxscript_evaluate_exposed
+rexxscript_output
+rexxscript_value
+rexxscriptevaluator
+```
+
+The runtime source is split into:
+
+```text
+RexxScriptEvaluator.crexx
+    namespace rexxscriptcore
+    owns the core evaluator class, parser state, output buffer, labels, and
+    sandbox RexxVariablePool
+
+RexxScriptRuntime.crexx
+    namespace rexxscript
+    preserves the public API and wraps the core evaluator
+
+RexxScriptEvaluateCompat.crexx
+    namespace rxfnsb
+    keeps the old evaluate()/evaluate_exposed() prototype facade
+
+RexxScriptRunner.crexx
+    packaged as the standalone bin/rexxscript executable
+```
+
+Each `.rexxscriptevaluator()` instance owns a separate core evaluator. The
+procedural `rexxscript_output()` and `rexxscript_value(name)` helpers are a
+transitional last-result facade and should not be used for code that needs
+multiple live evaluator instances.
+
+The `REXXSCRIPT` compiler exit is an adapter: it lowers the statement syntax to calls into the `rexxscript` namespace and asks the compiler to import that namespace. The old `rxfnsb.evaluate`, `rxfnsb.evaluate_exposed`, `rxfnsb.rexxscript_output`, `rxfnsb.rexxscript_value`, and `rxfnsb.rexxscriptevaluator` surface is kept as a compatibility module in `bin/rexxscript.rxbin`, not in the base Level B `library.rxbin`.
 
 The current implementation serves as both:
 
@@ -92,6 +134,9 @@ DO variable = start TO limit [BY step]
 LEAVE
 ITERATE
 
+label:
+SIGNAL label
+
 RETURN
 ```
 
@@ -133,34 +178,52 @@ flat result export
 
 Step 1 supports a small but extensible set of intrinsic functions.
 
-Intrinsics are implemented directly by the execution engine and are not general Rexx function calls.
+Intrinsics are evaluator built-ins, not general Rexx function calls. Where the
+function overlaps pure Classic Rexx behavior, RexxScript owns the name
+controller and routes the call to the specific shared `rxfnsc`
+`RexxClassicBifs` export. Direct Level C library harnesses call the same exports.
+Current compiler output may still use the deprecated `rxfnsc` compatibility
+dispatcher until a separate bulk lowering change; it never uses the RexxScript
+controller.
 
 The intrinsic subsystem is intentionally separated from the expression parser.
 
-Function-call syntax is parsed once and dispatched through a centralized intrinsic-function handler. As a result, new intrinsic functions can normally be added without parser modifications and with minimal impact on the execution engine.
+Function-call syntax is parsed once and dispatched through `_builtin_known()`
+and `_dispatch_builtin()` in `RexxScriptEvaluator.crexx`. As a result, new
+intrinsic functions can normally be added without parser modifications and
+with minimal impact on the execution engine.
 
 This architecture allows practical utility functions to be introduced incrementally as requirements emerge.
 
 Function names are matched case-insensitively.
 
+The shared BIF call context carries a caller variable pool. In RexxScript this
+is deliberately the script sandbox pool, not the host cRexx variable pool. Only
+variables explicitly passed through `EXPOSE` are copied into and out of that
+sandbox.
+
 Current intrinsic set:
 
 ```text
-LENGTH
-SUBSTR
-
-LEFT
-RIGHT
-STRIP
-POS
-
-UPPER
-LOWER
-
-WORDS
-WORD
-
+ABBREV
 ABS
+COPIES
+DATATYPE
+LENGTH
+LEFT
+LOWER
+MAX
+MIN
+POS
+RIGHT
+SIGN
+SPACE
+STRIP
+SUBSTR
+UPPER
+VERIFY
+WORD
+WORDS
 ```
 
 Examples:
@@ -168,32 +231,24 @@ Examples:
 ```rexx
 LEFT(name,10)
 RIGHT(code,3)
+SUBSTR(code,2,4,".")
 
 STRIP(customer)
 POS("-", date)
+SPACE(name,1)
 
 WORD(fullname,2)
+WORDS(fullname)
 
 ABS(balance)
+MAX(score, threshold, 0)
 ```
 
 Unknown function names generate a controlled runtime error.
 
-Potential future candidates include:
-
-```text
-MIN
-MAX
-SIGN
-
-SPACE
-VERIFY
-DATATYPE
-```
-
 ---
 
-## CREXX Integration
+## cRexx Integration
 
 The preferred integration mechanism is the `REXXSCRIPT` command.
 
@@ -224,7 +279,21 @@ script_status
 
 The underlying evaluator remains an implementation detail and may evolve without affecting the external RexxScript programming model.
 
-The communication layer between CREXX and RexxScript is still considered an active design area and may evolve as additional experience is gained.
+At runtime, applications using the command, direct `rexxscript_*` calls, or
+compatibility `evaluate()` calls must load `bin/rexxscript.rxbin` along with
+the base `bin/library.rxbin`. The `crexx` driver includes the RexxScript image
+in its default runtime set; direct VM invocations must pass it explicitly.
+
+The standalone `bin/rexxscript` executable packages `RexxScriptRunner.crexx`
+with `library`, `classlib`, `rxfnsc`, and `rexxscript`, and statically links
+the system plugin used by the runner/library file I/O path. The included
+classlib collection code is Rexx-only and does not require the historical
+treemap plugin.
+
+The communication layer between cRexx and RexxScript is still considered an
+active design area and may evolve as additional experience is gained. RexxScript
+now maintains a `RexxVariablePool` for the script-visible variables while
+continuing to copy values through the existing `EXPOSE` boundary.
 
 ---
 
@@ -317,6 +386,9 @@ counted DO loops
 LEAVE
 ITERATE
 
+label:
+SIGNAL label
+
 RETURN
 ```
 
@@ -352,7 +424,7 @@ Variable pools are therefore viewed as a natural extension of the current archit
 
 The evaluator exports a flat result structure.
 
-This representation is intentionally simple and integrates naturally with CREXX arrays.
+This representation is intentionally simple and integrates naturally with cRexx arrays.
 
 The raw result structure is primarily intended as an integration and diagnostic mechanism rather than a user-facing programming interface.
 
@@ -525,7 +597,7 @@ The implementation remains free to use simpler internal representations than the
 
 ## Summary
 
-RexxScript has evolved from a simple assignment evaluator into a structured scripting environment integrated into CREXX through the `REXXSCRIPT` command.
+RexxScript has evolved from a simple assignment evaluator into a structured scripting environment integrated into cRexx through the `REXXSCRIPT` command.
 
 Implemented:
 

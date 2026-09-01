@@ -30,12 +30,14 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/ai-context/CREXX_DEBUGGING.md`
 - `docs/ai-context/CREXX_LEVELB_AUTHORING.md`
+- `docs/ai-context/CREXX_UNICODE.md`
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
 - `docs/books/crexx_language_reference/data_types.md`
 - `docs/books/crexx_language_reference/statements.md`
 - `docs/ai-context/RXAS_ASSEMBLER.md`
 - `docs/ai-context/RXLINK_LINKER.md`
 - `docs/ai-context/RXVM_INTERPRETER.md`
+- `docs/ai-context/RXPP_PREPROCESSOR.md`
 - `docs/ai-context/CREXX_LIBS.md`
 - `docs/ai-context/CREXX_ASAN_TESTING.md`
 
@@ -51,7 +53,42 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
+- Once the required full testing has passed, do not repeat it if no code or
+  test/build input has changed. Verify that with the relevant diff or tree
+  hashes and reuse the retained evidence. A history-only merge or
+  documentation-only commit does not by itself invalidate completed testing.
+  Exact-SHA hosted workflows required for publication remain separate gates;
+  they do not justify repeating unchanged local QA.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
+- Treat library development as an opportunity to validate the complete product
+  toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and
+  `rxvm`, and a library-discovered defect in any of those layers should gain a
+  focused regression test when it is fixed.
+- When correcting an inlining defect, preserve the supported optimized shape
+  by fixing its rewrite, ownership, or copyback mechanics. Retain an ordinary
+  call only when the required equivalence cannot be proved; do not use a broad
+  fail-closed guard as the final fix for a representable inline shape.
+- Treat source documentation tags as first-class code-adjacent assets during refactors. When rewriting or replacing `.crexx` classes, methods, plugins, or library surfaces, preserve existing `/** ... */` RexxDoc blocks and tags such as `@param`, `@parm`, `@return`, `@author`, examples, and notes wherever the documented API still exists. If behaviour, signatures, backing implementation, or return contracts change, update the tags in the same change instead of dropping them. Before large classlib or library refactors, compare relevant doc-tag coverage before and after; if tags are intentionally removed because an API is removed, call that out explicitly in the change summary.
+
+## Performance Programme
+
+For performance-programme work, read `performance/AGENTS.md` and
+`performance/ROADMAP.md` before changing benchmarks, profiling automation,
+compiler/assembler optimisations, VM execution paths, or recorded performance
+evidence. The dated programme charter remains
+`docs/planning/release-1/performance-programme-report-2026-07-15.md`; use the
+roadmap for live status and idea capture rather than editing historical findings
+into the charter.
+
+After an approved production performance edit, follow the mandatory first
+Release verdict in `performance/AGENTS.md` before doing broad closeout work.
+Once the minimum focused correctness checks needed for safe measurement pass,
+freeze implementation, build the ordinary profiling-off Release product, run
+the smallest decisive end-to-end comparison against retained valid baseline
+evidence, report it to Adrian, and stop for direction. The implementation
+remains provisional and revertable until that verdict is accepted. Full Debug
+CTest, sanitizer, install/package proof, harness refinement, follow-on PoCs,
+cleanup, and documentation polish come after this decision gate, not before it.
 
 ## Linux Install Notes
 
@@ -68,14 +105,27 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 ## Build Performance Notes
 
+- Full Debug CTest performs much better with deliberate test-level
+  parallelism. On Adrian's macOS ARM64 development machine, `uname -srm`
+  currently reports `Darwin arm64` and `sysctl -n hw.logicalcpu` reports 10
+  CPUs, but broad validation works best with `ctest --test-dir
+  cmake-build-debug --parallel 30 --output-on-failure` or
+  `CTEST_PARALLEL_LEVEL=30`. The compiler syntax-highlighting tests are
+  serialized with a CTest `RESOURCE_LOCK` because they drive parser-thread
+  tooling; do not remove that lock without proving `ctest --parallel 30` remains
+  stable. On slower or unknown Unix-like hosts, prefer at least `--parallel 10`
+  for full or large CTest sweeps unless memory pressure or platform locking
+  suggests less. Keep focused CTest runs narrow by `-R` as usual.
 - On the 2026-06-17 Linux ARM64 VM, a clean `develop` Release build with
   `--parallel $(nproc)` used 6 jobs and hit swap while compiling multiple
   optimized `rxvmintp.c` variants. If Release builds look unexpectedly slow,
   check memory pressure and the number of concurrent `rxvmintp.c` compiles
   before assuming CTest or generated bytecode is the bottleneck.
 - The VM core build is intentionally shared through the internal CMake object
-  libraries `rxvm_core_objects` and `rxbvm_core_objects`. Keep `NTHREADED`
-  separated between those two object variants.
+  libraries `rxtvm_core_objects` and `rxbvm_core_objects`. Keep `NTHREADED`
+  confined to the portable `rxbvm` object variant. Product `rxvm` is a
+  compiler-selected symlink/copy target and must not compile a third core;
+  MSVC builds only `rxbvm_core_objects`.
 - VM OS/TLS support is intentionally shared through `rxvm_platform_objects`.
   That target is compiled with the configured platform TLS backend. The RXPA
   static-plugin harness VMs use `rxvm_platform_notls_objects` so their
@@ -83,9 +133,44 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - Do not replace the object-library sharing with repeated per-target
   `rxvmintp.c` or `rxvmsock.c` source lists unless you have measured the
   Release build impact and validated Debug/Release CTest.
+- On Windows, avoid overlapping build and test invocations in the same build
+  tree. CTest fixtures and generated-runtime targets can rebuild and remove
+  `.rxbin`/`.exe` artifacts while other `ctest`, `ninja`, `cmake`, `rxc`,
+  `rxas`, `rxlink`, or VM processes still have them open, producing transient
+  "file can't be removed and still exist" failures. If a build/test run is
+  interrupted or times out, check for and stop leftover build/test processes
+  before retrying. For generated-runtime cleanup lock failures, retry the
+  relevant target after the processes are gone; use `--parallel 1` for the
+  retry when the lock appears tied to parallel cleanup.
 
 ## Debugging Output Discipline
 
+- Treat every first-party ASan, LSan, or maintained sanitizer finding as a
+  repository-level blocker, even when it is independent of the change that
+  exposed it.  Before continuing unrelated closeout work, give the finding a
+  stable `SAN-nnn` entry in `docs/SANITIZER-WORKLIST.md` with its reproducer,
+  retained log, affected revision, owner/next action, and closure test.  A
+  dated evidence note alone is not a valid disposition.
+- Do not describe a release candidate, release, or cross-platform sanitizer
+  pass as complete or sanitizer-clean while a first-party `SAN-nnn` item is
+  open. A bounded implementation phase may close only when Adrian explicitly
+  assigns the outstanding platform proof to a named later release-QA gate. The
+  phase record must name every open `SAN-nnn`, its current repair evidence and
+  its release-QA owner; the handoff does not close or downgrade the item and
+  does not support a sanitizer-clean or release-ready claim. "Pre-existing"
+  and "independent" identify attribution; they do not lower priority or permit
+  an ownerless deferral.
+- Close a `SAN-nnn` item only after retaining a permanent focused regression,
+  passing the same focused command in normal Debug and the maintained
+  sanitizer build, and completing the broad platform sanitizer gate required
+  by `docs/ai-context/CREXX_ASAN_TESTING.md`.  Unsupported platform facilities
+  such as Apple LeakSanitizer must be recorded as capability limits and covered
+  on a supported platform instead.
+- Do not add a sanitizer suppression, test exclusion, leak-off wrapper on a
+  supported platform, or time-bounded waiver for first-party code without the
+  user's explicit approval.  Any approved exception remains an open,
+  release-blocking `SAN-nnn` item until the underlying defect is repaired and
+  requalified.
 - For ASan/LSan builds or ctests, use `tools/asan-run.sh` and consult
   `docs/ai-context/CREXX_ASAN_TESTING.md`. Do not hand-run broad sanitizer
   commands unless the runner is broken or the task is specifically to debug the

@@ -1,0 +1,47 @@
+CMake is re-running because C:/Users/adria/CLionProjects/CREXX/cmake-build-msvc-rxbvm-release/CMakeFiles/generate.stamp is out-of-date.
+  the file 'C:/Users/adria/CLionProjects/CREXX/CMakeLists.txt'
+  is newer than 'C:/Users/adria/CLionProjects/CREXX/cmake-build-msvc-rxbvm-release/CMakeFiles/generate.stamp.depend'
+  result='-1'
+-- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
+-- CMake Version: 4.3.1
+-- CREXX Version: crexx-1.0.0-beta.3+local.g0a0f87a86fac.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260730T090620Z
+-- CREXX Build Commit: 0a0f87a86fac
+-- CMake Generator: Visual Studio 17 2022
+-- Using local DSL-Syntax-Highlighter at C:/Users/adria/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: /DWIN32 /D_WINDOWS
+-- C++ compiler flags: /DWIN32 /D_WINDOWS /EHsc  /W3 /wd4068 -D_CRT_SECURE_NO_WARNINGS /EHsc
+-- Linker flags for executables: /machine:x64
+-- Linker flags for shared libs: /machine:x64
+-- Fetching SQLite amalgamation 3530200 for native ADDRESS demo
+-- cREXX VM core socket TLS backend: SCHANNEL
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled, skipping subdirectory.
+-- Skipping INT_SIGNAL native signal test on Windows
+-- Smoke test 'INT_BYTECODE' is not present in this configuration; skipping
+-- Configuring done (5.6s)
+-- Generating done (13.7s)
+-- Build files have been written to: C:/Users/adria/CLionProjects/CREXX/cmake-build-msvc-rxbvm-release
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  Checking File Globs
+  1>Checking Build System
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  rxbvm_core_objects.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxbvm_core_objects.dir\Release\rxbvm_core_objects.lib
+  rxvm_platform_objects.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\interpreter\rxvm_platform_objects.dir\Release\rxvm_platform_objects.lib
+  decnumber.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\decnumber.lib
+  platform.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\platform.lib
+  avl_tree.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\avl_tree.lib
+  rxbin.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxbin.lib
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  rxpa.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxpa.lib
+  rxvmref.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxvmref.lib
+  rxvmplugin.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxvmplugin.lib
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  mc_decimal_manual.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxvm_mc_decimal_manual.lib
+  rxpashim.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxpashim.lib
+  Building Custom Rule C:/Users/adria/CLionProjects/CREXX/interpreter/CMakeLists.txt
+  rxbvm.vcxproj -> C:\Users\adria\CLionProjects\CREXX\cmake-build-msvc-rxbvm-release\bin\Release\rxbvm.exe

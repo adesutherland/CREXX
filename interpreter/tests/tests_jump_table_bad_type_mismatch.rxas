@@ -1,0 +1,15 @@
+/*
+ * Jump-table cases and jump instruction variants must agree on key kind.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable bytes linear
+    br done
+byte_key: .jcase bytes 0x01
+    ret 0
+done:
+    load r0,"one"
+    jumps r0,bytes
+    ret 0

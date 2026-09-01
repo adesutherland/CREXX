@@ -24,15 +24,11 @@
 
 options levelb comments_dash
 namespace id_id expose id
-import id
+import rxid
 
 /**
  * class id provides identifier generation methods.
- * It wraps the native id._* functions so the public
- * methods remain recursion-safe and signature-aligned.
- *
- * All methods take a string argument `s` to match the
- * native interface (arg0=.string).
+ * It wraps the public rxid provider functions.
  * 
  * @author René Vincent Jansen
  * @author Peter Jacob
@@ -51,40 +47,34 @@ id: class
  * method uuid returns a UUIDv4 string.
  */
   uuid: method = .string
-    return _uuid()
-    
-/** 
- * method uuidt returns a time base uuid string.
-  */
-  uuidt: method = .string
-    return _uuidt()
+    return rxid..uuid4()
     
 /** 
  * method uuidV7 returns a UUIDv7 string.
   */
   uuidV7: method = .string
-    return _uuidv7()
+    return rxid..uuid7()
     
 /** 
  * method ulid returns a ULID string.
   */
   ulid: method = .string
-    return _ulid()
+    return rxid..ulid()
     
 /** 
  * method nanoId returns a NanoID string.
   */
   nanoId: method = .string
-    return _nanoid()
+    return rxid..nanoid()
     
 /** 
  * method snowflake returns a Snowflake ID string.
   */
   snowflake: method = .string
-    return _snowflake()
+    return rxid..snowflake()
     
 /** 
  * method base58 returns a Base58 identifier string.
   */
   base58: method = .string
-    return _base58()
+    return rxid..base58()

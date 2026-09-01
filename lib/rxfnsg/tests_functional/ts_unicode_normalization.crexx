@@ -1,0 +1,231 @@
+/* Complete public Unicode 17 normalization conformance contract. */
+options levelb
+
+import rxfnsb
+import rxunicode
+
+arg argv = .string[]
+if argv[0] \= 1 then do
+  say "usage: ts_unicode_normalization NormalizationTest.txt"
+  return 2
+end
+
+part1_seen = .binary
+call binresize part1_seen,0x110000
+part_rows = .int[]
+part_index = .int
+do part_index = 1 to 6
+  part_rows[part_index] = 0
+end
+rows = 0
+relations = 0
+predicates = 0
+part = -1
+failure = ""
+
+lines = readlines(argv[1])
+do line_number = 1 to lines[0] while failure = ""
+  line = strip(lines[line_number])
+  if line = "" | left(line,1) = "#" then iterate
+  if left(line,5) = "@Part" then do
+    if length(line) < 6 then do
+      failure = "invalid part marker at line " || line_number
+      leave
+    end
+    next_part = c2d(substr(line,6,1)) - 48
+    if next_part < 0 | next_part > 5 | next_part \= part + 1 then do
+      failure = "unexpected part marker at line " || line_number
+      leave
+    end
+    part = next_part
+    iterate
+  end
+  if part < 0 | part > 5 then do
+    failure = "test row precedes a valid part marker at line " || line_number
+    leave
+  end
+
+  fields = qsplit(line,";")
+  if fields[0] < 5 then do
+    failure = "invalid normalization row at line " || line_number
+    leave
+  end
+  field1 = strip(fields[1])
+  field2 = strip(fields[2])
+  field3 = strip(fields[3])
+  field4 = strip(fields[4])
+  field5 = strip(fields[5])
+  if field1 = "" | field2 = "" | field3 = "" | field4 = "" | field5 = "" then do
+    failure = "empty normalization field at line " || line_number
+    leave
+  end
+
+  c1 = hex_sequence_to_string(field1)
+  c2 = hex_sequence_to_string(field2)
+  c3 = hex_sequence_to_string(field3)
+  c4 = hex_sequence_to_string(field4)
+  c5 = hex_sequence_to_string(field5)
+
+  failure = check_relation(1,"toNFD(c1) == c3",line_number,c1,c3)
+  if failure = "" then failure = check_relation(1,"toNFD(c2) == c3",line_number,c2,c3)
+  if failure = "" then failure = check_relation(1,"toNFD(c3) == c3",line_number,c3,c3)
+  if failure = "" then failure = check_relation(1,"toNFD(c4) == c5",line_number,c4,c5)
+  if failure = "" then failure = check_relation(1,"toNFD(c5) == c5",line_number,c5,c5)
+  if failure = "" then failure = check_relation(2,"toNFKD(c1) == c5",line_number,c1,c5)
+  if failure = "" then failure = check_relation(2,"toNFKD(c2) == c5",line_number,c2,c5)
+  if failure = "" then failure = check_relation(2,"toNFKD(c3) == c5",line_number,c3,c5)
+  if failure = "" then failure = check_relation(2,"toNFKD(c4) == c5",line_number,c4,c5)
+  if failure = "" then failure = check_relation(2,"toNFKD(c5) == c5",line_number,c5,c5)
+  if failure = "" then failure = check_relation(3,"toNFC(c1) == c2",line_number,c1,c2)
+  if failure = "" then failure = check_relation(3,"toNFC(c2) == c2",line_number,c2,c2)
+  if failure = "" then failure = check_relation(3,"toNFC(c3) == c2",line_number,c3,c2)
+  if failure = "" then failure = check_relation(3,"toNFC(c4) == c4",line_number,c4,c4)
+  if failure = "" then failure = check_relation(3,"toNFC(c5) == c4",line_number,c5,c4)
+  if failure = "" then failure = check_relation(4,"toNFKC(c1) == c4",line_number,c1,c4)
+  if failure = "" then failure = check_relation(4,"toNFKC(c2) == c4",line_number,c2,c4)
+  if failure = "" then failure = check_relation(4,"toNFKC(c3) == c4",line_number,c3,c4)
+  if failure = "" then failure = check_relation(4,"toNFKC(c4) == c4",line_number,c4,c4)
+  if failure = "" then failure = check_relation(4,"toNFKC(c5) == c4",line_number,c5,c4)
+
+  if failure = "" then failure = check_normalized(1,"isNFD(c1)",line_number,c1,c3)
+  if failure = "" then failure = check_normalized(1,"isNFD(c2)",line_number,c2,c3)
+  if failure = "" then failure = check_normalized(1,"isNFD(c3)",line_number,c3,c3)
+  if failure = "" then failure = check_normalized(1,"isNFD(c4)",line_number,c4,c5)
+  if failure = "" then failure = check_normalized(1,"isNFD(c5)",line_number,c5,c5)
+  if failure = "" then failure = check_normalized(2,"isNFKD(c1)",line_number,c1,c5)
+  if failure = "" then failure = check_normalized(2,"isNFKD(c2)",line_number,c2,c5)
+  if failure = "" then failure = check_normalized(2,"isNFKD(c3)",line_number,c3,c5)
+  if failure = "" then failure = check_normalized(2,"isNFKD(c4)",line_number,c4,c5)
+  if failure = "" then failure = check_normalized(2,"isNFKD(c5)",line_number,c5,c5)
+  if failure = "" then failure = check_normalized(3,"isNFC(c1)",line_number,c1,c2)
+  if failure = "" then failure = check_normalized(3,"isNFC(c2)",line_number,c2,c2)
+  if failure = "" then failure = check_normalized(3,"isNFC(c3)",line_number,c3,c2)
+  if failure = "" then failure = check_normalized(3,"isNFC(c4)",line_number,c4,c4)
+  if failure = "" then failure = check_normalized(3,"isNFC(c5)",line_number,c5,c4)
+  if failure = "" then failure = check_normalized(4,"isNFKC(c1)",line_number,c1,c4)
+  if failure = "" then failure = check_normalized(4,"isNFKC(c2)",line_number,c2,c4)
+  if failure = "" then failure = check_normalized(4,"isNFKC(c3)",line_number,c3,c4)
+  if failure = "" then failure = check_normalized(4,"isNFKC(c4)",line_number,c4,c4)
+  if failure = "" then failure = check_normalized(4,"isNFKC(c5)",line_number,c5,c4)
+  if failure \= "" then leave
+
+  if part = 1 then do
+    if words(field1) \= 1 then do
+      failure = "Part 1 source is not one codepoint at line " || line_number
+      leave
+    end
+    <at..u8>(x2d(field1)) part1_seen = 1
+  end
+  part_rows[part + 1] = part_rows[part + 1] + 1
+  rows = rows + 1
+  relations = relations + 20
+  predicates = predicates + 20
+end
+
+if failure = "" & part \= 5 then failure = "normalization test ended before Part 5"
+if failure = "" then do
+  expected_parts = .int[]
+  expected_parts[1] = 45
+  expected_parts[2] = 17086
+  expected_parts[3] = 1936
+  expected_parts[4] = 194
+  expected_parts[5] = 735
+  expected_parts[6] = 38
+  do part_index = 1 to 6 while failure = ""
+    if part_rows[part_index] \= expected_parts[part_index] then,
+      failure = "unexpected row count for Part " || (part_index - 1)
+  end
+end
+if failure = "" & relations \= 400680 then failure = "unexpected relation count"
+if failure = "" & predicates \= 400680 then failure = "unexpected predicate count"
+
+/* UAX #15 requires every scalar absent from Part 1 to remain an identity. */
+unlisted_identity_checks = 0
+batch_count = 0
+batch = ""
+starter = 0xFFFF
+do codepoint = 0 to 0x10FFFF while failure = ""
+  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+  if <at..u8>(codepoint) part1_seen \= 0 then iterate
+  assembler appendchar batch,starter
+  assembler appendchar batch,codepoint
+  batch_count = batch_count + 1
+  unlisted_identity_checks = unlisted_identity_checks + 1
+  if batch_count = 4096 then do
+    failure = check_identity_batch(batch,codepoint)
+    batch = ""
+    batch_count = 0
+  end
+end
+if failure = "" & batch_count > 0 then failure = check_identity_batch(batch,0x10FFFF)
+if failure = "" & unlisted_identity_checks \= 1094978 then,
+  failure = "unexpected unlisted scalar identity count"
+
+if failure \= "" then do
+  say "FAIL:" failure
+  return 1
+end
+
+say "NormalizationTest rows by Part 0..5:" part_rows[1] || "/" || part_rows[2] || "/" || part_rows[3] || "/" || part_rows[4] || "/" || part_rows[5] || "/" || part_rows[6]
+say "Normalization relations:" relations
+say "Normalization predicates:" predicates
+say "Unlisted scalar identity checks per form:" unlisted_identity_checks
+say "PASS: rxunicode Unicode 17 four-form normalization"
+return 0
+
+check_relation: procedure = .string
+  arg form = .int, relation = .string, line_number = .int, source = .string, expected = .string
+  if form = 1 then actual = .rxunicode..toNFD(source)
+  else if form = 2 then actual = .rxunicode..toNFKD(source)
+  else if form = 3 then actual = .rxunicode..toNFC(source)
+  else actual = .rxunicode..toNFKC(source)
+  if actual \== expected then return relation_failure(relation,line_number,actual,expected)
+  return ""
+
+check_normalized: procedure = .string
+  arg form = .int, relation = .string, line_number = .int, source = .string, normalized = .string
+  expected = source == normalized
+  if form = 1 then actual = .rxunicode..isNFD(source)
+  else if form = 2 then actual = .rxunicode..isNFKD(source)
+  else if form = 3 then actual = .rxunicode..isNFC(source)
+  else actual = .rxunicode..isNFKC(source)
+  if actual \= expected then,
+    return relation || " failed at line " || line_number || ": expected " || expected || " got " || actual
+  return ""
+
+check_identity_batch: procedure = .string
+  arg batch = .string, codepoint = .int
+  if .rxunicode..toNFD(batch) \== batch then return "NFD unlisted scalar batch changed near U+" || right(d2x(codepoint),6,"0")
+  if .rxunicode..toNFKD(batch) \== batch then return "NFKD unlisted scalar batch changed near U+" || right(d2x(codepoint),6,"0")
+  if .rxunicode..toNFC(batch) \== batch then return "NFC unlisted scalar batch changed near U+" || right(d2x(codepoint),6,"0")
+  if .rxunicode..toNFKC(batch) \== batch then return "NFKC unlisted scalar batch changed near U+" || right(d2x(codepoint),6,"0")
+  return ""
+
+hex_sequence_to_string: procedure = .string
+  arg sequence = .string
+  result = ""
+  do i = 1 to words(sequence)
+    codepoint = x2d(word(sequence,i))
+    assembler appendchar result,codepoint
+  end
+  return result
+
+string_to_hex_sequence: procedure = .string
+  arg value = .string
+  result = ""
+  value_length = 0
+  assembler strlen value_length,value
+  do i = 0 to value_length - 1
+    codepoint = 0
+    assembler strchar codepoint,value,i
+    if result \= "" then result = result || " "
+    width = 4
+    if codepoint > 0xFFFF then width = 6
+    result = result || right(d2x(codepoint),width,"0")
+  end
+  return result
+
+relation_failure: procedure = .string
+  arg relation = .string, line_number = .int, actual = .string, expected = .string
+  return relation || " failed at line " || line_number || ": expected [" ||,
+         string_to_hex_sequence(expected) || "] got [" || string_to_hex_sequence(actual) || "]"

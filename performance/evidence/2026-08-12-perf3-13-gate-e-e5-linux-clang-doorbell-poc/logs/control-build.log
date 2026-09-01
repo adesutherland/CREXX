@@ -1,0 +1,62 @@
+[0/2] Re-checking globbed directories...
+[1/54] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.o
+[2/54] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.o
+[3/54] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[4/54] Building C object platform/CMakeFiles/platform.dir/platform.c.o
+[5/54] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.o
+[6/54] Linking C static library bin/libplatform.a
+[7/54] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.o
+[8/54] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.o
+[9/54] Linking C static library bin/librxvmmemory.a
+[10/54] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.o
+[11/54] Linking C static library bin/librxvmref.a
+[12/54] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[13/54] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[14/54] Linking C static library bin/librxvmplugin.a
+[15/54] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.o
+[16/54] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[17/54] Linking C static library bin/libavl_tree.a
+[18/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmworker.c.o
+[19/54] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.o
+[20/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[21/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[22/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[23/54] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.o
+[24/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[25/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[26/54] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.o
+[27/54] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.o
+[28/54] Linking C static library bin/librxbin.a
+[29/54] Linking C static library bin/libdecnumber.a
+[30/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[31/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+/tmp/crexx-e4-linux-control-src/interpreter/rxspawn.c:802:11: warning: assigning to 'char *' from 'const char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  802 |     slash = strrchr(shell_path, '/');
+      |           ^ ~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+[32/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[33/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmworker.c.o
+[34/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[35/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[36/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[37/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[38/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[39/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[40/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[41/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[42/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[43/54] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[44/54] Linking C static library bin/librxpashim.a
+[45/54] Linking C static library bin/rxvm_mc_decimal_manual.a
+[46/54] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[47/54] Linking C static library bin/librxpa.a
+[48/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+/tmp/crexx-e4-linux-control-src/interpreter/rxspawn.c:802:11: warning: assigning to 'char *' from 'const char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  802 |     slash = strrchr(shell_path, '/');
+      |           ^ ~~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+[49/54] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[50/54] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[51/54] Linking C executable bin/rxbvm
+[52/54] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[53/54] Linking C executable bin/rxtvm

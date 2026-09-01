@@ -1,0 +1,54 @@
+/* Focused Level B SUBWORD tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + check_count("is the", "Now is the  time", 2, 2, "book count")
+errors = errors + check_omitted("the  time", "Now is the  time  ", 3, "book omitted")
+errors = errors + check_omitted("", "Now is the time", 5, "absent")
+errors = errors + check_count("is", "Now is the time", 2, 1, "one word")
+errors = errors + check_count("is   the", "Now is   the  time", 2, 2, "internal blanks")
+errors = errors + check_count("the  time", "Now is the  time   ", 3, 99, "oversized trim")
+errors = errors + check_count("", "Now is the time", 2, 0, "zero")
+errors = errors + check_omitted("one two", "  one two  ", 1, "outer blanks")
+errors = errors + check_count("two　three", "one two　three", 2, 2, "Unicode blanks")
+errors = errors + check_omitted("", "", 1, "empty")
+errors = errors + invalid_start(0)
+errors = errors + invalid_start(-1)
+errors = errors + invalid_count()
+
+if errors = 0 then say "PASS: subword"
+return errors <> 0
+
+check_omitted: procedure = .int
+  arg expected = .string, source = .string, start = .int, label = .string
+  return check(expected, subword(source, start), label)
+
+check_count: procedure = .int
+  arg expected = .string, source = .string, start = .int, count = .int, label = .string
+  return check(expected, subword(source, start, count), label)
+
+invalid_start: procedure = .int
+  arg start = .int
+  do
+    ignored = subword("one two", start)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: SUBWORD invalid start did not signal" start
+  return 1
+
+invalid_count: procedure = .int
+  do
+    ignored = subword("one two", 1, -1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: SUBWORD invalid count did not signal"
+  return 1
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: SUBWORD" label "expected" expected "got" actual
+  return 1

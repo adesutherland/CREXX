@@ -12,13 +12,13 @@ jobs:
       - name: Determine Release Name
         shell: bash
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             echo "RELEASE_ID=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
-          elif [[ "${{ github.ref }}" == refs/heads/master ]]; then
+          elif [[ "$GITHUB_REF" == refs/heads/master ]]; then
             echo "RELEASE_ID=release_candidate" >> "$GITHUB_ENV"
-          elif [[ "${{ github.ref }}" == refs/heads/develop ]]; then
+          elif [[ "$GITHUB_REF" == refs/heads/develop ]]; then
             echo "RELEASE_ID=dev_snapshot" >> "$GITHUB_ENV"
-          elif [[ "${{ github.ref }}" =~ ^refs/heads/feature/.*$ ]]; then
+          elif [[ "$GITHUB_REF" =~ ^refs/heads/feature/.*$ ]]; then
             echo "RELEASE_ID=${GITHUB_REF#refs/heads/feature/}" >> "$GITHUB_ENV"
           else
             echo "Skip release"
@@ -29,16 +29,23 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Configure + Build Release (MinSizeRel)
+      - name: Configure + Build Release
         shell: bash
         run: |
-          cmake -S . -B "${{ runner.temp }}/release" -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake -S . -B "${{ runner.temp }}/release" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
           cmake --build "${{ runner.temp }}/release"
+
+      - name: Prepare QA artifacts
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/release" --target qa-prep
 
       - name: CTest Release
         shell: bash
         run: |
-          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --parallel 1
+          ctest --test-dir "${{ runner.temp }}/release" --output-on-failure --no-tests=error --label-exclude "^(stress|performance-measurement)$" --parallel 1
 
       - name: Collect executables
         shell: bash

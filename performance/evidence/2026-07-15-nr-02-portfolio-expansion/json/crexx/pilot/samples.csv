@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+json,crexx,path-count-adaptation,process,warmup,1,422249000,0,pass,,
+json,crexx,path-count-adaptation,process,recorded,1,321207000,0,pass,,
+json,crexx,path-count-adaptation,process,recorded,2,307730000,0,pass,,
+json,crexx,path-count-adaptation,process,recorded,3,378666000,0,pass,,

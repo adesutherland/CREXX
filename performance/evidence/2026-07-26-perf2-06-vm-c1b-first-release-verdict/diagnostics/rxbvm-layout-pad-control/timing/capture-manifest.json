@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "capture_tool": "run_cross_runtime_matrix.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.ge7090198e450 20260726",
+  "source_manifest": "/private/tmp/crexx-perf2-06-c1b.gQ4Wvm/layout-pad-sieve500-manifest.txt",
+  "measurement": "timing",
+  "warmups": 1,
+  "recorded_runs": 12,
+  "sampling": "serial-rotated-by-workload",
+  "started_utc": "2026-07-26T18:08:57+0000",
+  "completed_utc": "2026-07-26T18:09:01+0000",
+  "result": "pass"
+}

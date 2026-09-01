@@ -1,0 +1,23 @@
+PASS: sieve-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: sieve-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: permute-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: permute-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: mandelbrot-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: mandelbrot-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: towers-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: towers-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: bounce-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: bounce-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: storage-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: storage-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: list-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: list-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: richards-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: richards-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: json-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: json-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: base64-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: base64-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: rexxcps-noopt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: rexxcps-opt retained 0 warmups, 1 recorded samples, profile, and RXSEQ N=2/3/4
+PASS: exact-image evidence bundle retained under /home/adrian/CLionProjects/CREXX/performance/evidence/2026-07-28-perf2-10-11-intel-linux/profiles/gcc/rxbvm-counts

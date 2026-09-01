@@ -1,0 +1,199 @@
+cmake_minimum_required(VERSION 3.24)
+
+file(MAKE_DIRECTORY "${WORK}")
+
+function(expect_contains label text expected)
+    string(FIND "${text}" "${expected}" pos)
+    if(pos EQUAL -1)
+        message(FATAL_ERROR "${label} did not contain expected text '${expected}':\n${text}")
+    endif()
+endfunction()
+
+function(expect_not_contains label text unexpected)
+    string(FIND "${text}" "${unexpected}" pos)
+    if(NOT pos EQUAL -1)
+        message(FATAL_ERROR "${label} contained unexpected text '${unexpected}':\n${text}")
+    endif()
+endfunction()
+
+function(run_rxpp_fail label locale diagnostics input output expected)
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E env
+                "CREXX_DIAGNOSTICS=${diagnostics}"
+                "CREXX_DIAGNOSTIC_LOCALE=${locale}"
+                "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+                "${RXPP_BIN}" -I "${input}" -O "${output}" -M "${MACLIB_FILE}"
+        WORKING_DIRECTORY "${WORK}"
+        RESULT_VARIABLE res
+        OUTPUT_VARIABLE out
+        ERROR_VARIABLE err
+        ENCODING UTF-8)
+    set(full "${out}${err}")
+    if(NOT res EQUAL 8)
+        message(FATAL_ERROR "${label} returned ${res}, expected 8:\n${full}")
+    endif()
+    expect_contains("${label}" "${full}" "${expected}")
+    set("${label}_OUTPUT" "${full}" PARENT_SCOPE)
+endfunction()
+
+function(run_rxpp_success label locale diagnostics input output expected)
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E env
+                "CREXX_DIAGNOSTICS=${diagnostics}"
+                "CREXX_DIAGNOSTIC_LOCALE=${locale}"
+                "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+                "${RXPP_BIN}" -I "${input}" -O "${output}" -M "${MACLIB_FILE}"
+        WORKING_DIRECTORY "${WORK}"
+        RESULT_VARIABLE res
+        OUTPUT_VARIABLE out
+        ERROR_VARIABLE err
+        ENCODING UTF-8)
+    set(full "${out}${err}")
+    if(NOT res EQUAL 0)
+        message(FATAL_ERROR "${label} returned ${res}, expected 0:\n${full}")
+    endif()
+    expect_contains("${label}" "${full}" "${expected}")
+    set("${label}_OUTPUT" "${full}" PARENT_SCOPE)
+endfunction()
+
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=raw"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}"
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE raw_res
+    OUTPUT_VARIABLE raw_out
+    ERROR_VARIABLE raw_err
+    ENCODING UTF-8)
+set(raw_full "${raw_out}${raw_err}")
+if(NOT raw_res EQUAL 8)
+    message(FATAL_ERROR "raw no-source diagnostic returned ${raw_res}, expected 8:\n${raw_full}")
+endif()
+expect_contains("raw no-source diagnostic" "${raw_full}" "RXPP_NO_SOURCE_FILE")
+expect_not_contains("raw no-source diagnostic" "${raw_full}" "No source file")
+
+set(double_input "${WORK}/already_srcmap.rxpp")
+set(double_output "${WORK}/already_srcmap.out.crexx")
+file(WRITE "${double_input}" "options levelb srcmap\nsay \"already mapped\"\n")
+
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=localized"
+            "CREXX_DIAGNOSTIC_LOCALE=de_DE"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}" -I "${double_input}" -O "${double_output}" -M "${MACLIB_FILE}"
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE de_res
+    OUTPUT_VARIABLE de_out
+    ERROR_VARIABLE de_err
+    ENCODING UTF-8)
+set(de_full "${de_out}${de_err}")
+if(NOT de_res EQUAL 8)
+    message(FATAL_ERROR "German already-srcmap diagnostic returned ${de_res}, expected 8:\n${de_full}")
+endif()
+expect_contains("German already-srcmap diagnostic" "${de_full}" "RXPP_ALREADY_SOURCE_MAPPED: Eingabe enthält bereits options srcmap")
+expect_contains("German already-srcmap hint" "${de_full}" "RXPP_ALREADY_SOURCE_MAPPED_HINT: Führen Sie rxc")
+
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=localized"
+            "CREXX_DIAGNOSTIC_LOCALE=nl_NL"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}" -I "${double_input}" -O "${double_output}" -M "${MACLIB_FILE}"
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE nl_res
+    OUTPUT_VARIABLE nl_out
+    ERROR_VARIABLE nl_err
+    ENCODING UTF-8)
+set(nl_full "${nl_out}${nl_err}")
+if(NOT nl_res EQUAL 8)
+    message(FATAL_ERROR "Dutch already-srcmap diagnostic returned ${nl_res}, expected 8:\n${nl_full}")
+endif()
+expect_contains("Dutch already-srcmap diagnostic" "${nl_full}" "RXPP_ALREADY_SOURCE_MAPPED: Invoer bevat al options srcmap")
+expect_contains("Dutch already-srcmap hint" "${nl_full}" "RXPP_ALREADY_SOURCE_MAPPED_HINT: Voer rxc uit")
+
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=raw"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}" -I "${double_input}" -O "${double_output}" -M "${MACLIB_FILE}"
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE raw_double_res
+    OUTPUT_VARIABLE raw_double_out
+    ERROR_VARIABLE raw_double_err
+    ENCODING UTF-8)
+set(raw_double_full "${raw_double_out}${raw_double_err}")
+if(NOT raw_double_res EQUAL 8)
+    message(FATAL_ERROR "raw already-srcmap diagnostic returned ${raw_double_res}, expected 8:\n${raw_double_full}")
+endif()
+expect_contains("raw already-srcmap diagnostic" "${raw_double_full}" "RXPP_ALREADY_SOURCE_MAPPED file=\"${double_input}\"")
+expect_not_contains("raw already-srcmap diagnostic" "${raw_double_full}" "Input already contains options srcmap")
+
+set(warn_input "${WORK}/warning.rxpp")
+set(warn_output "${WORK}/warning.out.crexx")
+set(missing_maclib "${WORK}/missing_maclib.rexx")
+file(WRITE "${warn_input}" "options levelb\nsay \"warning path\"\n")
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=localized"
+            "CREXX_DIAGNOSTIC_LOCALE=en_GB"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}" -I "${warn_input}" -O "${warn_output}" -M "${missing_maclib}" -VERBOSE
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE warn_res
+    OUTPUT_VARIABLE warn_out
+    ERROR_VARIABLE warn_err
+    ENCODING UTF-8)
+set(warn_full "${warn_out}${warn_err}")
+if(NOT warn_res EQUAL 0)
+    message(FATAL_ERROR "localized warning diagnostic run failed with ${warn_res}:\n${warn_full}")
+endif()
+expect_contains("localized warning diagnostic" "${warn_full}" "RXPP_MACLIB_MISSING: Macro library was not found or is not accessible")
+expect_contains("localized system warning diagnostic" "${warn_full}" "RXPP_SYSTEM_MACLIB_MISSING: System macro library was not found or is not accessible")
+
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E env
+            "CREXX_DIAGNOSTICS=localized"
+            "CREXX_DIAGNOSTIC_LOCALE=fr_FR"
+            "CREXX_MESSAGE_PATH=${MESSAGE_PATH}"
+            "${RXPP_BIN}"
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE fallback_res
+    OUTPUT_VARIABLE fallback_out
+    ERROR_VARIABLE fallback_err
+    ENCODING UTF-8)
+set(fallback_full "${fallback_out}${fallback_err}")
+if(NOT fallback_res EQUAL 8)
+    message(FATAL_ERROR "fallback locale diagnostic returned ${fallback_res}, expected 8:\n${fallback_full}")
+endif()
+expect_contains("fallback locale diagnostic" "${fallback_full}" "RXPP_NO_SOURCE_FILE: No source file was specified.")
+
+set(include_input "${WORK}/missing_include.rxpp")
+set(include_output "${WORK}/missing_include.out.crexx")
+set(include_missing "${WORK}/does_not_exist.rxpp")
+file(WRITE "${include_input}" "options levelb\n##include ${include_missing}\n")
+run_rxpp_fail("include_missing_raw" "en_GB" "raw" "${include_input}" "${include_output}" "RXPP_INCLUDE_MISSING file=\"${include_missing}\"")
+expect_contains("include missing termination" "${include_missing_raw_OUTPUT}" "RXPP_TERMINATED")
+
+set(bad_paren_input "${WORK}/bad_macro_paren.rxpp")
+set(bad_paren_output "${WORK}/bad_macro_paren.out.crexx")
+file(WRITE "${bad_paren_input}" "options levelb\n##DEFINE BROKEN(x { say x }\n")
+run_rxpp_fail("macro_missing_rparen_raw" "en_GB" "raw" "${bad_paren_input}" "${bad_paren_output}" "RXPP_MACRO_MISSING_RPAREN definition=\"BROKEN(x { say x }\"")
+
+set(unclosed_input "${WORK}/unclosed_macro.rxpp")
+set(unclosed_output "${WORK}/unclosed_macro.out.crexx")
+file(WRITE "${unclosed_input}" "options levelb\n##DEFINE OPEN { say \"x\" \\\n")
+run_rxpp_fail("macro_unclosed_de" "de_DE" "localized" "${unclosed_input}" "${unclosed_output}" "RXPP_MACRO_UNCLOSED: Makrodefinition ist nicht geschlossen: OPEN.")
+
+set(empty_input "${WORK}/empty_macro.rxpp")
+set(empty_output "${WORK}/empty_macro.out.crexx")
+file(WRITE "${empty_input}" "options levelb\n##DEFINE EMPTY {}\n")
+run_rxpp_fail("macro_empty_nl" "nl_NL" "localized" "${empty_input}" "${empty_output}" "RXPP_MACRO_EMPTY_BODY: Macro-body is leeg of accolades ontbreken: EMPTY.")
+
+set(positional_input "${WORK}/positional_after_keyword.rxpp")
+set(positional_output "${WORK}/positional_after_keyword.out.crexx")
+file(WRITE "${positional_input}" "options levelb\n##DEFINE M(a=1,b) { say a b }\nsay M(2,3)\n")
+run_rxpp_success("positional_after_keyword_raw" "en_GB" "raw" "${positional_input}" "${positional_output}" "RXPP_POSITIONAL_AFTER_KEYWORD macro=\"M(\" arguments=\"a=1,b\"")
+file(READ "${positional_output}" positional_generated)
+expect_contains("positional diagnostic generated source" "${positional_generated}" "+++ RXPP_POSITIONAL_AFTER_KEYWORD macro=\"M(\" arguments=\"a=1,b\"")

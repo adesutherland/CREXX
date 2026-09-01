@@ -1,0 +1,47 @@
+/* Focused Level B CENTRE tests; CENTER has a separate selector row. */
+options levelb
+import rxfnsb
+
+errors = 0
+source = "ABC"
+
+errors = errors + check(centre(source, 7) = "  ABC  ", "balanced padding")
+errors = errors + check(centre(source, 8, "-") = "--ABC---", "odd padding goes right")
+errors = errors + check(centre("The blue sky", 8) = "e blue s", "even truncation")
+errors = errors + check(centre("The blue sky", 7) = "e blue ", "odd truncation goes right")
+errors = errors + check(centre("12345678", 4, "-") = "3456", "even central slice")
+errors = errors + check(centre("12345678", 5, "-") = "23456", "odd central slice")
+errors = errors + check(centre("same", 4) = "same", "unchanged width")
+errors = errors + check(centre("anything", 0) = "", "zero width")
+errors = errors + check(centre("", 3, ".") = "...", "empty source")
+errors = errors + check(centre("é", 3, "·") = "·é·", "Unicode source and pad")
+errors = errors + check(source = "ABC", "source is not exposed or mutated")
+
+caught = 0
+do
+  ignored = centre("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = centre("abc", 5, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = .string
+  ignored = centre("abc", 5, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 3, "width and pad failures use signals")
+
+if errors = 0 then say "PASS: centre"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: CENTRE" label
+  return 1

@@ -1,0 +1,8 @@
+workload,argv,static_swaps_removed,removed_site_disposition,baseline_dynamic_swaps,candidate_dynamic_swaps,dynamic_swaps_removed,baseline_dynamic_instructions,candidate_dynamic_instructions,notes
+rexxcps_levelb,--smoke-count 1,44,all in unexecuted __rxtrace_handler,484376,484376,0,53548386,53548431,time-dependent calibration/reporting accounts for the 45 non-SWAP count difference
+awfy_permute,50,2,unexecuted standalone run method; executed caller is inlined,1731100,1731100,0,27167881,27167881,exact count in both VM modes
+awfy_list,100,4,executed,11618800,11476600,142200,84115631,83973431,only SWAP count changes
+awfy_richards,1,4,executed,496848,473606,23242,15271826,15248584,only SWAP count changes
+awfy_storage,10,2,executed,737220,655300,81920,8518551,8436671,also replaces 40 BCTP executions with 40 INC1 plus 40 BR because numbering moves the loop counter to r1
+base64_roundtrip,500,2,executed,1000,0,1000,58886883,58885883,only SWAP count changes
+

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin",
+    "/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin",
+    "-a",
+    "500"
+  ],
+  "completed_utc": "2026-07-15T15:37:40.427104+00:00",
+  "correctness_expectation": "PASS: AWFY Mandelbrot",
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "lifecycle": "process",
+  "metric_regex": null,
+  "python": "3.14.4",
+  "recorded_runs": 3,
+  "result": "pass",
+  "runtime": "crexx",
+  "sampling": "serial",
+  "schema": 1,
+  "started_utc": "2026-07-15T15:37:39.050489+00:00",
+  "variant": "equivalent-port",
+  "warmups": 1,
+  "workload": "mandelbrot"
+}

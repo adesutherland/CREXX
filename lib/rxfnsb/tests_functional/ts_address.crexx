@@ -1,44 +1,128 @@
-/* rexx test address bif */
+/* ADDRESS environment smoke tests */
 options levelb
-import rxfnsb
 
 errors=0
 
+default_env = .addressenvironment
+crexx_env = .addressenvironment
+system_env = .addressenvironment
+command_env = .addressenvironment
+cmd_env = .addressenvironment
+path_env = .addressenvironment
+shell_env = .addressenvironment
+
 out = .string[]
 err = .string[]
+system_out = .string[]
+command_out = .string[]
 cmd_out = .string[]
 path_out = .string[]
-rexx_version = .string
-platform = .string
+shell_out = .string[]
+configured_shell_out = .string[]
+platform_out = .string[]
 
-assembler rxvers rexx_version
-platform = translate(word(rexx_version, 1))
+default_env = addressenv()
+if default_env.environment_name() <> "CREXX" then do
+  say "ADDRESS_ENV_DEFAULT" default_env.environment_name()
+  errors=errors+1
+end
 
-address command 'echo #42'  output out error err
-if out.1 <> '#42' then errors=errors+1
+crexx_env = addressenv("crexx")
+if crexx_env.environment_name() <> "CREXX" then do
+  say "ADDRESS_ENV_CREXX" crexx_env.environment_name()
+  errors=errors+1
+end
 
-address cmd 'echo CMD_OK' output cmd_out
-if cmd_out.1 <> 'CMD_OK' then errors=errors+1
+system_env = addressenv("system")
+if system_env.environment_name() <> "SYSTEM" then do
+  say "ADDRESS_ENV_SYSTEM" system_env.environment_name()
+  errors=errors+1
+end
 
-address path 'echo PATH_OK' output path_out
-if path_out.1 <> 'PATH_OK' then errors=errors+1
+command_env = addressenv("command")
+if command_env.environment_name() <> "COMMAND" then do
+  say "ADDRESS_ENV_COMMAND" command_env.environment_name()
+  errors=errors+1
+end
 
-/* This should print OK - to the console - we are just testing the address bit returns ok */
-rc = 1
-'echo OK'
-if rc <> 0 then errors=errors+1
+cmd_env = addressenv("cmd")
+if cmd_env.environment_name() <> "CMD" then do
+  say "ADDRESS_ENV_CMD" cmd_env.environment_name()
+  errors=errors+1
+end
 
-/* Test explicit address shell */
-rc = 1
-address shell 'echo Hello Shell'
-if rc <> 0 then errors=errors+1
+path_env = addressenv("path")
+if path_env.environment_name() <> "PATH" then do
+  say "ADDRESS_ENV_PATH" path_env.environment_name()
+  errors=errors+1
+end
+
+shell_env = addressenv("shell")
+if shell_env.environment_name() <> "SHELL" then do
+  say "ADDRESS_ENV_SHELL" shell_env.environment_name()
+  errors=errors+1
+end
+
+address system "echo SYSTEM_OK" output system_out error err
+if rc <> 0 | system_out.1 <> "SYSTEM_OK" then do
+  say "ADDRESS_SYSTEM_SMOKE" rc system_out.1
+  errors=errors+1
+end
+
+address command "echo COMMAND_OK" output command_out error err
+if rc <> 0 | command_out.1 <> "COMMAND_OK" then do
+  say "ADDRESS_COMMAND_SMOKE" rc command_out.1
+  errors=errors+1
+end
+
+address cmd "echo CMD_OK" output cmd_out error err
+if rc <> 0 | cmd_out.1 <> "CMD_OK" then do
+  say "ADDRESS_CMD_SMOKE" rc cmd_out.1
+  errors=errors+1
+end
+
+address shell "echo SHELL_ONE && echo SHELL_TWO" output shell_out error err
+if rc <> 0 | shell_out.1 <> "SHELL_ONE" | shell_out.2 <> "SHELL_TWO" then do
+  say "ADDRESS_SHELL_SMOKE" rc shell_out.1 shell_out.2
+  errors=errors+1
+end
+
+address path "../../../bin/rxas -h" output path_out error err
+if rc <> 0 | path_out.1 <> "cREXX Assembler" then do
+  say "ADDRESS_PATH_SMOKE" rc path_out.1
+  errors=errors+1
+end
+
+address cmd "cd ."
+if rc <> 0 then do
+  say "ADDRESS_CMD_BUILTIN_CD" rc
+  errors=errors+1
+end
+
+address crexx "platform" output platform_out error err
+if platform_out.1 = "os=windows" then do
+  address crexx "setenv CREXX_ADDRESS_SHELL cmd.exe"
+  address crexx "setenv CREXX_ADDRESS_SHELL_ARGS /D /S /C"
+end
+else do
+  address crexx "setenv CREXX_ADDRESS_SHELL /bin/sh"
+  address crexx "setenv CREXX_ADDRESS_SHELL_ARGS -c"
+end
+
+address shell "echo CONFIGURED_SHELL_OK" output configured_shell_out error err
+if rc <> 0 | configured_shell_out.1 <> "CONFIGURED_SHELL_OK" then do
+  say "ADDRESS_CONFIGURED_SHELL_SMOKE" rc configured_shell_out.1
+  errors=errors+1
+end
+
+address crexx "unsetenv CREXX_ADDRESS_SHELL"
+address crexx "unsetenv CREXX_ADDRESS_SHELL_ARGS"
 
 address command
-'echo COMMAND_AFTER_COMMAND'
-if rc <> 0 then errors=errors+1
-
-if platform = "WINDOWS" then address command "cmd /c exit 3"
-else address command "sh -c 'exit 3'"
-if rc <> 3 then errors=errors+1
+"echo COMMAND_AFTER_COMMAND"
+if rc <> 0 then do
+  say "ADDRESS_COMMAND_AFTER_COMMAND_RC" rc
+  errors=errors+1
+end
 
 return errors<>0

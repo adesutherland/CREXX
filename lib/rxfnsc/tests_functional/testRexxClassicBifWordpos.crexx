@@ -1,0 +1,129 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifwordpos
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("3", "the", "Now is the time")
+errors = errors + check_default("0", "The", "Now is the time")
+errors = errors + check_default("2", "is the", "Now is the time")
+errors = errors + check_default("2", " is    the ", "Now  is the time")
+errors = errors + check_default("0", "is time", "Now is the time")
+errors = errors + check_default("2", "be", "To be or not to be")
+errors = errors + check_start("6", "be", "To be or not to be", "3")
+errors = errors + check_default("0", "jum", "the fox jumps")
+errors = errors + check_default("3", "jumps", "the fox jumps")
+errors = errors + check_default("2", "β γ", "α β　γ δ", "UTF8")
+errors = errors + check_default("0", "", "one two")
+errors = errors + check_default("0", "    ", "one two")
+errors = errors + check_default("0", "one", "")
+errors = errors + check_omitted_start("2", "two", "one two")
+errors = errors + check_default("2", "two three", "one|two|three", "BYTE_BAR")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_start_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_start_error("RXC-LC-40.12", "1.5")
+errors = errors + check_start_error("RXC-LC-40.14", "0")
+errors = errors + check_start_error("RXC-LC-40.14", "-1")
+
+if errors = 0 then say "PASS: Level C WORDPOS BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, search = .string, string = .string, profile = "BYTE"
+  return run_check(expected, search, string, 0, "", 0, profile)
+
+check_start: procedure = .int
+  arg expected = .string, search = .string, string = .string, start = .string, profile = "BYTE"
+  return run_check(expected, search, string, 1, start, 0, profile)
+
+check_omitted_start: procedure = .int
+  arg expected = .string, search = .string, string = .string, profile = "BYTE"
+  return run_check(expected, search, string, 0, "", 1, profile)
+
+run_check: procedure = .int
+  arg expected = .string, search = .string, string = .string, start_exists = .boolean, start = .string, include_start_slot = .boolean, profile = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(search)
+  args[2] = .RexxValue(string)
+  exists[1] = 1
+  exists[2] = 1
+  if start_exists | include_start_slot then do
+    args[3] = .RexxValue(start)
+    exists[3] = start_exists
+  end
+  context = .RexxBifCallContext("WORDPOS")
+  call configure_profile context, profile
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordpos(reference context)
+  if \context.hasError() & result.asString() = expected,
+      & args[1].asString() == search & args[2].asString() == string then return 0
+  say "FAIL: WORDPOS expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+configure_profile: procedure
+  arg context = .RexxBifCallContext, profile = .string
+  if profile = "UTF8" then call context.useUtf8Profile()
+  else if profile = "BYTE_BAR" then do
+    blanks = .binary
+    blanks = "7C"x
+    call context.setByteOtherBlanks(blanks)
+  end
+  return
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("WORDPOS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordpos(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORDPOS expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("WORDPOS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordpos(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: WORDPOS omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_start_error: procedure = .int
+  arg expected_code = .string, start = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("one")
+  args[2] = .RexxValue("one two")
+  args[3] = .RexxValue(start)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("WORDPOS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordpos(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORDPOS start expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

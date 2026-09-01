@@ -10,13 +10,13 @@
 
 main() .locals=6
    load r1,0
-   srcfproc r0,"link_iface.shape",r1
+   srcfprocsel r0,"rxsig1|link_iface.shape|.shape|",r1
    dcall r0,r0,r1
 
    load r1,1
    settp r0,256
    swap r2,r0
-   srcmethod r3,r2,"describe"
+   srcmethodsel r3,r2,"rxsig1|describe|.string|"
    dcall r3,r3,r1
    swap r0,r2
    seq r4,r3,"linked-box"

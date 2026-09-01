@@ -1,0 +1,731 @@
+/*
+ * SOURCE                 : awfy_list.crexx
+ */
+
+.meta "awfy_list.listarena"="b" ".unknown" .class
+.meta "awfy_list.listarena.element_count"="b" ".int" .attr 1
+.meta "awfy_list.listarena.elements"="b" ".listelement[*]" .attr 2
+.meta "awfy_list.listbenchmark"="b" ".unknown" .class
+.meta "awfy_list.listelement"="b" ".unknown" .class
+.meta "awfy_list.listelement.next_reference"="b" "reference .listelement" .attr 1
+.meta "awfy_list.listelement.value"="b" ".int" .attr 2
+.globals=0
+
+main() .locals=11
+   .meta "awfy_list.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_list.crexx" 8 5 19 "arg argv = .string[]"
+   .meta "awfy_list.main.argv"="b" ".string[*]" r0
+   brtpandt l4c,a1,512
+   copy r0,a1
+   br l4d
+l4c:
+   swap r0,a1
+l4d:
+   .srcstep 2 2 17 "awfy_list.crexx" 10 1 16 "repetitions = 1"
+   .meta "awfy_list.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_list.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   igte r4,r4,1
+   .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+   brf l23iffalse,r4
+   .srcstep 5 5 17 "awfy_list.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_list.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minlinkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   igetunlink r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+l23iffalse:
+   .srcstep 10 10 17 "awfy_list.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+   ilt r5,r1,1
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l30iffalse,r5
+   .srcstep 11 11 17 "awfy_list.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "awfy_list.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 8 8 17 "awfy_list.crexx" 12 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_list.crexx" 27 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 7 7 17 "awfy_list.crexx" 28 3 11 "  return 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r3,r4
+   br l520bexprend
+l520bexprend:
+   ret r3
+l30iffalse:
+   .srcstep 12 12 17 "awfy_list.crexx" 14 1 11 "result = 0"
+   .meta "awfy_list.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+   .srcstep 28 28 17 "awfy_list.crexx" 15 1 3 "do iteration = 1 to repetitions"
+   .srcstep 13 13 17 "awfy_list.crexx" 15 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_list.main.iteration"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+   .srcstep 14 14 17 "awfy_list.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l34dostart:
+   .srcstep 14 14 17 "awfy_list.crexx" 15 18 32 "do iteration = 1 to repetitions"
+   igt r3,r4,r1
+   brt l34doend,r3
+   .srcstep 19 19 17 "awfy_list.crexx" 16 3 29 "  benchmark = .ListBenchmark()"
+   .srcstep 16 16 6 "awfy_list.crexx" 68 3 13 "  *: factory"
+   setattrs r6,0
+   .srcstep 17 17 6 "awfy_list.crexx" 68 3 13 "  *: factory"
+   setobjtype r6,"awfy_list.listbenchmark"
+   .srcstep 18 18 33 "awfy_list.crexx" 69 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 18 18 0 "§factory" ""
+   copy r5,r6
+   .traceevent "A" 6 "R" "O" "r" 5 18 18 0 "benchmark" ""
+   .srcstep 20 20 17 "awfy_list.crexx" 17 3 25 "  result = benchmark.run()"
+   .meta "awfy_list.main.benchmark"="b" ".listbenchmark" r5
+   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "benchmark" ""
+   settp r5,256
+   call1 r2,§awfy_list.listbenchmark.run(),r5
+   .traceevent "F" 4 "R" "I" "r" 2 20 20 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "result" ""
+   .srcstep 26 26 17 "awfy_list.crexx" 18 3 18 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 26 26 0 "result" ""
+   ine r8,r2,10
+   .traceevent "O" 4 "R" "B" "r" 8 26 26 0 "" ""
+   brf l60iffalse,r8
+   .srcstep 27 27 17 "awfy_list.crexx" 18 19 23 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+   .srcstep 25 25 17 "awfy_list.crexx" 18 24 73 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+   .srcstep 24 24 17 "awfy_list.crexx" 18 31 35 "  if result <> 10 then return fail(\"expected length 10, got \" || result)"
+   .srcstep 21 21 33 "awfy_list.crexx" 26 7 14 "  arg message = .string"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 21 21 0 "result" ""
+   concat r7,"expected length 10, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 7 21 21 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 21 21 0 "message" ""
+   .srcstep 22 22 17 "awfy_list.crexx" 27 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 7 22 22 0 "message" ""
+   sconcat r9,"FAIL:",r7
+   .traceevent "O" 4 "R" "S" "r" 9 22 22 0 "" ""
+   say r9
+   .srcstep 23 23 17 "awfy_list.crexx" 28 3 11 "  return 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 25 25 0 "" ""
+   icopy r10,r9
+   br l586bexprend
+l586bexprend:
+   ret r10
+l60iffalse:
+l34doinc:
+   .srcstep 15 15 17 "awfy_list.crexx" 15 4 13 "do iteration = 1 to repetitions"
+   inc r4
+   .srcstep 29 29 17 "awfy_list.crexx" 19 1 4 "end"
+   br l34dostart
+l34doend:
+   endlife r5
+   .meta "awfy_list.main.benchmark"
+   .meta "awfy_list.main.iteration"
+   .srcstep 30 30 17 "awfy_list.crexx" 21 1 66 "say \"benchmark=awfy_list repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 30 30 0 "repetitions" ""
+   concat r10,"benchmark=awfy_list repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   sconcat r10,r10,"result="
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 30 30 0 "result" ""
+   concat r10,r10,r2
+   .traceevent "O" 4 "R" "S" "r" 10 30 30 0 "" ""
+   say r10
+   .srcstep 31 31 17 "awfy_list.crexx" 22 1 22 "say \"PASS: AWFY List\""
+   say "PASS: AWFY List"
+   .srcstep 32 32 17 "awfy_list.crexx" 23 1 9 "return 0"
+   ret 0
+   .meta "awfy_list.main.argv"
+   .meta "awfy_list.main.repetitions"
+   .meta "awfy_list.main.result"
+
+§awfy_list.listelement.§factory() .locals=3
+   .meta "awfy_list.listelement.§factory"="b" ".awfy_list..listelement" §awfy_list.listelement.§factory() "initial_value=.int"
+   .srcstep 39 39 17 "awfy_list.crexx" 34 3 13 "  *: factory"
+   setattrs r1,3
+   setobjtype r1,"awfy_list.listelement"
+   numsci 18,1,1
+   .srcstep 36 36 17 "awfy_list.crexx" 35 9 29 "    arg initial_value = .int"
+   .meta "awfy_list.listelement.§factory.initial_value"="b" ".int" a1
+   .meta "awfy_list.listelement.§factory.§factory"="b" ".listelement" r1
+   .srcstep 37 37 17 "awfy_list.crexx" 36 5 26 "    value = initial_value"
+   .traceevent "V" 6 "R" "I" "a" 1 37 37 0 "initial_value" ""
+   isetattr1 r1,2,a1
+   .srcstep 38 38 17 "awfy_list.crexx" 37 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 38 38 0 "§factory" ""
+   ret r1
+   .meta "awfy_list.listelement.§factory.initial_value"
+   .meta "awfy_list.listelement.§factory.§factory"
+
+§awfy_list.listelement.length() .locals=4
+   .meta "awfy_list.listelement.length"="b" ".int" §awfy_list.listelement.length() ""
+   .srcstep 45 45 17 "awfy_list.crexx" 39 3 24 "  length: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 41 41 17 "awfy_list.crexx" 40 5 38 "    if <refvalid>(next_reference) = 0 then return 1"
+   linkattr1 r0,a1,1
+   .traceevent "V" 6 "R" "R" "r" 0 41 41 0 "next_reference" ""
+   refvalid r3,r0
+   unlink r0
+   btoi r3
+   ieq r3,r3,0
+   .traceevent "O" 4 "R" "B" "r" 3 41 41 0 "" ""
+   brf l115iffalse,r3
+   .srcstep 42 42 17 "awfy_list.crexx" 40 39 43 "    if <refvalid>(next_reference) = 0 then return 1"
+   .srcstep 40 40 17 "awfy_list.crexx" 40 44 52 "    if <refvalid>(next_reference) = 0 then return 1"
+   .meta "awfy_list.listelement.length.§this"="b" ".listelement" a1
+   ret 1
+l115iffalse:
+   .srcstep 43 43 17 "awfy_list.crexx" 41 5 46 "    next_element = dereference next_reference"
+   .meta "awfy_list.listelement.length.next_element"="b" ".listelement" r1
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "R" "r" 3 43 43 0 "next_reference" ""
+   relinkref r1,r3
+   unlink r3
+   .traceevent "A" 6 "R" "O" "r" 1 43 43 0 "next_element" ""
+   .srcstep 44 44 17 "awfy_list.crexx" 42 5 35 "    return 1 + next_element.length()"
+   .traceevent "V" 6 "R" "O" "r" 1 44 44 0 "next_element" ""
+   settp r1,256
+   call1 r3,§awfy_list.listelement.length(),r1
+   .traceevent "F" 4 "R" "I" "r" 3 44 44 0 "length" ""
+   iadd r3,r3,1
+   .traceevent "O" 4 "R" "I" "r" 3 44 44 0 "" ""
+   ret r3
+   .meta "awfy_list.listelement.length.next_element"
+   .meta "awfy_list.listelement.length.§this"
+
+§awfy_list.listelement.next() .locals=3
+   .meta "awfy_list.listelement.next"="b" "reference .listelement" §awfy_list.listelement.next() ""
+   .srcstep 47 47 17 "awfy_list.crexx" 44 3 40 "  next: method = reference .ListElement"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 46 46 17 "awfy_list.crexx" 45 5 26 "    return next_reference"
+   .meta "awfy_list.listelement.next.§this"="b" ".listelement" a1
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "R" "r" 2 46 46 0 "next_reference" ""
+   ret r2
+   .meta "awfy_list.listelement.next.§this"
+
+§awfy_list.listelement.setnext() .locals=4
+   .meta "awfy_list.listelement.setnext"="b" ".void" §awfy_list.listelement.setnext() "element=reference .listelement"
+   .srcstep 51 51 17 "awfy_list.crexx" 47 3 26 "  setNext: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 48 48 17 "awfy_list.crexx" 48 9 41 "    arg element = reference .ListElement"
+   .meta "awfy_list.listelement.setnext.element"="b" "reference .listelement" a2
+   .meta "awfy_list.listelement.setnext.§this"="b" ".listelement" a1
+   .srcstep 49 49 17 "awfy_list.crexx" 49 5 29 "    next_reference = element"
+   .traceevent "V" 6 "R" "R" "a" 2 49 49 0 "element" ""
+   linkattr1 r3,a1,1
+   copy r3,a2
+   unlink r3
+   .srcstep 50 50 17 "awfy_list.crexx" 50 5 11 "    return"
+   ret
+   .meta "awfy_list.listelement.setnext.element"
+   .meta "awfy_list.listelement.setnext.§this"
+
+§awfy_list.listarena.§factory() .locals=3
+   .meta "awfy_list.listarena.§factory"="b" ".awfy_list..listarena" §awfy_list.listarena.§factory() ""
+   .srcstep 54 54 17 "awfy_list.crexx" 56 3 13 "  *: factory"
+   setattrs r0,3
+   setobjtype r0,"awfy_list.listarena"
+   numsci 18,1,1
+   .srcstep 52 52 17 "awfy_list.crexx" 57 5 22 "    element_count = 0"
+   .meta "awfy_list.listarena.§factory.§factory"="b" ".listarena" r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 52 52 0 "" ""
+   isetattr1 r0,1,r2
+   .srcstep 53 53 17 "awfy_list.crexx" 58 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 53 53 0 "§factory" ""
+   ret r0
+   .meta "awfy_list.listarena.§factory.§factory"
+
+§awfy_list.listarena.allocate() .locals=10
+   .meta "awfy_list.listarena.allocate"="b" "reference .listelement" §awfy_list.listarena.allocate() "value=.int"
+   .srcstep 60 60 17 "awfy_list.crexx" 60 3 44 "  allocate: method = reference .ListElement"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 55 55 17 "awfy_list.crexx" 61 9 21 "    arg value = .int"
+   .meta "awfy_list.listarena.allocate.value"="b" ".int" a2
+   .meta "awfy_list.listarena.allocate.§this"="b" ".listarena" a1
+   .srcstep 56 56 17 "awfy_list.crexx" 62 5 38 "    element_count = element_count + 1"
+   linkattr1 r5,a1,1
+   .traceevent "V" 6 "R" "I" "r" 5 56 56 0 "element_count" ""
+   iadd r6,r5,1
+   unlink r5
+   .traceevent "O" 4 "R" "I" "r" 6 56 56 0 "" ""
+   isetattr1 a1,1,r6
+   .srcstep 57 57 17 "awfy_list.crexx" 63 5 50 "    elements[element_count] = .ListElement(value)"
+   linkattr1 r4,a1,2
+   linkattr1 r6,a1,1
+   .traceevent "V" 6 "R" "I" "r" 6 57 57 0 "element_count" ""
+   .traceevent "C" 4 "R" "I" "r" 6 57 57 0 "elements" ""
+   minlinkattr1 r5,r4,r6,0
+   unlink r6
+   .traceevent "V" 6 "R" "I" "a" 2 57 57 0 "value" ""
+   call1 r9,§awfy_list.listelement.§factory(),a2
+   .traceevent "F" 4 "R" "O" "r" 9 57 57 0 "§factory" ""
+   copy r5,r9
+   .traceevent "A" 6 "R" "O" "r" 5 57 57 0 "elements" ""
+   unlinkn r5,r4
+   .srcstep 58 58 17 "awfy_list.crexx" 64 5 46 "    result = reference elements[element_count]"
+   .meta "awfy_list.listarena.allocate.result"="b" "reference .listelement" r2
+   linkattr1 r7,a1,2
+   linkattr1 r9,a1,1
+   .traceevent "V" 6 "R" "I" "r" 9 58 58 0 "element_count" ""
+   .traceevent "C" 4 "R" "I" "r" 9 58 58 0 "elements" ""
+   minlinkattr1 r8,r7,r9,0
+   unlink r9
+   .traceevent "V" 6 "R" "O" "r" 8 58 58 0 "elements" ""
+   mkref r2,r8
+   unlinkn r8,r7
+   .traceevent "A" 6 "R" "R" "r" 2 58 58 0 "result" ""
+   .srcstep 59 59 17 "awfy_list.crexx" 65 5 18 "    return result"
+   .traceevent "V" 6 "R" "R" "r" 2 59 59 0 "result" ""
+   ret r2
+   .meta "awfy_list.listarena.allocate.result"
+   .meta "awfy_list.listarena.allocate.value"
+   .meta "awfy_list.listarena.allocate.§this"
+
+§awfy_list.listbenchmark.§factory() .locals=1
+   .meta "awfy_list.listbenchmark.§factory"="b" ".awfy_list..listbenchmark" §awfy_list.listbenchmark.§factory() ""
+   .srcstep 62 62 17 "awfy_list.crexx" 68 3 13 "  *: factory"
+   setattrs r0,0
+   setobjtype r0,"awfy_list.listbenchmark"
+   numsci 18,1,1
+   .srcstep 61 61 17 "awfy_list.crexx" 69 5 11 "    return"
+   .meta "awfy_list.listbenchmark.§factory.§factory"="b" ".listbenchmark" r0
+   .traceevent "V" 6 "R" "O" "r" 0 61 61 0 "§factory" ""
+   ret r0
+   .meta "awfy_list.listbenchmark.§factory.§factory"
+
+§awfy_list.listbenchmark.run() .locals=17
+   .meta "awfy_list.listbenchmark.run"="b" ".int" §awfy_list.listbenchmark.run() ""
+   .srcstep 78 78 17 "awfy_list.crexx" 71 3 21 "  run: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .meta "awfy_list.listbenchmark.run.result_reference"="b" "reference .listelement" r8
+   .srcstep 63 63 17 "awfy_list.crexx" 76 5 46 "    result_reference = reference .ListElement"
+   null r8
+   .meta "awfy_list.listbenchmark.run.x"="b" "reference .listelement" r2
+   .srcstep 64 64 17 "awfy_list.crexx" 73 5 31 "    x = reference .ListElement"
+   null r2
+   .meta "awfy_list.listbenchmark.run.y"="b" "reference .listelement" r3
+   .srcstep 65 65 17 "awfy_list.crexx" 74 5 31 "    y = reference .ListElement"
+   null r3
+   .meta "awfy_list.listbenchmark.run.z"="b" "reference .listelement" r4
+   .srcstep 66 66 17 "awfy_list.crexx" 75 5 31 "    z = reference .ListElement"
+   null r4
+   .srcstep 71 71 17 "awfy_list.crexx" 72 5 23 "    arena = .ListArena()"
+   .srcstep 67 67 6 "awfy_list.crexx" 56 3 13 "  *: factory"
+   setattrs r10,3
+   .srcstep 68 68 6 "awfy_list.crexx" 56 3 13 "  *: factory"
+   setobjtype r10,"awfy_list.listarena"
+   .srcstep 69 69 17 "awfy_list.crexx" 57 5 22 "    element_count = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 69 69 0 "" ""
+   isetattr1 r10,1,r1
+   .srcstep 70 70 33 "awfy_list.crexx" 58 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 10 70 70 0 "§factory" ""
+   copy r7,r10
+   .traceevent "A" 6 "R" "O" "r" 7 70 70 0 "arena" ""
+   .srcstep 72 72 17 "awfy_list.crexx" 77 5 38 "    x = makeList(15, reference arena)"
+   .meta "awfy_list.listbenchmark.run.arena"="b" ".listarena" r7
+   .meta "awfy_list.listbenchmark.run.§this"="b" ".listbenchmark" a1
+   .traceevent "V" 6 "R" "O" "a" 1 72 72 0 "§this" ""
+   load r14,15
+   .traceevent "L" 4 "R" "I" "r" 14 72 72 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 7 72 72 0 "arena" ""
+   mkref r15,r7
+   settp a1,256
+   settp r15,768
+   call3 r2,§awfy_list.listbenchmark.makelist(),a1,r14,r15
+   .traceevent "F" 4 "R" "R" "r" 2 72 72 0 "makelist" ""
+   .traceevent "A" 6 "R" "R" "r" 2 72 72 0 "x" ""
+   .srcstep 73 73 17 "awfy_list.crexx" 78 5 38 "    y = makeList(10, reference arena)"
+   .traceevent "V" 6 "R" "O" "a" 1 73 73 0 "§this" ""
+   load r14,10
+   .traceevent "L" 4 "R" "I" "r" 14 73 73 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 7 73 73 0 "arena" ""
+   mkref r15,r7
+   settp a1,256
+   settp r15,768
+   call3 r3,§awfy_list.listbenchmark.makelist(),a1,r14,r15
+   .traceevent "F" 4 "R" "R" "r" 3 73 73 0 "makelist" ""
+   .traceevent "A" 6 "R" "R" "r" 3 73 73 0 "y" ""
+   .srcstep 74 74 17 "awfy_list.crexx" 79 5 37 "    z = makeList(6, reference arena)"
+   .traceevent "V" 6 "R" "O" "a" 1 74 74 0 "§this" ""
+   load r14,6
+   .traceevent "L" 4 "R" "I" "r" 14 74 74 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 7 74 74 0 "arena" ""
+   mkref r15,r7
+   settp a1,256
+   settp r15,768
+   call3 r4,§awfy_list.listbenchmark.makelist(),a1,r14,r15
+   .traceevent "F" 4 "R" "R" "r" 4 74 74 0 "makelist" ""
+   .traceevent "A" 6 "R" "R" "r" 4 74 74 0 "z" ""
+   .srcstep 75 75 17 "awfy_list.crexx" 80 5 37 "    result_reference = tail(x, y, z)"
+   .traceevent "V" 6 "R" "O" "a" 1 75 75 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "r" 2 75 75 0 "x" ""
+   .traceevent "V" 6 "R" "R" "r" 3 75 75 0 "y" ""
+   .traceevent "V" 6 "R" "R" "r" 4 75 75 0 "z" ""
+   settp a1,256
+   settp r2,256
+   settp r3,256
+   settp r4,256
+   call4 r8,§awfy_list.listbenchmark.tail(),a1,r2,r3,r4
+   .traceevent "F" 4 "R" "R" "r" 8 75 75 0 "tail" ""
+   .traceevent "A" 6 "R" "R" "r" 8 75 75 0 "result_reference" ""
+   .srcstep 76 76 17 "awfy_list.crexx" 81 5 42 "    result = dereference result_reference"
+   .meta "awfy_list.listbenchmark.run.result"="b" ".listelement" r6
+   .traceevent "V" 6 "R" "R" "r" 8 76 76 0 "result_reference" ""
+   relinkref r6,r8
+   .traceevent "A" 6 "R" "O" "r" 6 76 76 0 "result" ""
+   .srcstep 77 77 17 "awfy_list.crexx" 82 5 25 "    return result.length()"
+   .traceevent "V" 6 "R" "O" "r" 6 77 77 0 "result" ""
+   settp r6,256
+   call1 r14,§awfy_list.listelement.length(),r6
+   .traceevent "F" 4 "R" "I" "r" 14 77 77 0 "length" ""
+   ret r14
+   .meta "awfy_list.listbenchmark.run.arena"
+   .meta "awfy_list.listbenchmark.run.result"
+   .meta "awfy_list.listbenchmark.run.result_reference"
+   .meta "awfy_list.listbenchmark.run.x"
+   .meta "awfy_list.listbenchmark.run.y"
+   .meta "awfy_list.listbenchmark.run.z"
+   .meta "awfy_list.listbenchmark.run.§this"
+
+§awfy_list.listbenchmark.makelist() .locals=19
+   .meta "awfy_list.listbenchmark.makelist"="b" "reference .listelement" §awfy_list.listbenchmark.makelist() "list_length=.int,arena_reference=reference .listarena"
+   .srcstep 99 99 17 "awfy_list.crexx" 84 3 44 "  makeList: method = reference .ListElement"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 79 79 17 "awfy_list.crexx" 85 9 27 "    arg list_length = .int, arena_reference = reference .ListArena"
+   .meta "awfy_list.listbenchmark.makelist.list_length"="b" ".int" a2
+   .meta "awfy_list.listbenchmark.makelist.§this"="b" ".listbenchmark" a1
+   .srcstep 80 80 17 "awfy_list.crexx" 85 29 67 "    arg list_length = .int, arena_reference = reference .ListArena"
+   .meta "awfy_list.listbenchmark.makelist.arena_reference"="b" "reference .listarena" a3
+   .meta "awfy_list.listbenchmark.makelist.element_reference"="b" "reference .listelement" r8
+   .srcstep 81 81 17 "awfy_list.crexx" 87 5 47 "    element_reference = reference .ListElement"
+   null r8
+   .meta "awfy_list.listbenchmark.makelist.next_reference"="b" "reference .listelement" r9
+   .srcstep 82 82 17 "awfy_list.crexx" 86 5 44 "    next_reference = reference .ListElement"
+   null r9
+   .srcstep 85 85 17 "awfy_list.crexx" 88 5 23 "    if list_length = 0 then do"
+   .traceevent "V" 6 "R" "I" "a" 2 85 85 0 "list_length" ""
+   ieq r11,a2,0
+   .traceevent "O" 4 "R" "B" "r" 11 85 85 0 "" ""
+   brf l271iffalse,r11
+   .srcstep 86 86 17 "awfy_list.crexx" 88 24 28 "    if list_length = 0 then do"
+   .meta "awfy_list.listbenchmark.makelist.empty_reference"="b" "reference .listelement" r12
+   .srcstep 83 83 17 "awfy_list.crexx" 89 7 47 "      empty_reference = reference .ListElement"
+   null r12
+   .srcstep 84 84 17 "awfy_list.crexx" 90 7 29 "      return empty_reference"
+   .traceevent "V" 6 "R" "R" "r" 12 84 84 0 "empty_reference" ""
+   ret r12
+   endlife r12
+   .meta "awfy_list.listbenchmark.makelist.empty_reference"
+l271iffalse:
+   .srcstep 87 87 17 "awfy_list.crexx" 92 5 64 "    next_reference = makeList(list_length - 1, arena_reference)"
+   .traceevent "V" 6 "R" "O" "a" 1 87 87 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "a" 2 87 87 0 "list_length" ""
+   isub r16,a2,1
+   .traceevent "O" 4 "R" "I" "r" 16 87 87 0 "" ""
+   .traceevent "V" 6 "R" "R" "a" 3 87 87 0 "arena_reference" ""
+   settp a1,256
+   settp a3,256
+   call3 r9,§awfy_list.listbenchmark.makelist(),a1,r16,a3
+   .traceevent "F" 4 "R" "R" "r" 9 87 87 0 "makelist" ""
+   .traceevent "A" 6 "R" "R" "r" 9 87 87 0 "next_reference" ""
+   .srcstep 88 88 17 "awfy_list.crexx" 93 5 40 "    arena = dereference arena_reference"
+   .meta "awfy_list.listbenchmark.makelist.arena"="b" ".listarena" r5
+   .traceevent "V" 6 "R" "R" "a" 3 88 88 0 "arena_reference" ""
+   relinkref r5,a3
+   .traceevent "A" 6 "R" "O" "r" 5 88 88 0 "arena" ""
+   .srcstep 89 89 17 "awfy_list.crexx" 94 5 52 "    element_reference = arena.allocate(list_length)"
+   .traceevent "V" 6 "R" "O" "r" 5 89 89 0 "arena" ""
+   .traceevent "V" 6 "R" "I" "a" 2 89 89 0 "list_length" ""
+   settp r5,256
+   call2 r8,§awfy_list.listarena.allocate(),r5,a2
+   .traceevent "F" 4 "R" "R" "r" 8 89 89 0 "allocate" ""
+   .traceevent "A" 6 "R" "R" "r" 8 89 89 0 "element_reference" ""
+   .srcstep 90 90 17 "awfy_list.crexx" 95 5 44 "    element = dereference element_reference"
+   .meta "awfy_list.listbenchmark.makelist.element"="b" ".listelement" r7
+   .traceevent "V" 6 "R" "R" "r" 8 90 90 0 "element_reference" ""
+   relinkref r7,r8
+   .traceevent "A" 6 "R" "O" "r" 7 90 90 0 "element" ""
+   .srcstep 96 96 17 "awfy_list.crexx" 96 5 34 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+   .traceevent "V" 6 "R" "R" "r" 9 96 96 0 "next_reference" ""
+   refvalid r17,r9
+   brf l304iffalse,r17
+   .srcstep 97 97 17 "awfy_list.crexx" 96 35 39 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+   .srcstep 95 95 17 "awfy_list.crexx" 96 40 76 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+   .srcstep 91 91 33 "awfy_list.crexx" 96 45 52 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+   .traceevent "V" 6 "R" "O" "r" 7 91 91 0 "element" ""
+   .traceevent "A" 6 "R" "O" "r" 7 91 91 0 "§this" ""
+   .srcstep 92 92 6 "awfy_list.crexx" 48 9 16 "    arg element = reference .ListElement"
+   .traceevent "V" 6 "R" "R" "r" 9 0 0 0 "next_reference" ""
+   copy r18,r9
+   .srcstep 93 93 17 "awfy_list.crexx" 49 5 29 "    next_reference = element"
+   .traceevent "V" 6 "R" "R" "r" 18 93 93 0 "element" ""
+   linkattr1 r16,r7,1
+   copy r16,r18
+   unlink r16
+   .srcstep 94 94 6 "awfy_list.crexx" 96 45 76 "    if <refvalid>(next_reference) then call element.setNext(next_reference)"
+   .traceevent "V" 6 "R" "O" "r" 7 0 0 0 "§this" ""
+l304iffalse:
+   .srcstep 98 98 17 "awfy_list.crexx" 97 5 29 "    return element_reference"
+   .traceevent "V" 6 "R" "R" "r" 8 98 98 0 "element_reference" ""
+   ret r8
+   .meta "awfy_list.listbenchmark.makelist.arena"
+   .meta "awfy_list.listbenchmark.makelist.arena_reference"
+   .meta "awfy_list.listbenchmark.makelist.element"
+   .meta "awfy_list.listbenchmark.makelist.element_reference"
+   .meta "awfy_list.listbenchmark.makelist.list_length"
+   .meta "awfy_list.listbenchmark.makelist.next_reference"
+   .meta "awfy_list.listbenchmark.makelist.§this"
+
+§awfy_list.listbenchmark.isshorterthan() .locals=13
+   .meta "awfy_list.listbenchmark.isshorterthan"="b" ".boolean" §awfy_list.listbenchmark.isshorterthan() "x=reference .listelement,y=reference .listelement"
+   .srcstep 121 121 17 "awfy_list.crexx" 99 3 35 "  isShorterThan: method = .boolean"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 100 100 17 "awfy_list.crexx" 100 9 35 "    arg x = reference .ListElement, y = reference .ListElement"
+   .meta "awfy_list.listbenchmark.isshorterthan.x"="b" "reference .listelement" a2
+   .meta "awfy_list.listbenchmark.isshorterthan.§this"="b" ".listbenchmark" a1
+   .srcstep 101 101 17 "awfy_list.crexx" 100 37 63 "    arg x = reference .ListElement, y = reference .ListElement"
+   .meta "awfy_list.listbenchmark.isshorterthan.y"="b" "reference .listelement" a3
+   .meta "awfy_list.listbenchmark.isshorterthan.x_tail_reference"="b" "reference .listelement" r1
+   .srcstep 102 102 17 "awfy_list.crexx" 101 5 46 "    x_tail_reference = reference .ListElement"
+   null r1
+   .meta "awfy_list.listbenchmark.isshorterthan.y_tail_reference"="b" "reference .listelement" r3
+   .srcstep 103 103 17 "awfy_list.crexx" 102 5 46 "    y_tail_reference = reference .ListElement"
+   null r3
+   .srcstep 104 104 17 "awfy_list.crexx" 103 5 25 "    x_tail_reference = x"
+   .traceevent "V" 6 "R" "R" "a" 2 104 104 0 "x" ""
+   copy r1,a2
+   .traceevent "A" 6 "R" "R" "r" 1 104 104 0 "x_tail_reference" ""
+   .srcstep 105 105 17 "awfy_list.crexx" 104 5 25 "    y_tail_reference = y"
+   .traceevent "V" 6 "R" "R" "a" 3 105 105 0 "y" ""
+   copy r3,a3
+   .traceevent "A" 6 "R" "R" "r" 3 105 105 0 "y_tail_reference" ""
+   .srcstep 118 118 17 "awfy_list.crexx" 105 5 7 "    do while <refvalid>(y_tail_reference)"
+l332dostart:
+   .srcstep 106 106 17 "awfy_list.crexx" 105 8 42 "    do while <refvalid>(y_tail_reference)"
+   .traceevent "V" 6 "R" "R" "r" 3 0 0 0 "y_tail_reference" ""
+   refvalid r11,r3
+   brf l332doend,r11
+   .srcstep 108 108 17 "awfy_list.crexx" 106 7 42 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+   .traceevent "V" 6 "R" "R" "r" 1 108 108 0 "x_tail_reference" ""
+   refvalid r12,r1
+   btoi r12
+   ieq r12,r12,0
+   .traceevent "O" 4 "R" "B" "r" 12 108 108 0 "" ""
+   brf l350iffalse,r12
+   .srcstep 109 109 17 "awfy_list.crexx" 106 43 47 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+   .srcstep 107 107 17 "awfy_list.crexx" 106 48 56 "      if <refvalid>(x_tail_reference) = 0 then return 1"
+   ret 1
+l350iffalse:
+   .srcstep 110 110 17 "awfy_list.crexx" 107 7 44 "      x_tail = dereference x_tail_reference"
+   .meta "awfy_list.listbenchmark.isshorterthan.x_tail"="b" ".listelement" r9
+   .traceevent "V" 6 "R" "R" "r" 1 110 110 0 "x_tail_reference" ""
+   relinkref r9,r1
+   .traceevent "A" 6 "R" "O" "r" 9 110 110 0 "x_tail" ""
+   .srcstep 111 111 17 "awfy_list.crexx" 108 7 44 "      y_tail = dereference y_tail_reference"
+   .meta "awfy_list.listbenchmark.isshorterthan.y_tail"="b" ".listelement" r10
+   .traceevent "V" 6 "R" "R" "r" 3 111 111 0 "y_tail_reference" ""
+   relinkref r10,r3
+   .traceevent "A" 6 "R" "O" "r" 10 111 111 0 "y_tail" ""
+   .srcstep 114 114 17 "awfy_list.crexx" 109 7 37 "      x_tail_reference = x_tail.next()"
+   .srcstep 112 112 33 "awfy_list.crexx" 109 26 32 "      x_tail_reference = x_tail.next()"
+   .traceevent "V" 6 "R" "O" "r" 9 112 112 0 "x_tail" ""
+   .traceevent "A" 6 "R" "O" "r" 9 112 112 0 "§this" ""
+   .srcstep 113 113 33 "awfy_list.crexx" 45 5 11 "    return next_reference"
+   copyattr1 r1,r9,1
+   .traceevent "V" 6 "R" "R" "r" 1 113 113 0 "next_reference" ""
+   .traceevent "A" 6 "R" "R" "r" 1 113 113 0 "x_tail_reference" ""
+   .srcstep 117 117 17 "awfy_list.crexx" 110 7 37 "      y_tail_reference = y_tail.next()"
+   .srcstep 115 115 33 "awfy_list.crexx" 110 26 32 "      y_tail_reference = y_tail.next()"
+   .traceevent "V" 6 "R" "O" "r" 10 115 115 0 "y_tail" ""
+   .traceevent "A" 6 "R" "O" "r" 10 115 115 0 "§this" ""
+   .srcstep 116 116 33 "awfy_list.crexx" 45 5 11 "    return next_reference"
+   copyattr1 r3,r10,1
+   .traceevent "V" 6 "R" "R" "r" 3 116 116 0 "next_reference" ""
+   .traceevent "A" 6 "R" "R" "r" 3 116 116 0 "y_tail_reference" ""
+l332doinc:
+   .srcstep 119 119 17 "awfy_list.crexx" 110 37 38 "      y_tail_reference = y_tail.next()"
+   br l332dostart
+l332doend:
+   unlinkn r10,r9
+   endlife r9
+   endlife r10
+   .meta "awfy_list.listbenchmark.isshorterthan.x_tail"
+   .meta "awfy_list.listbenchmark.isshorterthan.y_tail"
+   .srcstep 120 120 17 "awfy_list.crexx" 112 5 13 "    return 0"
+   ret 0
+   .meta "awfy_list.listbenchmark.isshorterthan.x"
+   .meta "awfy_list.listbenchmark.isshorterthan.x_tail_reference"
+   .meta "awfy_list.listbenchmark.isshorterthan.y"
+   .meta "awfy_list.listbenchmark.isshorterthan.y_tail_reference"
+   .meta "awfy_list.listbenchmark.isshorterthan.§this"
+
+§awfy_list.listbenchmark.tail() .locals=34
+   .meta "awfy_list.listbenchmark.tail"="b" "reference .listelement" §awfy_list.listbenchmark.tail() "x=reference .listelement,y=reference .listelement,z=reference .listelement"
+   .srcstep 150 150 17 "awfy_list.crexx" 114 3 40 "  tail: method = reference .ListElement"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 122 122 17 "awfy_list.crexx" 115 9 35 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+   .meta "awfy_list.listbenchmark.tail.x"="b" "reference .listelement" a2
+   .meta "awfy_list.listbenchmark.tail.§this"="b" ".listbenchmark" a1
+   .srcstep 123 123 17 "awfy_list.crexx" 115 37 63 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+   .meta "awfy_list.listbenchmark.tail.y"="b" "reference .listelement" a3
+   .srcstep 124 124 17 "awfy_list.crexx" 115 65 91 "    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement"
+   .meta "awfy_list.listbenchmark.tail.z"="b" "reference .listelement" a4
+   .meta "awfy_list.listbenchmark.tail.first_tail"="b" "reference .listelement" r21
+   .srcstep 125 125 17 "awfy_list.crexx" 119 5 40 "    first_tail = reference .ListElement"
+   null r21
+   .meta "awfy_list.listbenchmark.tail.second_tail"="b" "reference .listelement" r22
+   .srcstep 126 126 17 "awfy_list.crexx" 120 5 41 "    second_tail = reference .ListElement"
+   null r22
+   .meta "awfy_list.listbenchmark.tail.third_tail"="b" "reference .listelement" r23
+   .srcstep 127 127 17 "awfy_list.crexx" 121 5 40 "    third_tail = reference .ListElement"
+   null r23
+   .meta "awfy_list.listbenchmark.tail.x_next"="b" "reference .listelement" r6
+   .srcstep 128 128 17 "awfy_list.crexx" 116 5 36 "    x_next = reference .ListElement"
+   null r6
+   .meta "awfy_list.listbenchmark.tail.y_next"="b" "reference .listelement" r11
+   .srcstep 129 129 17 "awfy_list.crexx" 117 5 36 "    y_next = reference .ListElement"
+   null r11
+   .meta "awfy_list.listbenchmark.tail.z_next"="b" "reference .listelement" r16
+   .srcstep 130 130 17 "awfy_list.crexx" 118 5 36 "    z_next = reference .ListElement"
+   null r16
+   .srcstep 147 147 17 "awfy_list.crexx" 122 5 27 "    if isShorterThan(y, x) then do"
+   .traceevent "V" 6 "R" "O" "a" 1 147 147 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "a" 3 147 147 0 "y" ""
+   .traceevent "V" 6 "R" "R" "a" 2 147 147 0 "x" ""
+   settp a1,256
+   settp a3,256
+   settp a2,256
+   call3 r7,§awfy_list.listbenchmark.isshorterthan(),a1,a3,a2
+   .traceevent "F" 4 "R" "B" "r" 7 147 147 0 "isshorterthan" ""
+   brf l472iffalse,r7
+   .srcstep 148 148 17 "awfy_list.crexx" 122 28 32 "    if isShorterThan(y, x) then do"
+   .srcstep 131 131 17 "awfy_list.crexx" 123 7 30 "      x_value = dereference x"
+   .meta "awfy_list.listbenchmark.tail.x_value"="b" ".listelement" r28
+   .traceevent "V" 6 "R" "R" "a" 2 131 131 0 "x" ""
+   relinkref r28,a2
+   .traceevent "A" 6 "R" "O" "r" 28 131 131 0 "x_value" ""
+   .srcstep 132 132 17 "awfy_list.crexx" 124 7 30 "      y_value = dereference y"
+   .meta "awfy_list.listbenchmark.tail.y_value"="b" ".listelement" r27
+   .traceevent "V" 6 "R" "R" "a" 3 132 132 0 "y" ""
+   relinkref r27,a3
+   .traceevent "A" 6 "R" "O" "r" 27 132 132 0 "y_value" ""
+   .srcstep 133 133 17 "awfy_list.crexx" 125 7 30 "      z_value = dereference z"
+   .meta "awfy_list.listbenchmark.tail.z_value"="b" ".listelement" r26
+   .traceevent "V" 6 "R" "R" "a" 4 133 133 0 "z" ""
+   relinkref r26,a4
+   .traceevent "A" 6 "R" "O" "r" 26 133 133 0 "z_value" ""
+   .srcstep 136 136 17 "awfy_list.crexx" 126 7 28 "      x_next = x_value.next()"
+   .srcstep 134 134 33 "awfy_list.crexx" 126 16 23 "      x_next = x_value.next()"
+   .traceevent "V" 6 "R" "O" "r" 28 134 134 0 "x_value" ""
+   .traceevent "A" 6 "R" "O" "r" 28 134 134 0 "§this" ""
+   .srcstep 135 135 33 "awfy_list.crexx" 45 5 11 "    return next_reference"
+   copyattr1 r6,r28,1
+   .traceevent "V" 6 "R" "R" "r" 6 135 135 0 "next_reference" ""
+   .traceevent "A" 6 "R" "R" "r" 6 135 135 0 "x_next" ""
+   .srcstep 139 139 17 "awfy_list.crexx" 127 7 28 "      y_next = y_value.next()"
+   .srcstep 137 137 33 "awfy_list.crexx" 127 16 23 "      y_next = y_value.next()"
+   .traceevent "V" 6 "R" "O" "r" 27 137 137 0 "y_value" ""
+   .traceevent "A" 6 "R" "O" "r" 27 137 137 0 "§this" ""
+   .srcstep 138 138 33 "awfy_list.crexx" 45 5 11 "    return next_reference"
+   copyattr1 r11,r27,1
+   .traceevent "V" 6 "R" "R" "r" 11 138 138 0 "next_reference" ""
+   .traceevent "A" 6 "R" "R" "r" 11 138 138 0 "y_next" ""
+   .srcstep 142 142 17 "awfy_list.crexx" 128 7 28 "      z_next = z_value.next()"
+   .srcstep 140 140 33 "awfy_list.crexx" 128 16 23 "      z_next = z_value.next()"
+   .traceevent "V" 6 "R" "O" "r" 26 140 140 0 "z_value" ""
+   .traceevent "A" 6 "R" "O" "r" 26 140 140 0 "§this" ""
+   .srcstep 141 141 33 "awfy_list.crexx" 45 5 11 "    return next_reference"
+   copyattr1 r16,r26,1
+   .traceevent "V" 6 "R" "R" "r" 16 141 141 0 "next_reference" ""
+   .traceevent "A" 6 "R" "R" "r" 16 141 141 0 "z_next" ""
+   .srcstep 143 143 17 "awfy_list.crexx" 129 7 38 "      first_tail = tail(x_next, y, z)"
+   .traceevent "V" 6 "R" "O" "a" 1 143 143 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "r" 6 143 143 0 "x_next" ""
+   .traceevent "V" 6 "R" "R" "a" 3 143 143 0 "y" ""
+   .traceevent "V" 6 "R" "R" "a" 4 143 143 0 "z" ""
+   settp a1,256
+   settp r6,256
+   settp a3,256
+   settp a4,256
+   call4 r21,§awfy_list.listbenchmark.tail(),a1,r6,a3,a4
+   .traceevent "F" 4 "R" "R" "r" 21 143 143 0 "tail" ""
+   .traceevent "A" 6 "R" "R" "r" 21 143 143 0 "first_tail" ""
+   .srcstep 144 144 17 "awfy_list.crexx" 130 7 39 "      second_tail = tail(y_next, z, x)"
+   .traceevent "V" 6 "R" "O" "a" 1 144 144 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "r" 11 144 144 0 "y_next" ""
+   .traceevent "V" 6 "R" "R" "a" 4 144 144 0 "z" ""
+   .traceevent "V" 6 "R" "R" "a" 2 144 144 0 "x" ""
+   settp a1,256
+   settp r11,256
+   settp a4,256
+   settp a2,256
+   call4 r22,§awfy_list.listbenchmark.tail(),a1,r11,a4,a2
+   .traceevent "F" 4 "R" "R" "r" 22 144 144 0 "tail" ""
+   .traceevent "A" 6 "R" "R" "r" 22 144 144 0 "second_tail" ""
+   .srcstep 145 145 17 "awfy_list.crexx" 131 7 38 "      third_tail = tail(z_next, x, y)"
+   .traceevent "V" 6 "R" "O" "a" 1 145 145 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "r" 16 145 145 0 "z_next" ""
+   .traceevent "V" 6 "R" "R" "a" 2 145 145 0 "x" ""
+   .traceevent "V" 6 "R" "R" "a" 3 145 145 0 "y" ""
+   settp a1,256
+   settp r16,256
+   settp a2,256
+   settp a3,256
+   call4 r23,§awfy_list.listbenchmark.tail(),a1,r16,a2,a3
+   .traceevent "F" 4 "R" "R" "r" 23 145 145 0 "tail" ""
+   .traceevent "A" 6 "R" "R" "r" 23 145 145 0 "third_tail" ""
+   .srcstep 146 146 17 "awfy_list.crexx" 132 7 55 "      return tail(first_tail, second_tail, third_tail)"
+   .traceevent "V" 6 "R" "O" "a" 1 146 146 0 "§this" ""
+   .traceevent "V" 6 "R" "R" "r" 21 146 146 0 "first_tail" ""
+   .traceevent "V" 6 "R" "R" "r" 22 146 146 0 "second_tail" ""
+   .traceevent "V" 6 "R" "R" "r" 23 146 146 0 "third_tail" ""
+   settp a1,256
+   settp r21,256
+   settp r22,256
+   settp r23,256
+   call4 r25,§awfy_list.listbenchmark.tail(),a1,r21,r22,r23
+   .traceevent "F" 4 "R" "R" "r" 25 146 146 0 "tail" ""
+   ret r25
+   unlinkn r26,r27
+   unlink r28
+   endlife r28
+   endlife r27
+   endlife r26
+   .meta "awfy_list.listbenchmark.tail.x_value"
+   .meta "awfy_list.listbenchmark.tail.y_value"
+   .meta "awfy_list.listbenchmark.tail.z_value"
+l472iffalse:
+   .srcstep 149 149 17 "awfy_list.crexx" 134 5 13 "    return z"
+   .traceevent "V" 6 "R" "R" "a" 4 149 149 0 "z" ""
+   ret a4
+   .meta "awfy_list.listbenchmark.tail.first_tail"
+   .meta "awfy_list.listbenchmark.tail.second_tail"
+   .meta "awfy_list.listbenchmark.tail.third_tail"
+   .meta "awfy_list.listbenchmark.tail.x"
+   .meta "awfy_list.listbenchmark.tail.x_next"
+   .meta "awfy_list.listbenchmark.tail.y"
+   .meta "awfy_list.listbenchmark.tail.y_next"
+   .meta "awfy_list.listbenchmark.tail.z"
+   .meta "awfy_list.listbenchmark.tail.z_next"
+   .meta "awfy_list.listbenchmark.tail.§this"

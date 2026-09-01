@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <string.h>
 
+RXPA_PLUGIN_PROCESS_REENTRANT
+
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
 // Constants are the integer part of the sines of integers (in radians) * 2^32.

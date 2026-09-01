@@ -1,0 +1,33 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start 385: basic_loops_run_opt
+      Start 440: optional_arg_presence_copy_run_noopt
+      Start 441: optional_arg_presence_copy_run_opt
+      Start 384: basic_loops_run_noopt
+      Start 417: repro_duplicate_call_argument_run_opt
+      Start 416: repro_duplicate_call_argument_run_noopt
+      Start  78: repro_duplicate_call_argument_opt
+      Start 209: basic_loops_opt
+      Start  77: repro_duplicate_call_argument_noopt
+      Start  60: 07_loops_opt
+      Start 208: basic_loops_noopt
+      Start  59: 07_loops_noopt
+ 1/12 Test  #77: repro_duplicate_call_argument_noopt .......   Passed    0.58 sec
+ 2/12 Test  #59: 07_loops_noopt ............................   Passed    0.60 sec
+ 3/12 Test #209: basic_loops_opt ...........................   Passed    0.62 sec
+ 4/12 Test  #78: repro_duplicate_call_argument_opt .........   Passed    0.64 sec
+ 5/12 Test  #60: 07_loops_opt ..............................   Passed    0.65 sec
+ 6/12 Test #208: basic_loops_noopt .........................   Passed    0.66 sec
+ 7/12 Test #441: optional_arg_presence_copy_run_opt ........   Passed    0.66 sec
+ 8/12 Test #417: repro_duplicate_call_argument_run_opt .....   Passed    0.67 sec
+ 9/12 Test #416: repro_duplicate_call_argument_run_noopt ...   Passed    0.68 sec
+10/12 Test #385: basic_loops_run_opt .......................   Passed    0.69 sec
+11/12 Test #440: optional_arg_presence_copy_run_noopt ......   Passed    0.69 sec
+12/12 Test #384: basic_loops_run_noopt .....................   Passed    0.69 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Label Time Summary:
+linked_opt    =   2.02 sec*proc (3 tests)
+smoke         =   1.29 sec*proc (2 tests)
+
+Total Test time (real) =   0.73 sec
