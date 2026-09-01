@@ -1,0 +1,157 @@
+name: Deep Build QA
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parallel-product:
+    name: Release product jobs ${{ matrix.jobs }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        jobs: [1, 5, 30]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Configure reproducible Release graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/deep-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCREXX_BUILD_CHANNEL=deep \
+            -DCREXX_BUILD_TIMESTAMP=19700101T000000Z \
+            -DCREXX_BUILD_COMMIT="${GITHUB_SHA}" \
+            -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+
+      - name: Clean product build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target stage-product \
+            --parallel ${{ matrix.jobs }}
+
+      - name: Prove immediate no-op
+        shell: bash
+        run: |
+          set -euo pipefail
+          no_op_log="${RUNNER_TEMP}/stage-product-no-op.log"
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target stage-product \
+            --parallel ${{ matrix.jobs }} | tee "$no_op_log"
+          if ! grep -q 'ninja: no work to do\.' "$no_op_log"; then
+            echo "The immediate stage-product repeat was not a true Ninja no-op" >&2
+            exit 1
+          fi
+
+      - name: Check generated-file dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing_log="${RUNNER_TEMP}/stage-product-missingdeps.log"
+          ninja -C "${RUNNER_TEMP}/deep-build" \
+            -t missingdeps stage-product | tee "$missing_log"
+          if grep -q '^Missing dep:' "$missing_log"; then
+            echo "Ninja found a generated output without an ordering dependency" >&2
+            exit 1
+          fi
+
+      - name: Exercise incremental REXX change closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/deep-build" \
+            --target crexx rxvme \
+            --parallel ${{ matrix.jobs }}
+          ctest --test-dir "${RUNNER_TEMP}/deep-build" \
+            --output-on-failure \
+            --no-tests=error \
+            -R '^crexx_project_build_contract$'
+
+      - name: Record deterministic RXBIN manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="${RUNNER_TEMP}/rxbin-j${{ matrix.jobs }}.sha256"
+          cd "${RUNNER_TEMP}/deep-build"
+          find bin -type f -name '*.rxbin' -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > "$manifest"
+          if [ ! -s "$manifest" ]; then
+            echo "No product RXBIN files were found" >&2
+            exit 1
+          fi
+
+      - name: Upload deep-build evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: deep-build-j${{ matrix.jobs }}
+          path: |
+            ${{ runner.temp }}/rxbin-j${{ matrix.jobs }}.sha256
+            ${{ runner.temp }}/stage-product-no-op.log
+            ${{ runner.temp }}/stage-product-missingdeps.log
+          if-no-files-found: error
+          retention-days: 30
+
+  compare-products:
+    name: Compare Release RXBIN outputs
+    needs: parallel-product
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download manifests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: deep-build-j*
+          path: ${{ runner.temp }}/deep-evidence
+          merge-multiple: true
+
+      - name: Compare jobs 1, 5 and 30
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="${RUNNER_TEMP}/deep-evidence"
+          diff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j5.sha256"
+          diff -u "$evidence/rxbin-j1.sha256" "$evidence/rxbin-j30.sha256"
+
+  stress:
+    name: Isolated Debug stress QA
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Configure Debug stress graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/stress-build" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+
+      - name: Run stress separately from correctness and performance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build "${RUNNER_TEMP}/stress-build" \
+            --target qa-stress \
+            --parallel 5

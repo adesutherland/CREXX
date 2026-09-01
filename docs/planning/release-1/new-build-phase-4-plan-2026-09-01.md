@@ -2,7 +2,7 @@
 
 ## Status and recovery point
 
-- **Status:** approved; P4.1 and P4.2 complete; P4.3 next
+- **Status:** approved; P4.1 through P4.3 complete; P4.4 next
 - **Branch:** `temp/newbuild`
 - **Current `develop` incorporated:**
   `292bf9e70e0dafd73b90c730942eb01902cd74f9`
@@ -178,19 +178,39 @@ or tool without CMake, while team members retain clear CMake QA entry points.
 
 ### P4.3 — hosted workflow policy and artifacts
 
-- [ ] Make Release, not MinSizeRel, the normal user artifact configuration.
-- [ ] Upload an exact-SHA optimized Release user-test archive for every PR head
+- [x] Make Release, not MinSizeRel, the normal user artifact configuration.
+- [x] Upload an exact-SHA optimized Release user-test archive for every PR head
   and every direct or merged `develop` push on each supported build platform.
-- [ ] Keep fast, comprehensive, sanitizer, static-analysis, deep, stress and
+- [x] Keep fast, comprehensive, sanitizer, static-analysis, deep, stress and
   performance responsibilities distinct.
-- [ ] Keep performance tests out of parallel correctness workloads.
-- [ ] Add explicit/scheduled deep graph and incremental checks without delaying
+- [x] Keep performance tests out of parallel correctness workloads.
+- [x] Add explicit/scheduled deep graph and incremental checks without delaying
   ordinary user-test artifact availability.
-- [ ] Commit P4.3 locally after workflow syntax and local equivalents pass.
+- [x] Commit P4.3 locally after workflow syntax and local equivalents pass. The
+  completion commit is the commit containing this checked status.
 
 **Acceptance:** CI policy matches the archetype contracts, and a downloadable
 exact candidate is a required output rather than an occasional release side
 effect.
+
+**Retained P4.3 evidence:**
+
+- `actionlint` and YAML parsing pass for every active workflow.
+- The fast Build matrix checks out the PR-head SHA explicitly, configures
+  Release, builds `stage-product` plus `stage-optional`, runs `qa-smoke`, and
+  uploads `CREXX-user-test-<full-sha>-<platform>.zip` on Linux x64, Windows
+  x64, macOS arm64 and macOS x86_64.
+- A clean local Release equivalent passes `qa-smoke` 149/149. Its immediate
+  `stage-product` repeat is a true no-op, `ninja -t missingdeps stage-product`
+  reports none across 1,771 nodes, and the staged exact-SHA archive is
+  non-empty. Elapsed time is indicative only because the host was active.
+- Linux Debug optimizer parity and the supported-platform comprehensive/
+  qualification matrix are independent hosted jobs. A release tag depends on
+  qualification; PR/develop user-test archives do not wait for deep QA.
+- `Deep Build QA` is scheduled and dispatchable. Its jobs 1/5/30 Release
+  builds compare deterministic RXBIN manifests, retain no-op/missingdeps
+  evidence, exercise the installed project change-closure contract and run
+  stress separately. It never runs performance measurement.
 
 ### P4.4 — qualification and close-out
 

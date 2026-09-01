@@ -247,6 +247,20 @@ The named correctness targets use 30 CTest workers by default on Apple ARM64
 and five elsewhere. Override that independently of build parallelism with
 `-DCREXX_QA_CTEST_JOBS=<positive-number>`.
 
+Hosted pull-request and `develop` builds use the optimized Release product
+path, run `qa-smoke`, then upload one archive per supported platform. The
+archive name and its `BUILDINFO` contain the exact PR-head or `develop` SHA.
+It is a user-test candidate, not a qualified or signed release.
+
+The other hosted lanes remain independent of artifact availability: Linux
+Debug optimizer parity runs for PRs and `develop`; comprehensive and
+install/package qualification run on integrated branches, explicit dispatches
+and release tags; sanitizer and CodeQL retain their own workflows. Scheduled
+deep QA builds the Release graph at jobs 1, 5 and 30, compares RXBIN manifests,
+checks an immediate no-op and Ninja generated-file dependencies, and runs
+stress separately. Performance measurement remains an explicit
+`qa-measurement` run on a quiescent host, not a hosted parallel timing claim.
+
 For routine system validation, run the product build and normal correctness
 suite:
 
