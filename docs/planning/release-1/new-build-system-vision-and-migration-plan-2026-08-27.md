@@ -1,11 +1,11 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** simplified vision approved; Phases 0-2 complete; Phase 3 Level G
-  ownership cutover locally accepted and broader qualification active
+- **Status:** simplified vision approved; Phases 0-3 complete; Phase 4 approved
+  and active
 - **Current `develop` incorporated:**
-  `9513e20a2af0a7177a487ce21e0f312902b7768b`
+  `292bf9e70e0dafd73b90c730942eb01902cd74f9`
 - **Planning branch:** `temp/newbuild`
-- **Last updated:** 2026-08-31
+- **Last updated:** 2026-09-01
 
 ## 1. Purpose
 
@@ -13,16 +13,20 @@ The build should make the cREXX product structure understandable, expose real
 dependencies, exploit safe parallelism, and make incremental work proportional
 to the source change.
 
-The end state has two deliberately separate executors:
+The end state has two deliberately separate interfaces with one owner for each
+artifact:
 
-1. CMake/Ninja builds the host-native toolchain and the Level B bootstrap.
-2. Once that bootstrap is qualified, a small cREXX Level B builder owns the
-   post-bootstrap libraries, REXX-based tools, product assembly and optional
-   material.
+1. CMake/Ninja is the team and product orchestrator. It builds the host-native
+   toolchain and Level B bootstrap, invokes owned Level B dependency waves,
+   prepares QA, and owns install, SDK and package integration.
+2. Level B builders own coherent REXX dependency graphs beneath that
+   orchestrator and provide the installed, non-CMake workflow for ordinary
+   REXX library and tool developers.
 
-A simple human-facing stage view joins those halves. There is no requirement
-for both executors to consume the same complete low-level graph, because they
-do not own the same actions.
+A simple human-facing stage view joins those interfaces. The strategic rule is
+not that every post-bootstrap command must leave CMake; it is that an artifact
+has one producer, the dependency boundary is explicit, and the same Level B
+engine can be invoked by CMake or by an installed user command.
 
 The practical success criteria are:
 
@@ -37,8 +41,10 @@ The practical success criteria are:
 
 ## 2. Governing principles
 
-1. **One owner per action and artifact.** CMake owns through the bootstrap
-   boundary; Level B owns the post-bootstrap graph after migration.
+1. **One owner per action and artifact.** CMake owns native compilation,
+   orchestration, QA, install and packaging. Level B owns each REXX dependency
+   graph delegated to it; CMake may invoke that graph but must not duplicate
+   its member producers.
 2. **Stages explain; dependencies schedule.** A named stage is a useful product
    selection, not permission to serialize independent actions.
 3. **Explicit inputs and outputs.** A generated input has a declared producer;
@@ -73,11 +79,11 @@ The human-facing build model is:
 | B0: Level B bootstrap | core Level B BIF modules and `library.rxbin` | CMake/Ninja |
 | X: certified exits | exit-token support and certified exits image | CMake/Ninja |
 | B1: Level B substrate | class/native libraries plus filesystem, hashing, process and task facilities | CMake/Ninja |
-| C: core REXX tools | Level C library, RexxScript, preprocessor and debugger | Level B after Phase 3 |
-| G: Level G library | network and other Level G facilities | Level B after Phase 3 |
-| L: Level L libraries | independent specialist libraries | Level B after Phase 3 |
-| Product | driver, runtime composition, install and package inputs | Level B after Phase 3 |
-| Optional | examples, demonstrations, contributions and experiments | Level B after Phase 3 |
+| C: core REXX tools | Level C library, RexxScript, preprocessor and debugger | CMake orchestration; owned CMake or Level B graph per artifact |
+| G: Level G library | network, Unicode and other Level G facilities | Level B graph invoked by CMake or installed command |
+| L: Level L libraries | independent specialist libraries | CMake orchestration; Level B graph where dependency waves add value |
+| Product | driver, runtime composition, install and package inputs | CMake/Ninja |
+| Optional | examples, demonstrations, contributions and experiments | explicit CMake selection or installed Level B command |
 
 Dependencies, not the table order alone, determine readiness. An independent
 Level L action may run beside a Level G or Level C action once its declared
@@ -95,8 +101,9 @@ Each action declares at least:
 - publication path; and
 - the small set of environment or resource settings that affect it.
 
-Phase 2 continues to express those facts in CMake. Phase 3 expresses only the
-post-bootstrap actions in the Level B build description.
+Phase 2 expressed those facts in CMake. Phase 3 proved that a Level B builder
+can own a substantial dependency graph. Phase 4 reuses that engine where it
+improves the REXX workflow without creating a second product graph.
 
 For Level B actions, a successful action key is derived from the tool identity,
 arguments and content of declared inputs. An action is skipped only when that
@@ -218,7 +225,7 @@ implementation SHA across the hosted matrix.
 **Phase 2 gate:** CMake provides a clear, deterministic and incrementally
 efficient reference/bootstrap build and selective QA interface.
 
-### Phase 3 — direct Level B takeover: active
+### Phase 3 — Level B dependency-wave proof: complete
 
 1. Define the small bootstrap handoff contract.
 2. Implement a Level B runner with readable stages, parallel jobs, explicit
@@ -226,13 +233,14 @@ efficient reference/bootstrap build and selective QA interface.
    publication.
 3. Migrate one complete independent post-bootstrap lane as the first real
    cutover, not as a shadow manifest-to-CMake experiment.
-4. Migrate the remaining Level C, G, L, product and optional lanes in bounded
-   waves.
-5. After each lane passes focused clean/no-op/incremental QA, remove its
-   superseded post-bootstrap CMake ownership.
+4. Prove dynamic packaged RXBIN dependency hints through the compiler, linker,
+   RXBIN metadata and VM autoload path.
+5. Remove superseded member producers for the migrated graph so that each
+   generated artifact has one owner.
 
-**Phase 3 gate:** the complete post-bootstrap product is owned by Level B and
-passes focused and broad clean/incremental QA without a permanent dual-run path.
+**Phase 3 gate:** the Level B engine owns a complete real dependency graph,
+passes focused clean/no-op/incremental QA, and publishes packaged dependency
+hints without a permanent dual-run path.
 
 The first real lane is now cut over: a Level B controller owns the complete
 Level G/Unicode graph, using the public Level B task classes for parallel
@@ -241,20 +249,32 @@ producers have been removed. See
 `new-build-phase-3-progress-2026-08-31.md` for the ownership and acceptance
 evidence.
 
-### Phase 4 — consolidate and qualify
+The accepted Phase 3 boundary deliberately does not require wholesale
+migration of Level C, Level L, product assembly or packaging. Those remain
+under the single-owner hybrid model above.
 
-1. Confirm CMake owns only native/bootstrap work and no superseded
-   post-bootstrap actions remain.
-2. Complete product assembly, install, packaging and explicit optional
-   selections.
-3. Run clean/no-op/change-closure checks at jobs 1, 5 and 30.
-4. Run essential, smoke, comprehensive and qualification QA; run stress
-   separately and the designed ASan scope under its maintained runner.
-5. Run one exact-SHA hosted platform gate and publish the developer workflow.
+### Phase 4 — developer workflows, CI policy and qualification: active
+
+1. Publish clear build and QA contracts for REXX users, REXX library/tool
+   developers, plugin developers, core developers and release maintainers.
+2. Add the installed non-CMake REXX library/tool workflow and a focused
+   optimizer-parity team target without introducing a new manifest system.
+3. Make optimized Release the standard user product. Every pull-request head
+   and every direct or merged push to `develop` must produce a downloadable,
+   exact-SHA Release user-test binary. Debug, no-opt, sanitizer and deep lanes
+   remain assurance evidence and do not replace that artifact.
+4. Separate fast merge evidence, comprehensive qualification, scheduled deep
+   checks, sanitizer scope, stress and quiet-host performance measurement.
+5. Run clean/no-op/change-closure checks at jobs 1, 5 and 30, exact-SHA hosted
+   platform gates, install/package consumers and publish the developer guide.
 
 **Phase 4 gate:** a fresh checkout builds, tests, installs and packages the
 supported product without stale inputs, manual sequencing, hidden network
-requirements or build-during-test behaviour.
+requirements or build-during-test behaviour; its exact-SHA optimized Release
+user-test artifact is available for every PR head and `develop` push.
+
+The approved, interruption-resistant work packages and resume state are in
+`new-build-phase-4-plan-2026-09-01.md`.
 
 ## 9. Human-facing interface
 
@@ -272,8 +292,10 @@ build qa stress
 build qa measurement       # serial; quiet host only
 ```
 
-During Phase 2 these map to named CMake targets. During Phase 3 the bootstrap
-commands remain CMake-backed and post-bootstrap commands are Level B-backed.
+For team members these map to named CMake targets. Installed REXX users can
+invoke the same owned Level B dependency engine through `crexx` for a library
+or tool without adopting CMake. Complex generated, native or packaged projects
+remain CMake projects.
 
 ## 10. Completion criteria
 
@@ -289,8 +311,10 @@ The programme is complete when:
 - normal CTest never builds or mutates the active tree;
 - clean output is independent of jobs 1, 5 and 30;
 - performance measurement is isolated from build, correctness and stress work;
-- the Level B runner completes the post-bootstrap workload without partial
-  publication; and
+- Level B runners complete their owned REXX dependency graphs without partial
+  publication;
+- every PR head and `develop` push provides an exact-SHA optimized Release
+  user-test artifact; and
 - the final exact SHA passes the supported hosted matrix and designed sanitizer
   scope.
 
@@ -302,11 +326,13 @@ Only these remaining architectural choices require a new approval:
 2. the exact serialized shape of the bootstrap handoff contract;
 3. a change to interactive compiler import precedence;
 4. a requirement for platform OS-level file-audit infrastructure; or
-5. moving work across the agreed CMake/Level B bootstrap ownership boundary.
+5. moving artifact ownership between CMake and a Level B dependency graph.
 
 ## References
 
 - `docs/planning/release-1/new-build-phase-2-plan-2026-08-28.md`
+- `docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md`
+- `docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md`
 - `docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`
 - `docs/planning/release-1/new-build-phase-0-report-2026-08-27.md`
 - `cmake/CrexxBuildResources.cmake`

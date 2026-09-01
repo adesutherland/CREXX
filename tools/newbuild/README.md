@@ -3,7 +3,8 @@
 The directory contains both the diagnostic graph tools from Phases 0-2 and the
 production Level B builder introduced in Phase 3. The catalogue and capture
 tools remain observation-only; the two `build_stage_g` programs are now the
-single production owner of the post-bootstrap Level G/Unicode lane.
+single production owner of the Level G/Unicode dependency graph. CMake remains
+the team/product orchestrator and invokes that owned graph.
 
 ## Phase 3 Level G builder
 
@@ -26,6 +27,8 @@ pool. The default is 30 on Apple ARM64 and 5 elsewhere. Independent jobs run
 within each readable wave; dependency boundaries remain serial. The full
 design and current acceptance evidence are in
 `docs/planning/release-1/new-build-phase-3-progress-2026-08-31.md`.
+The approved developer-workflow and CI follow-through is in
+`docs/planning/release-1/new-build-phase-4-plan-2026-09-01.md`.
 
 ## Phase 0-2 graph observation
 

@@ -2,23 +2,24 @@
 
 ## Status and programme context
 
-- **Status:** Level G/Unicode lane locally cut over; broad ordinary Debug QA
-  complete; sanitizer and hosted exact-SHA qualification pending
+- **Status:** complete at the accepted Level B dependency-wave proof boundary;
+  remaining product workflow and qualification work is assigned to Phase 4
 - **Branch:** `temp/newbuild`
 - **Phase 2 hosted checkpoint:**
   `c0ab085b5f28aa0dcbb669fe040fe8b0fd264cbb`
 - **Current `develop` incorporated:** `origin/develop` through
-  `9513e20a2af0a7177a487ce21e0f312902b7768b`
-- **Develop merge:** `5831bc919773a27ce757fc8879a0c201f2726f5f`
+  `292bf9e70e0dafd73b90c730942eb01902cd74f9`
+- **Latest develop merge:** `9027c65785e99119558572891501aae28bb6b99a`
 - **Level B builder foundation:** `a56ba5ff0`
 - **Complete Level G/Unicode graph:** `ae264c921`
-- **Date:** 2026-08-31
+- **Packaged RXBIN autoload hints:** `72d376e29`
+- **Date:** 2026-09-01
 
-Phase 3 makes the agreed ownership split real. CMake/Ninja retains the native
-toolchain and qualified Level B bootstrap. A Level B program now owns the
-complete Level G and Unicode lane. The former post-bootstrap CMake rules were
-removed at cutover, so there is one producer for every generated source,
-member RXBIN and the final `rxfnsg.rxbin`.
+Phase 3 makes the delegated ownership model real. CMake/Ninja remains the
+team/product orchestrator and retains the native toolchain and qualified Level
+B bootstrap. A Level B program owns the complete Level G and Unicode lane. The
+former CMake member producers were removed at cutover, so there is one producer
+for every generated source, member RXBIN and the final `rxfnsg.rxbin`.
 
 Elapsed times in this record are deliberately omitted. Other work was active
 on the host, so timings would be indicative rather than performance evidence.
@@ -35,7 +36,7 @@ host.
 | Level G base, HTTP and Unicode members | Level B builder |
 | Unicode build tools and generated sources | Level B builder |
 | consolidated `rxfnsg.rxbin` | Level B builder |
-| remaining Level C, Level L, product and optional lanes | later Phase 3 cutovers |
+| Level C, remaining Level L, product and optional lanes | CMake orchestration unless an explicitly delegated Level B graph owns the artifact |
 
 CMake has one Level G product command. Its declared inputs make Ninja invoke
 the builder when a source, Unicode input, bootstrap artifact or tool changes.
@@ -226,15 +227,19 @@ variants. The retained sanitizer log is
 `cmake-build-debugasan/asan-logs/20260831-223610-ctest/ctest.log`; it contains no
 AddressSanitizer diagnostic.
 
-## 8. Remaining Phase 3 work
+## 8. Phase 3 closure and transfer
 
-1. Preserve the retained green designed-scope evidence; any later finding
-   remains subject to the repository SAN worklist rules.
-2. Push the CMake ownership cutover, then require exact-SHA hosted
-   Build, Sanitizer and CodeQL success.
-3. Use the same direct, single-owner pattern for the remaining Level L and
-   other approved post-bootstrap lanes; do not reintroduce a shadow CMake
-   graph.
+Phase 3 closes with the complete Level G/Unicode dependency graph owned by the
+Level B builder and with packaged RXBIN autoload hints implemented through the
+toolchain. It proved parallel waves, content-keyed no-op builds, exact import
+roots and atomic publication on a substantial product graph.
 
-Hosted status must not be described as green until the exact cutover revision
-has reached terminal success on the maintained workflows.
+It is not a requirement that the complete post-bootstrap product move out of
+CMake. Phase 4 retains CMake as the team/product orchestrator, reuses the Level
+B engine for installed REXX library/tool workflows, and owns remaining broad
+sanitizer, platform, install and package qualification. This transfer does not
+downgrade any later sanitizer finding; repository SAN worklist rules continue
+to apply.
+
+See `new-build-phase-4-plan-2026-09-01.md` for the approved work packages and
+resume state.
