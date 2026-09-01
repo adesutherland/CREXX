@@ -18,6 +18,7 @@ add_static_plugin_target(_keyaccess keyaccess.c)
 
 add_custom_target(keyaccess_test ALL)
 crexx_add_rexx_opt_matrix(
+        PASS_TEST_NAME_ARGUMENT
         NAME keyaccess_test
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/keyaccess_test.crexx
         TARGET_GROUP keyaccess_test

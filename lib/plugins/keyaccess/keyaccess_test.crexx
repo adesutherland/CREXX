@@ -3,9 +3,15 @@ options levelb
 import keyaccess
 /* Test script for fileio plugin */
 
+arg test_args = .string[]
+
+if test_args.0 > 0 then database_file = "keyaccess_test." || test_args.1 || ".db"
+else database_file = "keyaccess_test.db"
+backup_file = database_file || ".backup"
+
 /* openkey database */
 say "openkeying database..."
-handle = _openkey("test.db", "w+") /* Just put it in the current directory (under the cmakefile, the current bin directory) */
+handle = _openkey(database_file, "w+") /* Use a per-mode fixture so opt/noopt may run in parallel. */
 if handle < 0 then do
     say "Failed to openkey database"
     exit 1
@@ -130,7 +136,7 @@ else
 /* Create backup */
 say ""
 say "Creating backup..."
-call _backup handle, "test.db.backup"
+call _backup handle, backup_file
 
 /* Compact database */
 say ""
