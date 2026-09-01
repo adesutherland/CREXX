@@ -420,11 +420,13 @@ PROCEDURE(message)
 PROCEDURE(input)
 {
     const char *prompt;
+    const char *initial = "";
 
     if (NUM_ARGS != 1)
         RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS,
                      "RXPLATFORM.INPUT expects one prompt argument")
     prompt = GETSTRING(ARG0);
+    if (NUM_ARGS == 2) initial = GETSTRING(ARG1);
 #ifdef _WIN32
     {
         char *quoted_prompt = powershell_quote(prompt);
@@ -531,6 +533,83 @@ PROCEDURE(input)
  *
  * @return 1 if Yes was selected, otherwise 0.
  */
+PROCEDURE(file)
+{
+    const char *prompt; const char *initial = "."; rxinteger save = 0;
+    char command[16384], result[8192] = ""; FILE *pipe;
+    if (NUM_ARGS < 1 || NUM_ARGS > 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXPLATFORM.FILE expects prompt, optional save mode and initial path")
+    prompt = GETSTRING(ARG0); if (NUM_ARGS > 1) save = GETINT(ARG1); if (NUM_ARGS > 2) initial = GETSTRING(ARG2);
+#ifdef _WIN32
+    { char *p = powershell_quote(prompt), *d = powershell_quote(initial); if (!p || !d) { free(p); free(d); RETURNSTRX(""); }
+      snprintf(command, sizeof(command), "powershell.exe -NoProfile -Command \"Add-Type -AssemblyName System.Windows.Forms; $d=New-Object System.Windows.Forms.%sFileDialog; $d.Title=%s; $d.InitialDirectory=%s; if($d.ShowDialog() -eq 'OK'){ $d.FileName }\"", save ? "Save" : "Open", p, d); free(p); free(d); }
+#elif defined(__APPLE__)
+    { char *p = applescript_quote(prompt), *q; if (!p) RETURNSTRX(""); q = shell_quote(p); free(p); if (!q) RETURNSTRX(""); snprintf(command, sizeof(command), "osascript -e '%s file with prompt %s'", save ? "choose" : "choose", q); free(q); }
+#elif defined(__linux__)
+    { char *p = shell_quote(prompt), *d = shell_quote(initial); if (!p || !d) { free(p); free(d); RETURNSTRX(""); }
+      if (system("command -v zenity >/dev/null 2>&1") == 0) snprintf(command, sizeof(command), "zenity --file-selection --title=%s --filename=%s %s", p, d, save ? "--save" : "");
+      else if (system("command -v kdialog >/dev/null 2>&1") == 0) snprintf(command, sizeof(command), "kdialog %s %s %s", save ? "--getsavefilename" : "--getopenfilename", d, p);
+      else { free(p); free(d); RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.FILE requires zenity or kdialog") } free(p); free(d); }
+#else
+    RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.FILE is not implemented on this platform")
+#endif
+    pipe = popen(command, "r"); if (!pipe) RETURNSTRX(""); (void)fgets(result, sizeof(result), pipe); (void)pclose(pipe); result[strcspn(result, "\r\n")] = '\0'; RETURNSTRX(result); ENDPROC
+}
+
+PROCEDURE(directory)
+{
+    const char *prompt;
+    const char *initial = "";
+    char command[8192];
+    char result[8192] = "";
+    FILE *pipe;
+    if (NUM_ARGS < 1 || NUM_ARGS > 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXPLATFORM.DIRECTORY expects prompt and optional directory")
+    prompt = GETSTRING(ARG0);
+    if (NUM_ARGS == 2) initial = GETSTRING(ARG1);
+#ifdef _WIN32
+    {
+        char *q = powershell_quote(prompt);
+        if (!q) RETURNSTRX("");
+        char *iq = powershell_quote(initial);
+        if (!iq) { free(q); RETURNSTRX(""); }
+        snprintf(command, sizeof(command), "powershell.exe -NoProfile -Command \"Add-Type -AssemblyName System.Windows.Forms; $d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description=%s; $d.SelectedPath=%s; if($d.ShowDialog() -eq 'OK'){ $d.SelectedPath }\"", q, iq);
+        free(iq);
+        free(q);
+    }
+#elif defined(__APPLE__)
+    {
+        char *q = applescript_quote(prompt);
+        char *s;
+        if (!q) RETURNSTRX("");
+        s = shell_quote(q);
+        free(q);
+        if (!s) RETURNSTRX("");
+        snprintf(command, sizeof(command), "osascript -e 'choose folder with prompt %s'", s);
+        free(s);
+    }
+#elif defined(__linux__)
+    {
+        char *q = shell_quote(prompt);
+        if (!q) RETURNSTRX("");
+        if (system("command -v zenity >/dev/null 2>&1") == 0)
+            snprintf(command, sizeof(command), "zenity --file-selection --directory --title=%s --filename=%s", q, shell_quote(initial));
+        else if (system("command -v kdialog >/dev/null 2>&1") == 0)
+            snprintf(command, sizeof(command), "kdialog --getexistingdirectory . --title %s", q);
+        else { free(q); RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.DIRECTORY requires zenity or kdialog") }
+        free(q);
+    }
+#else
+    RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.DIRECTORY is not implemented on this platform")
+#endif
+    pipe = popen(command, "r");
+    if (!pipe) RETURNSTRX("");
+    (void)fgets(result, sizeof(result), pipe);
+    (void)pclose(pipe);
+    result[strcspn(result, "\r\n")] = '\0';
+    RETURNSTRX(result);
+    ENDPROC
+}
+
+
 PROCEDURE(confirm)
 {
     const char *text;
@@ -669,4 +748,6 @@ LOADFUNCS
     ADDPROC(message, "rxplatform.message", "b", ".int", "message = .string");
     ADDPROC(confirm, "rxplatform.confirm", "b", ".int", "message = .string");
     ADDPROC(input, "rxplatform.input", "b", ".string", "prompt = .string");
-ENDLOADFUNCS
+    ADDPROC(directory, "rxplatform.directory", "b", ".string", "prompt = .string, initial = .string");
+    ADDPROC(file, "rxplatform.file", "b", ".string", "prompt = .string, save = .int, initial = .string");
+ ENDLOADFUNCS

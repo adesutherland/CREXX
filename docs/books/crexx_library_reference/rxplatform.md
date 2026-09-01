@@ -13,6 +13,8 @@ host-information and timing subset extracted from the retired `system` plugin:
 | `message(text)` | Display an informational desktop dialog and return zero. |
 | `confirm(text)` | Display a Yes/No desktop dialog; return `1` for Yes and `0` for No. |
 | `input(prompt)` | Request one text line; return entered text or an empty string on Cancel. |
+| `directory(prompt [, initial])` | Select a directory, optionally starting at `initial`; return its path or an empty string on Cancel. |
+| `file(prompt [, save [, initial]])` | Open or save a file; return its path or an empty string on Cancel. |
 
 `message()` and `confirm()` use native Windows dialogs on Windows, `osascript`
 on macOS, and `zenity` or `kdialog` on Linux. Linux therefore requires one of

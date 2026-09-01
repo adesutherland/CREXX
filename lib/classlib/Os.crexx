@@ -181,3 +181,12 @@ os: class
   input: method = .string
     arg message = .string
     return rxplatform..input(message)
+
+  directory: method = .string
+    arg message = .string, initial = ""
+    return rxplatform..directory(message, initial)
+
+  file: method = .string
+    arg message = .string, save = 0, initial = ""
+    return rxplatform..file(message, save, initial)
+

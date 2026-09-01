@@ -23,12 +23,16 @@ import system
 
 main: procedure
   x = .Os()
+  answer = x.directory("What DIR do you want?","C:\temp")
+  call x.message("You selected: "answer)
+ file = x.file("Select an input file:", 0, answer)
+   call x.message("You selected File: "file)
 
   /*
    * Display a simple informational message.
    */
   call x.message("Hello from cREXX - Cheers from Munich!")
-
+ 
   /*
    * Warning and error messages have the same simple calling convention
    * as message(), but allow the host platform to present the appropriate
