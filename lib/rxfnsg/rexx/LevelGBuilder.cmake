@@ -1,7 +1,7 @@
-# Phase 3 boundary: CMake bootstraps one Level B program; that program owns the
-# complete Level G/Unicode graph and its parallel dependency waves.
+# CMake bootstraps one Level B program; that program owns the complete Level G
+# and Unicode graph and its parallel dependency waves.
 
-set(_stage_g_root "${CMAKE_CURRENT_BINARY_DIR}/newbuild")
+set(_stage_g_root "${CMAKE_CURRENT_BINARY_DIR}/stage-g")
 set(_stage_g_bootstrap_root "${_stage_g_root}/bootstrap")
 set(_stage_g_bootstrap_import_root "${_stage_g_bootstrap_root}/imports")
 set(_stage_g_controller_import_root
@@ -27,9 +27,9 @@ if(NOT CREXX_LEVEL_G_BUILD_JOBS MATCHES "^[1-9][0-9]*$")
 endif()
 
 set(_stage_g_controller_source
-  "${CMAKE_SOURCE_DIR}/tools/newbuild/build_stage_g.crexx")
+  "${CMAKE_SOURCE_DIR}/tools/build-system/build_stage_g.crexx")
 set(_stage_g_worker_source
-  "${CMAKE_SOURCE_DIR}/tools/newbuild/build_stage_g_worker.crexx")
+  "${CMAKE_SOURCE_DIR}/tools/build-system/build_stage_g_worker.crexx")
 set(_stage_g_controller_copy
   "${_stage_g_bootstrap_root}/controller-source/build_stage_g.crexx")
 set(_stage_g_worker_copy

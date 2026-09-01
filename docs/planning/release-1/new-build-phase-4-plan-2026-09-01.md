@@ -1,13 +1,18 @@
 # New-build Phase 4 plan — developer workflows and qualification
 
+> Historical delivery record. Current user guidance lives in
+> `docs/books/crexx_programming_guide/Building_cRexx.md` and `crexx.md`;
+> current build-system tooling lives under `tools/build-system`.
+
 ## Status and recovery point
 
-- **Status:** P4.1 through P4.3 complete; P4.4 local qualification complete;
-  exact-SHA hosted gates next
-- **Branch:** `temp/newbuild`
+- **Status:** P4.1 through P4.4 implementation and local qualification
+  complete; direct `develop` publication and the exact-SHA quick hosted gate
+  are the remaining close-out actions
+- **Branch:** `temp/newbuild` (retire after direct integration)
 - **Current `develop` incorporated:**
-  `292bf9e70e0dafd73b90c730942eb01902cd74f9`
-- **Develop merge:** `9027c65785e99119558572891501aae28bb6b99a`
+  `9cc31c47d87784b79e507dc067edfef646bff0e8`
+- **Latest develop merge:** `c004d672fa7ada34248b46a355781ab26afe9c0c`
 - **Phase 3 packaged dependency-hint commit:** `72d376e29`
 - **Date:** 2026-09-01
 
@@ -43,7 +48,7 @@ out of CMake merely to satisfy the earlier provisional boundary wording.
 | Archetype | Normal build | Normal QA | Close-out evidence |
 | --- | --- | --- | --- |
 | REXX user | installed optimized Release product; `crexx program` | program result | exact-SHA user-test archive or qualified package |
-| REXX library/tool developer | installed Release toolchain and libraries; incremental `crexx --library` or `crexx --tool`; no CMake required | focused program/library tests | clean, no-op and changed-source closure |
+| REXX program/library developer | installed Release toolchain and libraries; incremental `crexx --program` or `crexx --library`; no CMake required | focused program/library tests | clean, no-op and changed-source closure |
 | plugin developer | installed Release SDK; external CMake project | focused dynamic-plugin consumer | Release install, autoload, external consumer and sanitizer proof |
 | core developer | source-tree CMake Debug; affected target and focused test or `qa-smoke` | optimizer/no-optimizer parity plus `qa-comprehensive` before close-out | relevant Debug, Release and sanitizer gates |
 | release/QA maintainer | clean Release build and install/package matrix | comprehensive, qualification, stress and maintained sanitizer scopes | exact-SHA supported-platform, sanitizer and CodeQL gates |
@@ -56,7 +61,7 @@ The developer guide must state when a broader route is required.
 Native build type and REXX bytecode optimization are independent axes:
 
 - **Release** is the standard installed and user-test product. Its REXX
-  library/tool builds optimize by default.
+  program/library builds optimize by default.
 - **Debug** is the core-development default and must exercise optimized and
   non-optimized REXX equivalence where the optimizer is relevant.
 - **RelWithDebInfo** is an investigation option for plugin/native faults, not
@@ -89,8 +94,8 @@ manifest or package-management language. The intended commands are:
 
 ```text
 crexx --library build/mylib source1.crexx source2.crexx --jobs auto
-crexx --tool build/mytool main.crexx support.crexx --jobs auto
-crexx --tool build/mytool main.crexx support.crexx --native
+crexx --program build/myprogram main.crexx support.crexx --jobs auto
+crexx --program build/myprogram main.crexx support.crexx --native
 ```
 
 The contract is:
@@ -148,7 +153,7 @@ point and do not require an obsolete wholesale post-bootstrap migration.
 
 ### P4.2 — developer commands and focused team QA
 
-- [x] Implement installed `crexx` library/tool modes using a reusable Level B
+- [x] Implement installed `crexx` program/library modes using a reusable Level B
   dependency-wave/action-key/publication engine.
 - [x] Provide optimized default, explicit no-opt, automatic/bounded jobs,
   incremental no-op, forced rebuild and atomic final publication.
@@ -302,4 +307,4 @@ When resuming:
 - `cmake/CrexxQaTiers.cmake`
 - `.github/workflows/build.yml`
 - `.github/workflows/sanitizers.yml`
-- `tools/newbuild/README.md`
+- `tools/build-system/README.md`

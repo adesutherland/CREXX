@@ -952,7 +952,7 @@ def build_findings(file_api: dict[str, Any], trace: dict[str, Any], tests: list[
                     "severity": "review",
                     "code": "fallback-target-classification",
                     "subject": target["name"],
-                    "detail": "Target uses the Phase 0 fallback classification and needs human review.",
+                    "detail": "Target uses the observation fallback classification and needs human review.",
                 }
             )
     for action in trace["custom_commands"] + trace["custom_targets"]:
@@ -962,7 +962,7 @@ def build_findings(file_api: dict[str, Any], trace: dict[str, Any], tests: list[
                     "severity": "review",
                     "code": "fallback-action-classification",
                     "subject": action["id"],
-                    "detail": "Custom action uses the Phase 0 fallback classification and needs human review.",
+                    "detail": "Custom action uses the observation fallback classification and needs human review.",
                 }
             )
     for test in tests:
@@ -1333,7 +1333,7 @@ def render_summary(catalogue: dict[str, Any], manifest_validation: dict[str, Any
         f"- Source commit: `{catalogue['source_commit']}`",
         f"- Platform: `{catalogue['platform']['system']} {catalogue['platform']['machine']}`",
         f"- Configuration: `{catalogue['configuration']['build_type']}`",
-        "- Status: observation-only Phase 0 export; not an executable replacement graph",
+        "- Status: observation-only catalogue export; not an executable replacement graph",
         "",
         "## Inventory",
         "",
@@ -1375,8 +1375,8 @@ def render_summary(catalogue: dict[str, Any], manifest_validation: dict[str, Any
             f"- Schema errors: `{len(manifest_validation['schema_errors'])}`",
             f"- Graph findings: `{len(manifest_validation['graph_findings'])}`",
             "",
-            "Graph findings describe the existing CMake projection and are Phase 1 inputs;",
-            "they do not mean the Phase 0 exporter changed build behaviour.",
+            "Graph findings describe the existing CMake projection and are review inputs;",
+            "they do not mean the catalogue exporter changed build behaviour.",
             "",
         ]
     )

@@ -1,4 +1,4 @@
-/* Compiler-sealed task adapter for the Level B Phase 3 builder. */
+/* Compiler-sealed task adapter for the Level B Level G builder. */
 options levelg comments_dash
 
 namespace crexx_stage_g_worker expose compile_target command_target

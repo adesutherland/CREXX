@@ -45,12 +45,12 @@ dependency closure.
 
 ## 2. Builder design
 
-`tools/newbuild/build_stage_g.crexx` is the Level B controller. It contains
+`tools/build-system/build_stage_g.crexx` is the Level B controller. It contains
 the human-readable waves, exact dependency roots, action keys, failure policy
 and publication policy. It uses the public Level B concurrency class surface:
 `.taskpool`, `.taskscope`, `.task`, `.completion` and `.channelvalue`.
 
-`tools/newbuild/build_stage_g_worker.crexx` is a deliberately small Level G
+`tools/build-system/build_stage_g_worker.crexx` is a deliberately small Level G
 adapter. The compiler currently seals task-target expressions to Level G, so
 the adapter creates the two task targets required by the Level B controller.
 It contains no build dependency or stage policy; the builder itself remains
@@ -236,7 +236,7 @@ roots and atomic publication on a substantial product graph.
 
 It is not a requirement that the complete post-bootstrap product move out of
 CMake. Phase 4 retains CMake as the team/product orchestrator, reuses the Level
-B engine for installed REXX library/tool workflows, and owns remaining broad
+B engine for installed REXX program/library workflows, and owns remaining broad
 sanitizer, platform, install and package qualification. This transfer does not
 downgrade any later sanitizer finding; repository SAN worklist rules continue
 to apply.

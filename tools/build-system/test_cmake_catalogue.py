@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 import cmake_catalogue as catalogue
-import capture_phase0
+import capture_build_graph
 
 
 class CatalogueUnitTests(unittest.TestCase):
@@ -337,8 +337,8 @@ class CatalogueUnitTests(unittest.TestCase):
             "\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:05.50\n"
             "\tMaximum resident set size (kbytes): 2048\n"
         )
-        self.assertEqual(capture_phase0.parse_time_output(darwin, "Darwin")["maximum_resident_set_bytes"], 123456)
-        parsed_linux = capture_phase0.parse_time_output(linux, "Linux")
+        self.assertEqual(capture_build_graph.parse_time_output(darwin, "Darwin")["maximum_resident_set_bytes"], 123456)
+        parsed_linux = capture_build_graph.parse_time_output(linux, "Linux")
         self.assertEqual(parsed_linux["elapsed_seconds"], 5.5)
         self.assertEqual(parsed_linux["maximum_resident_set_bytes"], 2 * 1024 * 1024)
 
@@ -348,8 +348,8 @@ class CatalogueUnitTests(unittest.TestCase):
             second = Path(root) / "second.txt"
             first.write_bytes(b"same contents\n")
             second.write_bytes(b"same contents\n")
-            first_gzip = capture_phase0.gzip_file(first)
-            second_gzip = capture_phase0.gzip_file(second)
+            first_gzip = capture_build_graph.gzip_file(first)
+            second_gzip = capture_build_graph.gzip_file(second)
             self.assertEqual(first_gzip.read_bytes(), second_gzip.read_bytes())
 
 

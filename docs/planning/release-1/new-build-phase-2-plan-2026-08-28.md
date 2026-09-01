@@ -452,7 +452,7 @@ Stop and return for direction before:
 
 - `docs/planning/release-1/new-build-system-vision-and-migration-plan-2026-08-27.md`
 - `docs/planning/release-1/new-build-phase-1-progress-2026-08-27.md`
-- `tools/newbuild/README.md`
+- `tools/build-system/README.md`
 - `cmake/CrexxBuildResources.cmake`
 - `cmake/CrexxQaTiers.cmake`
 - `cmake/CrexxTestModes.cmake`

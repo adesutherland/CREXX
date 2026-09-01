@@ -223,7 +223,7 @@ Linux build/QA actions, followed by hosted supported-platform qualification.
 
 ## 9. Tooling delivered
 
-`tools/newbuild/` now contains:
+`tools/build-system/` now contains:
 
 - a deterministic CMake/File API/CTest catalogue exporter;
 - the provisional manifest schema and standard-library validator;
@@ -261,4 +261,4 @@ changes.
 
 - `docs/planning/release-1/evidence/new-build-phase-0-2026-08-27/`
 - `docs/planning/release-1/evidence/new-build-phase-0-2026-08-27/github-build-run-33056734858.md`
-- `tools/newbuild/README.md`
+- `tools/build-system/README.md`

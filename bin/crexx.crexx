@@ -165,10 +165,14 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 if fn.i = '-optimise'   then optimize=1
 	 if fn.i = '-nooptimize' then optimize=0
 	 if fn.i = '-nooptimise' then optimize=0
-	 if fn.i = '-library' | fn.i = '-tool' then do
+	 if fn.i = '-tool' then do
+           say '--tool has been renamed to --program'
+           return 2
+	 end
+	 if fn.i = '-library' | fn.i = '-program' then do
            requestedMode = substr(fn.i,2)
            if projectMode <> '' & projectMode <> requestedMode then do
-             say '--library and --tool are mutually exclusive'
+             say '--library and --program are mutually exclusive'
              return 2
            end
            projectMode = requestedMode
@@ -433,15 +437,15 @@ end
 
 if projectMode <> '' then do
   if argsStart > 0 then do
-    say '--args is not available with --library or --tool'
+    say '--args is not available with --library or --program'
     return 2
   end
   if \compile then do
-    say '--nocompile is not available with --library or --tool'
+    say '--nocompile is not available with --library or --program'
     return 2
   end
   if projectMode = 'library' & native then do
-    say '--native is available with --tool, not --library'
+    say '--native is available with --program, not --library'
     return 2
   end
   projectBinaryRoots = rxpath || lpath
@@ -860,8 +864,29 @@ if hash <> '' then return hash
 hash = projectFileHash(candidate || '.rxplugin')
 return hash
 
+projectOwnsCandidate: procedure = .int
+arg candidate = .string, outputBase = .string
+normalizedCandidate = .string
+normalizedOutput = .string
+if outputBase = '' then return 0
+normalizedCandidate = translate(candidate,'/','\')
+normalizedOutput = translate(outputBase,'/','\')
+if normalizedCandidate = normalizedOutput then return 1
+if normalizedCandidate = normalizedOutput || '.exe' then return 1
+if normalizedCandidate = normalizedOutput || '.rxbin' then return 1
+if normalizedCandidate = normalizedOutput || '.c' then return 1
+if normalizedCandidate = normalizedOutput || '_linked.rxbin' then return 1
+if normalizedCandidate = normalizedOutput || '_linked.rxproviders' then return 1
+return 0
+
 projectKeyRoots: procedure = .binary
-arg state = .binary, roots = .string
+arg state = .binary, roots = .string, outputBase = .string
+rest = .string
+root = .string
+sep = .int
+i = .int
+candidate = .string
+hash = .string
 rest = roots
 do while rest <> ''
   sep = pos(';', rest)
@@ -883,6 +908,7 @@ do while rest <> ''
   ignored = arraysort(entries)
   do i = 1 to entries[0]
     candidate = root || '/' || entries[i]
+    if projectOwnsCandidate(candidate, outputBase) then iterate
     hash = projectFileHash(candidate)
     if hash <> '' then do
       state = projectKeyText(state, entries[i])
@@ -894,6 +920,10 @@ return state
 
 projectActionKey: procedure = .string
 arg mode = .string, output = .string, optimize = .int, sources = .string[], sourceRoots = .string, binaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, rxc = .string, rxas = .string, rxlink = .string
+rest = .string
+item = .string
+sep = .int
+i = .int
 state = rxhash..sha256init()
 state = projectKeyText(state, 'crexx-project/v1')
 state = projectKeyText(state, mode)
@@ -901,8 +931,8 @@ state = projectKeyText(state, output)
 state = projectKeyText(state, optimize)
 state = projectKeyText(state, sourceRoots)
 state = projectKeyText(state, binaryRoots)
-state = projectKeyRoots(state, sourceRoots)
-state = projectKeyRoots(state, dependencyBinaryRoots)
+state = projectKeyRoots(state, sourceRoots, output)
+state = projectKeyRoots(state, dependencyBinaryRoots, output)
 state = projectKeyText(state, projectFileHash(rxc))
 state = projectKeyText(state, projectFileHash(rxas))
 state = projectKeyText(state, projectFileHash(rxlink))
@@ -969,6 +999,10 @@ return translate(name,'_','.')
 
 projectNormalizeRoots: procedure = .string
 arg roots = .string, cwd = .string, dirsep = .string
+normalized = .string
+rest = .string
+item = .string
+sep = .int
 normalized = ''
 rest = roots
 do while rest <> ''
@@ -1092,6 +1126,15 @@ return rxhash..sha256finalhex(state)
 
 projectPackageNative: procedure = .int
 arg outputBase = .string, workRoot = .string, projectKey = .string, rxpath = .string, dirsep = .string, platformName = .string, userLibraries = .string
+driver = .string
+rxbin = .string
+nativeOutput = .string
+nativeStamp = .string
+nativeKey = .string
+rest = .string
+item = .string
+sep = .int
+argv = .string[]
 driver = rxpath || 'bin' || dirsep || 'crexx'
 rxbin = outputBase || '.rxbin'
 nativeOutput = outputBase
@@ -1099,16 +1142,16 @@ if isWindowsPlatform(platformName) then nativeOutput = outputBase || '.exe'
 nativeStamp = workRoot || '/native.action.sha256'
 nativeKey = projectNativeKey(projectKey, rxbin, driver, rxpath, dirsep)
 if projectActionCurrent(nativeOutput, nativeStamp, nativeKey) then do
-  say 'SKIP: native tool current' nativeOutput
+  say 'SKIP: native program current' nativeOutput
   return 0
 end
 
-argv = .string[]
 call appendArrayValue argv, driver
 call appendArrayValue argv, '-native'
 call appendArrayValue argv, '-nocompile'
 call appendArrayValue argv, '-noexec'
 call appendArrayValue argv, '-keep'
+call appendArrayValue argv, '-verbose2'
 rest = userLibraries
 do while rest <> ''
   sep = pos(';', rest)
@@ -1126,10 +1169,10 @@ do while rest <> ''
   end
 end
 call appendArrayValue argv, outputBase || '.crexx'
-if projectRunArgv('package native project tool', argv) <> 0 then return 1
+if projectRunArgv('package native project program', argv) <> 0 then return 1
 if rxfs..isfile(nativeOutput) = 0 then return 1
 if projectWriteStamp(nativeStamp, nativeKey) <> 0 then return 1
-say 'PUBLISHED: native tool' nativeOutput
+say 'PUBLISHED: native program' nativeOutput
 return 0
 
 buildProject: procedure = .int
@@ -1207,7 +1250,7 @@ finalOutput = outputBase || '.rxbin'
 finalStamp = workRoot || '/product.action.sha256'
 if \forceRebuild & projectActionCurrent(finalOutput, finalStamp, projectKey) then do
   say 'SKIP: project current' finalOutput
-  if mode = 'tool' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
+  if mode = 'program' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
   return 0
 end
 
@@ -1245,7 +1288,7 @@ end
 if projectWriteStamp(finalStamp, projectKey) <> 0 then return 1
 say 'PUBLISHED:' mode finalOutput
 
-if mode = 'tool' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
+if mode = 'program' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
 return 0
 
 emitStderr: procedure
@@ -1298,7 +1341,7 @@ say '-nocompile         -- skip rxc/rxas and reuse an existing .rxbin'
 say '-native            -- package a native executable from the compiled program'
 say '-nonative          -- disable native packaging (default)'
 say '-library output    -- incrementally build explicit sources into output.rxbin'
-say '-tool output       -- incrementally build explicit sources into a linked tool'
+say '-program output    -- incrementally build explicit sources into a linked program'
 say '-jobs auto|count   -- bounded parallel project compilation (default auto)'
 say '-rebuild           -- force every project member and final link to rebuild'
 say '-verbose[0-4]      -- report on progress; default verbose0'
@@ -1321,9 +1364,9 @@ say
 say 'Source files without OPTIONS use rxc file-type defaults: .rexx is Level C'
 say 'and .crexx/.crx are Level G.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
-say '--library and --tool optimize by default, compile explicit sources in one parallel'
+say '--library and --program optimize by default, compile explicit sources in one parallel'
 say 'wave, link only after that wave succeeds, and publish the final RXBIN atomically.'
-say 'Use --nooptimize for diagnostic parity; --tool also accepts --native.'
+say 'Use --nooptimize for diagnostic parity; --program also accepts --native.'
 say 'Native packaging uses rxlink before rxcpack; declared provider archives and explicit'
 say 'plugin/static libraries are linked with platform-appropriate retention flags.'
 say

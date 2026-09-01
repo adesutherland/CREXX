@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://crexx.org/schemas/build-manifest-v1.json",
   "title": "cREXX staged build manifest",
-  "description": "Versioned action and QA graph consumed by future CMake adapters and the Level B runner. Phase 0 projections are explicitly not executable.",
+  "description": "Versioned observation of the action and QA graph. Catalogue projections are explicitly not executable.",
   "type": "object",
   "additionalProperties": false,
   "required": [

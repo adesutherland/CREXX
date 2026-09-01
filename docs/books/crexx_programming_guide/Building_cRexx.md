@@ -209,7 +209,7 @@ Use the workflow that matches the work being changed:
 | Developer | Normal build and close-out route |
 | --- | --- |
 | REXX user | Install an optimized Release archive/package and run `crexx program`. |
-| REXX library/tool developer | Use installed Release `crexx --library` or `crexx --tool`; prove clean, immediate no-op and changed-source behavior without requiring CMake. |
+| REXX program/library developer | Use plain `crexx` for compile-and-run work, or installed Release `crexx --program` and `crexx --library` for maintained incremental products; prove clean, immediate no-op and changed-source behavior without requiring CMake. |
 | plugin developer | Use the installed Release SDK from an external CMake project; close with the dynamic-plugin consumer, install/autoload checks and relevant sanitizer scope. |
 | core developer | Configure a source Debug tree, build the affected target, run focused tests or `qa-smoke`, then run `qa-optimizer-parity` and `qa-comprehensive` when compiler/optimizer behavior is relevant. |
 | release/QA maintainer | Build a clean Release product, install/package it, and run comprehensive, qualification, separate stress, sanitizer, CodeQL and supported-platform gates for the exact SHA. |
@@ -252,14 +252,21 @@ path, run `qa-smoke`, then upload one archive per supported platform. The
 archive name and its `BUILDINFO` contain the exact PR-head or `develop` SHA.
 It is a user-test candidate, not a qualified or signed release.
 
-The other hosted lanes remain independent of artifact availability: Linux
-Debug optimizer parity runs for PRs and `develop`; comprehensive and
-install/package qualification run on integrated branches, explicit dispatches
-and release tags; sanitizer and CodeQL retain their own workflows. Scheduled
-deep QA builds the Release graph at jobs 1, 5 and 30, compares RXBIN manifests,
-checks an immediate no-op and Ninja generated-file dependencies, and runs
-stress separately. Performance measurement remains an explicit
-`qa-measurement` run on a quiescent host, not a hosted parallel timing claim.
+The other hosted lanes remain independent of artifact availability. Linux
+Debug optimizer parity runs for PRs and `develop`. After `develop` changes, the
+next scheduled deep QA run performs comprehensive and install/package
+qualification on every supported platform, builds the Release graph at jobs 1,
+5 and 30, compares RXBIN manifests, checks an immediate no-op and Ninja
+generated-file dependencies, and runs stress separately. The scheduled
+sanitizer workflow similarly runs Linux ASan/LSan and macOS ASan only when the
+current `develop` SHA has not already passed. Failed scheduled runs retry the
+same SHA on the next night; explicit dispatches and version-tag sanitizer runs
+are unconditional. GitHub starts schedules from the repository's default
+branch, so the scheduled workflows explicitly resolve and check out `develop`;
+changes to the schedule itself become active when that workflow revision
+reaches the default branch. CodeQL retains its own workflow. Performance
+measurement remains an explicit `qa-measurement` run on a quiescent host, not a
+hosted parallel timing claim.
 
 For routine system validation, run the product build and normal correctness
 suite:

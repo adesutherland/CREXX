@@ -70,12 +70,13 @@ normally interpret.
 atomically publish `output.rxbin`. Independent compile/assemble actions run in
 parallel; linking starts only after the complete source wave succeeds.
 
-`-tool output`
-: Build the explicit source files as one linked tool and atomically publish
-`output.rxbin`. Add `-native` to publish a native executable as well.
+`-program output`
+: Build the explicit source files as one incrementally maintained linked
+program and atomically publish `output.rxbin`. Add `-native` to publish a
+native executable as well.
 
 `-jobs auto|count`
-: Bound parallel compile/assemble work for `-library` and `-tool`. `auto` is
+: Bound parallel compile/assemble work for `-library` and `-program`. `auto` is
 the default: 30 workers on macOS and five elsewhere, capped by the number of
 source actions.
 
@@ -148,21 +149,36 @@ environment using direct argv dispatch. That avoids platform shell parsing for
 normal compile, assemble, link, pack, native-compile, and execute steps while
 keeping verbose output readable.
 
-## Incremental libraries and tools without CMake
+## Choosing how to build a program or library
 
-An installed Release toolchain can build an ordinary REXX library or tool
-without a CMake project:
+Use the ordinary `crexx source.crexx` form to compile and immediately run a
+program. Use `--program` when several explicitly listed sources form one
+maintained executable product, or when repeat-build speed and safe publication
+matter. Use `--library` for reusable linked code. Projects that also own native
+code, plugins, generators, installation or extensive QA should use CMake.
+
+| Need | Command |
+| --- | --- |
+| Compile and run a program now | `crexx source.crexx` |
+| Compile one program without running it | `crexx source.crexx --noexec` |
+| Build one maintained linked RXBIN incrementally | `crexx --program output sources...` |
+| Build a native version of that linked program | `crexx --program output sources... --native` |
+| Build a reusable linked library incrementally | `crexx --library output sources...` |
+| Build a product with native components, generators, packaging or broad QA | CMake |
+
+An installed Release toolchain therefore supports ordinary REXX program and
+library development without requiring a CMake project:
 
 ```bash
 crexx --library build/mylib source1.crexx source2.crexx --jobs auto
-crexx --tool build/mytool main.crexx support.crexx --jobs auto
-crexx --tool build/mytool main.crexx support.crexx --jobs auto --native
+crexx --program build/myprogram main.crexx support.crexx --jobs auto
+crexx --program build/myprogram main.crexx support.crexx --jobs auto --native
 ```
 
 These modes optimize REXX bytecode by default. Use `--nooptimize` when checking
 optimizer parity or diagnosing generated code. Existing `-s`, `-i`, `-l`,
 `--import-rxas`, diagnostics and locale options keep their normal meanings.
-Packaged RXBIN imports retain their autoload hints, so a linked tool can load a
+Packaged RXBIN imports retain their autoload hints, so a linked program can load a
 separately published dependency from an `rxvm -l` location.
 
 The builder records content keys under `<output>.crexx-build`. A repeat with
@@ -184,7 +200,7 @@ whose declarations provide narrower reverse-dependency closures.
 Each member writes only in its private action directory. The link writes a
 private RXBIN and renames it over the public output only after success. A
 compiler, assembler or linker failure therefore leaves the last published
-library/tool intact.
+library/program intact.
 
 ## Examples
 

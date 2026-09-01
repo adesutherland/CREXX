@@ -32,17 +32,17 @@ endfunction()
 file(REMOVE_RECURSE "${WORK_ROOT}")
 file(MAKE_DIRECTORY "${WORK_ROOT}/source" "${WORK_ROOT}/output")
 
-set(alpha "${WORK_ROOT}/source/p4alpha.crexx")
-set(beta "${WORK_ROOT}/source/p4beta.crexx")
+set(alpha "${WORK_ROOT}/source/projectalpha.crexx")
+set(beta "${WORK_ROOT}/source/projectbeta.crexx")
 set(provider "${WORK_ROOT}/source/autoloaddep.crexx")
 set(consumer "${WORK_ROOT}/source/autoload_consumer.crexx")
 file(WRITE "${alpha}" [=[options levelb
-namespace p4alpha expose alpha
+namespace projectalpha expose alpha
 alpha: procedure = .string
   return "alpha"
 ]=])
 file(WRITE "${beta}" [=[options levelb
-namespace p4beta expose beta
+namespace projectbeta expose beta
 beta: procedure = .string
   return "beta"
 ]=])
@@ -58,6 +58,18 @@ main: procedure = .int
   say "PASS: crexx project autoload"
   return 0
 ]=])
+
+execute_process(
+        COMMAND "${CREXX}" --tool ignored-output "${consumer}"
+        RESULT_VARIABLE renamed_mode_rc
+        OUTPUT_VARIABLE renamed_mode_out
+        ERROR_VARIABLE renamed_mode_err)
+if(renamed_mode_rc EQUAL 0)
+    message(FATAL_ERROR "retired --tool spelling unexpectedly succeeded")
+endif()
+require_text("retired program-mode spelling"
+        "${renamed_mode_out}${renamed_mode_err}"
+        "--tool has been renamed to --program")
 
 set(library_stem "${WORK_ROOT}/output/project_library")
 run_checked("clean optimized library build"
@@ -107,21 +119,43 @@ if(NOT EXISTS "${noopt_stem}.rxbin")
 endif()
 
 set(provider_stem "${WORK_ROOT}/output/packaged_provider")
-set(consumer_stem "${WORK_ROOT}/output/autoload_tool")
+set(consumer_stem "${WORK_ROOT}/output/autoload_program")
 run_checked("packaged provider library"
         "${CREXX}" --library "${provider_stem}" "${provider}" --jobs 2)
-run_checked("autoload consumer tool"
-        "${CREXX}" --tool "${consumer_stem}" "${consumer}" --jobs 2
+run_checked("autoload consumer program"
+        "${CREXX}" --program "${consumer_stem}" "${consumer}" --jobs 2
         -i "${WORK_ROOT}/output")
 run_checked("execute autoload consumer"
         "${RXVME}" -l "${WORK_ROOT}/output" "${consumer_stem}.rxbin")
 require_text("execute autoload consumer" "${last_output}"
         "PASS: crexx project autoload")
 
+set(native_program_stem "${WORK_ROOT}/output/autoload_native_program")
+run_checked("native autoload consumer program"
+        "${CREXX}" --program "${native_program_stem}" "${consumer}" --jobs 2
+        -i "${WORK_ROOT}/output" -l "${provider_stem}" --native)
+set(native_program "${native_program_stem}")
+if(WIN32)
+    string(APPEND native_program ".exe")
+endif()
+if(NOT EXISTS "${native_program}")
+    message(FATAL_ERROR "native program build did not publish ${native_program}")
+endif()
+run_checked("native program immediate no-op"
+        "${CREXX}" --program "${native_program_stem}" "${consumer}" --jobs 2
+        -i "${WORK_ROOT}/output" -l "${provider_stem}" --native)
+require_text("native program immediate no-op" "${last_output}"
+        "SKIP: project current")
+require_text("native program immediate no-op" "${last_output}"
+        "SKIP: native program current")
+run_checked("execute native autoload consumer" "${native_program}")
+require_text("execute native autoload consumer" "${last_output}"
+        "PASS: crexx project autoload")
+
 file(SHA256 "${consumer_stem}.rxbin" before_failure_hash)
 file(WRITE "${consumer}" "options levelb\nthis is not valid cREXX source !!!\n")
 execute_process(
-        COMMAND "${CREXX}" --tool "${consumer_stem}" "${consumer}" --jobs 2
+        COMMAND "${CREXX}" --program "${consumer_stem}" "${consumer}" --jobs 2
                 -i "${WORK_ROOT}/output"
         RESULT_VARIABLE failure_rc
         OUTPUT_VARIABLE failure_out
@@ -132,7 +166,7 @@ if(failure_rc EQUAL 0)
 endif()
 file(SHA256 "${consumer_stem}.rxbin" after_failure_hash)
 if(NOT after_failure_hash STREQUAL before_failure_hash)
-    message(FATAL_ERROR "failed build changed the previously published tool")
+    message(FATAL_ERROR "failed build changed the previously published program")
 endif()
 
 message(STATUS "crexx project build clean/no-op/change/rebuild/noopt/autoload/failure-publication checks passed")

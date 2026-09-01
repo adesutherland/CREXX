@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture a clean current-build Phase 0 evidence bundle.
+"""Capture a clean current-build graph evidence bundle.
 
 This is build-shape evidence, not a performance benchmark. Timings are always
 labelled indicative because unrelated host or cluster activity may be present.
@@ -206,13 +206,13 @@ def capture(args: argparse.Namespace) -> int:
     build_command = ["cmake", "--build", str(build), "--parallel", str(args.jobs)]
 
     capture_record: dict[str, Any] = {
-        "schema_version": "crexx.phase0-capture/v1",
+        "schema_version": "crexx.build-graph-capture/v1",
         "source": source_state,
         "configuration": args.configuration,
         "jobs": args.jobs,
         "timing_policy": {
             "classification": "indicative-non-comparative",
-            "reason": "Other host and cluster activities were allowed during Phase 0 capture.",
+            "reason": "Other host and cluster activities were allowed during capture.",
             "permitted_use": "gross build shape and resource-pressure observation only",
             "prohibited_use": "performance baseline, regression verdict or product comparison",
         },

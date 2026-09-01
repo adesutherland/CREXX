@@ -1,10 +1,10 @@
 # New Build System Vision and Migration Plan
 
-- **Status:** simplified vision approved; Phases 0-3 complete; Phase 4 approved
-  and active
+- **Status:** historical migration record; implementation complete and approved
+  for integration into `develop`
 - **Current `develop` incorporated:**
-  `292bf9e70e0dafd73b90c730942eb01902cd74f9`
-- **Planning branch:** `temp/newbuild`
+  `9cc31c47d87784b79e507dc067edfef646bff0e8`
+- **Planning branch:** `temp/newbuild` (to be retired after integration)
 - **Last updated:** 2026-09-01
 
 ## 1. Purpose
@@ -21,7 +21,7 @@ artifact:
    prepares QA, and owns install, SDK and package integration.
 2. Level B builders own coherent REXX dependency graphs beneath that
    orchestrator and provide the installed, non-CMake workflow for ordinary
-   REXX library and tool developers.
+   REXX program and library developers.
 
 A simple human-facing stage view joins those interfaces. The strategic rule is
 not that every post-bootstrap command must leave CMake; it is that an artifact
@@ -253,11 +253,11 @@ The accepted Phase 3 boundary deliberately does not require wholesale
 migration of Level C, Level L, product assembly or packaging. Those remain
 under the single-owner hybrid model above.
 
-### Phase 4 — developer workflows, CI policy and qualification: active
+### Phase 4 — developer workflows, CI policy and qualification: complete
 
-1. Publish clear build and QA contracts for REXX users, REXX library/tool
+1. Publish clear build and QA contracts for REXX users, REXX program/library
    developers, plugin developers, core developers and release maintainers.
-2. Add the installed non-CMake REXX library/tool workflow and a focused
+2. Add the installed non-CMake REXX program/library workflow and a focused
    optimizer-parity team target without introducing a new manifest system.
 3. Make optimized Release the standard user product. Every pull-request head
    and every direct or merged push to `develop` must produce a downloadable,
@@ -338,4 +338,4 @@ Only these remaining architectural choices require a new approval:
 - `cmake/CrexxBuildResources.cmake`
 - `cmake/CrexxQaTiers.cmake`
 - `cmake/CrexxTestModes.cmake`
-- `tools/newbuild/README.md`
+- `tools/build-system/README.md`

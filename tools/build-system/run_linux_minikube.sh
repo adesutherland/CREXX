@@ -73,11 +73,11 @@ if ! minikube status -p "$profile" >/dev/null 2>&1; then
   exit 1
 fi
 
-namespace="crexx-phase0-$(printf '%s' "$configuration" | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d%H%M%S)-$$"
+namespace="crexx-build-audit-$(printf '%s' "$configuration" | tr '[:upper:]' '[:lower:]')-$(date -u +%Y%m%d%H%M%S)-$$"
 kube=(kubectl --context "$profile")
 cleanup_namespace() {
-  if [[ "${KEEP_CREXX_PHASE0_NAMESPACE:-0}" == "1" ]]; then
-    echo "Retaining namespace $namespace because KEEP_CREXX_PHASE0_NAMESPACE=1"
+  if [[ "${KEEP_CREXX_BUILD_AUDIT_NAMESPACE:-0}" == "1" ]]; then
+    echo "Retaining namespace $namespace because KEEP_CREXX_BUILD_AUDIT_NAMESPACE=1"
     return
   fi
   "${kube[@]}" delete namespace "$namespace" --wait=false >/dev/null 2>&1 || true
@@ -85,38 +85,38 @@ cleanup_namespace() {
 trap cleanup_namespace EXIT
 
 "${kube[@]}" create namespace "$namespace" >/dev/null
-"${kube[@]}" apply -n "$namespace" -f "$repo_root/tools/newbuild/minikube-builder-pod.yaml" >/dev/null
-"${kube[@]}" wait -n "$namespace" --for=condition=Ready pod/crexx-phase0-builder --timeout=10m >/dev/null
+"${kube[@]}" apply -n "$namespace" -f "$repo_root/tools/build-system/minikube-builder-pod.yaml" >/dev/null
+"${kube[@]}" wait -n "$namespace" --for=condition=Ready pod/crexx-build-audit --timeout=10m >/dev/null
 
 ready=0
 for _attempt in {1..120}; do
-  if "${kube[@]}" exec -n "$namespace" crexx-phase0-builder -- test -f /work/toolchain-ready >/dev/null 2>&1; then
+  if "${kube[@]}" exec -n "$namespace" crexx-build-audit -- test -f /work/toolchain-ready >/dev/null 2>&1; then
     ready=1
     break
   fi
-  pod_phase="$("${kube[@]}" get -n "$namespace" pod crexx-phase0-builder -o jsonpath='{.status.phase}')"
+  pod_phase="$("${kube[@]}" get -n "$namespace" pod crexx-build-audit -o jsonpath='{.status.phase}')"
   if [[ "$pod_phase" == "Failed" || "$pod_phase" == "Succeeded" ]]; then
-    "${kube[@]}" logs -n "$namespace" crexx-phase0-builder >&2 || true
+    "${kube[@]}" logs -n "$namespace" crexx-build-audit >&2 || true
     echo "error: Minikube builder terminated during toolchain setup" >&2
     exit 1
   fi
   sleep 5
 done
 if [[ "$ready" != "1" ]]; then
-  "${kube[@]}" logs -n "$namespace" crexx-phase0-builder >&2 || true
+  "${kube[@]}" logs -n "$namespace" crexx-build-audit >&2 || true
   echo "error: Minikube toolchain setup timed out" >&2
   exit 1
 fi
 
 COPYFILE_DISABLE=1 git -C "$repo_root" archive "$source_commit" |
-  "${kube[@]}" exec -i -n "$namespace" crexx-phase0-builder -- \
+  "${kube[@]}" exec -i -n "$namespace" crexx-build-audit -- \
     tar --warning=no-unknown-keyword -xf - -C /work/source
-COPYFILE_DISABLE=1 tar -C "$repo_root/tools/newbuild" --exclude='__pycache__' -cf - . |
-  "${kube[@]}" exec -i -n "$namespace" crexx-phase0-builder -- \
+COPYFILE_DISABLE=1 tar -C "$repo_root/tools/build-system" --exclude='__pycache__' -cf - . |
+  "${kube[@]}" exec -i -n "$namespace" crexx-build-audit -- \
     tar --warning=no-unknown-keyword -xf - -C /work/tools
 
-"${kube[@]}" exec -n "$namespace" crexx-phase0-builder -- \
-  python3 /work/tools/capture_phase0.py \
+"${kube[@]}" exec -n "$namespace" crexx-build-audit -- \
+  python3 /work/tools/capture_build_graph.py \
     --source /work/source \
     --build /work/build \
     --evidence /work/evidence \
@@ -125,7 +125,7 @@ COPYFILE_DISABLE=1 tar -C "$repo_root/tools/newbuild" --exclude='__pycache__' -c
     --jobs "$jobs" \
     --allow-source-without-git
 
-"${kube[@]}" exec -n "$namespace" crexx-phase0-builder -- tar -C /work/evidence -cf - . |
+"${kube[@]}" exec -n "$namespace" crexx-build-audit -- tar -C /work/evidence -cf - . |
   COPYFILE_DISABLE=1 tar -C "$output_dir" -xf -
 
 echo "$output_dir"

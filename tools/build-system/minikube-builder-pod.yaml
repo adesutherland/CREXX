@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: crexx-phase0-builder
+  name: crexx-build-audit
   labels:
-    app.kubernetes.io/name: crexx-phase0-builder
-    app.kubernetes.io/part-of: crexx-newbuild-evidence
+    app.kubernetes.io/name: crexx-build-audit
+    app.kubernetes.io/part-of: crexx-build-system
 spec:
   restartPolicy: Never
   activeDeadlineSeconds: 7200
