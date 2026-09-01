@@ -178,6 +178,64 @@ you checked out if git is not a released version, there is a
 change that some test cases fail, but generally these should indicate
 success.
 
+### Running QA from CLion
+
+Do not use CLion's automatically generated `All CTest` configuration for a
+normal CREXX check. It selects independently prepared correctness,
+qualification, stress and measurement tiers together.
+
+The simplest CLion workflow is to select the `Release` CMake profile and build
+one of the named `qa-*` CMake targets. Use the CMake target selector or the
+CMake tool window and choose Build (the hammer), not Run:
+
+- build `qa-smoke` for the normal quick development check;
+- build `qa-comprehensive` for the broad correctness check before submitting a
+  substantial change; or
+- build `qa-qualification`, `qa-optimizer-parity`, `qa-stress` or
+  `qa-measurement` only when that separate assurance lane is required.
+
+Each `qa-*` target first builds its matching `qa-prep-*` dependency closure and
+then invokes CTest with the right labels and parallelism. The results appear in
+CLion's Build panel. Moving from smoke to comprehensive may build additional
+test harnesses and generated fixtures the first time; unchanged dependencies
+are incremental and should subsequently be no-ops.
+
+To use CLion's structured Test Runner instead, keep preparation and execution
+as two explicit steps:
+
+1. Select the `Release` CMake profile.
+2. Build the matching `qa-prep-*` target from the CMake target selector or
+   CMake tool window.
+3. Open **Run | Edit Configurations**, add a local **CTest Application**, and
+   give it the tier name.
+4. Set its working directory by browsing to this project's
+   `cmake-build-release` directory. Do not depend on a shared or copied
+   machine-specific path.
+5. Remove or disable its **Build** before-launch task because preparation was
+   completed explicitly in step 2.
+6. Enter the matching CTest arguments from the table below, save the local
+   configuration, and choose Run.
+
+| Local CTest configuration | Preparation target | CTest arguments |
+| --- | --- | --- |
+| Essential | `qa-prep-essential` | `--parallel 30 --output-on-failure --label-regex ^essential$` |
+| Smoke | `qa-prep-smoke` | `--parallel 30 --output-on-failure --label-regex ^(essential\|smoke)$` |
+| Comprehensive | `qa-prep-comprehensive` | `--parallel 30 --output-on-failure --label-regex ^(essential\|smoke\|comprehensive)$` |
+| Qualification | `qa-prep-qualification` | `--parallel 30 --output-on-failure --label-regex ^qualification$` |
+| Optimizer parity | `qa-prep-optimizer-parity` | `--parallel 30 --output-on-failure --label-regex ^optimizer-parity$ --label-exclude ^performance-measurement$` |
+| Stress | `qa-prep-stress` | `--parallel 30 --output-on-failure --label-regex ^stress$` |
+| Measurement | `qa-prep-measurement` | `--parallel 1 --output-on-failure --label-regex ^performance-measurement$` |
+
+Run measurement only on a quiescent host. After changing source, build inputs,
+or test tier, repeat the matching preparation step before starting CTest. The
+equivalent commands can always be run in CLion's Terminal; for example:
+
+```sh
+cmake --build cmake-build-release --target qa-prep-smoke --parallel 30
+ctest --test-dir cmake-build-release --parallel 30 --output-on-failure \
+  --label-regex '^(essential|smoke)$'
+```
+
 The default product build is deliberately offline. Parser mode uses a local
 sibling `DSL-Syntax-Highlighter` checkout when it exists; otherwise parser
 mode defaults off. To permit CMake to fetch the pinned parser dependency,
