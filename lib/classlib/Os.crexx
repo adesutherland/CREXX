@@ -125,4 +125,59 @@ os: class
     value = ""
     assembler getenv value,env_name
     return value
+
+    /**
+     * Displays an informational message to the user.
+     *
+     * The native platform provider determines how the message is
+     * presented to the user.
+     *
+     * @param message Message text to display.
+     * @return .int 0 on success.
+     */
+  message: method = .int
+    arg message = .string
+    return rxplatform..message(message)
+
+    /**
+     * Displays a warning message to the user.
+     *
+     * @param message Warning text to display.
+     * @return .int 0 on success.
+     */
+  warning: method = .int
+    arg message = .string
+    return rxplatform..message("Warning: " || message)
+
+    /**
+     * Displays an error message to the user.
+     *
+     * @param message Error text to display.
+     * @return .int 0 on success.
+     */
+  error: method = .int
+    arg message = .string
+    return rxplatform..message("Error: " || message)
+
+    /**
+     * Requests confirmation from the user.
+     *
+     * The native platform provider presents a Yes/No confirmation.
+     *
+     * @param message Message text to display.
+     * @return .int 1 if the user confirms, otherwise 0.
+     */
+  confirm: method = .int
+    arg message = .string
+    return rxplatform..confirm(message)
     
+   /**
+     * Requests text input from the user.
+     *
+     *
+     * @param message Message text to display.
+     * @return .string Entered text, or an empty string if cancelled.
+  */
+  input: method = .string
+    arg message = .string
+    return rxplatform..input(message)
