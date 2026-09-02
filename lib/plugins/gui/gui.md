@@ -67,6 +67,32 @@ call cleanup_gui
 when the interval expires without an event, and `-1` when the main window is
 closed. A timeout is an idle poll, not an instruction to exit.
 
+The plugin also has a native GTK event-loop proof of concept. A cREXX handler
+implements `.eventhandler` and returns non-zero to continue or zero to leave
+the loop:
+
+```rexx
+handler: class implements .eventhandler
+  *: factory
+    return
+
+  on_event: method = .int
+    arg widget = .int, event_type = .string
+    say event_type widget
+    if event_type = "clicked" | event_type = "close" then return 0
+    return 1
+
+callback = .handler()
+events = run_event_loop(callback)
+```
+
+`run_event_loop(handler)` first sends `on_event(0, "ready")`, then enters GTK
+when the handler elects to continue. GTK sends `clicked`, `close`, `changed`,
+and `selected` events with the corresponding widget handle. The callback runs
+synchronously on the GTK/VM thread and may call GUI procedures such as
+`set_status`; its object is borrowed only until `run_event_loop` returns.
+`process_events` remains supported for polling-oriented programs.
+
 ### Adding Common Widgets
 
 Here's how to add basic widgets to your window:

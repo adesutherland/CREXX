@@ -9,7 +9,9 @@ depending on these APIs in a packaged release.
 
 The (multiplatform) GTK Plugin enables a straightforward way to implement portable Rexx programs with a graphical user interface.
 
-cRexx does not implement event loop multitasking or callbacks yet. At the moment, the inclusion of the GTK plugin is a build time option[^option]. 
+The GTK plugin now includes an experimental same-thread callback event-loop
+proof of concept. It is not background multitasking. The plugin remains a
+build-time option.[^option]
 
 [^option]: `-DENABLE_GTK=ON`
 
@@ -47,6 +49,14 @@ call cleanup_gui
 `process_events(timeout)` returns a positive widget handle for an event, `0`
 when the interval expires without an event, and `-1` when the main window is
 closed. A timeout is an idle poll, not an instruction to exit.
+
+The callback alternative is `run_event_loop(handler)`. The handler implements
+`.eventhandler.on_event(widget=.int,event_type=.string) -> .int`, returning
+non-zero to continue and zero to leave the loop. It first receives the
+deterministic event `(0, "ready")`; GTK then reports `clicked`, `close`,
+`changed`, and `selected` events. Callbacks are synchronous on the GTK/VM
+thread, may call GUI functions, and remain borrowed only until the event-loop
+call returns. The polling API remains supported.
 
 ### Adding Common Widgets
 

@@ -49,25 +49,26 @@ if show_window(-1, -1) \= 1 then do
     failures = failures + 1
 end
 
-event_token = .int
-if automated then do
-    event_token = process_events(50)
-    if event_token \= 0 then do
-        say "FAIL: idle event processing returned" event_token "instead of 0"
-        failures = failures + 1
-    end
+/* Keep the original polling contract live alongside the callback surface. */
+event_token = process_events(50)
+if event_token \= 0 then do
+    say "FAIL: idle event processing returned" event_token "instead of 0"
+    failures = failures + 1
 end
-else do forever
-    event_token = process_events(250)
-    if event_token < 0 then leave
-    if event_token = ok_button then do
-        call set_status status, "OK selected"
-        leave
-    end
-    if event_token = cancel_button then do
-        call set_status status, "Cancel selected"
-        leave
-    end
+
+handler = .gui_event_handler(automated, status, ok_button, cancel_button)
+callback_events = run_event_loop(handler)
+if callback_events < 1 | handler.count() \= callback_events then do
+    say "FAIL: callback event count mismatch:" callback_events handler.count()
+    failures = failures + 1
+end
+if automated & (handler.last_type() \= "ready" | handler.last_widget() \= 0) then do
+    say "FAIL: automated event loop did not receive the ready callback"
+    failures = failures + 1
+end
+if \automated & handler.last_type() \= "clicked" & handler.last_type() \= "close" then do
+    say "FAIL: interactive event loop ended on unexpected event" handler.last_type()
+    failures = failures + 1
 end
 
 call cleanup_gui
@@ -82,3 +83,54 @@ call cleanup_gui
 if failures > 0 then exit 1
 say "PASS: gui GTK public contract"
 exit 0
+
+gui_event_handler: class implements .eventhandler
+  _automated = .int
+  _status = .int
+  _ok_button = .int
+  _cancel_button = .int
+  _count = .int
+  _last_widget = .int
+  _last_type = .string
+
+  *: factory
+    arg automated = .int, status = .int, ok_button = .int, cancel_button = .int
+    _automated = automated
+    _status = status
+    _ok_button = ok_button
+    _cancel_button = cancel_button
+    _count = 0
+    _last_widget = 0
+    _last_type = ""
+    return
+
+  on_event: method = .int
+    arg widget = .int, event_type = .string
+    _count = _count + 1
+    _last_widget = widget
+    _last_type = event_type
+
+    if event_type = "ready" then do
+      call set_status _status, "Callback event loop ready"
+      if _automated then return 0
+      return 1
+    end
+    if event_type = "clicked" & widget = _ok_button then do
+      call set_status _status, "OK selected by cREXX callback"
+      return 0
+    end
+    if event_type = "clicked" & widget = _cancel_button then do
+      call set_status _status, "Cancel selected by cREXX callback"
+      return 0
+    end
+    if event_type = "close" then return 0
+    return 1
+
+  count: method = .int
+    return _count
+
+  last_widget: method = .int
+    return _last_widget
+
+  last_type: method = .string
+    return _last_type

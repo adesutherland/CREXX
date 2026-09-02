@@ -34,6 +34,59 @@ static GtkWidget *widgets[MAX_WIDGETS] = {NULL};  // Array to store widget addre
 static int widget_count = 0;  // Keep track of how many widgets have been added
 static int graph_count = 0;   // Keep track of how many graphs have been inserted in the window
 
+typedef struct gui_event_loop_state {
+    rxpa_attribute_value handler;
+    rxpa_attribute_value scratch_and_result;
+    rxpa_attribute_value signal;
+    int event_count;
+    gboolean callback_failed;
+} gui_event_loop_state;
+
+static gui_event_loop_state *active_event_loop = NULL;
+static const char event_handler_descriptor[] =
+        "rxsig1|on_event|.int|widget=.int,event_type=.string";
+
+static gboolean dispatch_crexx_event(int widget_token, const char *event_type) {
+    rxpa_attribute_value callback_args[2];
+    int callback_rc;
+
+    if (!active_event_loop) return TRUE;
+
+    /* The outer native return slot is live for the duration of this call. Use
+     * two temporary child values as the callback arguments, then let
+     * CALLMETHOD replace the parent with the cREXX method result. */
+    SETNUMATTRS(active_event_loop->scratch_and_result, 2);
+    callback_args[0] = GETATTR(active_event_loop->scratch_and_result, 0);
+    callback_args[1] = GETATTR(active_event_loop->scratch_and_result, 1);
+    SETINT(callback_args[0], widget_token);
+    SETSTRING(callback_args[1], event_type ? event_type : "");
+
+    callback_rc = CALLMETHODX(active_event_loop->handler,
+                              event_handler_descriptor,
+                              2,
+                              callback_args,
+                              active_event_loop->scratch_and_result,
+                              active_event_loop->signal);
+    if (callback_rc != 0) {
+        active_event_loop->callback_failed = TRUE;
+        if (gtk_main_level() > 0) gtk_main_quit();
+        return FALSE;
+    }
+
+    active_event_loop->event_count++;
+    if (GETINT(active_event_loop->scratch_and_result) == 0) {
+        if (gtk_main_level() > 0) gtk_main_quit();
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean dispatch_ready_idle(gpointer data) {
+    (void)data;
+    (void)dispatch_crexx_event(0, "ready");
+    return G_SOURCE_REMOVE;
+}
+
 static void clear_widget_registry(void) {
     for (int i = 0; i < MAX_WIDGETS; i++) {
         widgets[i] = NULL;
@@ -42,22 +95,30 @@ static void clear_widget_registry(void) {
     graph_count = 0;
 }
 
-static gboolean button_clicked(GtkWidget *widget, gpointer data) {
+static void button_clicked(GtkWidget *widget, gpointer data) {
+    int token = 0;
+
+    (void)data;
     // Find the index of the clicked widget in the widgets array
     for (int i = 0; i < widget_count; i++) {
         if (widgets[i] == widget) {  // Compare addresses
-            last_event_token = i + 1;  // Store the index (1-based)
+            token = i + 1;
+            last_event_token = token;  // Store the index (1-based)
             break;
         }
     }
     user_event_occurred = TRUE;
-    // g_print("Button clicked! Token: %d\n", last_event_token);  // Debugging output
-    return FALSE;  // Allow event propagation
+    (void)dispatch_crexx_event(token, "clicked");
 }
 
 static gboolean window_close_callback(GtkWidget *widget, GdkEvent *event, gpointer data) {
+    (void)widget;
+    (void)event;
+    (void)data;
     user_event_occurred = TRUE;
     last_event_token = WINDOW_CLOSE_TOKEN;  // Set a special token for window close
+    (void)dispatch_crexx_event(WINDOW_CLOSE_TOKEN, "close");
+    if (gtk_main_level() > 0) gtk_main_quit();
     return FALSE;  // Allow the window to be destroyed
 }
 
@@ -67,22 +128,27 @@ static void window_destroy_callback(GtkWidget *widget, gpointer data) {
         main_window = NULL;
         main_fixed = NULL;
         clear_widget_registry();
+        if (active_event_loop && gtk_main_level() > 0) gtk_main_quit();
     }
 }
 
 static void combo_changed_callback(GtkComboBox *widget, gpointer data) {
+    (void)data;
     // Get the combo's token from its data
     int token= GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "combo-token"));
     user_event_occurred = TRUE;
     last_event_token = token;  // Use button_token mechanism for events
+    (void)dispatch_crexx_event(token, "changed");
 }
 
 static void list_row_selected(GtkListBox *box, GtkListBoxRow *row, gpointer data) {
+    (void)data;
     if (!row) return;  // No selection
 
     int token = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(box), "list-token"));
     user_event_occurred = TRUE;
     last_event_token = token;
+    (void)dispatch_crexx_event(token, "selected");
 }
 
 static void set_widget_background(GtkWidget *widget, const char *color_name) {
@@ -316,6 +382,42 @@ PROCEDURE(process_events) {
     }
 
     RETURNINTX(0); // Timeout occurred (using 0 as no button)
+    ENDPROC
+}
+
+PROCEDURE(run_event_loop) {
+    gui_event_loop_state state;
+
+    if (!main_window || active_event_loop || !ISINITIALIZED(ARG0)) {
+        RETURNINTX(-1);
+    }
+
+    memset(&state, 0, sizeof(state));
+    state.handler = ARG0;
+    state.scratch_and_result = RETURN;
+    state.signal = SIGNAL;
+    active_event_loop = &state;
+
+    /* Queue a deterministic lifecycle callback through GTK itself. Automated
+     * handlers return zero from the idle callback; interactive handlers return
+     * non-zero and remain in the same native event loop. */
+    if (g_idle_add(dispatch_ready_idle, NULL) == 0) {
+        active_event_loop = NULL;
+        RETURNSIGNAL(SIGNAL_FAILURE,
+                     "gui.run_event_loop could not schedule its ready callback")
+    }
+    gtk_main();
+    active_event_loop = NULL;
+
+    if (state.callback_failed) {
+        if (GETINT(SIGNAL) == SIGNAL_NONE) {
+            RETURNSIGNAL(SIGNAL_FAILURE,
+                         "gui.run_event_loop could not invoke eventhandler.on_event")
+        }
+        return;
+    }
+
+    RETURNINT(state.event_count);
     ENDPROC
 }
 
@@ -3147,11 +3249,14 @@ gboolean draw_graph(GtkWidget *widget, cairo_t *cr, gpointer data) {
 
 
 LOADFUNCS
+    ADDINTERFACE("gui.eventhandler");
+    ADDMETHOD("gui.eventhandler", "on_event", ".int", "widget=.int,event_type=.string");
     ADDPROC(init_window, "gui.init_window", "b", ".int", "title=.string, width=.int,height=.int");
     ADDPROC(add_button, "gui.add_button", "b", ".int", "button_text=.string,x=.int,y=.int");
     ADDPROC(add_text, "gui.add_text", "b", ".int", "text=.string,x=.int,y=.int");
     ADDPROC(show_window, "gui.show_window", "b", ".int", "x=.int,y=.int");
     ADDPROC(process_events, "gui.process_events", "b", ".int", "timeout=.int");
+    ADDPROC(run_event_loop, "gui.run_event_loop", "b", ".int", "handler=.eventhandler");
     ADDPROC(add_combo, "gui.add_combo", "b", ".int", "expose items=.string[],x=.int,y=.int");
     ADDPROC(combo_add_item, "gui.combo_add_item", "b", ".int", "combo=.int,text=.string");
     ADDPROC(combo_remove_item, "gui.combo_remove_item", "b", ".int", "combo=.int,position=.int");

@@ -2674,6 +2674,14 @@ void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_len
 int rxpa_isinitialized(rxpa_attribute_value attributeValue)
     { disablerFunction("rxpa_isinitialized"); return 0; }
 
+int rxpa_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal)
+    { disablerFunction("rxpa_callmethod"); return -1; }
+
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue)  /* Get the number of child attributes */
     { disablerFunction("rxpa_getnumattrs"); return 0; }
 
@@ -2811,6 +2819,7 @@ static void loadPluginFileForFunctions(Context *context, char* file_name, char* 
     rxpa_context.setsayexit = rxpa_setsayexit;
     rxpa_context.resetsayexit = rxpa_resetsayexit;
     rxpa_context.isinitialized = rxpa_isinitialized;
+    rxpa_context.callmethod = rxpa_callmethod;
 
     if (context->debug_mode >= 2) printf("Importing Procedures - Reading CREXX Plugin file %s for possible procedure imports\n", file_name);
 

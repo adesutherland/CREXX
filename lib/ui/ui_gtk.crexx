@@ -1,0 +1,100 @@
+/* GTK driver for the experimental backend-neutral cREXX UI contracts. */
+options levelb
+namespace ui_gtk expose gtkdriver
+import ui
+import ui_gtk_native
+
+/** GTK 3 driver. Native signals enter cREXX through one RXPA method callback. */
+gtkdriver: class implements .uidriver .eventhandler
+  _runtime = reference .uiruntime
+  _automated = .int
+  _created = .int
+
+  /** @param automated non-zero stops after the deterministic app.ready event */
+  *: factory
+    arg automated = 0
+    _automated = automated
+    _created = 0
+    return
+
+  /** Build the initial GTK tree and enter the native event loop.
+   * @param runtime application runtime
+   * @return zero on normal termination, or a negative setup failure
+   */
+  run: method = .int
+    arg runtime = .uiruntime
+    /* The native loop is synchronous, so this weak reference remains valid
+     * until ui_gtk_native.run returns. Copies of this callback receiver retain
+     * the same storage identity rather than a snapshot of the runtime. */
+    _runtime = reference runtime
+    view = runtime.view()
+
+    if create(view.title(), 520, 360) \= 1 then return -1
+    _created = 1
+    do index = 1 to view.count()
+      kind = view.node_kind(index)
+      if kind = "label" then do
+        if add_label(view.node_id(index), view.node_text(index)) \= 1 then do
+          call cleanup()
+          _created = 0
+          return -2
+        end
+      end
+      else if kind = "button" then do
+        if add_button(view.node_id(index), view.node_text(index), view.node_action(index)) \= 1 then do
+          call cleanup()
+          _created = 0
+          return -2
+        end
+      end
+    end
+
+    if show() \= 1 then do
+      call cleanup()
+      _created = 0
+      return -3
+    end
+
+    native_rc = ui_gtk_native..run(self)
+    call cleanup()
+    _created = 0
+    if native_rc < 0 then return native_rc
+    return 0
+
+  /** Receive one normalized native GTK action.
+   * @param action semantic action associated with the native widget
+   * @param payload optional native payload
+   * @return non-zero keeps the GTK loop running
+   */
+  on_native_event: method = .int
+    arg action = .string, payload = .string
+
+    runtime = dereference _runtime
+    effect = runtime.dispatch(action, payload)
+    do forever
+      kind = effect.kind()
+      if kind = "none" then do
+        call render()
+        if _automated then do
+          if action = "app.ready" then return 0
+        end
+        return 1
+      end
+      if kind = "quit" then return 0
+      if kind = "choose_file" then do
+        path = choose_file("Open a text file")
+        if path = "" then effect = runtime.dispatch("file.selection.cancelled", "")
+        else effect = runtime.dispatch("file.selected", path)
+        iterate
+      end
+      return 0
+    end
+
+  render: method = .void
+    if \_created then return
+    runtime = dereference _runtime
+    view = runtime.view()
+    do index = 1 to view.count()
+      call set_text view.node_id(index), view.node_text(index)
+    end
+    return

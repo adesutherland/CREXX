@@ -3242,6 +3242,128 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
     return called_function;
 }
 
+int rxvm_invoke_method_descriptor(rxvm_context *context,
+                                  value *receiver,
+                                  const char *method_descriptor,
+                                  size_t argc,
+                                  value **args,
+                                  value *result) {
+    const char *class_name;
+    size_t class_name_length;
+    proc_runtime *method;
+    proc_runtime *saved_ext_proc;
+    int saved_ext_argc;
+    value **saved_ext_args;
+    value *saved_ext_ret;
+    value **method_args;
+    value *method_result;
+    char *dummy_argv[] = {"rxpa_callmethod"};
+    rx_callable_signature expected_signature;
+    size_t index;
+    int initialization_rc;
+    int integer_result;
+    int run_status;
+
+    if (!context || !receiver || !method_descriptor || !*method_descriptor ||
+        !result || (argc && !args) || argc > (size_t)INT_MAX - 1u) {
+        return SIGNAL_INVALID_ARGUMENTS;
+    }
+    if (value_is_uninitialized_object(receiver)) {
+        return SIGNAL_OBJECT_NOT_INITIALIZED;
+    }
+    if (!rx_sig_parse_descriptor(method_descriptor, &expected_signature)) {
+        return SIGNAL_INVALID_ARGUMENTS;
+    }
+    integer_result = strcmp(expected_signature.return_type, ".int") == 0 ||
+                     strcmp(expected_signature.return_type, ".boolean") == 0;
+    rx_sig_free(&expected_signature);
+
+    class_name = runtime_value_type_name(receiver, &class_name_length);
+    if (!class_name || !class_name_length) {
+        return SIGNAL_INVALID_ARGUMENTS;
+    }
+    method = resolve_runtime_method(context,
+                                    class_name,
+                                    class_name_length,
+                                    method_descriptor,
+                                    strlen(method_descriptor));
+    if (!method) return SIGNAL_FUNCTION_NOT_FOUND;
+
+    method_args = rxvm_memory_alloc_bytes(
+            context->worker.memory_worker,
+            sizeof(*method_args) * (argc + 1u));
+    if (!method_args) return SIGNAL_FAILURE;
+    method_args[0] = receiver;
+    for (index = 0; index < argc; index++) {
+        if (!args[index]) {
+            (void)rxvm_memory_release(method_args);
+            return SIGNAL_INVALID_ARGUMENTS;
+        }
+        method_args[index + 1u] = args[index];
+    }
+
+    method_result = value_f_in(context->worker.memory_worker);
+    if (!method_result) {
+        (void)rxvm_memory_release(method_args);
+        return SIGNAL_FAILURE;
+    }
+
+    saved_ext_proc = context->ext_proc;
+    saved_ext_argc = context->ext_argc;
+    saved_ext_args = context->ext_args;
+    saved_ext_ret = context->ext_ret;
+
+    context->ext_proc = method;
+    context->ext_argc = (int)argc + 1;
+    context->ext_args = method_args;
+    context->ext_ret = method_result;
+
+    initialization_rc = context->initializer_depth != 0u
+            ? rxvm_ensure_callee_initialized(
+                    context, context->current_initializer_module, method)
+            : rxvm_initialize(context);
+    if (initialization_rc != 0 &&
+        rxvm_ensure_callee_initialized(context, 0, method) != 0) {
+        context->ext_proc = saved_ext_proc;
+        context->ext_argc = saved_ext_argc;
+        context->ext_args = saved_ext_args;
+        context->ext_ret = saved_ext_ret;
+        value_free(method_result);
+        (void)rxvm_memory_release(method_args);
+        return SIGNAL_FAILURE;
+    }
+
+    /* run() is deliberately nested here. It owns the same-thread worker
+     * recursion and active-context stack, while the trampoline above preserves
+     * the native procedure that requested this callback. As at the executor
+     * boundary, a non-zero status is a legitimate integer method result only
+     * when the external return cell contains that same value. Otherwise it is
+     * an unhandled signal from the nested invocation. */
+    run_status = run(context, 0, dummy_argv);
+    if (run_status != 0 &&
+        (!integer_result || method_result->int_value != (rxinteger)run_status)) {
+        context->ext_proc = saved_ext_proc;
+        context->ext_argc = saved_ext_argc;
+        context->ext_args = saved_ext_args;
+        context->ext_ret = saved_ext_ret;
+        value_free(method_result);
+        (void)rxvm_memory_release(method_args);
+        if (run_status > RXSIGNAL_NONE && run_status < RXSIGNAL_MAX) {
+            return run_status;
+        }
+        return SIGNAL_FAILURE;
+    }
+    copy_value(result, method_result);
+
+    context->ext_proc = saved_ext_proc;
+    context->ext_argc = saved_ext_argc;
+    context->ext_args = saved_ext_args;
+    context->ext_ret = saved_ext_ret;
+    value_free(method_result);
+    (void)rxvm_memory_release(method_args);
+    return SIGNAL_NONE;
+}
+
 void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
     size_t mod_index;
 

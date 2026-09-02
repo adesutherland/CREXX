@@ -696,6 +696,18 @@ int rxvm_ensure_callee_initialized(rxvm_context *context,
                                    module *caller,
                                    proc_runtime *callee);
 
+/* Synchronously invoke a descriptor-selected method on a live runtime object.
+ * Returns an RXPA/rxsignal code: SIGNAL_NONE on successful invocation, or a
+ * setup, resolution, or unhandled method signal code. The method's own return
+ * value is copied to result; ordinary non-zero integer returns are not treated
+ * as signals. */
+int rxvm_invoke_method_descriptor(rxvm_context *context,
+                                  value *receiver,
+                                  const char *method_descriptor,
+                                  size_t argc,
+                                  value **args,
+                                  value *result);
+
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc_direct(void* function, int args, value** argv,
                           value* ret, value* signal);

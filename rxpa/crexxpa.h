@@ -168,6 +168,15 @@ typedef void* (*rxpa_func_getnativepayload)(rxpa_attribute_value attributeValue,
                                             const rxpa_native_payload_ops **out_ops,
                                             unsigned int *out_flags); /* Get a native binary payload */
 typedef int (*rxpa_func_isinitialized)(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
+/* Invoke one method on a live cREXX object. The descriptor uses the canonical
+ * rxsig1 form. Arguments and the result are borrowed RXPA value handles; the
+ * call is synchronous and may only be made from the active plugin call. */
+typedef int (*rxpa_func_callmethod)(rxpa_attribute_value receiver,
+                                    const char *method_descriptor,
+                                    rxinteger argc,
+                                    rxpa_attribute_value *args,
+                                    rxpa_attribute_value result,
+                                    rxpa_attribute_value signal);
 
 // Array / Object Functions - these access the child attributes of an attribute value
 /* Get the number of child attributes */
@@ -221,6 +230,8 @@ struct RXPA_INITCTX_TAG {
     rxpa_reset_say_exit resetsayexit;
     /* Appended so existing initializer-field offsets remain stable. */
     rxpa_func_isinitialized isinitialized;
+    /* Appended nested-call facility; current hosts populate every field. */
+    rxpa_func_callmethod callmethod;
 };
 #undef RXPA_INITCTX_TAG
 
@@ -286,6 +297,12 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) _rxpa_context->setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) _rxpa_context->getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define ISINITIALIZED(attr) _rxpa_context->isinitialized((attr))
+#define CALLMETHODX(receiver, descriptor, argc, args, result, signal) \
+    (_rxpa_context->callmethod \
+        ? _rxpa_context->callmethod((receiver),(descriptor),(argc),(args),(result),(signal)) \
+        : -1)
+#define CALLMETHOD(receiver, descriptor, argc, args, result) \
+    CALLMETHODX((receiver),(descriptor),(argc),(args),(result),SIGNAL)
 #define GETNUMATTRS(attr) _rxpa_context->getnumattrs((attr))
 #define GETARRAYHI(attr) _rxpa_context->getnumattrs((attr))
 #define SETNUMATTRS(attr, num) _rxpa_context->setnumattrs((attr),(num))
@@ -450,6 +467,12 @@ void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_len
                             const rxpa_native_payload_ops **out_ops,
                             unsigned int *out_flags); /* Get a native binary payload */
 int rxpa_isinitialized(rxpa_attribute_value attributeValue); /* Test typed-object initialization without raising */
+int rxpa_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal); /* Invoke a cREXX object method synchronously */
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue); /* Get the number of child attributes */
 void rxpa_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs); /* Set the number of child attributes */
 rxpa_attribute_value rxpa_getattr(rxpa_attribute_value attributeValue, rxinteger index); /* Get the nth child attribute */
@@ -529,6 +552,10 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define SETNATIVEPAYLOAD(attr, payload, length, ops, flags) rxpa_setnativepayload((attr),(payload),(length),(ops),(flags))
 #define GETNATIVEPAYLOAD(attr, out_length, out_ops, out_flags) rxpa_getnativepayload((attr),(out_length),(out_ops),(out_flags))
 #define ISINITIALIZED(attr) rxpa_isinitialized((attr))
+#define CALLMETHODX(receiver, descriptor, argc, args, result, signal) \
+    rxpa_callmethod((receiver),(descriptor),(argc),(args),(result),(signal))
+#define CALLMETHOD(receiver, descriptor, argc, args, result) \
+    CALLMETHODX((receiver),(descriptor),(argc),(args),(result),SIGNAL)
 #define GETNUMATTRS(attr) rxpa_getnumattrs((attr))
 #define SETNUMATTRS(attr, num) rxpa_setnumattrs((attr),(num))
 #define GETATTR(attr, index) rxpa_getattr((attr),(index))

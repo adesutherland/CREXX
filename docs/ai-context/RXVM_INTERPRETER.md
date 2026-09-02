@@ -1259,6 +1259,14 @@ back into a Rexx method can overwrite the outer callback invocation state and
 cause the original `run()` to return through the wrong procedure or with the
 wrong argument/return vector.
 
+RXPA exposes the same nested runtime capability as `CALLMETHOD` (and the
+explicit-signal `CALLMETHODX`) in `crexxpa.h`. The VM derives the concrete class
+from the receiver's runtime type, resolves and signature-checks the canonical
+method descriptor through the ordinary runtime method registry, prepends the
+receiver to the argument vector, and enters `run()` recursively. The helper is
+synchronous and requires the current same-thread `rxvm_active_context`; it does
+not create a background VM or permit plugins to retain VM value handles.
+
 The ADDRESS sandbox/stem helpers use direct VM-layout mutation for the standard
 `.standardaddresssandbox` and `.standardaddressstem` classes, with nested method
 dispatch reserved as the fallback for non-standard interface implementations.

@@ -1,0 +1,124 @@
+/* Portable, line-oriented TUI driver for the experimental cREXX UI library. */
+options levelb
+namespace ui_tui expose tuidriver
+import rxfnsb
+import ui
+
+/** Portable TUI driver with interactive and deterministic scripted modes. */
+tuidriver: class implements .uidriver
+  _scripted = .int
+  _inputs = .string[]
+  _input_count = .int
+  _input_cursor = .int
+  _transcript = .string
+  _exhausted = .int
+
+  /** Construct an interactive terminal driver. */
+  *: factory
+    _scripted = 0
+    _input_count = 0
+    _input_cursor = 0
+    _transcript = ""
+    _exhausted = 0
+    return
+
+  /** Construct a deterministic terminal driver.
+   * @param inputs commands and prompted values in consumption order
+   */
+  scripted: factory
+    arg inputs = .string[]
+    _scripted = 1
+    _input_count = inputs[0]
+    _input_cursor = 0
+    _transcript = ""
+    _exhausted = 0
+    do index = 1 to _input_count
+      _inputs[index] = inputs[index]
+    end
+    return
+
+  /** Run the terminal event loop.
+   * @param runtime application runtime
+   * @return zero on normal quit, three when scripted input is exhausted
+   */
+  run: method = .int
+    arg runtime = .uiruntime
+
+    effect = runtime.dispatch("app.ready", "")
+    do forever
+      do forever
+        kind = effect.kind()
+        if kind = "none" then leave
+        if kind = "quit" then return 0
+        if kind = "choose_file" then do
+          path = next_input("File path")
+          if _exhausted then return 3
+          if strip(path) = "" then effect = runtime.dispatch("file.selection.cancelled", "")
+          else effect = runtime.dispatch("file.selected", path)
+          iterate
+        end
+        call emit_line("Unsupported effect: " || kind)
+        return 2
+      end
+
+      view = runtime.view()
+      call render(view)
+      command = next_input("Command")
+      if _exhausted then return 3
+      command = lower(strip(command))
+
+      action = ""
+      do index = 1 to view.count()
+        if view.node_kind(index) = "button" then do
+          if command = lower(view.node_shortcut(index)) | command = lower(view.node_action(index)) then do
+            action = view.node_action(index)
+            leave
+          end
+        end
+      end
+
+      if action = "" then do
+        call emit_line("Unknown command: " || command)
+        iterate
+      end
+
+      effect = runtime.dispatch(action, "")
+    end
+
+  /** @return complete scripted rendering and prompt transcript */
+  transcript: method = .string
+    return _transcript
+
+  render: method = .void
+    arg view = .uiview
+    call emit_line("")
+    call emit_line("=== " || view.title() || " ===")
+    do index = 1 to view.count()
+      if view.node_kind(index) = "label" then
+        call emit_line(view.node_text(index))
+      else if view.node_kind(index) = "button" then
+        call emit_line("[" || upper(view.node_shortcut(index)) || "] " || view.node_text(index))
+    end
+    return
+
+  next_input: method = .string
+    arg prompt = .string
+    if _scripted then do
+      if _input_cursor >= _input_count then do
+        _exhausted = 1
+        return ""
+      end
+      _input_cursor = _input_cursor + 1
+      value = _inputs[_input_cursor]
+      call emit_line(prompt || ": " || value)
+      return value
+    end
+    say prompt || ":"
+    return linein("")
+
+  emit_line: method = .void
+    arg line = .string
+    if length(_transcript) > 0 then _transcript = _transcript || '0A'x
+    _transcript = _transcript || line
+    if \_scripted then say line
+    return

@@ -48,6 +48,12 @@ int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
 int rxvm_isinitialized(rxpa_attribute_value attributeValue);
+int rxvm_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -129,6 +135,16 @@ void* rxpa_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_len
 
 int rxpa_isinitialized(rxpa_attribute_value attributeValue) {
     return rxvm_isinitialized(attributeValue);
+}
+
+int rxpa_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal) {
+    return rxvm_callmethod(receiver, method_descriptor, argc, args,
+                           result, signal);
 }
 
 rxinteger rxpa_getnumattrs(rxpa_attribute_value attributeValue) {

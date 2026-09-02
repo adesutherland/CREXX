@@ -1,0 +1,114 @@
+/*
+ * Text Inspector tracer application.
+ *
+ * RXPP generates only repetitive logical-view construction. The model,
+ * semantic event reduction and effect decisions remain ordinary cREXX.
+ */
+options levelb
+namespace text_inspector expose text_inspector_app
+import rxfnsb
+import ui
+
+##INCLUDE ui_macros.rxpm
+
+/** Small feature component shared unchanged by GTK, TUI and tests. */
+text_inspector_app: class implements .uiapp
+  _path = .string
+  _status = .string
+  _line_count = .int
+  _word_count = .int
+  _character_count = .int
+
+  *: factory
+    _path = ""
+    _status = "Ready"
+    _line_count = 0
+    _word_count = 0
+    _character_count = 0
+    return
+
+  /** Reduce one semantic event into model state and an explicit effect.
+   * @param event semantic UI or effect-completion event
+   * @return next effect request
+   */
+  update: method = .uieffect
+    arg event = .uievent
+    name = event.name()
+
+    if name = "app.ready" then do
+      _status = "Ready"
+      return .ui..uieffect_impl("none", "")
+    end
+    if name = "document.open.requested" then do
+      _status = "Choose a text file"
+      return .ui..uieffect_impl("choose_file", "")
+    end
+    if name = "file.selection.cancelled" then do
+      _status = "Open cancelled"
+      return .ui..uieffect_impl("none", "")
+    end
+    if name = "file.selected" then do
+      _path = event.payload()
+      _status = "Loading " || _path
+      return .ui..uieffect_impl("read_text", _path)
+    end
+    if name = "file.load.failed" then do
+      _line_count = 0
+      _word_count = 0
+      _character_count = 0
+      _status = "Could not read " || event.payload()
+      return .ui..uieffect_impl("none", "")
+    end
+    if name = "file.loaded" then do
+      _path = event.payload()
+      _line_count = event.item_count()
+      _word_count = 0
+      _character_count = 0
+      do index = 1 to event.item_count()
+        line = event.item(index)
+        _word_count = _word_count + words(line)
+        _character_count = _character_count + length(line)
+      end
+      _status = "Count complete"
+      return .ui..uieffect_impl("none", "")
+    end
+    if name = "document.clear.requested" then do
+      call clear_model()
+      return .ui..uieffect_impl("none", "")
+    end
+    if name = "app.quit.requested" then
+      return .ui..uieffect_impl("quit", "")
+    return .ui..uieffect_impl("none", "")
+
+  /** Build the complete backend-neutral view from current state.
+   * @return logical flat view consumed by all tracer drivers
+   */
+  view: method = .uiview
+    view = .ui..uiview_impl("cREXX Text Inspector")
+    path_text = "File: (none)"
+    if _path \= "" then path_text = "File: " || _path
+    line_text = "Lines: " || _line_count
+    word_text = "Words: " || _word_count
+    character_text = "Characters: " || _character_count
+    status_text = "Status: " || _status
+    open_text = "Open..."
+    clear_text = "Clear"
+    quit_text = "Quit"
+
+    ##UI_NODE "label|path|none|none",path_text
+    ##UI_NODE "label|lines|none|none",line_text
+    ##UI_NODE "label|words|none|none",word_text
+    ##UI_NODE "label|characters|none|none",character_text
+    ##UI_NODE "label|status|none|none",status_text
+    ##UI_NODE "button|open|document.open.requested|o",open_text
+    ##UI_NODE "button|clear|document.clear.requested|c",clear_text
+    ##UI_NODE "button|quit|app.quit.requested|q",quit_text
+    return view
+
+  clear_model: method = .void
+    _path = ""
+    _status = "Ready"
+    _line_count = 0
+    _word_count = 0
+    _character_count = 0
+    return

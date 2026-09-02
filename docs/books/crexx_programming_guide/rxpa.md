@@ -234,6 +234,8 @@ The following macros are provided for plugin developers (defined in
 | SETINT() | Sets the Integer value of a register|
 | GETFLOAT() | Gets the float (double) value of a register|
 | SETFLOAT() | Sets the float (double) value of a register|
+| CALLMETHOD() | Synchronously invokes a descriptor-checked method on a live cREXX object and uses the current SIGNAL register. |
+| CALLMETHODX() | The callback form of CALLMETHOD with an explicit signal register. |
 | SIGNAL | Returns the registers used to pass and Signal Information.|
 | RESETSIGNAL | Ensures that the signal register is set no “no signal”|
 | RETURNSIGNAL() | Sets the signal register and returns from the function. Used for error conditions.|
@@ -248,6 +250,24 @@ storage during the call; it does not mutate or retain the caller's buffer. The
 caller therefore retains ownership and may reuse or release a mutable source
 buffer as soon as the macro returns. Pass a non-null, null-terminated string;
 use `""` for an empty value.
+
+`CALLMETHOD(receiver, descriptor, argc, args, result)` enables a native
+procedure to call back into an object supplied by cREXX. The descriptor uses
+the canonical `rxsig1|name|return_type|arguments` form. `args` is an array of
+borrowed `rxpa_attribute_value` handles, and `result` is another borrowed handle
+that receives the method return value. The function returns zero after a
+successful invocation; on setup or resolution failure it returns non-zero and
+populates `SIGNAL`. An unhandled signal raised by the called method is likewise
+returned through that signal handle. `CALLMETHODX` takes the same arguments plus an explicit
+signal handle, which is useful from a C library callback outside a
+`PROCEDURE` body.
+
+The invocation is synchronous on the current VM thread. Receiver and argument
+mutations are copied back before it returns, and the called method may make
+nested RXPA calls. Never store any of these handles in plugin or session state
+beyond the lifetime of the active outer RXPA call. Because `callmethod` is an
+appended pre-release initializer callback and `rxpa_initctx` has no negotiated
+size, plugins using it must be rebuilt together with the host.
 
 The Signal values are:
 

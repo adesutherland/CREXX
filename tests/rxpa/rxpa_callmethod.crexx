@@ -1,0 +1,43 @@
+options levelb
+namespace rxpa_callmethod_test
+import rxpa_callmethod
+
+main: procedure
+  receiver = .callback_impl(10)
+
+  first = invoke(receiver, 7)
+  second = invoke(receiver, 5)
+  caught = 0
+  do
+    ignored = invoke_failure(receiver, 0)
+  on signal division_by_zero
+    caught = 1
+  end
+
+  if first \= 17 | second \= 22 | receiver.total() \= 22 | caught \= 1 then do
+    say "FAIL: RXPA CALLMETHOD result/state/signal contract:" first second receiver.total() caught
+    exit 1
+  end
+
+  say "PASS: RXPA CALLMETHOD invokes a cREXX object method"
+  exit 0
+
+callback_impl: class implements .callback
+  _total = .int
+
+  *: factory
+    arg initial = .int
+    _total = initial
+    return
+
+  on_value: method = .int
+    arg value = .int
+    _total = _total + value
+    return _total
+
+  fail: method = .int
+    arg value = .int
+    return 1 / value
+
+  total: method = .int
+    return _total

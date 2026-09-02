@@ -447,6 +447,43 @@ int rxvm_isinitialized(rxpa_attribute_value attributeValue) {
     return val && !value_is_uninitialized_object(val);
 }
 
+int rxvm_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal) {
+    rxvm_context *context = rxvm_active_context_current();
+    int signal_code;
+
+    if (!context || argc < 0) {
+        rxpa_set_signal((value*)signal, SIGNAL_INVALID_ARGUMENTS,
+                        "CALLMETHOD requires an active RXVM call");
+        return -1;
+    }
+
+    signal_code = rxvm_invoke_method_descriptor(
+            context,
+            (value*)receiver,
+            method_descriptor,
+            (size_t)argc,
+            (value**)args,
+            (value*)result);
+    if (signal_code != SIGNAL_NONE) {
+        const char *message = "CALLMETHOD failed";
+        if (signal_code == SIGNAL_FUNCTION_NOT_FOUND) {
+            message = "CALLMETHOD could not resolve the method descriptor";
+        } else if (signal_code == SIGNAL_OBJECT_NOT_INITIALIZED) {
+            message = "CALLMETHOD receiver is not initialized";
+        } else if (signal_code == SIGNAL_INVALID_ARGUMENTS) {
+            message = "CALLMETHOD received invalid arguments";
+        }
+        rxpa_set_signal((value*)signal, (rxsignal)signal_code, message);
+        return -1;
+    }
+    return 0;
+}
+
 /* Get the number of child attributes */
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;

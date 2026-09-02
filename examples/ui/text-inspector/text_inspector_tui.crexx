@@ -1,0 +1,9 @@
+options levelb
+import ui
+import ui_tui
+import text_inspector
+
+app = .text_inspector..text_inspector_app()
+runtime = .ui..uiruntime(app)
+driver = .ui_tui..tuidriver()
+exit driver.run(runtime)

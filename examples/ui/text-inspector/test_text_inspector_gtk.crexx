@@ -1,0 +1,18 @@
+options levelb
+namespace text_inspector_gtk_test
+import ui
+import ui_gtk
+import text_inspector
+
+app = .text_inspector..text_inspector_app()
+runtime = .ui..uiruntime(app)
+driver = .ui_gtk..gtkdriver(1)
+run_rc = driver.run(runtime)
+
+if run_rc \= 0 | runtime.event_count() \= 1 then do
+  say "FAIL: GTK driver did not deliver its app.ready callback" run_rc runtime.event_count()
+  exit 1
+end
+
+say "PASS: Text Inspector GTK callback path"
+exit 0

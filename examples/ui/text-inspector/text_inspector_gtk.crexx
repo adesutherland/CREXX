@@ -1,0 +1,9 @@
+options levelb
+import ui
+import ui_gtk
+import text_inspector
+
+app = .text_inspector..text_inspector_app()
+runtime = .ui..uiruntime(app)
+driver = .ui_gtk..gtkdriver()
+exit driver.run(runtime)

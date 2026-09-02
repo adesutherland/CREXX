@@ -1,0 +1,47 @@
+options levelb
+namespace text_inspector_core_test
+import ui
+import text_inspector
+
+app = .text_inspector..text_inspector_app()
+runtime = .ui..uiruntime(app)
+
+effect = runtime.dispatch("document.open.requested", "")
+if effect.kind() \= "choose_file" then do
+  say "FAIL: open did not produce choose_file"
+  exit 1
+end
+
+effect = runtime.dispatch("file.selection.cancelled", "")
+view = runtime.view()
+if effect.kind() \= "none" | view.node_text(5) \= "Status: Open cancelled" then do
+  say "FAIL: file-selection cancellation was not rendered"
+  exit 1
+end
+
+records = .string[]
+records[1] = "alpha beta"
+records[2] = "café gamma delta"
+event = .ui..uievent_impl.with_items("file.loaded", "fixture.txt", records)
+effect = runtime.dispatch_event(event)
+view = runtime.view()
+if view.node_text(2) \= "Lines: 2" | view.node_text(3) \= "Words: 5" | view.node_text(4) \= "Characters: 26" then do
+  say "FAIL: shared Text Inspector update produced the wrong counts"
+  exit 1
+end
+
+effect = runtime.dispatch("document.clear.requested", "")
+view = runtime.view()
+if view.node_text(1) \= "File: (none)" | view.node_text(3) \= "Words: 0" then do
+  say "FAIL: clear did not reset the shared model"
+  exit 1
+end
+
+effect = runtime.dispatch("app.quit.requested", "")
+if effect.kind() \= "quit" then do
+  say "FAIL: quit action did not produce quit effect"
+  exit 1
+end
+
+say "PASS: Text Inspector shared application contract"
+exit 0
