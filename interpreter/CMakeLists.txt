@@ -107,6 +107,7 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxcrexxcmd.c
         rxcrexxcmd.h
         exitfunc.c
+        rxpacallmethod.c
         rxpafuncs.c
         rxvml/rxvm_run.c)
 if(CREXX_VM_PROFILING)
