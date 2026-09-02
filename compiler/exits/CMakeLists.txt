@@ -59,6 +59,11 @@ function(crexx_add_compiler_exit_runtime_test TARGET_NAME SOURCE_FILE)
     add_dependencies(${TARGET_NAME}_bin compiler_exit_bin rxvm)
 
     if(BUILD_TESTING)
+        crexx_register_test_prep_targets(
+                TESTS
+                    ${TARGET_NAME}_noopt
+                    ${TARGET_NAME}_opt
+                TARGETS ${TARGET_NAME}_bin)
         add_dependencies(qa-prep-compiler-exits ${TARGET_NAME}_bin)
     endif()
 
