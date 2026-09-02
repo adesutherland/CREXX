@@ -15,7 +15,7 @@ add_custom_command(
                 "${CMAKE_CURRENT_SOURCE_DIR}/ui.crexx"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "Building experimental backend-neutral cREXX UI library"
+        COMMENT "Building experimental backend-neutral Level G UI library"
         VERBATIM)
 
 add_custom_command(
@@ -29,7 +29,7 @@ add_custom_command(
                 "${CMAKE_CURRENT_SOURCE_DIR}/ui_tui.crexx"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_tui.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-        COMMENT "Building portable cREXX TUI driver"
+        COMMENT "Building portable Level G cREXX TUI driver"
         VERBATIM)
 
 add_custom_target(ui ALL DEPENDS "${CREXX_UI_CORE_IMAGE}")
@@ -50,7 +50,7 @@ if(ENABLE_GTK)
                     "${CMAKE_CURRENT_SOURCE_DIR}/ui_gtk.crexx"
             BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_gtk.rxas"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-            COMMENT "Building cREXX GTK UI driver"
+            COMMENT "Building Level G cREXX GTK UI driver"
             VERBATIM)
     add_custom_target(ui_gtk ALL DEPENDS "${CREXX_UI_GTK_IMAGE}")
     add_dependencies(ui_gtk ui _ui_gtk_native)

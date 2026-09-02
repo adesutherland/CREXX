@@ -1,5 +1,5 @@
-/* GTK driver for the experimental backend-neutral cREXX UI contracts. */
-options levelb
+/* GTK driver for the experimental backend-neutral Level G UI contracts. */
+options levelg
 namespace ui_gtk expose gtkdriver
 import ui
 import ui_gtk_native
@@ -34,14 +34,21 @@ gtkdriver: class implements .uidriver .eventhandler
     do index = 1 to view.count()
       kind = view.node_kind(index)
       if kind = "label" then do
-        if add_label(view.node_id(index), view.node_text(index)) \= 1 then do
+        if add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index)) \= 1 then do
+          call cleanup()
+          _created = 0
+          return -2
+        end
+      end
+      else if kind = "line" then do
+        if add_line(view.node_id(index), view.node_column(index), view.node_row(index)) \= 1 then do
           call cleanup()
           _created = 0
           return -2
         end
       end
       else if kind = "button" then do
-        if add_button(view.node_id(index), view.node_text(index), view.node_action(index)) \= 1 then do
+        if add_button(view.node_id(index), view.node_text(index), view.node_action(index), view.node_column(index), view.node_row(index)) \= 1 then do
           call cleanup()
           _created = 0
           return -2
@@ -95,6 +102,7 @@ gtkdriver: class implements .uidriver .eventhandler
     runtime = dereference _runtime
     view = runtime.view()
     do index = 1 to view.count()
-      call set_text view.node_id(index), view.node_text(index)
+      if view.node_kind(index) \= "line" then
+        call set_text view.node_id(index), view.node_text(index)
     end
     return

@@ -6,31 +6,32 @@ set(_text_inspector_rxpp_root "${CMAKE_CURRENT_BINARY_DIR}/rxpp")
 set(_text_inspector_generated_root "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(_text_inspector_generated
         "${_text_inspector_generated_root}/text_inspector.crexx")
+set(_text_inspector_tui_generated
+        "${_text_inspector_generated_root}/text_inspector_tui.crexx")
 set(_text_inspector_module "${CMAKE_CURRENT_BINARY_DIR}/text_inspector.rxbin")
 set(_text_inspector_tui "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_tui.rxbin")
 
 set(_text_inspector_rxpp_support
         maclib.rexx macsys.rexx mathlib.rexx syslib.rexx)
 set(_text_inspector_support_sources)
-set(_text_inspector_stage_commands)
+file(MAKE_DIRECTORY
+        "${_text_inspector_rxpp_root}"
+        "${_text_inspector_generated_root}")
 foreach(_support IN LISTS _text_inspector_rxpp_support)
     list(APPEND _text_inspector_support_sources
             "${CMAKE_SOURCE_DIR}/preprocessor/${_support}")
-    list(APPEND _text_inspector_stage_commands
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${CMAKE_SOURCE_DIR}/preprocessor/${_support}"
-                    "${_text_inspector_rxpp_root}/${_support}")
+    configure_file(
+            "${CMAKE_SOURCE_DIR}/preprocessor/${_support}"
+            "${_text_inspector_rxpp_root}/${_support}"
+            COPYONLY)
 endforeach()
+configure_file(
+        "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+        "${_text_inspector_rxpp_root}/ui_macros.rxpm"
+        COPYONLY)
 
 add_custom_command(
         OUTPUT "${_text_inspector_generated}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-                "${_text_inspector_rxpp_root}"
-                "${_text_inspector_generated_root}"
-        ${_text_inspector_stage_commands}
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
-                "${_text_inspector_rxpp_root}/ui_macros.rxpm"
         COMMAND $<TARGET_FILE:rxpp> rxprecomp
                 -I "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector.rxpp"
                 -o "${_text_inspector_generated}"
@@ -40,6 +41,19 @@ add_custom_command(
                 "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
                 ${_text_inspector_support_sources}
         COMMENT "Generating source-mapped Text Inspector application with RXPP"
+        VERBATIM)
+
+add_custom_command(
+        OUTPUT "${_text_inspector_tui_generated}"
+        COMMAND $<TARGET_FILE:rxpp> rxprecomp
+                -I "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_tui.rxpp"
+                -o "${_text_inspector_tui_generated}"
+                -m "${_text_inspector_rxpp_root}/maclib.rexx"
+        DEPENDS rxpp rxpp_support_files
+                "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_tui.rxpp"
+                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+                ${_text_inspector_support_sources}
+        COMMENT "Generating Text Inspector TUI launcher with RXPP"
         VERBATIM)
 
 add_custom_command(
@@ -62,11 +76,11 @@ add_custom_command(
                 -i "${CMAKE_CURRENT_BINARY_DIR}"
                 -i "${CMAKE_BINARY_DIR}/bin"
                 -o text_inspector_tui
-                "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_tui.crexx"
+                "${_text_inspector_tui_generated}"
         COMMAND $<TARGET_FILE:rxas> -o text_inspector_tui text_inspector_tui
         DEPENDS rxc rxas compiler_exit_bin ui ui_tui
                 text_inspector_module_artifact
-                "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_tui.crexx"
+                "${_text_inspector_tui_generated}"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_tui.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Building Text Inspector TUI launcher"
@@ -80,18 +94,32 @@ add_dependencies(example_text_inspector_artifacts
         text_inspector_tui_artifact)
 
 if(ENABLE_GTK)
+    set(_text_inspector_gtk_generated
+            "${_text_inspector_generated_root}/text_inspector_gtk.crexx")
     set(_text_inspector_gtk "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gtk.rxbin")
+    add_custom_command(
+            OUTPUT "${_text_inspector_gtk_generated}"
+            COMMAND $<TARGET_FILE:rxpp> rxprecomp
+                    -I "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gtk.rxpp"
+                    -o "${_text_inspector_gtk_generated}"
+                    -m "${_text_inspector_rxpp_root}/maclib.rexx"
+            DEPENDS rxpp rxpp_support_files
+                    "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gtk.rxpp"
+                    "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+                    ${_text_inspector_support_sources}
+            COMMENT "Generating Text Inspector GTK launcher with RXPP"
+            VERBATIM)
     add_custom_command(
             OUTPUT "${_text_inspector_gtk}"
             COMMAND $<TARGET_FILE:rxc> --no-exe-import
                     -i "${CMAKE_CURRENT_BINARY_DIR}"
                     -i "${CMAKE_BINARY_DIR}/bin"
                     -o text_inspector_gtk
-                    "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gtk.crexx"
+                    "${_text_inspector_gtk_generated}"
             COMMAND $<TARGET_FILE:rxas> -o text_inspector_gtk text_inspector_gtk
             DEPENDS rxc rxas compiler_exit_bin ui ui_gtk _ui_gtk_native
                     text_inspector_module_artifact
-                    "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gtk.crexx"
+                    "${_text_inspector_gtk_generated}"
             BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_gtk.rxas"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             COMMENT "Building Text Inspector GTK launcher"
@@ -101,9 +129,16 @@ if(ENABLE_GTK)
 endif()
 
 if(BUILD_TESTING)
+    set(_text_inspector_generated_checks
+            -DGENERATED=${_text_inspector_generated}
+            -DTUI_GENERATED=${_text_inspector_tui_generated})
+    if(ENABLE_GTK)
+        list(APPEND _text_inspector_generated_checks
+                -DGTK_GENERATED=${_text_inspector_gtk_generated})
+    endif()
     add_test(NAME text_inspector_rxpp_generation
             COMMAND ${CMAKE_COMMAND}
-                    -DGENERATED=${_text_inspector_generated}
+                    ${_text_inspector_generated_checks}
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/CheckGenerated.cmake)
     set_tests_properties(text_inspector_rxpp_generation PROPERTIES
             LABELS "examples;ui;rxpp;source-map"

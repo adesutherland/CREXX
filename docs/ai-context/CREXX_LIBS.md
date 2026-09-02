@@ -108,14 +108,20 @@ published.
 
 The product master documentation is in `rexxscript/doc/`.
 
-`lib/ui` contains the experimental UI tracer architecture. `ui.rxbin` owns
-semantic events, explicit effects, logical views, the application/driver
+`lib/ui` contains the experimental Level G UI tracer architecture. Its public
+cREXX library, drivers, applications, launchers, and tests explicitly use
+`OPTIONS LEVELG`; the native GTK/RXPA C plugin remains lower-level mechanism.
+`ui.rxbin` owns semantic events, explicit effects, logical views, the application/driver
 interfaces, and the runtime. `ui_tui.rxbin` is always built; with
 `ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide the separate GTK
-driver. The GTK callback is same-thread and synchronous. Since cREXX classes
+driver. Logical `label`, `line`, and `button` nodes use stable IDs and
+relative `root`/`below`/`right` placement resolved into rows and columns for
+both drivers. RXPP generates both logical-node calls and the small backend
+launchers. The GTK callback is same-thread and synchronous. Since cREXX classes
 are values, the driver uses an explicit weak reference to the active runtime
-for the duration of its native loop. See `lib/ui/README.md` and
-`examples/ui/text-inspector/README.md` for the contract and end-to-end example.
+for the duration of its native loop. See `lib/ui/README.md` for the lifecycle,
+vocabulary, ANSI-driver feasibility assessment, and implementation trail, and
+`examples/ui/text-inspector/README.md` for the executable example.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in

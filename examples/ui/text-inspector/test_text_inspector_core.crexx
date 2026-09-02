@@ -1,4 +1,4 @@
-options levelb
+options levelg
 namespace text_inspector_core_test
 import ui
 import text_inspector
@@ -14,7 +14,7 @@ end
 
 effect = runtime.dispatch("file.selection.cancelled", "")
 view = runtime.view()
-if effect.kind() \= "none" | view.node_text(5) \= "Status: Open cancelled" then do
+if effect.kind() \= "none" | view.node_text(6) \= "Status: Open cancelled" then do
   say "FAIL: file-selection cancellation was not rendered"
   exit 1
 end
@@ -25,14 +25,22 @@ records[2] = "café gamma delta"
 event = .ui..uievent_impl.with_items("file.loaded", "fixture.txt", records)
 effect = runtime.dispatch_event(event)
 view = runtime.view()
-if view.node_text(2) \= "Lines: 2" | view.node_text(3) \= "Words: 5" | view.node_text(4) \= "Characters: 26" then do
+if view.node_text(3) \= "Lines: 2" | view.node_text(4) \= "Words: 5" | view.node_text(5) \= "Characters: 26" then do
   say "FAIL: shared Text Inspector update produced the wrong counts"
+  exit 1
+end
+if view.node_kind(2) \= "line" | view.node_row(3) \= 2 | view.node_column(3) \= 0 | view.node_column(4) \= 1 | view.node_column(5) \= 2 then do
+  say "FAIL: shared Text Inspector view did not resolve relative layout"
+  exit 1
+end
+if view.node_relation(8) \= "right" | view.node_anchor(8) \= "open" then do
+  say "FAIL: shared Text Inspector view did not retain authored placement"
   exit 1
 end
 
 effect = runtime.dispatch("document.clear.requested", "")
 view = runtime.view()
-if view.node_text(1) \= "File: (none)" | view.node_text(3) \= "Words: 0" then do
+if view.node_text(1) \= "File: (none)" | view.node_text(4) \= "Words: 0" then do
   say "FAIL: clear did not reset the shared model"
   exit 1
 end

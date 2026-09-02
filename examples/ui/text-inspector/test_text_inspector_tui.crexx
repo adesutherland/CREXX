@@ -1,4 +1,4 @@
-options levelb
+options levelg
 namespace text_inspector_tui_test
 import rxfnsb
 import ui
@@ -28,6 +28,10 @@ if run_rc \= 0 then do
 end
 if pos("Lines: 2", transcript) = 0 | pos("Words: 5", transcript) = 0 | pos("Characters: 26", transcript) = 0 then do
   say "FAIL: Text Inspector TUI did not render the counted file"
+  exit 1
+end
+if pos("Lines: 2    Words: 5    Characters: 26", transcript) = 0 | pos("------------------------------------------------------------", transcript) = 0 then do
+  say "FAIL: Text Inspector TUI did not render shared relative layout"
   exit 1
 end
 if runtime.event_count() \= 5 then do

@@ -1,4 +1,4 @@
-options levelb
+options levelg
 namespace text_inspector_gtk_test
 import ui
 import ui_gtk

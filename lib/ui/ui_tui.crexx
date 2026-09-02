@@ -1,5 +1,5 @@
-/* Portable, line-oriented TUI driver for the experimental cREXX UI library. */
-options levelb
+/* Portable Level G line-oriented driver for the experimental cREXX UI library. */
+options levelg
 namespace ui_tui expose tuidriver
 import rxfnsb
 import ui
@@ -93,11 +93,39 @@ tuidriver: class implements .uidriver
     arg view = .uiview
     call emit_line("")
     call emit_line("=== " || view.title() || " ===")
-    do index = 1 to view.count()
-      if view.node_kind(index) = "label" then
-        call emit_line(view.node_text(index))
-      else if view.node_kind(index) = "button" then
-        call emit_line("[" || upper(view.node_shortcut(index)) || "] " || view.node_text(index))
+
+    /* The tracer uses a logical grid, but deliberately avoids terminal-cell
+     * measurement policy. Nodes in the same row are joined left-to-right;
+     * a later ANSI driver can use the same row/column values for cursor-based
+     * rendering and width-aware alignment. */
+    maximum_row = 0
+    maximum_column = 0
+    do position_index = 1 to view.count()
+      if view.node_row(position_index) > maximum_row then
+        maximum_row = view.node_row(position_index)
+      if view.node_column(position_index) > maximum_column then
+        maximum_column = view.node_column(position_index)
+    end
+
+    do grid_row = 0 to maximum_row
+      rendered = ""
+      separator = 0
+      do grid_column = 0 to maximum_column
+        do render_index = 1 to view.count()
+          if view.node_row(render_index) = grid_row & view.node_column(render_index) = grid_column then do
+            kind = view.node_kind(render_index)
+            if kind = "line" then separator = 1
+            else do
+              if rendered \= "" then rendered = rendered || "    "
+              if kind = "button" then
+                rendered = rendered || "[" || upper(view.node_shortcut(render_index)) || "] " || view.node_text(render_index)
+              else rendered = rendered || view.node_text(render_index)
+            end
+          end
+        end
+      end
+      if separator then call emit_line("------------------------------------------------------------")
+      else if rendered \= "" then call emit_line(rendered)
     end
     return
 

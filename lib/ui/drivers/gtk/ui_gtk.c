@@ -21,7 +21,7 @@ typedef struct ui_gtk_loop {
 } ui_gtk_loop;
 
 static GtkWidget *ui_window;
-static GtkWidget *ui_box;
+static GtkWidget *ui_grid;
 static ui_gtk_node ui_nodes[UI_GTK_MAX_NODES];
 static int ui_node_count;
 static ui_gtk_loop *ui_active_loop;
@@ -97,7 +97,7 @@ static void ui_gtk_destroy(GtkWidget *widget, gpointer data) {
     (void)data;
     if (widget == ui_window) {
         ui_window = NULL;
-        ui_box = NULL;
+        ui_grid = NULL;
         ui_gtk_clear_nodes();
         if (ui_active_loop && gtk_main_level() > 0) gtk_main_quit();
     }
@@ -123,13 +123,15 @@ PROCEDURE(create) {
 
     ui_gtk_clear_nodes();
     ui_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    ui_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
-    if (!ui_window || !ui_box) RETURNINTX(0);
+    ui_grid = gtk_grid_new();
+    if (!ui_window || !ui_grid) RETURNINTX(0);
 
     gtk_window_set_title(GTK_WINDOW(ui_window), title);
     gtk_window_set_default_size(GTK_WINDOW(ui_window), width, height);
     gtk_container_set_border_width(GTK_CONTAINER(ui_window), 16);
-    gtk_container_add(GTK_CONTAINER(ui_window), ui_box);
+    gtk_grid_set_row_spacing(GTK_GRID(ui_grid), 8);
+    gtk_grid_set_column_spacing(GTK_GRID(ui_grid), 16);
+    gtk_container_add(GTK_CONTAINER(ui_window), ui_grid);
     g_signal_connect(ui_window, "delete-event", G_CALLBACK(ui_gtk_delete), NULL);
     g_signal_connect(ui_window, "destroy", G_CALLBACK(ui_gtk_destroy), NULL);
     RETURNINT(1);
@@ -140,8 +142,11 @@ PROCEDURE(add_label) {
     ui_gtk_node *node;
     const char *id = GETSTRING(ARG0);
     const char *text = GETSTRING(ARG1);
+    int column = GETINT(ARG2);
+    int row = GETINT(ARG3);
 
-    if (!ui_box || ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
+    if (!ui_grid || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
         RETURNINTX(0);
     }
     node = &ui_nodes[ui_node_count++];
@@ -149,7 +154,28 @@ PROCEDURE(add_label) {
     node->action = g_strdup("");
     node->widget = gtk_label_new(text);
     gtk_label_set_xalign(GTK_LABEL(node->widget), 0.0f);
-    gtk_box_pack_start(GTK_BOX(ui_box), node->widget, FALSE, FALSE, 0);
+    gtk_widget_set_halign(node->widget, GTK_ALIGN_START);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
+    RETURNINT(1);
+    ENDPROC
+}
+
+PROCEDURE(add_line) {
+    ui_gtk_node *node;
+    const char *id = GETSTRING(ARG0);
+    int column = GETINT(ARG1);
+    int row = GETINT(ARG2);
+
+    if (!ui_grid || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
+        RETURNINTX(0);
+    }
+    node = &ui_nodes[ui_node_count++];
+    node->id = g_strdup(id);
+    node->action = g_strdup("");
+    node->widget = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+    gtk_widget_set_hexpand(node->widget, TRUE);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
     RETURNINT(1);
     ENDPROC
 }
@@ -159,8 +185,11 @@ PROCEDURE(add_button) {
     const char *id = GETSTRING(ARG0);
     const char *text = GETSTRING(ARG1);
     const char *action = GETSTRING(ARG2);
+    int column = GETINT(ARG3);
+    int row = GETINT(ARG4);
 
-    if (!ui_box || ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
+    if (!ui_grid || column < 0 || row < 0 ||
+        ui_node_count >= UI_GTK_MAX_NODES || ui_gtk_find_node(id)) {
         RETURNINTX(0);
     }
     node = &ui_nodes[ui_node_count++];
@@ -168,7 +197,8 @@ PROCEDURE(add_button) {
     node->action = g_strdup(action);
     node->widget = gtk_button_new_with_label(text);
     g_signal_connect(node->widget, "clicked", G_CALLBACK(ui_gtk_button_clicked), node);
-    gtk_box_pack_start(GTK_BOX(ui_box), node->widget, FALSE, FALSE, 0);
+    gtk_widget_set_halign(node->widget, GTK_ALIGN_START);
+    gtk_grid_attach(GTK_GRID(ui_grid), node->widget, column, row, 1, 1);
     RETURNINT(1);
     ENDPROC
 }
@@ -251,7 +281,7 @@ PROCEDURE(run) {
 PROCEDURE(cleanup) {
     if (ui_window) gtk_widget_destroy(ui_window);
     ui_window = NULL;
-    ui_box = NULL;
+    ui_grid = NULL;
     ui_gtk_clear_nodes();
     ENDPROC
 }
@@ -263,9 +293,11 @@ LOADFUNCS
     ADDPROC(create, "ui_gtk_native.create", "b", ".int",
             "title=.string,width=.int,height=.int");
     ADDPROC(add_label, "ui_gtk_native.add_label", "b", ".int",
-            "id=.string,text=.string");
+            "id=.string,text=.string,column=.int,row=.int");
+    ADDPROC(add_line, "ui_gtk_native.add_line", "b", ".int",
+            "id=.string,column=.int,row=.int");
     ADDPROC(add_button, "ui_gtk_native.add_button", "b", ".int",
-            "id=.string,text=.string,action=.string");
+            "id=.string,text=.string,action=.string,column=.int,row=.int");
     ADDPROC(set_text, "ui_gtk_native.set_text", "b", ".int",
             "id=.string,text=.string");
     ADDPROC(show, "ui_gtk_native.show", "b", ".int", "");

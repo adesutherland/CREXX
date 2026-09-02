@@ -1,11 +1,11 @@
 /*
- * cREXX experimental backend-neutral UI contracts and runtime.
+ * cREXX experimental Level G backend-neutral UI contracts and runtime.
  *
  * The library deliberately exposes semantic events and effects rather than
  * native widget handles. Drivers own their event loops and rendering details;
  * application classes own feature state, update logic and logical views.
  */
-options levelb
+options levelg
 namespace ui expose uievent uieffect uiview uiapp uidriver uievent_impl uieffect_impl uiview_impl uiruntime
 import rxfnsb
 
@@ -37,7 +37,7 @@ uiview: interface
   /** @return number of logical nodes */
   count: method = .int
   /** @param index one-based node index
-   * @return `label` or `button`
+   * @return `label`, `line`, or `button`
    */
   node_kind: method = .string
     arg index = .int
@@ -60,6 +60,26 @@ uiview: interface
    * @return TUI shortcut, or an empty string
    */
   node_shortcut: method = .string
+    arg index = .int
+  /** @param index one-based node index
+   * @return authored placement relation (`root`, `below`, or `right`)
+   */
+  node_relation: method = .string
+    arg index = .int
+  /** @param index one-based node index
+   * @return stable node ID used as the placement anchor, or an empty string
+   */
+  node_anchor: method = .string
+    arg index = .int
+  /** @param index one-based node index
+   * @return resolved zero-based logical grid row
+   */
+  node_row: method = .int
+    arg index = .int
+  /** @param index one-based node index
+   * @return resolved zero-based logical grid column
+   */
+  node_column: method = .int
     arg index = .int
 
 /** Feature-owned model/update/view contract. */
@@ -158,6 +178,10 @@ uiview_impl: class implements .uiview
   _texts = .string[]
   _actions = .string[]
   _shortcuts = .string[]
+  _relations = .string[]
+  _anchors = .string[]
+  _rows = .int[]
+  _columns = .int[]
 
   /** @param title application window or screen title */
   *: factory
@@ -169,15 +193,34 @@ uiview_impl: class implements .uiview
   /** Append a text label.
    * @param id stable node identity
    * @param text displayed text
+   * @param relation placement relative to the anchor
+   * @param anchor stable node ID, or empty to use the preceding node
    */
   add_label: method = .void
-    arg id = .string, text = .string
+    arg id = .string, text = .string, relation = "below", anchor = ""
     _count = _count + 1
     _kinds[_count] = "label"
     _ids[_count] = id
     _texts[_count] = text
     _actions[_count] = ""
     _shortcuts[_count] = ""
+    call place_current relation, anchor
+    return
+
+  /** Append a horizontal visual separator.
+   * @param id stable node identity
+   * @param relation placement relative to the anchor
+   * @param anchor stable node ID, or empty to use the preceding node
+   */
+  add_line: method = .void
+    arg id = .string, relation = "below", anchor = ""
+    _count = _count + 1
+    _kinds[_count] = "line"
+    _ids[_count] = id
+    _texts[_count] = ""
+    _actions[_count] = ""
+    _shortcuts[_count] = ""
+    call place_current relation, anchor
     return
 
   /** Append a button.
@@ -185,21 +228,25 @@ uiview_impl: class implements .uiview
    * @param text displayed text
    * @param action semantic event name
    * @param shortcut TUI shortcut
+   * @param relation placement relative to the anchor
+   * @param anchor stable node ID, or empty to use the preceding node
    */
   add_button: method = .void
-    arg id = .string, text = .string, action = .string, shortcut = .string
+    arg id = .string, text = .string, action = .string, shortcut = .string, relation = "below", anchor = ""
     _count = _count + 1
     _kinds[_count] = "button"
     _ids[_count] = id
     _texts[_count] = text
     _actions[_count] = action
     _shortcuts[_count] = shortcut
+    call place_current relation, anchor
     return
 
   /** Append a node from RXPP's compact builder specification.
    *
-   * The form is `label|id|none|none` or
-   * `button|id|semantic.action|shortcut`.
+   * The form is `kind|id|action|shortcut|relation|anchor`. Labels and lines
+   * use `none` for fields that do not apply. `root` starts a layout, while
+   * `below` and `right` place a node relative to a stable prior node ID.
    * RXPP emits this one uniform operation so a future GUI builder need not
    * generate backend-specific procedure calls.
    *
@@ -213,8 +260,66 @@ uiview_impl: class implements .uiview
     id = word(fields, 2)
     action = word(fields, 3)
     shortcut = word(fields, 4)
-    if kind = "label" then call add_label(id, text)
-    else if kind = "button" then call add_button(id, text, action, shortcut)
+    relation = word(fields, 5)
+    anchor = word(fields, 6)
+    if action = "none" then action = ""
+    if shortcut = "none" then shortcut = ""
+    if anchor = "none" then anchor = ""
+    if kind = "label" then call add_label(id, text, relation, anchor)
+    else if kind = "line" then call add_line(id, relation, anchor)
+    else if kind = "button" then call add_button(id, text, action, shortcut, relation, anchor)
+    return
+
+  /** Resolve the current node's relative placement into a small logical grid.
+   *
+   * This is deliberately view logic rather than GTK/TUI policy. Drivers see
+   * the same coordinates, while the application keeps readable relationships
+   * between stable node IDs. Missing/unknown placement currently falls back
+   * to `below` the preceding node; a production contract should report a
+   * validation diagnostic instead.
+   *
+   * @param relation `root`, `below`, or `right`
+   * @param anchor stable ID of an earlier node
+   */
+  place_current: method = .void
+    arg relation = .string, anchor = .string
+    row = 0
+    column = 0
+    resolved_relation = lower(strip(relation))
+    resolved_anchor = strip(anchor)
+
+    if _count = 1 | resolved_relation = "root" then do
+      resolved_relation = "root"
+      resolved_anchor = ""
+    end
+    else do
+      anchor_index = _count - 1
+      if resolved_anchor \= "" then do
+        anchor_found = 0
+        do candidate = 1 to _count - 1
+          if _ids[candidate] = resolved_anchor then do
+            anchor_index = candidate
+            anchor_found = 1
+            leave
+          end
+        end
+        if \anchor_found then resolved_anchor = _ids[anchor_index]
+      end
+      else resolved_anchor = _ids[anchor_index]
+
+      row = _rows[anchor_index]
+      column = _columns[anchor_index]
+      if resolved_relation = "right" then column = column + 1
+      else do
+        resolved_relation = "below"
+        row = row + 1
+      end
+    end
+
+    _relations[_count] = resolved_relation
+    _anchors[_count] = resolved_anchor
+    _rows[_count] = row
+    _columns[_count] = column
     return
 
   title: method = .string
@@ -247,6 +352,26 @@ uiview_impl: class implements .uiview
     arg index = .int
     if index < 1 | index > _count then return ""
     return _shortcuts[index]
+
+  node_relation: method = .string
+    arg index = .int
+    if index < 1 | index > _count then return ""
+    return _relations[index]
+
+  node_anchor: method = .string
+    arg index = .int
+    if index < 1 | index > _count then return ""
+    return _anchors[index]
+
+  node_row: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return -1
+    return _rows[index]
+
+  node_column: method = .int
+    arg index = .int
+    if index < 1 | index > _count then return -1
+    return _columns[index]
 
 /** Event dispatcher and backend-neutral effect executor. */
 uiruntime: class
