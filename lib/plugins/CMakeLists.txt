@@ -185,7 +185,8 @@ if(TARGET _odbc_mock)
     add_test(NAME rxpa_odbc_mock_prepared_sessions
             COMMAND test_rxpa_odbc "$<TARGET_FILE_DIR:_odbc_mock>")
     set_tests_properties(rxpa_odbc_mock_prepared_sessions PROPERTIES
-            LABELS "interpreter;worker;plugins;rxpa;odbc")
+            LABELS "interpreter;worker;plugins;rxpa;odbc"
+            TIMEOUT 30)
     add_test(NAME rxpa_odbc_old_host_default_session
             COMMAND test_rxpa_odbc_old_host "$<TARGET_FILE_DIR:_odbc_mock>")
     set_tests_properties(rxpa_odbc_old_host_default_session PROPERTIES
