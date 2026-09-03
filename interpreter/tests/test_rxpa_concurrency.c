@@ -15,7 +15,6 @@
 #include <windows.h>
 #else
 #include <pthread.h>
-#include <unistd.h>
 #endif
 
 void rxvm_addfunc(rxpa_libfunc func, char *name, char *option,
@@ -158,17 +157,6 @@ static void gate_destroy(call_gate *gate) {
 #else
     (void)pthread_cond_destroy(&gate->condition);
     (void)pthread_mutex_destroy(&gate->mutex);
-#endif
-}
-
-/* The coordinator has no externally visible "transition is blocked" event,
- * so this negative assertion retains a bounded observation window. Positive
- * overlap and legacy serialization use condition-variable handshakes. */
-static void observe_legacy_transition_blocked(void) {
-#ifdef _WIN32
-    Sleep(50);
-#else
-    (void)usleep(50000);
 #endif
 }
 
@@ -1060,7 +1048,7 @@ static int test_legacy_transition_quiescence(void) {
     gate_broadcast(&binding_gate);
     while (!binding_gate.active) gate_wait(&binding_gate);
     gate_unlock(&binding_gate);
-    observe_legacy_transition_blocked();
+    rxpa_compatibility_test_wait_transition_started();
     gate_lock(&binding_gate);
     if (binding_gate.maximum_active) binding_failures++;
     gate_unlock(&binding_gate);

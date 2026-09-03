@@ -41,7 +41,8 @@ seconds and emitted no AddressSanitizer diagnostic. Its native-return fixture
 used a fixed 50 ms scheduling window as an ordering mechanism. First hosted
 qualification of that repair then exposed the same class of invalid scheduling
 assumption in the CRI-17 attached-provider fixture; both deterministic handshake
-repairs are under qualification on `hotfix`.
+repairs are under qualification on `hotfix`. The adjacent audit has now removed
+every fixed 50 ms correctness observation from maintained tests.
 
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
@@ -273,12 +274,12 @@ diagnostic and not a product timeout.
   sleeps to infer positive overlap or legacy-call contention. Positive overlap
   now uses condition-variable rendezvous, ODBC enables its rendezvous only for
   the overlap test, and legacy serialization waits until both callers have
-  explicitly attempted the call. The one remaining 50 ms RXPA wait is a
-  negative observation of an internal transition state that has no public
-  event; it cannot make a correct implementation fail because scheduler
-  latency can only defer the peer, not create forbidden overlap. Tests with a
-  positive rendezvous have explicit 30-second CTest timeouts so a genuine
-  regression is reported as a timeout rather than hanging the gate.
+  explicitly attempted the call. Legacy-transition quiescence no longer samples
+  a 50 ms period in which completion must remain absent: the internal
+  coordinator broadcasts when its transition is genuinely waiting, and the
+  test waits positively for that state before checking quiescence. These
+  rendezvous tests have explicit 30-second CTest timeouts so a missing event or
+  genuine regression is reported as a timeout rather than hanging the gate.
 - First hosted qualification: exact-SHA Build CREXX run
   [33736096849](https://github.com/adesutherland/CREXX/actions/runs/33736096849)
   passed its other jobs but the Windows x64 comprehensive job failed only
@@ -295,9 +296,8 @@ diagnostic and not a product timeout.
   found no further scheduler-assignment assumptions. Persistent-executor tests
   address fixed workers explicitly; positive RXPA and ODBC overlap tests now
   rendezvous; HTTP/task tests depend on protocol backpressure rather than task
-  identity. The retained RXPA negative observation is the only fixed 50 ms
-  correctness window and can only hide forbidden overlap, not create a false
-  failure.
+  identity. A search covering common 50 ms sleep, microsecond and nanosecond
+  spellings now finds no fixed 50 ms delay in maintained test code.
 - Local repair evidence:
   - the nine-cell E5/RXPA/ODBC panel passed in normal Debug, followed by 500
     consecutive passes of each of its eight rendezvous-based cells; logs are
@@ -321,6 +321,10 @@ diagnostic and not a product timeout.
     diagnostic. Broad final-tree qualification is assigned to the parallel
     exact-SHA hosted workflows rather than repeating the unchanged low-risk
     local suites.
+  - after removing the final RXPA observation window, its six-cell coordinator
+    panel passed in normal Debug and focused Apple ASan at
+    `cmake-build-debugasan/asan-logs/20260903-110318-ctest/`, with no sanitizer
+    diagnostic.
 - Owner/next action: hotfix QA. Publish the locally qualified candidate and
   run exact-SHA Build CREXX, Sanitizer QA and Deep Build QA together on
   `hotfix`, treating Windows x64 Build and Linux x64 ASan/LSan as the highest
