@@ -75,7 +75,11 @@ filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  /* when there are no commandline arguments found, display help */
  if fn[0]=0 then do
-   ret = help(nocolor)
+   call logo nocolor
+   say
+   say 'Arguments are: in_file_specification... [--option]...'
+   say
+   say 'Use "--help" to show all options'
    exit
  end
  
