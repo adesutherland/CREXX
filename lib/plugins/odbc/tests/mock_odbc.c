@@ -7,16 +7,20 @@
 #ifdef _WIN32
 #include <windows.h>
 static SRWLOCK mock_lock = SRWLOCK_INIT;
+static CONDITION_VARIABLE mock_condition = CONDITION_VARIABLE_INIT;
 #define MOCK_LOCK() AcquireSRWLockExclusive(&mock_lock)
 #define MOCK_UNLOCK() ReleaseSRWLockExclusive(&mock_lock)
-#define MOCK_PAUSE() Sleep(50)
+#define MOCK_WAIT() SleepConditionVariableSRW( \
+        &mock_condition, &mock_lock, INFINITE, 0)
+#define MOCK_BROADCAST() WakeAllConditionVariable(&mock_condition)
 #else
 #include <pthread.h>
-#include <unistd.h>
 static pthread_mutex_t mock_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t mock_condition = PTHREAD_COND_INITIALIZER;
 #define MOCK_LOCK() ((void)pthread_mutex_lock(&mock_lock))
 #define MOCK_UNLOCK() ((void)pthread_mutex_unlock(&mock_lock))
-#define MOCK_PAUSE() ((void)usleep(50000))
+#define MOCK_WAIT() ((void)pthread_cond_wait(&mock_condition, &mock_lock))
+#define MOCK_BROADCAST() ((void)pthread_cond_broadcast(&mock_condition))
 #endif
 
 typedef struct mock_odbc_handle {
@@ -34,6 +38,7 @@ typedef struct mock_odbc_handle {
 static int mock_live_handles;
 static int mock_active_executes;
 static int mock_maximum_execute_overlap;
+static int mock_overlap_barrier_enabled;
 
 static mock_odbc_handle *mock_handle(SQLHANDLE handle,
                                      SQLSMALLINT expected_type) {
@@ -163,10 +168,13 @@ SQLRETURN SQLExecute(SQLHSTMT statement) {
     if (mock_active_executes > mock_maximum_execute_overlap) {
         mock_maximum_execute_overlap = mock_active_executes;
     }
-    MOCK_UNLOCK();
-    MOCK_PAUSE();
-    MOCK_LOCK();
+    MOCK_BROADCAST();
+    while (mock_overlap_barrier_enabled &&
+           mock_maximum_execute_overlap < 2) {
+        MOCK_WAIT();
+    }
     mock_active_executes--;
+    MOCK_BROADCAST();
     MOCK_UNLOCK();
     return SQL_SUCCESS;
 }
@@ -340,6 +348,8 @@ int crexx_mock_odbc_maximum_execute_overlap(void) {
     int maximum;
     MOCK_LOCK();
     maximum = mock_maximum_execute_overlap;
+    mock_overlap_barrier_enabled = 0;
+    MOCK_BROADCAST();
     MOCK_UNLOCK();
     return maximum;
 }
@@ -348,6 +358,7 @@ void crexx_mock_odbc_reset_execute_overlap(void) {
     MOCK_LOCK();
     mock_active_executes = 0;
     mock_maximum_execute_overlap = 0;
+    mock_overlap_barrier_enabled = 1;
     MOCK_UNLOCK();
 }
 

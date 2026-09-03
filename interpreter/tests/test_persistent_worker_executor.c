@@ -21,6 +21,7 @@ void rxvm_signal_thread_doorbell_e5_statistics(
         unsigned long *maximum_depth);
 void e5_native_return_reset(void);
 int e5_native_return_entered(void);
+void e5_native_return_release(void);
 
 #include "rxvm.h"
 #include "rxvmexecutor.h"
@@ -516,6 +517,22 @@ static uint64_t monotonic_nanoseconds(void) {
 #endif
 }
 
+static void sleep_milliseconds(unsigned milliseconds) {
+#if defined(_WIN32)
+    Sleep((DWORD)milliseconds);
+#else
+    struct timespec delay;
+    delay.tv_sec = (time_t)(milliseconds / 1000u);
+    delay.tv_nsec = (long)(milliseconds % 1000u) * 1000000L;
+    while (nanosleep(&delay, &delay) != 0) {
+    }
+#endif
+}
+
+static void wait_for_native_return_entry(void) {
+    while (!e5_native_return_entered()) sleep_milliseconds(1u);
+}
+
 static int parse_positive_size(const char *text, size_t *value_out) {
     char *end = 0;
     unsigned long long value;
@@ -996,14 +1013,19 @@ static int run_sparse_progress(int argc, char **argv) {
 
 static int run_native_return(int argc, char **argv) {
     rxvm_executor_result create_result = RXVM_EXECUTOR_OK;
+    rxvm_executor_result cancel_result;
+    rxvm_executor_result kill_result;
+    rxvm_executor_result destroy_result;
     rxvm_executor *executor;
     rxvm_executor_request *request = 0;
     rxvm_executor_request *coalesced = 0;
     rxvm_executor_request *reuse = 0;
-    rxvm_executor_request_state state;
-    uint64_t deadline;
+    rxvm_executor_request_state state = RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
     int result = 0;
-    int ok = 1;
+    int mailbox_ok = 1;
+    int coalesced_ok = 1;
+    int reuse_ok = 1;
+    int teardown_ok;
 
     if (argc != 3) {
         fprintf(stderr, "usage: %s --native-return E5_RXBIN\n", argv[0]);
@@ -1023,27 +1045,28 @@ static int run_native_return(int argc, char **argv) {
     request = submit_zero(executor, 0u, "e5worker.native_then_complete");
     if (!request || rxvm_executor_request_wait_started(request) !=
                             RXVM_EXECUTOR_REQUEST_RUNNING) {
-        ok = 0;
+        mailbox_ok = 0;
+    } else {
+        wait_for_native_return_entry();
     }
-    deadline = monotonic_nanoseconds() + 2000000000ULL;
-    while (ok && !e5_native_return_entered() &&
-           monotonic_nanoseconds() < deadline) {
-#if defined(_WIN32)
-        Sleep(1);
-#else
-        struct timespec delay = {0, 1000000L};
-        (void)nanosleep(&delay, 0);
-#endif
+    cancel_result = request
+            ? rxvm_executor_cancel(request) : RXVM_EXECUTOR_INVALID;
+    if (cancel_result != RXVM_EXECUTOR_OK) {
+        fprintf(stderr, "FAIL: native-return cancellation publish: %s\n",
+                rxvm_executor_result_name(cancel_result));
+        mailbox_ok = 0;
     }
-    if (!e5_native_return_entered() ||
-        rxvm_executor_cancel(request) != RXVM_EXECUTOR_OK) {
-        ok = 0;
-    }
+    e5_native_return_release();
     if (request) {
         state = rxvm_executor_request_wait(request, &result);
+        destroy_result = rxvm_executor_request_destroy(request);
         if (state != RXVM_EXECUTOR_REQUEST_CANCELLED ||
-            rxvm_executor_request_destroy(request) != RXVM_EXECUTOR_OK) {
-            ok = 0;
+            destroy_result != RXVM_EXECUTOR_OK) {
+            fprintf(stderr,
+                    "FAIL: native-return cancellation completion: state=%s destroy=%s\n",
+                    rxvm_executor_request_state_name(state),
+                    rxvm_executor_result_name(destroy_result));
+            mailbox_ok = 0;
         }
     }
 
@@ -1053,44 +1076,61 @@ static int run_native_return(int argc, char **argv) {
     if (!coalesced ||
         rxvm_executor_request_wait_started(coalesced) !=
                 RXVM_EXECUTOR_REQUEST_RUNNING) {
-        ok = 0;
+        coalesced_ok = 0;
+    } else {
+        wait_for_native_return_entry();
     }
-    deadline = monotonic_nanoseconds() + 2000000000ULL;
-    while (ok && !e5_native_return_entered() &&
-           monotonic_nanoseconds() < deadline) {
-#if defined(_WIN32)
-        Sleep(1);
-#else
-        struct timespec delay = {0, 1000000L};
-        (void)nanosleep(&delay, 0);
-#endif
+    cancel_result = coalesced
+            ? rxvm_executor_cancel(coalesced) : RXVM_EXECUTOR_INVALID;
+    kill_result = coalesced
+            ? rxvm_executor_kill(coalesced) : RXVM_EXECUTOR_INVALID;
+    if (cancel_result != RXVM_EXECUTOR_OK ||
+        kill_result != RXVM_EXECUTOR_OK) {
+        fprintf(stderr,
+                "FAIL: native-return coalesced publish: cancel=%s kill=%s\n",
+                rxvm_executor_result_name(cancel_result),
+                rxvm_executor_result_name(kill_result));
+        coalesced_ok = 0;
     }
-    if (!e5_native_return_entered() ||
-        rxvm_executor_cancel(coalesced) != RXVM_EXECUTOR_OK ||
-        rxvm_executor_kill(coalesced) != RXVM_EXECUTOR_OK) {
-        ok = 0;
-    }
+    e5_native_return_release();
     if (coalesced) {
         state = rxvm_executor_request_wait(coalesced, &result);
+        destroy_result = rxvm_executor_request_destroy(coalesced);
         if (state != RXVM_EXECUTOR_REQUEST_KILLED ||
-            rxvm_executor_request_destroy(coalesced) != RXVM_EXECUTOR_OK) {
-            ok = 0;
+            destroy_result != RXVM_EXECUTOR_OK) {
+            fprintf(stderr,
+                    "FAIL: native-return coalesced completion: state=%s destroy=%s\n",
+                    rxvm_executor_request_state_name(state),
+                    rxvm_executor_result_name(destroy_result));
+            coalesced_ok = 0;
         }
     }
 
     reuse = submit_one(executor, 0u, "e5worker.identity", "59");
-    if (!reuse || rxvm_executor_request_wait(reuse, &result) !=
-                          RXVM_EXECUTOR_REQUEST_COMPLETED ||
-        result != 59 ||
-        rxvm_executor_request_destroy(reuse) != RXVM_EXECUTOR_OK) {
-        ok = 0;
+    if (reuse) {
+        state = rxvm_executor_request_wait(reuse, &result);
+        destroy_result = rxvm_executor_request_destroy(reuse);
+    } else {
+        state = RXVM_EXECUTOR_REQUEST_SETUP_FAILED;
+        destroy_result = RXVM_EXECUTOR_INVALID;
     }
-    if (rxvm_executor_destroy(executor) != 0u) ok = 0;
+    if (!reuse || state != RXVM_EXECUTOR_REQUEST_COMPLETED ||
+        result != 59 || destroy_result != RXVM_EXECUTOR_OK) {
+        fprintf(stderr,
+                "FAIL: native-return worker reuse: state=%s result=%d destroy=%s\n",
+                rxvm_executor_request_state_name(state), result,
+                rxvm_executor_result_name(destroy_result));
+        reuse_ok = 0;
+    }
+    teardown_ok = rxvm_executor_destroy(executor) == 0u;
     printf("E5_NATIVE_RETURN mailbox_after_native=%s coalesced_priority=%s "
            "reuse=%s result=%s\n",
-           ok ? "PASS" : "FAIL", ok ? "PASS" : "FAIL",
-           ok ? "PASS" : "FAIL", ok ? "PASS" : "FAIL");
-    return ok ? 0 : 1;
+           mailbox_ok ? "PASS" : "FAIL",
+           coalesced_ok ? "PASS" : "FAIL",
+           reuse_ok ? "PASS" : "FAIL",
+           mailbox_ok && coalesced_ok && reuse_ok && teardown_ok
+                   ? "PASS" : "FAIL");
+    return mailbox_ok && coalesced_ok && reuse_ok && teardown_ok ? 0 : 1;
 }
 
 static int run_doorbell_stress(int argc, char **argv) {

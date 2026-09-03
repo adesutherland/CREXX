@@ -69,6 +69,10 @@ void rxpa_compatibility_execution_enter(
         rxpa_compatibility_context *context);
 void rxpa_compatibility_execution_leave(
         rxpa_compatibility_context *context);
+/* Internal test synchronization for the cold legacy-binding transition.
+ * The caller must arrange for a transition to start; the owning CTest timeout
+ * bounds a missing transition. */
+void rxpa_compatibility_test_wait_transition_started(void);
 void rxvm_native_payload_copy_call(const rxvm_native_payload_ops *ops,
                                    value *dest, value *source);
 void rxvm_native_payload_finalize_call(const rxvm_native_payload_ops *ops,

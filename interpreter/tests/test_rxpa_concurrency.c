@@ -15,7 +15,6 @@
 #include <windows.h>
 #else
 #include <pthread.h>
-#include <unistd.h>
 #endif
 
 void rxvm_addfunc(rxpa_libfunc func, char *name, char *option,
@@ -37,6 +36,7 @@ typedef struct call_gate {
 #endif
     int ready;
     int release;
+    int attempting;
     int active;
     int maximum_active;
 } call_gate;
@@ -160,14 +160,6 @@ static void gate_destroy(call_gate *gate) {
 #endif
 }
 
-static void pause_for_overlap(void) {
-#ifdef _WIN32
-    Sleep(50);
-#else
-    (void)usleep(50000);
-#endif
-}
-
 static void static_probe(rxinteger numargs, rxpa_attribute_value *args,
                          rxpa_attribute_value result,
                          rxpa_attribute_value signal) {
@@ -254,10 +246,10 @@ static void session_probe(rxinteger numargs, rxpa_attribute_value *args,
     if (session_gate.active > session_gate.maximum_active) {
         session_gate.maximum_active = session_gate.active;
     }
-    gate_unlock(&session_gate);
-    pause_for_overlap();
-    gate_lock(&session_gate);
+    gate_broadcast(&session_gate);
+    while (session_gate.maximum_active < 2) gate_wait(&session_gate);
     session_gate.active--;
+    gate_broadcast(&session_gate);
     gate_unlock(&session_gate);
 }
 
@@ -753,12 +745,17 @@ static void legacy_probe(rxinteger numargs, rxpa_attribute_value *args,
     if (legacy_gate.active > legacy_gate.maximum_active) {
         legacy_gate.maximum_active = legacy_gate.active;
     }
-    gate_unlock(&legacy_gate);
-
-    pause_for_overlap();
-
-    gate_lock(&legacy_gate);
+    gate_broadcast(&legacy_gate);
+    if (call_capabilities == RXPA_PLUGIN_CAP_PROCESS_REENTRANT) {
+        while (legacy_gate.maximum_active < 2) gate_wait(&legacy_gate);
+        legacy_gate.active--;
+        gate_broadcast(&legacy_gate);
+        gate_unlock(&legacy_gate);
+        return;
+    }
+    while (legacy_gate.attempting < 2) gate_wait(&legacy_gate);
     legacy_gate.active--;
+    gate_broadcast(&legacy_gate);
     gate_unlock(&legacy_gate);
 }
 
@@ -852,6 +849,10 @@ static int call_bound_legacy(rxvm_context *context) {
     int failed = 0;
 
     if (!procedure || procedure->native_invoker != rxvm_callfunc) return 1;
+    gate_lock(&legacy_gate);
+    legacy_gate.attempting++;
+    gate_broadcast(&legacy_gate);
+    gate_unlock(&legacy_gate);
     previous_worker = rxvm_memory_enter(context->worker.memory_worker);
     if (rxvm_worker_begin_execution(&context->worker) !=
             RXVM_WORKER_TRANSITION_OK) {
@@ -1047,7 +1048,7 @@ static int test_legacy_transition_quiescence(void) {
     gate_broadcast(&binding_gate);
     while (!binding_gate.active) gate_wait(&binding_gate);
     gate_unlock(&binding_gate);
-    pause_for_overlap();
+    rxpa_compatibility_test_wait_transition_started();
     gate_lock(&binding_gate);
     if (binding_gate.maximum_active) binding_failures++;
     gate_unlock(&binding_gate);
@@ -1088,6 +1089,8 @@ static void run_legacy_call(void) {
     legacy_gate.ready++;
     gate_broadcast(&legacy_gate);
     while (!legacy_gate.release) gate_wait(&legacy_gate);
+    legacy_gate.attempting++;
+    gate_broadcast(&legacy_gate);
     gate_unlock(&legacy_gate);
 
     rxvm_callfunc_capabilities((void *)legacy_probe, call_capabilities,

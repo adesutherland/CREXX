@@ -823,6 +823,13 @@ set_tests_properties(
         rxpa_bound_legacy_serialization
         rxpa_legacy_transition_quiescence
         PROPERTIES LABELS "interpreter;worker;plugins;rxpa")
+set_tests_properties(
+        rxpa_static_session_lifecycle
+        rxpa_legacy_call_serialization
+        rxpa_process_reentrant_overlap
+        rxpa_bound_legacy_serialization
+        rxpa_legacy_transition_quiescence
+        PROPERTIES TIMEOUT 30)
 set_tests_properties(rxvmstem_storage PROPERTIES
         LABELS "interpreter;stem;nr15")
 set_tests_properties(rxvmstem_allocator_family PROPERTIES
