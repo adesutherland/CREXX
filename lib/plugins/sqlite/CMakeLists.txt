@@ -37,7 +37,8 @@ add_static_plugin_target(sqlite ${_rxsqlite_sources})
 foreach(_rxsqlite_target IN ITEMS sqlite sqlite_static)
     target_include_directories(${_rxsqlite_target} PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
-    target_link_libraries(${_rxsqlite_target} PRIVATE Threads::Threads)
+    target_link_libraries(${_rxsqlite_target} PRIVATE
+            Threads::Threads ${CREXX_MATH_LIBRARY})
 endforeach()
 add_rxpa_provider_package(sqlite)
 
@@ -90,7 +91,7 @@ if(BUILD_TESTING)
             ${CMAKE_SOURCE_DIR}/platform
             ${CMAKE_BINARY_DIR}/generated)
     target_link_libraries(rxsqlite_thread_test PRIVATE
-            crexx_sqlite3_objects Threads::Threads)
+            crexx_sqlite3_objects Threads::Threads ${CREXX_MATH_LIBRARY})
     add_test(NAME rxsqlite_thread_sessions
             COMMAND rxsqlite_thread_test
                     "${CMAKE_CURRENT_BINARY_DIR}/rxsqlite-thread.db")
