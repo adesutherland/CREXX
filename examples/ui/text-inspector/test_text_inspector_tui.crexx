@@ -1,0 +1,43 @@
+options levelg
+namespace text_inspector_tui_test
+import rxfnsb
+import ui
+import ui_tui
+import text_inspector
+
+arg test_args = .string[]
+if test_args[0] < 1 then do
+  say "FAIL: sample file path was not supplied"
+  exit 1
+end
+
+commands = .string[]
+commands[1] = "o"
+commands[2] = test_args[1]
+commands[3] = "q"
+
+app = .text_inspector..text_inspector_app()
+runtime = .ui..uiruntime(app)
+driver = .ui_tui..tuidriver.scripted(commands)
+run_rc = driver.run(runtime)
+transcript = driver.transcript()
+
+if run_rc \= 0 then do
+  say "FAIL: Text Inspector TUI returned" run_rc
+  exit 1
+end
+if pos("Lines: 2", transcript) = 0 | pos("Words: 5", transcript) = 0 | pos("Characters: 26", transcript) = 0 then do
+  say "FAIL: Text Inspector TUI did not render the counted file"
+  exit 1
+end
+if pos("Lines: 2    Words: 5    Characters: 26", transcript) = 0 | pos("------------------------------------------------------------", transcript) = 0 then do
+  say "FAIL: Text Inspector TUI did not render shared relative layout"
+  exit 1
+end
+if runtime.event_count() \= 5 then do
+  say "FAIL: Text Inspector TUI delivered" runtime.event_count() "events instead of 5"
+  exit 1
+end
+
+say "PASS: Text Inspector TUI end-to-end"
+exit 0

@@ -293,6 +293,7 @@ add_test(NAME crexx_project_build_contract
                  -DCREXX=$<TARGET_FILE:crexx>
                  -DRXVME=$<TARGET_FILE:rxvme>
                  -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_project_build_ws
+                 -DSOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_project_build.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_project_build_contract PROPERTIES

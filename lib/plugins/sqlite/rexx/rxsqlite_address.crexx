@@ -1,0 +1,492 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland
+ *
+ * Level-G ADDRESS SQLITE facade over the generic rxsqlite RXPA provider.
+ * There are deliberately no sqlite3_* calls or product schema assumptions in
+ * this module.
+ */
+options levelg
+
+namespace rxsqlite_address expose sqliteaddressenvironment
+
+import _rxsysb
+import rxfnsb
+import rxsqlite
+
+sqliteaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _database = .binary
+  _environment_name = .string
+  _environment_id = .string
+  _open = .int
+  _status = .int
+  _error = .string
+
+  *: match
+    arg env_name = .string
+    normalized = _address_normalize_environment_name(env_name)
+    if normalized = "SQLITE" | normalized = "SQLITE3" then return 100
+    return 0
+
+  *: factory
+    arg env_name = .string
+    _environment_name = _address_normalize_environment_name(env_name)
+    _environment_id = "rexx:" || _environment_name
+    _open = 0
+    _status = 0
+    _error = ""
+    return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = _address_normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = "rexx:" || _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    original = strip(request.get_command())
+    normalized = _address_normalize_command(original)
+    verb = word(normalized, 1)
+
+    if verb = "OPEN" | verb = "CONNECT" then return _execute_open(request, original)
+    if verb = "EXEC" | verb = "EXECUTE" then return _execute_exec(request, original)
+    if verb = "QUERY" then return _execute_query(request, original)
+    if verb = "VALUE" | verb = "SCALAR" then return _execute_value(request, original)
+    if normalized = "CLOSE" then return _execute_close(request)
+    if normalized = "HELP" | normalized = "" then do
+      return rxsqlite_emit_text(request, "OPEN path [mode] | EXEC sql | QUERY sql | VALUE sql INTO ${target} | CLOSE" || "0a"x)
+    end
+    return _address_unknown_command_response(_environment_name, request.get_command())
+
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    name = _address_normalize_environment_name(request.get_function_name())
+    value = .string
+    status = .int
+
+    if name = "ID" then return .addressfunctionresponse(0, _environment_id)
+    if name = "NAME" then return .addressfunctionresponse(0, _environment_name)
+    if name = "DRIVER" then return .addressfunctionresponse(0, "sqlite")
+    if name = "VERSION" then return .addressfunctionresponse(0, sqliteversion())
+    if name = "STATUS" then return .addressfunctionresponse(0, "" || _status)
+    if name = "ERROR" then return .addressfunctionresponse(0, _error)
+
+    if name = "CHANGES" then do
+      if _open <> 1 then return .addressfunctionresponse(0, "0")
+      changes = 0
+      status = sqlitechanges(_database, changes)
+      if status <> 0 then return _sqlite_function_failure(status)
+      call _success
+      return .addressfunctionresponse(0, "" || changes)
+    end
+
+    if name = "LAST_INSERT_ROWID" | name = "LAST_INSERT_ID" then do
+      if _open <> 1 then return .addressfunctionresponse(0, "0")
+      rowid = 0
+      status = sqlitelastinsertrowid(_database, rowid)
+      if status <> 0 then return _sqlite_function_failure(status)
+      call _success
+      return .addressfunctionresponse(0, "" || rowid)
+    end
+
+    if name = "SCALAR" then do
+      if request.get_argument_count() < 1 then return _local_function_failure(-1, "SCALAR requires a SQL argument")
+      if _ensure_open() <> 0 then return _current_function_failure()
+      status = _scalar_unbound(request.get_argument(1), value)
+      if status <> 0 then return _current_function_failure()
+      return .addressfunctionresponse(0, value)
+    end
+
+    return _local_function_failure(-3, "Unknown SQLITE function " || request.get_function_name())
+
+  _execute_open: method = .addressresponse
+    arg request = .addressrequest, command = .string
+    path = ":memory:"
+    mode = "create"
+    status = .int
+
+    if words(command) > 3 then return _local_failure(request, -1, "OPEN accepts a path anchor and optional mode")
+    if words(command) >= 2 then do
+      path = rxsqlite_resolve_host_text(request, word(command, 2))
+      if path = "" then return _local_failure(request, -1, "OPEN path anchor was not exposed")
+    end
+    if words(command) = 3 then mode = lower(word(command, 3))
+
+    if _open = 1 then do
+      status = sqliteclose(_database)
+      _open = 0
+      if status <> 0 then return _sqlite_failure(request, status)
+    end
+
+    status = sqliteopenmode(path, mode, _database)
+    if status <> 0 then return _sqlite_failure(request, status)
+    _open = 1
+    call _success
+    return .addressresponse(0)
+
+  _execute_exec: method = .addressresponse
+    arg request = .addressrequest, command = .string
+    if _ensure_open() <> 0 then return _current_failure(request)
+    sql = strip(substr(command, length(word(command, 1)) + 1))
+    if sql = "" then return _local_failure(request, -1, "EXEC requires SQL text")
+
+    statement = .binary
+    status = _prepare_bound(request, sql, statement)
+    if status <> 0 then return _current_failure(request)
+    do forever
+      status = sqlitestep(statement)
+      if status = 100 then iterate
+      leave
+    end
+    if status <> 101 then do
+      call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _current_failure(request)
+    end
+    status = sqlitefinalize(statement)
+    if status <> 0 then return _sqlite_failure(request, status)
+    call _success
+    return .addressresponse(0)
+
+  _execute_query: method = .addressresponse
+    arg request = .addressrequest, command = .string
+    if _ensure_open() <> 0 then return _current_failure(request)
+    sql = strip(substr(command, length(word(command, 1)) + 1))
+    if sql = "" then return _local_failure(request, -1, "QUERY requires SQL text")
+
+    statement = .binary
+    status = _prepare_bound(request, sql, statement)
+    if status <> 0 then return _current_failure(request)
+    columns = 0
+    status = sqlitecolumncount(statement, columns)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _current_failure(request)
+    end
+
+    output = ""
+    do forever
+      status = sqlitestep(statement)
+      if status = 101 then leave
+      if status <> 100 then do
+        call _capture_sqlite_error status
+        call sqlitefinalize statement
+        return _current_failure(request)
+      end
+      row = ""
+      do column = 0 to columns - 1
+        value = ""
+        status = rxsqlite_column_string(statement, column, "", value)
+        if status <> 0 then do
+          call _capture_sqlite_error status
+          call sqlitefinalize statement
+          return _current_failure(request)
+        end
+        if column > 0 then row = row || "|"
+        row = row || value
+      end
+      output = output || row || "0a"x
+    end
+    status = sqlitefinalize(statement)
+    if status <> 0 then return _sqlite_failure(request, status)
+    call _success
+    return rxsqlite_emit_text(request, output)
+
+  _execute_value: method = .addressresponse
+    arg request = .addressrequest, command = .string
+    if _ensure_open() <> 0 then return _current_failure(request)
+    command_tail = strip(substr(command, length(word(command, 1)) + 1))
+    marker = lastpos(" INTO ", upper(command_tail))
+    if marker < 2 then return _local_failure(request, -1, "VALUE requires SQL followed by INTO ${target}")
+    sql = strip(substr(command_tail, 1, marker - 1))
+    target = rxsqlite_host_anchor_name(strip(substr(command_tail, marker + 6)))
+    if target = "" then return _local_failure(request, -1, "VALUE target must be a host-variable anchor")
+
+    statement = .binary
+    status = _prepare_bound(request, sql, statement)
+    if status <> 0 then return _current_failure(request)
+    status = sqlitestep(statement)
+    if status <> 100 then do
+      if status = 101 then call _local_error(-1, "VALUE query returned no row")
+      else call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _current_failure(request)
+    end
+    value = ""
+    status = rxsqlite_column_string(statement, 0, "NULL", value)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _current_failure(request)
+    end
+    status = sqlitestep(statement)
+    if status <> 101 then do
+      if status = 100 then call _local_error(-1, "VALUE query returned more than one row")
+      else call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _current_failure(request)
+    end
+    status = sqlitefinalize(statement)
+    if status <> 0 then return _sqlite_failure(request, status)
+
+    response = .addressresponse(0)
+    call response.add_updated_binding("var", target, target, value, "")
+    call _success
+    return response
+
+  _execute_close: method = .addressresponse
+    arg request = .addressrequest
+    if _open <> 1 then do
+      call _success
+      return .addressresponse(0)
+    end
+    status = sqliteclose(_database)
+    _open = 0
+    if status <> 0 then return _sqlite_failure(request, status)
+    call _success
+    return .addressresponse(0)
+
+  _ensure_open: method = .int
+    if _open = 1 then return 0
+    status = sqliteopenmode(":memory:", "create", _database)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      return status
+    end
+    _open = 1
+    call _success
+    return 0
+
+  _prepare_bound: method = .int
+    arg request = .addressrequest, sql = .string, expose statement = .binary
+    status = sqliteprepare(_database, sql, statement)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      return status
+    end
+    count = 0
+    status = sqlitebindcount(statement, count)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return status
+    end
+    do index = 1 to count
+      parameter = ""
+      status = sqlitebindname(statement, index, parameter)
+      if status <> 0 then do
+        call _capture_sqlite_error status
+        call sqlitefinalize statement
+        return status
+      end
+      if parameter = "" then iterate
+      host_name = parameter
+      prefix = left(parameter, 1)
+      if prefix = ":" | prefix = "$" | prefix = "@" then host_name = substr(parameter, 2)
+      found = 0
+      host_value = rxsqlite_request_binding(request, host_name, found)
+      if found = 0 then do
+        call _local_error(-1, "Missing host variable for SQL parameter " || parameter)
+        call sqlitefinalize statement
+        return -1
+      end
+      status = sqlitebindtext(statement, index, host_value)
+      if status <> 0 then do
+        call _capture_sqlite_error status
+        call sqlitefinalize statement
+        return status
+      end
+    end
+    return 0
+
+  _scalar_unbound: method = .int
+    arg sql = .string, expose value = .string
+    statement = .binary
+    status = sqliteprepare(_database, sql, statement)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      return status
+    end
+    status = sqlitestep(statement)
+    if status <> 100 then do
+      if status = 101 then call _local_error(-1, "SCALAR query returned no row")
+      else call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return _status
+    end
+    status = rxsqlite_column_string(statement, 0, "NULL", value)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      call sqlitefinalize statement
+      return status
+    end
+    status = sqlitefinalize(statement)
+    if status <> 0 then do
+      call _capture_sqlite_error status
+      return status
+    end
+    call _success
+    return 0
+
+  _capture_sqlite_error: method = .void
+    arg status = .int
+    code = 0
+    sqlite_code = 0
+    extended_code = 0
+    operation = ""
+    message = ""
+    call sqliteerrorextended code, sqlite_code, extended_code, operation, message
+    _status = status
+    _error = operation || ": sqlite=" || sqlite_code || " extended=" || extended_code || " " || message
+    return
+
+  _local_error: method = .void
+    arg status = .int, message = .string
+    _status = status
+    _error = message
+    return
+
+  _success: method = .void
+    _status = 0
+    _error = ""
+    return
+
+  _sqlite_failure: method = .addressresponse
+    arg request = .addressrequest, status = .int
+    call _capture_sqlite_error status
+    return _current_failure(request)
+
+  _current_failure: method = .addressresponse
+    arg request = .addressrequest
+    response = .addressresponse(8, "FAILURE")
+    if _error <> "" then do
+      call response.add_diagnostic(_error)
+      error_output = request.get_stderr_endpoint()
+      if error_output.native_emit(_error || "0a"x) = 1 then call request.set_stderr_endpoint(error_output)
+    end
+    return response
+
+  _local_failure: method = .addressresponse
+    arg request = .addressrequest, status = .int, message = .string
+    call _local_error status, message
+    return _current_failure(request)
+
+  _sqlite_function_failure: method = .addressfunctionresponse
+    arg status = .int
+    call _capture_sqlite_error status
+    return _current_function_failure()
+
+  _current_function_failure: method = .addressfunctionresponse
+    response = .addressfunctionresponse(8, "", "FAILURE")
+    if _error <> "" then call response.add_diagnostic(_error)
+    return response
+
+  _local_function_failure: method = .addressfunctionresponse
+    arg status = .int, message = .string
+    call _local_error status, message
+    return _current_function_failure()
+
+rxsqlite_request_binding: procedure = .string
+  arg request = .addressrequest, name = .string, expose found = .int
+  binding = .addressbinding
+  target = _address_normalize_environment_name(name)
+  found = 0
+  do i = 1 to request.get_binding_count()
+    binding = request.get_binding(i)
+    if _address_normalize_environment_name(binding.get_kind()) <> "VAR" then iterate
+    if _address_normalize_environment_name(binding.get_internal_name()) = target | _address_normalize_environment_name(binding.get_external_alias()) = target then do
+      found = 1
+      return binding.get_value()
+    end
+  end
+  return ""
+
+rxsqlite_column_string: procedure = .int
+  arg statement = .binary, column = .int, null_text = .string, expose value = .string
+  kind = ""
+  status = sqlitecolumntype(statement, column, kind)
+  if status <> 0 then return status
+  if kind = "null" then do
+    value = null_text
+    return 0
+  end
+  if kind = "integer" then do
+    int_value = 0
+    status = sqlitecolumnint(statement, column, int_value)
+    value = "" || int_value
+    return status
+  end
+  if kind = "real" then do
+    real_value = 0.0
+    status = sqlitecolumnreal(statement, column, real_value)
+    value = "" || real_value
+    return status
+  end
+  if kind = "text" then return sqlitecolumntext(statement, column, value)
+  if kind = "blob" then do
+    blob_value = .binary
+    status = sqlitecolumnblob(statement, column, blob_value)
+    if status = 0 then value = "X'" || bin2x(blob_value) || "'"
+    return status
+  end
+  return -7
+
+rxsqlite_resolve_host_text: procedure = .string
+  arg request = .addressrequest, token = .string
+  anchor = rxsqlite_host_anchor_name(token)
+  if anchor = "" then return token
+  found = 0
+  value = rxsqlite_request_binding(request, anchor, found)
+  if found = 0 then return ""
+  return value
+
+rxsqlite_host_anchor_name: procedure = .string
+  arg token = .string
+  name = .string
+  if length(token) > 1 & left(token, 1) = ":" then do
+    name = substr(token, 2)
+    if rxsqlite_host_anchor_name_ok(name) = 1 then return name
+  end
+  if length(token) > 3 & left(token, 2) = "${" & right(token, 1) = "}" then do
+    name = substr(token, 3, length(token) - 3)
+    if rxsqlite_host_anchor_name_ok(name) = 1 then return name
+  end
+  return ""
+
+rxsqlite_host_anchor_name_ok: procedure = .int
+  arg name = .string
+  if length(name) < 1 then return 0
+  if rxsqlite_host_anchor_start(left(name, 1)) <> 1 then return 0
+  do i = 2 to length(name)
+    if rxsqlite_host_anchor_part(substr(name, i, 1)) <> 1 then return 0
+  end
+  return 1
+
+rxsqlite_host_anchor_start: procedure = .int
+  arg ch = .string
+  if ch = "_" then return 1
+  if pos(upper(ch), "ABCDEFGHIJKLMNOPQRSTUVWXYZ") > 0 then return 1
+  return 0
+
+rxsqlite_host_anchor_part: procedure = .int
+  arg ch = .string
+  if rxsqlite_host_anchor_start(ch) = 1 then return 1
+  if pos(ch, "0123456789") > 0 then return 1
+  return 0
+
+rxsqlite_emit_text: procedure = .addressresponse
+  arg request = .addressrequest, text = .string
+  output = request.get_stdout_endpoint()
+  if output.native_emit(text) = 1 then call request.set_stdout_endpoint(output)
+  else say text
+  return .addressresponse(0)

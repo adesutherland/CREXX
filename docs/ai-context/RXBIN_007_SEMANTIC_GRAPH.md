@@ -398,6 +398,9 @@ refine them to concrete types. Arity, reference/optional/variadic flags, and
 every known imported type must still match. The linked callable adopts the
 definition's complete descriptor and procedure reference. This refinement does
 not reconcile two definitions or two contradictory known import contracts.
+Compiler-generated source-import class stubs preserve each `expose` qualifier
+in their `META_FUNC` projection so this strict comparison sees the same
+reference contract that drove call generation.
 
 These headers and the `rxbin` archive are not an installed external SDK. The
 supported external metadata surface is the deterministic

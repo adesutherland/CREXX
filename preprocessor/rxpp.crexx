@@ -1505,8 +1505,9 @@ expandRecursive:  procedure=.string
   if substr(word1,1,2)='##' then do
      do k=1 to scriptMacros[0]
         macname=scriptMacros[k]
-        ipi=pos(macname,word1)
-        if ipi>0 then return newmacros(macname,line,linnum,ipi)
+        /* A scripted directive names one macro. Prefix matching made a macro
+         * such as ##ui capture ##ui_node when both packages were present. */
+        if word1=macname then return newmacros(macname,line,linnum,1)
      end
   end
   expandlevel=0
@@ -2527,7 +2528,7 @@ return
  * normalisePath: resolves ../, ./ and mixed slashes
  * Returns normalised UNIX-style path
  * Example:
- *   normalisePath("C:\Users\Peter/../Docs/./file.txt")
+ *   normalisePath("C:/Users/Peter/macros", "../Docs/./file.txt")
  *   -> "C:/Users/Docs/file.txt"
  * ------------------------------------------------------------------
  */
@@ -2536,6 +2537,16 @@ normalisePath: procedure=.string
 
   path = translate(rawpath, '/', '\')   /* "\" -> "/" */
   syspath = translate(xsyspath, '/', '\')
+
+  /* Resolve relative INCLUDE/USE names against the macro-library directory
+   * supplied by the caller. Previously xsyspath was accepted but ignored,
+   * turning a relative name such as ui.rxpm into /ui.rxpm. */
+  if length(path) < 2 | substr(path, 2, 1) \= ':' then do
+    if left(path, 1) \= '/' & syspath \= '' then do
+      if right(syspath, 1) \= '/' then syspath = syspath || '/'
+      path = syspath || path
+    end
+  end
 
   drive = ''
   part=''

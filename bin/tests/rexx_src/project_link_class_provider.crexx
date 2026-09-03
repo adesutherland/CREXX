@@ -1,0 +1,15 @@
+options levelb
+
+namespace project_link_class_provider expose projectlinkbox
+
+projectlinkbox: class
+  *: factory
+    return
+
+  update: method = .int
+    arg prefix = .string, expose output = .string
+    output_ref = reference .string
+    output_ref = reference output
+    linked_output = dereference output_ref
+    linked_output = prefix || "-linked"
+    return 7

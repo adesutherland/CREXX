@@ -19,7 +19,8 @@ add_custom_target(cri07_rxpa_sdk_consumer_prereqs
                 vector vector_static
                 id id_static
                 fs fs_static
-                _platform _platform_static)
+                _platform _platform_static
+                sqlite sqlite_static rxsqlite_address)
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -38,7 +39,7 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed;sqlite;native"
         RUN_SERIAL TRUE
         TIMEOUT 240)
 crexx_register_test_prep_targets(
@@ -264,6 +265,26 @@ add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)
 localize_test_plugin_output(_rxpa_classdecl)
 add_dependencies(_rxpa_classdecl rxpa library rxvm rxc)
 
+# Native-to-cREXX callback fixture. The native procedure synchronously calls a
+# descriptor-checked method on the interface object supplied by Rexx.
+add_dynamic_plugin_target(_rxpa_callmethod rxpa_callmethod.c)
+add_static_plugin_target(_rxpa_callmethod rxpa_callmethod.c)
+localize_test_plugin_output(_rxpa_callmethod)
+add_dependencies(_rxpa_callmethod rxpa library rxvm rxc)
+
+add_custom_target(rxpa_callmethod_run ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxpa_callmethod_run
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_callmethod.crexx
+        TARGET_GROUP rxpa_callmethod_run
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library _rxpa_callmethod
+        RUNTIME_ARGS rx_rxpa_callmethod ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS "interpreter;rxpa;callback;classes;regression"
+        REQUIRED_OUTPUT_REGEX
+                "PASS: RXPA CALLMETHOD invokes a cREXX object method"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
 # Compiler-facing signature validation fixture. The deliberately malformed
 # declarations are never invoked; they exercise import diagnostics alongside
 # three valid declarations that compile and run through both VM engines.
@@ -439,9 +460,11 @@ endif()
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
+configure_linker_for_static_lib(funcvm _rxpa_callmethod)
 enable_rxpa_test_vm_platform(funcvm)
 # Add the dependencies and link libraries
-add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
+add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static
+        _rxpa_callmethod_static)
 target_link_libraries(funcvm rxvmplugin rxvmref rxbin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
@@ -453,6 +476,20 @@ target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/avl_tree
         ${CMAKE_SOURCE_DIR}/utf8
         ${CMAKE_SOURCE_DIR}/inc)
+
+add_custom_target(rxpa_callmethod_static_run ALL)
+crexx_add_rexx_opt_matrix(
+        NAME rxpa_callmethod_static_run
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_callmethod.crexx
+        TARGET_GROUP rxpa_callmethod_static_run
+        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library funcvm _rxpa_callmethod
+        RUNNER funcvm
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
+        TEST_LABELS "interpreter;rxpa;callback;classes;static;regression"
+        REQUIRED_OUTPUT_REGEX
+                "PASS: RXPA CALLMETHOD invokes a cREXX object method"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 
 # Additional functional tests (of callback functions)
 set(FUNC_TESTS

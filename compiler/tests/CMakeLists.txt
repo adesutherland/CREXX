@@ -5362,8 +5362,6 @@ target_compile_definitions(test_address_bridge PRIVATE
 set(CREXX_CMS_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/cms")
 set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/llm")
 set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/kv")
-set(CREXX_NATIVE_SQLITE_DEMO_DIR "${CMAKE_SOURCE_DIR}/demos/native/sqlite")
-
 add_custom_command(
         OUTPUT address_cms_provider.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
@@ -5449,55 +5447,6 @@ target_compile_definitions(native_kv_address_demo PRIVATE
         CREXX_NATIVE_KV_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
         CREXX_NATIVE_KV_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_kv_address_demo.rxbin")
 add_dependencies(native_kv_address_demo native_kv_address_demo_bin library)
-
-if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
-    if(NOT CREXX_ALLOW_NETWORK_DOWNLOADS)
-        message(FATAL_ERROR
-                "CREXX_BUILD_SQLITE_ADDRESS_DEMO=ON requires CREXX_ALLOW_NETWORK_DOWNLOADS=ON")
-    endif()
-    include(FetchContent)
-    message(STATUS "Fetching SQLite amalgamation ${CREXX_SQLITE_AMALGAMATION_VERSION} for native ADDRESS demo")
-    FetchContent_Declare(
-            crexx_sqlite_amalgamation
-            URL "https://www.sqlite.org/${CREXX_SQLITE_AMALGAMATION_YEAR}/sqlite-amalgamation-${CREXX_SQLITE_AMALGAMATION_VERSION}.zip"
-            URL_HASH "SHA3_256=${CREXX_SQLITE_AMALGAMATION_SHA3_256}"
-    )
-    FetchContent_MakeAvailable(crexx_sqlite_amalgamation)
-    FetchContent_GetProperties(crexx_sqlite_amalgamation)
-
-    add_library(crexx_demo_sqlite3 STATIC
-            "${crexx_sqlite_amalgamation_SOURCE_DIR}/sqlite3.c")
-    target_include_directories(crexx_demo_sqlite3 PUBLIC
-            "${crexx_sqlite_amalgamation_SOURCE_DIR}")
-    target_compile_definitions(crexx_demo_sqlite3 PRIVATE
-            SQLITE_THREADSAFE=0
-            SQLITE_OMIT_LOAD_EXTENSION
-            SQLITE_DQS=0)
-    if (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
-        target_compile_options(crexx_demo_sqlite3 PRIVATE -w)
-    elseif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-        target_compile_options(crexx_demo_sqlite3 PRIVATE /w)
-    endif()
-
-    add_custom_command(
-            OUTPUT native_sqlite_address_demo.rxbin
-            COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o native_sqlite_address_demo ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.crexx
-            COMMAND $<TARGET_FILE:rxas> native_sqlite_address_demo
-            DEPENDS rxc rxas library compiler_exit_bin ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.crexx
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            COMMENT "Compiling sqlite_address_demo.crexx ..."
-    )
-
-    add_custom_target(native_sqlite_address_demo_bin DEPENDS native_sqlite_address_demo.rxbin)
-
-    add_executable(native_sqlite_address_demo ${CREXX_NATIVE_SQLITE_DEMO_DIR}/sqlite_address_demo.c)
-    target_link_libraries(native_sqlite_address_demo PRIVATE rxvml rxpashim crexx_demo_sqlite3)
-    target_include_directories(native_sqlite_address_demo PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
-    target_compile_definitions(native_sqlite_address_demo PRIVATE
-            CREXX_NATIVE_SQLITE_LIBRARY_PATH="${CMAKE_BINARY_DIR}/bin/library"
-            CREXX_NATIVE_SQLITE_DEMO_MODULE="${CMAKE_CURRENT_BINARY_DIR}/native_sqlite_address_demo.rxbin")
-    add_dependencies(native_sqlite_address_demo native_sqlite_address_demo_bin library)
-endif()
 
 add_custom_command(
         OUTPUT address_callback_host.rxbin
@@ -5755,10 +5704,6 @@ set_tests_properties(address_llm_provider PROPERTIES
 crexx_label_concurrency_tests(SP07 address_llm_provider)
 add_test(NAME address_native_kv_demo COMMAND native_kv_address_demo)
 set_tests_properties(address_native_kv_demo PROPERTIES LABELS "compiler;stage3")
-if(CREXX_BUILD_SQLITE_ADDRESS_DEMO)
-    add_test(NAME address_native_sqlite_demo COMMAND native_sqlite_address_demo)
-    set_tests_properties(address_native_sqlite_demo PROPERTIES LABELS "compiler;stage3")
-endif()
 add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME e2_active_context_isolation COMMAND test_e2_active_context)

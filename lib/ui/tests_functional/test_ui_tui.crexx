@@ -1,0 +1,54 @@
+options levelg
+namespace ui_tui_test
+import rxfnsb
+import ui
+import ui_tui
+
+commands = .string[]
+commands[1] = "g"
+commands[2] = "q"
+
+app = .tui_probe()
+runtime = .ui..uiruntime(app)
+driver = .ui_tui..tuidriver.scripted(commands)
+run_rc = driver.run(runtime)
+
+if run_rc \= 0 then do
+  say "FAIL: scripted TUI run returned" run_rc
+  exit 1
+end
+if pos("Count: 1", driver.transcript()) = 0 then do
+  say "FAIL: scripted TUI did not re-render updated state"
+  exit 1
+end
+if runtime.event_count() \= 3 then do
+  say "FAIL: scripted TUI delivered" runtime.event_count() "events instead of 3"
+  exit 1
+end
+
+say "PASS: TUI drives semantic events"
+exit 0
+
+tui_probe: class implements .uiapp
+  _count = .int
+
+  *: factory
+    _count = 0
+    return
+
+  update: method = .uieffect
+    arg event = .uievent
+    if event.name() = "probe.go" then _count = _count + 1
+    if event.name() = "app.quit.requested" then
+      return .ui..uieffect_impl("quit", "")
+    return .ui..uieffect_impl("none", "")
+
+  view: method = .uiview
+    result = .ui..uiview_impl("TUI probe")
+    call result.add_label("count", "Count: " || _count)
+    call result.add_button("go", "Go", "probe.go", "g")
+    call result.add_button("quit", "Quit", "app.quit.requested", "q")
+    return result
+
+  count: method = .int
+    return _count

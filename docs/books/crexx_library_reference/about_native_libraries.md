@@ -1,6 +1,11 @@
 # About native libraries
 
-With the exception of the SQLite `address` environment, there are no native libraries for other products than cRexx delivered in the distribution packages. This is for a number of reasons, including size. For the library functionality in this section of the documentation installation of this native function is required; the cRexx part of the API is delivered in the downloadable package. For some of the libraries, generic installation instructions are provided. For example, when ODBC is needed, action on all supported operating systems is required. The same goes for the installation of GTK, which is a platform independent Grapical User Interface library.
+CREXX distribution packages include selected native providers with both dynamic
+VM and native-static delivery. In particular, the [rxsqlite provider](rxsqlite.md)
+includes its pinned SQLite implementation, while `rxsqlite_address` is an
+optional Level G façade over it. Other integrations can still require a
+separately installed product library. ODBC and GTK, for example, depend on
+native facilities supplied for the target platform.
 
 When these libraries are not delivered with the language product itself, there is a distinct possibility of API skew between the cRexx part of the library and the products themselves. This means that a newer version of the external product library has impact on the functioning of the cRexx library API. Insulation between the upgrade paths is always a prudent strategy here, for example by using a virtual machine or a container image. This approach is not necessary when using the cRexx API's proper, for which the contract is guaranteed.
 

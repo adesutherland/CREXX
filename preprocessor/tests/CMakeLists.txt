@@ -28,6 +28,26 @@ add_test(NAME rxpp_srcmap
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_srcmap.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(NAME rxpp_relative_include
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DSOURCE_ROOT=${CMAKE_SOURCE_DIR}
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_relative_include
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_relative_include.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_relative_include PROPERTIES
+        LABELS "preprocessor;includes;regression")
+
+add_test(NAME rxpp_script_macro_exact_match
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DSOURCE_ROOT=${CMAKE_SOURCE_DIR}
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_script_macro_exact_match
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_script_macro_exact_match.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_script_macro_exact_match PROPERTIES
+        LABELS "preprocessor;macros;regression")
+
 if (ENABLE_PARSER_MODE)
     add_test(NAME rxpp_sh_srcmap
              COMMAND ${CMAKE_COMMAND}
@@ -101,12 +121,15 @@ set_tests_properties(rxpp_diagnostic_catalogs PROPERTIES LABELS "preprocessor;di
 crexx_label_smoke_tests(
         rxpp_smoke
         rxpp_srcmap
+        rxpp_relative_include
+        rxpp_script_macro_exact_match
         rxpp_sh_tokens
         rxpp_diagnostics
         PREP_TARGETS rxpp
 )
 crexx_register_test_prep_targets(
-        TESTS rxpp_smoke rxpp_srcmap
+        TESTS rxpp_smoke rxpp_srcmap rxpp_relative_include
+              rxpp_script_macro_exact_match
         TARGETS rxc)
 if(ENABLE_PARSER_MODE)
     crexx_register_test_prep_targets(

@@ -184,17 +184,6 @@ option(ENABLE_GTK  "Enable GTK support"  OFF)
 option(CREXX_ALLOW_NETWORK_DOWNLOADS
        "Allow explicitly enabled build features to download pinned dependencies"
        OFF)
-option(CREXX_BUILD_SQLITE_ADDRESS_DEMO
-       "Build the native SQLite ADDRESS demo; requires CREXX_ALLOW_NETWORK_DOWNLOADS=ON"
-       OFF)
-# These are source-controlled dependency pins, not user build options. Remove
-# stale cache entries left by earlier builds where they were CACHE variables.
-unset(CREXX_SQLITE_AMALGAMATION_YEAR CACHE)
-unset(CREXX_SQLITE_AMALGAMATION_VERSION CACHE)
-unset(CREXX_SQLITE_AMALGAMATION_SHA3_256 CACHE)
-set(CREXX_SQLITE_AMALGAMATION_YEAR "2026")
-set(CREXX_SQLITE_AMALGAMATION_VERSION "3530200")
-set(CREXX_SQLITE_AMALGAMATION_SHA3_256 "81142986038e18f96c4a54e1a72562ae17e502a916f2a7701eff43388cbf1a40")
 set(DSLSH_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../DSL-Syntax-Highlighter"
         CACHE PATH "Path to a local DSL-Syntax-Highlighter checkout")
 option(DSLSH_PREFER_LOCAL "Prefer a local/sibling DSL-Syntax-Highlighter checkout when present" ON)
@@ -455,7 +444,6 @@ if(BUILD_TESTING)
                 program_generation_control-rxbvml
                 program_generation_control-rxtvml
                 program_generation_control-rxvml
-                rxbvm_instrumented
                 rxc_classdecl_static
                 rxc_staticlink
                 signal_tester

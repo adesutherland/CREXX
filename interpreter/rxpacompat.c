@@ -116,6 +116,12 @@ static void rxpa_coordinator_broadcast(void) {
 }
 #endif
 
+void rxpa_compatibility_test_wait_transition_started(void) {
+    rxpa_coordinator_enter();
+    while (!rxpa_coordinator.transitioning) rxpa_coordinator_wait();
+    rxpa_coordinator_leave();
+}
+
 void rxpa_compatibility_context_init(rxpa_compatibility_context *context,
                                      rxvm_memory_worker *memory_worker) {
     if (!context || !memory_worker) abort();
@@ -219,6 +225,7 @@ int rxpa_compatibility_bind_legacy(
         */
         rxpa_coordinator.transitioning = 1u;
         started_transition = 1;
+        rxpa_coordinator_broadcast();
         while (rxpa_coordinator.active_legacy_executions != 0u) {
             rxpa_coordinator_wait();
         }

@@ -1,0 +1,189 @@
+/*
+ * Text Inspector: an executable Level G explanation of the proposed UI
+ * architecture.
+ *
+ * Start reading here, then follow the types into lib/ui/ui.crexx and finally
+ * into one of the drivers. This file is intentionally more heavily commented
+ * than an ordinary application because the example is the tracer bullet and
+ * the architectural teaching aid.
+ *
+ * The application owns only three things:
+ *
+ *   1. MODEL -- the private fields on text_inspector_app;
+ *   2. UPDATE -- one reducer which turns semantic events into new state and
+ *      explicit effect requests;
+ *   3. VIEW -- a fresh, backend-neutral description derived from that state.
+ *
+ * It does not import GTK or the TUI. A launcher chooses a uidriver, the driver
+ * owns input and rendering, and uiruntime connects that driver to this uiapp.
+ * The same application object is therefore used by GTK, terminal, and tests.
+ *
+ * RXPP is used at the declarative edge. UI_NODE expands the compact logical
+ * node declarations in view(); UI_LAUNCHER generates the tiny backend-specific
+ * launchers from their .rxpp declarations. State transitions and effect policy
+ * remain ordinary cREXX so generated code does not conceal program behaviour.
+ */
+options levelg
+namespace text_inspector expose text_inspector_app
+import rxfnsb
+import ui
+
+##INCLUDE ui_macros.rxpm
+
+/**
+ * Small feature component shared unchanged by GTK, TUI and tests.
+ *
+ * An event is a fact that has already happened: the user requested Open, a
+ * path was selected, or a file finished loading. An effect is work requested
+ * by update() but performed elsewhere: show a chooser, read a file, or quit.
+ * Keeping those directions distinct makes update() deterministic and easy to
+ * test without a real window or terminal.
+ */
+text_inspector_app: class implements .uiapp
+  /* MODEL: private feature state. Native widget handles never enter here. */
+  _path = .string
+  _status = .string
+  _line_count = .int
+  _word_count = .int
+  _character_count = .int
+
+  *: factory
+    /* Construction establishes a complete renderable model. The later
+     * app.ready event is still delivered by every driver as a lifecycle fact. */
+    _path = ""
+    _status = "Ready"
+    _line_count = 0
+    _word_count = 0
+    _character_count = 0
+    return
+
+  /** Reduce one semantic event into model state and an explicit effect.
+   *
+   * Event names form a layered vocabulary rather than being entirely local.
+   * The framework supplies app.ready and the completion events associated
+   * with choose_file and read_text. This feature adds document.* intent.
+   * Logical button nodes bind those semantic names to interactions; GTK
+   * signals and terminal keys remain inside their drivers. A GUI builder could
+   * list these stable names and connect controls without knowing the backend.
+   *
+   * @param event semantic UI or effect-completion event
+   * @return next effect request
+   */
+  update: method = .uieffect
+    arg event = .uievent
+    name = event.name()
+
+    /* Lifecycle event emitted once after a driver starts. It is deliberately
+     * harmless here, but applications may use it to request startup work. */
+    if name = "app.ready" then do
+      _status = "Ready"
+      return .ui..uieffect_impl("none", "")
+    end
+    /* User intent becomes an effect request. update() does not open a native
+     * dialog itself; the selected driver decides how files are chosen. */
+    if name = "document.open.requested" then do
+      _status = "Choose a text file"
+      return .ui..uieffect_impl("choose_file", "")
+    end
+    /* A cancelled effect is represented explicitly, which keeps cancellation
+     * testable and avoids treating an empty filename as application policy. */
+    if name = "file.selection.cancelled" then do
+      _status = "Open cancelled"
+      return .ui..uieffect_impl("none", "")
+    end
+    /* The driver has supplied a path. Reading is backend-neutral work, so the
+     * runtime owns it and later returns file.loaded or file.load.failed. */
+    if name = "file.selected" then do
+      _path = event.payload()
+      _status = "Loading " || _path
+      return .ui..uieffect_impl("read_text", _path)
+    end
+    /* Effect failure is another ordinary event. The model remains valid and
+     * the next view explains what happened. */
+    if name = "file.load.failed" then do
+      _line_count = 0
+      _word_count = 0
+      _character_count = 0
+      _status = "Could not read " || event.payload()
+      return .ui..uieffect_impl("none", "")
+    end
+    /* Successful read completion carries physical text records. This feature
+     * owns word-counting policy; neither GTK nor TUI duplicates it. */
+    if name = "file.loaded" then do
+      _path = event.payload()
+      _line_count = event.item_count()
+      _word_count = 0
+      _character_count = 0
+      do index = 1 to event.item_count()
+        line = event.item(index)
+        _word_count = _word_count + words(line)
+        _character_count = _character_count + length(line)
+      end
+      _status = "Count complete"
+      return .ui..uieffect_impl("none", "")
+    end
+    /* Commands are semantic events too. Clear changes only feature state. */
+    if name = "document.clear.requested" then do
+      call clear_model()
+      return .ui..uieffect_impl("none", "")
+    end
+    /* Quit remains an effect so the active driver can leave its own loop and
+     * restore any backend resources before returning to the launcher. */
+    if name = "app.quit.requested" then
+      return .ui..uieffect_impl("quit", "")
+    return .ui..uieffect_impl("none", "")
+
+  /** Build the complete backend-neutral view from current state.
+   *
+   * A view is a disposable description, not a collection of live widgets.
+   * Drivers may rebuild, diff, or otherwise render it. Stable IDs connect
+   * successive views and are also anchors for the small relative layout.
+   *
+   * UI_NODE fields are:
+   *
+   *   kind | id | action | shortcut | relation | anchor
+   *
+   * `root` starts the logical grid. `below` and `right` refer to a prior
+   * stable ID. uiview_impl resolves those relationships once; GTK and TUI then
+   * consume the same rows and columns. The `line` node proves that this is a
+   * logical widget vocabulary, not merely a list of text/button procedures.
+   *
+   * @return logical flat view consumed by all tracer drivers
+   */
+  view: method = .uiview
+    view = .ui..uiview_impl("cREXX Text Inspector")
+    path_text = "File: (none)"
+    if _path \= "" then path_text = "File: " || _path
+    line_text = "Lines: " || _line_count
+    word_text = "Words: " || _word_count
+    character_text = "Characters: " || _character_count
+    status_text = "Status: " || _status
+    open_text = "Open..."
+    clear_text = "Clear"
+    quit_text = "Quit"
+    separator_text = ""
+
+    /* Row 0: selected path. */
+    ##UI_NODE "label|path|none|none|root|none",path_text
+    /* Row 1: a backend-neutral separator below the path. */
+    ##UI_NODE "line|summary-divider|none|none|below|path",separator_text
+    /* Row 2: three related values placed left-to-right. */
+    ##UI_NODE "label|lines|none|none|below|summary-divider",line_text
+    ##UI_NODE "label|words|none|none|right|lines",word_text
+    ##UI_NODE "label|characters|none|none|right|words",character_text
+    /* Row 3: status begins below the left edge of the summary row. */
+    ##UI_NODE "label|status|none|none|below|lines",status_text
+    /* Row 4: commands share one row and emit semantic action names. */
+    ##UI_NODE "button|open|document.open.requested|o|below|status",open_text
+    ##UI_NODE "button|clear|document.clear.requested|c|right|open",clear_text
+    ##UI_NODE "button|quit|app.quit.requested|q|right|clear",quit_text
+    return view
+
+  /** Reset only feature-owned state; the runtime and driver keep running. */
+  clear_model: method = .void
+    _path = ""
+    _status = "Ready"
+    _line_count = 0
+    _word_count = 0
+    _character_count = 0
+    return

@@ -164,6 +164,18 @@ The generated CREXX source is:
 say "Hello World"
 ```
 
+### External script-macro packages
+
+RXPP discovers `.rxpm` package names in the directory containing the selected
+macro library. An autoloaded package is named for its directive, for example
+`widget.rxpm` for `##WIDGET`, and its first record must be the `##MACRO`
+header. A package containing one or more differently named macros can instead
+be brought into the source with `##INCLUDE package.rxpm`.
+
+Relative `##INCLUDE` and `##USE` paths are resolved against that macro-library
+directory. Scripted directives use complete-name matching: `##UI` and
+`##UI_NODE` can coexist without the shorter name capturing the longer one.
+
 ---
 
 ## RexxScript Statements Inside a Macro

@@ -1,0 +1,108 @@
+options levelg
+namespace ui_runtime_test
+import rxfnsb
+import ui
+
+arg test_args = .string[]
+
+if test_args[0] < 3 then do
+  say "FAIL: fixture paths were not supplied"
+  exit 1
+end
+
+app = .runtime_probe()
+runtime = .ui..uiruntime(app)
+
+effect = runtime.dispatch("document.open.requested", "")
+if effect.kind() \= "choose_file" then do
+  say "FAIL: open action did not request choose_file"
+  exit 1
+end
+
+effect = runtime.dispatch("file.selected", test_args[1])
+if effect.kind() \= "none" then do
+  say "FAIL: successful read did not settle to none"
+  exit 1
+end
+view = runtime.view()
+if view.node_text(1) \= "Lines: 2" | view.node_text(2) \= "Words: 5" | view.node_text(3) \= "Characters: 26" then do
+  say "FAIL: text counts were not reflected in the runtime-owned app view"
+  exit 1
+end
+
+effect = runtime.dispatch("file.selected", test_args[2])
+view = runtime.view()
+if effect.kind() \= "none" | view.node_text(1) \= "Lines: 1" | view.node_text(2) \= "Words: 4" | view.node_text(3) \= "Characters: 19" then do
+  say "FAIL: valid text resembling the readlines error sentinel was rejected"
+  exit 1
+end
+
+effect = runtime.dispatch("file.selected", test_args[3])
+view = runtime.view()
+if effect.kind() \= "none" | view.node_text(4) \= "Status: load failed" then do
+  say "FAIL: read failure was not returned as a semantic event"
+  exit 1
+end
+if runtime.event_count() \= 7 then do
+  say "FAIL: runtime delivered" runtime.event_count() "events instead of 7"
+  exit 1
+end
+
+say "PASS: UI runtime event and effect contract"
+exit 0
+
+runtime_probe: class implements .uiapp
+  _lines = .int
+  _words = .int
+  _characters = .int
+  _status = .string
+
+  *: factory
+    _lines = 0
+    _words = 0
+    _characters = 0
+    _status = "empty"
+    return
+
+  update: method = .uieffect
+    arg event = .uievent
+    if event.name() = "document.open.requested" then
+      return .ui..uieffect_impl("choose_file", "")
+    if event.name() = "file.selected" then
+      return .ui..uieffect_impl("read_text", event.payload())
+    if event.name() = "file.load.failed" then do
+      _status = "load failed"
+      return .ui..uieffect_impl("none", "")
+    end
+    if event.name() = "file.loaded" then do
+      _lines = event.item_count()
+      _words = 0
+      _characters = 0
+      do index = 1 to event.item_count()
+        line = event.item(index)
+        _words = _words + words(line)
+        _characters = _characters + length(line)
+      end
+      _status = "ready"
+    end
+    return .ui..uieffect_impl("none", "")
+
+  view: method = .uiview
+    result = .ui..uiview_impl("runtime probe")
+    call result.add_label("lines", "Lines: " || _lines)
+    call result.add_label("words", "Words: " || _words)
+    call result.add_label("characters", "Characters: " || _characters)
+    call result.add_label("status", "Status: " || _status)
+    return result
+
+  line_count: method = .int
+    return _lines
+
+  word_count: method = .int
+    return _words
+
+  character_count: method = .int
+    return _characters
+
+  status: method = .string
+    return _status

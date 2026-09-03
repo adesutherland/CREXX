@@ -1,0 +1,18 @@
+##MACRO UI_NODE spec,text
+  .gen call view.add_spec(&spec, &text)
+##MEND
+
+##MACRO UI_LAUNCHER driver_namespace,driver_class,app_namespace,app_class
+  driver_namespace = unquote(driver_namespace)
+  driver_class = unquote(driver_class)
+  app_namespace = unquote(app_namespace)
+  app_class = unquote(app_class)
+
+  .gen import ui
+  .gen import &driver_namespace
+  .gen import &app_namespace
+  .gen app = .&app_namespace..&app_class()
+  .gen runtime = .ui..uiruntime(app)
+  .gen driver = .&driver_namespace..&driver_class()
+  .gen exit driver.run(runtime)
+##MEND

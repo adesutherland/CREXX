@@ -241,9 +241,11 @@ sibling `DSL-Syntax-Highlighter` checkout when it exists; otherwise parser
 mode defaults off. To permit CMake to fetch the pinned parser dependency,
 configure with `-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`. An explicit
 `-DENABLE_PARSER_MODE=ON` without either a local checkout or that network
-permission is a configuration error. The native SQLite ADDRESS demo is also
-off by default and requires both `-DCREXX_BUILD_SQLITE_ADDRESS_DEMO=ON` and
-`-DCREXX_ALLOW_NETWORK_DOWNLOADS=ON`.
+permission is a configuration error.
+
+`rxsqlite` is a normal offline core component with a source-controlled SQLite
+amalgamation. Its ADDRESS demo is an ordinary Level G consumer of the installed
+façade; neither needs a SQLite build option or network access.
 
 Standalone examples and demonstrations are not members of the default product
 build. Request the documented auxiliary groups explicitly:

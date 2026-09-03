@@ -1,94 +1,136 @@
 options levelb
 import gui
-import rxfnsb
 
+arg test_args = .string[]
 
-home="C:\Users\PeterJ\CLionProjects\CREXX\CREXX\f0049B\"
-home="C:\Users\PeterJ\CLionProjects\CREXX\250319\"
-say Substr("GETPI Test",3,4)
-pluginhome=home"\lib\plugins\"
-/* ----------------------------------------------------------------------------------------
- * Initialize splash screen and store return value
- * ----------------------------------------------------------------------------------------
- */
-  splash_rc = splash_pick("Let's do the Time Warp again!", ,
-                       "it's a jump to the left and then a step to the right", ,
-                       3, 500,500, ,
-                       "CREXX.png")
-/* Initialize the GUI */
-  call init_window "Process CREXX File", 600, 430
-/* Add a label for the input field */
-  label_index = add_text("Select_ a CREXX File ", 10, 10)
-/* Add an entry field for input */
-  input_field_index = add_edit(10, 30,515)
-/* Add a small button next to the input field */
-  select_ = add_button("Dir", 530, 30)
-  update = add_button("Edit  ", 530,70)
-/* Add checkboxes */
-  checkbox1_index = add_checkbox("Compile", 10, 70)
-  checkbox2_index = add_checkbox("Assembly 2", 10, 90)
-  checkbox3_index = add_checkbox("Run", 10, 110)
-  submit = add_button("Submit", 10, 140)
-  message_area = add_message_area(10, 190, 580, 200)  /* x, y, width, height */
-  status_bar = add_status_bar()
-/* Show the window */
-  call show_window -1,-1
-## hidemsg=hide_widget(submit)
-  call set_sensitive submit,0
-  call set_sensitive update,0
-/* ----------------------------------------------------------------------------------------
- * Event Handler
- * ----------------------------------------------------------------------------------------
- */
-do forever
-    event_token = process_events(500)  /* Wait for events with a timeout of 500ms */
-    if event_token < 0 then leave      /* Exit loop on timeout */
-    else if event_token = select_ then do
-       input_rexx = file_pick('Select_ REXX File', pluginhome,0,"*.rexx")
-       if input_rexx <> "" then do     /* Check if the input text is not empty */
-          call set_edit input_field_index, input_rexx
-          call set_status status_bar, "Select_ed: "input_rexx
-          ## call show_widget(submit)
-          call set_sensitive submit,1
-          call set_sensitive update,1
-       end
-    end
-    else if event_token = submit then do
-       call submitit input_rexx,home,message_area
-    end
-    else if event_token = update then do
-       call run_sync "C:\Program Files\Notepad++\Notepad++.exe",input_rexx,""
-    end
+automated = test_args.0 > 0
+failures = 0
+
+if rgb_to_hex(255, 0, 16) \= "#FF0010" then do
+    say "FAIL: rgb_to_hex did not preserve the requested components"
+    failures = failures + 1
 end
+if rgb_to_hex(256, 0, 0) \= "" then do
+    say "FAIL: rgb_to_hex accepted an out-of-range component"
+    failures = failures + 1
+end
+
+if \automated then
+    call splash_pick "cREXX GTK plugin", "GTK 3 loaded successfully", 1, 420, 180, ""
+
+init_rc = init_window("cREXX GTK plugin", 460, 240)
+if init_rc \= 1 then do
+    say "FAIL: GTK could not initialize a window"
+    exit 1
+end
+
+title = add_text("The cREXX GTK plugin is active.", 20, 20)
+edit = add_edit(20, 60, 410)
+set_edit_rc = set_edit(edit, "Edit-field round trip")
+edit_text = get_edit(edit)
+ok_button = add_button("OK", 120, 110)
+cancel_button = add_button("Cancel", 240, 110)
+status = add_status_bar()
+
+if title < 1 | edit < 1 | ok_button < 1 | cancel_button < 1 | status < 1 then do
+    say "FAIL: one or more widgets could not be created"
+    failures = failures + 1
+end
+if set_edit_rc \= 1 | edit_text \= "Edit-field round trip" then do
+    say "FAIL: edit-field set/get contract failed: rc=" set_edit_rc "text=<"edit_text">"
+    failures = failures + 1
+end
+if set_status(status, "Ready: choose OK or Cancel") \= 1 then do
+    say "FAIL: status-bar update failed"
+    failures = failures + 1
+end
+if show_window(-1, -1) \= 1 then do
+    say "FAIL: main window could not be shown"
+    failures = failures + 1
+end
+
+/* Keep the original polling contract live alongside the callback surface. */
+event_token = process_events(50)
+if event_token \= 0 then do
+    say "FAIL: idle event processing returned" event_token "instead of 0"
+    failures = failures + 1
+end
+
+handler = .gui_event_handler(automated, status, ok_button, cancel_button)
+callback_events = run_event_loop(handler)
+if callback_events < 1 | handler.count() \= callback_events then do
+    say "FAIL: callback event count mismatch:" callback_events handler.count()
+    failures = failures + 1
+end
+if automated & (handler.last_type() \= "ready" | handler.last_widget() \= 0) then do
+    say "FAIL: automated event loop did not receive the ready callback"
+    failures = failures + 1
+end
+if \automated & handler.last_type() \= "clicked" & handler.last_type() \= "close" then do
+    say "FAIL: interactive event loop ended on unexpected event" handler.last_type()
+    failures = failures + 1
+end
+
+call cleanup_gui
+
+/* A second lifecycle catches stale widget, graph, and display state. */
+if init_window("cREXX GTK lifecycle check", 240, 120) \= 1 then do
+    say "FAIL: GTK window could not be reinitialized after cleanup"
+    failures = failures + 1
+end
+call cleanup_gui
+
+if failures > 0 then exit 1
+say "PASS: gui GTK public contract"
 exit 0
-/* ----------------------------------------------------------------------------------------
- * Event Handler
- * ----------------------------------------------------------------------------------------
- */
-submitit: procedure=.int
-arg isrexx=.string,home=.string,msg=.int
-  getfile=translate(isrexx,,'/\')
-  fpos=words(getfile)
-  member=translate(word(getfile,fpos),,'.')
-  member=word(member,1)
-  xdir=word(getfile,fpos-1)
 
-  build=home"\cmake-build-debug"
+gui_event_handler: class implements .eventhandler
+  _automated = .int
+  _status = .int
+  _ok_button = .int
+  _cancel_button = .int
+  _count = .int
+  _last_widget = .int
+  _last_type = .string
 
-  plugindir=build"\lib\plugins\"xdir
-  plugindir2=home"\lib\plugins\"xdir
-  rxc=build"\compiler\rxc.exe"
-  rxas=build"\assembler\rxas.exe"
-  rxvm=build"\interpreter\rxvme.exe"
+  *: factory
+    arg automated = .int, status = .int, ok_button = .int, cancel_button = .int
+    _automated = automated
+    _status = status
+    _ok_button = ok_button
+    _cancel_button = cancel_button
+    _count = 0
+    _last_widget = 0
+    _last_type = ""
+    return
 
-  ms1="Compile  "member": "run_sync(rxc, "-i "build"\rxfns\rxas;"plugindir" -l "plugindir2" -o "member member,"")
-  say "rxc, " "-i "build"\rxfns\rxas;"plugindir" -l "plugindir2" -o "member member
-  ms2="Assembly "member": "run_sync(rxas,"-l "plugindir2" -o "member member,"")
-## rxbin member must be copied into the BUILD part
-  crx=copy_file(plugindir2"\"member".rxbin",plugindir"\"member".rxbin")
-  ms3="Execute  "member": "run_sync(rxvm,member" rx_"xdir,plugindir)
-  /* Append messages to it */
-  call append_message msg,ms1
-  call append_message msg,ms2
-  call append_message msg,ms3
-return 0
+  on_event: method = .int
+    arg widget = .int, event_type = .string
+    _count = _count + 1
+    _last_widget = widget
+    _last_type = event_type
+
+    if event_type = "ready" then do
+      call set_status _status, "Callback event loop ready"
+      if _automated then return 0
+      return 1
+    end
+    if event_type = "clicked" & widget = _ok_button then do
+      call set_status _status, "OK selected by cREXX callback"
+      return 0
+    end
+    if event_type = "clicked" & widget = _cancel_button then do
+      call set_status _status, "Cancel selected by cREXX callback"
+      return 0
+    end
+    if event_type = "close" then return 0
+    return 1
+
+  count: method = .int
+    return _count
+
+  last_widget: method = .int
+    return _last_widget
+
+  last_type: method = .string
+    return _last_type

@@ -33,6 +33,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
+- `lib/ui/` (experimental backend-neutral event/effect/view contracts, a
+  portable TUI driver, and an optional GTK driver)
+
 Same-named Level B and Level C functions are separate APIs. For example,
 `lib/rxfnsb/rexx/value.crexx` is a read-only, immediate-caller metadata helper,
 whereas `lib/rxfnsc/RexxClassicBifValue.crexx` implements the Classic
@@ -104,6 +107,21 @@ remains owned by the action that generated it until the consolidated image is
 published.
 
 The product master documentation is in `rexxscript/doc/`.
+
+`lib/ui` contains the experimental Level G UI tracer architecture. Its public
+cREXX library, drivers, applications, launchers, and tests explicitly use
+`OPTIONS LEVELG`; the native GTK/RXPA C plugin remains lower-level mechanism.
+`ui.rxbin` owns semantic events, explicit effects, logical views, the application/driver
+interfaces, and the runtime. `ui_tui.rxbin` is always built; with
+`ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide the separate GTK
+driver. Logical `label`, `line`, and `button` nodes use stable IDs and
+relative `root`/`below`/`right` placement resolved into rows and columns for
+both drivers. RXPP generates both logical-node calls and the small backend
+launchers. The GTK callback is same-thread and synchronous. Since cREXX classes
+are values, the driver uses an explicit weak reference to the active runtime
+for the duration of its native loop. See `lib/ui/README.md` for the lifecycle,
+vocabulary, ANSI-driver feasibility assessment, and implementation trail, and
+`examples/ui/text-inspector/README.md` for the executable example.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in
@@ -933,6 +951,30 @@ collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
 RXBIN dependency, runtime lookup, and native archive identity consistently
 `rxplatform`.
 
+### `rxsqlite` typed database provider
+
+`rxsqlite` is a standard session-aware RXPA provider rather than an incubator
+or demo. It owns opaque database/statement native payloads, gives every VM its
+own handle registry and diagnostic state, and marks its procedures
+`SESSION_AFFINE`. Copied payloads retain their resource; explicit close,
+finalization, stale/wrong-kind/cross-session rejection and session teardown are
+all provider-owned.
+
+The provider preserves SQLite NULL, signed 64-bit integer, real, UTF-8 text and
+exact binary blob types. Its public surface covers prepared statements and
+metadata, modes, busy timeout, WAL checkpoint, bounded online backup and
+integrity checking, changes/row identity, and primary plus extended errors.
+The separate `rxsqlite_address.rxbin` Level G module implements SQL commands
+and named host bindings only through that typed API.
+
+The source-controlled SQLite 3.53.2 amalgamation is compiled with
+`SQLITE_THREADSAFE=1`, `SQLITE_ENABLE_FTS5=1`, FULLMUTEX connections and the
+documented extension/security policy. It is embedded in
+`rxsqlite.rxplugin` and the canonical `providers/rxsqlite` static archive, so
+installed native packaging requires no downstream SQLite SDK or extra link
+metadata. See the maintained [rxsqlite
+reference](../books/crexx_library_reference/rxsqlite.md).
+
 ### Level G packed numeric owners
 
 The `rxfnsg` Rexx library publishes `.packedfloat` and `.packedint` as the
@@ -967,11 +1009,12 @@ binary route for files, persistence, wire formats, or incompatible hosts.
 
 RXPA's `ISINITIALIZED(value)` helper lets such a provider preserve the ordinary
 typed-object `OBJECT_NOT_INITIALIZED` boundary before borrowing the payload.
-It is appended to `rxpa_initctx`, so earlier field offsets remain stable, but
-the initializer context has no negotiated size. This pre-release extension is
-therefore a rebuild-together boundary: do not mix a plugin compiled against the
-current `crexxpa.h` with an older host binary. The compiler scan stub and both
-dynamic and static VM initializer contexts must populate every appended helper.
+`ISINITIALIZED` and the later `CALLMETHOD` callback helper are appended to
+`rxpa_initctx`, so earlier field offsets remain stable, but the initializer
+context has no negotiated size. These pre-release extensions are therefore a
+rebuild-together boundary: do not mix a plugin compiled against the current
+`crexxpa.h` with an older host binary. The compiler scan stub and both dynamic
+and static VM initializer contexts must populate every appended helper.
 
 The classes deliberately wrap the existing `<packed..float>` and
 `<packed..int>` Level B instructions. They do not change ordinary `.float[]`
@@ -1023,6 +1066,44 @@ Available declaration macros:
 These declarations are consumed from both dynamic `.rxplugin` modules and
 static `DECL_ONLY` declaration libraries. They make contracts visible for type
 checking and runtime metadata discovery.
+
+### Calling back into a cREXX object
+
+A native procedure can synchronously invoke a method on an object received
+from cREXX with `CALLMETHOD`:
+
+```c
+PROCEDURE(invoke)
+{
+    rxpa_attribute_value method_args[1];
+    method_args[0] = ARG1;
+    if (CALLMETHOD(ARG0,
+                   "rxsig1|on_value|.int|value=.int",
+                   1, method_args, RETURN) != 0) {
+        return; /* CALLMETHOD has populated SIGNAL */
+    }
+    RESETSIGNAL
+}
+```
+
+The receiver must be a live, initialized cREXX object. The descriptor is the
+canonical `rxsig1|name|return_type|arguments` form and is checked against the
+concrete receiver class at runtime. The argument array and result are borrowed
+RXPA handles; the call copies the result into the supplied result slot and
+copies receiver/argument mutations back before it returns. `CALLMETHODX` is the
+same operation with an explicit signal handle for native callbacks outside the
+lexical `PROCEDURE` body.
+
+An unhandled signal raised by the cREXX method is propagated through the RXPA
+signal handle. Ordinary non-zero `.int` and `.boolean` method results remain
+ordinary results rather than being confused with signal status codes.
+
+The call is same-thread, synchronous, and valid only while an RXPA procedure is
+active. A plugin must not retain the receiver, argument, result, or signal
+handles after that outer call returns. The VM preserves the outer external-call
+trampoline and recursively enters the existing worker lifecycle, so the cREXX
+method may itself call RXPA procedures. Legacy plugin calls use the recursive
+compatibility lane, which prevents that nested native re-entry from deadlocking.
 
 Declaration is not construction. `ADDCLASS`, `ADDINTERFACE`,
 `ADDIMPLEMENTS`, and the member macros tell the compiler and VM that a contract

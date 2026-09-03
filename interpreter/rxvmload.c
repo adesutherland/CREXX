@@ -63,6 +63,12 @@ int rxvm_setnativepayload(rxpa_attribute_value attributeValue, const void *paylo
 void* rxvm_getnativepayload(rxpa_attribute_value attributeValue, size_t *out_length,
                             const rxpa_native_payload_ops **out_ops, unsigned int *out_flags);
 int rxvm_isinitialized(rxpa_attribute_value attributeValue);
+int rxvm_callmethod(rxpa_attribute_value receiver,
+                    const char *method_descriptor,
+                    rxinteger argc,
+                    rxpa_attribute_value *args,
+                    rxpa_attribute_value result,
+                    rxpa_attribute_value signal);
 rxinteger rxvm_getnumattrs(rxpa_attribute_value attributeValue);
 void rxvm_setnumattrs(rxpa_attribute_value attributeValue, rxinteger numAttrs);
 rxpa_attribute_value rxvm_getattr(rxpa_attribute_value attributeValue, rxinteger index);
@@ -1262,6 +1268,7 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
             rxpa_functions.setsayexit = rxvm_setsayexit;
             rxpa_functions.resetsayexit = rxvm_resetsayexit;
             rxpa_functions.isinitialized = rxvm_isinitialized;
+            rxpa_functions.callmethod = rxvm_callmethod;
 
             // Load the plugin - and run the plugin initialization function.
             // Declarative provider lookup supplies the canonical filename with
@@ -2715,6 +2722,7 @@ int rxldmodp(rxvm_context *context) {
     rxpa_functions.setsayexit = rxvm_setsayexit;
     rxpa_functions.resetsayexit = rxvm_resetsayexit;
     rxpa_functions.isinitialized = rxvm_isinitialized;
+    rxpa_functions.callmethod = rxvm_callmethod;
 
     // Create rxpa_context and module
     char* dummy_file_name = "statically_linked_plugins";

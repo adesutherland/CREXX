@@ -1,0 +1,4 @@
+/* Declarative launcher: RXPP's UI_LAUNCHER emits the executable cREXX source. */
+options levelg
+##INCLUDE ui_macros.rxpm
+##UI_LAUNCHER "ui_gtk","gtkdriver","text_inspector","text_inspector_app"

@@ -6,17 +6,20 @@ set(CREXX_ARRAY_FORMATTING_MODULE
 
 add_subdirectory(functions/array-formatting)
 add_subdirectory(exits/pprint)
+add_subdirectory(ui/text-inspector)
 
 add_custom_target(crexx-examples)
 add_dependencies(crexx-examples
         example_array_formatting_artifacts
-        example_pprint_exit_artifacts)
+        example_pprint_exit_artifacts
+        example_text_inspector_artifacts)
 
 if(BUILD_TESTING)
     add_custom_target(qa-prep-examples)
     add_dependencies(qa-prep-examples
             example_array_formatting_artifacts
-            example_pprint_exit_artifacts)
+            example_pprint_exit_artifacts
+            example_text_inspector_artifacts)
 endif()
 
 # Install source demonstrations alongside their category documentation. Built
