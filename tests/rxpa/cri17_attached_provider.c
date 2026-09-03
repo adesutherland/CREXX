@@ -6,6 +6,9 @@
 #if defined(_WIN32)
 #include <windows.h>
 typedef volatile LONG cri17_counter;
+static SRWLOCK cri17_session_call_lock = SRWLOCK_INIT;
+static CONDITION_VARIABLE cri17_session_call_condition =
+        CONDITION_VARIABLE_INIT;
 static LONG cri17_increment(cri17_counter *counter) {
     return InterlockedIncrement(counter);
 }
@@ -16,8 +19,25 @@ static LONG cri17_read(cri17_counter *counter) {
     return InterlockedCompareExchange(counter, 0, 0);
 }
 #define CRI17_THREAD_LOCAL __declspec(thread)
+static void cri17_session_call_enter(void) {
+    AcquireSRWLockExclusive(&cri17_session_call_lock);
+}
+static void cri17_session_call_leave(void) {
+    ReleaseSRWLockExclusive(&cri17_session_call_lock);
+}
+static void cri17_session_call_wait(void) {
+    (void)SleepConditionVariableSRW(
+            &cri17_session_call_condition,
+            &cri17_session_call_lock, INFINITE, 0);
+}
+static void cri17_session_call_broadcast(void) {
+    WakeAllConditionVariable(&cri17_session_call_condition);
+}
 #else
+#include <pthread.h>
 typedef volatile int cri17_counter;
+static pthread_mutex_t cri17_session_call_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t cri17_session_call_condition = PTHREAD_COND_INITIALIZER;
 static int cri17_increment(cri17_counter *counter) {
     return __atomic_add_fetch(counter, 1, __ATOMIC_SEQ_CST);
 }
@@ -28,6 +48,19 @@ static int cri17_read(cri17_counter *counter) {
     return __atomic_load_n(counter, __ATOMIC_SEQ_CST);
 }
 #define CRI17_THREAD_LOCAL __thread
+static void cri17_session_call_enter(void) {
+    (void)pthread_mutex_lock(&cri17_session_call_lock);
+}
+static void cri17_session_call_leave(void) {
+    (void)pthread_mutex_unlock(&cri17_session_call_lock);
+}
+static void cri17_session_call_wait(void) {
+    (void)pthread_cond_wait(
+            &cri17_session_call_condition, &cri17_session_call_lock);
+}
+static void cri17_session_call_broadcast(void) {
+    (void)pthread_cond_broadcast(&cri17_session_call_condition);
+}
 #endif
 
 typedef struct cri17_session {
@@ -38,6 +71,7 @@ static cri17_counter cri17_created_count;
 static cri17_counter cri17_destroyed_count;
 static cri17_counter cri17_live_count;
 static CRI17_THREAD_LOCAL cri17_session *cri17_current_session;
+static int cri17_session_call_arrivals;
 
 static uint32_t cri17_capabilities(const char *procedure_name) {
     if (procedure_name &&
@@ -82,13 +116,22 @@ RXPA_PLUGIN_SESSION_AWARE(cri17_session_create, cri17_session_destroy,
 
 PROCEDURE(cri17_session_id)
 {
+    rxinteger session_id;
     (void)_numargs;
     (void)_arg;
     if (!cri17_current_session) {
         SETINT(SIGNAL, 1);
         return;
     }
-    SETINT(RETURN, cri17_current_session->id);
+    session_id = cri17_current_session->id;
+    /* Pool capacity permits concurrency but does not promise worker affinity.
+     * Make both calls overlap before comparing their session identities. */
+    cri17_session_call_enter();
+    cri17_session_call_arrivals++;
+    cri17_session_call_broadcast();
+    while (cri17_session_call_arrivals < 2) cri17_session_call_wait();
+    cri17_session_call_leave();
+    SETINT(RETURN, session_id);
     RESETSIGNAL
 }
 

@@ -38,8 +38,10 @@ failure message so another recurrence identifies the failing launch stage.
 Status at 2026-09-03: SAN-QA-012 records a macOS arm64 ASan test-orchestration
 failure in the scheduled Sanitizer QA gate. The failed test completed in 0.29
 seconds and emitted no AddressSanitizer diagnostic. Its native-return fixture
-used a fixed 50 ms scheduling window as an ordering mechanism; a deterministic
-handshake repair is under qualification on `hotfix`.
+used a fixed 50 ms scheduling window as an ordering mechanism. First hosted
+qualification of that repair then exposed the same class of invalid scheduling
+assumption in the CRI-17 attached-provider fixture; both deterministic handshake
+repairs are under qualification on `hotfix`.
 
 A later production process-channel repair in `c87809d2b` is not a sanitizer
 finding. Its exact three-test process panel passes ordinary Debug at
@@ -210,16 +212,18 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 
 ## Qualification infrastructure repairs
 
-### SAN-QA-012 — native-return fixture assumes a 50 ms scheduling window
+### SAN-QA-012 — concurrency fixtures assume scheduler timing or assignment
 
 Status: local closure candidate and release-blocking pending exact-SHA hosted
-proof. Final-tree focused normal-Debug and Apple-ASan controls, repeated
-concurrency checks, comprehensive Debug QA and the maintained broad Apple-ASan
-gate pass. This is a maintained sanitizer test failure, not an ASan memory
+proof. Focused final-tree normal-Debug and Apple-ASan controls pass. Earlier in
+the same hotfix, comprehensive Debug QA and the maintained broad Apple-ASan
+gate passed before the hosted Windows matrix exposed a second test scheduling
+assumption. This is a maintained sanitizer test failure, not an ASan memory
 diagnostic and not a product timeout.
 
-- Scope: the E5 persistent-worker native-return cancellation test and adjacent
-  RXPA concurrency fixtures.
+- Scope: the E5 persistent-worker native-return cancellation test, adjacent
+  RXPA concurrency fixtures, and the CRI-17 attached-provider worker-session
+  test found by applying the same audit criterion to the hosted repair.
 - Failure: scheduled Sanitizer QA run
   [33717508663](https://github.com/adesutherland/CREXX/actions/runs/33717508663)
   failed only `persistent_worker_executor-rxvml-native-return` in its macOS
@@ -275,6 +279,25 @@ diagnostic and not a product timeout.
   latency can only defer the peer, not create forbidden overlap. Tests with a
   positive rendezvous have explicit 30-second CTest timeouts so a genuine
   regression is reported as a timeout rather than hanging the gate.
+- First hosted qualification: exact-SHA Build CREXX run
+  [33736096849](https://github.com/adesutherland/CREXX/actions/runs/33736096849)
+  passed its other jobs but the Windows x64 comprehensive job failed only
+  `cri17_attached_provider_noopt`: both fast task calls legitimately ran on
+  provider session 2. The optimized sibling and both direct C controls passed.
+  `.taskpool.local(2, ...)` permits two calls to overlap but does not promise
+  worker affinity or any particular schedule, so comparing two unsynchronised
+  calls could not prove two worker sessions. The CRI-17 provider now holds the
+  two calls at a condition-variable rendezvous before returning their captured
+  session identities. A single-worker or session-isolation regression therefore
+  reaches the existing 60-second CTest timeout instead of passing by schedule.
+- Strategic follow-through: a repository-wide review of local task pools,
+  session/worker identity checks, maximum-overlap checks and fixed 50 ms sleeps
+  found no further scheduler-assignment assumptions. Persistent-executor tests
+  address fixed workers explicitly; positive RXPA and ODBC overlap tests now
+  rendezvous; HTTP/task tests depend on protocol backpressure rather than task
+  identity. The retained RXPA negative observation is the only fixed 50 ms
+  correctness window and can only hide forbidden overlap, not create a false
+  failure.
 - Local repair evidence:
   - the nine-cell E5/RXPA/ODBC panel passed in normal Debug, followed by 500
     consecutive passes of each of its eight rendezvous-based cells; logs are
@@ -291,10 +314,18 @@ diagnostic and not a product timeout.
     0.13 and 0.14 seconds. Logs are retained under
     `cmake-build-debugasan/asan-logs/20260903-091948-full/`; none contains an
     AddressSanitizer diagnostic.
+  - after the Windows finding, the repaired four-cell CRI-17 normal-Debug panel
+    passed, 375 completed repeated cells passed before the deliberately stopped
+    local repetition, and the same four-cell panel passed focused Apple ASan at
+    `cmake-build-debugasan/asan-logs/20260903-105559-ctest/` with no sanitizer
+    diagnostic. Broad final-tree qualification is assigned to the parallel
+    exact-SHA hosted workflows rather than repeating the unchanged low-risk
+    local suites.
 - Owner/next action: hotfix QA. Publish the locally qualified candidate and
-  require exact-SHA Build CREXX plus Sanitizer QA on `hotfix`; Linux x64
-  ASan/LSan remains the leak-closure authority. Promote the source-identical
-  commit to `develop` and `master` only after both hosted workflows pass.
+  run exact-SHA Build CREXX, Sanitizer QA and Deep Build QA together on
+  `hotfix`, treating Windows x64 Build and Linux x64 ASan/LSan as the highest
+  risk gates. Promote the source-identical commit to `develop` and `master`
+  only after the hosted workflows pass.
 
 ### SAN-QA-011 — private bootstrap rules assume their working directories exist
 
