@@ -1,5 +1,7 @@
-if(NOT DEFINED CREXX OR NOT DEFINED RXVME OR NOT DEFINED WORK_ROOT)
-    message(FATAL_ERROR "crexx project-build test requires CREXX, RXVME and WORK_ROOT")
+if(NOT DEFINED CREXX OR NOT DEFINED RXVME OR NOT DEFINED WORK_ROOT OR
+   NOT DEFINED SOURCE_ROOT)
+    message(FATAL_ERROR
+            "crexx project-build test requires CREXX, RXVME, WORK_ROOT and SOURCE_ROOT")
 endif()
 
 function(run_checked label)
@@ -29,6 +31,15 @@ function(reject_text label text pattern)
     endif()
 endfunction()
 
+function(verify_project_no_op label output_file expected_hash)
+    require_text("${label}" "${last_output}" "SKIP: project current")
+    reject_text("${label}" "${last_output}" "WAVE:|BARRIER:|PUBLISHED:")
+    file(SHA256 "${output_file}" no_op_hash)
+    if(NOT no_op_hash STREQUAL expected_hash)
+        message(FATAL_ERROR "${label} changed ${output_file}")
+    endif()
+endfunction()
+
 file(REMOVE_RECURSE "${WORK_ROOT}")
 file(MAKE_DIRECTORY "${WORK_ROOT}/source" "${WORK_ROOT}/output")
 
@@ -36,6 +47,8 @@ set(alpha "${WORK_ROOT}/source/projectalpha.crexx")
 set(beta "${WORK_ROOT}/source/projectbeta.crexx")
 set(provider "${WORK_ROOT}/source/autoloaddep.crexx")
 set(consumer "${WORK_ROOT}/source/autoload_consumer.crexx")
+set(class_provider "${SOURCE_ROOT}/project_link_class_provider.crexx")
+set(class_consumer "${SOURCE_ROOT}/project_link_class_consumer.crexx")
 file(WRITE "${alpha}" [=[options levelb
 namespace projectalpha expose alpha
 alpha: procedure = .string
@@ -118,6 +131,44 @@ if(NOT EXISTS "${noopt_stem}.rxbin")
     message(FATAL_ERROR "non-optimized library build did not publish its RXBIN")
 endif()
 
+foreach(project_mode IN ITEMS library program)
+    foreach(optimize_mode IN ITEMS optimized noopt)
+        set(project_stem
+                "${WORK_ROOT}/output/class_method_${project_mode}_${optimize_mode}")
+        set(project_args
+                "--${project_mode}" "${project_stem}"
+                "${class_provider}" "${class_consumer}" --jobs 2)
+        if(optimize_mode STREQUAL "noopt")
+            list(APPEND project_args --nooptimize)
+        endif()
+
+        run_checked("${optimize_mode} class-method ${project_mode} build"
+                "${CREXX}" ${project_args})
+        require_text("${optimize_mode} class-method ${project_mode} build"
+                "${last_output}" "WAVE: project compile/assemble jobs=2")
+        require_text("${optimize_mode} class-method ${project_mode} build"
+                "${last_output}" "BARRIER: link ${project_mode}")
+        require_text("${optimize_mode} class-method ${project_mode} build"
+                "${last_output}" "PUBLISHED: ${project_mode}")
+        if(NOT EXISTS "${project_stem}.rxbin")
+            message(FATAL_ERROR
+                    "${optimize_mode} class-method ${project_mode} did not publish its RXBIN")
+        endif()
+
+        run_checked("execute ${optimize_mode} class-method ${project_mode}"
+                "${RXVME}" "${project_stem}.rxbin")
+        require_text("execute ${optimize_mode} class-method ${project_mode}"
+                "${last_output}" "PASS: project source-import class method")
+
+        file(SHA256 "${project_stem}.rxbin" project_hash)
+        run_checked("${optimize_mode} class-method ${project_mode} no-op"
+                "${CREXX}" ${project_args})
+        verify_project_no_op(
+                "${optimize_mode} class-method ${project_mode} no-op"
+                "${project_stem}.rxbin" "${project_hash}")
+    endforeach()
+endforeach()
+
 set(provider_stem "${WORK_ROOT}/output/packaged_provider")
 set(consumer_stem "${WORK_ROOT}/output/autoload_program")
 run_checked("packaged provider library"
@@ -169,4 +220,4 @@ if(NOT after_failure_hash STREQUAL before_failure_hash)
     message(FATAL_ERROR "failed build changed the previously published program")
 endif()
 
-message(STATUS "crexx project build clean/no-op/change/rebuild/noopt/autoload/failure-publication checks passed")
+message(STATUS "crexx project build clean/no-op/change/rebuild/noopt/class-method/autoload/failure-publication checks passed")

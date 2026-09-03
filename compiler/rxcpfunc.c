@@ -1411,8 +1411,21 @@ static char *generate_arg_source(ASTNode *node) {
         }
 
         char *tmp;
-        if (i == 0) tmp = mprintf("%s%s%s = %s", buffer, a->is_opt_arg ? "?" : "", name_str, type_str);
-        else tmp = mprintf("%s, %s%s = %s", buffer, a->is_opt_arg ? "?" : "", name_str, type_str);
+        if (i == 0) {
+            tmp = mprintf("%s%s%s%s = %s",
+                          buffer,
+                          a->is_ref_arg ? "expose " : "",
+                          a->is_opt_arg ? "?" : "",
+                          name_str,
+                          type_str);
+        } else {
+            tmp = mprintf("%s, %s%s%s = %s",
+                          buffer,
+                          a->is_ref_arg ? "expose " : "",
+                          a->is_opt_arg ? "?" : "",
+                          name_str,
+                          type_str);
+        }
 
         free(buffer);
         buffer = tmp;

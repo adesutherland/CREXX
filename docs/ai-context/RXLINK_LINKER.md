@@ -89,6 +89,14 @@ refines only those unresolved imported fields from the definition. Known types,
 arity, and parameter flags remain strict contracts, and duplicate definitions
 remain errors.
 
+Source-import class stubs must therefore preserve `expose` on writable
+arguments when they emit their imported `META_FUNC` projection. The compiler's
+callable registry and call ABI already retain that property; dropping it only
+from the emitted projection creates a false reference-mode conflict when
+RXLINK rebuilds the graph. RXLINK continues to reject a genuine value/reference
+mismatch and adopts the selected definition's complete descriptor and
+procedure reference only after the import contract matches.
+
 The common `rxbin` graph library owns structural merge, remap, validation, and
 fast rule-neutral traversal. Future language-policy adapters may decide
 inheritance, assignability, override/default conflicts, and provider selection
