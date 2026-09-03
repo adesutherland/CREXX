@@ -781,12 +781,18 @@ rejects duplicate names/codes atomically, pins provider/module lifetime and is
 seeded with the core type `1` local-thread descriptor. An internal fake
 extension fixture proves register/open/operate/close/unload sequencing without
 publishing a plugin ABI. `chanopen` validates its canonical RXCV pool
-configuration, required capabilities and the controller's sealed bytecode-only
-program generation, then creates an attached executor over that same
-generation. A program containing native/plugin modules may still execute
-normally, but local `chanopen` reports provider unavailability when the image
-cannot be sealed for attached workers. This avoids making ordinary native
-program startup depend on channel eligibility.
+configuration, required capabilities and the controller's sealed bytecode
+generation, then creates an attached executor over that same generation.
+
+Native modules remain outside the immutable generation. Each attached worker
+inherits the controller's trusted provider location, resolves the generation's
+declarative `META_PROVIDER` requirements into a fresh native overlay, and then
+links, prepares and initializes its own VM. RXPA V2 therefore creates a normal
+context-local provider session for every worker. A missing or invalid declared
+provider fails pool construction as provider unavailable; a live provider
+handle or diagnostic state is never copied from the controller. The generic
+CRI-17 session fixture and the real `rxsqlite` attached-task tests cover both
+VM modes and optimized/non-optimized images.
 
 The core type `1` provider advertises bounded admission, cancellation,
 provider-owned deadlines and completion-order observation. Task envelopes name
@@ -1400,11 +1406,12 @@ usage errors. Use repeated `ADDRESS` statements or `ADDRESS CREXX "batch"` with
 input lines. `batch` skips blank lines and `--` comments and stops at the first
 non-zero return code.
 
-`demos/native/sqlite/` shows the database-oriented form of the native provider
-model. The provider routes by the ADDRESS environment name carried in the
-request (`SQLITE` initially), looks up a driver table, and then treats SQL
-named parameters such as `:name` as handler-specific uses of ADDRESS
-host-variable bindings. This is the intended shape for later database drivers.
+`demos/native/sqlite/` is now an ordinary consumer of the installed
+`rxsqlite_address` Level G environment. The façade claims `SQLITE` and
+`SQLITE3`, treats SQL named parameters such as `:name` as handler-specific uses
+of ADDRESS host-variable bindings, and delegates every database operation to
+the generic typed `rxsqlite` RXPA provider. There is no ADDRESS-specific native
+SQLite implementation.
 
 `demos/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
 providers. One Rexx environment class claims a family of model-shaped

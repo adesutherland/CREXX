@@ -951,6 +951,30 @@ collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
 RXBIN dependency, runtime lookup, and native archive identity consistently
 `rxplatform`.
 
+### `rxsqlite` typed database provider
+
+`rxsqlite` is a standard session-aware RXPA provider rather than an incubator
+or demo. It owns opaque database/statement native payloads, gives every VM its
+own handle registry and diagnostic state, and marks its procedures
+`SESSION_AFFINE`. Copied payloads retain their resource; explicit close,
+finalization, stale/wrong-kind/cross-session rejection and session teardown are
+all provider-owned.
+
+The provider preserves SQLite NULL, signed 64-bit integer, real, UTF-8 text and
+exact binary blob types. Its public surface covers prepared statements and
+metadata, modes, busy timeout, WAL checkpoint, bounded online backup and
+integrity checking, changes/row identity, and primary plus extended errors.
+The separate `rxsqlite_address.rxbin` Level G module implements SQL commands
+and named host bindings only through that typed API.
+
+The source-controlled SQLite 3.53.2 amalgamation is compiled with
+`SQLITE_THREADSAFE=1`, `SQLITE_ENABLE_FTS5=1`, FULLMUTEX connections and the
+documented extension/security policy. It is embedded in
+`rxsqlite.rxplugin` and the canonical `providers/rxsqlite` static archive, so
+installed native packaging requires no downstream SQLite SDK or extra link
+metadata. See the maintained [rxsqlite
+reference](../books/crexx_library_reference/rxsqlite.md).
+
 ### Level G packed numeric owners
 
 The `rxfnsg` Rexx library publishes `.packedfloat` and `.packedint` as the

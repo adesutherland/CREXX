@@ -17,6 +17,8 @@ foreach(consumer_file IN ITEMS
         sdk_probe.crexx
         sdk_const_probe.cpp
         rx_hash_installed.crexx
+        rxsqlite_installed.crexx
+        rxsqlite_address_installed.crexx
         rcc5de_installed.crexx)
     file(COPY_FILE
             "${CONSUMER_SOURCE_DIR}/${consumer_file}"
@@ -79,6 +81,11 @@ set(required_sdk_files
         "${prefix}/bin/providers/rxplatform.rxplugin"
         "${prefix}/bin/providers/rxplatform${STATIC_SUFFIX}"
         "${prefix}/bin/providers/rxplatform_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxsqlite.rxplugin"
+        "${prefix}/bin/providers/rxsqlite.rxplugin"
+        "${prefix}/bin/providers/rxsqlite${STATIC_SUFFIX}"
+        "${prefix}/bin/providers/rxsqlite_static${STATIC_SUFFIX}"
+        "${prefix}/bin/rxsqlite_address.rxbin"
         "${prefix}/BUILDINFO"
         "${prefix}/VERSION")
 foreach(required_file IN LISTS required_sdk_files)
@@ -90,7 +97,9 @@ endforeach()
 foreach(test_only_plugin IN ITEMS
         "${prefix}/bin/rx_rcc5f_stats_boxed.rxplugin"
         "${prefix}/bin/rx_rcc5f_stats_direct.rxplugin"
-        "${prefix}/bin/rx_rxvector01_direct.rxplugin")
+        "${prefix}/bin/rx_rxvector01_direct.rxplugin"
+        "${prefix}/bin/rxsqlite_thread_test${EXE_SUFFIX}"
+        "${prefix}/bin/rxsqlite_address.rxas")
     if(EXISTS "${test_only_plugin}")
         message(FATAL_ERROR
                 "Scratch SDK published test-only provider ${test_only_plugin}")
@@ -195,6 +204,95 @@ run_checked("run native-packaged installed rx_hash consumer"
 if(NOT last_stdout STREQUAL
    "PASS: installed rx_hash complete SHA-256 family\n")
     message(FATAL_ERROR "Installed native rx_hash output mismatch:\n${last_stdout}")
+endif()
+
+foreach(mode IN ITEMS opt noopt)
+    set(mode_flag)
+    if(mode STREQUAL "noopt")
+        set(mode_flag -n)
+    endif()
+    run_checked("compile installed rxsqlite consumer ${mode}"
+            COMMAND "${rxc}" -i "${prefix}/bin" ${mode_flag}
+                    -o "${WORK_ROOT}/rxsqlite-installed-${mode}"
+                    "${consumer_source}/rxsqlite_installed.crexx"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+    run_checked("assemble installed rxsqlite consumer ${mode}"
+            COMMAND "${rxas}" ${mode_flag}
+                    -o "${WORK_ROOT}/rxsqlite-installed-${mode}.rxbin"
+                    "${WORK_ROOT}/rxsqlite-installed-${mode}"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
+
+foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
+    foreach(mode IN ITEMS opt noopt)
+        run_checked("autoload installed rxsqlite with ${vm} ${mode}"
+                COMMAND "${vm}" "${WORK_ROOT}/rxsqlite-installed-${mode}"
+                        "${prefix}/bin/library"
+                WORKING_DIRECTORY "${WORK_ROOT}")
+        if(NOT last_stdout STREQUAL
+           "PASS: installed rxsqlite dynamic and native contract\n")
+            message(FATAL_ERROR
+                    "Installed rxsqlite output mismatch for ${vm} ${mode}:\n${last_stdout}")
+        endif()
+    endforeach()
+endforeach()
+
+run_checked("native-package installed rxsqlite consumer"
+        COMMAND "${crexx}" -native rxsqlite_installed.crexx
+        WORKING_DIRECTORY "${consumer_source}")
+run_checked("run native-packaged installed rxsqlite consumer"
+        COMMAND "${consumer_source}/rxsqlite_installed${EXE_SUFFIX}"
+        WORKING_DIRECTORY "${consumer_source}")
+if(NOT last_stdout STREQUAL
+   "PASS: installed rxsqlite dynamic and native contract\n")
+    message(FATAL_ERROR "Installed native rxsqlite output mismatch:\n${last_stdout}")
+endif()
+
+foreach(mode IN ITEMS opt noopt)
+    set(mode_flag)
+    if(mode STREQUAL "noopt")
+        set(mode_flag -n)
+    endif()
+    run_checked("compile installed rxsqlite ADDRESS consumer ${mode}"
+            COMMAND "${rxc}" -i "${prefix}/bin" ${mode_flag}
+                    -o "${WORK_ROOT}/rxsqlite-address-installed-${mode}"
+                    "${consumer_source}/rxsqlite_address_installed.crexx"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+    run_checked("assemble installed rxsqlite ADDRESS consumer ${mode}"
+            COMMAND "${rxas}" ${mode_flag}
+                    -o "${WORK_ROOT}/rxsqlite-address-installed-${mode}.rxbin"
+                    "${WORK_ROOT}/rxsqlite-address-installed-${mode}"
+            WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
+
+foreach(vm IN ITEMS "${rxvm}" "${rxbvm}")
+    foreach(mode IN ITEMS opt noopt)
+        run_checked("run installed rxsqlite ADDRESS with ${vm} ${mode}"
+                COMMAND "${vm}"
+                        "${WORK_ROOT}/rxsqlite-address-installed-${mode}"
+                        "${prefix}/bin/library"
+                        "${prefix}/bin/classlib"
+                        "${prefix}/bin/rxsqlite_address"
+                WORKING_DIRECTORY "${WORK_ROOT}")
+        if(NOT last_stdout STREQUAL
+           "PASS: installed rxsqlite ADDRESS facade\n")
+            message(FATAL_ERROR
+                    "Installed rxsqlite ADDRESS output mismatch for ${vm} ${mode}:\n${last_stdout}")
+        endif()
+    endforeach()
+endforeach()
+
+run_checked("native-package installed rxsqlite ADDRESS consumer"
+        COMMAND "${crexx}" -native -l rxsqlite_address
+                rxsqlite_address_installed.crexx
+        WORKING_DIRECTORY "${consumer_source}")
+run_checked("run native-packaged installed rxsqlite ADDRESS consumer"
+        COMMAND "${consumer_source}/rxsqlite_address_installed${EXE_SUFFIX}"
+        WORKING_DIRECTORY "${consumer_source}")
+if(NOT last_stdout STREQUAL
+   "PASS: installed rxsqlite ADDRESS facade\n")
+    message(FATAL_ERROR
+            "Installed native rxsqlite ADDRESS output mismatch:\n${last_stdout}")
 endif()
 
 foreach(mode IN ITEMS opt noopt)
@@ -324,6 +422,16 @@ set(manifest_files ${required_sdk_files}
         "${WORK_ROOT}/rx-hash-installed-noopt.rxas"
         "${WORK_ROOT}/rx-hash-installed-noopt.rxbin"
         "${consumer_source}/rx_hash_installed${EXE_SUFFIX}"
+        "${WORK_ROOT}/rxsqlite-installed-opt.rxas"
+        "${WORK_ROOT}/rxsqlite-installed-opt.rxbin"
+        "${WORK_ROOT}/rxsqlite-installed-noopt.rxas"
+        "${WORK_ROOT}/rxsqlite-installed-noopt.rxbin"
+        "${consumer_source}/rxsqlite_installed${EXE_SUFFIX}"
+        "${WORK_ROOT}/rxsqlite-address-installed-opt.rxas"
+        "${WORK_ROOT}/rxsqlite-address-installed-opt.rxbin"
+        "${WORK_ROOT}/rxsqlite-address-installed-noopt.rxas"
+        "${WORK_ROOT}/rxsqlite-address-installed-noopt.rxbin"
+        "${consumer_source}/rxsqlite_address_installed${EXE_SUFFIX}"
         "${WORK_ROOT}/rcc5de-installed-opt.rxas"
         "${WORK_ROOT}/rcc5de-installed-opt.rxbin"
         "${WORK_ROOT}/rcc5de-installed-noopt.rxas"

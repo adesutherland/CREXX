@@ -1,0 +1,19 @@
+/* Consumer compiled and run only against the installed ADDRESS module. */
+options levelg
+
+main: procedure = .int
+  count = ""
+  value = "installed-address"
+  address sqlite "EXEC CREATE TABLE installed_address(v TEXT)"
+  if rc <> 0 then return 1
+  address sqlite "EXEC INSERT INTO installed_address VALUES(:value)"
+  if rc <> 0 then return 2
+  address sqlite "VALUE SELECT count(*) FROM installed_address INTO ${count}"
+  if rc <> 0 | count <> "1" then return 3
+  if addresscall("sqlite", "driver") <> "sqlite" then return 4
+  address sqlite "CLOSE"
+  if rc <> 0 then return 5
+  say "PASS: installed rxsqlite ADDRESS facade"
+  return 0
+
+exit main()

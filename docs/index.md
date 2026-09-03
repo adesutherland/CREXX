@@ -31,6 +31,7 @@ designs.
 - [Mathematics](books/crexx_library_reference/mathematics.md)
 - [Unicode text services](books/crexx_library_reference/unicode.md)
 - [Packed vectors](books/crexx_library_reference/rxvector.md)
+- [SQLite typed provider and ADDRESS façade](books/crexx_library_reference/rxsqlite.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)

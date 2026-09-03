@@ -19,7 +19,8 @@ add_custom_target(cri07_rxpa_sdk_consumer_prereqs
                 vector vector_static
                 id id_static
                 fs fs_static
-                _platform _platform_static)
+                _platform _platform_static
+                sqlite sqlite_static rxsqlite_address)
 
 add_test(
         NAME rxpa_external_sdk_consumer
@@ -38,7 +39,7 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_external_sdk_consumer.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_external_sdk_consumer PROPERTIES
-        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed"
+        LABELS "install;package;rxpa;external-consumer;hash;crexx-rag;rcc-5d;rcc-5e;rcc-5f;stats;vector;packed;sqlite;native"
         RUN_SERIAL TRUE
         TIMEOUT 240)
 crexx_register_test_prep_targets(

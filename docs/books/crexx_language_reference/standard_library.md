@@ -119,6 +119,16 @@ search over `.packedfloat` and `.packedint` owners. Portable persistence stays
 separate from host-native computation. See
 [Packed vectors](../crexx_library_reference/rxvector.md).
 
+## SQLite
+
+The standard `rxsqlite` native provider exposes typed SQLite connections,
+prepared statements, exact NULL/int64/real/text/blob access, WAL and bounded
+maintenance operations. Provider metadata makes the dynamic plugin automatic
+for the VMs and selects its bundled static archive for `crexx --native`.
+`rxsqlite_address` is a separate installed Level G `ADDRESS SQLITE` façade over
+the same provider, not a second driver. See [SQLite with
+`rxsqlite`](../crexx_library_reference/rxsqlite.md).
+
 ## ADDRESS and Trace Support
 
 `_address.rexx` contains the Rexx-side ADDRESS protocol support used by

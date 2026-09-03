@@ -4,7 +4,7 @@ The OBDC plugin is dependent on a working ODBC installation on the operating pla
 
 ## Windows ODBC Configuration
 
-On Windows, elevated privileges might be required to achieve a working ODBC setup. When planning an application using ODBC in an environment you do not control, like a corporate environment, it is a good idea to involve administrative staff in an early stage to insure that ODBC is installed and working. For simple applications we suggest to have a look at the addressable sqlite implementation, see [SQLite address environment](sqlite-environment) on page \pageref{sqlite-environment}
+On Windows, elevated privileges might be required to achieve a working ODBC setup. When planning an application using ODBC in an environment you do not control, like a corporate environment, it is a good idea to involve administrative staff in an early stage to insure that ODBC is installed and working. For simple applications, consider CREXX's bundled [SQLite typed provider and ADDRESS environment](rxsqlite.md), which needs no separately installed ODBC driver.
 
 ### Setting Up ODBC Data Sources
 

@@ -1,0 +1,48 @@
+/* CRI-17 qualification: attached local-task VMs resolve rxsqlite themselves. */
+options levelg comments_dash
+
+namespace rxsqlite_attached_test
+
+import concurrency
+import rxsqlite
+
+worker_sqlite: task = .int
+  database = .binary
+  statement = .binary
+  if sqliteopen(":memory:", database) <> 0 then return -1
+  session_affinity = 0
+  if sqlitecapability(database, "session_affinity", session_affinity) <> 0 | session_affinity <> 1 then return -2
+  if sqliteexec(database, "CREATE TABLE task_values(v INTEGER); INSERT INTO task_values VALUES(4),(7)") <> 0 then return -3
+  if sqliteprepare(database, "SELECT sum(v) FROM task_values", statement) <> 0 then return -4
+  if sqlitestep(statement) <> 100 then return -5
+  result = 0
+  if sqlitecolumnint(statement, 0, result) <> 0 then return -6
+  if sqlitefinalize(statement) <> 0 then return -7
+  if sqliteclose(database) <> 0 then return -8
+  return result
+
+main: procedure = .int
+  /* The controller also owns an independent provider session. */
+  controller = .binary
+  if sqliteopen(":memory:", controller) <> 0 then do
+    say "FAIL: rxsqlite attached controller resolution"
+    return 1
+  end
+  if sqliteclose(controller) <> 0 then return 2
+
+  pool = .taskpool.local(2, 4)
+  scope = .taskscope.collectall(pool, 60000)
+  do parallel using scope
+    first = worker_sqlite()
+    second = worker_sqlite()
+  end
+  call pool.close()
+
+  if first <> 11 | second <> 11 then do
+    say "FAIL: rxsqlite attached worker resolution" first second
+    return 3
+  end
+  say "PASS: rxsqlite resolves in attached local-task VMs sessions=controller+2"
+  return 0
+
+exit main()

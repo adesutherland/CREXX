@@ -437,6 +437,13 @@ provider. It snapshots the current bytecode-only linked generation and loads
 that exact semantic graph in bounded warm worker processes. Native modules are
 not process-eligible.
 
+The local provider is different: an attached VM inherits the controller's
+trusted provider search location and resolves every declarative native
+provider dependency into its own mutable overlay and RXPA V2 session. The
+immutable generation still contains bytecode only. Native handles are not
+transferred; each task creates and owns its own provider resources. Missing
+providers fail pool construction explicitly.
+
 Each request receives a fresh executor and VM context even when its process is
 reused. Globals, registers, frames, references, cancellation state and mutable
 overlays do not spill between requests. Pool close joins workers/monitors,
