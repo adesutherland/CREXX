@@ -25,6 +25,7 @@ install(FILES ${RXPP_SUPPORT_FILES} DESTINATION bin)
 
 set(RXFNSB_RXBIN ${CMAKE_BINARY_DIR}/bin/library.rxbin)
 set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
+set(CLASSLIB_NATIVE_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin)
 set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
 set(REXXSCRIPT_RXBIN ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin)
 
@@ -40,6 +41,7 @@ add_dynamic_plugin_target(precomp precomp.c)
 set(RXPP_IMPORT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/imports/compiler)
 set(RXPP_IMPORT_RXFNSB ${RXPP_IMPORT_ROOT}/library.rxbin)
 set(RXPP_IMPORT_CLASSLIB ${RXPP_IMPORT_ROOT}/classlib.rxbin)
+set(RXPP_IMPORT_CLASSLIB_NATIVE ${RXPP_IMPORT_ROOT}/classlib_native.rxbin)
 set(RXPP_IMPORT_RXFNSC ${RXPP_IMPORT_ROOT}/rxfnsc.rxbin)
 set(RXPP_IMPORT_REXXSCRIPT ${RXPP_IMPORT_ROOT}/rexxscript.rxbin)
 set(RXPP_IMPORT_EXITS ${RXPP_IMPORT_ROOT}/rxcexits.rxbin)
@@ -48,6 +50,7 @@ add_custom_command(
         OUTPUT
                 ${RXPP_IMPORT_RXFNSB}
                 ${RXPP_IMPORT_CLASSLIB}
+                ${RXPP_IMPORT_CLASSLIB_NATIVE}
                 ${RXPP_IMPORT_RXFNSC}
                 ${RXPP_IMPORT_REXXSCRIPT}
                 ${RXPP_IMPORT_EXITS}
@@ -55,6 +58,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E make_directory ${RXPP_IMPORT_ROOT}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RXFNSB_RXBIN} ${RXPP_IMPORT_RXFNSB}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CLASSLIB_RXBIN} ${RXPP_IMPORT_CLASSLIB}
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CLASSLIB_NATIVE_RXBIN} ${RXPP_IMPORT_CLASSLIB_NATIVE}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RXFNSC_RXBIN} ${RXPP_IMPORT_RXFNSC}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REXXSCRIPT_RXBIN} ${RXPP_IMPORT_REXXSCRIPT}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -63,9 +67,10 @@ add_custom_command(
                 $<TARGET_FILE:precomp> ${RXPP_IMPORT_PRECOMP}
         DEPENDS
                 precomp
-                library classlib rxfnsc rexxscript compiler_exit_bin
+                library classlib classlib_native rxfnsc rexxscript compiler_exit_bin
                 ${RXFNSB_RXBIN}
                 ${CLASSLIB_RXBIN}
+                ${CLASSLIB_NATIVE_RXBIN}
                 ${RXFNSC_RXBIN}
                 ${REXXSCRIPT_RXBIN}
                 ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
@@ -75,6 +80,7 @@ add_custom_target(rxpp_compiler_imports
         DEPENDS
                 ${RXPP_IMPORT_RXFNSB}
                 ${RXPP_IMPORT_CLASSLIB}
+                ${RXPP_IMPORT_CLASSLIB_NATIVE}
                 ${RXPP_IMPORT_RXFNSC}
                 ${RXPP_IMPORT_REXXSCRIPT}
                 ${RXPP_IMPORT_EXITS}
@@ -124,6 +130,7 @@ add_custom_command(
                 ${RXPP_MEMBER_RXBIN}
                 ${RXFNSB_RXBIN}
                 ${CLASSLIB_RXBIN}
+                ${CLASSLIB_NATIVE_RXBIN}
                 ${RXFNSC_RXBIN}
                 ${REXXSCRIPT_RXBIN}
         DEPENDS
@@ -131,6 +138,7 @@ add_custom_command(
                 ${RXPP_MEMBER_RXBIN}
                 ${RXFNSB_RXBIN}
                 ${CLASSLIB_RXBIN}
+                ${CLASSLIB_NATIVE_RXBIN}
                 ${RXFNSC_RXBIN}
                 ${REXXSCRIPT_RXBIN}
         COMMENT "Link the private rxpp runtime image ..."
@@ -153,15 +161,46 @@ add_custom_command(
         COMMENT "Package the private rxpp runtime image as C ..."
         VERBATIM)
 
+###
 add_executable(rxpp ${RXPP_GENERATED_C})
-# Ensure precomp static lib is force-loaded, then append providers (rxpashim, rxpa) after it
-# This ordering is important for Unix linkers when resolving symbols from static archives.
-# First, inject the whole-archive of precomp_static so its objects come before providers
+
+#
+# RXPA providers statically required by the packaged RXPP executable.
+#
+# precomp is RXPP's own native provider.
+#
+# The SYSTEM/Os class is contained in classlib_native.rxbin and references
+# the filesystem and platform RXPA providers.  Since RXPP is packaged as a
+# standalone native executable, those providers must also be statically
+# available to the executable.
+#
+
 configure_linker_for_static_lib(rxpp precomp)
-# Now link other required libraries. Place rxpashim (which provides rxpa_* symbols) AFTER the precomp objects.
-target_link_libraries(rxpp precomp_static rxvml rxpashim)
-add_dependencies(rxpp rxvml rxpa avl_tree platform)
-add_dependencies(rxpp rxpp_support_files)
+configure_linker_for_static_lib(rxpp fs)
+configure_linker_for_static_lib(rxpp _platform
+        PROVIDER_ID rxplatform)
+
+# Runtime libraries required by the packaged executable.
+#
+# configure_linker_for_static_lib() already links the corresponding
+# *_static provider libraries and force-loads their RXPA init symbols.
+#
+target_link_libraries(rxpp
+        rxvml
+        rxpashim)
+
+add_dependencies(rxpp
+        rxvml
+        rxpa
+        avl_tree
+        platform
+        fs
+        fs_static
+        _platform
+        _platform_static)
+
+add_dependencies(rxpp
+        rxpp_support_files)
 
 if (ENABLE_PARSER_MODE)
         configure_file(
