@@ -51,6 +51,9 @@ which:
 
 2. **Source loading**
     - Reads the actual input Rexx file into `source[]`
+    - Registers `.rxpm` names from any `##loadMacro` directives before
+      expansion begins; only names and their source directories are recorded
+      at this stage
 
 3. **Early structural setup**
     - Neutralizes existing `options levelb`, `import rxfnsb`, etc.
@@ -59,6 +62,8 @@ which:
 4. **In-file macro extraction**
     - Runs `GetPreComp(rexxlines)` again on the real source
     - Registers `##DEFINE` macros
+    - Processes `##loadMacro path-to-macros` by scanning the directory for
+      `.rxpm` names and suppressing the directive from generated output
     - Sorts macro names by length to prevent partial matches
 
 ---
@@ -89,6 +94,30 @@ which:
 - Applies OO translation via `ooTranslate()`
 - Writes final output using `writeall(outbuf, outfile)`
 - Writes linker include via `linkerInfo(outfile, imported_funcs)`
+
+### Script-macro search precedence
+
+Script-macro package names are registered during the initial source scan, but
+their `.rxpm` bodies are loaded only when the corresponding directive is first
+used. Search precedence is established in this order:
+
+1. the selected `maclib` directory
+2. `syspath`
+3. each `##loadMacro path-to-macros` directive, in source order
+
+If a later registration finds an existing name, it replaces that name's stored
+directory. Therefore the last matching `##loadMacro` wins. The debug messages
+`CRX0170I` and `CRX0171I` report registration/override and lazy file selection.
+
+RXPP accepts relative paths for `##INCLUDE`, `##USE`, and `##loadMacro`.
+They are resolved against the configured RXPP macro/system path and normalized
+across `/` and `\\` separators, including `.` and `..` components.
+
+The `##buildDir path` directive is consumed by the `crexx` driver for `.rxpp`
+inputs. It routes the generated `.crexx`, `.rxas`, and `.rxbin` artifacts to
+the requested directory, resolved relative to the driver's current working
+directory; the driver process working directory is unchanged. The directive
+must occur within the first 32 physical source lines.
 
 ---
 

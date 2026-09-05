@@ -166,11 +166,29 @@ say "Hello World"
 
 ### External script-macro packages
 
-RXPP discovers `.rxpm` package names in the directory containing the selected
-macro library. An autoloaded package is named for its directive, for example
+RXPP discovers `.rxpm` package names in the selected macro-library directory
+first, then in the system path. An autoloaded package is named for its directive,
+for example
 `widget.rxpm` for `##WIDGET`, and its first record must be the `##MACRO`
 header. A package containing one or more differently named macros can instead
 be brought into the source with `##INCLUDE package.rxpm`.
+
+When the same package name exists in both locations, the copy beside the
+selected `maclib` wins. This precedence applies both to discovery and to lazy
+loading, so `maclist` and expansion select the same file.
+
+An RXPP source file can register another macro directory with:
+
+```text
+##loadMacro path-to-macros
+```
+
+The directive scans that directory for `.rxpm` names during the initial
+preprocessor scan, before macro expansion. Package contents are still loaded
+only when their directive is used for the first time. Each later
+`##loadMacro` overrides an earlier registration of the same name. The effective
+precedence is `maclib`, then `syspath`, then `##loadMacro` directives in source
+order, with the last matching load winning.
 
 Relative `##INCLUDE` and `##USE` paths are resolved against that macro-library
 directory. Scripted directives use complete-name matching: `##UI` and

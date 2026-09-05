@@ -47,6 +47,39 @@ This section documents the RXPP macro system in more depth. RXPP macros are **co
 
 Macros are intended to improve readability, reduce repetition, and provide small, reusable language extensions without runtime overhead.
 
+#### External script macros
+
+An RXPP source file can register script-macro packages from an additional
+directory:
+
+```rexx
+##loadMacro path-to-macros
+```
+
+RXPP scans the directory for `.rxpm` filenames during its early preprocessing
+pass, before any macro expansion takes place. Only the names are registered at
+that point. The package body is loaded lazily the first time its directive is
+used.
+
+The selected `maclib` directory is searched first, followed by `syspath`, then
+each `##loadMacro` directory in source order. If the same macro name is found
+again, the later registration replaces the earlier one; therefore the last
+matching `##loadMacro` wins. The directive is consumed by RXPP and does not
+remain in generated CREXX.
+
+With verbose output enabled, `CRX0170I` shows registration or replacement and
+`CRX0171I` shows the file selected for lazy loading.
+
+RXPP accepts relative paths for `##INCLUDE`, `##USE`, and `##loadMacro`.
+They are resolved against the configured RXPP macro/system path and normalized
+across `/` and `\\` separators, including `.` and `..` components.
+
+For `.rxpp` inputs, `##buildDir path` tells the `crexx` driver where to place
+the generated `.crexx`, `.rxas`, and `.rxbin` artifacts. The path is relative
+to the driver’s current working directory when it is not absolute. The
+driver’s working directory is unchanged. Place the directive within the first
+32 physical source lines; comments and blank lines count toward this limit.
+
 ---
 
 #### 3.1.1 Defining macros
@@ -854,6 +887,15 @@ Define macros.
 
 ### `##INCLUDE` / `##USE`
 Inline file inclusion.
+
+### `##loadMacro`
+Register `.rxpm` script-macro names from an additional directory. Registration
+happens before expansion; package contents are loaded lazily on first use.
+Later registrations override earlier registrations of the same name.
+
+### `##buildDir`
+Route generated `.crexx`, `.rxas`, and `.rxbin` artifacts to the specified
+directory when the source is compiled through `crexx`.
 
 ### `##SET` / `##UNSET`
 Set compile-time variables.

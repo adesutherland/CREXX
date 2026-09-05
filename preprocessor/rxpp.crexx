@@ -36,21 +36,22 @@ options levelb
 import rexxscript
 import precomp
 import rxfnsb
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
-
-
+import system
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath binpath inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
  *   Currently supported Commands
  *   ##DEFINE
  *   ##INCLUDE  (nested)
+ *   ##LOADMACRO (register external script macros from a directory)
  * ------------------------------------------------------------------
  */
  main: procedure = .int
 arg command=.string[]
-internal_testing=0    ## activate only for rxpp internal tests
-
+  internal_testing=0    ## activate only for rxpp internal tests
+  env=.os()
+  binPath=env.LoadPath()
   infile  = .string
   outfile = .string
   maclib  = .string
@@ -89,11 +90,17 @@ internal_testing=0    ## activate only for rxpp internal tests
      say 'Macro Lib:   ' maclib
      say 'Verbose:     ' verbose
   end
+  inpath=getpath(infile)
+  outpath=getpath(outfile)
+  macpath=getpath(maclib)
+
 scriptMacro=.stem()
 scriptMacros=.string[]
+scriptMacroPath=.stem()
 scriptMacroCounter=0
 syspath=rxppinit(infile,maclib)                   ## init global and environment variables
-call macroList(syspath,'rxpm',ScriptMacros)       /* load potential macros list not content */
+call registerScriptMacros inpath                 /* maclib macros have precedence */
+if inpath \= macpath then call registerScriptMacros macpath
 
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   if verbose then say 'CRX0110I ['time('l')'] System Path 'syspath
@@ -537,6 +544,8 @@ GetPrecomp: procedure
       if ucmd      = '##DEFINE'  then lineno=cmd_define(lineNo,line)
       else if ucmd = '##MACRO'  then lineno=cmd_macro(lineNo,line)
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
+      else if ucmd = '##LOADMACRO' then call cmd_loadMacro lineNo,line
+      else if ucmd = '##BUILDDIR' then stype.LineNo='X'
       else if ucmd = '##EMIT'    then stype.LineNo='EMIT'
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##COPYBLOCK' then call cmd_copyBlock lineNo,line
@@ -549,6 +558,27 @@ GetPrecomp: procedure
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
+return
+/* ------------------------------------------------------------------
+ * CMD_loadMacro: Register .rxpm names from an additional directory.
+ * The package bodies remain lazy and are read by LoadExternalScriptMacro.
+ * ------------------------------------------------------------------
+ */
+CMD_loadMacro: procedure
+  arg line_no=.int,line=.string
+  stype.line_no='X'
+  path=normalisePath(syspath,word(line,2))
+  if right(path,1) \= '/' then path=path'/'
+  call registerScriptMacros path
+return
+/* ------------------------------------------------------------------
+ * registerScriptMacros: Add names from PATH and remember their directory.
+ * Existing names retain the earlier directory, which defines precedence.
+ * ------------------------------------------------------------------
+ */
+registerScriptMacros: procedure
+  arg path=.string
+  call macroList path,'rxpm',scriptMacros,1
 return
 /* ------------------------------------------------------------------
  * Process ##DEFINE command
@@ -695,7 +725,8 @@ return
 /* ----------------------------------------------------------------------
  * LoadExternalScriptMacro
  *
- * Load a script macro from <syspath>/<macro-name>.rxpm and store it in
+ * Load a script macro from the selected macro-library directory first,
+ * followed by <syspath>/<macro-name>.rxpm, and store it in
  * scriptMacro. using the same representation as an internal ##MACRO.
  *
  * MACNAME is the canonical macro key and may include the ## prefix.
@@ -710,12 +741,22 @@ LoadExternalScriptMacro: procedure=.int
     file_macname = macname
     body=.string
     if substr(file_macname,1,2) = '##' then file_macname = substr(file_macname,3)
-    macro_file = syspath || file_macname || '.rxpm'
+    macro_path = scriptMacroPath.macname
+    if macro_path = '' then macro_path = macpath
+    macro_file = macro_path || file_macname || '.rxpm'
+    if verbose then say 'CRX0171I Script macro 'macname' selected from 'macro_file
     stream = loadtext(macro_file, ';', 'noRaise')
     if pos('-8 OPEN ERROR',stream) > 0 then do
-        scriptMacro.macname.error = 'error'
-        call rxpp_diag('warning', 'RXPP_SCRIPT_MACRO_MISSING', 'file', macro_file)
-        return 1
+        if macro_path = macpath & syspath \= macpath then do
+            macro_file = syspath || file_macname || '.rxpm'
+            stream = loadtext(macro_file, ';', 'noRaise')
+        end
+        if pos('-8 OPEN ERROR',stream) > 0 then do
+            scriptMacro.macname.error = 'error'
+            scriptMacro.macname.file = macro_file
+            call rxpp_diag('warning', 'RXPP_SCRIPT_MACRO_MISSING', 'file', macro_file)
+            return 1
+        end
     end
     /*
      * First record:
@@ -1264,12 +1305,12 @@ CMD_global: procedure
    end
 return
 /* ------------------------------------------------------------------
- * Load macro names from SYSPATH, Content will loaded if used
+ * Load macro names from PATH, Content will loaded if used
  * ------------------------------------------------------------------
  */
 macroList: procedure
-  arg dir= .string, extension=.string, expose macros=.string[]
-  macros = .string[]
+  arg dir= .string, extension=.string, expose macros=.string[], append=.int
+  if append \= 1 then macros=.string[]
   lowalpha='abcdefghijklmnopqrstuvwxyz_0123456789'
   dir=translate(dir,'/','\')
   out=.string[]
@@ -1296,7 +1337,18 @@ macroList: procedure
      * makes the name invalid.
      */
      if strip(translate(mname, , lowalpha)) \= '' then iterate
-     macros[macros[0] + 1] = '##'mname
+     candidate = '##'mname
+     duplicate = 0
+     do existing = 1 to macros[0]
+        if macros[existing] = candidate then do
+           duplicate = 1
+           leave
+        end
+     end
+     /* Later search roots override earlier roots. */
+     scriptMacroPath.candidate = dir
+     if verbose then say 'CRX0170I Script macro 'candidate' registered from 'dir
+     if duplicate = 0 then macros[macros[0] + 1] = candidate
   end
 return
 /* ------------------------------------------------------------------
@@ -1546,16 +1598,17 @@ newMacros:  procedure=.string
   arg macname=.string,line=.string,linnum=.int,ipi=.int
   original_call=.string
   source_len=.int
-    if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
-    if scriptMacro.macname = '' then do
-        rc = LoadExternalScriptMacro(macname)
-        if rc \= 0 then do
-           missing_file = syspath || strip(macname,,'#') || '.rxpm'
-           return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING', 'file', missing_file)
-      end
-    end
+  if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
+  if scriptMacro.macname = '' then do
+     rc = LoadExternalScriptMacro(macname)
+     if rc \= 0 then do
+        missing_file = scriptMacro.macname.file
+        if missing_file = '' then missing_file = syspath || strip(macname,,'#') || '.rxpm'
+        return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING', 'file', missing_file)
+     end
+  end
 
-   scriptMacroCounter=scriptMacroCounter+1
+  scriptMacroCounter=scriptMacroCounter+1
   if scriptMacroCounter>500 then do
      call rxpp_diag 'warning','RXPP_EXPANSION_LIMIT','count',scriptMacroCounter
      return line
@@ -2525,13 +2578,245 @@ linkerInfo: procedure
   if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
 return
 /* ------------------------------------------------------------------
- * normalisePath: resolves ../, ./ and mixed slashes
- * Returns normalised UNIX-style path
- * Example:
- *   normalisePath("C:/Users/Peter/macros", "../Docs/./file.txt")
- *   -> "C:/Users/Docs/file.txt"
+ * GetPath: from a path/file-name input
+ * Returns UNIX-style path specified a parameter
+  * ------------------------------------------------------------------
+ */
+getPath: procedure=.string
+  arg input=.string
+
+  path = translate(input, '/', '\')   /* "\" -> "/" */
+  fpos=lastpos('/',path)
+  if fpos>0 then path=substr(path,1,fpos)
+return path
+
+/* ------------------------------------------------------------------
+ * normalisePath
+ *
+ * Normalises a filesystem path and, when necessary, resolves a
+ * relative path against a supplied base directory.
+ *
+ * Syntax:
+ *
+ *   normalised = normalisePath(xsyspath, rawpath)
+ *
+ * Arguments:
+ *
+ *   xsyspath
+ *       Base directory used when rawpath is relative.
+ *
+ *       This is typically the directory of the current source file,
+ *       macro library, INCLUDE file, or other caller-defined search
+ *       location.
+ *
+ *       xsyspath is ignored when rawpath is already absolute.
+ *
+ *   rawpath
+ *       Path to normalise.
+ *       The path may:
+ *         - be absolute;
+ *         - be relative to xsyspath;
+ *         - contain "." components;
+ *         - contain ".." components;
+ *         - use "/" or "\" directory separators.
+ *
+ * Result:
+ *
+ *   Returns a normalised path using UNIX-style "/" separators.
+ *
+ *   The routine:
+ *     1. Converts "\" directory separators to "/".
+ *     2. Detects Windows drive prefixes such as:
+ *          C:
+ *          D:
+ *     3. Detects absolute paths.
+ *     4. If rawpath is relative and xsyspath is supplied, prefixes
+ *        rawpath with xsyspath.
+ *     5. Removes "." path components.
+ *     6. Resolves ".." by removing the preceding path component.
+ *     7. Prevents ".." from moving above the root of an absolute path.
+ *     8. Reconstructs the path using "/" separators.
+ *
+ * Examples:
+ *   normalisePath(
+ *       "C:/Users/Peter/macros",
+ *       "../Docs/./file.txt" )
+ *
+ *   returns:
+ *       C:/Users/Peter/Docs/file.txt
+ *
+ *   normalisePath(
+ *       "/home/peter/project/src/macros",
+ *       "../../example")
+ *
+ *   returns:
+ *       /home/peter/project/example
+ *
+ *   normalisePath(
+ *       "C:/projects/rxpp/src/macros",
+ *       "../../example")
+ *
+ *   returns:
+ *       C:/projects/rxpp/example
+ *
+ * Absolute paths:
+ *
+ *   If rawpath is absolute, xsyspath is not used.
+ *
+ *   Example:
+ *
+ *       normalisePath(
+ *           "/home/peter/project",
+ *           "/usr/local/macros")
+ *
+ *   returns:
+ *       /usr/local/macros
+ *
+ * Windows absolute paths:
+ *       normalisePath(
+ *           "C:/projects/rxpp",
+ *           "D:/macros/common" )
+ *
+ *   returns:
+ *       D:/macros/common
+ *
+ *
+ * Mixed separators:
+ *       normalisePath(
+ *           "C:\projects\rxpp",
+ *           "..\macros/./common" )
+ *
+ *   returns:
+ *
+ *       C:/projects/macros/common
+ *
+ * Parent-directory traversal:
+ *   A relative path may move upwards without knowing the complete
+ *   absolute pathname.
+ *
+ *   For example:
+ *       "../../example"
+ *
+ *   means:
+ *       - move one directory up;
+ *       - move another directory up;
+ *       - enter directory "example".
+ *
+ *   Therefore:
+ *
+ *       normalisePath(
+ *           "/a/b/c/d",
+ *           "../../example"  )
+ *
+ *   returns:
+ *       /a/b/example
+ *
+ * Behaviour of "..":
+ *
+ *   Internally, path components are treated like a stack.
+ *       a/b/c/../d
+ *
+ *   is processed approximately as:
+ *       a
+ *       a/b
+ *       a/b/c
+ *       a/b
+ *       a/b/d
+ *
+ *   producing:
+ *       a/b/d
+ *
+ *   For an absolute path, ".." cannot escape above the root.
+ *       /a/../../b
+ *
+ *   becomes:
+ *       /b
+ *
+ *   For a relative path that has no component available to remove,
+ *   ".." is preserved.
+ *       ../../example
+ *
+ *   therefore remains meaningful when no xsyspath is supplied.
+ *
+ * Important implementation detail:
+ *
+ *   The variable "parti" is the logical number of components currently
+ *   present in the normalised path.
+ *
+ *   It acts as the stack pointer while "." and ".." are processed.
+ *
+ *
+ * Empty / current-directory result:
+ *   If normalisation removes all components:
+ *       "."        -> "."
+ *
+ *   for a relative path, while:
+ *       "/."       -> "/"
+ *
+ *   for an absolute path.
+ *   A Windows drive root becomes:
+ *       C:/.
+ *   logically:
+ *       C:/
+ *
+ *
+ * Intended RXPP use:
+ *
+ *   normalisePath is suitable for resolving paths specified by RXPP
+ *   directives such as INCLUDE, USE, or MACRODIR against the directory
+ *   associated with the calling source.
+ *
+ *   Example:
+ *       ##MACRODIR ../../example
+ *
+ *   may be resolved internally as:
+ *       macrodir = normalisePath(
+ *           currentSourceDirectory,
+ *           "../../example"    )
+ *
+ *   This allows source files to refer to neighbouring directories
+ *   without knowing their absolute installation location.
+ *
+ *
+ * Deliberate limitations:
+ *
+ *   - The returned path always uses "/" separators, including Windows.
+ *
+ *   - Windows drive-relative paths such as:
+ *
+ *         C:example
+ *
+ *     have special native Windows semantics and should not be relied
+ *     upon. Prefer:
+ *         C:/example
+ *
+ *     for an absolute path, or:
+ *         example
+ *     for a normal relative path.
+ *
+ *   - UNC paths such as:
+ *         \\server\share\directory
+ *
+ *     are not explicitly preserved as UNC paths by the current
+ *     implementation. Add dedicated handling if RXPP needs UNC support.
+ *
+ *   - The procedure performs lexical path normalisation only.
+ *     It does not check whether the resulting file or directory exists.
+ *
+ *   - Symbolic links are not resolved. Consequently, lexical ".."
+ *     processing may differ from filesystem-level canonicalisation when
+ *     symbolic links are involved.
+ *
+ *
+ * Notes:
+ *   This routine performs path manipulation only. It does not access
+ *   the filesystem and therefore works with paths that do not yet exist.
+ *
+ *   This is intentional for RXPP, where paths may be constructed and
+ *   interpreted before the referenced file or directory is opened.
  * ------------------------------------------------------------------
  */
+
 normalisePath: procedure=.string
   arg xsyspath=.string, rawpath=.string
 
@@ -2599,7 +2884,7 @@ normalisePath: procedure=.string
 
   if absolute then normalised = normalised || '/'
 
-  do i = .int(1) to norm[0]
+  do i = .int(1) to parti
     if right(normalised, 1) \= '/' then normalised = normalised || '/'
     normalised = normalised || norm[i]
   end

@@ -64,7 +64,16 @@ os: class
      */
   loadpath: method = .string
     return rxfs..loadpath()
-    
+
+    /**
+     * Returns the path from which the program is running.
+     *
+     * @return .string Runtime load path.
+     */
+  isfile: method = .int
+    arg path=.string
+    return rxfs..isfile(path)
+
     /**
      * Returns the operating system name.
      *
