@@ -66,9 +66,10 @@ os: class
     return rxfs..loadpath()
 
     /**
-     * Returns the path from which the program is running.
+     * Tests whether a path names a regular file.
      *
-     * @return .string Runtime load path.
+     * @param path Path to inspect.
+     * @return .int 1 when the path is a regular file, otherwise 0.
      */
   isfile: method = .int
     arg path=.string
@@ -198,4 +199,3 @@ os: class
   file: method = .string
     arg message = .string, save = 0, initial = ""
     return rxplatform..file(message, save, initial)
-

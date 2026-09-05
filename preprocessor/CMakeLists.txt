@@ -194,6 +194,7 @@ add_dependencies(rxpp
         rxpa
         avl_tree
         platform
+        precomp_static
         fs
         fs_static
         _platform

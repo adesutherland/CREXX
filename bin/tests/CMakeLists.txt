@@ -301,6 +301,17 @@ set_tests_properties(crexx_project_build_contract PROPERTIES
         CREXX_PREP_TARGETS "crexx;rxvme"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
         TIMEOUT 180)
+add_test(NAME crexx_rxpp_builddir
+         COMMAND ${CMAKE_COMMAND}
+                 -DCREXX=$<TARGET_FILE:crexx>
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_rxpp_builddir_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_rxpp_builddir.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(crexx_rxpp_builddir PROPERTIES
+        LABELS "driver;preprocessor;build;regression"
+        CREXX_PREP_TARGETS "crexx;rxpp"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        TIMEOUT 60)
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -537,7 +548,8 @@ crexx_label_smoke_tests(
         crexx_native_rx_hash_provider
         crexx_native_default_link_strip
         crexx_project_build_contract
-        PREP_TARGETS crexx rxdas
+        crexx_rxpp_builddir
+        PREP_TARGETS crexx rxdas rxpp
 )
 
 function(crexx_isolate_bin_test_environment)
