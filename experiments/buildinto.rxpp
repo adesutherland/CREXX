@@ -1,0 +1,54 @@
+/* ------------------------------------------------------------------
+ * RXPP ##BUILDDIR example
+ *
+ * Demonstrates how RXPP can redirect the generated build artifacts
+ * to a directory different from the directory containing this .rxpp
+ * source file.
+ *
+ * ##buildDir ../temp
+ *
+ * The path may be absolute or relative. A relative path is resolved
+ * against the directory containing this .rxpp file. In this example,
+ * the build artifacts are therefore written to the "temp" directory
+ * one level above the source directory.
+ *
+ * ##BUILDDIR is currently supported only when the build is driven by
+ * CREXX.exe. It is not processed by a normal CMakeLists.txt build.
+ *
+ * The callermodule() result below can be used to verify that the
+ * generated .rxbin is executed from the configured build directory.
+ * ------------------------------------------------------------------ */
+
+options levelb
+##cflags nosrcmap
+##buildDir ../temp
+
+import system
+
+os = .Os()
+
+entries = .string[]
+call os.chdir('C:\Users\PeterJ\CLionProjects\CREXX\Beta2.1\examples')
+say 'before:' entries[0]
+say os.cwd()
+
+say 'Verify execution from the configured build directory'
+say '----------------------------------------------------'
+say 'Called module: 'os.callermodule()
+say
+say 'Current Work Directory: 'os.cwd()
+cwd=os.cwd()
+entries=.string[]
+count=os.listDir(cwd,entries)
+say 'entries in directory 'count
+
+direntries=os.DirEntries(cwd)
+do i=.int(1) to direntries[0]
+   say right(i,3) direntries[i]
+end
+
+say 'check if 'cdw' is directory 'os.isDir(cwd)
+say 'check if 'os.callermodule()' is directory 'os.isDir(os.callermodule())
+call os.chdir('build')
+say 'new Current Work Directory: 'os.cwd()
+return
