@@ -1,20 +1,42 @@
 options levelg
 namespace text_inspector_core_test
+import rxfnsb
 import ui
+import ui_contract
 import text_inspector
 
-app = .text_inspector..text_inspector_app()
-runtime = .ui..uiruntime(app)
-
-effect = runtime.dispatch("document.open.requested", "")
-if effect.kind() \= "choose_file" then do
-  say "FAIL: open did not produce choose_file"
+/* A normal provider size failure must remain an application event, not tear
+ * down the session as a malformed completion. Drive the adapter without I/O. */
+shell = .text_inspector_app()
+legacy_work = shell.update(.uievent_impl("document.open.requested", ""))
+legacy_work = shell.update(.uievent_impl("file.selected", "large.txt"))
+oversized = .string[]
+oversized[1] = copies("x", 16385)
+legacy_work = shell.update(.uievent_impl.with_items("file.loaded", "large.txt", oversized))
+shell_view = shell.view()
+if legacy_work.kind() \= "none" | shell_view.node_text(6) \= "Status: File exceeds the tracer message limits" then do
+  say "FAIL: oversized read did not report a recoverable effect failure"
   exit 1
 end
 
-effect = runtime.dispatch("file.selection.cancelled", "")
-view = runtime.view()
-if effect.kind() \= "none" | view.node_text(6) \= "Status: Open cancelled" then do
+/* Unit-test the feature directly. Session admission/correlation has its own
+ * conformance tests; driver tests below exercise the compatibility shell. */
+app = .text_inspector..text_inspector_component()
+
+effect = app.update(.uimessage("document.open.requested", .uipayload()))
+if effect.count() \= 1 then do
+  say "FAIL: open did not produce one effect"
+  exit 1
+end
+
+request = effect.item(1)
+if request.name() \= "ui.resource.choose" then do
+  say "FAIL: open did not request standard resource chooser"
+  exit 1
+end
+effect = app.update(.uimessage("ui.effect.cancelled", .uipayload('{"reason":"chooser_cancelled"}')))
+view = app.view()
+if effect.count() \= 0 | view.node_text(6) \= "Status: Open cancelled" then do
   say "FAIL: file-selection cancellation was not rendered"
   exit 1
 end
@@ -22,9 +44,12 @@ end
 records = .string[]
 records[1] = "alpha beta"
 records[2] = "café gamma delta"
-event = .ui..uievent_impl.with_items("file.loaded", "fixture.txt", records)
-effect = runtime.dispatch_event(event)
-view = runtime.view()
+body = .uipayload()
+call body.put_resource("resource", .uiresource("fixture-1", "session", "fixture.txt"))
+call body.put_texts("records", records)
+event = .uimessage("io.text.read.completed", body)
+effect = app.update(event)
+view = app.view()
 if view.node_text(3) \= "Lines: 2" | view.node_text(4) \= "Words: 5" | view.node_text(5) \= "Characters: 26" then do
   say "FAIL: shared Text Inspector update produced the wrong counts"
   exit 1
@@ -38,16 +63,22 @@ if view.node_relation(8) \= "right" | view.node_anchor(8) \= "open" then do
   exit 1
 end
 
-effect = runtime.dispatch("document.clear.requested", "")
-view = runtime.view()
+effect = app.update(.uimessage("document.clear.requested", .uipayload()))
+view = app.view()
 if view.node_text(1) \= "File: (none)" | view.node_text(4) \= "Words: 0" then do
   say "FAIL: clear did not reset the shared model"
   exit 1
 end
 
-effect = runtime.dispatch("app.quit.requested", "")
-if effect.kind() \= "quit" then do
-  say "FAIL: quit action did not produce quit effect"
+effect = app.update(.uimessage("ui.close.requested", .uipayload()))
+if effect.count() \= 1 then do
+  say "FAIL: close request did not produce one effect"
+  exit 1
+end
+
+request = effect.item(1)
+if request.name() \= "ui.close" then do
+  say "FAIL: close request did not produce standard close effect"
   exit 1
 end
 

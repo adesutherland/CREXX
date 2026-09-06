@@ -1,0 +1,1268 @@
+{
+  "version": 0,
+  "title": "cREXX UI contract v0",
+  "reserved_prefixes": [
+    "ui.",
+    "widget.",
+    "io."
+  ],
+  "profiles": {
+    "core": [
+      "ui.lifecycle",
+      "ui.commands",
+      "ui.effects"
+    ],
+    "tracer.compat": [
+      "ui.lifecycle",
+      "ui.commands",
+      "ui.effects",
+      "ui.resource.choose",
+      "io.text.read"
+    ],
+    "terminal.planned": [
+      "ui.lifecycle",
+      "ui.commands",
+      "ui.effects",
+      "ui.focus",
+      "ui.keyboard",
+      "ui.text",
+      "ui.viewport",
+      "ui.widgets",
+      "ui.collections",
+      "ui.scroll"
+    ],
+    "web.planned": [
+      "ui.lifecycle",
+      "ui.commands",
+      "ui.effects",
+      "ui.focus",
+      "ui.keyboard",
+      "ui.text",
+      "ui.viewport",
+      "ui.widgets",
+      "ui.collections",
+      "ui.session"
+    ]
+  },
+  "messages": [
+    {
+      "name": "ui.ready",
+      "direction": "event",
+      "capability": "ui.lifecycle",
+      "summary": "The surface is ready to accept interaction.",
+      "role": "input",
+      "fields": {}
+    },
+    {
+      "name": "ui.close.requested",
+      "direction": "event",
+      "capability": "ui.lifecycle",
+      "summary": "A user requested close; the application may save or confirm.",
+      "role": "input",
+      "fields": {
+        "reason": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.closed",
+      "direction": "event",
+      "capability": "ui.lifecycle",
+      "summary": "The host completed an orderly close.",
+      "role": "completion",
+      "fields": {}
+    },
+    {
+      "name": "ui.visibility.changed",
+      "direction": "event",
+      "capability": "ui.visibility",
+      "summary": "The surface visibility changed.",
+      "role": "input",
+      "fields": {
+        "visible": {
+          "type": "boolean",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "ui.suspended",
+      "direction": "event",
+      "capability": "ui.suspend",
+      "summary": "The host reports suspension; delivery is best effort.",
+      "role": "input",
+      "fields": {
+        "reason": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.resumed",
+      "direction": "event",
+      "capability": "ui.suspend",
+      "summary": "The host reports resumption.",
+      "role": "input",
+      "fields": {}
+    },
+    {
+      "name": "ui.command.invoked",
+      "direction": "event",
+      "capability": "ui.commands",
+      "summary": "A registered enabled command was invoked.",
+      "role": "input",
+      "fields": {
+        "command": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.focus.changed",
+      "direction": "event",
+      "capability": "ui.focus",
+      "summary": "The focused logical node changed.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "previous": {
+          "type": "string",
+          "required": false,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.navigation.requested",
+      "direction": "event",
+      "capability": "ui.navigation",
+      "summary": "The user requested navigation.",
+      "role": "input",
+      "fields": {
+        "destination": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.navigation.changed",
+      "direction": "event",
+      "capability": "ui.navigation",
+      "summary": "Navigation completed.",
+      "role": "completion",
+      "fields": {
+        "destination": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.viewport.changed",
+      "direction": "event",
+      "capability": "ui.viewport",
+      "summary": "Available size changed; units are explicit.",
+      "role": "input",
+      "fields": {
+        "width": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "height": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unit": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "cells",
+            "css-pixels",
+            "logical-pixels"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.preferences.changed",
+      "direction": "event",
+      "capability": "ui.preferences",
+      "summary": "Host presentation preferences changed.",
+      "role": "input",
+      "fields": {
+        "theme": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "light",
+            "dark",
+            "system"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        },
+        "reduced_motion": {
+          "type": "boolean",
+          "required": false
+        },
+        "high_contrast": {
+          "type": "boolean",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "ui.input.key",
+      "direction": "event",
+      "capability": "ui.keyboard",
+      "summary": "A key action; release is optional and never synthesized.",
+      "role": "input",
+      "fields": {
+        "key": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "modifiers": {
+          "type": "strings",
+          "required": true,
+          "maxItems": 4096
+        },
+        "phase": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "press",
+            "repeat",
+            "release"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.input.text",
+      "direction": "event",
+      "capability": "ui.text",
+      "summary": "Committed Unicode text, separate from physical keys.",
+      "role": "input",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.input.composition",
+      "direction": "event",
+      "capability": "ui.composition",
+      "summary": "Input-method composition changed.",
+      "role": "input",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "phase": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "start",
+            "update",
+            "end"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.input.pasted",
+      "direction": "event",
+      "capability": "ui.paste",
+      "summary": "A complete pasted text block.",
+      "role": "input",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "widget.activated",
+      "direction": "event",
+      "capability": "ui.widgets",
+      "summary": "A logical control was activated by any input modality.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "widget.value.changed",
+      "direction": "event",
+      "capability": "ui.widgets",
+      "summary": "An edited string value changed.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "widget.value.committed",
+      "direction": "event",
+      "capability": "ui.widgets",
+      "summary": "An edited string value was committed.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "widget.checked.changed",
+      "direction": "event",
+      "capability": "ui.widgets",
+      "summary": "A check or toggle state changed.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "checked": {
+          "type": "boolean",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "widget.selection.changed",
+      "direction": "event",
+      "capability": "ui.collections",
+      "summary": "Selection changed using stable item IDs.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "items": {
+          "type": "strings",
+          "required": true,
+          "maxItems": 4096
+        }
+      }
+    },
+    {
+      "name": "widget.item.activated",
+      "direction": "event",
+      "capability": "ui.collections",
+      "summary": "A collection item was activated.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "item": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "widget.expansion.changed",
+      "direction": "event",
+      "capability": "ui.collections",
+      "summary": "A tree item expansion changed.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "item": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "expanded": {
+          "type": "boolean",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "widget.form.submitted",
+      "direction": "event",
+      "capability": "ui.forms",
+      "summary": "A form was submitted; values remain in feature state.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "widget.validation.completed",
+      "direction": "event",
+      "capability": "ui.validation",
+      "summary": "Validation completed for a field or form.",
+      "role": "completion",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "valid": {
+          "type": "boolean",
+          "required": true
+        },
+        "message": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "widget.text.selection.changed",
+      "direction": "event",
+      "capability": "ui.text.selection",
+      "summary": "Selection offsets are zero-based Unicode scalar boundaries, end exclusive.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "start": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "end": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    {
+      "name": "ui.pointer.changed",
+      "direction": "event",
+      "capability": "ui.pointer",
+      "summary": "Pointer activity in explicit coordinate units.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "phase": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "press",
+            "release",
+            "move",
+            "cancel"
+          ]
+        },
+        "x": {
+          "type": "integer",
+          "required": true,
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "y": {
+          "type": "integer",
+          "required": true,
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "unit": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "cells",
+            "css-pixels",
+            "logical-pixels"
+          ]
+        },
+        "button": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.scrolled",
+      "direction": "event",
+      "capability": "ui.scroll",
+      "summary": "A scroll request with explicit delta units.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "x": {
+          "type": "integer",
+          "required": true,
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "y": {
+          "type": "integer",
+          "required": true,
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "unit": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "lines",
+            "pages",
+            "css-pixels"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.context.requested",
+      "direction": "event",
+      "capability": "ui.context",
+      "summary": "Context actions were requested.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.gesture.changed",
+      "direction": "event",
+      "capability": "ui.gestures",
+      "summary": "An optional high-level gesture.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "gesture": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "phase": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "start",
+            "update",
+            "end",
+            "cancel"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.drop.received",
+      "direction": "event",
+      "capability": "ui.dragdrop",
+      "summary": "A drop supplies resource tokens or text, not native handles.",
+      "role": "input",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "text": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        },
+        "resource": {
+          "type": "resource",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "ui.dialog.accepted",
+      "direction": "event",
+      "capability": "ui.dialog",
+      "summary": "A dialog returned a declared response.",
+      "role": "completion",
+      "fields": {
+        "response": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.resource.selected",
+      "direction": "event",
+      "capability": "ui.resource.choose",
+      "summary": "A user selected a scoped resource token.",
+      "role": "completion",
+      "fields": {
+        "resource": {
+          "type": "resource",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "io.text.read.completed",
+      "direction": "event",
+      "capability": "io.text.read",
+      "summary": "A text read returned physical records.",
+      "role": "completion",
+      "fields": {
+        "resource": {
+          "type": "resource",
+          "required": true
+        },
+        "records": {
+          "type": "strings",
+          "required": true,
+          "maxItems": 4096
+        }
+      }
+    },
+    {
+      "name": "io.text.write.completed",
+      "direction": "event",
+      "capability": "io.text.write",
+      "summary": "A text write completed.",
+      "role": "completion",
+      "fields": {
+        "resource": {
+          "type": "resource",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "ui.clipboard.read.completed",
+      "direction": "event",
+      "capability": "ui.clipboard.read",
+      "summary": "Clipboard text was obtained.",
+      "role": "completion",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.timer.elapsed",
+      "direction": "event",
+      "capability": "ui.timer",
+      "summary": "A scheduled timer elapsed.",
+      "role": "completion",
+      "fields": {}
+    },
+    {
+      "name": "ui.effect.completed",
+      "direction": "event",
+      "capability": "ui.effects",
+      "summary": "A finite operation completed successfully.",
+      "role": "completion",
+      "fields": {}
+    },
+    {
+      "name": "ui.effect.failed",
+      "direction": "event",
+      "capability": "ui.effects",
+      "summary": "An operation failed with a stable code and display message.",
+      "role": "completion",
+      "fields": {
+        "code": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "message": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.effect.cancelled",
+      "direction": "event",
+      "capability": "ui.effects",
+      "summary": "An operation ended cancelled.",
+      "role": "completion",
+      "fields": {
+        "reason": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.effect.progress",
+      "direction": "event",
+      "capability": "ui.effects",
+      "summary": "Nonterminal progress for an accepted operation.",
+      "role": "progress",
+      "fields": {
+        "completed": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total": {
+          "type": "integer",
+          "required": false,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "message": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.session.connected",
+      "direction": "event",
+      "capability": "ui.session",
+      "summary": "Transport attached to a logical application session.",
+      "role": "input",
+      "fields": {
+        "revision": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    {
+      "name": "ui.session.disconnected",
+      "direction": "event",
+      "capability": "ui.session",
+      "summary": "Transport detached; this does not imply application shutdown.",
+      "role": "input",
+      "fields": {
+        "reason": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.session.resumed",
+      "direction": "event",
+      "capability": "ui.session",
+      "summary": "Transport resumed from a declared revision.",
+      "role": "input",
+      "fields": {
+        "revision": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    {
+      "name": "ui.capabilities.changed",
+      "direction": "event",
+      "capability": "ui.capabilities",
+      "summary": "The host reported its capability names.",
+      "role": "input",
+      "fields": {
+        "capabilities": {
+          "type": "strings",
+          "required": true,
+          "maxItems": 4096
+        }
+      }
+    },
+    {
+      "name": "ui.permission.changed",
+      "direction": "event",
+      "capability": "ui.permissions",
+      "summary": "A host permission decision changed.",
+      "role": "completion",
+      "fields": {
+        "permission": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "state": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "granted",
+            "denied",
+            "prompt"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.stream.item",
+      "direction": "event",
+      "capability": "ui.stream",
+      "summary": "A subscription produced one text item.",
+      "role": "progress",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.close",
+      "direction": "effect",
+      "capability": "ui.lifecycle",
+      "summary": "Close the owning surface after application consent.",
+      "mode": "finite",
+      "success": "ui.closed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {}
+    },
+    {
+      "name": "ui.focus.set",
+      "direction": "effect",
+      "capability": "ui.focus",
+      "summary": "Move focus to a stable node.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.navigation.go",
+      "direction": "effect",
+      "capability": "ui.navigation",
+      "summary": "Navigate within the application.",
+      "mode": "finite",
+      "success": "ui.navigation.changed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "destination": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.item.reveal",
+      "direction": "effect",
+      "capability": "ui.collections",
+      "summary": "Reveal a stable collection item.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "item": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.dialog.confirm",
+      "direction": "effect",
+      "capability": "ui.dialog",
+      "summary": "Ask for a confirmation.",
+      "mode": "finite",
+      "success": "ui.dialog.accepted",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "title": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "message": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.resource.choose",
+      "direction": "effect",
+      "capability": "ui.resource.choose",
+      "summary": "Choose a resource using a host-appropriate picker.",
+      "mode": "finite",
+      "success": "ui.resource.selected",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "title": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "purpose": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "open",
+            "save"
+          ]
+        }
+      }
+    },
+    {
+      "name": "io.text.read",
+      "direction": "effect",
+      "capability": "io.text.read",
+      "summary": "Read records through a scoped resource provider.",
+      "mode": "finite",
+      "success": "io.text.read.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "resource": {
+          "type": "resource",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "io.text.write",
+      "direction": "effect",
+      "capability": "io.text.write",
+      "summary": "Write records through a scoped resource provider.",
+      "mode": "finite",
+      "success": "io.text.write.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "resource": {
+          "type": "resource",
+          "required": true
+        },
+        "records": {
+          "type": "strings",
+          "required": true,
+          "maxItems": 4096
+        }
+      }
+    },
+    {
+      "name": "ui.clipboard.read",
+      "direction": "effect",
+      "capability": "ui.clipboard.read",
+      "summary": "Request permission-gated clipboard text.",
+      "mode": "finite",
+      "success": "ui.clipboard.read.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {}
+    },
+    {
+      "name": "ui.clipboard.write",
+      "direction": "effect",
+      "capability": "ui.clipboard.write",
+      "summary": "Request clipboard text replacement.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.timer.schedule",
+      "direction": "effect",
+      "capability": "ui.timer",
+      "summary": "Schedule one timer; the owner cancels it when no longer relevant.",
+      "mode": "finite",
+      "success": "ui.timer.elapsed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "delay_ms": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    {
+      "name": "ui.validation.run",
+      "direction": "effect",
+      "capability": "ui.validation",
+      "summary": "Request a registered validator.",
+      "mode": "finite",
+      "success": "widget.validation.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "validator": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        }
+      }
+    },
+    {
+      "name": "ui.accessibility.announce",
+      "direction": "effect",
+      "capability": "ui.announce",
+      "summary": "Announce a message through the host accessibility surface.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "message": {
+          "type": "string",
+          "required": true,
+          "maxLength": 16384
+        },
+        "urgency": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "polite",
+            "assertive"
+          ]
+        }
+      }
+    },
+    {
+      "name": "ui.permission.request",
+      "direction": "effect",
+      "capability": "ui.permissions",
+      "summary": "Ask the host for a named permission.",
+      "mode": "finite",
+      "success": "ui.permission.changed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "permission": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    },
+    {
+      "name": "ui.share",
+      "direction": "effect",
+      "capability": "ui.share",
+      "summary": "Share a resource or text through the host.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "text": {
+          "type": "string",
+          "required": false,
+          "maxLength": 16384
+        },
+        "resource": {
+          "type": "resource",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "ui.pointer.capture",
+      "direction": "effect",
+      "capability": "ui.pointer",
+      "summary": "Capture or release a logical pointer.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "node": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        },
+        "capture": {
+          "type": "boolean",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "ui.session.reconnect",
+      "direction": "effect",
+      "capability": "ui.session",
+      "summary": "Request transport reconnection.",
+      "mode": "finite",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "revision": {
+          "type": "integer",
+          "required": true,
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    {
+      "name": "ui.stream.subscribe",
+      "direction": "effect",
+      "capability": "ui.stream",
+      "summary": "Subscribe to a named stream until completion or cancellation.",
+      "mode": "subscription",
+      "success": "ui.effect.completed",
+      "failure": "ui.effect.failed",
+      "cancel": "ui.effect.cancelled",
+      "progress": "ui.effect.progress",
+      "fields": {
+        "stream": {
+          "type": "string",
+          "required": true,
+          "maxLength": 128
+        }
+      }
+    }
+  ]
+}

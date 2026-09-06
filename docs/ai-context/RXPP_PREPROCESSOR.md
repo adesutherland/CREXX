@@ -67,6 +67,28 @@ strings, ordinary identifiers, keywords, numbers, and operators. It does not yet
 project generated CREXX semantic tokens or included-file macro definitions back
 onto the authored RXPP buffer.
 
+## Directory macros and build directories
+
+Recent additions separate macro discovery from output placement:
+
+- `##LOADMACRO ui` registers the `.rxpm` files in the `ui` directory relative
+  to RXPP's selected system/macro-library directory (an absolute directory also
+  works). Bodies load lazily on invocation. Later search roots override an
+  earlier same-named package. Current package filenames must be lowercase,
+  using letters, digits and underscores; each file contains one `##MACRO` body
+  terminated by `##MEND`. The complete macro name is matched, not a prefix.
+- `##BUILDDIR path` is consumed by `bin/crexx.crexx`, which scans the first
+  64 source lines and resolves it relative to the command's working directory.
+  RXPP suppresses the directive in generated cREXX but does not itself move
+  build products. Direct CMake recipes should keep their explicit `-o` paths.
+
+The UI worked example uses `##LOADMACRO ui` with `ui_node.rxpm`,
+`ui_command.rxpm` and `ui_launcher.rxpm`, staged below the selected macro-library
+root. It retains one RXPP invocation per generated source file: these additions
+do not introduce arbitrary multi-output generation. See
+`preprocessor/tests/run_rxpp_loadmacro.cmake` and the Text Inspector generation
+test for executable examples.
+
 ## Source Maps
 
 RXPP emits source maps by default for generated CREXX. The generated file's

@@ -10,6 +10,10 @@ set(_text_inspector_tui_generated
         "${_text_inspector_generated_root}/text_inspector_tui.crexx")
 set(_text_inspector_module "${CMAKE_CURRENT_BINARY_DIR}/text_inspector.rxbin")
 set(_text_inspector_tui "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_tui.rxbin")
+set(_text_inspector_contract_images
+        "${CMAKE_BINARY_DIR}/bin/ui_compat.rxbin"
+        "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin"
+        "${CMAKE_BINARY_DIR}/bin/ui_catalog.rxbin")
 
 set(_text_inspector_rxpp_support
         maclib.rexx macsys.rexx mathlib.rexx syslib.rexx)
@@ -25,10 +29,13 @@ foreach(_support IN LISTS _text_inspector_rxpp_support)
             "${_text_inspector_rxpp_root}/${_support}"
             COPYONLY)
 endforeach()
-configure_file(
-        "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
-        "${_text_inspector_rxpp_root}/ui_macros.rxpm"
-        COPYONLY)
+set(_text_inspector_ui_macros)
+foreach(macro IN ITEMS ui_node ui_command ui_launcher)
+    list(APPEND _text_inspector_ui_macros
+            "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm")
+    configure_file("${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm"
+            "${_text_inspector_rxpp_root}/ui/${macro}.rxpm" COPYONLY)
+endforeach()
 
 add_custom_command(
         OUTPUT "${_text_inspector_generated}"
@@ -38,7 +45,7 @@ add_custom_command(
                 -m "${_text_inspector_rxpp_root}/maclib.rexx"
         DEPENDS rxpp rxpp_support_files
                 "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector.rxpp"
-                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+                ${_text_inspector_ui_macros}
                 ${_text_inspector_support_sources}
         COMMENT "Generating source-mapped Text Inspector application with RXPP"
         VERBATIM)
@@ -51,7 +58,7 @@ add_custom_command(
                 -m "${_text_inspector_rxpp_root}/maclib.rexx"
         DEPENDS rxpp rxpp_support_files
                 "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_tui.rxpp"
-                "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+                ${_text_inspector_ui_macros}
                 ${_text_inspector_support_sources}
         COMMENT "Generating Text Inspector TUI launcher with RXPP"
         VERBATIM)
@@ -62,7 +69,8 @@ add_custom_command(
                 -i "${CMAKE_BINARY_DIR}/bin"
                 -o text_inspector "${_text_inspector_generated}"
         COMMAND $<TARGET_FILE:rxas> -o text_inspector text_inspector
-        DEPENDS rxc rxas compiler_exit_bin ui "${_text_inspector_generated}"
+        DEPENDS rxc rxas compiler_exit_bin ui ui_compat "${_text_inspector_generated}"
+                ${_text_inspector_contract_images}
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Compiling and assembling Text Inspector application"
@@ -105,7 +113,7 @@ if(ENABLE_GTK)
                     -m "${_text_inspector_rxpp_root}/maclib.rexx"
             DEPENDS rxpp rxpp_support_files
                     "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_gtk.rxpp"
-                    "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui_macros.rxpm"
+                    ${_text_inspector_ui_macros}
                     ${_text_inspector_support_sources}
             COMMENT "Generating Text Inspector GTK launcher with RXPP"
             VERBATIM)
@@ -146,13 +154,18 @@ if(BUILD_TESTING)
 
     crexx_add_rexx_opt_matrix(
             NAME text_inspector_core
+            RUNNER rxvm
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_text_inspector_core.crexx
             TARGET_GROUP example_text_inspector_artifacts
             IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS ui text_inspector_module_artifact
+                    "${_text_inspector_module}" ${_text_inspector_contract_images}
             RUNTIME_ARGS
                     ${_text_inspector_module}
                     ${CMAKE_BINARY_DIR}/bin/ui
+                    ${CMAKE_BINARY_DIR}/bin/ui_compat
+                    ${CMAKE_BINARY_DIR}/bin/ui_contract
+                    ${CMAKE_BINARY_DIR}/bin/ui_catalog
                     ${CMAKE_BINARY_DIR}/bin/library
             TEST_LABELS "examples;ui;events;effects;rxpp;classes"
             REQUIRED_OUTPUT_REGEX "PASS: Text Inspector shared application contract"
@@ -160,14 +173,19 @@ if(BUILD_TESTING)
 
     crexx_add_rexx_opt_matrix(
             NAME text_inspector_tui
+            RUNNER rxvm
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_text_inspector_tui.crexx
             TARGET_GROUP example_text_inspector_artifacts
             IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS ui ui_tui text_inspector_module_artifact
+                    "${_text_inspector_module}" ${_text_inspector_contract_images}
             RUNTIME_ARGS
                     ${_text_inspector_module}
                     ${CMAKE_BINARY_DIR}/bin/ui_tui
                     ${CMAKE_BINARY_DIR}/bin/ui
+                    ${CMAKE_BINARY_DIR}/bin/ui_compat
+                    ${CMAKE_BINARY_DIR}/bin/ui_contract
+                    ${CMAKE_BINARY_DIR}/bin/ui_catalog
                     ${CMAKE_BINARY_DIR}/bin/library
                     -a ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/sample.txt
             TEST_LABELS "examples;ui;tui;event-loop;effects;rxpp"
@@ -177,16 +195,21 @@ if(BUILD_TESTING)
     if(ENABLE_GTK)
         crexx_add_rexx_opt_matrix(
                 NAME text_inspector_gtk
+                RUNNER rxvm
                 SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_text_inspector_gtk.crexx
                 TARGET_GROUP example_text_inspector_artifacts
                 IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
                 DEPENDS ui ui_gtk _ui_gtk_native
                         text_inspector_module_artifact
+                        "${_text_inspector_module}" ${_text_inspector_contract_images}
                 RUNTIME_ARGS
                         ${CMAKE_BINARY_DIR}/bin/rx_ui_gtk_native
                         ${_text_inspector_module}
                         ${CMAKE_BINARY_DIR}/bin/ui_gtk
                         ${CMAKE_BINARY_DIR}/bin/ui
+                    ${CMAKE_BINARY_DIR}/bin/ui_compat
+                    ${CMAKE_BINARY_DIR}/bin/ui_contract
+                    ${CMAKE_BINARY_DIR}/bin/ui_catalog
                         ${CMAKE_BINARY_DIR}/bin/library
                 TEST_LABELS "examples;ui;gtk;event-loop;rxpa;callback;rxpp"
                 REQUIRED_OUTPUT_REGEX "PASS: Text Inspector GTK callback path"

@@ -1,0 +1,869 @@
+/* UI contract v0: Level G values, validation, commands and owner-driven queues.
+ * catalogue.json defines the standard vocabulary; this file defines its rules.
+ * No native handles, threads, terminal protocols or browser objects live here.
+ */
+options levelg
+namespace ui_contract expose uipayload uiresource uimessage uieffects uicomponent uicapabilities uicommand uiregistry uisession
+import rxfnsb
+import rxjson
+import ui
+import ui_catalog
+
+/** A scoped resource identity. The provider owns its underlying path/handle. */
+uiresource: class
+  _json = .string
+
+  /** @param id opaque provider token
+   * @param scope local, session or remote
+   * @param display_name user-visible name, never used to resolve the resource
+   * @param readable nonzero if readable
+   * @param writable nonzero if writable
+   */
+  *: factory
+    arg id = .string, scope = .string, display_name = .string, readable = 1, writable = 0
+    data = .uipayload()
+    call data.put_text("id", id)
+    call data.put_text("scope", scope)
+    call data.put_text("display_name", display_name)
+    call data.put_flag("readable", readable)
+    call data.put_flag("writable", writable)
+    _json = data.json()
+    return
+
+  /** @param json encoded resource; validation occurs at the message boundary */
+  from_json: factory
+    arg json = .string
+    _json = json
+    return
+
+  /** @return serialized resource descriptor */
+  json: method = .string
+    return _json
+  /** @return opaque provider token */
+  id: method = .string
+    return jsonget(_json, "id")
+  /** @return provider scope */
+  scope: method = .string
+    return jsonget(_json, "scope")
+  /** @return display-only resource name */
+  display_name: method = .string
+    return jsonget(_json, "display_name")
+
+/** Named typed payload fields. Application code need not concatenate JSON. */
+uipayload: class
+  _json = .string
+
+  /** @param json optional serialized payload object */
+  *: factory
+    arg json = "{}"
+    _json = json
+    return
+
+  /** @return payload serialization */
+  json: method = .string
+    return _json
+
+  /** @param name field name
+   * @return text value, or empty when absent
+   */
+  text: method = .string
+    arg name = .string
+    return jsonget(_json, name)
+
+  /** @param name field name
+   * @return validated integer value; zero for missing/invalid fields
+   */
+  integer: method = .int
+    arg name = .string
+    doc = .jsondocument(_json)
+    result = 0
+    rc = doc.node_int(doc.find(name), result)
+    return result
+
+  /** @param name field name
+   * @return boolean as zero or one
+   */
+  flag: method = .int
+    arg name = .string
+    return jsonget(_json, name) = "true"
+
+  /** @param name field name
+   * @return owning text-record array
+   */
+  texts: method = .string[]
+    arg name = .string
+    result = .string[]
+    count = jsoncount(_json, name)
+    do index = 1 to count
+      result[index] = jsonget(_json, name || "." || index)
+    end
+    return result
+
+  /** @param name field name
+   * @return scoped resource value
+   */
+  resource: method = .uiresource
+    arg name = .string
+    return .uiresource.from_json(jsonget(_json, name))
+
+  /** Set a text field. @param name field name @param value text */
+  put_text: method = .void
+    arg name = .string, value = .string
+    call put_encoded(name, jsonquote(value))
+    return
+  /** Set an integer field. @param name field name @param value integer */
+  put_integer: method = .void
+    arg name = .string, value = .int
+    call put_encoded(name, value as .string)
+    return
+  /** Set a boolean field. @param name field name @param value zero or one */
+  put_flag: method = .void
+    arg name = .string, value = .int
+    encoded = "false"
+    if value then encoded = "true"
+    call put_encoded(name, encoded)
+    return
+  /** Set records. @param name field name @param values text records */
+  put_texts: method = .void
+    arg name = .string, values = .string[]
+    encoded = "["
+    do index = 1 to values[0]
+      if index > 1 then encoded = encoded || ","
+      encoded = encoded || jsonquote(values[index])
+    end
+    call put_encoded(name, encoded || "]")
+    return
+  /** Set a resource. @param name field name @param value scoped descriptor */
+  put_resource: method = .void
+    arg name = .string, value = .uiresource
+    call put_encoded(name, value.json())
+    return
+
+  put_encoded: method = .void
+    arg name = .string, encoded = .string
+    names = .string[]
+    count = jsonmembers(_json, "", names)
+    result = "{"
+    separator = ""
+    do index = 1 to count
+      key = names[index]
+      if key = name then iterate
+      value = jsonget(_json, key)
+      if jsontype(_json, key) = "string" then value = jsonquote(value)
+      result = result || separator || jsonquote(key) || ":" || value
+      separator = ","
+    end
+    _json = result || separator || jsonquote(name) || ":" || encoded || "}"
+    return
+
+/** Immutable-by-interface message; the session stamps routing/order metadata. */
+uimessage: class
+  _name = .string
+  _body = .string
+  _target = .string
+  _direction = .string
+  _request = .string
+  _session = .string
+  _sequence = .int
+  _wire_error = .string
+
+  /** Construct a local message; empty metadata is assigned on admission.
+   * @param name registered event/effect name
+   * @param body typed fields
+   * @param target component ID (not widget ID)
+   * @param direction event or effect
+   * @param request_id correlation token for effect outcomes
+   * @param session_id owning application session
+   * @param sequence owner-assigned event order; zero before admission
+   */
+  *: factory
+    arg name = .string, body = .uipayload, target = "root", direction = "event", request_id = "", session_id = "", sequence = 0
+    _name = name
+    _body = body.json()
+    _target = target
+    _direction = direction
+    _request = request_id
+    _session = session_id
+    _sequence = sequence
+    _wire_error = ""
+    return
+
+  /** Decode a transport envelope. Validate through uiregistry before use.
+   * @param wire JSON envelope
+   */
+  from_json: factory
+    arg wire = .string
+    _wire_error = ""
+    _sequence = 0
+    _name = jsonget(wire, "name")
+    _body = jsonget(wire, "payload")
+    _target = jsonget(wire, "target")
+    _direction = jsonget(wire, "direction")
+    _request = jsonget(wire, "request_id")
+    _session = jsonget(wire, "session_id")
+    doc = .jsondocument(wire)
+    version = 0
+    if doc.node_int(doc.find("version"), version) \= 0 | version \= 0 then
+      _wire_error = "unsupported or missing version"
+    if doc.node_int(doc.find("sequence"), _sequence) \= 0 then
+      _wire_error = "invalid sequence"
+    fields = .string[]
+    index = .int
+    count = jsonmembers(wire, "", fields)
+    if count \= 8 then _wire_error = "invalid envelope fields"
+    do index = 1 to count
+      if wordpos(fields[index], "version direction name target payload request_id session_id sequence") = 0 then
+        _wire_error = "unknown envelope field"
+    end
+    do index = 1 to 5
+      field = word("name target direction request_id session_id", index)
+      if jsontype(wire, field) \= "string" then _wire_error = "invalid envelope text"
+    end
+    return
+
+  /** @return stable name */
+  name: method = .string
+    return _name
+  /** @return event or effect */
+  direction: method = .string
+    return _direction
+  /** @return target component identity */
+  target: method = .string
+    return _target
+  /** @return owning payload value */
+  body: method = .uipayload
+    return .uipayload(_body)
+  /** @return request correlation token */
+  request_id: method = .string
+    return _request
+  /** @return session identity */
+  session_id: method = .string
+    return _session
+  /** @return admission sequence */
+  sequence: method = .int
+    return _sequence
+  /** @return decoding error, empty on success */
+  wire_error: method = .string
+    return _wire_error
+  /** @return complete JSON envelope */
+  json: method = .string
+    return '{"version":0,"direction":' || jsonquote(_direction) || ',"name":' || jsonquote(_name) || ',"target":' || jsonquote(_target) || ',"payload":' || _body || ',"request_id":' || jsonquote(_request) || ',"session_id":' || jsonquote(_session) || ',"sequence":' || _sequence || '}'
+
+/** An ordered collection of effect requests; empty means no work. */
+uieffects: class
+  _items = .uimessage[]
+  *: factory
+    return
+  /** @param effect requested work */
+  add: method = .void
+    arg effect = .uimessage
+    _items[_items[0] + 1] = effect
+    return
+  /** @return requested effect count */
+  count: method = .int
+    return _items[0]
+  /** @param index one-based position @return requested work */
+  item: method = .uimessage
+    arg index = .int
+    return _items[index]
+
+/** A cohesive feature; the session owns the mutable component value. */
+uicomponent: interface
+  /** @param event validated targeted event @return zero or more effects */
+  update: method = .uieffects
+    arg event = .uimessage
+  /** @return logical view; drivers decide its presentation */
+  view: method = .uiview
+
+/** Declared executor capabilities. Planned profiles do not implement services. */
+uicapabilities: class
+  _names = .string
+  /** @param profile catalogue profile, empty for an explicit set */
+  *: factory
+    arg profile = "core"
+    _names = catalogue_profile(profile)
+    return
+  /** @param name implemented capability */
+  enable: method = .void
+    arg name = .string
+    if wordpos(name, _names) = 0 then _names = strip(_names || " " || name)
+    return
+  /** @param name capability @return one when advertised */
+  has: method = .int
+    arg name = .string
+    return wordpos(name, _names) > 0
+  /** @return advertised names */
+  names: method = .string
+    return _names
+
+/** A named action shared by buttons, menus, shortcuts and future builders. */
+uicommand: class
+  _id = .string
+  _label = .string
+  _target = .string
+  _event = .string
+  _shortcut = .string
+  _enabled = .int
+  /** @param id stable command name @param label display text
+   * @param target feature owner @param event registered intent event
+   * @param shortcut optional backend-independent key-binding hint
+   */
+  *: factory
+    arg id = .string, label = .string, target = .string, event = .string, shortcut = ""
+    _id = id
+    _label = label
+    _target = target
+    _event = event
+    _shortcut = shortcut
+    _enabled = 1
+    return
+  id: method = .string
+    return _id
+  label: method = .string
+    return _label
+  target: method = .string
+    return _target
+  event_name: method = .string
+    return _event
+  shortcut: method = .string
+    return _shortcut
+  enabled: method = .int
+    return _enabled
+  /** @param enabled whether invocation is currently permitted */
+  set_enabled: method = .void
+    arg enabled = .int
+    _enabled = enabled
+    return
+
+/** Standard definitions plus explicitly registered application extensions. */
+uiregistry: class
+  _names = .string[]
+  _definitions = .string[]
+  *: factory
+    return
+
+  /** @param name name to resolve @return catalogue JSON or empty */
+  definition: method = .string
+    arg name = .string
+    standard = catalogue_entry(name)
+    if standard \= "" then return standard
+    do index = 1 to _names[0]
+      if _names[index] = name then return _definitions[index]
+    end
+    return ""
+
+  /** Register an application-owned event. Reserved namespaces cannot be replaced.
+   * @param name namespaced event name @param fields catalogue field definitions
+   * @param role input or completion; results cannot be posted as ordinary input
+   * @return zero on success, negative on invalid/duplicate registration
+   */
+  register_event: method = .int
+    arg name = .string, fields = "{}", role = "input"
+    if valid_name(name) = 0 | definition(name) \= "" then return -1
+    if left(name, 3) = "ui." | left(name, 7) = "widget." | left(name, 3) = "io." then return -2
+    if valid_fields(fields) = 0 then return -3
+    if wordpos(role, "input completion") = 0 then return -4
+    slot = _names[0] + 1
+    _names[slot] = name
+    _definitions[slot] = '{"name":' || jsonquote(name) || ',"direction":"event","capability":"application","role":' || jsonquote(role) || ',"fields":' || fields || '}'
+    return 0
+
+  /** Register application work with a named executor capability and success event.
+   * @param name namespaced effect @param capability executor capability
+   * @param fields payload specification @param success registered result event
+   * @return zero on success; registration does not install an executor
+   */
+  register_effect: method = .int
+    arg name = .string, capability = .string, fields = .string, success = .string
+    if valid_name(name) = 0 | definition(name) \= "" | valid_name(capability) = 0 then return -1
+    if left(name, 3) = "ui." | left(name, 7) = "widget." | left(name, 3) = "io." then return -2
+    if valid_fields(fields) = 0 then return -3
+    outcome = definition(success)
+    if jsonget(outcome, "direction") \= "event" | jsonget(outcome, "role") \= "completion" then return -4
+    slot = _names[0] + 1
+    _names[slot] = name
+    _definitions[slot] = '{"name":' || jsonquote(name) || ',"direction":"effect","capability":' || jsonquote(capability) || ',"mode":"finite","success":' || jsonquote(success) || ',"failure":"ui.effect.failed","cancel":"ui.effect.cancelled","progress":"ui.effect.progress","fields":' || fields || '}'
+    return 0
+
+  /** @param message message to check @return empty on success or a diagnostic */
+  validate: method = .string
+    arg message = .uimessage
+    if message.wire_error() \= "" then return message.wire_error()
+    spec = definition(message.name())
+    if spec = "" then return "unregistered message"
+    if jsonget(spec, "direction") \= message.direction() then return "wrong direction"
+    if length(message.target()) = 0 | length(message.target()) > 128 then return "invalid target"
+    if length(message.session_id()) > 128 | length(message.request_id()) > 128 then return "invalid correlation"
+    if message.sequence() < 0 | message.sequence() > 9007199254740991 then return "invalid sequence"
+    body = message.body()
+    if length(body.json()) > 262144 then return "payload too large"
+    return validate_payload(jsonget(spec, "fields"), body.json())
+
+/** Serialized owner-driven coordinator. It does not create an OS event loop.
+ * Only its owner calls these methods; adapters marshal foreign-thread activity.
+ * Components are owned values, never weak references into driver stack frames.
+ */
+uisession: class
+  _id = .string
+  _registry = .uiregistry
+  _capabilities = .uicapabilities
+  _component_ids = .string[]
+  _components = .uicomponent[]
+  _commands = .uicommand[]
+  _queue = .uimessage[]
+  _head = .int
+  _tail = .int
+  _queued = .int
+  _work = .uimessage[]
+  _states = .int[]
+  _limit = .int
+  _work_limit = .int
+  _sequence = .int
+  _request_number = .int
+  _pumping = .int
+  _closed = .int
+  _fault = .string
+
+  /** @param id session identity, unique for this owner lifetime (1..64 chars)
+   * @param capabilities implemented services, not desired/planned services
+   * @param max_queue bounded admitted-event count
+   * @param max_effects bounded outstanding requests (slots are reusable)
+   */
+  *: factory
+    arg id = .string, capabilities = .uicapabilities, max_queue = 128, max_effects = 64
+    _id = id
+    _registry = .uiregistry()
+    _capabilities = capabilities
+    _limit = max_queue
+    _work_limit = max_effects
+    _head = 1
+    _tail = 1
+    _queued = 0
+    _sequence = 0
+    _request_number = 0
+    _pumping = 0
+    _closed = 0
+    _fault = ""
+    if length(id) < 1 | length(id) > 64 | max_queue < 1 | max_queue > 4096 | max_effects < 1 | max_effects > 4096 then
+      _fault = "invalid session configuration"
+    return
+
+  /** @param id component identity @param component owned feature
+   * @return zero on success; duplicate identities are never replaced
+   */
+  add_component: method = .int
+    arg id = .string, component = .uicomponent
+    if _closed | _pumping | _fault \= "" then return -1
+    if id = "" | length(id) > 128 | component_slot(id) > 0 then return -2
+    slot = _component_ids[0] + 1
+    _component_ids[slot] = id
+    _components[slot] = component
+    return 0
+
+  /** @param name application event @param fields typed field specification
+   * @param role input or completion
+   */
+  register_event: method = .int
+    arg name = .string, fields = "{}", role = "input"
+    if _closed | _pumping then return -1
+    return _registry.register_event(name, fields, role)
+
+  /** @param name application effect @param capability executor capability
+   * @param fields payload specification @param success registered result
+   */
+  register_effect: method = .int
+    arg name = .string, capability = .string, fields = .string, success = .string
+    if _closed | _pumping then return -1
+    return _registry.register_effect(name, capability, fields, success)
+
+  /** @param command named action; v0 command intents have an empty payload */
+  register_command: method = .int
+    arg command = .uicommand
+    if _closed | _pumping then return -1
+    if valid_name(command.id()) = 0 | component_slot(command.target()) = 0 then return -2
+    probe = .uimessage(command.event_name(), .uipayload(), command.target())
+    if _registry.validate(probe) \= "" then return -3
+    definition = _registry.definition(command.event_name())
+    if jsonget(definition, "role") \= "input" | command.event_name() = "ui.command.invoked" then return -3
+    do index = 1 to _commands[0]
+      if _commands[index].id() = command.id() then return -4
+    end
+    _commands[_commands[0] + 1] = command
+    return 0
+
+  /** @param id command @param enabled zero disables every invocation source */
+  enable_command: method = .int
+    arg id = .string, enabled = .int
+    if _closed then return -1
+    do index = 1 to _commands[0]
+      if _commands[index].id() = id then do
+        call _commands[index].set_enabled(enabled)
+        return 0
+      end
+    end
+    return -2
+
+  /** Buttons, keys and menus all enter here. No native key code reaches a feature.
+   * @param id registered command @return admission status, not handler result
+   */
+  invoke: method = .int
+    arg id = .string
+    do index = 1 to _commands[0]
+      if _commands[index].id() = id then do
+        if \_commands[index].enabled() then return -2
+        return post(.uimessage(_commands[index].event_name(), .uipayload(), _commands[index].target()))
+      end
+    end
+    return -1
+
+  /** Admit a fresh input; correlated outcomes must use complete().
+   * @param event unsequenced input @return 0, -1 invalid, -2 full/closed/faulted
+   */
+  post: method = .int
+    arg event = .uimessage
+    if _closed | _fault \= "" | _queued >= _limit then return -2
+    if _registry.validate(event) \= "" | event.direction() \= "event" then return -1
+    if event.request_id() \= "" | event.sequence() \= 0 then return -1
+    if event.session_id() \= "" & event.session_id() \= _id then return -1
+    if component_slot(event.target()) = 0 then return -1
+    spec = _registry.definition(event.name())
+    if jsonget(spec, "role") \= "input" then return -1
+    if event.name() = "ui.command.invoked" then do
+      body = event.body()
+      do index = 1 to _commands[0]
+        if _commands[index].id() = body.text("command") & _commands[index].target() = event.target() then
+          return invoke(body.text("command"))
+      end
+      return -1
+    end
+    call enqueue(event)
+    return 0
+
+  /** Process at most budget inputs. Effects are queued, never executed here.
+   * @param budget finite work allowance @return handled count or -1 contract fault
+   */
+  pump: method = .int
+    arg budget = 64
+    if _closed | _fault \= "" | _pumping | budget < 1 then return -1
+    _pumping = 1
+    handled = 0
+    index = .int
+    effect = .uimessage
+    spec = .string
+    do while _queued > 0 & handled < budget
+      event = _queue[_head]
+      _head = _head + 1
+      if _head > _limit then _head = 1
+      _queued = _queued - 1
+      slot = component_slot(event.target())
+      requested = _components[slot].update(event)
+      /* Validate the whole batch before publishing any work to an executor. */
+      missing = 0
+      do index = 1 to requested.count()
+        effect = requested.item(index)
+        if _registry.validate(effect) \= "" | effect.direction() \= "effect" | effect.target() \= event.target() | effect.request_id() \= "" | effect.sequence() \= 0 | effect.session_id() \= "" then
+          _fault = "invalid component effect batch"
+        spec = _registry.definition(effect.name())
+        if \_capabilities.has(jsonget(spec, "capability")) then missing = missing + 1
+      end
+      if outstanding() + requested.count() > _work_limit | _queued + missing > _limit then
+        _fault = "component effect batch exceeds capacity"
+      if _fault \= "" then leave
+      do index = 1 to requested.count()
+        effect = requested.item(index)
+        _request_number = _request_number + 1
+        _sequence = _sequence + 1
+        request = _id || "/" || _request_number
+        stamped = .uimessage(effect.name(), effect.body(), effect.target(), "effect", request, _id, _sequence)
+        spec = _registry.definition(effect.name())
+        if \_capabilities.has(jsonget(spec, "capability")) then do
+          failure = .uipayload()
+          call failure.put_text("code", "unsupported_capability")
+          call failure.put_text("message", jsonget(spec, "capability"))
+          call enqueue(.uimessage("ui.effect.failed", failure, effect.target(), "event", request, _id))
+          iterate
+        end
+        work_slot = 1
+        do while work_slot <= _states[0]
+          if _states[work_slot] = 0 then leave
+          work_slot = work_slot + 1
+        end
+        _work[work_slot] = stamped
+        _states[work_slot] = 1
+      end
+      handled = handled + 1
+    end
+    _pumping = 0
+    if _fault \= "" then return -1
+    return handled
+
+  /** @return pending effect count; take_effect is valid only when nonzero */
+  pending: method = .int
+    result = 0
+    do index = 1 to _states[0]
+      if _states[index] = 1 then result = result + 1
+    end
+    return result
+
+  /** Transfer the oldest pending request to the executor. A request is taken once.
+   * @return effect with correlation metadata; empty name if none or closed
+   */
+  take_effect: method = .uimessage
+    if _closed | _fault \= "" then return .uimessage("", .uipayload())
+    oldest = 0
+    do index = 1 to _states[0]
+      if _states[index] \= 1 then iterate
+      if oldest = 0 then oldest = index
+      else if _work[index].sequence() < _work[oldest].sequence() then oldest = index
+    end
+    if oldest = 0 then return .uimessage("", .uipayload())
+    _states[oldest] = 2
+    return _work[oldest]
+
+  /** Accept progress or exactly one terminal outcome for a running request.
+   * Full queues leave the request active: the executor must retry, not drop it.
+   * @param event validated unsequenced correlated outcome
+   * @return 0 accepted, -1 invalid/stale/duplicate, -2 full/closed/faulted
+   */
+  complete: method = .int
+    arg event = .uimessage
+    if _closed | _fault \= "" | _queued >= _limit then return -2
+    if _registry.validate(event) \= "" | event.direction() \= "event" then return -1
+    if event.session_id() \= _id | event.sequence() \= 0 | event.request_id() = "" then return -1
+    do index = 1 to _states[0]
+      if _states[index] \= 2 then iterate
+      request = _work[index]
+      if request.request_id() \= event.request_id() then iterate
+      if request.target() \= event.target() then return -1
+      spec = _registry.definition(request.name())
+      terminal = event.name() = jsonget(spec, "success") | event.name() = jsonget(spec, "failure") | event.name() = jsonget(spec, "cancel")
+      progress = event.name() = jsonget(spec, "progress")
+      if jsonget(spec, "mode") = "subscription" & event.name() = "ui.stream.item" then progress = 1
+      if \terminal & \progress then return -1
+      call enqueue(event)
+      if terminal then _states[index] = 0
+      return 0
+    end
+    return -1
+
+  /** Cancel logically and reject late results. The executor must separately stop
+   * and release its physical operation; v0 cannot forcibly cancel native work.
+   * @param request_id active token @param reason user-visible reason
+   */
+  cancel: method = .int
+    arg request_id = .string, reason = "cancelled"
+    if _closed | _fault \= "" | _queued >= _limit then return -2
+    do index = 1 to _states[0]
+      if _states[index] = 0 then iterate
+      request = _work[index]
+      if request.request_id() \= request_id then iterate
+      body = .uipayload()
+      call body.put_text("reason", reason)
+      event = .uimessage("ui.effect.cancelled", body, request.target(), "event", request_id, _id)
+      if _registry.validate(event) \= "" then return -1
+      call enqueue(event)
+      _states[index] = 0
+      return 0
+    end
+    return -1
+
+  /** @param id component identity @return current logical view */
+  view: method = .uiview
+    arg id = "root"
+    slot = component_slot(id)
+    if slot = 0 then return .uiview_impl("Unknown component")
+    return _components[slot].view()
+  /** @return queued event count */
+  queued: method = .int
+    return _queued
+  /** @return registered command count for a menu/builder inspector */
+  command_count: method = .int
+    return _commands[0]
+  /** @param index one-based index @return owning command descriptor snapshot */
+  command: method = .uicommand
+    arg index = .int
+    return _commands[index]
+  /** @param capability service name @return one if implemented by this host */
+  supports: method = .int
+    arg capability = .string
+    return _capabilities.has(capability)
+  /** @return pending plus running requests */
+  outstanding: method = .int
+    result = 0
+    do index = 1 to _states[0]
+      if _states[index] > 0 then result = result + 1
+    end
+    return result
+  /** @return fatal component/configuration contract fault, otherwise empty */
+  fault: method = .string
+    return _fault
+  /** Explicit teardown, not a user close request. The driver releases native
+   * resources first. No more events or completions can be delivered afterward.
+   */
+  close: method = .void
+    _closed = 1
+    _queued = 0
+    empty_messages = .uimessage[]
+    empty_states = .int[]
+    empty_commands = .uicommand[]
+    empty_components = .uicomponent[]
+    empty_ids = .string[]
+    _queue = empty_messages
+    _work = empty_messages
+    _states = empty_states
+    _commands = empty_commands
+    _components = empty_components
+    _component_ids = empty_ids
+    return
+
+  component_slot: method = .int
+    arg id = .string
+    do index = 1 to _component_ids[0]
+      if _component_ids[index] = id then return index
+    end
+    return 0
+  enqueue: method = .void
+    arg event = .uimessage
+    _sequence = _sequence + 1
+    _queue[_tail] = .uimessage(event.name(), event.body(), event.target(), "event", event.request_id(), _id, _sequence)
+    _tail = _tail + 1
+    if _tail > _limit then _tail = 1
+    _queued = _queued + 1
+    return
+
+valid_name: procedure = .int
+  arg name = .string
+  if length(name) < 3 | length(name) > 128 | pos(".", name) = 0 then return 0
+  if verify(name, "abcdefghijklmnopqrstuvwxyz0123456789_.") > 0 then return 0
+  if left(name, 1) = "." | right(name, 1) = "." | pos("..", name) > 0 then return 0
+  segments = translate(name, " ", ".")
+  do segment = 1 to words(segments)
+    if verify(left(word(segments, segment), 1), "abcdefghijklmnopqrstuvwxyz") > 0 then return 0
+  end
+  return 1
+
+valid_fields: procedure = .int
+  arg fields = .string
+  if length(fields) > 65536 then return 0
+  if jsontype(fields, "") \= "object" then return 0
+  names = .string[]
+  count = jsonmembers(fields, "", names)
+  if count > 64 then return 0
+  do index = 1 to count
+    name = names[index]
+    if length(name) = 0 | length(name) > 64 | verify(name, "abcdefghijklmnopqrstuvwxyz0123456789_") > 0 then return 0
+    spec = jsonget(fields, name)
+    type = jsonget(spec, "type")
+    if wordpos(type, "string integer boolean strings resource") = 0 then return 0
+    if jsontype(spec, "required") \= "boolean" then return 0
+    allowed = "type required"
+    if type = "string" then allowed = allowed || " minLength maxLength enum"
+    if type = "integer" then allowed = allowed || " minimum maximum"
+    if type = "strings" then allowed = allowed || " maxItems"
+    properties = .string[]
+    property_count = jsonmembers(spec, "", properties)
+    doc = .jsondocument(spec)
+    do property_index = 1 to property_count
+      property = properties[property_index]
+      if wordpos(property, allowed) = 0 then return 0
+      if wordpos(property, "minimum maximum minLength maxLength maxItems") > 0 then do
+        number = 0
+        if doc.node_int(doc.find(property), number) \= 0 then return 0
+        if number < -9007199254740991 | number > 9007199254740991 then return 0
+        if wordpos(property, "minLength maxLength maxItems") > 0 & number < 0 then return 0
+        if wordpos(property, "minLength maxLength") > 0 & number > 16384 then return 0
+        if property = "maxItems" & number > 4096 then return 0
+      end
+      if property = "enum" then do
+        if jsontype(spec, "enum") \= "array" then return 0
+        choices = jsoncount(spec, "enum")
+        if choices < 1 | choices > 64 then return 0
+        do choice = 1 to choices
+          if jsontype(spec, "enum." || choice) \= "string" then return 0
+        end
+      end
+    end
+    if jsontype(spec, "minimum") = "number" & jsontype(spec, "maximum") = "number" then do
+      low = jsonget(spec, "minimum") as .int
+      high = jsonget(spec, "maximum") as .int
+      if low > high then return 0
+    end
+    if jsontype(spec, "minLength") = "number" & jsontype(spec, "maxLength") = "number" then do
+      low_length = jsonget(spec, "minLength") as .int
+      high_length = jsonget(spec, "maxLength") as .int
+      if low_length > high_length then return 0
+    end
+  end
+  return 1
+
+/* One validator is shared by standard definitions and application extensions. */
+validate_payload: procedure = .string
+  arg fields = .string, body = .string
+  if jsontype(body, "") \= "object" then return "payload must be an object"
+  keys = .string[]
+  index = .int
+  count = jsonmembers(body, "", keys)
+  do index = 1 to count
+    if jsontype(fields, keys[index]) = "missing" then return "unknown field: " || keys[index]
+  end
+  count = jsonmembers(fields, "", keys)
+  do index = 1 to count
+    field = keys[index]
+    spec = jsonget(fields, field)
+    actual = jsontype(body, field)
+    if actual = "missing" then do
+      if jsonget(spec, "required") = "true" then return "missing field: " || field
+      iterate
+    end
+    expected = jsonget(spec, "type")
+    value = jsonget(body, field)
+    if expected = "string" then do
+      if actual \= "string" then return "expected string: " || field
+      maximum = 16384
+      minimum_length = 0
+      if jsontype(spec, "maxLength") = "number" then maximum = jsonget(spec, "maxLength") as .int
+      if jsontype(spec, "minLength") = "number" then minimum_length = jsonget(spec, "minLength") as .int
+      if length(value) < minimum_length then return "text too short: " || field
+      if length(value) > maximum then return "text too long: " || field
+      if jsontype(spec, "enum") = "array" then do
+        found = 0
+        do choice = 1 to jsoncount(spec, "enum")
+          if value = jsonget(spec, "enum." || choice) then found = 1
+        end
+        if \found then return "invalid choice: " || field
+      end
+    end
+    else if expected = "integer" then do
+      doc = .jsondocument(body)
+      number = 0
+      if doc.node_int(doc.find(field), number) \= 0 then return "expected integer: " || field
+      minimum = -9007199254740991
+      maximum_number = 9007199254740991
+      if jsontype(spec, "minimum") = "number" then minimum = jsonget(spec, "minimum") as .int
+      if jsontype(spec, "maximum") = "number" then maximum_number = jsonget(spec, "maximum") as .int
+      if number < minimum | number > maximum_number then return "integer out of range: " || field
+    end
+    else if expected = "boolean" then do
+      if actual \= "boolean" then return "expected boolean: " || field
+    end
+    else if expected = "strings" then do
+      if actual \= "array" then return "expected text array: " || field
+      items = jsoncount(body, field)
+      maximum_items = 4096
+      if jsontype(spec, "maxItems") = "number" then maximum_items = jsonget(spec, "maxItems") as .int
+      if items > maximum_items then return "too many items: " || field
+      do item = 1 to items
+        path = field || "." || item
+        if jsontype(body, path) \= "string" then return "expected text item: " || field
+        if length(jsonget(body, path)) > 16384 then return "text item too long: " || field
+      end
+    end
+    else if expected = "resource" then do
+      resource_fields = '{"id":{"type":"string","required":true,"maxLength":128},"scope":{"type":"string","required":true,"enum":["local","session","remote"]},"display_name":{"type":"string","required":true},"readable":{"type":"boolean","required":true},"writable":{"type":"boolean","required":true}}'
+      resource_error = validate_payload(resource_fields, value)
+      if resource_error \= "" then return resource_error
+      if jsonget(value, "id") = "" then return "empty resource token"
+    end
+    else return "unsupported field definition"
+  end
+  return ""

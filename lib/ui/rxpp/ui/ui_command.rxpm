@@ -1,0 +1,5 @@
+##MACRO UI_COMMAND owner,id,label,target,event,shortcut
+  owner = unquote(owner)
+  .gen rc = &owner.register_command(.uicommand(&id, &label, &target, &event, &shortcut))
+  .gen if rc < 0 then exit 1
+##MEND

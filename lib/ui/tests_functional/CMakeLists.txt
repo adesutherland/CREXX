@@ -4,8 +4,36 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 
 add_custom_target(ui_functional_tests ALL)
 
+add_test(NAME ui_contract_generation
+        COMMAND ${CMAKE_COMMAND}
+                "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../contracts"
+                "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/generation-checks"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/../contracts/CheckGeneration.cmake")
+set_tests_properties(ui_contract_generation PROPERTIES
+        LABELS "library;ui;conformance")
+
+crexx_add_rexx_opt_matrix(
+        NAME ui_contract_v0
+        RUNNER rxvm
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_contract_v0.crexx
+        TARGET_GROUP ui_functional_tests
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ui ui_catalog ui_contract
+                ${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin
+                ${CMAKE_BINARY_DIR}/bin/ui_catalog.rxbin
+        RUNTIME_ARGS
+                ${CMAKE_BINARY_DIR}/bin/ui_contract
+                ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                ${CMAKE_BINARY_DIR}/bin/ui
+                ${CMAKE_BINARY_DIR}/bin/library
+                -a ${CMAKE_CURRENT_SOURCE_DIR}/../contracts/conformance.jsonl
+        TEST_LABELS "library;ui;events;effects;classes;conformance"
+        REQUIRED_OUTPUT_REGEX "PASS: UI v0 catalogue and session conformance"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
 crexx_add_rexx_opt_matrix(
         NAME ui_runtime_contract
+        RUNNER rxvm
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_runtime.crexx
         TARGET_GROUP ui_functional_tests
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
@@ -23,6 +51,7 @@ crexx_add_rexx_opt_matrix(
 
 crexx_add_rexx_opt_matrix(
         NAME ui_tui_contract
+        RUNNER rxvm
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_tui.crexx
         TARGET_GROUP ui_functional_tests
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin

@@ -1,0 +1,220 @@
+/* These conformance tests are backend-free and run through both toolchain modes. */
+options levelg
+namespace ui_contract_v0_test
+import rxfnsb
+import rxjson
+import ui
+import ui_catalog
+import ui_contract
+
+arg test_args = .string[]
+registry = .uiregistry()
+call check(test_args[0] = 1, "shared wire fixtures supplied")
+fixtures = readlines(test_args[1])
+call check(fixtures[0] >= 20, "shared wire fixtures loaded")
+do fixture = 1 to fixtures[0]
+  wire = jsonget(fixtures[fixture], "message")
+  expected_valid = jsonget(fixtures[fixture], "valid") = "true"
+  actual_valid = registry.validate(.uimessage.from_json(wire)) = ""
+  call check(actual_valid = expected_valid, "wire fixture: " || jsonget(fixtures[fixture], "case"))
+end
+names = catalogue_names()
+tested = 0
+index = .int
+field = .string
+type = .string
+do entry = 1 to words(names)
+  name = word(names, entry)
+  spec = registry.definition(name)
+  fields = jsonget(spec, "fields")
+  payload = .uipayload()
+  keys = .string[]
+  count = jsonmembers(fields, "", keys)
+  do index = 1 to count
+    field = keys[index]
+    field_spec = jsonget(fields, field)
+    type = jsonget(field_spec, "type")
+    if type = "string" then do
+      value = "sample"
+      if jsontype(field_spec, "enum") = "array" then value = jsonget(field_spec, "enum.1")
+      call payload.put_text(field, value)
+    end
+    if type = "integer" then do
+      value_number = 1
+      if jsontype(field_spec, "minimum") = "number" then value_number = jsonget(field_spec, "minimum") as .int
+      call payload.put_integer(field, value_number)
+    end
+    if type = "boolean" then call payload.put_flag(field, 1)
+    if type = "strings" then do
+      values = .string[]
+      values[1] = "café"
+      call payload.put_texts(field, values)
+    end
+    if type = "resource" then call payload.put_resource(field, .uiresource("opaque-1", "session", "café.txt"))
+  end
+  message = .uimessage(name, payload, "root", jsonget(spec, "direction"))
+  call check(registry.validate(message) = "", "catalogue payload " || name || " " || registry.validate(message))
+  decoded = .uimessage.from_json(message.json())
+  call check(registry.validate(decoded) = "", "wire round trip " || name)
+  call payload.put_text("undeclared", "no")
+  call check(registry.validate(.uimessage(name, payload, "root", jsonget(spec, "direction"))) \= "", "unknown field " || name)
+  do index = 1 to count
+    broken = .uipayload(message.body().json())
+    field = keys[index]
+    type = jsonget(fields, field || ".type")
+    if type = "boolean" then call broken.put_text(field, "true")
+    else call broken.put_flag(field, 1)
+    call check(registry.validate(.uimessage(name, broken, "root", jsonget(spec, "direction"))) \= "", "wrong field type " || name || "." || field)
+  end
+  tested = tested + 1
+end
+call check(tested > 60, "standard catalogue coverage")
+call check(registry.register_event("document.open.requested") = 0, "application event registration")
+call check(registry.register_event("ui.ready") < 0, "reserved name cannot be replaced")
+call check(registry.register_event("ui.invented") < 0, "reserved namespace cannot be extended by application")
+call check(registry.register_event("document.open.requested") < 0, "duplicate event")
+call check(registry.register_event("document.result", "{}", "completion") = 0, "application result")
+call check(registry.register_effect("document.count", "document.worker", "{}", "document.result") = 0, "application effect")
+call check(registry.register_effect("document.broken", "document.worker", "{}", "document.missing") < 0, "missing success event")
+call check(registry.register_event("document.invalid", '{"x":{"type":"integer","required":true,"minimum":"oops"}}') < 0, "invalid extension bound")
+call check(registry.register_event("document.invalid", '{"x":{"type":"string","required":true,"enum":[]}}') < 0, "invalid empty enum")
+call check(registry.register_event("document.invalid", '{"x":{"type":"boolean","required":true,"maximum":5}}') < 0, "inapplicable schema property")
+call check(registry.validate(.uimessage("document.unknown", .uipayload())) \= "", "unregistered message")
+call check(registry.validate(.uimessage("ui.input.key", .uipayload('{"key":"Enter","phase":"press","modifiers":"Ctrl"}'))) \= "", "modifiers require an array")
+call check(registry.validate(.uimessage("ui.viewport.changed", .uipayload('{"width":1.5,"height":2,"unit":"cells"}'))) \= "", "fraction is not integer")
+call check(registry.validate(.uimessage("ui.viewport.changed", .uipayload('{"width":9007199254740992,"height":2,"unit":"cells"}'))) \= "", "unsafe wire integer")
+call check(registry.validate(.uimessage("ui.viewport.changed", .uipayload('{"width":1,"height":2,"unit":"pixels"}'))) \= "", "unknown unit")
+call check(registry.validate(.uimessage.from_json('{"version":1}')) \= "", "bad envelope")
+
+/* Two separately owned features prove routing without a root god object. */
+caps = .uicapabilities()
+call caps.enable("ui.timer")
+call caps.enable("document.worker")
+call caps.enable("ui.stream")
+session = .uisession("test-session", caps, 4, 2)
+call check(session.add_component("left", .probe_component()) = 0, "first feature")
+call check(session.add_component("right", .probe_component()) = 0, "second feature")
+call check(session.add_component("left", .probe_component()) < 0, "duplicate feature")
+call check(session.register_event("probe.start") = 0, "start event")
+call check(session.register_event("probe.clipboard") = 0, "clipboard event")
+call check(session.register_event("probe.custom") = 0, "custom work intent")
+call check(session.register_event("probe.stream") = 0, "stream intent")
+call check(session.register_event("document.result", "{}", "completion") = 0, "custom completion registration")
+call check(session.register_effect("document.count", "document.worker", "{}", "document.result") = 0, "custom executor contract")
+call check(session.register_command(.uicommand("probe.run", "Run", "left", "probe.start", "Ctrl+R")) = 0, "command")
+call check(session.enable_command("probe.run", 0) = 0, "disable command")
+call check(session.invoke("probe.run") < 0 & session.queued() = 0, "disabled invocation")
+call check(session.enable_command("probe.run", 1) = 0, "enable command")
+call check(session.command_count() = 1 & session.command(1).enabled() = 1, "command inspection snapshot")
+call check(session.supports("ui.timer") = 1 & session.supports("ui.clipboard") = 0, "host capability inspection")
+wrong_command = .uimessage("ui.command.invoked", .uipayload('{"command":"probe.run"}'), "right")
+call check(session.post(wrong_command) < 0, "command target cannot be redirected")
+call check(session.invoke("probe.run") = 0, "invoke queues input")
+call check(session.pending() = 0 & session.queued() = 1, "no inline handler call")
+call check(session.pump(1) = 1 & session.pending() = 2, "one event returns two effects")
+left_view = session.view("left")
+right_view = session.view("right")
+call check(left_view.node_text(1) = "1" & right_view.node_text(1) = "0", "routed state ownership")
+first = session.take_effect()
+second = session.take_effect()
+call check(first.name() = "ui.timer.schedule" & second.name() = "ui.timer.schedule", "executor work")
+call check(first.sequence() < second.sequence() & first.request_id() \= second.request_id(), "request ordering")
+call check(session.take_effect().name() = "", "take once")
+late = .uimessage("ui.timer.elapsed", .uipayload(), "left", "event", first.request_id(), first.session_id())
+wrong = .uimessage("ui.timer.elapsed", .uipayload(), "right", "event", first.request_id(), first.session_id())
+call check(session.complete(wrong) < 0, "wrong component result")
+wrong = .uimessage("ui.timer.elapsed", .uipayload(), "left", "event", first.request_id(), "old-session")
+call check(session.complete(wrong) < 0, "stale session result")
+wrong = .uimessage("ui.clipboard.read.completed", .uipayload('{"text":"x"}'), "left", "event", first.request_id(), first.session_id())
+call check(session.complete(wrong) < 0, "wrong outcome")
+progress = .uimessage("ui.effect.progress", .uipayload('{"completed":1}'), "left", "event", first.request_id(), first.session_id())
+call check(session.complete(progress) = 0 & session.outstanding() = 2, "nonterminal progress")
+done = .uimessage("ui.timer.elapsed", .uipayload(), "left", "event", second.request_id(), second.session_id())
+call check(session.complete(done) = 0, "out-of-order completion is correlated")
+call check(session.complete(done) < 0, "duplicate result")
+call check(session.cancel(first.request_id()) = 0, "logical cancellation")
+call check(session.complete(late) < 0, "late result after cancellation")
+call check(session.pump() = 3 & session.outstanding() = 0, "terminal events dispatched")
+call check(session.post(.uimessage("ui.timer.elapsed", .uipayload(), "left")) < 0, "completion cannot bypass correlation")
+call check(session.post(.uimessage("ui.ready", .uipayload(), "missing")) < 0, "unknown target")
+
+/* Slots are bounded concurrently, not by lifetime request count. */
+do cycle = 1 to 5
+  call check(session.invoke("probe.run") = 0 & session.pump() = 1, "reusable slots")
+  first = session.take_effect()
+  second = session.take_effect()
+  call check(session.cancel(first.request_id()) = 0, "cancel reused first")
+  call check(session.cancel(second.request_id()) = 0, "cancel reused second")
+  call check(session.pump() = 2, "drain reused results")
+end
+call check(session.post(.uimessage("probe.custom", .uipayload(), "right")) = 0 & session.pump() = 1, "application-owned work")
+custom = session.take_effect()
+call check(custom.name() = "document.count", "application executor receives request")
+custom_done = .uimessage("document.result", .uipayload(), "right", "event", custom.request_id(), custom.session_id())
+call check(session.complete(custom_done) = 0 & session.pump() = 1, "application result correlation")
+call check(session.post(.uimessage("document.result", .uipayload(), "right")) < 0, "application result cannot bypass executor")
+call check(session.post(.uimessage("probe.stream", .uipayload(), "right")) = 0 & session.pump() = 1, "subscription request")
+subscription = session.take_effect()
+item = .uimessage("ui.stream.item", .uipayload('{"text":"debugger stopped"}'), "right", "event", subscription.request_id(), subscription.session_id())
+call check(session.complete(item) = 0 & session.complete(item) = 0 & session.outstanding() = 1, "subscription items are nonterminal")
+call check(session.pump() = 2 & session.cancel(subscription.request_id()) = 0, "subscription cancellation")
+call check(session.pump() = 1 & session.complete(item) < 0, "late subscription item")
+call check(session.post(.uimessage("probe.clipboard", .uipayload(), "right")) = 0, "unsupported request input")
+call check(session.pump(1) = 1 & session.pending() = 0 & session.queued() = 1, "unsupported capability becomes event")
+call check(session.pump() = 1, "unsupported failure delivered")
+right_view = session.view("right")
+call check(right_view.node_text(2) = "ui.effect.failed", "failure routed to requester")
+call check(session.fault() = "", "session remains healthy")
+call session.close()
+call check(session.post(.uimessage("ui.ready", .uipayload(), "left")) < 0 & session.complete(late) < 0, "closed session rejects all activity")
+call check(session.outstanding() = 0 & session.queued() = 0, "teardown releases queues")
+
+/* Full queue rejection is retryable and does not consume the completion. */
+small = .uisession("small", caps, 1, 2)
+call check(small.add_component("root", .probe_component()) = 0, "small owner")
+call check(small.register_event("probe.start") = 0, "small event")
+call check(small.post(.uimessage("probe.start", .uipayload())) = 0 & small.pump() = 1, "small start")
+first = small.take_effect()
+done = .uimessage("ui.timer.elapsed", .uipayload(), "root", "event", first.request_id(), first.session_id())
+call check(small.post(.uimessage("ui.ready", .uipayload())) = 0, "fill queue")
+call check(small.complete(done) = -2 & small.outstanding() = 2, "backpressure preserves request")
+call check(small.pump() = 1 & small.complete(done) = 0, "retry completion")
+call small.close()
+call check(small.outstanding() = 0 & small.queued() = 0, "teardown clears occupied storage")
+
+say "PASS: UI v0 catalogue and session conformance" tested "standard messages"
+exit 0
+
+check: procedure = .void
+  arg ok = .int, description = .string
+  if \ok then do
+    say "FAIL:" description
+    exit 1
+  end
+  return
+
+probe_component: class implements .uicomponent
+  _seen = .int
+  _last = .string
+  *: factory
+    _seen = 0
+    _last = ""
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    _seen = _seen + 1
+    _last = event.name()
+    result = .uieffects()
+    if event.name() = "probe.start" then do
+      call result.add(.uimessage("ui.timer.schedule", .uipayload('{"delay_ms":1}'), event.target(), "effect"))
+      call result.add(.uimessage("ui.timer.schedule", .uipayload('{"delay_ms":2}'), event.target(), "effect"))
+    end
+    if event.name() = "probe.clipboard" then call result.add(.uimessage("ui.clipboard.read", .uipayload(), event.target(), "effect"))
+    if event.name() = "probe.custom" then call result.add(.uimessage("document.count", .uipayload(), event.target(), "effect"))
+    if event.name() = "probe.stream" then call result.add(.uimessage("ui.stream.subscribe", .uipayload('{"stream":"debugger"}'), event.target(), "effect"))
+    return result
+  view: method = .uiview
+    result = .uiview_impl("probe")
+    call result.add_label("seen", _seen as .string)
+    call result.add_label("last", _last)
+    return result

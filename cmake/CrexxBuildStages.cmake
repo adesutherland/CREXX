@@ -65,7 +65,8 @@ crexx_add_build_stage(stage-c-rexx-tools
 
 crexx_add_build_stage(stage-g-library
         DESCRIPTION "G Level G library"
-        REQUIRED_TARGETS rxfnsg)
+        REQUIRED_TARGETS rxfnsg ui_tui ui_compat
+        OPTIONAL_TARGETS ui_gtk)
 
 crexx_add_build_stage(stage-l-libraries
         DESCRIPTION "L Level L libraries"
