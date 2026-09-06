@@ -1932,7 +1932,7 @@ readRxppBuildDir: procedure = .string
 arg file = .string, cwd = .string, dirsep = .string
 buildDir = ''
 lineCount = 0
-do while lineCount < 32 & lines(file)
+do while lineCount < 64 & lines(file)
   lineCount = lineCount + 1
   line = linein(file)
   if upper(word(line,1)) = '##BUILDDIR' then do

@@ -120,8 +120,21 @@ os: class
      * @return .int Status code from the native implementation.
      */
   listDir: method = .int
-    arg file = .string, entries = .string[]
+    arg file = .string, expose entries = .string[]
     return rxfs..listdir(file,entries)
+
+    /**
+     * Lists the files in a directory.
+     *
+     * @param file Directory path.
+     * @param entries Output array receiving directory entries.
+     * @return contents of the directory.
+     */
+  dirEntries: method = .string[]
+    arg path = .string
+    entries = .string[]
+    call rxfs..listdir(path, entries)
+  return entries
 
     /**
      * Returns the contents of an environment variable.
@@ -135,6 +148,57 @@ os: class
     value = ""
     assembler getenv value,env_name
     return value
+
+    /**
+     * Returns the embedded name/path of the first module loaded by the VM.
+     *
+     * This is normally the main RXBIN module. The returned value is the
+     * module name recorded in the RXBIN and is not necessarily the path used
+     * to locate the file at runtime.
+     *
+     * @param none
+     * @return .string Embedded name/path of the first loaded module.
+     */
+  callermodule: method = .string
+    modules = .string[]
+    assembler metaloadedmodules modules
+  return modules[1]
+
+    /**
+     * Returns the current working directory of the process.
+     *
+     * The returned path represents the directory from which the current
+     * CREXX process is operating. It is independent of the location of the
+     * currently executing RXBIN module.
+     *
+     * @param none
+     * @return .string Current working directory.
+     */
+  cwd: method = .string
+    return rxfs..cwd()
+
+    /**
+     * Changes the current working directory of the process.
+     *
+     * The specified path becomes the working directory used for subsequent
+     * relative file and directory operations.
+     *
+     * @param path New working directory.
+     * @return .int 0 on success, otherwise a negative error code.
+     */
+  chdir: method = .int
+    arg path = .string
+    return rxfs..chdir(path)
+
+    /**
+     * Tests whether a path names a directory.
+     *
+     * @param path Path to inspect.
+     * @return .int 1 when the path is a directory, otherwise 0.
+     */
+  isdir: method = .int
+    arg path = .string
+    return rxfs..isdir(path)
 
     /**
      * Displays an informational message to the user.
