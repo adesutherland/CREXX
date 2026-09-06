@@ -1,0 +1,101 @@
+{
+  "release-broad": {
+    "path": "/tmp/crexx-scaling-release-ctest.log",
+    "bytes": 354571,
+    "sha256": "ccc1bbccad20a5aa6189859f8cc2b2ae9b4f408600113ba6342d31f173e88559",
+    "retained": "release-broad.log"
+  },
+  "release-final-wrapper": {
+    "path": "/tmp/crexx-scaling-wrapper-final-ctest.log",
+    "bytes": 598,
+    "sha256": "b9949958495cec142290b94af71667d345204ac7f1520172f25415e3e708c45a",
+    "retained": "release-final-wrapper.log"
+  },
+  "release-format-fixtures": {
+    "path": "/tmp/crexx-scaling-feature-fixture-release.log",
+    "bytes": 1201,
+    "sha256": "8711421beb93d9c15c2afd8f19e9f20db2138c213527a864d2c93e3f68dbc8b4",
+    "retained": "release-format-fixtures.log"
+  },
+  "debug-initial": {
+    "path": "/tmp/crexx-scaling-debug-ctest.log",
+    "bytes": 518154,
+    "sha256": "a7ecca77628553f2473e719d81978deaeb9485fe2404b0e226b6a56aa386378c",
+    "retained": "debug-initial.log"
+  },
+  "debug-measurement-prep": {
+    "path": "/tmp/crexx-scaling-debug-measurement-prep.log",
+    "bytes": 24217,
+    "sha256": "0137d220015e7894dfbdad0e1577d4428c7b7b2ee0e7f3eb3ffb3b8416b26577",
+    "retained": "debug-measurement-prep.log"
+  },
+  "debug-replay": {
+    "path": "/tmp/crexx-scaling-debug-replay.log",
+    "bytes": 11508,
+    "sha256": "08df9f688e09d19e6c622d1d978824119d45e7c6c2462cec77d6c17dcf0ad3d6",
+    "retained": "debug-replay.log"
+  },
+  "binary-forward-original-regression": {
+    "path": "/tmp/crexx-scaling-regression-before-forward.log",
+    "bytes": 235,
+    "sha256": "ffbcaa33be3a3e82d3e291574f7af755582cc68409b10b79038fdc5d31ffa043"
+  },
+  "installed-rag-build": {
+    "path": "/tmp/crexx-scaling-rag-build.log",
+    "bytes": 4328,
+    "sha256": "bc50caff131c7f3049c16c7cd05a8e56fba2bfd6c2cd07399bc5e1edceea549f"
+  },
+  "offline-linked": {
+    "path": "/tmp/crexx-scaling-rag-offline-linked.log",
+    "bytes": 514,
+    "sha256": "21105880e866b68ae3ce5accc74cc0cef9425b97c919fd7d25edc6665ab44ac4",
+    "retained": "offline-linked.log"
+  },
+  "offline-native": {
+    "path": "/tmp/crexx-scaling-rag-offline-native.log",
+    "bytes": 4575,
+    "sha256": "109efa6b891a24db1807237d78af0c37e1bf04ee31cdb601b27ed12a8703d4b2",
+    "retained": "offline-native.log"
+  },
+  "offline-config-retired-provider": {
+    "path": "/tmp/crexx-scaling-rag-offline-config.log",
+    "bytes": 210,
+    "sha256": "ec330672607f86b56f6fb4bc48dffa72d22ee813ad8c7deabff6a91b208654e1",
+    "retained": "offline-config-retired-provider.log"
+  },
+  "offline-config-current-route": {
+    "path": "/tmp/crexx-scaling-rag-offline-config-current-route.log",
+    "bytes": 101,
+    "sha256": "2599f7041f6d0c09b14a539c114f4dc85931566b3d87d0d71da8671f45124bfc",
+    "retained": "offline-config-current-route.log"
+  },
+  "offline-address": {
+    "path": "/tmp/crexx-scaling-rag-offline-address.log",
+    "bytes": 56,
+    "sha256": "feec4ff7b5406db8f66e39f629143d804fb9c6dae30897d2c76949b43cff84b8",
+    "retained": "offline-address.log"
+  },
+  "asan-broad-initial": {
+    "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debugasan/asan-logs/20260906-110736-full/ctest.log",
+    "bytes": 375368,
+    "sha256": "7e303391f5d00c370eae60c3fc0ea57683b8c02d069f06f1bd7a77ab621a98f2",
+    "retained": "asan-broad-initial.log"
+  },
+  "asan-broad-build": {
+    "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debugasan/asan-logs/20260906-110736-full/build.log",
+    "bytes": 447028,
+    "sha256": "1984db34f4b7de04646cc70895c4057cad532d6a7546a0b1984d983b47a7baab"
+  },
+  "sanqa013-debug": {
+    "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debug/asan-logs/20260906-120138-ctest/ctest.log",
+    "bytes": 735,
+    "sha256": "5e00b43ea79980cfbf046ee792219af647d1847cd932b00ed800ceddde30d10e",
+    "retained": "sanqa013-debug.log"
+  },
+  "sanqa013-asan": {
+    "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debugasan/asan-logs/20260906-120320-ctest/ctest.log",
+    "bytes": 743,
+    "sha256": "73e53c68d0c30504c2f9cbe50f2ba1eb7aa1227b3ee5f863bc570fa312ac01ce",
+    "retained": "sanqa013-asan.log"
+  }
+}

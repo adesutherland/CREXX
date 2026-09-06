@@ -1946,6 +1946,17 @@ typedef struct class_meta_agg {
     struct class_meta_agg *next;
 } class_meta_agg;
 
+/* A module's metadata is read in stream order. Its own contracts are forward
+ * declarations until their stubs are registered; resolving a signature must
+ * not search a same-namespace source extension for those declarations. The
+ * stack is scoped to this synchronous import, including nested module reads. */
+struct pending_import_contracts {
+    const char *file_name;
+    class_meta_agg *declarations;
+    struct pending_import_contracts *previous;
+};
+
+
 static class_meta_agg* agg_find(class_meta_agg *head, const char *fq) {
     class_meta_agg *it = head;
     while (it) {
@@ -2312,7 +2323,30 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
     /* Aggregator for class metadata to synthesize class stubs */
     class_meta_agg *class_aggs = 0;
 
+    struct pending_import_contracts pending;
+    Context *master = context->master_context;
+
     (void)constant_size;
+
+    pending.file_name = full_file_name;
+    pending.declarations = 0;
+    pending.previous = master->pending_import_contracts;
+    i = meta_head;
+    while (i != -1) {
+        entry = (chameleon_constant *)((unsigned char *)constant + (size_t)i);
+        if (entry->type == META_CLASS || entry->type == META_INTERFACE) {
+            char *symbol = entry->type == META_CLASS ?
+                get_const_string(constant, ((meta_class_constant *)entry)->symbol) :
+                get_const_string(constant, ((meta_interface_constant *)entry)->symbol);
+            if (symbol) {
+                agg_find_or_add(&pending.declarations, symbol,
+                               entry->type == META_CLASS ? CLASS_DEF : INTERFACE_DEF);
+                free(symbol);
+            }
+        }
+        i = ((meta_entry *)entry)->next;
+    }
+    master->pending_import_contracts = &pending;
 
     /* Walk only the module metadata chain so shared constant pools stay module-local in effect. */
     i = meta_head;
@@ -2566,6 +2600,8 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
         import_class_meta_aggs(context, full_file_name, class_aggs);
         agg_free_all(class_aggs);
     }
+    master->pending_import_contracts = pending.previous;
+    agg_free_all(pending.declarations);
 }
 
 // RXPA Disabler Function
@@ -3175,6 +3211,12 @@ static int source_import_file_is_visible(Context *context, importable_file *file
     return find_visible_namespace_scope(context, 0, file->namespace_name) != 0;
 }
 
+/* The dependency checker uses exactly the resolver's header interpretation. */
+const char *rxcp_importable_source_namespace(Context *context, importable_file *file) {
+    ensure_importable_source_header(file, context->cli_level_override);
+    return file->namespace_name;
+}
+
 /* Parse and rxcp_val a rexx program in a string and return the context */
 /* Parse and rxcp_val a rexx program in a string and return the context */
 Context *rxcp_parse_buffer(char* rexx_source, int debug_mode) {
@@ -3430,9 +3472,32 @@ static int ast_declares_local_contract(ASTNode *node, const char *short_name) {
             return 1;
         }
 
-        if (node->child && ast_declares_local_contract(node->child, short_name)) return 1;
+        /* Source structure normalization puts contracts directly under a
+         * file node. Executable bodies cannot declare a class or interface;
+         * walking them here makes each inline type check scan every expanded
+         * body in the compilation unit. Inspect the live declaration level
+         * instead, so newly inserted declarations remain visible without a
+         * cache or any dependency on optimizer invalidation. */
+        if ((node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) &&
+            node->child && ast_declares_local_contract(node->child, short_name)) return 1;
     }
 
+    return 0;
+}
+
+static int current_binary_declares_contract(Context *context, const char *name) {
+    struct pending_import_contracts *pending;
+    class_meta_agg *declaration;
+    if (!context || !context->master_context || !context->file_name) return 0;
+    for (pending = context->master_context->pending_import_contracts;
+         pending; pending = pending->previous) {
+        if (strcmp(context->file_name, pending->file_name) != 0) continue;
+        for (declaration = pending->declarations; declaration; declaration = declaration->next) {
+            if (strcmp(name, declaration->fq) == 0) return 1;
+            if (strcmp(name, declaration->name) == 0 &&
+                find_visible_namespace_scope(context, 0, declaration->ns)) return 1;
+        }
+    }
     return 0;
 }
 
@@ -3487,6 +3552,16 @@ Symbol *sym_imcls(Context *context, ASTNode *node) {
     }
 
     if (context->debug_mode >= 2) fprintf(stderr, "Importing Class for file %s Looking for Class %s\n", context->file_name, name);
+
+    /* A known forward contract in this binary is registered later in the
+     * same metadata read. Reuse it if already available, otherwise leave this
+     * declaration unresolved for the ordinary consumer validation pass. */
+    if (current_binary_declares_contract(context, name)) {
+        if (src_fqcl(context, name, &found_cls))
+            found_symbol = load_imported_contract(context, found_cls);
+        free(name);
+        return found_symbol;
+    }
 
     /* Process all the unread files */
     do {

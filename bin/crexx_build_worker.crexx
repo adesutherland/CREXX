@@ -30,7 +30,7 @@
  */
 options levelg comments_dash
 
-namespace crexx_build_worker expose compile_target
+namespace crexx_build_worker expose compile_target dependencies_current
 import rxfnsb
 import rxfs
 import concurrency
@@ -82,6 +82,55 @@ write_stamp: procedure = .int
   if rxfs..rename(temporary, path) <> 0 then return 1
   return 0
 
+/** The check and compile must receive the same resolver and compiler options. */
+compile_argv: procedure = .string[]
+  arg request = .channelvalue, check = .int
+  source = request.field("source").as_string()
+  source_roots = request.field("sourceRoots").as_string()
+  binary_roots = request.field("binaryRoots").as_string()
+  rxc = request.field("rxc").as_string()
+  optimize = request.field("optimize").as_integer()
+  import_rxas = request.field("importRxas").as_integer()
+  diagnostics = request.field("diagnostics").as_string()
+  diagnostic_locale = request.field("diagnosticLocale").as_string()
+  output_base = request.field("workDir").as_string() || "/" || request.field("stem").as_string()
+  compile = .string[]
+  call arrayappend compile, rxc
+  if optimize = 0 then call arrayappend compile, "-n"
+  if source_roots <> "" then do
+    call arrayappend compile, "-s"
+    call arrayappend compile, source_roots
+  end
+  if binary_roots <> "" then do
+    call arrayappend compile, "-i"
+    call arrayappend compile, binary_roots
+  end
+  if import_rxas then call arrayappend compile, "--import-rxas"
+  if diagnostics <> "" then do
+    call arrayappend compile, "--diagnostics"
+    call arrayappend compile, diagnostics
+  end
+  if diagnostic_locale <> "" then do
+    call arrayappend compile, "--diagnostic-locale"
+    call arrayappend compile, diagnostic_locale
+  end
+  if check then call arrayappend compile, "--check-project-dependencies"
+  else call arrayappend compile, "--project-dependencies"
+  call arrayappend compile, request.field("workDir").as_string() || "/dependencies.snapshot"
+  call arrayappend compile, "-o"
+  call arrayappend compile, output_base
+  call arrayappend compile, source
+  return compile
+
+/** @return true only when the compiler confirms the retained dependency inputs */
+dependencies_current: procedure = .int
+  arg request = .channelvalue
+  argv = compile_argv(request, 1)
+  captured = .string[]
+  errors = .string[]
+  address crexx "run :argv[]" output captured error errors
+  return rc = 0
+
 /** Execute one isolated compiler/assembler action. */
 compilework: class implements .taskwork
   *: factory
@@ -98,46 +147,17 @@ compilework: class implements .taskwork
     if context.cancellation_requested() then return .channelvalue.integer_value(1)
     if request.schema() <> "crexx.build.project.compile" | request.version() <> 1 then return .channelvalue.integer_value(2)
 
-    source = request.field("source").as_string()
     stem = request.field("stem").as_string()
     work_dir = request.field("workDir").as_string()
-    source_roots = request.field("sourceRoots").as_string()
-    binary_roots = request.field("binaryRoots").as_string()
-    rxc = request.field("rxc").as_string()
     rxas = request.field("rxas").as_string()
     key = request.field("key").as_string()
     optimize = request.field("optimize").as_integer()
-    import_rxas = request.field("importRxas").as_integer()
-    diagnostics = request.field("diagnostics").as_string()
-    diagnostic_locale = request.field("diagnosticLocale").as_string()
 
     if remove_tree(work_dir) <> 0 then return .channelvalue.integer_value(1)
     if make_directory(work_dir) <> 0 then return .channelvalue.integer_value(1)
     output_base = work_dir || "/" || stem
 
-    compile = .string[]
-    call arrayappend compile, rxc
-    if optimize = 0 then call arrayappend compile, "-n"
-    if source_roots <> "" then do
-      call arrayappend compile, "-s"
-      call arrayappend compile, source_roots
-    end
-    if binary_roots <> "" then do
-      call arrayappend compile, "-i"
-      call arrayappend compile, binary_roots
-    end
-    if import_rxas then call arrayappend compile, "--import-rxas"
-    if diagnostics <> "" then do
-      call arrayappend compile, "--diagnostics"
-      call arrayappend compile, diagnostics
-    end
-    if diagnostic_locale <> "" then do
-      call arrayappend compile, "--diagnostic-locale"
-      call arrayappend compile, diagnostic_locale
-    end
-    call arrayappend compile, "-o"
-    call arrayappend compile, output_base
-    call arrayappend compile, source
+    compile = compile_argv(request, 0)
 
     say "START: project member" stem
     if run_argv("compile project member " || stem, compile) <> 0 then return .channelvalue.integer_value(1)

@@ -1,0 +1,69 @@
+{
+  "comparison": "Uncontended serial single runs; ordinary Release O3, profiling off, normal Rexx optimization; matched packages differ only in actual rxc and wrapper.",
+  "baseline": {
+    "wave": {
+      "real": 156.18,
+      "user": 155.47,
+      "sys": 0.49,
+      "rss_bytes": 402817024
+    },
+    "members": [
+      {
+        "argv": [
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline//bin/rxc.actual",
+          "-s",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/providers;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/config;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/config/profiles;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/surfaces",
+          "-i",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline//bin;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline/bin/providers;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline/bin",
+          "-o",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/address-measured-baseline/rag_address_environment.crexx-build/members/rag_address_environment/rag_address_environment",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/surfaces/rag_address_environment.crexx"
+        ],
+        "pid": "60026",
+        "time": {
+          "real": 155.84,
+          "user": 155.19,
+          "sys": 0.43,
+          "rss_bytes": 402817024
+        },
+        "rc": 0
+      }
+    ],
+    "rxc_sha256": "896690d2529e5de9232a4b55a71d2ac38e67cac54cfed09855dddea3ed4644c4",
+    "crexx_sha256": "b9b1ec023748c7ca0aab7026948c1d997cd87799bdd9d68091aee701911356bf"
+  },
+  "qualified": {
+    "wave": {
+      "real": 11.53,
+      "user": 11.35,
+      "sys": 0.11,
+      "rss_bytes": 402046976
+    },
+    "members": [
+      {
+        "argv": [
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-measured-qualified//bin/rxc.actual",
+          "-s",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/providers;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/config;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/config/profiles;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/surfaces",
+          "-i",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-measured-qualified//bin;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-measured-qualified/bin/providers;/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-measured-qualified/bin",
+          "--project-dependencies",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/address-measured-qualified/rag_address_environment.crexx-build/members/rag_address_environment/dependencies.snapshot",
+          "-o",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/address-measured-qualified/rag_address_environment.crexx-build/members/rag_address_environment/rag_address_environment",
+          "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-qualification/crexx/application/surfaces/rag_address_environment.crexx"
+        ],
+        "pid": "60357",
+        "time": {
+          "real": 11.15,
+          "user": 11.03,
+          "sys": 0.08,
+          "rss_bytes": 402046976
+        },
+        "rc": 0
+      }
+    ],
+    "rxc_sha256": "67ddcc9e1eed14735a557dac4f3c56359baddf9d884a66f347e1811217a8ff1d",
+    "crexx_sha256": "44acfb76208a8734286da2b8e7e74440fbdcf261883c312dccaa56b7dee777b5"
+  }
+}

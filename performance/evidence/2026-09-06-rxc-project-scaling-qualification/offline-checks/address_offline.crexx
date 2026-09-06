@@ -1,0 +1,27 @@
+options levelg
+
+namespace address_surface_scenario expose main
+
+import rxfnsb
+import rxjson
+import rag_address_environment
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 \= 2 then return 2
+  library = args[1]; config_file = args[2]
+  environment = addressenv("rag")
+  if environment.environment_name() \= "RAG" | environment.environment_id() \= "rexx:RAG" then return 4
+  lines = .string[]
+  command = "LIBRARY OPEN " || library || " --config architecture-local --profile generic-profile --access plan --format json"
+  address RAG (command) output lines
+  if rc \= 0 | lines.0 \= 1 then do; say "ADDRESS_SURFACE_FAIL=open"; return 10; end
+  if pos('"operation":"library.open"', lines[1]) = 0 then return 11
+  clear lines
+  address RAG "LIBRARY STATUS" output lines
+  if rc \= 0 | lines.0 \= 1 | pos('"operation":"library.status"', lines[1]) = 0 | pos('"status":"ok"', lines[1]) = 0 then return 12
+  clear lines
+  address RAG "LIBRARY CLOSE" output lines
+  if rc \= 0 | lines.0 \= 1 then return 19
+  say "ADDRESS_OFFLINE_OK"
+  return 0

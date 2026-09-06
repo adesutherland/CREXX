@@ -1,0 +1,17 @@
+[
+  "cmake",
+  "-DCPRAG_RXC=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin/rxc",
+  "-DCPRAG_RXAS=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin/rxas",
+  "-DCPRAG_RXLINK=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin/rxlink",
+  "-DCPRAG_RXVME=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin/rxvme",
+  "-DCPRAG_RXBVM=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin/rxbvm",
+  "-DCPRAG_CREXX_BIN_DIR=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-qualified/bin",
+  "-DCPRAG_APPLICATION_DIR=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/rag-build-qualified/crexx-application",
+  "-DCPRAG_ADDRESS_RXBIN=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/rag-build-qualified/crexx-application/address/rag_address_environment.rxbin",
+  "-DCPRAG_SCENARIO=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/offline-checks/address_offline.crexx",
+  "-DCPRAG_CONFIG_FIXTURE=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-frozen/crexx/application/config/google-gemini.conf",
+  "-DCPRAG_NATIVE_APPLICATION=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/offline-native-package/crexxrag",
+  "-DCPRAG_WORK_DIR=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/offline-address-work",
+  "-P",
+  "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/offline-checks/AddressOffline.cmake"
+]

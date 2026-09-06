@@ -1,0 +1,10 @@
+{
+  "added_vector": {
+    "bin/rxvector_static.a": "e226789e9f463694daebc96d1bb4ae1c4fce377338567eff4087ab69e751638f",
+    "bin/rxvector.rxplugin": "584b59d4453b18271fcb8cb53b3aed7ea660d3286eced22ad3577b32ce850d2c",
+    "bin/providers/rxvector_static.a": "e226789e9f463694daebc96d1bb4ae1c4fce377338567eff4087ab69e751638f",
+    "bin/providers/rxvector.a": "e226789e9f463694daebc96d1bb4ae1c4fce377338567eff4087ab69e751638f",
+    "bin/providers/rxvector.rxplugin": "584b59d4453b18271fcb8cb53b3aed7ea660d3286eced22ad3577b32ce850d2c"
+  },
+  "note": "The initial stage-product package omitted rxvector; invalid wave retained separately. Existing library/classlib/rxfnsg/rxfnsl images are byte-identical to prepared build."
+}

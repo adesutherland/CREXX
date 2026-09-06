@@ -138,6 +138,25 @@ set_tests_properties(rxc_help_import_resolution_report PROPERTIES
         PASS_REGULAR_EXPRESSION "--import-resolution-report"
         LABELS "compiler;imports;newbuild")
 
+add_executable(test_project_dependencies test_project_dependencies.c)
+target_link_libraries(test_project_dependencies PRIVATE rxclib)
+target_include_directories(test_project_dependencies PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME project_dependencies COMMAND test_project_dependencies)
+set_tests_properties(project_dependencies PROPERTIES
+        LABELS "compiler;imports;incremental;regression"
+        CREXX_PREP_TARGETS "test_project_dependencies")
+
+add_test(NAME binary_forward_dependencies
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_forward_dependencies_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_forward_dependencies.cmake)
+set_tests_properties(binary_forward_dependencies PROPERTIES
+    LABELS "compiler;imports;incremental;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
+
 add_executable(test_import_resolution_report test_import_resolution_report.c)
 target_link_libraries(test_import_resolution_report PRIVATE rxclib)
 target_include_directories(test_import_resolution_report PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
@@ -1451,7 +1470,7 @@ add_test(NAME nr21_fixed_call_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
 set_tests_properties(nr21_fixed_call_contract PROPERTIES
-        LABELS "compiler;performance;rxbin")
+        LABELS "compiler;codegen;rxbin")
 
 add_test(NAME nr14_frozen_parse_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1467,7 +1486,7 @@ add_test(NAME nr14_frozen_parse_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
 set_tests_properties(nr14_frozen_parse_contract PROPERTIES
-        LABELS "compiler;performance;rxbin;parse")
+        LABELS "compiler;codegen;rxbin;parse")
 
 add_test(NAME nr15_native_stem_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1481,7 +1500,7 @@ add_test(NAME nr15_native_stem_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr15_native_stem_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr15_native_stem_contract.cmake)
 set_tests_properties(nr15_native_stem_contract PROPERTIES
-        LABELS "compiler;performance;rxbin;stem;nr15")
+        LABELS "compiler;codegen;rxbin;stem;nr15")
 
 add_test(NAME gate_f_channel_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1493,7 +1512,7 @@ add_test(NAME gate_f_channel_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/gate_f_channel_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
 set_tests_properties(gate_f_channel_contract PROPERTIES
-        LABELS "compiler;performance;rxas;rxbin;gate-f;channels")
+        LABELS "compiler;codegen;rxas;rxbin;gate-f;channels")
 crexx_label_concurrency_tests(SP02 gate_f_channel_contract)
 
 add_test(NAME nr09_numeric_context_contract

@@ -1,0 +1,19 @@
+Command: ctest --test-dir ../build-debugasan --output-on-failure -R \^crexx_project_build_contract\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debugasan
+    Start 2445: crexx_project_build_contract
+1/1 Test #2445: crexx_project_build_contract .....   Passed  193.84 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+autoload       = 193.84 sec*proc (1 test)
+build          = 193.84 sec*proc (1 test)
+driver         = 193.84 sec*proc (1 test)
+incremental    = 193.84 sec*proc (1 test)
+parallel       = 193.84 sec*proc (1 test)
+regression     = 193.84 sec*proc (1 test)
+smoke          = 193.84 sec*proc (1 test)
+
+Total Test time (real) = 193.88 sec

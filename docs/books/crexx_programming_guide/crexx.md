@@ -181,26 +181,55 @@ optimizer parity or diagnosing generated code. Existing `-s`, `-i`, `-l`,
 Packaged RXBIN imports retain their autoload hints, so a linked program can load a
 separately published dependency from an `rxvm -l` location.
 
-The builder records content keys under `<output>.crexx-build`. A repeat with
-unchanged tools, options, declared sources and explicit library inputs prints
-`SKIP: project current` and does not invoke the compiler or linker. `--rebuild`
-forces the full action set.
+The builder records project and member content keys under `<output>.crexx-build`.
+A repeat with unchanged tools, options, sources and import candidates prints
+`SKIP: project current` and does no compilation, assembly or linking. Normally
+this fast path does not start `rxc`. With `--import-rxas`, the compiler's cheap
+checks still run because timestamp-only changes can select a different artifact.
+`--rebuild` forces every member and the final link.
 
-The explicit source list is intentionally one safe dependency cohort. A change
-to any member rebuilds that cohort in parallel and relinks it. This is
-conservative because `rxc` may consume sibling source metadata and optimized
-inline bodies; skipping an importer without an exact producer-binding depfile
-would be fragile. Files outside the declared source and import roots do not
-invalidate the cohort. Direct files inside a source import root are
-fingerprinted because one may satisfy an import even when it was not named as
-an output member. The immediate no-op remains limited to those content-key
-checks. Larger generated/native/package projects should use the CMake graph,
-whose declarations provide narrower reverse-dependency closures.
+When project inputs change, each member first checks its own source, compiler,
+assembler, wrapper and compile options. If those still match, the driver calls
+`rxc --check-project-dependencies` on the snapshot retained by that member's
+successful compile. Only members with changed action or dependency inputs enter
+`WAVE: project compile/assemble jobs=N`; current members print
+`SKIP: project member current`. Here `N` is the number selected, while `--jobs`
+bounds concurrent workers. The final link still includes every declared member.
+
+An implementation edit in an independent source normally rebuilds that member.
+An edit in an imported source also rebuilds its consumers, including for private
+implementation changes, because cross-file optimization can inline its body.
+Contract changes invalidate those consumers too. Discovery and namespace-header
+changes are conservative: adding/removing a candidate, changing a previously
+excluded source's namespace, or changing root precedence can invalidate more
+members. Binary candidates are fingerprinted even if not ultimately loaded.
+This is safe reuse based on compiler inputs, not a promise of the smallest
+possible semantic dependency graph.
+
+The compiler owns dependency discovery; the wrapper does not parse Rexx import
+syntax. Dependency snapshots are created and maintained automatically. Users do
+not list implicit dependencies or edit a manifest. Missing or corrupt snapshots
+force compilation when member reuse is checked. Compiler options such as
+optimization, RXAS imports, diagnostics and locale participate in action keys.
+Compiler environment variables are included too: `RXCP_DISABLE_EXIT` (including
+an empty but present value), `RXCP_EXIT_MODULE`, `CREXX_DIAGNOSTICS`,
+`CREXX_DIAGNOSTIC_LOCALE`, `CREXX_MESSAGE_PATH`, `LC_ALL`, `LC_MESSAGES` and `LANG`.
+An explicit exit-module file is fingerprinted. If a custom compiler exit reads
+other external inputs, keep them stable and use `--rebuild` when they change;
+the builder cannot infer arbitrary file or environment reads by custom code.
+Changes to the compiler/assembler/wrapper rebuild members; linker-only changes
+require relinking. The builder fingerprints candidates from implicit installed
+binary roots as well as explicitly configured roots. CMake remains useful for
+generated sources, provider builds and native packaging; it invokes this same
+supported driver route.
 
 Each member writes only in its private action directory. The link writes a
 private RXBIN and renames it over the public output only after success. A
 compiler, assembler or linker failure therefore leaves the last published
-library/program intact.
+library/program intact. A change in content inputs during the compile wave
+also aborts publication and invalidates its member stamps. RXAS-enabled waves
+recheck compiler dependency snapshots before publishing to catch timestamp-only
+selection changes too; retry once inputs are stable.
 
 ## Examples
 

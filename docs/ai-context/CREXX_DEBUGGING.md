@@ -22,6 +22,36 @@ To test end-to-end execution:
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
 
+### Compiler time versus project selection
+
+Measure these separately. Capture the wrapper command and actual child `rxc`
+argv, tool hashes, source hashes, elapsed/user/system time and maximum RSS in a
+scratch build. A full-CPU sample in inline preparation is not proof of an
+infinite loop; inspect its leaf frames. Repeated
+`ast_declares_local_contract()` body walks were one scaling mechanism; imported
+source optimization and unused-import namespace analysis are distinct work.
+Use ordinary profiling-off Release with optimization enabled for comparisons.
+
+Project logs distinguish a whole-project hit, member hits, selected compile
+wave, link barrier and publication. `WAVE ... jobs=N` counts selected members,
+not the concurrency bound. For an unexpected selection, first compare member
+action inputs, then run the captured member command with
+`--check-project-dependencies path` in place of `--project-dependencies path`.
+Zero means the retained dependencies are current; a nonzero result forces a
+compile. The check does not compile bodies. Use `--import-resolution-report`
+on an actual compile to inspect candidate precedence, without treating that
+observe-only JSON as a dependency manifest.
+
+Test an unchanged repeat, an independent body edit, an imported body/contract
+edit, a namespace/discovery change and changed options/tools. An imported body
+edit may require consumers to recompile even when signatures are unchanged.
+Keep fixtures outside the installed package/source checkout. The maintained
+`project_dependencies` and `crexx_project_build_contract` tests cover this
+protocol; build their `CREXX_PREP_TARGETS` before a focused CTest invocation.
+
+Always redirect verbose builds and `rxc -d*` stdout/stderr to a temporary log
+and inspect bounded slices. Preserve the complete log for attribution.
+
 ### CTest Result Contracts
 
 Do not use `PASS_REGULAR_EXPRESSION` to represent an expected process failure.
@@ -232,6 +262,18 @@ ctest --test-dir cmake-build-debug -R 'reference_(iterator|generated|source)|typ
 cmake --build cmake-build-asan --target rxc rxas rxvm library crexx_test_driver
 ctest --test-dir cmake-build-asan -R 'reference_source_|reference_(iterator|generated)' --output-on-failure
 ```
+
+For unexpected project-wide selection, inspect whether a synthetic binary
+signature is importing an unrelated same-namespace extension. In particular,
+`node_to_type` can call `ensure_class_imported` before the module's class stubs
+exist. The scoped binary forward-declaration inventory in `rxcpfunc.c` prevents
+that temporary registry gap from creating an application dependency. Keep this
+separate from actual imported-body dependencies and from inline eligibility cost.
+Use `binary_forward_dependencies` and `project_dependencies`, then
+`crexx_project_build_contract`, after building their declared prep targets.
+The first regression should fail against the old compiler at the unused-source
+body edit, not merely run more slowly. Compiler environment presence matters:
+unset and present-empty `RXCP_DISABLE_EXIT` have different semantics.
 
 ### 9. Known Build and Platform Issues
 When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:

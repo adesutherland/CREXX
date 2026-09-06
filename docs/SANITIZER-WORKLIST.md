@@ -213,6 +213,40 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-013 — expanded project-build matrix exceeds its aggregate timeout
+
+Status: closed for the observed macOS harness timeout. The expanded permanent
+contract passes normal Debug and Apple-ASan, accounting with the unchanged broad
+passes for all 2,271 applicable macOS sanitizer checks. Owner: RXC-PROJECT-01
+(Adrian/Codex). This is not Linux or cross-platform sanitizer closure.
+
+- Affected revision: e0e67ad3e plus the local RXC-PROJECT-01 compiler/wrapper
+  and expanded `bin/tests/crexx_project_build.cmake` matrix, 2026-09-06.
+- Reproducer: `tools/asan-run.sh --build-dir ../build-debugasan --phase full
+  --build-jobs 4 --test-jobs 8 --build-leaks off --leaks off
+  --exclude-label performance-measurement --no-live-tail`, from the isolated
+  `crexx-scaling-20260906.1lT795/source` worktree on macOS ARM64.
+- Retained failure:
+  `../build-debugasan/asan-logs/20260906-110736-full/ctest.log`:
+  `crexx_project_build_contract` exceeded 180 seconds; the other 2,270 checks
+  passed. There is no ASan memory diagnostic. The expanded contract adds many
+  complete project checks/builds, including environment, tool-content and
+  installed-candidate matrices, but retained the earlier aggregate deadline.
+- Repair: retain every assertion and subprocess, expose the current scenario
+  label in the test log, and allow the expanded composite a bounded 600 seconds.
+  This does not change compiler performance, child options or test coverage.
+- Focused proof: normal Debug passes in 77.01 seconds at
+  `../build-debug/asan-logs/20260906-120138-ctest/ctest.log`; Apple-ASan passes
+  in 193.84 seconds at
+  `../build-debugasan/asan-logs/20260906-120320-ctest/ctest.log`. The latter
+  exceeds the previous 180-second aggregate bound and completes below the new
+  bound, with every assertion retained. These logs and the original broad log
+  are copied into the RXC-PROJECT-01 qualification evidence bundle.
+- Closure: the same permanent contract passes normal Debug and maintained
+  Apple-ASan; retain those logs with the 2,270 unchanged broad passes to account
+  for all 2,271 applicable macOS checks. Linux is not the failing platform and
+  no Linux or leak-clean claim follows from this timeout repair.
+
 ### SAN-QA-012 — concurrency fixtures assume scheduler timing or assignment
 
 Status: local closure candidate and release-blocking pending exact-SHA hosted

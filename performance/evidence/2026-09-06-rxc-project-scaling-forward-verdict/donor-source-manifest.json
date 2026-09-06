@@ -1,0 +1,526 @@
+{
+  ".gitattributes": {
+    "sha256": "118a32b6082d95c136f4966104d6b204c3abcd279caed93476f8f8ef44b0983c",
+    "bytes": 111
+  },
+  ".gitignore": {
+    "sha256": "03770353345738d7b38812fd3dee3f9240be8cbf181e8b111d45229f9c538248",
+    "bytes": 112
+  },
+  "AGENTS.md": {
+    "sha256": "2f7a7c5869ee9cabfc3d3621ad39c62b3f1563f6d2685dc19059bbe00efd05da",
+    "bytes": 3043
+  },
+  "CMakeLists.txt": {
+    "sha256": "a2330c2612efc973e66ad41fad3db6ad491da33c7f14adf10f69d565b150ee90",
+    "bytes": 6781
+  },
+  "CMakePresets.json": {
+    "sha256": "6335029850689cdb005bad3ca5a9bab09c93a2564eb6af9b4a3da6ce99c6bc89",
+    "bytes": 1147
+  },
+  "README.md": {
+    "sha256": "2b38f1b33d235aa86b305398649e799f57032ab70a553cceb24060289aaa4a15",
+    "bytes": 7332
+  },
+  "cmake/AddressSurface.cmake": {
+    "sha256": "68ac879ab734deac272d327a33d1c966656b0601a83175c6e6dd99bf2f87e103",
+    "bytes": 3367
+  },
+  "cmake/AnnMethodology.cmake": {
+    "sha256": "7e3746a3c1442a7e768d931205fccfb58026b9697a08c3a0399cf59456a7340c",
+    "bytes": 3383
+  },
+  "cmake/AttemptNativeCrexxRag.cmake": {
+    "sha256": "ea1b0b839c314ab1cc2e04529c2f7f923ff2d6834adfce0889fdcff34f3ed552",
+    "bytes": 3558
+  },
+  "cmake/CodexApplication.cmake": {
+    "sha256": "e614f05d14fb706de32a0ef959bd65639c54698373f8f8701f1e3a02fc0b26f0",
+    "bytes": 11247
+  },
+  "cmake/CodexProtocol.cmake": {
+    "sha256": "2cb0de05813173232cd45ab2a45449e49cae470d61b7504b0ae3658519de2c6d",
+    "bytes": 2814
+  },
+  "cmake/ConfigContract.cmake": {
+    "sha256": "51c9e33f96c94cc3a1810b69b9cad9ea058a773e25c5cae54d0af8fa70db3813",
+    "bytes": 27538
+  },
+  "cmake/CrexxRagApplication.cmake": {
+    "sha256": "25bd372c0e77d2385f68180698e0b60f55f701589e3dcdc4448fd867fe7205de",
+    "bytes": 6527
+  },
+  "cmake/CrexxRagApplicationSmoke.cmake": {
+    "sha256": "b8cf1680264926256e77867ee9a8e6300d08e237bba1031b6c7771c836b2a39a",
+    "bytes": 2646
+  },
+  "cmake/CrexxRagTests.cmake": {
+    "sha256": "9d929bcb08c9fd49eff63a506ef29abe7e503d3bec0b172bb980f8366e19dba1",
+    "bytes": 15983
+  },
+  "cmake/DocumentationContract.cmake": {
+    "sha256": "c1690a13a199f7f1cb4aeac4255f20ad6afb3a6161d4682c5b54d154b05de5bc",
+    "bytes": 2247
+  },
+  "cmake/EvidenceMethodology.cmake": {
+    "sha256": "d08553ba2915858d35be39e740d05fcc7fbeaf3897dc9fd516667113bc673908",
+    "bytes": 3665
+  },
+  "cmake/GeminiExtractionValidation.cmake": {
+    "sha256": "805f554024527d2938e5932d860a379481ab91eede3a5e0fa69eae34792ba59a",
+    "bytes": 8103
+  },
+  "cmake/GeminiImprovement.cmake": {
+    "sha256": "595c12243c420b0228af0ecacc875ce041bbb23e82176a2909c45e939710d438",
+    "bytes": 22607
+  },
+  "cmake/GeminiIngestion.cmake": {
+    "sha256": "58c18646562e0eea1a55df6206c4a58a6f7a8d14e3fb6f392a1f8f21f7b4bc8c",
+    "bytes": 26907
+  },
+  "cmake/GeminiProviderSmoke.cmake": {
+    "sha256": "847441f152e88ff5c41c5a1698d746cec09c296efba5293f753196c4a542e884",
+    "bytes": 10486
+  },
+  "cmake/GeminiQuery.cmake": {
+    "sha256": "40816aaab4ba6f0e6b64c8a8aae07b9347cc55831ffa862bff0d4b0c49ad3155",
+    "bytes": 31420
+  },
+  "cmake/InstalledProduct.cmake": {
+    "sha256": "25a6f96bfda7a3f9ac256abd8b04c9e6340d7189596e54492920b3eb2a842c68",
+    "bytes": 4799
+  },
+  "cmake/LifecycleMethodology.cmake": {
+    "sha256": "5c03771b7037d6012fe93741b5ff89ba66ae0754b6ed2075b6527ae6b253c596",
+    "bytes": 3673
+  },
+  "cmake/LinkCrexxRagApplication.cmake": {
+    "sha256": "2c4e0794a3377afff104804dd085f2444bb01f5984d110feb8472143fbd4f8ee",
+    "bytes": 1756
+  },
+  "cmake/LocalEmbeddingProtocol.cmake": {
+    "sha256": "aab444eb6954082a5cbadcfb1602f8be69cd90c465b96aeab2307de69c7a42f7",
+    "bytes": 4568
+  },
+  "cmake/MaintenanceMethodology.cmake": {
+    "sha256": "d7961cabf105f641c90cfafbb665f259c8a956f54cd8ba0e463b1a514f03452b",
+    "bytes": 3495
+  },
+  "cmake/NativeSurfaces.cmake": {
+    "sha256": "6e07729991a3811e0bd113780fcfe375e2dba033a9ea695172cba71a1574fb82",
+    "bytes": 13494
+  },
+  "cmake/ProcessWorkers.cmake": {
+    "sha256": "048126bc6644a72fdac7ff1f9ece06228f0042103b8074be05c5126796fa4a5d",
+    "bytes": 8129
+  },
+  "cmake/ProviderDurability.cmake": {
+    "sha256": "f0d3c764463c33c25cd99d13a264591707a164d01cae0f65e468bd393dd5298a",
+    "bytes": 3597
+  },
+  "cmake/QueryPolicy.cmake": {
+    "sha256": "e47d6bc2d5bdeeb4ff13282b381b6bd88b8966cd01da668d5cefe226f0df104d",
+    "bytes": 3748
+  },
+  "cmake/crexxrag-launcher.in": {
+    "sha256": "44aaf93875bab156b340a0fe4287b3c9157fd3904f6b1895716f82b5c18baf30",
+    "bytes": 533
+  },
+  "crexx/application/config/architecture_local_config.crexx": {
+    "sha256": "c79cb04210cab13444fae7b3eb6744202d7aa3ab4c687a53b09a711fdecf17f4",
+    "bytes": 2658
+  },
+  "crexx/application/config/google-gemini.conf": {
+    "sha256": "b195cab5920f628d7a29a016a6fab72e9e72b826898644ecbb97f1e9edb85931",
+    "bytes": 7549
+  },
+  "crexx/application/config/operator_registry.crexx": {
+    "sha256": "244452083ef8d0c377cedbd02f4c41257984cad97eb3af0b9c06ac94a257ceba",
+    "bytes": 1012
+  },
+  "crexx/application/config/profiles/generic_profile.crexx": {
+    "sha256": "f54cb39d656e1b861b6d0e64e0e3dd1f20aed65745a68bcbf0b891a08acf90a1",
+    "bytes": 1414
+  },
+  "crexx/application/config/profiles/it_architecture_profile.crexx": {
+    "sha256": "415918a6c29e2c8aa6e277aea9127056eafe2210ad50b0b0867d64690f4b62e2",
+    "bytes": 1913
+  },
+  "crexx/application/config/profiles/scottish-history.profile.tsv": {
+    "sha256": "75ee8466a90944b98a0770d2423ec3653bb501f996fd9bb81d143f6d24b4b13b",
+    "bytes": 1356
+  },
+  "crexx/application/ragapplicationprovider.crexx": {
+    "sha256": "4fd436fb0dbaf3990b9df9bd033ebb052f42c7e079b9d3adb7a4551f3eeb51f1",
+    "bytes": 44525
+  },
+  "crexx/application/ragbackup.crexx": {
+    "sha256": "c4dcc2ca07044a3d03d45836867e7692ce71e4be99b823b9017b91479b4bc530",
+    "bytes": 20773
+  },
+  "crexx/application/ragcanonical.crexx": {
+    "sha256": "bd1bafbdde22e456e50e1f166f85e5a57ad1b87d3941f234834bb5329dda8920",
+    "bytes": 24691
+  },
+  "crexx/application/ragclaims.crexx": {
+    "sha256": "9a7daeb9511444315a7832c9e90586984f2cfd5eda9b157e1bbd56b9685ff73a",
+    "bytes": 59152
+  },
+  "crexx/application/ragcommand.crexx": {
+    "sha256": "637606c2974576327c7e29c7cbaf600f9a824c06fe4f4c495c2c3e526765a849",
+    "bytes": 19302
+  },
+  "crexx/application/ragconfig.crexx": {
+    "sha256": "232048f5c96dd3a04855a172feb67e3da1f4eff00be87d799be2bf82db5ba5d9",
+    "bytes": 43569
+  },
+  "crexx/application/ragconfigfile.crexx": {
+    "sha256": "0f67ab6bed0c963225aaa6e4ff5fff298668fbf63b4d1dd189710921d77fc83a",
+    "bytes": 35765
+  },
+  "crexx/application/ragconfiguration.crexx": {
+    "sha256": "ecf5790256d39a1967bf341c76e5b860d8f0882b001a75c53a8683ff075b4b5c",
+    "bytes": 23150
+  },
+  "crexx/application/ragembedding.crexx": {
+    "sha256": "83801f75889c331470d39d0d203d28e7e117b5ea894d04d24f11656a57a59914",
+    "bytes": 37283
+  },
+  "crexx/application/ragevidence.crexx": {
+    "sha256": "b468728a82848b9bdfdeb4d3f885a26f429969b338d0ebe744557ac2f68ef44e",
+    "bytes": 9284
+  },
+  "crexx/application/ragevidencejson.crexx": {
+    "sha256": "83e5309586bbd31f0ea54e22f2f3089d1c64a3cf6ea662b72b020d8ac3556e08",
+    "bytes": 17024
+  },
+  "crexx/application/ragfile.crexx": {
+    "sha256": "24fe8c8c8d3e0408a9bd4ba034da722096638e14aa281cf8ae1e6ecc81ccaab1",
+    "bytes": 3661
+  },
+  "crexx/application/ragfolder.crexx": {
+    "sha256": "c90c27cc6b982f6416a9d748f785ba3fd5a0f404716fde40e3f477f3117660d7",
+    "bytes": 4360
+  },
+  "crexx/application/ragfoundation.crexx": {
+    "sha256": "188a16974d8c4d1378b016025fde5656278c3c3742c2fa27061225e79f990c34",
+    "bytes": 28093
+  },
+  "crexx/application/ragglossary.crexx": {
+    "sha256": "e6712649ef0a5cba285e2b9ea9db9bcb9e160d4c5f8f39af82e2f6e61ea6469b",
+    "bytes": 14218
+  },
+  "crexx/application/ragimprove.crexx": {
+    "sha256": "b83fd3311a548e593e36c8e8195fb1d47c7cedd3c62adce4ade2c08fe261dcd0",
+    "bytes": 48988
+  },
+  "crexx/application/ragingest.crexx": {
+    "sha256": "2029c305b6316da48f5d5e47a250ab84240c98cf881763f39c62aa93ee0219a2",
+    "bytes": 99946
+  },
+  "crexx/application/ragjob.crexx": {
+    "sha256": "c30bf8ead0d829b233182f0ec4582d54cc630418d8780ac81526a9ccca34dcbb",
+    "bytes": 3881
+  },
+  "crexx/application/ragmaintain.crexx": {
+    "sha256": "78e56ff468f4a382116e0b1c9982193f32281e3858ad0b368259dbc0721210ab",
+    "bytes": 71985
+  },
+  "crexx/application/ragmodel.crexx": {
+    "sha256": "f7cfadea90f14371602e91d03894c7c9648543faf3b4de1f3908cb7efd6f7dcf",
+    "bytes": 6434
+  },
+  "crexx/application/ragplanning.crexx": {
+    "sha256": "9734830b3c02f8f812de39f7d7783971985fa56ee5008c2cef7179c07553ef22",
+    "bytes": 21769
+  },
+  "crexx/application/ragprocess.crexx": {
+    "sha256": "cf391a5146dfbe1ce7334c01df7772f533bc0d3ad9c0ceecea457c64a71383e7",
+    "bytes": 37518
+  },
+  "crexx/application/ragproduct.crexx": {
+    "sha256": "66f4df6686b7e4a36e7d98067531c04eb6e85e569ce97f9b8c71d53e0a7b34ee",
+    "bytes": 252649
+  },
+  "crexx/application/ragprofile.crexx": {
+    "sha256": "289e22715b9ed3e31987b591854b8c6196635390fe995d9267b4ff6ec118fcc0",
+    "bytes": 11995
+  },
+  "crexx/application/ragprofilefile.crexx": {
+    "sha256": "cc93ca01d28905d2ec8e004177aa1ef31d21958ef894d5bad64cee34b6455861",
+    "bytes": 8962
+  },
+  "crexx/application/ragproposalio.crexx": {
+    "sha256": "7a42f3d0d5afc9c04ea4983b515dca64eb57fdd51754d620ebf7fdb1a3f9ed3e",
+    "bytes": 11588
+  },
+  "crexx/application/ragproviderdiagnostics.crexx": {
+    "sha256": "890fd48c90c2baf46e7606b2329657984addc3b545e9593ba711c9a10db4b29a",
+    "bytes": 3243
+  },
+  "crexx/application/ragquery.crexx": {
+    "sha256": "0b65ce1a84818b95b56fcd6ffa7a2356f4db70e152a46152bfec6248ae22676b",
+    "bytes": 19718
+  },
+  "crexx/application/ragquerypolicy.crexx": {
+    "sha256": "38c5be18a812e4566ff3fc5d56e99178fe29ce1046360a1813ba3e80911431c8",
+    "bytes": 6141
+  },
+  "crexx/application/ragqueryprovider.crexx": {
+    "sha256": "789e5761fa946d565905052e9bc275baca1b10f929e6a9bc254ba6c69f8b93da",
+    "bytes": 12125
+  },
+  "crexx/application/ragregistry.crexx": {
+    "sha256": "4489b381e574b8021093bba153c0826c9813c14d70125886a92b37f61eb639f5",
+    "bytes": 4518
+  },
+  "crexx/application/ragrepository.crexx": {
+    "sha256": "bc8f123832872da3abc91e778b2dd06ba133afa62d259bd2493c4d373d128d45",
+    "bytes": 27089
+  },
+  "crexx/application/ragretrieval.crexx": {
+    "sha256": "442eb2fb74d4475512966e98253886db4eb8a8f263946f2b8f4ba5a340d4ad2d",
+    "bytes": 71132
+  },
+  "crexx/application/ragschema.crexx": {
+    "sha256": "9d9ed09e76444660a413bf783642661752c8add0c4e781c2be45e01fa880fd07",
+    "bytes": 39468
+  },
+  "crexx/application/ragstore.crexx": {
+    "sha256": "b04c845753a49d512e4d46bd3dc92a0f1302b6c36ca67e67a1f179cef3bb84a0",
+    "bytes": 55909
+  },
+  "crexx/application/ragtrace.crexx": {
+    "sha256": "e95a61f443c38f6fc010c074ceb20d86cfc2a4ec4cffbb8de6564e5ec7211822",
+    "bytes": 1961
+  },
+  "crexx/application/ragwork.crexx": {
+    "sha256": "1386228d770d3a6f47af7c6673f5a80c834519c3440c272725e983bd87a18ecf",
+    "bytes": 109429
+  },
+  "crexx/application/surfaces/crexxrag_cli.crexx": {
+    "sha256": "2700523c4470fc4c3bf3695a0b52a05a0445904bef9b92beafcfee9ec6507d10",
+    "bytes": 40629
+  },
+  "crexx/application/surfaces/rag_address_environment.crexx": {
+    "sha256": "dfcafd9e495838774e1cf83c841fb5f9cf9698187c74600daefa7ca5a2e3a076",
+    "bytes": 9290
+  },
+  "crexx/application/surfaces/ragmcp.crexx": {
+    "sha256": "2b3d47cc9ad978edbb8c97bc086642f701079334ae7efec2cc6c5e50a6b976c5",
+    "bytes": 26696
+  },
+  "crexx/application/tests/address_surface_scenario.crexx": {
+    "sha256": "5494cc9ec2ed01e549eba86e046eb2a8bd0765db114667c2bda82e7309d5c45a",
+    "bytes": 3443
+  },
+  "crexx/application/tests/ann_methodology_scenario.crexx": {
+    "sha256": "e84ee81b2ca53fbed0c4dabde5bb8fb8198611b5ea82793477d5cc1db19f3fa1",
+    "bytes": 12441
+  },
+  "crexx/application/tests/config_scenario.crexx": {
+    "sha256": "47e8186798ba5a67c98410558852cff82532545ff3edad4edc6f53a86d4fc9e2",
+    "bytes": 10789
+  },
+  "crexx/application/tests/evidence_methodology_scenario.crexx": {
+    "sha256": "0e96988331902c083ff4868e747ea33b2538ea2e4ff1444c29ae4b83ee6263af",
+    "bytes": 14602
+  },
+  "crexx/application/tests/lifecycle_methodology_scenario.crexx": {
+    "sha256": "5bc69491d78b60ad3bffc0b6b5bd2f53a985b5cd94b1716ea00ffb559a058b01",
+    "bytes": 20686
+  },
+  "crexx/application/tests/maintenance_methodology_scenario.crexx": {
+    "sha256": "8cb8a4d13b2c2f1be81664ff25d9712cc8cd62aa7d6d7bfd9cebc4e3ef68a739",
+    "bytes": 11702
+  },
+  "crexx/application/tests/provider_durability_scenario.crexx": {
+    "sha256": "6126a188eec5227058f669f610c4efc487660909c762d9f2b6a1093e3f26311c",
+    "bytes": 23396
+  },
+  "crexx/application/tests/query_policy_scenario.crexx": {
+    "sha256": "8e277b65b05721af8d7381fcb1e77ba4378417960bbd63eebb5d9c072ca83e96",
+    "bytes": 5759
+  },
+  "crexx/providers/README.md": {
+    "sha256": "c61b2c25bbb317c27048022447b4892aa4ef5eb7aa278f900335d16bab6b00e5",
+    "bytes": 652
+  },
+  "crexx/providers/SYSTEM.md": {
+    "sha256": "fba1ddd6ed72d8cbd9159428b517e33dd8f430f2819f552432eb46003d9aab55",
+    "bytes": 629
+  },
+  "crexx/providers/codex_provider.crexx": {
+    "sha256": "f0f13500476ef68a9960a0ae75e76d9ac336f7d6c132980d608f41683baaf186",
+    "bytes": 27307
+  },
+  "crexx/providers/industrial_provider.crexx": {
+    "sha256": "568006a099fe3d0efa4966102cf2b34d5fc609f84f127152e5cb721c1d1b77e8",
+    "bytes": 29348
+  },
+  "crexx/providers/provider_catalog.crexx": {
+    "sha256": "ec7fecd5be6f9645ee16b32deba6498eac4465c6b831b660d9445cac0a66ba53",
+    "bytes": 6464
+  },
+  "crexx/providers/provider_contract.crexx": {
+    "sha256": "00c13afd41d9c5e0d675a5aabe59a15e364ef3e09428c471084facd4aed77152",
+    "bytes": 17639
+  },
+  "crexx/providers/provider_http.crexx": {
+    "sha256": "2527cdf33a952333020b816f5a7e25c3fd4db4a842c62367e420764431067ac1",
+    "bytes": 12752
+  },
+  "crexx/providers/tests/codex_protocol_scenario.crexx": {
+    "sha256": "abf1b0407f1b2df87066ec9ee389eb8596ce4de7eae4181ea1b89adc7b2032d9",
+    "bytes": 1540
+  },
+  "crexx/providers/tests/local_embedding_protocol_scenario.crexx": {
+    "sha256": "2b6a39a30eaaf4c41edcd4ed91c06097af8027f9e35c534a0af10b2485f3889b",
+    "bytes": 2678
+  },
+  "docs/README.md": {
+    "sha256": "fa70e17623eaad1392492f80d77b146ffaaf5cbc0de6da0883c27c4eb5dc8cdd",
+    "bytes": 1355
+  },
+  "docs/agent-integration.md": {
+    "sha256": "407432c7c14ffa01917199256b31cae2d8275a8062baa2fbb093ca121988788d",
+    "bytes": 10143
+  },
+  "docs/algorithm.md": {
+    "sha256": "aba63fcfc084d5c5a6715e20043891f9ae3b7261bcfbe1dff55e3003d31da41a",
+    "bytes": 35594
+  },
+  "docs/architecture.md": {
+    "sha256": "d4437d017b2027f4589ead43afd2e2159733b3af5e2db198fd19b9cab21670e1",
+    "bytes": 11991
+  },
+  "docs/configuration-audit.md": {
+    "sha256": "e843d1edf10cf376b6ddb45f46afc609980b9852f4a2a6ecce5127da39ba97ad",
+    "bytes": 29052
+  },
+  "docs/integration-issues.md": {
+    "sha256": "b636cf7ab31ec33c269b0e3f1d26cf835ab8e9e877ceb7f04dc9ff283021bf92",
+    "bytes": 4627
+  },
+  "docs/methodology-closure.md": {
+    "sha256": "98cb98b143e4a07d191096700b7a3a76943b90f9fe2fa6a6ea4c997b15da3b19",
+    "bytes": 8676
+  },
+  "docs/recovery-defects.md": {
+    "sha256": "a5fba25c6b4388c879ab3b59401bebbebd5dc408d5326d1618da27fe8ec99744",
+    "bytes": 4331
+  },
+  "docs/standalone-setup.md": {
+    "sha256": "1bf7f22228762620bca41ae38c9e98035fe93dfeb758859a79cb2d0cfa7ca1db",
+    "bytes": 7072
+  },
+  "docs/test-strategy.md": {
+    "sha256": "ba86326b7c6967b669e8f019423888ff31d0fa3d62e045c8e7153b79e246da9a",
+    "bytes": 6527
+  },
+  "docs/tutorial/README.md": {
+    "sha256": "8f824bbc1d717c9190d7d6ad583c94059a2a405245e92e38fef11a30072e25a1",
+    "bytes": 2661
+  },
+  "docs/tutorial/architecture.glossary.tsv": {
+    "sha256": "fdd24adf72f8f368917eec9fe754205e46600a1f1155301d4c1ad6e60a8a7d0c",
+    "bytes": 162
+  },
+  "docs/tutorial/crexxrag-codex-local.conf": {
+    "sha256": "8f305a199a47a3fd63ef28638aa057e7a08a77bd97d85e3712754b9afc291168",
+    "bytes": 3413
+  },
+  "docs/tutorial/crexxrag.conf": {
+    "sha256": "c43da5a97b25321da10772a4d5ef5d083bba35b51af3c133ef2901f6dda08929",
+    "bytes": 3472
+  },
+  "docs/tutorial/setup.sh": {
+    "sha256": "93b1696359ca4a34935751687967beb74f3055535bc66049e96217ab5f03370e",
+    "bytes": 2143
+  },
+  "docs/tutorial/source-docs/architecture.txt": {
+    "sha256": "dd6a6d61ff2c25aadf83ed9035a599fbd3d847226797a6326cf2eadc4f06a833",
+    "bytes": 88
+  },
+  "docs/user-guide.md": {
+    "sha256": "5e514af2274286992a4be4690845c3400284996bc759bef65e35403d65eec674",
+    "bytes": 26697
+  },
+  "scripts/setup_llama_cpp_embedder.sh": {
+    "sha256": "73dc0a29225e05f24237c882bb33bdf6b6326472ea754b19ac9b9c79785dab52",
+    "bytes": 919
+  },
+  "scripts/start_local_llama_servers.sh": {
+    "sha256": "87aa35be27e9f571ed57f486fa6c5fcd78c996c1458ef038de6548b26aa059c3",
+    "bytes": 7176
+  },
+  "scripts/status_local_llama_servers.sh": {
+    "sha256": "ed99e9dda5fc88f97a4d09aabc2510ffea00c4b97a19b476f0e619840f39ece9",
+    "bytes": 5001
+  },
+  "scripts/stop_local_llama_servers.sh": {
+    "sha256": "ebe8b4ec5c83d0f27f9492b11a0b55e196599652a25d106bedebee5fac35cda5",
+    "bytes": 2140
+  },
+  "skills/README.md": {
+    "sha256": "55f23a729106c5ef3e8ab26cc8134c219ec1f89205e880d192e5119ab2ee5ab0",
+    "bytes": 1401
+  },
+  "skills/crexxrag-diagnose/SKILL.md": {
+    "sha256": "4d777b2f51a527bb43388ea19cba69d6f966b01dd080368d2291009746259dd1",
+    "bytes": 1452
+  },
+  "skills/crexxrag-diagnose/manifest.json": {
+    "sha256": "309f1e72d2b91de71514a7bc4283b8c93f573a4c7b4e088064412307da3d90cd",
+    "bytes": 441
+  },
+  "skills/crexxrag-ingest/SKILL.md": {
+    "sha256": "1dc1025a724a0f7c50799017e1807c37855409da91b2ba959a5d420aadc0df31",
+    "bytes": 1107
+  },
+  "skills/crexxrag-ingest/manifest.json": {
+    "sha256": "e8eda7485946fd2926e4ada6559cb8eac62a28c800d2dc8e939eca6dbd32b41a",
+    "bytes": 411
+  },
+  "skills/crexxrag-maintain/SKILL.md": {
+    "sha256": "723f7829eefdd4509720669fe6e2fa21d42770f7e0ed67908dd8d7749df1cdfb",
+    "bytes": 2110
+  },
+  "skills/crexxrag-maintain/manifest.json": {
+    "sha256": "ac2106d713f2f999d6ea380cfbc4da9f855b4a7461ebfddc74d22cbddc6964f1",
+    "bytes": 651
+  },
+  "skills/crexxrag-qa/SKILL.md": {
+    "sha256": "645cf3217639f87cb41737c8b8e111d22477b2f4737ad6f6c8af7acaa266205e",
+    "bytes": 1268
+  },
+  "skills/crexxrag-qa/manifest.json": {
+    "sha256": "a6b06e5fd7e0cb54a3a32051d6401b83deee8c81fdf2eb4f43ac3c0a83e4cf34",
+    "bytes": 413
+  },
+  "tests/fixtures/proposals/external-architecture.ndjson.in": {
+    "sha256": "5c356844170811a41fa8de373901f7f22ad4d21044ac90faea3e0397293298b3",
+    "bytes": 1017
+  },
+  "tests/fixtures/providers/codex-app-server-fixture.sh": {
+    "sha256": "acbbfad9d11c6648ca7e82c91872bb7b127d95262061923e2ed17bc558196a88",
+    "bytes": 3446
+  },
+  "tests/fixtures/providers/codex-application.conf.in": {
+    "sha256": "5e86fb3adf2e752bf41078a833c6fb9bf1f017271a6a5b70e231532b9f1e4634",
+    "bytes": 1880
+  },
+  "tests/fixtures/providers/gemini-ingestion.conf.in": {
+    "sha256": "47c1b600c5f2145b11e5723124f52a4271c4cd102d4fc8e63480c62c513d47ae",
+    "bytes": 1894
+  },
+  "tests/fixtures/providers/gemini-query.conf.in": {
+    "sha256": "f2cd26e458551bb1f39f9af4df106e945d750a1f2f8133ce101982c971ba8a31",
+    "bytes": 1746
+  },
+  "tests/provider_fixture.cpp": {
+    "sha256": "1455b13fbfc843e6b3af6131246288300e0833bb5dbb1b78e23b17bcefba960a",
+    "bytes": 29009
+  }
+}

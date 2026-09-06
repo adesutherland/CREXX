@@ -49,6 +49,7 @@
 
 /* Compiler Context Object */
 struct Context {
+    struct pending_import_contracts *pending_import_contracts; /* Active binary metadata forward declarations. */
     struct Context *master_context; /* This points to the context of the file being compiled (rather than imported files* */
     int debug_mode;
     int stop_after_parse;
@@ -386,6 +387,10 @@ void freimpfc(imported_func *func);
 
 /* Get the list of importable files as a null terminated malloced array */
 importable_file **rxfl_lst(Context *context);
+const char *rxcp_importable_source_namespace(Context *context, importable_file *file);
+
+/* Internal project-driver dependency snapshot: zero means written/current. */
+int rxcp_project_dependencies(Context *context, const char *path, int check);
 
 /* free the list of importable files */
 void rxfl_fre(importable_file **file_list);

@@ -86,6 +86,56 @@ Within a single binary root, when multiple artifacts share the same
 module stem, the compiler keeps only the freshest candidate. If
 timestamps tie, `.rxbin` wins over `.rxas`.
 
+## Project dependency checks
+
+The `crexx --program` and `crexx --library` driver uses two compiler options to
+reuse individual compiled members safely. The driver manages these files
+automatically; ordinary project users do not need to invoke these options or
+maintain a dependency list:
+
+- `--project-dependencies path` writes a private dependency snapshot after a
+  successful compilation.
+- `--check-project-dependencies path` checks a retained snapshot without parsing,
+  validating or optimizing callable bodies, emitting assembly, or loading
+  dynamic provider code. Exit status is 0 for current inputs and 2 for a stale,
+  missing, unreadable or malformed snapshot. Other argument/input failures are
+  ordinary compiler failures; callers must treat every nonzero status as a miss.
+
+Place these options before the source argument. Use the same source, working
+location, ordered import roots and compiler options for creation and checking:
+
+```sh
+rxc --project-dependencies build/member.dependencies -s src -i lib -o build/member src/member.crexx
+rxc --check-project-dependencies build/member.dependencies -s src -i lib -o build/member src/member.crexx
+```
+
+The snapshot includes the primary source, resolver options, compiler environment
+settings and ordered candidate selection. Loaded source files and binary candidates are checked by full content;
+excluded source files are checked by the namespace interpretation used by the
+compiler's existing header scanner. Candidate additions, removals, earlier-root
+shadowing and timestamp-based RXAS selection invalidate the snapshot. A private
+implementation change in an imported source can require rebuilding a consumer:
+normal optimization may have copied that implementation into its inline code.
+
+The snapshot is an internal versioned binary format, not a Make dependency file
+or the observe-only `--import-resolution-report` JSON. The driver also checks the
+compiler, assembler, wrapper, diagnostics and action options; the snapshot alone
+does not establish that a different toolchain can reuse an earlier output. Keep
+inputs stable during a build. The driver rejects a wave whose content inputs
+change while its members compile. Deleting `<output>.crexx-build` or using
+`--rebuild` requests a fresh build. No optimization or callable-validation rules
+are relaxed by dependency checking. The driver also fingerprints an explicit
+`RXCP_EXIT_MODULE` file. Custom exits that read additional external inputs require
+caller-managed invalidation (`--rebuild` in the project driver).
+
+Compiler declaration lookups inspect declaration-bearing file nodes instead of
+repeatedly walking expanded executable bodies. During binary metadata loading,
+classes/interfaces declared by that module are recognized as forward declarations
+before their full stubs are registered. This prevents an unrelated source file in
+the same namespace from being loaded merely to resolve that temporary gap. These
+are internal compiler repairs; normal optimization and callable validation stay
+enabled and no user-facing optimization switch is required.
+
  \section{Inline Assembler}
  On page \pageref{in-line-assembly} the inline assembler function of
  the cRexx compiler is discussed. This enables the incorporation

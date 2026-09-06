@@ -1,0 +1,26 @@
+{
+  "base_commit": "e0e67ad3e89e19f98ab09676ffa2bbc99fad7010",
+  "source_diff": "diff --git a/compiler/rxcpfunc.c b/compiler/rxcpfunc.c\nindex 92782bedb..fb244a394 100644\n--- a/compiler/rxcpfunc.c\n+++ b/compiler/rxcpfunc.c\n@@ -3430,7 +3430,14 @@ static int ast_declares_local_contract(ASTNode *node, const char *short_name) {\n             return 1;\n         }\n \n-        if (node->child && ast_declares_local_contract(node->child, short_name)) return 1;\n+        /* Source structure normalization puts contracts directly under a\n+         * file node. Executable bodies cannot declare a class or interface;\n+         * walking them here makes each inline type check scan every expanded\n+         * body in the compilation unit. Inspect the live declaration level\n+         * instead, so newly inserted declarations remain visible without a\n+         * cache or any dependency on optimizer invalidation. */\n+        if ((node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) &&\n+            node->child && ast_declares_local_contract(node->child, short_name)) return 1;\n     }\n \n     return 0;\n",
+  "artifacts": {
+    "observed_rxc": {
+      "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/installed-observed/bin/rxc.actual",
+      "sha256": "ee3ef98fb33d405024745ae10c34931ca1ff98eb217af73e3b0b83275620e422"
+    },
+    "observed_wrapper": {
+      "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/installed-observed/bin/crexx",
+      "sha256": "2ad3a090b5050e49d693d5a8024ac6310d1c2ee10fa917a6a3b4c1fb94cf5d89"
+    },
+    "baseline_rxc": {
+      "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline/bin/rxc.actual",
+      "sha256": "896690d2529e5de9232a4b55a71d2ac38e67cac54cfed09855dddea3ed4644c4"
+    },
+    "baseline_wrapper": {
+      "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/install-baseline/bin/crexx",
+      "sha256": "b9b1ec023748c7ca0aab7026948c1d997cd87799bdd9d68091aee701911356bf"
+    },
+    "narrow_rxc": {
+      "path": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/evidence/rxc-narrow-prototype",
+      "sha256": "aac5dcda2d6f8898b3ff496a37ef441a13be672b3d5e5225694a8718d33616b8"
+    }
+  }
+}

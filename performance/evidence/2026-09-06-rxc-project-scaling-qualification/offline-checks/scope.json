@@ -1,0 +1,8 @@
+{
+  "configuration": "Original script prefix before Configuration lifecycle; no ingestion/maintenance/worker operations. Adapted compilation/runtime setup to installed crexx --program and automatic provider metadata because frozen explicit VM list names retired rx_system.",
+  "address": "Original scenario OPEN/STATUS prefix plus CLOSE; no report/snapshot/maintenance/ingestion/worker operations.",
+  "sha256": {
+    "address_offline.crexx": "87ac6fe662d9ca1d6fc853b2b6164eaba9b0b9a37f04880c7ae84d0ecf1a8fd3",
+    "ConfigContractOffline.cmake": "592ffd6b242303031ac38b9d4d5b64231d8dc17e1481b3293088bd7d642387a8"
+  }
+}

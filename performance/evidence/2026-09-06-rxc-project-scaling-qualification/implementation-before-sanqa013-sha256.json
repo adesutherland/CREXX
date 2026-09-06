@@ -1,0 +1,21 @@
+{
+  "base_commit": "e0e67ad3e89e19f98ab09676ffa2bbc99fad7010",
+  "branch": "temp/rxc-project-scaling",
+  "files": {
+    "bin/crexx.crexx": "70d48588f31931984815e49d4207e0756b8f640bc4ff2a9f810d89defb298141",
+    "bin/crexx_build_worker.crexx": "b26e8c5f8b202e6146968f89111b79a2b289b043c9a01b70c89f9270bd99379a",
+    "bin/tests/crexx_project_build.cmake": "2a587d222505f4e4a8cba80ede1c06b7301bb80ce41bd76ab5cd94ab9b120f35",
+    "compiler/CMakeLists.txt": "c2120977eea7cf2075720ca91670ce63833e74733a3f55e6acea5ef05e30fafc",
+    "compiler/rxcp_ctx.h": "78c014520884d65fcb4b58ce6112d2ce3dfa123d682aa987eb606c95cbd74f19",
+    "compiler/rxcp_project_dependencies.c": "7c4a4337a102a6f7280104e131891c419a2764492cce533c5f8720b0ab0e0cd9",
+    "compiler/rxcpfunc.c": "624c7e71126e5427c6fd46afb024446640dff12a682f3a697e7c1f0c8f758642",
+    "compiler/rxcpmain.c": "36eb41ccda82d07515af75e06362d94db4e6295a5a6155ebbee37e967ade2038",
+    "compiler/tests/CMakeLists.txt": "2880c487ddf3f4e6719b715d59a8f044a5ec986400f1ceaa10d9603564f0f68a",
+    "compiler/tests/binary_forward_dependencies.cmake": "021244495f61a526a333da45056addfb72da2c33d43ad4b48ec027195d1c977c",
+    "compiler/tests/gate_f_channel_contract.cmake": "aa825824998da5786dc52b68dcc53196dca2b176d9c362d6fd3a1b49386df251",
+    "compiler/tests/nr14_frozen_parse_contract.cmake": "7a1b56a3c6a94fb188a0944c83bd3f3ebb7bc654dddb332386f756424dbf1775",
+    "compiler/tests/nr15_native_stem_contract.cmake": "be26f07375892eb9af8524631a43b1deddba9917ed11e38b021cedf8cf89b5a5",
+    "compiler/tests/nr21_fixed_call_contract.cmake": "f426dd82fb49badb9b977ad78a7d84f2c5516ab8ba6537e9958f4c67cf4e6e15",
+    "compiler/tests/test_project_dependencies.c": "430faba3ccdc58b84b7b04220c609f51e76a3a606111baa75d652107471c99c8"
+  }
+}

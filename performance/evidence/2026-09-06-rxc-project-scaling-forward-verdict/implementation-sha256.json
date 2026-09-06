@@ -1,0 +1,12 @@
+{
+  "bin/crexx.crexx": "921936fcc05ed28a3b777cf17db8cd0f7dd7c20f88f8229fd4a0e9cc13c0d4fe",
+  "bin/crexx_build_worker.crexx": "b26e8c5f8b202e6146968f89111b79a2b289b043c9a01b70c89f9270bd99379a",
+  "bin/tests/crexx_project_build.cmake": "db60ded9cbebdc0bf9bb9dae92c27eca33950137b77ed8a312dd67de10858a6e",
+  "compiler/CMakeLists.txt": "c2120977eea7cf2075720ca91670ce63833e74733a3f55e6acea5ef05e30fafc",
+  "compiler/rxcp_ctx.h": "78c014520884d65fcb4b58ce6112d2ce3dfa123d682aa987eb606c95cbd74f19",
+  "compiler/rxcpfunc.c": "624c7e71126e5427c6fd46afb024446640dff12a682f3a697e7c1f0c8f758642",
+  "compiler/rxcpmain.c": "36eb41ccda82d07515af75e06362d94db4e6295a5a6155ebbee37e967ade2038",
+  "compiler/tests/CMakeLists.txt": "eaaafc6cbde2b04ba74c9ef6b6aa623872ba17ed7493ea1e481141f41702739d",
+  "compiler/rxcp_project_dependencies.c": "8f9463c4dd81b3e7539b0d8ef5876e687fbaa32404ed16aaa05f080376a37a2b",
+  "compiler/tests/test_project_dependencies.c": "430faba3ccdc58b84b7b04220c609f51e76a3a606111baa75d652107471c99c8"
+}

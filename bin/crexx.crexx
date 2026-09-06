@@ -896,7 +896,7 @@ if normalizedCandidate = normalizedOutput || '_linked.rxproviders' then return 1
 return 0
 
 projectKeyRoots: procedure = .binary
-arg state = .binary, roots = .string, outputBase = .string
+arg state = .binary, roots = .string, outputBase = .string, binaryOnly = .int
 rest = .string
 root = .string
 sep = .int
@@ -923,6 +923,10 @@ do while rest <> ''
   end
   ignored = arraysort(entries)
   do i = 1 to entries[0]
+    if binaryOnly then do
+      extension = lower(right(entries[i], 6))
+      if extension <> '.rxbin' & right(extension,5) <> '.rxas' & lower(right(entries[i],9)) <> '.rxplugin' then iterate
+    end
     candidate = root || '/' || entries[i]
     if projectOwnsCandidate(candidate, outputBase) then iterate
     hash = projectFileHash(candidate)
@@ -935,20 +939,21 @@ end
 return state
 
 projectActionKey: procedure = .string
-arg mode = .string, output = .string, optimize = .int, sources = .string[], sourceRoots = .string, binaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, rxc = .string, rxas = .string, rxlink = .string
+arg mode = .string, output = .string, optimize = .int, sources = .string[], sourceRoots = .string, binaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, rxc = .string, rxas = .string, rxlink = .string, compileKey = .string
 rest = .string
 item = .string
 sep = .int
 i = .int
 state = rxhash..sha256init()
-state = projectKeyText(state, 'crexx-project/v1')
+state = projectKeyText(state, 'crexx-project/v2')
+state = projectKeyText(state, compileKey)
 state = projectKeyText(state, mode)
 state = projectKeyText(state, output)
 state = projectKeyText(state, optimize)
 state = projectKeyText(state, sourceRoots)
 state = projectKeyText(state, binaryRoots)
-state = projectKeyRoots(state, sourceRoots, output)
-state = projectKeyRoots(state, dependencyBinaryRoots, output)
+state = projectKeyRoots(state, sourceRoots, output, 0)
+state = projectKeyRoots(state, binaryRoots, output, 1)
 state = projectKeyText(state, projectFileHash(rxc))
 state = projectKeyText(state, projectFileHash(rxas))
 state = projectKeyText(state, projectFileHash(rxlink))
@@ -974,11 +979,59 @@ do while rest <> ''
 end
 return rxhash..sha256finalhex(state)
 
-projectMemberKey: procedure = .string
-arg projectKey = .string, stem = .string
+/* These are compilation inputs shared by all members, not project contents. */
+projectCompileKey: procedure = .string
+arg optimize = .int, sourceRoots = .string, binaryRoots = .string, rxc = .string, rxas = .string, driver = .string, importRxas = .int, diagnostics = .string, diagnosticLocale = .string
 state = rxhash..sha256init()
-state = projectKeyText(state, projectKey)
-state = projectKeyText(state, stem)
+state = projectKeyText(state, 'crexx-project-member/v2')
+state = projectKeyText(state, optimize)
+state = projectKeyText(state, sourceRoots)
+state = projectKeyText(state, binaryRoots)
+state = projectKeyText(state, projectFileHash(rxc))
+state = projectKeyText(state, projectFileHash(rxas))
+state = projectKeyText(state, projectFileHash(driver))
+state = projectKeyText(state, importRxas)
+state = projectKeyText(state, diagnostics)
+state = projectKeyText(state, diagnosticLocale)
+environmentName = .string
+environmentValue = .string
+environmentIndex = .int
+environmentLine = .int
+/* The env command distinguishes absent variables from present empty values;
+   getenv alone cannot represent RXCP_DISABLE_EXIT's presence semantics. */
+environmentNames = .string[]
+environmentNames[1] = 'RXCP_DISABLE_EXIT'
+environmentNames[2] = 'RXCP_EXIT_MODULE'
+environmentNames[3] = 'CREXX_DIAGNOSTICS'
+environmentNames[4] = 'CREXX_DIAGNOSTIC_LOCALE'
+environmentNames[5] = 'CREXX_MESSAGE_PATH'
+environmentNames[6] = 'LC_ALL'
+environmentNames[7] = 'LC_MESSAGES'
+environmentNames[8] = 'LANG'
+do environmentIndex = 1 to environmentNames[0]
+  environmentName = environmentNames[environmentIndex]
+  environmentValues = .string[]
+  environmentErrors = .string[]
+  address crexx 'env :environmentName' output environmentValues error environmentErrors
+  state = projectKeyText(state, environmentName)
+  state = projectKeyText(state, rc)
+  do environmentLine = 1 to environmentValues[0]
+    state = projectKeyText(state, environmentValues[environmentLine])
+  end
+end
+environmentName = 'RXCP_EXIT_MODULE'
+environmentValue = ''
+assembler getenv environmentValue,environmentName
+/* Named modules are covered by binary roots; an explicit file may be outside them. */
+if environmentValue <> '' then state = projectKeyText(state, projectCandidateHash(environmentValue))
+return rxhash..sha256finalhex(state)
+
+projectMemberKey: procedure = .string
+arg compileKey = .string, source = .string
+state = rxhash..sha256init()
+state = projectKeyText(state, compileKey)
+state = projectKeyText(state, source)
+state = projectKeyText(state, projectFileHash(source))
 return rxhash..sha256finalhex(state)
 
 projectActionCurrent: procedure = .int
@@ -1247,6 +1300,7 @@ buildProject: procedure = .int
 arg mode = .string, output = .string, sources = .string[], jobsText = .string, forceRebuild = .int, optimize = .int, native = .int, configuredSourceRoots = .string, configuredBinaryRoots = .string, dependencyBinaryRoots = .string, libraryInputs = .string, userLibraries = .string, importRxas = .int, diagnostics = .string, diagnosticLocale = .string, rxpath = .string, dirsep = .string, platformName = .string
 i = .int
 j = .int
+ignored = .int
 if output = '' then do
   say 'missing project output path'
   return 2
@@ -1313,10 +1367,11 @@ if projectMakeDirectory(publishRoot) <> 0 then return 1
 rxc = rxpath || 'bin' || dirsep || 'rxc'
 rxas = rxpath || 'bin' || dirsep || 'rxas'
 rxlink = rxpath || 'bin' || dirsep || 'rxlink'
-projectKey = projectActionKey(mode, outputBase, optimize, resolvedSources, sourceRoots, binaryRoots, dependencyRoots, libraryInputs, rxc, rxas, rxlink)
+compileKey = projectCompileKey(optimize, sourceRoots, binaryRoots, rxc, rxas, rxpath || 'bin' || dirsep || 'crexx', importRxas, diagnostics, diagnosticLocale)
+projectKey = projectActionKey(mode, outputBase, optimize, resolvedSources, sourceRoots, binaryRoots, dependencyRoots, libraryInputs, rxc, rxas, rxlink, compileKey)
 finalOutput = outputBase || '.rxbin'
 finalStamp = workRoot || '/product.action.sha256'
-if \forceRebuild & projectActionCurrent(finalOutput, finalStamp, projectKey) then do
+if \forceRebuild & \importRxas & projectActionCurrent(finalOutput, finalStamp, projectKey) then do
   say 'SKIP: project current' finalOutput
   if mode = 'program' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
   return 0
@@ -1327,13 +1382,50 @@ do i = 1 to resolvedSources[0]
   memberDir = memberRoot || '/' || stems[i]
   memberOutput = memberDir || '/' || stems[i] || '.rxbin'
   memberStamp = memberDir || '/action.sha256'
-  memberKey = projectMemberKey(projectKey, stems[i])
+  memberKey = projectMemberKey(compileKey, resolvedSources[i])
+  request = projectCompileRequest(resolvedSources[i], stems[i], memberDir, sourceRoots, binaryRoots, rxc, rxas, memberKey, optimize, importRxas, diagnostics, diagnosticLocale)
+  memberCurrent = 0
   if \forceRebuild & projectActionCurrent(memberOutput, memberStamp, memberKey) then
+    memberCurrent = crexx_build_worker..dependencies_current(request)
+  if memberCurrent then
     say 'SKIP: project member current' stems[i]
-  else requests[requests[0] + 1] = projectCompileRequest(resolvedSources[i], stems[i], memberDir, sourceRoots, binaryRoots, rxc, rxas, memberKey, optimize, importRxas, diagnostics, diagnosticLocale)
+  else requests[requests[0] + 1] = request
+end
+if requests[0] = 0 & projectActionCurrent(finalOutput, finalStamp, projectKey) then do
+  say 'SKIP: project current' finalOutput
+  if mode = 'program' & native then return projectPackageNative(outputBase, workRoot, projectKey, rxpath, dirsep, platformName, userLibraries)
+  return 0
 end
 if requests[0] > 0 then say 'WAVE: project compile/assemble jobs=' || requests[0]
-if projectRunCompileWave(jobs, requests) <> 0 then return 1
+waveRc = projectRunCompileWave(jobs, requests)
+compileKeyAfter = projectCompileKey(optimize, sourceRoots, binaryRoots, rxc, rxas, rxpath || 'bin' || dirsep || 'crexx', importRxas, diagnostics, diagnosticLocale)
+/* Never publish or retain successful member stamps from a moving input wave. */
+if projectKey <> projectActionKey(mode, outputBase, optimize, resolvedSources, sourceRoots, binaryRoots, dependencyRoots, libraryInputs, rxc, rxas, rxlink, compileKeyAfter) then do
+  do i = 1 to stems[0]
+    ignored = rxfs..delete(memberRoot || '/' || stems[i] || '/action.sha256')
+  end
+  say 'FAILED: project inputs changed during compilation; retry the build'
+  return 1
+end
+
+if waveRc <> 0 then return 1
+
+/* RXAS winner selection also depends on mtimes, which the global content key
+   cannot detect. Recheck the completed snapshots before publishing a wave. */
+if importRxas & requests[0] > 0 then do
+  do i = 1 to resolvedSources[0]
+    checkedMemberDir = memberRoot || '/' || stems[i]
+    checkedMemberKey = projectMemberKey(compileKeyAfter, resolvedSources[i])
+    checkedRequest = projectCompileRequest(resolvedSources[i], stems[i], checkedMemberDir, sourceRoots, binaryRoots, rxc, rxas, checkedMemberKey, optimize, importRxas, diagnostics, diagnosticLocale)
+    if \crexx_build_worker..dependencies_current(checkedRequest) then do
+      do j = 1 to stems[0]
+        ignored = rxfs..delete(memberRoot || '/' || stems[j] || '/action.sha256')
+      end
+      say 'FAILED: project import selection changed during compilation; retry the build'
+      return 1
+    end
+  end
+end
 
 privateBase = publishRoot || '/product'
 privateOutput = privateBase || '.rxbin'

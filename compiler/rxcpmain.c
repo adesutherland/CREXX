@@ -163,6 +163,8 @@ static void help() {
             "  --no-autoload   Do not emit packaged-RXBIN autoload hints\n"
             "  --no-exe-import Do not add the executable directory to binary roots\n"
             "  --import-resolution-report path  Write observe-only import selection JSON\n"
+            "  --project-dependencies path  Write a private project dependency snapshot\n"
+            "  --check-project-dependencies path  Check a snapshot with the same compile arguments\n"
             "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
@@ -348,6 +350,8 @@ int rxcmain(int argc, char *argv[]) {
     char *exe_path = 0;
     char *combined_import_locations = 0;
     char *import_resolution_report_path = 0;
+    char *project_dependencies_path = 0;
+    int check_project_dependencies = 0;
     char c;
     int do_optimise = 1;
     int disable_exits = 0;
@@ -446,6 +450,15 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--no-exe-import") == 0) {
             add_executable_import = 0;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--project-dependencies") == 0 ||
+            strcmp(argv[i], "--check-project-dependencies") == 0) {
+            check_project_dependencies = strcmp(argv[i], "--check-project-dependencies") == 0;
+            i++;
+            if (i >= argc) error_and_exit(2, "Missing project dependency snapshot path");
+            project_dependencies_path = argv[i];
             continue;
         }
 
@@ -754,6 +767,13 @@ int rxcmain(int argc, char *argv[]) {
         source_import_locations = 0;
     }
 
+    /* Dependency checks reuse discovery/header semantics without compiling or
+     * loading executable provider code. The controller owns the action key. */
+    if (check_project_dependencies) {
+        errors = rxcp_project_dependencies(context, project_dependencies_path, 1);
+        goto finish;
+    }
+
     /* Load VM Plugins */
     // Manually initialize the plugins that are statically linked with manual initializers (hardcoded)
     CALL_PLUGIN_INITIALIZER(decnumber); // MC Decimal Plugin
@@ -980,6 +1000,12 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Close outfile */
     if (outFile) fclose(outFile);
+
+    if (!errors && !check_project_dependencies && project_dependencies_path &&
+        rxcp_project_dependencies(context, project_dependencies_path, 0) != 0) {
+        fprintf(stderr, "Can't write project dependency snapshot %s\n", project_dependencies_path);
+        errors = 1;
+    }
 
     if (rxcp_import_report_write(context) != 0) {
         fprintf(stderr, "Can't write import resolution report %s\n",

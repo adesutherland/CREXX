@@ -1,0 +1,703 @@
+{
+  "baseline": {
+    "wave": {
+      "elapsed_s": 509.45,
+      "user_s": 1078.6,
+      "system_s": 7.54,
+      "maxrss_bytes": 586940416
+    },
+    "members": {
+      "architecture_local_config": {
+        "elapsed_s": 11.4,
+        "user_s": 11.29,
+        "system_s": 0.07,
+        "maxrss_bytes": 267386880,
+        "rc": 0
+      },
+      "industrial_provider": {
+        "elapsed_s": 15.21,
+        "user_s": 12.85,
+        "system_s": 0.12,
+        "maxrss_bytes": 296435712,
+        "rc": 0
+      },
+      "ragmodel": {
+        "elapsed_s": 16.72,
+        "user_s": 14.22,
+        "system_s": 0.12,
+        "maxrss_bytes": 249610240,
+        "rc": 0
+      },
+      "ragprocess": {
+        "elapsed_s": 14.89,
+        "user_s": 14.77,
+        "system_s": 0.07,
+        "maxrss_bytes": 351567872,
+        "rc": 0
+      },
+      "ragconfigfile": {
+        "elapsed_s": 18.08,
+        "user_s": 15.62,
+        "system_s": 0.13,
+        "maxrss_bytes": 350928896,
+        "rc": 0
+      },
+      "ragingest": {
+        "elapsed_s": 17.17,
+        "user_s": 14.72,
+        "system_s": 0.13,
+        "maxrss_bytes": 356532224,
+        "rc": 0
+      },
+      "ragclaims": {
+        "elapsed_s": 17.7,
+        "user_s": 15.21,
+        "system_s": 0.12,
+        "maxrss_bytes": 302284800,
+        "rc": 0
+      },
+      "ragmcp": {
+        "elapsed_s": 133.95,
+        "user_s": 133.68,
+        "system_s": 0.19,
+        "maxrss_bytes": 411451392,
+        "rc": 0
+      },
+      "ragconfig": {
+        "elapsed_s": 10.08,
+        "user_s": 9.94,
+        "system_s": 0.05,
+        "maxrss_bytes": 278675456,
+        "rc": 0
+      },
+      "generic_profile": {
+        "elapsed_s": 11.71,
+        "user_s": 11.61,
+        "system_s": 0.06,
+        "maxrss_bytes": 257720320,
+        "rc": 0
+      },
+      "ragrepository": {
+        "elapsed_s": 21.27,
+        "user_s": 14.67,
+        "system_s": 0.15,
+        "maxrss_bytes": 264699904,
+        "rc": 0
+      },
+      "ragqueryprovider": {
+        "elapsed_s": 15.92,
+        "user_s": 15.84,
+        "system_s": 0.07,
+        "maxrss_bytes": 336887808,
+        "rc": 0
+      },
+      "provider_http": {
+        "elapsed_s": 18.69,
+        "user_s": 12.78,
+        "system_s": 0.11,
+        "maxrss_bytes": 257982464,
+        "rc": 0
+      },
+      "ragwork": {
+        "elapsed_s": 9.98,
+        "user_s": 9.88,
+        "system_s": 0.07,
+        "maxrss_bytes": 355778560,
+        "rc": 0
+      },
+      "ragproviderdiagnostics": {
+        "elapsed_s": 20.53,
+        "user_s": 20.41,
+        "system_s": 0.08,
+        "maxrss_bytes": 338542592,
+        "rc": 0
+      },
+      "ragglossary": {
+        "elapsed_s": 10.26,
+        "user_s": 10.13,
+        "system_s": 0.05,
+        "maxrss_bytes": 268304384,
+        "rc": 0
+      },
+      "ragconfiguration": {
+        "elapsed_s": 17.57,
+        "user_s": 15.13,
+        "system_s": 0.12,
+        "maxrss_bytes": 287096832,
+        "rc": 0
+      },
+      "ragstore": {
+        "elapsed_s": 10.79,
+        "user_s": 10.66,
+        "system_s": 0.05,
+        "maxrss_bytes": 306774016,
+        "rc": 0
+      },
+      "ragmaintain": {
+        "elapsed_s": 21.3,
+        "user_s": 14.69,
+        "system_s": 0.15,
+        "maxrss_bytes": 267206656,
+        "rc": 0
+      },
+      "ragquery": {
+        "elapsed_s": 12.41,
+        "user_s": 12.3,
+        "system_s": 0.06,
+        "maxrss_bytes": 291323904,
+        "rc": 0
+      },
+      "ragjob": {
+        "elapsed_s": 19.59,
+        "user_s": 13.65,
+        "system_s": 0.11,
+        "maxrss_bytes": 250871808,
+        "rc": 0
+      },
+      "ragquerypolicy": {
+        "elapsed_s": 7.77,
+        "user_s": 7.71,
+        "system_s": 0.05,
+        "maxrss_bytes": 263929856,
+        "rc": 0
+      },
+      "ragtrace": {
+        "elapsed_s": 19.35,
+        "user_s": 13.43,
+        "system_s": 0.11,
+        "maxrss_bytes": 249462784,
+        "rc": 0
+      },
+      "operator_registry": {
+        "elapsed_s": 8.32,
+        "user_s": 8.25,
+        "system_s": 0.05,
+        "maxrss_bytes": 265060352,
+        "rc": 0
+      },
+      "ragretrieval": {
+        "elapsed_s": 9.24,
+        "user_s": 9.16,
+        "system_s": 0.06,
+        "maxrss_bytes": 318685184,
+        "rc": 0
+      },
+      "ragcommand": {
+        "elapsed_s": 28.48,
+        "user_s": 21.01,
+        "system_s": 0.15,
+        "maxrss_bytes": 260603904,
+        "rc": 0
+      },
+      "ragfile": {
+        "elapsed_s": 10.34,
+        "user_s": 10.21,
+        "system_s": 0.04,
+        "maxrss_bytes": 256524288,
+        "rc": 0
+      },
+      "ragproposalio": {
+        "elapsed_s": 6.94,
+        "user_s": 6.89,
+        "system_s": 0.04,
+        "maxrss_bytes": 267550720,
+        "rc": 0
+      },
+      "ragproduct": {
+        "elapsed_s": 173.38,
+        "user_s": 172.97,
+        "system_s": 0.26,
+        "maxrss_bytes": 586940416,
+        "rc": 0
+      },
+      "it_architecture_profile": {
+        "elapsed_s": 8.68,
+        "user_s": 8.62,
+        "system_s": 0.05,
+        "maxrss_bytes": 254492672,
+        "rc": 0
+      },
+      "ragapplicationprovider": {
+        "elapsed_s": 10.5,
+        "user_s": 10.43,
+        "system_s": 0.06,
+        "maxrss_bytes": 347537408,
+        "rc": 0
+      },
+      "provider_catalog": {
+        "elapsed_s": 17.46,
+        "user_s": 11.81,
+        "system_s": 0.1,
+        "maxrss_bytes": 252461056,
+        "rc": 0
+      },
+      "ragcanonical": {
+        "elapsed_s": 17.33,
+        "user_s": 14.9,
+        "system_s": 0.12,
+        "maxrss_bytes": 292716544,
+        "rc": 0
+      },
+      "ragfolder": {
+        "elapsed_s": 10.52,
+        "user_s": 10.31,
+        "system_s": 0.06,
+        "maxrss_bytes": 322158592,
+        "rc": 0
+      },
+      "ragbackup": {
+        "elapsed_s": 20.22,
+        "user_s": 13.95,
+        "system_s": 0.13,
+        "maxrss_bytes": 254509056,
+        "rc": 0
+      },
+      "ragregistry": {
+        "elapsed_s": 16.54,
+        "user_s": 11.11,
+        "system_s": 0.11,
+        "maxrss_bytes": 261586944,
+        "rc": 0
+      },
+      "ragfoundation": {
+        "elapsed_s": 9.64,
+        "user_s": 9.57,
+        "system_s": 0.06,
+        "maxrss_bytes": 303988736,
+        "rc": 0
+      },
+      "codex_provider": {
+        "elapsed_s": 12.14,
+        "user_s": 11.29,
+        "system_s": 0.07,
+        "maxrss_bytes": 301531136,
+        "rc": 0
+      },
+      "ragschema": {
+        "elapsed_s": 10.28,
+        "user_s": 10.13,
+        "system_s": 0.05,
+        "maxrss_bytes": 255197184,
+        "rc": 0
+      },
+      "ragevidence": {
+        "elapsed_s": 18.94,
+        "user_s": 13.01,
+        "system_s": 0.12,
+        "maxrss_bytes": 249036800,
+        "rc": 0
+      },
+      "ragevidencejson": {
+        "elapsed_s": 7.76,
+        "user_s": 7.7,
+        "system_s": 0.05,
+        "maxrss_bytes": 293388288,
+        "rc": 0
+      },
+      "provider_contract": {
+        "elapsed_s": 15.89,
+        "user_s": 13.5,
+        "system_s": 0.11,
+        "maxrss_bytes": 257900544,
+        "rc": 0
+      },
+      "ragprofile": {
+        "elapsed_s": 19.14,
+        "user_s": 13.18,
+        "system_s": 0.11,
+        "maxrss_bytes": 252411904,
+        "rc": 0
+      },
+      "ragembedding": {
+        "elapsed_s": 12.39,
+        "user_s": 12.28,
+        "system_s": 0.07,
+        "maxrss_bytes": 293404672,
+        "rc": 0
+      },
+      "crexxrag_cli": {
+        "elapsed_s": 172.91,
+        "user_s": 164.27,
+        "system_s": 0.37,
+        "maxrss_bytes": 415907840,
+        "rc": 0
+      },
+      "ragprofilefile": {
+        "elapsed_s": 19.48,
+        "user_s": 13.52,
+        "system_s": 0.12,
+        "maxrss_bytes": 254836736,
+        "rc": 0
+      },
+      "ragplanning": {
+        "elapsed_s": 17.3,
+        "user_s": 14.82,
+        "system_s": 0.13,
+        "maxrss_bytes": 287555584,
+        "rc": 0
+      },
+      "ragimprove": {
+        "elapsed_s": 21.35,
+        "user_s": 14.78,
+        "system_s": 0.13,
+        "maxrss_bytes": 266027008,
+        "rc": 0
+      }
+    }
+  },
+  "candidate": {
+    "wave": {
+      "elapsed_s": 107.23,
+      "user_s": 573.07,
+      "system_s": 6.89,
+      "maxrss_bytes": 583401472
+    },
+    "members": {
+      "provider_catalog": {
+        "elapsed_s": 14.76,
+        "user_s": 11.19,
+        "system_s": 0.11,
+        "maxrss_bytes": 252395520,
+        "rc": 0
+      },
+      "ragingest": {
+        "elapsed_s": 20.72,
+        "user_s": 12.55,
+        "system_s": 0.13,
+        "maxrss_bytes": 311066624,
+        "rc": 0
+      },
+      "generic_profile": {
+        "elapsed_s": 7.4,
+        "user_s": 7.35,
+        "system_s": 0.04,
+        "maxrss_bytes": 253853696,
+        "rc": 0
+      },
+      "ragclaims": {
+        "elapsed_s": 20.42,
+        "user_s": 12.39,
+        "system_s": 0.11,
+        "maxrss_bytes": 276758528,
+        "rc": 0
+      },
+      "architecture_local_config": {
+        "elapsed_s": 7.23,
+        "user_s": 7.18,
+        "system_s": 0.05,
+        "maxrss_bytes": 256589824,
+        "rc": 0
+      },
+      "ragtrace": {
+        "elapsed_s": 19.72,
+        "user_s": 11.79,
+        "system_s": 0.1,
+        "maxrss_bytes": 238714880,
+        "rc": 0
+      },
+      "ragmcp": {
+        "elapsed_s": 13.07,
+        "user_s": 13.0,
+        "system_s": 0.06,
+        "maxrss_bytes": 408502272,
+        "rc": 0
+      },
+      "ragprofilefile": {
+        "elapsed_s": 14.96,
+        "user_s": 11.31,
+        "system_s": 0.12,
+        "maxrss_bytes": 252362752,
+        "rc": 0
+      },
+      "ragproduct": {
+        "elapsed_s": 22.01,
+        "user_s": 21.7,
+        "system_s": 0.11,
+        "maxrss_bytes": 583401472,
+        "rc": 0
+      },
+      "ragschema": {
+        "elapsed_s": 14.61,
+        "user_s": 11.0,
+        "system_s": 0.11,
+        "maxrss_bytes": 241188864,
+        "rc": 0
+      },
+      "ragmodel": {
+        "elapsed_s": 19.25,
+        "user_s": 11.47,
+        "system_s": 0.1,
+        "maxrss_bytes": 251166720,
+        "rc": 0
+      },
+      "ragquerypolicy": {
+        "elapsed_s": 8.12,
+        "user_s": 8.03,
+        "system_s": 0.06,
+        "maxrss_bytes": 269369344,
+        "rc": 0
+      },
+      "ragprocess": {
+        "elapsed_s": 12.4,
+        "user_s": 12.03,
+        "system_s": 0.1,
+        "maxrss_bytes": 337526784,
+        "rc": 0
+      },
+      "ragfolder": {
+        "elapsed_s": 8.14,
+        "user_s": 8.06,
+        "system_s": 0.04,
+        "maxrss_bytes": 303284224,
+        "rc": 0
+      },
+      "ragevidencejson": {
+        "elapsed_s": 10.48,
+        "user_s": 10.15,
+        "system_s": 0.09,
+        "maxrss_bytes": 295993344,
+        "rc": 0
+      },
+      "ragconfigfile": {
+        "elapsed_s": 8.99,
+        "user_s": 8.31,
+        "system_s": 0.06,
+        "maxrss_bytes": 347996160,
+        "rc": 0
+      },
+      "provider_http": {
+        "elapsed_s": 14.7,
+        "user_s": 11.03,
+        "system_s": 0.11,
+        "maxrss_bytes": 249135104,
+        "rc": 0
+      },
+      "ragcanonical": {
+        "elapsed_s": 13.76,
+        "user_s": 10.34,
+        "system_s": 0.12,
+        "maxrss_bytes": 258162688,
+        "rc": 0
+      },
+      "ragplanning": {
+        "elapsed_s": 19.3,
+        "user_s": 11.35,
+        "system_s": 0.12,
+        "maxrss_bytes": 258424832,
+        "rc": 0
+      },
+      "it_architecture_profile": {
+        "elapsed_s": 9.78,
+        "user_s": 9.44,
+        "system_s": 0.07,
+        "maxrss_bytes": 261996544,
+        "rc": 0
+      },
+      "ragfoundation": {
+        "elapsed_s": 9.18,
+        "user_s": 8.92,
+        "system_s": 0.07,
+        "maxrss_bytes": 303841280,
+        "rc": 0
+      },
+      "ragjob": {
+        "elapsed_s": 12.05,
+        "user_s": 8.93,
+        "system_s": 0.1,
+        "maxrss_bytes": 257769472,
+        "rc": 0
+      },
+      "ragprofile": {
+        "elapsed_s": 16.21,
+        "user_s": 9.61,
+        "system_s": 0.1,
+        "maxrss_bytes": 255639552,
+        "rc": 0
+      },
+      "ragmaintain": {
+        "elapsed_s": 8.15,
+        "user_s": 8.08,
+        "system_s": 0.04,
+        "maxrss_bytes": 321470464,
+        "rc": 0
+      },
+      "ragretrieval": {
+        "elapsed_s": 12.07,
+        "user_s": 11.75,
+        "system_s": 0.09,
+        "maxrss_bytes": 325746688,
+        "rc": 0
+      },
+      "codex_provider": {
+        "elapsed_s": 19.76,
+        "user_s": 11.74,
+        "system_s": 0.13,
+        "maxrss_bytes": 272760832,
+        "rc": 0
+      },
+      "ragglossary": {
+        "elapsed_s": 14.32,
+        "user_s": 10.77,
+        "system_s": 0.11,
+        "maxrss_bytes": 244416512,
+        "rc": 0
+      },
+      "operator_registry": {
+        "elapsed_s": 10.54,
+        "user_s": 10.19,
+        "system_s": 0.08,
+        "maxrss_bytes": 265371648,
+        "rc": 0
+      },
+      "ragstore": {
+        "elapsed_s": 20.24,
+        "user_s": 12.46,
+        "system_s": 0.12,
+        "maxrss_bytes": 274120704,
+        "rc": 0
+      },
+      "ragevidence": {
+        "elapsed_s": 14.16,
+        "user_s": 10.68,
+        "system_s": 0.11,
+        "maxrss_bytes": 245170176,
+        "rc": 0
+      },
+      "ragbackup": {
+        "elapsed_s": 15.24,
+        "user_s": 11.4,
+        "system_s": 0.14,
+        "maxrss_bytes": 254164992,
+        "rc": 0
+      },
+      "ragrepository": {
+        "elapsed_s": 20.06,
+        "user_s": 12.27,
+        "system_s": 0.11,
+        "maxrss_bytes": 259801088,
+        "rc": 0
+      },
+      "ragembedding": {
+        "elapsed_s": 12.0,
+        "user_s": 11.65,
+        "system_s": 0.08,
+        "maxrss_bytes": 280346624,
+        "rc": 0
+      },
+      "ragfile": {
+        "elapsed_s": 14.89,
+        "user_s": 11.27,
+        "system_s": 0.11,
+        "maxrss_bytes": 251887616,
+        "rc": 0
+      },
+      "ragqueryprovider": {
+        "elapsed_s": 9.64,
+        "user_s": 9.57,
+        "system_s": 0.05,
+        "maxrss_bytes": 337592320,
+        "rc": 0
+      },
+      "ragwork": {
+        "elapsed_s": 11.44,
+        "user_s": 11.14,
+        "system_s": 0.09,
+        "maxrss_bytes": 342949888,
+        "rc": 0
+      },
+      "ragimprove": {
+        "elapsed_s": 20.59,
+        "user_s": 12.58,
+        "system_s": 0.12,
+        "maxrss_bytes": 273973248,
+        "rc": 0
+      },
+      "ragapplicationprovider": {
+        "elapsed_s": 9.98,
+        "user_s": 9.71,
+        "system_s": 0.08,
+        "maxrss_bytes": 335380480,
+        "rc": 0
+      },
+      "ragconfig": {
+        "elapsed_s": 18.57,
+        "user_s": 10.84,
+        "system_s": 0.11,
+        "maxrss_bytes": 250445824,
+        "rc": 0
+      },
+      "ragquery": {
+        "elapsed_s": 11.12,
+        "user_s": 10.96,
+        "system_s": 0.08,
+        "maxrss_bytes": 290373632,
+        "rc": 0
+      },
+      "ragregistry": {
+        "elapsed_s": 16.81,
+        "user_s": 9.67,
+        "system_s": 0.1,
+        "maxrss_bytes": 246235136,
+        "rc": 0
+      },
+      "ragconfiguration": {
+        "elapsed_s": 17.53,
+        "user_s": 10.5,
+        "system_s": 0.11,
+        "maxrss_bytes": 253902848,
+        "rc": 0
+      },
+      "ragproposalio": {
+        "elapsed_s": 8.63,
+        "user_s": 8.52,
+        "system_s": 0.05,
+        "maxrss_bytes": 268353536,
+        "rc": 0
+      },
+      "ragcommand": {
+        "elapsed_s": 19.81,
+        "user_s": 11.73,
+        "system_s": 0.14,
+        "maxrss_bytes": 259981312,
+        "rc": 0
+      },
+      "ragproviderdiagnostics": {
+        "elapsed_s": 9.84,
+        "user_s": 9.77,
+        "system_s": 0.06,
+        "maxrss_bytes": 332791808,
+        "rc": 0
+      },
+      "crexxrag_cli": {
+        "elapsed_s": 25.9,
+        "user_s": 17.72,
+        "system_s": 0.14,
+        "maxrss_bytes": 416940032,
+        "rc": 0
+      },
+      "provider_contract": {
+        "elapsed_s": 17.67,
+        "user_s": 10.2,
+        "system_s": 0.11,
+        "maxrss_bytes": 236552192,
+        "rc": 0
+      },
+      "industrial_provider": {
+        "elapsed_s": 19.6,
+        "user_s": 11.62,
+        "system_s": 0.11,
+        "maxrss_bytes": 250249216,
+        "rc": 0
+      }
+    }
+  },
+  "comparison": {
+    "assembly_identical": 48,
+    "assembly_different": [],
+    "linked_sha256": {
+      "baseline": "6fd6e73cc63d7c66aaaa47a697bfaa6101ea8319f999ae897b56b72d6bb80551",
+      "candidate": "6fd6e73cc63d7c66aaaa47a697bfaa6101ea8319f999ae897b56b72d6bb80551"
+    },
+    "elapsed_reduction_percent": 78.95181077632742
+  }
+}

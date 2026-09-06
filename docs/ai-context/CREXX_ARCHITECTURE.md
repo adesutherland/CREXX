@@ -436,6 +436,73 @@ or symbol was ultimately supplied by that file. It is evidence of current
 selection behaviour only and does not enforce an expected provider or alter
 the timestamp/tie-break policy.
 
+### Project member invalidation and declaration lookup
+
+`bin/crexx.crexx` owns project/member action keys, worker selection and atomic
+link publication. `bin/crexx_build_worker.crexx` constructs the same compiler
+argv for compilation and dependency checking. A successful member compile uses
+`rxc --project-dependencies path`; `--check-project-dependencies path` checks
+that snapshot without compiling bodies or loading executable providers.
+`compiler/rxcp_project_dependencies.c` owns the private v1 snapshot. It reruns
+`rxfl_lst()` and calls `rxcp_importable_source_namespace()` so ordered-root,
+source-extension, header normalization, namespace exclusion and RXAS timestamp
+rules cannot drift from the actual resolver. Status 0 means current; any
+nonzero status must trigger compilation. The observe-only import report has
+unchanged semantics and is not an input to this reuse decision.
+
+The snapshot contains a digest and one full-content/header mode byte per
+ordered selected candidate. Primary contents and resolver options are included;
+loaded source bodies and binary candidates contribute full hashes. Unloaded
+source candidates contribute the existing scanner's normalized namespace.
+Candidate identity/order changes, source namespace changes and loaded input
+changes therefore invalidate it. Header-only entries never authorize reuse of
+a changed loaded body. Cross-file inline payloads make imported implementation
+contents dependencies even when exported signatures are unchanged. This policy
+is conservative: discovery changes and binary candidate changes can select
+members with no resulting semantic output change. Tool and complete action
+identity remain additional controller checks. The snapshot belongs to one
+member action directory; missing/malformed data forces recompilation.
+
+The normal global content-key fast path performs no compiler invocation. With
+RXAS imports enabled the controller also checks dependencies on a content-key
+hit, because mtime can change the selected artifact without changing its bytes.
+After an RXAS-enabled compile wave it rechecks all snapshots before publication
+for the same reason.
+The controller includes implicit installed binary candidates in the global key,
+rechecks content inputs after the wave, and drops stamps if those inputs moved.
+Compiler environment settings participate in the keys, including the distinction
+between unset and present-empty `RXCP_DISABLE_EXIT`, `RXCP_EXIT_MODULE`, diagnostic
+settings and locale variables. Explicit exit-module file contents also enter the
+controller key. Arbitrary external inputs read by custom compiler exits are not
+discovered automatically; callers must keep them stable and use `--rebuild` when
+changing those external inputs.
+Do not infer dependencies from emitted callable declarations alone: inlining can
+remove runtime references while retaining an implementation dependency.
+
+For compiler-time declaration existence, `current_source_declares_contract()`
+must inspect current declaration-bearing file children after source structure
+normalization. `ast_source_structure_walker()` rejects classes/interfaces
+inside executable bodies. `ast_declares_local_contract()` therefore descends
+through PROGRAM_FILE/IMPORTED_FILE nodes, not procedure/method bodies. It
+retains the guard against stale imported declarations when a local declaration
+appears later. No eligibility/AST cache or cutoff change is involved; inserted
+live declarations are visible on the next lookup. Traversing expanded bodies
+here multiplies inline eligibility work and caused pathological RAG scaling.
+
+Binary metadata has the corresponding forward-declaration boundary.
+`read_constant_pool_for_functions()` first inventories the current module's
+META_CLASS/META_INTERFACE names. `current_binary_declares_contract()` uses that
+per-master-context stack only while that module is being read. A signature
+referring to a class declared later in the same binary must not load an external
+same-namespace source while the class registry is incomplete. Existing registered
+contracts remain usable, and normal consumer validation resolves the pending
+declaration. The stack is restored after nested imports and freed on return;
+there is no persistent lookup cache. Metadata and eager inline-payload validation
+remain intact. `binary_forward_dependencies` proves that an unused `_rxsysb`
+source extension stays excluded while a real consumer still imports it, tracks
+its body and rejects an invalid call, in both optimization modes.
+
+
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
 surface. The provider artifact's exports and metadata remain definitive. When

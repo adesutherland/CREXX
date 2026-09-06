@@ -123,14 +123,15 @@ if(result EQUAL 0 OR NOT err MATCHES "opcode 401 requires feature flag 0x0000000
     message(FATAL_ERROR "missing fixed-call feature was not rejected precisely:\n${out}${err}")
 endif()
 
+# Bit 0x40 is the supported autoload-hints feature; use an unassigned high bit.
 run_checked("add unsupported feature"
             "${MUTATE_FEATURE}" "${WORK_DIR}/fixed_opt.rxbin"
-            "${WORK_DIR}/unknown_feature.rxbin" 65)
+            "${WORK_DIR}/unknown_feature.rxbin" 2147483649)
 execute_process(
         COMMAND "${RXDAS}" "${WORK_DIR}/unknown_feature.rxbin"
         OUTPUT_VARIABLE out
         ERROR_VARIABLE err
         RESULT_VARIABLE result)
-if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x00000040")
+if(result EQUAL 0 OR NOT err MATCHES "unsupported feature flags 0x80000000")
     message(FATAL_ERROR "unknown RXBIN feature was not rejected precisely:\n${out}${err}")
 endif()

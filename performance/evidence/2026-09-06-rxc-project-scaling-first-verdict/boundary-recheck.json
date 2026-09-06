@@ -1,0 +1,14 @@
+{
+  "donor_files": [
+    {
+      "root": "/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/donor-frozen",
+      "mismatches": []
+    },
+    {
+      "root": "/Users/adrian/CLionProjects/crexx-rag",
+      "mismatches": []
+    }
+  ],
+  "main_unrelated_patch_byte_identical": true,
+  "main_head": "e0e67ad3e89e19f98ab09676ffa2bbc99fad7010"
+}

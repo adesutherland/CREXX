@@ -300,7 +300,9 @@ set_tests_properties(crexx_project_build_contract PROPERTIES
         LABELS "driver;build;incremental;parallel;autoload;regression"
         CREXX_PREP_TARGETS "crexx;rxvme"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
-        TIMEOUT 180)
+        # The expanded matrix runs many complete project actions, including
+        # tool/environment changes. Keep all scenarios in the ASan gate.
+        TIMEOUT 600)
 add_test(NAME crexx_rxpp_builddir
          COMMAND ${CMAKE_COMMAND}
                  -DCREXX=$<TARGET_FILE:crexx>

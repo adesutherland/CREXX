@@ -1,0 +1,7 @@
+CMake Error at /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/offline-checks/ConfigContractOffline.cmake:93 (message):
+  noopt-rxvme config scenario failed:
+
+  ERROR reading module file rx_system
+
+
+

@@ -1,0 +1,55 @@
+{
+  "build-release": [
+    "CMAKE_BUILD_TYPE:STRING=Release",
+    "CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++",
+    "CMAKE_CXX_FLAGS:STRING=",
+    "CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc",
+    "CMAKE_C_FLAGS:STRING=",
+    "CMAKE_C_FLAGS_DEBUG:STRING=-g",
+    "CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG",
+    "DSLSH_LOCAL_DIR:PATH=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/source/../DSL-Syntax-Highlighter",
+    "ENABLE_PARSER_MODE:BOOL=OFF",
+    "CMAKE_GENERATOR:INTERNAL=Ninja",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ],
+  "build-debug": [
+    "CMAKE_BUILD_TYPE:STRING=Debug",
+    "CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++",
+    "CMAKE_CXX_FLAGS:STRING=",
+    "CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc",
+    "CMAKE_C_FLAGS:STRING=",
+    "CMAKE_C_FLAGS_DEBUG:STRING=-g",
+    "CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG",
+    "DSLSH_LOCAL_DIR:PATH=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/dsl-syntax-frozen",
+    "ENABLE_PARSER_MODE:BOOL=ON",
+    "CMAKE_GENERATOR:INTERNAL=Ninja",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ],
+  "build-debugasan": [
+    "CMAKE_BUILD_TYPE:STRING=Debug",
+    "CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++",
+    "CMAKE_CXX_FLAGS:STRING=-fsanitize=address -fno-omit-frame-pointer",
+    "CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc",
+    "CMAKE_C_FLAGS:STRING=-fsanitize=address -fno-omit-frame-pointer",
+    "CMAKE_C_FLAGS_DEBUG:STRING=-g",
+    "CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG",
+    "DSLSH_LOCAL_DIR:PATH=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/dsl-syntax-frozen",
+    "ENABLE_PARSER_MODE:BOOL=ON",
+    "CMAKE_GENERATOR:INTERNAL=Ninja",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ],
+  "build-product": [
+    "CMAKE_BUILD_TYPE:STRING=Release",
+    "CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++",
+    "CMAKE_CXX_FLAGS:STRING=",
+    "CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc",
+    "CMAKE_C_FLAGS:STRING=",
+    "CMAKE_C_FLAGS_DEBUG:STRING=-g",
+    "CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG",
+    "CMAKE_SKIP_INSTALL_ALL_DEPENDENCY:UNINITIALIZED=ON",
+    "DSLSH_LOCAL_DIR:PATH=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/source/../DSL-Syntax-Highlighter",
+    "ENABLE_PARSER_MODE:BOOL=OFF",
+    "CMAKE_GENERATOR:INTERNAL=Ninja",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ]
+}

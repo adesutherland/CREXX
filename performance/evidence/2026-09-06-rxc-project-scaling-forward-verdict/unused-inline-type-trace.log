@@ -1,0 +1,318 @@
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressdriverregistry
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=rxsqlite_address.sqliteaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=rxsqlite_address.sqliteaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=/Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-release/bin/rxsqlite_address@rxsqlite_address.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressdriverregistry
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.standardaddressstem
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.standardaddressstem
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressstem
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressstem
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.standardaddresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.standardaddresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressrequest
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressrequest
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionrequest
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionrequest
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.crexxaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.crexxaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.systemaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.systemaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.shelladdressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.shelladdressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.pathaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.pathaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.unknownaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.unknownaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.nativeaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.nativeaddressenvironment
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+HEADER_TRACE visible=0 ns=_rxsysb
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressrequest
+HEADER_TRACE visible=1 ns=_rxsysb
+IMPORT_STACK caller=_address@library.rxbin candidate=extension.crexx namespace=_rxsysb
+0   rxc.actual                          0x0000000100b00f34 load_another_file + 880
+1   rxc.actual                          0x0000000100b020b4 sym_imcls + 348
+2   rxc.actual                          0x0000000100b0251c ensure_class_imported + 76
+3   rxc.actual                          0x0000000100ab1ef0 node_to_type + 2544
+4   rxc.actual                          0x0000000100aa0c20 structure_symbols_walker + 156
+5   rxc.actual                          0x0000000100a45be0 ast_wlkr + 52
+6   rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+7   rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+8   rxc.actual                          0x0000000100ab4670 rxcp_bvl + 168
+9   rxc.actual                          0x0000000100b036c0 rximpf_provider_f + 1436
+10  rxc.actual                          0x0000000100b079c8 read_constant_pool_for_functions + 2716
+11  rxc.actual                          0x0000000100b01064 load_another_file + 1184
+12  rxc.actual                          0x0000000100b020b4 sym_imcls + 348
+13  rxc.actual                          0x0000000100b0251c ensure_class_imported + 76
+14  rxc.actual                          0x0000000100ab1ef0 node_to_type + 2544
+15  rxc.actual                          0x0000000100aa0c20 structure_symbols_walker + 156
+16  rxc.actual                          0x0000000100a45be0 ast_wlkr + 52
+17  rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+18  rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+19  rxc.actual                          0x0000000100ab4670 rxcp_bvl + 168
+20  rxc.actual                          0x0000000100b036c0 rximpf_provider_f + 1436
+21  rxc.actual                          0x0000000100b079c8 read_constant_pool_for_functions + 2716
+22  rxc.actual                          0x0000000100b01064 load_another_file + 1184
+23  rxc.actual                          0x0000000100b020b4 sym_imcls + 348
+24  rxc.actual                          0x0000000100b0251c ensure_class_imported + 76
+25  rxc.actual                          0x0000000100ab1ef0 node_to_type + 2544
+26  rxc.actual                          0x0000000100aa0c20 structure_symbols_walker + 156
+27  rxc.actual                          0x0000000100a45be0 ast_wlkr + 52
+28  rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+29  rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+30  rxc.actual                          0x0000000100a45c18 ast_wlkr + 108
+31  rxc.actual                          0x0000000100ab4670 rxcp_bvl + 168
+32  rxc.actual                          0x0000000100b0631c parseRexx + 204
+33  rxc.actual                          0x0000000100b080d0 import_class_meta_aggs + 232
+34  rxc.actual                          0x0000000100b07eb4 read_constant_pool_for_functions + 3976
+35  rxc.actual                          0x0000000100b01064 load_another_file + 1184
+36  rxc.actual                          0x0000000100b0504c rxcp_scan_imports + 24
+37  rxc.actual                          0x0000000100ab2e28 validate_ast + 1184
+38  rxc.actual                          0x0000000100a3edf0 rxcmain + 4760
+39  dyld                                0x0000000184ba84e4 start + 6992
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressenvironment
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressenvironment
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressenvironment
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressredirect
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressbinding
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addresssandbox
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressfunctionresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressresponse
+TYPE_TRACE file=_address@library.rxbin class=_rxsysb.addressstem

@@ -1686,3 +1686,16 @@ remains separate and queued. Evidence:
   [`CRI-13 RXAS trace`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-R1-RXAS-TRACE.md),
   [`bounded conversion decision`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-BOUNDED-NUMERIC-CONVERSION-DECISION.md) and
   [`class-access verdict`](evidence/2026-07-29-crexx-rag-integration-ledger/CRI13-C-CLASS-RELEASE-VERDICT.md)
+
+## RXC-PROJECT-01: compiler and project-build scaling
+
+Selected by Adrian on 2026-09-06; both bounded Release verdicts are accepted.
+The [worklist](RXC-PROJECT-SCALING-WORKLIST.md) records the measured declaration
+walk, binary forward-declaration and project-key mechanisms, their history and
+rejected alternatives. Normal optimization and strict import/callable validation
+are retained. The frozen application wave improves from 509.45 to 70.98 seconds;
+the separate ADDRESS library from 156.18 to 11.53 seconds. Dependency snapshots
+are automatic; real imported implementations still invalidate their consumers.
+macOS Debug/Release/Apple-ASan and scratch installed/offline checks are qualified
+for the local develop repair. Linux/Windows and release publication remain
+separate; this is not a new broad performance stage or portfolio claim.

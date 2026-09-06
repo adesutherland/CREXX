@@ -1,0 +1,176 @@
+Test project /Users/adrian/CLionProjects/crexx-scaling-20260906.1lT795/build-debug
+      Start  369: nr21_fixed_call_contract
+      Start  370: nr14_frozen_parse_contract
+      Start  371: nr15_native_stem_contract
+      Start  372: gate_f_channel_contract
+ 1/60 Test  #372: gate_f_channel_contract ..............................   Passed    0.04 sec
+ 2/60 Test  #371: nr15_native_stem_contract ............................   Passed    0.07 sec
+ 3/60 Test  #369: nr21_fixed_call_contract .............................   Passed    1.97 sec
+ 4/60 Test  #370: nr14_frozen_parse_contract ...........................   Passed    4.24 sec
+      Start 2226: crexxrag_sha256_a_vs_d_noopt
+ 5/60 Test #2226: crexxrag_sha256_a_vs_d_noopt .........................   Passed    0.12 sec
+      Start 2227: crexxrag_sha256_a_vs_d_opt
+ 6/60 Test #2227: crexxrag_sha256_a_vs_d_opt ...........................   Passed    0.08 sec
+      Start 2228: inlining_simple_noopt
+ 7/60 Test #2228: inlining_simple_noopt ................................   Passed    4.88 sec
+      Start 2229: inlining_simple_opt
+ 8/60 Test #2229: inlining_simple_opt ..................................   Passed    1.19 sec
+      Start 2230: reference_iterator_compare_rxvm_noopt
+ 9/60 Test #2230: reference_iterator_compare_rxvm_noopt ................   Passed    0.14 sec
+      Start 2231: reference_iterator_compare_rxvm_opt
+10/60 Test #2231: reference_iterator_compare_rxvm_opt ..................   Passed    0.09 sec
+      Start 2312: stringarraylist_iterator_compare_rxvm_noopt
+11/60 Test #2312: stringarraylist_iterator_compare_rxvm_noopt ..........   Passed    0.50 sec
+      Start 2313: stringarraylist_iterator_compare_rxvm_opt
+12/60 Test #2313: stringarraylist_iterator_compare_rxvm_opt ............   Passed    0.24 sec
+      Start 2314: stringtreemap_insert_compare_noopt
+13/60 Test #2314: stringtreemap_insert_compare_noopt ...................   Passed    2.10 sec
+      Start 2315: stringtreemap_insert_compare_opt
+14/60 Test #2315: stringtreemap_insert_compare_opt .....................   Passed    1.76 sec
+      Start 2316: binary_fastpath_compare_noopt
+15/60 Test #2316: binary_fastpath_compare_noopt ........................   Passed    0.24 sec
+      Start 2317: binary_fastpath_compare_opt
+16/60 Test #2317: binary_fastpath_compare_opt ..........................   Passed    0.17 sec
+      Start 2318: binary_byvalue_compare_rxvm_noopt
+17/60 Test #2318: binary_byvalue_compare_rxvm_noopt ....................   Passed    0.13 sec
+      Start 2319: binary_byvalue_compare_rxvm_opt
+18/60 Test #2319: binary_byvalue_compare_rxvm_opt ......................   Passed    0.08 sec
+      Start 2320: rxjson_parser_compare_noopt
+19/60 Test #2320: rxjson_parser_compare_noopt ..........................   Passed    0.34 sec
+      Start 2321: rxjson_parser_compare_opt
+20/60 Test #2321: rxjson_parser_compare_opt ............................   Passed    0.31 sec
+      Start 2322: rxjson_numeric_materialization_compare_noopt
+21/60 Test #2322: rxjson_numeric_materialization_compare_noopt .........   Passed    0.19 sec
+      Start 2323: rxjson_numeric_materialization_compare_opt
+22/60 Test #2323: rxjson_numeric_materialization_compare_opt ...........   Passed    0.19 sec
+      Start 2324: rxjson_numeric_materialization_compare_rxbvm_noopt
+23/60 Test #2324: rxjson_numeric_materialization_compare_rxbvm_noopt ...   Passed    0.21 sec
+      Start 2325: rxjson_numeric_materialization_compare_rxbvm_opt
+24/60 Test #2325: rxjson_numeric_materialization_compare_rxbvm_opt .....   Passed    0.19 sec
+      Start 2326: postperf04_scalar_access_compare_noopt
+25/60 Test #2326: postperf04_scalar_access_compare_noopt ...............   Passed    0.11 sec
+      Start 2327: postperf04_scalar_access_compare_opt
+26/60 Test #2327: postperf04_scalar_access_compare_opt .................   Passed    0.07 sec
+      Start 2328: postperf04_scalar_access_compare_rxbvm_noopt
+27/60 Test #2328: postperf04_scalar_access_compare_rxbvm_noopt .........   Passed    0.11 sec
+      Start 2329: postperf04_scalar_access_compare_rxbvm_opt
+28/60 Test #2329: postperf04_scalar_access_compare_rxbvm_opt ...........   Passed    0.07 sec
+      Start 2330: postperf04_scalar_access_codegen
+29/60 Test #2330: postperf04_scalar_access_codegen .....................   Passed    0.03 sec
+      Start 2331: binary_packed_float_compare_noopt
+30/60 Test #2331: binary_packed_float_compare_noopt ....................   Passed    0.10 sec
+      Start 2332: binary_packed_float_compare_opt
+31/60 Test #2332: binary_packed_float_compare_opt ......................   Passed    0.06 sec
+      Start 2333: binary_packed_float_compare_rxbvm_opt
+32/60 Test #2333: binary_packed_float_compare_rxbvm_opt ................   Passed    0.07 sec
+      Start 2334: packed_numeric_class_compare_noopt
+33/60 Test #2334: packed_numeric_class_compare_noopt ...................   Passed    0.72 sec
+      Start 2335: packed_numeric_class_compare_opt
+34/60 Test #2335: packed_numeric_class_compare_opt .....................   Passed    0.16 sec
+      Start 2336: packed_numeric_class_compare_rxbvm_opt
+35/60 Test #2336: packed_numeric_class_compare_rxbvm_opt ...............   Passed    0.15 sec
+      Start 2337: rcc5f_rxstats_packed_noopt
+36/60 Test #2337: rcc5f_rxstats_packed_noopt ...........................   Passed    1.01 sec
+      Start 2338: rcc5f_rxstats_packed_opt
+37/60 Test #2338: rcc5f_rxstats_packed_opt .............................   Passed    0.35 sec
+      Start 2339: rcc5f_rxstats_boxed_noopt
+38/60 Test #2339: rcc5f_rxstats_boxed_noopt ............................   Passed    3.37 sec
+      Start 2340: rcc5f_rxstats_boxed_opt
+39/60 Test #2340: rcc5f_rxstats_boxed_opt ..............................   Passed    3.72 sec
+      Start 2341: rcc5f_rxstats_direct_noopt
+40/60 Test #2341: rcc5f_rxstats_direct_noopt ...........................   Passed    1.28 sec
+      Start 2342: rcc5f_rxstats_direct_opt
+41/60 Test #2342: rcc5f_rxstats_direct_opt .............................   Passed    0.43 sec
+      Start 2343: rcc5f_rxstats_packed_rxbvm_opt
+42/60 Test #2343: rcc5f_rxstats_packed_rxbvm_opt .......................   Passed    0.44 sec
+      Start 2344: rcc5f_rxstats_boxed_rxbvm_opt
+43/60 Test #2344: rcc5f_rxstats_boxed_rxbvm_opt ........................   Passed    3.71 sec
+      Start 2345: rcc5f_rxstats_direct_rxbvm_opt
+44/60 Test #2345: rcc5f_rxstats_direct_rxbvm_opt .......................   Passed    0.36 sec
+      Start 2346: rxvector01_compare_noopt
+45/60 Test #2346: rxvector01_compare_noopt .............................   Passed    0.97 sec
+      Start 2347: rxvector01_compare_opt
+46/60 Test #2347: rxvector01_compare_opt ...............................   Passed    0.27 sec
+      Start 2348: tinyexpr_dispatch_compare_noopt
+47/60 Test #2348: tinyexpr_dispatch_compare_noopt ......................   Passed    1.27 sec
+      Start 2349: tinyexpr_dispatch_compare_opt
+48/60 Test #2349: tinyexpr_dispatch_compare_opt ........................   Passed    1.18 sec
+      Start 2350: jump_dispatch_compare_noopt
+49/60 Test #2350: jump_dispatch_compare_noopt ..........................   Passed    0.24 sec
+      Start 2351: jump_dispatch_compare_opt
+50/60 Test #2351: jump_dispatch_compare_opt ............................   Passed    0.17 sec
+      Start 2352: runtime_interface_lookup_compare_noopt
+51/60 Test #2352: runtime_interface_lookup_compare_noopt ...............   Passed    0.16 sec
+      Start 2353: runtime_interface_lookup_compare_opt
+52/60 Test #2353: runtime_interface_lookup_compare_opt .................   Passed    0.10 sec
+      Start 2354: inlining_complex_noopt
+53/60 Test #2354: inlining_complex_noopt ...............................   Passed    2.73 sec
+      Start 2355: inlining_complex_opt
+54/60 Test #2355: inlining_complex_opt .................................   Passed    2.48 sec
+      Start 2356: nr15_stem_semantics_rxvm_noopt
+55/60 Test #2356: nr15_stem_semantics_rxvm_noopt .......................   Passed    0.11 sec
+      Start 2357: nr15_stem_semantics_rxvm_opt
+56/60 Test #2357: nr15_stem_semantics_rxvm_opt .........................   Passed    0.07 sec
+      Start 2358: nr15_stem_access_rxvm_noopt
+57/60 Test #2358: nr15_stem_access_rxvm_noopt ..........................   Passed    0.12 sec
+      Start 2359: nr15_stem_access_rxvm_opt
+58/60 Test #2359: nr15_stem_access_rxvm_opt ............................   Passed    0.08 sec
+      Start 2360: nr16_17_stable_state_rxvm_noopt
+59/60 Test #2360: nr16_17_stable_state_rxvm_noopt ......................   Passed    0.11 sec
+      Start 2361: nr16_17_stable_state_rxvm_opt
+60/60 Test #2361: nr16_17_stable_state_rxvm_opt ........................   Passed    0.15 sec
+
+100% tests passed, 0 tests failed out of 60
+
+Label Time Summary:
+address                    =   0.26 sec*proc (2 tests)
+binary                     =   2.67 sec*proc (14 tests)
+binary01                   =   1.27 sec*proc (6 tests)
+boxed                      =   7.10 sec*proc (2 tests)
+calls                      =   0.26 sec*proc (2 tests)
+cap01_j02                  =   0.79 sec*proc (4 tests)
+channels                   =   0.04 sec*proc (1 test)
+classlib                   =   4.61 sec*proc (4 tests)
+codegen                    =   6.35 sec*proc (5 tests)
+compiler                   =   6.33 sec*proc (4 tests)
+comprehensive              =   6.33 sec*proc (4 tests)
+concurrency                =   0.04 sec*proc (1 test)
+concurrency-sp02           =   0.04 sec*proc (1 test)
+crexx-rag                  =   0.20 sec*proc (2 tests)
+direct-control             =   1.70 sec*proc (2 tests)
+dispatch                   =   2.86 sec*proc (4 tests)
+gate-f                     =   0.04 sec*proc (1 test)
+inlining                   =  11.48 sec*proc (6 tests)
+interfaces                 =   0.26 sec*proc (2 tests)
+json                       =   1.44 sec*proc (6 tests)
+level-l                    =   2.45 sec*proc (2 tests)
+levelg                     =   1.03 sec*proc (3 tests)
+linked_opt                 =  18.39 sec*proc (30 tests)
+math                       =  14.67 sec*proc (9 tests)
+nr15                       =   0.44 sec*proc (5 tests)
+nr16                       =   0.26 sec*proc (2 tests)
+nr17                       =   0.26 sec*proc (2 tests)
+oracle                     =   7.10 sec*proc (2 tests)
+packed                     =   5.57 sec*proc (12 tests)
+parse                      =   4.24 sec*proc (1 test)
+perf2_07                   =   0.20 sec*proc (2 tests)
+performance                =  39.66 sec*proc (56 tests)
+performance-measurement    =  39.66 sec*proc (56 tests)
+postperf04                 =   0.39 sec*proc (5 tests)
+rcc5f                      =  14.67 sec*proc (9 tests)
+reference                  =   0.97 sec*proc (4 tests)
+rxas                       =   0.04 sec*proc (1 test)
+rxbin                      =   6.33 sec*proc (4 tests)
+rxbvm                      =   4.51 sec*proc (3 tests)
+rxvector01                 =   1.23 sec*proc (2 tests)
+scalar-access              =   0.39 sec*proc (5 tests)
+semantics                  =   0.18 sec*proc (2 tests)
+sha256                     =   0.20 sec*proc (2 tests)
+stats                      =  14.67 sec*proc (9 tests)
+stem                       =   0.44 sec*proc (5 tests)
+trace                      =   0.26 sec*proc (2 tests)
+treemap                    =   3.86 sec*proc (2 tests)
+vector                     =   1.23 sec*proc (2 tests)
+vm                         =   0.26 sec*proc (2 tests)
+
+Total Test time (real) =  44.01 sec
