@@ -12,3 +12,8 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
 add_dynamic_plugin_target(_ui_gtk_native ui_gtk.c)
 target_link_libraries(_ui_gtk_native PRIVATE PkgConfig::GTK3)
+
+if(BUILD_TESTING)
+    add_dynamic_plugin_target(_ui_gtk_test ui_gtk_test.c)
+    target_link_libraries(_ui_gtk_test PRIVATE PkgConfig::GTK3)
+endif()

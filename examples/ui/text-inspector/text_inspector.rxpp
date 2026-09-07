@@ -15,21 +15,18 @@
  * a payload shape. A future builder can generate the declarations below without
  * spreading handwritten logic across widget callbacks.
  *
- * ui_compat is a temporary shell for the existing GTK/line-TUI tracer. It owns
- * paths and maps their scalar protocol to v0. The feature below imports neither
- * driver, never opens a file, and receives an opaque resource rather than an
- * OS path to use for I/O. Future terminal/web shells can reuse the feature.
+ * Every host runs the configured session below directly. The feature never
+ * opens a file: it receives an opaque grant, not path authority.
  */
 options levelg
-namespace text_inspector expose text_inspector_app text_inspector_component make_text_inspector_session
+namespace text_inspector expose text_inspector_component make_text_inspector_session
 import rxfnsb
 import ui
 import ui_contract
-import ui_compat
 
 ##LOADMACRO ui
 
-/** Composition for new owner-loop drivers; it imports no particular driver.
+/** Composition for every owner-loop driver; it imports no particular driver.
  * @param id session identity @param caps services actually supplied by the host
  * @return session with the same feature and declarative commands as the tracer
  */
@@ -42,39 +39,10 @@ make_text_inspector_session: procedure = .uisession
   if rc < 0 then exit 1
   rc = session.register_event("document.clear.requested")
   if rc < 0 then exit 1
-  ##UI_COMMAND session,"document.open.requested","Open...","root","document.open.requested","o"
-  ##UI_COMMAND session,"document.clear.requested","Clear","root","document.clear.requested","c"
+  ##UI_COMMAND session,"document.open","Open...","root","document.open.requested","o"
+  ##UI_COMMAND session,"document.clear","Clear","root","document.clear.requested","c"
   ##UI_COMMAND session,"document.quit","Quit","root","ui.close.requested","q"
   return session
-
-/**
- * Compatibility composition root shared unchanged by GTK, TUI and tests.
- * This is wiring, not a god class: the feature below owns application policy.
- */
-text_inspector_app: class implements .uiapp
-  _bridge = .uibridge
-  *: factory
-    _bridge = .uibridge(.text_inspector_component())
-    rc = _bridge.register_event("document.open.requested")
-    if rc < 0 then exit 1
-    rc = _bridge.register_event("document.clear.requested")
-    if rc < 0 then exit 1
-    /* One declaration per command. UI_COMMAND emits checked registration.
-     * Button action fields below contain command IDs, not native signals.
-     * The first two IDs keep the original tracer's spelling for compatibility. */
-    ##UI_COMMAND _bridge,"document.open.requested","Open...","root","document.open.requested","o"
-    ##UI_COMMAND _bridge,"document.clear.requested","Clear","root","document.clear.requested","c"
-    ##UI_COMMAND _bridge,"document.quit","Quit","root","ui.close.requested","q"
-    return
-
-  /** @param event legacy driver fact @return translated legacy driver work */
-  update: method = .uieffect
-    arg event = .uievent
-    return _bridge.update(event)
-
-  /** @return current feature view */
-  view: method = .uiview
-    return _bridge.view()
 
 /**
  * Small backend-independent feature. Test it directly with v0 messages, or
@@ -91,7 +59,7 @@ text_inspector_component: class implements .uicomponent
   _confirming = .int
 
   /** @param confirm_clear ask the standard confirmation service before Clear;
-   * legacy hosts omit it until they implement that optional capability.
+   * hosts without that optional capability clear immediately.
    */
   *: factory
     arg confirm_clear = 0
@@ -142,6 +110,7 @@ text_inspector_component: class implements .uicomponent
       call result.add(.uimessage("io.text.read", request, event.target(), "effect"))
     end
     if name = "ui.effect.failed" then do
+      _confirming = 0
       _line_count = 0
       _word_count = 0
       _character_count = 0
@@ -223,8 +192,8 @@ text_inspector_component: class implements .uicomponent
     /* Row 3: status begins below the left edge of the summary row. */
     ##UI_NODE "label|status|none|none|below|lines",status_text
     /* Row 4: stable command IDs resolve through the session registry. */
-    ##UI_NODE "button|open|document.open.requested|o|below|status",open_text
-    ##UI_NODE "button|clear|document.clear.requested|c|right|open",clear_text
+    ##UI_NODE "button|open|document.open|o|below|status",open_text
+    ##UI_NODE "button|clear|document.clear|c|right|open",clear_text
     ##UI_NODE "button|quit|document.quit|q|right|clear",quit_text
     return view
 

@@ -1,13 +1,11 @@
-##MACRO UI_LAUNCHER driver_namespace,driver_class,app_namespace,app_class
+##MACRO UI_LAUNCHER driver_namespace,driver_class,app_namespace,session_factory
   driver_namespace = unquote(driver_namespace)
   driver_class = unquote(driver_class)
   app_namespace = unquote(app_namespace)
-  app_class = unquote(app_class)
-  .gen import ui
+  session_factory = unquote(session_factory)
   .gen import &driver_namespace
   .gen import &app_namespace
-  .gen app = .&app_namespace..&app_class()
-  .gen runtime = .ui..uiruntime(app)
+  .gen session = &app_namespace..&session_factory("app-local", &driver_namespace..capabilities())
   .gen driver = .&driver_namespace..&driver_class()
-  .gen exit driver.run(runtime)
+  .gen exit driver.run(session)
 ##MEND

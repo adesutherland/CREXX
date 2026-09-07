@@ -3973,6 +3973,11 @@ add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(deferred_register_outer_if_lifetime
         rexx_src/deferred_register_outer_if_lifetime.crexx)
+add_crexx_run_test(short_circuit_linked_left
+        rexx_src/short_circuit_linked_left.crexx)
+set_tests_properties(short_circuit_linked_left_run_noopt
+        short_circuit_linked_left_run_opt PROPERTIES
+        LABELS "compiler;register-lifetime;regression")
 set_tests_properties(deferred_register_outer_if_lifetime_run_noopt
         deferred_register_outer_if_lifetime_run_opt PROPERTIES
         LABELS "compiler;register-lifetime;regression")

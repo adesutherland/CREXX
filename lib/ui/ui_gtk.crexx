@@ -1,108 +1,220 @@
-/* GTK driver for the experimental backend-neutral Level G UI contracts. */
+/* GTK owns the native loop. Its idle mailbox enters the same Level G session
+ * contract as the terminal hosts; native signals never call a feature directly.
+ */
 options levelg
-namespace ui_gtk expose gtkdriver
+namespace ui_gtk expose gtkdriver capabilities
 import ui
+import ui_contract
+import ui_local_resources
 import ui_gtk_native
 
-/** GTK 3 driver. Native signals enter cREXX through one RXPA method callback. */
-gtkdriver: class implements .uidriver .eventhandler
-  _runtime = reference .uiruntime
-  _automated = .int
-  _created = .int
+/** @return services actually implemented by this GTK host */
+capabilities: procedure = .uicapabilities
+  caps = .uicapabilities()
+  call caps.enable("ui.resource.choose")
+  call caps.enable("io.text.read")
+  call caps.enable("ui.dialog")
+  return caps
 
-  /** @param automated non-zero stops after the deterministic app.ready event */
+/** GTK 3 host. Application policy lives exclusively in session components. */
+gtkdriver: class implements .uidriver
+  _session = .uisession
+  _resources = .uilocal_resources
+  _request = .uimessage
+  _close_request = .uimessage
+  _modal = .int
+  _closing = .int
+  _closed = .int
+  _error = .string
+
+  /** Construct an idle host; run owns all native resources. */
   *: factory
-    arg automated = 0
-    _automated = automated
-    _created = 0
+    _modal = 0
+    _closing = 0
+    _closed = 0
+    _error = ""
     return
 
   /** Build the initial GTK tree and enter the native event loop.
-   * @param runtime application runtime
-   * @return zero on normal termination, or a negative setup failure
+   * @param session configured application session owned for this run
+   * @return zero after native destruction and ui.closed; nonzero on failure
    */
   run: method = .int
-    arg runtime = .uiruntime
-    /* The native loop is synchronous, so this weak reference remains valid
-     * until ui_gtk_native.run returns. Copies of this callback receiver retain
-     * the same storage identity rather than a snapshot of the runtime. */
-    _runtime = reference runtime
-    view = runtime.view()
-
-    if create(view.title(), 520, 360) \= 1 then return -1
-    _created = 1
+    arg session = .uisession
+    _session = session
+    _resources = .uilocal_resources(session.id())
+    _modal = 0
+    _closing = 0
+    _closed = 0
+    _error = ""
+    view = _session.view()
+    if ui_gtk_native..create(view.title(), 520, 360) \= 1 then do
+      _error = "Cannot create GTK surface"
+      call _session.close()
+      return -1
+    end
     do index = 1 to view.count()
       kind = view.node_kind(index)
-      if kind = "label" then do
-        if add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index)) \= 1 then do
-          call cleanup()
-          _created = 0
-          return -2
-        end
-      end
-      else if kind = "line" then do
-        if add_line(view.node_id(index), view.node_column(index), view.node_row(index)) \= 1 then do
-          call cleanup()
-          _created = 0
-          return -2
-        end
-      end
-      else if kind = "button" then do
-        if add_button(view.node_id(index), view.node_text(index), view.node_action(index), view.node_column(index), view.node_row(index)) \= 1 then do
-          call cleanup()
-          _created = 0
-          return -2
+      rc = 0
+      if kind = "label" then rc = add_label(view.node_id(index), view.node_text(index), view.node_column(index), view.node_row(index))
+      else if kind = "line" then rc = add_line(view.node_id(index), view.node_column(index), view.node_row(index))
+      else if kind = "button" then rc = add_button(view.node_id(index), view.node_text(index), view.node_action(index), view.node_column(index), view.node_row(index))
+      if rc \= 1 then _error = "Unsupported or invalid GTK view node: " || kind
+    end
+    native_rc = -1
+    if _error = "" then do
+      if show() \= 1 then _error = "Cannot show GTK surface"
+      else do
+        /* The callback holds a weak reference to this live receiver. Native run
+         * is synchronous; neither this reference nor borrowed RXPA arguments
+         * escape it. Copies of the callback therefore share host state. */
+        callback = .gtkcallback(reference self)
+        do
+          native_rc = ui_gtk_native..run(callback)
+        on signal
+          _error = "GTK callback failed"
         end
       end
     end
-
-    if show() \= 1 then do
-      call cleanup()
-      _created = 0
-      return -3
-    end
-
-    native_rc = ui_gtk_native..run(self)
     call cleanup()
-    _created = 0
-    if native_rc < 0 then return native_rc
+    call _session.close()
+    if _error \= "" | native_rc < 0 | \_closed then return -2
     return 0
 
-  /** Receive one normalized native GTK action.
-   * @param action semantic action associated with the native widget
-   * @param payload optional native payload
-   * @return non-zero keeps the GTK loop running
+  /** @return diagnostic retained after deterministic native teardown */
+  error: method = .string
+    return _error
+
+  /** Owner-turn entry, called only by the native idle mailbox.
+   * @param action native fact, not application policy
+   * @param payload owned text captured when the native signal occurred
+   * @return 0 stop, 1 wait for native input, 2 schedule more queued work
    */
   on_native_event: method = .int
     arg action = .string, payload = .string
-
-    runtime = dereference _runtime
-    effect = runtime.dispatch(action, payload)
-    do forever
-      kind = effect.kind()
-      if kind = "none" then do
-        call render()
-        if _automated then do
-          if action = "app.ready" then return 0
-        end
-        return 1
-      end
-      if kind = "quit" then return 0
-      if kind = "choose_file" then do
-        path = choose_file("Open a text file")
-        if path = "" then effect = runtime.dispatch("file.selection.cancelled", "")
-        else effect = runtime.dispatch("file.selected", path)
-        iterate
-      end
-      return 0
+    rc = 0
+    if action = "ready" then rc = _session.post(.uimessage("ui.ready", .uipayload()))
+    else if action = "command" & \_modal & \_closing then do
+      /* Disabled/unregistered commands are rejected without killing the host. */
+      rc = _session.invoke(payload)
+      rc = 0
     end
+    else if action = "close.requested" & \_closing then rc = _session.post(.uimessage("ui.close.requested", .uipayload()))
+    else if action = "dialog.accepted" | action = "dialog.cancelled" then do
+      if _modal then do
+        body = .uipayload()
+        if action = "dialog.cancelled" then do
+          call body.put_text("reason", "dialog_cancelled")
+          call finish(_request, "ui.effect.cancelled", body)
+        end
+        else if _request.name() = "ui.dialog.confirm" then do
+          call body.put_text("response", "ok")
+          call finish(_request, "ui.dialog.accepted", body)
+        end
+        else do
+          grant = _resources.grant(payload)
+          if grant.id() = "" then call fail_effect(_request, "resource_limit", "Local resource grant limit reached")
+          else do
+            call body.put_resource("resource", grant)
+            call finish(_request, "ui.resource.selected", body)
+          end
+        end
+        _modal = 0
+      end
+    end
+    else if action = "closed" then do
+      if \_closing then _error = "GTK surface destroyed without a close effect"
+      else call finish(_close_request, "ui.closed", .uipayload())
+      _closed = 1
+    end
+    if rc < 0 then _error = "Native input admission failed"
+    if _error = "" then call service()
+    if _error \= "" | _closed then return 0
+    call render()
+    if _error \= "" then return 0
+    if _session.queued() > 0 | _session.pending() > 0 then return 2
+    return 1
 
-  render: method = .void
-    if \_created then return
-    runtime = dereference _runtime
-    view = runtime.view()
-    do index = 1 to view.count()
-      if view.node_kind(index) \= "line" then
-        call set_text view.node_id(index), view.node_text(index)
+  /** Bounded owner work; showing a dialog returns immediately to GTK. */
+  service: method = .void
+    do budget = 1 to 64
+      rc = _session.pump()
+      if rc < 0 then do
+        _error = _session.fault()
+        return
+      end
+      if _closed | _session.pending() = 0 then return
+      effect = _session.take_effect()
+      name = effect.name()
+      body = effect.body()
+      if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
+        if _modal | _closing then call fail_effect(effect, "dialog_busy", "Another dialog or close is active")
+        else if name = "ui.resource.choose" & body.text("purpose") \= "open" then
+          call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+        else do
+          _request = effect
+          _modal = 1
+          kind = "confirm"
+          if name = "ui.resource.choose" then kind = "file"
+          if begin_dialog(kind, body.text("title"), body.text("message")) \= 1 then do
+            _modal = 0
+            call fail_effect(effect, "dialog_failed", "Cannot create GTK dialog")
+          end
+        end
+      end
+      else if name = "io.text.read" then do
+        rc = _session.complete(_resources.read(effect))
+        if rc < 0 then _error = "Read completion rejected"
+      end
+      else if name = "ui.close" then do
+        if _closing then call fail_effect(effect, "close_busy", "Close already in progress")
+        else do
+          _close_request = effect
+          _closing = 1
+          /* Native response/destroy signals enqueue their facts. ui.closed is
+           * admitted only when the destruction fact returns through the mailbox. */
+          call close_surface()
+        end
+      end
+      else call fail_effect(effect, "unsupported_effect", "No GTK executor for " || name)
+      if _error \= "" then return
     end
     return
+
+  finish: method = .void
+    arg request = .uimessage, name = .string, body = .uipayload
+    rc = _session.complete(.uimessage(name, body, request.target(), "event", request.request_id(), request.session_id()))
+    if rc < 0 then _error = "Effect completion rejected: " || name
+    return
+
+  fail_effect: method = .void
+    arg request = .uimessage, code = .string, message = .string
+    body = .uipayload()
+    call body.put_text("code", code)
+    call body.put_text("message", message)
+    call finish(request, "ui.effect.failed", body)
+    return
+
+  /** Reproject feature text; this tracer has a fixed node topology. */
+  render: method = .void
+    if _closing | _closed then return
+    view = _session.view()
+    do index = 1 to view.count()
+      if view.node_kind(index) \= "line" then do
+        if set_text(view.node_id(index), view.node_text(index)) \= 1 then _error = "GTK view projection failed"
+      end
+    end
+    return
+
+/* Implementation detail: one identity-preserving RXPA callback, not another
+ * application shell. The receiver is valid only during gtkdriver.run(). */
+gtkcallback: class implements .eventhandler
+  _host = reference .gtkdriver
+  *: factory
+    arg host = reference .gtkdriver
+    _host = host
+    return
+  on_native_event: method = .int
+    arg action = .string, payload = .string
+    host = dereference _host
+    return host.on_native_event(action, payload)

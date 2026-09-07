@@ -1,0 +1,87 @@
+/* Shared host-conformance observer. Test-only: never linked into an app. */
+options levelg
+namespace ui_driver_probe expose driver_probe expected_journal host_edge_probe expected_edge_journal
+import ui
+import ui_contract
+
+/** @return common line/GTK scenario, including one deliberately vetoed close */
+expected_journal: procedure = .string
+  return "ui.ready document.open.requested ui.resource.selected io.text.read.completed document.clear.requested ui.effect.cancelled document.clear.requested ui.dialog.accepted document.open.requested ui.effect.cancelled ui.close.requested ui.close.requested ui.closed "
+
+/** Observe a real feature without replacing its effect/update implementation. */
+driver_probe: class implements .uicomponent
+  _feature = .uicomponent
+  _journal = reference .string
+  _veto = .int
+  *: factory
+    arg feature = .uicomponent, journal = reference .string
+    _feature = feature
+    _journal = journal
+    _veto = 1
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    journal = dereference _journal
+    journal = journal || event.name() || " "
+    if event.name() = "ui.close.requested" & _veto then do
+      _veto = 0
+      return .uieffects()
+    end
+    return _feature.update(event)
+  view: method = .uiview
+    return _feature.view()
+
+/** @param mode shared teardown scenario @return its semantic outcome order */
+expected_edge_journal: procedure = .string
+  arg mode = .int
+  if mode = 2 then return "ui.ready "
+  if mode = 3 then return "ui.ready ui.effect.failed unsupported_purpose ui.closed "
+  if mode = 4 then return "ui.ready ui.effect.failed dialog_busy ui.effect.cancelled ui.closed "
+  return "ui.ready ui.effect.cancelled ui.closed "
+
+/** Native-host error/teardown probes, using only the public session contract. */
+host_edge_probe: class implements .uicomponent
+  _mode = .int
+  _journal = reference .string
+  *: factory
+    arg mode = .int, journal = reference .string
+    _mode = mode
+    _journal = journal
+    return
+  update: method = .uieffects
+    arg event = .uimessage
+    /* Viewport is a separate platform fact, not part of these core scenarios. */
+    if event.name() = "ui.viewport.changed" then return .uieffects()
+    journal = dereference _journal
+    journal = journal || event.name() || " "
+    effects = .uieffects()
+    body = .uipayload()
+    if event.name() = "ui.ready" then do
+      if _mode = 2 then do
+        /* A programming fault: the host must clean up, not claim ui.closed. */
+        call effects.add(.uimessage("unregistered.work", body, "root", "effect"))
+        return effects
+      end
+      if _mode = 3 then do
+        call body.put_text("title", "Unsupported purpose")
+        call body.put_text("purpose", "save")
+        call effects.add(.uimessage("ui.resource.choose", body, "root", "effect"))
+        return effects
+      end
+      call body.put_text("title", "Close while modal")
+      call body.put_text("message", "The owner can still process queued work")
+      call effects.add(.uimessage("ui.dialog.confirm", body, "root", "effect"))
+      if _mode = 4 then
+        call effects.add(.uimessage("ui.dialog.confirm", body, "root", "effect"))
+      else call effects.add(.uimessage("ui.close", .uipayload(), "root", "effect"))
+    end
+    if event.name() = "ui.effect.failed" then do
+      failure = event.body()
+      journal = journal || failure.text("code") || " "
+      call effects.add(.uimessage("ui.close", .uipayload(), "root", "effect"))
+    end
+    return effects
+  view: method = .uiview
+    view = .uiview_impl("Host cleanup probe")
+    call view.add_label("status", "Testing owner cleanup")
+    return view

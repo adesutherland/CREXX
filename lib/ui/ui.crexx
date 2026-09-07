@@ -1,34 +1,13 @@
 /*
- * cREXX experimental Level G backend-neutral UI contracts and runtime.
+ * cREXX experimental Level G backend-neutral UI logical views.
  *
  * The library deliberately exposes semantic events and effects rather than
  * native widget handles. Drivers own their event loops and rendering details;
  * application classes own feature state, update logic and logical views.
  */
 options levelg
-namespace ui expose uievent uieffect uiview uiapp uidriver uievent_impl uieffect_impl uiview_impl uiruntime
+namespace ui expose uiview uiview_impl
 import rxfnsb
-
-/** One semantic fact delivered to an application. */
-uievent: interface
-  /** @return stable semantic event name */
-  name: method = .string
-  /** @return scalar event payload, or an empty string */
-  payload: method = .string
-  /** @return number of structured text items carried by the event */
-  item_count: method = .int
-  /** @param index one-based item index
-   * @return event item, or an empty string when the index is invalid
-   */
-  item: method = .string
-    arg index = .int
-
-/** A request for impure work outside an application's update method. */
-uieffect: interface
-  /** @return stable effect kind; `none` means no work */
-  kind: method = .string
-  /** @return scalar effect payload */
-  payload: method = .string
 
 /** A flat logical view rendered by the tracer drivers. */
 uiview: interface
@@ -37,7 +16,7 @@ uiview: interface
   /** @return number of logical nodes */
   count: method = .int
   /** @param index one-based node index
-   * @return `label`, `line`, or `button`
+   * @return `label`, `line`, `input`, or `button`
    */
   node_kind: method = .string
     arg index = .int
@@ -52,7 +31,7 @@ uiview: interface
   node_text: method = .string
     arg index = .int
   /** @param index one-based node index
-   * @return semantic event emitted by a button
+   * @return registered command ID invoked by a button
    */
   node_action: method = .string
     arg index = .int
@@ -81,93 +60,6 @@ uiview: interface
    */
   node_column: method = .int
     arg index = .int
-
-/** Feature-owned model/update/view contract. */
-uiapp: interface
-  /** Apply one semantic event and return the next requested effect.
-   * @param event event to reduce into application state
-   * @return requested effect, or `none`
-   */
-  update: method = .uieffect
-    arg event = .uievent
-  /** @return backend-neutral view of current application state */
-  view: method = .uiview
-
-/** Backend event-loop contract. */
-uidriver: interface
-  /** Run until the application requests the `quit` effect.
-   * @param runtime application runtime to drive
-   * @return zero on normal termination
-   */
-  run: method = .int
-    arg runtime = .uiruntime
-
-/** Concrete semantic event value. */
-uievent_impl: class implements .uievent
-  _name = .string
-  _payload = .string
-  _items = .string[]
-  _item_count = .int
-
-  /** Construct an event with a scalar payload.
-   * @param name semantic event name
-   * @param payload scalar payload
-   */
-  *: factory
-    arg name = .string, payload = ""
-    _name = name
-    _payload = payload
-    _item_count = 0
-    return
-
-  /** Construct an event carrying text records.
-   * @param name semantic event name
-   * @param payload scalar payload, normally a path
-   * @param items text records
-   */
-  with_items: factory
-    arg name = .string, payload = .string, items = .string[]
-    _name = name
-    _payload = payload
-    _item_count = items[0]
-    do index = 1 to _item_count
-      _items[index] = items[index]
-    end
-    return
-
-  name: method = .string
-    return _name
-
-  payload: method = .string
-    return _payload
-
-  item_count: method = .int
-    return _item_count
-
-  item: method = .string
-    arg index = .int
-    if index < 1 | index > _item_count then return ""
-    return _items[index]
-
-/** Concrete effect value. */
-uieffect_impl: class implements .uieffect
-  _kind = .string
-  _payload = .string
-
-  /** @param kind stable effect kind
-   * @param payload scalar effect payload
-   */
-  *: factory
-    arg kind = .string, payload = ""
-    _kind = kind
-    _payload = payload
-    return
-
-  kind: method = .string
-    return _kind
-
-  payload: method = .string
-    return _payload
 
 /** Mutable logical-view builder returned through the read-only uiview contract. */
 uiview_impl: class implements .uiview
@@ -226,7 +118,7 @@ uiview_impl: class implements .uiview
   /** Append a button.
    * @param id stable node identity
    * @param text displayed text
-   * @param action semantic event name
+   * @param action registered command ID
    * @param shortcut TUI shortcut
    * @param relation placement relative to the anchor
    * @param anchor stable node ID, or empty to use the preceding node
@@ -383,62 +275,3 @@ uiview_impl: class implements .uiview
     arg index = .int
     if index < 1 | index > _count then return -1
     return _columns[index]
-
-/** Event dispatcher and backend-neutral effect executor. */
-uiruntime: class
-  _app = .uiapp
-  _event_count = .int
-
-  /** @param app feature application to run */
-  *: factory
-    arg app = .uiapp
-    _app = app
-    _event_count = 0
-    return
-
-  /** Dispatch a named scalar event.
-   * @param name semantic event name
-   * @param payload scalar payload
-   * @return first driver-owned effect after backend-neutral effects complete
-   */
-  dispatch: method = .uieffect
-    arg name = .string, payload = ""
-    return dispatch_event(.uievent_impl(name, payload))
-
-  /** Dispatch a structured event.
-   *
-   * `read_text` is deliberately resolved here rather than in either driver.
-   * Its completion is delivered as `file.loaded` or `file.load.failed`, so a
-   * future asynchronous executor can preserve the application contract.
-   *
-   * @param event semantic event
-   * @return first effect requiring a driver, or `none`
-   */
-  dispatch_event: method = .uieffect
-    arg event = .uievent
-    _event_count = _event_count + 1
-    effect = _app.update(event)
-
-    do while effect.kind() = "read_text"
-      path = effect.payload()
-      records = readlines(path, 1, 0, "return")
-      failed = 0
-      if records[0] = 1 then do
-        if records[1] = "-8 OPEN ERROR" then failed = 1
-      end
-
-      if failed then event = .uievent_impl("file.load.failed", path)
-      else event = .uievent_impl.with_items("file.loaded", path, records)
-
-      _event_count = _event_count + 1
-      effect = _app.update(event)
-    end
-    return effect
-
-  /** @return current logical view */
-  view: method = .uiview
-    return _app.view()
-
-  /** @return number of semantic events delivered to the application */
-  event_count: method = .int
-    return _event_count

@@ -1,0 +1,60 @@
+options levelb
+namespace short_circuit_linked_left
+
+/* A linked attribute on the left must not prevent the right expression from
+ * receiving its result register. Both truth-table paths must preserve storage
+ * and short-circuit side effects, with compiler optimization on and off. */
+probe = .Probe()
+do flag = 0 to 1
+  do value = 0 to 1
+    rc = probe.check(flag, value)
+    if rc \= 0 then return rc
+  end
+end
+say "PASS: short circuit linked left register and lifetime"
+return 0
+
+Probe: class
+  _flag = .int
+  _flags = .int[]
+  _counter = .Counter
+  *: factory
+    _counter = .Counter()
+    return
+
+  check: method = .int
+    arg flag = .int, value = .int
+    _flag = flag
+    _flags[1] = flag
+    expected_or = flag | value = 0
+    expected_and = flag & value = 0
+    /* Right-hand comparison without a call: retain the exact donation shape
+     * even if a tiny local method is inlined in an optimized build. */
+    actual_or = _flag | value = 0
+    actual_and = _flag & value = 0
+    array_or = _flags[1] | value = 0
+    array_and = _flags[1] & value = 0
+    if actual_or \= expected_or | array_or \= expected_or then return 1
+    if actual_and \= expected_and | array_and \= expected_and then return 2
+    before = _counter.calls()
+    call_or = _flag | _counter.probe(value) = 0
+    after_or = _counter.calls()
+    if call_or \= expected_or | after_or \= before + 1 - flag then return 3
+    call_and = _flag & _counter.probe(value) = 0
+    after_and = _counter.calls()
+    if call_and \= expected_and | after_and \= after_or + flag then return 4
+    /* Re-read the linked left storage after all result-register reuse. */
+    if _flag \= flag | _flags[1] \= flag then return 5
+    return 0
+
+Counter: class
+  _calls = .int
+  *: factory
+    _calls = 0
+    return
+  probe: method = .int
+    arg value = .int
+    _calls = _calls + 1
+    return value
+  calls: method = .int
+    return _calls

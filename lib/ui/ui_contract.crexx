@@ -3,11 +3,20 @@
  * No native handles, threads, terminal protocols or browser objects live here.
  */
 options levelg
-namespace ui_contract expose uipayload uiresource uimessage uieffects uicomponent uicapabilities uicommand uiregistry uisession
+namespace ui_contract expose uipayload uiresource uimessage uieffects uicomponent uidriver uicapabilities uicommand uiregistry uisession
 import rxfnsb
 import rxjson
 import ui
 import ui_catalog
+
+/** Driver ownership boundary, shared by line, ANSI and GTK hosts. */
+uidriver: interface
+  /** Own a configured session until native resources have been released.
+   * @param session components, schemas, commands and implemented capabilities
+   * @return zero after accepted close; nonzero on setup, I/O or contract failure
+   */
+  run: method = .int
+    arg session = .uisession
 
 /** A scoped resource identity. The provider owns its underlying path/handle. */
 uiresource: class

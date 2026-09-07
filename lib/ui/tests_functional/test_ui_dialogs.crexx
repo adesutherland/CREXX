@@ -71,6 +71,14 @@ main: procedure = .int
   if extra.id() \= "" then exit 1
   extra = resources.grant(picker.selection())
   if extra.id() \= grant.id() then exit 1
+  large_resources = .uilocal_resources("oversized-test")
+  large_grant = large_resources.grant(args[2])
+  body = .uipayload()
+  call body.put_resource("resource", large_grant)
+  response = large_resources.read(.uimessage("io.text.read", body, "root", "effect", "large-read", "oversized-test"))
+  output = response.body()
+  if response.name() \= "ui.effect.failed" | output.text("code") \= "resource_too_large" then exit 1
+  if response.request_id() \= "large-read" | response.session_id() \= "oversized-test" then exit 1
   cancelled = .uifile_dialog("Open", args[1])
   call cancelled.resize(80, 24)
   body = .uipayload()

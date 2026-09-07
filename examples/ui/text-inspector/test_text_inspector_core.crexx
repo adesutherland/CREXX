@@ -1,26 +1,11 @@
 options levelg
 namespace text_inspector_core_test
-import rxfnsb
 import ui
 import ui_contract
 import text_inspector
 
-/* A normal provider size failure must remain an application event, not tear
- * down the session as a malformed completion. Drive the adapter without I/O. */
-shell = .text_inspector_app()
-legacy_work = shell.update(.uievent_impl("document.open.requested", ""))
-legacy_work = shell.update(.uievent_impl("file.selected", "large.txt"))
-oversized = .string[]
-oversized[1] = copies("x", 16385)
-legacy_work = shell.update(.uievent_impl.with_items("file.loaded", "large.txt", oversized))
-shell_view = shell.view()
-if legacy_work.kind() \= "none" | shell_view.node_text(6) \= "Status: File exceeds the tracer message limits" then do
-  say "FAIL: oversized read did not report a recoverable effect failure"
-  exit 1
-end
-
-/* Unit-test the feature directly. Session admission/correlation has its own
- * conformance tests; driver tests below exercise the compatibility shell. */
+/* Unit-test feature policy; session and host conformance cover admission,
+ * correlation, physical I/O and teardown separately. */
 app = .text_inspector..text_inspector_component()
 
 effect = app.update(.uimessage("document.open.requested", .uipayload()))

@@ -4,6 +4,8 @@ project(crexx_ui NONE)
 
 set(CREXX_UI_CORE_IMAGE "${CMAKE_BINARY_DIR}/bin/ui.rxbin")
 set(CREXX_UI_TUI_IMAGE "${CMAKE_BINARY_DIR}/bin/ui_tui.rxbin")
+# Prevent obsolete generated metadata from satisfying imports after reconfigure.
+file(REMOVE "${CMAKE_BINARY_DIR}/bin/ui_compat.rxbin")
 
 add_custom_command(
         OUTPUT "${CREXX_UI_CORE_IMAGE}"
@@ -25,7 +27,9 @@ add_custom_command(
                 -o ui_tui "${CMAKE_CURRENT_SOURCE_DIR}/ui_tui.crexx"
         COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/ui_tui" ui_tui
         DEPENDS rxc rxas library compiler_exit_bin
-                "${CREXX_UI_CORE_IMAGE}"
+                "${CREXX_UI_CORE_IMAGE}" ui_contract ui_local_resources
+                "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/ui_local_resources.rxbin"
                 "${CMAKE_CURRENT_SOURCE_DIR}/ui_tui.crexx"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_tui.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -35,7 +39,7 @@ add_custom_command(
 add_custom_target(ui ALL DEPENDS "${CREXX_UI_CORE_IMAGE}")
 add_custom_target(ui_tui ALL DEPENDS "${CREXX_UI_TUI_IMAGE}")
 add_dependencies(ui library)
-add_dependencies(ui_tui ui)
+add_dependencies(ui_tui ui ui_contract ui_local_resources)
 
 # The vocabulary has one source. Generate language bindings and transport docs
 # with CMake itself, so building the native product does not require Node/Python.
@@ -53,7 +57,7 @@ add_custom_command(
         DEPENDS contracts/catalogue.json contracts/Generate.cmake
         COMMENT "Generating UI contract v0 bindings and schema"
         VERBATIM)
-foreach(module IN ITEMS ui_catalog ui_contract ui_compat)
+foreach(module IN ITEMS ui_catalog ui_contract)
     set(module_inputs "${CREXX_UI_CORE_IMAGE}")
     if(module STREQUAL "ui_catalog")
         set(module_source "${CREXX_UI_CATALOG_SOURCE}")
@@ -62,11 +66,6 @@ foreach(module IN ITEMS ui_catalog ui_contract ui_compat)
         set(module_source "${CMAKE_CURRENT_SOURCE_DIR}/ui_contract.crexx")
         set(module_dependencies ui ui_catalog)
         list(APPEND module_inputs "${CMAKE_BINARY_DIR}/bin/ui_catalog.rxbin")
-    else()
-        set(module_source "${CMAKE_CURRENT_SOURCE_DIR}/ui_compat.crexx")
-        set(module_dependencies ui ui_catalog ui_contract)
-        list(APPEND module_inputs "${CMAKE_BINARY_DIR}/bin/ui_catalog.rxbin"
-                "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin")
     endif()
     add_custom_command(
             OUTPUT "${CMAKE_BINARY_DIR}/bin/${module}.rxbin"
@@ -88,7 +87,7 @@ install(FILES contracts/catalogue.json contracts/README.md contracts/conformance
         "${CREXX_UI_CONTRACT_DIR}/CATALOGUE.md"
         DESTINATION share/crexx/ui/contracts)
 
-# New owner-loop host modules. Console primitives remain a Level B provider;
+# Owner-loop host modules. Console primitives remain a Level B provider;
 # dialogs, resource authority, presentation and the host are Level G values.
 foreach(module IN ITEMS ui_dialogs ui_terminal_view ui_local_resources ui_ansi)
     set(module_dependencies ui ui_contract ui_catalog)
@@ -127,7 +126,10 @@ if(ENABLE_GTK)
                     -i "${CMAKE_BINARY_DIR}/bin"
                     -o ui_gtk "${CMAKE_CURRENT_SOURCE_DIR}/ui_gtk.crexx"
             COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/ui_gtk" ui_gtk
-            DEPENDS rxc rxas library compiler_exit_bin ui _ui_gtk_native
+            DEPENDS rxc rxas library compiler_exit_bin ui _ui_gtk_native ui_contract ui_local_resources
+                    "${CREXX_UI_CORE_IMAGE}" "$<TARGET_FILE:_ui_gtk_native>"
+                    "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin"
+                    "${CMAKE_BINARY_DIR}/bin/ui_local_resources.rxbin"
                     "${CMAKE_CURRENT_SOURCE_DIR}/ui_gtk.crexx"
             BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/ui_gtk.rxas"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -151,8 +153,7 @@ if(ENABLE_GTK)
             LIBRARY DESTINATION bin
             RUNTIME DESTINATION bin)
 endif()
-install(FILES README.md TERMINAL.md DESTINATION share/crexx/ui)
-install(FILES rxpp/ui_macros.rxpm DESTINATION share/crexx/ui/rxpp)
+install(FILES README.md TERMINAL.md EXTENDING.md DESTINATION share/crexx/ui)
 install(DIRECTORY rxpp/ui DESTINATION share/crexx/ui/rxpp)
 
 crexx_finalize_directory_qa_tiers()

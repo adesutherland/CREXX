@@ -12,13 +12,6 @@
       "ui.commands",
       "ui.effects"
     ],
-    "tracer.compat": [
-      "ui.lifecycle",
-      "ui.commands",
-      "ui.effects",
-      "ui.resource.choose",
-      "io.text.read"
-    ],
     "terminal.planned": [
       "ui.lifecycle",
       "ui.commands",

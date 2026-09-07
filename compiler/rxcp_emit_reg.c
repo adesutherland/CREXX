@@ -1404,11 +1404,13 @@ walker_result register_walker(walker_direction direction,
                     /* If we are assigning a register to either children we
                      * will assign to this node and children, overriding/ignoring
                      * any DONT_ASSIGN_REGISTER flag for this node
-                     * HOWEVER this is only possible if we have defer_reg_return children */
+                     * Only children without deferred cleanup may share it. */
                     node->register_num = get_reg(node->scope);
                     if (!defer_reg_return(child1) && child1->register_num == DONT_ASSIGN_REGISTER)
                         child1->register_num = node->register_num;
-                    if (!defer_reg_return(child1) && child2->register_num == DONT_ASSIGN_REGISTER)
+                    /* Test the right child's lifetime independently: a linked
+                     * left attribute must not leave the right result at -2. */
+                    if (!defer_reg_return(child2) && child2->register_num == DONT_ASSIGN_REGISTER)
                         child2->register_num = node->register_num;
                 }
                 else {

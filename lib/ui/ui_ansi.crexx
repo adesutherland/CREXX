@@ -3,7 +3,7 @@
  * nested event loops or borrowed native handles escape a poll operation.
  */
 options levelg
-namespace ui_ansi expose ansidriver terminal_capabilities
+namespace ui_ansi expose ansidriver capabilities
 import rxfnsb
 import rxconsole
 import rxfs
@@ -14,8 +14,10 @@ import ui_terminal_view
 import ui_local_resources
 
 /** @return only services implemented by this tracer host */
-terminal_capabilities: procedure = .uicapabilities
-  caps = .uicapabilities("tracer.compat")
+capabilities: procedure = .uicapabilities
+  caps = .uicapabilities()
+  call caps.enable("ui.resource.choose")
+  call caps.enable("io.text.read")
   names = "ui.dialog ui.viewport ui.keyboard ui.text ui.pointer ui.scroll ui.widgets"
   do i = 1 to words(names)
     call caps.enable(word(names, i))
@@ -24,7 +26,7 @@ terminal_capabilities: procedure = .uicapabilities
   return caps
 
 /** Host/executor, deliberately containing no Text Inspector policy. */
-ansidriver: class
+ansidriver: class implements .uidriver
   _session = .uisession
   _canvas = .uiterminal_canvas
   _resources = .uilocal_resources
@@ -61,6 +63,14 @@ ansidriver: class
   run: method = .int
     arg session = .uisession
     _session = session
+    /* Each invocation owns a new session lifetime, including after a fault. */
+    _canvas = .uiterminal_canvas()
+    _modal = 0
+    _focus = ""
+    _saved_focus = ""
+    _pressed = ""
+    _error = ""
+    _dirty = 1
     _resources = .uilocal_resources(_session.id())
     _handle = rxconsole..open(11)
     if _handle < 0 then do

@@ -111,17 +111,18 @@ The product master documentation is in `rexxscript/doc/`.
 `lib/ui` contains the experimental Level G UI tracer architecture. Its public
 cREXX library, drivers, applications, launchers, and tests explicitly use
 `OPTIONS LEVELG`; the native GTK/RXPA C plugin remains lower-level mechanism.
-`ui.rxbin` owns semantic events, explicit effects, logical views, the application/driver
-interfaces, and the runtime. `ui_tui.rxbin` is always built; with
-`ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide the separate GTK
-driver. Logical `label`, `line`, and `button` nodes use stable IDs and
-relative `root`/`below`/`right` placement resolved into rows and columns for
-both drivers. RXPP generates both logical-node calls and the small backend
-launchers. The GTK callback is same-thread and synchronous. Since cREXX classes
-are values, the driver uses an explicit weak reference to the active runtime
-for the duration of its native loop. See `lib/ui/README.md` for the lifecycle,
-vocabulary and implementation trail, and
-`examples/ui/text-inspector/README.md` for the executable example.
+`ui.rxbin` owns logical views; `ui_contract.rxbin` owns typed messages,
+effect collections, component/driver interfaces and owner-driven sessions.
+The line, ANSI and optional GTK hosts all implement `uidriver.run(session)`
+directly. Each supplies `capabilities()`; there is no scalar adapter.
+With `ENABLE_GTK=ON`, `ui_gtk.rxbin` and `rx_ui_gtk_native` provide GTK.
+Nodes use stable IDs and relative `root`/`below`/`right` placement.
+RXPP's single `UI_LAUNCHER` composes every host with the same session factory.
+GTK signals enter an owning idle mailbox; dialog responses are deferred, and
+close intent is distinct from destruction. RXPA calls remain synchronous:
+the callback receiver holds a weak reference to the live host only for the
+duration of native run. See `lib/ui/README.md`, `lib/ui/EXTENDING.md` and
+`examples/ui/text-inspector/README.md` for the lifecycle and executable trail.
 
 The first full-screen terminal host is `ui_ansi.rxbin`, using `ui_contract`
 directly. `ui_dialogs`, `ui_terminal_view` and `ui_local_resources` are Level G
@@ -129,7 +130,7 @@ modules for standard confirmation/file selection, cell projection and scoped
 file grants. `lib/plugins/console` supplies the independent Level B `rxconsole`
 C provider: explicit console lease, timed key/text/paste input, resize, mouse,
 batched output and restoration. It has no ncurses or GTK dependency. RXPP's
-`UI_SESSION_LAUNCHER` composes the same Text Inspector feature with this host.
+`UI_LAUNCHER` composes the same Text Inspector feature with this host.
 See `lib/ui/TERMINAL.md` for the lifecycle, precise limits and platform QA boundary.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module

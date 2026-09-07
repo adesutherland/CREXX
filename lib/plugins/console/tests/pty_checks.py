@@ -96,7 +96,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--build", required=True, type=pathlib.Path)
     parser.add_argument("--source", required=True, type=pathlib.Path)
-    parser.add_argument("--mode", choices=["console", "app"], required=True)
+    parser.add_argument("--mode", choices=["console", "app", "host-edges"], required=True)
+    parser.add_argument("--variant", choices=["noopt", "opt"], default="opt")
     args = parser.parse_args()
     build, source = args.build.resolve(), args.source.resolve()
     binary = build / "bin"
@@ -129,6 +130,14 @@ def main():
             os.close(terminal.master)
             terminal.master = -1
             assert terminal.process.wait(timeout=10) == 0, "disconnect did not end the input loop"
+        finally:
+            terminal.close()
+    elif args.mode == "host-edges":
+        program = build / "lib/ui/tests_functional" / f"ui_ansi_edges_{args.variant}.rxbin"
+        terminal = Terminal([vm, str(program)], source)
+        try:
+            terminal.expect(b"PASS: ANSI shared host edges")
+            terminal.finish()
         finally:
             terminal.close()
     else:

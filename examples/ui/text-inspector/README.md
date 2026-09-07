@@ -1,127 +1,116 @@
-# Text Inspector UI contract v0 tracer
+# Text Inspector: one feature, three hosts
 
-Text Inspector is a **Level G** feature shared by GTK, the portable line TUI, the ANSI full-screen host and
-tests. It counts physical text records, whitespace-delimited words and Unicode
-scalar values excluding line terminators.
+Text Inspector is a **Level G** worked example. It counts physical text records,
+whitespace-delimited words and Unicode scalar values excluding line terminators.
 
-First read [the framework introduction](../../../lib/ui/README.md) and
-[UI contract v0](../../../lib/ui/contracts/README.md). Then open
-[text_inspector.rxpp](text_inspector.rxpp): its small application shell registers
-commands and application events; its `text_inspector_component` owns only the
-model, update policy and logical view. Follow into `ui_contract.crexx`, then
-`ui_compat.crexx`, and finally the desired driver.
+Read [the framework introduction](../../../lib/ui/README.md), then
+[text_inspector.rxpp](text_inspector.rxpp). Its session factory registers schemas,
+commands and one feature; `text_inspector_component` owns the model, update and
+view. Follow into [the contract](../../../lib/ui/ui_contract.crexx), your chosen
+driver and [resource executor](../../../lib/ui/ui_local_resources.crexx).
+There is one application contract and no compatibility shell.
 
-Open invokes an application command, which queues
-`document.open.requested`. The feature requests `ui.resource.choose`.
-A successful choice supplies `ui.resource.selected` with an opaque resource
-descriptor. The feature requests `io.text.read`; its
-`io.text.read.completed` result carries text records. Failure and cancellation
-use `ui.effect.failed` and `ui.effect.cancelled`. The application owns the
-counting policy, not the driver or framework. OS paths remain in the host's
-resource executor; the feature reads only display text and passes a resource grant back
-when requesting I/O.
+## What to trace
 
-Framework and widget names are standard; `document.*` intent is registered by
-this feature. A larger application can register several cohesive components
-and target commands/events at their owners. The feature's update returns an
-effect collection, including an empty one: it never opens dialogs or files itself.
+Open invokes `document.open`, which queues `document.open.requested`.
+The feature returns `ui.resource.choose`; the driver later completes
+`ui.resource.selected` with an opaque grant. The feature requests `io.text.read`;
+the shared executor completes `io.text.read.completed`. The feature counts the
+records and returns a fresh logical view. Failure/cancellation are
+`ui.effect.failed`/`ui.effect.cancelled`, not magic filename values.
 
-The existing scalar drivers remain behind the temporary `uibridge` shell,
-not a second copy of the feature. The bridge is synchronous and supports one
-root feature. Deferred completion and multiple owners are separately exercised
-in the session conformance tests. The legacy close path cannot report a true
-post-destruction `ui.closed`; that limitation is explicit in the contract.
+Clear demonstrates `ui.dialog.confirm` and its OK/Cancel outcomes. Quit queues
+`ui.close.requested`; this read-only feature accepts by returning `ui.close`.
+After native destruction/restoration, the driver completes `ui.closed` and
+tears down the session. Tests wrap the same feature to prove close can be vetoed.
 
-RXPP's recent `##LOADMACRO` directive selects the `ui` macro directory.
-`UI_COMMAND` generates checked command registration, `UI_NODE` generates the
-logical view, and `UI_LAUNCHER`/`UI_SESSION_LAUNCHER` generate the legacy/session
-backend launchers. Package filenames
-are lowercase. CMake stages the package under the selected macro-library root.
+Framework/widget events are standard; `document.*` belongs to this application.
+Commands and effects are not native callbacks. No feature opens files, stores
+GTK handles, emits terminal escape sequences or knows its driver.
 
-The logical view still deliberately has only `label`, `line` and `button`,
-with stable IDs and `root`/`below`/`right` placement. GTK renders a grid; the
-line TUI groups nodes by row. The declarations illustrate a builder-compatible
-authoring surface, not a completed rich widget system.
+`##LOADMACRO ui` loads `UI_COMMAND`, `UI_NODE` and the single `UI_LAUNCHER`
+macro. The three launcher files differ only in driver namespace/class.
+RXPP emits one source per invocation and retains source maps to the authored
+`.rxpp`. Stable view IDs and `root`/`below`/`right` layout are the builder
+seam; this is not yet a rich or responsive widget system.
 
-The authored launchers are `text_inspector_tui.rxpp` and
-`text_inspector_gtk.rxpp`. RXPP emits one file per invocation, so CMake generates
-their .crexx launchers separately, including `text_inspector_ansi.rxpp` for the
-new session host. `##BUILDDIR` is useful in the command-line
-driver, but not needed for CMake's already-explicit output directories.
+## Build and run
 
-From a configured Debug tree, build the launchers with:
+All commands below run from the repository root.
 
 ```sh
-cmake --build cmake-build-debug --target example_text_inspector_artifacts
+cmake --build cmake-build-debug --target example_text_inspector_artifacts rxvm --parallel 10
 ```
 
-## Full-screen terminal (new)
-
-Run in a real terminal from the repository root; no Homebrew library or GTK is needed:
-
-```sh
-sh examples/ui/text-inspector/run-ansi.sh cmake-build-debug
-```
-
-Use **o** to open the file selector. Type or paste a path (for example
-`examples/ui/text-inspector/fixtures/sample.txt`) and press Enter; alternatively
-browse with arrows, PageUp/PageDown, Tab and the mouse. Escape cancels. **c**
-requests Clear and opens the standard OK/Cancel confirmation. **q** closes;
-Ctrl-C cancels an active dialog or requests application close. Resize preserves
-state; below 32x10 a resize prompt replaces ordinary controls.
-
-For the existing GTK-enabled build use the same command with
-`cmake-build-ui-v0-gtk` instead of `cmake-build-debug`.
-
-The new launcher uses `make_text_inspector_session` and `ui_ansi` directly,
-without `uibridge`. Its loop retains a dialog as a pending effect while still
-handling input and resize. Dialog completion returns to the feature as an event.
-Read [terminal responsibilities and lifecycle](../../../lib/ui/TERMINAL.md),
-then trace `ui_ansi` -> `ui_dialogs` / `ui_terminal_view` / `ui_local_resources`
-and finally the C-backed, Level B `rxconsole` primitives.
-
-Focused QA (the PTY checks require Python 3 on Unix, not an application dependency):
-
-```sh
-cmake --build cmake-build-debug --target rxconsole_test_artifacts ui_functional_tests example_text_inspector_artifacts --parallel 10
-ctest --test-dir cmake-build-debug -R '^rxconsole_|^ui_|^text_inspector_' --output-on-failure
-```
-
-## Existing line TUI and GTK
-
-Run the TUI from the repository root with:
+### Line TUI
 
 ```sh
 cmake-build-debug/bin/rxvm \
   cmake-build-debug/examples/ui/text-inspector/text_inspector_tui \
   cmake-build-debug/examples/ui/text-inspector/text_inspector \
   cmake-build-debug/bin/ui_tui \
-  cmake-build-debug/bin/ui \
-  cmake-build-debug/bin/ui_compat \
+  cmake-build-debug/bin/ui_local_resources \
   cmake-build-debug/bin/ui_contract \
   cmake-build-debug/bin/ui_catalog \
+  cmake-build-debug/bin/ui \
   cmake-build-debug/bin/library
 ```
 
-With `ENABLE_GTK=ON`, run GTK with:
+Enter `o`, then a file path; an empty path cancels. Enter `c`, then `ok` or
+`cancel`; `q` closes. This host blocks on line input and is also useful for
+deterministic scripted tests. It does not require GTK or raw-console support.
+
+### ANSI full-screen terminal
 
 ```sh
-cmake-build-debug/bin/rxvm \
-  cmake-build-debug/examples/ui/text-inspector/text_inspector_gtk \
-  cmake-build-debug/bin/rx_ui_gtk_native \
-  cmake-build-debug/examples/ui/text-inspector/text_inspector \
-  cmake-build-debug/bin/ui_gtk \
-  cmake-build-debug/bin/ui \
-  cmake-build-debug/bin/ui_compat \
-  cmake-build-debug/bin/ui_contract \
-  cmake-build-debug/bin/ui_catalog \
-  cmake-build-debug/bin/library
+sh examples/ui/text-inspector/run-ansi.sh cmake-build-debug
 ```
 
-The original TUI remains line-oriented and dependency-free. The new ANSI host
-uses the same feature; it does not replace this useful scripted-input driver.
+Run in a real terminal. `o` opens the selector: type/paste a path, or browse with
+arrows, PageUp/PageDown, Tab and the mouse. Enter opens; Escape cancels.
+`c` asks for Clear confirmation; `q` closes. Ctrl-C cancels an active dialog
+or requests close. Resize preserves state; below 32x10 a resize prompt replaces
+ordinary controls. No ncurses or GTK library is needed.
 
-The GTK loop enters cREXX through RXPA `CALLMETHOD`. Because cREXX class values
-are copied, the synchronous driver carries an explicit weak reference to the
-live `ui.uiruntime`; this is the identity-preserving pattern for callbacks that
-cannot outlive their native procedure call.
+See [terminal lifecycle and limits](../../../lib/ui/TERMINAL.md), then trace
+`ui_ansi` -> `ui_dialogs` / `ui_terminal_view` / `ui_local_resources` and
+the Level B C console provider.
+
+### GTK
+
+Use a tree configured with `-DENABLE_GTK=ON` and GTK 3 discoverable through
+`pkg-config`. On this checkout the existing GTK tree is `cmake-build-ui-v0-gtk`.
+
+```sh
+cmake --build cmake-build-ui-v0-gtk --target example_text_inspector_artifacts rxvm --parallel 10
+cmake-build-ui-v0-gtk/bin/rxvm \
+  cmake-build-ui-v0-gtk/examples/ui/text-inspector/text_inspector_gtk \
+  cmake-build-ui-v0-gtk/bin/rx_ui_gtk_native \
+  cmake-build-ui-v0-gtk/examples/ui/text-inspector/text_inspector \
+  cmake-build-ui-v0-gtk/bin/ui_gtk \
+  cmake-build-ui-v0-gtk/bin/ui_local_resources \
+  cmake-build-ui-v0-gtk/bin/ui_contract \
+  cmake-build-ui-v0-gtk/bin/ui_catalog \
+  cmake-build-ui-v0-gtk/bin/ui \
+  cmake-build-ui-v0-gtk/bin/library
+```
+
+Click Open, select a file, then Open/Cancel. Clear uses an explicit OK/Cancel
+dialog. Quit and the window close control go through the same vetoable intent.
+GTK uses its native loop and non-blocking dialog responses. Its idle mailbox
+enters cREXX through synchronous RXPA; callbacks never outlive the native run.
+
+## QA and extension
+
+```sh
+cmake --build cmake-build-debug --target rxconsole_test_artifacts ui_functional_tests example_text_inspector_artifacts --parallel 10
+ctest --test-dir cmake-build-debug -R '^rxconsole_|^ui_|^text_inspector_' --output-on-failure
+```
+
+Repeat with the GTK tree to include real GTK signal/dialog tests (they briefly
+open windows and require an available display). Optimized tests link bytecode
+before running it. The line and GTK tests compare a shared event journal;
+ANSI tests exercise a real PTY, resize, input, dialogs and terminal restoration.
+Session tests separately cover routing, correlation, stale outcomes and limits.
+See [how to extend](../../../lib/ui/EXTENDING.md) for the feature/widget/effect/
+driver checklist. Sanitizers remain the agreed later tracer-scope gate.

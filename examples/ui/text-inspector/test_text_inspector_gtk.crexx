@@ -1,18 +1,61 @@
 options levelg
 namespace text_inspector_gtk_test
-import ui
+import ui_contract
 import ui_gtk
-import text_inspector
+import ui_gtk_test
+import ui_driver_probe
+import text_inspector_test_host
 
-app = .text_inspector..text_inspector_app()
-runtime = .ui..uiruntime(app)
-driver = .ui_gtk..gtkdriver(1)
-run_rc = driver.run(runtime)
+arg test_args = .string[]
+if test_args[0] < 1 then exit 1
+steps = .string[]
+steps[1] = "expect|status|Status: Ready"
+steps[2] = "click|open"
+steps[3] = "file|" || test_args[1]
+steps[4] = "expect|status|Status: Count complete"
+steps[5] = "expect|words|Words: 5"
+steps[6] = "expect|characters|Characters: 26"
+steps[7] = "click|clear"
+steps[8] = "cancel"
+steps[9] = "expect|status|Status: Clear cancelled"
+steps[10] = "click|clear"
+steps[11] = "ok"
+steps[12] = "expect|words|Words: 0"
+steps[13] = "click|open"
+steps[14] = "cancel"
+steps[15] = "expect|status|Status: Open cancelled"
+steps[16] = "close"
+steps[17] = "expect|status|Status: Open cancelled"
+steps[18] = "close"
 
-if run_rc \= 0 | runtime.event_count() \= 1 then do
-  say "FAIL: GTK driver did not deliver its app.ready callback" run_rc runtime.event_count()
+journal = ""
+session = make_observed_session(ui_gtk..capabilities(), reference journal)
+driver = .gtkdriver()
+rc = ui_gtk_test..start(steps)
+if rc < 0 then exit 1
+run_rc = driver.run(session)
+test_rc = ui_gtk_test..finish()
+if run_rc \= 0 | test_rc \= 0 | journal \= expected_journal() then do
+  say "FAIL: GTK conformance" run_rc test_rc driver.error()
+  say journal
   exit 1
 end
-
+/* No input injector is needed: these feature effects exercise the actual native
+ * dialog/close and fault paths. Reusing the driver proves resources are released. */
+do mode = 1 to 4
+  journal = ""
+  session = .uisession("gtk-edge-" || mode, ui_gtk..capabilities())
+  rc = session.add_component("root", .host_edge_probe(mode, reference journal))
+  run_rc = driver.run(session)
+  expected = expected_edge_journal(mode)
+  if journal \= expected then do
+    say "FAIL: GTK cleanup journal" mode journal driver.error()
+    exit 1
+  end
+  if mode = 2 then do
+    if run_rc >= 0 | driver.error() = "" then exit 1
+  end
+  else if run_rc \= 0 then exit 1
+end
 say "PASS: Text Inspector GTK callback path"
 exit 0

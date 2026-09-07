@@ -60,9 +60,9 @@ not an unbounded, concurrent event service.
 ## Standard dialogs and RXPP
 
 The confirmation dialog is used for **Clear results?** when the composition
-root supplies `ui.dialog`. Legacy GTK/line-TUI hosts retain immediate Clear
-until they implement that optional service; the driver does not choose this
-application policy.
+root supplies `ui.dialog`. All three reference hosts supply it; a host without
+that optional service may be composed with immediate Clear. The feature, not
+the driver, chooses that application policy.
 
 The first selector opens one existing regular file. It provides directory and
 parent navigation, scrolling, editable filename/path, Open and Cancel. Use
@@ -73,8 +73,8 @@ fills the filename field. Save, multi-select, file deletion and creation are
 outside this increment. Browsing never changes the process working directory.
 
 `UI_NODE` now also accepts the logical `input` kind used by the selector.
-`UI_SESSION_LAUNCHER` generates the new session/host launcher; `UI_LAUNCHER`
-remains the legacy runtime/driver form. Both use RXPP directory macros. A future
+`UI_LAUNCHER` generates the same session/host composition for every driver.
+It uses the RXPP directory macro package. A future
 builder can generate these declarations without generating native event code or
 overwriting handwritten dialog/feature logic.
 

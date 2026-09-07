@@ -1,178 +1,153 @@
 # Experimental cREXX UI library
 
-This is a driver-independent **Level G** UI framework and a worked Text Inspector
-example. The shared feature runs under GTK, a line-oriented TUI, the new ANSI
-full-screen terminal host and deterministic tests. The terminal tracer adds
-standard confirmation and Open-file dialogs; a modern browser surface comes
-afterward. The event contract considers desktop, terminal, web and mobile
-without presenting their native APIs as the cREXX programming model.
-
-Start with [UI contract v0](contracts/README.md) for the complete vocabulary,
-payload rules, ownership and lifecycle. [catalogue.json](contracts/catalogue.json)
-is the machine-readable standard list; the build generates cREXX and TypeScript
-bindings, JSON Schema and a readable catalogue from it.
+A driver-independent **Level G** programming model, demonstrated by one Text
+Inspector feature running under line TUI, ANSI full-screen terminal and GTK.
+This is a reference implementation to extend, not a complete widget toolkit.
+Desktop, terminal, browser and mobile needs inform the vocabulary; browser and
+mobile drivers are not implemented yet.
 
 ## The framework in a minute
 
-A feature owns its model, `update(event)` and `view()`. A command is a named intent
-shared by buttons, menus and shortcuts. The session resolves enabled commands
-to registered events targeted at the owning feature. Events describe facts;
-effects request external work. An update returns zero or more effects, and
-completion returns through the queue as another event.
+A **component** is a cohesive feature: its model, `update(event)` and `view()`
+live together. A **command** is a named intent shared by buttons, menus and
+shortcuts. A **session** owns the components and resolves commands to their
+registered, targeted events. An **event** says something happened or was
+requested; an **effect** asks for external work. Each update returns an
+`uieffects` collection—zero, one or many requests—without doing I/O itself.
 
-The driver owns the real input/rendering loop. The session owns feature values,
-bounded queues and request correlation. Executors perform I/O. Keeping those
-responsibilities separate gives us cohesive feature classes without either
-native callbacks scattered through the application or one all-application
-controller.
-
-The lifecycle is: construct/register -> surface ready -> enqueue input -> pump
-feature updates -> take effects -> complete effects -> render -> repeat. A user
-close request can trigger save/confirmation; accepted close is a host effect.
-After native operations and resources are stopped, explicitly tear down the
-session. No frame-scoped callback reference may survive its owning call.
-
-Framework `ui.*` and `io.*` names and widget `widget.*` names are reserved.
-Applications register extensions such as `document.open.requested`, including
-their payload schemas. Application effects also declare a capability and result
-event; merely returning a new name does not install an executor. Optional
-capability families describe compatible semantics, not universal availability.
-
-## Code-reading map
-
-1. [Text Inspector](../../examples/ui/text-inspector/text_inspector.rxpp):
-   ordinary cREXX feature logic plus RXPP command/view declarations.
-2. [UI contract v0](contracts/README.md) and [ui_contract.crexx](ui_contract.crexx):
-   typed payloads, messages, commands, capabilities, registry and queued session.
-3. [ui_compat.crexx](ui_compat.crexx): temporary scalar-driver translation and
-   local resource grants; native path handling stays outside the feature.
-4. [ui.crexx](ui.crexx): retained logical view and legacy driver/runtime contract.
-5. [Terminal lifecycle and limits](TERMINAL.md), [ui_ansi.crexx](ui_ansi.crexx),
-   [standard dialogs](ui_dialogs.crexx), [cell rendering](ui_terminal_view.crexx)
-   and the Level B [console API](../plugins/console/README.md).
-6. [ui_tui.crexx](ui_tui.crexx) or [ui_gtk.crexx](ui_gtk.crexx), then
-   [GTK mechanism](drivers/gtk/ui_gtk.c).
-7. [RXPA bridge](../../interpreter/rxpacallmethod.c): synchronous native-to-cREXX
-   method dispatch, owned by the complete VM.
-
-The existing line TUI and GTK are intentionally kept as compatibility drivers.
-They remain synchronous. The new session's delayed completions, subscriptions,
-multiple feature owners and cancellation are proven with backend-free executors,
-not misrepresented as new asynchronous GTK support. The bridge's close-handshake
-limitation is documented in the contract.
-
-`drivers/gtk` is owned by this UI library. It duplicates only the required
-GTK 3 mechanism; the older `lib/plugins/gui` remains a separate comparison
-surface. Native mechanism is C; public UI policy, libraries and application code
-use `OPTIONS LEVELG`.
-
-## Logical view and layout
-
-The current logical node vocabulary is `label`, `line`, `button`, and `input`
-(the file dialog's editor; currently rendered by the ANSI host). Nodes
-have stable IDs. Buttons add a semantic action and a TUI shortcut. This is
-small, but it proves that drivers consume a cREXX view rather than application
-code calling native widget procedures.
-
-Layout uses durable relative relationships rather than GTK coordinates:
+A **driver** implements `uidriver.run(session)`: it owns input, presentation,
+physical operations and the loop. All three drivers use the same contract:
 
 ```text
-kind | id | action | shortcut | relation | anchor
+input -> invoke/post -> session queue -> pump -> component.update
+                             ^                        |
+                             |                    effects
+                             |                        v
+                         complete <- driver/executor <- take_effect
 ```
 
-The first node is `root`. Another node can be `below` or `right` of a prior
-stable ID. `uiview_impl` resolves those relationships into a logical row and
-column once; GTK attaches nodes to a grid and the TUI groups nodes by row. The
-line node becomes a `GtkSeparator` or a textual rule. A later layout system can
-add containers, spans, alignment, and constraints while preserving stable IDs,
-semantic actions, and the driver-facing row/column seam. Unknown relations or
-anchors currently fall back below the preceding node; production validation is
-still required.
+The driver renders the component's view after processing work. A view is a
+disposable description with stable node IDs, not live native widgets. A dialog
+is a **deferred effect**: its request remains active until acceptance,
+cancellation or failure returns as a correlated event. “Deferred” does not imply
+a worker thread. Physical file reads in this tracer are synchronous.
 
-## RXPP and a future GUI builder
+Lifecycle: compose/register; start the surface; post `ui.ready`; service input
+and effects; repeat. `ui.close.requested` is vetoable intent. The component
+accepts by returning `ui.close`. The driver stops native operations and closes
+the surface, then completes `ui.closed` and pumps that final event before
+`session.close()` tears down ownership. A failed host cleans up and returns
+nonzero; it must not fabricate a successful close.
 
-The current example uses `##LOADMACRO ui` and the directory package
-[rxpp/ui](rxpp/ui), with lowercase filenames:
+Framework `ui.*`/`io.*` and widget `widget.*` names are reserved. Applications
+register their own names and payload shapes, such as `document.open.requested`.
+The [catalogue](contracts/catalogue.json) defines the standard names;
+[contract v0](contracts/README.md) explains fields, correlation and queue limits.
+An application effect also needs a capability, outcome schema and executor.
+Declaring a name alone does not implement it.
 
-- `UI_NODE` emits logical view construction;
-- `UI_COMMAND` emits checked command registration;
-- `UI_LAUNCHER` emits the small legacy application/runtime/driver composition root;
-- `UI_SESSION_LAUNCHER` emits the new session/owner-loop host composition root.
+## Start here, then follow the code
 
-CMake stages that package under the selected macro-library directory. The older
-`ui_macros.rxpm` INCLUDE package is retained for existing callers, but the v0
-example does not depend on it. RXPP keeps source maps back to authored declarations.
-Use the .rxpp files as source, not the generated .crexx files in the build tree.
+1. [Text Inspector](../../examples/ui/text-inspector/text_inspector.rxpp):
+   one session factory, one feature and declarative commands/view.
+2. [ui_contract.crexx](ui_contract.crexx): `uicomponent`, `uidriver`,
+   `uimessage`, `uieffects`, commands, capabilities and `uisession`.
+3. [ui.crexx](ui.crexx): logical view interface and builder.
+4. Choose a direct host: [line](ui_tui.crexx), [ANSI](ui_ansi.crexx) or
+   [GTK](ui_gtk.crexx). There is no scalar adapter or second application shell.
+5. Shared [local resources](ui_local_resources.crexx); ANSI
+   [dialogs](ui_dialogs.crexx) and [cell projection](ui_terminal_view.crexx);
+   native [console](../plugins/console/README.md) or
+   [GTK mechanism](drivers/gtk/ui_gtk.c).
+6. [Extending the model](EXTENDING.md): add a feature, widget, effect or driver.
 
-RXPP still emits one source output per invocation. The three small launcher .rxpp
-files therefore generate the line-TUI, GTK and ANSI launchers separately. The recent
-`##BUILDDIR` directive is consumed by the command-line `crexx` driver; CMake
-already owns its explicit output directories and does not need that directive.
+The UI library owns its GTK mechanism. All application and framework code is
+Level G; native providers expose lower-level mechanism, not application policy.
 
-This is the builder seam: view IDs/layout, command descriptors, message schemas,
-capabilities and feature ownership. A builder can emit RXPP or equivalent cREXX
-wiring while preserving handwritten feature methods. It should not emit GTK,
-terminal-control or browser-DOM calls into application logic.
+## Three hosts, one example
 
-## Callback and object lifetime
+| Host | Loop and dialogs | Input/presentation limits |
+| --- | --- | --- |
+| Line TUI | Owner loop; retained chooser/confirmation request; next line supplies response | Blocking line input; shortcuts/command IDs; row-oriented rendering |
+| ANSI | Timed console polling; Level G modal dialog state; resize stays live | Keyboard, text, mouse, paste where supported; bounded cell projection |
+| GTK | Native GTK loop; owned signal mailbox serviced on idle; response-driven dialogs | One GTK 3 window; fixed label/line/button topology |
 
-The legacy GTK callback path is synchronous. RXPA `CALLMETHOD` enters a named cREXX
-method from native code while the outer plugin call is active. RXPA values are
-borrowed for that call; a plugin must not retain them after it returns.
+Each host starts with core capabilities and explicitly enables its implemented
+services through `capabilities()`. All three demonstrate Open, Cancel,
+confirmation, read failure and orderly close. Capability families are not a
+claim to implement every catalogue operation: unsupported effects and chooser
+purposes receive explicit failures. The local chooser implements single-file
+Open, not Save or multiple selection.
 
-cREXX class instances have value semantics. `gtkdriver.run` therefore retains
-an explicit weak `reference` to its runtime argument and dereferences it inside
-each native callback. The reference is safe because GTK's event loop is
-synchronous and returns before the `run` frame expires. An asynchronous driver
-must instead own a longer-lived queue or runtime object; it must not retain this
-borrowed RXPA handle or the frame-scoped reference.
+`ui_local_resources` owns bounded, session-scoped path grants and text reading.
+The feature may display a grant's name but cannot use it as authority. The same
+executor handles missing files, oversized data and forged/expired grants in all
+hosts. Limits and terminal-specific qualifications are in [TERMINAL.md](TERMINAL.md).
 
-There is also a current compiler/linker limitation: a class implementing an
-imported interface must spell member argument and return types the same way as
-the interface metadata. The drivers therefore use imported `.uievent`,
-`.uieffect`, `.uiview`, and `.uiruntime` names in signatures. The equivalent
-qualified form such as `.ui..uievent` currently fails interface-conformance
-linking and needs canonicalisation work.
+## Logical view, RXPP and builders
 
-## ANSI full-screen terminal host
+Nodes have stable IDs; buttons contain **command IDs**, not native signals or
+event handlers. The current vocabulary is `label`, `line`, `button`, and
+`input` (the ANSI dialog editor). Relative `root`/`below`/`right` placement
+resolves to logical rows/columns. GTK uses a grid, line TUI groups rows, and ANSI
+projects cells. Unknown anchors/relations currently fall back below the previous
+node: stricter validation, containers, spans and responsive layout are future work.
 
-The [terminal tracer](TERMINAL.md) now implements the approved next slice:
-Level B C primitives for console ownership, timed input, resize, mouse and
-restoration, with Level G presentation, dialogs, grants and the owner loop.
-There is no ncurses dependency. The C layer emits input data, not callbacks
-into feature classes. The same session loop continues while a dialog is active;
-acceptance/cancellation completes its originating effect through the queue.
+One directory macro package, loaded by `##LOADMACRO ui`, provides:
 
-The first file selector supports one existing file, directory navigation and
-filename editing. Clear uses the standard OK/Cancel dialog when the composition
-root advertises `ui.dialog`. GTK and the line TUI retain their existing behavior.
-Real foreground-PTY tests cover input, resize, mouse, dialogs, disconnect and
-restoration. This is not yet a complete curses replacement: Unicode cell-width
-policy, asynchronous physical I/O and native Windows qualification remain
-explicit limits in the terminal document.
+- `UI_COMMAND`: checked command registration.
+- `UI_NODE`: logical view construction.
+- `UI_LAUNCHER`: session factory + driver capabilities + `driver.run(session)`.
 
-## What is implemented, and what is next?
+All three launchers use that same macro. RXPP produces one output per invocation,
+so CMake generates the three tiny authored launcher files separately. Edit
+`.rxpp`, not build-tree `.crexx`; source maps lead back to authored declarations.
+The launcher uses a local lifetime identity; network/reconnecting hosts must
+allocate unique session identities rather than reuse this single-run value.
 
-Implemented: the versioned standard catalogue and schemas; Level G typed payload
-builders and validation; application message registration; command descriptors
-and enablement; capability checks; targeted component ownership; bounded,
-owner-driven event/effect queues; correlation, progress, subscriptions, logical
-cancellation, stale-result rejection and explicit teardown. Text Inspector uses
-these contracts directly in the ANSI host and through the legacy compatibility shell.
+A builder can generate view/layout, command descriptors, schemas and composition.
+Handwritten feature logic stays separate and survives regeneration. It must not
+generate terminal escapes, GTK handles or browser DOM calls into a feature.
 
-Still deliberately narrow: one GTK window, a flat logical view
-(`label`, `line`, `button`, terminal `input`), relative placement, scalar legacy callbacks and
-synchronous physical effects. Names for richer widget/input/service families do
-not implement those widgets. Rich view properties and containers, a browser transport/frontend,
-remote-session security, responsive layout and accessibility implementation are
-next stages.
+## GTK callback lifetime
 
-Build the focused artifacts before running their tests:
+GTK signals copy native facts into a bounded mailbox (128 records). One idle
+source crosses RXPA into the host; only then does the host admit messages and
+pump updates. Native response/destroy signals caused by executing an effect
+enqueue facts instead of re-entering the active cREXX call. Dialogs use response
+signals, not a nested blocking dialog loop. Window-manager close returns to the
+application for a decision; destruction is reported afterward.
+
+RXPA `CALLMETHODX` is synchronous. Its borrowed values remain inside native
+`run()`. Because cREXX objects have value semantics, the small callback receiver
+holds an explicit weak `reference` to the live driver, dereferenced only while
+that outer call is active. It owns no application policy and never escapes the
+run frame. Foreign threads must marshal owning data to an owner; neither this
+session nor those borrowed handles are a thread-safe mailbox.
+
+Implement imported interfaces using the signature spellings shown in their
+metadata (for example `.uisession`, `.uimessage`, `.uieffects`, `.uiview`).
+Qualified type-name canonicalisation remains a separate compiler limitation.
+
+## Tests and next steps
+
+[Example commands](../../examples/ui/text-inspector/README.md) show how to run
+each host. Prepare focused artifacts before testing:
 
 ```sh
 cmake --build cmake-build-debug --target rxconsole_test_artifacts ui_functional_tests example_text_inspector_artifacts --parallel 10
 ctest --test-dir cmake-build-debug -R '^rxconsole_|^ui_|^text_inspector_' --output-on-failure
 ```
 
-Use `qa-comprehensive` for prepared broad correctness QA. This contract step does
-not claim sanitizer qualification; that remains the agreed later tracer gate.
+The line and GTK tests wrap the same real feature with a shared event journal,
+including an intentionally vetoed close. GTK tests drive real buttons, chooser
+responses, confirmation and destruction through a test-only injector that is
+not installed. ANSI tests use a real foreground PTY for input, resize, mouse,
+dialogs and restoration. Backend-free session tests cover multiple components,
+progress, subscriptions, cancellation, stale results and bounded admission.
+
+Use `qa-comprehensive` for prepared broad correctness QA. This slice makes no
+sanitizer or cross-platform release claim; sanitizer testing remains the agreed
+later tracer gate. Rich widgets, dynamic GTK topology, general Unicode cell
+width, asynchronous file I/O, accessibility and browser/mobile implementations
+remain subsequent work.

@@ -1,8 +1,18 @@
 /* Portable Level G line-oriented driver for the experimental cREXX UI library. */
 options levelg
-namespace ui_tui expose tuidriver
+namespace ui_tui expose tuidriver capabilities
 import rxfnsb
 import ui
+import ui_contract
+import ui_local_resources
+
+/** @return services implemented by the line host, not raw terminal input */
+capabilities: procedure = .uicapabilities
+  caps = .uicapabilities()
+  call caps.enable("ui.resource.choose")
+  call caps.enable("io.text.read")
+  call caps.enable("ui.dialog")
+  return caps
 
 /** Portable TUI driver with interactive and deterministic scripted modes. */
 tuidriver: class implements .uidriver
@@ -12,6 +22,12 @@ tuidriver: class implements .uidriver
   _input_cursor = .int
   _transcript = .string
   _exhausted = .int
+  _session = .uisession
+  _resources = .uilocal_resources
+  _request = .uimessage
+  _modal = .int
+  _running = .int
+  _error = .string
 
   /** Construct an interactive terminal driver. */
   *: factory
@@ -38,33 +54,57 @@ tuidriver: class implements .uidriver
     return
 
   /** Run the terminal event loop.
-   * @param runtime application runtime
-   * @return zero on normal quit, three when scripted input is exhausted
+   * Input is line-blocking; effects and completions are serviced between lines.
+   * A modal request persists across turns, never calls a feature recursively.
+   * @param session configured application session owned for this run
+   * @return zero on accepted close, two on host fault, three on input exhaustion
    */
   run: method = .int
-    arg runtime = .uiruntime
-
-    effect = runtime.dispatch("app.ready", "")
-    do forever
-      do forever
-        kind = effect.kind()
-        if kind = "none" then leave
-        if kind = "quit" then return 0
-        if kind = "choose_file" then do
-          path = next_input("File path")
-          if _exhausted then return 3
-          if strip(path) = "" then effect = runtime.dispatch("file.selection.cancelled", "")
-          else effect = runtime.dispatch("file.selected", path)
-          iterate
-        end
-        call emit_line("Unsupported effect: " || kind)
-        return 2
-      end
-
-      view = runtime.view()
+    arg session = .uisession
+    _session = session
+    _resources = .uilocal_resources(session.id())
+    _running = 1
+    _modal = 0
+    _error = ""
+    answer = .string
+    rc = _session.post(.uimessage("ui.ready", .uipayload()))
+    if rc < 0 then _error = "Cannot admit ui.ready"
+    do while _running & _error = ""
+      call service()
+      if \_running | _error \= "" then leave
+      /* A finite service budget yields to the owner, not to blocking input
+       * while admitted work remains. No pending completion is stranded. */
+      if _session.queued() > 0 | _session.pending() > 0 then iterate
+      view = _session.view()
       call render(view)
+      if _error \= "" then leave
+      if _modal then do
+        body = _request.body()
+        call emit_line(body.text("title"))
+        if _request.name() = "ui.resource.choose" then do
+          answer = next_input("File path (empty cancels)")
+          if _exhausted then leave
+          call selected(answer)
+        end
+        else do
+          call emit_line(body.text("message"))
+          answer = lower(strip(next_input("OK / Cancel")))
+          if _exhausted then leave
+          if answer = "ok" | answer = "cancel" | answer = "" then do
+            output = .uipayload()
+            if answer = "ok" then do
+              call output.put_text("response", "ok")
+              call finish(_request, "ui.dialog.accepted", output)
+            end
+            else call cancelled("dialog_cancelled")
+            _modal = 0
+          end
+          else call emit_line("Enter OK or Cancel")
+        end
+        iterate
+      end
       command = next_input("Command")
-      if _exhausted then return 3
+      if _exhausted then leave
       command = lower(strip(command))
 
       action = ""
@@ -82,8 +122,92 @@ tuidriver: class implements .uidriver
         iterate
       end
 
-      effect = runtime.dispatch(action, "")
+      rc = _session.invoke(action)
+      if rc < 0 then call emit_line("Command unavailable: " || action)
     end
+    /* No native surface remains. Teardown also invalidates resource grants. */
+    call _session.close()
+    if _exhausted then return 3
+    if _error \= "" then do
+      call emit_line(_error)
+      return 2
+    end
+    return 0
+
+  /** Owner-only service turn. File I/O is synchronous and bounded in this slice. */
+  service: method = .void
+    do budget = 1 to 64
+      rc = _session.pump()
+      if rc < 0 then do
+        _error = _session.fault()
+        return
+      end
+      if _session.pending() = 0 then return
+      effect = _session.take_effect()
+      name = effect.name()
+      body = effect.body()
+      if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
+        if _modal then call fail_effect(effect, "dialog_busy", "Another dialog is active")
+        else if name = "ui.resource.choose" & body.text("purpose") \= "open" then
+          call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+        else do
+          _request = effect
+          _modal = 1
+        end
+      end
+      else if name = "io.text.read" then do
+        rc = _session.complete(_resources.read(effect))
+        if rc < 0 then _error = "Read completion rejected"
+      end
+      else if name = "ui.close" then do
+        if _modal then call cancelled("host_closed")
+        _modal = 0
+        _running = 0
+        call finish(effect, "ui.closed", .uipayload())
+        rc = _session.pump()
+        if rc < 0 then _error = _session.fault()
+        return
+      end
+      else call fail_effect(effect, "unsupported_effect", "No line executor for " || name)
+      if _error \= "" then return
+    end
+    return
+
+  selected: method = .void
+    arg path = .string
+    if strip(path) = "" then call cancelled("dialog_cancelled")
+    else do
+      grant = _resources.grant(path)
+      if grant.id() = "" then call fail_effect(_request, "resource_limit", "Local resource grant limit reached")
+      else do
+        body = .uipayload()
+        call body.put_resource("resource", grant)
+        call finish(_request, "ui.resource.selected", body)
+      end
+    end
+    _modal = 0
+    return
+
+  cancelled: method = .void
+    arg reason = .string
+    body = .uipayload()
+    call body.put_text("reason", reason)
+    call finish(_request, "ui.effect.cancelled", body)
+    return
+
+  finish: method = .void
+    arg request = .uimessage, name = .string, body = .uipayload
+    rc = _session.complete(.uimessage(name, body, request.target(), "event", request.request_id(), request.session_id()))
+    if rc < 0 then _error = "Effect completion rejected: " || name
+    return
+
+  fail_effect: method = .void
+    arg request = .uimessage, code = .string, message = .string
+    body = .uipayload()
+    call body.put_text("code", code)
+    call body.put_text("message", message)
+    call finish(request, "ui.effect.failed", body)
+    return
 
   /** @return complete scripted rendering and prompt transcript */
   transcript: method = .string
@@ -91,6 +215,7 @@ tuidriver: class implements .uidriver
 
   render: method = .void
     arg view = .uiview
+    kind = .string
     call emit_line("")
     call emit_line("=== " || view.title() || " ===")
 
@@ -101,6 +226,11 @@ tuidriver: class implements .uidriver
     maximum_row = 0
     maximum_column = 0
     do position_index = 1 to view.count()
+      kind = view.node_kind(position_index)
+      if kind \= "label" & kind \= "line" & kind \= "button" then do
+        _error = "Unsupported line view node: " || kind
+        return
+      end
       if view.node_row(position_index) > maximum_row then
         maximum_row = view.node_row(position_index)
       if view.node_column(position_index) > maximum_column then

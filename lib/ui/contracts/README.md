@@ -76,7 +76,8 @@ families. A name's presence does not require every host to implement it.
 | Lifecycle and preferences | visibility, suspension/resumption, theme/locale/reduced-motion/high-contrast preferences |
 | Remote/mobile seams | session connection/disconnection/resumption, capability changes, permission requests, sharing and stream subscription/items |
 
-`core` and `tracer.compat` are usable profiles. `terminal.planned` and
+`core` is the required starting profile. Each driver's `capabilities()` adds
+only its implemented services. `terminal.planned` and
 `web.planned` are coverage checklists, **not capability claims**. Only advertise
 services actually supplied by your host. Capability changes are vocabulary for
 future adapters; the v0 session's advertised set is fixed at construction.
@@ -92,8 +93,8 @@ an effect does not create its executor.
 Command IDs are a separate registry, with label, target, intent event, shortcut
 hint and enabled state. In v0 a command invokes an **empty-payload input event**;
 parameterized operations use an explicitly constructed event. Command IDs need
-not be the same as event names. The tracer retains two old action spellings to
-avoid breaking existing scripted input. An incoming `ui.command.invoked` is
+not be the same as event names: `document.open` invokes
+`document.open.requested`. An incoming `ui.command.invoked` is
 resolved by the session, not broadcast to all features. Disabled commands are
 rejected centrally regardless of which control invoked them.
 
@@ -187,35 +188,35 @@ tear down. This is a programming error, not user input backpressure.
 ## How to trace the worked example
 
 Read [Text Inspector](../../../examples/ui/text-inspector/text_inspector.rxpp),
-then [ui_contract.crexx](../ui_contract.crexx), then
-[ui_compat.crexx](../ui_compat.crexx), and finally the chosen legacy driver.
+then [ui_contract.crexx](../ui_contract.crexx), the selected direct driver
+([line](../ui_tui.crexx), [ANSI](../ui_ansi.crexx), [GTK](../ui_gtk.crexx)) and
+[local resource execution](../ui_local_resources.crexx).
 
-The feature implements `uicomponent`. Its tiny `uiapp` shell registers its
-`document.*` events and commands. `UI_COMMAND` and `UI_NODE` come from
-`##LOADMACRO ui`; RXPP generates wiring and views, not hidden application policy.
-The shell's bridge supplies the existing `uiruntime`/`uidriver` entry point.
+The feature implements `uicomponent`; the composition function registers its
+`document.*` events and commands and returns a `uisession`. Every driver
+implements `uidriver.run(session)`. `UI_COMMAND`, `UI_NODE` and the single
+`UI_LAUNCHER` come from `##LOADMACRO ui`. They generate wiring, not hidden
+application policy.
 
-| Legacy adapter protocol | Standard feature contract |
-| --- | --- |
-| `app.ready` | `ui.ready` |
-| `app.quit.requested` | `ui.close.requested` |
-| `choose_file` / `file.selected` | `ui.resource.choose` / `ui.resource.selected` |
-| `file.selection.cancelled` | `ui.effect.cancelled` |
-| `read_text` / `file.loaded` | `io.text.read` / `io.text.read.completed` |
-| `file.load.failed` | `ui.effect.failed` |
-| `quit` | `ui.close` request |
+Open follows `document.open` -> `document.open.requested` ->
+`ui.resource.choose` -> `ui.resource.selected` -> `io.text.read` ->
+`io.text.read.completed`. Each effect outcome carries the original request,
+target and session. Cancellation/failure follow the same queue and do not fake
+successful data. Clear demonstrates `ui.dialog.confirm`; accepted shutdown
+completes `ui.closed` only after the surface is gone.
 
-The bridge owns the actual path and one current local resource grant. It is
-synchronous, supports one root feature, and only advertises the tracer profile.
-Reads exceeding the message/record limits produce `ui.effect.failed` with code
-`resource_too_large`, not a partial word count. Its legacy `readlines` executor
-still reads the file before this check; streaming/bounded-memory I/O is later work.
-It does **not** turn the legacy callbacks into asynchronous callbacks. Legacy
-drivers lack a post-destruction callback, so the bridge does not fabricate
-`ui.closed` before their window closes: it abandons that final request on
-teardown and returns `quit`. A new v0 driver must implement the complete close
-handshake. Multi-component routing and deferred effects are exercised separately
-by the session conformance tests.
+All hosts share bounded local grants and the text-read executor. Record/message
+limits become recoverable `ui.effect.failed` outcomes, not partial counts.
+A long line may allocate before validation; streaming is subsequent work.
+File I/O remains synchronous, while dialogs remain deferred requests in the
+owning loop. GTK queues native facts and handles dialog response signals without
+a recursive dialog loop. Line input blocks between service turns; ANSI continues
+to service resize while modal.
+
+The [extension guide](../EXTENDING.md) lists responsibilities and conformance
+checks for Peter's desktop work and future hosts. Multi-component routing and
+subscription/deferred-effect semantics are tested in the session independently
+of the deliberately small one-root-feature presentation.
 
 ## Testing and the next driver
 

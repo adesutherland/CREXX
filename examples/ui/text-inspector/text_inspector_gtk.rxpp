@@ -1,4 +1,4 @@
 /* Declarative launcher: RXPP's UI_LAUNCHER emits the executable cREXX source. */
 options levelg
 ##LOADMACRO ui
-##UI_LAUNCHER "ui_gtk","gtkdriver","text_inspector","text_inspector_app"
+##UI_LAUNCHER "ui_gtk","gtkdriver","text_inspector","make_text_inspector_session"

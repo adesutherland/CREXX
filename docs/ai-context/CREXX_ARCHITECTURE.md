@@ -50,6 +50,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
    - Outputs intermediate string fragments representing the `rxas` Assembly instructions.
+   - Short-circuit `AND`/`OR` result-register donation checks each operand's
+     cleanup lifetime independently. A linked left attribute must remain live
+     through cleanup without preventing a computed right operand from receiving
+     the shared result register. `short_circuit_linked_left` covers both truth
+     paths, skipped side effects, and subsequent attribute reads in opt/noopt.
    - The optimiser performs opportunity-based AST inlining before emission. A
      callable may be structurally available for inlining, but each call site is
      still validated against the supported rewrite shapes. The release slice
