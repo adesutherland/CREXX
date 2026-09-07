@@ -52,6 +52,19 @@ protocol; build their `CREXX_PREP_TARGETS` before a focused CTest invocation.
 Always redirect verbose builds and `rxc -d*` stdout/stderr to a temporary log
 and inspect bounded slices. Preserve the complete log for attribution.
 
+### QA preparation dependencies
+
+Reproduce a QA-tier failure in a fresh build directory with the failing
+`qa-*` target. A full `all` build can hide missing tier prerequisites by
+building helpers that `qa-prep-*` never requests. Hand-written CMake-script
+tests must declare their tool and fixture producers in `CREXX_PREP_TARGETS`;
+passing `$<TARGET_FILE:...>` to `add_test()` only supplies a path. Keep these
+dependencies with the owning tests so changes to their scheduling labels also
+move their preparation requirements. In particular, the four RXBIN feature
+contract tests need `mutate_rxbin_feature` before comprehensive QA runs.
+Include `execute_process()`'s `RESULT_VARIABLE` in failure messages so launch
+errors remain visible even when the child produces no stdout or stderr.
+
 ### CTest Result Contracts
 
 Do not use `PASS_REGULAR_EXPRESSION` to represent an expected process failure.
