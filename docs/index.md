@@ -79,10 +79,11 @@ designs.
 
 ## Project Direction
 
-- [Release 1 plan](release-1-plan.md): fixed-date path to Release 1, scope
-  tiers, gates, provisional owners, and issue candidates
-- [Roadmap](ROADMAP.md): future direction, research themes, and non-commitment
-  planning notes
+- [Release 1 plan](release-1-plan.md): live beta 3-to-beta 6 cadence, RC1 and
+  2027-05-01 Release 1 cut target, plus original scope, gates, dependencies,
+  provisional owners, and issue candidates
+- [Roadmap](ROADMAP.md): consolidated current priority order, below-cut queue,
+  research themes, and explicit non-commitments
 - The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained
   for project vision, direction, and history. It is intentionally not the
   technical source of truth for the current release.

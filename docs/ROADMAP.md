@@ -1,202 +1,272 @@
 # CREXX Roadmap
 
-Status: project direction. This document is not a release contract.
+Status: consolidated project direction, refreshed 2026-09-04. This document is
+not a release contract.
 
-The current release documentation describes what CREXX implements today. This
-roadmap is the repository home for future direction, research themes, and
-discussion clean-up decisions that should not be mistaken for current language
-or toolchain behaviour.
+This is the single portfolio-ordering view for CREXX. It ranks product outcomes
+rather than every issue, experiment, or completed programme stage. Detailed
+worklists retain evidence and implementation state; they do not create competing
+roadmaps.
 
-Use this rule of thumb:
+Use this authority split:
 
-* GitHub issues track concrete work that the project is willing to carry.
-* Roadmap entries track direction, research, and possible future work.
-* Release notes describe what has actually landed.
+- code and tests describe what is implemented;
+- release notes and tags describe what has been released;
+- GitHub issues track concrete accepted work;
+- this roadmap orders proposed outcomes and future decisions;
+- [`../performance/ROADMAP.md`](../performance/ROADMAP.md) tracks only live
+  performance closeout and evidence-gated performance candidates.
 
-## Release 1 Plan
+## Current Baseline
 
-The fixed-date path to Release 1 is tracked in
-[`release-1-plan.md`](release-1-plan.md). That plan carries the current
-Release 1 gates, scope tiers, provisional owners, and issue candidates. This
-roadmap remains the home for broader future direction and research themes.
+- `v1.0.0-beta.2` remains the latest versioned beta tag. Beta 3 material on
+  `develop` is work in progress until a `v1.0.0-beta.3` tag and release assets
+  exist. The release train has been rebaselined after the extended performance
+  programme: beta 3 targets 2026-09-30 and Release 1 targets 2027-05-01, ready
+  for the planned May 2027 London Rexx Symposium. The symposium's exact public
+  dates remain TBC.
+- Level B is the principal implemented language surface. The initial Level G
+  concurrency and provider layers are implemented development content, not a
+  claim that the full Level G language contract is stable.
+- Level C has progressed beyond a parser-only proof. Six fail-closed execution
+  lowering slices now cover scalar values, expressions, selected BIFs, internal
+  procedures/arguments/calls, and stems through the Classic value and variable
+  pool foundation. Unsupported shapes still reject rather than silently changing
+  semantics.
+- RexxScript is already a distinct standalone and embedded interpreted product.
+  It is sandboxed and string-first, shares Classic BIF foundations where
+  appropriate, and remains separate from the compiled Level C path.
+- PERF3 and `POSTPERF-01` through `POSTPERF-05` are complete. The retained
+  scorecard is strong overall; remaining performance work is release closeout or
+  separately selected product evidence, not an automatically continuing
+  optimization programme.
+- Level B Unicode issue
+  [#583](https://github.com/adesutherland/CREXX/issues/583) is closed. Keep the
+  resulting code, tests, and documentation as release evidence rather than an
+  active roadmap item.
 
-## Beta 3 Milestone
+## Release Train To Release 1
 
-Beta 3 is the next Release 1 foundation milestone after the tagged beta 2
-baseline. It is work in progress on `develop` until `v1.0.0-beta.3` exists.
-The beta 3 planning note is
-[`releases/v1.0.0-beta.3.md`](releases/v1.0.0-beta.3.md).
-Candidate issues and working team guidance are tracked in
-[`planning/beta-3/issue-candidates.md`](planning/beta-3/issue-candidates.md)
-until GitHub issues are created.
+The longer runway deliberately allows feature-bearing betas rather than
+treating beta 3 as the last place new Release 1 capability can land. Dates are
+fixed planning targets; scope moves between betas when a vertical slice misses
+its quality gate.
 
-| Date | Milestone | Direction |
-|------|-----------|-----------|
-| 2026-06-17 | Beta 3 opens | Move live branch docs and version strings to beta 3 WIP while preserving beta 2 release notes as the latest completed beta baseline. |
-| 2026-07-03 | Design lock | Approve Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue ownership. |
-| 2026-07-31 | Beta 3 foundation target | Land or defer high-risk VM/compiler foundations, decide beta 3 package shape, and make the release note match actual tag assets before publication. |
-| 2026-08-14 | Feature complete after beta 3 | Freeze user-facing Release 1 surface except for release defects, documentation, QA, examples, packaging, and measured performance work. |
+| Milestone | Target | Intended product outcome |
+| --- | --- | --- |
+| Beta 3 | 2026-09-30 | Publish the accumulated foundation and performance work; close release defects, package/demo/policy reconciliation, KeyAccess decisions, and the named hosted gates. Do not add a new broad architecture programme to this cut. |
+| Beta 4 | 2026-11-30 | First user-meaningful compiled Level C vertical slice; stabilized RexxScript product contract, diagnostics, and standalone/embedded examples. |
+| Beta 5 | 2027-01-31 | Extend the selected Level C/RexxScript surfaces from beta feedback; decide the Level G ownership/nested-container contract and, if approved, land its smallest useful implementation slice. |
+| Beta 6 | 2027-03-31 | Complete the selected Release 1 feature set, including the synchronous cREXX Pipes reference executor if its contract is ready; publish migration/compatibility boundaries and freeze user-facing features. |
+| Release 1 RC1 | 2027-04-15 | Exact-candidate correctness, sanitizer, performance, package, install, documentation, and example qualification only. Feature work is closed. |
+| Release 1 | 2027-05-01 | Tag and publish the stable Release 1 assets for launch and presentation at the planned May London symposium. Update the event reference when RexxLA publishes the exact 2027 dates. |
 
-## Packaging Roadmap
+Release 1 therefore includes more than the old beta 3 foundation plan: a
+useful Level C subset, a supported small RexxScript product, the selected Level
+G ownership/container increment if its design gate passes, and a demonstrable
+Pipes contribution surface. A feature that misses its beta gate does not move
+the Release 1 date automatically; it needs an explicit scope decision.
 
-Beta 2 shipped the package formats that were already in the release close-out
-path: portable ZIPs, signed Windows ZIPs through the maintainer signing flow,
-macOS `.pkg` installers when Apple signing and notarization are configured, and
-prototype Linux `.deb` packaging through the moving dev snapshot.
+## Proposed Priority Order
 
-For beta 3, improve the end-user install experience while keeping portable ZIP
-assets available for CI, testing, and users who do not want a system install:
+This is the working top five for maintainer review. A language syntax,
+ownership, ABI, ISA, or architecture decision still requires Adrian's explicit
+selection before implementation.
 
-| Platform | Direction |
-|----------|-----------|
-| macOS | Treat the signed, notarized, stapled `.pkg` as the preferred user install. Keep ZIPs as portable developer/CI archives. |
-| Linux | Keep the `.deb` as adequate for Debian/Ubuntu-style users, but harden it before promoting it from prototype: install/uninstall smoke tests, dependency review, and later `.rpm` packaging. |
-| Windows | Add a signed NSIS `setup.exe` for beta 3 if the signing and upload flow is reliable. It should be built from the signed Windows payload, install CREXX into a normal Windows location, add the tools to PATH, register an uninstaller, and keep the signed ZIP available for portable use. |
+### 1. Cut beta 3 and operate the feature-bearing Release 1 train
 
-Longer-term Windows packaging may include WiX/MSI and `winget` publication, but
-the simple click-through NSIS installer is the next practical user-experience
-step.
+**Why now:** beta 3 slipped to the end of September because the performance
+programme ran longer than the original calendar. The extra work should now be
+published behind a trustworthy boundary, while the longer Release 1 horizon is
+used deliberately for richer betas rather than an indefinitely moving
+development snapshot.
 
-## Release 1 / Level B Quality Issues
+**Scope:** freeze the beta 3 candidate for 2026-09-30; close or explicitly defer
+the remaining package, demo, policy, and release-defect work; reconcile release
+notes and known limits; and run the named hosted build, sanitizer, package,
+concurrency, and performance gates on the appropriate exact SHA. Then maintain
+the beta 4, beta 5, beta 6, RC1, and Release 1 cadence above with explicit
+feature and fallback decisions. Current beta 3 inputs include plugin policy/inventory
+[#617](https://github.com/adesutherland/CREXX/issues/617) and
+[#622](https://github.com/adesutherland/CREXX/issues/622), package validation
+[#624](https://github.com/adesutherland/CREXX/issues/624), demos/tutorials
+[#625](https://github.com/adesutherland/CREXX/issues/625), and release defects
+such as [#680](https://github.com/adesutherland/CREXX/issues/680).
 
-These items are specific enough to track as GitHub issues because they affect
-the Release 1 or Level B quality bar.
+**Exit:** beta 3 has a tag and matching assets, documentation, known
+limitations, package evidence, and exact-SHA hosted results by 2026-09-30. Each
+following beta publishes at least one user-visible vertical increment, and
+Release 1 is cut on 2027-05-01 unless Adrian explicitly changes the date.
 
-| Area | Issue | Source discussions | Notes |
-|------|-------|--------------------|-------|
-| Unicode and text semantics | [#583](https://github.com/adesutherland/CREXX/issues/583) | #155, #162, #194, #231, #470 | Define and verify Level B behaviour for case conversion, `TRANSLATE`, comparison, and byte/codepoint conversion decisions. |
+### 2. Deliver a useful compiled Level C vertical slice
 
-Closed Release 1 quality issues remain useful as evidence rather than active
-roadmap work:
+**Why now:** compiled Classic REXX is a central CREXX differentiator, and the
+risk has fallen materially because the canonical-AST lowerer, `RexxValue`,
+`RexxVariablePool`, stems, procedures, and a broad shared BIF foundation now
+exist.
 
-| Area | Issue | Outcome |
-|------|-------|---------|
-| Tool output paths | [#584](https://github.com/adesutherland/CREXX/issues/584) | Closed with normalized `-o` behavior and regression coverage. |
-| RXAS float literal precision | [#585](https://github.com/adesutherland/CREXX/issues/585) | Closed with stored binary64 precision coverage separated from display formatting. |
-| RXAS instruction coverage | [#586](https://github.com/adesutherland/CREXX/issues/586) | Closed after the instruction inventory and regression surface were extended. |
+**Scope:** turn the existing six execution slices into one user-meaningful
+Classic program contract. Select the next bounded control-flow slice, with
+`IF` and a simple `DO` form as candidates; add source provenance and diagnostics
+that point to the user's Classic source; verify observable behavior against a
+named reference interpreter; and keep every unsupported shape fail-closed.
+Source provenance and shared BIF work are prerequisites inside this workstream,
+not competing roadmap items.
 
-## Platform Roadmap
+**Exit:** a documented, tested Classic program compiles through `rxc`, `rxas`,
+`rxlink`, and both applicable VMs in optimized and no-opt modes, with reference
+equivalence and explicit unsupported boundaries.
 
-Mainframe support is a long-term platform direction, not a Release 1 desktop
-release gate.
+### 3. Stabilize RexxScript as a small product
 
-| Theme | Source discussions | Direction |
-|-------|--------------------|-----------|
-| Legacy 32-bit platform validation | Release 1 `.int` contract | Keep `.int` signed 64-bit even when revisiting a 32-bit host ABI. Audit pointer-sized handles, RXBIN compatibility, compiler/toolchain availability, memory limits, and performance as separate platform work; do not restore a host-sized `.int` typedef. |
-| z/VM CMS support | #278 | Keep the CMS interest and contact history as roadmap context. Current CMS work is best expressed as deterministic demos and ADDRESS environment compatibility rather than a full platform promise. |
-| VM/370 build recovery | #294, #322 | Investigate cross-compilation and source-structure constraints after the Level B desktop release line is stable. |
-| MVS/370 porting | #379 | Treat as a future platform project. Likely needs a dedicated maintainer, toolchain notes, and a clear cross-build strategy. |
+**Why now:** RexxScript already has a real standalone/embedded runtime and a
+documented sandbox, but its integration strategy issue
+[#612](https://github.com/adesutherland/CREXX/issues/612) remains open and the
+implemented surface has outrun the old beta-planning description.
 
-## Language And Compatibility Roadmap
+**Scope:** reconcile and close the positioning decision; freeze the supported
+subset and sandbox boundary; provide stable status/error categories and
+source-mapped diagnostics; curate one standalone and one embedded example; and
+make host integration explicit through the existing facade. General `CALL`,
+stems, `ADDRESS`, `INTERPRET`, and object-model breadth remain later decisions
+unless required by the selected product contract.
 
-These items are useful direction but should not become Release 1 commitments
-until they are narrowed.
+**Exit:** the user and developer guides, tests, examples, issue state, and
+runtime behavior describe the same small product. It remains explicitly
+separate from Level C while sharing `rxfnsc` behavior where clean.
 
-| Theme | Source discussions | Direction |
-|-------|--------------------|-----------|
-| Classic compatibility BIFs | #129 | `BITAND`, `BITOR`, and `BITXOR` belong with broader Classic/Level C compatibility planning, not as isolated Level B promises. |
-| RexxScript positioning | Beta 3 planning | Treat RexxScript as a modern interpreted-only Rexx-family surface that primarily uses strings. It is not the Level C compiler path, though it may later migrate toward a light Classic Rexx subset and should share BIF implementations where that is clean. |
-| Level C canonical AST lowering | Beta 3 planning, `compiler/docs/levelc_working_architecture.md` | Level C is compiled Classic Rexx. The intended implementation path is to transform the Level C parse/AST shape into the canonical compiler AST shape, then use the normal validation, optimization, and emission pipeline where possible. |
-| Source provenance through generated code | Beta 3 planning | Preprocessor output, RexxScript integration, parser-mode diagnostics, Level C lowering, TRACE, and debug metadata need a shared source-line/provenance strategy so errors map to the user source rather than generated text. |
-| Classic Rexx value model | Beta 3 planning | Create a dedicated Classic Rexx value class with canonical string storage and cached derived forms such as integer or numeric values. This supports Level C and shared BIFs without leaking Level B typed semantics. |
-| Classic Rexx variable pool | Beta 3 planning, #424 | Create a variable-pool abstraction for Classic Rexx lookup, assignment, stems, host-variable access, SAA, and ADDRESS integration. BIFs and Level C work should use this instead of ad hoc maps. |
-| Shared Rexx BIF surface | Beta 3 planning, #129 | Curate BIFs that can serve RexxScript string-first use and later Level C Classic value/pool use. Prefer shared implementation strategy over per-BIF conversion islands. |
-| Rexx-style loose comparison | #233 and closed issue #150 | Keep under future compatibility review. Current Level B comparison policy should remain explicit in the language reference. |
-| Argument count and optional parameters | #219 | Current `arg()`, `arg[]`, `...`, and `?name` behaviour is documented. Reopen only if a concrete unsupported case appears. |
-| StringIterable loop sugar and callbacks | #591 | Level B should keep the minimal collection contract as `StringIterable.iterator()` returning a `StringIterator` with `hasNext()` / `next()`. Object-valued collections use the same explicit tagging style through `ObjectIterator` / `ObjectIterable`; string-key object maps use `StringObject...` names. A no-argument `forEach()` method is not useful without callable/reference support, so richer Java-style callback iteration belongs with future Level G facilities. Possible Level B syntax sugar such as `loop item over collection` should lower to the current iterator loop and validate against the relevant iterator interface contract. Bare collection names remain reserved for future Level G generic or generic-like surfaces. Object-key collections stay deferred until object equality/hash/ordering semantics are defined. |
-| Compile-time build metadata | #454 | A `_build_date()`-style virtual function is a possible convenience, but it needs a naming and semantics decision before issue tracking. |
-| Unused imports | #467 and closed issue #441 | Already tracked previously. Reopen only if the compiler policy is still wanted and not implemented. |
+### 4. Decide the Level G ownership and nested-container model
 
-## Runtime, Backend, And Performance Roadmap
+**Why now:** Storage, List, and graph-workload evidence repeatedly points to a
+product capability mismatch rather than a local VM micro-optimization. Current
+Level B forms require extra owner/wrapper objects because nested reference
+containers are not ordinary owned object values.
 
-| Theme | Source discussions | Direction |
-|-------|--------------------|-----------|
-| JIT / MIR / LLVM-style backend research | #331 | Research only. Keep separate from the interpreter and bytecode release contract. |
-| File-I/O instruction migration | Transferred former RCC-6; [`runtime-capability-composition-roadmap.md`](planning/release-1/runtime-capability-composition-roadmap.md#transferred-rxas-instruction-to-call-review); Release 1 backlog candidate 42 | Post-Release-1 candidate. Design a typed low-level `rx_io` call surface, replace raw `FILE *` integer exposure with context-owned handles, inventory producers/consumers, and measure call, code-size and startup effects before deciding dual lowering or opcode tombstones. Preserve byte/text/UTF behavior, signals, standard streams, close-on-exec, both VMs, packaging and late load. This row is planning authority, not implementation approval. |
-| Measured RXAS instruction-family review | Transferred former RCC-7; #288, #338, #357; Release 1 backlog candidate 43 | Post-Release-1 candidate. Review the existing FNV-1a `rxhash` opcode, partitioned clock/environment/version/random utilities, then sockets and reflection in that order as separate decisions. Keep an instruction unless use, performance, ownership, size, compatibility and cross-platform evidence justify conversion. Do not reclaim numeric IDs without an approved RXBIN/ISA boundary. |
-| Optimizer and loop super-instructions | #339 | `BCTP` / `IGTBR` optimizer work has landed. Future optimizer work should be benchmark-driven and covered by RXAS optimizer tests. |
-| Performance benchmark portfolio expansion | [`current results report`](../performance/RESULTS.md) | POSTPERF-05 is complete and no further production performance stage is automatically authorized. Portfolio v3 retains all 14 AWFY lanes plus Base64, RexxCPS and separate capability controls. The Apple Stage 5 scorecard is complete. cREXX is 1.214718x/1.250737x faster than CPython on the equivalent common four, while the full control set splits seven median wins each; CPython's strong object/container rows are therefore product evidence, not an assumed slow-language baseline. CD, DeltaBlue, Towers and Havlak receive bounded release reviews, with a production change only if current evidence supports a safe, general and material improvement. Storage/List ownership, NBody, Permute and any unselected release-review finding carry into the next release. Direct Java and CPython remain controls, primitive-Java work is not NetRexx capability, and exact-commit formal Linux QA-C remains the Stage 5 exit item. Any test revision prompted by a finding must preserve algorithm, work and observable result and repeat the affected qualification. |
-| Generic final/concrete scalar access | transferred PERF3-04 | **Complete.** The accepted exact type-generic G1 lane plus four-family RXAS guard proof covers integer and float reads/writes, receiver/copyback/signal/TRACE/import semantics and both concrete VMs without new syntax, opcode, RXBIN or ABI. All 266 verdict processes and 2,249/2,249 final Debug tests pass; float writes improve by 32.75-35.41% and the selected RXBIN grows 2.07%. The bounded signal-policy worklist fixes exponential resolution. Adrian accepted the remaining +8.104172% (about 17.5 ms) real `httpcodec` assembler lifecycle cost for closure. Current packed `i64`/`f32` forms remain controls; the typed-binary redesign stays in `BINARY-01`. |
-| Native packed numeric storage and byte interoperability | [`BINARY-01`](../performance/BINARY-01-WORKLIST.md) (transferred from `POSTPERF-04-PACKED-01`) | **Release 1 Level B and explicit Level G owner verdicts accepted.** `.binary` remains the sole Level B container and is guaranteed native-aligned. Zero-based `<packed..int>(item)` and `<packed..float>(item)` reads/writes expose contiguous host-native `rxinteger`/`rxfloat` items without endian or width conversion, a packed type/flag, or new RXBIN metadata. The symmetric `.packedint` and `.packedfloat` Level G classes own the same bytes directly in `register.0.binary`; their accepted exact-getter rework reaches direct Level B read parity while retaining the uninitialized-receiver signal boundary. Raw `<at..type>` access retains byte positions, encoded widths, endianness, conversion and unaligned interchange. `rxstats` and the now-implemented exact CPU `rxvector` provider are the first bulk consumers. Automatically packing ordinary `.int[]` and `.float[]` arrays is explicitly a post-release Level G roadmap item, including custom indexed-reference and boxed-array compatibility work. |
-| Exact packed vector CPU provider | [`RXVECTOR-01`](../performance/RXVECTOR-01-WORKLIST.md) | **Accepted and sanitizer-qualified.** The process-reentrant Level G `rxvector` provider exposes explicit portable `f32le` conversion and exact deterministic cosine/top-k over BINARY-01 owners. The accepted profiling-off Release verdict reaches the shared direct-kernel ceiling and 14.68x-15.62x paired speedup over the Level B oracle. Installed dynamic/static selection, public documentation, bounded `crexx-rag` integration, proportional normal-Debug QA, and supported Linux sanitizer qualification are complete; GitHub supplies final-head cross-platform coverage. |
-| RXAS control-flow and bounded compiler optimization | PERF3-11/12 performance programme | The reusable immutable CFG, signal policy, sparse component SSA/use index and transactional proof service are implemented. Current consumers include branch threading, conversion/copy placement, capability-lazy loop-scoped joined-key reuse and the completed exit-owned PARSE lowering. Continue only with evidence-selected bounded hoisting, register finalisation and late-inlining consumers, one production candidate and first Release verdict at a time; keep exact local normalizations in the cheap peephole and do not recreate dense whole-procedure scans. |
-| UNICODE-NORM-02-F1: exact scalar accessor through a class-attribute receiver copies the whole object | [`LEVEL-L-INLINE-01` and `UNICODE-NORM-02-F1` performance activities](../performance/ROADMAP.md#activity-register) | **Published to `origin/hotfix` and `origin/develop` at code SHA `c0ac864d59428a807102a7b266933967f3b2e294`; local QA complete and exact-SHA hosted QA pending.** Exact call-free read-only scalar getters now borrow proved receiver storage without a whole-value `COPY_REG_REG`; local/imported methods share the same proof, indexed receivers are evaluated once through a live locator, mutation writes through to the original storage, and normal plus signal cleanup unlinks the borrowed receiver. References, escapes, whole-value replacement, dynamic/interface dispatch, unproved shapes and deliberate residual calls remain ordinary calls. The cumulative final-tree evidence is: prescribed focused Debug 10/10; full Debug 2,397/2,397 before the teardown-only SAN-007 repair plus post-repair normal-Debug SAN-006/SAN-007 2/2; complete post-repair Apple-ASan build and 2,398/2,398 CTests; ordinary profiling-off Release build with focused 10/10 and additional root cases 7/7; explicit optimized/no-opt dual-VM matrix 16/16; zero-conflict Lemon regeneration; and install, native package plus metadata smoke. This is published development content, not a release or tag. |
-| RXC-CALL-REG-01: discarded call temporaries inflate procedure local counts | [`RXC-CALL-REG-01` performance activity](../performance/ROADMAP.md#activity-register) | **Published to `origin/hotfix` and `origin/develop` at code SHA `c0ac864d59428a807102a7b266933967f3b2e294`; local QA complete and exact-SHA hosted QA pending.** RXC recycles discarded standalone-call results, temporary member receivers outside the reserved call window, and statement-call node registers before deferred cleanup. The permanent 32-call regression compiles, assembles and runs under both VMs in optimized and no-opt modes; the final dispatch procedure uses 6 optimized and 39 no-opt locals, within the 7/39 limits, while the retained pre-fix no-opt image required 101. The Unicode scale diagnostic fell from 6,455 to 361 locals in scratch but did not materially improve normalization wall time: this remains a compiler resource repair, not a claim that the generated Unicode normalizer is faster or selected. |
-| CRI-18: disjoint block-local and enclosing values did not warn in a mixed `if`/`else` | Downstream `crexx-rag` Codex extraction plus an independent 28-line Level-G reproducer; re-audited on `origin/develop` at `273c7b46` | **Reclassified as a source defect plus missing diagnostic coverage; there is no value-merge or register-allocation defect.** A grouped `DO` arm creates a local scope, while a single-statement arm executes in the enclosing scope. The two `result` assignments therefore create different variables, and the later read legally selects the enclosing variable; taking the grouped arm leaves that object invalid and the expected method access raises `SIGNAL OUT_OF_RANGE`. The validator now reports the deterministic `#NOT_IN_SAME_SCOPE` warning when an implicit assignment creates the disjoint enclosing binding; an explicit `name = .type` declaration suppresses it, and a visible parent is reused quietly. Review of the first published fix found that its impact analysis was incomplete: compiler-exit-generated private assignments also triggered the new rule, and the TRACE scratch warning changed a syntax-highlight token from severity 48 to warning severity 50, failing the hosted Build workflow. The follow-up retains the rule and instead makes ADDRESS, EXECIO, QUERY, SIGNAL, SORT, SORTX and TRACE scratch bindings explicit. Permanent tests assert exact warning symbols and source locations, explicit suppression, repeated exit expansion without internal warnings, the TRACE severity contract, and `crexx` progress from fresh RXAS through fresh RXBIN for `rexxcps_levelb`, including more than 64 KiB of valid captured warnings. Focused Debug panels pass locally; issues #646 and #669 remain open pending reporter/cross-platform confirmation, and this hotfix is not closure evidence until its exact commit passes both hosted Build and Sanitizer workflows. |
-| String performance follow-up | #470 | Performance results are useful, but regressions or semantic fallout should be tracked through concrete bugs such as #583. |
+**Scope:** compare explicit owner objects, owned heterogeneous/nested
+containers, and generic-like Level G collection directions; preserve weak
+reference lifetime rules and typed-array fast paths; specify construction,
+transfer, mutation, iteration, and destruction before syntax; and use Storage,
+List, plus one complex graph workload as equivalence and performance controls.
 
-The post-PERF3 performance order is therefore benchmark foundations, generic
-scalar-access proof, then broader bounded optimizer consumers. `BINARY-01` is a
-separate future language/runtime design and does not interrupt that sequence.
-VM handler layout is frozen until release-candidate finalisation, when the
-current portfolio and platform evidence must be regenerated before any
-low-level shape decision.
+**Exit:** Adrian selects a documented ownership/lifetime contract and a minimal
+vertical implementation gate. No Level B syntax or benchmark-specific shortcut
+is implied by placing the decision here.
 
-## Concurrency Roadmap
+### 5. Establish cREXX Pipes through a synchronous reference executor
 
-This is the sole project roadmap entry that orders concurrency work. The
-[`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) and
-[`concurrency/QA-CLOSEOUT.md`](../concurrency/QA-CLOSEOUT.md) files are detailed
-status and evidence ledgers; they do not create a separate product roadmap.
+**Why now:** this is a high-value Rexx ecosystem contribution that can reuse
+the implemented endpoint/process/concurrency substrate while remaining a
+separately maintainable project. It also offers a practical compatibility path
+for Rexx/CMS and CognitivePipelines-style use without making background-service
+claims prematurely.
 
-The initial concurrency implementation is feature-complete on `develop` for
-its frozen Release 1 surface: local and isolated-process structured tasks,
-bounded channels and endpoints, child-process redirection, the Level B control
-classes, Level G task/parallel syntax, and the concurrent HTTP client/server
-and LLM transports over one private protocol backend.
+**Scope:** begin with the contribution proposal's Phase 1 synchronous stage
+interfaces and reference executor, then freeze an immutable `PipePlan` and named
+ports. Preserve deterministic command and observable-result behavior across the
+reference executor before selecting asynchronous task/channel execution.
 
-Release 1 concurrency work is now a bounded QA and publication programme. The
-target-host commands and evidence rules are frozen in
-[`concurrency/qa/`](../concurrency/qa/), and the independent continuation is
-defined in
-[`INDEPENDENT-REVIEW-PROMPT.md`](../concurrency/qa/INDEPENDENT-REVIEW-PROMPT.md).
+**Exit:** the Phase 1 contract suite, examples, ownership boundaries, and
+maintainer-facing extension points are clear enough for independent
+contribution. Broader `rxio.*` streams and concurrent execution remain later
+phases, not part of the first claim.
 
-| Gate | Status | Work | Exit condition |
-| --- | --- | --- | --- |
-| QA-A: test readiness | complete | Independently review every solution point, close direct test gaps, maintain the labelled matrix in [`concurrency/TEST-MANIFEST.md`](../concurrency/TEST-MANIFEST.md), and prepare exact platform commands. | The frozen candidate is test-ready on Mac and every solution point has a source/test/risk disposition. |
-| QA-B: Mac closeout | complete | Focused Debug/Release, both applicable VM modes, optimized/unoptimized toolchain paths, sanitizer, stress, broad regression, install and package proof pass. | The retained performance run remains battery-only diagnostic evidence and is not relabelled. It found no confirmed adverse guard; earlier AC baselines remain valid. Adrian waived an unchanged AC replay on 2026-08-18 unless a relevant source change, evidence inconsistency or new performance question reopens it. |
-| QA-C: Linux qualification | delegated to GitHub final-head closeout | Build CREXX runs the Linux MinSizeRel build, CTest and package path; Sanitizer QA runs Linux x64 ASan/LSan. Adrian selected those workflows as the closeout authority on 2026-08-23. | The final-head GitHub workflows pass and retain their logs/artifacts. |
-| QA-D: Windows qualification | complete | Exact clean commit `2b793c81e` passed the frozen native Windows matrix under MSVC, Clang and GCC, including full CTest, TLS, stress, install and ZIP-package proof. | The retained runner evidence, inventories and digests satisfy the Windows defect-return discipline; no replay is needed without a concrete inconsistency or new source candidate. |
-| QA-E: publication decision | complete: published as initial | Reconcile packages, release notes, compatibility boundary and residual risks. | Adrian selected publication as **initial** on 2026-08-16. The corrected publication commit `53b3de77a` passed Build CREXX on Windows x64, Linux x64, macOS arm64 and macOS x86_64, published the development snapshot, and passed CodeQL. Native Windows qualification is complete; Linux/final-head closeout follows the selected GitHub authority in QA-C. |
+## How The Five Relate
 
-Feature development remains frozen during this programme. Concrete services
-and `.taskscope.ask()`, provider type `3`, a public provider-plugin ABI, pool
-telemetry, server TLS/readiness/background lifecycle, HTTP/2 and WebSockets are
-post-Release-1 candidates requiring separate design approval. Shared writable
-VM state, detached ordinary tasks and public worker identities remain outside
-the model. These candidates are recorded here so they are not lost; they are
-not an approved automatic sequence after QA-E.
+Priority 1 supplies the cadence and trustworthy product boundaries. Priorities
+2 and 3 share the Classic value, variable-pool, BIF, and provenance foundations
+but remain different products. Priority 4 converts repeated performance
+evidence into an explicit product-design decision. Priority 5 can progress at
+the contract and reference-executor level without reopening the concurrency
+model, and enters Release 1 only through a beta quality gate.
 
-The publication choice does not waive QA-B through QA-D and does not declare
-the surface stable. CI failures receive bounded tactical repairs and replay;
-native Linux and Windows failures return to Mac under the same defect-return
-policy.
+## Important Work Below The Cut
 
-## Library, Plugin, And Host Integration Roadmap
+### Required closeout that does not consume a strategic slot
 
-| Theme | Source discussions | Direction |
-|-------|--------------------|-----------|
-| Runtime capability composition | [`planning/release-1/runtime-capability-composition-roadmap.md`](planning/release-1/runtime-capability-composition-roadmap.md), PERF3-07 `CAP-05`, CREXXRAG-SHA256 | **RCC-1 through RCC-5F are published complete.** They provide declarative provider dependencies, static-first trusted dynamic resolution, automatic native-package selection, explicit per-mutable-module-instance initialization, `rx_hash`, the `rxfloat`/`rxint`/`rxdecimal` family, packed-float `rxstats`, and the `rxid`/`rxfs`/`rxplatform` split. The broad pre-release `system`, mixed `rxmath`, and boxed statistics surfaces are retired; only direct scalar `rxmath` compatibility names remain in `rxfloat`. Existing metadata homes stay RXBIN 007; a file-structure change moves to 008. Consolidated Release, Debug, install/package, documentation, Apple-ASan, and supported Linux ASan/LSan QA is green. GitHub Build CREXX and Sanitizer QA supply final-head cross-platform closeout. The former RCC-6/RCC-7 instruction-to-call candidates are transferred to the broader runtime/backend roadmap and post-Release-1 backlog; they are not outstanding gates in this composition roadmap. |
-| Math library expansion | #384 | Extend the separated `rxfloat`, `rxint`, `rxdecimal`, and `rxstats` families according to their numeric contracts. The historical mixed `rxmath` provider is retired; its remaining names are direct scalar compatibility registrations supplied by `rxfloat`, not a future bundle home. |
-| Regex support | #399 and closed issue #414 | RxLite now provides a pure-Rexx regex surface in `rxfnsb`. External/native regex dependencies remain a future packaging decision, not an open Release 1 blocker. |
-| System plugin portability | #398 | Keep platform coverage under normal plugin test hardening. Open a fresh issue only for a failing platform-specific test. |
-| REXX/SAA compatibility | #424 | Continue through the `crexxsaa` and RXPA host-integration path. Variable-pool emulation needs explicit design before new commitments. |
-| IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Bounded provider type `4` endpoints and type `5` structured child processes now underpin ADDRESS redirection and concurrent HTTP streaming. Broader `rxio.*` stream classes, reusable pipeline helpers and any public native-handle surface remain future work. |
-| Mixed Rexx/native libraries | #432 | Combining Rexx scripts and native plugin functions into one library remains an architecture direction for plugin packaging. |
-| Threads and subtasks | #491, [`concurrency/WORKLIST.md`](../concurrency/WORKLIST.md) | Local-thread and isolated-process structured tasks form the published initial receiver-owned transfer surface with no shared writable VM state. Native Windows qualification is complete; final-head Linux/build/package and sanitizer closeout uses the selected GitHub workflow authority. Durable single-owner services and open-host/provider extension are separately approved later work. |
-| CRI-17: native RXPA providers in attached tasks | Downstream `crexx-rag` CRI-17; [`RXVM_INTERPRETER.md`](ai-context/RXVM_INTERPRETER.md#channel-level-b-and-level-g-task-substrate) | **Complete in CREXX.** Attached local-task VMs inherit the trusted provider location, resolve declarative provider dependencies into fresh mutable native overlays, and create/destroy normal RXPA V2 per-VM sessions while the shared sealed generation remains bytecode-only. Missing providers fail closed. The generic session-aware CRI-17 control covers provider identity/lifetime and failure, and the installed `rxsqlite` regression proves real provider resolution in attached tasks under both VM modes and optimizer settings. Handles remain execution-local and are never transferred. Isolated-process workers still start fresh VMs and resolve their own packaged dependencies; the statement that native modules themselves are not process-generation payloads remains unchanged. |
+- Review and accept, revise, or reject the completed
+  [`KEYACCESS-01`](../performance/KEYACCESS-01-WORKLIST.md) and
+  [`KEYACCESS-02`](../performance/KEYACCESS-02-WORKLIST.md) first Release
+  verdicts. This is an immediate product decision, not a reason to start
+  another performance programme.
+- Resolve the formal Linux performance QA-C disposition and run the named
+  final-candidate hosted gates. Preserve the distinction between the frozen
+  Apple scorecard and a newer release candidate.
+- Close concrete release defects and reconcile issue status, package shape,
+  examples, plugin classification, release notes, and documentation. Closed
+  work should move to evidence/history rather than remain in the active list.
 
-## Closed As Already Handled Or Stale
+### Next-wave language, library, and integration work
 
-The following discussion topics were not converted into issues because the
-current tree already handles them, they are covered by existing closed issues,
-or the information was too stale to carry forward as a commitment:
+- First-class source provenance, shared Classic BIF behavior, and variable-pool
+  integration are carried by Level C and RexxScript before becoming independent
+  programmes.
+- Preprocessor product definition and macros
+  ([#610](https://github.com/adesutherland/CREXX/issues/610),
+  [#663](https://github.com/adesutherland/CREXX/issues/663)); SAA/data queues
+  (historical discussion #424 and
+  [#665](https://github.com/adesutherland/CREXX/issues/665)); class-library
+  principles
+  [#616](https://github.com/adesutherland/CREXX/issues/616) and future
+  iteration ergonomics; broader
+  Level G Unicode/collation; math-family expansion; and mixed Rexx/native
+  libraries remain valuable, but are less decisive than the five outcomes
+  above.
+- Compile-time build metadata, loose comparison changes, optional-argument
+  redesign, broader native regex packaging, and richer callback/generic
+  collection syntax wait for a concrete user contract.
 
-* #316: namespace `hello` repro no longer fails in the current compiler.
-* #342: `HASH` naming concern is stale; current hash helpers exist under
-  `fnv`/`rxmath` and stem internals.
-* #467: duplicate of closed issue #441.
-* #399: current regex support exists in `rxfnsb`; Windows native dependency
-  question was handled in closed issue #414.
-* #288: `SAYX REG` was handled in closed issue #409; broader instruction
-  cleanup is retained in the post-Release-1 roadmap and candidate backlog.
+### Evidence-gated performance follow-ons
+
+- CD, DeltaBlue, Towers, and Havlak receive bounded mechanism reviews only.
+  NBody and Permute remain next-release product evidence.
+- Later Level L inline slices, register finalisation, value caching,
+  string-copy fast paths, signal specialization, VM/link hygiene, and RXAS
+  instruction-family studies require fresh attribution and separate selection.
+- JIT/MIR/LLVM-style backend work remains research. It does not displace the
+  interpreter/bytecode product sequence.
+
+### Later platform and service directions
+
+- Public provider-plugin ABI, durable services, pool telemetry, server
+  lifecycle, HTTP/2, WebSockets, and GPU work remain post-Release-1 design
+  candidates.
+- `.rpm`, MSI/WiX, `winget`, legacy 32-bit validation, VM/370, MVS/370, and a
+  full z/VM CMS port require dedicated platform ownership and evidence. The
+  current CMS direction is deterministic demos and compatible host/environment
+  contracts rather than a full platform promise.
+
+## Completed Or No Longer Active
+
+- Level B Unicode [#583](https://github.com/adesutherland/CREXX/issues/583),
+  tool output paths #584, RXAS float precision #585, and RXAS instruction
+  coverage #586 are closed quality evidence.
+- Runtime capability composition, packed numeric owners, the exact CPU
+  `rxvector` provider, generic scalar access, the reusable RXAS proof service,
+  and the five-stage POSTPERF sequence have completed governed verdicts.
+- The initial concurrency surface is implemented and published as initial
+  development content. Its detailed portability and evidence history remains
+  in [`../concurrency/WORKLIST.md`](../concurrency/WORKLIST.md); future services
+  do not follow automatically from that history.
+- Regex functionality exists through RxLite in `rxfnsb`; a native dependency is
+  a future packaging choice, not an open Release 1 blocker.
+- Stale or duplicate discussions such as #316, #342, and #467 should not be
+  revived without a current reproducer or product need.
+
+## Detailed Authorities
+
+- Release scope, cadence, and dependencies:
+  [`release-1-plan.md`](release-1-plan.md)
+- Beta 3 draft release note:
+  [`releases/v1.0.0-beta.3.md`](releases/v1.0.0-beta.3.md)
+- Current performance order and results:
+  [`../performance/ROADMAP.md`](../performance/ROADMAP.md) and
+  [`../performance/RESULTS.md`](../performance/RESULTS.md)
+- Completed PERF3 history:
+  [`../performance/PERF3-PROGRAMME-LEDGER-2026-08-17.md`](../performance/PERF3-PROGRAMME-LEDGER-2026-08-17.md)
+- Level C implementation status:
+  [`../compiler/docs/levelc_remapping_target.md`](../compiler/docs/levelc_remapping_target.md)
+- RexxScript product documentation:
+  [`../rexxscript/doc/user-guide.md`](../rexxscript/doc/user-guide.md) and
+  [`../rexxscript/doc/developer-guide.md`](../rexxscript/doc/developer-guide.md)
+- Pipes contribution proposal:
+  [`../contrib/crexx-pipes/ARCHITECTURE_PROPOSAL.md`](../contrib/crexx-pipes/ARCHITECTURE_PROPOSAL.md)

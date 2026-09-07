@@ -91,16 +91,18 @@ is searched for same-extension imports.
 
 ## Documentation
 
-- [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) track the current
-  beta 3 WIP scope, timetable, and known limitations.
+- [Beta 3 release notes](docs/releases/v1.0.0-beta.3.md) track the beta 3 WIP
+  scope, rebased 2026-09-30 cut, original timetable, and current known
+  limitations.
 - [Beta 2 release notes](docs/releases/v1.0.0-beta.2.md) summarize the latest
   completed beta scope, signing status, and known limitations.
-- [Release 1 plan](docs/release-1-plan.md) tracks the fixed-date path to
-  Release 1, including scope tiers, gates, and provisional issue owners.
+- [Release 1 plan](docs/release-1-plan.md) defines the feature-bearing beta
+  train through March 2027, RC1, and the 2027-05-01 Release 1 cut target while
+  retaining the original gates and dependencies.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.
-- [Roadmap](docs/ROADMAP.md) collects future direction and non-release
-  commitments separately from current technical documentation.
+- [Roadmap](docs/ROADMAP.md) is the consolidated current priority order and
+  below-cut queue, kept separate from current technical documentation.
 - [Documentation map](docs/DOCS_MAP.md) explains which documentation area to
   use and how much authority each area has.
 - [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
