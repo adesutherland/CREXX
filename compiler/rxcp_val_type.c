@@ -1195,6 +1195,15 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
     }
 }
 
+/* ARGS can carry diagnostic children after an invalid declaration. They are
+ * not formals and must not consume an actual argument or be dereferenced as
+ * a variable. The diagnostics remain attached for normal error reporting. */
+static ASTNode *next_formal_argument(ASTNode *node) {
+    while (node && (node->node_type == WARNING || node->node_type == ERROR))
+        node = node->sibling;
+    return node;
+}
+
 /* This walker does the basic value types of operations
  * No errors generated - just simple "guesses" as to types */
 /* Propagate types from function signature to arguments and promote unknown symbols */
@@ -1219,6 +1228,7 @@ void infer_arguments(Context *context, ASTNode *node) {
     /* Check each argument */
     arg_num = 0;
     while (n1) {
+        n2 = next_formal_argument(n2);
         arg_num++;
         if (!n2) break;
 
@@ -3041,6 +3051,7 @@ walker_result func_type_safety_walker(walker_direction direction,
                 /* Check each argument */
                 arg_num = 0;
                 while (n1) {
+                    n2 = next_formal_argument(n2);
                     if (n1->node_type == WARNING || n1->node_type == ERROR) {
                         n1 = n1->sibling;
                         continue;
@@ -3133,6 +3144,8 @@ walker_result func_type_safety_walker(walker_direction direction,
                 }
 
                 while (n2) {
+                    n2 = next_formal_argument(n2);
+                    if (!n2) break;
                     /* Skip an ellipse - should be the last argument, but this does not assume it */
                     if (n2->child->node_type == VARG || n2->child->node_type == VARG_REFERENCE) {
                         n2 = n2->sibling;

@@ -30,7 +30,7 @@ foreach(_support IN LISTS _text_inspector_rxpp_support)
             COPYONLY)
 endforeach()
 set(_text_inspector_ui_macros)
-foreach(macro IN ITEMS ui_node ui_command ui_launcher)
+foreach(macro IN ITEMS ui_node ui_command ui_launcher ui_session_launcher)
     list(APPEND _text_inspector_ui_macros
             "${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm")
     configure_file("${CMAKE_SOURCE_DIR}/lib/ui/rxpp/ui/${macro}.rxpm"
@@ -101,6 +101,29 @@ add_dependencies(example_text_inspector_artifacts
         text_inspector_module_artifact
         text_inspector_tui_artifact)
 
+set(_text_inspector_ansi_generated "${_text_inspector_generated_root}/text_inspector_ansi.crexx")
+add_custom_command(OUTPUT "${_text_inspector_ansi_generated}"
+        COMMAND $<TARGET_FILE:rxpp> rxprecomp
+                -I "${CMAKE_CURRENT_SOURCE_DIR}/text_inspector_ansi.rxpp"
+                -o "${_text_inspector_ansi_generated}"
+                -m "${_text_inspector_rxpp_root}/maclib.rexx"
+        DEPENDS rxpp rxpp_support_files ${_text_inspector_ui_macros}
+                ${_text_inspector_support_sources} text_inspector_ansi.rxpp
+        VERBATIM)
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_ansi.rxbin"
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                -i "${CMAKE_CURRENT_BINARY_DIR}" -i "${CMAKE_BINARY_DIR}/bin"
+                -o text_inspector_ansi "${_text_inspector_ansi_generated}"
+        COMMAND $<TARGET_FILE:rxas> -o text_inspector_ansi text_inspector_ansi
+        DEPENDS rxc rxas compiler_exit_bin ui_ansi text_inspector_module_artifact
+                "${_text_inspector_ansi_generated}" "${_text_inspector_module}"
+                "${CMAKE_BINARY_DIR}/bin/ui_ansi.rxbin"
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_ansi.rxas"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(text_inspector_ansi_artifact
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/text_inspector_ansi.rxbin")
+add_dependencies(example_text_inspector_artifacts text_inspector_ansi_artifact)
+
 if(ENABLE_GTK)
     set(_text_inspector_gtk_generated
             "${_text_inspector_generated_root}/text_inspector_gtk.crexx")
@@ -137,9 +160,20 @@ if(ENABLE_GTK)
 endif()
 
 if(BUILD_TESTING)
+    if(UNIX)
+        find_package(Python3 COMPONENTS Interpreter REQUIRED)
+        add_test(NAME text_inspector_ansi_pty
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/lib/plugins/console/tests/pty_checks.py
+                        --build ${CMAKE_BINARY_DIR} --source ${CMAKE_SOURCE_DIR} --mode app)
+        set_tests_properties(text_inspector_ansi_pty PROPERTIES TIMEOUT 90
+                LABELS "examples;ui;console;dialogs;pty")
+        crexx_register_test_prep_targets(TESTS text_inspector_ansi_pty
+                TARGETS example_text_inspector_artifacts rxvm)
+    endif()
     set(_text_inspector_generated_checks
             -DGENERATED=${_text_inspector_generated}
-            -DTUI_GENERATED=${_text_inspector_tui_generated})
+            -DTUI_GENERATED=${_text_inspector_tui_generated}
+            -DANSI_GENERATED=${_text_inspector_ansi_generated})
     if(ENABLE_GTK)
         list(APPEND _text_inspector_generated_checks
                 -DGTK_GENERATED=${_text_inspector_gtk_generated})

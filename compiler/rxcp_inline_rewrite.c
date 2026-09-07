@@ -2011,12 +2011,36 @@ fail:
     return 0;
 }
 
+/* Intrinsic suffixes reuse CLASS nodes, but are storage-format descriptors,
+ * not object values. This also applies to existing imported inline payloads
+ * whose descriptor annotations say TP_OBJECT (for example bare "float").
+ * Classify by the exact syntax position, never by a global type-name blacklist:
+ * an actual user class named u8 still requires the normal reference proof. */
+static int inline_node_is_storage_selector(ASTNode *node) {
+    ASTNode *parent;
+    if (!node || node->node_type != CLASS || node->child) return 0;
+    parent = node->parent;
+    if (!parent || parent->child != node) return 0;
+    switch (parent->node_type) {
+        case OP_SIZEOF:
+            return rxcp_binary_storage_is_fixed(node);
+        case OP_BINARY_AT:
+        case OP_BINARY_COMPARE:
+            return rxcp_binary_storage_is_valid(node);
+        case OP_PACKED_AT:
+            return rxcp_packed_storage_info(node, NULL);
+        default:
+            return 0;
+    }
+}
+
 static walker_result inlinable_check_walker(walker_direction direction, ASTNode *node, void *payload) {
     InlinableCheck *check;
 
     check = (InlinableCheck *)payload;
 
     if (direction == in) {
+        int storage_selector = inline_node_is_storage_selector(node);
         check->node_count++;
 
         if (node->node_type == RETURN) {
@@ -2037,9 +2061,9 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             node->node_type == TYPE_REFERENCE ||
             node->value_type == TP_REFERENCE ||
             node->target_type == TP_REFERENCE ||
-            (node->value_type == TP_OBJECT &&
+            (!storage_selector && node->value_type == TP_OBJECT &&
              inline_class_has_reference_attribute(check->context, node->scope, node->value_class)) ||
-            (node->target_type == TP_OBJECT &&
+            (!storage_selector && node->target_type == TP_OBJECT &&
              inline_class_has_reference_attribute(check->context, node->scope, node->target_class)) ||
             (node->symbolNode && node->symbolNode->symbol &&
              (node->symbolNode->symbol->type == TP_REFERENCE ||

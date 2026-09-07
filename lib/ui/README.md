@@ -1,9 +1,10 @@
 # Experimental cREXX UI library
 
 This is a driver-independent **Level G** UI framework and a worked Text Inspector
-example. The shared feature runs under GTK, a line-oriented TUI and deterministic
-tests. A full-screen text driver is the next priority; a modern browser surface
-comes afterward. The event contract considers desktop, terminal, web and mobile
+example. The shared feature runs under GTK, a line-oriented TUI, the new ANSI
+full-screen terminal host and deterministic tests. The terminal tracer adds
+standard confirmation and Open-file dialogs; a modern browser surface comes
+afterward. The event contract considers desktop, terminal, web and mobile
 without presenting their native APIs as the cREXX programming model.
 
 Start with [UI contract v0](contracts/README.md) for the complete vocabulary,
@@ -46,9 +47,12 @@ capability families describe compatible semantics, not universal availability.
 3. [ui_compat.crexx](ui_compat.crexx): temporary scalar-driver translation and
    local resource grants; native path handling stays outside the feature.
 4. [ui.crexx](ui.crexx): retained logical view and legacy driver/runtime contract.
-5. [ui_tui.crexx](ui_tui.crexx) or [ui_gtk.crexx](ui_gtk.crexx), then
+5. [Terminal lifecycle and limits](TERMINAL.md), [ui_ansi.crexx](ui_ansi.crexx),
+   [standard dialogs](ui_dialogs.crexx), [cell rendering](ui_terminal_view.crexx)
+   and the Level B [console API](../plugins/console/README.md).
+6. [ui_tui.crexx](ui_tui.crexx) or [ui_gtk.crexx](ui_gtk.crexx), then
    [GTK mechanism](drivers/gtk/ui_gtk.c).
-6. [RXPA bridge](../../interpreter/rxpacallmethod.c): synchronous native-to-cREXX
+7. [RXPA bridge](../../interpreter/rxpacallmethod.c): synchronous native-to-cREXX
    method dispatch, owned by the complete VM.
 
 The existing line TUI and GTK are intentionally kept as compatibility drivers.
@@ -64,7 +68,8 @@ use `OPTIONS LEVELG`.
 
 ## Logical view and layout
 
-The current logical node vocabulary is `label`, `line`, and `button`. Nodes
+The current logical node vocabulary is `label`, `line`, `button`, and `input`
+(the file dialog's editor; currently rendered by the ANSI host). Nodes
 have stable IDs. Buttons add a semantic action and a TUI shortcut. This is
 small, but it proves that drivers consume a cREXX view rather than application
 code calling native widget procedures.
@@ -91,15 +96,16 @@ The current example uses `##LOADMACRO ui` and the directory package
 
 - `UI_NODE` emits logical view construction;
 - `UI_COMMAND` emits checked command registration;
-- `UI_LAUNCHER` emits the small legacy application/runtime/driver composition root.
+- `UI_LAUNCHER` emits the small legacy application/runtime/driver composition root;
+- `UI_SESSION_LAUNCHER` emits the new session/owner-loop host composition root.
 
 CMake stages that package under the selected macro-library directory. The older
 `ui_macros.rxpm` INCLUDE package is retained for existing callers, but the v0
 example does not depend on it. RXPP keeps source maps back to authored declarations.
 Use the .rxpp files as source, not the generated .crexx files in the build tree.
 
-RXPP still emits one source output per invocation. The two small launcher .rxpp
-files therefore generate the TUI and GTK launchers separately. The recent
+RXPP still emits one source output per invocation. The three small launcher .rxpp
+files therefore generate the line-TUI, GTK and ANSI launchers separately. The recent
 `##BUILDDIR` directive is consumed by the command-line `crexx` driver; CMake
 already owns its explicit output directories and does not need that directive.
 
@@ -128,33 +134,22 @@ the interface metadata. The drivers therefore use imported `.uievent`,
 qualified form such as `.ui..uievent` currently fails interface-conformance
 linking and needs canonicalisation work.
 
-## Feasibility of an ANSI full-screen driver
+## ANSI full-screen terminal host
 
-A third, ANSI-only driver is highly feasible for the tracer's present scope
-and should be mostly cREXX. It should use the new `ui_contract` session boundary, render the existing
-logical rows and columns with ANSI cursor movement, draw `line`, map the current
-shortcuts to semantic actions, and retain the same feature and session conformance tests.
-No application or event vocabulary needs to change.
+The [terminal tracer](TERMINAL.md) now implements the approved next slice:
+Level B C primitives for console ownership, timed input, resize, mouse and
+restoration, with Level G presentation, dialogs, grants and the owner loop.
+There is no ncurses dependency. The C layer emits input data, not callbacks
+into feature classes. The same session loop continues while a dialog is active;
+acceptance/cancellation completes its originating effect through the queue.
 
-It is important not to call that a pure-ANSI replacement for curses in the
-general case. ANSI escape sequences are chiefly an output protocol. Robust
-single-key input, raw/canonical mode, terminal size and resize, signal-safe
-restoration, escape-sequence decoding, and Windows console differences require
-terminal services that cREXX does not yet expose portably. The scalable shape
-would be:
-
-- `ui_ansi.crexx` for layout, rendering, key mapping, redraw, and the event
-  loop;
-- a very small cross-platform terminal capability plugin for raw mode,
-  restoration, size, and key reads; and
-- no ncurses dependency unless later requirements justify its richer terminal
-  database and input handling.
-
-For the present application, an initial ANSI driver could remain line-input
-based and still demonstrate cursor-positioned redraw entirely in cREXX. Before
-claiming full-screen portability, it should add pseudo-terminal tests for input
-and teardown plus snapshot tests for emitted escape sequences. This is an
-assessment only; that driver is deliberately not part of this tracer increment.
+The first file selector supports one existing file, directory navigation and
+filename editing. Clear uses the standard OK/Cancel dialog when the composition
+root advertises `ui.dialog`. GTK and the line TUI retain their existing behavior.
+Real foreground-PTY tests cover input, resize, mouse, dialogs, disconnect and
+restoration. This is not yet a complete curses replacement: Unicode cell-width
+policy, asynchronous physical I/O and native Windows qualification remain
+explicit limits in the terminal document.
 
 ## What is implemented, and what is next?
 
@@ -163,21 +158,20 @@ builders and validation; application message registration; command descriptors
 and enablement; capability checks; targeted component ownership; bounded,
 owner-driven event/effect queues; correlation, progress, subscriptions, logical
 cancellation, stale-result rejection and explicit teardown. Text Inspector uses
-these contracts through the compatibility shell.
+these contracts directly in the ANSI host and through the legacy compatibility shell.
 
-Still deliberately narrow: one GTK window, a flat three-widget view
-(`label`, `line`, `button`), relative placement, scalar legacy callbacks and
+Still deliberately narrow: one GTK window, a flat logical view
+(`label`, `line`, `button`, terminal `input`), relative placement, scalar legacy callbacks and
 synchronous physical effects. Names for richer widget/input/service families do
-not implement those widgets. Rich view properties and containers, console C
-primitives, full-screen terminal rendering, a browser transport/frontend,
+not implement those widgets. Rich view properties and containers, a browser transport/frontend,
 remote-session security, responsive layout and accessibility implementation are
 next stages.
 
 Build the focused artifacts before running their tests:
 
 ```sh
-cmake --build cmake-build-debug --target ui_functional_tests example_text_inspector_artifacts --parallel 10
-ctest --test-dir cmake-build-debug -R '^ui_|^text_inspector_' --output-on-failure
+cmake --build cmake-build-debug --target rxconsole_test_artifacts ui_functional_tests example_text_inspector_artifacts --parallel 10
+ctest --test-dir cmake-build-debug -R '^rxconsole_|^ui_|^text_inspector_' --output-on-failure
 ```
 
 Use `qa-comprehensive` for prepared broad correctness QA. This contract step does

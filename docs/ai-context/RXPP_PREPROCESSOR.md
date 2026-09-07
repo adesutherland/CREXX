@@ -91,6 +91,13 @@ test for executable examples.
 
 ## Source Maps
 
+The compiler applies the source-map prepass to imported generated source as
+well as directly compiled source. `source_import_srcmap_factory` retains the
+regression for an RXPP-mapped factory argument: map directives must not enter
+the ordinary grammar or be mistaken for instructions before `ARG`. Attached
+argument diagnostic nodes are skipped during formal-argument traversal, not
+silently treated as parameters.
+
 RXPP emits source maps by default for generated CREXX. The generated file's
 leading options include `srcmap`, followed by raw source-map directives in the
 `@` channel. `rxc` recognizes `options ... srcmap`, strips the raw directives

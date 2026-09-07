@@ -21,13 +21,31 @@
  * OS path to use for I/O. Future terminal/web shells can reuse the feature.
  */
 options levelg
-namespace text_inspector expose text_inspector_app text_inspector_component
+namespace text_inspector expose text_inspector_app text_inspector_component make_text_inspector_session
 import rxfnsb
 import ui
 import ui_contract
 import ui_compat
 
 ##LOADMACRO ui
+
+/** Composition for new owner-loop drivers; it imports no particular driver.
+ * @param id session identity @param caps services actually supplied by the host
+ * @return session with the same feature and declarative commands as the tracer
+ */
+make_text_inspector_session: procedure = .uisession
+  arg id = .string, caps = .uicapabilities
+  session = .uisession(id, caps)
+  rc = session.add_component("root", .text_inspector_component(caps.has("ui.dialog")))
+  if rc < 0 then exit 1
+  rc = session.register_event("document.open.requested")
+  if rc < 0 then exit 1
+  rc = session.register_event("document.clear.requested")
+  if rc < 0 then exit 1
+  ##UI_COMMAND session,"document.open.requested","Open...","root","document.open.requested","o"
+  ##UI_COMMAND session,"document.clear.requested","Clear","root","document.clear.requested","c"
+  ##UI_COMMAND session,"document.quit","Quit","root","ui.close.requested","q"
+  return session
 
 /**
  * Compatibility composition root shared unchanged by GTK, TUI and tests.
@@ -69,8 +87,16 @@ text_inspector_component: class implements .uicomponent
   _line_count = .int
   _word_count = .int
   _character_count = .int
+  _confirm_clear = .int
+  _confirming = .int
 
+  /** @param confirm_clear ask the standard confirmation service before Clear;
+   * legacy hosts omit it until they implement that optional capability.
+   */
   *: factory
+    arg confirm_clear = 0
+    _confirm_clear = confirm_clear
+    _confirming = 0
     _path = ""
     _status = "Ready"
     _line_count = 0
@@ -102,7 +128,11 @@ text_inspector_component: class implements .uicomponent
       call result.add(.uimessage("ui.resource.choose", request, event.target(), "effect"))
     end
     /* Cancellation is a terminal outcome, not an empty-filename convention. */
-    if name = "ui.effect.cancelled" then _status = "Open cancelled"
+    if name = "ui.effect.cancelled" then do
+      if _confirming then _status = "Clear cancelled"
+      else _status = "Open cancelled"
+      _confirming = 0
+    end
     if name = "ui.resource.selected" then do
       resource = body.resource("resource")
       _path = resource.display_name()
@@ -133,7 +163,20 @@ text_inspector_component: class implements .uicomponent
       end
       _status = "Count complete"
     end
-    if name = "document.clear.requested" then call clear_model()
+    if name = "document.clear.requested" then do
+      if _confirm_clear then do
+        _confirming = 1
+        request = .uipayload()
+        call request.put_text("title", "Clear results?")
+        call request.put_text("message", "Clear the current file and counts?")
+        call result.add(.uimessage("ui.dialog.confirm", request, event.target(), "effect"))
+      end
+      else call clear_model()
+    end
+    if name = "ui.dialog.accepted" & _confirming then do
+      if body.text("response") = "ok" then call clear_model()
+      _confirming = 0
+    end
     /* A close request can be declined, confirmed or preceded by a save.
      * This tiny read-only feature simply accepts it by requesting ui.close. */
     if name = "ui.close.requested" then call result.add(.uimessage("ui.close", .uipayload(), event.target(), "effect"))

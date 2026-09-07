@@ -1,0 +1,81 @@
+options levelg
+import rxfnsb
+import ui
+import ui_contract
+import ui_dialogs
+import ui_terminal_view
+import ui_local_resources
+
+main: procedure = .int
+  arg args = .string[]
+  dialog = .uiconfirm_dialog("Question", "Continue?")
+  body = .uipayload()
+  call body.put_text("node", "dialog.ok")
+  call dialog.update(.uimessage("widget.activated", body))
+  if dialog.result() \= "ok" then exit 1
+  call body.put_text("node", "dialog.cancel")
+  call dialog.update(.uimessage("widget.activated", body))
+  if dialog.result() \= "ok" then exit 1
+  canvas = .uiterminal_canvas()
+  call canvas.resize(40, 12)
+  frame = canvas.render(dialog.view(), "dialog.ok")
+  if pos("[ OK ]", frame) = 0 | pos("[ Cancel ]", frame) = 0 then exit 1
+  if canvas.hit(2, 4) \= "dialog.ok" then exit 1
+  if canvas.next_focus("dialog.ok", 1) \= "dialog.cancel" then exit 1
+  if terminal_text('1B'x || "[2J") \= "?[2J" then exit 1
+  call canvas.resize(20, 5)
+  frame = canvas.render(dialog.view(), "dialog.ok")
+  if \canvas.small() | canvas.hit(2, 4) \= "" then exit 1
+
+  picker = .uifile_dialog("Open", args[1])
+  call picker.resize(80, 24)
+  view = picker.view()
+  if view.count() < 5 then exit 1
+  body = .uipayload()
+  call body.put_text("text", "sample.txt")
+  call picker.update(.uimessage("ui.input.text", body))
+  call picker.resize(40, 12)
+  body = .uipayload()
+  call body.put_text("key", "Enter")
+  call picker.update(.uimessage("ui.input.key", body))
+  if picker.result() \= "ok" then exit 1
+  resources = .uilocal_resources("test-grants")
+  grant = resources.grant(picker.selection())
+  body = .uipayload()
+  call body.put_resource("resource", grant)
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-1", "test-grants"))
+  if response.name() \= "io.text.read.completed" then exit 1
+  call body.put_resource("resource", .uiresource("foreign", "session", picker.selection()))
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-2", "test-grants"))
+  if response.name() \= "ui.effect.failed" then exit 1
+  call body.put_resource("resource", grant)
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-3", "other-session"))
+  if response.name() \= "ui.effect.failed" then exit 1
+  sentinel = resources.grant(args[1] || "/error-looking.txt")
+  call body.put_resource("resource", sentinel)
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-4", "test-grants"))
+  if response.name() \= "io.text.read.completed" then exit 1
+  output = response.body()
+  records = output.texts("records")
+  if records[0] \= 1 | records[1] \= "-8 OPEN ERROR" then exit 1
+  missing = resources.grant(args[1] || "/does-not-exist.txt")
+  call body.put_resource("resource", missing)
+  response = resources.read(.uimessage("io.text.read", body, "root", "effect", "read-5", "test-grants"))
+  if response.name() \= "ui.effect.failed" then exit 1
+  extra = .uiresource
+  do i = 4 to 64
+    extra = resources.grant("grant-" || i)
+    if extra.id() = "" then exit 1
+  end
+  extra = resources.grant("one-too-many")
+  if extra.id() \= "" then exit 1
+  extra = resources.grant(picker.selection())
+  if extra.id() \= grant.id() then exit 1
+  cancelled = .uifile_dialog("Open", args[1])
+  call cancelled.resize(80, 24)
+  body = .uipayload()
+  call body.put_text("key", "Escape")
+  call cancelled.update(.uimessage("ui.input.key", body))
+  if cancelled.result() \= "cancel" | cancelled.selection() \= "" then exit 1
+  say "PASS: standard dialogs, terminal geometry and resource grants"
+  return 0

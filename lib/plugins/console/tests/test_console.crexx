@@ -1,0 +1,22 @@
+/* The low-level API is usable without importing any UI classes. */
+options levelb
+import rxconsole
+main: procedure = .int
+  fields = .int[]
+  text = "old"
+  columns = 99
+  rows = 99
+  if rxconsole..size(-1, columns, rows) \= -1 then exit 1
+  if columns \= 0 | rows \= 0 then exit 1
+  if rxconsole..poll(-1, 0, fields, text) \= -1 then exit 1
+  if fields[0] \= 10 | text \= "" then exit 1
+  do i = 1 to 10
+    if fields[i] \= 0 then exit 1
+  end
+  if rxconsole..open(16) \= -1 then exit 1
+  if rxconsole..close(-1) \= -1 then exit 1
+  if rxconsole..write(-1, "must not print") \= -1 then exit 1
+  if rxconsole..capabilities(-1) \= -1 then exit 1
+  if rxconsole..capabilities(0) < 1 then exit 1
+  say "PASS: rxconsole Level B contract"
+  return 0

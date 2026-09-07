@@ -35,3 +35,14 @@ foreach(launcher IN ITEMS TUI_GENERATED GTK_GENERATED)
         endif()
     endif()
 endforeach()
+
+if(NOT DEFINED ANSI_GENERATED OR NOT EXISTS "${ANSI_GENERATED}")
+    message(FATAL_ERROR "generated ANSI session launcher is missing")
+endif()
+file(READ "${ANSI_GENERATED}" launcher_source)
+if(NOT launcher_source MATCHES "options[^\n]*levelg[^\n]*srcmap" OR
+   NOT launcher_source MATCHES "make_text_inspector_session" OR
+   NOT launcher_source MATCHES "terminal_capabilities" OR
+   NOT launcher_source MATCHES "driver.run\\(session\\)")
+    message(FATAL_ERROR "ANSI launcher must be source-mapped session composition")
+endif()

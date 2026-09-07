@@ -157,6 +157,17 @@ set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
 
+add_test(NAME binary_storage_selector_dependencies
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_storage_selector_dependencies_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_storage_selector_dependencies.cmake)
+set_tests_properties(binary_storage_selector_dependencies PROPERTIES
+    LABELS "compiler;imports;incremental;binary;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib;compiler_exit_bin")
+
 add_executable(test_import_resolution_report test_import_resolution_report.c)
 target_link_libraries(test_import_resolution_report PRIVATE rxclib)
 target_include_directories(test_import_resolution_report PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
@@ -3373,6 +3384,13 @@ add_test(NAME source_import_optional_factory_arg
          COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_optional_factory_arg PROPERTIES LABELS "compiler;imports")
+
+add_test(NAME source_import_srcmap_factory
+        COMMAND ${CMAKE_COMMAND} -DRXC=$<TARGET_FILE:rxc>
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/source_import_srcmap_factory_ws
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/run_source_import_srcmap.cmake)
+set_tests_properties(source_import_srcmap_factory PROPERTIES LABELS "compiler;imports;srcmap;regression")
+crexx_register_test_prep_targets(TESTS source_import_srcmap_factory TARGETS rxc)
 
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_covariant_cycle.cmake")
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_covariant_cycle_ws\")\n")

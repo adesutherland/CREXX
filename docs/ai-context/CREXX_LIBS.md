@@ -120,8 +120,17 @@ both drivers. RXPP generates both logical-node calls and the small backend
 launchers. The GTK callback is same-thread and synchronous. Since cREXX classes
 are values, the driver uses an explicit weak reference to the active runtime
 for the duration of its native loop. See `lib/ui/README.md` for the lifecycle,
-vocabulary, ANSI-driver feasibility assessment, and implementation trail, and
+vocabulary and implementation trail, and
 `examples/ui/text-inspector/README.md` for the executable example.
+
+The first full-screen terminal host is `ui_ansi.rxbin`, using `ui_contract`
+directly. `ui_dialogs`, `ui_terminal_view` and `ui_local_resources` are Level G
+modules for standard confirmation/file selection, cell projection and scoped
+file grants. `lib/plugins/console` supplies the independent Level B `rxconsole`
+C provider: explicit console lease, timed key/text/paste input, resize, mouse,
+batched output and restoration. It has no ncurses or GTK dependency. RXPP's
+`UI_SESSION_LAUNCHER` composes the same Text Inspector feature with this host.
+See `lib/ui/TERMINAL.md` for the lifecycle, precise limits and platform QA boundary.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in

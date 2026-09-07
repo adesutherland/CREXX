@@ -2,7 +2,8 @@
 
 This is the shared, experimental cREXX UI vocabulary and executable contract.
 It is **not** a promise that every named widget or service is implemented.
-The next delivery priority is a full-screen text UI, followed by a browser UI;
+The [first full-screen terminal slice](../TERMINAL.md) now exercises this contract;
+a browser UI remains the next surface priority.
 Peter's desktop work can use the same contract. Mobile contributes lifecycle,
 touch, permission and resource requirements without forcing a mobile toolkit
 into cREXX application code.
@@ -42,7 +43,7 @@ a mandatory class hierarchy.
    explicit session `close()` teardown method.
 
 The session's `pump` is not a busy polling loop. GTK may call it from its own
-loop, the future terminal can call it after console input/timer wake-ups, and a
+loop, the terminal calls it after console input/wake-ups, and a
 browser host can call it after receiving a message. Foreign threads must marshal
 owning data to the owner; neither `uisession` nor borrowed RXPA handles are
 thread-safe mailboxes. No new VM callback or thread mechanism is introduced here.
@@ -245,12 +246,15 @@ Use `qa-comprehensive` for broader prepared normal QA. Sanitizer qualification
 remains the later agreed tracer-scope gate; this step makes no sanitizer claim.
 See the [local qualification record](QUALIFICATION-2026-09-06.md) for retained
 commands, results and the tested input fingerprint.
-Native terminal services, full-screen widgets/rendering, web hosting/transport,
-responsive layout and accessibility implementation remain subsequent work.
+The first native console provider and full-screen terminal dialogs are described
+in [TERMINAL.md](../TERMINAL.md). `terminal.planned` remains a wider checklist,
+not a claim that every terminal service exists. Web hosting/transport, responsive
+layout and accessibility implementation remain subsequent work.
 
 The builder seam is now explicit: stable view/node IDs and relative placement;
 command descriptors; registered message schemas; feature-owned handlers; host
 capabilities. A builder should generate those declarations and preserve the
-handwritten feature classes. v0 still uses the tracer's flat three-widget view:
+handwritten feature classes. v0 still uses the tracer's flat logical view (now
+including a terminal `input` node):
 containers, rich properties, validation metadata and state composition across
 views are future additions, not secretly implemented by the event catalogue.

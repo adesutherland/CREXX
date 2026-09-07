@@ -4,6 +4,27 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 
 add_custom_target(ui_functional_tests ALL)
 
+crexx_add_rexx_opt_matrix(
+        NAME ui_standard_dialogs RUNNER rxvm
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/test_ui_dialogs.crexx
+        TARGET_GROUP ui_functional_tests
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ui ui_contract ui_catalog ui_dialogs ui_terminal_view ui_local_resources fs
+                ${CMAKE_BINARY_DIR}/bin/ui_dialogs.rxbin
+                ${CMAKE_BINARY_DIR}/bin/ui_terminal_view.rxbin
+                ${CMAKE_BINARY_DIR}/bin/ui_local_resources.rxbin
+        RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/ui_dialogs
+                ${CMAKE_BINARY_DIR}/bin/ui_terminal_view
+                ${CMAKE_BINARY_DIR}/bin/ui_local_resources
+                ${CMAKE_BINARY_DIR}/bin/ui_contract
+                ${CMAKE_BINARY_DIR}/bin/ui_catalog
+                ${CMAKE_BINARY_DIR}/bin/ui
+                ${CMAKE_BINARY_DIR}/bin/library
+                -a ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
+        TEST_LABELS "library;ui;console;dialogs;resource;classes"
+        REQUIRED_OUTPUT_REGEX "PASS: standard dialogs, terminal geometry and resource grants"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
 add_test(NAME ui_contract_generation
         COMMAND ${CMAKE_COMMAND}
                 "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/../contracts"

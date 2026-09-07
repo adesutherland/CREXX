@@ -88,6 +88,36 @@ install(FILES contracts/catalogue.json contracts/README.md contracts/conformance
         "${CREXX_UI_CONTRACT_DIR}/CATALOGUE.md"
         DESTINATION share/crexx/ui/contracts)
 
+# New owner-loop host modules. Console primitives remain a Level B provider;
+# dialogs, resource authority, presentation and the host are Level G values.
+foreach(module IN ITEMS ui_dialogs ui_terminal_view ui_local_resources ui_ansi)
+    set(module_dependencies ui ui_contract ui_catalog)
+    set(module_images "${CMAKE_BINARY_DIR}/bin/ui.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/ui_contract.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/ui_catalog.rxbin")
+    if(module STREQUAL "ui_dialogs")
+        list(APPEND module_dependencies fs)
+        list(APPEND module_images "$<TARGET_FILE:fs>")
+    elseif(module STREQUAL "ui_ansi")
+        list(APPEND module_dependencies console fs ui_dialogs ui_terminal_view ui_local_resources)
+        list(APPEND module_images "$<TARGET_FILE:console>" "$<TARGET_FILE:fs>"
+                "${CMAKE_BINARY_DIR}/bin/ui_dialogs.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/ui_terminal_view.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/ui_local_resources.rxbin")
+    endif()
+    add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/${module}.rxbin"
+            COMMAND $<TARGET_FILE:rxc> --no-exe-import
+                    -i "${CMAKE_BINARY_DIR}/bin" -o ${module}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/${module}.crexx"
+            COMMAND $<TARGET_FILE:rxas> -o "${CMAKE_BINARY_DIR}/bin/${module}" ${module}
+            DEPENDS rxc rxas library compiler_exit_bin ${module_dependencies}
+                    ${module_images} "${CMAKE_CURRENT_SOURCE_DIR}/${module}.crexx"
+            BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${module}.rxas"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+    add_custom_target(${module} ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/${module}.rxbin")
+    install(FILES "${CMAKE_BINARY_DIR}/bin/${module}.rxbin" DESTINATION bin)
+endforeach()
+
 if(ENABLE_GTK)
     add_subdirectory(drivers/gtk)
     set(CREXX_UI_GTK_IMAGE "${CMAKE_BINARY_DIR}/bin/ui_gtk.rxbin")
@@ -121,7 +151,7 @@ if(ENABLE_GTK)
             LIBRARY DESTINATION bin
             RUNTIME DESTINATION bin)
 endif()
-install(FILES README.md DESTINATION share/crexx/ui)
+install(FILES README.md TERMINAL.md DESTINATION share/crexx/ui)
 install(FILES rxpp/ui_macros.rxpm DESTINATION share/crexx/ui/rxpp)
 install(DIRECTORY rxpp/ui DESTINATION share/crexx/ui/rxpp)
 

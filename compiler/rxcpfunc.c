@@ -36,6 +36,7 @@
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 #include "rxcp_source_ext.h"
+#include "rxcp_srcmap.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
@@ -3081,6 +3082,20 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     /* Deallocate memory and reset context */
     free_ast(context);
     free_tok(context);
+    /* Source imports must consume the same RXPP source-map representation as
+     * a directly compiled file. Otherwise @ directives enter the grammar as
+     * instructions, corrupting callable boundaries and argument diagnostics. */
+    if (context->source_has_srcmap) {
+        char *cleaned = 0;
+        size_t cleaned_bytes = 0;
+        if (rxcp_srcmap_preprocess(context, &cleaned, &cleaned_bytes) != 0) {
+            prnterrs(context);
+            goto finish;
+        }
+        free(buff_start);
+        buff_start = cleaned;
+        bytes = cleaned_bytes;
+    }
     cntx_buf(context, buff_start, bytes);
 
     /* Parse program for real */

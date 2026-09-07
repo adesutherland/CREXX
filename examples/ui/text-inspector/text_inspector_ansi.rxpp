@@ -1,0 +1,4 @@
+/* RXPP owns this launcher's generated .crexx file. The feature stays shared. */
+options levelg
+##LOADMACRO ui
+##UI_SESSION_LAUNCHER "ui_ansi","ansidriver","text_inspector","make_text_inspector_session"

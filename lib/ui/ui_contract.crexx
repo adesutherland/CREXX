@@ -673,6 +673,9 @@ uisession: class
     slot = component_slot(id)
     if slot = 0 then return .uiview_impl("Unknown component")
     return _components[slot].view()
+  /** @return immutable identity of this owning session */
+  id: method = .string
+    return _id
   /** @return queued event count */
   queued: method = .int
     return _queued

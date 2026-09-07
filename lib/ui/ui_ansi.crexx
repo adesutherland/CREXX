@@ -1,0 +1,368 @@
+/* Full-screen terminal host. One owner-driven loop services native input,
+ * queued application updates, effects and modal dialog state. No callbacks,
+ * nested event loops or borrowed native handles escape a poll operation.
+ */
+options levelg
+namespace ui_ansi expose ansidriver terminal_capabilities
+import rxfnsb
+import rxconsole
+import rxfs
+import ui
+import ui_contract
+import ui_dialogs
+import ui_terminal_view
+import ui_local_resources
+
+/** @return only services implemented by this tracer host */
+terminal_capabilities: procedure = .uicapabilities
+  caps = .uicapabilities("tracer.compat")
+  names = "ui.dialog ui.viewport ui.keyboard ui.text ui.pointer ui.scroll ui.widgets"
+  do i = 1 to words(names)
+    call caps.enable(word(names, i))
+  end
+  if (rxconsole..capabilities(0) <idiv> 16) <mod> 2 then call caps.enable("ui.paste")
+  return caps
+
+/** Host/executor, deliberately containing no Text Inspector policy. */
+ansidriver: class
+  _session = .uisession
+  _canvas = .uiterminal_canvas
+  _resources = .uilocal_resources
+  _dialog = .uidialog
+  _request = .uimessage
+  _modal = .int
+  _focus = .string
+  _saved_focus = .string
+  _pressed = .string
+  _handle = .int
+  _columns = .int
+  _rows = .int
+  _running = .int
+  _error = .string
+  _dirty = .int
+  *: factory
+    _canvas = .uiterminal_canvas()
+    _modal = 0
+    _focus = ""
+    _saved_focus = ""
+    _pressed = ""
+    _handle = 0
+    _columns = 80
+    _rows = 24
+    _running = 0
+    _error = ""
+    _dirty = 1
+    return
+
+  /** Own a session for this run. Session teardown follows terminal restoration.
+   * @param session configured components, schemas and commands
+   * @return zero on an accepted close, nonzero on host/runtime failure
+   */
+  run: method = .int
+    arg session = .uisession
+    _session = session
+    _resources = .uilocal_resources(_session.id())
+    _handle = rxconsole..open(11)
+    if _handle < 0 then do
+      say "Cannot open an interactive terminal; rxconsole status" _handle
+      call _session.close()
+      return 1
+    end
+    _running = 1
+    rc = rxconsole..size(_handle, _columns, _rows)
+    if rc < 0 then _error = "Cannot read terminal size"
+    call resized(_columns, _rows)
+    rc = _session.post(.uimessage("ui.ready", .uipayload()))
+    if rc < 0 then _error = "Cannot admit ui.ready"
+    fields = .int[]
+    text = ""
+    do while _running & _error = ""
+      call service()
+      if \_running | _error \= "" then leave
+      if _dirty then call draw()
+      kind = rxconsole..poll(_handle, 100, fields, text)
+      if kind = 4 then call resized(fields[3], fields[4])
+      else if kind = 8 then do
+        _error = "Terminal disconnected"
+        leave
+      end
+      else if kind = 7 then do
+        if _modal then call dialog_cancel()
+        else call deliver(.uimessage("ui.close.requested", .uipayload()))
+      end
+      else if kind = -5 | kind = -6 then nop /* bounded malformed input is not a command */
+      else if kind < 0 then _error = "Console input failed: " || kind
+      else if kind > 0 & \_canvas.small() then call input(kind, fields, text)
+    end
+    if _handle > 0 then do
+      rc = rxconsole..close(_handle)
+      _handle = 0
+      if rc < 0 & _error = "" then _error = "Terminal restoration failed"
+    end
+    call _session.close()
+    if _error \= "" then do
+      say _error
+      return 1
+    end
+    return 0
+
+  /** @return diagnostic for headless host tests */
+  error: method = .string
+    return _error
+
+  resized: method = .void
+    arg columns = .int, rows = .int
+    _columns = columns
+    _rows = rows
+    _dirty = 1
+    _pressed = ""
+    call _canvas.resize(columns, rows)
+    if _modal then call _dialog.resize(columns, rows)
+    body = .uipayload()
+    call body.put_integer("width", max(0, columns))
+    call body.put_integer("height", max(0, rows))
+    call body.put_text("unit", "cells")
+    /* Surface resize remains visible to the feature even during modality. */
+    rc = _session.post(.uimessage("ui.viewport.changed", body))
+    if rc < 0 then _error = "Cannot admit viewport change"
+    return
+
+  draw: method = .void
+    view = _session.view()
+    if _modal then view = _dialog.view()
+    frame = _canvas.render(view, _focus)
+    if _focus = "" then do
+      _focus = _canvas.next_focus("", 1)
+      frame = _canvas.render(view, _focus)
+    end
+    rc = rxconsole..write(_handle, frame)
+    if rc < 0 then _error = "Console output failed: " || rc
+    _dirty = 0
+    return
+
+  /** One input record becomes semantic data, never a native callback. */
+  input: method = .void
+    arg kind = .int, fields = .int[], text = .string
+    _dirty = 1
+    body = .uipayload()
+    name = ""
+    direction = .int
+    phase = .string
+    if kind = 1 then do
+      if text = "Tab" then do
+        direction = 1
+        if fields[5] <mod> 2 = 1 then direction = -1
+        _focus = _canvas.next_focus(_focus, direction)
+        return
+      end
+      if text = "Enter" & _focus \= "dialog.filename" then do
+        call activated(_focus)
+        return
+      end
+      if \_modal & (text = "Left" | text = "Right") then do
+        direction = 1
+        if text = "Left" then direction = -1
+        _focus = _canvas.next_focus(_focus, direction)
+        return
+      end
+      call body.put_text("key", text)
+      modifiers = .string[]
+      if fields[5] <mod> 2 = 1 then call arrayappend modifiers, "shift"
+      if (fields[5] <idiv> 2) <mod> 2 = 1 then call arrayappend modifiers, "alt"
+      if (fields[5] <idiv> 4) <mod> 2 = 1 then call arrayappend modifiers, "ctrl"
+      call body.put_texts("modifiers", modifiers)
+      phase = "press"
+      if fields[8] = 2 then phase = "repeat"
+      call body.put_text("phase", phase)
+      name = "ui.input.key"
+    end
+    if kind = 2 | kind = 3 then do
+      if \_modal & kind = 2 then do
+        view = _session.view()
+        do i = 1 to view.count()
+          if view.node_shortcut(i) \= "" & lower(text) = lower(view.node_shortcut(i)) then do
+            rc = _session.invoke(view.node_action(i))
+            if rc < 0 then _error = "Command rejected"
+            return
+          end
+        end
+      end
+      call body.put_text("text", text)
+      name = "ui.input.text"
+      if kind = 3 then name = "ui.input.pasted"
+      if _modal then if _request.name() = "ui.resource.choose" then _focus = "dialog.filename"
+    end
+    if kind = 5 then do
+      node = _canvas.hit(fields[1], fields[2])
+      if fields[8] = 1 & fields[7] = 1 then do
+        _pressed = node
+        if node \= "" then _focus = node
+      end
+      if fields[8] = 2 & fields[7] = 1 then do
+        pressed = _pressed
+        _pressed = ""
+        if node \= "" & node = pressed then call activated(node)
+      end
+      call body.put_text("node", node)
+      call body.put_integer("x", fields[1])
+      call body.put_integer("y", fields[2])
+      call body.put_text("unit", "cells")
+      phase = "move"
+      if fields[8] = 1 then phase = "press"
+      if fields[8] = 2 then phase = "release"
+      call body.put_text("phase", phase)
+      name = "ui.pointer.changed"
+    end
+    if kind = 6 then do
+      call body.put_text("node", _focus)
+      call body.put_integer("x", fields[9])
+      call body.put_integer("y", fields[10])
+      call body.put_text("unit", "lines")
+      name = "ui.scrolled"
+    end
+    if name \= "" then call deliver(.uimessage(name, body))
+    return
+
+  activated: method = .void
+    arg node = .string
+    if node = "" | node = "dialog.filename" then return
+    if _modal then do
+      body = .uipayload()
+      call body.put_text("node", node)
+      call deliver(.uimessage("widget.activated", body))
+    end
+    else do
+      view = _session.view()
+      do i = 1 to view.count()
+        if view.node_id(i) = node then do
+          rc = _session.invoke(view.node_action(i))
+          if rc < 0 then _error = "Command rejected"
+          leave
+        end
+      end
+    end
+    return
+
+  deliver: method = .void
+    arg event = .uimessage
+    if _modal then call _dialog.update(event)
+    else do
+      rc = _session.post(event)
+      if rc < 0 then _error = "Input admission failed: " || event.name()
+    end
+    return
+
+  dialog_cancel: method = .void
+    _dirty = 1
+    body = .uipayload()
+    call body.put_text("key", "Escape")
+    call _dialog.update(.uimessage("ui.input.key", body))
+    return
+
+  /** Drain bounded queued work; active dialogs remain deferred operations. */
+  service: method = .void
+    if _modal then do
+      outcome = _dialog.result()
+      if outcome \= "" then do
+        body = .uipayload()
+        name = "ui.effect.cancelled"
+        if outcome = "cancel" then call body.put_text("reason", "dialog_cancelled")
+        else if _request.name() = "ui.dialog.confirm" then do
+          name = "ui.dialog.accepted"
+          call body.put_text("response", outcome)
+        end
+        else do
+          name = "ui.resource.selected"
+          resource = _resources.grant(_dialog.selection())
+          if resource.id() = "" then do
+            name = "ui.effect.failed"
+            call body.put_text("code", "resource_limit")
+            call body.put_text("message", "Local resource grant limit reached")
+          end
+          else call body.put_resource("resource", resource)
+        end
+        call finish(_request, name, body)
+        _modal = 0
+        _focus = _saved_focus
+        _pressed = ""
+      end
+    end
+    do budget = 1 to 64
+      handled = _session.pump()
+      if handled > 0 then _dirty = 1
+      if handled < 0 then do
+        _error = _session.fault()
+        return
+      end
+      if _session.pending() = 0 then return
+      effect = _session.take_effect()
+      call execute(effect)
+      if \_running | _error \= "" then return
+    end
+    /* Return to input after a finite budget; pending work is not discarded. */
+    return
+
+  execute: method = .void
+    arg effect = .uimessage
+    _dirty = 1
+    name = effect.name()
+    body = effect.body()
+    rc = .int
+    if name = "ui.resource.choose" | name = "ui.dialog.confirm" then do
+      if _modal then do
+        call fail_effect(effect, "dialog_busy", "Another dialog is active")
+        return
+      end
+      if name = "ui.resource.choose" & body.text("purpose") \= "open" then do
+        call fail_effect(effect, "unsupported_purpose", "This selector opens existing files only")
+        return
+      end
+      if name = "ui.dialog.confirm" then _dialog = .uiconfirm_dialog(body.text("title"), body.text("message"))
+      else _dialog = .uifile_dialog(body.text("title"), rxfs..cwd())
+      call _dialog.resize(_columns, _rows)
+      _request = effect
+      _modal = 1
+      _saved_focus = _focus
+      _focus = "dialog.ok"
+      if name = "ui.resource.choose" then _focus = "dialog.filename"
+      _pressed = ""
+      return
+    end
+    if name = "io.text.read" then do
+      response = _resources.read(effect)
+      rc = _session.complete(response)
+      if rc < 0 then _error = "Read completion rejected"
+      return
+    end
+    if name = "ui.close" then do
+      if _modal then do
+        cancelled = .uipayload()
+        call cancelled.put_text("reason", "host_closed")
+        call finish(_request, "ui.effect.cancelled", cancelled)
+        _modal = 0
+      end
+      rc = rxconsole..close(_handle)
+      _handle = 0
+      if rc < 0 then _error = "Terminal restoration failed"
+      else call finish(effect, "ui.closed", .uipayload())
+      rc = _session.pump()
+      if rc < 0 then _error = _session.fault()
+      _running = 0
+      return
+    end
+    call fail_effect(effect, "unsupported_effect", "No terminal executor for " || name)
+    return
+
+  finish: method = .void
+    arg effect = .uimessage, name = .string, body = .uipayload
+    response = .uimessage(name, body, effect.target(), "event", effect.request_id(), effect.session_id())
+    rc = _session.complete(response)
+    if rc < 0 then _error = "Effect completion rejected: " || name
+    return
+  fail_effect: method = .void
+    arg effect = .uimessage, code = .string, message = .string
+    body = .uipayload()
+    call body.put_text("code", code)
+    call body.put_text("message", message)
+    call finish(effect, "ui.effect.failed", body)
+    return

@@ -1,0 +1,21 @@
+options levelb
+import rxconsole
+main: procedure = .int
+  arg args = .string[]
+  handle = rxconsole..open(11)
+  if handle < 0 then exit 1
+  if rxconsole..open(0) \= -3 then exit 1
+  fields = .int[]
+  text = ""
+  say "CONSOLE_READY"
+  do forever
+    kind = rxconsole..poll(handle, 1000, fields, text)
+    if kind = 8 then return 0
+    if kind < 0 then exit 1
+    if kind > 0 then say "EVENT" kind fields[1] fields[2] fields[3] fields[4] fields[5] fields[8] text
+    if kind = 2 & text = "q" then leave
+  end
+  if args[0] > 0 then if args[1] = "abandon" then return 0
+  if rxconsole..close(handle) \= 0 then exit 1
+  if rxconsole..close(handle) \= -1 then exit 1
+  return 0

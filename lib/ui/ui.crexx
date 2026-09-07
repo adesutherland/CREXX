@@ -242,6 +242,16 @@ uiview_impl: class implements .uiview
     call place_current relation, anchor
     return
 
+  /** Append an editable text field. Drivers advertise support explicitly.
+   * @param id stable field identity @param text current display value
+   * @param relation placement @param anchor stable preceding node
+   */
+  add_input: method = .void
+    arg id = .string, text = .string, relation = "below", anchor = ""
+    call add_label(id, text, relation, anchor)
+    _kinds[_count] = "input"
+    return
+
   /** Append a node from RXPP's compact builder specification.
    *
    * The form is `kind|id|action|shortcut|relation|anchor`. Labels and lines
@@ -266,6 +276,7 @@ uiview_impl: class implements .uiview
     if shortcut = "none" then shortcut = ""
     if anchor = "none" then anchor = ""
     if kind = "label" then call add_label(id, text, relation, anchor)
+    else if kind = "input" then call add_input(id, text, relation, anchor)
     else if kind = "line" then call add_line(id, relation, anchor)
     else if kind = "button" then call add_button(id, text, action, shortcut, relation, anchor)
     return

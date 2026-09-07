@@ -502,6 +502,21 @@ remain intact. `binary_forward_dependencies` proves that an unused `_rxsysb`
 source extension stays excluded while a real consumer still imports it, tracks
 its body and rejects an invalid call, in both optimization modes.
 
+Storage selectors have a separate syntax-role boundary. The compact suffixes
+in `<sizeof..float>`, `<at..u8>`, `<packed..float>` and `<compare..u8>` use
+leaf `CLASS` nodes, but describe binary storage, not object values. Existing
+inline payloads can annotate these leaves as `TP_OBJECT` with a bare name such
+as `float`. The inliner's reference-attribute check recognizes the validated
+selector position and does not resolve it as an object class. Otherwise a
+spurious lookup such as `rxfnsg.float` can load unrelated source bodies and
+correctly-but-unnecessarily make them snapshot dependencies. Actual object
+nodes and reference-bearing symbols retain their normal proof; there is no
+global type-name blacklist, metadata relaxation or inlining disablement.
+`binary_storage_selector_dependencies` isolates all four selector contexts
+from the ambient library set, checks unused-source snapshots in both compiler
+modes, and executes imported bodies through the full toolchain while requiring
+supported methods to remain inlined in optimized assembly.
+
 
 Compiler-generated consumer `.rxas` treats imported declaration blocks as a
 runtime dependency snapshot, not as a copy of the provider's full public
