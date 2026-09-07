@@ -18,7 +18,7 @@ function(run_checked description)
             RESULT_VARIABLE result
             ENCODING UTF-8)
     if(NOT result EQUAL 0)
-        message(FATAL_ERROR "${description} failed:\n${out}${err}")
+        message(FATAL_ERROR "${description} failed (${result}):\n${out}${err}")
     endif()
 endfunction()
 

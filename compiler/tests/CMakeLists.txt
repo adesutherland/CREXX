@@ -1470,7 +1470,8 @@ add_test(NAME nr21_fixed_call_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
 set_tests_properties(nr21_fixed_call_contract PROPERTIES
-        LABELS "compiler;codegen;rxbin")
+        LABELS "compiler;codegen;rxbin"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxvm;rxbvm;library;mutate_rxbin_feature")
 
 add_test(NAME nr14_frozen_parse_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1486,7 +1487,8 @@ add_test(NAME nr14_frozen_parse_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
 set_tests_properties(nr14_frozen_parse_contract PROPERTIES
-        LABELS "compiler;codegen;rxbin;parse")
+        LABELS "compiler;codegen;rxbin;parse"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas;rxvm;rxbvm;library;mutate_rxbin_feature")
 
 add_test(NAME nr15_native_stem_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1500,7 +1502,8 @@ add_test(NAME nr15_native_stem_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr15_native_stem_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr15_native_stem_contract.cmake)
 set_tests_properties(nr15_native_stem_contract PROPERTIES
-        LABELS "compiler;codegen;rxbin;stem;nr15")
+        LABELS "compiler;codegen;rxbin;stem;nr15"
+        CREXX_PREP_TARGETS "rxas;rxlink;rxdas;rxvm;rxbvm;mutate_rxbin_feature")
 
 add_test(NAME gate_f_channel_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1512,7 +1515,8 @@ add_test(NAME gate_f_channel_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/gate_f_channel_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/gate_f_channel_contract.cmake)
 set_tests_properties(gate_f_channel_contract PROPERTIES
-        LABELS "compiler;codegen;rxas;rxbin;gate-f;channels")
+        LABELS "compiler;codegen;rxas;rxbin;gate-f;channels"
+        CREXX_PREP_TARGETS "rxas;rxlink;rxdas;mutate_rxbin_feature")
 crexx_label_concurrency_tests(SP02 gate_f_channel_contract)
 
 add_test(NAME nr09_numeric_context_contract
