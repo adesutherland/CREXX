@@ -1,17 +1,18 @@
 # Decimal backend performance workspace
 
-This directory is the independent control plane for decimal-provider
-correctness and performance engineering. It does not extend the completed
-[`NUMERIC-01`](../NUMERIC-01-WORKLIST.md) typed-BIF/RexxCPS work and it does
-not borrow implementation authority from the live PERF3 queue.
+This directory retains the completed independent control plane for
+decimal-provider correctness and performance engineering. It does not extend
+the completed [`NUMERIC-01`](../NUMERIC-01-WORKLIST.md) typed-BIF/RexxCPS work
+and it does not borrow implementation authority from the live performance
+roadmap.
 
 The approved engineering contract is
-[`DECIMAL-01-ENGINEERING-PLAN.md`](DECIMAL-01-ENGINEERING-PLAN.md), and live
-Gate 0 progress is recorded in
-[`DECIMAL-01-WORKLIST.md`](DECIMAL-01-WORKLIST.md). Gate 0 validates the current
-provider contract and the individual/combined RXAS numeric-context
-instructions. No candidate backend, hybrid value representation, plugin ABI
-change, or production edit is selected by this approval.
+[`DECIMAL-01-ENGINEERING-PLAN.md`](DECIMAL-01-ENGINEERING-PLAN.md), and the
+completed gated progress is recorded in
+[`DECIMAL-01-WORKLIST.md`](DECIMAL-01-WORKLIST.md). Stage 3 rejected the tuned
+decNumber, decQuad, and libmpdec candidates and retained the current
+`mc_decimal` provider with no production change. Reopening requires a fresh
+selection through the live performance roadmap.
 
 The preliminary source-attributed review that will inform the later extended
 panel is [`PUBLIC-EVIDENCE-ORIENTATION.md`](PUBLIC-EVIDENCE-ORIENTATION.md).

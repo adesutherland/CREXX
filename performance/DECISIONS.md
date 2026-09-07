@@ -1,13 +1,32 @@
 # cREXX performance decisions and lessons
 
-Status: **enduring decision record; initially seeded with the completed
-DECIMAL-01 Stage 3 decision; broader Stage 6 consolidation remains plan-only**
+Status: **enduring decision record; PERF3/POSTPERF and DECIMAL-01 durable
+decisions consolidated; Stage 6 authority consolidation complete**
 
 This file records accepted mechanisms, rejected experiments, lessons and
 explicit reopening triggers. It prevents a later performance review from
 repeating a closed experiment merely because its evidence is no longer in the
-immediate working set. Current measurements remain in `performance/RESULTS.md`
-when that Stage 6 authority is created; raw evidence remains in dated bundles.
+immediate working set. Current measurements remain in `performance/RESULTS.md`;
+raw evidence remains in dated bundles.
+
+## Consolidated Programme Decisions
+
+These are durable selection boundaries from the completed programmes, not
+current release or exact-head performance claims. The full dated activity and
+negative-result history remains in
+[`PERF3-PROGRAMME-LEDGER-2026-08-17.md`](PERF3-PROGRAMME-LEDGER-2026-08-17.md).
+
+| ID | Durable decision | Do not infer or repeat | Reopening trigger |
+| --- | --- | --- | --- |
+| PERF-DEC-01 | PERF3 and `POSTPERF-01` through `POSTPERF-05` are closed. New production performance work requires a separately selected gate and first ordinary profiling-off Release verdict. | A retained idea, old profile, or compiling PoC is not authorization for `POSTPERF-06`. | A current product/profile question is ranked and Adrian selects a bounded gate. |
+| PERF-DEC-02 | Keep the versioned portfolio-v3 capability and aggregation boundary. Report product `rxvm` once and concrete `rxtvm`/`rxbvm` only for dispatch comparisons; keep throughput, lifecycle, RSS, and artifacts separate. | Do not pool incomparable workloads, duplicate an executable alias, or reinterpret historical VM labels. | A separately approved portfolio/version change with requalification of affected results. |
+| PERF-DEC-03 | Retain the proved C1abc copy/receiver-ownership compiler ladder. Broad aliasing, whole-value replacement, escape, dynamic/interface, or otherwise unproved shapes remain ordinary calls or copies. | Do not replace the supported optimized shape with a broad fail-closed guard, and do not broaden it without lifetime proof. | A current hot supported shape has material evidence and a complete ownership/copyback proof. |
+| PERF-DEC-04 | Retain the private locale-aware C4 v3 string-to-number prefilter and the accepted bounded conversion paths. Broad value caching remains unselected. | Do not infer a numeric-context cache, public ABI span, or value-layout change from the private prefilter result. | A current residual census shows material same-source/same-context conversions after existing proof consumers. |
+| PERF-DEC-05 | Reuse the immutable CFG, signal policy, sparse component/value proof, and transactional rewrite services for bounded RXAS consumers. Keep exact local normalizations in the cheap peephole. | Do not recreate dense whole-procedure scans or duplicate proof authorities for one optimization. | A selected consumer demonstrates that the shared proof lacks a required semantic fact or cannot scale. |
+| PERF-DEC-06 | Dynamic PARSE uses exit-owned compiled-pattern lowering through existing instructions; no new instruction was justified. Generic scalar access and bounded late-profitability consumers completed their governed verdicts. | Do not reopen an opcode or broad late-inline programme merely because the historical alternatives remain replayable. | A new semantic requirement or current profile establishes a material gap the existing instruction/proof surface cannot represent. |
+| PERF-DEC-07 | Storage/List and related graph deficits are product evidence for a Level G ownership/nested-container decision. They are not common-score cells or benchmark-local speed-patch authority. | Do not weaken Level B ownership, comparisons, or workload equivalence to improve a score. | Adrian selects a product ownership/lifetime contract and equivalent control. |
+| PERF-DEC-08 | JIT/MIR/LLVM, VM handler placement, and broad ISA migration remain deferred research. | Do not treat a historical handler-layout result or external JIT reputation as a product selection. | The accepted non-JIT product has a current material residual gap and Adrian opens the architecture gate. |
+| PERF-DEC-09 | Concurrency product capability, portability, and publication moved to `concurrency/`; performance retains only workload and regression evidence. | Do not infer current concurrency product status from historical Gate E/F labels in the PERF3 ledger. | A selected concurrency change needs a governed performance verdict under the current concurrency contract. |
 
 ## DECIMAL-01-DECISION-2026-08-18 — retain current `mc_decimal`
 

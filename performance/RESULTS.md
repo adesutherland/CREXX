@@ -5,6 +5,11 @@ Date: 2026-08-19
 Status: **Apple pre-release scorecard complete; final Linux verification
 pending**
 
+This report describes the frozen 2026-08-18 scorecard candidate. Use
+[`ROADMAP.md`](ROADMAP.md) for current selection and closeout order; do not
+present these measurements as an unverified claim about a later `develop`
+revision or release tag.
+
 ## Executive summary
 
 The current cREXX performance position is strong overall. All 89 tested cells
