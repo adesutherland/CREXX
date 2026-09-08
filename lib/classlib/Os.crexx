@@ -26,6 +26,7 @@ options levelb comments_dash
 namespace system expose os
 import rxfs
 import rxplatform
+import rxfnsb
 
 /**
  * Operating-system services backed by the narrow rxfs and rxplatform
@@ -135,6 +136,72 @@ os: class
     entries = .string[]
     call rxfs..listdir(path, entries)
   return entries
+
+
+  /**
+   * Parses a filesystem path into its component parts.
+   *
+   * The path is interpreted lexically; the filesystem is not accessed and
+   * the supplied path does not need to exist. Unless the path ends with a
+   * directory separator, the final path component is treated as a filename.
+   *
+   * The returned stem contains:
+   *   _path       Directory portion of the path.
+   *   _filename   Filename including its extension.
+   *   _file       Filename without its extension.
+   *   _extension  Filename extension without the leading period.
+   *
+   * A leading period in a filename does not by itself constitute an
+   * extension. For example, ".profile" has no extension.
+   *
+   * @param source Path string to parse.
+   * @return .stem Stem containing the parsed path components.
+   */
+  pathInfo: method = .stem
+    arg source = .string
+    info = .stem()
+    info._path = ''
+    info._filename = ''
+    info._file = ''
+    info._extension = ''
+
+    /* Accept both filesystem separator styles. */
+    source = changestr('\', source, '/')
+
+    /* A trailing separator denotes a path without a filename. */
+    if right(source, 1) = '/' then do
+      info._path = strip(source, 'T', '/')
+      info._filename = ''
+      info._file = ''
+      info._extension = ''
+      return info
+    end
+
+    /* Separate the final component from its path. */
+    separator = lastpos('/', source)
+
+    if separator > 0 then do
+      info._path = left(source, separator - 1)
+      info._filename = substr(source, separator + 1)
+    end
+    else do
+      info._path = ''
+      info._filename = source
+    end
+
+    /* Split the filename at its final period. */
+    extension = lastpos('.', info._filename)
+
+    if extension > 1 then do
+      info._file = left(info._filename, extension - 1)
+      info._extension = substr(info._filename, extension + 1)
+    end
+    else do
+      info._file = info._filename
+      info._extension = ''
+    end
+
+  return info
 
     /**
      * Returns the contents of an environment variable.
