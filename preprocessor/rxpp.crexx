@@ -85,9 +85,9 @@ arg command=.string[]
      exit 8
   end
   if verbose then do
-     say 'Input File:  ' infile
-     say 'Output File: ' outfile
-     say 'Macro Lib:   ' maclib
+     say 'Input File:  ' translate(infile,'/','\')
+     say 'Output File: ' translate(outfile,'/','\')
+     say 'Macro Lib:   ' translate(maclib,'/','\')
      say 'Verbose:     ' verbose
   end
   inpath=getpath(infile)
@@ -104,6 +104,9 @@ if inpath \= macpath then call registerScriptMacros macpath
 
   if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
   if verbose then say 'CRX0110I ['time('l')'] System Path 'syspath
+  if verbose then say 'CRX0110I ['time('l')'] Input Path  'inpath
+  if verbose then say 'CRX0110I ['time('l')'] Macro Path  'macpath
+  if verbose then say 'CRX0110I ['time('l')'] Build Path  'outpath
 /* --------------------------------------------------------------------
  * Pass One. Load Macros, Load Source, Expand Macros of Source
  * --------------------------------------------------------------------
@@ -515,6 +518,7 @@ return source[0]
 GetPrecomp: procedure
    arg line_no=.int
    lineNo = 0
+   builddir=0    /* ##BUILDDIR may appear only once */
    do while lineNo < source.0      ## array might grow, so while is more reliable
       LineNo=LineNo+1
       if stype[LineNO]='noexp' | stype[LineNO]='cmt' then iterate
@@ -567,8 +571,9 @@ return
 CMD_loadMacro: procedure
   arg line_no=.int,line=.string
   stype.line_no='X'
-  path=normalisePath(syspath,word(line,2))
+  path=normalisePath(inpath,word(line,2))
   if right(path,1) \= '/' then path=path'/'
+  if verbose then say 'CRX0110I ['time('l')'] Macro Path  'path
   call registerScriptMacros path
 return
 /* ------------------------------------------------------------------
@@ -1177,7 +1182,7 @@ CMD_include: procedure
   file=word(incl,2)
   rc=.int
   insertat=.int
-  file=normalisepath(syspath,file)
+  file=normalisepath(inpath,file)
   include=.string[]
   /* new=readall(include,file,-1) */
   include=readLines(file,,,'noRaise')
@@ -2816,7 +2821,6 @@ return path
  *   interpreted before the referenced file or directory is opened.
  * ------------------------------------------------------------------
  */
-
 normalisePath: procedure=.string
   arg xsyspath=.string, rawpath=.string
 
@@ -3028,4 +3032,4 @@ rxppinit: procedure=.string
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
   call setvar 'rxpp_date',date()' 'time()
-return strip(syspath)
+return translate(strip(syspath),'/','\')
