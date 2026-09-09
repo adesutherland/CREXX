@@ -41,8 +41,8 @@ The dated discussion and approval trail remains in [`history/`](history/).
 11. The Level G surface lowers through the public Level B pool, scope, task,
     completion, channel, value and endpoint classes.
 12. Those classes reach RXVM only through `chanopen`, `chanstart`, `chanwait`,
-    `chancancel` and `chanclose`. There is no public RXPA task ABI or hidden
-    native-payload contract.
+    `chancancel`, `chanrelease` and `chanclose`. There is no public RXPA task ABI
+    or hidden native-payload contract.
 13. RXAS channel and ticket integers are execution-local capabilities. They
     are not transferable values or public worker identities.
 14. A task target is a linker-sealed descriptor for a statically resolved task
@@ -63,6 +63,23 @@ The dated discussion and approval trail remains in [`history/`](history/).
     only complete bounded request values to sealed `.httpservice .taskwork`
     targets and receives buffered responses over a private byte endpoint.
     Socket handles never cross executions.
+
+## Request lifetime
+
+20. An accepted channel request owns its ticket and provider state until explicit
+    release or whole-channel close. Waiting, cancellation and freeing an encoded
+    completion do not release that ownership. Long-lived callers release requests
+    after observing a terminal completion and finishing request-specific access.
+21. Release invalidates every copy of the request capability, but leaves saved
+    completion values usable. Release before successful terminal observation
+    returns `WOULD_BLOCK`; provider cleanup failure retains ownership for retry.
+    The 65,535-ticket context capacity counts unreleased requests. Slot generation
+    wrap retires a slot rather than reviving stale authority.
+22. Request release does not detach structured tasks or remove scope accounting.
+    Joined task results remain available through the scope after channel close.
+
+The rationale, accepted resource tradeoff and validation are recorded in
+[`CHANNEL-REQUEST-LIFETIME.md`](CHANNEL-REQUEST-LIFETIME.md).
 
 ## Deliberately absent
 

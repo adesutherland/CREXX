@@ -126,6 +126,7 @@ struct rxvm_channel_local_request {
     rxvm_executor_request *executor_request;
     rxvm_channel_local_state *owner;
     rxvm_channel_local_request *next;
+    rxvm_channel_local_request *previous;
     unsigned char failfast_applied;
 };
 
@@ -139,6 +140,9 @@ typedef struct rxvm_channel_slot {
     void *provider_state;
     rxvm_channel_provider_entry *provider;
     uint64_t next_submission_sequence;
+    /* List links are slot+1, so reallocating the tables cannot invalidate them. */
+    uint32_t first_ticket;
+    uint32_t first_unobserved;
     uint16_t generation;
     rxvm_channel_lifecycle state;
     unsigned char live;
@@ -149,6 +153,10 @@ typedef struct rxvm_channel_ticket_slot {
     void *request_state;
     uint64_t submission_sequence;
     int64_t capability;
+    uint32_t next;
+    uint32_t previous;
+    uint32_t next_unobserved;
+    uint32_t previous_unobserved;
     uint16_t generation;
     uint16_t channel_slot;
     unsigned char live;
@@ -166,6 +174,7 @@ typedef struct rxvm_channel_context {
     size_t ticket_capacity;
     size_t live_channels;
     size_t live_tickets;
+    uint32_t free_ticket;
     uint32_t owner_id;
 } rxvm_channel_context;
 
@@ -1906,33 +1915,73 @@ static int channel_allocate_slot(rxvm_channel_context *state,
 }
 
 static int ticket_allocate_slot(rxvm_channel_context *state,
+                                size_t channel_slot,
                                 size_t *slot_out,
                                 rxvm_channel_ticket_slot **ticket_out) {
     size_t slot;
-    for (slot = 0u; slot < state->ticket_count; slot++) {
-        if (!state->tickets[slot].live && !state->tickets[slot].retired) break;
-    }
-    if (slot == state->ticket_count) {
+    rxvm_channel_slot *channel = &state->channels[channel_slot];
+    if (state->free_ticket) {
+        slot = state->free_ticket - 1u;
+        state->free_ticket = state->tickets[slot].next;
+    } else {
         if (state->ticket_count == RXVM_CHANNEL_MAX_SLOTS ||
             !channel_grow((void **)&state->tickets,
                           &state->ticket_capacity,
                           state->ticket_count + 1u,
                           sizeof(*state->tickets))) return 0;
-        state->ticket_count++;
+        slot = state->ticket_count++;
     }
     if (!state->tickets[slot].generation) {
         state->tickets[slot].generation = 1u;
     }
     state->tickets[slot].live = 1u;
+    state->tickets[slot].channel_slot = (uint16_t)channel_slot;
+    state->tickets[slot].previous = 0u;
+    state->tickets[slot].next = channel->first_ticket;
+    if (channel->first_ticket) {
+        state->tickets[channel->first_ticket - 1u].previous = (uint32_t)slot + 1u;
+    }
+    channel->first_ticket = (uint32_t)slot + 1u;
+    state->tickets[slot].previous_unobserved = 0u;
+    state->tickets[slot].next_unobserved = channel->first_unobserved;
+    if (channel->first_unobserved) {
+        state->tickets[channel->first_unobserved - 1u].previous_unobserved =
+                (uint32_t)slot + 1u;
+    }
+    channel->first_unobserved = (uint32_t)slot + 1u;
     state->live_tickets++;
     *slot_out = slot;
     *ticket_out = &state->tickets[slot];
     return 1;
 }
 
+static void ticket_mark_observed(rxvm_channel_context *state,
+                                 rxvm_channel_ticket_slot *ticket) {
+    rxvm_channel_slot *channel = &state->channels[ticket->channel_slot];
+    if (ticket->observed) return;
+    if (ticket->previous_unobserved) {
+        state->tickets[ticket->previous_unobserved - 1u].next_unobserved =
+                ticket->next_unobserved;
+    } else {
+        channel->first_unobserved = ticket->next_unobserved;
+    }
+    if (ticket->next_unobserved) {
+        state->tickets[ticket->next_unobserved - 1u].previous_unobserved =
+                ticket->previous_unobserved;
+    }
+    ticket->next_unobserved = ticket->previous_unobserved = 0u;
+    ticket->observed = 1u;
+}
+
 static void ticket_release_slot(rxvm_channel_context *state,
                                 rxvm_channel_ticket_slot *ticket) {
+    rxvm_channel_slot *channel = &state->channels[ticket->channel_slot];
+    uint32_t link = (uint32_t)(ticket - state->tickets) + 1u;
     if (!ticket->live || !state->live_tickets) abort();
+    ticket_mark_observed(state, ticket);
+    if (ticket->previous) state->tickets[ticket->previous - 1u].next = ticket->next;
+    else channel->first_ticket = ticket->next;
+    if (ticket->next) state->tickets[ticket->next - 1u].previous = ticket->previous;
     ticket->live = 0u;
     ticket->observed = 0u;
     ticket->request_state = 0;
@@ -1940,14 +1989,20 @@ static void ticket_release_slot(rxvm_channel_context *state,
     ticket->submission_sequence = 0u;
     state->live_tickets--;
     ticket->generation++;
+    ticket->next = ticket->previous = 0u;
     if (!ticket->generation) ticket->retired = 1u;
+    else {
+        ticket->next = state->free_ticket;
+        state->free_ticket = link;
+    }
 }
 
 static void channel_release_slot(rxvm_channel_context *state,
                                  rxvm_channel_slot *channel) {
     rxvm_channel_provider_entry *provider;
     if (!channel->live || !state->live_channels) abort();
-    if (channel->provider_state) abort();
+    if (channel->provider_state || channel->first_ticket ||
+        channel->first_unobserved) abort();
     provider = channel->provider;
     channel->live = 0u;
     channel->provider = 0;
@@ -2201,6 +2256,7 @@ static rxvm_channel_status channel_local_start(
                 local_request->executor_request = request;
                 local_request->owner = local;
                 local_request->next = local->requests;
+                if (local_request->next) local_request->next->previous = local_request;
                 local->requests = local_request;
                 *request_state_out = local_request;
                 (void)channel_local_expire_due(local);
@@ -2577,13 +2633,13 @@ static rxvm_channel_status channel_local_request_destroy(
     if (!local || !request || request->owner != local) {
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
-    (void)rxvm_executor_request_wait(
-            request->executor_request, 0);
-    result = rxvm_executor_request_destroy(request->executor_request);
-    cursor = &local->requests;
-    while (*cursor && *cursor != request) cursor = &(*cursor)->next;
+    cursor = request->previous ? &request->previous->next : &local->requests;
     if (*cursor != request) return RXVM_CHANNEL_INTERNAL_ERROR;
+    (void)rxvm_executor_request_wait(request->executor_request, 0);
+    result = rxvm_executor_request_destroy(request->executor_request);
+    if (result != RXVM_EXECUTOR_OK) return RXVM_CHANNEL_INTERNAL_ERROR;
     *cursor = request->next;
+    if (request->next) request->next->previous = request->previous;
     memset(request, 0, sizeof(*request));
     free(request);
     return result == RXVM_EXECUTOR_OK
@@ -2701,10 +2757,9 @@ rxvm_channel_status rxvm_channel_start(
     }
     status = rxcv_document_root(envelope, envelope_length, &envelope_root);
     if (status != RXVM_CHANNEL_OK) return status;
-    if (!ticket_allocate_slot(state, &ticket_slot, &ticket)) {
+    if (!ticket_allocate_slot(state, channel_slot, &ticket_slot, &ticket)) {
         return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
     }
-    ticket->channel_slot = (uint16_t)channel_slot;
     status = channel->provider->descriptor.operations.start(
             channel->provider_state, envelope, envelope_length,
             wait_microseconds, &ticket->request_state);
@@ -2714,8 +2769,15 @@ rxvm_channel_status rxvm_channel_start(
             (void)channel->provider->descriptor.operations.cancel(
                     channel->provider_state, ticket->request_state,
                     0, 0u);
-            (void)channel->provider->descriptor.operations.request_destroy(
+            rxvm_channel_status destroyed =
+                    channel->provider->descriptor.operations.request_destroy(
                     channel->provider_state, ticket->request_state);
+            if (destroyed != RXVM_CHANNEL_OK) {
+                /* No capability was issued. Keep failed-start cleanup owned
+                 * by close, without making it a deliverable completion. */
+                ticket_mark_observed(state, ticket);
+                return destroyed;
+            }
         }
         ticket_release_slot(state, ticket);
         return status;
@@ -2756,18 +2818,15 @@ rxvm_channel_status rxvm_channel_wait(
         rxvm_channel_ticket_slot *best = 0;
         uint64_t best_terminal_sequence = UINT64_MAX;
         uint64_t observed_generation;
-        size_t index;
+        uint32_t link;
 
         observed_generation = channel->provider->descriptor.operations.
                 completion_generation(channel->provider_state);
-        for (index = 0u; index < state->ticket_count; index++) {
-            rxvm_channel_ticket_slot *ticket = &state->tickets[index];
+        for (link = channel->first_unobserved; link;
+             link = state->tickets[link - 1u].next_unobserved) {
+            rxvm_channel_ticket_slot *ticket = &state->tickets[link - 1u];
             uint64_t terminal_sequence = 0u;
             int terminal;
-            if (!ticket->live || ticket->observed ||
-                ticket->channel_slot != channel_slot) {
-                continue;
-            }
             terminal = channel->provider->descriptor.operations.
                     terminal_snapshot(
                         channel->provider_state, ticket->request_state,
@@ -2806,7 +2865,7 @@ rxvm_channel_status rxvm_channel_wait(
                 }
             }
             free(encoded.data);
-            if (status == RXVM_CHANNEL_OK) best->observed = 1u;
+            if (status == RXVM_CHANNEL_OK) ticket_mark_observed(state, best);
             return status;
         }
         if (wait_microseconds == 0) return RXVM_CHANNEL_WOULD_BLOCK;
@@ -2860,6 +2919,29 @@ rxvm_channel_status rxvm_channel_cancel(
             reason, reason_length);
 }
 
+rxvm_channel_status rxvm_channel_release(
+        rxvm_context *context,
+        int64_t channel_capability_value,
+        int64_t ticket_capability_value) {
+    rxvm_channel_context *state;
+    rxvm_channel_slot *channel;
+    rxvm_channel_ticket_slot *ticket;
+    rxvm_channel_status status;
+    size_t channel_slot;
+    if (!context) return RXVM_CHANNEL_INVALID_ARGUMENT;
+    state = channel_context_for(context, 1);
+    if (!state) return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
+    status = channel_resolve(state, channel_capability_value, &channel_slot, &channel);
+    if (status != RXVM_CHANNEL_OK) return status;
+    status = ticket_resolve(state, ticket_capability_value, channel_slot, 0, &ticket);
+    if (status != RXVM_CHANNEL_OK) return status;
+    if (!ticket->observed) return RXVM_CHANNEL_WOULD_BLOCK;
+    status = channel->provider->descriptor.operations.request_destroy(
+            channel->provider_state, ticket->request_state);
+    if (status == RXVM_CHANNEL_OK) ticket_release_slot(state, ticket);
+    return status;
+}
+
 static rxvm_channel_status channel_close_slot(
     rxvm_channel_context *state,
     size_t channel_slot,
@@ -2867,15 +2949,17 @@ static rxvm_channel_status channel_close_slot(
     int64_t mode) {
     rxvm_channel_provider_entry *provider = channel->provider;
     rxvm_channel_status result = RXVM_CHANNEL_OK;
-    size_t index;
+    uint32_t link;
+    int first_close = channel->state == RXVM_CHANNEL_SLOT_OPEN;
+    (void)channel_slot;
 
     channel->state = mode == 1
         ? RXVM_CHANNEL_SLOT_CLOSING_DRAIN
         : RXVM_CHANNEL_SLOT_CLOSING_CANCEL;
     if (mode == 2) {
-        for (index = 0u; index < state->ticket_count; index++) {
-            rxvm_channel_ticket_slot *ticket = &state->tickets[index];
-            if (!ticket->live || ticket->channel_slot != channel_slot) continue;
+        for (link = channel->first_ticket; link;
+             link = state->tickets[link - 1u].next) {
+            rxvm_channel_ticket_slot *ticket = &state->tickets[link - 1u];
             rxvm_channel_status cancel_result =
                     provider->descriptor.operations.cancel(
                         channel->provider_state, ticket->request_state,
@@ -2885,25 +2969,30 @@ static rxvm_channel_status channel_close_slot(
                 result == RXVM_CHANNEL_OK) result = cancel_result;
         }
     }
-    {
+    if (first_close) {
         rxvm_channel_status close_result = provider->descriptor.operations.
                 close(channel->provider_state, mode);
         if (close_result != RXVM_CHANNEL_OK && result == RXVM_CHANNEL_OK) {
             result = close_result;
         }
     }
-    for (index = 0u; index < state->ticket_count; index++) {
-        rxvm_channel_ticket_slot *ticket = &state->tickets[index];
-        if (!ticket->live || ticket->channel_slot != channel_slot) continue;
+    link = channel->first_ticket;
+    while (link) {
+        rxvm_channel_ticket_slot *ticket = &state->tickets[link - 1u];
+        uint32_t next = ticket->next;
         {
             rxvm_channel_status destroy_result =
                     provider->descriptor.operations.request_destroy(
                         channel->provider_state, ticket->request_state);
             if (destroy_result != RXVM_CHANNEL_OK &&
                 result == RXVM_CHANNEL_OK) result = destroy_result;
+            if (destroy_result == RXVM_CHANNEL_OK) ticket_release_slot(state, ticket);
         }
-        ticket_release_slot(state, ticket);
+        link = next;
     }
+    /* A failed destroy still owns its request. Keep the closing channel and
+     * capabilities for a cleanup retry; never destroy their provider below. */
+    if (channel->first_ticket) return result;
     provider->descriptor.operations.channel_destroy(channel->provider_state);
     channel->provider_state = 0;
     channel_release_slot(state, channel);
@@ -2927,9 +3016,6 @@ rxvm_channel_status rxvm_channel_close(
     status = channel_resolve(state, channel_capability_value,
                              &channel_slot, &channel);
     if (status != RXVM_CHANNEL_OK) return status;
-    if (channel->state != RXVM_CHANNEL_SLOT_OPEN) {
-        return RXVM_CHANNEL_CLOSED;
-    }
     return channel_close_slot(state, channel_slot, channel, mode);
 }
 

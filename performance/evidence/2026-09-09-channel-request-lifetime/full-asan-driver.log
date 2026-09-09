@@ -1,0 +1,71 @@
+ASan run directory: /tmp/crexx-channel-release.1v4pFt/asan/asan-logs/20260909-114903-full
+==> build
+    log: /tmp/crexx-channel-release.1v4pFt/asan/asan-logs/20260909-114903-full/build.log
+==> build passed
+[1457/1477] Generating rxpa_int_funcs_static_noopt.rxbin
+[1458/1477] Generating rxpa_int_funcs_static_opt.rxbin
+[1459/1477] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[1460/1477] Generating rxpa_float_funcs_dynamic_opt.rxbin
+[1461/1477] Generating rxpa_float_funcs_static_noopt.rxbin
+[1462/1477] Generating rxpa_float_funcs_static_opt.rxbin
+[1463/1477] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[1464/1477] Generating rxpa_array_push_funcs_dynamic_opt.rxbin
+[1465/1477] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[1466/1477] Generating rxpa_array_push_funcs_static_opt.rxbin
+[1467/1477] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[1468/1477] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[1469/1477] Generating rxpa_native_payload_funcs_dynamic_opt.rxbin
+[1470/1477] Generating rxpa_native_payload_funcs_static_opt.rxbin
+[1471/1477] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[1472/1477] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[1473/1477] Generating rxpa_native_unwind_funcs_dynamic_opt.rxbin
+[1474/1477] Generating rxpa_native_unwind_funcs_static_opt.rxbin
+[1475/1477] Generating rxpa_mult_test_noopt.rxbin
+[1476/1477] Generating rxpa_mult_test_opt.rxbin
+==> qa-prep
+    log: /tmp/crexx-channel-release.1v4pFt/asan/asan-logs/20260909-114903-full/qa-prep.log
+==> qa-prep passed
+[22/42] Building Text Inspector TUI launcher
+[23/42] Generating text_inspector_ansi.rxbin
+[24/42] Generating text_inspector_core_noopt.rxbin
+[25/42] Generating text_inspector_core_opt.rxbin
+[26/42] Generating text_inspector_tui_noopt.rxbin
+[27/42] Generating san002_concat_after_wide_decimal_rxbvm_noopt.rxbin
+[28/42] Generating san002_concat_after_wide_decimal_rxbvm_opt.rxbin
+[29/42] Generating text_inspector_tui_opt.rxbin
+[30/42] Generating san002_concat_after_wide_decimal_rxtvm_noopt.rxbin
+[31/42] Generating san002_concat_after_wide_decimal_rxtvm_opt.rxbin
+[32/42] Generating san002_wide_decimal_extract_rxbvm_noopt.rxbin
+[33/42] Generating san002_wide_decimal_extract_rxbvm_opt.rxbin
+[34/42] Generating decimal_gate1_common18_opt_rxas_noopt.rxbin
+[35/42] Generating san002_wide_decimal_extract_rxtvm_noopt.rxbin
+[36/42] Generating san002_wide_decimal_extract_rxtvm_opt.rxbin
+[37/42] Generating decimal_gate1_classic9_opt_rxas_noopt.rxbin
+[38/42] Generating decimal_gate1_common18_noopt.rxbin
+[39/42] Generating decimal_gate1_classic9_noopt.rxbin
+[40/42] Generating decimal_gate1_rexxcps_family_noopt.rxbin
+[41/42] Generating decimal_gate1_rexxcps_family_opt.rxbin
+==> ctest
+    log: /tmp/crexx-channel-release.1v4pFt/asan/asan-logs/20260909-114903-full/ctest.log
+==> ctest passed
+stress                               =  39.53 sec*proc (9 tests)
+syntax_highlighting                  =  89.61 sec*proc (72 tests)
+system                               =   0.77 sec*proc (4 tests)
+taskcontext                          =  10.20 sec*proc (4 tests)
+taskwork                             =  44.81 sec*proc (4 tests)
+terminal                             =   0.77 sec*proc (2 tests)
+tls                                  =  28.91 sec*proc (4 tests)
+topology                             =   2.06 sec*proc (3 tests)
+tty                                  =   7.37 sec*proc (3 tests)
+tui                                  =   2.85 sec*proc (4 tests)
+ui                                   =  15.58 sec*proc (15 tests)
+unicode                              = 1215.43 sec*proc (27 tests)
+unit                                 =   0.51 sec*proc (1 test)
+utf                                  =   2.14 sec*proc (6 tests)
+vararg                               =   5.52 sec*proc (2 tests)
+vector                               =  49.45 sec*proc (5 tests)
+vm                                   =   0.56 sec*proc (1 test)
+worker                               =  19.47 sec*proc (33 tests)
+
+Total Test time (real) = 1293.05 sec
+ASan run complete: /tmp/crexx-channel-release.1v4pFt/asan/asan-logs/20260909-114903-full

@@ -251,11 +251,14 @@ channel: interface
   /** Start one bounded asynchronous provider request.
    * @param envelope canonical request envelope
    * @param wait_milliseconds admission wait: -1 indefinite, 0 nonblocking, positive bounded
-   * @return request wrapper, including immediate rejected completions
+   * Keep the request until its completion has been observed, then release it
+   * when no further request access is needed. Start failures raise CHANNEL_ERROR.
+   * @return request wrapper for an accepted operation
    */
   start: method = .channelrequest
     arg envelope = .channelvalue, wait_milliseconds = .int
   /** Observe the next request in completion order.
+   * Successful observation consumes delivery, but retains request ownership.
    * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
    * @return terminal completion or an unavailable sentinel
    */
@@ -285,6 +288,7 @@ channelrequest: interface
   cancel: method = .void
     arg reason = .channelvalue
   /** Wait for this specific request.
+   * Repeated access returns its saved completion until release or channel close.
    * @param wait_milliseconds -1 waits indefinitely, 0 polls, positive values bound the wait
    * @return terminal completion or an unavailable sentinel
    */
@@ -294,6 +298,16 @@ channelrequest: interface
    * @return terminal completion or an unavailable sentinel
    */
   completion: method = .completion
+  /** Release an observed terminal request without closing its channel.
+   * Saved completion values remain valid; all request copies become stale.
+   * Identity remains readable. Other access, including repeated release, raises
+   * CHANNEL_ERROR with status 13 after successful release or channel close.
+   * Pending or unobserved requests raise CHANNEL_ERROR with status 10, without
+   * cancellation or observation. Any terminal outcome can be released after
+   * successful observation. Native request threads are joined before return;
+   * cleanup failure raises CHANNEL_ERROR and preserves ownership for retry.
+   */
+  release: method = .void
 
 /** Immutable canonical portable value tree used by every channel boundary. */
 channelvalue: interface
@@ -1183,27 +1197,38 @@ channelrequest_impl: class implements .channelrequest
     return _identity
 
   terminal: method = .boolean
+    owner = dereference _owner
+    index = owner.require_ticket(_ticket)
     if _terminal then return 1
     observed = completion()
     return observed.available()
 
   cancel: method = .void
     arg reason = .channelvalue
-    if _terminal then return
     owner = dereference _owner
+    index = owner.require_ticket(_ticket)
+    if _terminal then return
     call owner.cancel_ticket(_ticket, reason)
     return
 
   wait: method = .completion
     arg wait_milliseconds = .int
-    if _terminal then return _cached
     owner = dereference _owner
+    index = owner.require_ticket(_ticket)
+    if _terminal then return _cached
     item = owner.wait_for(_ticket, wait_milliseconds)
     if item.available() then call set_completion(item)
     return item
 
   completion: method = .completion
     return wait(0)
+
+  release: method = .void
+    owner = dereference _owner
+    call owner.release_ticket(_ticket)
+    _cached = .completion_impl.none()
+    _terminal = 0
+    return
 
   raw_ticket: method = .int
     return _ticket
@@ -1230,6 +1255,17 @@ channel_impl: class implements .channel
   _identities = .int[]
   _terminals = .boolean[]
   _completions = .completion_impl[]
+  _buckets = .int[]
+  _bucket_next = .int[]
+  _bucket_previous = .int[]
+  _next = .int[]
+  _previous = .int[]
+  _bucket_count = .int
+  _slot_count = .int
+  _count = .int
+  _head = .int
+  _tail = .int
+  _free = .int
 
   open: factory
     arg provider_type = .int, required_capabilities = .int, configuration = .channelvalue
@@ -1245,23 +1281,92 @@ channel_impl: class implements .channel
     _handle = handle
     _closed = 0
     _next_identity = 0
-    tickets = .int[1]
-    identities = .int[1]
-    terminals = .boolean[1]
-    completions = .completion_impl[1]
-    tickets[1] = 0
-    identities[1] = 0
-    terminals[1] = 0
-    empty_completion = .completion_impl
-    completions[1] = empty_completion
-    assembler SETATTRS tickets,0
-    assembler SETATTRS identities,0
-    assembler SETATTRS terminals,0
-    assembler SETATTRS completions,0
-    _tickets = tickets
-    _identities = identities
-    _terminals = terminals
-    _completions = completions
+    _bucket_count = 8
+    _buckets[_bucket_count] = 0
+    _slot_count = 0
+    _count = 0
+    _head = 0
+    _tail = 0
+    _free = 0
+    return
+
+  reset_tracking: method = .void
+    assembler SETATTRS _tickets,0
+    assembler SETATTRS _identities,0
+    assembler SETATTRS _terminals,0
+    assembler SETATTRS _completions,0
+    assembler SETATTRS _buckets,0
+    assembler SETATTRS _bucket_next,0
+    assembler SETATTRS _bucket_previous,0
+    assembler SETATTRS _next,0
+    assembler SETATTRS _previous,0
+    _bucket_count = 8
+    _buckets[_bucket_count] = 0
+    _slot_count = 0
+    _count = 0
+    _head = 0
+    _tail = 0
+    _free = 0
+    return
+
+  ticket_index: method = .int
+    arg ticket = .int
+    bucket = (ticket <mod> _bucket_count) + 1
+    index = _buckets[bucket]
+    do while index <> 0
+      if _tickets[index] = ticket then return index
+      index = _bucket_next[index]
+    end
+    return 0
+
+  require_ticket: method = .int
+    arg ticket = .int
+    if _closed then call _channel_error "channelrequest.stale", 13
+    index = ticket_index(ticket)
+    if index = 0 then call _channel_error "channelrequest.stale", 13
+    return index
+
+  track_ticket: method = .void
+    arg ticket = .int
+    index = .int
+    bucket = .int
+    if _count * 4 >= _bucket_count * 3 then do
+      _bucket_count = _bucket_count * 2
+      assembler SETATTRS _buckets,0
+      _buckets[_bucket_count] = 0
+      index = _head
+      do while index <> 0
+        bucket = (_tickets[index] <mod> _bucket_count) + 1
+        _bucket_previous[index] = 0
+        _bucket_next[index] = _buckets[bucket]
+        if _buckets[bucket] <> 0 then _bucket_previous[_buckets[bucket]] = index
+        _buckets[bucket] = index
+        index = _next[index]
+      end
+    end
+    if _free <> 0 then do
+      index = _free
+      _free = _next[index]
+    end
+    else do
+      _slot_count = _slot_count + 1
+      index = _slot_count
+    end
+    _tickets[index] = ticket
+    _identities[index] = _next_identity
+    _terminals[index] = 0
+    _completions[index] = .completion_impl.none()
+    bucket = (ticket <mod> _bucket_count) + 1
+    _bucket_previous[index] = 0
+    _bucket_next[index] = _buckets[bucket]
+    if _buckets[bucket] <> 0 then _bucket_previous[_buckets[bucket]] = index
+    _buckets[bucket] = index
+    _previous[index] = _tail
+    _next[index] = 0
+    if _tail = 0 then _head = index
+    else _next[_tail] = index
+    _tail = index
+    _count = _count + 1
     return
 
   provider_type: method = .int
@@ -1273,6 +1378,7 @@ channel_impl: class implements .channel
   start: method = .channelrequest
     arg envelope = .channelvalue, wait_milliseconds = .int
     call _channel_require _closed = 0, "channel.start.closed"
+    if _next_identity = 9223372036854775807 then call _channel_error "channel.identity", 8
     value = envelope as .channelvalue_impl
     encoded = value.encode()
     wait_microseconds = _channel_wait_microseconds(wait_milliseconds)
@@ -1281,16 +1387,13 @@ channel_impl: class implements .channel
     assembler chanstart status,ticket,_handle,encoded,wait_microseconds
     if status <> 0 then call _channel_error "chanstart", status
     _next_identity = _next_identity + 1
-    request = .channelrequest_impl.new(reference self, ticket, _next_identity)
-    index = _tickets[0] + 1
-    _tickets[index] = ticket
-    _identities[index] = _next_identity
-    _terminals[index] = 0
-    return request
+    call track_ticket(ticket)
+    return .channelrequest_impl.new(reference self, ticket, _next_identity)
 
   start_structured: method = .channelrequest_impl
     arg envelope = .channelvalue
     call _channel_require _closed = 0, "channel.start.closed"
+    if _next_identity = 9223372036854775807 then call _channel_error "channel.identity", 8
     value = envelope as .channelvalue_impl
     encoded = value.encode()
     wait_microseconds = -1
@@ -1299,10 +1402,7 @@ channel_impl: class implements .channel
     _next_identity = _next_identity + 1
     assembler chanstart status,ticket,_handle,encoded,wait_microseconds
     if status = 0 then do
-      index = _tickets[0] + 1
-      _tickets[index] = ticket
-      _identities[index] = _next_identity
-      _terminals[index] = 0
+      call track_ticket(ticket)
       return .channelrequest_impl.new(reference self, ticket, _next_identity)
     end
     return .channelrequest_impl.rejected(reference self, _next_identity, _next_identity, status)
@@ -1318,16 +1418,12 @@ channel_impl: class implements .channel
     if status <> 0 then call _channel_error "chanwait", status
     record = .channelvalue_impl.from_encoded(encoded)
     ticket = record.field("ticket").as_integer()
-    do i = 1 to _tickets[0]
-      if _tickets[i] = ticket then do
-        item = .completion_impl.from_encoded(encoded, _identities[i])
-        _completions[i] = item
-        _terminals[i] = 1
-        return item
-      end
-    end
-    call _channel_error "chanwait.unknown-ticket ticket=" || ticket || " tracked=" || _tickets[0], 15
-    return .completion_impl.none()
+    index = ticket_index(ticket)
+    if index = 0 then call _channel_error "chanwait.unknown-ticket", 15
+    item = .completion_impl.from_encoded(encoded, _identities[index])
+    _completions[index] = item
+    _terminals[index] = 1
+    return item
 
   cancel: method = .void
     arg request = .channelrequest, reason = .channelvalue
@@ -1341,8 +1437,39 @@ channel_impl: class implements .channel
     call _channel_require mode = 1 | mode = 2, "channel.close.mode"
     status = 0
     assembler chanclose status,_handle,mode
-    _closed = 1
     if status <> 0 then call _channel_error "chanclose", status
+    _closed = 1
+    call reset_tracking()
+    return
+
+  release_ticket: method = .void
+    arg ticket = .int
+    index = require_ticket(ticket)
+    status = 0
+    assembler chanrelease status,_handle,ticket
+    if status <> 0 then call _channel_error "chanrelease", status
+    bucket = (ticket <mod> _bucket_count) + 1
+    before = _bucket_previous[index]
+    after = _bucket_next[index]
+    if before = 0 then _buckets[bucket] = after
+    else _bucket_next[before] = after
+    if after <> 0 then _bucket_previous[after] = before
+    before = _previous[index]
+    after = _next[index]
+    if before = 0 then _head = after
+    else _next[before] = after
+    if after = 0 then _tail = before
+    else _previous[after] = before
+    _tickets[index] = 0
+    _identities[index] = 0
+    _terminals[index] = 0
+    _completions[index] = .completion_impl.none()
+    _bucket_previous[index] = 0
+    _bucket_next[index] = 0
+    _previous[index] = 0
+    _next[index] = _free
+    _free = index
+    _count = _count - 1
     return
 
   cancel_ticket: method = .void
@@ -1359,29 +1486,18 @@ channel_impl: class implements .channel
     arg ticket = .int, wait_milliseconds = .int
     remaining_microseconds = _channel_wait_microseconds(wait_milliseconds)
     observed = .completion_impl
+    index = require_ticket(ticket)
+    if _terminals[index] then return _completions[index]
     if remaining_microseconds > 0 then started = _channel_time_microseconds()
-    do i = 1 to _tickets[0]
-      if _tickets[i] = ticket then do
-        if _terminals[i] then return _completions[i]
-        leave
-      end
-    end
     do forever
       if remaining_microseconds > 0 then do
-        -- Convert the remaining microseconds to a ceiling millisecond wait.
-        -- Subtracting before division keeps the maximum accepted bound safe
-        -- from overflow under the default numeric_common integer semantics.
+        -- Ceiling conversion stays within the supported integer bound.
         next_wait = ((remaining_microseconds - 1) / 1000) + 1
         observed = wait(next_wait) as .completion_impl
       end
       else observed = wait(wait_milliseconds) as .completion_impl
       if observed.available() = 0 then return observed
-      do i = .int(1) to _tickets[0]
-        if _tickets[i] = ticket then do
-          if _terminals[i] then return _completions[i]
-          leave
-        end
-      end
+      if _terminals[index] then return _completions[index]
       if wait_milliseconds = 0 then return .completion_impl.none()
       if remaining_microseconds > 0 then do
         finished = _channel_time_microseconds()
@@ -1403,8 +1519,10 @@ channel_impl: class implements .channel
   pending: method = .int
     call poll()
     result = 0
-    do i = 1 to _tickets[0]
-      if _terminals[i] = 0 then result = result + 1
+    index = _head
+    do while index <> 0
+      if _terminals[index] = 0 then result = result + 1
+      index = _next[index]
     end
     return result
 
@@ -1420,18 +1538,20 @@ channel_impl: class implements .channel
    */
   cancel_pending: method = .void
     arg reason = .channelvalue
-    do i = 1 to _tickets[0]
-      if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
+    index = _head
+    do while index <> 0
+      if _terminals[index] = 0 then call cancel_ticket(_tickets[index], reason)
+      index = _next[index]
     end
     return
 
   cancel_and_account: method = .void
     reason = .channelvalue.string_value("owning task pool closing")
-    do i = 1 to _tickets[0]
-      if _terminals[i] = 0 then call cancel_ticket(_tickets[i], reason)
-    end
-    do i = .int(1) to _tickets[0]
-      if _terminals[i] = 0 then completed = wait_for(_tickets[i], -1)
+    call cancel_pending(reason)
+    index = _head
+    do while index <> 0
+      if _terminals[index] = 0 then completed = wait_for(_tickets[index], -1)
+      index = _next[index]
     end
     call close(2)
     return
@@ -1464,7 +1584,7 @@ _byteendpoint_integer_envelope: procedure = .channelvalue
   values[1] = .channelvalue.integer_value(item)
   return .channelvalue.record_value(schema, 1, names, values)
 
-/** Reusable bounded endpoint implemented solely through the five channel instructions. */
+/** Reusable bounded endpoint implemented solely through the channel instructions. */
 byteendpoint_impl: class implements .byteendpoint
   _channel = .channel_impl
   _direction = .int
@@ -1543,6 +1663,7 @@ byteendpoint_impl: class implements .byteendpoint
     envelope = .channelvalue.record_value("crexx.channel.byte-export-reference", 1, names, values)
     request = _channel.start(envelope, -1)
     result = request.wait(-1)
+    call request.release()
     if result.succeeded() = 0 then call _channel_error "byteendpoint.reference.export", result.error_code()
     return result.value()
 
@@ -1577,6 +1698,7 @@ byteendpoint_impl: class implements .byteendpoint
     envelope = _byteendpoint_integer_envelope("crexx.channel.byte-half-close", "direction", direction)
     request = _channel.start(envelope, -1)
     result = request.wait(-1)
+    call request.release()
     if result.succeeded() = 0 then call _channel_error "byteendpoint.half-close", result.error_code()
     return
 
@@ -1790,6 +1912,11 @@ task_impl: class implements .task
   cancel: method = .void
     arg reason = .channelvalue
     if _terminal then return
+    scope = dereference _scope
+    if scope.open_state() = 0 then do
+      completed = wait(0)
+      return
+    end
     channel = dereference _channel
     call channel.cancel_ticket(_ticket, reason)
     return
@@ -1797,14 +1924,22 @@ task_impl: class implements .task
   wait: method = .completion
     arg wait_milliseconds = .int
     if _terminal then return _cached
-    channel = dereference _channel
-    item = channel.wait_for(_ticket, wait_milliseconds)
+    scope = dereference _scope
+    item = .completion
+    if scope.open_state() = 0 then do
+      -- Join owns the immutable result after close, including for task copies
+      -- retained by DO PARALLEL before the scope joined its own child copy.
+      item = scope.wait_task(_identity, wait_milliseconds)
+    end
+    else do
+      channel = dereference _channel
+      item = channel.wait_for(_ticket, wait_milliseconds)
+    end
     if item.available() then do
       _cached = item as .completion_impl
       _terminal = 1
     end
     if item.available() then do
-      scope = dereference _scope
       call scope.mark_observed(identity())
     end
     return item

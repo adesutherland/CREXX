@@ -38,6 +38,14 @@ defined in [`AGENTS.md`](AGENTS.md).
 
 ## Activity Register
 
+`CHANNEL-LIFETIME-01`: explicit completed-request release and bounded bookkeeping.
+Adrian accepted the first Release verdict and 2.51 MiB retained-request RSS
+tradeoff on 2026-09-09. Documentation and full local Debug/Apple-ASan correctness
+qualification pass (2,298 checks each). Adrian accepted the later-platform handoff
+to Hotfix release QA and authorized develop publication/local install on 2026-09-09;
+see [the selected design and scope](../concurrency/CHANNEL-REQUEST-LIFETIME.md).
+This is a channel lifecycle defect repair, not a new broad performance stage.
+
 | ID | Status | Work | Exit or decision |
 | --- | --- | --- | --- |
 | PERF-CLOSEOUT-01 | required beta 3 closeout | Resolve the remaining formal Linux QA-C obligation for the frozen Apple Stage 5 evidence, and run the named exact-SHA hosted gates for the 2026-09-30 beta 3 candidate. Do not relabel an unmatched newer run as the missing counterpart to the retained `81f159186` scorecard. | The retained scorecard has an explicit Linux disposition, and the exact beta 3 candidate has the required cross-platform evidence. |

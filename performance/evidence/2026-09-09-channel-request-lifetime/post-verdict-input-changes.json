@@ -1,0 +1,18 @@
+{
+  "interpreter/CMakeLists.txt": {
+    "measured_sha256": "235e437377420f54ce7831d28718cc490b36a130bb3218f727c04195ada86058",
+    "current_sha256": "d46bc06d26915f65facf9567676ef4a8eb6be67379d39267fa10dcc39f2c2342"
+  },
+  "interpreter/tests/test_rxvmchannel_byte.c": {
+    "measured_sha256": "9e2a3b1a5682b2a68adddd593333a715aab14e134e129b3ca63a83d62af8728f",
+    "current_sha256": "02d0fcb3c630c07808f880b9faabf5bf385a607a010c85ca2dd13faa8b9c3517"
+  },
+  "interpreter/tests/test_rxvmchannel_process.c": {
+    "measured_sha256": "c680edbfa732096824cb84b1b8d2ac1438bcd6ad4642f591eee56ba92d04e150",
+    "current_sha256": "cbffba76e04f0c49495f5368df728e8152e14f102b89ef5a3c3471e9533ac881"
+  },
+  "lib/classlib/Concurrency.crexx": {
+    "measured_sha256": "03460349d13576238bbe47a55417f5bfb6483268e8bc20cb6038f1386fa6934d",
+    "current_sha256": "dc33818ba00617e78a69a212387b168c1ca8c3bf3bbe4e8202eceb2e4ab352c8"
+  }
+}

@@ -678,6 +678,8 @@ int main(void) {
         state = completion_integer_field(&completion, "state", &valid);
         CHECK(valid && state == 3,
               "cancelled child cannot publish success");
+        CHECK(rxvm_channel_release(producer, child_channel, ticket) == RXVM_CHANNEL_OK,
+              "cancelled child request can be released while the channel stays open");
         rxvm_channel_binary_free(&completion);
     }
     {
@@ -718,6 +720,8 @@ int main(void) {
         state = completion_integer_field(&completion, "state", &valid);
         CHECK(valid && state == 1,
               "zero-exit child is a successful provider completion");
+        CHECK(rxvm_channel_release(producer, child_channel, ticket) == RXVM_CHANNEL_OK,
+              "observed child request releases while provider remains open");
         rxvm_channel_binary_free(&completion);
     }
     CHECK(rxvm_channel_wait(

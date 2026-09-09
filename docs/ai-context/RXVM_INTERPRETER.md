@@ -764,10 +764,12 @@ policy adds no public worker/channel API, plugin ABI or scheduling contract.
 
 The public RXAS channel boundary is implemented without exposing a
 public RXPA threading ABI. Opcodes `650..654` implement `chanopen`,
-`chanstart`, `chanwait`, `chancancel` and `chanclose` in the shared VM core, so
+`chanstart`, `chanwait`, `chancancel` and `chanclose`; opcode `659` adds
+`chanrelease` in the shared VM core, so
 `rxbvm` and `rxtvm` execute the same logical behavior. They require RXBIN 007
 feature bit `1 << 3`, return operation statuses rather than VM signals, remain
 opaque optimizer barriers and are outlined/cold under profile-20.
+Request release additionally requires RXBIN feature bit `1 << 7`.
 
 Each `rxvm_context` owns a generation-checked table of channel and ticket
 capabilities. Handles encode their execution owner, kind, slot and generation;
@@ -775,6 +777,15 @@ wrong-owner, wrong-kind and stale uses are rejected. They are local authority,
 not transferable `ChannelValue`. Context teardown cancel-closes every live
 channel, joins its workers and releases all tickets/requests before the runtime
 provider state and sealed generation are destroyed.
+
+Successful observation retains ticket ownership until explicit `chanrelease`
+or channel close. Release requires observation, destroys the provider request
+with physical thread/worker detachment, and only then recycles its slot.
+Destruction failure preserves ownership for retry. Slots retire on generation
+wrap. A free list plus per-channel live/unobserved lists bounds lookup work by
+the current request set; provider lists support direct unlink. A failed request
+destructor during close leaves the closing channel retryable instead of
+discarding still-owned request state.
 
 The runtime-owned provider registry validates complete private descriptors,
 rejects duplicate names/codes atomically, pins provider/module lifetime and is
@@ -811,7 +822,8 @@ canonical limits/order/flags/NaN.
 `lib/classlib/Concurrency.crexx` supplies the executable Level B pool, scope,
 task, target, context, completion, channel, value/codec, endpoint,
 service-reference and transfer-buffer surface. Inspection proves its runtime
-bridge is only the five channel instructions.
+bridge is only the six channel instructions. Its full-ticket index reuses and
+clears released entries; saved completions have independent value ownership.
 
 Core provider type `4` implements bounded C-owned byte endpoints and
 type `5` as structured child-process execution. Endpoint storage owns copied

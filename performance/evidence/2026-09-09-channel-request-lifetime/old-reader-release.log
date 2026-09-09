@@ -1,0 +1,2 @@
+ERROR: reading file /tmp/crexx-channel-release.1v4pFt/debug/compiler/tests/gate_f_channel_contract_ws/release.rxbin: RXBIN 007 has unsupported feature flags 0x00000080
+exit=255

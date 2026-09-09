@@ -237,12 +237,51 @@ Most programs use pools, scopes and `.byteendpoint` rather than opening a raw
 channel = .channel.open(provider_type, required_capabilities, configuration)
 request = channel.start(envelope, admission_wait)
 outcome = request.wait(completion_wait)
+if outcome.available() then call request.release()
 call channel.close(1)  /* drain */
 ```
 
 Close mode `1` drains accepted work; mode `2` requests cancellation. A channel
 owns its requests, so cancellation with a request from another channel is an
 error.
+
+Completion observation and request lifetime are separate. `channel.wait()`
+delivers each completion once; `request.wait()` and `request.completion()` can
+return that saved outcome repeatedly. Neither observation, cancellation nor
+dropping a request variable releases the request. For sustained use, call
+`request.release()` after obtaining an available terminal completion and finishing
+request access. Close the channel when its own lifetime ends.
+
+Release applies to successful, failed, cancelled and deadline outcomes. It raises
+`CHANNEL_ERROR` with status `10` if the request is pending or its completion has
+not been successfully observed; a polling miss is not sufficient. Release does
+not cancel or consume anything in that case. To abandon pending work, cancel it,
+wait for an available terminal completion, then release it, or close the channel.
+Release waits for private request cleanup, including native thread joins. If
+cleanup fails, the request remains owned and release can be retried.
+
+After successful release, all copies of that request are stale: wait, completion,
+terminal, cancel and repeated release raise `CHANNEL_ERROR` with status `13`.
+Its diagnostic identity remains readable. Saved `.completion` values remain
+usable after release and channel close. Caller-retained completion values still
+occupy their own memory; release removes the channel's request and cache ownership.
+Ordinary VM value buffers can retain reusable capacity while wrapper storage
+remains alive, so release and close do not promise an immediate drop in process
+memory. Provider request payloads and private thread resources are destroyed
+before successful release returns.
+This does not add a `.task.release()` or allow structured children to detach.
+Task scopes retain their join results for task-result access after close.
+
+The runtime permits at most 65,535 unreleased request tickets per execution,
+shared across channels and including completed requests. Released slots are
+reused; generation wrap retires slots to protect stale capabilities, so the
+authority namespace is finite. Provider admission, allocation and thread limits
+are separate. Raising status `8` does not identify which limit was reached.
+
+The new release instruction has a separate RXBIN feature bit. Update the runtime
+and class library together and rebuild consumers of `release()`. Older runtimes
+reject images that require it. Existing callers keep their earlier ownership
+behavior until they adopt release or close their channels.
 
 Provider type `4` supplies reusable bounded byte endpoints. This complete
 Level B example writes and reads through one duplex endpoint:
@@ -256,10 +295,12 @@ endpoint = .byteendpoint.memory(3, 32)
 
 write_request = endpoint.start_write("hello" as .binary, -1)
 write_result = write_request.wait(-1)
+call write_request.release()
 if write_result.succeeded() = 0 then exit 1
 
 read_request = endpoint.start_read(5, -1)
 read_result = read_request.wait(-1)
+call read_request.release()
 if read_result.succeeded() = 0 then exit 2
 if read_result.value().as_binary() as .string <> "hello" then exit 3
 
@@ -273,6 +314,12 @@ capacity is a real backpressure bound. A transferable provider reference can
 be adapted in another execution with `from_reference()` or, for an exact
 encoded 92-byte reference, `from_encoded_reference()`. Close every adapter
 when finished.
+
+`half_close()` and provider-reference export release their temporary requests
+internally. Explicit `start_read()` and `start_write()` return caller-owned
+requests and require caller release. A half-close still needs a new request, so
+it can fail at ticket exhaustion. Arrange cleanup so that a failed preliminary
+operation does not prevent whole-channel close, which needs no new ticket.
 
 ## Transfer buffers
 

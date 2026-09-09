@@ -1,0 +1,19 @@
+channel lifetime: 200000 released, capacity recovery, async I/O and stale authority passed
+        0.37 real         0.10 user         0.00 sys
+            22233088  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                2053  page reclaims
+                   1  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   1  voluntary context switches
+                 675  involuntary context switches
+          2319660853  instructions retired
+           426325143  cycles elapsed
+            17662336  peak memory footprint

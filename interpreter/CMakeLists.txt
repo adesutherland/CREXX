@@ -684,6 +684,13 @@ target_include_directories(test_rxvmchannel_byte PRIVATE
         ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
 target_link_libraries(test_rxvmchannel_byte PRIVATE rxvml Threads::Threads)
 
+add_executable(test_rxvmchannel_lifetime tests/test_rxvmchannel_lifetime.c)
+target_include_directories(test_rxvmchannel_lifetime PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../inc ../assembler ../binutils/include ../platform ../avl_tree
+        ../utf8 ${CMAKE_SOURCE_DIR}/rxpa)
+target_link_libraries(test_rxvmchannel_lifetime PRIVATE rxvml Threads::Threads)
+
 add_executable(test_rxvmactive tests/test_rxvmactive.c)
 target_include_directories(test_rxvmactive PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -781,6 +788,10 @@ add_test(NAME rxvmbyteendpoint_substrate COMMAND test_rxvmbyteendpoint)
 set_tests_properties(rxvmbyteendpoint_substrate PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;lifecycle")
 add_test(NAME rxvmchannel_byte_provider COMMAND test_rxvmchannel_byte)
+add_test(NAME rxvmchannel_request_lifetime COMMAND test_rxvmchannel_lifetime)
+set_tests_properties(rxvmchannel_request_lifetime PROPERTIES
+        TIMEOUT 90 LABELS "interpreter;channels;byte-endpoint;lifecycle"
+        CREXX_PREP_TARGETS test_rxvmchannel_lifetime)
 set_tests_properties(rxvmchannel_byte_provider PROPERTIES
         LABELS "interpreter;perf3;gate-f;f1d;channels;byte-endpoint;provider-reference")
 add_test(NAME rxvmactive_isolation COMMAND test_rxvmactive)

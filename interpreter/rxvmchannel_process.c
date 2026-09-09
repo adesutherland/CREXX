@@ -146,6 +146,7 @@ typedef struct process_request {
     process_channel *owner;
     process_worker *worker;
     struct process_request *owner_next;
+    struct process_request *owner_previous;
     struct process_request *queue_next;
     unsigned char *envelope;
     size_t envelope_length;
@@ -1102,6 +1103,7 @@ static rxvm_channel_status process_start(
     }
     request->request_id = shared->next_request_id++;
     request->owner_next = channel->requests;
+    if (request->owner_next) request->owner_next->owner_previous = request;
     channel->requests = request;
     request->queued = 1u;
     if (shared->queue_tail) shared->queue_tail->queue_next = request;
@@ -1320,13 +1322,13 @@ static rxvm_channel_status process_request_destroy(void *channel_state,
         process_mutex_unlock(&channel->shared->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
-    cursor = &channel->requests;
-    while (*cursor && *cursor != request) cursor = &(*cursor)->owner_next;
+    cursor = request->owner_previous ? &request->owner_previous->owner_next : &channel->requests;
     if (*cursor != request) {
         process_mutex_unlock(&channel->shared->mutex);
         return RXVM_CHANNEL_INTERNAL_ERROR;
     }
     *cursor = request->owner_next;
+    if (request->owner_next) request->owner_next->owner_previous = request->owner_previous;
     process_mutex_unlock(&channel->shared->mutex);
     free(request->envelope);
     free(request->completion_document);

@@ -1377,13 +1377,14 @@ The current public instructions are:
 | `652` | `chanwait rStatus,rCompletion,rChannel,rWaitMicroseconds` | status, completion | channel `.int`, relative wait `.int` |
 | `653` | `chancancel rStatus,rChannel,rTicket,rReason` | status | channel/ticket `.int`, RXCV reason `.binary` |
 | `654` | `chanclose rStatus,rChannel,rMode` | status | channel `.int`, mode `.int` |
+| `659` | `chanrelease rStatus,rChannel,rTicket` | status | channel/ticket `.int` |
 
 The two-output forms require distinct output registers. Outputs may alias input
 registers because the VM snapshots inputs before writing failure defaults or
 results. A failed operation returns a status and leaves the companion output at
 `0` or empty binary; the instructions have `RXSC_NONE` signal contracts.
 
-All five instructions are initially `FLG_OPT_BARRIER` with classified opaque
+All six instructions are `FLG_OPT_BARRIER` with classified opaque
 effects. Optimizers must not move, duplicate, fold or remove them. TRACE,
 debugger and profiler identity remains the canonical opcode. The handlers are
 outlined/cold under the current `profile-20` policy.
@@ -1391,8 +1392,17 @@ outlined/cold under the current `profile-20` policy.
 Any image containing one of these opcodes requires
 `RXBIN007_FEATURE_CHANNELS` (`1 << 3`). RXAS emits it, RXLINK retains the
 validated union, and RXBIN readers reject either a channel opcode without the
-bit or an unsupported feature bit. RXAS/RXDAS round trips preserve the five
+bit or an unsupported feature bit. `chanrelease` also requires
+`RXBIN007_FEATURE_CHANNEL_RELEASE` (`1 << 7`); its combined requirement is
+`0x88`. RXAS/RXDAS round trips preserve the six
 mnemonics and operand order.
+
+Observation does not release request authority. `chanrelease` succeeds only
+after successful terminal observation, destroys the provider request, and
+invalidates the ticket while leaving the channel and saved completion binary
+valid. Pending/unobserved requests return status `10`; later use of a released
+ticket returns stale status `13`. Release is provider-neutral and never needs
+another ticket. See the lifecycle reference for cleanup-failure retry rules.
 
 `rProviderType` is one mutually exclusive implementation code;
 `rRequiredCapabilities` is a bit mask. Type `0` is invalid; type `1` is the

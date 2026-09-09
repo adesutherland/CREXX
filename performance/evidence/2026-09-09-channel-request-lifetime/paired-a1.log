@@ -1,0 +1,23 @@
+completed=1000 live_tickets=1000 cpu_seconds=0.001
+completed=10000 live_tickets=10000 cpu_seconds=0.038
+completed=65535 live_tickets=65535 cpu_seconds=1.169
+start_failure operation=65536 status=8 live_tickets=65535
+close_status=0 live_after_close=0 close_cpu_seconds=13.920
+       15.11 real        15.05 user         0.04 sys
+            18939904  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                1337  page reclaims
+                   1  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                1366  involuntary context switches
+         50027488012  instructions retired
+         66972258379  cycles elapsed
+            14352744  peak memory footprint

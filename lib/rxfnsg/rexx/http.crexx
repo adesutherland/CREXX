@@ -43,10 +43,22 @@ _http_failure: procedure
   call raise "HTTP_CHANNEL_ERROR", message, ""
   return
 
+/* These helpers own byte requests. On an observation miss, cancel and account
+ * for physical I/O before release, while preserving the unavailable outcome. */
+_http_endpoint_completion: procedure = .completion
+  arg request = .channelrequest, wait_milliseconds = .int
+  outcome = request.wait(wait_milliseconds)
+  if outcome.available() = 0 then do
+    call request.cancel(.channelvalue.string_value("HTTP byte observation timed out"))
+    settled = request.wait(-1)
+  end
+  call request.release()
+  return outcome
+
 _http_endpoint_write: procedure = .boolean
   arg endpoint = .byteendpoint, bytes = .binary, wait_milliseconds = .int
   request = endpoint.start_write(bytes, wait_milliseconds)
-  completion = request.wait(wait_milliseconds)
+  completion = _http_endpoint_completion(request, wait_milliseconds)
   if completion.available() = 0 | completion.succeeded() = 0 then return 0
   return completion.value().as_integer() = binlength(bytes)
 
@@ -69,7 +81,7 @@ _http_endpoint_read_exact: procedure = .binary
   do while binlength(result) < expected
     remaining = expected - binlength(result)
     request = endpoint.start_read(remaining, wait_milliseconds)
-    completion = request.wait(wait_milliseconds)
+    completion = _http_endpoint_completion(request, wait_milliseconds)
     if completion.available() = 0 | completion.succeeded() = 0 then return result
     chunk = completion.value().as_binary()
     if binlength(chunk) > 0 then call binappend result, chunk
@@ -475,7 +487,7 @@ httpbody: class
     arg bytes = .binary, wait_milliseconds = .int
     call _http_failure_if _closed | _finished, "HTTP request body is not writable"
     request = _endpoint.start_write(bytes, wait_milliseconds)
-    completion = request.wait(wait_milliseconds)
+    completion = _http_endpoint_completion(request, wait_milliseconds)
     if completion.available() = 0 | completion.succeeded() = 0 then return -1
     return completion.value().as_integer()
 
@@ -1613,7 +1625,8 @@ httpconnectionowner: class implements .taskwork
         if remaining = 0 then return 1
         if remaining < maximum then maximum = remaining
       end
-      completion = endpoint.start_read(maximum, _request_timeout).wait(_request_timeout)
+      request = endpoint.start_read(maximum, _request_timeout)
+      completion = _http_endpoint_completion(request, _request_timeout)
       if completion.available() = 0 | completion.succeeded() = 0 then do
         _last_transport = -4
         _last_error = "HTTP request stream was cancelled or exceeded its read deadline"

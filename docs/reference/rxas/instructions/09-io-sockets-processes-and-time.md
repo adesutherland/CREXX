@@ -22,7 +22,8 @@ Request cancellation of one operation owned by a channel.
 The channel and ticket are execution-local integer capabilities. `rReason` is
 a canonical RXCV binary reason document. Only `rStatus` is written. Providers
 may report a race with an already-terminal operation; cancellation never
-transfers or forcibly shares a live VM value.
+transfers or forcibly shares a live VM value. Cancellation does not release the
+ticket; observe its terminal completion and use `chanrelease` when finished.
 
 ### Signals
 
@@ -59,6 +60,11 @@ Mode `1` drains admitted operations; mode `2` cancels them. Close is the
 structured teardown boundary: provider workers, tickets and attached resources
 are joined or released before successful completion. Only `rStatus` is
 written.
+
+Successful close invalidates the channel and all remaining request tickets;
+saved receiver-owned completion binaries stay valid. Close needs no new ticket.
+If a request destructor fails, still-owned requests and the closing channel
+remain available for a cleanup retry.
 
 ### Signals
 
@@ -117,6 +123,61 @@ main() .locals=5
 
 `chanstart`, `chanwait`, `chancancel`, `chanclose`.
 
+## `chanrelease`
+
+Release one successfully observed terminal request while keeping its channel open.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0293` | `chanrelease rStatus,rChannel,rTicket` | Destroy request state and invalidate its ticket. |
+
+### Operands And Semantics
+
+Channel and ticket are execution-local integer capabilities. Only `rStatus` is
+written; it may alias either input because inputs are read before output is
+written. The request must belong to this channel and have had its terminal
+completion successfully delivered by `chanwait`. All terminal states qualify.
+An unavailable wait or failed completion encoding is not successful observation.
+
+Status `0` means provider request cleanup is complete, including joining private
+request threads or establishing worker detachment, and the ticket is invalidated.
+Its slot is reusable with a new generation unless generation wrap retires it.
+The channel, other requests and saved completion binaries stay valid.
+Release may wait for physical cleanup; it does not start or cancel an operation.
+Provider cleanup failure preserves ownership for retry. There is no new ticket
+allocation, so release works at the live-ticket capacity limit.
+
+Pending/unobserved requests return `10` (`WOULD_BLOCK`) without changing their
+state or consuming a completion. Released tickets, including copies and repeated
+release, return `13` (`STALE_CAPABILITY`). Wrong execution owners return `14`;
+a live ticket belonging to another channel returns `15` (`UNKNOWN_TICKET`).
+
+The instruction requires RXBIN 007 feature bits `0x08 | 0x80` (`0x88`). A runtime
+without the release feature rejects the image; deploy the updated runtime and
+library together. The private C provider destructor is not a public caller API.
+
+### Signals
+
+Operational failures are returned in `rStatus`; the instruction raises no VM
+signal. The Level B `.channelrequest.release()` wrapper raises `CHANNEL_ERROR`
+for any nonzero status.
+
+### Example
+
+<!-- rxas-example name="channel-chanrelease" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    chanrelease r0,r1,r2
+    ret
+```
+
+### Related
+
+`chanopen`, `chanstart`, `chanwait`, `chancancel`, `chanclose`.
+
 ## `chanstart`
 
 Submit one canonical operation envelope to an open channel.
@@ -133,6 +194,12 @@ The envelope is a canonical RXCV binary value. A wait of `-1` waits forever,
 `0` is nonblocking, and a positive value is a relative microsecond budget.
 Admission and backpressure are provider-bounded. The two output registers must
 be distinct; failure leaves the ticket at `0`.
+
+The execution-wide limit of 65,535 unreleased tickets includes completed,
+observed requests on every channel. Call `chanrelease` after successful terminal
+observation to reuse capacity. Generation wrap retires a slot rather than
+aliasing stale authority. Provider admission and host allocation/thread limits
+can also produce resource exhaustion.
 
 ### Signals
 
@@ -169,6 +236,11 @@ The wait budget uses the same `-1`, `0`, or positive-relative-microseconds
 contract as `chanstart`. Successful observation writes a receiver-owned RXCV
 binary completion and consumes that observation. The two outputs must be
 distinct; failure leaves the completion as an empty binary value.
+
+Successful observation does not release the ticket or provider request state.
+Use `chanrelease` when request authority is no longer needed. Freeing an encoded
+completion only releases that receiver-owned buffer. If encoding or allocation
+fails, the completion remains available for another wait.
 
 ### Signals
 

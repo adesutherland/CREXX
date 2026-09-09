@@ -109,3 +109,28 @@ if(result EQUAL 0 OR NOT "${out}${err}" MATCHES
     message(FATAL_ERROR
             "duplicate channel outputs were not rejected precisely:\n${out}${err}")
 endif()
+
+# Request release has its own reader feature requirement in addition to channels.
+file(WRITE "${WORK_DIR}/release.rxas"
+     ".globals=0\nmain() .locals=3\n chanrelease r0,r1,r2\n ret\n")
+run_checked("release assembly" "${RXAS}" -o "${WORK_DIR}/release" "${WORK_DIR}/release.rxas")
+assert_header("${WORK_DIR}/release.rxbin" "88000000" "release feature declaration")
+run_checked("release link" "${RXLINK}" -o "${WORK_DIR}/release_linked" "${WORK_DIR}/release.rxbin")
+assert_header("${WORK_DIR}/release_linked.rxbin" "88000000" "linked release feature")
+run_checked("release disassembly" "${RXDAS}" -o "${WORK_DIR}/release_roundtrip.rxas" "${WORK_DIR}/release.rxbin")
+run_checked("release reassembly" "${RXAS}" -o "${WORK_DIR}/release_roundtrip" "${WORK_DIR}/release_roundtrip.rxas")
+assert_header("${WORK_DIR}/release_roundtrip.rxbin" "88000000" "round-trip release feature")
+run_checked("clear required release feature" "${MUTATE_FEATURE}"
+            "${WORK_DIR}/release.rxbin" "${WORK_DIR}/missing_release.rxbin" 8)
+execute_process(COMMAND "${RXDAS}" "${WORK_DIR}/missing_release.rxbin"
+                RESULT_VARIABLE result OUTPUT_VARIABLE out ERROR_VARIABLE err)
+if(result EQUAL 0 OR NOT "${out}${err}" MATCHES "opcode 659 requires feature flag 0x00000088")
+    message(FATAL_ERROR "missing release feature was not rejected precisely:\n${out}${err}")
+endif()
+file(WRITE "${WORK_DIR}/release_arity.rxas"
+     ".globals=0\nmain() .locals=3\n chanrelease r0,r1\n ret\n")
+execute_process(COMMAND "${RXAS}" -o "${WORK_DIR}/release_arity" "${WORK_DIR}/release_arity.rxas"
+                RESULT_VARIABLE result OUTPUT_VARIABLE out ERROR_VARIABLE err)
+if(result EQUAL 0 OR NOT "${out}${err}" MATCHES "invalid operand")
+    message(FATAL_ERROR "wrong release arity was not rejected precisely:\n${out}${err}")
+endif()

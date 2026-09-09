@@ -1,0 +1,19 @@
+PASS: channel release preserves outcomes and reclaims requests
+        2.93 real         2.91 user         0.01 sys
+            14680064  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+                1206  page reclaims
+                   3  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   0  voluntary context switches
+                 407  involuntary context switches
+         60637602064  instructions retired
+         12674740352  cycles elapsed
+             9535848  peak memory footprint

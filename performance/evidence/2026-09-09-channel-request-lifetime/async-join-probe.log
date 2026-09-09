@@ -1,0 +1,11 @@
+operations=1000 creates=1000 joins=1000 live_tickets=0 payload_bytes=4096
+operations=2000 creates=2000 joins=2000 live_tickets=0 payload_bytes=4096
+operations=3000 creates=3000 joins=3000 live_tickets=0 payload_bytes=4096
+operations=4000 creates=4000 joins=4000 live_tickets=0 payload_bytes=4096
+operations=5000 creates=5000 joins=5000 live_tickets=0 payload_bytes=4096
+operations=6000 creates=6000 joins=6000 live_tickets=0 payload_bytes=4096
+operations=7000 creates=7000 joins=7000 live_tickets=0 payload_bytes=4096
+operations=8000 creates=8000 joins=8000 live_tickets=0 payload_bytes=4096
+operations=9000 creates=9000 joins=9000 live_tickets=0 payload_bytes=4096
+operations=10000 creates=10000 joins=10000 live_tickets=0 payload_bytes=4096
+PASS: every observed asynchronous request joined during release; saved read payload survived release

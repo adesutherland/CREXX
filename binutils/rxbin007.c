@@ -957,6 +957,8 @@ static uint32_t rxbin007_opcode_features(int opcode) {
         case OP_CHANCANCEL_REG_REG_REG_REG:
         case OP_CHANCLOSE_REG_REG_REG:
             return RXBIN007_FEATURE_CHANNELS;
+        case OP_CHANRELEASE_REG_REG_REG:
+            return RXBIN007_FEATURE_CHANNELS | RXBIN007_FEATURE_CHANNEL_RELEASE;
         default:
             return 0u;
     }

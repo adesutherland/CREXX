@@ -1152,8 +1152,8 @@ int main(void) {
           &op_table[OP_RESERVED_466]);
     effects = rxop_effects(OP_CHANOPEN_REG_REG_REG_REG_REG);
     signal = rxop_signal_contract(OP_CHANOPEN_REG_REG_REG_REG_REG);
-    check(OP_MAX_INSTRUCTIONS == 659 && rxop_effect_count() == 659 &&
-              rxop_signal_contract_count() == 659 &&
+    check(OP_MAX_INSTRUCTIONS == 660 && rxop_effect_count() == 660 &&
+              rxop_signal_contract_count() == 660 &&
               effects.state == RXOP_EFFECT_CLASSIFIED &&
               rxop_effect_reads_operand(&effects, 2) &&
               rxop_effect_reads_operand(&effects, 4) &&

@@ -87,3 +87,15 @@ RXVM_HANDLER(CHANCLOSE_REG_REG_REG, VM_ADVANCE(3);
     }
     DISPATCH;
 )
+
+RXVM_HANDLER(CHANRELEASE_REG_REG_REG, VM_ADVANCE(3);
+    DEBUG("TRACE - CHANRELEASE R%lu,R%lu,R%lu\n",
+          REG_IDX(1), REG_IDX(2), REG_IDX(3));
+    {
+        rxvm_channel_status status = rxvm_channel_release(
+                context, (int64_t)op2R->int_value,
+                (int64_t)op3R->int_value);
+        set_int(op1R, (rxinteger)status);
+    }
+    DISPATCH;
+)
