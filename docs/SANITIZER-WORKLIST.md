@@ -60,6 +60,42 @@ hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
 ## Open findings
 
+### SAN-QA-015 — PTY restoration observation races Darwin pending-input state
+
+Status: repair candidate discovered during ordinary Debug qualification of
+SAN-QA-008/SAN-QA-014. This is a shared maintained test-harness failure, not
+an ASan memory diagnostic.
+
+- Affected revision: `d9982d0004fc712849366419eab10a26debe8cd8`.
+  The full Debug correctness run passed 2,285/2,286, failing only
+  `ui_ansi_host_edges_opt` with `terminal modes not restored`. Retained log:
+  `cmake-build-debug/asan-logs/20260909-065711-ctest/ctest.log`.
+- Reproducer: eight independent processes each repeat the actual optimized
+  ANSI host-edge image against the existing `Terminal` harness 100 times.
+  Four processes reproduced the failure; all before/after fields were identical
+  except `c_lflag ^ before = 0x20000000`, Darwin's `PENDIN` state. The retained
+  diagnostic is `/tmp/crexx-ci-20260909.wjmUik/ansi-edges-parallel.log`.
+  A 200-run serial control passed, as did a 200-run shell-only control.
+- Cause: Darwin sets `PENDIN` when raw input returns to canonical mode and
+  clears it on a terminal read. The harness observes the child's exit marker
+  before its holding shell is guaranteed to have performed that read.
+- Repair: complete a newline/read/acknowledgement handshake with the holding
+  shell before comparing terminal attributes. The complete equality check,
+  alternate-screen assertion and cursor assertion remain unchanged.
+- Permanent regression surface: `ui_ansi_host_edges_{noopt,opt}`,
+  `rxconsole_pty` and `text_inspector_ansi_pty` retain their real terminal
+  conversations. Hotfix QA owns focused Debug and Apple-ASan validation,
+  concurrent replay and hosted qualification before closure. The unaffected
+  2,282 tests from the completed broad run need no repetition for this
+  Python-harness-only edit.
+- Local qualification: all four affected tests pass in normal Debug
+  (`/tmp/crexx-ci-20260909.wjmUik/pty-fixed-debug.log`) and maintained Apple
+  ASan (`cmake-build-debugasan/asan-logs/20260909-071031-ctest`). The same
+  eight-process panel passes all 800 repetitions after repair at
+  `/tmp/crexx-ci-20260909.wjmUik/ansi-edges-parallel-fixed.log`. A negative
+  control deliberately leaving ECHO disabled still fails the exact attribute
+  assertion (`pty-negative-control.log`). Hosted final-head proof is pending.
+
 ### SAN-QA-014 — RXPP loses macros outside the input-source directory
 
 Status: repair candidate; exact-SHA hosted qualification is required for closure.

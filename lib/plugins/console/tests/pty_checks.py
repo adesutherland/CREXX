@@ -33,6 +33,7 @@ class Terminal:
             # This also models returning to a real interactive shell.
             command = ["/bin/sh", "-c",
                        '"$@"; status=$?; printf "\\nPTY_EXIT:%s\\n" "$status"; '
+                       'read -r ready; printf "\\nPTY_READ_READY\\n"; '
                        'read -r release; exit "$status"', "rxconsole-pty"] + command
         self.process = subprocess.Popen(command, cwd=cwd, env=env,
                                         stdin=self.slave, stdout=self.slave,
@@ -73,6 +74,12 @@ class Terminal:
 
     def finish(self):
         self.expect(b"PTY_EXIT:0")
+        # Darwin sets the transient PENDIN state when ICANON is restored.
+        # Complete a real shell read before inspecting the restored settings;
+        # the exit marker alone races the shell's first read. Keep every
+        # termios field in the equality check rather than masking state bits.
+        self.send(b"\n")
+        self.expect(b"PTY_READ_READY")
         assert termios.tcgetattr(self.slave) == self.before, "terminal modes not restored"
         assert b"\x1b[?1049l" in self.output, "alternate screen not restored"
         assert b"\x1b[?25h" in self.output, "cursor not restored"
