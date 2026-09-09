@@ -314,6 +314,25 @@ set_tests_properties(crexx_rxpp_builddir PROPERTIES
         CREXX_PREP_TARGETS "crexx;rxpp"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
         TIMEOUT 60)
+foreach(metadata_case IN ITEMS link link_invalid_source external_bare
+        external_spaces external_names external_missing norun)
+    add_test(NAME crexx_rxpp_metadata_${metadata_case}
+            COMMAND ${CMAKE_COMMAND}
+                    -DCREXX=$<TARGET_FILE:crexx>
+                    -DRXVME=$<TARGET_FILE:rxvme>
+                    -DRXPP=$<TARGET_FILE:rxpp>
+                    -DMACLIB=${CMAKE_BINARY_DIR}/bin/maclib.rexx
+                    -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxpp_metadata_${metadata_case}
+                    -DCASE=${metadata_case}
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_rxpp_metadata.cmake)
+    set_tests_properties(crexx_rxpp_metadata_${metadata_case} PROPERTIES
+            LABELS "driver;preprocessor;build;regression"
+            CREXX_PREP_TARGETS "crexx;rxpp;rxvme"
+            RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+            TIMEOUT 180)
+    crexx_label_smoke_tests(crexx_rxpp_metadata_${metadata_case}
+            PREP_TARGETS crexx rxpp rxvme)
+endforeach()
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -544,6 +563,7 @@ crexx_label_smoke_tests(
         crexx_headerless_simple_smoke
         crexx_args_smoke
         crexx_rexxscript_smoke
+        crexx_levelc_classic_runtime_smoke
         crexx_status_diagnostics
         crexx_source_root_compile_only
         crexx_native_explicit_header_smoke

@@ -467,6 +467,9 @@ do i=.int(1) to filenames[0]
   filename=filenames[i]
   sourceFile=filename
   rxppManifest=''
+  linkTarget=''
+  noRun=0
+  externalModules = .string
   if i=filenames[0] then lastfile=1
     dotpos = lastpos('.',filename)
   if dotpos > 0 then do
@@ -532,35 +535,11 @@ do i=.int(1) to filenames[0]
     linkTarget = readRxppLinkTarget(rxppManifest)
     externalModules = readRxppExternalModules(rxppManifest)
     noRun = readRxppNoRun(rxppManifest)
-    if noRun then execute=0
     libs = appendSemicolonValuesUnique(libs, externalModules)
     runtimeLibs = appendSemicolonValuesUnique(runtimeLibs, externalModules)
-    if linkTarget <> '' then do
-      if externalModules = '' then do
-        say 'RXPP link recipe has no ##EXTERNAL inputs:' rxppManifest
-        return 2
-      end
-      linkOutput = .string
-      linkSlash = .int
-      linkOutput = linkTarget
-      linkSlash = max(lastpos('/', binfile), lastpos('\', binfile))
-      if linkSlash > 0 then linkOutput = left(binfile, linkSlash)||linkTarget
-      linkArgs = .string[]
-      call appendArrayValue linkArgs, rxpath||'bin'||dirsep||'rxlink'
-      call appendArrayValue linkArgs, '-o'
-      call appendArrayValue linkArgs, linkOutput
-      call appendSemicolonValuesToArray linkArgs, externalModules
-      linkCommand = renderCommand(linkArgs, platformUpper)
-      if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET linkCommand
-      address crexx "run :linkArgs[]" output out error err
-      if verbose then do
-        res = .string
-        if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
-        else res = esc||ANSI_RED||RC||esc||ANSI_RESET
-        say '[ 'res' ] rxlink   : Linked         ' esc||ANSI_BLUE||linkOutput'.rxbin'||esc||ANSI_RESET
-      end
-      if RC\=0 then return RC
-      return 0
+    if linkTarget <> '' & externalModules = '' then do
+      say 'RXPP link recipe has no ##EXTERNAL inputs:' rxppManifest
+      return 2
     end
   end
 
@@ -659,7 +638,44 @@ do i=.int(1) to filenames[0]
 
   if verbose>2 then call banner nocolor
 
-  if native then do
+  if linkTarget <> '' then do
+    /* A recipe changes only the final stage. Compile and assemble first,
+     * then make the authored member the first linker input. */
+    linkOutput = .string
+    linkSlash = .int
+    linkIndex = .int
+    linkOutput = linkTarget
+    linkSlash = max(lastpos('/', binfile), lastpos('\', binfile))
+    if linkSlash > 0 then linkOutput = left(binfile, linkSlash)||linkTarget
+    linkArgs = .string[]
+    call appendArrayValue linkArgs, rxpath||'bin'||dirsep||'rxlink'
+    call appendArrayValue linkArgs, '-o'
+    call appendArrayValue linkArgs, linkOutput
+    call appendArrayValue linkArgs, binfile
+    call appendSemicolonValuesToArray linkArgs, externalModules
+    linkCommand = renderCommand(linkArgs, platformUpper)
+    if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET linkCommand
+    address crexx "run :linkArgs[]" output out error err
+    do linkIndex = 1 to out.0
+      say '> rxlink output:' out.linkIndex
+    end
+    do linkIndex = 1 to err.0
+      say '> rxlink error:' err.linkIndex
+    end
+    if verbose then do
+      res = .string
+      if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+      else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+      say '[ 'res' ] rxlink   : Linked         ' esc||ANSI_BLUE||linkOutput'.rxbin'||esc||ANSI_RESET
+    end
+    if RC\=0 then return RC
+    /* The linked result is a deliverable even when it replaces the input
+     * member. Do not remove it as an intermediate under --nokeep. */
+    do linkIndex = cleanupFiles.0 to 1 by -1
+      if cleanupFiles.linkIndex = linkOutput'.rxbin' then call arraydelete cleanupFiles, linkIndex, 1
+    end
+  end
+  else if native then do
     linkedOutput = binfile'_linked'
     providerRequirements = linkedOutput'.rxproviders'
     outputStem = binfile
@@ -871,13 +887,13 @@ do i=.int(1) to filenames[0]
     ex_command = renderCommand(exArgs, platformUpper)
 
     if verbose>1 then do
-      if execute then say esc||ANSI_GREEN"crexx executes  : "ex_command||esc||ANSI_RESET
-      if execute=0 then do
+      if execute & \noRun then say esc||ANSI_GREEN"crexx executes: "ex_command||esc||ANSI_RESET
+      if execute=0 | noRun then do
         if noRun then say esc||ANSI_GREEN'crexx does not execute because of ##NORUN '||esc||ANSI_RESET
         else say esc||ANSI_GREEN'crexx does not execute because of --noexec '||esc||ANSI_RESET
       end
     end
-    if lastfile=1 then if execute then do
+    if lastfile=1 then if execute & \noRun then do
       address crexx "run :exArgs[]"
       if RC\=0 then return RC
     end
@@ -1707,7 +1723,7 @@ do while rest <> ''
       old = left(existing, sep - 1)
       existing = substr(existing, sep + 1)
     end
-    if lower(strip(old)) = lower(item) then found = 1
+    if strip(old) = item then found = 1
   end
   if \found then current = appendSemicolonValue(current, item)
 end
@@ -1746,18 +1762,15 @@ readRxppExternalModules: procedure = .string
 arg manifest = .string
 found = .string
 line = .string
-names = .string
-i = .int
 moduleName = .string
 if \fileExists(manifest) then return ''
 do while lines(manifest)
   line = strip(linein(manifest))
   if lower(left(line,9)) <> 'external|' then iterate
-  names = translate(substr(line,10),' ','|')
-  do i = 1 to words(names)
-    moduleName = word(names,i)
-    found = appendSemicolonValuesUnique(found, moduleName)
-  end
+  /* One typed record contains one complete path. Preserve spaces inherited
+   * from the source directory instead of splitting the path into words. */
+  moduleName = strip(substr(line,10))
+  found = appendSemicolonValuesUnique(found, moduleName)
 end
 call lineout manifest
 return found

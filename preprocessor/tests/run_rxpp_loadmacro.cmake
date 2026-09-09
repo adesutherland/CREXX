@@ -26,6 +26,7 @@ file(WRITE "${WORK}/source/external/external_macro.rxpm" [=[##MACRO EXTERNAL_MAC
 ##MEND
 ]=])
 file(WRITE "${WORK}/source/input.rxpp" [=[options levelb
+##EXTERNAL unused.rxbin
 ##LOADMACRO external
 ##EXTERNAL_MACRO works
 ]=])

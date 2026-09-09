@@ -151,6 +151,7 @@ RXPP_MACRO_EMPTY_BODY = Macro body is empty or missing braces: {name}.
 RXPP_MACRO_MISSING_RPAREN = Macro definition is missing a closing parenthesis: {definition}.
 RXPP_MACRO_UNCLOSED = Macro definition is not closed: {name}.
 RXPP_MISSING_ENDIF = No matching ##ENDIF found after line {line}.
+RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL requires a module name.
 RXPP_NO_SOURCE_FILE = No source file was specified.
 RXPP_POSITIONAL_AFTER_KEYWORD = Positional parameter follows keyword parameter in {macro}({arguments}).
 RXPP_SCRIPT_MACRO_MISSING = Script macro file was not found: {file}.

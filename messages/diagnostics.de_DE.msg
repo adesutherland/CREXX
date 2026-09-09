@@ -151,6 +151,7 @@ RXPP_MACRO_EMPTY_BODY = Makro-Body ist leer oder die geschweiften Klammern fehle
 RXPP_MACRO_MISSING_RPAREN = Makrodefinition enthält keine schließende Klammer: {definition}.
 RXPP_MACRO_UNCLOSED = Makrodefinition ist nicht geschlossen: {name}.
 RXPP_MISSING_ENDIF = Kein passendes ##ENDIF nach Zeile {line} gefunden.
+RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL erfordert einen Modulnamen.
 RXPP_NO_SOURCE_FILE = Keine Source-Datei angegeben.
 RXPP_POSITIONAL_AFTER_KEYWORD = Positionsparameter folgt auf Keyword-Parameter in {macro}({arguments}).
 RXPP_SCRIPT_MACRO_MISSING = Script-Makrodatei wurde nicht gefunden: {file}.

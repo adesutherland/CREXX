@@ -151,6 +151,7 @@ RXPP_MACRO_EMPTY_BODY = Macro-body is leeg of accolades ontbreken: {name}.
 RXPP_MACRO_MISSING_RPAREN = Macrodefinitie mist een sluitend haakje: {definition}.
 RXPP_MACRO_UNCLOSED = Macrodefinitie is niet gesloten: {name}.
 RXPP_MISSING_ENDIF = Geen bijpassende ##ENDIF gevonden na regel {line}.
+RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL vereist een modulenaam.
 RXPP_NO_SOURCE_FILE = Geen source-bestand opgegeven.
 RXPP_POSITIONAL_AFTER_KEYWORD = Positionele parameter volgt op keyword-parameter in {macro}({arguments}).
 RXPP_SCRIPT_MACRO_MISSING = Scriptmacrobestand is niet gevonden: {file}.

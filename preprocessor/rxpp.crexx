@@ -601,11 +601,11 @@ CMD_external: procedure
   stype.line_no='X'
   module=strip(word(line,2))
   if module='' then do
-    say 'RXPP error: ##EXTERNAL requires a module name'
-    return
+    call rxpp_diag 'error','RXPP_EXTERNAL_REQUIRES_MODULE'
+    exit 8
   end
   module=normalisePath(inpath,module)
-  if pos('|'module,external_modules)=0 then external_modules=external_modules'|'module
+  if pos('|'module'|',external_modules'|')=0 then external_modules=external_modules'|'module
 return
 
 /* ------------------------------------------------------------------
@@ -2698,7 +2698,8 @@ linkerInfo: procedure
 return
 /* ------------------------------------------------------------------
  * GetPath: from a path/file-name input
- * Returns UNIX-style path specified a parameter
+ * Returns the containing directory with UNIX-style separators, or ./ when
+ * the input is a bare filename in the current directory.
   * ------------------------------------------------------------------
  */
 getPath: procedure=.string
@@ -2707,6 +2708,7 @@ getPath: procedure=.string
   path = translate(input, '/', '\')   /* "\" -> "/" */
   fpos=lastpos('/',path)
   if fpos>0 then path=substr(path,1,fpos)
+  else path='./'
 return path
 
 /* ------------------------------------------------------------------
@@ -2939,15 +2941,15 @@ normalisePath: procedure=.string
   arg xsyspath=.string, rawpath=.string
 
   path = translate(rawpath, '/', '\')   /* "\" -> "/" */
-  syspath = translate(xsyspath, '/', '\')
+  basepath = translate(xsyspath, '/', '\')
 
   /* Resolve relative INCLUDE/USE names against the macro-library directory
    * supplied by the caller. Previously xsyspath was accepted but ignored,
    * turning a relative name such as ui.rxpm into /ui.rxpm. */
   if length(path) < 2 | substr(path, 2, 1) \= ':' then do
-    if left(path, 1) \= '/' & syspath \= '' then do
-      if right(syspath, 1) \= '/' then syspath = syspath || '/'
-      path = syspath || path
+    if left(path, 1) \= '/' & basepath \= '' then do
+      if right(basepath, 1) \= '/' then basepath = basepath || '/'
+      path = basepath || path
     end
   end
 
@@ -2980,10 +2982,15 @@ normalisePath: procedure=.string
      part = components[i]
 
     select
-      when part = '.' then nop
+      when part = '.' | part = '' then nop
       when part = '..' then do
-        if parti > 0 then parti = parti - 1
-        else if \absolute then do
+        if parti > 0 then do
+          if norm[parti] <> '..' then do
+            parti = parti - 1
+            iterate
+          end
+        end
+        if \absolute then do
           parti = parti + 1
           norm[parti] = '..'
         end
@@ -3009,7 +3016,8 @@ normalisePath: procedure=.string
 
   if normalised = '' then do
     if drive \= '' then normalised = drive || '/'
-    else normalised = '/'
+    else if absolute then normalised = '/'
+    else normalised = '.'
   end
 return normalised
 

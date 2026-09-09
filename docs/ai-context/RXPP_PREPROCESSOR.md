@@ -103,6 +103,14 @@ driver's `--noexec` option. A link recipe already stops after RXLINK.
 `##EXTERNAL` declares an existing RXBIN module that is added to the final
 runtime or link stage.
 
+External paths resolve relative to the input source directory, including when
+the source is a bare filename in the working directory. Each `external|` record
+holds one complete path; spaces in the source directory must survive manifest
+reading and argv construction. Duplicate declarations match the complete,
+case-preserved path. Resolving an external path must not change the selected
+macro-library root used by a later `##LOADMACRO`. A missing module name is a
+preprocessing error and stops the pipeline.
+
 The presence of `##EXTERNAL` does not change the normal RXPP compilation
 pipeline:
 
@@ -134,6 +142,12 @@ rxlink generated.rxbin external1.rxbin external2.rxbin ...
 ```
 
 The linked result is not automatically executed.
+
+Compilation or assembly errors stop the recipe before linking. The driver
+continues processing later command-line source members after a successful
+recipe; `##NORUN` also applies to its own member without changing the command's
+execution option for later members. `--nokeep` removes intermediates while
+preserving the linked result, including when its member name matches the input.
 
 `##LINK` accepts exactly one bare output member name. It must not contain a
 directory separator, drive prefix, or `.rxbin` suffix. `##BUILDDIR` owns the
