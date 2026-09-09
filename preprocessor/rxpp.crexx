@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath binpath inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath binpath inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -128,7 +128,7 @@ if inpath \= macpath then call registerScriptMacros macpath
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
   call writeall outbuf,outfile,-1                   ## write generated output to file
-  call linkerInfo outfile,imported_funcs            ## linker definition will be calculated out of the normal output file
+  call linkerInfo outfile,imported_funcs,external_modules,link_target,no_run            ## linker definition will be calculated out of the normal output file
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
@@ -550,6 +550,9 @@ GetPrecomp: procedure
       else if ucmd = '##INCLUDE' then call cmd_include lineNo,line,1
       else if ucmd = '##LOADMACRO' then call cmd_loadMacro lineNo,line
       else if ucmd = '##BUILDDIR' then stype.LineNo='X'
+      else if ucmd = '##EXTERNAL' then call cmd_external lineNo,line
+      else if ucmd = '##LINK' then call cmd_link lineNo,line
+      else if ucmd = '##NORUN' then call cmd_norun lineNo,line
       else if ucmd = '##EMIT'    then stype.LineNo='EMIT'
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##COPYBLOCK' then call cmd_copyBlock lineNo,line
@@ -584,6 +587,63 @@ return
 registerScriptMacros: procedure
   arg path=.string
   call macroList path,'rxpm',scriptMacros,1
+return
+
+/* ------------------------------------------------------------------
+ * CMD_external: Declare an explicit runtime module dependency.
+ * The name is kept verbatim and written to the RXPP manifest as an
+ * external|... record.  It is deliberately separate from ordinary
+ * compiler imports, which may name consolidated namespaces.
+ * ------------------------------------------------------------------
+ */
+CMD_external: procedure
+  arg line_no=.int,line=.string
+  stype.line_no='X'
+  module=strip(word(line,2))
+  if module='' then do
+    say 'RXPP error: ##EXTERNAL requires a module name'
+    return
+  end
+  module=normalisePath(inpath,module)
+  if pos('|'module,external_modules)=0 then external_modules=external_modules'|'module
+return
+
+/* ------------------------------------------------------------------
+ * CMD_link: Declare a linked RXBIN output member for crexx.exe.
+ * The directive is metadata only; the driver invokes rxlink after RXPP.
+ * ------------------------------------------------------------------
+ */
+CMD_link: procedure
+  arg line_no=.int,line=.string
+  stype.line_no='X'
+  member=strip(word(line,2))
+  if member='' then do
+    say 'RXPP error: ##LINK requires an output member name'
+    exit 8
+  end
+  if words(line) <> 2 | member='.' | member='..' | pos('/',member)>0 | pos('\',member)>0 | pos(':',member)>0 | lower(right(member,6))='.rxbin' then do
+    say 'RXPP error: ##LINK accepts only a member name, not a path:' member
+    exit 8
+  end
+  if link_target \= '' then do
+    say 'RXPP error: only one ##LINK directive is allowed'
+    exit 8
+  end
+  link_target=member
+return
+
+/* ------------------------------------------------------------------
+ * CMD_norun: Compile and assemble an RXPP member without starting rxvme.
+ * ------------------------------------------------------------------
+ */
+CMD_norun: procedure
+  arg line_no=.int,line=.string
+  stype.line_no='X'
+  if words(line) <> 1 then do
+    say 'RXPP error: ##NORUN takes no arguments'
+    exit 8
+  end
+  no_run=1
 return
 /* ------------------------------------------------------------------
  * Process ##DEFINE command
@@ -2568,17 +2628,71 @@ return lnr
  * ------------------------------------------------------------------
  */
 linkerInfo: procedure
-  arg outfile=.string, imported=.string
-  userpath=translate(outfile,,'/\')
-  wrds=words(userpath)
-  member=word(userpath,wrds)
-  fmember=translate(member,,'.')
-  member=word(fmember,1)
-  wlast=wordindex(userpath,wrds)
-  userpath=substr(outfile,1,wlast-1)
-  userpath=translate(userpath,'/','/\')
+  arg outfile=.string, imported=.string, external=.string, link=.string, norun=.int
+  normalized=.string
+  slash=.int
+  userpath=.string
+  member=.string
+  dot=.int
+  linker=.string[]
+  linkcount=.int
+  rest=.string
+  sep=.int
+  item=.string
+  normalized=translate(outfile,'/','\')
+  slash=lastpos('/',normalized)
+  if slash>0 then do
+    userpath=left(normalized,slash)
+    member=substr(normalized,slash+1)
+  end
+  else do
+    userpath=''
+    member=normalized
+  end
+  dot=lastpos('.',member)
+  if dot>0 then member=left(member,dot-1)
   linkfile=userpath||member'.inc'
-  linker.1=substr(imported,2)
+  linker=.string[]
+  linkcount=.int
+  linkcount=0
+  rest=substr(imported,2)
+  do while rest <> ''
+    sep=pos('|',rest)
+    if sep=0 then do
+      item=strip(rest)
+      rest=''
+    end
+    else do
+      item=strip(left(rest,sep-1))
+      rest=substr(rest,sep+1)
+    end
+    if item='' then iterate
+    linkcount=linkcount+1
+    linker[linkcount] = 'import|' || item
+  end
+  rest=substr(external,2)
+  do while rest <> ''
+    sep=pos('|',rest)
+    if sep=0 then do
+      item=strip(rest)
+      rest=''
+    end
+    else do
+      item=strip(left(rest,sep-1))
+      rest=substr(rest,sep+1)
+    end
+    if item='' then iterate
+    linkcount=linkcount+1
+    linker[linkcount] = 'external|' || item
+  end
+  if link \= '' then do
+    linkcount=linkcount+1
+    linker[linkcount] = 'link|' || link
+  end
+  if norun then do
+    linkcount=linkcount+1
+    linker[linkcount] = 'norun|1'
+  end
   call writeall linker,linkfile,-1
   if verbose then say 'CRX0510I ['time('l')'] Library import names passed to 'linkfile
 return
@@ -2889,7 +3003,7 @@ normalisePath: procedure=.string
   if absolute then normalised = normalised || '/'
 
   do i = .int(1) to parti
-    if right(normalised, 1) \= '/' then normalised = normalised || '/'
+    if normalised \= '' & right(normalised, 1) \= '/' then normalised = normalised || '/'
     normalised = normalised || norm[i]
   end
 
@@ -3010,6 +3124,9 @@ rxppinit: procedure=.string
   macros_varvalue=.string[]
   included_files=.string[]
   imported_funcs=""
+  external_modules=""
+  link_target=""
+  no_run=0
   scriptMacro=.stem()
   globaldef=''
   lino=0

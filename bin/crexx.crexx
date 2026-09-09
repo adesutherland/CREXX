@@ -57,7 +57,7 @@
 
  /* defaults for options for this program */
 native=0;version=0;help=0;compile=0;filename='';verbose=0
-execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
+execute=1;noRun=0;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
 lastfile=0;sourceRoots='';binaryRoots='';importRxas=0;argsStart=0
 linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
 diagnosticsMode='';diagnosticLocale=''
@@ -466,6 +466,7 @@ err = .string[]
 do i=.int(1) to filenames[0]
   filename=filenames[i]
   sourceFile=filename
+  rxppManifest=''
   if i=filenames[0] then lastfile=1
     dotpos = lastpos('.',filename)
   if dotpos > 0 then do
@@ -500,6 +501,7 @@ do i=.int(1) to filenames[0]
     call appendArrayValue rxppArgs, '-verbose'
     call appendArrayValue rxppArgs, verbose
     address crexx "run :rxppArgs[]"
+    rxppManifest = filename'.inc'
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -523,6 +525,44 @@ do i=.int(1) to filenames[0]
 
   binfile = chop_suffix(filename)
   call appendArrayUnique binfiles, binfile
+
+  /* Only explicit ##EXTERNAL declarations are runtime module requests.
+   * Ordinary imports may name namespaces contained in classlib. */
+  if rxppManifest <> '' then do
+    linkTarget = readRxppLinkTarget(rxppManifest)
+    externalModules = readRxppExternalModules(rxppManifest)
+    noRun = readRxppNoRun(rxppManifest)
+    if noRun then execute=0
+    libs = appendSemicolonValuesUnique(libs, externalModules)
+    runtimeLibs = appendSemicolonValuesUnique(runtimeLibs, externalModules)
+    if linkTarget <> '' then do
+      if externalModules = '' then do
+        say 'RXPP link recipe has no ##EXTERNAL inputs:' rxppManifest
+        return 2
+      end
+      linkOutput = .string
+      linkSlash = .int
+      linkOutput = linkTarget
+      linkSlash = max(lastpos('/', binfile), lastpos('\', binfile))
+      if linkSlash > 0 then linkOutput = left(binfile, linkSlash)||linkTarget
+      linkArgs = .string[]
+      call appendArrayValue linkArgs, rxpath||'bin'||dirsep||'rxlink'
+      call appendArrayValue linkArgs, '-o'
+      call appendArrayValue linkArgs, linkOutput
+      call appendSemicolonValuesToArray linkArgs, externalModules
+      linkCommand = renderCommand(linkArgs, platformUpper)
+      if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET linkCommand
+      address crexx "run :linkArgs[]" output out error err
+      if verbose then do
+        res = .string
+        if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
+        else res = esc||ANSI_RED||RC||esc||ANSI_RESET
+        say '[ 'res' ] rxlink   : Linked         ' esc||ANSI_BLUE||linkOutput'.rxbin'||esc||ANSI_RESET
+      end
+      if RC\=0 then return RC
+      return 0
+    end
+  end
 
   /* print the file when verbose ibm style output is requested */
   if verbose>3 then do
@@ -831,8 +871,15 @@ do i=.int(1) to filenames[0]
     ex_command = renderCommand(exArgs, platformUpper)
 
     if verbose>1 then do
-      if execute then say 'crexx executes:' ex_command
-      if execute=0 then say 'crexx does not execute because of --noexec'
+      if execute then say esc||ANSI_GREEN"crexx executes  : "ex_command||esc||ANSI_RESET
+      if execute=0 then do
+        if noRun then say esc||ANSI_GREEN'crexx does not execute because of ##NORUN '||esc||ANSI_RESET
+        else say esc||ANSI_GREEN'crexx does not execute because of --noexec '||esc||ANSI_RESET
+      end
+    end
+    if execute then do
+       say
+       say
     end
     if lastfile=1 then if execute then do
       address crexx "run :exArgs[]"
@@ -1574,7 +1621,7 @@ if nocolor then do
   say '======> RexxLA cREXX compiler 'rvers2'            'date() time()
   end
 else say esc'[34m'||'======> RexxLA cREXX compiler 'rvers2'            'date() time() esc'[0m'
-say;say
+/* say;say */
 
 formfeed: procedure
 say x2c('0C')
@@ -1631,6 +1678,93 @@ arg current = .string, value = .string
 if value = '' then return current
 if current = '' then return value
 return current';'value
+
+appendSemicolonValuesUnique: procedure = .string
+arg current = .string, values = .string
+rest = .string
+sep = .int
+item = .string
+existing = .string
+found = .int
+old = .string
+rest = values
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = strip(rest)
+    rest = ''
+  end
+  else do
+    item = strip(left(rest, sep - 1))
+    rest = substr(rest, sep + 1)
+  end
+  if item = '' then iterate
+  existing = current
+  found = 0
+  do while existing <> ''
+    sep = pos(';', existing)
+    if sep = 0 then do
+      old = existing
+      existing = ''
+    end
+    else do
+      old = left(existing, sep - 1)
+      existing = substr(existing, sep + 1)
+    end
+    if lower(strip(old)) = lower(item) then found = 1
+  end
+  if \found then current = appendSemicolonValue(current, item)
+end
+return current
+
+readRxppLinkTarget: procedure = .string
+arg manifest = .string
+target = .string
+line = .string
+if \fileExists(manifest) then return ''
+do while lines(manifest)
+  line = strip(linein(manifest))
+  if lower(left(line,5)) = 'link|' then do
+    target = strip(substr(line,6))
+    leave
+  end
+end
+call lineout manifest
+return target
+
+readRxppNoRun: procedure = .int
+arg manifest = .string
+line = .string
+if \fileExists(manifest) then return 0
+do while lines(manifest)
+  line = strip(linein(manifest))
+  if lower(left(line,6)) = 'norun|' then do
+    call lineout manifest
+    return 1
+  end
+end
+call lineout manifest
+return 0
+
+readRxppExternalModules: procedure = .string
+arg manifest = .string
+found = .string
+line = .string
+names = .string
+i = .int
+moduleName = .string
+if \fileExists(manifest) then return ''
+do while lines(manifest)
+  line = strip(linein(manifest))
+  if lower(left(line,9)) <> 'external|' then iterate
+  names = translate(substr(line,10),' ','|')
+  do i = 1 to words(names)
+    moduleName = word(names,i)
+    found = appendSemicolonValuesUnique(found, moduleName)
+  end
+end
+call lineout manifest
+return found
 
 resolveLibraryPath: procedure = .string
 arg rxpath = .string, dirsep = .string, candidate = .string

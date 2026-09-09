@@ -78,7 +78,7 @@ For `.rxpp` inputs, `##buildDir path` tells the `crexx` driver where to place
 the generated `.crexx`, `.rxas`, and `.rxbin` artifacts. The path is relative
 to the driver’s current working directory when it is not absolute. The
 driver’s working directory is unchanged. Place the directive within the first
-32 physical source lines; comments and blank lines count toward this limit.
+64 physical source lines; comments and blank lines count toward this limit.
 
 ---
 
@@ -896,6 +896,70 @@ Later registrations override earlier registrations of the same name.
 ### `##buildDir`
 Route generated `.crexx`, `.rxas`, and `.rxbin` artifacts to the specified
 directory when the source is compiled through `crexx`.
+
+### `##EXTERNAL`
+
+Adds an existing RXBIN module to the final build stage.
+
+```rexx
+##EXTERNAL ../lib/CallCatalog.rxbin
+```
+
+The current `.rxpp` source is still preprocessed, compiled, and assembled
+normally.
+
+Without `##LINK`, the generated RXBIN and all declared external modules are
+passed to `rxvme`:
+
+```text
+rxvme generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+Multiple `##EXTERNAL` directives may be used when a program depends on more
+than one external RXBIN module.
+
+### `##LINK`
+
+Requests creation of a linked RXBIN instead of executing the generated module.
+
+```rexx
+##LINK MyApplication
+```
+
+The source still passes through the normal RXPP, compiler, and assembler
+stages. The generated RXBIN is then linked together with all modules declared
+using `##EXTERNAL`:
+
+```text
+source.rxpp
+  -> RXPP
+  -> RXC
+  -> RXAS
+  -> generated.rxbin
+  -> RXLINK generated.rxbin + external modules
+  -> MyApplication.rxbin
+```
+
+`##LINK` accepts a bare member name, without a path or `.rxbin` suffix.
+
+When combined with `##BUILDDIR`, the build directory determines where the
+linked member is written:
+
+```rexx
+##BUILDDIR ../build
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK MyApplication
+```
+
+This produces:
+
+```text
+../build/MyApplication.rxbin
+```
+
+Without `##LINK`, the equivalent build ends by running the generated RXBIN with
+the external modules instead of producing a linked member.
+
 
 ### `##SET` / `##UNSET`
 Set compile-time variables.

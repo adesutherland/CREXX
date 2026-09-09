@@ -93,7 +93,8 @@ which:
 - Expands macros via `expandRecursive()`
 - Applies OO translation via `ooTranslate()`
 - Writes final output using `writeall(outbuf, outfile)`
-- Writes linker include via `linkerInfo(outfile, imported_funcs)`
+- Writes typed linker manifest records via
+  `linkerInfo(outfile, imported_funcs, external_modules, link_target)`
 
 ### Script-macro search precedence
 
@@ -117,9 +118,91 @@ The `##buildDir path` directive is consumed by the `crexx` driver for `.rxpp`
 inputs. It routes the generated `.crexx`, `.rxas`, and `.rxbin` artifacts to
 the requested directory, resolved relative to the driver's current working
 directory; the driver process working directory is unchanged. The directive
-must occur within the first 32 physical source lines.
+must occur within the first 64 physical source lines.
+
+### Build metadata directives
+
+RXPP records three build-time directives in typed `.inc` manifest records.
+They are suppressed from the generated CREXX source:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+`##EXTERNAL` declares an already-built RXBIN module that participates in the
+final stage of the `crexx.exe` build pipeline.
+
+A normal `.rxpp` build still follows the complete compile pipeline:
+
+```text
+source.rxpp
+    -> RXPP
+generated.crexx
+    -> RXC
+generated.rxas
+    -> RXAS
+generated.rxbin
+```
+
+When one or more `##EXTERNAL` directives are present and no `##LINK` directive
+is specified, `crexx.exe` starts the generated module with `rxvme` and appends
+the external modules to the runtime module list:
+
+```text
+RXVME generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+`##LINK` changes only this final stage. The source is still preprocessed,
+compiled, and assembled normally. Instead of starting the generated RXBIN with
+`rxvme`, `crexx.exe` invokes `rxlink` using the generated RXBIN together with
+all declared external modules:
+
+```text
+RXLINK generated.rxbin external1.rxbin external2.rxbin ...
+    -> member.rxbin
+```
+
+The resulting linked RXBIN is not automatically executed.
+
+`##NORUN` takes no argument and records `norun|1` in the manifest. The driver
+still runs RXPP, RXC, and RXAS, but skips the final RXVME stage. It is
+equivalent to `--noexec` for that RXPP member. A `##LINK` recipe already stops
+after RXLINK.
+
+`##LINK` accepts one bare member name only. Paths, drive prefixes, and a
+`.rxbin` suffix are rejected. `##BUILDDIR` determines the output directory and
+`##LINK` determines the output member, so:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+produces:
+
+```text
+../temp/CallCatalog_linked.rxbin
+```
+
+The directives may occur independently of one another, subject to their normal
+validation rules. Only one `##LINK` directive is allowed.
+
+The manifest record forms are:
+
+```text
+import|<compiler import>
+external|<external RXBIN module>
+link|<bare output member>
+norun|1
+```
+
+Compiler imports remain distinct from external runtime/link modules.
 
 ---
+
 
 ## 3. Core data structures (global)
 
@@ -251,12 +334,6 @@ This subsystem inserts new source lines dynamically and advances `lino` accordin
 - `RXPPPassTwo` – normalize conditionals; build IF/ENDIF links; prep OO
 - `RXPPPassThree` – expand and emit final output
 - `rxppinit` – initialize all global state
-
-### OO support
-
-- `oocreatedefs` – preprocess OOCREATE constructs
-- `oo_translate_tilde` – legacy `~` syntax support
-- `ooTranslate` – main OO call translator
 
 ### Conditional support
 
@@ -400,7 +477,7 @@ The precomp interface is therefore part of RXPP’s **compatibility contract**: 
 **End of RXPP internal documentation**
 
 
-## 7) Stability
+## 8. Stability
 
 RXPP is **functionally stable but architecturally fluid**.
 
@@ -412,7 +489,7 @@ RXPP is **functionally stable but architecturally fluid**.
 
 In short: RXPP should be considered **stable for development and experimentation**, but not yet frozen as a long-term compatibility contract. Internal procedures, especially those related to stem handling and parsing helpers, may still evolve as the design settles.
 
-## 8) Design principles
+## 9. Design principles
 
 RXPP is intentionally engineered as a **mutable, single-pass-at-a-time transformation pipeline**, rather than a classical compiler with immutable ASTs.
 
@@ -448,7 +525,7 @@ Key principles:
 - Insertions always happen *ahead* of the current line or at known anchors.
 - No pass relies on backtracking or speculative parsing.
 
-## 9) Known limitations and non-goals
+## 10. Known limitations and non-goals
 
 RXPP deliberately does **not** try to be a full Rexx compiler or parser.
 
@@ -467,7 +544,7 @@ Explicit non-goals:
 - Optimized code generation.
 - Rewriting RXPP into an AST-based compiler framework.
 
-## 10) Mental model for contributors
+## 11. Mental model for contributors
 
 To work safely and effectively on RXPP, it helps to adopt the right mental model.
 
@@ -511,7 +588,7 @@ To work safely and effectively on RXPP, it helps to adopt the right mental model
 
 Following these principles makes it possible to extend RXPP confidently without destabilizing the pipeline.
 
-## 11) Overview of remaining helper procedures
+## 12. Overview of remaining helper procedures
 
 The following procedures support RXPP internally and are generally not entry points for new features. They are grouped by responsibility and briefly described.
 

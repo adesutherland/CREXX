@@ -67,7 +67,7 @@ strings, ordinary identifiers, keywords, numbers, and operators. It does not yet
 project generated CREXX semantic tokens or included-file macro definitions back
 onto the authored RXPP buffer.
 
-## Directory macros and build directories
+## Build metadata directives
 
 Recent additions separate macro discovery from output placement:
 
@@ -86,6 +86,84 @@ Recent additions separate macro discovery from output placement:
   RXPP suppresses the directive in generated cREXX but does not itself move
   build products. Direct CMake recipes should keep their explicit `-o` paths.
 
+RXPP also supports explicit external-module and link metadata. These directives
+are suppressed from generated cREXX and recorded in the typed `.inc` manifest
+beside the generated output:
+
+```rexx
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+`##NORUN` is a compile-only directive. It takes no argument, is suppressed
+from generated cREXX, and records `norun|1` in the manifest. `crexx.exe` still
+runs RXC and RXAS but does not start RXVME. It is the RXPP equivalent of the
+driver's `--noexec` option. A link recipe already stops after RXLINK.
+
+`##EXTERNAL` declares an existing RXBIN module that is added to the final
+runtime or link stage.
+
+The presence of `##EXTERNAL` does not change the normal RXPP compilation
+pipeline:
+
+```text
+source.rxpp
+  -> rxpp
+generated.crexx
+  -> rxc
+generated.rxas
+  -> rxas
+generated.rxbin
+```
+
+Without `##LINK`, `crexx.exe` invokes `rxvme` with the newly generated RXBIN
+followed by the declared external modules:
+
+```text
+rxvme generated.rxbin external1.rxbin external2.rxbin ...
+```
+
+When `##LINK` is present, the preprocessing, compilation, and assembly stages
+are unchanged. Only the final stage changes: `crexx.exe` invokes `rxlink`
+instead of `rxvme`, linking the newly generated RXBIN together with the
+declared external modules:
+
+```text
+rxlink generated.rxbin external1.rxbin external2.rxbin ...
+  -> member.rxbin
+```
+
+The linked result is not automatically executed.
+
+`##LINK` accepts exactly one bare output member name. It must not contain a
+directory separator, drive prefix, or `.rxbin` suffix. `##BUILDDIR` owns the
+output directory, while `##LINK` supplies the output member name.
+
+For example:
+
+```rexx
+##BUILDDIR ../temp
+##EXTERNAL ../lib/CallCatalog.rxbin
+##LINK CallCatalog_linked
+```
+
+produces:
+
+```text
+../temp/CallCatalog_linked.rxbin
+```
+
+The manifest uses typed records so compiler imports are never mistaken for
+external runtime/link modules:
+
+```text
+import|data_CallCatalog
+external|../lib/CallCatalog.rxbin
+link|CallCatalog_linked
+norun|1
+```
+
+---
 The UI worked example uses `##LOADMACRO ui` with `ui_node.rxpm`,
 `ui_command.rxpm` and `ui_launcher.rxpm`, staged below the selected macro-library
 root. It retains one RXPP invocation per generated source file: these additions
