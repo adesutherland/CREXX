@@ -877,10 +877,6 @@ do i=.int(1) to filenames[0]
         else say esc||ANSI_GREEN'crexx does not execute because of --noexec '||esc||ANSI_RESET
       end
     end
-    if execute then do
-       say
-       say
-    end
     if lastfile=1 then if execute then do
       address crexx "run :exArgs[]"
       if RC\=0 then return RC
