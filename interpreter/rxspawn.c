@@ -67,6 +67,9 @@
 #include "rxvmbyteendpoint.h"
 #include "rxvmvars.h"
 #include "rxcrexxcmd.h"
+#ifndef _WIN32
+#include "rxspawn_posix.h"
+#endif
 
 // Private structure to allow all the threads to share data etc. and
 // make the shellspawn() call re-enterent
@@ -3355,18 +3358,10 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
 
 #ifndef _WIN32
 static int rxspawn_terminate_posix_child(SHELLDATA *data, int signal_number) {
-    pid_t child_pid;
-    int result;
-
-    if (!data || data->ChildProcessPID <= 0) return 0;
-    child_pid = (pid_t)data->ChildProcessPID;
-    result = kill(data->ChildProcessGroupOwned ? -child_pid : child_pid,
-                  signal_number);
-    if (result == -1 && errno == ESRCH && data->ChildProcessGroupOwned) {
-        result = kill(child_pid, signal_number);
-    }
-    if (result == -1 && errno == ESRCH) return 0;
-    return result;
+    if (!data) return 0;
+    return rxspawn_signal_unreaped_child(
+            (pid_t)data->ChildProcessPID,
+            data->ChildProcessGroupOwned, signal_number);
 }
 
 static int rxspawn_terminate_posix_group_after_reap(

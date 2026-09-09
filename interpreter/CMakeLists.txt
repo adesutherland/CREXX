@@ -539,6 +539,15 @@ if(BUILD_TESTING)
             LABELS "interpreter;address;runtime")
 
     if(NOT WIN32)
+        add_executable(test_rxspawn_posix_termination
+                tests/test_rxspawn_posix_termination.c)
+        target_include_directories(test_rxspawn_posix_termination PRIVATE .)
+        add_test(NAME rxspawn_posix_termination
+                COMMAND test_rxspawn_posix_termination)
+        set_tests_properties(rxspawn_posix_termination PROPERTIES
+                LABELS "interpreter;spawn;posix;sanitizer;concurrency"
+                CREXX_PREP_TARGETS test_rxspawn_posix_termination
+                TIMEOUT 10)
         add_executable(test_rxspawn_diagnostics
                 tests/test_rxspawn_diagnostics.c)
         target_include_directories(test_rxspawn_diagnostics PRIVATE

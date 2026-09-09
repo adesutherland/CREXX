@@ -571,7 +571,7 @@ return
 CMD_loadMacro: procedure
   arg line_no=.int,line=.string
   stype.line_no='X'
-  path=normalisePath(inpath,word(line,2))
+  path=normalisePath(syspath,word(line,2))
   if right(path,1) \= '/' then path=path'/'
   if verbose then say 'CRX0110I ['time('l')'] Macro Path  'path
   call registerScriptMacros path

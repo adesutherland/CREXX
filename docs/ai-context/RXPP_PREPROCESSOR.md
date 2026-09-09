@@ -77,6 +77,10 @@ Recent additions separate macro discovery from output placement:
   earlier same-named package. Current package filenames must be lowercase,
   using letters, digits and underscores; each file contains one `##MACRO` body
   terminated by `##MEND`. The complete macro name is matched, not a prefix.
+  The selected macro-library root remains authoritative when input and output
+  live in separate directories; `##LOADMACRO` does not switch to the input
+  source directory. `rxpp_loadmacro` retains a conflicting source-relative
+  package to exercise that distinction.
 - `##BUILDDIR path` is consumed by `bin/crexx.crexx`, which scans the first
   64 source lines and resolves it relative to the command's working directory.
   RXPP suppresses the directive in generated cREXX but does not itself move

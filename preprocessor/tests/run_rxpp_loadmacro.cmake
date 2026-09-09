@@ -3,7 +3,7 @@ if(NOT DEFINED RXPP_BIN OR NOT DEFINED SOURCE_ROOT OR NOT DEFINED WORK)
 endif()
 
 file(REMOVE_RECURSE "${WORK}")
-file(MAKE_DIRECTORY "${WORK}" "${WORK}/external")
+file(MAKE_DIRECTORY "${WORK}" "${WORK}/external" "${WORK}/source/external")
 foreach(support IN ITEMS maclib.rexx macsys.rexx mathlib.rexx syslib.rexx)
     file(COPY_FILE
             "${SOURCE_ROOT}/preprocessor/${support}"
@@ -20,14 +20,19 @@ file(WRITE "${WORK}/external/external_macro.rxpm" [=[##MACRO EXTERNAL_MACRO valu
   .gen say "external &value"
 ##MEND
 ]=])
-file(WRITE "${WORK}/input.rxpp" [=[options levelb
+# Source-relative lookup must not replace the selected macro-library root.
+file(WRITE "${WORK}/source/external/external_macro.rxpm" [=[##MACRO EXTERNAL_MACRO value
+  .gen say "wrong source &value"
+##MEND
+]=])
+file(WRITE "${WORK}/source/input.rxpp" [=[options levelb
 ##LOADMACRO external
 ##EXTERNAL_MACRO works
 ]=])
 
 execute_process(
         COMMAND "${RXPP_BIN}" rxprecomp
-                -I "${WORK}/input.rxpp"
+                -I "${WORK}/source/input.rxpp"
                 -o "${WORK}/output.crexx"
                 -m "${WORK}/maclib.rexx"
         RESULT_VARIABLE rxpp_result

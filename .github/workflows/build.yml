@@ -973,6 +973,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build
+      - optimizer-parity
       - version
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     timeout-minutes: 15

@@ -833,6 +833,14 @@ that stops unexpectedly is terminated with a diagnostic instead of leaving a
 wait loop stalled. Controller-mode CREXX execution remains synchronous where
 it must preserve command-environment state.
 
+On POSIX, redirect shutdown can let a controlled child exit between a
+nonblocking wait and the group termination signal. Darwin may report `EPERM`
+when that group contains only the unreaped exited child. The termination path
+accepts this only after `waitid(WEXITED | WNOHANG | WNOWAIT)` confirms the
+owned child's exit. It retains the PID until the ordinary `waitpid` reaps it,
+then performs the existing group-only descendant cleanup. A live child or
+failed exit observation retains the original termination error.
+
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
 redirects onto these two providers and apply captured output only on the
 controlling execution. The retired source mnemonics `spawn`, `redir2str`,

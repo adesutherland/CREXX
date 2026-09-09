@@ -60,6 +60,33 @@ hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
 ## Open findings
 
+### SAN-QA-014 — RXPP loses macros outside the input-source directory
+
+Status: repair candidate; exact-SHA hosted qualification is required for closure.
+
+- Affected revision: `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.
+  `CMD_loadMacro` changed the relative `##LOADMACRO` root from the selected
+  macro-library directory to the input-source directory. Text Inspector stages
+  its UI macros separately, so its generated application loses the macro bodies.
+- Evidence: Sanitizer QA [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325),
+  Build CREXX [34211281347](https://github.com/adesutherland/CREXX/actions/runs/34211281347),
+  and Deep Build QA [34303936426](https://github.com/adesutherland/CREXX/actions/runs/34303936426).
+  Full downloaded logs are retained at `/tmp/crexx-ci-20260909.wjmUik/`.
+- Permanent reproducer: `rxpp_loadmacro` now separates the input and selected
+  macro-library roots, with a conflicting source-relative package. The earlier
+  fixture placed both roots in the same directory and could not detect this.
+- Original broad trigger: maintained full Linux ASan/LSan and macOS ASan;
+  Text Inspector generation, core, TUI and ANSI PTY coverage. The macOS PTY
+  also recorded exit 139 without an ASan stack; retain this as unqualified
+  until the complete repaired application passes the maintained lane.
+- Owner/next action: hotfix QA; restore the documented macro-library lookup,
+  pass focused Debug/ASan and full hosted Build, Deep Build and Sanitizer QA.
+- Repair: the documented macro-library lookup is restored. The strengthened
+  fixture fails before repair and passes after it; all six Text Inspector
+  tests pass in normal Debug. This item closes only when the same code passes
+  focused Apple-ASan and the complete hosted gates above. Investigation and
+  evidence are in [the hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
+
 ### SAN-007 — imported inline-payload AST freed during recursive function replacement
 
 Status: closure candidate and release-blocking pending exact-SHA hosted proof.
@@ -521,6 +548,26 @@ waiver is authorized.
 Status: reopened and release-blocking. The original failure recurred in two
 maintained macOS arm64 lanes. The provider remains parallel; exact-SHA hosted
 qualification with the strengthened diagnostic is pending.
+
+- 2026-09-09 recurrence: Sanitizer QA
+  [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325)
+  actually checked out `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.
+  The retained macOS artifact at
+  `/tmp/crexx-ci-20260909.wjmUik/sanitizer/sanitizer-logs-macos/20260909-034939-full/ctest.log`
+  identifies `Failure spawn terminate. Details: RC=1 Text=Operation not permitted`,
+  `state=2`, `errorCode=17`. This establishes termination, not launch setup,
+  as the failing stage. Hotfix QA owns a deterministic exited-child reproducer
+  and normal Debug/maintained sanitizer qualification; no assertion is relaxed.
+- Repair candidate, 2026-09-09: the new `rxspawn_posix_termination` regression
+  deterministically reproduces Darwin's group `EPERM` for an exited but
+  unreaped child. The private signalling helper now confirms terminal child
+  state using nonblocking `waitid` with `WNOWAIT` before accepting that result.
+  Reap ownership and post-reap group-only cleanup remain intact; live-child and
+  unrelated failures remain errors. The regression, byte-provider test and
+  launch diagnostic pass together in normal Debug and Apple ASan (3/3 at
+  `cmake-build-debugasan/asan-logs/20260909-065238-ctest`). Closure remains
+  conditional on the original broad trigger and both exact-code hosted
+  sanitizer lanes passing; see the [hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
