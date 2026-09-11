@@ -1,5 +1,9 @@
 # Mike's CREXX report review — 11 September 2026
 
+**Later evidence:** This is the initial review, before Mike's source archives
+arrived. The [follow-up review](mike-followup-2026-09-11.md) independently
+reproduces reports 2 and 5 and supersedes their missing-source dispositions.
+
 The supplied examples establish four documentation/usage traps, rather than a
 demonstrated runtime or compiler implementation defect. Two larger-program
 claims need their original source, and the numeric-period observation remains
