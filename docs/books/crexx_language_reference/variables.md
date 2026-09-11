@@ -32,15 +32,68 @@ payload = .binary()
 
 The canonical integer type name is `.int`.
 
+## The System Variable `rc`
+
+`rc` has the integer type `.int`, including with `options numeric_classic`.
+The [ADDRESS statement](statements.md#address) stores the command's integer
+status in it. It can also hold an integer result assigned by the program, but
+it is not a general-purpose string result variable.
+
+Use a separate variable for a function that returns text:
+
+```rexx
+result_text = MyFunc()
+say result_text
+```
+
+Assigning nonnumeric text to `rc` requires an invalid string-to-integer
+conversion. The compiler reports `BAD_CONVERSION` when it can establish the
+invalid value during compilation; a value obtained at runtime raises
+`CONVERSION_ERROR`. The same conversion rules apply to an ordinary `.int`
+variable. Declaring `rc = .string` does not change its system type.
+
+## Block Scope
+
+A first assignment inside a `DO ... END` block creates a binding in that block
+unless the variable already exists in an enclosing scope. Sibling blocks do
+not share newly created bindings. This differs from Classic Rexx's procedure
+scope and matters when computing a result in alternative branches.
+
+Declare the shared result before the conditional:
+
+```rexx
+choose: procedure = .string
+  arg flag = .string
+  text = .string
+  if flag = "1" then do
+    text = "from-if"
+  end
+  else do
+    text = "from-else"
+  end
+  return text
+```
+
+Without `text = .string`, the assignments and final read create separate
+bindings. The compiler warns `NOT_IN_SAME_SCOPE`, and the final read returns
+the uninitialized variable's name instead of either branch's string. A bare
+type declaration is sufficient; no dummy initial value is needed.
+
 ## Arrays
 
-Array variables are declared from a typed array value:
+Array variables are declared with a typed array expression:
 
 ```rexx
 args = .string[]
 scores = .int[10]
 grid = .int[10, 10]
 ```
+
+These bare type expressions declare storage; they do not create and assign a
+fresh empty array whenever execution reaches the declaration. In particular,
+repeating `args = .string[]` in a procedure that exposes `args` does not clear
+its existing module-global elements. With `import rxfnsb`, use
+`call arraydrop args` when the program needs to empty an existing array.
 
 Array arguments use the same notation in procedure signatures:
 

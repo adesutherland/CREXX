@@ -66,6 +66,13 @@ and examples should prefer `namespace..symbol`.
 
 ## Libraries and Linking
 
+Importing source makes its contracts available during compilation; it does not
+automatically build or load the imported module. Supply application bytecode
+with `crexx -l ./library.rxbin program.crexx`, or build the explicit source
+members together using `crexx --program output program.crexx library.crexx`.
+Packaged binary imports can carry exact runtime autoload hints. See the
+[worked import and loading example](../crexx_programming_guide/intralanguage.md#supplying-the-library-at-runtime).
+
 Multiple `.rxbin` modules can be loaded together by the VM. For deployable
 images, use `rxlink`. It combines selected modules into one linked image with a
 shared constant pool while preserving module boundaries and runtime metadata.

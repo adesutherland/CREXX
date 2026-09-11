@@ -47,3 +47,24 @@ Global variables are typed based on their first use or declaration. All modules 
 - Inside a `DO` block (e.g., `if cond then do; x = 10; end`), if `x` does not already exist in an outer scope, it creates a block-local variable. If it does exist (including as a global), it updates that variable.
 
 Note: The distinction between single-instruction branches and `DO` blocks is an intentional design choice in Level B.
+
+## Declaring and clearing an exposed array
+
+The declaration `TOK = .string[]` binds the array type to exposed global
+storage. It does not clear that storage on each call. A routine that rebuilds
+tokens for each input must clear the array explicitly:
+
+```rexx
+Tokenize: procedure = .void expose TOK
+  arg line = .string
+  TOK = .string[]
+  call arraydrop TOK
+  do i = 1 to words(line)
+    call arrayappend TOK, word(line, i)
+  end
+  return
+```
+
+This example requires `import rxfnsb`. Calling it with `"a b c"` and then
+`"x y"` leaves only `x` and `y` in `TOK`. A factory call such as
+`VARSET = .stem()` is different: it creates and assigns an object each time.
