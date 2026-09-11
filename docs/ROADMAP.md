@@ -227,6 +227,14 @@ model, and enters Release 1 only through a beta quality gate.
 
 ### Later platform and service directions
 
+- Local native inference has a requirements backlog:
+  [`CREXX-NI-01` through `CREXX-NI-07`](planning/native-inference-backlog.md),
+  captured 2026-09-11. It covers an optional in-process embedding provider,
+  persistent model ownership using existing workers, CPU/Metal execution,
+  canonical packages, reproducible model identity and qualification. Local text
+  generation is a separate extension. Scheduling is unassigned; this capture
+  does not change the five priorities or Release 1 scope. Product retrieval and
+  graph policy remain in the companion crexx-rag backlog.
 - Public provider-plugin ABI, durable services, pool telemetry, server
   lifecycle, HTTP/2, WebSockets, and GPU work remain post-Release-1 design
   candidates.
@@ -254,6 +262,8 @@ model, and enters Release 1 only through a beta quality gate.
 
 ## Detailed Authorities
 
+- Native inference requirements and the crexx-rag dependency:
+  [`planning/native-inference-backlog.md`](planning/native-inference-backlog.md)
 - Release scope, cadence, and dependencies:
   [`release-1-plan.md`](release-1-plan.md)
 - Beta 3 draft release note:
