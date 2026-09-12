@@ -1377,6 +1377,36 @@ fail:
     return NULL;
 }
 
+/* Keep the declared return conversion separate from the caller's conversion.
+ * Capturing the raw expression type would collapse those two boundaries. */
+static ASTNode *inline_capture_converted_return(Context *context,
+                                                ASTNode *instr_list,
+                                                Scope *scope,
+                                                ASTNode *call_node,
+                                                ASTNode *return_node,
+                                                InlineCloneState *clone_state) {
+    Symbol *result;
+    ASTNode *assignment;
+    ASTNode *lhs;
+    ASTNode *rhs;
+
+    result = rxcp_remap_create_temp_symbol(context, scope, call_node,
+                                            "__inline_return", return_node->node_number);
+    if (!result) return NULL;
+    assignment = rxcp_remap_create_assignment_node(context, scope, return_node, call_node);
+    lhs = rxcp_remap_create_symbol_node(context, scope, return_node, result,
+                                         VAR_TARGET, 0, 1);
+    rhs = inline_clone_subtree(context, return_node->child, clone_state);
+    if (!assignment || !lhs || !rhs) return NULL;
+    ast_sttn(rhs, lhs);
+    ast_svtn(assignment, lhs);
+    ast_rttp(assignment);
+    rxcp_remap_append_assignment_node(instr_list, assignment, lhs, rhs);
+
+    return rxcp_remap_create_symbol_node(context, scope, return_node, result,
+                                           VAR_SYMBOL, 1, 0);
+}
+
 static int ast_inline_statement(Context *context,
                                 ASTNode *statement_node,
                                 ASTNode *call_node,
@@ -1455,6 +1485,7 @@ static int ast_inline_statement(Context *context,
             ASTNode *ret_assign;
             ASTNode *ret_lhs;
             ASTNode *ret_rhs;
+            int needs_result_conversion;
 
             ret_expr = proc_instr->child;
             if (!ret_expr) {
@@ -1493,14 +1524,24 @@ static int ast_inline_statement(Context *context,
                 goto fail;
             }
 
+            needs_result_conversion = return_plan && return_plan->return_target &&
+                                      call_node->value_dims == 0 && ret_lhs->value_dims == 0 &&
+                                      call_node->value_type != ret_lhs->value_type;
+
             if (clone_state.method_receiver_needs_copyback) {
-                ret_rhs = inline_create_temp_value_ref(context,
-                                                       instr_list,
-                                                       inline_scope,
-                                                       ret_expr,
-                                                       &clone_state,
-                                                       "__inline_ret",
-                                                       (size_t)proc_instr->node_number);
+                if (needs_result_conversion) {
+                    ret_rhs = inline_capture_converted_return(context, instr_list,
+                                                               inline_scope, call_node,
+                                                               proc_instr, &clone_state);
+                } else {
+                    ret_rhs = inline_create_temp_value_ref(context,
+                                                           instr_list,
+                                                           inline_scope,
+                                                           ret_expr,
+                                                           &clone_state,
+                                                           "__inline_ret",
+                                                           (size_t)proc_instr->node_number);
+                }
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to capture return value before receiver copyback");
                     goto fail;
@@ -1515,6 +1556,15 @@ static int ast_inline_statement(Context *context,
                     goto fail;
                 }
                 receiver_copyback_appended = 1;
+            } else if (needs_result_conversion && ret_expr->value_type != call_node->value_type) {
+                ret_rhs = inline_capture_converted_return(context, instr_list,
+                                                           inline_scope, call_node,
+                                                           proc_instr, &clone_state);
+                if (!ret_rhs) {
+                    inline_debug_fail_closed(context, call_node, proc_sym,
+                                             "failed to preserve declared return conversion");
+                    goto fail;
+                }
             } else if (inline_node_has_array_shape(ret_expr) ||
                 (inline_node_needs_attr_copy(ret_expr) &&
                  (ret_expr->value_type == TP_BINARY || ret_expr->target_type == TP_BINARY))) {
@@ -1544,6 +1594,14 @@ static int ast_inline_statement(Context *context,
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone scalar return expression");
                     goto fail;
                 }
+            }
+
+            if (needs_result_conversion) {
+                /* This assignment is created after final type validation;
+                 * the cloned callee target does not describe its new caller. */
+                ast_sttn(ret_rhs, ret_lhs);
+                ast_svtn(ret_assign, ret_lhs);
+                ast_rttp(ret_assign);
             }
 
             /* Aggregate caller locals can use the direct register-copy form.

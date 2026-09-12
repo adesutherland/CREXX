@@ -75,6 +75,13 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      and leave the downstream emitter with an ordinary validated tree. This is
      why new inline cases are opened by specific parent/operand shape instead
      of by globally deciding that a callable is "always inlineable".
+     Statement-position return rewrites preserve two conversion boundaries:
+     the expression becomes the callee's declared return type, then that result
+     becomes the caller's target type. These assignments are built after final
+     type validation, so the inliner sets their target types explicitly. When
+     both conversions are needed, a temporary with the declared return type
+     preserves the intermediate result and any conversion error before receiver
+     copyback. Nested block expressions retain their caller conversion as well.
    - A real method call binds the receiver value directly as `a1`. The inliner
      may therefore place a proved direct-object receiver in that same storage.
      For a nested call on the enclosing method's direct `§this`, the current

@@ -157,6 +157,20 @@ set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
 
+add_test(NAME inline_return_conversions
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXBVM=$<TARGET_FILE:rxbvm> -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_return_conversions.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/inline_return_conversions_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/inline_return_conversions.cmake)
+set_tests_properties(inline_return_conversions PROPERTIES
+    LABELS "compiler;imports;inline;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
+    TIMEOUT 600)
+
 add_test(NAME global_import_types
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
