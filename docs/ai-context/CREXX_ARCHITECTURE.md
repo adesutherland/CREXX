@@ -455,9 +455,20 @@ name, array bounds and reference referent. Source imports use the same
 Global resolution parses the retained declaration with the normal type grammar
 and copies its complete shape into the consuming symbol. Matching declarations
 may share a namespace; incompatible shapes still produce a type diagnostic.
-The `global_import_types` regression checks source imports, optimized and
-unoptimized execution, and incompatible bounds. Binary global emission and
-import have separate known gaps tracked in issue #694.
+Global metadata is emitted from the enclosing namespace for every global with
+a live use in the procedure, method or factory. Binary import walks each
+module's separate export chain and pairs exposed registers with type records
+from that module's metadata chain; this also applies to linked shared constant
+pools. Imported object and reference contracts load their classes into the
+consumer before member and indexer lowering.
+
+Older modules without populated global metadata can still use a complete
+caller declaration. Missing array shape must be diagnosed after type inference
+has converged, before register allocation; early constant-bound checks wait for
+complete bounds. Present but malformed type declarations report an import
+syntax error. The `global_import_types` and `binary_global_import_types`
+regressions cover source, opt-in RXAS, RXBIN and shared-pool imports, runtime
+values, legacy caller declarations and incompatible or incomplete contracts.
 
 ### Project member invalidation and declaration lookup
 

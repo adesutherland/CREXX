@@ -60,6 +60,58 @@ hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
 ## Open findings
 
+### SAN-008 — array size shorthand reads beyond an imported array's bounds table
+
+Status: open, release-blocking; repair and qualification in progress under
+[#694](https://github.com/adesutherland/CREXX/issues/694). Owner: current
+CREXX-hotfix compiler repair, with exact-commit hosted Linux ASan/LSan and
+macOS ASan closure required before this entry closes.
+
+- Affected revision: `fa887be158213403b9b1de458cfdecc7e4c86122` plus the local
+  #694 import repair. The unchecked access in `set_node_types_walker()` also
+  exists in that base revision; the new permanent import matrix exposes it.
+- Reproducer: import the `binary_global_import_types` provider with
+  `grid = .int[-2 to 2, 1 to 3]`, then compile a consumer that reads
+  `grid[-2, 1, 1]`. The normal Debug compiler returns
+  `ARRAY_DIMS_MISMATCH`; maintained Apple ASan first reports a four-byte
+  heap-buffer-overflow just beyond the two-element `dim_base` allocation.
+- Original maintained command: `tools/asan-run.sh --build-dir
+  cmake-build-debugasan --phase ctest --regex
+  '^(binary_global_import_types|global_import_types|inline_return_conversions|binary_forward_dependencies|binary_storage_selector_dependencies|crexx_process_runtime)$'
+  --test-jobs 2 --leaks off --no-live-tail`. Leak detection is unavailable
+  on Apple ASan; no supported sanitizer has been disabled.
+- Retained log:
+  `cmake-build-debugasan/asan-logs/20260912-150240-ctest/ctest.log`.
+  The report names `rxcp_val_type.c:1788` in `set_node_types_walker()` and
+  the allocation in `node_to_type()` via `sym_imva()`.
+- Cause: the earlier type-setting pass checks the last subscript's base for
+  the literal-zero array-size shorthand before validating that the subscript
+  ordinal exists. Guarding the later type-safety and optimization passes
+  alone does not cover this earlier read.
+- Repair: retain the signed `ast_chdi()` result, require it to be non-negative,
+  cast only after that check, and require it to be below the `size_t`
+  dimension count before reading `dim_base`. The permanent matrix includes
+  both extra final-one and final-zero cases, so the size shorthand cannot hide
+  an excess dimension. Existing valid one-based final-zero queries retain
+  their rewrite.
+- Local proof: the final normal-Debug focused panel passed 14/14 at
+  `cmake-build-debug/asan-logs/20260912-154901-ctest`; the identical maintained
+  Apple-ASan trigger passed 6/6 at
+  `cmake-build-debugasan/asan-logs/20260912-155610-ctest`; Release passed the
+  binary import matrix at
+  `cmake-build-release/asan-logs/20260912-160205-ctest`; and normal Debug
+  `qa-prep` plus all 2,302 non-performance tests passed at
+  `cmake-build-debug/asan-logs/20260912-160326-build` and
+  `cmake-build-debug/asan-logs/20260912-160637-ctest`. Apple ASan provides no
+  leak-closure authority; both exact-commit hosted sanitizer lanes remain
+  required.
+- Permanent closure test: `binary_global_import_types`, including excess
+  final subscripts of both one and zero, source/RXAS/RXBIN/shared-pool imports,
+  and both compiler modes. Required closure is the identical normal Debug
+  and maintained ASan focused command passing, then the full supported
+  platform sanitizer gates and ordinary Debug correctness QA. No suppression,
+  test exclusion, or waiver is authorized.
+
 ### SAN-QA-015 — PTY restoration observation races Darwin pending-input state
 
 Status: repair candidate discovered during ordinary Debug qualification of

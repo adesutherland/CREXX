@@ -50,6 +50,23 @@
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxvmvars.h"
 
+/* Signed literals remain unary nodes with -n; range validation must not
+ * depend on the optional constant-folding pass. */
+static int array_index_literal(ASTNode *node, rxinteger *value) {
+    ASTNode *literal = node;
+    int negative = node->node_type == OP_NEG;
+    if (negative || node->node_type == OP_PLUS) literal = ast_chdn(node, 0);
+    if (!literal || literal->node_type != INTEGER) return 0;
+    if (literal->int_value) *value = literal->int_value;
+    else if (!literal->node_string ||
+             string2integer(value, literal->node_string, literal->node_string_length)) return 0;
+    if (negative) {
+        if (*value == RXINTEGER_MIN) return 0;
+        *value = -*value;
+    }
+    return 1;
+}
+
 static char *build_factory_lookup_name(const char *member_name, size_t member_name_length) {
     static const char factory_prefix[] = "\xc2\xa7" "factory";
     char *name;
@@ -1760,6 +1777,7 @@ walker_result set_node_types_walker(walker_direction direction,
                         /* We have array parameters (subscript or stem-style) */
                         n1 = child1;
                         while (n1) {
+                            int subscript_index = ast_chdi(n1);
                             if (n1->value_type == TP_VOID && !ast_nsib(n1)) {
                                 /* The last parameter is VOID - this is a special case, we
                                  * are returning the number of elements as an integer */
@@ -1768,7 +1786,9 @@ walker_result set_node_types_walker(walker_direction direction,
 
                             if (n1->node_type == INTEGER && !ast_nsib(n1) &&
                                 node->symbolNode->symbol->dim_base &&
-                                node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
+                                subscript_index >= 0 &&
+                                (size_t)subscript_index < node->symbolNode->symbol->value_dims &&
+                                node->symbolNode->symbol->dim_base[subscript_index] == 1 &&
                                 node_to_integer(n1) == 0) {
                                 /* Special case - last parameter and 1-base and is "0"
                                  * this is a syntax candy for VOID - returning the number of elements as an integer */
@@ -2137,6 +2157,7 @@ walker_result type_safety_walker(walker_direction direction,
     Context *context = (Context*)payload;
     ASTNode *child1, *child2, *n1, *n2;
     int val, ix;
+    rxinteger index_value;
 
     if (direction == in) {
         /* IN - TOP DOWN */
@@ -2146,6 +2167,32 @@ walker_result type_safety_walker(walker_direction direction,
         /* OUT - BOTTOM UP */
         child1 = ast_chdn(node, 0);
         child2 = ast_chdn(node, 1);
+
+        /* Exposed globals can acquire their array contract in a later
+         * fixed-point pass. At the final pass, every surviving subscript
+         * needs actual bounds before register allocation/code generation.
+         * A caller's explicit declaration still supplies a valid contract
+         * when an older imported module contains no global type metadata. */
+        if (context->is_final_pass && child1 &&
+            (node->node_type == VAR_SYMBOL || node->node_type == VAR_TARGET ||
+             node->node_type == VAR_REFERENCE) &&
+            node->parent && node->parent->node_type != DEFINE &&
+            node->symbolNode && node->symbolNode->symbol) {
+            Symbol *symbol = node->symbolNode->symbol;
+            const char *error = 0;
+            /* Scalar object indexing is handled by its indexer method. */
+            if (symbol->type == TP_OBJECT && !symbol->value_dims) {
+                /* Preserve the object-indexer validation/lowering path. */
+            } else if (!symbol->value_dims || !symbol->dim_base || !symbol->dim_elements)
+                error = symbol->type == TP_UNKNOWN ? "UNKNOWN_TYPE" : "NOT_AN_ARRAY";
+            else if (ast_nchd(node) > symbol->value_dims)
+                error = "ARRAY_DIMS_MISMATCH";
+            if (error) {
+                mknd_err_unique(node, error);
+                context->current_scope = node->scope;
+                return result_normal;
+            }
+        }
 
         switch (node->node_type) {
             case MEMBER_CALL:
@@ -2452,6 +2499,7 @@ walker_result type_safety_walker(walker_direction direction,
                         if (n1->node_type == INTEGER && !ast_nsib(n1) &&
                             node->symbolNode && node->symbolNode->symbol &&
                             node->symbolNode->symbol->dim_base &&
+                            ast_chdi(n1) < node->symbolNode->symbol->value_dims &&
                             node->symbolNode->symbol->dim_base[ast_chdi(n1)] == 1 &&
                             node_to_integer(n1) == 0) {
                             /* Special case - last parameter and 1-base and is "0"
@@ -2470,17 +2518,20 @@ walker_result type_safety_walker(walker_direction direction,
                             }
                         }
 
-                        if (n1->node_type == INTEGER && n1->parent->symbolNode && n1->parent->symbolNode->symbol && n1->parent->symbolNode->symbol->dim_base) {
+                        if (array_index_literal(n1, &index_value) && node->symbolNode &&
+                            node->symbolNode->symbol &&
+                            ast_chdi(n1) < node->symbolNode->symbol->value_dims &&
+                            node->symbolNode->symbol->dim_base &&
+                            node->symbolNode->symbol->dim_elements) {
                             /* As a constant integer we can check it is in range */
-                            val = node_to_integer(n1);
                             ix = ast_chdi(n1);
 
-                            if (val < n1->parent->symbolNode->symbol->dim_base[ix])
+                            if (index_value < n1->parent->symbolNode->symbol->dim_base[ix])
                                 mknd_err(n1, "OUT_OF_RANGE");
 
                             else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
                                 /* There is a max number of elements - so check it */
-                                if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
+                                if (index_value > (rxinteger)n1->parent->symbolNode->symbol->dim_base[ix] +
                                                       n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
                                     mknd_err(n1, "OUT_OF_RANGE");
                             }
@@ -2725,19 +2776,20 @@ walker_result type_safety_walker(walker_direction direction,
                                 }
                             }
 
-                            if (n1->node_type == INTEGER) {
+                            if (array_index_literal(n1, &index_value)) {
                                 /* As a constant integer we can check it is in range */
-                                val = node_to_integer(n1);
                                 ix = ast_chdi(n1);
 
-                                if (ix < (int)child1->value_dims) {
-                                    if (val < n1->parent->symbolNode->symbol->dim_base[ix])
+                                if (child1->symbolNode && child1->symbolNode->symbol &&
+                                    ix < (int)child1->symbolNode->symbol->value_dims &&
+                                    child1->symbolNode->symbol->dim_base &&
+                                    child1->symbolNode->symbol->dim_elements) {
+                                    if (index_value < n1->parent->symbolNode->symbol->dim_base[ix])
                                         mknd_err(n1, "OUT_OF_RANGE");
 
                                     else if (n1->parent->symbolNode->symbol->dim_elements[ix]) {
                                         /* There is a max number of elements - so check it */
-                                        if (val > n1->parent->symbolNode->symbol->dim_base[ix] +
-                                                  n1->parent->symbolNode->symbol->dim_base[ix] +
+                                        if (index_value > (rxinteger)n1->parent->symbolNode->symbol->dim_base[ix] +
                                                   n1->parent->symbolNode->symbol->dim_elements[ix] - 1)
                                             mknd_err(n1, "OUT_OF_RANGE");
                                     }

@@ -1853,16 +1853,23 @@ static walker_result opt1_walker(walker_direction direction,
                              ( node->parent->node_type == VAR_REFERENCE ||
                                node->parent->node_type == VAR_TARGET ||
                                node->parent->node_type == VAR_SYMBOL ) ) {
-                            /* If the parent is a Variable, then the node is an array subscript, and so it must be >=0 */
-                            if (node->target_type == TP_INTEGER) { /* This 'must' be true */
+                            if (node->target_type == TP_INTEGER) {
+                                Symbol *array_symbol = node->parent->symbolNode
+                                        ? node->parent->symbolNode->symbol : 0;
                                 index = ast_chdi(node);
-                                if (node->int_value < node->parent->symbolNode->symbol->dim_base[index]) mknd_err(node, "OUT_OF_RANGE");
-
-                                else if (node->parent->symbolNode->symbol->dim_elements[index]) {
-                                    /* There is a max number of elements - so check it */
-                                    if (node->int_value > node->parent->symbolNode->symbol->dim_base[index] +
-                                                          node->parent->symbolNode->symbol->dim_elements[index] - 1)
+                                /* This fold also runs before validation has finished.
+                                 * Missing import/type information must reach its
+                                 * diagnostic rather than indexing absent bounds. */
+                                if (array_symbol && index >= 0 &&
+                                    (size_t)index < array_symbol->value_dims &&
+                                    array_symbol->dim_base && array_symbol->dim_elements) {
+                                    if (node->int_value < array_symbol->dim_base[index]) {
                                         mknd_err(node, "OUT_OF_RANGE");
+                                    } else if (array_symbol->dim_elements[index] &&
+                                               node->int_value > (rxinteger)array_symbol->dim_base[index] +
+                                                       array_symbol->dim_elements[index] - 1) {
+                                        mknd_err(node, "OUT_OF_RANGE");
+                                    }
                                 }
                             }
                         }

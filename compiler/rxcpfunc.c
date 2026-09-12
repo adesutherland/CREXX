@@ -2309,7 +2309,7 @@ static int has_task_target_for_symbol(void *constant, int meta_head, const char 
     return 0;
 }
 
-static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head) {
+static void read_constant_pool_for_functions(Context *context, char *full_file_name, void* constant, size_t constant_size, int meta_head, int expose_head) {
     chameleon_constant *entry;
     int i;
     size_t exposed_ix;
@@ -2573,28 +2573,28 @@ static void read_constant_pool_for_functions(Context *context, char *full_file_n
             if (args_str) free(args_str);
         }
 
-        /* A exposed global variable */
-        else if (entry->type == EXPOSE_REG_CONST) {
-            fqname = ((expose_reg_constant *)entry)->index;
-            meta_reg_constant *mentry = get_variable_type(fqname, constant, meta_head);
-            if (mentry) {
-                option = get_const_string(constant, mentry->option);
-                type = get_const_string(constant, mentry->type);
-
-                rximpf_f(context, full_file_name, fqname, option, type, "", "", 1, 0);
-
-                if (option) {
-                    free(option);
-                    option = 0;
-                }
-                if (type) {
-                    free(type);
-                    type = 0;
-                }
-            }
-        }
-
         i = ((meta_entry *)entry)->next;
+    }
+
+    /* Exports have a separate module-local chain. They are never META entries,
+     * even when several modules share one constant pool. Older modules may
+     * omit a global contract; retain their existing caller-declared typing. */
+    for (i = expose_head; i != -1;
+         i = ((expose_reg_constant *)entry)->next) {
+        entry = (chameleon_constant *)((unsigned char *)constant + (size_t)i);
+        if (entry->type == EXPOSE_REG_CONST) {
+            meta_reg_constant *mentry;
+            fqname = ((expose_reg_constant *)entry)->index;
+            mentry = get_variable_type(fqname, constant, meta_head);
+            if (!mentry) continue;
+            option = get_const_string(constant, mentry->option);
+            type = get_const_string(constant, mentry->type);
+            rximpf_f(context, full_file_name, fqname,
+                      option ? option : "b", type ? type : "", "", "", 1, 0);
+            free(option);
+            free(type);
+            option = type = 0;
+        }
     }
 
     if (class_aggs) {
@@ -2964,7 +2964,7 @@ static void parseRxasFileForFunctions(Context *context, char* file_name, char* l
     /* Parse & Process */
     rxaspars(&scanner);
     read_constant_pool_for_functions(context, file_name, scanner.binary.const_pool,
-                                     scanner.binary.const_size, scanner.meta_head);
+                                     scanner.binary.const_size, scanner.meta_head, scanner.expose_head);
 
     rxasclrc(&scanner);
 }
@@ -2993,7 +2993,8 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
                 full_file_name = mprintf("%s@%s", file_module_section->name, file_name);
 
                 read_constant_pool_for_functions(context, full_file_name, file_module_section->constant,
-                                                 file_module_section->header.constant_size, file_module_section->header.meta_head);
+                                                 file_module_section->header.constant_size, file_module_section->header.meta_head,
+                                                 file_module_section->header.expose_head);
                 free(full_file_name);
                 free_module(file_module_section);
                 modules_processed++;
@@ -3855,6 +3856,7 @@ Symbol *ensure_function_imported_exact(Context *context,
 static ASTNode *imported_variable_type_node(Context *context, imported_func *var) {
     ASTNode *procedure;
 
+    if (!var->type || !*var->type) return 0;
     if (!var->context) {
         char *source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
                                var->namespace, var->name,
@@ -3974,6 +3976,16 @@ void sym_imva(Context *context, Symbol *symbol) {
             class_name = 0;
             rxcp_set_symbol_reference_type_from_node(symbol, type_node);
             symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
+            /* The private type declaration may already have cached its type
+             * without loading the class into this consumer. Global objects,
+             * object arrays and references need the same on-demand class
+             * import as ordinary declarations before member/indexer lowering. */
+            if (symbol->value_class)
+                ensure_class_imported(context, symbol->value_class,
+                                      strlen(symbol->value_class));
+            if (symbol->reference_class)
+                ensure_class_imported(context, symbol->reference_class,
+                                      strlen(symbol->reference_class));
         }
     }
     free(dim_base);

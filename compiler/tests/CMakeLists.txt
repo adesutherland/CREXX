@@ -184,6 +184,20 @@ set_tests_properties(global_import_types PROPERTIES
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib"
     TIMEOUT 240)
 
+add_test(NAME binary_global_import_types
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DRXBVM=$<TARGET_FILE:rxbvm> -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_global_import_types.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/binary_global_import_types_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_global_import_types.cmake)
+set_tests_properties(binary_global_import_types PROPERTIES
+    LABELS "compiler;imports;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
+    TIMEOUT 600)
+
 add_test(NAME binary_storage_selector_dependencies
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>

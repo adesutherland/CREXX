@@ -1,0 +1,21 @@
+options levelb
+import rxfnsb
+namespace binary_global_import_types expose Make state labels grid boxes counter counter_ref
+
+Make: procedure = .void expose state labels grid boxes counter counter_ref
+  state = .stem()
+  state["text"] = "hello"
+  labels = .string[]
+  labels[1] = "value"
+  grid = .int[-2 to 2, 1 to 3]
+  grid[-2, 1] = 42
+  grid[2, 3] = 17
+  boxes = .stem[]
+  box = .stem()
+  box["number"] = "7"
+  boxes[1] = box
+  counter = .int
+  counter = 31
+  counter_ref = reference .int
+  counter_ref = reference counter
+  return
