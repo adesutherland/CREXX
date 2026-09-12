@@ -157,6 +157,19 @@ set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
 
+add_test(NAME global_import_types
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXVME=$<TARGET_FILE:rxvme>
+        -DBIN=${CMAKE_BINARY_DIR}/bin
+        -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/global_import_types.crexx
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/global_import_types_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/global_import_types.cmake)
+set_tests_properties(global_import_types PROPERTIES
+    LABELS "compiler;imports;regression"
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib"
+    TIMEOUT 240)
+
 add_test(NAME binary_storage_selector_dependencies
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>

@@ -3169,7 +3169,9 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
         if (symbols[i]->symbol_type == VARIABLE_SYMBOL && symbols[i]->exposed) {
             /* import symbol */
             char* fqname = sym_frnm(symbols[i]);
-            rximpf_f(parent_context, file_name, fqname, 0, type_nm(symbols[i]->type), 0, 0, 1, 0);
+            char* type = sym_2tp(symbols[i]);
+            rximpf_f(parent_context, file_name, fqname, 0, type, 0, 0, 1, 0);
+            free(type);
             free(fqname);
         }
     }
@@ -3847,6 +3849,31 @@ Symbol *ensure_function_imported_exact(Context *context,
     return sym_imfn_impl(context, &lookup_node, 1);
 }
 
+/* Parse a global's complete type with the same declaration grammar used for
+ * callable metadata. Keep the private declaration with the import record; it
+ * supplies type shape only and is never added to the consumer's symbol table. */
+static ASTNode *imported_variable_type_node(Context *context, imported_func *var) {
+    ASTNode *procedure;
+
+    if (!var->context) {
+        char *source = mprintf("options levelb\nnamespace %s\n%s: procedure = %s\n",
+                               var->namespace, var->name,
+                               var->type ? var->type : ".unknown");
+        if (!source) return 0;
+        var->context = parseRexx(context, context->location, var->file_name,
+                                 LEVELB, context->debug_mode, source,
+                                 strlen(source), 1);
+        if (!var->context) {
+            free(source);
+            return 0;
+        }
+    }
+    if (!var->context->ast || error_in_node(var->context->ast) ||
+        !var->context->ast->child) return 0;
+    procedure = ast_chld(var->context->ast->child, PROCEDURE, 0);
+    return procedure ? ast_type_child(procedure) : 0;
+}
+
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol) {
     imported_func *var;
@@ -3855,6 +3882,11 @@ void sym_imva(Context *context, Symbol *symbol) {
     ValueType tp;
     char error = 0;
     char* defining_file = 0;
+    ASTNode *type_node = 0;
+    size_t dims = 0;
+    int *dim_base = 0;
+    int *dim_elements = 0;
+    char *class_name = 0;
 
     if (context->debug_mode >= 2) printf("Importing Globals - Looking for Global %s\n", symbol->name);
 
@@ -3873,7 +3905,6 @@ void sym_imva(Context *context, Symbol *symbol) {
 
     if (found_var) {
         /* Compare found variable with the type defined in the master file being compiled */
-        tp = type_from_string(found_var->type);
         if (!found_var->is_variable) {
             mknd_err3(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH",
                       "name", symbol->name,
@@ -3881,16 +3912,29 @@ void sym_imva(Context *context, Symbol *symbol) {
                       "import_file", found_var->file_name);
             error = 1;
         }
-        else if (symbol->type != TP_UNKNOWN) {
-            if ((tp != TP_UNKNOWN) && (tp != symbol->type)) {
+        else {
+            type_node = imported_variable_type_node(context, found_var);
+            if (!type_node) {
+                mknd_err2(sym_trnd(symbol, 0)->node, "SYNTAX_ERROR_IN_IMPORT_DECL",
+                          "name", symbol->name, "import_file", found_var->file_name);
+                error = 1;
+            } else {
+                tp = node_to_type(context, type_node, &dims, &dim_base,
+                                  &dim_elements, &class_name);
+            }
+        }
+        if (!error && symbol->type != TP_UNKNOWN && tp != TP_UNKNOWN) {
+            char *local_type = sym_2tp(symbol);
+            if (!metadata_type_strings_equivalent(context, local_type, found_var->type)) {
                 mknd_err5(sym_trnd(symbol, 0)->node, "TYPE_MISMATCH",
                           "name", symbol->name,
-                          "expected_type", type_nm(symbol->type),
+                          "expected_type", local_type,
                           "defining_file", defining_file,
                           "actual_type", found_var->type,
                           "import_file", found_var->file_name);
                 error = 1;
             }
+            free(local_type);
         }
 
         /* Produce Errors for all import inconsistencies */
@@ -3904,7 +3948,8 @@ void sym_imva(Context *context, Symbol *symbol) {
                 error = 1;
             }
 
-            if (safe_strcmp(found_var->type, inconsistent_var->type)) {
+            if (!metadata_type_strings_equivalent(context, found_var->type,
+                                                   inconsistent_var->type)) {
                 mknd_err5(sym_trnd(symbol, 0)->node,
                           "TYPE_MISMATCH",
                           "name", found_var->name,
@@ -3916,11 +3961,24 @@ void sym_imva(Context *context, Symbol *symbol) {
             }
             inconsistent_var = inconsistent_var->duplicate;
         }
-        if (!error) {
+        if (!error && tp != TP_UNKNOWN) {
+            free(symbol->dim_base);
+            free(symbol->dim_elements);
+            free(symbol->value_class);
             symbol->type = tp;
+            symbol->value_dims = dims;
+            symbol->dim_base = dim_base;
+            symbol->dim_elements = dim_elements;
+            symbol->value_class = class_name;
+            dim_base = dim_elements = 0;
+            class_name = 0;
+            rxcp_set_symbol_reference_type_from_node(symbol, type_node);
             symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
         }
     }
+    free(dim_base);
+    free(dim_elements);
+    free(class_name);
 }
 
 /* imported_func factory - returns null if the function is not in an applicable namespace or is a duplicate */

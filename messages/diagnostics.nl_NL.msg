@@ -167,6 +167,7 @@ SRCMAP_UNBALANCED = Source-map-spanne is niet in balans: {reason}.
 SYMBOL_HAS_BOUNDARY_WHITESPACE = Symbool heeft ongeldige witruimte aan de rand.
 SYNC_TEST = Source-synchronisatietestdiagnose.
 SYNTAX_ERROR = Syntaxisfout.
+SYNTAX_ERROR_IN_IMPORT_DECL = De geïmporteerde declaratie "{name}" in {import_file} heeft een ongeldige syntaxis.
 INITIALISER_NOT_CALLABLE = Initialisatiefuncties zijn VM-levenscyclusingangen en kunnen niet rechtstreeks worden aangeroepen.
 INITIALISER_NOT_EXPOSABLE = Initialisatiefuncties zijn privé-levenscyclusingangen van een module en kunnen niet via een namespace worden geëxporteerd.
 INITIALISER_TAKES_NO_ARGUMENTS = Initialisatiefuncties mogen geen toepassingsargumenten declareren.

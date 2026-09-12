@@ -167,6 +167,7 @@ SRCMAP_UNBALANCED = Source map span is not balanced: {reason}.
 SYMBOL_HAS_BOUNDARY_WHITESPACE = Symbol has invalid boundary whitespace.
 SYNC_TEST = Source synchronisation test diagnostic.
 SYNTAX_ERROR = Syntax error.
+SYNTAX_ERROR_IN_IMPORT_DECL = Imported declaration "{name}" in {import_file} has invalid syntax.
 INITIALISER_NOT_CALLABLE = Initialisers are VM lifecycle entry points and cannot be called directly.
 INITIALISER_NOT_EXPOSABLE = Initialisers are private module lifecycle entry points and cannot be exposed by a namespace.
 INITIALISER_TAKES_NO_ARGUMENTS = Initialisers cannot declare application arguments.

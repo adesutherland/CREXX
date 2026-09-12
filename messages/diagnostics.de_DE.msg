@@ -167,6 +167,7 @@ SRCMAP_UNBALANCED = Source-Map-Spanne ist nicht ausgeglichen: {reason}.
 SYMBOL_HAS_BOUNDARY_WHITESPACE = Symbol hat ungültigen Leerraum am Rand.
 SYNC_TEST = Source-Synchronisationstestdiagnose.
 SYNTAX_ERROR = Syntaxfehler.
+SYNTAX_ERROR_IN_IMPORT_DECL = Die importierte Deklaration "{name}" in {import_file} hat eine ungültige Syntax.
 INITIALISER_NOT_CALLABLE = Initialisierer sind VM-Lebenszyklus-Einstiegspunkte und können nicht direkt aufgerufen werden.
 INITIALISER_NOT_EXPOSABLE = Initialisierer sind private Modul-Lebenszyklus-Einstiegspunkte und können nicht durch einen Namensraum exportiert werden.
 INITIALISER_TAKES_NO_ARGUMENTS = Initialisierer dürfen keine Anwendungsargumente deklarieren.

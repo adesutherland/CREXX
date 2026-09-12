@@ -441,6 +441,17 @@ or symbol was ultimately supplied by that file. It is evidence of current
 selection behaviour only and does not enforce an expected provider or alter
 the timestamp/tie-break policy.
 
+Exposed global imports retain the complete type contract, including the class
+name, array bounds and reference referent. Source imports use the same
+`sym_2tp()` representation as emitted global metadata; reducing a class to
+`.object` loses information needed before local inference has converged.
+Global resolution parses the retained declaration with the normal type grammar
+and copies its complete shape into the consuming symbol. Matching declarations
+may share a namespace; incompatible shapes still produce a type diagnostic.
+The `global_import_types` regression checks source imports, optimized and
+unoptimized execution, and incompatible bounds. Binary global emission and
+import have separate known gaps tracked in issue #694.
+
 ### Project member invalidation and declaration lookup
 
 `bin/crexx.crexx` owns project/member action keys, worker selection and atomic
