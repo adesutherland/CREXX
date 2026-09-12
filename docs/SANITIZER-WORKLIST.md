@@ -58,14 +58,32 @@ QA and Build CREXX both pass for the exact published code revision. A failure
 in either workflow leaves the affected item open; do not claim the current
 hotfix or Release 1 line is sanitizer-clean before that condition is satisfied.
 
-## Open findings
+Status at 2026-09-12: all remaining registered findings are closed on exact
+code revision `1dde1dd14fbc288cc0a3041adab4244d533dc528`. GitHub
+[Build CREXX 34718340724](https://github.com/adesutherland/CREXX/actions/runs/34718340724),
+[CodeQL 34718340684](https://github.com/adesutherland/CREXX/actions/runs/34718340684),
+and [Deep Build QA 34718575156](https://github.com/adesutherland/CREXX/actions/runs/34718575156)
+pass. [Sanitizer QA 34718578056](https://github.com/adesutherland/CREXX/actions/runs/34718578056)
+passes 2,303/2,303 tests on both Linux x64 ASan/LSan and macOS arm64 ASan.
+SAN-006 through SAN-008, SAN-QA-008 through SAN-QA-012, SAN-QA-014 and
+SAN-QA-015 therefore satisfy their recorded closure conditions. SAN-QA-013
+was already closed by its focused evidence.
+
+The three nested aggregates that previously produced contention-driven timeout
+failures all pass under the retained serial scheduling. On macOS, binary
+imports, project build and process runtime take 467.03, 365.50 and 219.55
+seconds; on Linux they take 561.59, 462.71 and 187.81 seconds. The complete
+CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
+AddressSanitizer or LeakSanitizer diagnostic appears in either retained
+artifact.
+
+## Findings closed on 2026-09-12
 
 ### SAN-008 — array size shorthand reads beyond an imported array's bounds table
 
-Status: open, release-blocking; repair and qualification in progress under
-[#694](https://github.com/adesutherland/CREXX/issues/694). Owner: current
-CREXX-hotfix compiler repair, with exact-commit hosted Linux ASan/LSan and
-macOS ASan closure required before this entry closes.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; GitHub Build CREXX and both
+Sanitizer QA platforms pass, including the permanent #694 regression.
 
 - Affected revision: `fa887be158213403b9b1de458cfdecc7e4c86122` plus the local
   #694 import repair. The unchecked access in `set_node_types_walker()` also
@@ -103,8 +121,8 @@ macOS ASan closure required before this entry closes.
   `qa-prep` plus all 2,302 non-performance tests passed at
   `cmake-build-debug/asan-logs/20260912-160326-build` and
   `cmake-build-debug/asan-logs/20260912-160637-ctest`. Apple ASan provides no
-  leak-closure authority; both exact-commit hosted sanitizer lanes remain
-  required.
+  leak-closure authority. At candidate time both exact-commit hosted sanitizer
+  lanes remained required; run 34718578056 now supplies them.
 - Permanent closure test: `binary_global_import_types`, including excess
   final subscripts of both one and zero, source/RXAS/RXBIN/shared-pool imports,
   and both compiler modes. Required closure is the identical normal Debug
@@ -114,9 +132,10 @@ macOS ASan closure required before this entry closes.
 
 ### SAN-QA-015 — PTY restoration observation races Darwin pending-input state
 
-Status: repair candidate discovered during ordinary Debug qualification of
-SAN-QA-008/SAN-QA-014. This is a shared maintained test-harness failure, not
-an ASan memory diagnostic.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass. This was a shared maintained test-harness
+failure, not an ASan memory diagnostic.
 
 - Affected revision: `d9982d0004fc712849366419eab10a26debe8cd8`.
   The full Debug correctness run passed 2,285/2,286, failing only
@@ -146,11 +165,14 @@ an ASan memory diagnostic.
   eight-process panel passes all 800 repetitions after repair at
   `/tmp/crexx-ci-20260909.wjmUik/ansi-edges-parallel-fixed.log`. A negative
   control deliberately leaving ECHO disabled still fails the exact attribute
-  assertion (`pty-negative-control.log`). Hosted final-head proof is pending.
+  assertion (`pty-negative-control.log`). The current exact-head hosted gates
+  supply the final proof.
 
 ### SAN-QA-014 — RXPP loses macros outside the input-source directory
 
-Status: repair candidate; exact-SHA hosted qualification is required for closure.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass.
 
 - Affected revision: `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.
   `CMD_loadMacro` changed the relative `##LOADMACRO` root from the selected
@@ -167,21 +189,22 @@ Status: repair candidate; exact-SHA hosted qualification is required for closure
   Text Inspector generation, core, TUI and ANSI PTY coverage. The macOS PTY
   also recorded exit 139 without an ASan stack; retain this as unqualified
   until the complete repaired application passes the maintained lane.
-- Owner/next action: hotfix QA; restore the documented macro-library lookup,
-  pass focused Debug/ASan and full hosted Build, Deep Build and Sanitizer QA.
+- Closure evidence: hotfix QA restored the documented macro-library lookup and
+  passed focused Debug/ASan plus the current full hosted Build, Deep Build and
+  Sanitizer QA gates.
 - Repair: the documented macro-library lookup is restored. The strengthened
   fixture fails before repair and passes after it; all six Text Inspector
-  tests pass in normal Debug. This item closes only when the same code passes
-  focused Apple-ASan and the complete hosted gates above. Investigation and
-  evidence are in [the hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
+  tests pass in normal Debug. The same code now passes focused Apple-ASan and
+  the complete hosted gates above. Investigation and evidence are in
+  [the hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
 
 ### SAN-007 — imported inline-payload AST freed during recursive function replacement
 
-Status: closure candidate and release-blocking pending exact-SHA hosted proof.
-The ownership repair and permanent regression pass normal Debug and the full
-maintained Apple-ASan gate. No suppression, exclusion or waiver is authorized;
-closure still requires GitHub Sanitizer QA's supported Linux ASan/LSan and
-macOS ASan lanes on the exact published code revision.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. The ownership repair and permanent regression also retain
+their focused normal Debug and Apple-ASan evidence. No suppression, exclusion
+or waiver was used.
 
 - Scope: compiler imported-function replacement and inline-payload attachment
   during recursive source-import validation.
@@ -234,9 +257,9 @@ macOS ASan lanes on the exact published code revision.
   parser or package surfaces. The complete post-repair Apple-ASan build and
   2,398/2,398 CTest run supplies broad final-tree execution. No local gate was
   repeated after the source-identical develop merge.
-- Owner/next action: hotfix QA. Require exact-SHA hosted Build CREXX and
-  Sanitizer QA for published code revision
-  `c0ac864d59428a807102a7b266933967f3b2e294` before closing this item.
+- Closure evidence: the later exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528`, which retains this repair and
+  regression, passes hosted Build CREXX and both Sanitizer QA platforms.
 - Closure checks: the permanent focused regression must pass in normal Debug
   and Apple ASan; the focused `httpcore` target must pass through the runner;
   cumulative normal-product evidence and the full local Apple-ASan build/CTest
@@ -247,12 +270,10 @@ macOS ASan lanes on the exact published code revision.
 
 ### SAN-006 — superseded imported class context freed during recursive validation
 
-Status: closure candidate; the imported-context ownership repair is implemented
-and passes focused plus broad macOS qualification. SAN-006 remains open and
-release-blocking until the exact published commit passes GitHub Sanitizer QA,
-including its supported Linux x64 ASan/LSan and macOS arm64 ASan lanes, plus
-Build CREXX. When both workflows pass on that commit, this conditional record
-marks SAN-006 closed without weakening any sanitizer closure requirement.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. The imported-context ownership repair also retains its
+focused and broad macOS qualification evidence.
 
 - Scope: compiler symbol construction in `sym_fn()` while a Level G class or
   interface import recursively loads further class metadata.
@@ -306,13 +327,11 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
   - complete Apple-ASan build and 2,391/2,391 CTest pass with build/test leak
     detection off:
     `cmake-build-debugasan/asan-logs/20260826-210616-full`.
-- Conditional closure gate: GitHub Sanitizer QA and Build CREXX must both pass
-  for the exact published commit containing this record. GitHub Sanitizer QA is
-  the named release-QA owner for the supported Linux x64 ASan/LSan and macOS
-  arm64 ASan proof. Apple LeakSanitizer is unsupported, so the local macOS
-  result is address-safety evidence only and does not satisfy the Linux
-  leak-closure authority. If either workflow fails or does not run, SAN-006
-  remains open and release-blocking.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes GitHub Build CREXX and
+  Sanitizer QA. The hosted run supplies both Linux x64 ASan/LSan and macOS
+  arm64 ASan proof. Apple LeakSanitizer remains unsupported locally; the hosted
+  Linux lane supplies leak-closure authority.
 
 ## Platform coverage at task close
 
@@ -323,8 +342,8 @@ marks SAN-006 closed without weakening any sanitizer closure requirement.
 - GitHub Build CREXX supplies the final-head MinSizeRel build, CTest and package
   coverage across Linux, macOS and Windows. GitHub Sanitizer QA supplies the
   final-head Linux x64 ASan/LSan and macOS arm64 ASan gates.
-- SAN-006, SAN-007, SAN-QA-008, SAN-QA-010, SAN-QA-011 and SAN-QA-012 are the
-  currently registered closure candidates pending exact-SHA hosted proof.
+- Exact revision `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes Build
+  CREXX and both Sanitizer QA platforms, closing every candidate listed here.
 
 ## Qualification infrastructure repairs
 
@@ -364,12 +383,11 @@ passes for all 2,271 applicable macOS sanitizer checks. Owner: RXC-PROJECT-01
 
 ### SAN-QA-012 — concurrency fixtures assume scheduler timing or assignment
 
-Status: local closure candidate and release-blocking pending exact-SHA hosted
-proof. Focused final-tree normal-Debug and Apple-ASan controls pass. Earlier in
-the same hotfix, comprehensive Debug QA and the maintained broad Apple-ASan
-gate passed before the hosted Windows matrix exposed a second test scheduling
-assumption. This is a maintained sanitizer test failure, not an ASan memory
-diagnostic and not a product timeout.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX, Deep Build QA and
+both Sanitizer QA platforms pass. Focused final-tree normal-Debug and Apple-ASan
+controls also pass. This was a maintained sanitizer test failure, not an ASan
+memory diagnostic or a product timeout.
 
 - Scope: the E5 persistent-worker native-return cancellation test, adjacent
   RXPA concurrency fixtures, and the CRI-17 attached-provider worker-session
@@ -474,18 +492,17 @@ diagnostic and not a product timeout.
     panel passed in normal Debug and focused Apple ASan at
     `cmake-build-debugasan/asan-logs/20260903-110318-ctest/`, with no sanitizer
     diagnostic.
-- Owner/next action: hotfix QA. Publish the locally qualified candidate and
-  run exact-SHA Build CREXX, Sanitizer QA and Deep Build QA together on
-  `hotfix`, treating Windows x64 Build and Linux x64 ASan/LSan as the highest
-  risk gates. Promote the source-identical commit to `develop` and `master`
-  only after the hosted workflows pass.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes Build CREXX, Sanitizer QA
+  and Deep Build QA, including Windows x64 Build and Linux x64 ASan/LSan.
 
 ### SAN-QA-011 — private bootstrap rules assume their working directories exist
 
-Status: local closure candidate and release-blocking pending exact-SHA hosted
-sanitizer qualification. Focused normal-Debug and Apple-ASan controls plus the
-maintained broad Apple-ASan gate pass. This was a maintained sanitizer build
-failure, not an ASan memory diagnostic.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass. Focused normal-Debug and Apple-ASan controls plus the
+maintained broad Apple-ASan gate also pass. This was a maintained sanitizer
+build failure, not an ASan memory diagnostic.
 
 - Scope: private CMake bootstrap rules for the installed `crexx --library` /
   `--tool` Level B worker and the `rxpp` member image.
@@ -533,16 +550,17 @@ failure, not an ASan memory diagnostic.
   instrumented build, explicit `qa-prep` barrier and all 2,238 non-performance
   CTests. No AddressSanitizer diagnostic was present; logs are retained under
   `cmake-build-debugasan/asan-logs/20260901-114245-full`.
-- Owner/next action: new-build Phase 4 P4.4. Require exact-SHA GitHub Build and
-  Sanitizer QA for the published P4.4 commit. Linux ASan/LSan remains the
-  leak-closure authority.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes GitHub Build and
+  Sanitizer QA. Linux ASan/LSan supplies the leak-closure authority.
 
 ### SAN-QA-010 — parallel spawn stress exceeds its scope under contended ASan
 
-Status: repair implemented; focused and designed-slice Apple-ASan proof passes.
-The item remains open and release-blocking pending exact-SHA hosted sanitizer
-qualification. No sanitizer suppression, product assertion or launcher
-cancellation behavior is weakened.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; Build CREXX and both Sanitizer
+QA platforms pass after the focused and designed-slice Apple-ASan proof. No
+sanitizer suppression, product assertion or launcher cancellation behavior was
+weakened.
 
 - Scope: CTest scheduling for the new
   `test_address_parallel_spawn_{noopt,opt}` launcher-race regressions.
@@ -578,16 +596,16 @@ cancellation behavior is weakened.
   64 seconds. The 256-launch focused Apple-ASan pair subsequently passed in
   12.88 and 15.15 seconds, retaining the eight-worker race shape with ample
   correctness-watchdog margin.
-- Owner/acceptance: new-build Phase 3D. Final exact-SHA GitHub Build and both
-  Sanitizer QA lanes remain required. Linux ASan/LSan remains the leak-closure
-  authority.
+- Closure evidence: exact code revision
+  `1dde1dd14fbc288cc0a3041adab4244d533dc528` passes final GitHub Build and
+  both Sanitizer QA lanes. Linux ASan/LSan supplies the leak-closure authority.
 
 ### SAN-QA-009 — interactive stdin watchdogs expire under contended Apple ASan
 
-Status: repair implemented; focused normal-Debug and Apple-ASan proof passes.
-The item remains open and release-blocking pending exact-SHA hosted sanitizer
-qualification. No sanitizer suppression, test exclusion or product-behaviour
-waiver is authorized.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; both Sanitizer QA platforms pass
+after the focused normal-Debug and Apple-ASan proof. No sanitizer suppression,
+test exclusion or product-behaviour waiver was used.
 
 - Scope: the three interactive `linein(stdin)` correctness tests which launch
   a VM or the `crexx` driver through pipe/PTY harnesses.
@@ -600,7 +618,7 @@ waiver is authorized.
   watchdog; the PTY driver exceeded its 15-second watchdog while another
   instrumented `crexx` driver case was running. The sibling driver case passed
   in 15.32 seconds. The uploaded sanitizer artifact contains no ASan memory
-  diagnostic; this remains a first-party maintained-lane failure.
+  diagnostic; this was a first-party maintained-lane failure until closure.
 - Original trigger: the workflow's maintained full Apple-ASan build and CTest
   command, `tools/asan-run.sh --phase full --build-jobs 4 --test-jobs 8
   --build-leaks off --leaks off`, as retained by the run above.
@@ -623,9 +641,9 @@ waiver is authorized.
   tests at `cmake-build-debugasan/asan-logs/20260831-171637-ctest`. The ASan
   tree also exposed and qualified clean-Make working-directory ownership for
   the private classlib, Level C and RexxScript member families.
-- Owner/next action: new-build Phase 2 hosted qualification. Require a clean
-  enough full exact-SHA GitHub Sanitizer QA run. Linux x64 ASan/LSan must also
-  pass before closure; Apple ASan provides no leak-closure authority.
+- Closure evidence: the clean full exact-SHA GitHub Sanitizer QA run passes on
+  Linux x64 ASan/LSan and macOS arm64 ASan. Apple ASan provides no local
+  leak-closure authority; the hosted Linux lane supplies it.
 - Acceptance: retain all three permanent conversations, prove their focused
   build/test prerequisites from a clean-enough tree, pass the focused normal
   Debug and maintained Apple-ASan shapes, rerun the original broad trigger,
@@ -633,9 +651,10 @@ waiver is authorized.
 
 ### SAN-QA-008 — saturated child redirect loses typed timeout completion
 
-Status: reopened and release-blocking. The original failure recurred in two
-maintained macOS arm64 lanes. The provider remains parallel; exact-SHA hosted
-qualification with the strengthened diagnostic is pending.
+Status: closed on exact code revision
+`1dde1dd14fbc288cc0a3041adab4244d533dc528`; both Sanitizer QA platforms pass,
+including `rxspawn_posix_termination` and `rxvmchannel_byte_provider`. The
+provider remains parallel and the strengthened diagnostic remains active.
 
 - 2026-09-12 recurrence: Sanitizer QA
   [34702281757](https://github.com/adesutherland/CREXX/actions/runs/34702281757),
@@ -669,8 +688,8 @@ qualification with the strengthened diagnostic is pending.
   unchanged with one test job at
   `cmake-build-debugasan/asan-logs/20260912-193456-ctest` in 305.57, 266.14,
   and 3.01 seconds. All 33,795 frozen non-documentation inputs match their
-  pre-run SHA-256 manifest. Exact-commit hosted Linux ASan/LSan and macOS ASan
-  qualification remains pending; see the
+  pre-run SHA-256 manifest. Exact-commit run 34718578056 now supplies the
+  required hosted Linux ASan/LSan and macOS ASan qualification; see the
   [repair report](planning/beta-3/reports/mike-fix-697-2026-09-12.md).
 - 2026-09-09 recurrence: Sanitizer QA
   [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325)
@@ -688,9 +707,10 @@ qualification with the strengthened diagnostic is pending.
   Reap ownership and post-reap group-only cleanup remain intact; live-child and
   unrelated failures remain errors. The regression, byte-provider test and
   launch diagnostic pass together in normal Debug and Apple ASan (3/3 at
-  `cmake-build-debugasan/asan-logs/20260909-065238-ctest`). Closure remains
-  conditional on the original broad trigger and both exact-code hosted
-  sanitizer lanes passing; see the [hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
+  `cmake-build-debugasan/asan-logs/20260909-065238-ctest`). At that point closure
+  remained conditional on the original broad trigger and both exact-code
+  hosted sanitizer lanes passing; see the
+  [hotfix report](planning/beta-3/reports/ci-hotfix-2026-09-09.md).
 
 - Scope: the byte-channel child-process provider's deadline and saturated
   output-redirect completion path, exercised by `rxvmchannel_byte_provider`.
