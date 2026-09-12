@@ -574,23 +574,6 @@ crexx_label_smoke_tests(
         PREP_TARGETS crexx rxdas rxpp
 )
 
-function(crexx_isolate_bin_test_environment)
-    get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
-    foreach(_crexx_test IN LISTS _crexx_tests)
-        get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
-        if(NOT _crexx_env OR _crexx_env MATCHES "NOTFOUND$")
-            set(_crexx_env)
-        endif()
-        list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
-        list(APPEND _crexx_env "CREXX_HOME=${CMAKE_BINARY_DIR}")
-        set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
-    endforeach()
-endfunction()
-
-crexx_isolate_bin_test_environment()
-
-crexx_finalize_directory_qa_tiers()
-
 add_test(NAME crexx_process_runtime
     COMMAND ${CMAKE_COMMAND}
         -DCREXX=$<TARGET_FILE:crexx>
@@ -608,3 +591,20 @@ set_tests_properties(crexx_process_runtime PROPERTIES
     LABELS "driver;concurrency;process;regression"
     CREXX_PREP_TARGETS "crexx;rxvme;rxbvme;rxvm"
     TIMEOUT 600)
+
+function(crexx_isolate_bin_test_environment)
+    get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
+    foreach(_crexx_test IN LISTS _crexx_tests)
+        get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
+        if(NOT _crexx_env OR _crexx_env MATCHES "NOTFOUND$")
+            set(_crexx_env)
+        endif()
+        list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
+        list(APPEND _crexx_env "CREXX_HOME=${CMAKE_BINARY_DIR}")
+        set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
+    endforeach()
+endfunction()
+
+crexx_isolate_bin_test_environment()
+
+crexx_finalize_directory_qa_tiers()
