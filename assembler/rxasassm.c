@@ -648,8 +648,11 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
 
-    if (registerToken->token_value.integer >= context->binary.globals)
+    if (registerToken->token_value.integer < 0 ||
+        registerToken->token_value.integer >= context->binary.globals) {
         rxaserat(context, registerToken, "global register number bigger than the number of globals");
+        return;
+    }
 
     /* Duplicate extern index check */
     add_extern_index(context, exposeToken);

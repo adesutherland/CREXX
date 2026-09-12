@@ -372,6 +372,15 @@ add_test(NAME rxas_invalid_diagnostic
          COMMAND ${CMAKE_COMMAND} -P "${RXAS_DIAG_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(NAME rxas_exposed_global_bounds
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/rxas_exposed_global_bounds_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/rxas_exposed_global_bounds.cmake)
+set_tests_properties(rxas_exposed_global_bounds PROPERTIES
+        LABELS "rxas;assembler;negative;regression"
+        CREXX_PREP_TARGETS "rxas")
+
 set(RXAS_INVALID_UTF8_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.cmake")
 set(RXAS_INVALID_UTF8_CONTENT "")
 string(APPEND RXAS_INVALID_UTF8_CONTENT
