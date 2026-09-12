@@ -590,3 +590,21 @@ endfunction()
 crexx_isolate_bin_test_environment()
 
 crexx_finalize_directory_qa_tiers()
+
+add_test(NAME crexx_process_runtime
+    COMMAND ${CMAKE_COMMAND}
+        -DCREXX=$<TARGET_FILE:crexx>
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DRXVME=$<TARGET_FILE:rxvme>
+        -DRXBVME=$<TARGET_FILE:rxbvme>
+        -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+        -DEXAMPLE_DIR=${CMAKE_SOURCE_DIR}/docs/books/crexx_programming_guide/examples
+        -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/crexx_process_runtime_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/crexx_process_runtime.cmake)
+set_tests_properties(crexx_process_runtime PROPERTIES
+    LABELS "driver;concurrency;process;regression"
+    CREXX_PREP_TARGETS "crexx;rxvme;rxbvme;rxvm"
+    TIMEOUT 600)

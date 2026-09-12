@@ -201,6 +201,7 @@ struct process_shared {
     process_request *queue_tail;
     char *program_path;
     char *worker_executable;
+    char *provider_location;
     size_t worker_count;
     size_t admission_capacity;
     size_t active_requests;
@@ -458,7 +459,7 @@ static PROCESS_THREAD_RETURN process_monitor_run(void *opaque) {
             worker->output, &worker->output_stopped);
     REDIRECT *error_redirect = rxspawn_redirect_to_byte_endpoint(
             worker->error, &worker->output_stopped);
-    const char *argv[4];
+    const char *argv[5];
     int spawn_status = SHELLSPAWN_FAILURE;
     int exit_status = 0;
     int termination_reason = 0;
@@ -467,10 +468,11 @@ static PROCESS_THREAD_RETURN process_monitor_run(void *opaque) {
     argv[0] = worker->shared->worker_executable;
     argv[1] = "--rxvm-process-worker";
     argv[2] = worker->shared->program_path;
-    argv[3] = 0;
+    argv[3] = worker->shared->provider_location;
+    argv[4] = 0;
     if (input_redirect && output_redirect && error_redirect) {
         spawn_status = shellspawn_argv_snapshot(
-                argv, 3, input_redirect, output_redirect, error_redirect,
+                argv, 4, input_redirect, output_redirect, error_redirect,
                 0, 0, -1, &worker->process_cancelled,
                 &worker->input_stopped, &worker->output_stopped,
                 &termination_reason, &exit_status, &message);
@@ -938,9 +940,12 @@ static rxvm_channel_status process_open(
     }
     shared->program_path = process_temp_program(generation);
     shared->worker_executable = process_worker_executable();
+    shared->provider_location = process_strdup(
+            context->provider_location ? context->provider_location : "");
     shared->workers = (process_worker *)calloc(
             worker_count, sizeof(*shared->workers));
     if (!shared->program_path || !shared->worker_executable ||
+        !shared->provider_location ||
         !shared->workers) goto open_failure;
     shared->worker_count = worker_count;
     shared->admission_capacity = admission_capacity;
@@ -996,6 +1001,7 @@ open_failure:
     if (shared->program_path) remove(shared->program_path);
     free(shared->program_path);
     free(shared->worker_executable);
+    free(shared->provider_location);
     free(shared->workers);
     process_condition_destroy(&shared->changed);
     process_mutex_destroy(&shared->mutex);
@@ -1357,6 +1363,7 @@ static void process_shared_destroy(process_shared *shared) {
     if (shared->program_path) remove(shared->program_path);
     free(shared->program_path);
     free(shared->worker_executable);
+    free(shared->provider_location);
     free(shared->workers);
     process_condition_destroy(&shared->changed);
     process_mutex_destroy(&shared->mutex);

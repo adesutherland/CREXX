@@ -868,6 +868,16 @@ written together, so numeric callable/member identities are preserved. Native
 modules make the generation ineligible rather than being exposed through a
 new process ABI.
 
+The snapshot retains declarative `META_PROVIDER` requirements, including those
+in the embedded core libraries. The process pool also snapshots the controller's
+existing trusted provider search path and passes it through the private worker
+launch. Each request's fresh executor uses that path for its source context and
+worker contexts, resolving fresh native provider sessions as the local provider
+does. No native handles or sessions cross the process boundary, and no additional
+ambient search directories are introduced. The older file-backed executor entry
+point retains its empty provider-path default; internal callers that need declared
+providers use `rxvm_executor_create_with_provider_path` explicitly.
+
 The provider owns a bounded set of warm child VMs and a bounded admitted
 request count. Its private version-1 protocol uses
 `READY`/`INVOKE`/`STARTED`/`RESULT`/`CANCEL`/`SHUTDOWN` frames carrying the same

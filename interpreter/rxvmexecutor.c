@@ -1994,6 +1994,16 @@ rxvm_executor *rxvm_executor_create(
         size_t worker_count,
         size_t queue_capacity,
         rxvm_executor_result *result_out) {
+    return rxvm_executor_create_with_provider_path(
+            rxbin_path, 0, worker_count, queue_capacity, result_out);
+}
+
+rxvm_executor *rxvm_executor_create_with_provider_path(
+        const char *rxbin_path,
+        const char *provider_location,
+        size_t worker_count,
+        size_t queue_capacity,
+        rxvm_executor_result *result_out) {
     rxvm_executor *executor = 0;
     rxvm_context *source = 0;
     rxvm_executor_result result = RXVM_EXECUTOR_INVALID;
@@ -2008,6 +2018,11 @@ rxvm_executor *rxvm_executor_create(
     }
     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
     if (!executor) {
+        result = RXVM_EXECUTOR_OUT_OF_MEMORY;
+        goto fail;
+    }
+    executor->provider_location = executor_copy_string(provider_location);
+    if (!executor->provider_location) {
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
@@ -2074,7 +2089,8 @@ rxvm_executor *rxvm_executor_create(
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
         goto fail;
     }
-    if (!rxvm_load_file(source, (char *)rxbin_path) ||
+    if (rxvm_set_provider_path(source, provider_location) != 0 ||
+        !rxvm_load_file(source, (char *)rxbin_path) ||
         rxvm_program_generation_seal(source, &executor->generation) !=
                 RXVM_PROGRAM_OK ||
         rxldmodp(source) < 0 ||

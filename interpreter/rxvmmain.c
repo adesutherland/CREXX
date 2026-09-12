@@ -161,8 +161,8 @@ int main(int argc, char *argv[]) {
 
     /* Private, rebuild-together process-provider worker mode. It is kept out
      * of public help and executes only the versioned framed task protocol. */
-    if (argc == 3 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
-        return rxvm_process_worker_main(argv[2]);
+    if (argc == 4 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+        return rxvm_process_worker_main(argv[2], argv[3]);
     }
 
 #ifdef _WIN32
