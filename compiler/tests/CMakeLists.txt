@@ -196,7 +196,11 @@ add_test(NAME binary_global_import_types
 set_tests_properties(binary_global_import_types PROPERTIES
     LABELS "compiler;imports;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
-    TIMEOUT 600)
+    # This matrix launches many complete compiler/assembler/linker/VM paths.
+    # Running it beside other aggregate tests can exhaust its outer timeout
+    # even though the unchanged matrix passes comfortably in isolation.
+    RUN_SERIAL TRUE
+    TIMEOUT 900)
 
 add_test(NAME binary_storage_selector_dependencies
     COMMAND ${CMAKE_COMMAND}

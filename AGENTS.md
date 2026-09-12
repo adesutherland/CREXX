@@ -59,6 +59,27 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   documentation-only commit does not by itself invalidate completed testing.
   Exact-SHA hosted workflows required for publication remain separate gates;
   they do not justify repeating unchanged local QA.
+- Before registering or materially expanding an aggregate CTest that launches
+  nested builds, compilers, assemblers, linkers, VMs, or scenario matrices,
+  measure it in isolation in normal Debug and the maintained sanitizer build.
+  Set explicit scheduling and timeout properties from that evidence. Do not
+  inherit an old timeout after materially increasing the test workload, and do
+  not let nested end-to-end aggregates compete in the broad pool when host load
+  can make their inner or outer deadlines nondeterministic.
+- When a broad run fails only through explicit CTest timeouts, inspect the log
+  first for sanitizer diagnostics and non-timeout failures, then replay the
+  unchanged timed-out tests once under their declared isolated scheduling. If
+  they pass, classify and repair the QA scheduling or timeout defect before
+  repeating a broad run. Do not create a new product defect or spend another
+  full-suite cycle on a timeout-only result unless the isolated test reproduces
+  a product failure or establishes a distinct mechanism.
+- Keep a discovered finding on the current issue unless it has a distinct
+  reproduced cause, affected component, repair, approval path, or shared
+  cross-cutting impact. Preserve separate reviewable commits where causes do
+  differ, but publish compatible commits together and use one combined
+  exact-head hosted qualification when that avoids redundant long-running
+  gates. Sanitizer worklist requirements below still apply to actual
+  first-party sanitizer findings.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
 - Treat library development as an opportunity to validate the complete product
   toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and

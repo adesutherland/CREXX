@@ -148,6 +148,17 @@ all CTests. Both build steps are important because many tests consume generated
 `.rxbin` artifacts directly. A CTest-only run against a partially prepared tree
 can fail with missing module files and should not be treated as a code failure.
 
+CTest schedules the large `binary_global_import_types`,
+`crexx_project_build_contract`, and `crexx_process_runtime` end-to-end matrices
+with `RUN_SERIAL`. Each test launches substantial nested compiler, assembler,
+linker, or VM work; allowing these aggregates to compete with the broad pool can
+exhaust their outer or inner deadlines without a product or sanitizer failure.
+Keep them enabled in the full gate. The expanded binary-import and project-build
+matrices have 900-second outer limits to cover instrumented hosted execution.
+An explicit CTest timeout with no sanitizer diagnostic is a harness result until
+the unchanged test is checked under its declared isolated scheduling; it is not
+a sanitizer-clean result and must not be waived.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh
@@ -207,8 +218,8 @@ record that the command was validated only in the sanitizer tree.
 
 ## Mandatory CI gates
 
-`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs on
-pushes and pull requests to `develop` or `master`:
+`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs for
+each workflow invocation:
 
 * Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
   and complete CTest phases.

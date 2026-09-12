@@ -301,8 +301,10 @@ set_tests_properties(crexx_project_build_contract PROPERTIES
         CREXX_PREP_TARGETS "crexx;rxvme"
         RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
         # The expanded matrix runs many complete project actions, including
-        # tool/environment changes. Keep all scenarios in the ASan gate.
-        TIMEOUT 600)
+        # tool/environment changes. Keep all scenarios in the ASan gate and
+        # isolate the aggregate from other compiler-heavy CTests.
+        RUN_SERIAL TRUE
+        TIMEOUT 900)
 add_test(NAME crexx_rxpp_builddir
          COMMAND ${CMAKE_COMMAND}
                  -DCREXX=$<TARGET_FILE:crexx>
@@ -590,6 +592,9 @@ add_test(NAME crexx_process_runtime
 set_tests_properties(crexx_process_runtime PROPERTIES
     LABELS "driver;concurrency;process;regression"
     CREXX_PREP_TARGETS "crexx;rxvme;rxbvme;rxvm"
+    # The test contains its own bounded compiler and process operations. Avoid
+    # turning their inner deadlines into load-dependent broad-suite failures.
+    RUN_SERIAL TRUE
     TIMEOUT 600)
 
 function(crexx_isolate_bin_test_environment)
