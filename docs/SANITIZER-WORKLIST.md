@@ -637,6 +637,41 @@ Status: reopened and release-blocking. The original failure recurred in two
 maintained macOS arm64 lanes. The provider remains parallel; exact-SHA hosted
 qualification with the strengthened diagnostic is pending.
 
+- 2026-09-12 recurrence: Sanitizer QA
+  [34702281757](https://github.com/adesutherland/CREXX/actions/runs/34702281757),
+  macOS arm64 job [103576080611](https://github.com/adesutherland/CREXX/actions/runs/34702281757/job/103576080611),
+  checked out `99d500eb99ecc947ce819643eccc14b430760e8a` and failed only
+  `rxvmchannel_byte_provider` with the same saturated-redirect assertion,
+  `state=2`, `errorCode=17`, and `Failure spawn terminate. Details: RC=1
+  Text=Operation not permitted`. The retained artifact is
+  `/tmp/crexx-693-macos-artifact.lceTQL/20260912-152819-full/ctest.log`
+  (SHA-256 `0c817d5fbffbe095e0193f07426f312323e75aaadae84b11637b2b4c05e42f8a`).
+  No ASan/LSan memory diagnostic appears. The new #693 regression was
+  selected later and passed; the earlier termination repair has therefore
+  not covered every occurrence. Owner: resumed hotfix maintenance, tracked in
+  [#697](https://github.com/adesutherland/CREXX/issues/697).
+- 2026-09-12 repair candidate: a pipe-synchronized native probe verifies a
+  signalable live group, releases its owned child to exit, and observes group
+  `EPERM` before `waitid` exposes terminal status. All 1,000 iterations failed
+  with the old helper; all 1,000 pass after retrying the signal against the
+  still-owned, unreaped direct child. A denied direct signal still requires
+  confirmed terminal status, and post-reap cleanup remains group-only. The
+  strengthened `rxspawn_posix_termination` regression fails before repair and
+  passes afterward; real permission errors and reap ownership remain covered.
+  The identical termination/launch/byte-provider panel passes 3/3 in normal
+  Debug at `cmake-build-debug/asan-logs/20260912-180805-ctest` and maintained
+  Apple ASan at `cmake-build-debugasan/asan-logs/20260912-180909-ctest`.
+  The maintained Apple-ASan full run at
+  `cmake-build-debugasan/asan-logs/20260912-185113-full` passes 2,299/2,302;
+  `rxspawn_posix_termination`, `rxspawn_posix_launch_diagnostic`, and
+  `rxvmchannel_byte_provider` all pass, with no sanitizer diagnostic. Three
+  aggregate/build-driver tests time out under the eight-way run and then pass
+  unchanged with one test job at
+  `cmake-build-debugasan/asan-logs/20260912-193456-ctest` in 305.57, 266.14,
+  and 3.01 seconds. All 33,795 frozen non-documentation inputs match their
+  pre-run SHA-256 manifest. Exact-commit hosted Linux ASan/LSan and macOS ASan
+  qualification remains pending; see the
+  [repair report](planning/beta-3/reports/mike-fix-697-2026-09-12.md).
 - 2026-09-09 recurrence: Sanitizer QA
   [34308566325](https://github.com/adesutherland/CREXX/actions/runs/34308566325)
   actually checked out `82730b495c07a6fb1bc34ffe4e9ad8b33aba50d3`.

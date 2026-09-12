@@ -14,7 +14,13 @@ static int rxspawn_signal_unreaped_child(
 
     if (child_pid <= 0) return 0;
     result = kill(group_owned ? -child_pid : child_pid, signal_number);
-    if (result == -1 && errno == ESRCH && group_owned) {
+    if (result == -1 && group_owned &&
+            (errno == ESRCH || errno == EPERM)) {
+        /* Darwin can omit an exiting member from group signalling before
+         * waitid exposes its terminal status. Signal the still-owned direct
+         * child: success confirms delivery or an already exited child, while
+         * a real permission failure remains an error. Its unreaped PID cannot
+         * be reused; descendant cleanup still targets only the owned group. */
         result = kill(child_pid, signal_number);
     }
     if (result == -1 && errno == ESRCH) return 0;

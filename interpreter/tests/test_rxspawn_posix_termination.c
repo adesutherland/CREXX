@@ -10,8 +10,12 @@
 /* Also exercise Darwin's EPERM result on Linux and verify live-child errors
  * remain failures. Only this test translation unit substitutes kill(). */
 static int forced_errno;
+static int group_error_only;
 static int test_kill(pid_t pid, int signal_number) {
-    if (forced_errno) { errno = forced_errno; return -1; }
+    if (forced_errno && (!group_error_only || pid < 0)) {
+        errno = forced_errno;
+        return -1;
+    }
     return kill(pid, signal_number);
 }
 #define kill test_kill
@@ -27,7 +31,8 @@ static int observe_exit(pid_t child, siginfo_t *info) {
     return result;
 }
 
-static int check_child(int group_owned, int exits_first, int signal_error) {
+static int check_child(int group_owned, int exits_first, int signal_error,
+                       int deny_group_only) {
     int ready[2];
     int status = 0;
     int failed = 0;
@@ -54,12 +59,14 @@ static int check_child(int group_owned, int exits_first, int signal_error) {
             (observe_exit(child, &info) != 0 || info.si_pid != child ||
              info.si_code != CLD_EXITED || info.si_status != 0)) failed = 1;
     if (!failed) {
-        int expected_error = signal_error &&
+        int expected_error = signal_error && !deny_group_only &&
                 !(signal_error == EPERM && group_owned && exits_first);
         int result;
         forced_errno = signal_error;
+        group_error_only = deny_group_only;
         result = rxspawn_signal_unreaped_child(child, group_owned, SIGKILL);
         forced_errno = 0;
+        group_error_only = 0;
         if ((expected_error && (result != -1 || errno != signal_error)) ||
                 (!expected_error && result != 0)) {
             fprintf(stderr,
@@ -82,14 +89,18 @@ static int check_child(int group_owned, int exits_first, int signal_error) {
 
 int main(void) {
     int failed = 0;
-    failed += check_child(1, 1, 0);
-    failed += check_child(1, 0, 0);
-    failed += check_child(0, 1, 0);
-    failed += check_child(0, 0, 0);
-    failed += check_child(1, 1, EPERM);
-    failed += check_child(1, 0, EPERM);
-    failed += check_child(0, 1, EPERM);
-    failed += check_child(1, 1, EINVAL);
+    failed += check_child(1, 1, 0, 0);
+    failed += check_child(1, 0, 0, 0);
+    failed += check_child(0, 1, 0, 0);
+    failed += check_child(0, 0, 0, 0);
+    failed += check_child(1, 1, EPERM, 0);
+    failed += check_child(1, 0, EPERM, 0);
+    failed += check_child(0, 1, EPERM, 0);
+    failed += check_child(1, 1, EINVAL, 0);
+    /* A group can omit an exiting member before waitid reports its exit.
+     * Force that group-only failure while the child still needs a signal;
+     * the real direct-child signal must terminate it without reaping it. */
+    failed += check_child(1, 0, EPERM, 1);
     if (failed) return 1;
     puts("PASS: POSIX live and exited child termination retains reap ownership");
     return 0;

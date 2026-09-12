@@ -847,11 +847,15 @@ it must preserve command-environment state.
 
 On POSIX, redirect shutdown can let a controlled child exit between a
 nonblocking wait and the group termination signal. Darwin may report `EPERM`
-when that group contains only the unreaped exited child. The termination path
-accepts this only after `waitid(WEXITED | WNOHANG | WNOWAIT)` confirms the
-owned child's exit. It retains the PID until the ordinary `waitpid` reaps it,
-then performs the existing group-only descendant cleanup. A live child or
-failed exit observation retains the original termination error.
+while the child is exiting, before a nonblocking `waitid` can report its
+terminal state. The termination path retries the signal against the still-owned
+direct child; a successful direct signal confirms delivery or an already exited
+child. If that signal is also denied, only
+`waitid(WEXITED | WNOHANG | WNOWAIT)` confirmation of the owned child's exit
+can accept the result. A denied direct signal without that confirmation remains
+an error. The PID remains reserved until ordinary `waitpid` reaps it, then the
+existing group-only descendant cleanup runs. There is no direct-PID fallback
+after reaping.
 
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
 redirects onto these two providers and apply captured output only on the
