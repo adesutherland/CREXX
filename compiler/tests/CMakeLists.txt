@@ -2462,6 +2462,11 @@ string(REGEX MATCH
 if(parallel_leave_unwind STREQUAL \"\")
   message(FATAL_ERROR \"Parallel LEAVE WITH did not unwind its signal handler\")
 endif()
+string(FIND \"\${rxas}\" \"sigpush \\\"POSIX_CHLD\\\"\" parallel_posix_chld_handler)
+if(NOT parallel_posix_chld_handler EQUAL -1)
+  message(FATAL_ERROR
+          \"Compiler-generated parallel guard intercepted POSIX_CHLD\")
+endif()
 execute_process(
   COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS}
           -o \"${BASE}.rxbin\" \"${BASE}\"

@@ -165,6 +165,14 @@ execution-local default pool.
 Ordinary clauses in the block still run sequentially on the controller. Only a
 task call or explicit Level B submission creates child work.
 
+Compiler lowering installs a generated block guard for signals that require
+structured-scope abort and join. That guard deliberately does not intercept
+`POSIX_CHLD`: child-exit notification retains the caller's existing handler or
+the VM's default ignore policy. Otherwise an interrupt immediately after
+`chanwait` can unwind before the Level B channel class caches the completion
+that the native provider has already marked observed. Authored `ON SIGNAL`
+blocks, including the empty-name catch-all form, keep their ordinary semantics.
+
 ### Recursion and nesting
 
 A direct call from a task body to the same task callable is an ordinary

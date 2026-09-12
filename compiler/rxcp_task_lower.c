@@ -1343,6 +1343,38 @@ static int task_materialize_all_pending(RxcpParallelPlan *plan,
     return 1;
 }
 
+/* The compiler-generated parallel guard owns structured-scope cleanup for
+ * controller failures. POSIX_CHLD is an execution notification whose existing
+ * caller/default policy must remain in force; catching it here can interrupt
+ * classlib completion caching after CHANWAIT has consumed native delivery. */
+static const char *task_parallel_abort_signal_names[] = {
+        "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
+        "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE",
+        "UNICODE_ERROR", "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED",
+        "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND",
+        "NOT_IMPLEMENTED", "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT",
+        "TERM", "POSIX_INT", "POSIX_HUP", "POSIX_USR1", "POSIX_USR2",
+        "CHANNEL_ERROR", "TASK_FAILURE", "OTHER", 0
+};
+
+static int task_parallel_add_abort_signal_names(RxcpParallelPlan *plan,
+                                                ASTNode *names,
+                                                ASTNode *anchor) {
+    const char **signal_name;
+
+    if (!plan || !names || !anchor) return 0;
+    for (signal_name = task_parallel_abort_signal_names;
+         *signal_name; signal_name++) {
+        ASTNode *name = rxcp_remap_create_named_ref(
+                plan->task.context, anchor, SIGNAL_NAME, *signal_name);
+        if (!name) return 0;
+        name->is_compiler_added = 1;
+        name->scope = plan->task.scope;
+        add_ast(names, name);
+    }
+    return 1;
+}
+
 static ASTNode *task_parallel_signal_handler(RxcpParallelPlan *plan,
                                              ASTNode *anchor) {
     ASTNode *handler;
@@ -1392,6 +1424,10 @@ static ASTNode *task_parallel_signal_handler(RxcpParallelPlan *plan,
     instructions->scope = plan->task.scope;
     instructions->inherit_parent_scope = 1;
     instructions->inherit_parent_reg_scope = 1;
+    if (!task_parallel_add_abort_signal_names(plan, names, anchor)) {
+        free(problem_name);
+        return 0;
+    }
     add_ast(binding, binding_target);
     add_ast(binding, binding_type);
 
