@@ -35,6 +35,10 @@ function Install-And-Check {
     if (@($machinePath.Split(';') | Where-Object { $_ -eq $bin }).Count -ne 1) {
         throw 'Installed bin must occur exactly once in machine PATH'
     }
+    $expectedPath = if ($beforePath) { "$beforePath;$bin" } else { $bin }
+    if ($machinePath -ne $expectedPath) {
+        throw 'Installation changed pre-existing machine PATH entries'
+    }
     if (!(Test-Path $uninstallKey)) { throw 'Uninstaller registration is missing' }
     if (!(Select-String -Path (Join-Path $installRoot 'BUILDINFO') -SimpleMatch "commit=$Commit")) {
         throw 'Installed source commit does not match the build'

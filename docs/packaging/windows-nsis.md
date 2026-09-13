@@ -36,7 +36,7 @@ scripts/sign-windows-dev-snapshot.sh
 This downloads the unsigned ZIP by immutable GitHub asset ID, verifies its
 SHA-256 and BUILDINFO against the tag, signs/verifies Windows executables,
 libraries and native plugins, and creates the signed ZIP. It then builds NSIS
-from that payload, signs private copies of the embedded NSIS helper DLLs, signs
+from that payload, signs private copies of all three embedded NSIS helper DLLs, signs
 the embedded uninstaller, and signs/verifies the final setup. Both signed
 outputs are uploaded together through staged temporary assets. The unsigned
 ZIP and installer remain available; `--delete-unsigned` is refused for snapshots.
@@ -109,7 +109,10 @@ installer reputation is still maturing.
 - Shows `packaging/windows/assets/crexx-wizard.bmp` on the welcome and finish
   pages. NSIS Modern UI expects this bitmap at `164x314`.
 - Sets machine-level `CREXX_HOME` and `REXX_HOME` to the install directory.
-- Adds the install `bin` directory to the machine `Path`.
+- Adds the install `bin` directory to the machine `Path`, preserving existing
+  entries and unexpanded registry values even when PATH exceeds NSIS string
+  limits. This uses the built-in Windows PowerShell registry API; an unavailable
+  PowerShell reports an install/uninstall error instead of replacing PATH.
 - Broadcasts the Windows environment-change message after install and
   uninstall.
 - Registers an uninstaller in Windows Apps & Features.

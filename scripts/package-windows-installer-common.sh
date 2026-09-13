@@ -451,7 +451,7 @@ sign_file() {
 }
 if [[ "${1:-}" == "--nsis-plugins" ]]; then
   mkdir -p "$3"
-  for plugin in System.dll nsDialogs.dll; do
+  for plugin in System.dll nsDialogs.dll nsExec.dll; do
     cp "$2/$plugin" "$3/$plugin"
     sign_file "$3/$plugin"
   done
