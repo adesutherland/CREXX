@@ -22,9 +22,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $runs = gh api "repos/$env:GITHUB_REPOSITORY/actions/workflows/build.yml/runs?branch=develop&event=push&per_page=1" | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or !$runs.workflow_runs.Count) { throw 'No develop build found' }
-          $run = $runs.workflow_runs[0]
+          $commit = gh api "repos/$env:GITHUB_REPOSITORY/branches/develop" --jq '.commit.sha'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve develop' }
+          $runs = gh api "repos/$env:GITHUB_REPOSITORY/actions/workflows/build.yml/runs" --method GET -f "head_sha=$commit" -F per_page=10 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot read develop builds' }
+          $run = $runs.workflow_runs | Where-Object { $_.head_sha -eq $commit -and $_.event -eq 'push' } | Sort-Object id -Descending | Select-Object -First 1
+          if (!$run) { throw "No pushed develop build found for $commit" }
           "run_id=$($run.id)" >> $env:GITHUB_OUTPUT
           "commit=$($run.head_sha)" >> $env:GITHUB_OUTPUT
           "Retained product: $($run.head_sha), build run $($run.id); packaging scripts: $env:GITHUB_SHA" >> $env:GITHUB_STEP_SUMMARY
