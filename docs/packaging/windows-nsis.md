@@ -129,11 +129,15 @@ After copying the generated `setup.exe` to a Windows x64 machine:
 
 ```powershell
 crexx --version
-rxc --version
-rxas --version
-rxlink --version
-rxvm --version
+rxc -v
+rxas -v
+rxlink -h
+rxvm -v
 ```
+
+`rxlink` has no version option; use its help command to check startup and
+`BUILDINFO` for the installed payload identity. CI also compares every installed
+file to the staged payload by SHA-256.
 
 Then uninstall through Apps & Features or run:
 

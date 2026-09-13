@@ -54,12 +54,19 @@ try {
     $env:CREXX_HOME = $installRoot
     $env:REXX_HOME = $installRoot
     $env:Path = "$bin;$env:Path"
-    foreach ($tool in 'crexx', 'rxc', 'rxas', 'rxlink', 'rxvm') {
-        $output = & (Join-Path $bin "$tool.exe") --version 2>&1 | Out-String
+    foreach ($tool in 'crexx', 'rxc', 'rxas', 'rxvm') {
+        $versionFlag = if ($tool -eq 'crexx') { '--version' } else { '-v' }
+        $output = & (Join-Path $bin "$tool.exe") $versionFlag 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0 -or !$output.Contains($Commit.Substring(0, 12))) {
             throw "Installed $tool version check failed: $output"
         }
         Write-Host $output.Trim()
+    }
+    # rxlink has no version option. Its installed bytes were checked above;
+    # check startup/help here, then exercise linking through the driver below.
+    $output = & (Join-Path $bin 'rxlink.exe') -h 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0 -or !$output.Contains('cREXX Linker')) {
+        throw "Installed linker help check failed: $output"
     }
     Push-Location $env:RUNNER_TEMP
     try {
