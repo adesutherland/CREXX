@@ -134,28 +134,14 @@ Function un.RemoveInstallBinFromPath
   StrCpy $3 ";$1;"
   ${UnStrRep} $2 "$2" "$3" ";"
 
-  ${Do}
-    StrCpy $3 "$2" 1
-    ${If} $3 == ";"
-      StrCpy $2 "$2" "" 1
-    ${Else}
-      ${ExitDo}
-    ${EndIf}
-  ${Loop}
-
-  ${Do}
-    StrLen $3 "$2"
-    ${If} $3 <= 0
-      ${ExitDo}
-    ${EndIf}
+  ; Remove exactly the boundary delimiters added above. Trimming all of them
+  ; would also discard empty entries that belonged to the original PATH.
+  StrCpy $2 "$2" "" 1
+  StrLen $3 "$2"
+  ${If} $3 > 0
     IntOp $3 $3 - 1
-    StrCpy $4 "$2" 1 $3
-    ${If} $4 == ";"
-      StrCpy $2 "$2" $3
-    ${Else}
-      ${ExitDo}
-    ${EndIf}
-  ${Loop}
+    StrCpy $2 "$2" $3
+  ${EndIf}
 
   ${If} $2 != $0
     WriteRegExpandStr HKLM "${CREXX_ENV_KEY}" "Path" "$2"

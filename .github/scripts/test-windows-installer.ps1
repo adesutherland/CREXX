@@ -92,7 +92,8 @@ if ((Test-Path $uninstallKey) -or (Test-Path 'HKLM:\SOFTWARE\CREXX\CREXX')) {
 foreach ($name in 'CREXX_HOME', 'REXX_HOME') {
     if ([Environment]::GetEnvironmentVariable($name, 'Machine')) { throw "Uninstall left $name behind" }
 }
-if ([Environment]::GetEnvironmentVariable('Path', 'Machine') -ne $beforePath) {
-    throw 'Uninstall did not restore the machine PATH'
+$afterPath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+if ($afterPath -ne $beforePath) {
+    throw "Uninstall did not restore the machine PATH: before=$(ConvertTo-Json -Compress $beforePath); after=$(ConvertTo-Json -Compress $afterPath)"
 }
 Write-Host "Installer install/reinstall, payload, toolchain and uninstall checks passed for $Commit"
