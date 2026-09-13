@@ -1,5 +1,10 @@
 # Mike's CREXX report review — 11 September 2026
 
+For #685's final working-as-designed resolution and the ordinary multi-source
+command, see [the 13 September resolution](mike-685-resolution-2026-09-13.md).
+The investigation below retains the findings and decisions as recorded on
+11 September.
+
 **Later evidence:** This is the initial review, before Mike's source archives
 arrived. The [follow-up review](mike-followup-2026-09-11.md) independently
 reproduces reports 2 and 5 and supersedes their missing-source dispositions.

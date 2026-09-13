@@ -1,7 +1,8 @@
 # CREXX Roadmap
 
-Status: consolidated project direction, refreshed 2026-09-04. This document is
-not a release contract.
+Status: consolidated project direction, refreshed 2026-09-04; library discovery
+and dependency status reconciled 2026-09-13. This document is not a release
+contract.
 
 This is the single portfolio-ordering view for CREXX. It ranks product outcomes
 rather than every issue, experiment, or completed programme stage. Detailed
@@ -214,6 +215,13 @@ model, and enters Release 1 only through a beta quality gate.
 - Compile-time build metadata, loose comparison changes, optional-argument
   redesign, broader native regex packaging, and richer callback/generic
   collection syntax wait for a concrete user contract.
+- Incremental build-and-run as the ordinary `crexx` default is a possible
+  future usability improvement. It would need to preserve immediate execution,
+  program arguments and clear output/rebuild controls. Automatically adding
+  imported sources to a build and improving missing-runtime-input diagnostics
+  are separate possible changes; none is selected here. Existing import
+  discovery, packaged-library autoload and incremental project builds are
+  completed capabilities, recorded below.
 
 ### Evidence-gated performance follow-ons
 
@@ -248,9 +256,36 @@ model, and enters Release 1 only through a beta quality gate.
 - Level B Unicode [#583](https://github.com/adesutherland/CREXX/issues/583),
   tool output paths #584, RXAS float precision #585, and RXAS instruction
   coverage #586 are closed quality evidence.
+- Source-input report [#685](https://github.com/adesutherland/CREXX/issues/685)
+  is resolved as working as designed, with clearer user documentation.
+  `crexx a b` compiles the explicitly listed sources and runs them together;
+  imports do not add source members. Separately built binary libraries use
+  the existing discovery/loading mechanisms. `--program` and `--library`
+  remain optional incremental workflows for larger or repeatedly built projects.
+- New-build Phase 2/P2B completed deterministic compiler import discovery:
+  separate source and binary roots, documented precedence, curated production
+  inputs, executable-root isolation and an opt-in resolver report. Phase 3
+  completed packaged RXBIN autoload: retained binary imports identify the exact
+  package for the VM to find through runtime roots. Source and RXAS imports
+  deliberately emit no package hint. The
+  [new-build programme](planning/release-1/new-build-system-vision-and-migration-plan-2026-08-27.md)
+  is completed implementation history.
+- New-build Phase 4 implemented installed `crexx --program` and `--library`
+  workflows with explicit source membership, incremental builds and atomic
+  publication. The later
+  [`RXC-PROJECT-01`](../performance/RXC-PROJECT-SCALING-WORKLIST.md)
+  repair implemented compiler-owned dependency snapshots and selective member
+  rebuilding; both bounded Release performance verdicts are accepted.
+  Dependencies used to decide rebuilds are discovered automatically; the
+  sources included in the linked product remain explicit. These capabilities
+  are implemented on `develop`; dated qualification notes in the detailed
+  records do not make them unimplemented or authorize a new discovery project.
 - Runtime capability composition, packed numeric owners, the exact CPU
   `rxvector` provider, generic scalar access, the reusable RXAS proof service,
   and the five-stage POSTPERF sequence have completed governed verdicts.
+  In particular, RCC-1/RCC-2 implemented declarative native-provider identity,
+  static-first trusted lookup and automatic native-package selection. This
+  native-plugin resolution is distinct from bytecode-package autoload.
 - The initial concurrency surface is implemented and published as initial
   development content. Its detailed portability and evidence history remains
   in [`../concurrency/WORKLIST.md`](../concurrency/WORKLIST.md); future services
@@ -262,6 +297,15 @@ model, and enters Release 1 only through a beta quality gate.
 
 ## Detailed Authorities
 
+- Current compiler import discovery, program/library builds and runtime lookup:
+  [`rxc`](books/crexx_programming_guide/rxc.md),
+  [`crexx`](books/crexx_programming_guide/crexx.md), and
+  [`RXVM_INTERPRETER.md`](ai-context/RXVM_INTERPRETER.md)
+- Completed build migration and dependency-selection evidence:
+  [new-build programme](planning/release-1/new-build-system-vision-and-migration-plan-2026-08-27.md)
+  and [`RXC-PROJECT-01`](../performance/RXC-PROJECT-SCALING-WORKLIST.md)
+- Native-provider discovery and composition:
+  [runtime capability composition](planning/release-1/runtime-capability-composition-roadmap.md)
 - Native inference requirements and the crexx-rag dependency:
   [`planning/native-inference-backlog.md`](planning/native-inference-backlog.md)
 - Release scope, cadence, and dependencies:

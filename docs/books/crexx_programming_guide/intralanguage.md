@@ -156,7 +156,20 @@ work because optimization inlines it into the caller. That does not establish
 that the library was loaded, and adding a helper or disabling optimization can
 expose the missing dependency.
 
-Compile the library and supply its exact runtime path:
+For this two-source program, the ordinary solution is to list both files:
+
+```sh
+crexx usemod.crexx libmod.crexx
+```
+
+The command compiles both sources and runs them together, printing
+`hello from B with fixed`. No `-l` or `--program` option is needed. The shorter
+`crexx usemod libmod` form works with these `.crexx` filenames too.
+
+### Separately built libraries and larger projects
+
+As the project grows, you may choose to build reusable code separately and
+supply its exact runtime path:
 
 ```sh
 rxc libmod.crexx
@@ -164,19 +177,28 @@ rxas libmod.rxas
 crexx -l ./libmod.rxbin usemod.crexx
 ```
 
-Alternatively, build an explicit linked program from both source files:
+For repeated development, build one named linked program incrementally:
 
 ```sh
 crexx --program combined usemod.crexx libmod.crexx
-rxvm combined.rxbin
+rxvme combined.rxbin
 ```
 
-Both routes print `hello from B with fixed`. The `./` in the first command
-selects the application-local library path; a bare `-l` library name is
-resolved relative to the tool installation.
+These routes also print `hello from B with fixed`. `--program` builds without
+running; an unchanged repeat skips compilation, assembly and linking.
+`--library output sources...` offers the same incremental build support for a
+reusable linked library. Both modes retain explicit source membership. The
+ordinary compile-and-run command recompiles its listed sources unless
+`--nocompile` is selected.
+
+The `./` in `-l ./libmod.rxbin` selects the application-local library path;
+a bare `-l` library name is resolved relative to the tool installation.
 
 Packaged binary imports provide another route. When the compiler selects a
 `.rxbin` library through a binary root such as `-i .`, it records the exact
 package stem for runtime autoload. The VM can load that package from its module
 roots when an unresolved callable needs it. This does not search for or compile
 source files, and compiler `-s`/`-i` roots do not themselves add VM search roots.
+Merely leaving `libmod.rxbin` beside the source does not make it a compiler
+input: the binary must be visible through a binary import root. Use `-i .`
+when the current directory is an intended binary-library location.

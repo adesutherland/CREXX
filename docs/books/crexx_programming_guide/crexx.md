@@ -9,22 +9,38 @@ place: source-level defaults are delegated to `rxc` by file type, native
 packaging runs through `rxlink` before `rxcpack`, and source/binary import paths
 are passed to the compiler phase consistently.
 
-## Use cases
+## Compile and run from source
 
-- Executing a simple script with Rexx statements and built-in functions, without having to run the tools in the chain individually and having to specify files and options on each tool
+List the source files that make up your program:
 
-- Using plugins and class libraries with minimal overhead in programs
+```sh
+crexx a.crexx b.crexx
+```
 
-- Combining multiple source files containing functions and classes and executing them as a unit
+If `a.crexx` is the main program and imports functions from `b.crexx`, this
+compiles both files, loads their bytecode together and runs the program. With
+`.crexx` files, the shorter `crexx a b` form works too. No project file,
+library option or separate link command is needed for this ordinary workflow.
 
-- Building a larger application using separate compilation and linking
+An `import` makes another module's declarations available to the compiler;
+it does not add that module's source to the files being built. For a program
+whose sources are `a.crexx` and `b.crexx`, list both. `crexx a` alone does not
+automatically compile `b.crexx`.
 
-- Developing Class libraries[^functions] together with their consumers
+The ordinary command compiles each listed source on every invocation and runs
+the result. Add `--noexec` to compile without running. `--nocompile` explicitly
+reuses existing bytecode without checking whether its sources have changed.
+Pass program arguments after the final driver option, `--args`:
 
-- See which code is produced for the cRexx virtual machine and tools using verbosity levels
+```sh
+crexx a.crexx b.crexx --args "first argument" second
+```
 
-
-[^functions]: or function libraries
+As a project grows, or when you repeatedly build the same application, consider
+the existing `--program` and `--library` modes described under
+[Choosing how to build a program or library](#choosing-how-to-build-a-program-or-library).
+They add incremental builds and named linked outputs; they are optional for the
+simple compile-and-run workflow above.
 
 ## Options
 
@@ -68,12 +84,13 @@ normally interpret.
 `-library output`
 : Build the explicit source files as one incrementally maintained library and
 atomically publish `output.rxbin`. Independent compile/assemble actions run in
-parallel; linking starts only after the complete source wave succeeds.
+parallel; linking starts only after the complete source wave succeeds. This
+mode builds without executing the result.
 
 `-program output`
 : Build the explicit source files as one incrementally maintained linked
 program and atomically publish `output.rxbin`. Add `-native` to publish a
-native executable as well.
+native executable as well. This mode builds without executing the result.
 
 `-jobs auto|count`
 : Bound parallel compile/assemble work for `-library` and `-program`. `auto` is
@@ -134,14 +151,18 @@ This keeps the direct interpreter path fast while still producing compact native
 `--link-keep-inline`
 : When using `-native`, keep inline-body metadata in the linked intermediate. The native link strips this metadata by default because it is only needed by later compiler imports and debugging/tooling checks.
 
-`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add user runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
+`-s`, `-i`, and `--import-rxas` control compile-time discovery. They do not
+add imported source files to the build or configure VM search roots. When the
+compiler selects a packaged RXBIN, its autoload hint can identify that package
+for the VM to find through runtime roots. Use `-l` to supply an existing
+runtime library explicitly.
 
 Source files without an `OPTIONS` clause use the `rxc` file-type defaults:
 `.rexx` defaults to Level C Classic REXX, while `.crexx` and `.crx` default to
 Level G. Explicit `OPTIONS LEVELC` scripts use the normal source header and the
 driver's standard runtime module set, including the Classic compatibility
-runtime `rxfnsc`. Level C compilation is incremental: supported Classic Rexx
-shapes lower and run, while constructs outside the implemented slice are
+runtime `rxfnsc`. Level C support is being extended in stages: supported Classic
+Rexx shapes lower and run, while constructs outside the implemented slice are
 rejected with an unsupported-shape diagnostic.
 
 The driver invokes its toolchain phases through the CREXX ADDRESS command
@@ -151,16 +172,22 @@ keeping verbose output readable.
 
 ## Choosing how to build a program or library
 
-Use the ordinary `crexx source.crexx` form to compile and immediately run a
-program. Use `--program` when several explicitly listed sources form one
-maintained executable product, or when repeat-build speed and safe publication
-matter. Use `--library` for reusable linked code. Projects that also own native
-code, plugins, generators, installation or extensive QA should use CMake.
+Start with `crexx a.crexx b.crexx` to compile and immediately run a program
+from its listed sources. This remains useful for quick experiments, inspecting
+individual module outputs, and deliberately repeating compilation during
+debugging.
+
+For repeated development of a larger application, `--program` avoids
+recompiling unchanged work and produces one named linked program. `--library`
+provides the same incremental build support for reusable code built separately
+from its consumers. Both are available now; neither is required merely because
+a program has more than one source file.
 
 | Need | Command |
 | --- | --- |
 | Compile and run a program now | `crexx source.crexx` |
-| Compile one program without running it | `crexx source.crexx --noexec` |
+| Compile and run several source modules together | `crexx a.crexx b.crexx` |
+| Compile sources without running the program | `crexx a.crexx b.crexx --noexec` |
 | Build one maintained linked RXBIN incrementally | `crexx --program output sources...` |
 | Build a native version of that linked program | `crexx --program output sources... --native` |
 | Build a reusable linked library incrementally | `crexx --library output sources...` |
@@ -174,6 +201,18 @@ crexx --library build/mylib source1.crexx source2.crexx --jobs auto
 crexx --program build/myprogram main.crexx support.crexx --jobs auto
 crexx --program build/myprogram main.crexx support.crexx --jobs auto --native
 ```
+
+`--program` and `--library` are build-only modes: they do not run the output
+and do not accept `--args`. After a program build, run the result separately,
+for example `rxvme build/myprogram.rxbin`. The ordinary command leaves separate
+module outputs; the project modes publish one linked output and keep their
+member artifacts and incremental state under `<output>.crexx-build`.
+
+All these source-based modes require the program or library's source members
+to be listed explicitly. Automatic dependency tracking decides when to rebuild
+those members; it does not add further sources to the linked product. Projects
+that also own native code, plugins, generators, installation or extensive QA
+should use CMake as their outer build system.
 
 These modes optimize REXX bytecode by default. Use `--nooptimize` when checking
 optimizer parity or diagnosing generated code. Existing `-s`, `-i`, `-l`,
@@ -235,7 +274,11 @@ selection changes too; retry once inputs are stable.
 
 ### Just run it
 
-The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will execute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
+The simplest way to run a cRexx program is to specify its source files as input
+to `crexx`. It compiles and assembles each listed file, then runs their bytecode
+together through `rxvme`, which includes the shipped bytecode libraries.
+Separately built application libraries must be supplied explicitly or be
+discoverable through packaged-library autoload.
 
 ```rexx <!--crexx-1.crexx-->
 options levelb
