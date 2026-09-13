@@ -166,7 +166,7 @@ Section "CREXX" SecCREXX
   SetRegView 64
   SetOverwrite on
   SetOutPath "$INSTDIR"
-  File /r "${CREXX_PAYLOAD_DIR}/*"
+  File /r "${CREXX_PAYLOAD_DIR}\*"
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 

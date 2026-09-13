@@ -602,29 +602,9 @@ jobs:
         shell: pwsh
         timeout-minutes: 10
         run: |
-          $ErrorActionPreference = 'Stop'
-          $makensis = "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
-          if (!(Test-Path $makensis)) {
-            choco install nsis --yes --no-progress
-            if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed' }
-          }
           $payload = Join-Path "${{ runner.temp }}" "release-payload/${{ matrix.artifact_name }}"
           $installer = Join-Path "${{ runner.temp }}" 'release-assets/CREXX-dev-snapshot-windows-x64-unsigned-setup.exe'
-          $baseVersion = "${{ needs.version.outputs.version }}" -replace '[-+].*$', ''
-          $arguments = @(
-            "/DCREXX_PAYLOAD_DIR=$payload",
-            "/DCREXX_OUTFILE=$installer",
-            "/DCREXX_DISPLAY_VERSION=${{ needs.version.outputs.display_version }}",
-            "/DCREXX_FILE_VERSION=$baseVersion.0",
-            "/DCREXX_WIZARD_BITMAP=$env:GITHUB_WORKSPACE/packaging/windows/assets/crexx-wizard.bmp",
-            "$env:GITHUB_WORKSPACE/packaging/windows/crexx.nsi"
-          )
-          & $makensis @arguments
-          if ($LASTEXITCODE -ne 0) { throw 'Unsigned NSIS packaging failed' }
-          if ((Get-AuthenticodeSignature $installer).Status -ne 'NotSigned') {
-            throw 'Expected an unsigned snapshot installer'
-          }
-          & "$env:GITHUB_WORKSPACE/.github/scripts/test-windows-installer.ps1" -Installer $installer -Payload $payload -Commit '${{ needs.version.outputs.commit }}'
+          & "$env:GITHUB_WORKSPACE/.github/scripts/build-windows-installer.ps1" -Payload $payload -Installer $installer -Commit '${{ needs.version.outputs.commit }}'
 
       - name: Report macOS package status
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
