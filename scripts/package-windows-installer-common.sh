@@ -74,13 +74,13 @@ Input options:
 
 Output options:
   -o, --output PATH          Installer path. Defaults in the current directory
-                             as <zip-base>-setup.exe.
+                             as <zip-base>-signed-setup.exe or -unsigned-setup.exe.
       --output-dir DIR       Directory for the default installer filename.
       --upload               Upload the generated installer to the release.
       --no-upload            Do not upload. This is the default.
 
 Signing options:
-      --sign                 Sign the embedded uninstaller and final setup.exe.
+      --sign                 Sign payload, embedded uninstaller and final setup.exe.
       --unsigned             Build without signing. $sign_default
       --provider PATH        SunPKCS11 provider config.
       --certum-alias TEXT    Certificate alias/serial.
@@ -256,6 +256,7 @@ EOF
   if [[ "$sign_installer" -eq 1 ]]; then
     require_cmd jsign
     require_cmd osslsigncode
+    require_cmd file
     [[ -f "$provider" ]] || die "provider config not found: $provider"
   fi
 
@@ -274,9 +275,13 @@ EOF
   if [[ "$keep_work" -eq 1 ]]; then
     echo "Working directory: $work"
   else
+    # Freeze the function-local path now; it is out of scope when EXIT runs.
+    # shellcheck disable=SC2064
     trap "rm -rf -- $(printf '%q' "$work")" EXIT
   fi
 
+  local release_helper="$script_dir/windows-release-assets.py"
+  local source_state=""
   local download_dir unpack_dir
   download_dir="$work/download"
   unpack_dir="$work/unpacked"
@@ -314,7 +319,7 @@ EOF
           *.zip)
             if [[ "$lower" == *win* || "$lower" == *windows* ]]; then
               candidates+=("$candidate")
-              if [[ "$lower" == *signed* ]]; then
+              if [[ "$lower" == *-signed.zip ]]; then
                 signed_candidates+=("$candidate")
               fi
             fi
@@ -338,8 +343,11 @@ EOF
     fi
 
     echo "Downloading $repo@$tag asset $asset"
-    gh release download "$tag" -R "$repo" -p "$asset" -D "$download_dir" --clobber
+    require_cmd python3
+    source_state="$work/source.json"
+    python3 "$release_helper" capture --repo "$repo" --tag "$tag" --asset "$asset" --state "$source_state"
     zip_path="$download_dir/$asset"
+    python3 "$release_helper" download --state "$source_state" "$zip_path"
   fi
 
   [[ -f "$zip_path" ]] || die "ZIP not found: $zip_path"
@@ -362,6 +370,15 @@ EOF
   else
     find "$unpack_dir" -maxdepth 2 -type d -print >&2
     die "could not find a CREXX payload directory with a bin subdirectory"
+  fi
+
+  if [[ -n "$source_state" ]]; then
+    python3 "$release_helper" payload --state "$source_state" "$payload_dir"
+  fi
+  if [[ "$sign_installer" -eq 1 ]]; then
+    # shellcheck source=scripts/windows-signing-common.sh
+    source "$script_dir/windows-signing-common.sh"
+    sign_windows_payload "$payload_dir" "$provider" "$certum_alias" "$tsa_url"
   fi
 
   local exe
@@ -393,6 +410,12 @@ EOF
     zip_base="$(basename "$zip_path")"
     zip_base="${zip_base%.zip}"
     zip_base="${zip_base%-signed}"
+    zip_base="${zip_base%-unsigned}"
+    if [[ "$sign_installer" -eq 1 ]]; then
+      zip_base="${zip_base}-signed"
+    else
+      zip_base="${zip_base}-unsigned"
+    fi
     if [[ -n "$output_dir" ]]; then
       output="$output_dir/${zip_base}-setup.exe"
     else
@@ -412,15 +435,30 @@ EOF
   sign_helper=""
   if [[ "$sign_installer" -eq 1 ]]; then
     sign_helper="$work/sign-windows-file.sh"
+    # Emit references for the generated helper to expand when it runs.
+    # shellcheck disable=SC2016
     {
       echo '#!/usr/bin/env bash'
       echo 'set -euo pipefail'
       printf 'provider=%q\n' "$provider"
       printf 'certum_alias=%q\n' "$certum_alias"
       printf 'tsa_url=%q\n' "$tsa_url"
-      echo 'target="${1:?target file is required}"'
-      echo 'jsign --verbose --storetype PKCS11 --keystore "$provider" --alias "$certum_alias" --alg SHA-256 --tsaurl "$tsa_url" "$target"'
-      echo 'osslsigncode verify -in "$target" >/dev/null'
+      cat <<'SIGN_HELPER'
+sign_file() {
+  jsign --storetype PKCS11 --keystore "$provider" --alias "$certum_alias" \
+    --alg SHA-256 --tsaurl "$tsa_url" "$1"
+  osslsigncode verify -in "$1" >/dev/null
+}
+if [[ "${1:-}" == "--nsis-plugins" ]]; then
+  mkdir -p "$3"
+  for plugin in System.dll nsDialogs.dll; do
+    cp "$2/$plugin" "$3/$plugin"
+    sign_file "$3/$plugin"
+  done
+else
+  sign_file "${1:?target file is required}"
+fi
+SIGN_HELPER
     } > "$sign_helper"
     chmod +x "$sign_helper"
   fi
@@ -456,6 +494,7 @@ EOF
 
   if [[ "$sign_installer" -eq 1 ]]; then
     makensis_args+=("-DCREXX_SIGN_HELPER=$sign_helper")
+    makensis_args+=("-DCREXX_SIGNED_PLUGIN_DIR=$work/nsis-plugins")
   fi
 
   makensis "${makensis_args[@]}" "$nsis_script"
@@ -472,7 +511,7 @@ EOF
     require_cmd gh
     [[ -n "$repo" && -n "$tag" ]] || die "internal error: upload requires repo and tag"
     echo "Uploading $(basename "$output") to $repo@$tag"
-    gh release upload "$tag" "$output" -R "$repo" --clobber
+    python3 "$release_helper" publish --state "$source_state" "$output"
   fi
 
   echo "Created $output"

@@ -25,8 +25,8 @@ Options:
                              unsigned Windows ZIP in the release.
       --keep-unsigned        Keep the original unsigned asset after the signed
                              asset is visible in the release.
-      --delete-unsigned      Accepted for compatibility; deletion is now the
-                             default after the signed asset is visible.
+      --delete-unsigned      Delete the original ZIP after publication (versioned
+                             releases only). Snapshots always retain both forms.
       --dry-run              Show what would be done without signing/uploading.
       --keep-work            Keep the temporary working directory after exit.
       --work-dir DIR         Use DIR as the working directory instead of mktemp.
@@ -53,6 +53,11 @@ EOF
   tag=""
   asset=""
   delete_unsigned=1
+  local with_installer=0 explicit_delete=0
+  if [[ "$default_tag_mode" == "dev-snapshot" ]]; then
+    delete_unsigned=0
+    with_installer=1
+  fi
   dry_run=0
   keep_work=0
   work=""
@@ -75,6 +80,7 @@ EOF
         shift 2
         ;;
       --delete-unsigned)
+        explicit_delete=1
         delete_unsigned=1
         shift
         ;;
@@ -106,8 +112,12 @@ EOF
     esac
   done
 
+  # shellcheck source=scripts/windows-signing-common.sh
+  source "$script_dir/windows-signing-common.sh"
+  local release_helper="$script_dir/windows-release-assets.py"
+
   local cmd
-  for cmd in gh jsign osslsigncode unzip zip find file grep; do
+  for cmd in gh jsign osslsigncode unzip zip find file grep python3; do
     command -v "$cmd" >/dev/null || die "missing command: $cmd"
   done
 
@@ -126,6 +136,15 @@ EOF
     else
       tag="$default_tag_mode"
     fi
+  fi
+
+  if [[ "$tag" == "dev-snapshot" ]]; then
+    [[ "$explicit_delete" -eq 0 ]] || die "dev-snapshot retains unsigned assets; omit --delete-unsigned"
+    delete_unsigned=0
+    with_installer=1
+  fi
+  if [[ "$with_installer" -eq 1 ]]; then
+    command -v makensis >/dev/null || die "missing command: makensis"
   fi
 
   local release_assets
@@ -197,26 +216,6 @@ EOF
 
   asset_exists "$asset" || die "asset not found in $repo@$tag: $asset"
 
-  is_windows_signable() {
-    local file_path="$1"
-    local lower_path
-    local file_type
-
-    file_type="$(file -b "$file_path")"
-    if [[ "$file_type" == PE32* ]]; then
-      return 0
-    fi
-
-    lower_path="$(printf '%s' "$file_path" | tr '[:upper:]' '[:lower:]')"
-    case "$lower_path" in
-      *.msi|*.cab|*.cat|*.appx|*.msix|*.ps1|*.ps1xml|*.psc1|*.psd1|*.psm1|*.cdxml|*.mof|*.js|*.vbs|*.wsf)
-        return 0
-        ;;
-    esac
-
-    return 1
-  }
-
   local signed_asset
   if [[ "$asset" != *.* ]]; then
     signed_asset="${asset}-signed"
@@ -239,6 +238,7 @@ EOF
   echo "Provider config:  $provider"
   echo "Certum alias:     $certum_alias"
   echo "Timestamp URL:    $tsa_url"
+  echo "Signed installer: $with_installer (snapshot signs payload, uninstaller and setup)"
 
   if [[ "$dry_run" -eq 1 ]]; then
     echo "Dry run only; no files changed."
@@ -255,6 +255,8 @@ EOF
   if [[ "$keep_work" -eq 1 ]]; then
     echo "Working directory: $work"
   else
+    # Freeze the function-local path now; it is out of scope when EXIT runs.
+    # shellcheck disable=SC2064
     trap "rm -rf -- $(printf '%q' "$work")" EXIT
   fi
 
@@ -263,60 +265,42 @@ EOF
   unpacked_dir="$work/unpacked"
   mkdir -p "$download_dir" "$unpacked_dir"
 
-  echo "Downloading $asset"
-  gh release download "$tag" -R "$repo" -p "$asset" -D "$download_dir" --clobber
-
-  local input_zip
-  input_zip="$download_dir/$asset"
+  local source_state="$work/source.json"
+  python3 "$release_helper" capture --repo "$repo" --tag "$tag" --asset "$asset" --state "$source_state"
+  local input_zip="$download_dir/$asset"
+  python3 "$release_helper" download --state "$source_state" "$input_zip"
   [[ -f "$input_zip" ]] || die "downloaded asset not found: $input_zip"
 
   echo "Unpacking"
   unzip -q "$input_zip" -d "$unpacked_dir"
 
-  local signed_count skipped_count file rel
-  signed_count=0
-  skipped_count=0
-
-  while IFS= read -r -d '' file; do
-    rel="${file#$unpacked_dir/}"
-
-    if ! is_windows_signable "$file"; then
-      continue
-    fi
-
-    if osslsigncode verify -in "$file" >/dev/null 2>&1; then
-      echo "Already signed: $rel"
-      skipped_count=$((skipped_count + 1))
-      continue
-    fi
-
-    echo "Signing: $rel"
-    jsign --verbose \
-      --storetype PKCS11 \
-      --keystore "$provider" \
-      --alias "$certum_alias" \
-      --alg SHA-256 \
-      --tsaurl "$tsa_url" \
-      "$file"
-
-    osslsigncode verify -in "$file" >/dev/null
-    signed_count=$((signed_count + 1))
-  done < <(find "$unpacked_dir" -type f -print0)
-
-  [[ "$signed_count" -gt 0 || "$skipped_count" -gt 0 ]] ||
-    die "no signable Windows binaries found in $asset"
+  local buildinfo payload_dir
+  buildinfo="$(find "$unpacked_dir" -maxdepth 2 -name BUILDINFO -type f)"
+  [[ -n "$buildinfo" && "$buildinfo" != *$'\n'* ]] || die "expected one payload BUILDINFO"
+  payload_dir="$(dirname "$buildinfo")"
+  python3 "$release_helper" payload --state "$source_state" "$payload_dir"
+  sign_windows_payload "$payload_dir" "$provider" "$certum_alias" "$tsa_url"
 
   local output_zip
   output_zip="$work/$signed_asset"
   echo "Creating $signed_asset"
   (
-    cd "$unpacked_dir"
+    cd "$unpacked_dir" || exit
     export COPYFILE_DISABLE=1
     zip -qr -X "$output_zip" .
   )
 
-  echo "Uploading $signed_asset"
-  gh release upload "$tag" "$output_zip" -R "$repo" --clobber
+  local publish_paths=("$output_zip")
+  if [[ "$with_installer" -eq 1 ]]; then
+    local output_installer="$work/${signed_asset%.zip}-setup.exe"
+    bash "$script_dir/package-windows-nsis.sh" --zip "$output_zip" --sign --no-upload \
+      --provider "$provider" --certum-alias "$certum_alias" --tsa-url "$tsa_url" \
+      --output "$output_installer"
+    publish_paths+=("$output_installer")
+  fi
+
+  echo "Publishing signed assets for the pinned source"
+  python3 "$release_helper" publish --state "$source_state" "${publish_paths[@]}"
 
   read_release_assets
   asset_exists "$signed_asset" || die "signed asset upload is not visible in the release: $signed_asset"
@@ -326,7 +310,10 @@ EOF
     asset_exists "$asset" || die "unsigned asset is already absent: $asset"
 
     echo "Deleting unsigned asset $asset"
-    gh release delete-asset "$tag" "$asset" -R "$repo" --yes
+    python3 "$release_helper" verify --state "$source_state"
+    local source_id
+    source_id="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["asset"]["id"])' "$source_state")"
+    gh api "repos/$repo/releases/assets/$source_id" --method DELETE
 
     read_release_assets
     asset_exists "$signed_asset" || die "signed asset disappeared after deleting unsigned asset"
@@ -337,5 +324,5 @@ EOF
     echo "Keeping unsigned asset $asset"
   fi
 
-  echo "Done. Signed $signed_count file(s), skipped $skipped_count already-signed file(s)."
+  echo "Done. Signed assets are published for the pinned source commit."
 }

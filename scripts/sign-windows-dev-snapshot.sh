@@ -9,5 +9,5 @@ run_windows_release_asset_signer \
   "scripts/sign-windows-dev-snapshot.sh" \
   "dev-snapshot" \
   "Defaults to the dev-snapshot release." \
-  "Downloads the CREXX Dev Snapshot Windows ZIP, signs Windows binaries using Certum SimplySign via Jsign, then uploads a sibling ZIP with \"-signed\" in the asset name." \
+  "Download the current Windows snapshot, sign its payload, embedded uninstaller and setup, and publish a signed ZIP and signed setup alongside the unsigned downloads." \
   "$@"

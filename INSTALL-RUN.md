@@ -40,15 +40,23 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-Prefer the `windows-x64-signed` ZIP asset. The signed package contains
-Authenticode-signed Windows executables, libraries, and native plugin binaries.
-After the local signing script has uploaded the signed ZIP and verified that it
-is visible on the release, it deletes the matching unsigned Windows ZIP.
+The moving dev snapshot provides an automatic installer:
+`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`. It installs into
+`C:\Program Files\CREXX`, sets `CREXX_HOME` and `REXX_HOME`, adds `bin` to the
+machine PATH, and registers an uninstaller. Open a new terminal after installing.
+Unsigned applications may show unknown-publisher/SmartScreen warnings or be
+blocked by Windows security policy.
 
-For the moving dev snapshot, prefer `CREXX-dev-snapshot-windows-x64-signed.zip`
-when it is present. The unsigned `CREXX-dev-snapshot-windows-x64.zip` asset is
-published by CI first and is normally removed by the local signing script after
-the signed asset is uploaded successfully.
+When present, prefer `CREXX-dev-snapshot-windows-x64-signed-setup.exe` for
+installation or `CREXX-dev-snapshot-windows-x64-signed.zip` for portable use.
+The maintainer's `scripts/sign-windows-dev-snapshot.sh` signs the complete
+payload and installer and publishes both. Unsigned downloads remain available.
+Each new snapshot replaces the automatic assets and removes the previous signed
+assets and legacy installers, so old code is not offered as the current build.
+Check the release's commit and installed `BUILDINFO`/`VERSION` for build identity.
+
+For versioned releases, prefer a signed Windows ZIP when it is present. The
+versioned-release ZIP signing helper may remove the corresponding unsigned ZIP.
 
 ## Linux
 

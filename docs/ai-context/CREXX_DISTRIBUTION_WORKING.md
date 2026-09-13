@@ -53,15 +53,17 @@ place:
 - The release title is timestamped, for example `CREXX Dev Snapshot
   20260514T104213Z`.
 - Stable asset names are replaced by each successful build.
-- Windows local signing may remove the unsigned Windows ZIP after the signed
-  ZIP is uploaded and visible.
+- Snapshot Windows signing retains the automatic unsigned ZIP and installer.
+- Each snapshot invalidates prior signed Windows assets and legacy installers.
 
 Current dev snapshot assets include:
 
 - `CREXX-dev-snapshot-linux-x64.zip`
 - `CREXX-dev-snapshot-linux-x64.deb`
-- `CREXX-dev-snapshot-windows-x64-signed.zip` after the local Windows signing
-  script has completed
+- `CREXX-dev-snapshot-windows-x64.zip`
+- `CREXX-dev-snapshot-windows-x64-unsigned-setup.exe`
+- `CREXX-dev-snapshot-windows-x64-signed.zip` and
+  `CREXX-dev-snapshot-windows-x64-signed-setup.exe` after local signing
 - `CREXX-dev-snapshot-macos-arm64.zip`
 - `CREXX-dev-snapshot-macos-arm64.pkg` when Apple signing and notarization are
   configured
@@ -128,19 +130,20 @@ Beta 2 shipped the Windows ZIP path, with the maintainer signing flow producing
 a signed ZIP after the CI asset exists. Beta 3 targets the first Windows
 click-through installer while keeping the signed ZIP as the portable asset.
 
-Preferred simple beta 3 flow: add a signed NSIS `setup.exe` after the ZIP
-signing flow. This remains a local post-build helper: it downloads the existing
-Windows ZIP asset, unpacks that packaged payload as the baseline, builds the
-NSIS installer from those files, signs the embedded uninstaller and final
-installer, then uploads the setup executable.
+The dev snapshot automatically builds an unsigned NSIS installer from the same
+staged Windows payload as its ZIP. Windows CI gates upload on install/reinstall,
+payload hashes, tool versions, installed hello-example execution and uninstall.
 
-1. GitHub builds and publishes the unsigned Windows ZIP.
-2. The local signing script downloads the ZIP.
-3. The local signing script signs the Windows binaries/plugins.
-4. The signed payload is repacked as a signed ZIP.
-5. The NSIS installer is built from the signed payload.
-6. The installer `.exe` itself is signed and uploaded.
-7. The unsigned ZIP is removed after signed assets are visible.
+For signed snapshot downloads the maintainer runs
+`scripts/sign-windows-dev-snapshot.sh` once. The helper pins and verifies the
+source ZIP and tag, signs the payload and NSIS helper DLLs, signs the uninstaller
+and setup, and publishes both the signed ZIP and `-signed-setup.exe`. It keeps
+the unsigned ZIP and `-unsigned-setup.exe`. Source movement aborts publication;
+cleanup targets only this invocation's uploaded IDs. Every new snapshot removes
+the previous signed assets and the legacy ambiguous `-setup.exe` asset.
+
+For versioned releases the separate packaging/signing helpers remain available.
+See `docs/packaging/windows-nsis.md` for commands and publication limitations.
 
 The installer should:
 

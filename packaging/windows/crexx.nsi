@@ -19,6 +19,13 @@ SetCompressor /SOLID lzma
 ManifestDPIAware true
 RequestExecutionLevel admin
 
+!ifdef CREXX_SIGN_HELPER
+  ; Sign private copies of the two embedded NSIS helper DLLs as well as the
+  ; CREXX payload. Never modify the machine's installed NSIS plugin files.
+  !system '"${CREXX_SIGN_HELPER}" --nsis-plugins "${NSISDIR}/Plugins/x86-unicode" "${CREXX_SIGNED_PLUGIN_DIR}"' = 0
+  !addplugindir /x86-unicode "${CREXX_SIGNED_PLUGIN_DIR}"
+!endif
+
 !include "LogicLib.nsh"
 !include "MUI2.nsh"
 !include "StrFunc.nsh"

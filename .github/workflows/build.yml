@@ -88,6 +88,9 @@ jobs:
             echo "release_name=${release_name}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Check Windows publication safeguards
+        run: python3 -B -m unittest discover -s scripts/tests -p 'test_windows_release_assets.py' -v
+
   build:
     name: ${{ matrix.name }}
     needs: version
@@ -594,6 +597,35 @@ jobs:
           Compress-Archive -Path (Join-Path $payloadRoot $payload) -DestinationPath $assetPath -Force
           "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Build and test unsigned Windows snapshot installer
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'windows'
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $makensis = "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
+          if (!(Test-Path $makensis)) {
+            choco install nsis --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed' }
+          }
+          $payload = Join-Path "${{ runner.temp }}" "release-payload/${{ matrix.artifact_name }}"
+          $installer = Join-Path "${{ runner.temp }}" 'release-assets/CREXX-dev-snapshot-windows-x64-unsigned-setup.exe'
+          $baseVersion = "${{ needs.version.outputs.version }}" -replace '[-+].*$', ''
+          $arguments = @(
+            "/DCREXX_PAYLOAD_DIR=$payload",
+            "/DCREXX_OUTFILE=$installer",
+            "/DCREXX_DISPLAY_VERSION=${{ needs.version.outputs.display_version }}",
+            "/DCREXX_FILE_VERSION=$baseVersion.0",
+            "/DCREXX_WIZARD_BITMAP=$env:GITHUB_WORKSPACE/packaging/windows/assets/crexx-wizard.bmp",
+            "$env:GITHUB_WORKSPACE/packaging/windows/crexx.nsi"
+          )
+          & $makensis @arguments
+          if ($LASTEXITCODE -ne 0) { throw 'Unsigned NSIS packaging failed' }
+          if ((Get-AuthenticodeSignature $installer).Status -ne 'NotSigned') {
+            throw 'Expected an unsigned snapshot installer'
+          }
+          & "$env:GITHUB_WORKSPACE/.github/scripts/test-windows-installer.ps1" -Installer $installer -Payload $payload -Commit '${{ needs.version.outputs.commit }}'
+
       - name: Report macOS package status
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
         shell: bash
@@ -1023,13 +1055,14 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' \) \
+            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
             CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
+            CREXX-dev-snapshot-windows-x64-unsigned-setup.exe
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
           )
@@ -1084,7 +1117,15 @@ jobs:
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
-            echo "Windows signing and installer packaging are completed separately. Prefer \`CREXX-dev-snapshot-windows-x64-setup.exe\` for normal installation when it is present and matches commit \`${short_sha}\`; use \`CREXX-dev-snapshot-windows-x64-signed.zip\` as the portable archive."
+            echo "Windows testers: use \`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe\` for installation, or \`CREXX-dev-snapshot-windows-x64.zip\` as the portable archive. Both are built automatically from commit \`${short_sha}\`. Unsigned applications may show Windows security warnings or be blocked by policy."
+            echo
+            echo "Optional \`CREXX-dev-snapshot-windows-x64-signed-setup.exe\` and \`CREXX-dev-snapshot-windows-x64-signed.zip\` are added together when the maintainer runs \`scripts/sign-windows-dev-snapshot.sh\`. Their payload, embedded uninstaller and setup are signed. Unsigned downloads remain available. Previous signed assets and legacy installers are removed whenever the snapshot is refreshed."
+            echo
+            echo '### Automatic asset SHA-256 checksums'
+            echo
+            echo '```text'
+            (cd "${{ runner.temp }}/dev-snapshot-assets" && sha256sum CREXX-dev-snapshot-*)
+            echo '```'
           } > "$notes_file"
 
           echo "DEV_SNAPSHOT_NOTES_PATH=$notes_file" >> "$GITHUB_ENV"
@@ -1143,7 +1184,7 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg"))) | .apiUrl' |
+                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
@@ -1159,6 +1200,9 @@ jobs:
                 ;;
               *.pkg)
                 echo "${asset%.pkg}-${GITHUB_RUN_ID}.tmp.pkg"
+                ;;
+              *.exe)
+                echo "${asset%.exe}-${GITHUB_RUN_ID}.tmp.exe"
                 ;;
               *)
                 echo "${asset}-${GITHUB_RUN_ID}.tmp"
@@ -1213,10 +1257,17 @@ jobs:
             gh api -X PATCH "$temp_api_path" -f name="$asset"
           done
 
-          signed_asset_api_path="$(asset_api_path "CREXX-dev-snapshot-windows-x64-signed.zip" || true)"
-          if [ -n "$signed_asset_api_path" ]; then
-            gh api -X DELETE "$signed_asset_api_path"
-          fi
+          # Signed derivatives and the old ambiguous setup name belong to the
+          # previous snapshot. Keep only the freshly published unsigned installer.
+          for stale_windows_asset in \
+            CREXX-dev-snapshot-windows-x64-signed.zip \
+            CREXX-dev-snapshot-windows-x64-signed-setup.exe \
+            CREXX-dev-snapshot-windows-x64-setup.exe; do
+            stale_windows_api_path="$(asset_api_path "$stale_windows_asset" || true)"
+            if [ -n "$stale_windows_api_path" ]; then
+              gh api -X DELETE "$stale_windows_api_path"
+            fi
+          done
 
           for stale_optional_asset in \
             CREXX-dev-snapshot-macos-arm64.pkg \
