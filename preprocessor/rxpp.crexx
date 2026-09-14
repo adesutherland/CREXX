@@ -128,7 +128,9 @@ if inpath \= macpath then call registerScriptMacros macpath
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
   call writeall outbuf,outfile,-1                   ## write generated output to file
-  call linkerInfo outfile,imported_funcs,external_modules,link_target,no_run            ## linker definition will be calculated out of the normal output file
+ /* call linkerInfo outfile,imported_funcs,external_modules,link_target,link_go,no_run      */      ## linker definition will be calculated out of the normal output file
+  call linkerInfo outfile,imported_funcs,external_modules,link_target,no_run      ## linker definition will be calculated out of the normal output file
+
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
      if pos(' vars',cflags)>0 then call printvars
@@ -556,7 +558,10 @@ GetPrecomp: procedure
       else if ucmd = '##EMIT'    then stype.LineNo='EMIT'
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##COPYBLOCK' then call cmd_copyBlock lineNo,line
-      else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2)
+      else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
+      else if ucmd = '##PROGRAM' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
+      else if ucmd = '##LIBRARY' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
+      else if ucmd = '##RULE' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
  ##     else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
@@ -1544,12 +1549,14 @@ CMD_for: procedure
   end
 return
 /* ------------------------------------------------------------------
- * CMD_data: Implements ##DATA blocks: converts lines into array assignments until ##END.
+ * CMD_data: Implements ##DATA blocks: converts lines into array assignments
+ * until ##END, then optionally calls a callback with the array name.
  * ------------------------------------------------------------------
  */
 CMD_data: procedure
-  arg line_no=.int,line=.string,array=.string
+  arg line_no=.int,line=.string,array='_data',onto='',callback=''
   stype.line_no= 'D'
+  if onto \='' & callback ='' then callback=onto
   j=0
   i = .int
   do i=line_no+1 to source.0
@@ -1558,7 +1565,12 @@ CMD_data: procedure
      j=j+1
      source.i=array'.'j'='safe_quote(line)
   end
-  stype.i='D'   ## set D for ##END
+  if callback = '' then stype.i='D'   ## set D for ##END
+  else do
+     /* Replace the suppressed ##END with a call after all array entries. */
+     source.i='call 'callback' 'array
+     stype.i=' '
+  end
 return
 /* ------------------------------------------------------------------
  * writeline: Appends a line to outbuf[] after variable injection and OO translation.

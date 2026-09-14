@@ -18,17 +18,15 @@ and the corresponding character-oriented functions:
 * `CHARIN()` reads one or more characters; and
 * `CHAROUT()` writes text without adding a line terminator.
 
-These functions form the portable Rexx-style interface described in this
-chapter. The Level B library also provides `_EXECIO`, `READLINES()`,
-`LOADTEXT()`, and `ERASEFILE()` for bulk or specialized file operations. Those
-additional routines are documented separately later in the chapter because
-they are not all part of the standard Rexx built-in-function set.
+These functions form the standard stream-oriented part of the supported Level
+B File I/O API. cREXX also provides an extended group of functions for more
+specific file-processing requirements; those functions are documented
+separately later in this chapter.
 
 The implementation treats these facilities as UTF-8 text I/O. `LINEIN()` and
 `LINEOUT()` operate on text lines, and `CHARIN()` reads Unicode code points
 rather than arbitrary bytes. Programs that need to preserve arbitrary binary
-data should use binary I/O facilities instead; the current Level B file-I/O library does not expose 
-a corresponding binary I/O interface.
+data should use the extended `READBINARY()` and `WRITEBINARY()` functions.
 
 [^streamio]: Except for the mainframe implementations on CMS and TSO where the product cutoff date precluded delivery of the stream I/O functions, and the PL/S stream implementation was available as an add-on (PRPQ). VM employed the EXECIO program for I/O, which was reproduced for the TSO/E implementation. The z/OS USS (Unix System Services) implementation of Rexx does include all stream I/O functions.
 
@@ -466,7 +464,18 @@ call lineout file
 `CHAROUT()` writes the prompt without a newline, while `LINEIN()` reads the
 reply as a complete line.
 
-## Record I/O with EXECIO
+## Extended File I/O Functions
+
+In addition to the standard file I/O operations, cREXX provides several
+functions for more specific file-processing requirements. These functions are
+part of the supported Level B File I/O API; they are grouped separately
+because they provide higher-level or more specialised operations rather than
+basic file access.
+
+They can be used like any other File I/O function when their behaviour matches
+the requirements of an application.
+
+### Record I/O with EXECIO
 
 `EXECIO`, included in the IBM Classic Rexx implementations for VM/CMS and TSO/E, offers an IBM-mainframe style record-oriented
 syntax for transferring lines between a text file and a string array.
@@ -627,7 +636,7 @@ say "SUCCESS"
 return
 ```
 
-## Relationship to `_execio()`
+#### Relationship to `_execio()`
 
 `EXECIO` is source-level convenience syntax. The actual transfer is performed
 by the `_execio()` Level B library function. The compiler exit:
@@ -717,7 +726,7 @@ final separator as an additional empty record.
 The return value is the number of records processed. Failure to open the file
 returns `-12`; a non-zero close error is returned instead of the count.
 
-## Reading Several Lines with READLINES
+### Reading Several Lines with READLINES
 
 `READLINES()` reads a selected range of a text file into a dense string array.
 It is convenient when the complete selection is to be processed in memory
@@ -773,7 +782,7 @@ The file is closed before a successful return.
 preferable for very large files when the program does not need the entire
 selection at once.
 
-## Loading Text with LOADTEXT
+### Loading Text with LOADTEXT
 
 `LOADTEXT()` reads a complete non-binary file and combines its lines into one
 string.
@@ -823,7 +832,27 @@ code `40.27`. If `errorAction` is not `RAISE`, an open failure returns:
 The routine loads the complete text into memory and should therefore be used
 only when the expected file size is appropriate.
 
-## Emptying a File with ERASEFILE
+### Reading and Writing Binary Files
+
+`READBINARY()` and `WRITEBINARY()` provide whole-file byte I/O using the
+`.binary` type. They do not perform UTF validation, newline conversion, or
+text encoding.
+
+```rexx
+data = readbinary("input.dat")
+written = writebinary("copy.dat", data)
+```
+
+`READBINARY()` returns the exact file contents, including embedded NUL and
+invalid UTF-8 bytes. It raises `NOTREADY` if the file cannot be opened, read,
+or closed. `WRITEBINARY()` replaces the target with the supplied bytes and
+returns the number of bytes written. Empty data creates or truncates a file to
+zero bytes; open, write, flush, or close failures raise `NOTREADY`.
+
+These operations load or write the complete value, so the caller is
+responsible for the memory required by the data.
+
+### Emptying a File with ERASEFILE
 
 Despite its name, `ERASEFILE()` does not delete a file. It truncates the file
 to zero length while retaining the directory entry:
@@ -862,6 +891,27 @@ if erasefile("trace.log") <> 0 then
 Use an operating-system or file-system deletion facility when the file itself
 must be removed.
 
+### Closing a Cached Stream with CLOSEFILE
+
+`CLOSEFILE()` explicitly closes a cached stream opened by the Level B text I/O
+functions:
+
+```rexx
+result = closefile(fileName [, suppressMessage])
+```
+
+Its signature is:
+
+```rexx
+closefile(fileName = .string, suppressMessage = 1) = .int
+```
+
+The function returns `0`. `suppressMessage` defaults to `1`, so closing a
+stream that is not currently cached produces no diagnostic. Pass `0` when a
+diagnostic is wanted for that case. `CLOSEFILE()` is a Level B helper, not a
+portable classic Rexx built-in. `LINEOUT()` and `CHAROUT()` remain convenient
+ways to close a stream when their data argument is omitted.
+
 ## Selecting an I/O Facility
 
 The appropriate operation depends on the structure of the data and the way it
@@ -871,10 +921,11 @@ will be consumed:
 * use `LINEOUT()` to write complete lines;
 * use `CHARIN()` for sequential Unicode code-point input;
 * use `CHAROUT()` for text that must not receive an automatic newline;
-* use `_EXECIO` to transfer multiple records between a file and a stem;
 * use `READLINES()` to load a selected line range into an array;
 * use `LOADTEXT()` to obtain a complete text file as one string; and
-* use `ERASEFILE()` to retain a file while reducing it to zero length.
+* use `READBINARY()` and `WRITEBINARY()` for exact byte-oriented file I/O;
+* use `ERASEFILE()` to retain a file while reducing it to zero length; and
+* use `CLOSEFILE()` when a cached stream must be closed explicitly.
 
 The line and character functions keep memory use small and are appropriate for
 streaming large inputs. The bulk routines are more convenient when random

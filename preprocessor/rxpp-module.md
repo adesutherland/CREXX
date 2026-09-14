@@ -275,6 +275,14 @@ Detected in `GetPreComp()` and dispatched via `CMD_*` handlers:
 - `##STEM` → `CMD_stem`
 - `##DATA / ##INPUT / ##SYS*` → `CMD_data`
 
+`##DATA name` creates a data array from the lines in the block. A callback may optionally be specified either directly as `##DATA name callback`, 
+or with an optional callback keyword, for example `##DATA name CALL callback`. 
+After the complete data array has been generated, RXPP invokes the callback once as `call callback`.
+
+`##PROGRAM name`, `##RULE name` and `##LIBRARY name` are thin aliases for `##DATA name` and
+support the same optional callback forms.
+
+
 Also rewrites convenience constructs:
 
 - `FOR`, `SELECT`, `SWITCH`, `WHEN`, `CASE`

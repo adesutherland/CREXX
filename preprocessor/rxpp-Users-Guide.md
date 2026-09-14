@@ -990,22 +990,113 @@ Notable flag:
 
 - `dotisstem`: **By default, RXPP requires at least two tail segments to recognize a stem**, else it is interpreted as a CREXX array. Setting `dotisstem` relaxes that rule so a single tail can be treated as a stem.
 
-### `##DATA name` and `##END`
+### `##DATA name [callback]` and `##END`
 
-`##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into array assignments of the form:
+`##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into a cREXX string array.
 
+For example:
+
+```rexx
+##DATA names
+Alice
+Bob
+Carol
+##END
 ```
-name.1 = ...
-name.2 = ...
-name.3 = ...
+
+generates, in effect:
+
+```rexx
+names.1 = 'Alice'
+names.2 = 'Bob'
+names.3 = 'Carol'
+names.0 = 3
 ```
 
-All lines between `##DATA` and `##END` are treated as **plain, free-form text**. They are **not parsed, tokenized, or interpreted** in any special way by RXPP. No quoting rules, delimiters, or formatting constraints apply.
+All lines between `##DATA` and `##END` are treated as **plain, free-form text**. They are not parsed, tokenized, or interpreted specially by `##DATA`. Each line is collected in order and stored as an element of the generated array.
 
-This design allows you to write ordinary text exactly as it should appear, without escaping or syntactic decoration. RXPP simply stores each line verbatim into the associated array element.
+Macro calls or RXPP variables contained in the captured text may still be processed by later preprocessing stages.
 
-This makes `##DATA` especially useful for embedding inline data blocks—such as templates, configuration fragments, scripts, messages, or documentation text—directly into the source code without relying on external files. Each line is preserved exactly as written and stored sequentially, which keeps later processing simple and predictable.
+#### Optional callback
 
+A callback may optionally be specified after the array name:
+
+```rexx
+##DATA person prolog..PrologSourceAppendArray
+  person(alice).
+  person(bob).
+##END
+```
+
+After the complete array has been generated, RXPP emits a normal cREXX call with the array as its argument. The example above therefore becomes, in effect:
+
+```rexx
+person.1 = 'person(alice).'
+person.2 = 'person(bob).'
+person.0 = 2
+
+call prolog..PrologSourceAppendArray person
+```
+
+The callback is invoked **once after the complete block has been converted**, not once for each line.
+
+The callback is optional. A normal:
+
+```rexx
+##DATA person
+...
+##END
+```
+
+continues to generate only the array.
+
+An optional descriptive keyword may also be placed before the callback name:
+
+```text
+##DATA name keyword callback
+```
+
+The keyword does not change the callback semantics; it provides a more descriptive form of the declaration.
+
+#### `##PROGRAM`, `##LIBRARY` and `##RULE`
+
+`##PROGRAM`, `##LIBRARY` and `##RULE` are aliases for `##DATA`. They use the same block collection, array generation, and optional callback mechanism. The different directive names make the intended purpose of the embedded content clearer.
+
+For example, a program can be described as:
+
+```rexx
+##PROGRAM prolog_sample
+prolog_sample.rxpp
+##END
+```
+
+and a library as:
+
+```rexx
+##LIBRARY prolog
+prolog.crexx
+crexxcallback.crexx
+##END
+```
+
+A callback can be attached in exactly the same way:
+
+```rexx
+##LIBRARY prolog processLibrary
+prolog.crexx
+crexxcallback.crexx
+##END
+```
+
+After the `prolog` array has been generated, RXPP emits, in effect:
+
+```rexx
+call processLibrary prolog
+```
+
+At this level, `##PROGRAM`, `##LIBRARY` and `##RULE` do not themselves compile, link, execute, or otherwise interpret their contents. They collect the block into an array and, when specified, pass that completed array to a callback. The callback determines what further processing is performed.
+
+This mechanism is useful for embedding not only ordinary data, but also configuration fragments, scripts, templates, messages, Prolog facts and rules, program member lists, library member lists, or other structured text directly in an RXPP source file.
 ---
 
 ### `##SYSxxx`
