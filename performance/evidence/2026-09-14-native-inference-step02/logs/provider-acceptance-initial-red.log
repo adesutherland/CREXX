@@ -1,0 +1,31 @@
+WAVE: project compile/assemble jobs=1
+START: project member provider_acceptance
+FAILED: compile project member provider_acceptance rc=2
+Warning in provider_acceptance.crexx @ 73:3 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 65, column 5. Declare this binding explicitly if intentional., "status"
+Warning in provider_acceptance.crexx @ 115:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 112, column 6. Declare this binding explicitly if intentional., "i"
+2 warning(s) in source file
+Error in provider_acceptance.crexx @ 26:8 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelstate"
+Error in provider_acceptance.crexx @ 38:8 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..prepare"
+Error in provider_acceptance.crexx @ 50:8 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..process"
+Error in provider_acceptance.crexx @ 60:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..requestopen"
+Error in provider_acceptance.crexx @ 65:14 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..addembedding"
+Error in provider_acceptance.crexx @ 68:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..submit"
+Error in provider_acceptance.crexx @ 73:12 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..embeddings"
+Error in provider_acceptance.crexx @ 85:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 86:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 87:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..submit"
+Error in provider_acceptance.crexx @ 100:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configcreate"
+Error in provider_acceptance.crexx @ 101:18 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configtext"
+Error in provider_acceptance.crexx @ 102:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configint"
+Error in provider_acceptance.crexx @ 103:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..configint"
+Error in provider_acceptance.crexx @ 104:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..runtimeopen"
+Error in provider_acceptance.crexx @ 106:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..devicecount"
+Error in provider_acceptance.crexx @ 107:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..modelopen"
+Error in provider_acceptance.crexx @ 109:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..sessionopen"
+Error in provider_acceptance.crexx @ 110:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 119:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..infoint"
+Error in provider_acceptance.crexx @ 120:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 121:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 122:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+Error in provider_acceptance.crexx @ 123:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..close"
+24 error(s) in source file

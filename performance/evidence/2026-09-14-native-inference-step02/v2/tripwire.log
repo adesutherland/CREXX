@@ -1,0 +1,6 @@
+embedding parity max_abs=0.0005 min_cosine=1
+embedding parity max_abs=0.002 min_cosine=0.999998
+embedding parity max_abs=0.0007 min_cosine=0.999906
+embedding parity max_abs=0.003 min_cosine=0.999995
+embedding parity max_abs=0.001 min_cosine=0.999808
+PASS embedding tripwire: accepted variation; rejected coordinate/direction drift, NaN, infinity, zero, dimensions and empty output

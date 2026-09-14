@@ -1,0 +1,48 @@
+{
+  "device": "metal",
+  "scope": "direct two-model allocation/lifecycle control; no provider registry",
+  "resident_before_bytes": 128450560,
+  "primary_model_loads": 2,
+  "unique_model_payload_bytes": 451165440,
+  "resident_after_models_bytes": 631177216,
+  "allocation_stages": [
+    {
+      "owners_per_model": 1,
+      "unique_models": 2,
+      "private_contexts": 2,
+      "resident_bytes": 1177042944,
+      "concurrent_work_ms": 230.320292
+    },
+    {
+      "owners_per_model": 2,
+      "unique_models": 2,
+      "private_contexts": 4,
+      "resident_bytes": 1722187776,
+      "concurrent_work_ms": 471.742625
+    },
+    {
+      "owners_per_model": 4,
+      "unique_models": 2,
+      "private_contexts": 8,
+      "resident_bytes": 2806087680,
+      "concurrent_work_ms": 1147.188334
+    }
+  ],
+  "resident_after_close_bytes": 544161792,
+  "closed_reload_cycle_resident_bytes": [
+    580452352,
+    592871424,
+    597803008,
+    603111424
+  ],
+  "closed_reload_cycle_live_allocation_bytes": [
+    31472455,
+    31456695,
+    31441071,
+    31425431
+  ],
+  "retention_metric": "asan_live_allocations",
+  "closed_reload_retained_growth_bytes": 0,
+  "parity_failures": [],
+  "result": "PASS"
+}

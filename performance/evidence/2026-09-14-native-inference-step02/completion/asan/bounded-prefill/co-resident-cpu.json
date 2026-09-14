@@ -1,0 +1,48 @@
+{
+  "device": "cpu",
+  "scope": "direct two-model allocation/lifecycle control; no provider registry",
+  "resident_before_bytes": 39878656,
+  "primary_model_loads": 2,
+  "unique_model_payload_bytes": 451165440,
+  "resident_after_models_bytes": 1024016384,
+  "allocation_stages": [
+    {
+      "owners_per_model": 1,
+      "unique_models": 2,
+      "private_contexts": 2,
+      "resident_bytes": 1576304640,
+      "concurrent_work_ms": 2669.443541
+    },
+    {
+      "owners_per_model": 2,
+      "unique_models": 2,
+      "private_contexts": 4,
+      "resident_bytes": 2122219520,
+      "concurrent_work_ms": 3254.320666
+    },
+    {
+      "owners_per_model": 4,
+      "unique_models": 2,
+      "private_contexts": 8,
+      "resident_bytes": 3212165120,
+      "concurrent_work_ms": 5121.429125
+    }
+  ],
+  "resident_after_close_bytes": 442908672,
+  "closed_reload_cycle_resident_bytes": [
+    489193472,
+    508674048,
+    520536064,
+    530743296
+  ],
+  "closed_reload_cycle_live_allocation_bytes": [
+    2410743,
+    2410819,
+    2410867,
+    2410899
+  ],
+  "retention_metric": "asan_live_allocations",
+  "closed_reload_retained_growth_bytes": 156,
+  "parity_failures": [],
+  "result": "PASS"
+}

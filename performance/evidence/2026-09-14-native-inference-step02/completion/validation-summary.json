@@ -1,0 +1,102 @@
+{
+  "date": "2026-09-14",
+  "scope": "STEP-02 direct-library acceptance controls, not a provider or product release qualification",
+  "source_verification": "source-and-model-verification.json",
+  "normal_debug": {
+    "initial_tests": "11/11",
+    "four_thread_followup": "1/1",
+    "bounded_prefill_affected_rerun": "7/7",
+    "all_distinct_cases": 12,
+    "logs": [
+      "debug/ctest.log",
+      "debug/threads4-ctest.log",
+      "debug/bounded-prefill/ctest.log"
+    ]
+  },
+  "apple_asan": {
+    "initial_tests": "11/11",
+    "four_thread_followup": "1/1",
+    "bounded_prefill_affected_rerun": "7/7",
+    "all_distinct_cases": 12,
+    "logs": [
+      "asan/ctest.log",
+      "asan/threads4-ctest.log",
+      "asan/bounded-prefill/ctest.log"
+    ],
+    "limits": [
+      "Apple LeakSanitizer unavailable",
+      "Metal kernels not ASan instrumented",
+      "No broad product or hosted exact-head gate"
+    ]
+  },
+  "release": {
+    "initial_auxiliary_ctest": "7/7",
+    "bounded_prefill_affected_ctest": "7/7",
+    "logs": [
+      "release/ctest.log",
+      "release/bounded-prefill/ctest.log"
+    ],
+    "unchanged_embedding_capture_source": "whole-prefill-identities.json",
+    "final_generation_source": "frozen-identities.json"
+  },
+  "provider_acceptance": {
+    "status": "ordinary compile failure",
+    "missing_procedure_diagnostics": 59,
+    "log": "logs/provider-red.log"
+  },
+  "foreign_worker_acceptance": {
+    "status": "ordinary compile failure",
+    "missing_procedure_diagnostics": 12,
+    "log": "logs/worker-red.log"
+  },
+  "positive_controls": {
+    "packed_vector": "../logs/vector-positive.log",
+    "worker_transport": [
+      "logs/worker-transport-embedded.log",
+      "logs/worker-transport-plain.log"
+    ],
+    "template": "release/template.json",
+    "generated_fixture": "release/bounded-prefill/generated-scratch.json",
+    "token_equivalence": "bounded-prefill-token-equivalence.json"
+  },
+  "decisions": {
+    "S2-D01": "Approved numerical v2 tripwire unchanged; old v1 failures retained",
+    "S2-QA01": "ASan RSS reservation distinguished from live allocations; normal RSS and 32 MiB allowance unchanged",
+    "S2-C01": "Explicit four-thread Smol CPU variant; both whole-prefill CPU timing failures retained",
+    "S2-C02": "Causal prefill at existing 128-token physical boundaries; all prompts, tokens, logical rows and deadlines retained"
+  },
+  "product_criteria": "All AC-01 through AC-14 remain open; STEP-03 not started",
+  "final_absolute_captures": [
+    {
+      "cell": "bge-cpu",
+      "result": "PASS",
+      "warmups": 2,
+      "recorded": 10,
+      "manifest": "capture/bge-cpu/manifest.json"
+    },
+    {
+      "cell": "bge-metal",
+      "result": "PASS",
+      "warmups": 2,
+      "recorded": 10,
+      "manifest": "capture/bge-metal/manifest.json"
+    },
+    {
+      "cell": "smol-cpu-bounded128",
+      "result": "PASS",
+      "warmups": 2,
+      "recorded": 10,
+      "manifest": "capture/smol-cpu-bounded128/manifest.json"
+    },
+    {
+      "cell": "smol-metal-bounded128",
+      "result": "PASS",
+      "warmups": 2,
+      "recorded": 10,
+      "manifest": "capture/smol-metal-bounded128/manifest.json"
+    }
+  ],
+  "peak_memory": "peak-memory-check.json",
+  "status": "S2-01 through S2-05 complete; STEP-03 not started",
+  "performance_limit": "Smol CPU warm mean relative 95% halfwidth 7.1% single and 5.6% batch; cannot establish a 5% wrapper verdict from these absolute observations"
+}

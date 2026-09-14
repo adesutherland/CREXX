@@ -1,0 +1,49 @@
+Mon Sep 14 12:16:39 UTC 2026
+Darwin 25.6.0 arm64
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+13:16  up 16 days, 11:11, 2 users, load averages: 6.70 6.48 5.58
+  PID  %CPU COMM
+94406  24.6 qemu-system-aarch64
+  737  11.5 /usr/libexec/sysmond
+42621   5.5 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+82184   2.2 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+82234   1.9 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+82145   1.8 /Applications/CLion.app/Contents/MacOS/clion
+91552   1.4 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  592   1.3 /usr/sbin/notifyd
+32798   1.1 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+63679   0.9 /bin/zsh
+    1   0.4 /sbin/launchd

@@ -1,0 +1,23 @@
+{
+  "archive": "/Users/adrian/Library/Caches/crexx/native-inference/llama.cpp-5266f24da75dc449bd56cbed7addb9c8e4a6a73e.tar.gz",
+  "archive_sha256": "2de0d87eda4696e9f6bbd771d4c623267f4e95856cce6f99793f91522f993e43",
+  "source_regular_files_compared": 3527,
+  "source_differences": [],
+  "models": [
+    {
+      "path": "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "bytes": 67308128,
+      "sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+    },
+    {
+      "path": "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+      "bytes": 386404992,
+      "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+    },
+    {
+      "path": "/Users/adrian/Library/Caches/crexx/native-inference/stories260K.gguf",
+      "bytes": 1185376,
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    }
+  ]
+}

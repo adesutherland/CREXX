@@ -1,0 +1,20 @@
+{
+  "scope": "Single independent peak-memory probes, not formal throughput baselines; macOS time -l reports RSS bytes",
+  "result": "PASS",
+  "checks": [
+    {
+      "device": "cpu",
+      "peak_rss_bytes": 2775924736,
+      "budget_bytes": 4294967296,
+      "result": "PASS",
+      "source": "capture/peak-memory-cpu/raw/recorded-1.stderr.txt"
+    },
+    {
+      "device": "metal",
+      "peak_rss_bytes": 2414870528,
+      "budget_bytes": 4294967296,
+      "result": "PASS",
+      "source": "capture/peak-memory-metal/raw/recorded-1.stderr.txt"
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+--- tests/native-inference/direct_control.cpp
++++ tests/native-inference/direct_control.cpp
+@@ -11,6 +11,7 @@
+ #include <fstream>
+ #include <future>
+ #include <iostream>
++#include <limits>
+ #include <memory>
+ #include <stdexcept>
+ #include <string>
+@@ -31,6 +32,13 @@
+ using Tokens = std::vector<llama_token>;
+ using Vectors = std::vector<std::vector<double>>;
+ static json parity_failures = json::array();
++static json parity_summary = json::object();
++// S2-D01 version 2, approved 2026-09-14. These are numerical regression
++// tripwires for the pinned BGE F16 controls, not retrieval-quality scores.
++struct ParityLimit { double absolute; double cosine; };
++static constexpr ParityLimit same_layout{0.00001,0.999999};
++static constexpr ParityLimit different_layout{0.001,0.99998};
++static constexpr ParityLimit different_backend{0.002,0.9999};
+ static uint64_t resident_bytes() {
+ #if defined(__APPLE__)
+     mach_task_basic_info_data_t info{};
+@@ -132,23 +140,69 @@
+     for (size_t i = 0; i < a.size(); ++i) { dot += a[i]*b[i]; aa += a[i]*a[i]; bb += b[i]*b[i]; }
+     return dot / std::sqrt(aa*bb);
+ }
+-static void compare(const Vectors & actual, const Vectors & expected, double tolerance, double minimum_cosine) {
++static void compare(const Vectors & actual, const Vectors & expected, ParityLimit limit, const std::string & label) {
++    require(!actual.empty(), "empty vector comparison");
+     require(actual.size() == expected.size(), "row count mismatch");
+     double maximum_delta = 0, lowest_cosine = 1;
+     for (size_t r = 0; r < actual.size(); ++r) {
++        require(actual[r].size() == 384, "BGE reference dimensions mismatch");
+         require(actual[r].size() == expected[r].size(), "dimensions mismatch");
+-        for (size_t d = 0; d < actual[r].size(); ++d)
++        double squared_norm = 0, expected_squared_norm = 0;
++        for (size_t d = 0; d < actual[r].size(); ++d) {
++            require(std::isfinite(actual[r][d]) && std::isfinite(expected[r][d]), "nonfinite comparison vector");
+             maximum_delta = std::max(maximum_delta, std::abs(actual[r][d] - expected[r][d]));
+-        lowest_cosine = std::min(lowest_cosine, cosine(actual[r], expected[r]));
+-        double squared_norm = 0;
+-        for (double value : actual[r]) squared_norm += value*value;
++            squared_norm += actual[r][d]*actual[r][d];
++            expected_squared_norm += expected[r][d]*expected[r][d];
++        }
+         require(std::abs(std::sqrt(squared_norm) - 1) <= 0.00001, "embedding norm invariant");
++        require(std::abs(std::sqrt(expected_squared_norm) - 1) <= 0.00001, "reference norm invariant");
++        lowest_cosine = std::min(lowest_cosine, cosine(actual[r], expected[r]));
+     }
+-    if (maximum_delta > tolerance || lowest_cosine < minimum_cosine)
++    if (!parity_summary.contains(label))
++        parity_summary[label] = {{"comparisons",0},{"max_abs",0.0},{"min_cosine",1.0},
++                                 {"max_abs_allowed",limit.absolute},{"min_cosine_allowed",limit.cosine}};
++    auto & summary = parity_summary[label];
++    summary["comparisons"] = summary["comparisons"].get<int>() + 1;
++    summary["max_abs"] = std::max(summary["max_abs"].get<double>(),maximum_delta);
++    summary["min_cosine"] = std::min(summary["min_cosine"].get<double>(),lowest_cosine);
++    if (maximum_delta > limit.absolute || lowest_cosine < limit.cosine)
+         std::cerr << "embedding parity max_abs=" << maximum_delta << " min_cosine=" << lowest_cosine << '\n';
+-    if (maximum_delta > tolerance || lowest_cosine < minimum_cosine)
+-        parity_failures.push_back({{"max_abs",maximum_delta},{"min_cosine",lowest_cosine},
+-                                  {"max_abs_allowed",tolerance},{"min_cosine_allowed",minimum_cosine}});
++    if (maximum_delta > limit.absolute || lowest_cosine < limit.cosine)
++        parity_failures.push_back({{"comparison",label},{"max_abs",maximum_delta},{"min_cosine",lowest_cosine},
++                                  {"max_abs_allowed",limit.absolute},{"min_cosine_allowed",limit.cosine}});
++}
++static void test_tripwire() {
++    Vectors reference(1,std::vector<double>(384,0)); reference[0][0] = 1;
++    auto rotated = [&](double delta, size_t count) {
++        auto result = reference;
++        for (size_t i = 1; i <= count; ++i) result[0][i] = delta;
++        result[0][0] = std::sqrt(1-count*delta*delta);
++        return result;
++    };
++    compare(reference,reference,same_layout,"identical");
++    compare(rotated(0.0005,1),reference,different_layout,"accepted_layout_variation");
++    require(parity_failures.empty(),"tripwire rejected positive controls");
++    compare(rotated(0.0005,1),reference,same_layout,"same_layout_drift");
++    compare(rotated(0.002,1),reference,different_layout,"coordinate_corruption");
++    compare(rotated(0.0007,383),reference,different_layout,"distributed_direction_corruption");
++    compare(rotated(0.003,1),reference,different_backend,"backend_coordinate_corruption");
++    compare(rotated(0.001,383),reference,different_backend,"backend_direction_corruption");
++    require(parity_failures.size() == 5,"tripwire missed numerical corruption");
++    auto rejects = [&](const Vectors & actual, const Vectors & expected) {
++        bool rejected = false;
++        try { compare(actual,expected,different_layout,"invalid"); }
++        catch (const std::runtime_error &) { rejected = true; }
++        require(rejected,"tripwire missed invalid vectors");
++    };
++    auto invalid = reference; invalid[0][1] = std::numeric_limits<double>::quiet_NaN();
++    rejects(invalid,reference); rejects(reference,invalid);
++    invalid = reference; invalid[0][0] = std::numeric_limits<double>::infinity();
++    rejects(invalid,reference);
++    invalid = reference; invalid[0][0] = 0; rejects(invalid,reference);
++    invalid = reference; invalid[0].pop_back(); rejects(invalid,reference);
++    rejects({},{});
++    parity_failures = json::array(); parity_summary = json::object();
++    std::cout << "PASS embedding tripwire: accepted variation; rejected coordinate/direction drift, NaN, infinity, zero, dimensions and empty output\n";
+ }
+ static std::string prompt(const std::string & text) {
+     return "<|im_start|>system\nYou are a helpful AI assistant named SmolLM, trained by Hugging Face<|im_end|>\n"
+@@ -213,6 +267,9 @@
+             std::cout << "model backend-directory cpu|metal|cuda|vulkan bge|smol|scratch output.json [repeats=100] [batches=20] [owners=4] [threads=4] [reference.json]\n";
+             return 0;
+         }
++        if (argc == 2 && std::string(argv[1]) == "--test-tripwire") {
++            test_tripwire(); return 0;
++        }
+         require(argc >= 6 && argc <= 11, "use --help for arguments");
+         std::string device = argv[3], profile = argv[4];
+         require(device == "cpu" || device == "metal" || device == "cuda" || device == "vulkan", "unsupported control device");
+@@ -276,21 +333,33 @@
+         output["resident_after_each_context_bytes"] = context_memory;
+         json memory_samples = json::array();
+         if (embedding) {
++            output["numeric_policy"] = "S2-D01-v2";
+             Vectors serial;
+             for (const auto & input : inputs) serial.push_back(embed(ctx,model.get(),{input})[0]);
+-            for (int i = 0; i < 2; ++i) compare(embed(ctx,model.get(),inputs),serial,0.00001,0.999999);
++            const auto batched = embed(ctx,model.get(),inputs);
++            compare(batched,serial,different_layout,"single_vs_batch8");
++            Vectors batch4;
++            for (size_t first = 0; first < inputs.size(); first += 4) {
++                std::vector<Tokens> rows(inputs.begin()+first,inputs.begin()+first+4);
++                auto result = embed(ctx,model.get(),rows);
++                compare(embed(ctx,model.get(),rows),result,same_layout,"batch4_repeat");
++                batch4.insert(batch4.end(),result.begin(),result.end());
++            }
++            compare(batch4,serial,different_layout,"single_vs_batch4");
++            compare(batch4,batched,different_layout,"batch4_vs_batch8");
++            for (int i = 0; i < 2; ++i) compare(embed(ctx,model.get(),inputs),batched,same_layout,"batch8_warmup");
+             memory_samples.push_back(resident_bytes());
+             llama_perf_context_reset(ctx);
+             for (int i = 0; i < repeats; ++i) {
+-                compare(embed(ctx,model.get(),{inputs[size_t(i)%inputs.size()]}),{serial[size_t(i)%inputs.size()]},0.00001,0.999999);
++                compare(embed(ctx,model.get(),{inputs[size_t(i)%inputs.size()]}),{serial[size_t(i)%inputs.size()]},same_layout,"single_repeat");
+                 if ((i+1)%10 == 0) memory_samples.push_back(resident_bytes());
+             }
+-            for (int i = 0; i < batches; ++i) compare(embed(ctx,model.get(),inputs),serial,0.00001,0.999999);
++            for (int i = 0; i < batches; ++i) compare(embed(ctx,model.get(),inputs),batched,same_layout,"batch8_repeat");
+             memory_samples.push_back(resident_bytes());
+             output["warm_upstream_counters"] = perf(ctx);
+             std::vector<std::future<Vectors>> jobs;
+             for (auto & owner : contexts) jobs.push_back(std::async(std::launch::async,[&,c=owner.get()]{return embed(c,model.get(),inputs);}));
+-            for (auto & job : jobs) compare(job.get(),serial,0.00001,0.999999);
++            for (auto & job : jobs) compare(job.get(),batched,same_layout,"batch8_private_contexts");
+             std::string boundary;
+             for (int i = 0; i < 510; ++i) boundary += " a";
+             auto exact = tokenize(vocab,boundary);
+@@ -316,12 +385,18 @@
+             require(rejected,"oversized query accepted");
+             output["query_boundary_tokens"] = {query_exact.size(),query_over.size()};
+             output["vectors"] = serial;
++            output["vectors_batch4"] = batch4;
++            output["vectors_batch8"] = batched;
+             require(cosine(serial[1],serial[0]) > cosine(serial[1],serial[5]),"semantic positive control failed");
+             if (argc == 11) {
+                 std::ifstream input(argv[10]); require(bool(input),"reference file absent");
+                 json reference; input >> reference;
+                 require(reference["input_token_ids"] == output["input_token_ids"],"reference tokenizer mismatch");
+-                compare(serial,reference["vectors"].get<Vectors>(),0.002,0.9999);
++                require(reference["numeric_policy"] == "S2-D01-v2", "reference policy mismatch");
++                require(reference["result"] == "PASS", "reference control failed");
++                compare(serial,reference["vectors"].get<Vectors>(),different_backend,"reference_single");
++                compare(batch4,reference["vectors_batch4"].get<Vectors>(),different_backend,"reference_batch4");
++                compare(batched,reference["vectors_batch8"].get<Vectors>(),different_backend,"reference_batch8");
+                 output["cross_backend_parity_checked"] = true;
+             }
+         } else {
+@@ -364,6 +439,7 @@
+         require(cancel_ms <= 1000,"load cancellation exceeded 1 second");
+         contexts.clear(); model.reset(); llama_backend_free();
+         output["parity_failures"] = parity_failures;
++        output["parity_summary"] = parity_summary;
+         output["result"] = parity_failures.empty() ? "PASS" : "FAIL";
+         std::ofstream result(argv[5]); require(bool(result),"cannot open output file");
+         result << output.dump(2) << '\n'; result.close(); require(bool(result),"output write failed");

@@ -1,0 +1,1425 @@
+{
+  "scope": "Illustrative exact cosine/dot-product ranking of the existing 7-document control with one prefixed cat query. Not corpus retrieval qualification or ANN-index validation.",
+  "algorithm": "Read vectors/vectors_batch4/vectors_batch8 from bge-cpu.json and bge-metal.json. Exclude query row 1 from documents. For each of six index and six query configurations, sum query[d]*document[d] over 384 normalized coordinates. Sort descending score with row ID as tie-break. Compare with CPU batch8 index plus CPU single query.",
+  "inputs": [
+    "bge-cpu.json",
+    "bge-metal.json"
+  ],
+  "query_row": 1,
+  "document_rows": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "baseline_index": "cpu_batch8",
+  "baseline_query": "cpu_single",
+  "baseline": [
+    {
+      "row": 4,
+      "score": 0.772707999339199
+    },
+    {
+      "row": 0,
+      "score": 0.7106576942258624
+    },
+    {
+      "row": 2,
+      "score": 0.3975637930102391
+    },
+    {
+      "row": 3,
+      "score": 0.39252420237914964
+    },
+    {
+      "row": 7,
+      "score": 0.3494318893377967
+    },
+    {
+      "row": 6,
+      "score": 0.3471308720831487
+    },
+    {
+      "row": 5,
+      "score": 0.3424300413353041
+    }
+  ],
+  "combinations": 36,
+  "top2_matches": 36,
+  "top3_matches": 36,
+  "full_order_matches": 36,
+  "maximum_score_change": 0.0007334174667167348,
+  "trials": [
+    {
+      "index": "cpu_single",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7726158652806862
+        },
+        {
+          "row": 0,
+          "score": 0.7106742068267253
+        },
+        {
+          "row": 2,
+          "score": 0.3975866226341459
+        },
+        {
+          "row": 3,
+          "score": 0.39264950180153196
+        },
+        {
+          "row": 7,
+          "score": 0.3493443036493353
+        },
+        {
+          "row": 6,
+          "score": 0.34711089402477435
+        },
+        {
+          "row": 5,
+          "score": 0.34235119001452885
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00012529942238231895
+    },
+    {
+      "index": "cpu_single",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7726158652806862
+        },
+        {
+          "row": 0,
+          "score": 0.7106742068267253
+        },
+        {
+          "row": 2,
+          "score": 0.3975866226341459
+        },
+        {
+          "row": 3,
+          "score": 0.39264950180153196
+        },
+        {
+          "row": 7,
+          "score": 0.3493443036493353
+        },
+        {
+          "row": 6,
+          "score": 0.34711089402477435
+        },
+        {
+          "row": 5,
+          "score": 0.34235119001452885
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00012529942238231895
+    },
+    {
+      "index": "cpu_single",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727372014307081
+        },
+        {
+          "row": 0,
+          "score": 0.7109651575025434
+        },
+        {
+          "row": 2,
+          "score": 0.39740160643145905
+        },
+        {
+          "row": 3,
+          "score": 0.39247334379849175
+        },
+        {
+          "row": 7,
+          "score": 0.34910207307279567
+        },
+        {
+          "row": 6,
+          "score": 0.3469118558395815
+        },
+        {
+          "row": 5,
+          "score": 0.3421258421774994
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0003298162650010039
+    },
+    {
+      "index": "cpu_single",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727725064310668
+        },
+        {
+          "row": 0,
+          "score": 0.7108843431184819
+        },
+        {
+          "row": 2,
+          "score": 0.39785717311343327
+        },
+        {
+          "row": 3,
+          "score": 0.3928797104545529
+        },
+        {
+          "row": 7,
+          "score": 0.3496159196132624
+        },
+        {
+          "row": 6,
+          "score": 0.34735303911227794
+        },
+        {
+          "row": 5,
+          "score": 0.3425703214669428
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0003555080754032436
+    },
+    {
+      "index": "cpu_single",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727769910817484
+        },
+        {
+          "row": 0,
+          "score": 0.7108824352024098
+        },
+        {
+          "row": 2,
+          "score": 0.39779416150072183
+        },
+        {
+          "row": 3,
+          "score": 0.3928318023947957
+        },
+        {
+          "row": 7,
+          "score": 0.34961056565239085
+        },
+        {
+          "row": 6,
+          "score": 0.3473287314850702
+        },
+        {
+          "row": 5,
+          "score": 0.3425381026842464
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.000307600015646059
+    },
+    {
+      "index": "cpu_single",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727769910817484
+        },
+        {
+          "row": 0,
+          "score": 0.7108824352024098
+        },
+        {
+          "row": 2,
+          "score": 0.39779416150072183
+        },
+        {
+          "row": 3,
+          "score": 0.3928318023947957
+        },
+        {
+          "row": 7,
+          "score": 0.34961056565239085
+        },
+        {
+          "row": 6,
+          "score": 0.3473287314850702
+        },
+        {
+          "row": 5,
+          "score": 0.3425381026842464
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.000307600015646059
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7726018604956579
+        },
+        {
+          "row": 0,
+          "score": 0.7106742068267253
+        },
+        {
+          "row": 2,
+          "score": 0.3975866226341459
+        },
+        {
+          "row": 3,
+          "score": 0.3922903111043958
+        },
+        {
+          "row": 7,
+          "score": 0.3493487606933935
+        },
+        {
+          "row": 6,
+          "score": 0.34707299128440045
+        },
+        {
+          "row": 5,
+          "score": 0.3423842530725544
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0002338912747538724
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7726018604956579
+        },
+        {
+          "row": 0,
+          "score": 0.7106742068267253
+        },
+        {
+          "row": 2,
+          "score": 0.3975866226341459
+        },
+        {
+          "row": 3,
+          "score": 0.3922903111043958
+        },
+        {
+          "row": 7,
+          "score": 0.3493487606933935
+        },
+        {
+          "row": 6,
+          "score": 0.34707299128440045
+        },
+        {
+          "row": 5,
+          "score": 0.3423842530725544
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0002338912747538724
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727228439580893
+        },
+        {
+          "row": 0,
+          "score": 0.7109651575025434
+        },
+        {
+          "row": 2,
+          "score": 0.39740160643145905
+        },
+        {
+          "row": 3,
+          "score": 0.3921146273990827
+        },
+        {
+          "row": 7,
+          "score": 0.34910637794943317
+        },
+        {
+          "row": 6,
+          "score": 0.34687382091083196
+        },
+        {
+          "row": 5,
+          "score": 0.3421587934737993
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00040957498006694015
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7727582885344351
+        },
+        {
+          "row": 0,
+          "score": 0.7108843431184819
+        },
+        {
+          "row": 2,
+          "score": 0.39785717311343327
+        },
+        {
+          "row": 3,
+          "score": 0.3925211959499124
+        },
+        {
+          "row": 7,
+          "score": 0.3496202013942322
+        },
+        {
+          "row": 6,
+          "score": 0.3473148360534949
+        },
+        {
+          "row": 5,
+          "score": 0.3426032839003349
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00029338010319418517
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772762703724575
+        },
+        {
+          "row": 0,
+          "score": 0.7108824352024098
+        },
+        {
+          "row": 2,
+          "score": 0.39779416150072183
+        },
+        {
+          "row": 3,
+          "score": 0.39247320212783693
+        },
+        {
+          "row": 7,
+          "score": 0.3496148618170452
+        },
+        {
+          "row": 6,
+          "score": 0.34729049872539614
+        },
+        {
+          "row": 5,
+          "score": 0.3425711421086332
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00023036849048274632
+    },
+    {
+      "index": "cpu_batch4",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772762703724575
+        },
+        {
+          "row": 0,
+          "score": 0.7108824352024098
+        },
+        {
+          "row": 2,
+          "score": 0.39779416150072183
+        },
+        {
+          "row": 3,
+          "score": 0.39247320212783693
+        },
+        {
+          "row": 7,
+          "score": 0.3496148618170452
+        },
+        {
+          "row": 6,
+          "score": 0.34729049872539614
+        },
+        {
+          "row": 5,
+          "score": 0.3425711421086332
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00023036849048274632
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772707999339199
+        },
+        {
+          "row": 0,
+          "score": 0.7106576942258624
+        },
+        {
+          "row": 2,
+          "score": 0.3975637930102391
+        },
+        {
+          "row": 3,
+          "score": 0.39252420237914964
+        },
+        {
+          "row": 7,
+          "score": 0.3494318893377967
+        },
+        {
+          "row": 6,
+          "score": 0.3471308720831487
+        },
+        {
+          "row": 5,
+          "score": 0.3424300413353041
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772707999339199
+        },
+        {
+          "row": 0,
+          "score": 0.7106576942258624
+        },
+        {
+          "row": 2,
+          "score": 0.3975637930102391
+        },
+        {
+          "row": 3,
+          "score": 0.39252420237914964
+        },
+        {
+          "row": 7,
+          "score": 0.3494318893377967
+        },
+        {
+          "row": 6,
+          "score": 0.3471308720831487
+        },
+        {
+          "row": 5,
+          "score": 0.3424300413353041
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728286318007374
+        },
+        {
+          "row": 0,
+          "score": 0.7109482012218193
+        },
+        {
+          "row": 2,
+          "score": 0.39737835580965225
+        },
+        {
+          "row": 3,
+          "score": 0.39234849436065705
+        },
+        {
+          "row": 7,
+          "score": 0.34918964951723463
+        },
+        {
+          "row": 6,
+          "score": 0.346931835703399
+        },
+        {
+          "row": 5,
+          "score": 0.34220464108393156
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0002905069959568962
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728640703405157
+        },
+        {
+          "row": 0,
+          "score": 0.7108676579337037
+        },
+        {
+          "row": 2,
+          "score": 0.39783446362633684
+        },
+        {
+          "row": 3,
+          "score": 0.3927550420742493
+        },
+        {
+          "row": 7,
+          "score": 0.3497034081191909
+        },
+        {
+          "row": 6,
+          "score": 0.3473728929008228
+        },
+        {
+          "row": 5,
+          "score": 0.3426489851397195
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0002715187813941977
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772868478327791
+        },
+        {
+          "row": 0,
+          "score": 0.710865815250005
+        },
+        {
+          "row": 2,
+          "score": 0.39777140183273096
+        },
+        {
+          "row": 3,
+          "score": 0.39270699118151103
+        },
+        {
+          "row": 7,
+          "score": 0.34969801313325766
+        },
+        {
+          "row": 6,
+          "score": 0.34734850947899043
+        },
+        {
+          "row": 5,
+          "score": 0.34261678168387233
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00026612379546098186
+    },
+    {
+      "index": "cpu_batch8",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772868478327791
+        },
+        {
+          "row": 0,
+          "score": 0.710865815250005
+        },
+        {
+          "row": 2,
+          "score": 0.39777140183273096
+        },
+        {
+          "row": 3,
+          "score": 0.39270699118151103
+        },
+        {
+          "row": 7,
+          "score": 0.34969801313325766
+        },
+        {
+          "row": 6,
+          "score": 0.34734850947899043
+        },
+        {
+          "row": 5,
+          "score": 0.34261678168387233
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00026612379546098186
+    },
+    {
+      "index": "metal_single",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728141283556754
+        },
+        {
+          "row": 0,
+          "score": 0.7107216372338483
+        },
+        {
+          "row": 2,
+          "score": 0.3979708329606798
+        },
+        {
+          "row": 3,
+          "score": 0.39251616064899436
+        },
+        {
+          "row": 7,
+          "score": 0.3494282945021338
+        },
+        {
+          "row": 6,
+          "score": 0.347222799004395
+        },
+        {
+          "row": 5,
+          "score": 0.34258187756882363
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00040703995044072405
+    },
+    {
+      "index": "metal_single",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728141283556754
+        },
+        {
+          "row": 0,
+          "score": 0.7107216372338483
+        },
+        {
+          "row": 2,
+          "score": 0.3979708329606798
+        },
+        {
+          "row": 3,
+          "score": 0.39251616064899436
+        },
+        {
+          "row": 7,
+          "score": 0.3494282945021338
+        },
+        {
+          "row": 6,
+          "score": 0.347222799004395
+        },
+        {
+          "row": 5,
+          "score": 0.34258187756882363
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00040703995044072405
+    },
+    {
+      "index": "metal_single",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772934867541155
+        },
+        {
+          "row": 0,
+          "score": 0.7110121742862143
+        },
+        {
+          "row": 2,
+          "score": 0.39778569419710624
+        },
+        {
+          "row": 3,
+          "score": 0.3923402442862136
+        },
+        {
+          "row": 7,
+          "score": 0.34918631268941985
+        },
+        {
+          "row": 6,
+          "score": 0.34702372955543026
+        },
+        {
+          "row": 5,
+          "score": 0.34235660142871155
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0003544800603518805
+    },
+    {
+      "index": "metal_single",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729710086523163
+        },
+        {
+          "row": 0,
+          "score": 0.710932198023228
+        },
+        {
+          "row": 2,
+          "score": 0.39824153049466343
+        },
+        {
+          "row": 3,
+          "score": 0.39274646629470844
+        },
+        {
+          "row": 7,
+          "score": 0.3496999353885623
+        },
+        {
+          "row": 6,
+          "score": 0.3474646885875726
+        },
+        {
+          "row": 5,
+          "score": 0.34280085836570234
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0006777374844243456
+    },
+    {
+      "index": "metal_single",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729754182590441
+        },
+        {
+          "row": 0,
+          "score": 0.7109303560313147
+        },
+        {
+          "row": 2,
+          "score": 0.39817851413333727
+        },
+        {
+          "row": 3,
+          "score": 0.3926985832973544
+        },
+        {
+          "row": 7,
+          "score": 0.34969453251148824
+        },
+        {
+          "row": 6,
+          "score": 0.3474402917090443
+        },
+        {
+          "row": 5,
+          "score": 0.342768698374347
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.000614721123098183
+    },
+    {
+      "index": "metal_single",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729754182590441
+        },
+        {
+          "row": 0,
+          "score": 0.7109303560313147
+        },
+        {
+          "row": 2,
+          "score": 0.39817851413333727
+        },
+        {
+          "row": 3,
+          "score": 0.3926985832973544
+        },
+        {
+          "row": 7,
+          "score": 0.34969453251148824
+        },
+        {
+          "row": 6,
+          "score": 0.3474402917090443
+        },
+        {
+          "row": 5,
+          "score": 0.342768698374347
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.000614721123098183
+    },
+    {
+      "index": "metal_batch4",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728158865231373
+        },
+        {
+          "row": 0,
+          "score": 0.7107712672369484
+        },
+        {
+          "row": 2,
+          "score": 0.3980264116139821
+        },
+        {
+          "row": 3,
+          "score": 0.39279935495925516
+        },
+        {
+          "row": 7,
+          "score": 0.34944491373038045
+        },
+        {
+          "row": 6,
+          "score": 0.3472060368833711
+        },
+        {
+          "row": 5,
+          "score": 0.3425671624024206
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00046261860374302577
+    },
+    {
+      "index": "metal_batch4",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728158865231373
+        },
+        {
+          "row": 0,
+          "score": 0.7107712672369484
+        },
+        {
+          "row": 2,
+          "score": 0.3980264116139821
+        },
+        {
+          "row": 3,
+          "score": 0.39279935495925516
+        },
+        {
+          "row": 7,
+          "score": 0.34944491373038045
+        },
+        {
+          "row": 6,
+          "score": 0.3472060368833711
+        },
+        {
+          "row": 5,
+          "score": 0.3425671624024206
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00046261860374302577
+    },
+    {
+      "index": "metal_batch4",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729365665340485
+        },
+        {
+          "row": 0,
+          "score": 0.7110618083354504
+        },
+        {
+          "row": 2,
+          "score": 0.3978412692111595
+        },
+        {
+          "row": 3,
+          "score": 0.3926232832571705
+        },
+        {
+          "row": 7,
+          "score": 0.3492029240660055
+        },
+        {
+          "row": 6,
+          "score": 0.34700693232425583
+        },
+        {
+          "row": 5,
+          "score": 0.34234191621663523
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0004041141095879608
+    },
+    {
+      "index": "metal_batch4",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729727530465275
+        },
+        {
+          "row": 0,
+          "score": 0.7109816874515327
+        },
+        {
+          "row": 2,
+          "score": 0.3982972104769558
+        },
+        {
+          "row": 3,
+          "score": 0.3930301205489836
+        },
+        {
+          "row": 7,
+          "score": 0.34971656969714177
+        },
+        {
+          "row": 6,
+          "score": 0.34744785865747035
+        },
+        {
+          "row": 5,
+          "score": 0.34278611172798334
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0007334174667167348
+    },
+    {
+      "index": "metal_batch4",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729771618389724
+        },
+        {
+          "row": 0,
+          "score": 0.7109798560173822
+        },
+        {
+          "row": 2,
+          "score": 0.39823418389749154
+        },
+        {
+          "row": 3,
+          "score": 0.3929822219365462
+        },
+        {
+          "row": 7,
+          "score": 0.3497111589530797
+        },
+        {
+          "row": 6,
+          "score": 0.3474234623421869
+        },
+        {
+          "row": 5,
+          "score": 0.3427539432682105
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0006703908872524589
+    },
+    {
+      "index": "metal_batch4",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729771618389724
+        },
+        {
+          "row": 0,
+          "score": 0.7109798560173822
+        },
+        {
+          "row": 2,
+          "score": 0.39823418389749154
+        },
+        {
+          "row": 3,
+          "score": 0.3929822219365462
+        },
+        {
+          "row": 7,
+          "score": 0.3497111589530797
+        },
+        {
+          "row": 6,
+          "score": 0.3474234623421869
+        },
+        {
+          "row": 5,
+          "score": 0.3427539432682105
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0006703908872524589
+    },
+    {
+      "index": "metal_batch8",
+      "query": "cpu_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728126776090268
+        },
+        {
+          "row": 0,
+          "score": 0.7107712672369484
+        },
+        {
+          "row": 2,
+          "score": 0.3980264116139821
+        },
+        {
+          "row": 3,
+          "score": 0.39279935495925516
+        },
+        {
+          "row": 7,
+          "score": 0.3494351767915689
+        },
+        {
+          "row": 6,
+          "score": 0.3472000197830998
+        },
+        {
+          "row": 5,
+          "score": 0.34258207612015695
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00046261860374302577
+    },
+    {
+      "index": "metal_batch8",
+      "query": "cpu_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7728126776090268
+        },
+        {
+          "row": 0,
+          "score": 0.7107712672369484
+        },
+        {
+          "row": 2,
+          "score": 0.3980264116139821
+        },
+        {
+          "row": 3,
+          "score": 0.39279935495925516
+        },
+        {
+          "row": 7,
+          "score": 0.3494351767915689
+        },
+        {
+          "row": 6,
+          "score": 0.3472000197830998
+        },
+        {
+          "row": 5,
+          "score": 0.34258207612015695
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.00046261860374302577
+    },
+    {
+      "index": "metal_batch8",
+      "query": "cpu_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729334562788516
+        },
+        {
+          "row": 0,
+          "score": 0.7110618083354504
+        },
+        {
+          "row": 2,
+          "score": 0.3978412692111595
+        },
+        {
+          "row": 3,
+          "score": 0.3926232832571705
+        },
+        {
+          "row": 7,
+          "score": 0.34919320556447014
+        },
+        {
+          "row": 6,
+          "score": 0.3470009894921033
+        },
+        {
+          "row": 5,
+          "score": 0.34235680621185577
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0004041141095879608
+    },
+    {
+      "index": "metal_batch8",
+      "query": "metal_single",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.7729696546822767
+        },
+        {
+          "row": 0,
+          "score": 0.7109816874515327
+        },
+        {
+          "row": 2,
+          "score": 0.3982972104769558
+        },
+        {
+          "row": 3,
+          "score": 0.3930301205489836
+        },
+        {
+          "row": 7,
+          "score": 0.3497067796150442
+        },
+        {
+          "row": 6,
+          "score": 0.34744192306925464
+        },
+        {
+          "row": 5,
+          "score": 0.34280104079240376
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0007334174667167348
+    },
+    {
+      "index": "metal_batch8",
+      "query": "metal_batch4",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772974059737805
+        },
+        {
+          "row": 0,
+          "score": 0.7109798560173822
+        },
+        {
+          "row": 2,
+          "score": 0.39823418389749154
+        },
+        {
+          "row": 3,
+          "score": 0.3929822219365462
+        },
+        {
+          "row": 7,
+          "score": 0.34970138048155563
+        },
+        {
+          "row": 6,
+          "score": 0.3474175167219668
+        },
+        {
+          "row": 5,
+          "score": 0.3427688710106514
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0006703908872524589
+    },
+    {
+      "index": "metal_batch8",
+      "query": "metal_batch8",
+      "ranking": [
+        {
+          "row": 4,
+          "score": 0.772974059737805
+        },
+        {
+          "row": 0,
+          "score": 0.7109798560173822
+        },
+        {
+          "row": 2,
+          "score": 0.39823418389749154
+        },
+        {
+          "row": 3,
+          "score": 0.3929822219365462
+        },
+        {
+          "row": 7,
+          "score": 0.34970138048155563
+        },
+        {
+          "row": 6,
+          "score": 0.3474175167219668
+        },
+        {
+          "row": 5,
+          "score": 0.3427688710106514
+        }
+      ],
+      "top2_matches": true,
+      "top3_matches": true,
+      "full_order_matches": true,
+      "maximum_score_change": 0.0006703908872524589
+    }
+  ]
+}

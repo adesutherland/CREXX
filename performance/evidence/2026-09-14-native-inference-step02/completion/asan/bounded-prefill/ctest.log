@@ -1,0 +1,22 @@
+Command: ctest --test-dir cmake-build-llama-debugasan --output-on-failure -R \^native_inference_\(smol_cpu\|smol_cpu_threads4\|smol_metal\|scratch\|generated_scratch\|co_resident_cpu\|co_resident_metal\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-llama-debugasan
+    Start  4: native_inference_smol_cpu
+1/7 Test  #4: native_inference_smol_cpu ............   Passed   39.55 sec
+    Start  5: native_inference_co_resident_cpu
+2/7 Test  #5: native_inference_co_resident_cpu .....   Passed   32.73 sec
+    Start  7: native_inference_smol_metal
+3/7 Test  #7: native_inference_smol_metal ..........   Passed   20.09 sec
+    Start  8: native_inference_co_resident_metal
+4/7 Test  #8: native_inference_co_resident_metal ...   Passed    3.65 sec
+    Start  9: native_inference_smol_cpu_threads4
+5/7 Test  #9: native_inference_smol_cpu_threads4 ...   Passed   37.93 sec
+    Start 10: native_inference_scratch
+6/7 Test #10: native_inference_scratch .............   Passed    1.33 sec
+    Start 12: native_inference_generated_scratch
+7/7 Test #12: native_inference_generated_scratch ...   Passed    1.84 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) = 137.13 sec

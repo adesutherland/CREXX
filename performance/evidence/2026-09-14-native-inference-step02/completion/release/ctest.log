@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload
+    Start  1: native_inference_control_usage
+1/7 Test  #1: native_inference_control_usage ........   Passed    0.30 sec
+    Start  2: native_inference_embedding_tripwire
+2/7 Test  #2: native_inference_embedding_tripwire ...   Passed    0.01 sec
+    Start  5: native_inference_co_resident_cpu
+3/7 Test  #5: native_inference_co_resident_cpu ......   Passed    6.27 sec
+    Start  8: native_inference_co_resident_metal
+4/7 Test  #8: native_inference_co_resident_metal ....   Passed    2.26 sec
+    Start  9: native_inference_scratch
+5/7 Test  #9: native_inference_scratch ..............   Passed    0.37 sec
+    Start 10: native_inference_template
+6/7 Test #10: native_inference_template .............   Passed    0.05 sec
+    Start 11: native_inference_generated_scratch
+7/7 Test #11: native_inference_generated_scratch ....   Passed    0.41 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =   9.66 sec

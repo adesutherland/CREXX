@@ -1,0 +1,5 @@
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload
+[1/2] Building CXX object CMakeFiles/native_inference_control.dir/direct_control.cpp.o
+[2/2] Linking CXX executable native_inference_control

@@ -1,0 +1,6 @@
+WAVE: project compile/assemble jobs=1
+START: project member rxvector_test
+BUILT: project member rxvector_test
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/vector-positive.rxbin
+PASS: rxvector exact packed contract

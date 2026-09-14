@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,warmup,1,17748331000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,warmup,2,18366634000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,1,18828619000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,2,19509192000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,3,20906679000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,4,23354780000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,5,24343977000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,6,24064593000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,7,23663212000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,8,23765958000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,9,23062078000,0,pass,,
+native-inference-smol-persistent,llama-cpu-m5,step02-bounded128-threads4,complete-control-process,recorded,10,22855237000,0,pass,,

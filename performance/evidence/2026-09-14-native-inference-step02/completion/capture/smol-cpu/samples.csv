@@ -1,0 +1,2 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+native-inference-smol-persistent,llama-cpu-m5,step02-completion,complete-control-process,warmup,1,26091097000,1,fail,,

@@ -1,0 +1,80 @@
+{
+  "date": "2026-09-14",
+  "crexx_checkout": "037e7939bc29eb91b29ed41e9b1b8debdef6353d",
+  "dirty_scope": "approved guidance/planning and STEP-02 test/evidence additions; no product code edits",
+  "upstream_commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "upstream_archive_sha256": "2de0d87eda4696e9f6bbd771d4c623267f4e95856cce6f99793f91522f993e43",
+  "upstream_source": "GitHub codeload commit archive; no .git, so upstream build-info reports unknown; source identity retained independently",
+  "control_scope": "direct native QA workload and unchanged Level B serial capture; not a CREXX provider verdict",
+  "compiler": "AppleClang 21.0.0 (clang-2100.1.1.101)",
+  "sdk": "macOS 26.5 command line tools",
+  "host": "Apple M5 arm64, 10 logical CPUs, 24 GiB unified memory, Darwin 25.6.0",
+  "builds": "ordinary Release/Ninja; exact initial configure command in tests/native-inference/README.md; no sanitizer qualification",
+  "capture_runtime_version": "crexx-1.0.0-beta.3+local.g32efa89a2daa.dirty 20260904; existing Release orchestration toolchain, not current product qualification",
+  "sources": [
+    {
+      "path": "tests/native-inference/direct_control.cpp",
+      "sha256": "df8733133bd1ac5f80f9afa1eafa37f815720af4ecc2f02e0f9c36b2bbc0e76f"
+    },
+    {
+      "path": "tests/native-inference/CMakeLists.txt",
+      "sha256": "c9fc66bcf9df471a41047bac6a75e8a8db56c3aeeef785c8824f15b99d91c380"
+    },
+    {
+      "path": "performance/tools/run_cross_runtime.crexx",
+      "sha256": "79f302b7898158a03199934a058be902aa66801fdedba4eb672c155f89c42a7c"
+    },
+    {
+      "path": "tests/native-inference/provider_acceptance.crexx",
+      "sha256": "f19784d03e8e9b1e7cff22a50200acdabc8a72f38ec220826b6ff1bca096563f"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "cmake-build-llama-workload/native_inference_control",
+      "sha256": "408951f32551455dfc06ef74591431cfe07476635a1342973adb5a3adbee9a83"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/llama-embedding",
+      "sha256": "90e9b6d38f00624a227a45fabc4c010510c4593d64673a81fe2a72521d5aceb6"
+    },
+    {
+      "path": "cmake-build-llama-controls/bin/llama-bench",
+      "sha256": "796ac41ec195aa5e996658c60a59dabda787674421424594a479f52450927d92"
+    },
+    {
+      "path": "cmake-build-release/bin/rxvm",
+      "sha256": "822b4a899d24dc1f1b44721d4c46b6d9295e5d4156c496518d04d2a30acc0092"
+    },
+    {
+      "path": "cmake-build-release/bin/rxc",
+      "sha256": "21024131e9d26d5a21696517698b26ba601de5879803c3095a3f4c39e1d33e6e"
+    },
+    {
+      "path": "cmake-build-release/bin/rxas",
+      "sha256": "a7f380cfa818a2df27c8c8c5a44f823922a9f71882074c21277f95c1c9769794"
+    },
+    {
+      "path": "cmake-build-release/bin/rxlink",
+      "sha256": "d9bb085960915f956490edb7bd648df34903fde70ea032512230ad9658639cda"
+    },
+    {
+      "path": "cmake-build-llama-workload/capture-control.rxbin",
+      "sha256": "81d3789415e8788c9036100376af1535fe28e76e3af17a9b40c7f39b3bab869b"
+    }
+  ],
+  "timing_disposition": "Both captures passed all 2 warmup/10 recorded correctness checks; CPU elapsed 23.16-39.88s, Metal 18.79-27.20s; retain as noisy diagnostic samples, not qualified comparative baselines",
+  "concurrent_host_observation": {
+    "qemu_system_aarch64_cpu_percent": 62.7,
+    "windowserver_cpu_percent": 39.3,
+    "interpretation": "observed during Metal capture; not proof of the cause of all CPU drift"
+  },
+  "full_current_source_note": "BGE full diagnostics precede added context identity/memory telemetry; their BGE calculation and thresholds are unchanged. Earlier short and F32/flash diagnostics use the retained command/log shapes; use current source to reproduce, do not treat their timing as a baseline.",
+  "primary_current_controls": [
+    "controls/bge-cpu-current.json",
+    "controls/bge-metal-current.json",
+    "controls/stories-cpu-current.json",
+    "capture/smol-cpu",
+    "capture/smol-metal"
+  ]
+}

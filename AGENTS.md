@@ -49,7 +49,10 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 ## Working Rules
 
-- For tasks that change compiler logic, syntax, scoping, or architecture, present a numbered implementation plan before editing.
+- For tasks that change compiler logic, syntax, scoping, or architecture,
+  present an implementation plan before editing. Include the vision and intended
+  outcomes, numbered checkable acceptance criteria, and numbered implementation
+  steps, following the plan and session-continuity rules below.
 - Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
 - For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
 - Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
@@ -90,6 +93,47 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   call only when the required equivalence cannot be proved; do not use a broad
   fail-closed guard as the final fix for a representable inline shape.
 - Treat source documentation tags as first-class code-adjacent assets during refactors. When rewriting or replacing `.crexx` classes, methods, plugins, or library surfaces, preserve existing `/** ... */` RexxDoc blocks and tags such as `@param`, `@parm`, `@return`, `@author`, examples, and notes wherever the documented API still exists. If behaviour, signatures, backing implementation, or return contracts change, update the tags in the same change instead of dropping them. Before large classlib or library refactors, compare relevant doc-tag coverage before and after; if tags are intentionally removed because an API is removed, call that out explicitly in the change summary.
+
+## Plans, Acceptance and Session Continuity
+
+Every required implementation plan, and every plan for work spanning sessions,
+must contain all three of the following:
+
+1. **Vision and intended outcomes:** explain the problem, why the work matters,
+   and the complete intended end state from the user's perspective. Preserve
+   the requested capabilities, platforms, integration and delivery requirements,
+   constraints, and any explicitly agreed scope boundaries. A list of immediate
+   implementation tasks is not a substitute for the intended outcome.
+2. **Numbered checkable acceptance criteria:** give each criterion a stable ID
+   such as `AC-01`, an observable pass condition, and the test, inspection or
+   retained evidence needed to verify it. Together the criteria must cover the
+   full intended outcome, including required failure, lifecycle, packaging and
+   platform behavior where applicable. Keep unverified criteria visibly open.
+3. **Numbered implementation steps:** give each step a stable ID such as
+   `STEP-01`, identify the acceptance criteria it serves, and record dependencies
+   and applicable decision gates. Separate phased delivery from overall success.
+
+Before implementation, record this plan in the appropriate repository planning
+or worklist file so it survives conversation compaction and session takeover.
+Reuse an existing authoritative plan where one exists; do not create competing
+scope records. Include its path in progress handoffs, and keep criterion/step
+status and evidence references current. Preserve IDs when updating the plan.
+
+After compaction or at session takeover, read the repository instructions and
+the authoritative plan, including its vision and every acceptance criterion,
+before continuing implementation. Reconcile completed and outstanding work with
+the current checkout and retained evidence. Handoffs must identify the plan,
+accepted scope decisions, unmet criteria, blockers and next steps; they must not
+reduce the objective to the latest task or the easiest remaining subset.
+
+Do not silently remove, weaken, defer or reinterpret outcomes or acceptance
+criteria because of context loss, implementation difficulty, elapsed time or a
+partial implementation. Record explicit user-approved scope changes and their
+effect on acceptance. Until then, preserve the original requirement as open.
+Report phase completion separately from overall completion, and claim the
+overall outcome complete only when every acceptance criterion in the current
+explicitly agreed scope is verified. A scope revision does not itself satisfy
+the criteria that remain.
 
 ## Performance Programme
 

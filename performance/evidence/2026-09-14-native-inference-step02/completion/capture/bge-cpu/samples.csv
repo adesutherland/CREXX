@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,warmup,1,4859726000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,warmup,2,4980245000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,1,5142213000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,2,5194939000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,3,5274502000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,4,5290622000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,5,5357446000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,6,5369091000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,7,5569158000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,8,5428387000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,9,5642813000,0,pass,,
+native-inference-bge-persistent,llama-cpu-m5,step02-completion,complete-control-process,recorded,10,5502369000,0,pass,,

@@ -1,0 +1,48 @@
+Mon Sep 14 12:16:39 UTC 2026
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+13:16  up 16 days, 11:11, 2 users, load averages: 6.70 6.48 5.58
+  PID  %CPU COMM
+94406  24.1 qemu-system-aarch64
+  737  18.1 /usr/libexec/sysmond
+42621   6.3 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+82234   2.7 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+82145   2.3 /Applications/CLion.app/Contents/MacOS/clion
+82184   2.3 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+32798   0.4 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+91552   0.2 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  554   0.1 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds
+  828   0.1 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores
+63829   0.1 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mdworker_shared

@@ -1,0 +1,1008 @@
+load_backend: loaded CPU backend from /Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin/libggml-cpu.so
+llama_model_loader: loaded meta data with 24 key-value pairs and 197 tensors from cmake-build-llama-controls/fixtures/bge-f32-diagnostic.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = bert
+llama_model_loader: - kv   1:                               general.name str              = bge-small-en-v1.5
+llama_model_loader: - kv   2:                           bert.block_count u32              = 12
+llama_model_loader: - kv   3:                        bert.context_length u32              = 512
+llama_model_loader: - kv   4:                      bert.embedding_length u32              = 384
+llama_model_loader: - kv   5:                   bert.feed_forward_length u32              = 1536
+llama_model_loader: - kv   6:                  bert.attention.head_count u32              = 12
+llama_model_loader: - kv   7:          bert.attention.layer_norm_epsilon f32              = 0.000000
+llama_model_loader: - kv   8:                      bert.attention.causal bool             = false
+llama_model_loader: - kv   9:                          bert.pooling_type u32              = 2
+llama_model_loader: - kv  10:            tokenizer.ggml.token_type_count u32              = 2
+llama_model_loader: - kv  11:                tokenizer.ggml.bos_token_id u32              = 101
+llama_model_loader: - kv  12:                tokenizer.ggml.eos_token_id u32              = 102
+llama_model_loader: - kv  13:                       tokenizer.ggml.model str              = bert
+llama_model_loader: - kv  14:                      tokenizer.ggml.tokens arr[str,30522]   = ["[PAD]", "[unused0]", "[unused1]", "...
+llama_model_loader: - kv  15:                      tokenizer.ggml.scores arr[f32,30522]   = [-1000.000000, -1000.000000, -1000.00...
+llama_model_loader: - kv  16:                  tokenizer.ggml.token_type arr[i32,30522]   = [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  17:            tokenizer.ggml.unknown_token_id u32              = 100
+llama_model_loader: - kv  18:          tokenizer.ggml.seperator_token_id u32              = 102
+llama_model_loader: - kv  19:            tokenizer.ggml.padding_token_id u32              = 0
+llama_model_loader: - kv  20:                tokenizer.ggml.cls_token_id u32              = 101
+llama_model_loader: - kv  21:               tokenizer.ggml.mask_token_id u32              = 103
+llama_model_loader: - kv  22:               general.quantization_version u32              = 2
+llama_model_loader: - kv  23:                          general.file_type u32              = 0
+llama_model_loader: - type  f32:  196 tensors
+llama_model_loader: - type  f16:    1 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = all F32
+print_info: file size   = 126.32 MiB (31.91 BPW) 
+init_tokenizer: initializing tokenizer for type 3
+load: 0 unused tokens
+load: control token:    100 '[UNK]' is not marked as EOG
+load: control token:    101 '[CLS]' is not marked as EOG
+load: control token:    102 '[SEP]' is not marked as EOG
+load: control token:    103 '[MASK]' is not marked as EOG
+load: special_eos_id is not in special_eog_ids - the tokenizer config may be incorrect
+load: printing all EOG tokens:
+load:   - 0 ('[PAD]')
+load:   - 102 ('[SEP]')
+load: special tokens cache size = 5
+load: token to piece cache size = 0.2032 MB
+print_info: arch                  = bert
+print_info: vocab_only            = 0
+print_info: no_alloc              = 0
+print_info: n_ctx_train           = 512
+print_info: n_embd_inp            = 384
+print_info: n_embd                = 384
+print_info: n_embd_out            = 384
+print_info: n_layer               = 12
+print_info: n_layer_all           = 12
+print_info: n_head                = 12
+print_info: n_head_kv             = 12
+print_info: n_rot                 = 32
+print_info: n_swa                 = 0
+print_info: is_swa_any            = 0
+print_info: non_causal_type       = 0
+print_info: n_embd_head_k         = 32
+print_info: n_embd_head_v         = 32
+print_info: n_gqa                 = 1
+print_info: n_embd_k_gqa          = 384
+print_info: n_embd_v_gqa          = 384
+print_info: f_norm_eps            = 1.0e-12
+print_info: f_norm_rms_eps        = 0.0e+00
+print_info: f_clamp_kqv           = 0.0e+00
+print_info: f_max_alibi_bias      = 0.0e+00
+print_info: f_logit_scale         = 0.0e+00
+print_info: f_attn_scale          = 0.0e+00
+print_info: f_attn_value_scale    = 0.0000
+print_info: n_ff                  = 1536
+print_info: n_expert              = 0
+print_info: n_expert_used         = 0
+print_info: n_expert_groups       = 0
+print_info: n_group_used          = 0
+print_info: causal attn           = 0
+print_info: pooling type          = 2
+print_info: rope type             = 2
+print_info: rope scaling          = linear
+print_info: freq_base_train       = 10000.0
+print_info: freq_scale_train      = 1
+print_info: n_ctx_orig_yarn       = 512
+print_info: rope_yarn_log_mul     = 0.0000
+print_info: rope_finetuned        = unknown
+print_info: model type            = 33M
+print_info: model params          = 33.21 M
+print_info: general.name          = bge-small-en-v1.5
+print_info: vocab type            = WPM
+print_info: n_vocab               = 30522
+print_info: n_merges              = 0
+print_info: BOS token             = 101 '[CLS]'
+print_info: EOS token             = 102 '[SEP]'
+print_info: UNK token             = 100 '[UNK]'
+print_info: SEP token             = 102 '[SEP]'
+print_info: PAD token             = 0 '[PAD]'
+print_info: MASK token            = 103 '[MASK]'
+print_info: LF token              = 0 '[PAD]'
+print_info: FIM PAD token         = 0 '[PAD]'
+print_info: EOG token             = 0 '[PAD]'
+print_info: EOG token             = 102 '[SEP]'
+print_info: max token length      = 21
+load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+load_tensors: layer   0 assigned to device CPU, is_swa = 0
+load_tensors: layer   1 assigned to device CPU, is_swa = 0
+load_tensors: layer   2 assigned to device CPU, is_swa = 0
+load_tensors: layer   3 assigned to device CPU, is_swa = 0
+load_tensors: layer   4 assigned to device CPU, is_swa = 0
+load_tensors: layer   5 assigned to device CPU, is_swa = 0
+load_tensors: layer   6 assigned to device CPU, is_swa = 0
+load_tensors: layer   7 assigned to device CPU, is_swa = 0
+load_tensors: layer   8 assigned to device CPU, is_swa = 0
+load_tensors: layer   9 assigned to device CPU, is_swa = 0
+load_tensors: layer  10 assigned to device CPU, is_swa = 0
+load_tensors: layer  11 assigned to device CPU, is_swa = 0
+load_tensors: layer  12 assigned to device CPU, is_swa = 0
+create_tensor: loading tensor token_embd.weight
+create_tensor: loading tensor token_types.weight
+create_tensor: loading tensor position_embd.weight
+create_tensor: loading tensor cls.weight
+create_tensor: loading tensor cls.bias
+create_tensor: loading tensor cls.output.weight
+create_tensor: loading tensor cls.output.bias
+create_tensor: loading tensor token_embd_norm.weight
+create_tensor: loading tensor token_embd_norm.bias
+create_tensor: loading tensor blk.0.attn_qkv.weight
+create_tensor: loading tensor blk.0.attn_q.weight
+create_tensor: loading tensor blk.0.attn_k.weight
+create_tensor: loading tensor blk.0.attn_v.weight
+create_tensor: loading tensor blk.0.attn_q.bias
+create_tensor: loading tensor blk.0.attn_k.bias
+create_tensor: loading tensor blk.0.attn_v.bias
+create_tensor: loading tensor blk.0.attn_output.weight
+create_tensor: loading tensor blk.0.attn_output.bias
+create_tensor: loading tensor blk.0.attn_output_norm.weight
+create_tensor: loading tensor blk.0.attn_output_norm.bias
+create_tensor: loading tensor blk.0.ffn_up.weight
+create_tensor: loading tensor blk.0.ffn_up.bias
+create_tensor: loading tensor blk.0.ffn_down.weight
+create_tensor: loading tensor blk.0.ffn_down.bias
+create_tensor: loading tensor blk.0.layer_output_norm.weight
+create_tensor: loading tensor blk.0.layer_output_norm.bias
+create_tensor: loading tensor blk.1.attn_qkv.weight
+create_tensor: loading tensor blk.1.attn_q.weight
+create_tensor: loading tensor blk.1.attn_k.weight
+create_tensor: loading tensor blk.1.attn_v.weight
+create_tensor: loading tensor blk.1.attn_q.bias
+create_tensor: loading tensor blk.1.attn_k.bias
+create_tensor: loading tensor blk.1.attn_v.bias
+create_tensor: loading tensor blk.1.attn_output.weight
+create_tensor: loading tensor blk.1.attn_output.bias
+create_tensor: loading tensor blk.1.attn_output_norm.weight
+create_tensor: loading tensor blk.1.attn_output_norm.bias
+create_tensor: loading tensor blk.1.ffn_up.weight
+create_tensor: loading tensor blk.1.ffn_up.bias
+create_tensor: loading tensor blk.1.ffn_down.weight
+create_tensor: loading tensor blk.1.ffn_down.bias
+create_tensor: loading tensor blk.1.layer_output_norm.weight
+create_tensor: loading tensor blk.1.layer_output_norm.bias
+create_tensor: loading tensor blk.2.attn_qkv.weight
+create_tensor: loading tensor blk.2.attn_q.weight
+create_tensor: loading tensor blk.2.attn_k.weight
+create_tensor: loading tensor blk.2.attn_v.weight
+create_tensor: loading tensor blk.2.attn_q.bias
+create_tensor: loading tensor blk.2.attn_k.bias
+create_tensor: loading tensor blk.2.attn_v.bias
+create_tensor: loading tensor blk.2.attn_output.weight
+create_tensor: loading tensor blk.2.attn_output.bias
+create_tensor: loading tensor blk.2.attn_output_norm.weight
+create_tensor: loading tensor blk.2.attn_output_norm.bias
+create_tensor: loading tensor blk.2.ffn_up.weight
+create_tensor: loading tensor blk.2.ffn_up.bias
+create_tensor: loading tensor blk.2.ffn_down.weight
+create_tensor: loading tensor blk.2.ffn_down.bias
+create_tensor: loading tensor blk.2.layer_output_norm.weight
+create_tensor: loading tensor blk.2.layer_output_norm.bias
+create_tensor: loading tensor blk.3.attn_qkv.weight
+create_tensor: loading tensor blk.3.attn_q.weight
+create_tensor: loading tensor blk.3.attn_k.weight
+create_tensor: loading tensor blk.3.attn_v.weight
+create_tensor: loading tensor blk.3.attn_q.bias
+create_tensor: loading tensor blk.3.attn_k.bias
+create_tensor: loading tensor blk.3.attn_v.bias
+create_tensor: loading tensor blk.3.attn_output.weight
+create_tensor: loading tensor blk.3.attn_output.bias
+create_tensor: loading tensor blk.3.attn_output_norm.weight
+create_tensor: loading tensor blk.3.attn_output_norm.bias
+create_tensor: loading tensor blk.3.ffn_up.weight
+create_tensor: loading tensor blk.3.ffn_up.bias
+create_tensor: loading tensor blk.3.ffn_down.weight
+create_tensor: loading tensor blk.3.ffn_down.bias
+create_tensor: loading tensor blk.3.layer_output_norm.weight
+create_tensor: loading tensor blk.3.layer_output_norm.bias
+create_tensor: loading tensor blk.4.attn_qkv.weight
+create_tensor: loading tensor blk.4.attn_q.weight
+create_tensor: loading tensor blk.4.attn_k.weight
+create_tensor: loading tensor blk.4.attn_v.weight
+create_tensor: loading tensor blk.4.attn_q.bias
+create_tensor: loading tensor blk.4.attn_k.bias
+create_tensor: loading tensor blk.4.attn_v.bias
+create_tensor: loading tensor blk.4.attn_output.weight
+create_tensor: loading tensor blk.4.attn_output.bias
+create_tensor: loading tensor blk.4.attn_output_norm.weight
+create_tensor: loading tensor blk.4.attn_output_norm.bias
+create_tensor: loading tensor blk.4.ffn_up.weight
+create_tensor: loading tensor blk.4.ffn_up.bias
+create_tensor: loading tensor blk.4.ffn_down.weight
+create_tensor: loading tensor blk.4.ffn_down.bias
+create_tensor: loading tensor blk.4.layer_output_norm.weight
+create_tensor: loading tensor blk.4.layer_output_norm.bias
+create_tensor: loading tensor blk.5.attn_qkv.weight
+create_tensor: loading tensor blk.5.attn_q.weight
+create_tensor: loading tensor blk.5.attn_k.weight
+create_tensor: loading tensor blk.5.attn_v.weight
+create_tensor: loading tensor blk.5.attn_q.bias
+create_tensor: loading tensor blk.5.attn_k.bias
+create_tensor: loading tensor blk.5.attn_v.bias
+create_tensor: loading tensor blk.5.attn_output.weight
+create_tensor: loading tensor blk.5.attn_output.bias
+create_tensor: loading tensor blk.5.attn_output_norm.weight
+create_tensor: loading tensor blk.5.attn_output_norm.bias
+create_tensor: loading tensor blk.5.ffn_up.weight
+create_tensor: loading tensor blk.5.ffn_up.bias
+create_tensor: loading tensor blk.5.ffn_down.weight
+create_tensor: loading tensor blk.5.ffn_down.bias
+create_tensor: loading tensor blk.5.layer_output_norm.weight
+create_tensor: loading tensor blk.5.layer_output_norm.bias
+create_tensor: loading tensor blk.6.attn_qkv.weight
+create_tensor: loading tensor blk.6.attn_q.weight
+create_tensor: loading tensor blk.6.attn_k.weight
+create_tensor: loading tensor blk.6.attn_v.weight
+create_tensor: loading tensor blk.6.attn_q.bias
+create_tensor: loading tensor blk.6.attn_k.bias
+create_tensor: loading tensor blk.6.attn_v.bias
+create_tensor: loading tensor blk.6.attn_output.weight
+create_tensor: loading tensor blk.6.attn_output.bias
+create_tensor: loading tensor blk.6.attn_output_norm.weight
+create_tensor: loading tensor blk.6.attn_output_norm.bias
+create_tensor: loading tensor blk.6.ffn_up.weight
+create_tensor: loading tensor blk.6.ffn_up.bias
+create_tensor: loading tensor blk.6.ffn_down.weight
+create_tensor: loading tensor blk.6.ffn_down.bias
+create_tensor: loading tensor blk.6.layer_output_norm.weight
+create_tensor: loading tensor blk.6.layer_output_norm.bias
+create_tensor: loading tensor blk.7.attn_qkv.weight
+create_tensor: loading tensor blk.7.attn_q.weight
+create_tensor: loading tensor blk.7.attn_k.weight
+create_tensor: loading tensor blk.7.attn_v.weight
+create_tensor: loading tensor blk.7.attn_q.bias
+create_tensor: loading tensor blk.7.attn_k.bias
+create_tensor: loading tensor blk.7.attn_v.bias
+create_tensor: loading tensor blk.7.attn_output.weight
+create_tensor: loading tensor blk.7.attn_output.bias
+create_tensor: loading tensor blk.7.attn_output_norm.weight
+create_tensor: loading tensor blk.7.attn_output_norm.bias
+create_tensor: loading tensor blk.7.ffn_up.weight
+create_tensor: loading tensor blk.7.ffn_up.bias
+create_tensor: loading tensor blk.7.ffn_down.weight
+create_tensor: loading tensor blk.7.ffn_down.bias
+create_tensor: loading tensor blk.7.layer_output_norm.weight
+create_tensor: loading tensor blk.7.layer_output_norm.bias
+create_tensor: loading tensor blk.8.attn_qkv.weight
+create_tensor: loading tensor blk.8.attn_q.weight
+create_tensor: loading tensor blk.8.attn_k.weight
+create_tensor: loading tensor blk.8.attn_v.weight
+create_tensor: loading tensor blk.8.attn_q.bias
+create_tensor: loading tensor blk.8.attn_k.bias
+create_tensor: loading tensor blk.8.attn_v.bias
+create_tensor: loading tensor blk.8.attn_output.weight
+create_tensor: loading tensor blk.8.attn_output.bias
+create_tensor: loading tensor blk.8.attn_output_norm.weight
+create_tensor: loading tensor blk.8.attn_output_norm.bias
+create_tensor: loading tensor blk.8.ffn_up.weight
+create_tensor: loading tensor blk.8.ffn_up.bias
+create_tensor: loading tensor blk.8.ffn_down.weight
+create_tensor: loading tensor blk.8.ffn_down.bias
+create_tensor: loading tensor blk.8.layer_output_norm.weight
+create_tensor: loading tensor blk.8.layer_output_norm.bias
+create_tensor: loading tensor blk.9.attn_qkv.weight
+create_tensor: loading tensor blk.9.attn_q.weight
+create_tensor: loading tensor blk.9.attn_k.weight
+create_tensor: loading tensor blk.9.attn_v.weight
+create_tensor: loading tensor blk.9.attn_q.bias
+create_tensor: loading tensor blk.9.attn_k.bias
+create_tensor: loading tensor blk.9.attn_v.bias
+create_tensor: loading tensor blk.9.attn_output.weight
+create_tensor: loading tensor blk.9.attn_output.bias
+create_tensor: loading tensor blk.9.attn_output_norm.weight
+create_tensor: loading tensor blk.9.attn_output_norm.bias
+create_tensor: loading tensor blk.9.ffn_up.weight
+create_tensor: loading tensor blk.9.ffn_up.bias
+create_tensor: loading tensor blk.9.ffn_down.weight
+create_tensor: loading tensor blk.9.ffn_down.bias
+create_tensor: loading tensor blk.9.layer_output_norm.weight
+create_tensor: loading tensor blk.9.layer_output_norm.bias
+create_tensor: loading tensor blk.10.attn_qkv.weight
+create_tensor: loading tensor blk.10.attn_q.weight
+create_tensor: loading tensor blk.10.attn_k.weight
+create_tensor: loading tensor blk.10.attn_v.weight
+create_tensor: loading tensor blk.10.attn_q.bias
+create_tensor: loading tensor blk.10.attn_k.bias
+create_tensor: loading tensor blk.10.attn_v.bias
+create_tensor: loading tensor blk.10.attn_output.weight
+create_tensor: loading tensor blk.10.attn_output.bias
+create_tensor: loading tensor blk.10.attn_output_norm.weight
+create_tensor: loading tensor blk.10.attn_output_norm.bias
+create_tensor: loading tensor blk.10.ffn_up.weight
+create_tensor: loading tensor blk.10.ffn_up.bias
+create_tensor: loading tensor blk.10.ffn_down.weight
+create_tensor: loading tensor blk.10.ffn_down.bias
+create_tensor: loading tensor blk.10.layer_output_norm.weight
+create_tensor: loading tensor blk.10.layer_output_norm.bias
+create_tensor: loading tensor blk.11.attn_qkv.weight
+create_tensor: loading tensor blk.11.attn_q.weight
+create_tensor: loading tensor blk.11.attn_k.weight
+create_tensor: loading tensor blk.11.attn_v.weight
+create_tensor: loading tensor blk.11.attn_q.bias
+create_tensor: loading tensor blk.11.attn_k.bias
+create_tensor: loading tensor blk.11.attn_v.bias
+create_tensor: loading tensor blk.11.attn_output.weight
+create_tensor: loading tensor blk.11.attn_output.bias
+create_tensor: loading tensor blk.11.attn_output_norm.weight
+create_tensor: loading tensor blk.11.attn_output_norm.bias
+create_tensor: loading tensor blk.11.ffn_up.weight
+create_tensor: loading tensor blk.11.ffn_up.bias
+create_tensor: loading tensor blk.11.ffn_down.weight
+create_tensor: loading tensor blk.11.ffn_down.bias
+create_tensor: loading tensor blk.11.layer_output_norm.weight
+create_tensor: loading tensor blk.11.layer_output_norm.bias
+create_tensor: loading tensor blk.0.attn_q.scale
+create_tensor: loading tensor blk.0.attn_k.scale
+create_tensor: loading tensor blk.0.attn_v.scale
+create_tensor: loading tensor blk.0.attn_output.scale
+create_tensor: loading tensor blk.0.ffn_down.scale
+create_tensor: loading tensor blk.0.ffn_up.scale
+create_tensor: loading tensor blk.0.attn_q.input_scale
+create_tensor: loading tensor blk.0.attn_k.input_scale
+create_tensor: loading tensor blk.0.attn_v.input_scale
+create_tensor: loading tensor blk.0.attn_output.input_scale
+create_tensor: loading tensor blk.0.ffn_down.input_scale
+create_tensor: loading tensor blk.0.ffn_up.input_scale
+create_tensor: loading tensor blk.1.attn_q.scale
+create_tensor: loading tensor blk.1.attn_k.scale
+create_tensor: loading tensor blk.1.attn_v.scale
+create_tensor: loading tensor blk.1.attn_output.scale
+create_tensor: loading tensor blk.1.ffn_down.scale
+create_tensor: loading tensor blk.1.ffn_up.scale
+create_tensor: loading tensor blk.1.attn_q.input_scale
+create_tensor: loading tensor blk.1.attn_k.input_scale
+create_tensor: loading tensor blk.1.attn_v.input_scale
+create_tensor: loading tensor blk.1.attn_output.input_scale
+create_tensor: loading tensor blk.1.ffn_down.input_scale
+create_tensor: loading tensor blk.1.ffn_up.input_scale
+create_tensor: loading tensor blk.2.attn_q.scale
+create_tensor: loading tensor blk.2.attn_k.scale
+create_tensor: loading tensor blk.2.attn_v.scale
+create_tensor: loading tensor blk.2.attn_output.scale
+create_tensor: loading tensor blk.2.ffn_down.scale
+create_tensor: loading tensor blk.2.ffn_up.scale
+create_tensor: loading tensor blk.2.attn_q.input_scale
+create_tensor: loading tensor blk.2.attn_k.input_scale
+create_tensor: loading tensor blk.2.attn_v.input_scale
+create_tensor: loading tensor blk.2.attn_output.input_scale
+create_tensor: loading tensor blk.2.ffn_down.input_scale
+create_tensor: loading tensor blk.2.ffn_up.input_scale
+create_tensor: loading tensor blk.3.attn_q.scale
+create_tensor: loading tensor blk.3.attn_k.scale
+create_tensor: loading tensor blk.3.attn_v.scale
+create_tensor: loading tensor blk.3.attn_output.scale
+create_tensor: loading tensor blk.3.ffn_down.scale
+create_tensor: loading tensor blk.3.ffn_up.scale
+create_tensor: loading tensor blk.3.attn_q.input_scale
+create_tensor: loading tensor blk.3.attn_k.input_scale
+create_tensor: loading tensor blk.3.attn_v.input_scale
+create_tensor: loading tensor blk.3.attn_output.input_scale
+create_tensor: loading tensor blk.3.ffn_down.input_scale
+create_tensor: loading tensor blk.3.ffn_up.input_scale
+create_tensor: loading tensor blk.4.attn_q.scale
+create_tensor: loading tensor blk.4.attn_k.scale
+create_tensor: loading tensor blk.4.attn_v.scale
+create_tensor: loading tensor blk.4.attn_output.scale
+create_tensor: loading tensor blk.4.ffn_down.scale
+create_tensor: loading tensor blk.4.ffn_up.scale
+create_tensor: loading tensor blk.4.attn_q.input_scale
+create_tensor: loading tensor blk.4.attn_k.input_scale
+create_tensor: loading tensor blk.4.attn_v.input_scale
+create_tensor: loading tensor blk.4.attn_output.input_scale
+create_tensor: loading tensor blk.4.ffn_down.input_scale
+create_tensor: loading tensor blk.4.ffn_up.input_scale
+create_tensor: loading tensor blk.5.attn_q.scale
+create_tensor: loading tensor blk.5.attn_k.scale
+create_tensor: loading tensor blk.5.attn_v.scale
+create_tensor: loading tensor blk.5.attn_output.scale
+create_tensor: loading tensor blk.5.ffn_down.scale
+create_tensor: loading tensor blk.5.ffn_up.scale
+create_tensor: loading tensor blk.5.attn_q.input_scale
+create_tensor: loading tensor blk.5.attn_k.input_scale
+create_tensor: loading tensor blk.5.attn_v.input_scale
+create_tensor: loading tensor blk.5.attn_output.input_scale
+create_tensor: loading tensor blk.5.ffn_down.input_scale
+create_tensor: loading tensor blk.5.ffn_up.input_scale
+create_tensor: loading tensor blk.6.attn_q.scale
+create_tensor: loading tensor blk.6.attn_k.scale
+create_tensor: loading tensor blk.6.attn_v.scale
+create_tensor: loading tensor blk.6.attn_output.scale
+create_tensor: loading tensor blk.6.ffn_down.scale
+create_tensor: loading tensor blk.6.ffn_up.scale
+create_tensor: loading tensor blk.6.attn_q.input_scale
+create_tensor: loading tensor blk.6.attn_k.input_scale
+create_tensor: loading tensor blk.6.attn_v.input_scale
+create_tensor: loading tensor blk.6.attn_output.input_scale
+create_tensor: loading tensor blk.6.ffn_down.input_scale
+create_tensor: loading tensor blk.6.ffn_up.input_scale
+create_tensor: loading tensor blk.7.attn_q.scale
+create_tensor: loading tensor blk.7.attn_k.scale
+create_tensor: loading tensor blk.7.attn_v.scale
+create_tensor: loading tensor blk.7.attn_output.scale
+create_tensor: loading tensor blk.7.ffn_down.scale
+create_tensor: loading tensor blk.7.ffn_up.scale
+create_tensor: loading tensor blk.7.attn_q.input_scale
+create_tensor: loading tensor blk.7.attn_k.input_scale
+create_tensor: loading tensor blk.7.attn_v.input_scale
+create_tensor: loading tensor blk.7.attn_output.input_scale
+create_tensor: loading tensor blk.7.ffn_down.input_scale
+create_tensor: loading tensor blk.7.ffn_up.input_scale
+create_tensor: loading tensor blk.8.attn_q.scale
+create_tensor: loading tensor blk.8.attn_k.scale
+create_tensor: loading tensor blk.8.attn_v.scale
+create_tensor: loading tensor blk.8.attn_output.scale
+create_tensor: loading tensor blk.8.ffn_down.scale
+create_tensor: loading tensor blk.8.ffn_up.scale
+create_tensor: loading tensor blk.8.attn_q.input_scale
+create_tensor: loading tensor blk.8.attn_k.input_scale
+create_tensor: loading tensor blk.8.attn_v.input_scale
+create_tensor: loading tensor blk.8.attn_output.input_scale
+create_tensor: loading tensor blk.8.ffn_down.input_scale
+create_tensor: loading tensor blk.8.ffn_up.input_scale
+create_tensor: loading tensor blk.9.attn_q.scale
+create_tensor: loading tensor blk.9.attn_k.scale
+create_tensor: loading tensor blk.9.attn_v.scale
+create_tensor: loading tensor blk.9.attn_output.scale
+create_tensor: loading tensor blk.9.ffn_down.scale
+create_tensor: loading tensor blk.9.ffn_up.scale
+create_tensor: loading tensor blk.9.attn_q.input_scale
+create_tensor: loading tensor blk.9.attn_k.input_scale
+create_tensor: loading tensor blk.9.attn_v.input_scale
+create_tensor: loading tensor blk.9.attn_output.input_scale
+create_tensor: loading tensor blk.9.ffn_down.input_scale
+create_tensor: loading tensor blk.9.ffn_up.input_scale
+create_tensor: loading tensor blk.10.attn_q.scale
+create_tensor: loading tensor blk.10.attn_k.scale
+create_tensor: loading tensor blk.10.attn_v.scale
+create_tensor: loading tensor blk.10.attn_output.scale
+create_tensor: loading tensor blk.10.ffn_down.scale
+create_tensor: loading tensor blk.10.ffn_up.scale
+create_tensor: loading tensor blk.10.attn_q.input_scale
+create_tensor: loading tensor blk.10.attn_k.input_scale
+create_tensor: loading tensor blk.10.attn_v.input_scale
+create_tensor: loading tensor blk.10.attn_output.input_scale
+create_tensor: loading tensor blk.10.ffn_down.input_scale
+create_tensor: loading tensor blk.10.ffn_up.input_scale
+create_tensor: loading tensor blk.11.attn_q.scale
+create_tensor: loading tensor blk.11.attn_k.scale
+create_tensor: loading tensor blk.11.attn_v.scale
+create_tensor: loading tensor blk.11.attn_output.scale
+create_tensor: loading tensor blk.11.ffn_down.scale
+create_tensor: loading tensor blk.11.ffn_up.scale
+create_tensor: loading tensor blk.11.attn_q.input_scale
+create_tensor: loading tensor blk.11.attn_k.input_scale
+create_tensor: loading tensor blk.11.attn_v.input_scale
+create_tensor: loading tensor blk.11.attn_output.input_scale
+create_tensor: loading tensor blk.11.ffn_down.input_scale
+create_tensor: loading tensor blk.11.ffn_up.input_scale
+done_getting_tensors: tensor 'token_embd.weight' (f32) (and 196 others) cannot be used with preferred buffer type CPU_REPACK, using CPU instead
+load_tensors:   CPU_Mapped model buffer size =   126.32 MiB
+...............................................
+llama_context: constructing llama_context
+llama_context: n_seq_max             = 8
+llama_context: n_ctx                 = 4096
+llama_context: n_ctx_seq             = 512
+llama_context: n_batch               = 4096
+llama_context: n_ubatch              = 4096
+llama_context: causal_attn           = 0
+llama_context: flash_attn            = disabled
+llama_context: kv_unified            = false
+llama_context: freq_base             = 10000.0
+llama_context: freq_scale            = 1
+llama_context: n_rs_seq              = 0
+llama_context: n_outputs_max         = 4096
+llama_context: n_outputs_max_per_seq = 1
+set_abort_callback: call
+llama_context:        CPU  output buffer size =     0.94 MiB
+llama_context: enumerating backends
+llama_context: backend_ptrs.size() = 1
+sched_reserve: reserving ...
+sched_reserve: max_nodes = 1576
+sched_reserve: worst-case: n_tokens = 4096, n_seqs = 8, n_outputs = 8
+resolve_fused_ops: resolving fused DeepSeek V4 HC support:
+graph_reserve: reserving a graph for ubatch with n_tokens =    8, n_seqs =  8, n_outputs =    8
+resolve_fused_ops: fused DeepSeek V4 HC pre enabled
+graph_reserve: reserving a graph for ubatch with n_tokens =    8, n_seqs =  8, n_outputs =    8
+resolve_fused_ops: fused DeepSeek V4 HC comb enabled
+graph_reserve: reserving a graph for ubatch with n_tokens =    8, n_seqs =  8, n_outputs =    8
+resolve_fused_ops: fused DeepSeek V4 HC post enabled
+graph_reserve: reserving a graph for ubatch with n_tokens = 4096, n_seqs =  8, n_outputs = 4096
+graph_reserve: reserving a graph for ubatch with n_tokens =    8, n_seqs =  8, n_outputs =    8
+graph_reserve: reserving a graph for ubatch with n_tokens = 4096, n_seqs =  8, n_outputs = 4096
+sched_reserve:        CPU compute buffer size =   868.05 MiB
+sched_reserve: graph nodes  = 431
+sched_reserve: graph splits = 1
+sched_reserve: reserve took 2.03 ms, sched copies = 1
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+embedding parity max_abs=2.86666e-05 min_cosine=1
+decode: cannot decode batches with this context (calling encode() instead)
+embedding parity max_abs=2.86666e-05 min_cosine=1
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+decode: cannot decode batches with this context (calling encode() instead)
+embedding parity max_abs=2.86666e-05 min_cosine=1
+decode: cannot decode batches with this context (calling encode() instead)
+embedding parity max_abs=2.86666e-05 min_cosine=1
+decode: cannot decode batches with this context (calling encode() instead)
+llama_model_loader: loaded meta data with 24 key-value pairs and 197 tensors from cmake-build-llama-controls/fixtures/bge-f32-diagnostic.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = bert
+llama_model_loader: - kv   1:                               general.name str              = bge-small-en-v1.5
+llama_model_loader: - kv   2:                           bert.block_count u32              = 12
+llama_model_loader: - kv   3:                        bert.context_length u32              = 512
+llama_model_loader: - kv   4:                      bert.embedding_length u32              = 384
+llama_model_loader: - kv   5:                   bert.feed_forward_length u32              = 1536
+llama_model_loader: - kv   6:                  bert.attention.head_count u32              = 12
+llama_model_loader: - kv   7:          bert.attention.layer_norm_epsilon f32              = 0.000000
+llama_model_loader: - kv   8:                      bert.attention.causal bool             = false
+llama_model_loader: - kv   9:                          bert.pooling_type u32              = 2
+llama_model_loader: - kv  10:            tokenizer.ggml.token_type_count u32              = 2
+llama_model_loader: - kv  11:                tokenizer.ggml.bos_token_id u32              = 101
+llama_model_loader: - kv  12:                tokenizer.ggml.eos_token_id u32              = 102
+llama_model_loader: - kv  13:                       tokenizer.ggml.model str              = bert
+llama_model_loader: - kv  14:                      tokenizer.ggml.tokens arr[str,30522]   = ["[PAD]", "[unused0]", "[unused1]", "...
+llama_model_loader: - kv  15:                      tokenizer.ggml.scores arr[f32,30522]   = [-1000.000000, -1000.000000, -1000.00...
+llama_model_loader: - kv  16:                  tokenizer.ggml.token_type arr[i32,30522]   = [3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  17:            tokenizer.ggml.unknown_token_id u32              = 100
+llama_model_loader: - kv  18:          tokenizer.ggml.seperator_token_id u32              = 102
+llama_model_loader: - kv  19:            tokenizer.ggml.padding_token_id u32              = 0
+llama_model_loader: - kv  20:                tokenizer.ggml.cls_token_id u32              = 101
+llama_model_loader: - kv  21:               tokenizer.ggml.mask_token_id u32              = 103
+llama_model_loader: - kv  22:               general.quantization_version u32              = 2
+llama_model_loader: - kv  23:                          general.file_type u32              = 0
+llama_model_loader: - type  f32:  196 tensors
+llama_model_loader: - type  f16:    1 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = all F32
+print_info: file size   = 126.32 MiB (31.91 BPW) 
+init_tokenizer: initializing tokenizer for type 3
+load: 0 unused tokens
+load: control token:    100 '[UNK]' is not marked as EOG
+load: control token:    101 '[CLS]' is not marked as EOG
+load: control token:    102 '[SEP]' is not marked as EOG
+load: control token:    103 '[MASK]' is not marked as EOG
+load: special_eos_id is not in special_eog_ids - the tokenizer config may be incorrect
+load: printing all EOG tokens:
+load:   - 0 ('[PAD]')
+load:   - 102 ('[SEP]')
+load: special tokens cache size = 5
+load: token to piece cache size = 0.2032 MB
+print_info: arch                  = bert
+print_info: vocab_only            = 0
+print_info: no_alloc              = 0
+print_info: n_ctx_train           = 512
+print_info: n_embd_inp            = 384
+print_info: n_embd                = 384
+print_info: n_embd_out            = 384
+print_info: n_layer               = 12
+print_info: n_layer_all           = 12
+print_info: n_head                = 12
+print_info: n_head_kv             = 12
+print_info: n_rot                 = 32
+print_info: n_swa                 = 0
+print_info: is_swa_any            = 0
+print_info: non_causal_type       = 0
+print_info: n_embd_head_k         = 32
+print_info: n_embd_head_v         = 32
+print_info: n_gqa                 = 1
+print_info: n_embd_k_gqa          = 384
+print_info: n_embd_v_gqa          = 384
+print_info: f_norm_eps            = 1.0e-12
+print_info: f_norm_rms_eps        = 0.0e+00
+print_info: f_clamp_kqv           = 0.0e+00
+print_info: f_max_alibi_bias      = 0.0e+00
+print_info: f_logit_scale         = 0.0e+00
+print_info: f_attn_scale          = 0.0e+00
+print_info: f_attn_value_scale    = 0.0000
+print_info: n_ff                  = 1536
+print_info: n_expert              = 0
+print_info: n_expert_used         = 0
+print_info: n_expert_groups       = 0
+print_info: n_group_used          = 0
+print_info: causal attn           = 0
+print_info: pooling type          = 2
+print_info: rope type             = 2
+print_info: rope scaling          = linear
+print_info: freq_base_train       = 10000.0
+print_info: freq_scale_train      = 1
+print_info: n_ctx_orig_yarn       = 512
+print_info: rope_yarn_log_mul     = 0.0000
+print_info: rope_finetuned        = unknown
+print_info: model type            = 33M
+print_info: model params          = 33.21 M
+print_info: general.name          = bge-small-en-v1.5
+print_info: vocab type            = WPM
+print_info: n_vocab               = 30522
+print_info: n_merges              = 0
+print_info: BOS token             = 101 '[CLS]'
+print_info: EOS token             = 102 '[SEP]'
+print_info: UNK token             = 100 '[UNK]'
+print_info: SEP token             = 102 '[SEP]'
+print_info: PAD token             = 0 '[PAD]'
+print_info: MASK token            = 103 '[MASK]'
+print_info: LF token              = 0 '[PAD]'
+print_info: FIM PAD token         = 0 '[PAD]'
+print_info: EOG token             = 0 '[PAD]'
+print_info: EOG token             = 102 '[SEP]'
+print_info: max token length      = 21
+load_tensors: loading model tensors, this can take a while... (load_mode = mmap)
+load_tensors: layer   0 assigned to device CPU, is_swa = 0
+load_tensors: layer   1 assigned to device CPU, is_swa = 0
+load_tensors: layer   2 assigned to device CPU, is_swa = 0
+load_tensors: layer   3 assigned to device CPU, is_swa = 0
+load_tensors: layer   4 assigned to device CPU, is_swa = 0
+load_tensors: layer   5 assigned to device CPU, is_swa = 0
+load_tensors: layer   6 assigned to device CPU, is_swa = 0
+load_tensors: layer   7 assigned to device CPU, is_swa = 0
+load_tensors: layer   8 assigned to device CPU, is_swa = 0
+load_tensors: layer   9 assigned to device CPU, is_swa = 0
+load_tensors: layer  10 assigned to device CPU, is_swa = 0
+load_tensors: layer  11 assigned to device CPU, is_swa = 0
+load_tensors: layer  12 assigned to device CPU, is_swa = 0
+create_tensor: loading tensor token_embd.weight
+create_tensor: loading tensor token_types.weight
+create_tensor: loading tensor position_embd.weight
+create_tensor: loading tensor cls.weight
+create_tensor: loading tensor cls.bias
+create_tensor: loading tensor cls.output.weight
+create_tensor: loading tensor cls.output.bias
+create_tensor: loading tensor token_embd_norm.weight
+create_tensor: loading tensor token_embd_norm.bias
+create_tensor: loading tensor blk.0.attn_qkv.weight
+create_tensor: loading tensor blk.0.attn_q.weight
+create_tensor: loading tensor blk.0.attn_k.weight
+create_tensor: loading tensor blk.0.attn_v.weight
+create_tensor: loading tensor blk.0.attn_q.bias
+create_tensor: loading tensor blk.0.attn_k.bias
+create_tensor: loading tensor blk.0.attn_v.bias
+create_tensor: loading tensor blk.0.attn_output.weight
+create_tensor: loading tensor blk.0.attn_output.bias
+create_tensor: loading tensor blk.0.attn_output_norm.weight
+create_tensor: loading tensor blk.0.attn_output_norm.bias
+create_tensor: loading tensor blk.0.ffn_up.weight
+create_tensor: loading tensor blk.0.ffn_up.bias
+create_tensor: loading tensor blk.0.ffn_down.weight
+create_tensor: loading tensor blk.0.ffn_down.bias
+create_tensor: loading tensor blk.0.layer_output_norm.weight
+create_tensor: loading tensor blk.0.layer_output_norm.bias
+create_tensor: loading tensor blk.1.attn_qkv.weight
+create_tensor: loading tensor blk.1.attn_q.weight
+create_tensor: loading tensor blk.1.attn_k.weight
+create_tensor: loading tensor blk.1.attn_v.weight
+create_tensor: loading tensor blk.1.attn_q.bias
+create_tensor: loading tensor blk.1.attn_k.bias
+create_tensor: loading tensor blk.1.attn_v.bias
+create_tensor: loading tensor blk.1.attn_output.weight
+create_tensor: loading tensor blk.1.attn_output.bias
+create_tensor: loading tensor blk.1.attn_output_norm.weight
+create_tensor: loading tensor blk.1.attn_output_norm.bias
+create_tensor: loading tensor blk.1.ffn_up.weight
+create_tensor: loading tensor blk.1.ffn_up.bias
+create_tensor: loading tensor blk.1.ffn_down.weight
+create_tensor: loading tensor blk.1.ffn_down.bias
+create_tensor: loading tensor blk.1.layer_output_norm.weight
+create_tensor: loading tensor blk.1.layer_output_norm.bias
+create_tensor: loading tensor blk.2.attn_qkv.weight
+create_tensor: loading tensor blk.2.attn_q.weight
+create_tensor: loading tensor blk.2.attn_k.weight
+create_tensor: loading tensor blk.2.attn_v.weight
+create_tensor: loading tensor blk.2.attn_q.bias
+create_tensor: loading tensor blk.2.attn_k.bias
+create_tensor: loading tensor blk.2.attn_v.bias
+create_tensor: loading tensor blk.2.attn_output.weight
+create_tensor: loading tensor blk.2.attn_output.bias
+create_tensor: loading tensor blk.2.attn_output_norm.weight
+create_tensor: loading tensor blk.2.attn_output_norm.bias
+create_tensor: loading tensor blk.2.ffn_up.weight
+create_tensor: loading tensor blk.2.ffn_up.bias
+create_tensor: loading tensor blk.2.ffn_down.weight
+create_tensor: loading tensor blk.2.ffn_down.bias
+create_tensor: loading tensor blk.2.layer_output_norm.weight
+create_tensor: loading tensor blk.2.layer_output_norm.bias
+create_tensor: loading tensor blk.3.attn_qkv.weight
+create_tensor: loading tensor blk.3.attn_q.weight
+create_tensor: loading tensor blk.3.attn_k.weight
+create_tensor: loading tensor blk.3.attn_v.weight
+create_tensor: loading tensor blk.3.attn_q.bias
+create_tensor: loading tensor blk.3.attn_k.bias
+create_tensor: loading tensor blk.3.attn_v.bias
+create_tensor: loading tensor blk.3.attn_output.weight
+create_tensor: loading tensor blk.3.attn_output.bias
+create_tensor: loading tensor blk.3.attn_output_norm.weight
+create_tensor: loading tensor blk.3.attn_output_norm.bias
+create_tensor: loading tensor blk.3.ffn_up.weight
+create_tensor: loading tensor blk.3.ffn_up.bias
+create_tensor: loading tensor blk.3.ffn_down.weight
+create_tensor: loading tensor blk.3.ffn_down.bias
+create_tensor: loading tensor blk.3.layer_output_norm.weight
+create_tensor: loading tensor blk.3.layer_output_norm.bias
+create_tensor: loading tensor blk.4.attn_qkv.weight
+create_tensor: loading tensor blk.4.attn_q.weight
+create_tensor: loading tensor blk.4.attn_k.weight
+create_tensor: loading tensor blk.4.attn_v.weight
+create_tensor: loading tensor blk.4.attn_q.bias
+create_tensor: loading tensor blk.4.attn_k.bias
+create_tensor: loading tensor blk.4.attn_v.bias
+create_tensor: loading tensor blk.4.attn_output.weight
+create_tensor: loading tensor blk.4.attn_output.bias
+create_tensor: loading tensor blk.4.attn_output_norm.weight
+create_tensor: loading tensor blk.4.attn_output_norm.bias
+create_tensor: loading tensor blk.4.ffn_up.weight
+create_tensor: loading tensor blk.4.ffn_up.bias
+create_tensor: loading tensor blk.4.ffn_down.weight
+create_tensor: loading tensor blk.4.ffn_down.bias
+create_tensor: loading tensor blk.4.layer_output_norm.weight
+create_tensor: loading tensor blk.4.layer_output_norm.bias
+create_tensor: loading tensor blk.5.attn_qkv.weight
+create_tensor: loading tensor blk.5.attn_q.weight
+create_tensor: loading tensor blk.5.attn_k.weight
+create_tensor: loading tensor blk.5.attn_v.weight
+create_tensor: loading tensor blk.5.attn_q.bias
+create_tensor: loading tensor blk.5.attn_k.bias
+create_tensor: loading tensor blk.5.attn_v.bias
+create_tensor: loading tensor blk.5.attn_output.weight
+create_tensor: loading tensor blk.5.attn_output.bias
+create_tensor: loading tensor blk.5.attn_output_norm.weight
+create_tensor: loading tensor blk.5.attn_output_norm.bias
+create_tensor: loading tensor blk.5.ffn_up.weight
+create_tensor: loading tensor blk.5.ffn_up.bias
+create_tensor: loading tensor blk.5.ffn_down.weight
+create_tensor: loading tensor blk.5.ffn_down.bias
+create_tensor: loading tensor blk.5.layer_output_norm.weight
+create_tensor: loading tensor blk.5.layer_output_norm.bias
+create_tensor: loading tensor blk.6.attn_qkv.weight
+create_tensor: loading tensor blk.6.attn_q.weight
+create_tensor: loading tensor blk.6.attn_k.weight
+create_tensor: loading tensor blk.6.attn_v.weight
+create_tensor: loading tensor blk.6.attn_q.bias
+create_tensor: loading tensor blk.6.attn_k.bias
+create_tensor: loading tensor blk.6.attn_v.bias
+create_tensor: loading tensor blk.6.attn_output.weight
+create_tensor: loading tensor blk.6.attn_output.bias
+create_tensor: loading tensor blk.6.attn_output_norm.weight
+create_tensor: loading tensor blk.6.attn_output_norm.bias
+create_tensor: loading tensor blk.6.ffn_up.weight
+create_tensor: loading tensor blk.6.ffn_up.bias
+create_tensor: loading tensor blk.6.ffn_down.weight
+create_tensor: loading tensor blk.6.ffn_down.bias
+create_tensor: loading tensor blk.6.layer_output_norm.weight
+create_tensor: loading tensor blk.6.layer_output_norm.bias
+create_tensor: loading tensor blk.7.attn_qkv.weight
+create_tensor: loading tensor blk.7.attn_q.weight
+create_tensor: loading tensor blk.7.attn_k.weight
+create_tensor: loading tensor blk.7.attn_v.weight
+create_tensor: loading tensor blk.7.attn_q.bias
+create_tensor: loading tensor blk.7.attn_k.bias
+create_tensor: loading tensor blk.7.attn_v.bias
+create_tensor: loading tensor blk.7.attn_output.weight
+create_tensor: loading tensor blk.7.attn_output.bias
+create_tensor: loading tensor blk.7.attn_output_norm.weight
+create_tensor: loading tensor blk.7.attn_output_norm.bias
+create_tensor: loading tensor blk.7.ffn_up.weight
+create_tensor: loading tensor blk.7.ffn_up.bias
+create_tensor: loading tensor blk.7.ffn_down.weight
+create_tensor: loading tensor blk.7.ffn_down.bias
+create_tensor: loading tensor blk.7.layer_output_norm.weight
+create_tensor: loading tensor blk.7.layer_output_norm.bias
+create_tensor: loading tensor blk.8.attn_qkv.weight
+create_tensor: loading tensor blk.8.attn_q.weight
+create_tensor: loading tensor blk.8.attn_k.weight
+create_tensor: loading tensor blk.8.attn_v.weight
+create_tensor: loading tensor blk.8.attn_q.bias
+create_tensor: loading tensor blk.8.attn_k.bias
+create_tensor: loading tensor blk.8.attn_v.bias
+create_tensor: loading tensor blk.8.attn_output.weight
+create_tensor: loading tensor blk.8.attn_output.bias
+create_tensor: loading tensor blk.8.attn_output_norm.weight
+create_tensor: loading tensor blk.8.attn_output_norm.bias
+create_tensor: loading tensor blk.8.ffn_up.weight
+create_tensor: loading tensor blk.8.ffn_up.bias
+create_tensor: loading tensor blk.8.ffn_down.weight
+create_tensor: loading tensor blk.8.ffn_down.bias
+create_tensor: loading tensor blk.8.layer_output_norm.weight
+create_tensor: loading tensor blk.8.layer_output_norm.bias
+create_tensor: loading tensor blk.9.attn_qkv.weight
+create_tensor: loading tensor blk.9.attn_q.weight
+create_tensor: loading tensor blk.9.attn_k.weight
+create_tensor: loading tensor blk.9.attn_v.weight
+create_tensor: loading tensor blk.9.attn_q.bias
+create_tensor: loading tensor blk.9.attn_k.bias
+create_tensor: loading tensor blk.9.attn_v.bias
+create_tensor: loading tensor blk.9.attn_output.weight
+create_tensor: loading tensor blk.9.attn_output.bias
+create_tensor: loading tensor blk.9.attn_output_norm.weight
+create_tensor: loading tensor blk.9.attn_output_norm.bias
+create_tensor: loading tensor blk.9.ffn_up.weight
+create_tensor: loading tensor blk.9.ffn_up.bias
+create_tensor: loading tensor blk.9.ffn_down.weight
+create_tensor: loading tensor blk.9.ffn_down.bias
+create_tensor: loading tensor blk.9.layer_output_norm.weight
+create_tensor: loading tensor blk.9.layer_output_norm.bias
+create_tensor: loading tensor blk.10.attn_qkv.weight
+create_tensor: loading tensor blk.10.attn_q.weight
+create_tensor: loading tensor blk.10.attn_k.weight
+create_tensor: loading tensor blk.10.attn_v.weight
+create_tensor: loading tensor blk.10.attn_q.bias
+create_tensor: loading tensor blk.10.attn_k.bias
+create_tensor: loading tensor blk.10.attn_v.bias
+create_tensor: loading tensor blk.10.attn_output.weight
+create_tensor: loading tensor blk.10.attn_output.bias
+create_tensor: loading tensor blk.10.attn_output_norm.weight
+create_tensor: loading tensor blk.10.attn_output_norm.bias
+create_tensor: loading tensor blk.10.ffn_up.weight
+create_tensor: loading tensor blk.10.ffn_up.bias
+create_tensor: loading tensor blk.10.ffn_down.weight
+create_tensor: loading tensor blk.10.ffn_down.bias
+create_tensor: loading tensor blk.10.layer_output_norm.weight
+create_tensor: loading tensor blk.10.layer_output_norm.bias
+create_tensor: loading tensor blk.11.attn_qkv.weight
+create_tensor: loading tensor blk.11.attn_q.weight
+create_tensor: loading tensor blk.11.attn_k.weight
+create_tensor: loading tensor blk.11.attn_v.weight
+create_tensor: loading tensor blk.11.attn_q.bias
+create_tensor: loading tensor blk.11.attn_k.bias
+create_tensor: loading tensor blk.11.attn_v.bias
+create_tensor: loading tensor blk.11.attn_output.weight
+create_tensor: loading tensor blk.11.attn_output.bias
+create_tensor: loading tensor blk.11.attn_output_norm.weight
+create_tensor: loading tensor blk.11.attn_output_norm.bias
+create_tensor: loading tensor blk.11.ffn_up.weight
+create_tensor: loading tensor blk.11.ffn_up.bias
+create_tensor: loading tensor blk.11.ffn_down.weight
+create_tensor: loading tensor blk.11.ffn_down.bias
+create_tensor: loading tensor blk.11.layer_output_norm.weight
+create_tensor: loading tensor blk.11.layer_output_norm.bias
+create_tensor: loading tensor blk.0.attn_q.scale
+create_tensor: loading tensor blk.0.attn_k.scale
+create_tensor: loading tensor blk.0.attn_v.scale
+create_tensor: loading tensor blk.0.attn_output.scale
+create_tensor: loading tensor blk.0.ffn_down.scale
+create_tensor: loading tensor blk.0.ffn_up.scale
+create_tensor: loading tensor blk.0.attn_q.input_scale
+create_tensor: loading tensor blk.0.attn_k.input_scale
+create_tensor: loading tensor blk.0.attn_v.input_scale
+create_tensor: loading tensor blk.0.attn_output.input_scale
+create_tensor: loading tensor blk.0.ffn_down.input_scale
+create_tensor: loading tensor blk.0.ffn_up.input_scale
+create_tensor: loading tensor blk.1.attn_q.scale
+create_tensor: loading tensor blk.1.attn_k.scale
+create_tensor: loading tensor blk.1.attn_v.scale
+create_tensor: loading tensor blk.1.attn_output.scale
+create_tensor: loading tensor blk.1.ffn_down.scale
+create_tensor: loading tensor blk.1.ffn_up.scale
+create_tensor: loading tensor blk.1.attn_q.input_scale
+create_tensor: loading tensor blk.1.attn_k.input_scale
+create_tensor: loading tensor blk.1.attn_v.input_scale
+create_tensor: loading tensor blk.1.attn_output.input_scale
+create_tensor: loading tensor blk.1.ffn_down.input_scale
+create_tensor: loading tensor blk.1.ffn_up.input_scale
+create_tensor: loading tensor blk.2.attn_q.scale
+create_tensor: loading tensor blk.2.attn_k.scale
+create_tensor: loading tensor blk.2.attn_v.scale
+create_tensor: loading tensor blk.2.attn_output.scale
+create_tensor: loading tensor blk.2.ffn_down.scale
+create_tensor: loading tensor blk.2.ffn_up.scale
+create_tensor: loading tensor blk.2.attn_q.input_scale
+create_tensor: loading tensor blk.2.attn_k.input_scale
+create_tensor: loading tensor blk.2.attn_v.input_scale
+create_tensor: loading tensor blk.2.attn_output.input_scale
+create_tensor: loading tensor blk.2.ffn_down.input_scale
+create_tensor: loading tensor blk.2.ffn_up.input_scale
+create_tensor: loading tensor blk.3.attn_q.scale
+create_tensor: loading tensor blk.3.attn_k.scale
+create_tensor: loading tensor blk.3.attn_v.scale
+create_tensor: loading tensor blk.3.attn_output.scale
+create_tensor: loading tensor blk.3.ffn_down.scale
+create_tensor: loading tensor blk.3.ffn_up.scale
+create_tensor: loading tensor blk.3.attn_q.input_scale
+create_tensor: loading tensor blk.3.attn_k.input_scale
+create_tensor: loading tensor blk.3.attn_v.input_scale
+create_tensor: loading tensor blk.3.attn_output.input_scale
+create_tensor: loading tensor blk.3.ffn_down.input_scale
+create_tensor: loading tensor blk.3.ffn_up.input_scale
+create_tensor: loading tensor blk.4.attn_q.scale
+create_tensor: loading tensor blk.4.attn_k.scale
+create_tensor: loading tensor blk.4.attn_v.scale
+create_tensor: loading tensor blk.4.attn_output.scale
+create_tensor: loading tensor blk.4.ffn_down.scale
+create_tensor: loading tensor blk.4.ffn_up.scale
+create_tensor: loading tensor blk.4.attn_q.input_scale
+create_tensor: loading tensor blk.4.attn_k.input_scale
+create_tensor: loading tensor blk.4.attn_v.input_scale
+create_tensor: loading tensor blk.4.attn_output.input_scale
+create_tensor: loading tensor blk.4.ffn_down.input_scale
+create_tensor: loading tensor blk.4.ffn_up.input_scale
+create_tensor: loading tensor blk.5.attn_q.scale
+create_tensor: loading tensor blk.5.attn_k.scale
+create_tensor: loading tensor blk.5.attn_v.scale
+create_tensor: loading tensor blk.5.attn_output.scale
+create_tensor: loading tensor blk.5.ffn_down.scale
+create_tensor: loading tensor blk.5.ffn_up.scale
+create_tensor: loading tensor blk.5.attn_q.input_scale
+create_tensor: loading tensor blk.5.attn_k.input_scale
+create_tensor: loading tensor blk.5.attn_v.input_scale
+create_tensor: loading tensor blk.5.attn_output.input_scale
+create_tensor: loading tensor blk.5.ffn_down.input_scale
+create_tensor: loading tensor blk.5.ffn_up.input_scale
+create_tensor: loading tensor blk.6.attn_q.scale
+create_tensor: loading tensor blk.6.attn_k.scale
+create_tensor: loading tensor blk.6.attn_v.scale
+create_tensor: loading tensor blk.6.attn_output.scale
+create_tensor: loading tensor blk.6.ffn_down.scale
+create_tensor: loading tensor blk.6.ffn_up.scale
+create_tensor: loading tensor blk.6.attn_q.input_scale
+create_tensor: loading tensor blk.6.attn_k.input_scale
+create_tensor: loading tensor blk.6.attn_v.input_scale
+create_tensor: loading tensor blk.6.attn_output.input_scale
+create_tensor: loading tensor blk.6.ffn_down.input_scale
+create_tensor: loading tensor blk.6.ffn_up.input_scale
+create_tensor: loading tensor blk.7.attn_q.scale
+create_tensor: loading tensor blk.7.attn_k.scale
+create_tensor: loading tensor blk.7.attn_v.scale
+create_tensor: loading tensor blk.7.attn_output.scale
+create_tensor: loading tensor blk.7.ffn_down.scale
+create_tensor: loading tensor blk.7.ffn_up.scale
+create_tensor: loading tensor blk.7.attn_q.input_scale
+create_tensor: loading tensor blk.7.attn_k.input_scale
+create_tensor: loading tensor blk.7.attn_v.input_scale
+create_tensor: loading tensor blk.7.attn_output.input_scale
+create_tensor: loading tensor blk.7.ffn_down.input_scale
+create_tensor: loading tensor blk.7.ffn_up.input_scale
+create_tensor: loading tensor blk.8.attn_q.scale
+create_tensor: loading tensor blk.8.attn_k.scale
+create_tensor: loading tensor blk.8.attn_v.scale
+create_tensor: loading tensor blk.8.attn_output.scale
+create_tensor: loading tensor blk.8.ffn_down.scale
+create_tensor: loading tensor blk.8.ffn_up.scale
+create_tensor: loading tensor blk.8.attn_q.input_scale
+create_tensor: loading tensor blk.8.attn_k.input_scale
+create_tensor: loading tensor blk.8.attn_v.input_scale
+create_tensor: loading tensor blk.8.attn_output.input_scale
+create_tensor: loading tensor blk.8.ffn_down.input_scale
+create_tensor: loading tensor blk.8.ffn_up.input_scale
+create_tensor: loading tensor blk.9.attn_q.scale
+create_tensor: loading tensor blk.9.attn_k.scale
+create_tensor: loading tensor blk.9.attn_v.scale
+create_tensor: loading tensor blk.9.attn_output.scale
+create_tensor: loading tensor blk.9.ffn_down.scale
+create_tensor: loading tensor blk.9.ffn_up.scale
+create_tensor: loading tensor blk.9.attn_q.input_scale
+create_tensor: loading tensor blk.9.attn_k.input_scale
+create_tensor: loading tensor blk.9.attn_v.input_scale
+create_tensor: loading tensor blk.9.attn_output.input_scale
+create_tensor: loading tensor blk.9.ffn_down.input_scale
+create_tensor: loading tensor blk.9.ffn_up.input_scale
+create_tensor: loading tensor blk.10.attn_q.scale
+create_tensor: loading tensor blk.10.attn_k.scale
+create_tensor: loading tensor blk.10.attn_v.scale
+create_tensor: loading tensor blk.10.attn_output.scale
+create_tensor: loading tensor blk.10.ffn_down.scale
+create_tensor: loading tensor blk.10.ffn_up.scale
+create_tensor: loading tensor blk.10.attn_q.input_scale
+create_tensor: loading tensor blk.10.attn_k.input_scale
+create_tensor: loading tensor blk.10.attn_v.input_scale
+create_tensor: loading tensor blk.10.attn_output.input_scale
+create_tensor: loading tensor blk.10.ffn_down.input_scale
+create_tensor: loading tensor blk.10.ffn_up.input_scale
+create_tensor: loading tensor blk.11.attn_q.scale
+create_tensor: loading tensor blk.11.attn_k.scale
+create_tensor: loading tensor blk.11.attn_v.scale
+create_tensor: loading tensor blk.11.attn_output.scale
+create_tensor: loading tensor blk.11.ffn_down.scale
+create_tensor: loading tensor blk.11.ffn_up.scale
+create_tensor: loading tensor blk.11.attn_q.input_scale
+create_tensor: loading tensor blk.11.attn_k.input_scale
+create_tensor: loading tensor blk.11.attn_v.input_scale
+create_tensor: loading tensor blk.11.attn_output.input_scale
+create_tensor: loading tensor blk.11.ffn_down.input_scale
+create_tensor: loading tensor blk.11.ffn_up.input_scale
+done_getting_tensors: tensor 'token_embd.weight' (f32) (and 196 others) cannot be used with preferred buffer type CPU_REPACK, using CPU instead
+load_tensors:   CPU_Mapped model buffer size =   126.32 MiB
+llama_model_load_from_file_impl: cancelled model load
+~llama_context:        CPU compute buffer size is 868.0469 MiB, matches expectation of 868.0469 MiB
+CONTROL_JSON {"profile":"bge","device":"cpu","devices":[{"name":"CPU","description":"Apple M5"}],"model_bytes":132455424,"model_parameters":33212160,"model_loads":1,"owners":1,"repeated_requests":2,"batches":1,"threads_per_context":4,"input_token_ids":[[101,1996,4937,2003,5777,2006,1037,4010,3645,8591,1012,102],[101,5050,2023,6251,2005,6575,7882,13768,1024,2073,2515,1996,4937,3637,1029,102],[101,14753,23099,2099,1012,7668,1010,2358,27807,1010,1864,1876,1950,1012,102],[101,102],[101,1037,5777,4937,16626,3875,1996,3332,1012,102],[101,1996,3194,19884,5992,2943,2046,4367,1012,102],[101,3616,1024,2459,1010,2756,1010,1998,4724,1012,102],[101,4542,4212,2058,1996,4564,1997,3885,1012,102]],"flash_attention":"off-diagnostic","warm_upstream_counters":{"prompt_tokens":114,"generated_tokens":1,"prompt_eval_ms":115.937,"token_eval_ms":0.0},"boundary_tokens":[512,513],"vectors":[[-0.02214847419741503,0.030874072165285368,0.031063407310230974,0.07119827214894417,0.007919944264773686,0.0068993290102655576,0.05502532341534965,0.04666209695011637,0.0826283627459327,0.03727804375398797,-0.07520999263714576,3.978609328182019e-05,-0.03935449347335756,0.07151743365489106,0.058286168459028107,-0.03146263109087642,0.04590543779424757,-0.04189987697541297,0.002303963065702307,-0.031520223160265676,0.00835487566552336,-0.06298388477893264,-0.02591855605934043,-0.036397321807855286,-0.005815365668358891,-0.0031901313679919066,-0.022988763872416777,0.06788486011764341,-0.04654446237066325,-0.06665490002385913,-0.010315142607620328,0.010729828501084115,-0.027607087592848217,0.018221488605033993,0.05819983909838505,-0.027104341085620924,-0.04046380125321412,-0.014164300693630363,-0.022610501429843326,0.04854916452978769,0.037505216388363884,0.02900677930618129,-0.0331070647625455,0.04773645741783143,0.061490633226582415,0.054336662309817055,0.0091151139753227,-0.0169620829419379,0.0589845239106816,0.007275430533408495,0.01527707433649586,-0.07227359265232079,0.012121570548488931,-0.00954604243017585,0.024829904151663557,0.026538475590414324,0.05276771563799793,-0.029023140193644322,0.08021628321657569,0.028113877327188605,-0.03786011069017535,0.11606038950961099,-0.10269029510084364,0.02795649190051816,0.06363213711071064,-0.12938764484455742,-0.09217419202133754,-0.0340830282884871,0.031702928688317665,-0.022741569795022145,-0.050206504974599026,-0.06189391533979717,-0.0031850425076320465,-0.027242055851533595,0.13904475769426972,-0.030357918726476755,0.07333754042555282,0.07214447121260947,0.008542669214743196,0.007526369924752015,-0.09443970834420894,0.0401028983365978,0.010092922045306346,-0.044538998225192056,-0.04148269448571393,-0.008641307843816075,-0.01956771203852404,-0.009506273120734265,-0.010654593258837717,-0.08163803560951627,-0.12579673551231413,0.01300496699956339,-0.06700626636245278,-0.11884568793755025,-0.017913651156095015,0.004370917327457808,-0.016697868372158923,0.05474805773140238,-0.07270938170730658,0.21037550133743652,0.02256559123013715,0.05669468444653873,0.011910032061293792,0.04397559827611627,0.011082831264100874,0.0202032086517219,-0.024291132809751554,-0.003261152607550799,-0.07123383374963833,0.01260780595288307,0.019602817118763757,-0.011906695433854676,-0.03326750820490713,0.02525443964177043,0.0922253961611326,0.018570916410080268,0.04225054174948471,0.015113589662283291,0.0525511571041879,0.042093716903078185,-0.046205381803123086,-0.08587447157788307,-0.02132036455527328,0.021877212093120532,0.07110479287236016,-0.0046300329665727846,0.06085553271201415,0.018202994491476835,0.0391034944993812,0.026413697808556336,0.022462441104808564,0.0057890066472666745,0.04983481340547836,0.04177780139183314,0.011804595976924927,0.02882689010652107,-0.021104465626384565,-0.007100423752873221,0.027293714833399072,-0.11178670684299025,-0.04525517475840919,-0.05092601142171919,-0.006972822089895355,-0.08601066908463832,0.08855074217964273,-0.009352059839868617,-0.025727371335200706,0.08177755631663845,-0.05046621811842644,0.0033124228337167868,0.047411582692667875,0.0032651769528436268,-0.03751299737669776,-0.1252314557731318,0.01811394950548343,-0.012206583216865397,-0.029103430728570107,0.08909138995489324,-0.020213198393430963,0.035650400636092,0.0423819189373239,-0.012732129731862649,0.016932291625517217,-0.009801487443430993,-0.03274461773262738,0.07881997512543439,-0.01124897701618302,-0.014469625601685862,-0.0495262122918086,0.03696073518400325,0.07005907234962551,0.06535648871605224,-0.061005311702289185,0.01952399013470664,-0.011054050334862458,-0.011542864576309013,0.017822582038969026,0.04434605455459549,0.032209183018154494,0.0558845284782985,-0.014697150696706749,-0.014596388911843889,-0.03603390131520341,0.04802849959472337,0.07976027970440845,0.007685464785550596,0.0026401026848369407,-0.01715136605697877,-0.09793437913653326,-0.04041693070096826,0.0073108612201488125,0.026042216037438636,0.011511992380577067,-0.050447762607701827,-0.02847630925165051,-0.048110001922914265,0.04465972438801683,0.06929938203220991,0.07405370017492972,0.10760828925355473,0.02797125496639063,-0.050492098800071904,-0.03577668225003522,0.01016169215229345,0.04273711534825963,0.009066993866171194,-0.07459859761852823,0.06819219237299126,0.05023617209060195,-0.07665830377887739,0.0499850959109605,-0.03143229597803206,0.026958170620996848,-0.08036134259097606,-0.0404224290870299,-0.03561988090100503,-0.07128113061142621,0.028483764633483788,0.06578179122765794,0.017831749372506478,0.04797994730168576,-0.1247116132462391,0.06284720389757857,-0.22054144651484603,-0.05903600330545654,0.022998678086844776,-0.08764406570296754,-0.03906023918632239,-0.088968223421698,0.02812113633809111,-0.06366391899058342,0.044796650313438366,-0.10614116678368546,0.06797872877932094,-0.024853770772480577,0.039535795872365734,0.0137758680830653,0.018813540247778364,0.07914648795340508,-0.0029196018783237544,-0.03976362643327894,0.02895974091553306,0.007485463510134374,-0.02663546604637593,-0.01170296394994578,0.008404942700142358,-0.01881016333912268,-0.021347316045925862,0.007843468696733772,0.05206283462926029,0.02448776053328014,0.056333100106008796,-0.023728150778297676,0.011929042277938236,0.02655588882466022,-0.023494737912121647,-0.09269322892389888,-0.0015570763008115045,0.0853987436966693,0.0739993742408506,0.08873501531837286,0.018025574194715482,0.017048477759557885,0.03731705946900292,0.05829693697092417,-0.05967118438245794,-0.011183316954791835,-0.013194193888739466,-0.015139775809821066,-0.004214041709934564,-0.02457670481623212,-0.028814963509648656,0.02926005416889379,0.002044274258443236,0.06574314811389627,0.005358599330652885,-0.011808495702203995,0.04005654472663124,-0.04913661907869114,-0.011457986178654444,0.02783854849840468,-0.021642401133052765,-0.024600504301688194,0.01384071832416505,-0.10434627605459577,0.0751423940422072,-0.04641307175575188,0.03724899764007381,-0.04728538164115779,-0.07396302715643334,-0.0055566385751454,0.08053182612656747,-0.026208285423047702,-0.04035063788880013,0.004754151982701472,-0.019655758386023344,-0.017018980160341347,0.019341190617149326,0.002400181884609015,0.05165733704913425,0.014949148309177212,-0.012913099810834132,-0.087273444942854,0.03371895658283404,-0.028214897583191113,-0.023503693769272114,-0.004917477210431791,-0.01851186750335844,-0.03072495110154763,-0.04317011828576607,0.07268336675493922,-0.015570477682831015,-0.027248052717650278,0.06653950105192558,0.024933836403947186,0.029232471605848295,-0.0451351199491939,0.061559144862429874,0.06212124238550326,-0.2070939383213695,-0.04079953847977907,-0.04804451137830947,-0.07087918449189433,-0.05381335224153139,-0.10305419561132628,-0.02433070406987834,0.0813632841448365,-0.04832947413138944,-0.016423380413770873,-0.044469781668054646,0.03811142855711622,-0.013567286069327908,0.060480393742108805,-0.021724648663750182,-0.016362936769925347,-0.0037413286260233737,-0.005000938632374351,0.01881112001801619,0.023780895674626486,0.019501664270423377,-0.01728611343993754,0.09012069588187609,-0.001967603578260568,-0.03316414324642351,0.0003314590256885393,-0.00994951755755333,0.0021301634628760795,0.07011673491114377,0.04045186122926951,0.006613271531206135,0.0097291205594811,-0.05520951599164664,0.03596133806032275,0.005667324225144395,0.02988743747372108,-0.035192030602451345,-0.010025949487608626,-0.02905270660660583,0.06637702676489528,0.012224838999891187,0.05173978262914647,0.01865590977704046,-0.07658230655028422,0.0247629785887185,-0.10016679101292118,0.0020821050343374455,-0.005989146808960857,0.0026379807878349777,-0.046245297131974734,0.011247364928328257,-0.03472223413037734,0.015609698160696848,0.06705515433229513,-0.012709118247705703,0.03265893287144942,-0.009832144806007906,0.0041992337472894605,0.037488607100065345,0.00932526947408231,-0.06557058338211547,-0.058809112639596615,-0.004249691845385981,0.03821842889539517,0.08024950850670885],[0.045099257975778594,-0.02790472114557377,0.0018242889839387736,0.10028182566157975,0.01577122065864488,0.024047821499691303,0.05299931315502264,0.06403779837413913,0.07346685194387328,0.035963356643014914,-0.07584021784611708,-0.045951389315610686,-0.03484736086872937,0.06427362712983799,0.06117668566571386,-0.06574467762905356,-0.009716353201836172,-0.02831710595928869,-0.002499216729455501,-0.009168800141276318,0.012879001429678268,0.01057270178700532,0.04567818185741013,0.009509742869765131,0.003093482843903023,-0.014857062939979631,-0.012653401104503125,0.048176066347004935,-0.045077056731231,-0.13495075393852773,-0.03516271104649081,-0.007294398950848105,-0.00017583253531428826,-0.005639276347285241,0.021584676011051542,0.0028023388779934632,0.04615305722776459,0.0028059449283541326,0.0014007011314945558,0.07313300072898885,0.07568514611746009,0.013133744192078757,-0.007408791524130906,0.06353856110240164,0.013817572257954297,0.04383010004416769,0.03297559112045624,-0.0497997470987286,0.0455104501333504,-0.03627996555205205,0.05068729801338134,-0.026163375449626176,0.01150665065975723,-0.009884626741983066,0.001515172168997298,0.0007286683027240828,0.06002670745074133,0.030428477353331113,0.0659606970600043,0.03165841969375453,-0.01363888858066909,0.07274264206072018,-0.19257574925514753,0.08365290848506104,0.07529441742844897,-0.07054027199408565,-0.07868358938144404,-0.0018104933221947835,0.013705784696773545,0.010862401598298382,-0.02354147619556629,-0.0784957642095661,-0.039976158912346585,0.01379409245959124,0.07269287427085933,-0.04856300232340585,0.12282637677553011,0.11298500116345699,0.06355759074058528,-0.006677139103231583,-0.06532093780380441,-0.00024236441225038548,-0.0558642053610316,0.008234064148507525,-0.0005831427788468999,-0.013023380550005152,-0.00937067619009785,0.0650582693292507,-0.02697931909122136,-0.044254266054021996,-0.10642169877645537,-0.019360522625083004,-0.024397091346763777,-0.02577221892413158,-0.016240869486012097,-0.04443527227221747,-0.010219597930364768,0.09451221115964133,-0.016036573435459743,0.29824319378566466,0.03005144934306089,0.05651291779769637,0.024770199449793567,0.08916864250507918,-0.03842405074423588,-0.01495161975846128,0.031170329296883643,0.009383185864573962,0.0002975421035914021,0.026484736812574277,0.020199650378822938,0.0052979008266780155,0.04372438313579292,-0.021926907204625704,0.11086690992843096,-0.03223321718335631,0.08866812998328286,0.058279416644739665,0.05890346323441153,0.036745200560562775,-0.0334603645456715,-0.05175179482933238,-0.023476154319495603,0.015113026440454575,0.09668775472244752,-0.045234850755350366,0.02878229471520661,0.017113109140567243,0.051786689106849,-0.02593343894387533,0.0391403283077225,-0.00872476946875035,-0.012702663419599726,0.06410559806768164,-0.007242809965145455,0.03832392048832093,-0.02121749154365774,-0.003066892558673662,-0.0037993705057606827,-0.11075279156694838,-0.04443255328051171,-0.05555141229090109,0.03786790296080541,-0.06678547990246066,-0.041194346486683645,0.01945945692109822,-0.030501615917586267,0.039496909368215184,-0.02859711254863195,0.012248317592938531,0.06547973616993903,0.008977408564117254,0.0028371579950467705,-0.011060313139164987,-0.0022933885617664007,0.042807812022910105,-0.04666595883692006,0.022034351977717494,-0.016909340039197234,0.00043104443115611033,0.013582747844270689,-0.008973870240767482,0.0362365211523793,0.03428893018946818,-0.036761507903284044,0.014365635748913348,-0.09142819399145027,-0.04089015639881532,-0.07296448931836466,-0.036854829116786406,0.057168013092168575,0.0626153130973714,-0.03568700731226007,0.006842970754259988,-0.011501858560766711,-0.00047724498979668823,-0.00024273938862778903,0.0393627801528301,0.021510197773483286,0.009356002555029675,-0.016559463952783317,-0.08151545723618846,-0.037277660408962555,0.030951541317877716,-0.03157963500942024,-0.01904643778611051,-0.053597230333514906,0.02381881004579661,-0.04734124669190936,-0.049444979800625295,0.030229429320184097,-0.059238741672159735,0.02404412624790165,-0.04336071882108743,-0.035102288641501084,-0.1318809164937888,0.06799283776256751,0.04490447839619638,0.04308388053435148,0.05375367312117297,0.01999406421130692,-0.012028298964588261,-0.0498625614235178,0.022412402500664428,-0.0010786278089928833,0.009441201482859379,-0.05982322247244142,0.05067487258469927,0.01413546632832015,-0.06448042247228025,0.026471686973889307,0.0017976759853825875,0.011262788819814702,-0.08600512373736531,-0.026428120335221284,0.010489110962714834,-0.026608092477591844,-0.008284737993623913,0.03551602799543394,0.049836280039533255,0.04328676092518826,-0.15980881349211573,0.06889761116052777,-0.26642770028673596,-0.055887100394471305,0.0022503141828361145,-0.07143025116986079,-0.008762750280897711,-0.08931330740035448,0.0121430987258756,0.024949173857662137,0.02057029553128573,-0.03758606609028962,0.053034167787459716,-0.07308503679024748,-0.021755247313933978,0.034095396126135144,0.0068216834113899215,0.10333435142158216,0.020904703429162168,-0.030572877948076085,0.011559223338996196,-0.02099856150311676,0.058780391692464067,-0.03889239789149123,-0.04571124585375422,-0.010897414811053649,0.007270213800444733,0.004074671719724942,0.08681063246364747,0.010228201738566119,0.09523430003103855,-0.04514248432751382,0.008427135685912489,-0.004080026283281565,-0.00765543264933767,-0.12483680518952683,-0.004847494729797028,0.015831317643606634,0.03282388591980431,0.024964328189319845,0.02040614507941196,-0.01512409402516208,-0.08005317490706652,0.08097635022945092,-0.0645003375172405,0.022608399514564465,-0.012859224316557281,-0.014638314606053254,-0.012835097807834076,-0.04235547818403604,0.01219390802501378,0.005989623219018804,0.05633921288165123,0.013308836685908126,-0.030335694652159295,-0.05267930798417079,0.00614674492866415,-0.013819670143413778,-0.034600692487530414,-0.06173430692460092,-0.04590266551284463,0.02535176468485007,-0.028555095371822978,-0.05345864765419379,0.007457525238166851,0.018531689376999366,0.03297486759775446,0.0010877850996720028,-0.1044084952068902,-0.015758228635700918,0.01471940035687972,-0.028185794848308233,-0.03278979115139194,0.032512477123701394,-0.042876097368677105,-0.08335212126652071,0.03748775290052068,-0.0027124097966100364,0.0815927717488228,1.8409357876536822e-05,0.020464530718439837,-0.03436345963526419,0.02584879174340269,-0.025256827934356074,0.0301656502984592,0.012348877337215264,0.0026980287504883263,-0.01724825260923746,-0.042741429640961476,0.0021378039248927468,-0.00020973238208554662,-0.024086316871933647,0.060049681774340134,0.0452239351434478,-0.03200286275239188,-0.04463200767572411,0.006791252509079224,0.04487577866235934,-0.14905684326290186,-0.025389234240659076,-0.0164428562106807,-0.0161507909096412,-0.004453683635850945,-0.09807827945758527,-0.025686265087912125,0.022516401455592062,-0.028601301712037657,0.021359003003230556,0.09673125858973958,0.028341547150830815,0.006965329097745143,0.06513699124220904,0.015457768489066858,0.04172596057338637,0.06567599252873445,-0.030747930796825904,0.016904754424996036,0.0013096372097090307,-0.009723411677874258,-0.014242727742919025,0.08569153115813055,-0.009449640929168432,-0.02972522319847643,-0.03754713462217223,-0.04013889866013973,-0.006268268660630876,0.009544407536196028,0.04117887499438954,0.03298179227164907,0.06375296169260411,-0.04440354299355153,0.011313020787481946,-0.018873856147319262,0.018509213920651555,-0.06687723843907745,0.0491522570520166,0.026807287527908855,-0.03197569265787411,0.02510753943167834,0.019396951497553844,0.017349882770662024,-0.025116637977434898,0.054354718957192995,-0.035555174207732215,-0.049824373300641954,-0.007323694186817547,0.03046386058682884,-0.06607612370911202,0.005239995884239672,-0.03642037190503243,-0.01611346837100219,0.03231567234130554,-0.008769068715450877,0.05909841791309508,0.04614119674146609,-0.005483707403255576,0.0036094226702485382,-0.036948629374999986,-0.041891217783730894,-0.08185388085024758,0.08307042315378334,-0.005563844975929489,0.07908345626129128],[0.031576467478255404,-0.026589282996646802,0.002349785819973503,-0.0015644834022697604,0.0130822444212302,0.0031500016870748054,0.013732666229472668,0.036235254113512326,0.047333554370502816,0.0007508802501719206,0.0005560357003279165,-0.04083472900840133,0.031333217330700124,0.010258613605053278,0.0995254276648579,-0.0049809742608904455,0.01974891595301442,-0.031299698996187564,-0.02370027751675226,-0.08525433554461646,0.022068448530142972,-0.042423782839208855,0.006132378968838283,0.001917793734381525,-0.00791533014557872,0.017400568737339576,0.02791770886369522,-0.006742380742536971,0.008442728373361857,-0.02135223471563891,-0.03326225640084511,-0.010722002124733225,0.03304929386552076,-0.032925590262210355,0.03559083139975989,0.011270179919612978,0.06575854684603151,-0.0012784429600165086,-0.006905478208724191,-0.000474477556569099,0.010856860230429874,0.024044180866090854,0.0009596202609336605,0.040064848216016344,0.007337985016787077,-0.005316629366754446,-0.013600429198615952,-0.03814494485599094,-0.023749451924895047,-0.09166792482950048,-0.022218105929776622,-0.06837273471567164,0.011004699325881715,-0.05137078866341738,0.039611044663429795,0.037515124221365506,0.10145453220049999,-0.009809737967760543,0.03810684393668175,-0.03396020043174744,0.014819450763556907,-0.03279650866831361,-0.16141423041901715,0.007728679830174205,-0.05000530277846357,-0.070296988257979,-0.016327032783229906,-0.01712293938398494,-0.07014015911313862,0.054622738132480544,0.017393472277454497,-0.004429912710863666,-0.00785534411059072,0.013952638482898454,-0.005635472932964493,-0.0585047864645318,0.001921815770859289,-0.023826035100034015,0.004405076737903312,0.025956568787049775,0.0036538511572342166,-0.014251355909504763,0.0011624880166059936,0.041618956564474646,-0.067002738257968,0.003386374684160276,-0.018891075718732817,-0.002113118228151106,0.02667650267842625,-0.008861484972078686,-0.07317500862746103,-0.030341870034918166,0.04949044937656123,0.053269896908290607,-0.06595875997579666,-0.019749454406728026,-0.02160212142796218,0.04306829393138237,0.0598809694117109,0.3451840377651603,-0.045768546016778225,-0.02886076553554517,0.04448348776828028,-0.06713624859274321,0.0006424251977723329,-0.02005186736064534,0.06332579005504002,0.029616702177048954,0.061053423731930866,0.053001442544353815,-0.09272413206652914,-0.06288810738111307,0.06858463343666821,0.018665764754018946,-0.06271662705802286,-0.03248509257190833,0.06756786261508947,0.032571402283278164,-0.005367084034524793,0.06483357174447915,0.0657831815125883,0.013502863513339378,-0.012182656021132506,-0.02082543549715419,-0.010784592868186884,0.00923157779353007,-0.007313013202920252,-0.020705293216885745,0.001596795944157701,0.0064279409584846224,-0.009131708541074469,0.048911740928792594,0.06027537284550845,0.04691565536979793,-0.01345840507594356,0.04427605379418558,-0.016320509146444406,-0.03575039700237884,0.03729926811106955,-0.01056585791265619,0.05394215555140777,-0.06413276359807893,-0.03249989104752662,-0.07064880638591636,-0.0021681763478452903,0.0490438994010528,-0.052070166388706075,0.030377129751653444,-0.015683675520442687,-0.004831131102908788,0.0063292492666580154,-0.018690360141277475,0.042044659052433236,-0.03302075090878741,-0.013226498462397386,0.08711341163801621,0.04592041942348853,0.04429575890881113,0.052897705917657335,-0.020488275094016364,0.016825197393285345,-0.04028504796204454,0.011830767517785768,-0.005048303069696343,-0.026255958871638733,-0.09114399790970079,-0.05080320935015486,0.02164680490300426,-0.0316852220353042,-0.03137551131509824,0.0259921181886097,-0.011975272782798056,0.02903028844027225,0.002111911412628098,0.05703626443370043,0.0356478223882558,-0.021606301399951684,0.10212076801788443,-0.026468595716115043,0.02793248442638952,-0.026661982431170617,-0.027420248007733548,-0.025890622118551292,-0.006148555493170417,0.07899387005743728,-0.005537530002760909,-0.009826358020835493,-0.01564560733388204,0.010195011419669503,0.054119265907248144,-0.001534356180506717,0.04645670295586487,0.0015496485114687138,0.0319599610869621,-0.029509240563567782,-0.044703762799630134,-0.05107124146163539,0.011960032415074378,0.016666873998473764,-0.028157941051834428,0.031470295535067,0.0636128824459997,-0.009109626210585666,-0.02355736306331938,0.0421191489683026,-0.047288085309495596,0.005966479988534761,0.0037714108236422688,0.009381099352257246,0.06152577693311924,-0.007380994211740957,0.04236452019796375,0.09125466733253962,0.04712127267634824,0.06355375400902366,-0.0339029803140117,0.011482189931954604,0.020230748558182125,0.006985783097372999,-0.0254158401474207,0.0082194452024205,-0.06965568824843799,-0.13353133610667695,-0.2795774756171842,0.035369878800515106,0.012449823988051386,-0.003077722868369824,0.031155213370824407,0.025710857136803725,-0.016057089079234203,0.01747884910549073,0.08815312811632668,0.008184607738141482,0.07531486623790051,-0.0587526061037843,0.05921700524707565,0.031988985215099096,0.012742818093574181,-0.0195415523543291,0.07473435094241206,-0.03256731396298459,-0.04039955038973826,0.009244904113782437,0.08578793826488677,0.045872443033942584,-0.11331071997080767,-0.04951639007978507,0.0428357899451752,-0.016538581263817013,0.11165994199606429,0.054718242472917344,0.04095324119779211,-0.07260098750928437,0.059691322413176866,0.02735900503520133,0.0033906708574071246,-0.14601645745412445,0.03430769456360168,-0.01465445807122879,0.05967642246603808,-0.076230329202725,-0.018883406435748155,0.027051089706253195,0.008209270227534534,-0.01320784570563764,-0.05052582876568918,-0.061719273302882446,0.010312143105390298,-0.03237484212825092,-0.03592067603359737,-0.040895762491342844,-0.041374279269082694,-0.007927140939573342,-0.03497639515695174,-0.0059704868861163215,0.023089026170377776,0.07400389347237758,-0.03973563859750069,-0.05364153471547343,0.029241532506297865,-0.002368202082624994,-0.038189425387992026,-0.03053185090748738,-0.053862271278577796,0.026639347735550076,0.021166026292339785,-0.02388160385060554,0.04402346499346972,0.06296916021306619,-0.03852075936188841,-0.06640994163522455,-0.0130673076497493,0.07200069508712356,-0.004762014676872844,0.023122583784188588,-0.02404816771486393,-0.02451669445774711,0.041745694493575396,0.026098069185745407,0.042139773873162326,-0.039332819574051596,-0.04459659905416074,-0.019150382916088036,0.07631038041257257,-0.01306301311313988,0.04791775210020286,0.07106883956182654,0.004891555347567965,-0.0006279094512696234,0.0765479416084303,-0.06036789523255258,0.0815384681036656,0.0579602051803987,-0.036313809436751276,-0.03169791252191604,-0.004942231370550365,-0.07895546799684146,-0.01547907947564705,0.0046113957527506135,-0.28609823192081246,0.03560420600081637,-0.06362198215009589,-0.029368542117211557,0.03150041293700548,-0.01368681092203259,-0.07799456543048344,-0.003944478685037033,-0.05274936110124044,-0.0015567421072382962,0.05512708104882431,-0.0008608745600719507,0.032676248550150395,-0.05232005801094163,0.0019853737670325246,0.0012256671312147927,0.0627539292982675,0.06465313574138637,0.057410229539304976,-0.010005831681120987,-0.010998517746318536,-0.01268089100659732,0.15954668309029332,-0.017759128174840277,-0.005030072565392858,0.018020553181026515,0.038788519791556,-0.022013342947963394,0.01918034647410834,-0.02862558073723197,-0.042804428698791926,-0.02422190987087877,0.10828481592094233,-0.022605687858776893,0.012178845929201586,0.003823610146910193,-0.03035026271164572,0.01343333424551238,-0.03309338160453927,-0.01112400037451249,-0.015566343346637038,0.03205281080149171,-0.029732369890590964,-0.07557099344873436,0.03486548351177367,-0.08969445432647723,0.01617122981005648,0.03408831313628718,0.01800276456882842,-0.009964249634003775,0.032378128496205076,-0.04497783737649252,-0.058193242710407184,0.01541759919068786,0.04448232575570685,-0.02555209675979904,-0.05542636966189277,-0.0497378303969832,-0.02439612010519784,0.03387209696575721,-0.026780347323192937,-0.0068337173857649725,0.05511982092519649,-0.006720350784445845,-0.01403926897520405],[0.04846418462700475,-0.001390093082309683,0.016888028194159473,-0.04791935316409857,-0.02283249087608301,0.07031199990388806,0.006430622247482123,0.04526074421144651,0.027714976576916035,-0.00791100516129317,-0.027373248041824918,-0.06026213150583412,-0.015979638225255468,0.04573843180841311,0.01698609482444516,-0.014291057828583836,0.014044323393681184,0.05496498851696987,-0.02271476953141702,-0.037798318966106324,0.03418487507931194,-0.03322865000301767,0.01130674646826295,-0.00886490648860389,0.001050332171007373,-0.004477578364349399,-0.015063769923456729,-0.04072455555832217,-0.07304455810019632,-0.17125865087406797,0.004121575991815608,-0.05990335477289763,0.02927603986587135,-0.018687001674766487,-0.012715374351428098,-0.030732990985886947,-0.005854157547010697,0.013786813777393866,0.0012794615613503691,-0.006832757198196789,0.03260098818375266,0.011552807158133999,-0.06329387988738358,0.008871274287484054,-0.021369524231846206,-0.02528667784558264,0.011494455151452063,-0.019182042353027697,0.08874786292066138,-0.02955064665092076,0.01873760126939077,-0.0650791636272078,0.011020752365369915,0.02158876860569389,0.013866696400507748,0.04718250831645319,-0.009787221574632337,-0.02824508517066738,-0.010133445955819444,0.06263151506494334,-0.008211220576371437,0.03715045901325617,-0.2241086076139412,0.0596024585041063,-0.004726764504501868,-0.006533003057559854,-0.0035156051292421233,0.03633969019726643,0.033181258793291826,-0.01610421865767578,-0.048098229705501774,0.018267042890073932,0.05203906786615219,0.08243556862532972,0.009010233212935183,0.0028049466894575024,0.02907913570828843,-0.028721174104159225,-0.0021091325588026323,-0.004704087810648051,0.0061370684567843186,0.016518403613316735,0.04273924434735928,-0.014678169765815409,-0.004860452342651239,-0.051277358430470654,-0.0502409379490783,-0.01345887292491899,0.05915272856146397,0.0317594719508928,-0.03158677838265182,-0.029683661138965277,-0.05082570756412744,-0.011453820348526135,-0.05200278831540007,0.01976426706011455,-0.015545526845631786,-0.048506160601165915,-0.0010837382347431202,0.29086250076692477,-0.056904009341144715,0.002972268069149305,0.035902714808868315,-0.03115464637588769,0.0023368929355746734,-0.022961344415913593,-0.01858516744330759,-0.010001521465598621,-0.025687999247197012,0.004687313691965588,-0.007920406787449282,-0.007845153495672118,0.016210630879994185,0.03157366997404166,-0.0218335915951376,0.05858372442218363,0.056486164204405935,0.04015039209600968,-0.01865836158702217,-0.03942181227534049,-0.005389350485920836,-0.02012463455799084,-0.04614759487553012,-0.0509905721045217,0.013835661476965284,-0.039055519296541476,0.06160489508572229,0.07964965424569813,0.024034843779795447,0.04689878662206651,0.02489564981472072,0.019444445901572703,-0.017991167600310855,0.03349946233187503,-0.004206674017559819,-0.013447078832525218,0.00802899742570809,-0.04059758818863867,-0.02058237519478383,0.002613791875467825,-0.016088442123958043,-0.04075636137887618,0.017181605680462137,-0.1397184106593669,0.01271383887623298,0.08577221309377138,-0.0003961533901937694,-0.044298661581630115,-0.055534706683810074,-0.045363147137422115,0.011495535671033813,0.04508240792983418,0.029028897866565054,0.034069869250963246,0.014025655996170174,-0.008294317903211721,0.019560984045702536,0.008669867964977181,-0.02122216916373865,0.015592485215642134,-0.007353818810011469,-0.04269453548010392,-0.005717281860153766,0.05781904513735927,-0.022960582997144,-0.036797682007470967,-0.013334493115286523,0.009316336195968389,0.03333965285385152,-0.023775462210723956,0.008237867073893288,0.008173218355145779,-0.018599901370411356,0.015809407420213247,0.07408425173447374,0.019718724107568017,-0.04095500005473506,-0.0011657601760493767,-0.0076696725344457695,-0.010235025854452809,-0.005612190272879717,0.0015743841681557541,-0.014293458983209944,0.019718024297371066,0.0930453483692246,-0.033450921095459836,-0.005990588941276446,-0.022166434278405117,-0.004895881616115532,-0.005128907353751488,0.0035104999111744066,0.01842949363818616,0.005976358545776019,-0.0008363265991998235,-0.024650446115892212,-0.05186315485506385,-0.017140852399511894,-0.0750389065820191,-0.0022302161123352944,-0.024000477254209254,0.13333847962951453,-0.0196547159600053,-0.027781099952139513,0.07243747670360827,0.00745210817898287,-0.005988926694595313,-0.03572612568318788,0.022048611832491714,0.020739371214656615,0.003691280789355097,0.0018705571130444062,0.016322262454210403,0.10976821503807552,0.040103787580365285,0.028332199692385426,-0.058892948906230785,0.03912700419729194,0.040414844524521834,-0.033820155488675833,-0.01798956103830115,0.04022617695918927,0.10304076110788955,0.05046101640821716,-0.300031928951864,0.05604859168676527,0.022138084856747117,0.03988883685011877,-0.03616507254591059,0.03091581679476731,-0.020194016868736467,-0.010663683295690543,0.053032608780984605,0.07335900825496924,0.0891960384316247,0.014861982891565059,-0.0396647490946371,0.06957533198342565,0.02760144303548282,0.07237880638596766,0.05186556232851792,0.0167133979051477,0.013282127408246455,0.003471061341367307,0.011458682686644005,0.019580720904846357,0.004780152281965022,-0.01600144608026431,0.07856856596943217,-0.014976113562240817,0.20876897029925634,0.007744821565561535,-0.02250000362688843,0.022751622515806827,-0.013001748373852436,-0.0011864894861102085,-0.007014898204096611,-0.06340138842635365,-0.006522994034065756,0.02948576808480608,-0.04998065278760804,-0.00520558356660067,-0.08223661400807267,-0.029165052812107406,0.025774669871250627,0.026560160215972597,-0.014143243065741938,-0.03916055085494987,0.035666134730502924,-0.043208531062548475,0.0276678949897604,0.03201393115298076,-0.022589588810340185,-0.0507499132227059,0.05282348401012038,-0.01108486398374053,0.07601953181249423,-0.0026279559232746364,0.021666981478518428,-0.03860696781531433,0.028422568410504646,-0.024456499169796187,-0.023053512420295408,0.012810648059753944,0.055682421925111546,0.009390027947385086,-0.036260670094169556,-0.045027449923622107,0.040454008620239276,-0.023641738434240545,-0.03600857097432594,-0.024764622598070708,0.012237561167755727,0.009997587995191376,-0.04472072137662052,-0.026128508440133685,0.055067321935837875,0.012975814324183464,0.05803132616279123,0.030335922155491975,0.03066921821466587,-0.03940426173067201,-0.039182413999703396,-0.01883228100788805,0.03179130304675866,-0.012290941836537422,0.023197731770026105,-0.022170157647782577,0.0634921331147367,0.0469451668193182,0.030628736643318055,-0.0237289035065823,0.012048056357718004,-0.03091844226778612,-0.0008611233585670629,-0.004925463209226404,0.00821594074086013,-0.09568072931028303,-0.003802962124341525,-0.004841091848697988,-0.3251115593412754,-0.016479029416569514,0.02122312646617511,-0.03916584287336926,-0.03217123837513075,0.005919331913259416,-0.009413456581766552,-0.008805188825228355,0.016513944100481532,-0.01266791995342262,-0.06483558544687289,-0.0012984156756802204,0.028858807655445018,-0.021239689693974294,-0.009155614437157658,0.05756715137942447,0.11691055057468541,-0.03724923177256677,0.03670289958801928,-0.07718451516763085,0.0007268982225774246,0.04595753716804559,0.24620218738563476,-0.04828721005281853,0.07723509106665027,-0.011022010601988135,-0.012173636744663527,-0.041811431881002635,0.01121271125021794,0.013022584709061898,0.03848007311215241,0.0013584579688423783,0.09383835495980909,-0.03918522903756111,-0.011036496515094335,0.056807741997121616,-0.04441076074911563,0.03108627033849524,-0.04114229959381354,0.0006342871103846759,-0.020394510120602623,-0.026181321204252164,-0.07874811546601349,-0.019384064761261005,0.050109133516588786,-0.07722363503155254,-0.03329908913774018,-0.04476393900047651,-0.005311422750208144,0.013064180763691768,0.012010659164269846,-0.024170354204885523,-0.025783181332517387,0.01580644388989839,0.02520382853273992,-0.04502525097149083,0.013086592856624614,-0.052481199418168485,0.007674704691065158,-0.015512466737727037,-0.016015811935639206,-0.058428660383960676,-0.021794141572454812,0.03800559232037726,0.00787934704334281],[0.004154129164846608,0.03805068871027339,0.014848623802622295,0.0940224997597096,0.0006560785986320205,0.024336667527878095,0.03660796489466506,0.050844225954734285,0.10678687481557188,-0.0001930336918784324,-0.1283665685811792,-0.020806054678629282,0.00041946992479021425,0.049974237283856915,0.019922638502080484,-0.05486720838245976,0.026527885855285985,0.012968704026016749,-0.0408754449467048,-0.03431269586503947,-0.0041046071343048786,-0.008178834495472359,0.04708534218460824,-0.022778493426752405,-0.03788402008701726,-0.01766316064008516,-0.04099395540032579,0.027958211086491845,-0.025272357559137853,-0.07197456869184966,-0.038899703344686024,-0.04680799886679713,-0.06325874450791166,0.043667727829484686,0.014056505688589386,0.031902709593966974,-0.01126574540981978,-0.020417926958987326,-0.013364656700220258,0.05302188546018601,0.04475219754911125,0.04339914114696413,-0.030940098062106267,0.027049352795334616,0.024321524599347923,0.008974366001792503,-0.010575036712226909,-0.048990901050249315,0.08043682279220692,-0.024501354771243117,0.0357272880755496,-0.03550391408853076,-0.0032564128111139414,0.011195561842326344,-0.03376046268304079,0.05771282894808005,0.07554479584106896,-0.020400214220631947,0.07458407260413803,0.038315990823444265,-0.02576598710905533,0.05550952121131981,-0.13597187587863357,-0.0052080603682320824,0.0956388868685252,-0.10590882432215101,-0.09060640800859632,-0.04819250801248409,0.08404588631707702,0.020924851036060056,-0.037398392519311006,-0.10047487667294426,-0.040281832174933335,-0.028263320318481666,0.11535130960776302,-0.06426371634610199,0.08961103721927428,0.056624825324385966,0.017306080079508693,-0.009037151808207616,-0.05415236907087429,0.017831405058758038,0.018124704136279486,-0.0063770873862777164,-0.03650109338567286,0.024326601054203152,-0.009948732834483661,-0.0045993021745832615,-0.010000385014631474,-0.027764584393542815,-0.09936286377815359,-0.005665163213101671,-0.016451287528567973,-0.04883119052785239,0.022735280395687764,-0.06815620363143562,0.004821524235205678,0.09397716738354331,-0.07614928957992699,0.25659585014225256,0.061499777834046206,0.05337355379515389,0.020758192386192642,0.028720340882894366,-0.03624545548616547,0.029921961350813958,-0.024309162584037397,0.0179691641525963,0.007968777475733374,0.017355491571658846,0.01976019194671312,-0.004118276910210477,-0.0004987434049803845,-0.0239927169335431,0.0747679087538332,0.029764621170467964,0.05083900654797416,0.03601965464122632,0.08252437273063112,0.029912054451358434,-0.05050914336519714,-0.10457514288981153,-0.007869046913060127,-0.0026785513445841736,0.0787178826517121,-0.021194647823077867,0.07031380000325847,0.020209032670149205,0.0442276039517009,0.07396650042821355,0.015950635050764654,-0.011951917877779408,0.055734381233256976,0.015380970047526027,0.01772089160065392,0.04603409382278673,-0.004893163917451301,-0.04093305456437755,0.026769752167211322,-0.1262588989932567,-0.07603970198474178,-0.08094801880411197,0.008906789644331952,-0.04045916899965012,0.04053786236106345,0.019068116894866486,-0.025234407152851097,0.09228384555419088,-0.004212102395649538,-0.053038740487112025,0.0716509654727219,0.03601847445689521,-0.038089824287585616,-0.03660624614734341,0.03680936085742199,0.007348081135794356,-0.03729618523177388,0.08701380722402947,-0.014556180774298768,0.05300771992374978,0.05892710232181432,-0.034456661731120504,0.03615171893010911,-0.0366890884384616,-0.04111926438058655,0.06465241254890063,-0.0551616394396002,0.012470313014104244,-0.09249814708194322,0.0015535281642165986,0.08306090779879458,0.01949164848221032,-0.021804045144720088,0.0015789723566143462,0.012290196938399259,0.03276798750090861,-0.023042214757812172,0.03392317519544052,0.014336018218445712,0.03365729130126134,0.006215595367321819,-0.052748062748590806,-0.067267348633575,0.031196001918646014,0.0048854320478510715,0.02008093945220589,-0.02486474350018095,0.01730596206107558,-0.07863010353318067,-0.02663918721109848,0.018096856772759618,-0.029862593092264713,0.010825978807881633,-0.06312822609427948,-0.027149036815527203,-0.07113622558336061,0.0392280040298979,0.03072951328388119,0.031389891244164504,0.10722894194583997,0.0742676036824034,-0.03056482271605326,-0.036346834982439374,-0.0015594257614092498,-0.01713814982258029,-0.006371698847467323,-0.043456976828114384,0.07350419396778263,0.05941120396104739,-0.06186629322034576,0.017209733820072265,-0.018502740448774712,0.06594600095861136,-0.07289143561414392,0.004227885698846697,-0.018834395517057272,-0.07655494719246457,0.023743330686527703,0.07803840897650512,0.01310437120157233,0.0342101661046006,-0.09348203517639297,0.027125290177000085,-0.23494327750085195,-0.041244596632087654,-0.017310039514827995,-0.06139568890050511,-0.061498714005916756,-0.09112586863528206,0.049602206613598744,0.0021614602288336417,0.0347564086044453,-0.12472674712551629,0.03552676644653656,-0.03924614894843087,0.021056110804919946,0.04996439354919658,-0.01499665548683558,0.11776679786494251,0.03806247060680707,0.00536191526478053,0.028464420404040097,-0.05295156309636631,0.00655444623556125,-0.0037285422283120434,0.007562308694247084,-0.031948307927165624,-0.0045054451067466075,-0.003466374668102283,0.08873643751834832,0.02388033180282373,0.034558789231547926,-0.03607702822203285,-0.0019907299430238943,0.03544953917326413,-0.08540708100441445,-0.06567273010785832,-0.011520372672604183,0.06819541899585756,0.04881833482980054,0.09538130083375576,-0.041403565799256865,0.03236848014474442,-0.006658902522253299,0.05029741829619581,-0.02257550172180129,-0.03427385948938865,-0.02339374014087516,-0.0164871285631418,-0.014021474160732812,-0.03302906754619073,0.012887558042095596,0.008109844410161653,0.024442968891482165,-0.0031997826633244453,-0.015639545110009572,0.0009759665226850342,0.07126002858192561,-0.061264279530814515,0.0037064254077238757,0.0003473905823254652,-0.03379011356768637,-0.04052960439520858,7.797236852090646e-05,-0.06201027570874131,0.04889986063360853,0.021672718886602108,0.00749810417328746,-0.02064329396151744,-0.09293613842069035,-0.005951234908268652,0.043493017330462486,-0.01193821693503408,-0.07123231585915338,0.00014718228394117587,-0.04073058480010245,-0.01035826344630503,0.0036404256767958013,0.02307195207849327,0.0777276647798921,0.055685059501605245,-0.025079207926615624,-0.05380597333407301,0.04244077495423251,-0.0158858030374318,0.05624085650783759,0.010092067883728559,0.0022972701485151864,-0.008327897594301777,-0.06220581396786045,0.05473455566364287,0.003445529454575101,-0.040434298692661276,0.05328678531334544,0.042473161871848526,-0.030418799007434317,-0.0258897601874542,0.03249720334840815,0.05895708897721326,-0.20338951018227114,-0.027243022706301405,-0.06988334189745303,-0.056804259885195524,-0.06194733697703259,-0.11327893251803511,-0.01997500876621568,0.0606087353395944,-0.06121187934651318,-0.02953432565168188,-0.03750133783761294,0.05060004415439594,-0.011185838619446295,0.041536148704352766,-0.025707908742113046,0.00459865847545337,-0.008416918399728053,-0.06390092435825553,0.02240412067237798,-0.006167347021630389,0.0052149070995839795,0.019329843548183533,0.07978895811029628,-0.011626526928724725,-0.002761357066610416,0.016570165335339906,-0.01572858087551892,-0.008002778420089542,0.004243730920165454,0.05459710242039182,0.03669105319603818,0.019592176915980655,-0.011839868517813395,-0.026053167512600974,-0.011305397941113661,-0.0001269928207219142,-0.07634460177556862,0.04727870624498781,0.038967785020508065,-0.00140728711883527,0.004053309009456399,0.039075497618615104,0.0406701194687947,-0.04633860797591664,0.04968266194035147,-0.04946674804809042,-0.0320591920628836,0.034736325524038984,0.0064798074722178705,-0.022177345759807798,-0.04589209936320809,-0.010190491932480323,-0.01179900172644363,0.05419690690040639,0.014860598518004442,0.026610984130047827,0.015181231329527005,0.02138426188930112,0.05890139757463643,-0.0005522739066692616,-0.05029645420195349,-0.06676972307924627,0.024331694131372907,-0.0034249755471099297,0.13010292225836798],[-0.023206139225305636,0.03639304393848198,0.010392401057295225,0.016717704150109737,-0.041136457534886775,0.04128945019129345,-0.039785073141756576,-0.008961580473898754,0.0015656743070679513,0.03044730043706005,-0.028004385985673626,-0.04495192403398159,-0.03158944049196461,-0.025439763997713048,-0.030441639320137975,0.006197560378102897,0.033393723954736616,0.0560719510725577,-0.013739611735509536,-0.01509052814729234,0.01969887973593981,-0.03887803784763073,0.030961114808868522,0.0017720259457107276,-0.026050089401717092,0.03456619049640223,-0.011378553537101068,0.030338871263975897,-0.025554489058266606,-0.10907601722638303,0.009415944211806011,-0.05714306807591699,-0.028596338668682855,0.04222604765662337,-0.01770591396660022,-0.014597933248065933,-0.049389617884842835,0.02653829758305394,-0.028629881110308678,-0.048826990953395044,0.032965334800922196,-0.009791361601514764,-0.034410279838652996,-0.031137221533623513,0.0450597475841456,0.012538353815447323,0.018662678351308724,0.04464567639252368,0.07870208460554307,-0.07794817799008404,-0.01711369571632119,0.007213067757097352,0.017817246567213348,-0.025437924458575897,0.05002639637981914,-0.002872383686718874,0.03306552491139207,0.04788818474565045,0.05906756930765207,-0.0696697596018698,-0.024483294327901518,0.07212163209067411,-0.1485531877891833,0.03292195665443805,0.051713363881844415,-0.07448096410182889,-0.008497709751595185,-0.006540072120873926,0.04607855431260479,0.0011423027958229449,0.001422851945989854,-0.037947098260597646,0.005798375527403362,-0.009682626378345289,-0.025689371322323025,0.027822067577705507,-0.07781450049461744,-0.005172837490983859,-0.06688992448936358,-0.02136526577455559,0.025309198821103496,-0.07553514957242581,-0.06256163787640942,0.02239175776071278,-0.024246152471845927,0.014522201235419578,0.08527380578676103,-0.04697128136041386,0.044645669915273196,0.0521346895940072,-0.0828132537823096,-0.009872587132226947,-0.05523766177860557,-0.02517989023108763,0.0643554605796515,0.01260827087647263,-0.02052918552084494,0.016380370564271652,0.037308632441870535,0.3323418668444199,0.008219467312256507,0.04682443885334072,0.0790150977351304,-0.01115637089103579,-0.015881316227001147,0.015839881255661877,-0.052740422627418855,0.015987807082878287,-0.02003233344873863,-0.02308619350086284,0.0441593482331395,0.013223026719806996,-0.005253409629053578,0.00664553754703399,0.0421983833198108,0.019770114917438394,-0.04480121784699539,0.009071244372856217,-0.05759033517626389,0.007944108059039041,-0.0024999822667662332,0.06904694605893469,-0.011552856347596566,0.015280117268927541,0.052500466406028436,-0.010794761380044014,0.10340935577789362,0.08655321821115021,0.013594560188194925,0.004422933006666964,-0.01946875598078247,-0.0010040118786998858,-0.021295194878831317,-0.01723878761627267,-0.016621094339844298,-0.03690984432276308,0.011390821449515727,0.023202840685497206,-0.023452430197668357,0.05974461039163024,-0.002563624491386208,-0.025801741902326043,-0.02124523908448176,-0.13891862746735917,-0.008979362955443312,-0.004989735335707308,0.02152822368083025,0.014902615014219597,-0.03064157908804489,0.029288649870674515,0.019044089626683112,0.030908338171933652,-0.014378401416760793,-0.03877732307987174,0.010568769301038467,0.02461109857649272,0.014382333107803928,0.09115863398601629,0.009616819132751397,0.006223919953771312,-0.05477451246007454,0.019100103269546823,-0.032373667116934214,0.002897496796497483,0.0821443027841846,-0.04366164602190731,-0.0014452952140850323,-0.011353020215697378,-0.032115263686168426,-0.007810232197776405,-0.0658822262454826,0.05262915641862318,-0.050062691652900206,-0.022868732770399615,0.08407338343201111,0.018332124827413636,0.03622130288055248,0.03452426325402626,-0.002234150644180994,0.0654089724161982,0.09357563295822054,0.0017073821762348307,-0.02318467037857998,0.04294354888574312,0.02532132099538229,0.020029462407462072,-0.03573206967432671,0.0018013201206760641,-0.030475929884194577,0.06675179064556473,-0.0011454592409489049,0.10595416385662694,-0.0025972705690197593,0.05947350507266743,0.019471913640392895,-0.03843558658301788,-0.017485713359182718,-0.013401967241648268,-0.03623063335987313,-0.018174143068822486,0.010592243666444895,-0.00933454784361234,0.005895050919829942,0.07910210016361703,-0.013954831337305669,-0.0310512522265889,-0.05651120581405722,-0.0178488620268205,-0.002244648243073039,0.07293871133009311,-0.02143352304014465,-0.05741210715197574,0.0659269451828167,-0.02886436405504103,-0.03981090441668248,0.014427178351522456,-0.08100920350055497,0.002329647581847836,0.024568429688936456,-0.030051802761197923,0.024713259390422026,-0.0004896469406003678,0.018033811817797306,-0.31904386433096044,-0.023685186955147007,-0.027383240334737855,-0.01719270197908666,0.03510140570380628,-0.02509186925496255,-0.010533003543184379,-0.08423580696512092,0.018923523705506574,-0.08019858207986746,0.0789045958418917,-0.053105001148100746,-0.0230269671417596,0.011980298203527858,0.04934691337240891,0.006350131608400028,-0.004379803424670101,0.03328961834634981,-0.07647998610037002,0.049158836688761476,0.029697833976807066,0.004261238569064634,0.023824172557384362,-0.05026105744893977,0.03169421001852592,-0.03692121189736061,0.17974112295546288,-0.017543218388970123,0.07044487921266042,-0.05201747403064296,0.018461423701553775,-0.006926381412097872,0.01506049313680302,0.003330166603224805,0.018997879302425306,-0.05572911668174699,0.09891477871329134,0.030755028130253312,-0.0333179401240864,0.012743786291763757,-0.042401872620982356,-0.026143928568088462,-0.014363829222486833,-0.025762962603684773,0.03538141400355787,-0.05165335539474536,-0.04666857677497011,-0.063428566035545,-0.05385828918613866,-0.006443598737696784,0.10512931839387891,-0.0026260060811309433,0.05594551514313101,0.019059086080863704,0.05136990767498734,-0.07340329859823136,-0.0060064600329643985,0.061729945959900945,-0.012492509455841804,0.005229290777224098,-0.03849034849722576,0.027662779033829427,-0.007926838089938942,-0.004467758008977733,0.059314333119300046,-0.0003604407721077656,-0.03635441361660182,-0.01651075761649292,-0.0007560173894601552,-0.010649200558910181,-0.0415657535037688,0.0620042575178528,0.03129030487153695,-0.033630528993767096,0.027662911817464327,0.027865610894076968,0.006383402410333724,0.04552395593313059,-0.010502889186376641,0.007623395097940137,0.003388392227128434,-0.010616197348387061,0.02714090048516972,0.040431463876449546,-0.0020106656659404946,-0.04541979526811468,-0.009677930371745169,-0.05828948959339077,-0.04626797502572744,0.014856955256252842,-0.011154811492982027,0.020271926944102004,-0.030766907407638995,-0.005333794736515602,0.025779314422528916,-0.007401648856626148,-0.3359633753164288,-0.016046503926754548,0.007018821492364929,0.01635646789067704,-0.056663349950650636,-0.0026923889923615055,9.410635295378944e-06,0.04354559312500475,0.026202123425052296,0.012451820177964382,-0.11144271387133688,-0.011949992767830875,0.011807203400247424,0.05987408415153342,0.03039710498444263,0.007454352624493083,0.04326764782953198,-0.06674862327007858,0.001096626844729982,-0.02464664086920515,0.0006233924471970345,0.03830901463133105,0.1427170426045577,0.0027268293428355257,0.05277214496165898,0.015921353731548724,-0.034899341397740966,0.011919654945881477,0.03952642681409768,0.01178765667760258,-0.02719195417347613,0.011300320496111994,0.054610307683081914,-0.0405506485239606,0.05216246404407798,0.02345321556428941,0.009510365521064533,-0.03293481075802141,0.040163862749998,0.0014845291347445715,-0.049719167434913066,0.07144759645092003,0.04705995168089986,-0.06984568820223652,0.028041578357946576,-0.044215677641964254,-0.0248611981721394,-0.08318631750112411,-0.014108779388158577,-0.015376626681810496,0.0214176861627139,0.06296960102082594,-0.012331217012597569,0.03142754161614392,0.059209958705018204,0.01973898687093008,-0.04176419702681416,-0.0085679085730165,0.023753842571640767,-0.03980774027982157,-0.019568238451637087,-0.035543986513428785,0.016925359942654435,0.013721660035796111,0.03249235949340856],[-0.018348019462094425,-0.03827365363116344,-0.0018936468325170199,-0.06760013070061295,-0.038116379458063544,0.001633579902657724,0.007000038035519892,0.022118264148434333,0.01685296049969511,-0.019539922349407393,-0.0083679667194691,0.0009032048096391218,-0.002328285551815072,-0.0006778393265970435,-0.026025644163303774,0.0039508087234818535,0.002549136531602316,-0.04763381651611725,-0.06969787283008555,-0.014899420157638767,0.052987308477435276,-0.0322733336533707,-0.02125636537392286,-0.04711849126016854,0.02748846713436628,0.03608439031815908,-0.019221688694428148,-0.04053693210634455,-0.07452955403572507,-0.11897778320565923,0.007256053539679501,-0.020071565959514925,0.1174052474657187,-0.04084538440465937,0.04765494991126652,-0.04205337390619043,-0.04968420645103669,0.047739470617422446,0.0058005311814021505,0.03399357785663598,0.01190721737802625,0.008573124157819632,-0.0153874483797372,-0.0035537223350633807,0.046097181155326114,-0.0131396369362938,-0.05917435613107098,0.02485525768576432,0.06540898450059027,-0.035035236015717466,0.0007455963033955881,0.0034688491910809457,-0.04280357402927634,0.10965380393756015,-0.0033893454937110254,-0.02589688044013264,0.04378749997562672,0.04532946213644406,0.011683175548465003,0.027294542645919944,0.05476019305195647,-0.011418634750305755,-0.14943056144753708,0.013109971809924317,0.008602349139232269,-0.019921691371466533,0.024244468448681375,-0.051478617091162256,0.0033469757078832788,0.05103967267595179,-0.016866583267737947,-0.007710327391037882,0.016310323726149815,0.022432176819102295,-0.011803516168513136,-0.0002523929582807631,-0.052233619380797465,-0.017062453406103222,0.020080058262759114,-0.0725167510317458,0.0650481396640117,0.008538501566954465,0.06343626606913445,-0.02841324146084866,0.0030605177829696978,-0.04511810243606906,0.01358568804301959,0.006343771444376394,-0.014585903376036196,0.010419785717356293,-0.06191393421246202,0.01248212474296895,-0.051753222483691255,-0.026456545271405195,-0.055969965663586946,-0.057888624316649956,0.030880042320354135,0.007980981939438683,-0.01529311091220368,0.34048534983577,-0.045015943745536344,0.027831181539194044,0.03852526849040714,-0.0068217833512593945,-0.0463248141493159,0.02101450934107157,-0.031038034243548195,-0.04872490287338749,-0.01722687450334703,0.025922281712523445,-0.03202554572175911,-0.05251554711173106,0.023523325939273143,-0.0069954032367055535,0.0029985708000668013,0.01497613251523665,0.08554791275481721,0.006756734432691693,-0.01576241325964807,0.003427537925711578,0.11067254559139295,-0.030478855422429087,0.026178513668224903,-0.0218034904995144,0.07324628123956388,0.027327710424935057,0.03705110635530094,0.08082054027138261,0.053173318403184074,0.050565317110355654,-0.014256235608009768,-0.019780735552525457,-0.05090532144532114,-0.011248688908503047,-0.0211431443198312,-0.04290335094819614,0.07789045908428109,-0.0007408341683117408,0.004942794069992721,-0.0462832200485675,-0.02941791778772407,-0.06276490902365692,0.016888910767303967,-0.05099893794415021,-0.014526621402451544,0.09240271582901848,-0.0628874157684287,0.03934920697518506,0.08032732043089005,0.031301844417172126,-0.041221804096420296,0.03921103847275317,0.008680101107953088,-0.09514436025821424,-0.05215634376639923,0.04177569795944694,0.022743138024136404,0.020724554396080366,-0.02417208190331021,0.011051267399979085,0.08456907543133174,-0.0035540892566361822,-0.04240765599639232,0.08200375934813926,0.020377399918360673,-0.047779548752725325,-0.0054156618329833485,0.00517240610698318,-0.0016306187811930075,-0.030750686372890055,0.03313798755828847,0.023442313518330846,-0.00025171061289976326,0.08123776228576116,0.07008269631330775,0.036815217625923116,0.013243918300311278,0.0678306604438617,0.005276985594778559,0.03384515164321707,-0.0471880711773688,-0.03663871869357457,-0.05895288999439249,-0.002620171662978919,-0.008770487731358413,0.058936925687365325,-0.023209406831384605,-1.1608722655289111e-05,0.07584085449027186,0.019697186866676427,0.029705890068778027,0.07315173778097193,0.011815220644824485,0.03643210644337399,0.02115031860216256,-0.051900470685744854,-0.04335006187003091,0.023436967406642917,0.05245681391120047,-0.017457722889014267,0.033116358497154885,-0.028400704973777932,0.012426238403237857,0.019622563387155283,0.03483253759562676,-0.008170908913907652,0.02546336260186729,0.005838951732406846,0.02890144670651292,-0.01013242819086729,-0.00941780336729172,-0.061339965877070766,0.07271859652011026,-0.016749274578580862,-0.015316561706760119,0.014879896067633366,-0.019071809278464323,0.010556244333072833,-0.018726661604259034,0.0267139198337588,0.043722107470410804,-0.038575630085579335,0.01881444437194158,-0.3257293606083836,-0.018626648117483092,0.054272058615718544,-0.033269422727998425,-0.036824966796484664,-0.00957879905853681,-0.015021252603555265,-0.002532709951672573,0.02286506541905639,0.10414210762476907,-0.023175114148073928,-0.014700606600165362,-0.07022291185188265,-0.03481380528375214,-0.010503837311062783,0.026706356099582624,-0.02415681603471548,0.005543198058656,-0.0021570162576946754,0.038865369383681264,0.005887784487692366,0.06350505420820393,-0.05549186685422618,0.02239788413579162,0.017804589301113206,0.015693723288192366,0.16452249634231617,0.03236012347977948,-0.04918117628638712,-0.01411129675883762,0.01997794946068586,-0.05526201301913785,0.004777700283198773,0.018387785392199395,0.052010263919880076,-0.055909249799119105,-0.020915006004026238,-0.0035705250900705024,-0.006922287676104215,-0.018970117286423328,-0.0465288000135217,0.0252847780100523,0.022633468706497257,-0.03919640023316454,0.05405563925997122,-0.026086886270553656,-0.07769470320658103,-0.015141908647411597,0.026148250684994472,-0.005304212623855084,-0.012328720948740055,0.007748615979020781,-0.003908247430341987,-0.02162231009850235,0.011982196513984187,-0.04129401039961535,-0.04282491019687374,-0.004911060181860795,-0.058762785996357696,0.047166258655448816,-0.03548615044258802,0.012317539496600463,0.015858366469546033,0.008390637001030763,0.021543584500169494,0.02533441380860461,-0.08099774407938416,0.02009947452931988,-0.03911565495687613,0.013163818355385555,-0.00619678596138753,-0.023388862057282425,-0.012518655969734744,-0.070847341559365,-0.010946842807803803,-0.00357393198906007,-0.023949846518772955,-0.008444823109877358,-0.01742143305802005,0.017581369021827904,0.044416110657872855,-0.013542061389874483,0.030895671891911378,0.005221591300095206,0.060340574508287816,-0.012660261947953944,0.030773055714389815,0.07359143856960003,0.027661049017994644,-0.006848940375562161,-0.0011866809938658306,-0.012113365343692834,-0.032362341102267725,-0.01580306752619245,0.018623881721940783,-0.02370805485812742,-0.34735697980455554,0.05021903648532908,-0.022004637549446416,-0.029479605672498802,0.012161465865137893,-0.004066958712935356,0.05448203431366981,0.020850212160323837,0.02271504599354505,0.03336396940520065,0.021039334482220874,0.04268134086637902,0.038763310470067466,-0.04115228855142579,0.003226079676397368,-0.013495616843422462,-0.03087314483850752,-0.07038992553971322,-0.005984740294694958,-0.012969918006516376,0.029106938880333375,0.047582376686498666,0.17024412972973507,-0.05446666223093559,0.03853457992996956,0.004042556819038891,0.007349247595908303,0.05839506620820452,0.028246189149694626,0.019746515287946256,0.0030363745848751094,-0.047487057542827386,0.09444814266687424,-0.0030419198480745916,0.008010420958435453,0.010751833647690499,0.013016758442033788,-0.06698243432585252,0.02589489616689025,0.05241286056911115,-0.0485321724893579,-0.010785289492326364,-0.11183720616123052,-0.030449968395096665,0.08487483053422544,0.011915937397948297,-0.027808918411833777,-0.02113391656413626,0.0430073603396443,0.007134083498173202,0.010461188310792575,0.040350880338662014,0.027297844940075162,0.03323252136104954,0.04099733177773306,0.01935365171622529,-0.09577104299289801,0.019482489467433046,-0.031169813804558938,-0.016935175071579874,-0.08072411070716205,-0.04192176493152494,-0.020522803856719403,0.007568170225806908,-0.011141958182056601],[-0.017080593054446258,-0.036887367072052674,0.0012546165769592977,0.052658077177723125,0.05145913759522005,-0.050895154761341224,-0.01101536456876058,-0.0014429516771630193,0.009247095060355226,0.030675958562577627,-0.017365714037560022,-0.08765465623371423,0.0538347940592788,0.01587707936476938,0.061849336556785275,0.03325883058853283,0.015165323094945506,0.02732564591058186,-0.04904875652498421,0.061663872543165965,-0.03685564606414852,0.004246989801110728,-0.07475787271605386,0.0004709506308365545,-0.05033793165952325,0.028737050808171915,0.03458699033464258,0.040688989995916795,-0.0598938435740076,-0.05615083662297514,0.03698154525580855,-0.04388577067933097,0.0004404549470644362,0.03487123281433992,-0.0306421860774217,0.022346247647600737,-0.038161720528839704,-0.011503809196400802,0.019257812446985764,0.007388270172320027,0.03171779817658993,-0.031728664135047865,-0.06950914690009341,-0.003688844025313494,0.030175578067290747,0.020419766544873208,0.026959954548959605,-0.02829409204457332,0.058564067512487356,-0.03426680937626353,-0.0014710989593442962,0.014615998344141528,-0.036384156388850675,-0.015720483267884302,0.047563473907128874,-0.0005015313838408036,0.033495188906221156,-0.009131656930327123,0.05152776229040125,0.006120672357726924,-0.02523443314767336,0.051863638522108436,-0.14977515423980994,0.013351786939365938,0.07751742699335763,-0.015150979113650835,-0.002626632375139329,0.01459315071152732,0.03172757786639143,-0.02007257937718617,-0.022562585248696435,0.0457950318063391,0.06441317270610443,0.036132011184814995,-0.0575527971998519,0.0009105687911272427,-0.06495719698936796,-0.002434943993040221,-0.022379162896648267,-0.016478440310489055,0.05671300682783086,0.04268309132250768,0.025830336574962493,-0.028045385600651854,0.04355250214677795,-0.006744403239603458,-0.0024904917477014724,-0.008081943504502406,0.07053606995144093,-0.03255111674318194,-0.003172664783065169,-0.060851696952652,-0.048041494281939524,0.027158746620928327,-0.03932520260101196,0.06655794473037313,0.023962086997575266,-0.0033264507323830786,-0.01772525096742697,0.3337002130995745,-0.08104388694210761,0.021843971090005403,0.06535589030521664,0.06329293525089652,0.001214530973211204,-0.020613590246496137,-0.008791522329173086,-0.016236850235024684,0.051665024768337835,-0.03752928641013748,0.05929016612765913,-0.06667645271451841,0.01907712212604641,0.04307102992427891,-0.01654326142942595,-0.021757863031674547,-0.021799615665183052,0.02025658412628508,-0.08331276188848097,-0.006189715446295002,0.017880332177601408,0.06473828113615998,0.011747845012288934,0.06626677892393777,0.034613515575599677,0.0487318965385518,0.07966962621597005,0.10441490473510426,0.05606804462875061,-0.0530293782008257,0.013817798646898591,-0.07452439693657735,-0.01472831099786221,-0.10463778612328695,0.04246075306865322,-0.010553916334747712,-0.008102699579168933,0.004561867020055779,-0.03935086733396711,-0.04325399093933745,-0.018970206460725718,-0.12915764426484871,-0.025679808204653824,-0.036533151877034216,0.05598054110782346,0.039643139040420175,-0.020741387136411396,0.04298588871049016,-0.042434584464092366,-0.01540181883216266,-0.036077930056434615,0.019212356029986027,-0.001371722554721196,-0.030313269163281524,0.028707508881367725,0.04321479692657995,0.025047799432112255,0.026867747681063682,-0.007616424216948048,-0.04373244974788293,0.05198669771017272,-0.0474557697154642,0.010401419920472632,-0.021076592629942163,0.013823488469770724,-0.02037827239095464,-0.004623567570525567,-0.01261372055558546,-0.017705411840926003,0.010059430155679434,-0.032837482681789,-0.008289718560194786,0.05525728249624744,-0.038542955020740316,0.04838842624193017,-0.03704397625651192,-0.09019243502285301,0.05766402194896937,0.0007119111735338231,-0.017006347246157336,0.03829949342216907,-0.012790836332828546,0.029403898703164587,0.059650807321597006,0.039715536228857026,0.007208889426771458,-0.05780820120985689,0.016220196296888312,0.031650312100361865,0.008615788108978737,0.006936793033880952,-0.054168226186509,0.0327780585512521,-0.06753780486499106,-0.021002343549759696,0.07424933539016305,-0.0021490038095805073,0.04138076971971088,0.026816997340310574,0.026807464678471612,0.050384199506121774,0.014497377479668993,0.018764047720443825,-0.00457766535803053,0.007029902126421493,0.007478786289227351,0.055950688351132635,0.012337005066984928,-0.09447929611868475,-0.03613159892622852,0.0444617384592596,-0.04927088537765189,0.07163639466254317,-0.0732482210350866,0.010514522736484068,0.03456907017370488,-0.057815189974465796,0.0015700148449511498,0.008847659842645551,-0.02008564077621179,0.0540063623410189,-0.16439116076368535,0.006899160532317091,-0.23110425868589085,-0.015029097807262212,0.03927361465551172,-0.07493121763598808,0.06303675907401526,-0.021977322019210738,0.017447316698481485,-0.07429897655900491,0.0350475846044406,0.03291445724929319,0.09762172083466088,-0.07278800303304608,0.03638382592760278,-0.039709515944737,0.035705212303427714,0.009864772121202913,-0.009273352824015136,-0.006759175838952324,-0.034224808078845724,0.03925281522825574,0.0034842762432671223,0.05409404908798449,-0.055599561823619234,-0.029732907230323978,0.02413374689233458,-0.017026312340559725,0.15054149714556667,0.023790095005621285,0.019855662650933276,-0.03897987059696408,-0.03281831265751768,-0.02139692900326453,0.0616964344277108,-0.014635389221227034,-0.01457816871099167,0.04804317603522088,0.03108627691618634,-0.006022558086038227,-0.03111114003522334,-0.041354686184382164,0.028243230459439734,0.08971548455723108,0.11346271121364554,-0.007442468270894589,-0.03684574531428591,-0.030326415631539275,0.02037929322174021,0.03839626294561139,-0.003756907181765296,-0.0740388544785102,-0.003922074412774243,-0.006844312962874148,0.10235567309563662,0.011651864015190591,0.08778829345360462,-0.06559456185164023,-0.09994574681860333,-0.005925732940405664,-0.0519985452366937,-0.009410764173107947,0.0652422378110899,-0.08091522954419042,0.06354811022835347,-0.036578156772724954,0.02094692748881357,-0.020658084726794087,-0.049100079447107425,-0.03212634970768516,-0.014533369944594176,-0.017201658023395783,-0.007389793238764523,-0.01626170844622137,-0.041698133577748986,-0.02387742020835032,-0.00845973923628881,-0.004612318800523041,-0.03125199505227067,0.045468752038394976,-0.002336306218384564,-0.004261283477042166,0.0863441778003135,-0.06372860096378667,0.022246549779436988,0.03534227424022231,0.014212366104988937,-0.005784573637258783,-0.03996417069112053,0.05064709615234137,-0.05463755314017459,-0.032114976605727985,0.016668293569296957,0.023066628628805257,-0.0505835069013236,0.012029806982186452,0.06368074624881954,-0.01763275944479276,-0.29701527153727053,0.04082885035732691,-0.03357563822466854,-0.03566388174418632,0.02663057956972334,0.0012841769081646701,0.012436230146531642,0.10027872742452452,-0.02159064146050698,0.04360206806206831,-0.013620326783974668,-0.010637896026328525,0.00426243027572916,0.01896094045821055,0.024605225116005023,-0.014815791615534557,-0.029653962982906602,-0.027246616593932352,-0.008714587024391412,0.012386660959347736,-0.04914327825756215,0.07006749553329034,0.10307206073077131,-0.08416659522759067,0.014268837351602838,0.01688306720527887,-0.048546592847716126,-0.02870727330503259,-0.01692858415230916,0.0073468340945118575,0.02534692084769862,0.015375419559106993,-0.013164862843252847,-0.0547793308312012,-0.03425661415598201,0.032628362877850245,-0.008774082318612887,0.001461500859634462,0.04528612148458434,-0.06392270932014787,0.01047064828001261,0.04425471266718868,-0.007403725779446098,-0.053923671775494224,0.03818377309132284,-0.039050497690993904,0.04528313424577913,-0.05696051248682187,0.08498982981828164,-0.0008818235704008926,0.03930417086931439,0.016142829102158897,0.001330870918897232,0.03364629476574025,0.05669726901988667,0.03576852998728137,-0.05842317977650459,0.03386868864178495,-0.038826140678823104,-0.07004262259857272,0.023609553555838162,-0.08197137060488133,-0.011582560402099113,-0.08157780761810883,0.028755108388638446]],"cancelled_load_progress_calls":1,"load_cancel_elapsed_ms":52.825917,"resident_memory_samples_bytes":[169050112,169082880],"retained_growth_bytes":32768,"parity_failures":[{"max_abs":2.8666552683784263e-05,"min_cosine":0.9999999873719951,"max_abs_allowed":1e-05,"min_cosine_allowed":0.999999},{"max_abs":2.8666552683784263e-05,"min_cosine":0.9999999873719951,"max_abs_allowed":1e-05,"min_cosine_allowed":0.999999},{"max_abs":2.8666552683784263e-05,"min_cosine":0.9999999873719951,"max_abs_allowed":1e-05,"min_cosine_allowed":0.999999},{"max_abs":2.8666552683784263e-05,"min_cosine":0.9999999873719951,"max_abs_allowed":1e-05,"min_cosine_allowed":0.999999}],"result":"FAIL"}
+FAIL native inference direct control

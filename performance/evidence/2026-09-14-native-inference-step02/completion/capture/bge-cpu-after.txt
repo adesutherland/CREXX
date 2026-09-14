@@ -1,0 +1,48 @@
+Mon Sep 14 11:52:11 UTC 2026
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+12:52  up 16 days, 10:46, 2 users, load averages: 4.58 4.19 4.58
+  PID  %CPU COMM
+  599  40.1 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+94406  17.9 qemu-system-aarch64
+32806   2.9 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+82234   2.1 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+ 1418   1.6 /System/Library/CoreServices/Finder.app/Contents/MacOS/Finder
+82145   1.6 /Applications/CLion.app/Contents/MacOS/clion
+82184   1.5 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+32870   1.2 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+91552   0.8 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  737   0.6 /usr/libexec/sysmond
+91560   0.6 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.83/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper

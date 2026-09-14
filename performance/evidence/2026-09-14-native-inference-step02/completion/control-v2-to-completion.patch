@@ -1,0 +1,482 @@
+--- tests/native-inference/direct_control.cpp
++++ tests/native-inference/direct_control.cpp
+@@ -4,6 +4,7 @@
+ #include "ggml-backend.h"
+ #include "nlohmann/json.hpp"
+ #include <algorithm>
++#include <atomic>
+ #include <chrono>
+ #include <cmath>
+ #include <cstdlib>
+@@ -13,9 +14,14 @@
+ #include <iostream>
+ #include <limits>
+ #include <memory>
++#include <map>
+ #include <stdexcept>
+ #include <string>
++#include <thread>
+ #include <vector>
++#if CONTROL_ASAN
++#include <sanitizer/allocator_interface.h>
++#endif
+ #if defined(__APPLE__)
+ #include <mach/mach.h>
+ #elif defined(_WIN32)
+@@ -31,6 +37,27 @@
+ using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
+ using Tokens = std::vector<llama_token>;
+ using Vectors = std::vector<std::vector<double>>;
++using Clock = std::chrono::steady_clock;
++static double milliseconds(Clock::time_point start) {
++    return std::chrono::duration<double,std::milli>(Clock::now()-start).count();
++}
++struct UnitTime { size_t calls = 0; double total = 0, maximum = 0; };
++static thread_local std::map<std::string,UnitTime> unit_times;
++static int decode_unit(llama_context * ctx, llama_batch batch, const std::string & kind) {
++    auto started = Clock::now();
++    int status = llama_decode(ctx,batch);
++    llama_synchronize(ctx); // Include GPU completion, not just command submission.
++    double duration = milliseconds(started);
++    auto & value = unit_times[kind];
++    ++value.calls; value.total += duration; value.maximum = std::max(value.maximum,duration);
++    return status;
++}
++static json unit_report() {
++    json report = json::object();
++    for (const auto & item : unit_times)
++        report[item.first] = {{"calls",item.second.calls},{"total_ms",item.second.total},{"max_ms",item.second.maximum}};
++    return report;
++}
+ static json parity_failures = json::array();
+ static json parity_summary = json::object();
+ // S2-D01 version 2, approved 2026-09-14. These are numerical regression
+@@ -115,7 +142,7 @@
+     }
+     clear(ctx);
+     // llama.cpp routes BERT through decode despite its noncausal attention.
+-    require(llama_decode(ctx, batch.value) == 0, "embedding decode failed");
++    require(decode_unit(ctx, batch.value,"embedding") == 0, "embedding decode failed");
+     const int dimensions = llama_model_n_embd_out(model);
+     require(dimensions == 384, "BGE dimensions differ from pinned contract");
+     Vectors output;
+@@ -209,6 +236,13 @@
+            "<|im_start|>user\n" + text + "<|im_end|>\n<|im_start|>assistant\n";
+ }
+ struct Generated { std::vector<Tokens> tokens; std::vector<std::string> finish; };
++static llama_token greedy(llama_context * ctx, const llama_vocab * vocab, int output) {
++    const float * values = llama_get_logits_ith(ctx,output);
++    require(values != nullptr,"missing logits");
++    int size = llama_vocab_n_tokens(vocab);
++    for (int i = 0; i < size; ++i) require(std::isfinite(values[i]),"nonfinite logits");
++    return int(std::max_element(values,values+size)-values);
++}
+ static Generated generate(llama_context * ctx, llama_model * model, const std::vector<Tokens> & inputs) {
+     require(!inputs.empty() && inputs.size() <= 8, "generation row limit");
+     auto vocab = llama_model_get_vocab(model);
+@@ -223,17 +257,27 @@
+         positions[row] = int(inputs[row].size());
+     }
+     clear(ctx);
+-    require(llama_decode(ctx, batch.value) == 0, "generation prefill failed");
++    // Causal generation can yield between the already configured 128-token
++    // physical batches. Preserve all logical rows/positions; collect each
++    // prompt's first sample before a later decode replaces its logits. BERT's
++    // noncausal embedding batch must not use this splitting path.
++    std::vector<llama_token> first_tokens(inputs.size());
++    Batch unit(int(llama_n_ubatch(ctx)));
++    for (int first = 0; first < batch.value.n_tokens; first += int(llama_n_ubatch(ctx))) {
++        unit.value.n_tokens = 0;
++        int end = std::min(batch.value.n_tokens,first+int(llama_n_ubatch(ctx)));
++        for (int i = first; i < end; ++i)
++            unit.add(batch.value.token[i],batch.value.pos[i],batch.value.seq_id[i][0],batch.value.logits[i]);
++        require(decode_unit(ctx,unit.value,"prefill") == 0,"generation prefill failed");
++        for (int i = 0; i < unit.value.n_tokens; ++i)
++            if (unit.value.logits[i]) first_tokens[size_t(unit.value.seq_id[i][0])] = greedy(ctx,vocab,i);
++    }
+     Generated result{std::vector<Tokens>(inputs.size()), std::vector<std::string>(inputs.size())};
+     for (int step = 0; step < 32; ++step) {
+         batch.value.n_tokens = 0;
+         for (size_t row = 0; row < inputs.size(); ++row) {
+             if (!result.finish[row].empty()) continue;
+-            const float * values = llama_get_logits_ith(ctx, logits[row]);
+-            require(values != nullptr, "missing logits");
+-            int size = llama_vocab_n_tokens(vocab);
+-            for (int i = 0; i < size; ++i) require(std::isfinite(values[i]), "nonfinite logits");
+-            llama_token next = int(std::max_element(values, values + size) - values);
++            llama_token next = step == 0 ? first_tokens[row] : greedy(ctx,vocab,logits[row]);
+             if (llama_vocab_is_eog(vocab, next)) { result.finish[row] = "eos"; continue; }
+             result.tokens[row].push_back(next);
+             if (step == 31) { result.finish[row] = "output_limit"; continue; }
+@@ -241,7 +285,7 @@
+             batch.add(next, positions[row]++, int(row), true);
+         }
+         if (batch.value.n_tokens == 0) break;
+-        require(llama_decode(ctx, batch.value) == 0, "generation decode failed");
++        require(decode_unit(ctx, batch.value,"decode") == 0, "generation decode failed");
+     }
+     return result;
+ }
+@@ -260,9 +304,163 @@
+         }
+     }
+     throw std::runtime_error("required backend absent: " + name);
++}
++static json cancellation_probe(llama_context * ctx, const std::vector<Tokens> & inputs, bool embedding, bool gpu) {
++    json report = json::array();
++    auto build_prefill = [&](Batch & batch) {
++        for (size_t row = 0; row < inputs.size(); ++row)
++            for (size_t pos = 0; pos < inputs[row].size(); ++pos)
++                batch.add(inputs[row][pos],int(pos),int(row),embedding || pos+1 == inputs[row].size());
++    };
++    for (const auto & phase : embedding ? std::vector<std::string>{"embedding"} : std::vector<std::string>{"prefill","decode"}) {
++        clear(ctx);
++        Batch batch(4096);
++        if (phase == "decode") {
++            build_prefill(batch);
++            require(decode_unit(ctx,batch.value,"cancel_setup") == 0,"cancel prefill setup failed");
++            batch.value.n_tokens = 0;
++            for (size_t row = 0; row < inputs.size(); ++row)
++                batch.add(inputs[row].back(),int(inputs[row].size()),int(row),true);
++        } else build_prefill(batch);
++        // CPU: request cancellation from the first actual compute callback and
++        // abort at the next callback. GPU: another thread requests it while the
++        // admitted unit is executing; we drain before observing the flag.
++        struct Cancel { std::atomic<int> callbacks{0}; Clock::time_point requested; } cancellation;
++        if (!gpu) llama_set_abort_callback(ctx,[](void * data) {
++            auto & c = *static_cast<Cancel *>(data);
++            if (c.callbacks.fetch_add(1) == 0) { c.requested = Clock::now(); return false; }
++            return true;
++        },&cancellation);
++        std::promise<void> start;
++        std::future<void> request;
++        if (gpu) request = std::async(std::launch::async,[&] {
++            start.get_future().wait();
++            std::this_thread::sleep_for(std::chrono::microseconds(50));
++            cancellation.requested = Clock::now();
++        });
++        auto began = Clock::now();
++        if (gpu) start.set_value();
++        int status = decode_unit(ctx,batch.value,"cancel_"+phase);
++        auto completed = Clock::now();
++        if (gpu) request.get();
++        llama_set_abort_callback(ctx,nullptr,nullptr);
++        require(gpu ? status == 0 : status == 2,"unexpected inference cancellation result");
++        require(gpu || cancellation.callbacks.load() >= 2,"CPU abort callback did not execute");
++        double elapsed = std::max(0.0,std::chrono::duration<double,std::milli>(completed-cancellation.requested).count());
++        bool during = cancellation.requested >= began && cancellation.requested < completed;
++        report.push_back({{"phase",phase},{"mechanism",gpu ? "between_units_after_gpu_drain" : "cpu_abort_callback"},
++            {"return_code",status},{"request_during_unit",during},{"callbacks",cancellation.callbacks.load()},
++            {"cancel_to_drain_ms",elapsed},{"unit_ms",std::chrono::duration<double,std::milli>(completed-began).count()}});
++        require(during,"cancellation probe missed the active work unit");
++#if CONTROL_TIMING_GATE
++        require(elapsed <= 250,"warm cancellation exceeded 250 ms");
++#endif
++    }
++    clear(ctx);
++    return report;
+ }
++static json invalid_loads(const std::filesystem::path & real_model, llama_model_params params) {
++    auto dir = std::filesystem::temp_directory_path() / ("crexx-ni-invalid-"+std::to_string(Clock::now().time_since_epoch().count()));
++    require(std::filesystem::create_directory(dir),"cannot create invalid-model fixture directory");
++    struct Cleanup { std::filesystem::path path; ~Cleanup() { std::error_code error; std::filesystem::remove_all(path,error); } } cleanup{dir};
++    { std::ofstream f(dir/"bad-magic.gguf",std::ios::binary); f << "this is not GGUF\n"; }
++    { std::ifstream source(real_model,std::ios::binary); char header[64]; source.read(header,sizeof(header));
++      require(source.gcount() == sizeof(header),"cannot read truncated fixture input");
++      std::ofstream f(dir/"truncated.gguf",std::ios::binary); f.write(header,sizeof(header)); }
++    json report = json::array();
++    for (const auto & file : {"missing.gguf","bad-magic.gguf","truncated.gguf"}) {
++        Model invalid(llama_model_load_from_file((dir/file).string().c_str(),params),llama_model_free);
++        require(!invalid,"invalid model was accepted");
++        report.push_back({{"case",file},{"rejected",true}});
++    }
++    return report;
++}
++static int co_resident(int argc, char ** argv) {
++    require(argc == 7,"--co-resident BGE SMOL BACKEND_DIR cpu|metal OUTPUT");
++    std::string device = argv[5];
++    require(device == "cpu" || device == "metal","co-resident local control backend");
++    load_backend(argv[4],"cpu");
++    if (device != "cpu") load_backend(argv[4],device);
++    llama_backend_init();
++    ggml_backend_dev_t gpu = nullptr;
++    for (size_t i = 0; i < ggml_backend_dev_count(); ++i)
++        if (device != "cpu" && ggml_backend_dev_type(ggml_backend_dev_get(i)) == GGML_BACKEND_DEVICE_TYPE_GPU) gpu = ggml_backend_dev_get(i);
++    require(device == "cpu" || gpu,"required Metal device absent");
++    ggml_backend_dev_t placement[] = {gpu,nullptr};
++    auto params = llama_model_default_params(); params.devices = placement; params.n_gpu_layers = gpu ? 999 : 0;
++    json result = {{"device",device},{"scope","direct two-model allocation/lifecycle control; no provider registry"},
++                   {"resident_before_bytes",resident_bytes()},{"primary_model_loads",2}};
++    Model bge(llama_model_load_from_file(argv[2],params),llama_model_free);
++    Model smol(llama_model_load_from_file(argv[3],params),llama_model_free);
++    require(bge && smol,"two-model load failed");
++    result["unique_model_payload_bytes"] = llama_model_size(bge.get())+llama_model_size(smol.get());
++    result["resident_after_models_bytes"] = resident_bytes();
++    std::vector<Tokens> documents, prompts;
++    for (int i = 0; i < 8; ++i) {
++        std::string text;
++        for (int j = 0; j < (i%2 ? 126 : 382); ++j) text += "cat ";
++        documents.push_back(tokenize(llama_model_get_vocab(bge.get()),text));
++    }
++    for (int i = 0; i < 4; ++i) prompts.push_back(tokenize(llama_model_get_vocab(smol.get()),prompt("Name one animal."),true));
++    std::vector<Context> embeddings, generations;
++    json stages = json::array();
++    for (int owners : {1,2,4}) {
++        while (int(embeddings.size()) < owners) {
++            embeddings.push_back(context(bge.get(),true,gpu != nullptr,2));
++            generations.push_back(context(smol.get(),false,gpu != nullptr,2));
++            require(llama_get_model(embeddings.back().get()) == bge.get(),"embedding weight identity changed");
++            require(llama_get_model(generations.back().get()) == smol.get(),"generation weight identity changed");
++        }
++        auto expected_vectors = embed(embeddings[0].get(),bge.get(),documents);
++        auto expected_tokens = generate(generations[0].get(),smol.get(),prompts).tokens;
++        auto started = Clock::now();
++        std::vector<std::future<Vectors>> ejobs;
++        std::vector<std::future<Generated>> gjobs;
++        for (int i = 0; i < owners; ++i) {
++            ejobs.push_back(std::async(std::launch::async,[&,i]{return embed(embeddings[i].get(),bge.get(),documents);}));
++            gjobs.push_back(std::async(std::launch::async,[&,i]{return generate(generations[i].get(),smol.get(),prompts);}));
++        }
++        for (auto & job : ejobs) compare(job.get(),expected_vectors,same_layout,"two_model_private_contexts");
++        for (auto & job : gjobs) require(job.get().tokens == expected_tokens,"two-model generation isolation failed");
++        auto resident = resident_bytes();
++        stages.push_back({{"owners_per_model",owners},{"unique_models",2},{"private_contexts",2*owners},
++                          {"resident_bytes",resident},{"concurrent_work_ms",milliseconds(started)}});
++        require(resident <= 4ull*1024*1024*1024,"two-model process exceeds 4 GiB budget");
++    }
++    result["allocation_stages"] = stages;
++    embeddings.clear(); bge.reset();
++    require(!generate(generations[0].get(),smol.get(),prompts).tokens[0].empty(),"closing embedding model damaged generation");
++    generations.clear(); smol.reset();
++    result["resident_after_close_bytes"] = resident_bytes();
++    json reloads = json::array(), live_reload_allocations = json::array();
++    for (int i = 0; i < 4; ++i) {
++        Model model(llama_model_load_from_file(argv[2],params),llama_model_free);
++        require(bool(model),"reload failed");
++        auto ctx = context(model.get(),true,gpu != nullptr,2);
++        require(embed(ctx.get(),model.get(),documents).size() == 8,"reload inference failed");
++        ctx.reset(); model.reset(); reloads.push_back(resident_bytes());
++#if CONTROL_ASAN
++        live_reload_allocations.push_back(__sanitizer_get_current_allocated_bytes());
++#endif
++    }
++    const auto & retained_samples = live_reload_allocations.empty() ? reloads : live_reload_allocations;
++    uint64_t first = retained_samples[0].get<uint64_t>(), maximum = first;
++    for (auto value : retained_samples) maximum = std::max(maximum,value.get<uint64_t>());
++    require(maximum-first <= 32u*1024*1024,"close/reload retains more than 32 MiB");
++    result["closed_reload_cycle_resident_bytes"] = reloads;
++    result["closed_reload_cycle_live_allocation_bytes"] = live_reload_allocations;
++    result["retention_metric"] = live_reload_allocations.empty() ? "process_rss" : "asan_live_allocations";
++    result["closed_reload_retained_growth_bytes"] = maximum-first;
++    result["parity_failures"] = parity_failures;
++    result["result"] = parity_failures.empty() ? "PASS" : "FAIL";
++    llama_backend_free();
++    std::ofstream output(argv[6]); output << result.dump(2) << '\n'; output.close(); require(bool(output),"co-resident output failed");
++    std::cout << "CONTROL_JSON " << result.dump() << '\n' << result["result"].get<std::string>() << " co-resident inference control\n";
++    return parity_failures.empty() ? 0 : 1;
++}
+ int main(int argc, char ** argv) {
+     try {
++        if (argc > 1 && std::string(argv[1]) == "--co-resident") return co_resident(argc,argv);
+         if (argc == 2 && std::string(argv[1]) == "--help") {
+             std::cout << "model backend-directory cpu|metal|cuda|vulkan bge|smol|scratch output.json [repeats=100] [batches=20] [owners=4] [threads=4] [reference.json]\n";
+             return 0;
+@@ -279,6 +477,7 @@
+         int owners = argc > 8 ? std::stoi(argv[8]) : 4;
+         int threads = argc > 9 ? std::stoi(argv[9]) : 4;
+         require(repeats >= 1 && batches >= 1 && owners >= 1 && owners <= 4 && threads >= 1, "invalid work limits");
++        auto backend_started = Clock::now();
+         load_backend(argv[2], "cpu");
+         if (device != "cpu") load_backend(argv[2], device);
+         llama_backend_init();
+@@ -290,18 +489,24 @@
+             if (device != "cpu" && ggml_backend_dev_type(d) == GGML_BACKEND_DEVICE_TYPE_GPU && selected == nullptr) selected = d;
+         }
+         require(device == "cpu" || selected != nullptr, "required GPU absent");
++        double backend_ms = milliseconds(backend_started);
+         ggml_backend_dev_t placement[] = {selected, nullptr};
+         auto mp = llama_model_default_params();
+         mp.devices = placement; mp.n_gpu_layers = selected ? 999 : 0;
++        auto load_started = Clock::now();
+         Model model(llama_model_load_from_file(argv[1], mp), llama_model_free);
+         require(bool(model), "model load failed");
++        double model_load_ms = milliseconds(load_started);
+         uint64_t memory_after_model = resident_bytes();
+         const auto vocab = llama_model_get_vocab(model.get());
+         bool embedding = profile == "bge";
+         std::vector<Context> contexts;
+         json context_memory = json::array();
++        json context_times = json::array();
+         for (int i = 0; i < owners; ++i) {
++            auto started = Clock::now();
+             contexts.push_back(context(model.get(), embedding, selected != nullptr, threads));
++            context_times.push_back(milliseconds(started));
+             require(llama_get_model(contexts.back().get()) == model.get(),"context does not share original model");
+             context_memory.push_back(resident_bytes());
+         }
+@@ -331,11 +536,29 @@
+         output["context_model_identity_shared"] = true;
+         output["resident_after_model_bytes"] = memory_after_model;
+         output["resident_after_each_context_bytes"] = context_memory;
++        output["backend_setup_ms"] = backend_ms;
++        output["model_load_ms"] = model_load_ms;
++        output["context_create_ms"] = context_times;
++        output["timing_limits_enforced"] = bool(CONTROL_TIMING_GATE);
+         json memory_samples = json::array();
++        json allocation_samples = json::array();
++        auto sample_memory = [&] {
++            memory_samples.push_back(resident_bytes());
++#if CONTROL_ASAN
++            allocation_samples.push_back({{"live_bytes",__sanitizer_get_current_allocated_bytes()},
++                {"heap_bytes",__sanitizer_get_heap_size()},{"free_bytes",__sanitizer_get_free_bytes()}});
++#endif
++        };
++        json single_times = json::array(), batch_times = json::array();
++        auto preparation_started = Clock::now();
+         if (embedding) {
+             output["numeric_policy"] = "S2-D01-v2";
+             Vectors serial;
+-            for (const auto & input : inputs) serial.push_back(embed(ctx,model.get(),{input})[0]);
++            for (const auto & input : inputs) {
++                auto started = Clock::now();
++                serial.push_back(embed(ctx,model.get(),{input})[0]);
++                if (serial.size() == 1) output["first_request_ms"] = milliseconds(started);
++            }
+             const auto batched = embed(ctx,model.get(),inputs);
+             compare(batched,serial,different_layout,"single_vs_batch8");
+             Vectors batch4;
+@@ -348,15 +571,27 @@
+             compare(batch4,serial,different_layout,"single_vs_batch4");
+             compare(batch4,batched,different_layout,"batch4_vs_batch8");
+             for (int i = 0; i < 2; ++i) compare(embed(ctx,model.get(),inputs),batched,same_layout,"batch8_warmup");
+-            memory_samples.push_back(resident_bytes());
++            output["preparation_requests_ms"] = milliseconds(preparation_started);
++            output["preparation_compute_units"] = unit_report();
++            sample_memory();
+             llama_perf_context_reset(ctx);
++            unit_times.clear();
+             for (int i = 0; i < repeats; ++i) {
+-                compare(embed(ctx,model.get(),{inputs[size_t(i)%inputs.size()]}),{serial[size_t(i)%inputs.size()]},same_layout,"single_repeat");
+-                if ((i+1)%10 == 0) memory_samples.push_back(resident_bytes());
+-            }
+-            for (int i = 0; i < batches; ++i) compare(embed(ctx,model.get(),inputs),batched,same_layout,"batch8_repeat");
+-            memory_samples.push_back(resident_bytes());
++                auto started = Clock::now();
++                auto actual = embed(ctx,model.get(),{inputs[size_t(i)%inputs.size()]});
++                single_times.push_back(milliseconds(started));
++                compare(actual,{serial[size_t(i)%inputs.size()]},same_layout,"single_repeat");
++                if ((i+1)%10 == 0) sample_memory();
++            }
++            for (int i = 0; i < batches; ++i) {
++                auto started = Clock::now();
++                auto actual = embed(ctx,model.get(),inputs);
++                batch_times.push_back(milliseconds(started));
++                compare(actual,batched,same_layout,"batch8_repeat");
++            }
++            sample_memory();
+             output["warm_upstream_counters"] = perf(ctx);
++            output["warm_units"] = unit_report();
+             std::vector<std::future<Vectors>> jobs;
+             for (auto & owner : contexts) jobs.push_back(std::async(std::launch::async,[&,c=owner.get()]{return embed(c,model.get(),inputs);}));
+             for (auto & job : jobs) compare(job.get(),batched,same_layout,"batch8_private_contexts");
+@@ -400,25 +635,59 @@
+                 output["cross_backend_parity_checked"] = true;
+             }
+         } else {
++            auto first_started = Clock::now();
+             auto expected = generate(ctx,model.get(),inputs);
++            output["first_request_ms"] = milliseconds(first_started);
+             require(std::any_of(expected.tokens.begin(),expected.tokens.end(),[](const Tokens & t){return !t.empty();}),"all generation controls are empty");
+             for (int i = 0; i < 2; ++i) require(generate(ctx,model.get(),inputs).tokens==expected.tokens,"generation warmup mismatch");
+-            memory_samples.push_back(resident_bytes());
++            output["preparation_requests_ms"] = milliseconds(preparation_started);
++            output["preparation_compute_units"] = unit_report();
++            sample_memory();
+             llama_perf_context_reset(ctx);
++            unit_times.clear();
+             for (int i = 0; i < repeats; ++i) {
+                 auto row = size_t(i)%inputs.size();
+-                require(generate(ctx,model.get(),{inputs[row]}).tokens[0]==expected.tokens[row],"generation single/batch mismatch");
+-                if ((i+1)%10 == 0) memory_samples.push_back(resident_bytes());
++                auto started = Clock::now();
++                auto actual = generate(ctx,model.get(),{inputs[row]});
++                single_times.push_back(milliseconds(started));
++                require(actual.tokens[0]==expected.tokens[row],"generation single/batch mismatch");
++                if ((i+1)%10 == 0) sample_memory();
+             }
+-            for (int i = 0; i < batches; ++i) require(generate(ctx,model.get(),inputs).tokens==expected.tokens,"generation repeat mismatch");
+-            memory_samples.push_back(resident_bytes());
++            for (int i = 0; i < batches; ++i) {
++                auto started = Clock::now();
++                auto actual = generate(ctx,model.get(),inputs);
++                batch_times.push_back(milliseconds(started));
++                require(actual.tokens==expected.tokens,"generation repeat mismatch");
++            }
++            sample_memory();
+             output["warm_upstream_counters"] = perf(ctx);
++            output["warm_units"] = unit_report();
+             std::vector<std::future<Generated>> jobs;
+             for (auto & owner : contexts) jobs.push_back(std::async(std::launch::async,[&,c=owner.get()]{return generate(c,model.get(),inputs);}));
+             for (auto & job : jobs) require(job.get().tokens==expected.tokens,"generation shared-context mismatch");
+             output["generated_token_ids"] = expected.tokens;
+             output["finish_reasons"] = expected.finish;
+         }
++        output["warm_single_request_ms"] = single_times;
++        output["warm_batch_request_ms"] = batch_times;
++        double single_total = 0, batch_total = 0;
++        for (auto value : single_times) single_total += value.get<double>();
++        for (auto value : batch_times) batch_total += value.get<double>();
++        output["warm_single_total_ms"] = single_total;
++        output["warm_batch_total_ms"] = batch_total;
++        // Frozen workload's indivisible units bound cooperative GPU response.
++#if CONTROL_TIMING_GATE
++        for (const auto & item : output["warm_units"].items())
++            require(item.value()["max_ms"].get<double>() <= 250,"warm compute unit exceeded 250 ms");
++#endif
++        if (profile != "scratch") output["inference_cancellation"] = cancellation_probe(ctx,inputs,embedding,selected != nullptr);
++        // Positive recovery after aborted/cleared inference, before failed loads.
++        if (embedding) compare(embed(ctx,model.get(),inputs),output["vectors_batch8"].get<Vectors>(),same_layout,"post_cancel_recovery");
++        else require(generate(ctx,model.get(),inputs).tokens == output["generated_token_ids"].get<std::vector<Tokens>>(),"post-cancel generation recovery failed");
++        Batch empty(1);
++        require(llama_decode(ctx,empty.value) == -1,"empty native batch accepted");
++        output["invalid_batch_rejected"] = true;
++        output["invalid_model_controls"] = invalid_loads(argv[1],mp);
+         // Cancel a separate load at its first progress boundary; the existing
+         // prepared model/contexts remain a positive lifetime control.
+         int progress_calls = 0;
+@@ -435,15 +704,33 @@
+         uint64_t maximum = warmed;
+         for (auto value : memory_samples) maximum = std::max(maximum,value.get<uint64_t>());
+         output["retained_growth_bytes"] = maximum-warmed;
+-        require(maximum-warmed <= 32u*1024u*1024u,"retained memory growth exceeds 32 MiB");
++        output["sanitizer_allocation_samples"] = allocation_samples;
++        uint64_t retained_growth = maximum-warmed;
++#if CONTROL_ASAN
++        // ASan's quarantine/reserved heap inflates RSS without growing live
++        // allocations. Keep RSS diagnostic; apply the same 32 MiB allowance to
++        // owned live allocations in this instrumented lane (S2-QA01).
++        uint64_t live_first = allocation_samples[0]["live_bytes"].get<uint64_t>(), live_max = live_first;
++        for (const auto & sample : allocation_samples) live_max = std::max(live_max,sample["live_bytes"].get<uint64_t>());
++        retained_growth = live_max-live_first;
++        output["retention_metric"] = "asan_live_allocations";
++#else
++        output["retention_metric"] = "process_rss";
++#endif
++        output["retention_guard_growth_bytes"] = retained_growth;
++        require(retained_growth <= 32u*1024u*1024u,"retained memory growth exceeds 32 MiB");
++#if CONTROL_TIMING_GATE
+         require(cancel_ms <= 1000,"load cancellation exceeded 1 second");
++#endif
+         contexts.clear(); model.reset(); llama_backend_free();
+         output["parity_failures"] = parity_failures;
+         output["parity_summary"] = parity_summary;
+         output["result"] = parity_failures.empty() ? "PASS" : "FAIL";
+         std::ofstream result(argv[5]); require(bool(result),"cannot open output file");
+         result << output.dump(2) << '\n'; result.close(); require(bool(result),"output write failed");
+-        std::cout << "CONTROL_JSON " << output.dump() << '\n';
++        json compact = output;
++        for (const auto & key : {"vectors","vectors_batch4","vectors_batch8"}) compact.erase(key);
++        std::cout << "CONTROL_JSON " << compact.dump() << '\n';
+         std::cout << (parity_failures.empty() ? "PASS" : "FAIL") << " native inference direct control\n";
+         return parity_failures.empty() ? 0 : 1;
+     } catch (const std::exception & e) {

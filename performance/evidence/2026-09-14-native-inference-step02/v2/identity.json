@@ -1,0 +1,93 @@
+{
+  "date": "2026-09-14",
+  "policy": "S2-D01-v2",
+  "approval": "Adrian approved observed-accuracy tripwire; preserve batching/GPU performance and do not pursue upstream determinism changes.",
+  "crexx_checkout": "037e7939bc29eb91b29ed41e9b1b8debdef6353d",
+  "dirty_scope": "Approved guidance/planning plus direct QA controls and evidence; no product implementation.",
+  "upstream_commit": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "upstream_build_identity": "../identity.json: original upstream library/tool build remains unchanged; original workload hashes describe version 1.",
+  "host": "Apple M5 arm64, 10 logical CPUs, 24 GiB unified memory, Darwin 25.6.0",
+  "compiler": "AppleClang 21.0.0 (clang-2100.1.1.101)",
+  "sdk": "macOS 26.5 command line tools",
+  "model": {
+    "path": "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+    "bytes": 67308128,
+    "sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+  },
+  "sources_and_binaries": [
+    {
+      "path": "tests/native-inference/direct_control.cpp",
+      "sha256": "d743da57993544781f99c804f4c142d70e81791aba15e092d42d83dafdec9cb4"
+    },
+    {
+      "path": "tests/native-inference/CMakeLists.txt",
+      "sha256": "e7a289fe8a464ac27e4fbacf7368df619a294e1b0465ad813aba3a2ad5b9c19a"
+    },
+    {
+      "path": "cmake-build-llama-workload/native_inference_control",
+      "sha256": "77b2d8222d991a7d035d9b543bf357290f034e7b80f9ab835ff0dc77176fd1f4"
+    },
+    {
+      "path": "cmake-build-llama-workload-debug/native_inference_control",
+      "sha256": "806b69a453f720aa35fd86201dd56c80738e5cbe7b54a251db0df37cbbc2ab02"
+    }
+  ],
+  "reference_outputs": [
+    {
+      "path": "bge-cpu.json",
+      "sha256": "74f7e7799e2525957cc7713c7c22561b1a188b6ef5b4387e701f3a62e284cb31"
+    },
+    {
+      "path": "bge-metal.json",
+      "sha256": "36a3d9dd220e98a3de357ab25761f8feb3a7509eca8862bae9c0fcf0e1dc2478"
+    }
+  ],
+  "version1_reconstruction": {
+    "patch": "control-v1-to-v2.patch",
+    "instruction": "Reverse this unified diff against the version 2 direct_control.cpp identified above to reconstruct version 1. The only CMake change is the added native_inference_embedding_tripwire test.",
+    "version1_source_sha256": "df8733133bd1ac5f80f9afa1eafa37f815720af4ecc2f02e0f9c36b2bbc0e76f"
+  },
+  "commands": {
+    "cpu": {
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control",
+        "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin",
+        "cpu",
+        "bge",
+        "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/v2/bge-cpu.json",
+        "100",
+        "20",
+        "4",
+        "2"
+      ],
+      "stdout_stderr": "bge-cpu.log",
+      "exit_code": 0
+    },
+    "metal": {
+      "argv": [
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control",
+        "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin",
+        "metal",
+        "bge",
+        "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/v2/bge-metal.json",
+        "100",
+        "20",
+        "4",
+        "2",
+        "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/v2/bge-cpu.json"
+      ],
+      "stdout_stderr": "bge-metal.log",
+      "exit_code": 0
+    }
+  },
+  "validation": {
+    "release_ctest": "2/2 pass",
+    "debug_ctest": "2/2 pass; QA executable Debug, linked upstream libraries remain Release",
+    "cpu": "PASS; 100 single requests, 20 batches, 4 contexts, plus batch4 controls",
+    "metal": "PASS; same workload plus CPU comparison at all 3 layouts",
+    "retrieval": "All 36 exact-ranking combinations agree in a one-query/seven-document illustrative control.",
+    "scope": "Correctness only, no new formal timing or sanitizer qualification; prior noisy captures remain diagnostic."
+  }
+}

@@ -237,15 +237,27 @@ model, and enters Release 1 only through a beta quality gate.
 
 - Local native inference has a requirements backlog:
   [`CREXX-NI-01` through `CREXX-NI-07`](planning/native-inference-backlog.md),
-  captured 2026-09-11. It covers an optional in-process embedding provider,
-  persistent model ownership using existing workers, CPU/Metal execution,
-  canonical packages, reproducible model identity and qualification. Local text
-  generation is a separate extension. Scheduling is unassigned; this capture
-  does not change the five priorities or Release 1 scope. Product retrieval and
-  graph policy remain in the companion crexx-rag backlog.
+  captured 2026-09-11 and approved as a plan on 2026-09-14. Adrian's
+  revised direction includes GPU support from the first delivery, runtime
+  hardware selection, persistent preparation and batch processing, embeddings
+  and lightweight local generation. The plan selects `llama.rexx` / `rxllama`,
+  CPU/Metal/CUDA/Vulkan packages, shared-model ownership evaluation, and numbered
+  outcomes, acceptance criteria and implementation steps. The provider remains
+  optional to install. STEP-01 output is approved and STEP-02 controls are
+  complete; [the STEP-02 report](planning/native-inference-step-02.md) retains
+  CPU/Metal, persistence/sharing, cancellation, scratch, normal/ASan and Release
+  measurement evidence, including failed historical controls and timing
+  uncertainty. STEP-03 has not started. The
+  [dependency pins and proposed concrete contract](planning/native-inference-step-01.md)
+  record source/artifact inspection, not implemented or qualified support.
+  STEP-07 documentation/examples may start or complete before STEP-06 hardware
+  qualification finishes; missing platform evidence remains open. The detailed
+  API and package proposal is approved for the planned implementation. This plan does not change the five
+  priorities or assign Release 1 scope. Product
+  retrieval and graph policy remain in the companion crexx-rag backlog.
 - Public provider-plugin ABI, durable services, pool telemetry, server
-  lifecycle, HTTP/2, WebSockets, and GPU work remain post-Release-1 design
-  candidates.
+  lifecycle, HTTP/2, WebSockets, and GPU work beyond the native-inference
+  plan remain post-Release-1 design candidates.
 - `.rpm`, MSI/WiX, `winget`, legacy 32-bit validation, VM/370, MVS/370, and a
   full z/VM CMS port require dedicated platform ownership and evidence. The
   current CMS direction is deterministic demos and compatible host/environment

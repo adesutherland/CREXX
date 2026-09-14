@@ -1,0 +1,40 @@
+Start testing: Sep 14 11:57 BST
+----------------------------------------------------------
+1/2 Testing: native_inference_control_usage
+1/2 Test: native_inference_control_usage
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control" "--help"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload
+"native_inference_control_usage" start time: Sep 14 11:57 BST
+Output:
+----------------------------------------------------------
+model backend-directory cpu|metal|cuda|vulkan bge|smol|scratch output.json [repeats=100] [batches=20] [owners=4] [threads=4] [reference.json]
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"native_inference_control_usage" end time: Sep 14 11:57 BST
+"native_inference_control_usage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: native_inference_embedding_tripwire
+2/2 Test: native_inference_embedding_tripwire
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control" "--test-tripwire"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload
+"native_inference_embedding_tripwire" start time: Sep 14 11:57 BST
+Output:
+----------------------------------------------------------
+embedding parity max_abs=0.0005 min_cosine=1
+embedding parity max_abs=0.002 min_cosine=0.999998
+embedding parity max_abs=0.0007 min_cosine=0.999906
+embedding parity max_abs=0.003 min_cosine=0.999995
+embedding parity max_abs=0.001 min_cosine=0.999808
+PASS embedding tripwire: accepted variation; rejected coordinate/direction drift, NaN, infinity, zero, dimensions and empty output
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"native_inference_embedding_tripwire" end time: Sep 14 11:57 BST
+"native_inference_embedding_tripwire" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 14 11:57 BST

@@ -1,0 +1,23 @@
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload-debug
+[1/2] Building CXX object CMakeFiles/native_inference_control.dir/direct_control.cpp.o
+[2/2] Linking CXX executable native_inference_control
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload-debug
+    Start 1: native_inference_control_usage
+1/2 Test #1: native_inference_control_usage ........   Passed    0.31 sec
+    Start 2: native_inference_embedding_tripwire
+2/2 Test #2: native_inference_embedding_tripwire ...   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.33 sec

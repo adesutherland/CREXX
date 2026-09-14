@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g32efa89a2daa.dirty 20260904",
+  "workload": "native-inference-two-model-memory",
+  "runtime": "llama-metal-m5",
+  "variant": "step02-peak-rss-probe",
+  "lifecycle": "co-resident-process",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial",
+  "correctness_expectation": "PASS co-resident inference control",
+  "metric_prefix": null,
+  "command": ["/usr/bin/time","-l","/Users/adrian/CLionProjects/CREXX/cmake-build-llama-workload/native_inference_control","--co-resident","/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf","/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf","/Users/adrian/CLionProjects/CREXX/cmake-build-llama-controls/bin","metal","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-14-native-inference-step02/completion/release/peak-memory-metal.json"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-09-14T12:20:50+0000",
+  "completed_utc": "2026-09-14T12:20:52+0000",
+  "result": "pass"
+}

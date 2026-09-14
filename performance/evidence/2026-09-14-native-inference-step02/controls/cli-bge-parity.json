@@ -1,0 +1,11 @@
+{
+  "rows": [
+    1,
+    8
+  ],
+  "dimensions": 384,
+  "first_row_max_abs": 0.00035929999999999296,
+  "first_row_cosine": 0.9999974120778815,
+  "predeclared_max_abs": 1e-05,
+  "result": "FAIL"
+}

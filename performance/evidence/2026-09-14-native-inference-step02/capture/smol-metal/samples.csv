@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,warmup,1,18093793000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,warmup,2,20332934000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,1,21764138000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,2,20923184000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,3,27198690000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,4,26910963000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,5,26608413000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,6,25240367000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,7,18798515000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,8,18786813000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,9,19623938000,0,pass,,
+native-inference-smol-persistent,llama-metal-m5,step02-direct-v1,complete-control-process,recorded,10,19912084000,0,pass,,

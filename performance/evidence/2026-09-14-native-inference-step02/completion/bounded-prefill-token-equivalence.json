@@ -1,0 +1,35 @@
+{
+  "result": "PASS",
+  "checks": [
+    {
+      "case": "smol-cpu",
+      "result": "PASS",
+      "fields": [
+        "input_token_ids",
+        "generated_token_ids",
+        "finish_reasons"
+      ],
+      "reference": "release/smol-cpu-threads2-replay.json"
+    },
+    {
+      "case": "smol-cpu-threads4",
+      "result": "PASS",
+      "fields": [
+        "input_token_ids",
+        "generated_token_ids",
+        "finish_reasons"
+      ],
+      "reference": "release/smol-cpu-threads2-replay.json"
+    },
+    {
+      "case": "smol-metal",
+      "result": "PASS",
+      "fields": [
+        "input_token_ids",
+        "generated_token_ids",
+        "finish_reasons"
+      ],
+      "reference": "../capture/smol-metal/raw/recorded-1.stdout.txt"
+    }
+  ]
+}
