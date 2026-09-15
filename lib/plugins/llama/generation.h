@@ -36,10 +36,10 @@ void generation_sample(Resource &r, size_t index, const llama_vocab *vocab, llam
     auto &q = *r.request; auto &row = q.generated[index];
     if (llama_vocab_is_eog(vocab, token)) row.finish = "eos";
     else {
-        char small[256];
-        int length = llama_token_to_piece(vocab, token, small, sizeof(small), 0, false);
+        char token_piece[256];
+        int length = llama_token_to_piece(vocab, token, token_piece, sizeof(token_piece), 0, false);
         require(length != INT32_MIN, "generation detokenizer size failed", -6);
-        if (length >= 0) row.partial.append(small, size_t(length));
+        if (length >= 0) row.partial.append(token_piece, size_t(length));
         else {
             auto count = size_t(-length);
             require(count <= size_t(r.config.i("request_bytes") - q.output_bytes), "generation output byte limit exceeded", -8);
