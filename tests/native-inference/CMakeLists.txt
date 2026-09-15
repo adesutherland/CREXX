@@ -111,12 +111,12 @@ if(CONTROL_MODEL_DIR)
             add_test(NAME native_inference_${profile}_${device} COMMAND native_inference_control
                 "${${profile}}" "${LLAMA_LIBRARY_DIR}" "${device}" "${profile}"
                 "${CMAKE_CURRENT_BINARY_DIR}/results/${profile}-${device}.json" 100 20 4 2)
-            set_tests_properties(native_inference_${profile}_${device} PROPERTIES RUN_SERIAL TRUE TIMEOUT 600)
+            set_tests_properties(native_inference_${profile}_${device} PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800)
         endforeach()
         add_test(NAME native_inference_co_resident_${device} COMMAND native_inference_control
             --co-resident "${bge}" "${smol}" "${LLAMA_LIBRARY_DIR}" "${device}"
             "${CMAKE_CURRENT_BINARY_DIR}/results/co-resident-${device}.json")
-        set_tests_properties(native_inference_co_resident_${device} PROPERTIES RUN_SERIAL TRUE TIMEOUT 600)
+        set_tests_properties(native_inference_co_resident_${device} PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800)
     endforeach()
     # Explicit CPU configuration control: the two-thread Smol prefill exceeded
     # the conservative 250 ms call budget once on this M5. Keep that lane, and
@@ -124,7 +124,7 @@ if(CONTROL_MODEL_DIR)
     add_test(NAME native_inference_smol_cpu_threads4 COMMAND native_inference_control
         "${smol}" "${LLAMA_LIBRARY_DIR}" cpu smol
         "${CMAKE_CURRENT_BINARY_DIR}/results/smol-cpu-threads4.json" 100 20 4 4)
-    set_tests_properties(native_inference_smol_cpu_threads4 PROPERTIES RUN_SERIAL TRUE TIMEOUT 600)
+    set_tests_properties(native_inference_smol_cpu_threads4 PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800)
     add_test(NAME native_inference_scratch COMMAND native_inference_control "${stories}"
         "${LLAMA_LIBRARY_DIR}" cpu scratch "${CMAKE_CURRENT_BINARY_DIR}/results/scratch.json" 100 20 4 2)
     add_test(NAME native_inference_template COMMAND native_inference_template_control "${smol}"

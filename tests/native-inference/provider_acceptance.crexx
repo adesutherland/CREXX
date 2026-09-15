@@ -21,7 +21,7 @@ elapsed: procedure = .int
 ready_model: procedure = .int
   arg model = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..modelstate(model, state) <> 0 then return 1
     if state = "ready" then return 0
@@ -33,7 +33,7 @@ ready_model: procedure = .int
 ready_session: procedure = .int
   arg session = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..prepare(session, 512, state) <> 0 then return 1
     if state = "ready" then return 0
@@ -45,7 +45,7 @@ ready_session: procedure = .int
 complete_request: procedure = .int
   arg request = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..process(request, 512, state) <> 0 then return 1
     if state = "complete" then return 0
@@ -59,7 +59,7 @@ rejected_model: procedure = .int
   model = .binary
   if rxllama..modelopen(runtime, path, hash, "bge-small-en-v1.5", config, model) <> 0 then return 0
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..modelstate(model, state) <> 0 then return 1
     if state = "failed" then return check(rxllama..close(model) = 0, "failed model close")
@@ -98,8 +98,9 @@ incremental_generation: procedure = .int
   started = time("us")
   count = 0
   iterations = 0
-  do while elapsed(started) < 60000000
-    state = ""
+  finish = ""
+  state = ""
+  do while elapsed(started) < 600000000
     if rxllama..process(request, 1, state) <> 0 then return 1
     iterations = iterations + 1
     if cancel_early & iterations = 1 then do
@@ -108,7 +109,6 @@ incremental_generation: procedure = .int
     if \cancel_early then do
       text = ""
       tokens = 0
-      finish = ""
       status = rxllama..readtext(request, 1, text, tokens, finish)
       errors = errors + check(status = 0 & tokens >= 0, "incremental text read")
       count = count + tokens
@@ -190,17 +190,19 @@ generation_request: procedure = .int
 
 main: procedure = .int
   arg args = .string[]
-  if args.0 <> 4 then do
-    say "Usage: provider_acceptance BGE_F16_PATH SHA256 SMOL_Q8_PATH SHA256"
+  if args.0 <> 4 & args.0 <> 5 then do
+    say "Usage: provider_acceptance BGE_F16_PATH SHA256 SMOL_Q8_PATH SHA256 [cpu|auto|required-gpu]"
     return 2
   end
+  mode = "cpu"
+  if args.0 = 5 then mode = args[5]
   config = .binary
   runtime = .binary
   model = .binary
   session = .binary
   i = .int
   if rxllama..configcreate(config) <> 0 then return 1
-  errors = check(rxllama..configtext(config, "hardware_mode", "cpu") = 0, "CPU mode")
+  errors = check(rxllama..configtext(config, "hardware_mode", mode) = 0, "hardware mode")
   errors = errors + check(rxllama..configint(config, "memory_bytes", 4294967296) = 0, "memory budget")
   errors = errors + check(rxllama..configint(config, "output_tokens", 32) = 0, "output budget")
   errors = errors + check(rxllama..configint(config, "not_a_supported_option", 1) <> 0, "unknown option rejected")
@@ -230,6 +232,10 @@ main: procedure = .int
   generation_session = .binary
   if rxllama..modelopen(runtime, args[3], args[4], "smollm2-360m-instruct", config, generation_model) <> 0 then return 1
   if ready_model(generation_model) <> 0 then return 1
+  if mode = "required-gpu" then do
+    offloaded = 0
+    errors = errors + check(rxllama..infoint(generation_model, "gpu_layers", offloaded) = 0 & offloaded > 0, "generation GPU offload")
+  end
   if rxllama..sessionopen(generation_model, "generation", config, generation_session) <> 0 then return 1
   if ready_session(generation_session) <> 0 then return 1
   errors = errors + incremental_generation(generation_session, config, 1)

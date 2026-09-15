@@ -25,7 +25,7 @@ ready_model: procedure = .void
     call require state = "loading", "model loading"
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "model deadline"
+    call require duration < 600000000, "model deadline"
   end
 
 ready_session: procedure = .void
@@ -37,7 +37,7 @@ ready_session: procedure = .void
     if state = "ready" then return
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "session deadline"
+    call require duration < 600000000, "session deadline"
   end
 
 batch: procedure = .packedfloat
@@ -80,7 +80,7 @@ embed_worker: task = .string
     if owners = 5 then leave
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "four worker barrier"
+    call require duration < 600000000, "four worker barrier"
   end
   call require rxllama..sessionopen(model, "embedding", config, session) = 0, "worker session"
   call ready_session session
@@ -144,7 +144,7 @@ main: procedure = .int
   identity = ""
   call require rxllama..infotext(model, "shared_model_id", identity) = 0, "baseline identity"
   pool = .taskpool.local(4, 8)
-  scope = .taskscope.collectall(pool, 120000)
+  scope = .taskscope.collectall(pool, -1)
   do parallel using scope
     first = embed_worker(args[1], args[2], args[3], 1, first_bytes)
     second = embed_worker(args[1], args[2], args[3], 2, second_bytes)

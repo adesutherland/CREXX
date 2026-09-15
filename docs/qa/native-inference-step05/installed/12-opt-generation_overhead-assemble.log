@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxas'), '-o', PosixPath('/private/tmp/ni-s5/installed-generation/opt-generation_overhead-dynamic'), PosixPath('/private/tmp/ni-s5/installed-generation/opt-generation_overhead-dynamic')]
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0

@@ -1,0 +1,8 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-closeout-us2i3r42/work/noopt-persistent_generation-linked', '-a', 'cpu', '/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf', '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+rc=0
+Device: CPU backend: cpu
+Row 1: One animal is a cat.
+Row 2: Two plus two equals four.
+Row 3: Bonjour, je m'appelle François.
+Row 4: One planet is Earth.
+PASS: persistent typed generation example, one load and twenty batches

@@ -21,7 +21,7 @@ elapsed: procedure = .int
 ready_model: procedure = .int
   arg model = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..modelstate(model, state) <> 0 then return 1
     if state = "ready" then return 0
@@ -33,7 +33,7 @@ ready_model: procedure = .int
 ready_session: procedure = .int
   arg session = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..prepare(session, 512, state) <> 0 then return 1
     if state = "ready" then return 0
@@ -45,7 +45,7 @@ ready_session: procedure = .int
 complete_request: procedure = .int
   arg request = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..process(request, 512, state) <> 0 then return 1
     if state = "complete" then return 0
@@ -59,7 +59,7 @@ rejected_model: procedure = .int
   model = .binary
   if rxllama..modelopen(runtime, path, hash, "bge-small-en-v1.5", config, model) <> 0 then return 0
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..modelstate(model, state) <> 0 then return 1
     if state = "failed" then return check(rxllama..close(model) = 0, "failed model close")

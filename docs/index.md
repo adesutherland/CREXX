@@ -32,6 +32,8 @@ designs.
 - [Unicode text services](books/crexx_library_reference/unicode.md)
 - [Packed vectors](books/crexx_library_reference/rxvector.md)
 - [SQLite typed provider and ADDRESS façade](books/crexx_library_reference/rxsqlite.md)
+- [llama.rexx native embeddings and generation](../lib/plugins/llama/README.md)
+  (optional development provider; local CPU/Metal evidence, full QA pending)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)

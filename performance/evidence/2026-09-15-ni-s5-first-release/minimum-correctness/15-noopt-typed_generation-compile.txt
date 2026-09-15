@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/private/tmp/ni-s5/public-debug-01/noopt-typed_generation', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/typed_generation.crexx']
+rc=0

@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink', '-o', '/tmp/ni-s5/public-closeout-remainder/noopt-provider_acceptance-linked', '/tmp/ni-s5/public-closeout-remainder/noopt-provider_acceptance', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg']
+rc=0

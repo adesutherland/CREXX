@@ -1,0 +1,62 @@
+[
+  {
+    "argv": [
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/build/candidate_embedding",
+      "cpu",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/bge-small-en-v1.5-f16.gguf",
+      "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17"
+    ],
+    "returncode": 0,
+    "pass": true,
+    "elapsed_seconds": 5.813530832994729,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidate_embedding-cpu.log"
+  },
+  {
+    "argv": [
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/build/candidate_embedding",
+      "required-gpu",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/bge-small-en-v1.5-f16.gguf",
+      "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17"
+    ],
+    "returncode": 0,
+    "pass": true,
+    "elapsed_seconds": 1.999363665934652,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidate_embedding-required-gpu.log"
+  },
+  {
+    "argv": [
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/build/candidate_embedding",
+      "cross-device",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/bge-small-en-v1.5-f16.gguf",
+      "cdff157dc108aee08f38024b8f046f1774f6a4a29fb3a170564232ceeb74ac17"
+    ],
+    "returncode": 0,
+    "pass": true,
+    "elapsed_seconds": 2.7998403750825673,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidate_embedding-cross-device.log"
+  },
+  {
+    "argv": [
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/build/candidate_generation",
+      "cpu",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/smollm2-360m-instruct-q8_0.gguf",
+      "afb8552a500c22958467716b7991000dcc941d1f108a516c721b4cc40d41bad9"
+    ],
+    "returncode": 0,
+    "pass": true,
+    "elapsed_seconds": 10.189842791995034,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidate_generation-cpu.log"
+  },
+  {
+    "argv": [
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/provider-candidate/build/candidate_generation",
+      "required-gpu",
+      "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidates/repeat-1/smollm2-360m-instruct-q8_0.gguf",
+      "afb8552a500c22958467716b7991000dcc941d1f108a516c721b4cc40d41bad9"
+    ],
+    "returncode": 0,
+    "pass": true,
+    "elapsed_seconds": 9.256081874947995,
+    "log": "/tmp/crexx-ni-s6.zq0rk0ug/conversion/candidate_generation-required-gpu.log"
+  }
+]

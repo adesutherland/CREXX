@@ -1,6 +1,7 @@
 /* cREXX License (MIT). llama.rexx persistent model and VM ownership. */
 #include "bridge.h"
 #include "package.hpp"
+#include "generation_utf8.h"
 #include "llama.h"
 #include "ggml-backend.h"
 #include <algorithm>
@@ -177,12 +178,34 @@ std::atomic<uint64_t> next_model{1};
 std::atomic<unsigned> active_loaders{0};
 enum Kind { config_kind, runtime_kind, model_kind, session_kind, request_kind };
 struct EmbeddingRow { std::string text; std::vector<llama_token> tokens; };
+struct GenerationRow {
+    std::string text, partial, finish;
+    std::vector<llama_token> tokens;
+    size_t read_tokens = 0;
+    llama_token next = 0;
+    int position = 0;
+};
+struct GenerationBatch {
+    llama_batch value;
+    explicit GenerationBatch(int capacity): value(llama_batch_init(capacity, 0, 1)) {}
+    ~GenerationBatch() { llama_batch_free(value); }
+    void add(llama_token token, int position, int row, bool output) {
+        int n = value.n_tokens++; value.token[n] = token; value.pos[n] = position;
+        value.n_seq_id[n] = 1; value.seq_id[n][0] = row; value.logits[n] = output;
+    }
+};
 struct Request {
     std::string state = "building", error;
     std::vector<EmbeddingRow> rows;
     std::vector<double> values;
     int64_t bytes = 0, tokens = 0, decode_calls = 0;
     double submit_ms = 0, process_ms = 0;
+    bool generation = false;
+    std::vector<GenerationRow> generated;
+    std::unique_ptr<GenerationBatch> batch;
+    size_t prefill_row = 0, prefill_pos = 0, decode_row = 0;
+    int64_t output_bytes = 0, last_work_tokens = 0, maximum_work_tokens = 0;
+    int64_t prefill_calls = 0, token_calls = 0;
 };
 struct Resource {
     uint64_t id = 0, parent = 0;
@@ -467,20 +490,23 @@ void prepare(Resource &r, int64_t work) {
 // Requests retain owned bounded input/results; only their session owns compute state.
 void request_open(VM &vm, Resource &session, const Config &config, rxllama_result &out) {
     require(session.prepared, "session is not prepared", -7);
-    require(session.model->profile == "bge-small-en-v1.5", "generation requests belong to STEP-05", -6);
+    bool generation = session.model->profile == "smollm2-360m-instruct";
     require(!session.active_request, "session has an active request", -7);
     config.validate();
     for (const auto &entry : config.ints) {
-        bool limit = entry.first == "request_rows" || entry.first == "request_tokens" || entry.first == "request_bytes";
+        bool limit = entry.first == "request_rows" || entry.first == "request_tokens" || entry.first == "request_bytes" ||
+                     (generation && entry.first == "output_tokens");
         auto previous = session.config.ints.at(entry.first);
         require(limit ? entry.second <= previous : entry.second == previous, "request option conflicts with prepared session");
     }
     require(config.texts == session.config.texts && config.floats == session.config.floats,
             "request option conflicts with prepared session");
     Config snapshot = config;
-    auto request = std::make_unique<Request>();
+    auto request = std::make_unique<Request>(); request->generation = generation;
     auto charge = config.i("request_bytes") + config.i("request_tokens") * int64_t(sizeof(llama_token)) +
-                  config.i("request_rows") * (384 * int64_t(sizeof(double)) + 256);
+                  config.i("request_rows") * (generation ? config.i("output_tokens") * int64_t(sizeof(llama_token)) + 256
+                                                        : 384 * int64_t(sizeof(double)) + 256);
+    if (generation) charge += 2 * config.i("request_bytes");
     auto &rt = runtime(vm, session); reserve(rt, charge);
     try {
         auto &r = make(vm, request_kind, out); r.parent = session.id;
@@ -514,6 +540,7 @@ std::string selector(const rxllama_argument &arg) {
 void add_embedding(Resource &r, const char *text, size_t length, const std::string &role, rxllama_result &out) {
     auto &q = *r.request;
     require(q.state == "building", "request is not building", -7);
+    require(!q.generation, "embedding operation on a generation request", -4);
     require(text, "missing embedding input");
     require(role == "query" || role == "document", "unsupported embedding role");
     require(q.rows.size() < size_t(r.config.i("request_rows")), "request row limit exceeded", -8);
@@ -533,22 +560,33 @@ void submit(VM &vm, Resource &r) {
     require(q.state == "building", "request is not building", -7);
     auto begin = Clock::now();
     try {
-        require(!q.rows.empty(), "empty embedding batch");
+        require(!q.rows.empty(), "empty request batch");
+        if (q.generation) q.generated.resize(q.rows.size());
         auto &session = *vm.resources.at(r.parent);
         const auto vocab = llama_model_get_vocab(session.model->model);
         int64_t total = 0;
         for (auto &row : q.rows) {
-            int count = llama_tokenize(vocab, row.text.data(), int(row.text.size()), nullptr, 0, true, false);
+            int count = llama_tokenize(vocab, row.text.data(), int(row.text.size()), nullptr, 0, true, q.generation);
             require(count < 0 && count != INT32_MIN, "tokenizer size failed", -6); count = -count;
-            require(count <= r.config.i("context_tokens") && count <= 512, "embedding row exceeds token limit");
+            require(q.generation ? count <= r.config.i("context_tokens") - r.config.i("output_tokens")
+                                 : count <= r.config.i("context_tokens") && count <= 512,
+                    "request row exceeds context/token limit");
             require(count <= r.config.i("request_tokens") - total, "request token limit exceeded", -8);
             row.tokens.resize(size_t(count));
-            require(llama_tokenize(vocab, row.text.data(), int(row.text.size()), row.tokens.data(), count, true, false) == count,
+            require(llama_tokenize(vocab, row.text.data(), int(row.text.size()), row.tokens.data(), count, true, q.generation) == count,
                     "tokenization failed", -6);
             total += count;
         }
+        if (q.generation) for (size_t row = 0; row < q.rows.size(); ++row) {
+            q.generated[row].position = int(q.rows[row].tokens.size());
+            q.generated[row].tokens.reserve(size_t(r.config.i("output_tokens")));
+        }
         q.tokens = total; q.state = "running";
-    } catch (const std::exception &e) { q.state = "failed"; q.error = e.what(); release_active(vm, r); throw; }
+    } catch (const std::exception &e) {
+        q.state = "failed"; q.error = e.what();
+        for (auto &row : q.generated) row.finish = "error";
+        release_active(vm, r); throw;
+    }
     auto finished = Clock::now();
     q.submit_ms = std::chrono::duration<double, std::milli>(finished - begin).count();
     if (vm.probes_enabled) vm.probes.submit_ns += std::chrono::duration_cast<std::chrono::nanoseconds>(finished - begin).count();
@@ -604,7 +642,8 @@ void process_embedding(VM &vm, Resource &r, int64_t work) {
     }
     q.process_ms = std::chrono::duration<double, std::milli>(Clock::now() - begin).count();
 }
-const char *operations[] = {"configcreate","configint","configfloat","configtext","runtimeopen","devicecount","deviceinfo","modelopen","modelstate","modelcancel","sessionopen","prepare","infotext","infoint","diagnostic","close","requestopen","addembedding","submit","process","embeddings","cancel"};
+#include "generation.h"
+const char *operations[] = {"configcreate","configint","configfloat","configtext","runtimeopen","devicecount","deviceinfo","modelopen","modelstate","modelcancel","sessionopen","prepare","infotext","infoint","diagnostic","close","requestopen","addembedding","submit","process","embeddings","cancel","addprompt","readtext"};
 }
 extern "C" {
 #ifdef CREXX_LLAMA_TESTING
@@ -649,7 +688,7 @@ void rxllama_vm_destroy(void *opaque) {
     delete &vm;
 }
 int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result *out) {
-    if (!opaque || !a || !out || op < 0 || op > RXLLAMA_CANCEL) return -2;
+    if (!opaque || !a || !out || op < 0 || op > RXLLAMA_READ_TEXT) return -2;
     auto &vm = *static_cast<VM *>(opaque);
     out->probes = nullptr;
     if (op == RXLLAMA_DIAGNOSTIC) { out->integer = vm.error; out->operation = vm.operation.c_str(); out->message = vm.message.c_str(); return 0; }
@@ -728,12 +767,18 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
             if (vm.probes_enabled) vm.probes.admit_ns += rxllama_probe_clock_ns() - begin;
             break;
         }
+        case RXLLAMA_ADD_PROMPT: add_prompt(get(vm, a[0].handle, request_kind), a[1], a[2], *out); break;
+        case RXLLAMA_READ_TEXT: read_text(vm, get(vm, a[0].handle, request_kind), a[1].integer, *out); break;
         case RXLLAMA_SUBMIT: submit(vm, get(vm, a[0].handle, request_kind)); break;
         case RXLLAMA_PROCESS: {
-            auto &r = get(vm, a[0].handle, request_kind); process_embedding(vm, r, a[1].integer); vm.text = r.request->state; break;
+            auto &r = get(vm, a[0].handle, request_kind);
+            if (r.request->generation) process_generation(vm, r, a[1].integer);
+            else process_embedding(vm, r, a[1].integer);
+            vm.text = r.request->state; break;
         }
         case RXLLAMA_EMBEDDINGS: {
             auto &r = get(vm, a[0].handle, request_kind); auto &q = *r.request;
+            require(!q.generation, "embedding operation on a generation request", -4);
             require(q.state == "complete", "embedding result is not complete", -7);
             out->probes = vm.probes_enabled ? &vm.probes : nullptr;
             out->values = q.values.data(); out->value_count = int64_t(q.values.size());
@@ -741,7 +786,12 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
         }
         case RXLLAMA_CANCEL: {
             auto &r = get(vm, a[0].handle, request_kind); auto &q = *r.request;
-            if (q.state == "building" || q.state == "running") { q.state = "cancelled"; q.values.clear(); release_active(vm, r); }
+            if (q.state == "building" || q.state == "running") {
+                q.state = "cancelled"; q.values.clear();
+                if (q.generation && q.generated.empty()) q.generated.resize(q.rows.size());
+                for (auto &row : q.generated) if (row.finish.empty()) { row.finish = "cancelled"; row.partial.clear(); }
+                release_active(vm, r);
+            }
             break;
         }
         case RXLLAMA_CLOSE: close(vm, get(vm, a[0].handle, -1, true)); break;
@@ -758,6 +808,7 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
                     else if (key == "device") vm.text = m.device; else if (key == "selection") vm.text = r.selection;
                     else if (key == "error") vm.text = m.error;
                     else if (key == "placement") vm.text = m.placement;
+                    else if (key == "generation_spec" && m.profile == "smollm2-360m-instruct") vm.text = "smollm2-360m-instruct;Q8_0;greedy;explicit-system-user-template;bounded-prefill-decode;UTF-8";
                     else if (key == "embedding_spec" && m.profile == "bge-small-en-v1.5") vm.text = "bge-small-en-v1.5;F16;384;CLS;L2;512;query=Represent this sentence for searching relevant passages: ;document=unchanged";
                     else throw Failure(-1, "unknown model text property");
                 } else throw Failure(-1, "unknown resource text property");
@@ -782,6 +833,11 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
                 else if (r.request && key == "rows") out->integer = int64_t(r.request->rows.size());
                 else if (r.request && key == "input_tokens") out->integer = r.request->tokens;
                 else if (r.request && key == "input_bytes") out->integer = r.request->bytes;
+                else if (r.request && key == "output_bytes") out->integer = r.request->output_bytes;
+                else if (r.request && key == "last_work_tokens") out->integer = r.request->last_work_tokens;
+                else if (r.request && key == "maximum_work_tokens") out->integer = r.request->maximum_work_tokens;
+                else if (r.request && key == "prefill_calls") out->integer = r.request->prefill_calls;
+                else if (r.request && key == "token_calls") out->integer = r.request->token_calls;
                 else if (r.request && key == "decode_calls") out->integer = r.request->decode_calls;
                 else if (r.request && key == "submit_us") out->integer = int64_t(r.request->submit_ms * 1000);
                 else if (r.request && key == "process_us") out->integer = int64_t(r.request->process_ms * 1000);

@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.24)
+project(S6D01Candidate LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(Threads REQUIRED)
+set(REPO "/Users/adrian/CLionProjects/CREXX")
+set(UPSTREAM "${REPO}/cmake-build-debug/_deps/crexx_llama_source-src")
+set(RUNTIME "${CMAKE_CURRENT_SOURCE_DIR}/providers")
+include_directories("${REPO}/lib/plugins/llama" "${REPO}/binutils/include"
+ "${UPSTREAM}/include" "${UPSTREAM}/ggml/include" "${UPSTREAM}/vendor")
+add_library(candidate SHARED bridge.cpp "${REPO}/binutils/rxsha256.c")
+target_compile_definitions(candidate PRIVATE CREXX_LLAMA_BUILD CREXX_LLAMA_TESTING=1
+ CREXX_LLAMA_BUILD_ID="S6-D01-candidate-only:Debug" CREXX_LLAMA_PLATFORM="Darwin" CREXX_LLAMA_ARCH="arm64")
+set_target_properties(candidate PROPERTIES OUTPUT_NAME crexx-llama VERSION 1 SOVERSION 1
+ LIBRARY_OUTPUT_DIRECTORY "${RUNTIME}" BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "@loader_path")
+set(ENGINE "${RUNTIME}/libcrexx-llama-engine.dylib")
+set(GGML "${RUNTIME}/libcrexx-ggml.dylib" "${RUNTIME}/libcrexx-ggml-base.dylib")
+target_link_libraries(candidate PRIVATE ${ENGINE} ${GGML} Threads::Threads)
+foreach(kind embedding generation)
+ add_executable(candidate_${kind} "${REPO}/tests/native-inference/${kind}_bridge.cpp")
+ target_link_libraries(candidate_${kind} PRIVATE candidate ${ENGINE} ${GGML} Threads::Threads)
+ set_target_properties(candidate_${kind} PROPERTIES BUILD_RPATH "${RUNTIME}")
+endforeach()

@@ -1,0 +1,34 @@
+{
+  "runs": [
+    "opt-provider_acceptance-cpu-rxbvm",
+    "opt-provider_acceptance-cpu-rxtvm",
+    "opt-provider_acceptance-required-gpu-rxbvm",
+    "opt-provider_acceptance-required-gpu-rxtvm",
+    "opt-persistent_generation-cpu-rxbvm",
+    "opt-persistent_generation-cpu-rxtvm",
+    "opt-persistent_generation-required-gpu-rxbvm",
+    "opt-persistent_generation-required-gpu-rxtvm",
+    "opt-shared_generation-cpu-rxbvm",
+    "opt-shared_generation-cpu-rxtvm",
+    "opt-shared_generation-required-gpu-rxbvm",
+    "opt-shared_generation-required-gpu-rxtvm",
+    "noopt-provider_acceptance-cpu-rxbvm",
+    "noopt-provider_acceptance-cpu-rxtvm",
+    "noopt-provider_acceptance-required-gpu-rxbvm",
+    "noopt-provider_acceptance-required-gpu-rxtvm",
+    "noopt-persistent_generation-cpu-rxbvm",
+    "noopt-persistent_generation-cpu-rxtvm",
+    "noopt-persistent_generation-required-gpu-rxbvm",
+    "noopt-persistent_generation-required-gpu-rxtvm",
+    "noopt-shared_generation-cpu-rxbvm",
+    "noopt-shared_generation-cpu-rxtvm",
+    "noopt-shared_generation-required-gpu-rxbvm",
+    "noopt-shared_generation-required-gpu-rxtvm"
+  ],
+  "model_sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+  "sources": {
+    "tests/native-inference/provider_acceptance.crexx": "10174273b11df13ca1f2ba385d74e352322c08ba72217c2583d04f1653b37a58",
+    "lib/plugins/llama/examples/persistent_generation.crexx": "0f747ab385eaf3ceb39b9bd27a44012a0bb2acf73cc033204c75965cfa7a2fa2",
+    "lib/plugins/llama/examples/shared_generation.crexx": "a41ceec57c996626b74247d2d09614bc1288a119afb9d59443d3fab96e45691d"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "prior_normal_pass_count": 2347,
+  "current_selected_count": 2349,
+  "additional_current_tests": [
+    "odbc_sqlite_prepared_rxbvm",
+    "odbc_sqlite_prepared_rxtvm"
+  ],
+  "not_currently_selected": [],
+  "configuration_difference": {
+    "normal": "ENABLE_ODBC=OFF",
+    "sanitizer": "ENABLE_ODBC=ON; SQLite driver /opt/homebrew/lib/libsqlite3odbc.dylib"
+  }
+}

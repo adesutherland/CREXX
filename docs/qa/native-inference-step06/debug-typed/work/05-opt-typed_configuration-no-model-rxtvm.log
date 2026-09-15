@@ -1,0 +1,3 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/typed-3l_x9oku/work/opt-typed_configuration-linked']
+rc=0
+PASS: typed llama configuration

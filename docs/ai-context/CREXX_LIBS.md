@@ -796,6 +796,17 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
   and static paths; the unversioned initializer and old factories are unchanged.
   A service-requiring plugin must return NULL from its old factory and reject
   calls without a session on pre-V2 hosts, rather than silently using GETSTRING.
+- Complete UTF-8 output: `SETSTRINGLENGTH(host, value, data, byte_length)` is the
+  checked, optional `string_set` host service. It copies into VM-owned storage,
+  accepts embedded U+0000 and requires no terminator or padding. Length counts
+  bytes; the VM validates UTF-8 and maintains codepoint counts. NULL data is
+  valid only at length zero. Invalid/oversized text or an unavailable service
+  returns -1 without modifying the destination. A borrowed destination view is
+  also safe as input. Use `rxpa_host_has_string_set` to negotiate the complete
+  sized tail; require it for operations that publish arbitrary complete text.
+  Borrowed views remain counted, without a terminator guarantee. The legacy
+  C-string getter provides one trailing NUL; extra NUL padding would not make
+  C-string consumers preserve embedded U+0000.
 - `GETINT()`, `GETFLOAT()`, `GETSTRING()`: Extracts the native C value from a register handle.
 
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
@@ -988,13 +999,27 @@ RXBIN dependency, runtime lookup, and native archive identity consistently
 
 The optional `ENABLE_LLAMA` build adds the session-aware llama.rexx / `rxllama`
 provider. `import llama` exposes typed configuration, runtime, model, embedding
-session, request, result and diagnostic objects implemented directly in C RXPA.
+and generation sessions/requests, owned results/chunks and diagnostics directly
+implemented in C RXPA.
 Load and prepare once, then process repeated inputs or batches using private
 contexts over shared compatible model weights. CPU/GPU discovery, inspection
-and cleanup remain explicit. Generation requests remain STEP-05.
-See [the provider guide](../../lib/plugins/llama/README.md) for exact build and
-runtime boundaries and [STEP-04](../planning/native-inference-step-04.md) for
-qualification status, including remaining sanitizer and platform gates.
+and cleanup remain explicit. Generation uses bounded prefill/decode units,
+ordered incremental complete UTF-8, token deltas and explicit finish reasons.
+Use the negotiated counted output service, not a C-string or Rexx conversion
+facade. See `generation_toolchain.py` and `generation_package_consumer.py` for
+explicit generation checks; do not register their nested aggregates before
+STEP-06 establishes Debug/sanitizer scheduling.
+Use [the installed provider guide](../../lib/plugins/llama/README.md),
+[installation](../../lib/plugins/llama/installation.md),
+[model provisioning](../../lib/plugins/llama/models.md),
+[operating reference](../../lib/plugins/llama/reference.md) and
+[example walkthrough](../../lib/plugins/llama/examples/README.md) as the current
+human/agent contract. The [STEP-07 coverage and review ledger](../qa/native-inference-step07/README.md)
+prepares STEP-06 QA; [STEP-05](../planning/native-inference-step-05.md) retains the
+completed local generation evidence. Preserve that distinction at takeover.
+Do not interpret the historical STEP-01 Rexx-facade proposal as authority to add
+wrappers. Do not silently re-pin models to close the recorded conversion
+provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
 
 `add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
 `BACKEND_TARGETS`, `RUNTIME_FILES` and `ENGINE_ID`. Its runtime-package target

@@ -8,13 +8,16 @@
 #else
 #define LOCAL __thread
 #endif
-typedef struct { void *vm; rxpa_string_view_v1 string_view; const rxpa_host_services_v1 *host; } adapter_session;
+typedef struct {
+    void *vm; rxpa_string_view_v1 string_view; const rxpa_host_services_v1 *host;
+    const char *host_error_operation;
+} adapter_session;
 static LOCAL adapter_session *current_vm;
 static void *unsupported_host(void) { return NULL; }
 static void *create(const rxpa_host_services_v1 *host) {
     adapter_session *session;
     if (!rxpa_host_has_string_view(host)) return NULL;
-    session = malloc(sizeof(*session));
+    session = calloc(1, sizeof(*session));
     if (!session) return NULL;
     session->vm = rxllama_vm_create(); session->string_view = host->string_view; session->host = host;
     if (!session->vm) { free(session); return NULL; }
@@ -53,6 +56,23 @@ static void copy_payload(void *destination, void *source) {
     }
 }
 static void finalize_payload(void *value) { rxllama_release(token(value)); }
+/* Keep unsupported-host failures on the ordinary status/diagnostic surface.
+ * The existing embedding surface still works with the earlier sized table. */
+static int adapter_call(int op, const rxllama_argument *inputs, rxllama_result *output) {
+    if (op == RXLLAMA_DIAGNOSTIC && current_vm->host_error_operation) {
+        output->integer = -7; output->operation = current_vm->host_error_operation;
+        output->message = "generation requires the RXPA counted UTF-8 output service";
+        return 0;
+    }
+    current_vm->host_error_operation = NULL;
+    if (!rxpa_host_has_string_set(current_vm->host) &&
+        (op == RXLLAMA_READ_TEXT || (op == RXLLAMA_SESSION_OPEN &&
+         inputs[1].text_length == 10 && !memcmp(inputs[1].text, "generation", 10)))) {
+        current_vm->host_error_operation = op == RXLLAMA_READ_TEXT ? "readtext" : "sessionopen";
+        return -7;
+    }
+    return rxllama_call(current_vm->vm, op, inputs, output);
+}
 /* Signature codes: h opaque handle, i integer, f float, s text, H/I/S output.
  * All public functions return status, including failures to publish handles. */
 static void invoke(int op, const char *signature, rxinteger count, rxpa_attribute_value *args,
@@ -77,10 +97,13 @@ static void invoke(int op, const char *signature, rxinteger count, rxpa_attribut
                 break;
         }
     }
-    status = rxllama_call(current_vm->vm, op, inputs, &output);
+    status = adapter_call(op, inputs, &output);
     if (!status) {
         if (op == RXLLAMA_DIAGNOSTIC) {
             SETINT(args[0], output.integer); SETSTRING(args[1], output.operation); SETSTRING(args[2], output.message);
+        } else if (op == RXLLAMA_READ_TEXT) {
+            if (SETSTRINGLENGTH(current_vm->host, args[2], output.text, output.text_length)) status = -5;
+            else { SETINT(args[3], output.integer); SETSTRING(args[4], output.finish); }
         } else if (op == RXLLAMA_EMBEDDINGS) {
             size_t bytes = (size_t)output.value_count * sizeof(double);
             uint64_t begin = output.probes ? rxllama_probe_clock_ns() : 0;
@@ -131,6 +154,8 @@ WRAP(submit, RXLLAMA_SUBMIT, "h")
 WRAP(process, RXLLAMA_PROCESS, "hiS")
 WRAP(embeddings, RXLLAMA_EMBEDDINGS, "hPII")
 WRAP(cancel, RXLLAMA_CANCEL, "h")
+WRAP(addprompt, RXLLAMA_ADD_PROMPT, "hssI")
+WRAP(readtext, RXLLAMA_READ_TEXT, "hiSIS")
 #include "typed.h"
 LOADFUNCS
 LLAMA_TYPED_DECLARATIONS
@@ -156,4 +181,6 @@ ADDPROC(submit, "rxllama.submit", "b", ".int", "request=.binary");
 ADDPROC(process, "rxllama.process", "b", ".int", "request=.binary, work_tokens=.int, expose state=.string");
 ADDPROC(embeddings, "rxllama.embeddings", "b", ".int", "request=.binary, expose values=.packedfloat, expose rows=.int, expose dimensions=.int");
 ADDPROC(cancel, "rxllama.cancel", "b", ".int", "request=.binary");
+ADDPROC(addprompt, "rxllama.addprompt", "b", ".int", "request=.binary, system=.string, prompt=.string, expose row=.int");
+ADDPROC(readtext, "rxllama.readtext", "b", ".int", "request=.binary, row=.int, expose text=.string, expose tokens=.int, expose finish=.string");
 ENDLOADFUNCS

@@ -1,0 +1,178 @@
+/** Four persistent workers share weights and compare private ordered outputs.
+ * @docType example
+ * Arguments: hardware mode, local SmolLM2 GGUF, pinned SHA256.
+ * Only text and bytes cross workers; each worker constructs its native owners.
+ */
+options levelg floats_binary
+namespace llama_shared_generation_example
+import rxfnsb
+import rxfnsg
+import concurrency
+import llama
+import _rxsysb
+
+/** @param okay invariant @param message failure context */
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+/** @param model asynchronously opened owner; wait at most sixty seconds */
+ready_model: procedure = .void
+  arg model = .llama..model
+  started = time("us")
+  do forever
+    state = model.state()
+    call require model.status() = 0, "model state"
+    if state = "ready" then return
+    call require state = "loading", "model loading"
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "model deadline"
+  end
+
+/** @param session private owner; explicit bounded preparation */
+ready_session: procedure = .void
+  arg session = .llama..generation_session
+  started = time("us")
+  do forever
+    state = session.prepare(128)
+    call require session.status() = 0, "session preparation"
+    if state = "ready" then return
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "session deadline"
+  end
+
+/** @param session prepared owner @param config bounds @param seed input identity
+ * @return owned ordered text/token/finish transcript after request closure */
+batch: procedure = .string
+  arg session = .llama..generation_session, config = .llama..configuration, seed = .int
+  request = session.request(config)
+  call require request.status() = 0, "request open"
+  replies = .string[]
+  finishes = .string[]
+  counts = .int[]
+  row = .int
+  do row = 1 to 4
+    prompt = "Name one animal. Request from worker " || seed || " row " || row || "."
+    call require request.add("", prompt) = row, "ordered worker input"
+    replies[row] = ""
+    counts[row] = 0
+  end
+  call require request.submit() = 0, "worker submit"
+  started = time("us")
+  do forever
+    state = request.process(128)
+    call require request.status() = 0, request.diagnostic().message()
+    do row = 1 to 4
+      chunk = request.read(row)
+      call require chunk.status() = 0 & chunk.row() = row, "worker chunk"
+      replies[row] = replies[row] || chunk.text()
+      counts[row] = counts[row] + chunk.tokens()
+      finishes[row] = chunk.finish()
+    end
+    if state = "complete" then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require state = "running" & duration < 60000000, "worker request deadline"
+  end
+  call require request.close() = 0, "worker request close"
+  transcript = ""
+  do row = 1 to 4
+    call require replies[row] <> "" & counts[row] > 0 & counts[row] <= 32, "worker output bounds"
+    call require finishes[row] = "eos" | finishes[row] = "output_limit", "worker finish"
+    transcript = transcript || row || ":" || counts[row] || ":" || finishes[row] || ":" || c2x(replies[row]) || ";"
+  end
+  return transcript
+
+/** @param mode hardware policy @param path GGUF @param hash digest
+ * @param seed worker identity @param expected isolated reference
+ * @return shared allocation identity after twenty batches and explicit cleanup */
+generate_worker: task = .string
+  arg mode = .string, path = .string, hash = .string, seed = .int, expected = .string
+  config = .llama..configuration()
+  call require config.status() = 0, "worker config"
+  call require config.set_text("hardware_mode", mode) = 0, "worker mode"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, "worker runtime"
+  model = runtime.model(path, hash, "smollm2-360m-instruct", config)
+  call require model.status() = 0, "worker model"
+  call ready_model model
+  started = time("us")
+  do forever
+    owners = 0
+    owners = model.info_int("peak_owner_count")
+    call require model.status() = 0, "worker shared owners"
+    if owners = 5 then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "four worker barrier"
+  end
+  session = model.generation_session(config)
+  call require session.status() = 0, "worker session"
+  call ready_session session
+  do iteration = 1 to 20
+    actual = batch(session, config, seed)
+    call require actual = expected, "isolated/concurrent ordered text, token counts and finishes"
+  end
+  loads = 0
+  completed = 0
+  loads = model.info_int("load_count")
+  call require model.status() = 0 & loads = 1, "shared single load"
+  completed = session.info_int("completed_requests")
+  call require session.status() = 0 & completed = 20, "private completion count"
+  identity = ""
+  identity = model.info_text("shared_model_id")
+  call require model.status() = 0, "worker model identity"
+  call require session.close() = 0, "worker session close"
+  call require model.close() = 0, "worker model close"
+  call require runtime.close() = 0, "worker runtime close"
+  call require config.close() = 0, "worker config close"
+  return identity
+
+/** @param args hardware policy, GGUF, SHA256 @return zero on success */
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 3 then return 2
+  config = .llama..configuration()
+  call require config.status() = 0, "baseline config"
+  call require config.set_text("hardware_mode", args[1]) = 0, "baseline mode"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, "baseline runtime"
+  model = runtime.model(args[2], args[3], "smollm2-360m-instruct", config)
+  call require model.status() = 0, "baseline model"
+  call ready_model model
+  session = model.generation_session(config)
+  call require session.status() = 0, "baseline session"
+  call ready_session session
+  one = batch(session, config, 1)
+  two = batch(session, config, 2)
+  three = batch(session, config, 3)
+  four = batch(session, config, 4)
+  call require session.close() = 0, "baseline session close"
+  identity = ""
+  identity = model.info_text("shared_model_id")
+  call require model.status() = 0, "baseline identity"
+  pool = .taskpool.local(4, 8)
+  scope = .taskscope.collectall(pool, 120000)
+  do parallel using scope
+    first = generate_worker(args[1], args[2], args[3], 1, one)
+    second = generate_worker(args[1], args[2], args[3], 2, two)
+    third = generate_worker(args[1], args[2], args[3], 3, three)
+    fourth = generate_worker(args[1], args[2], args[3], 4, four)
+  end
+  call pool.close()
+  call require identity <> "" & first = identity & second = identity & third = identity & fourth = identity, "one model allocation across workers"
+  owners = 0
+  owners = model.info_int("owner_count")
+  call require model.status() = 0 & owners = 1, "worker owners released"
+  call require model.close() = 0, "baseline model close"
+  reserved = 0
+  reserved = runtime.info_int("reserved_bytes")
+  call require runtime.status() = 0 & reserved = 0, "baseline reservations released"
+  call require runtime.close() = 0, "baseline runtime close"
+  call require config.close() = 0, "baseline config close"
+  say "PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs" args[1]
+  return 0

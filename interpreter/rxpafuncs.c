@@ -365,6 +365,28 @@ int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *
     return 0;
 }
 
+/* Counted UTF-8 publication. Preserve a borrowed destination view before the
+ * existing setter releases/reuses storage. Ordinary external input needs no
+ * intermediate copy; validation and codepoint accounting belong to the VM. */
+int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length) {
+    value *val = (value *)destination;
+    char *owned = NULL;
+    int status;
+    if (!val || (!data && length) || !rxvm_value_string_metric_fits(length)) return -1;
+    if (length && val->string_value && (uintptr_t)data >= (uintptr_t)val->string_value &&
+        (uintptr_t)data - (uintptr_t)val->string_value < RXVM_VALUE_STRING_CAPACITY(val)) {
+        size_t offset = (uintptr_t)data - (uintptr_t)val->string_value;
+        if (offset > val->string_length || length > val->string_length - offset) return -1;
+        owned = rxvm_memory_alloc_bytes(rxvm_memory_current_worker(), length);
+        if (!owned) return -1;
+        memcpy(owned, data, length);
+        data = owned;
+    }
+    status = set_string_validated(val, data, length);
+    if (owned) (void)rxvm_memory_release(owned);
+    return status;
+}
+
 /* Get a string from an attribute value */
 char* rxvm_getstring(rxpa_attribute_value attributeValue) {
     value* val = (value*)attributeValue;

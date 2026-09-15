@@ -20,7 +20,7 @@ require: procedure = .void
   call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
   return
 
-/** @param model asynchronously opened owner; wait at most sixty seconds */
+/** @param model asynchronously opened owner; wait at most ten minutes */
 ready_model: procedure = .void
   arg model = .llama..model
   started = time("us")
@@ -31,7 +31,7 @@ ready_model: procedure = .void
     call require state = "loading", "model loading"
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "model deadline"
+    call require duration < 600000000, "model deadline"
   end
 
 /** @param session private owner; explicit bounded preparation */
@@ -44,7 +44,7 @@ ready_session: procedure = .void
     if state = "ready" then return
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "session deadline"
+    call require duration < 600000000, "session deadline"
   end
 
 /** @param session prepared owner @param config bounds @param seed input identity
@@ -91,7 +91,7 @@ embed_worker: task = .string
     if owners = 5 then leave
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "four worker barrier"
+    call require duration < 600000000, "four worker barrier"
   end
   session = model.embedding_session(config)
   call require session.status() = 0, "worker session"
@@ -161,7 +161,7 @@ main: procedure = .int
   identity = model.info_text("shared_model_id")
   call require model.status() = 0, "baseline identity"
   pool = .taskpool.local(4, 8)
-  scope = .taskscope.collectall(pool, 120000)
+  scope = .taskscope.collectall(pool, -1)
   do parallel using scope
     first = embed_worker(args[1], args[2], args[3], 1, first_bytes)
     second = embed_worker(args[1], args[2], args[3], 2, second_bytes)

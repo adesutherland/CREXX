@@ -55,9 +55,10 @@ void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* arg
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
 int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *length);
 int rxvm_object_set_type(rxpa_attribute_value destination, const char *class_name);
+int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length);
 static const rxpa_host_services_v1 rxpa_host_services = {
     sizeof(rxpa_host_services_v1), RXPA_HOST_SERVICES_ABI_V1, rxvm_string_view,
-    rxvm_object_set_type
+    rxvm_object_set_type, rxvm_string_set
 };
 void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);

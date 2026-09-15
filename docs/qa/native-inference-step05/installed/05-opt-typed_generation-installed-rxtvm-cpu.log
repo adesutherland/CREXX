@@ -1,0 +1,4 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxtvm'), '/private/tmp/ni-s5/installed-generation/opt-typed_generation-dynamic-linked', '-a', 'cpu', PosixPath('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'), '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201']
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0
+PASS: typed llama generation

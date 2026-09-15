@@ -1,0 +1,76 @@
+[
+  {
+    "name": "network-before",
+    "argv": [
+      "/usr/bin/curl",
+      "--noproxy",
+      "*",
+      "--silent",
+      "--show-error",
+      "--fail",
+      "--max-time",
+      "3",
+      "http://127.0.0.1:52099/"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "network-denied",
+    "argv": [
+      "/usr/bin/sandbox-exec",
+      "-p",
+      "(version 1)(allow default)(deny network*)",
+      "/usr/bin/curl",
+      "--noproxy",
+      "*",
+      "--silent",
+      "--show-error",
+      "--fail",
+      "--max-time",
+      "3",
+      "http://127.0.0.1:52099/"
+    ],
+    "returncode": 7
+  },
+  {
+    "name": "network-after",
+    "argv": [
+      "/usr/bin/curl",
+      "--noproxy",
+      "*",
+      "--silent",
+      "--show-error",
+      "--fail",
+      "--max-time",
+      "3",
+      "http://127.0.0.1:52099/"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "embeddings-offline",
+    "argv": [
+      "/usr/bin/sandbox-exec",
+      "-p",
+      "(version 1)(allow default)(deny network*)",
+      "/private/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings",
+      "auto",
+      "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+      "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "generation-offline",
+    "argv": [
+      "/usr/bin/sandbox-exec",
+      "-p",
+      "(version 1)(allow default)(deny network*)",
+      "/private/tmp/crexx-ni-s7.oheu5td2/llama-example-work/generation",
+      "auto",
+      "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+      "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+    ],
+    "returncode": 0
+  }
+]

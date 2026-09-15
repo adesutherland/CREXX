@@ -1,0 +1,5 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/tmp/ni-s5/install/bin'), '-o', PosixPath('/private/tmp/ni-s5/installed-generation/opt-generation_overhead-dynamic'), PosixPath('/private/tmp/ni-s5/installed-generation/opt-generation_overhead.crexx')]
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0
+Warning in opt-generation_overhead.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file

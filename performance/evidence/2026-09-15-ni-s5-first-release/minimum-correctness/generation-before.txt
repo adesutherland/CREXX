@@ -1,0 +1,9 @@
+Warning in provider_acceptance.crexx @ 120:48 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 102, column 5. Declare this binding explicitly if intentional., "state"
+Warning in provider_acceptance.crexx @ 123:29 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 111, column 7. Declare this binding explicitly if intentional., "finish"
+2 warning(s) in source file
+Error in provider_acceptance.crexx @ 82:27 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..addprompt"
+Error in provider_acceptance.crexx @ 95:6 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..addprompt"
+Error in provider_acceptance.crexx @ 112:16 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..readtext"
+Error in provider_acceptance.crexx @ 172:14 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..addprompt"
+Error in provider_acceptance.crexx @ 182:14 - #FUNCTION_NOT_FOUND: Function was not found., "rxllama..readtext"
+5 error(s) in source file

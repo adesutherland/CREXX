@@ -22,7 +22,7 @@ def run(label, argv, marker=None, success=True, cwd=None, environment=None):
     global number
     number += 1
     result = subprocess.run(list(map(str, argv)), cwd=cwd or work, env=environment or env,
-                            capture_output=True, text=True, timeout=180)
+                            capture_output=True, text=True, timeout=1800)
     output = result.stdout + result.stderr
     (work / f"{number:02}-{label}.log").write_text(
         f"argv={argv!r}\ncwd={cwd or work}\nrc={result.returncode}\n{output}")

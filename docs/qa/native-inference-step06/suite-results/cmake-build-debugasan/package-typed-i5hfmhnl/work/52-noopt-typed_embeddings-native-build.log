@@ -1,0 +1,9 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/install/bin/crexx'), '--program', PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work/noopt-typed_embeddings native Ω/persistent'), PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work/noopt-typed_embeddings.crexx'), '--jobs', '1', '--native', '--nooptimize']
+cwd=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member noopt-typed_embeddings
+BUILT: project member noopt-typed_embeddings
+BARRIER: link program
+PUBLISHED: program /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work/noopt-typed_embeddings native Ω/persistent.rxbin
+PUBLISHED: native program /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl/work/noopt-typed_embeddings native Ω/persistent

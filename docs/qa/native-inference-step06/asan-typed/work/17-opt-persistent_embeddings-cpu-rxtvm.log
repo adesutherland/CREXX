@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/typed-6e936gt5/work/opt-persistent_embeddings-linked', '-a', 'cpu', '/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf', 'f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999']
+rc=0
+Device: CPU backend: cpu
+PASS: persistent typed embedding example, one load and twenty batches

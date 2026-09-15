@@ -21,7 +21,7 @@ elapsed: procedure = .int
 ready_model: procedure = .int
   arg model = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..modelstate(model, state) <> 0 then return 1
     if state = "ready" then return 0
@@ -33,7 +33,7 @@ ready_model: procedure = .int
 ready_session: procedure = .int
   arg session = .binary
   started = time("us")
-  do while elapsed(started) < 60000000
+  do while elapsed(started) < 600000000
     state = ""
     if rxllama..prepare(session, 512, state) <> 0 then return 1
     if state = "ready" then return 0

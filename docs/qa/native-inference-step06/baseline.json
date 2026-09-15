@@ -1,0 +1,41 @@
+{
+  "baseline": "f9f87a8e8671a5e7894fbc187dbc93ee7bcf8466",
+  "step05_non_document_source_matches": {
+    "interpreter/rxpafuncs.c": true,
+    "interpreter/rxvmload.c": true,
+    "interpreter/tests/test_rxpa_host_services.c": true,
+    "lib/plugins/llama/bridge.cpp": true,
+    "lib/plugins/llama/bridge.h": true,
+    "lib/plugins/llama/examples/persistent_generation.crexx": true,
+    "lib/plugins/llama/examples/shared_generation.crexx": true,
+    "lib/plugins/llama/generation.h": true,
+    "lib/plugins/llama/generation_utf8.h": true,
+    "lib/plugins/llama/rxllama.c": true,
+    "lib/plugins/llama/typed.h": true,
+    "rxpa/crexxpa.h": true,
+    "tests/native-inference/bridge_lifecycle.cpp": true,
+    "tests/native-inference/generation_bridge.cpp": true,
+    "tests/native-inference/generation_memory.crexx": true,
+    "tests/native-inference/generation_overhead.crexx": true,
+    "tests/native-inference/generation_package_consumer.py": true,
+    "tests/native-inference/generation_qualification.hpp": true,
+    "tests/native-inference/generation_reference.hpp": true,
+    "tests/native-inference/generation_reference_control.cpp": true,
+    "tests/native-inference/generation_toolchain.py": true,
+    "tests/native-inference/provider_acceptance.crexx": true,
+    "tests/native-inference/typed_generation.crexx": true
+  },
+  "models": {
+    "bge-small-en-v1.5-f16.gguf": {
+      "sha256": "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+      "size": 67308128
+    },
+    "smollm2-360m-instruct-q8_0.gguf": {
+      "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "size": 386404992
+    }
+  },
+  "host": "Darwin 25.6.0 arm64\nApple M5\n10\n25769803776\n",
+  "ordinary_full_regression": "reuse STEP-05 2347-pass record for unchanged product sources; focused recheck for modified QA harness",
+  "qa_change": "generation live-allocation sampling and explicit qualification target; no inference/compiler/adapter logic changed"
+}

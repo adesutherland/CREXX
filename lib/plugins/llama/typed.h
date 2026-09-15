@@ -47,8 +47,8 @@ static int typed_call(rxpa_attribute_value owner, int op, const char *signature,
             break;
         }
     }
-    status = rxllama_call(current_vm->vm, op, inputs, output);
-    rxllama_call(current_vm->vm, RXLLAMA_DIAGNOSTIC, inputs, &diagnostic);
+    status = adapter_call(op, inputs, output);
+    adapter_call(RXLLAMA_DIAGNOSTIC, inputs, &diagnostic);
     typed_diagnostic(owner, status, diagnostic.operation, diagnostic.message);
     return status;
 }
@@ -163,22 +163,32 @@ METHODPROCEDURE(typed_model) {
 TYPED_TEXT_CALL(typed_model_state, RXLLAMA_MODEL_STATE, "h")
 /** Cancel model ownership; live sessions must close first. @return status */
 TYPED_STATUS_CALL(typed_model_cancel, RXLLAMA_MODEL_CANCEL, "h")
+static void typed_open_session(rxpa_attribute_value owner, rxpa_attribute_value config,
+                                rxpa_attribute_value result, const char *capability) {
+    rxllama_argument args[3] = {{0}};
+    rxllama_result out = {0}, diagnostic = {0};
+    int status;
+    args[0].handle = token(owner); args[1].text = capability; args[1].text_length = strlen(capability);
+    args[2].handle = token(config);
+    status = adapter_call(RXLLAMA_SESSION_OPEN, args, &out);
+    adapter_call(RXLLAMA_DIAGNOSTIC, args, &diagnostic);
+    typed_diagnostic(result, status, diagnostic.operation, diagnostic.message);
+    if (!status) typed_handle(result, out.handle);
+    typed_diagnostic(owner, GETINT(GETATTR(result, 0)), GETSTRING(GETATTR(result, 1)), GETSTRING(GETATTR(result, 2)));
+}
 /** Create private mutable embedding state on a ready model; does not reload it.
  * @param config bounded configuration @return session; explicitly prepare before requests.
  */
 METHODPROCEDURE(typed_session) {
-    rxllama_argument args[3] = {{0}};
-    rxllama_result out = {0}, diagnostic = {0};
-    int status;
     TYPED_INIT(RETURN, "embedding_session", 3)
-    args[0].handle = token(ARG0); args[1].text = "embedding"; args[1].text_length = 9;
-    args[2].handle = token(ARG1);
-    status = rxllama_call(current_vm->vm, RXLLAMA_SESSION_OPEN, args, &out);
-    rxllama_call(current_vm->vm, RXLLAMA_DIAGNOSTIC, args, &diagnostic);
-    typed_diagnostic(RETURN, status, diagnostic.operation, diagnostic.message);
-    if (!status) typed_handle(RETURN, out.handle);
-    typed_diagnostic(ARG0, GETINT(GETATTR(RETURN, 0)), GETSTRING(GETATTR(RETURN, 1)), GETSTRING(GETATTR(RETURN, 2)));
-    RESETSIGNAL
+    typed_open_session(ARG0, ARG1, RETURN, "embedding"); RESETSIGNAL
+}
+/** Create private persistent generation state using the model's shared weights.
+ * @param config bounded configuration @return session; prepare before requests.
+ */
+METHODPROCEDURE(typed_generation_session) {
+    TYPED_INIT(RETURN, "generation_session", 3)
+    typed_open_session(ARG0, ARG1, RETURN, "generation"); RESETSIGNAL
 }
 /** Explicitly warm private state once; subsequent requests reuse it.
  * @param work_tokens positive work budget @return preparing/ready, empty on failure.
@@ -194,6 +204,75 @@ METHODPROCEDURE(typed_request) {
     typed_diagnostic(ARG0, GETINT(GETATTR(RETURN, 0)), GETSTRING(GETATTR(RETURN, 1)), GETSTRING(GETATTR(RETURN, 2)));
     RESETSIGNAL
 }
+/** Create one bounded generation request on a prepared session.
+ * @param config compatible limits @return initialized request; inspect status.
+ */
+METHODPROCEDURE(typed_generation_request) {
+    rxllama_result out;
+    TYPED_INIT(RETURN, "generation_request", 3)
+    if (!typed_call(RETURN, RXLLAMA_REQUEST_OPEN, "hh", _arg, &out)) typed_handle(RETURN, out.handle);
+    typed_diagnostic(ARG0, GETINT(GETATTR(RETURN, 0)), GETSTRING(GETATTR(RETURN, 1)), GETSTRING(GETATTR(RETURN, 2)));
+    RESETSIGNAL
+}
+/** Add a prompt using the pinned chat template; empty system selects its default.
+ * @param system instruction @param prompt user text @return one-based row or zero.
+ */
+TYPED_INT_CALL(typed_add_prompt, RXLLAMA_ADD_PROMPT, "hss")
+/** Add all prompts in order; failure cancels the batch and retains its diagnostic.
+ * @param prompts input array @param system shared instruction @return status
+ */
+METHODPROCEDURE(typed_add_prompts) {
+    rxllama_result out;
+    rxpa_attribute_value args[3];
+    rxinteger i, count = GETNUMATTRS(ARG1);
+    int status = 0;
+    args[0] = ARG0; args[1] = ARG2;
+    typed_diagnostic(ARG0, 0, "add_all", "");
+    for (i = 0; i < count; ++i) {
+        args[2] = GETATTR(ARG1, i);
+        status = typed_call(ARG0, RXLLAMA_ADD_PROMPT, "hss", args, &out);
+        if (status) {
+            rxllama_argument input = {0}; input.handle = token(ARG0);
+            adapter_call(RXLLAMA_CANCEL, &input, &out); break;
+        }
+    }
+    SETINT(RETURN, status); RESETSIGNAL
+}
+/** Read newly available complete UTF-8 from a submitted row.
+ * @param row one-based input row @return owned chunk, surviving later reads/close;
+ * inspect status. Empty text may accompany tokens or an unfinished scalar.
+ */
+METHODPROCEDURE(typed_read_text) {
+    rxllama_result out;
+    TYPED_INIT(RETURN, "generation_chunk", 7)
+    SETSTRING(GETATTR(RETURN, 3), ""); SETINT(GETATTR(RETURN, 4), 0);
+    SETSTRING(GETATTR(RETURN, 5), ""); SETINT(GETATTR(RETURN, 6), GETINT(ARG1));
+    if (!typed_call(RETURN, RXLLAMA_READ_TEXT, "hi", _arg, &out)) {
+        if (SETSTRINGLENGTH(current_vm->host, GETATTR(RETURN, 3), out.text, out.text_length))
+            typed_diagnostic(RETURN, -5, "readtext", "complete output publication failed");
+        else {
+            SETINT(GETATTR(RETURN, 4), out.integer);
+            SETSTRING(GETATTR(RETURN, 5), out.finish);
+        }
+    }
+    typed_diagnostic(ARG0, GETINT(GETATTR(RETURN, 0)), GETSTRING(GETATTR(RETURN, 1)), GETSTRING(GETATTR(RETURN, 2)));
+    RESETSIGNAL
+}
+/** @return exact owned UTF-8 text, including embedded U+0000. */
+METHODPROCEDURE(typed_chunk_text) {
+    const char *data; size_t length;
+    if (current_vm->string_view(GETATTR(ARG0, 3), &data, &length) ||
+        SETSTRINGLENGTH(current_vm->host, RETURN, data, length)) {
+        RETURNSIGNAL(SIGNAL_FAILURE, "complete generation text publication failed")
+    }
+    RESETSIGNAL
+}
+/** @return newly sampled token count; partial UTF-8 may not yet yield text. */
+METHODPROCEDURE(typed_chunk_tokens) { SETINT(RETURN, GETINT(GETATTR(ARG0, 4))); RESETSIGNAL }
+/** @return empty while running, otherwise eos/output_limit/cancelled/error. */
+METHODPROCEDURE(typed_chunk_finish) { SETSTRING(RETURN, GETSTRING(GETATTR(ARG0, 5))); RESETSIGNAL }
+/** @return one-based input row. */
+METHODPROCEDURE(typed_chunk_row) { SETINT(RETURN, GETINT(GETATTR(ARG0, 6))); RESETSIGNAL }
 /** Add complete text without submitting; the model's role preparation is applied.
  * @param text complete input @param role query/document
  * @return one-based row, zero on failure; status contains the failure code.
@@ -217,7 +296,7 @@ METHODPROCEDURE(typed_add_all) {
             rxllama_argument input = {0};
             input.handle = token(ARG0);
             /* Do not overwrite the row diagnostic already owned by ARG0. */
-            rxllama_call(current_vm->vm, RXLLAMA_CANCEL, &input, &out);
+            adapter_call(RXLLAMA_CANCEL, &input, &out);
             break;
         }
     }
@@ -225,7 +304,8 @@ METHODPROCEDURE(typed_add_all) {
 }
 /** Submit validated rows once; input mutation then stops. @return status */
 TYPED_STATUS_CALL(typed_submit, RXLLAMA_SUBMIT, "h")
-/** Process a bounded batch. Noncausal attention is one indivisible compute unit.
+/** Process bounded work: one prefill/decode unit for generation; noncausal
+ * embedding attention is one indivisible compute unit.
  * @param work_tokens positive budget @return state, empty on failure; inspect status.
  */
 TYPED_TEXT_CALL(typed_process, RXLLAMA_PROCESS, "hi")
@@ -235,8 +315,8 @@ METHODPROCEDURE(typed_request_state) {
     rxllama_result out = {0}, diagnostic = {0};
     int status;
     args[0].handle = token(ARG0); args[1].text = "state"; args[1].text_length = 5;
-    status = rxllama_call(current_vm->vm, RXLLAMA_INFO_TEXT, args, &out);
-    rxllama_call(current_vm->vm, RXLLAMA_DIAGNOSTIC, args, &diagnostic);
+    status = adapter_call(RXLLAMA_INFO_TEXT, args, &out);
+    adapter_call(RXLLAMA_DIAGNOSTIC, args, &diagnostic);
     typed_diagnostic(ARG0, status, diagnostic.operation, diagnostic.message);
     SETSTRING(RETURN, !status && out.text ? out.text : ""); RESETSIGNAL
 }
@@ -299,7 +379,7 @@ METHODPROCEDURE(typed_values) {
     ADDMATCHPROC(typed_match, "llama." name "_impl", args);
 
 /** @docType native-module
- * llama.rexx: VM-local typed owners for persistent CPU/GPU embeddings.
+ * llama.rexx: VM-local typed owners for persistent CPU/GPU embeddings and generation.
  * Import llama and rxfnsg. Construct configuration/runtime, load model, poll,
  * prepare a session, repeat requests, then close children before parents.
  * Check each operation's status. Failed constructors are initialized values.
@@ -307,7 +387,8 @@ METHODPROCEDURE(typed_values) {
  * Configuration owns option values; runtime owns model reservations; model
  * shares immutable weights; embedding_session owns a private context;
  * embedding_request owns admission and rows; embedding_result owns copied
- * packed bytes; diagnostic owns a snapshot. The last two need no close.
+ * packed bytes; generation_session owns private KV state, generation_request owns
+ * prompts/output, generation_chunk and diagnostic own snapshots needing no close.
  */
 #define LLAMA_TYPED_DECLARATIONS \
     LLAMA_TYPE("diagnostic") \
@@ -326,6 +407,23 @@ METHODPROCEDURE(typed_values) {
     LLAMA_METHOD("model", typed_model_state, "state", ".string", "") \
     LLAMA_METHOD("model", typed_model_cancel, "cancel", ".int", "") \
     LLAMA_METHOD("model", typed_session, "embedding_session", ".llama..embedding_session", "config=.llama..configuration") \
+    LLAMA_METHOD("model", typed_generation_session, "generation_session", ".llama..generation_session", "config=.llama..configuration") \
+    LLAMA_OWNER("generation_session") LLAMA_INFO("generation_session") \
+    LLAMA_METHOD("generation_session", typed_prepare, "prepare", ".string", "work_tokens=.int") \
+    LLAMA_METHOD("generation_session", typed_generation_request, "request", ".llama..generation_request", "config=.llama..configuration") \
+    LLAMA_OWNER("generation_request") LLAMA_INFO("generation_request") \
+    LLAMA_METHOD("generation_request", typed_add_prompt, "add", ".int", "system=.string,prompt=.string") \
+    LLAMA_METHOD("generation_request", typed_add_prompts, "add_all", ".int", "prompts=.string[*],system=.string") \
+    LLAMA_METHOD("generation_request", typed_submit, "submit", ".int", "") \
+    LLAMA_METHOD("generation_request", typed_process, "process", ".string", "work_tokens=.int") \
+    LLAMA_METHOD("generation_request", typed_request_state, "state", ".string", "") \
+    LLAMA_METHOD("generation_request", typed_cancel, "cancel", ".int", "") \
+    LLAMA_METHOD("generation_request", typed_read_text, "read", ".llama..generation_chunk", "row=.int") \
+    LLAMA_TYPE("generation_chunk") LLAMA_STATUS("generation_chunk") \
+    LLAMA_METHOD("generation_chunk", typed_chunk_text, "text", ".string", "") \
+    LLAMA_METHOD("generation_chunk", typed_chunk_tokens, "tokens", ".int", "") \
+    LLAMA_METHOD("generation_chunk", typed_chunk_finish, "finish", ".string", "") \
+    LLAMA_METHOD("generation_chunk", typed_chunk_row, "row", ".int", "") \
     LLAMA_OWNER("embedding_session") LLAMA_INFO("embedding_session") \
     LLAMA_METHOD("embedding_session", typed_prepare, "prepare", ".string", "work_tokens=.int") \
     LLAMA_METHOD("embedding_session", typed_request, "request", ".llama..embedding_request", "config=.llama..configuration") \

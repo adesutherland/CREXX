@@ -120,11 +120,19 @@ typedef int (*rxpa_string_view_v1)(rxpa_attribute_value value,
  * borrowed value handles in the active VM call; never retain those handles. */
 typedef int (*rxpa_object_set_type_v1)(rxpa_attribute_value value,
                                       const char *class_name);
+/* Copy exactly byte_length UTF-8 bytes into VM-owned text. No source terminator
+ * or padding is required. Embedded U+0000 is text; length excludes any padding.
+ * NULL data is valid only for empty text. The VM validates/counts codepoints.
+ * Returns -1 for invalid input without modifying the destination. Borrowed
+ * string views, including a view of the destination itself, may be supplied. */
+typedef int (*rxpa_string_set_v1)(rxpa_attribute_value value,
+                                 const char *data, size_t byte_length);
 typedef struct rxpa_host_services_v1 {
     size_t struct_size;
     uint32_t abi_version;
     rxpa_string_view_v1 string_view;
     rxpa_object_set_type_v1 object_set_type; /* Optional complete sized tail. */
+    rxpa_string_set_v1 string_set; /* Optional complete sized tail. */
 } rxpa_host_services_v1;
 static inline int rxpa_host_has_string_view(const rxpa_host_services_v1 *host) {
     return host && host->struct_size >=
@@ -144,6 +152,19 @@ static inline int rxpa_set_object_type(const rxpa_host_services_v1 *host,
 }
 #define SETOBJECTTYPE(host, value, class_name) \
     rxpa_set_object_type((host), (value), (class_name))
+static inline int rxpa_host_has_string_set(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, string_set) + sizeof(host->string_set) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->string_set;
+}
+static inline int rxpa_set_string(const rxpa_host_services_v1 *host,
+                                  rxpa_attribute_value value,
+                                  const char *data, size_t byte_length) {
+    return rxpa_host_has_string_set(host)
+            ? host->string_set(value, data, byte_length) : -1;
+}
+#define SETSTRINGLENGTH(host, value, data, byte_length) \
+    rxpa_set_string((host), (value), (data), (byte_length))
 typedef void *(*rxpa_session_create_with_host_v1)(const rxpa_host_services_v1 *host);
 
 typedef struct rxpa_plugin_manifest_v2 {

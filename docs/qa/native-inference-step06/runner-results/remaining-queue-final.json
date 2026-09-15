@@ -1,0 +1,296 @@
+[
+  {
+    "label": "debug-rxllama_qualify_old_host",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debug",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_old_host",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:40:45.255170+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:40:45.895131+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/asan-logs/20260915-134045-build"
+  },
+  {
+    "label": "debug-rxllama_embedding_qualify_cpu",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debug",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_cpu",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:40:45.895386+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:40:51.084197+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/asan-logs/20260915-134045-build"
+  },
+  {
+    "label": "debug-rxllama_embedding_qualify_required_gpu",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debug",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_required_gpu",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:40:51.084816+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:40:53.418326+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/asan-logs/20260915-134051-build"
+  },
+  {
+    "label": "debug-rxllama_embedding_qualify_cross_device",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debug",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_cross_device",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:40:53.418743+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:40:56.970426+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/asan-logs/20260915-134053-build"
+  },
+  {
+    "label": "asan-refresh-final-qa",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rebuild_cache",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:40:56.970764+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:41:01.179989+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134056-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_old_host",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_old_host",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:41:01.180336+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:41:03.742069+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134101-build"
+  },
+  {
+    "label": "asan-rxllama_embedding_qualify_cpu",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_cpu",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:41:03.742575+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:41:13.224550+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134103-build"
+  },
+  {
+    "label": "asan-rxllama_embedding_qualify_required_gpu",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_required_gpu",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:41:13.225480+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:41:17.788095+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134113-build"
+  },
+  {
+    "label": "asan-rxllama_embedding_qualify_cross_device",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_embedding_qualify_cross_device",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:41:17.788411+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:41:23.739461+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134117-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_embedding_legacy",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_embedding_legacy",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:41:23.739884+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:42:35.817687+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134123-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_generation",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_generation",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:42:35.818107+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T12:46:45.205601+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134235-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_generation_closeout",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_generation_closeout",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T12:46:45.206275+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T13:02:07.218206+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-134645-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_package_typed",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_package_typed",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T13:02:07.219052+00:00",
+    "returncode": 0,
+    "end": "2026-09-15T13:13:31.665270+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-140207-build"
+  },
+  {
+    "label": "asan-rxllama_qualify_package_generation",
+    "argv": [
+      "tools/asan-run.sh",
+      "--build-dir",
+      "cmake-build-debugasan",
+      "--phase",
+      "build",
+      "--build-target",
+      "rxllama_qualify_package_generation",
+      "--build-jobs",
+      "4",
+      "--build-leaks",
+      "off",
+      "--no-live-tail"
+    ],
+    "start": "2026-09-15T13:13:31.666030+00:00",
+    "returncode": 2,
+    "end": "2026-09-15T13:25:52.274251+00:00",
+    "runner_log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260915-141331-build"
+  }
+]

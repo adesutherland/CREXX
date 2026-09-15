@@ -1,0 +1,4 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-closeout-us2i3r42/work/noopt-persistent_generation', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/persistent_generation.crexx']
+rc=0
+Warning in persistent_generation.crexx @ 92:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 59, column 5. Declare this binding explicitly if intentional., "duration"
+1 warning(s) in source file

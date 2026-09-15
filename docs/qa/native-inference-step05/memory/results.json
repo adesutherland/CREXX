@@ -1,0 +1,58 @@
+[
+  {
+    "mode": "cpu",
+    "contexts": 1,
+    "peak_bytes": {
+      "direct": 1041186816,
+      "provider": 1040728064,
+      "vm": 1040171008
+    },
+    "allowance_bytes": 83886080,
+    "signatures": {
+      "direct": 36428,
+      "provider": 36428
+    }
+  },
+  {
+    "mode": "cpu",
+    "contexts": 4,
+    "peak_bytes": {
+      "direct": 1575944192,
+      "provider": 1575649280,
+      "vm": 1574371328
+    },
+    "allowance_bytes": 134217728,
+    "signatures": {
+      "direct": 36428,
+      "provider": 36428
+    }
+  },
+  {
+    "mode": "required-gpu",
+    "contexts": 1,
+    "peak_bytes": {
+      "direct": 656998400,
+      "provider": 656998400,
+      "vm": 656326656
+    },
+    "allowance_bytes": 83886080,
+    "signatures": {
+      "direct": 36428,
+      "provider": 36428
+    }
+  },
+  {
+    "mode": "required-gpu",
+    "contexts": 4,
+    "peak_bytes": {
+      "direct": 1179975680,
+      "provider": 1178550272,
+      "vm": 1178435584
+    },
+    "allowance_bytes": 134217728,
+    "signatures": {
+      "direct": 36428,
+      "provider": 36428
+    }
+  }
+]

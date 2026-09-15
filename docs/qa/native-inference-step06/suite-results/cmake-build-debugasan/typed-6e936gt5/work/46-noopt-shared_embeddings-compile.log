@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/typed-6e936gt5/work/noopt-shared_embeddings', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/shared_embeddings.crexx']
+rc=0

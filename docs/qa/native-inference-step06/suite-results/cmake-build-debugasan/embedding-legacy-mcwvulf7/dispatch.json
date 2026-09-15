@@ -1,0 +1,120 @@
+{
+  "suite": "embedding-legacy",
+  "modes": "cpu,required-gpu",
+  "elapsed_seconds": 69.78,
+  "build": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+  "source": "/Users/adrian/CLionProjects/CREXX",
+  "models": "/Users/adrian/Library/Caches/crexx/native-inference",
+  "asan_options": "detect_leaks=0",
+  "commands": [
+    {
+      "label": "embedding_text_boundary-opt-cpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_text_boundary-opt-cpu",
+        "-DMODE=cpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_text_boundary",
+        "-DMARKER=PASS: complete text is validated",
+        "-DNO_OPT=OFF",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "embedding_text_boundary-noopt-cpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_text_boundary-noopt-cpu",
+        "-DMODE=cpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_text_boundary",
+        "-DMARKER=PASS: complete text is validated",
+        "-DNO_OPT=ON",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "embedding_acceptance-opt-cpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-opt-cpu",
+        "-DMODE=cpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_acceptance",
+        "-DMARKER=PASS: rxllama persistent embedding acceptance",
+        "-DNO_OPT=OFF",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "embedding_acceptance-opt-required-gpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-opt-required-gpu",
+        "-DMODE=required-gpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_acceptance",
+        "-DMARKER=PASS: rxllama persistent embedding acceptance",
+        "-DNO_OPT=OFF",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "embedding_acceptance-noopt-cpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu",
+        "-DMODE=cpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_acceptance",
+        "-DMARKER=PASS: rxllama persistent embedding acceptance",
+        "-DNO_OPT=ON",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "embedding_acceptance-noopt-required-gpu",
+      "argv": [
+        "cmake",
+        "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+        "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-required-gpu",
+        "-DMODE=required-gpu",
+        "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf",
+        "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999",
+        "-DPROGRAM=embedding_acceptance",
+        "-DMARKER=PASS: rxllama persistent embedding acceptance",
+        "-DNO_OPT=ON",
+        "-P",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+      ],
+      "returncode": 0
+    }
+  ],
+  "driver_sha256": "d7be2f0018a2bd18876d406b7d26d98934caba81e6a06cdb7382abe8be12b5a4"
+}

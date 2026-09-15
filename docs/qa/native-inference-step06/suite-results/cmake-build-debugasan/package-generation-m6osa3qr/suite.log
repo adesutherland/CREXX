@@ -1,0 +1,47 @@
+argv=['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_package_consumer.py', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install', '/Users/adrian/CLionProjects/CREXX', '/Users/adrian/Library/Caches/crexx/native-inference', '/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/work', 'cpu,required-gpu']
+PASS: opt-typed_generation-compile
+PASS: opt-typed_generation-assemble
+PASS: opt-typed_generation-link
+PASS: opt-typed_generation-installed-rxbvm-cpu
+PASS: opt-typed_generation-installed-rxtvm-cpu
+PASS: opt-typed_generation-installed-rxbvm-required-gpu
+PASS: opt-typed_generation-installed-rxtvm-required-gpu
+PASS: opt-typed_generation-native-build
+PASS: opt-typed_generation-relocated-native-cpu
+PASS: opt-typed_generation-relocated-native-required-gpu
+PASS: opt-generation_overhead-compile
+PASS: opt-generation_overhead-assemble
+PASS: opt-generation_overhead-link
+PASS: opt-generation_overhead-installed-rxbvm-cpu
+PASS: opt-generation_overhead-installed-rxtvm-cpu
+PASS: opt-generation_overhead-installed-rxbvm-required-gpu
+PASS: opt-generation_overhead-installed-rxtvm-required-gpu
+PASS: opt-generation_overhead-native-build
+PASS: opt-generation_overhead-relocated-native-cpu
+PASS: opt-generation_overhead-relocated-native-required-gpu
+PASS: opt-persistent_generation-compile
+PASS: opt-persistent_generation-assemble
+PASS: opt-persistent_generation-link
+PASS: opt-persistent_generation-installed-rxbvm-cpu
+PASS: opt-persistent_generation-installed-rxtvm-cpu
+PASS: opt-persistent_generation-installed-rxbvm-required-gpu
+PASS: opt-persistent_generation-installed-rxtvm-required-gpu
+PASS: opt-persistent_generation-native-build
+PASS: opt-persistent_generation-relocated-native-cpu
+PASS: opt-persistent_generation-relocated-native-required-gpu
+PASS: opt-shared_generation-compile
+PASS: opt-shared_generation-assemble
+PASS: opt-shared_generation-link
+PASS: opt-shared_generation-installed-rxbvm-cpu
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_package_consumer.py", line 76, in <module>
+    run(f"{test}-installed-{vm}-{mode}",
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        [prefix / "bin" / (vm + suffix), linked, "-a", mode, model, digest, *extra], marker,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        environment=clean)
+        ^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_package_consumer.py", line 41, in run
+    assert result.returncode == 0, (label, result.returncode, output[-3000:])
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('opt-shared_generation-installed-rxtvm-cpu', 27, 'PANIC: deadline exceeded status=6 (SIGNAL TASK_FAILURE)\n')

@@ -12,6 +12,9 @@
 #include <thread>
 #include <vector>
 #ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <psapi.h>
 #else
@@ -41,14 +44,14 @@ struct VM {
         for (;;) {
             std::string state(call(RXLLAMA_MODEL_STATE,{h(t)}).text);
             if (state != "loading") return state;
-            check(Clock::now()-begin < std::chrono::seconds(60), "model deadline");
+            check(Clock::now()-begin < std::chrono::minutes(10), "model deadline");
             std::this_thread::yield();
         }
     }
     void prepare(rxllama_token t) {
         auto begin = Clock::now();
         while (std::string(call(RXLLAMA_PREPARE,{h(t),i(1)}).text) != "ready")
-            check(Clock::now()-begin < std::chrono::seconds(60), "preparation deadline");
+            check(Clock::now()-begin < std::chrono::minutes(10), "preparation deadline");
     }
 };
 struct Barrier { std::mutex m; std::condition_variable cv; int arrived=0; bool failed=false;

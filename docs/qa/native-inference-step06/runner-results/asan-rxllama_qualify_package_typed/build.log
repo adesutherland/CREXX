@@ -1,0 +1,562 @@
+Command: cmake --build cmake-build-debugasan --target rxllama_qualify_package_typed --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  2%] Built target avl_tree
+[  2%] Built target platform
+[  2%] Built target rxpa
+[  4%] Built target rxbin
+[  6%] Built target rxpashim
+[  6%] Built target rxvmmemory
+[  8%] Built target rxtvm_core_objects
+[  8%] Built target rxvm_platform_objects
+[  8%] Built target decnumber
+[  8%] Built target rxlink
+[ 11%] Built target dslsyntax_parser
+[ 11%] Built target re2c_objects_autogen_ver_to_vernum
+[ 11%] Built target lemon
+[ 13%] Built target re2c_objects_autogen
+[ 15%] Built target rxbvm_core_objects
+[ 17%] Built target ggml-base
+[ 17%] Built target crexx-provider-package
+[ 17%] Built target _hash
+[ 17%] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqmain.c.o
+[ 17%] Building C object cpacker/CMakeFiles/rxcpack.dir/rxcpack.c.o
+[ 17%] Building C object contract/CMakeFiles/crexx-contract.dir/contract_model.c.o
+[ 17%] Building C object disassembler/CMakeFiles/rxdas.dir/rxdamain.c.o
+/Users/adrian/CLionProjects/CREXX/disassembler/rxdamain.c:148:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  148 |         sprintf(combined_location, ".;%s;%s", location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/disassembler/rxdamain.c:152:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  152 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[ 17%] Building C object disassembler/CMakeFiles/rxdas.dir/rxdadism.c.o
+[ 17%] Linking C executable ../bin/rxcpack
+[ 17%] Linking C executable ../bin/crexx-contract
+[ 17%] Building C object interpreter/CMakeFiles/rxseq.dir/rxseqfile.c.o
+[ 17%] Linking C executable ../bin/rxseq
+[ 17%] Linking C executable ../bin/rxdas
+[ 17%] Built target rxcpack
+[ 17%] Built target crexx-contract
+[ 17%] Built target rxseq
+[ 17%] Building C object lib/plugins/id/CMakeFiles/id.dir/id.c.o
+[ 17%] Building C object lib/plugins/fs/CMakeFiles/fs.dir/rxfs.c.o
+[ 17%] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess.dir/keyaccess.c.o
+[ 17%] Built target rxdas
+[ 17%] Building C object lib/plugins/platform/CMakeFiles/_platform.dir/rxplatform.c.o
+[ 17%] Linking C shared module ../../../bin/rxfs.rxplugin
+[ 17%] Linking C shared module ../../../bin/rxid.rxplugin
+[ 17%] Linking C shared module ../../../bin/rx_keyaccess.rxplugin
+[ 17%] Linking C shared module ../../../bin/rxplatform.rxplugin
+[ 17%] Built target _keyaccess
+[ 17%] Built target id
+[ 17%] Built target fs
+[ 17%] Building C object lib/plugins/float/CMakeFiles/float_static.dir/rxfloat.c.o
+[ 17%] Building C object lib/plugins/float/CMakeFiles/float.dir/rxfloat.c.o
+[ 17%] Building C object lib/plugins/hash/CMakeFiles/_hash_static.dir/rx_hash.c.o
+[ 17%] Built target _platform
+[ 20%] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess_static.dir/keyaccess.c.o
+[ 20%] Linking C static library ../../../bin/rx_hash_static.a
+[ 20%] Linking C static library ../../../bin/rxfloat_static.a
+[ 20%] Linking C shared module ../../../bin/rxfloat.rxplugin
+[ 20%] Linking C static library ../../../bin/rx_keyaccess_static.a
+[ 20%] Built target _hash_static
+[ 20%] Built target float
+[ 20%] Built target float_static
+[ 20%] Building C object lib/plugins/llist/CMakeFiles/_llist.dir/llist.c.o
+[ 20%] Building C object lib/plugins/llist/CMakeFiles/_llist_static.dir/llist.c.o
+[ 20%] Building C object lib/plugins/treemap/CMakeFiles/_treemap.dir/treemap.c.o
+[ 20%] Built target _keyaccess_static
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c:517:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  517 |         sprintf(endOfListMessage, "$END-OF-LLIST-%d$", (int)qname);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provid/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c:517:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ed   517 |    for c     sprinomptf(enatibildOfLiity restMesasons onlsage,y.   "$ENDue to secD-OF-uritLLIy cST-%d$"oncer, (inns inheret)qnant in the design of sme);
+      prin| [ 20%] Building C object lib/plugins/treemap/CMakeFiles/_treemap_static.dir/treemap.c.o
+        ^tf(
+3), it is h/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+ighly recommended th  278 | __deprecatedat y_msg(ou use snp"Thisri funcntf(3)tion  insteadis pro.")
+      | vided for compatibili^
+ty reaso/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+ns only  227 |         #de.  Due tofi secne __depurirecatty ced_msg(_oncernmsg) s inhere__attributnt in te__((he design of__depr sprecaintf(ted__3),(_msg it is highly recommende)))
+      |                                                       ^
+d that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c:547:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  547 |         sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", (int)qname);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278/Users/adrian/CLionProjects/CREXX/lib/plugins/llist/llist.c:547:1: note: 'sprintf' has been explicitly marked deprecated here
+:  278 | __deprecated_msg(9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  547"This |      function is provided     sfor comprintpatibilf(empitytyLis reasontMsg,s on "$EMPTY-Lly.  DLIST-%d$", (intue to security )qname);
+      | concerns        ^
+ inherent/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+ in th  278 | __de deseprecated_msg("This function is provided for compatibility reasons only.ign o  Due to security concerns inherent in f sprintf(the design o3), it is highly recommenf sprintf(3), it is highded that yly recommended thatou use s you use snpnprinrintf(3) itf(3)ns instead.")
+      | ^tead
+.")
+      | /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48^
+: note: expanded from macro '__deprecated_msg'
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227  227 |         #defin |         #define e __dep__deprecated_msg(recate_msg) __attribute__((__dd_msg(_msg) __atteprributeecat__((ed__(_msg)))
+      |                                                       ^
+__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+2 warnings generated.
+[ 20%] Linking C static library ../../../bin/rx_llist_static.a
+[ 20%] Linking C shared module ../../../bin/rx_llist.rxplugin
+[ 20%] Linking C shared module ../../../bin/rx_treemap.rxplugin
+[ 20%] Linking C static library ../../../bin/rx_treemap_static.a
+[ 20%] Built target _llist
+[ 20%] Built target _llist_static
+[ 20%] Built target _treemap
+[ 20%] Building C object lib/plugins/fs/CMakeFiles/fs_static.dir/rxfs.c.o
+[ 20%] Building C object preprocessor/CMakeFiles/precomp.dir/precomp.c.o
+[ 20%] Building C object lib/plugins/platform/CMakeFiles/_platform_static.dir/rxplatform.c.o
+[ 20%] Built target _treemap_static
+[ 20%] Built target rxpp_support_files
+[ 20%] Linking C static library ../../../bin/rxfs_static.a
+[ 20%] Linking C shared module ../bin/rxprecomp.rxplugin
+[ 20%] Building C object preprocessor/CMakeFiles/precomp_static.dir/precomp.c.o
+[ 20%] Linking C static library ../../../bin/rxplatform_static.a
+[ 20%] Built target precomp
+[ 20%] Linking C static library ../bin/rxprecomp_static.a
+[ 20%] Built target fs_static
+[ 20%] Building C object lib/plugins/console/CMakeFiles/console.dir/rxconsole.c.o
+[ 20%] Built target _platform_static
+[ 20%] Built target crexx_sqlite3_objects
+[ 20%] Built target rxvmref
+[ 20%] Built target precomp_static
+[ 20%] Linking C shared module ../../../bin/rxconsole.rxplugin
+[ 24%] Built target ggml-metal
+[ 26%] Built target ggml-cpu
+[ 26%] Building C object lib/plugins/sqlite/CMakeFiles/sqlite.dir/rxsqlite.c.o
+[ 26%] Built target console
+[ 26%] Built target rxvmplugin
+[ 33%] Built target re2c
+[ 33%] Built target mc_decimal_manual
+[ 33%] Built target ggml
+[ 33%] Built target rxaslib
+[ 33%] Built target rxtvm
+[ 33%] Built target rxbvml
+[ 33%] Built target rxbvm
+[ 35%] Built target rxvml
+[ 35%] Linking C shared module ../../../bin/rxsqlite.rxplugin
+[ 35%] Built target rxas
+[ 42%] Built target rxclib
+[ 42%] Built target rxvm
+[ 42%] Linking C shared library ../bin/libcrexxsaa.dylib
+[ 42%] Built target rxc
+[ 42%] Built target library-rxas
+[ 42%] Built target sqlite
+[ 42%] Built target token_bin
+[ 42%] Built target stage-c1-toolchain
+[ 55%] Built target library-rexx
+[ 55%] Built target crexxsaa
+[ 55%] Built target library
+[ 55%] Linking C executable ../bin/crexxsaa
+[ 55%] Staging deterministic compiler-exit imports ...
+[ 55%] Staging deterministic Level L imports ...
+[ 55%] Built target rxfnsl_imports
+[ 55%] Built target compiler_exit_imports
+[ 55%] Building optimized arrayformat function example
+[ 55%] Built target exit_rxqueue_bin
+[ 55%] Built target crexxsaa_tool
+[ 55%] Built target exit_dump_bin
+[ 55%] Built target exit_query_bin
+[ 55%] Building optimized arraydump function example
+[ 55%] Built target exit_sort_bin
+[ 73%] Built target llama
+[ 73%] Built target exit_sortx_bin
+[ 73%] Built target exit_address_bin
+[ 73%] Built target exit_execio_bin
+[ 73%] Built target exit_add_bin
+[ 73%] Built target exit_fsay_bin
+[ 73%] Built target exit_msay_bin
+[ 75%] Built target exit_parse_bin
+[ 75%] Built target exit_signal_bin
+[ 75%] Built target exit_trace_bin
+[ 75%] Built target exit_rexxscript_bin
+[ 75%] Built target exit_substr_bin
+[ 75%] Built target exit_dummy_bin
+[ 75%] cREXX compile and assemble tinyexpr ...
+[ 75%] Built target crexx_llama_bridge
+[ 75%] Built target compiler_exit_bin
+[ 75%] Built target llama_provider
+[ 75%] Built target llama_provider_static
+[ 75%] Staging immutable class library compiler imports ...
+[ 75%] Built target classlib_imports
+[ 75%] Staging immutable native-backed class library compiler imports ...
+[ 75%] Built target classlib_native_imports
+[ 75%] Staging deterministic debugger imports ...
+[ 75%] Built target debugger_imports
+[ 75%] Building experimental backend-neutral Level G UI library
+[ 75%] cREXX Linked Level L Library Image ...
+[ 75%] Built target rxfnsl
+[ 75%] Built target llama_provider_runtime_package
+[ 82%] Built target classlib
+[ 82%] cREXX compile and assemble native-backed classlib adapter Id ...
+[ 82%] cREXX compile and assemble native-backed classlib adapter KeyDB ...
+[ 82%] cREXX compile and assemble native-backed classlib adapter Os ...
+[ 82%] Staging immutable rxfnsc compiler imports ...
+[ 82%] Built target rxfnsc_imports
+[ 82%] Bundling array-formatting function example
+[ 84%] cREXX compile and assemble rxdb_gui ...
+[ 84%] Building optimized array-formatting example program
+[ 84%] Built target ui
+[ 84%] Built target stage-l-libraries
+[ 84%] Staging deterministic rxsqlite ADDRESS imports ...
+[ 84%] Built target rxsqlite_address_imports
+[ 84%] Staging exact imports for the Level B Level G builder ...
+[ 84%] Built target stage_g_builder_imports
+[ 84%] cREXX Linked native-backed Class Library Adapter Image ...
+[ 84%] cREXX compile and assemble rxfnsc runtime RexxValue ...
+[ 84%] Publishing native-backed class library image ...
+[ 84%] Built target classlib_native
+[ 84%] Staging deterministic rxdb GUI metadata ...
+[ 84%] Generating ../../bin/ui_catalog.rxbin
+[ 84%] Built target debugger_gui_imports
+[ 84%] Building the rxsqlite Level-G ADDRESS facade ...
+[ 84%] Built target example_array_formatting_artifacts
+[ 84%] cREXX compile and assemble rxfnsc runtime RexxStem ...
+[ 84%] cREXX compile and assemble rxfnsc runtime RexxClassicConfig ...
+[ 84%] Built target rxfnsg
+[ 84%] cREXX compile, assemble, link and package rxdb ...
+[ 84%] Built target ui_catalog
+[ 84%] Building optimized pprint compiler-exit example
+[ 84%] Built target rxsqlite_address
+[ 84%] Compiling gemini_generate.crexx ...
+[ 84%] cREXX compile and assemble rxfnsc runtime RexxClassicDatatype ...
+[ 84%] Bundling standalone pprint compiler-exit example
+[ 84%] Building program with standalone pprint exit example
+[ 84%] Building C object debugger/CMakeFiles/rxdb.dir/rxdb.c.o
+[ 84%] Linking C executable ../bin/rxdb
+[ 84%] Built target rxdb
+[ 84%] Compiling ollama_generate.crexx ...
+[ 84%] Built target llm_gemini_generate_demo_bin
+[ 86%] Compiling openai_generate.crexx ...
+[ 86%] Built target example_pprint_exit_artifacts
+[ 86%] Compiling anthropic_generate.crexx ...
+[ 86%] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterScan ...
+[ 86%] Built target llm_ollama_generate_demo_bin
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicCharacterOps ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicEncoding ...
+[ 88%] Built target llm_openai_generate_demo_bin
+[ 88%] Compiling llm_address_environment.crexx ...
+[ 88%] Built target llm_anthropic_generate_demo_bin
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicState ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxVariablePool ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifs ...
+[ 88%] Generating ../../bin/ui_contract.rxbin
+[ 88%] Compiling llm_address_demo.crexx ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBitFunctions ...
+Warning in llm_address_demo.crexx @ 4:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbbrev ...
+[ 88%] Built target llm_address_demos_bin
+[ 88%] Building the rxsqlite ADDRESS consumer demo ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifAbs ...
+[ 88%] Built target ui_contract
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifAddress ...
+[ 88%] Built target sqlite_address_demo_bin
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifB2x ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitand ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitor ...
+[ 88%] cREXX compile and assemble rxfnsc runtime RexxClassicBifBitxor ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2d ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifC2x ...
+[ 91%] Built target llm_generate_demos_bin
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifCenter ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifChangestr ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifCompare ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifCopies ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifCountstr ...
+[ 91%] Generating ../../bin/ui_dialogs.rxbin
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2x ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifD2c ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifDate ...
+[ 91%] Built target ui_dialogs
+[ 91%] Generating ../../bin/ui_terminal_view.rxbin
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifDatatype ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelstr ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifDelword ...
+[ 91%] Built target ui_terminal_view
+[ 91%] Generating ../../bin/ui_local_resources.rxbin
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifFormat ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifInsert ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifLastpos ...
+[ 91%] Built target ui_local_resources
+[ 91%] Generating ui_driver_probe.rxbin
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifLeft ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifLength ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifMax ...
+[ 91%] Built target ui_driver_probe
+[ 91%] Built target crexx-demos
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifMin ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifNumeric ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifOverlay ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifPos ...
+[ 91%] cREXX compile and assemble rxfnsc runtime RexxClassicBifRandom ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifReverse ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifRight ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifSign ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifSpace ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifStrip ...
+[ 93%] Generating ../../bin/ui_ansi.rxbin
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubstr ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifSubword ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifSymbol ...
+[ 93%] Building portable Level G cREXX TUI driver
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifTime ...
+[ 93%] Built target ui_ansi
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrace ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifTranslate ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifTrunc ...
+[ 93%] Built target ui_tui
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifValue ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifVerify ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifWord ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordindex ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordlength ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifWordpos ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifWords ...
+[ 93%] Built target stage-g-library
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2b ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2c ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifX2d ...
+[ 93%] cREXX compile and assemble rxfnsc runtime RexxClassicBifXrange ...
+[ 93%] cREXX Linked rxfnsc Runtime Library Image ...
+[ 93%] Publishing consolidated rxfnsc runtime library image ...
+[ 93%] Built target rxfnsc
+[ 93%] Staging immutable RexxScript compiler imports ...
+[ 93%] Built target rexxscript_imports
+[ 93%] cREXX compile and assemble RexxScript runtime RexxScriptEvaluator ...
+Warning in RexxScriptEvaluator.crexx @ 266:10 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 249, column 8. Declare this binding explicitly if intentional., "i"
+Warning in RexxScriptEvaluator.crexx @ 608:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 600, column 7. Declare this binding explicitly if intentional., "expr"
+2 warning(s) in source file
+[ 93%] cREXX compile and assemble RexxScript runtime RexxScriptRuntime ...
+[ 93%] cREXX compile and assemble RexxScript runtime RexxScriptEvaluateCompat ...
+[ 93%] cREXX Linked RexxScript Runtime Library Image ...
+[ 93%] Publishing consolidated RexxScript runtime library image ...
+[ 93%] Built target rexxscript
+[ 93%] Stage immutable rxpp compiler imports ...
+[ 93%] Staging deterministic RexxScript runner imports ...
+[ 93%] Staging deterministic crexx driver imports ...
+[ 93%] C Packing cREXX Core Libraries ...
+[ 93%] Built target crexx_driver_imports
+[ 93%] Built target rexxscript_runner_imports
+[ 93%] Bootstrapping the installed crexx project-build worker ...
+[ 93%] Built target rxpp_compiler_imports
+[ 93%] Compile and assemble rxpp in its private member directory ...
+[ 93%] Built target packed_library
+[ 95%] Building C object interpreter/CMakeFiles/rxbvme.dir/rxvmmain.c.o
+[ 95%] Building C object interpreter/CMakeFiles/rxvme.dir/rxvmmain.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:367:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  367 |             sprintf(installe/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:367:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]d
+_pro  367 |           vider_path, "%s/providers", exe_path);
+      |   spr            ^
+intf(installed_provider_p/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+ath, "%  278 | __s/provdeprecated_miders", sg("Thexe_path);
+      |             ^
+i/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278s function i:1: note: 'sprintf' has been explicitly marked deprecated heres provi
+de  278 | __ddeprecat for compatibied_msg("This functiolity rn ieasons only. s pro Due to securityvided for compatibility re concerns inherent inasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+the design of sprintf(3), it is highl  y 227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attr/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:384:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  384 | ibute__((__deprecated__(_ms        sprintf(combined_locatg)))
+      |                                                       ^
+ion, ".;%s;%s", context.location, exe_path);
+      |         ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:384:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  384 |         sprintf(combin/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+ed_loc  278 | __deprecated_msg("Tahis function is provided for ction, ".;ompatibility reasons o%s;%s", cnly.  Dontuext.location,e to security concer exe_patns inherent in the design of sprinh);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+tf(3), it   278 | __deprecated_msg("This function is highly recommended that you use snprintf(3) instead.")
+is provided for compatibili      | ^
+ty reas/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:ons 48only.: note: expanded from macro '__deprecated_msg'
+  227 |         #define __de  Due to security concerns inherprecated_msg(_msg) _ent_attribute__((__deprecated__(_msg))) in
+      |                                                       ^
+ the design/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:388:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  388 |         sprintf(combin of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'ed_locatio
+n,  227 |         #def ".ine ;%s", exe_path);
+__depr      |         ^
+ecat/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated hereed_msg(_m
+  278 | __deprecated_msg("This function sg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+is provided for compatibility reasons only.  Due to/Users/adrian/CLionProjects/CREXX/interpreter/rxvmmain.c:388:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  388 |   security concerns inherent       sprintf(combined_location,  in the design of sprintf(3), it is highly ".;%s", exerec_path);
+      |         ^ommende
+d that /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:you use snprintf(3) instead.")
+      | ^
+278:1/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function227:48: is provided for compatibility reasons onl note: expanded from macro '__deprecated_msg'
+y.  227 |         #def  Due to securityine __d coeprecated_msg(_msg) __attribute__((__deprecated__(_mncerns inherent in tsg)))
+      |                                                       ^
+he design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+3 warnings generated.
+[ 95%] Building C object interpreter/CMakeFiles/rxvme.dir/library.c.o
+[ 95%] Building C object interpreter/CMakeFiles/rxbvme.dir/library.c.o
+[ 95%] Built target crexx_build_worker
+[ 95%] Linking C executable ../bin/rxbvme
+[ 95%] Linking C executable ../bin/rxvme
+[ 95%] Built target rxbvme
+[ 95%] Built target rxvme
+[ 97%] cREXX compile, assemble, link and package standalone RexxScript runner ...
+[ 97%] cREXX compile, assemble, link and package crexx ...
+[ 97%] Building C object rexxscript/CMakeFiles/rexxscript_cli.dir/RexxScriptRunner.c.o
+[ 97%] Linking C executable ../bin/rexxscript
+[ 97%] Built target rexxscript_cli
+[ 97%] Link the private rxpp runtime image ...
+[ 97%] Package the private rxpp runtime image as C ...
+[ 97%] Building C object preprocessor/CMakeFiles/rxpp.dir/generated/rxpp/rxpp.c.o
+[ 97%] Linking C executable ../bin/rxpp
+[ 97%] Built target rxpp
+[ 97%] Generating source-mapped Text Inspector application with RXPP
+[ 97%] Linking C executable ../bin/rxpp-sh
+[ 97%] Built target rxpp_sh
+[ 97%] Built target stage-c-rexx-tools
+CRX0010I [14:03:53.956843] Pre-Compile started
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [14:03:53.964079] Pre-Compile pass one
+CRX0110I [14:03:53.964097] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:53.964112] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [14:03:53.964125] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:53.964136] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0120I [14:03:53.975233] Maclib loaded:      68 records
+CRX0130I [14:03:53.975251] Macros extracted:   35
+CRX0120I [14:03:53.985148] System Maclib loaded: 42 records
+CRX0130I [14:03:53.985169] Macros extracted:     29
+CRX0140I [14:03:53.988835] Rexx Source loaded: 210 records
+CRX0110I [14:03:53.996829] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [14:03:54.025913] Macros extracted:   0
+CRX0160I [14:03:54.042818] Macros arranged:    64
+CRX0200I [14:03:54.055569] Pre-Compile pass two
+CRX0171I Script macro ##ui_command selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_command.rxpm
+CRX0171I Script macro ##ui_node selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_node.rxpm
+CRX0300I [14:03:54.517583] Pre-Compiled REXX generated 
+CRX0310I [14:03:54.517607] Pre-Compiled REXX saved
+CRX0510I [14:03:54.527497] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector.inc
+CRX0500I [14:03:54.527522] Pre-Compile completed, 8 macro calls expanded, total source lines 600
+CRX0101I [14:03:54.527551] Elapsed Time 0.571149 seconds, 571.149 milliseconds
+[ 97%] Compiling and assembling Text Inspector application
+[ 97%] Built target text_inspector_module_artifact
+[ 97%] Generating Text Inspector TUI launcher with RXPP
+[ 97%] Generating generated/text_inspector_ansi.crexx
+[100%] Generating text_inspector_core_noopt.rxbin
+CRX0010I [14:03:56.607661] Pre-Compile started
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_tui.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_tui.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0010I [14:03:56.610164] Pre-Compile started
+Input File:   /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/text_inspector_ansi.rxpp
+Output File:  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.crexx
+Macro Lib:    /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/maclib.rexx
+Verbose:      1
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [14:03:56.616536] Pre-Compile pass one
+CRX0110I [14:03:56.616566] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:56.616588] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [14:03:56.616610] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:56.616635] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0170I Script macro ##ui_macros registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0100I [14:03:56.618310] Pre-Compile pass one
+CRX0110I [14:03:56.618339] System Path /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:56.618363] Input Path  /Users/adrian/CLionProjects/CREXX/examples/ui/text-inspector/
+CRX0110I [14:03:56.618388] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/
+CRX0110I [14:03:56.618410] Build Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/
+CRX0120I [14:03:56.629561] Maclib loaded:      68 records
+CRX0130I [14:03:56.629593] Macros extracted:   35
+CRX0120I [14:03:56.632188] Maclib loaded:      68 records
+CRX0130I [14:03:56.632215] Macros extracted:   35
+CRX0120I [14:03:56.639555] System Maclib loaded: 42 records
+CRX0130I [14:03:56.639573] Macros extracted:     29
+CRX0140I [14:03:56.642457] Rexx Source loaded: 7 records
+CRX0120I [14:03:56.642474] System Maclib loaded: 42 records
+CRX0130I [14:03:56.642493] Macros extracted:     29
+CRX0140I [14:03:56.643058] Rexx Source loaded: 7 records
+CRX0110I [14:03:56.644068] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0110I [14:03:56.644679] Macro Path  /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [14:03:56.646095] Macros extracted:   0
+CRX0170I Script macro ##ui_launcher registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_node registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0170I Script macro ##ui_command registered from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/
+CRX0150I [14:03:56.646590] Macros extracted:   0
+CRX0160I [14:03:56.661627] Macros arranged:    64
+CRX0160I [14:03:56.661852] Macros arranged:    64
+CRX0200I [14:03:56.663122] Pre-Compile pass two
+CRX0200I [14:03:56.663428] Pre-Compile pass two
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0171I Script macro ##ui_launcher selected from /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/rxpp/ui/ui_launcher.rxpm
+CRX0300I [14:03:56.698603] Pre-Compiled REXX generated 
+CRX0310I [14:03:56.698625] Pre-Compiled REXX saved
+CRX0300I [14:03:56.698933] Pre-Compiled REXX generated 
+CRX0310I [14:03:56.698952] Pre-Compiled REXX saved
+CRX0510I [14:03:56.700040] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_ansi.inc
+CRX0500I [14:03:56.700057] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0510I [14:03:56.700082] Library import names passed to /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/examples/ui/text-inspector/generated/text_inspector_tui.inc
+CRX0101I [14:03:56.700087] Elapsed Time 0.090291 seconds, 90.291 milliseconds
+CRX0500I [14:03:56.700102] Pre-Compile completed, 0 macro calls expanded, total source lines 26
+CRX0101I [14:03:56.700133] Elapsed Time 0.093024 seconds, 93.024 milliseconds
+[100%] Generating text_inspector_ansi.rxbin
+[100%] Building Text Inspector TUI launcher
+[100%] Built target text_inspector_core_noopt_artifact
+[100%] Generating text_inspector_core_opt.rxbin
+[100%] Built target text_inspector_tui_artifact
+[100%] Generating text_inspector_test_host.rxbin
+[100%] Built target text_inspector_ansi_artifact
+[100%] Built target text_inspector_core_opt_artifact
+[100%] Built target text_inspector_test_host
+[100%] Generating text_inspector_tui_noopt.rxbin
+[100%] Generating text_inspector_tui_opt.rxbin
+[100%] Built target text_inspector_tui_noopt_artifact
+[100%] Built target text_inspector_tui_opt_artifact
+[100%] Built target example_text_inspector_artifacts
+[100%] Built target crexx-examples
+[100%] Built target stage-optional
+[100%] Building C object crexx_driver/CMakeFiles/crexx.dir/crexx.c.o
+[100%] Linking C executable ../bin/crexx
+[100%] Built target crexx
+[100%] Built target stage-product
+QUALIFICATION_RECORD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-typed-i5hfmhnl
+PASS: STEP-06 package-typed modes=cpu,required-gpu
+Elapsed time (seconds): 534.234
+[100%] Built target rxllama_qualify_package_typed

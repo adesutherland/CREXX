@@ -1,0 +1,9 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/crexx'), '--program', PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation native Ω/persistent'), PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation.crexx'), '--jobs', '1', '--native', '--nooptimize']
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member noopt-shared_generation
+BUILT: project member noopt-shared_generation
+BARRIER: link program
+PUBLISHED: program /private/tmp/ni-s5/installed-generation/noopt-shared_generation native Ω/persistent.rxbin
+PUBLISHED: native program /private/tmp/ni-s5/installed-generation/noopt-shared_generation native Ω/persistent

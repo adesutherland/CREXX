@@ -1,0 +1,16 @@
+{
+  "files": [
+    "lib/plugins/llama/qualification.md",
+    "lib/plugins/llama/reference.md",
+    "lib/plugins/llama/README.md",
+    "lib/plugins/llama/models.md",
+    "lib/plugins/llama/installation.md",
+    "lib/plugins/llama/examples/shared_generation.crexx",
+    "lib/plugins/llama/examples/shared_embeddings.crexx",
+    "lib/plugins/llama/examples/persistent_generation.crexx",
+    "lib/plugins/llama/examples/persistent_embeddings.crexx",
+    "lib/plugins/llama/examples/README.md"
+  ],
+  "identical": true,
+  "local_links_resolve": true
+}

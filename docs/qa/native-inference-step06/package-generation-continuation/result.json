@@ -1,0 +1,33 @@
+{
+  "asan_options": "detect_leaks=0",
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "--install",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "--component",
+        "llama-docs",
+        "--prefix",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install"
+      ],
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_package_consumer.py",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install",
+        "/Users/adrian/CLionProjects/CREXX",
+        "/Users/adrian/Library/Caches/crexx/native-inference",
+        "/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work",
+        "cpu,required-gpu",
+        "--start-case",
+        "opt-shared_generation"
+      ],
+      "returncode": 0
+    }
+  ],
+  "reuses": "Three completed opt cases from package-generation-m6osa3qr; previous stricter hang limits passed.",
+  "elapsed_seconds": 1360.0510195828974
+}

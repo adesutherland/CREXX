@@ -1,0 +1,5 @@
+argv=['sh', '/tmp/crexx-ni-s7.oheu5td2/verify-models.sh']
+cwd=/tmp/crexx-ni-s7.oheu5td2
+rc=0
+Verified: /Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf
+Verified: /Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf

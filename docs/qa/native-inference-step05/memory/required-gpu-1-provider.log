@@ -1,0 +1,7 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/llama/tests/rxllama_generation_bridge', '--memory-provider', 'required-gpu', '/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf', '48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201', '1']
+rc=0
+RSS=656965632
+PEAK=656998400
+TOKENS=24
+SIGNATURE=36428
+PASS: generation memory control --memory-provider required-gpu 1

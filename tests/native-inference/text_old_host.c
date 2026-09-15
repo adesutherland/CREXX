@@ -3,6 +3,19 @@
 #include <stdio.h>
 #include <string.h>
 static rxpa_libfunc configcreate;
+static unsigned metadata_calls;
+/* These callbacks already exist in the legacy initializer. Only the optional
+ * sized host services are absent from this simulated host. The typed provider
+ * still registers declarations before a legacy call is rejected. */
+static void addtype(char *name, char *option, char *type) {
+    (void)name; (void)option; (void)type; ++metadata_calls;
+}
+static void addimplements(char *name, char *interface_name) {
+    (void)name; (void)interface_name; ++metadata_calls;
+}
+static void addmember(char *owner, char *kind, char *member, char *type, char *args) {
+    (void)owner; (void)kind; (void)member; (void)type; (void)args; ++metadata_calls;
+}
 static void add(rxpa_libfunc fn, char *name, char *option, char *type, char *args) {
     (void)option; (void)type; (void)args;
     if (!strcmp(name, "rxllama.configcreate")) configcreate = fn;
@@ -21,7 +34,9 @@ int main(int argc, char **argv) {
         plugin.manifest_v2.session_create_with_host(&absent) ||
         plugin.manifest_v2.session_create_with_host(NULL)) return 1;
     helpers.addfunc = add; helpers.setint = setint; helpers.setstring = setstring;
-    if (rxpa_initialize_plugin(&plugin, &helpers) || !configcreate) return 1;
+    helpers.addclass = addtype; helpers.addinterface = addtype;
+    helpers.addimplements = addimplements; helpers.addmember = addmember;
+    if (rxpa_initialize_plugin(&plugin, &helpers) || !configcreate || !metadata_calls) return 1;
     configcreate(1, args, &result, &signal);
     rxpa_close_plugin(&plugin);
     if (result != -7 || signal != SIGNAL_NONE || handle) return 1;

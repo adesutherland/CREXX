@@ -1,0 +1,294 @@
+[
+  {
+    "model": "bge",
+    "path": "README.md",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/README.md",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "ddb964361a55c6e5dfca6361615854b260c9c960205d04c7520151aaa1d75837",
+    "size": 94783,
+    "repository_entry": {
+      "type": "file",
+      "oid": "8b8567d75ffa619486d9590cb0eb76d66ad46c49",
+      "size": 94783,
+      "path": "README.md"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "config.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "094f8e891b932f2000c92cfc663bac4c62069f5d8af5b5278c4306aef3084750",
+    "size": 743,
+    "repository_entry": {
+      "type": "file",
+      "oid": "3992bf890728a92476c700e6e657fd696eb94160",
+      "size": 743,
+      "path": "config.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "model.safetensors",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/model.safetensors",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad",
+    "size": 133466304,
+    "repository_entry": {
+      "type": "file",
+      "oid": "a4fef68c99b10468206a9bc1d54d0112d87c5557",
+      "size": 133466304,
+      "lfs": {
+        "oid": "3c9f31665447c8911517620762200d2245a2518d6e7208acc78cd9db317e21ad",
+        "size": 133466304,
+        "pointerSize": 134
+      },
+      "xetHash": "f34dad568ecbc8f2452ae7ea84e72884e1bab4f299cec39fd8f978b5fba8d3c9",
+      "path": "model.safetensors"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "config_sentence_transformers.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/config_sentence_transformers.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "940d5f50db195fa6e5e6a4f122c095f77880de259d74b14a65779ed48bdd7c56",
+    "size": 124,
+    "repository_entry": {
+      "type": "file",
+      "oid": "dcb0c0d97d09b930d13600b1a773ddb27e441aab",
+      "size": 124,
+      "path": "config_sentence_transformers.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "modules.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/modules.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf",
+    "size": 349,
+    "repository_entry": {
+      "type": "file",
+      "oid": "952a9b81c0bfd99800fabf352f69c7ccd46c5e43",
+      "size": 349,
+      "path": "modules.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "sentence_bert_config.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/sentence_bert_config.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "84e39fda68ccbff05bfa723ae9c0e70e23e2ec373b76e0f8c6e71af72a693cbf",
+    "size": 52,
+    "repository_entry": {
+      "type": "file",
+      "oid": "ea85692bff64b0d1917833c31ddbca8ab10f5455",
+      "size": 52,
+      "path": "sentence_bert_config.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "1_Pooling/config.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/1_Pooling/config.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "d1caf60c96f5fba2157c0c26b76d80818fad6cf0b8eb5e73ec372ff9818eba5c",
+    "size": 190,
+    "repository_entry": {
+      "type": "file",
+      "oid": "1da070f0993788c8851a652170ff013aa54dd519",
+      "size": 190,
+      "path": "1_Pooling/config.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "special_tokens_map.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/special_tokens_map.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+    "size": 125,
+    "repository_entry": {
+      "type": "file",
+      "oid": "a8b3208c2884c4efb86e49300fdd3dc877220cdf",
+      "size": 125,
+      "path": "special_tokens_map.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "tokenizer.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+    "size": 711396,
+    "repository_entry": {
+      "type": "file",
+      "oid": "688882a79f44442ddc1f60d70334a7ff5df0fb47",
+      "size": 711396,
+      "path": "tokenizer.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "tokenizer_config.json",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/tokenizer_config.json",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+    "size": 366,
+    "repository_entry": {
+      "type": "file",
+      "oid": "37fca74771bc76a8e01178ce3a6055a0995f8093",
+      "size": 366,
+      "path": "tokenizer_config.json"
+    }
+  },
+  {
+    "model": "bge",
+    "path": "vocab.txt",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/5c38ec7c405ec4b44b94cc5a9bb96e735b38267a/vocab.txt",
+    "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+    "sha256": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+    "size": 231508,
+    "repository_entry": {
+      "type": "file",
+      "oid": "fb140275c155a9c7c5a3b3e0e77a9e839594a938",
+      "size": 231508,
+      "path": "vocab.txt"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "README.md",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/README.md",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "6b88794416ac9da8f254ebb0bec228967a2bdd0badf9a2853863928b25facd95",
+    "size": 7304,
+    "repository_entry": {
+      "type": "file",
+      "oid": "5ed0ef7d7e4c1304d542a073ff5767990d410e2f",
+      "size": 7304,
+      "path": "README.md"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "config.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/config.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "224f72354f10d617a359cc82ad15a3c96e866b9b2ffadb81997eeea9e88e22ee",
+    "size": 846,
+    "repository_entry": {
+      "type": "file",
+      "oid": "4f2ae86545bb5c1d4fcc55644deef86be50a7dee",
+      "size": 846,
+      "path": "config.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "model.safetensors",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/model.safetensors",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "e6bffe7435d7ddc10fd3b9a9efd429dafbacb1cb17015fb5562664e7532bf86e",
+    "size": 723674912,
+    "repository_entry": {
+      "type": "file",
+      "oid": "5e3cd2324bc51fbe72a42fc00f3ccd8da230cc04",
+      "size": 723674912,
+      "lfs": {
+        "oid": "e6bffe7435d7ddc10fd3b9a9efd429dafbacb1cb17015fb5562664e7532bf86e",
+        "size": 723674912,
+        "pointerSize": 134
+      },
+      "xetHash": "a24f4ebae72bd0ae8ea5962912e838391092a7408702fa7c38291ab61026143e",
+      "path": "model.safetensors"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "generation_config.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/generation_config.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "87b916edaaab66b3899b9d0dd0752727dff6666686da0504d89ae0a6e055a013",
+    "size": 132,
+    "repository_entry": {
+      "type": "file",
+      "oid": "da6c4d71a43aa7e6f785bdbb28ea5025438a73fa",
+      "size": 132,
+      "path": "generation_config.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "special_tokens_map.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/special_tokens_map.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "2b7379f3ae813529281a5c602bc5a11c1d4e0a99107aaa597fe936c1e813ca52",
+    "size": 655,
+    "repository_entry": {
+      "type": "file",
+      "oid": "44719d2e365acac0637fd25a3acf46494ca45940",
+      "size": 655,
+      "path": "special_tokens_map.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "tokenizer.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/tokenizer.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+    "size": 2104556,
+    "repository_entry": {
+      "type": "file",
+      "oid": "f922b1797f0c88e71addc8393787831f2477a4bd",
+      "size": 2104556,
+      "path": "tokenizer.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "tokenizer_config.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/tokenizer_config.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+    "size": 3764,
+    "repository_entry": {
+      "type": "file",
+      "oid": "8c7b22013909450429303ed10be4398bd63f5457",
+      "size": 3764,
+      "path": "tokenizer_config.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "vocab.json",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/vocab.json",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "82b84012e3add4d01d12ba14442026e49b8cbbaead1f79ecf3d919784f82dc79",
+    "size": 800662,
+    "repository_entry": {
+      "type": "file",
+      "oid": "0ad5ecc2035b7031b88afb544ee95e2d49baa484",
+      "size": 800662,
+      "path": "vocab.json"
+    }
+  },
+  {
+    "model": "smol",
+    "path": "merges.txt",
+    "url": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/a10cc1512eabd3dde888204e902eca88bddb4951/merges.txt",
+    "revision": "a10cc1512eabd3dde888204e902eca88bddb4951",
+    "sha256": "0b54e8aa4e53d5383e2e4bc635a56b43f9647f7b13832d5d9ecd8f82dac4f510",
+    "size": 466391,
+    "repository_entry": {
+      "type": "file",
+      "oid": "69503b13f727ba3812b6803e97442a6de05ef5eb",
+      "size": 466391,
+      "path": "merges.txt"
+    }
+  }
+]

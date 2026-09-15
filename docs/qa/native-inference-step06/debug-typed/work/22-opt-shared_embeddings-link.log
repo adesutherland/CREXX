@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink', '-o', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/typed-3l_x9oku/work/opt-shared_embeddings-linked', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/qualification/typed-3l_x9oku/work/opt-shared_embeddings', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg']
+rc=0

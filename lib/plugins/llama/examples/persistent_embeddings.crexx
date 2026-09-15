@@ -19,7 +19,7 @@ require: procedure = .void
   call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
   return
 
-/** @param model asynchronously opened model; waits at most sixty seconds */
+/** @param model asynchronously opened model; waits at most ten minutes */
 ready_model: procedure = .void
   arg model = .llama..model
   started = time("us")
@@ -30,7 +30,7 @@ ready_model: procedure = .void
     call require state = "loading", model.info_text("error")
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "model load deadline"
+    call require duration < 600000000, "model load deadline"
   end
 
 /** @param args hardware mode, GGUF path, SHA256 @return zero on success */
@@ -59,7 +59,7 @@ main: procedure = .int
     if state = "ready" then leave
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require state = "preparing" & duration < 60000000, "preparation deadline"
+    call require state = "preparing" & duration < 600000000, "preparation deadline"
   end
   call require session.status() = 0 & state = "ready", session.diagnostic().message()
   texts = .string[]

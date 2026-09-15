@@ -3,7 +3,15 @@
 Status: plan, STEP-01 and STEP-02 output approved by Adrian, 2026-09-14;
 STEP-03 closure is approved; STEP-04 is closed on 15 September following
 completion and acceptance of its implementation, factory cleanup and regression
-follow-ups. STEP-05 generation is next and unstarted. The 15 September full-regression
+follow-ups. [STEP-05 generation](native-inference-step-05.md) is complete locally after
+Adrian accepted its first Release verdict on 15 September. All numbered phase
+criteria pass, including public/installed/native delivery and a fresh 2,347-test
+ordinary Debug run. The latest parent acceptance disposition is recorded below.
+The remaining execution order is now **STEP-07 documentation, examples and
+review, then STEP-06 full QA and acceptance**, following Adrian's 15 September
+sequencing direction. Stable step IDs are retained for existing evidence and
+sanitizer handoffs; their numbers no longer indicate execution order.
+The 15 September full-regression
 preparation exposed NI-S4-QA01 in existing HTTP consumers. Its compiler repair,
 the authorized C factory cleanup and the separate QA02 static archive dependency
 repair now have [complete ordinary local coverage](../qa/native-inference-qa01/README.md)
@@ -15,10 +23,11 @@ hardware detection and effective hardware use, persistent startup/preparation,
 and repeated/batch processing. These replace the earlier CPU-first delivery
 sequence and later-GPU proposal. Embeddings and a lightweight generation
 example are both intended outcomes. Adrian approved the plan and authorized
-STEP-01, with STEP-07 allowed to start or complete before STEP-06 finishes when
-hardware qualification remains outstanding. STEP-03 supplies the lifecycle
+STEP-01, originally allowing STEP-07 to start or complete before STEP-06 finished
+when hardware qualification remained outstanding. The documentation-first
+sequence below supersedes that optional overlap. STEP-03 supplies the lifecycle
 foundation; STEP-04 supplies locally verified typed embeddings and examples.
-Full generation and platform/release acceptance remain open.
+Local generation implementation is complete; platform/release acceptance remains open.
 Scheduling remains with [the project roadmap](../ROADMAP.md); no beta/release date is
 assigned by this plan.
 
@@ -331,8 +340,9 @@ Release decision gate still applies to each production slice, limited to the glu
 
 ## Numbered checkable acceptance criteria
 
-All full-product criteria remain **open**, with the local embedding portions
-recorded in the [STEP-04 disposition](#step-04-parent-acceptance-disposition).
+All full-product criteria remain **open**, with local embedding and generation
+evidence recorded in the
+[current STEP-06 disposition](#step-06-parent-acceptance-disposition--15-september-2026).
 Every criterion needs retained evidence linked here
 before it can be marked passed. Numeric tolerances, memory allowances and
 performance/cancellation thresholds must be fixed in STEP-02 before candidate
@@ -360,8 +370,11 @@ results are assessed; they cannot be relaxed retrospectively to make a pass.
 The plan and STEP-01 output are approved; **STEP-02 and STEP-03 are complete as
 implementation phases**. STEP-03 closure includes the explicit STEP-06 sanitizer
 handoff; its evidence is in the [STEP-03 record](native-inference-step-03.md).
-[STEP-04](native-inference-step-04.md) is authorized and in progress.
-The steps describe one
+[STEP-04](native-inference-step-04.md) is closed;
+[STEP-05](native-inference-step-05.md) is complete locally; STEP-07 documentation
+and examples are approved and closed, 15 September 2026. STEP-06 is in progress.
+The remaining execution order is **STEP-05 → STEP-07 → STEP-06**. The list below
+follows execution order while preserving stable step IDs. The steps describe one
 complete scope; an intermediate milestone is not permission to omit later
 acceptance criteria or GPU/platform work.
 
@@ -423,25 +436,202 @@ acceptance criteria or GPU/platform work.
    broad closeout or further tuning. Serves AC-01/02/03/04 and AC-06 through
    AC-13; depends on the accepted STEP-04 verdict. No performance failure
    silently authorizes dropping GPU, batching or generation requirements.
-6. **STEP-06 — Qualify the complete initial matrix and packages.** Following
-   accepted implementation verdicts, finish required normal Debug, maintained
+6. **STEP-07 — Complete and review documentation, examples and QA coverage.**
+   Prepare the full human and agent documentation, preserve/update source API
+   documentation, and provide practical installation and model-download guides.
+   Cover pinned artifacts, hashes, provenance/licences, storage, offline use,
+   platform/backend prerequisites and troubleshooting. Provide useful persistent
+   embedding and generation examples, bounded batches, incremental output and
+   concurrent workers sharing a model, with explicit preparation and shutdown.
+   Document hardware selection, overrides, limits, cancellation and failures.
+   Run focused checks of the documented recipes and examples while developing
+   them, reusing unchanged valid evidence. Build an AC-01–14 coverage matrix
+   linking documented behavior, examples/tests, platform cells and evidence or
+   outstanding checks. Present the completed documentation and examples for
+   Adrian's review before the full STEP-06 campaign. Record missing hardware and
+   qualification truthfully. Serves AC-14 and prepares verification of AC-01
+   through AC-13; depends on STEP-05 and its accepted verdict. The checkable
+   readiness criteria below govern this handoff. Documentation readiness does
+   not close full-product AC-14 or any pending platform/sanitizer criterion.
+7. **STEP-06 — Qualify the complete initial matrix and packages.** Following
+   accepted implementation verdicts and the reviewed STEP-07 handoff, use its
+   coverage matrix and documented user workflows to finish required normal Debug, maintained
    sanitizer, real GPU, dynamic/static installed-consumer, failure and
    concurrency checks. Qualify Windows on actual supported hardware, not from a
    macOS or cross-build result. Reuse unchanged valid evidence; use
    `tools/asan-run.sh` and record first-party sanitizer findings in the canonical
-   worklist. Retain exact-head hosted gates for publication. Serves AC-01
-   through AC-13; depends on STEP-05 and its verdict.
-7. **STEP-07 — Complete examples, documentation and handoff.** Develop and
-   finalize reviewed source documentation, persistent examples, backend/model matrix and
-   retained measurements in the repository. Reconcile every AC and
-   identify remaining work explicitly before requesting any release/publication
-   action. Report full completion only when the agreed criteria are verified.
-   Serves AC-14 and audits AC-01 through AC-13. Adrian explicitly permits this
-   step to start or complete before STEP-06 finishes: develop documentation and
-   examples alongside the implementation, and record unavailable hardware and
-   pending qualification truthfully. Completing STEP-07 does not close STEP-06,
-   its open ACs or platform cells, or authorize a fully qualified release claim.
-   Existing first-Release verdict gates still apply to production edits.
+   worklist. Retain exact-head hosted gates for publication. Feed any discovered
+   behavior or recipe corrections back into the documentation and recheck the
+   affected coverage. Finish by reconciling every AC, the capability matrix and
+   evidence links, explicitly retaining unmet criteria and unavailable hardware.
+   This final evidence/status handoff now belongs here, after qualification;
+   report full completion only when the agreed criteria are verified. Serves
+   AC-01 through AC-14; depends on STEP-05 and the reviewed STEP-07 handoff.
+
+### STEP-07 documentation readiness and review criteria
+
+Status: sequencing and STEP-07 commencement approved by Adrian, 15 September
+2026. Adrian approved the completed documentation/examples on 15 September;
+all six readiness criteria and four execution tasks are complete. The coverage and evidence
+ledger is [the STEP-07 handoff](../qa/native-inference-step07/README.md).
+
+The outcome is a complete, usable and reviewed account of the intended product
+that a new user can follow and the QA owner can turn into coverage. These
+numbered criteria define readiness for STEP-06, not a pre-emptive qualification
+claim. Each stays unchecked until its document/example and verification or
+review evidence is linked in the handoff.
+
+1. [x] **S7-AC-01 — Installation and model provisioning:** document the optional
+   provider build/install and packaged dependencies, supported platform/backend
+   prerequisites, exact BGE-small and SmolLM2 download sources/pins and hash
+   verification, licences/conversion provenance and any unresolved gaps, model
+   storage/path configuration and offline use after provisioning. Include
+   actionable Windows guidance and distinguish verified recipes from pending
+   platform checks. Distinguish scratch smoke models from real-model acceptance.
+2. [x] **S7-AC-02 — Useful runnable examples:** provide and explain installed
+   persistent embedding and generation examples, repeated bounded batches,
+   incremental generation, concurrent shared-model workers and explicit cleanup.
+   Retain focused execution evidence on available CPU/GPU hardware and list
+   commands and expected behavior for pending platforms; reuse unchanged runs
+   where they cover the exact documented recipe.
+3. [x] **S7-AC-03 — Complete operating and API guidance:** cover discovery,
+   automatic selection/overrides, actual placement/fallback, preparation versus
+   warm processing, shared weights/private state, packed embedding outputs,
+   counted UTF-8 generation output, limits, cancellation, errors and shutdown.
+   Review human, agent and source documentation together for consistent API
+   spelling and contracts; use the C RXPA factories without obsolete Rexx shims.
+4. [x] **S7-AC-04 — Acceptance coverage map:** map every parent AC-01–14 to its
+   documented contract, runnable example or test, required platform/backend
+   cells, retained evidence and remaining verification. Include negative cases,
+   installed/native/offline workflows, resource/concurrency controls and the
+   full-toolchain and sanitizer gates; do not reduce QA to the examples alone.
+5. [x] **S7-AC-05 — Honest capability and evidence review:** publish the model,
+   backend and packaging matrix with verified/pending/unsupported distinctions,
+   retained indicative glue measurements and their limitations. Keep SAN-009,
+   missing hardware and all unmet parent criteria visible with owners/next
+   checks. No model-quality study, upstream performance tuning or replay of
+   accepted measurements is added by this documentation phase.
+6. [x] **S7-AC-06 — Reviewed handoff:** record Adrian's review of the concrete
+   documentation/examples, resolve review corrections and hand the coverage map
+   to STEP-06 with exact commands, prerequisites and evidence-reuse decisions.
+   Broad QA starts after this review; final qualification results and any
+   resulting documentation corrections are reconciled during STEP-06.
+
+Focused example/recipe checks during STEP-07 do not start the full QA campaign.
+S7-AC-01–05 evidence is linked by criterion in the
+[STEP-07 guide/coverage/check ledger](../qa/native-inference-step07/README.md).
+S7-AC-06 is approved; the checked readiness items do not close parent
+AC-01–14 or claim Windows/Linux/sanitizer qualification.
+Documentation-only changes do not invalidate unchanged full regression evidence.
+Any production repair still follows the applicable design and first-Release
+verdict gates. STEP-06 remains responsible for SAN-009 and all outstanding
+sanitizer/platform/package qualification; changing the order waives no gate.
+
+### STEP-07 numbered execution tasks
+
+1. [x] **S7-01 — Audit and preserve:** inspect the current API, examples, source
+   tags, model pins and retained qualification; record gaps and evidence that
+   can be reused. Serves S7-AC-01–05; depends on STEP-05 closure.
+2. [x] **S7-02 — Complete the user journey:** write installation, model-download,
+   operating/API and example walkthroughs, include them in the optional install,
+   and synchronize the human/agent entry points. Serves S7-AC-01–03; depends on
+   S7-01. Retain working C RXPA examples and source documentation.
+3. [x] **S7-03 — Check recipes and reconcile coverage:** smoke-check the guides
+   on available hardware, retain exact inputs/results, map AC-01–14 and preserve
+   pending hardware/provenance/sanitizer work. Serves S7-AC-02/04/05; depends on
+   S7-02. No broad or sanitizer campaign and no accepted performance replay.
+4. [x] **S7-04 — Present the reviewable handoff:** complete editorial/contract
+   review and present the documentation/examples and coverage map to Adrian.
+   Record his review and resolve corrections before STEP-06. Serves S7-AC-06;
+   depends on S7-01–03. Sequence approval is not documentation acceptance.
+
+### STEP-06 qualification execution and takeover
+
+Status: in progress after Adrian approved S7-AC-06, 15 September 2026. The
+vision remains OUT-01–05 and the full observable acceptance conditions remain
+AC-01–14 above. This phase verifies the accepted documented product across the
+initial CPU/GPU/OS/package matrix, corrects reproduced defects within approved
+contracts, and retains honest coverage for takeover. Unavailable hardware and
+unresolved model provenance remain open requirements. This is integration and
+product QA, not model-quality evaluation or an upstream tuning programme.
+
+Use the [approved coverage map](../qa/native-inference-step07/README.md) and
+[live STEP-06 evidence ledger](../qa/native-inference-step06/README.md) together.
+Do not replace a parent criterion with a smaller local test list.
+
+1. [x] **S6-01 — Freeze inputs and reconcile evidence:** record source/build/model
+   identities, available hosts/devices and prior test validity; reuse unchanged
+   ordinary full-suite and accepted Release evidence. Record S7 closure. Serves
+   AC-01–14; depends on S7 approval. Recorded in the STEP-06 baseline/ledger;
+   available local M5 CPU/Metal is identified, external host access is pending
+   under S6-06. This is an inventory, not a waiver of those cells.
+2. [x] **S6-02 — Prepare focused normal controls:** build the required host,
+   native-object, bridge and typed consumers; complete missing normal controls.
+   Apply the established S2-QA01 live-allocator policy to instrumented generation
+   memory checks while preserving normal RSS budgets and workload counts. Serves
+   AC-03–09/11/13; depends on S6-01. QA-only adaptations do not authorize changed
+   product behavior or weakened assertions. Current normal host, typed, native
+   numeric and legacy 100-single/20-batch controls pass; unchanged broad and
+   generation/package evidence is reused. S6-QA01 repairs only an incomplete
+   old-host fixture callback table, with matching normal/ASan passes.
+3. [x] **S6-03 — Run maintained focused sanitizers and measure aggregates:**
+   validate SAN-009, S3-D01/S4-D01/S5-D01, typed/native-object boundaries, both
+   capabilities and installed/native workers using the maintained runner after
+   matching normal checks. Measure new aggregates in isolation before any
+   registration/scheduling change. Serves AC-04–09/11/13; depends on S6-02.
+   Local Apple-ASan native embedding/generation, complete-text, typed, installed,
+   relocated and expanded native/dynamic worker matrices now pass, with isolated
+   costs retained in the S6 ledger. New qualification aggregates remain explicit
+   targets rather than entering the broad CTest pool. Generic RXPA object,
+   worker, text-service, external SDK and signature regressions also pass in the
+   current broad local gate; its remaining tests are tracked by S6-04. Supported Linux
+   leak/platform proof remains under S6-06 and SAN-009 stays open.
+4. [x] **S6-04 — Complete broad local qualification:** finish the required macOS
+   ASan build/preparation and broad gate; reuse unchanged valid ordinary Debug
+   coverage. Triage failures under AGENTS.md, retain first-party findings in the
+   sanitizer worklist, and distinguish timeouts from product failures. Serves
+   AC-09/13; depends on the focused controls and adequate aggregate scheduling.
+   Full build, QA preparation and 2,349/2,349 Apple-ASan CTests pass in
+   `20260915-150827-full` (CTest 2,278.82 seconds), with no sanitizer report.
+   All 7,415 non-document input hashes are unchanged during that final gate;
+   the prior 2,347-test ordinary Debug result remains valid. The two extra ASan
+   selections are the available SQLite-ODBC VM tests. Evidence is retained in
+   `docs/qa/native-inference-step06/full-local/`; supported leak/platform proof
+   remains open under S6-06 and SAN-009.
+5. [ ] **S6-05 — Complete delivery and failure scenarios:** prove documented
+   model provisioning and enforced-offline inference, installed/dynamic/native
+   package integrity and relocation, CPU-only/required-GPU/fallback, limits,
+   low-memory and cancellation/drain behavior. Serves AC-01/03/08–11/14; depends
+   on the prepared candidate and relevant focused controls.
+   Local documented downloads, enforced-offline examples, installed/relocated
+   CPU/Metal consumers and package dependency/cache/fallback/worker controls pass.
+   S6-QA02 removes the examples' whole-workload deadline and uses wide hang
+   backstops with serial QA scheduling, as Adrian requested. Matching normal and
+   ASan controls pass; all 48 generation package executions are covered by the
+   retained 18-execution prefix plus the successful 30-execution continuation.
+   Actual other-OS/device, driver and resource-failure coverage remains open.
+6. [ ] **S6-06 — Qualify the remaining platform/device cells:** inventory actual
+   Linux/Windows hosts and available real CUDA/Vulkan devices; run their normal,
+   package, memory/sharing and applicable sanitizer/leak gates. Retain exact-head
+   hosted publication gates and actual runner capabilities. Serves AC-01–13;
+   may proceed independently where hosts are available. Missing access/device
+   evidence stays open and does not close SAN-009's supported-platform gate.
+7. [x] **S6-07 — Resolve reproducibility gaps:** verify the exact model download
+   paths and obtain conversion ancestry, or present a concrete reproducible
+   conversion/re-pin proposal for Adrian's decision. Serves AC-10; may proceed
+   alongside execution. Do not silently replace the approved artifacts.
+   [S6-D01](native-inference-model-provenance-proposal.md) proposes reproducible
+   candidates; their reproducibility/compatibility QA is complete. Adrian's
+   subsequent direction is to keep this a QA confidence activity and avoid
+   overcomplication. The approved pins/downloads remain; no new adoption or
+   distribution work is pursued. Original-artifact ancestry remains unproven.
+   The bounded verification/proposal activity is complete; this does not close
+   the remaining historical-provenance element of parent AC-10.
+8. [ ] **S6-08 — Reconcile final acceptance:** update each parent AC, platform
+   matrix, documentation correction and retained evidence link; name every unmet
+   condition/owner. Close the full phase only when its agreed requirements are
+   verified or explicitly revised by Adrian. Serves AC-01–14; depends on S6-01–07.
+   Publication remains subject to its explicit authorization and exact-head gates.
 
 ## Approval and takeover record
 
@@ -638,3 +828,100 @@ latest completed implementation dependency.
   and all numbered QA01/QA02 criteria. Adrian accepted the report and STEP-04
   is recorded as closed. STEP-05 is unstarted and STEP-06 retains SAN-009,
   maintained sanitizers, platform and release qualification.
+
+
+- **STEP-05 authorized, 2026-09-15:** Adrian requests implementation of persistent
+  generation. He confirms the earlier slowdown was Metal and requires root-cause
+  investigation if a comparable material slowdown recurs in generation. The
+  [STEP-05 vision, criteria and steps](native-inference-step-05.md) retain all
+  original generation/concurrency/delivery outcomes and the Step 6 sanitizer hold.
+  This supersedes the earlier prohibition on investigating a recurring unexplained
+  generation integration slowdown; it does not authorize model tuning or rewriting
+  historical embedding findings.
+
+
+## STEP-05 parent acceptance disposition — 15 September 2026
+
+STEP-05 is locally complete. This supersedes the STEP-04-only disposition above;
+it adds generation evidence without replacing the full-product criteria or
+claiming unavailable platforms. The [phase evidence](../qa/native-inference-step05/README.md)
+retains commands, identities, failures, isolated replay and the complete ordinary
+regression result. All S5-AC-01–06 and S5-01–06 are checked in the phase plan.
+
+| Parent criterion | Local evidence now retained | Still open |
+| --- | --- | --- |
+| AC-01 | Installed typed/low-level embeddings and generation execute in-process; 32 generation VM and 16 relocated native Release runs use provisioned models and packaged dependencies. | Full target-OS delivery and offline/provisioning qualification in STEP-06. |
+| AC-02 | Actual CPU and Metal BGE/Smol computation, with required-GPU generation offload, persistent batches and private contexts. | Windows/Linux/CUDA/Vulkan and unavailable device cells. |
+| AC-03 | Existing discovery, placement, memory-aware selection, explicit overrides and failure controls remain; typed generation uses that same policy. | Target hardware/driver inventory, automatic-selection and memory-policy qualification. |
+| AC-04 | Both capabilities retain one model load, explicit preparation, 100 singles/20 batches and repeated typed/low-level/native consumers. | Target-platform persistence qualification. |
+| AC-05 | Existing BGE packed-vector/numeric-tripwire evidence remains; repeated low-level embedding controls and ordinary regressions pass after the RXPA addition. | Remaining platform and maintained sanitizer qualification. |
+| AC-06 | Smol generation now has repeated prompts, four-row batches, bounded prefill/decode, incremental complete UTF-8, token deltas and distinct finishes; same-backend direct token/text parity passes. | STEP-06 target-device and sanitizer qualification. |
+| AC-07 | 1/2/4 native VM owners and four actual cREXX workers share immutable weights with private ordered outputs; isolated and concurrent identities/results match. | Backend matrix and remaining platform stress proof. |
+| AC-08 | Exact input/output/token/context bounds, zero retained RSS growth, matched one/four-context memory allowance and co-resident BGE/Smol under 4 GiB pass. | Complete target RAM/VRAM, low-memory and driver-failure qualification. |
+| AC-09 | Preparation teardown, building/prefill/active-decode cancellation, recovery, owned output snapshots, worker cleanup and ordinary model-load drain checks pass. | Maintained sanitizer/GPU-platform drain proof and SAN-009 closure. |
+| AC-10 | The pinned upstream/model/build identities remain explicit; final consumer/package identities and source documentation are retained. | Previously recorded conversion provenance and full provisioning qualification. |
+| AC-11 | Both installed VMs, opt/noopt and relocated native generation examples pass alongside the existing embedding/SDK evidence. | Every target OS, CPU-only-host/backend/driver and Windows dependency qualification. |
+| AC-12 | Generation first Release verdict accepted: no material positive Metal recurrence in the fixed matched comparison. No tuning or repeat panel. | Remaining product qualification; the accepted unexplained NI-S4-P01 embedding observation is unchanged. |
+| AC-13 | All 2,347 selected ordinary Debug CTests pass in the fresh STEP-05 broad run, plus explicit native, public, installed and relocated controls. | Maintained sanitizer, remaining platforms and exact-head hosted gates before publication. |
+| AC-14 | Human/agent/C RXPA contracts and installed persistent/shared-worker examples cover both capabilities, with numbered phase criteria and truthful evidence boundaries. | Complete STEP-07 documentation/examples and review, then STEP-06 qualification and final whole-plan evidence reconciliation. |
+
+OUT-01–05 and CREXX-NI-01–07 retain their full scope. STEP-01/02 approvals and
+STEP-03/04 closure stand; STEP-05's accepted verdict and implementation closeout
+are complete. STEP-06 remains the named native-inference release-QA gate, owned
+by Codex under Adrian, including open/release-blocking SAN-009 and
+S3-D01/S4-D01/S5-D01/native-object/typed-call proof. New aggregate sanitizer memory
+accounting and scheduling must follow the existing S2-QA01 policy; no sanitizer
+run or waiver occurred here. The sequencing revision below supersedes the earlier
+STEP-07 overlap permission. No publication,
+user-prefix installation or release-ready claim follows from this local closure.
+
+## Documentation-first sequencing revision — 15 September 2026
+
+Following Adrian's proposal, complete the documentation, model-provisioning
+guides and useful working examples, review them, and then perform full QA and
+acceptance against that documented coverage. The execution order is STEP-07
+before STEP-06; stable IDs, OUT-01–05 and parent AC-01–14 are preserved. The
+S7-AC-01–06 readiness criteria above make the intermediate handoff checkable.
+STEP-06 retains full qualification and the final evidence/status reconciliation,
+including any documentation corrections discovered by QA. Missing hardware may
+keep individual cells open; neither documentation readiness nor this sequencing
+change closes them. Adrian subsequently approved this sequence and STEP-07 work.
+The [completed guide and coverage pack](../qa/native-inference-step07/README.md)
+now satisfies all S7-AC-01–06 and S7-01–04: Adrian approved the completed pack on
+15 September 2026. STEP-07 is closed and STEP-06 qualification is now authorized
+and in progress. No full QA or sanitizer run occurred during the documentation
+phase; the earlier sanitizer hold ends at this approved STEP-06 handoff.
+
+## STEP-06 parent acceptance disposition — 15 September 2026
+
+This updates the earlier phase snapshots without replacing OUT-01–05, AC-01–14
+or the initial platform matrix. The [STEP-06 evidence ledger](../qa/native-inference-step06/README.md)
+retains exact commands, raw results, source/model identities and the two repaired
+QA findings. The full local Apple-ASan gate passes 2,349/2,349 tests; all
+full-product criteria remain open pending the conditions below. Codex owns the remaining qualification
+under Adrian's direction; actual external host/device access is pending.
+
+| Criterion | Additional local evidence | Remaining full-product condition |
+| --- | --- | --- |
+| AC-01 | Both documented persistent native examples pass with networking denied and positive network controls. ASan installed/relocated embedding and generation matrices pass. | Target-OS delivery and offline/provisioning coverage. |
+| AC-02 | Real M5 CPU and Metal paths pass the focused ASan embedding/generation controls. | Linux/Windows CPU, real CUDA and representative AMD/Intel Vulkan cells. |
+| AC-03 | Local provider dependency, required-GPU/fallback, metadata and cache failure controls pass. | Actual other-OS driver/device, memory and selection-failure coverage. |
+| AC-04 | ASan repeated requests, twenty-batch workloads, persistent consumers and 1/2/4-owner controls pass. | Equivalent qualification on the remaining target backends. |
+| AC-05 | Typed and legacy embeddings, complete input boundaries, finite packed vectors and unchanged CPU/Metal numeric tripwires pass under ASan. | Remaining target-device qualification. |
+| AC-06 | ASan public, persistent, shared-worker and installed/native generation controls pass with existing output/context/identity assertions. | Remaining target-device qualification. |
+| AC-07 | ASan native/dynamic four-worker matrices, private outputs and shared allocation identities pass locally. | Other-backend sharing/stress and discrete RAM/VRAM evidence. |
+| AC-08 | Instrumented generation passes the approved live-allocation retention check and co-resident 4 GiB guard; normal memory evidence is reused. | Remaining target RAM/VRAM, low-memory/load and driver-failure coverage. |
+| AC-09 | Focused host/probe, cancellation, close, worker, package and full local checks pass under Apple ASan. | Supported Linux ASan/LSan, remaining GPU drain proof and SAN-009 closure. |
+| AC-10 | Fresh documented download hashes pass; bounded reproducible-candidate conversion and compatibility QA is complete. Original approved pins remain. | Original GGUF conversion ancestry remains unproven; no candidate adoption/distribution is implied. |
+| AC-11 | Local ASan matrices pass 42 embedding and 48 generation installed/relocated executions, plus expanded package failure controls. | Every remaining target OS, CPU-only host, runtime dependency and real driver/device cell. |
+| AC-12 | Accepted STEP-04/05 indicative Release verdicts are reused; no engine/model tuning or repeat timing panel. | Remaining platform integration qualification; accepted NI-S4-P01 remains recorded. |
+| AC-13 | All 2,347 ordinary Debug passes are reused against unchanged product logic; 2,349/2,349 full local Apple-ASan tests plus focused/package controls pass. | Remaining platforms and exact-head hosted gates before publication. |
+| AC-14 | STEP-07 documentation/review is approved. QA-driven example hang guards and human/agent guidance now agree. | Final whole-plan evidence and platform-status reconciliation. |
+
+S6-QA01 corrected an incomplete legacy-host test callback table. S6-QA02 corrected
+the shared example's whole-workload deadline and widened functional hang guards,
+with serial QA scheduling as Adrian requested. Both have matching normal/ASan
+proof. Neither changes product inference, RXPA, compiler or VM runtime logic.
+The generation package continuation retains the original failure and combines
+18 prior passing executions with all 30 remaining passing executions. No
+completed valid ordinary full suite or accepted Release panel is repeated.

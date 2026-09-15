@@ -69,6 +69,12 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   inherit an old timeout after materially increasing the test workload, and do
   not let nested end-to-end aggregates compete in the broad pool when host load
   can make their inner or outer deadlines nondeterministic.
+- In functional QA, use generous wall-clock limits as hang-protection backstops,
+  not incidental performance requirements. Avoid short nested or whole-workload
+  deadlines that make slower or busy GitHub runners fail correct work. Serialize
+  deadline-sensitive tests where practical, while retaining deliberate
+  concurrency inside ownership and worker tests. Keep explicit timeout or
+  cancellation-contract tests and isolated Release performance criteria intact.
 - When a broad run fails only through explicit CTest timeouts, inspect the log
   first for sanitizer diagnostics and non-timeout failures, then replay the
   unchanged timed-out tests once under their declared isolated scheduling. If

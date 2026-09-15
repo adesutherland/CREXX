@@ -1,0 +1,13 @@
+{
+  "install/share/crexx/llama/qualification.md": "f2011d81063af7729936f5705c2431a4679c56dc855441872a59d4a3fd6b77a6",
+  "install/share/crexx/llama/reference.md": "dd3fbe971857c8ae5b0de41b728238af145acd190fe0a19b883f7739b1e37532",
+  "install/share/crexx/llama/README.md": "e1d098a96e19a5fa82eaff18ee448eaa5f799e4c213a70be2adf7beb6d2ba37e",
+  "install/share/crexx/llama/models.md": "4ddc02c7942c5e019ff39905f4152c1554ab151d09459155e802c73d4f73c76e",
+  "install/share/crexx/llama/installation.md": "842be7ef34452911b18370ce8e39e2676eb7f692363b541641d87898a0fdd201",
+  "install/share/crexx/llama/examples/shared_generation.crexx": "a41ceec57c996626b74247d2d09614bc1288a119afb9d59443d3fab96e45691d",
+  "install/share/crexx/llama/examples/shared_embeddings.crexx": "d4724c3e1706595f499929072f19c5fefe2648cdff1e3a2f528e8384d85a4d0d",
+  "install/share/crexx/llama/examples/persistent_generation.crexx": "0f747ab385eaf3ceb39b9bd27a44012a0bb2acf73cc033204c75965cfa7a2fa2",
+  "install/share/crexx/llama/examples/persistent_embeddings.crexx": "2e297bcbb4f803a07aca0e5545dbfd52f6d87d8bb1b4cd8e0f55f623e5573340",
+  "install/share/crexx/llama/examples/README.md": "5aa51acc3ba5dec32b4201cd327fbfe516a5c1b0565f85694e31c4ec54e8aa2f",
+  "llama-example-work/rxllama.native.json": "7c894c08867c943cce1a9a0a5240c78de5e1b407ebd6c4306cf43e14f5b3313a"
+}

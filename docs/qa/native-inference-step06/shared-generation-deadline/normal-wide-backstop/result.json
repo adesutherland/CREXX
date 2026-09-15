@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "cmake",
+    "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+    "-DSOURCE=/Users/adrian/CLionProjects/CREXX",
+    "-DOUTPUT=/tmp/crexx-ni-s6.zq0rk0ug/shared-deadline/normal-wide-backstop",
+    "-DMODE=cpu",
+    "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf",
+    "-DHASH=48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+    "-DPROGRAM=shared_generation",
+    "-DCONSUMER=/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/shared_generation.crexx",
+    "-DMARKER=PASS: four typed generation workers",
+    "-P",
+    "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step04_toolchain.cmake"
+  ],
+  "returncode": 0,
+  "elapsed_seconds": 106.1575952921994,
+  "source_sha256": "8e8bd0738810950e425a5e6efe5f6283aa184c6ba7c30bd0730b74e7e9ac4f5d"
+}

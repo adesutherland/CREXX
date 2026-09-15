@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/ni-s5/install/bin/rxas'), '-o', PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation-dynamic'), PosixPath('/private/tmp/ni-s5/installed-generation/noopt-shared_generation-dynamic')]
+cwd=/private/tmp/ni-s5/installed-generation
+rc=0

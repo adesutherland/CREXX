@@ -86,13 +86,36 @@ checks pass; required broader platform proof remains outstanding.
 ### SAN-009 — CPU backend probe unload/reload re-registers Apple-ASan globals
 
 Status: open; local repair established, platform qualification pending. Discovered
-2026-09-14 during STEP-03. Owner: the STEP-03 implementation agent. Adrian's
-subsequent direction is to diagnose/fix SAN-009 while he reviews S3-D01, but
-**do not rerun the sanitizer yet**. The source/evidence review below confirms
-the existing repair; further sanitizer builds and tests are on hold pending
-his direction. Required platform proof remains open. Adrian subsequently approved STEP-03 closure and the named STEP-06
+2026-09-14 during STEP-03. Current owner: Codex, STEP-06 qualification. Adrian's
+initial direction was to diagnose/fix SAN-009 while he reviewed S3-D01, but
+**do not rerun the sanitizer yet**. That historical hold lasted until the
+STEP-06 approval below. Required platform proof remains open. Adrian approved
+STEP-03 closure and the named STEP-06
 native-inference release-QA handoff, owned by Codex under his direction.
 SAN-009 remains open and release-blocking; no sanitizer suppression is authorized.
+
+- **STEP-06 commencement, 2026-09-15:** Adrian approved the completed STEP-07
+  documentation/examples and the planned transition to full QA. The earlier
+  sanitizer hold is lifted for the named STEP-06 qualification gate, owned by
+  Codex under Adrian. Follow matching normal controls, the maintained runner
+  and every closure condition below; this approval does not close SAN-009.
+- **Focused STEP-06 proof, 2026-09-15:** current `rxllama_backend_probe_cycle`
+  and `rxpa_host_text_services` pass together in normal Debug (2/2, 0.74 s)
+  and Apple ASan (2/2, 1.80 s). Sustained generation CPU/Metal controls also
+  pass under ASan. [Current evidence](qa/native-inference-step06/README.md)
+  retains commands/logs. The expanded package/native matrix now passes Apple
+  ASan (385.991 s, `20260915-150153-build`), including native foreign-handle
+  rejection and four-worker BGE/Smol CPU/Metal ownership after S3-D01. Installed
+  typed embedding and generation matrices also pass. The original broader
+  lifecycle workload passes as `rxllama_toolchain_lifecycle` (7.25 s) in
+  `20260915-150827-full`; this CTest invokes the same `step03_toolchain.cmake`
+  CPU/BGE compile/assemble/link/both-VM workload as the original measurement
+  target, in a separate output directory. The full local build/preparation and
+  2,349/2,349 Apple-ASan CTests pass (CTest 2,278.82 s), with no sanitizer
+  diagnostic in retained build, preparation or test logs. See
+  [full local result](qa/native-inference-step06/full-local/summary.json).
+  Supported Linux ASan/LSan remains outstanding.
+  The item stays open.
 
 - Affected revision: baseline `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`
   plus the uncommitted STEP-03 provider implementation.

@@ -1,0 +1,9 @@
+{
+  "reused_executions": 18,
+  "continuation_executions": 30,
+  "installed_vm_total": 32,
+  "relocated_native_total": 16,
+  "deadline_repair": "S6-QA02",
+  "prior_prefix": "../suite-results/cmake-build-debugasan/package-generation-m6osa3qr/reused-prefix.json",
+  "source_scope": "Only hang guards changed; all workload counts and semantic assertions retained."
+}

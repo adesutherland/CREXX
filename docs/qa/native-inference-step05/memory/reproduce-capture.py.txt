@@ -1,0 +1,29 @@
+from pathlib import Path
+import subprocess, re, json, hashlib
+root=Path('/Users/adrian/CLionProjects/CREXX'); work=Path('/tmp/ni-s5/memory-closeout'); work.mkdir(exist_ok=False)
+model=Path('/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf'); digest='48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201'
+assert hashlib.sha256(model.read_bytes()).hexdigest()==digest
+bridge=root/'cmake-build-release/lib/plugins/llama/tests/rxllama_generation_bridge'
+vm=root/'cmake-build-release/bin/rxbvm'; program=Path('/tmp/ni-s5/generation-memory-linked.rxbin')
+records=[]
+for mode in ('cpu','required-gpu'):
+ for count in (1,4):
+  peaks={}; signatures={}
+  for surface in ('direct','provider','vm'):
+   argv=[str(bridge),'--memory-'+surface,mode,str(model),digest,str(count)] if surface!='vm' else ['/usr/bin/time','-l',str(vm),str(program),'-a',mode,str(model),digest,str(count)]
+   run=subprocess.run(argv,capture_output=True,text=True,timeout=180)
+   output=run.stdout+run.stderr; label=f'{mode}-{count}-{surface}'
+   (work/(label+'.log')).write_text('argv='+repr(argv)+'\nrc='+str(run.returncode)+'\n'+output)
+   assert run.returncode==0 and 'PASS: generation' in output and 'FAIL:' not in output,(label,output[-2000:])
+   peak=int(re.search(r'^PEAK=(\d+)$',output,re.M)[1]) if surface!='vm' else int(re.search(r'(\d+)\s+maximum resident set size',output)[1])
+   assert int(re.search(r'^TOKENS=(\d+)$',output,re.M)[1])==24
+   if surface!='vm': signatures[surface]=int(re.search(r'^SIGNATURE=(\d+)$',output,re.M)[1])
+   peaks[surface]=peak;print(label,'peak',peak,flush=True)
+  assert signatures['direct']==signatures['provider']
+  allowance=(64+16*count)*1024*1024
+  assert peaks['provider']<=peaks['direct']+allowance,(mode,count,peaks,allowance)
+  assert peaks['vm']<=peaks['direct']+allowance,(mode,count,peaks,allowance)
+  records.append(dict(mode=mode,contexts=count,peak_bytes=peaks,allowance_bytes=allowance,signatures=signatures))
+  print('PASS: memory allowance',mode,count,flush=True)
+(work/'results.json').write_text(json.dumps(records,indent=2)+'\n')
+print('PASS: generation native and VM memory comparisons, 12 processes')

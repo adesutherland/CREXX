@@ -1,0 +1,19 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc;--no-exe-import;-n;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding;/Users/adrian/CLionProjects/CREXX/tests/native-inference/embedding_acceptance.crexx
+
+Warning in embedding_acceptance.crexx @ 164:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 161, column 6. Declare this binding explicitly if intentional., "i"
+1 warning(s) in source file
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding-linked;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: rxllama persistent embedding acceptance cpu
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/embedding-legacy-mcwvulf7/work/embedding_acceptance-noopt-cpu/embedding-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: rxllama persistent embedding acceptance cpu
+
+

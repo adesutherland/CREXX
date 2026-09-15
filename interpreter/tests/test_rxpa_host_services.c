@@ -30,8 +30,49 @@ static void probe(rxinteger n, rxpa_attribute_value *args,
         data != ((value *)args[0])->string_value) {
         set_int(ret, 1); return;
     }
+    /* S5-D01: public native output must retain valid embedded U+0000. */
+    if (SETSTRINGLENGTH(received_host, args[0], text, sizeof(text))) {
+        set_int(ret, 7); return;
+    }
+    if (received_host->string_view(args[0], &data, &length) ||
+        length != sizeof(text) || memcmp(data, text, sizeof(text))) {
+        fprintf(stderr, "FAIL: RXPA output truncated embedded U+0000: %zu of %zu bytes\n", length, sizeof(text));
+        set_int(ret, 7); return;
+    }
+    {
+        char source[] = {'x', (char)0xf0, (char)0x9f, (char)0x98, (char)0x80, 0};
+        const char bad[] = {(char)0xc0, (char)0x80};
+        if (SETSTRINGLENGTH(received_host, args[0], source, sizeof(source))) {
+            set_int(ret, 8); return;
+        }
+        source[0] = 'y';
+        if (received_host->string_view(args[0], &data, &length) || length != 6 || data[0] != 'x'
+#ifndef NUTF8
+            || ((value *)args[0])->string_chars != 3
+#endif
+        ) { set_int(ret, 8); return; }
+        /* Invalid input leaves a previously valid destination untouched. */
+        if (!SETSTRINGLENGTH(received_host, NULL, text, sizeof(text)) ||
+            !SETSTRINGLENGTH(received_host, args[0], NULL, 1) ||
+            !SETSTRINGLENGTH(received_host, args[0], text, SIZE_MAX)
+#ifndef NUTF8
+            || !SETSTRINGLENGTH(received_host, args[0], bad, sizeof(bad))
+            || !SETSTRINGLENGTH(received_host, args[0], source + 1, 3)
+#endif
+            || ((value *)args[0])->string_length != 6 ||
+            memcmp(((value *)args[0])->string_value, "x\xf0\x9f\x98\x80\0", 6)) {
+            set_int(ret, 9); return;
+        }
+        if (SETSTRINGLENGTH(received_host, args[0], data, length) ||
+            received_host->string_view(args[0], &data, &length) ||
+            SETSTRINGLENGTH(received_host, args[0], data + 1, length - 1) ||
+            ((value *)args[0])->string_length != 5 ||
+            memcmp(((value *)args[0])->string_value, "\xf0\x9f\x98\x80\0", 5)) {
+            set_int(ret, 10); return;
+        }
+    }
     /* Empty text is successful; no terminator or writable buffer is promised. */
-    set_string(args[0], "", 0);
+    if (SETSTRINGLENGTH(received_host, args[0], NULL, 0)) { set_int(ret, 2); return; }
     if (received_host->string_view(args[0], &data, &length) || length) {
         set_int(ret, 2); return;
     }
@@ -104,6 +145,31 @@ int main(int argc, char **paths) {
     if (!failed) {
         rxpa_host_services_v1 invalid = *received_host;
         size_t boundary;
+        if (!rxpa_host_has_string_set(received_host) ||
+            !SETSTRINGLENGTH(NULL, &arg, "", 0)) failed = 1;
+        for (boundary = offsetof(rxpa_host_services_v1, string_set);
+             boundary < offsetof(rxpa_host_services_v1, string_set) + sizeof(invalid.string_set);
+             ++boundary) {
+            invalid.struct_size = boundary;
+            if (rxpa_host_has_string_set(&invalid) ||
+                !SETSTRINGLENGTH(&invalid, &arg, "", 0)) failed = 1;
+        }
+        invalid = *received_host; invalid.abi_version++;
+        if (rxpa_host_has_string_set(&invalid)) failed = 1;
+        invalid = *received_host; invalid.string_set = NULL;
+        if (rxpa_host_has_string_set(&invalid)) failed = 1;
+        {
+            size_t size = offsetof(rxpa_host_services_v1, string_set);
+            rxpa_host_services_v1 *prefix = malloc(size);
+            if (!prefix) failed = 1;
+            else {
+                memcpy(prefix, received_host, size); prefix->struct_size = size;
+                if (!rxpa_host_has_object_set_type(prefix) || rxpa_host_has_string_set(prefix) ||
+                    !SETSTRINGLENGTH(prefix, &arg, "", 0)) failed = 1;
+                free(prefix);
+            }
+        }
+        invalid = *received_host;
         if (!rxpa_host_has_object_set_type(received_host) ||
             !SETOBJECTTYPE(received_host, &arg, "host.box") ||
             !SETOBJECTTYPE(NULL, &arg, "host.box")) failed = 1;
@@ -156,6 +222,8 @@ int main(int argc, char **paths) {
         else {
             set_string(&arg, "", 0);
             mark_value_uninitialized_object(&arg);
+            /* Independent setup also keeps an earlier failed probe reportable. */
+            set_num_attributes(&arg, 1);
             set_string(arg.attributes[0], "\xc3\xa9", 2);
             mark_value_uninitialized_object(arg.attributes[0]);
             rxvm_call_native_procedure(procedure, 1, argv, &ret, &sig);

@@ -1,0 +1,25 @@
+{
+  "runs": [
+    "opt-typed_generation-cpu-rxbvm",
+    "opt-typed_generation-cpu-rxtvm",
+    "opt-typed_generation-required-gpu-rxbvm",
+    "opt-typed_generation-required-gpu-rxtvm",
+    "opt-generation_overhead-cpu-rxbvm",
+    "opt-generation_overhead-cpu-rxtvm",
+    "opt-generation_overhead-required-gpu-rxbvm",
+    "opt-generation_overhead-required-gpu-rxtvm",
+    "noopt-typed_generation-cpu-rxbvm",
+    "noopt-typed_generation-cpu-rxtvm",
+    "noopt-typed_generation-required-gpu-rxbvm",
+    "noopt-typed_generation-required-gpu-rxtvm",
+    "noopt-generation_overhead-cpu-rxbvm",
+    "noopt-generation_overhead-cpu-rxtvm",
+    "noopt-generation_overhead-required-gpu-rxbvm",
+    "noopt-generation_overhead-required-gpu-rxtvm"
+  ],
+  "model_sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+  "sources": {
+    "tests/native-inference/typed_generation.crexx": "b8d50efc29c8ab9c2a02ddcaf80212bd0a420b9e4bd6f0889d767e30b94e1207",
+    "tests/native-inference/generation_overhead.crexx": "8fbb31bfa0a03a61b1959a0fddd41a68e3494468b8a4a57452ff223b3be49cb7"
+  }
+}

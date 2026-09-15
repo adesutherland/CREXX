@@ -229,7 +229,8 @@ The following macros are provided for plugin developers (defined in
 | ARG() | Returns the nth argument (which is an opaque pointer to the cRexx register)|
 | RETURN | Returns the register used to pass the function’s returned value.|
 | GETSTRING() | Gets the String value of a register|
-| SETSTRING() | Sets the String value of a register|
+| SETSTRING() | Copies a NUL-terminated C string into a register|
+| SETSTRINGLENGTH(host,value,data,byte_length) | Copies complete counted UTF-8 through the optional negotiated host service; returns zero or -1. |
 | GETINT() | Gets the Integer value of a register|
 | SETINT() | Sets the Integer value of a register|
 | GETFLOAT() | Gets the float (double) value of a register|
@@ -250,6 +251,29 @@ storage during the call; it does not mutate or retain the caller's buffer. The
 caller therefore retains ownership and may reuse or release a mutable source
 buffer as soon as the macro returns. Pass a non-null, null-terminated string;
 use `""` for an empty value.
+
+For complete UTF-8 that may contain U+0000, use the size-negotiated host table
+obtained through `RXPA_PLUGIN_SESSION_WITH_HOST`. `rxpa_host_has_string_view`
+checks the input-view service and `rxpa_host_has_string_set` checks output.
+`host->string_view(value, &data, &byte_length)` borrows read-only bytes until
+value mutation/reentrant mutation or native-call return. No terminator is
+promised. Copy input retained beyond that boundary into plugin-owned storage.
+
+`SETSTRINGLENGTH(host,value,data,byte_length)` copies exactly that many bytes into
+VM-owned text. The VM validates UTF-8 and maintains codepoint counts; the C length
+counts **bytes**, while ordinary Rexx string positions count codepoints. The
+source needs no terminator or padding and remains caller-owned. NULL is accepted
+only with length zero. Invalid/oversized text or an unavailable service returns
+-1 without changing the destination. A borrowed destination view is safe as
+input, including self-copy and substring-copy. Use only live borrowed value
+handles during the active VM call.
+
+The legacy C-string getter supplies one trailing NUL. Extra NUL padding adds no
+UTF-8 meaning and cannot prevent embedded U+0000 from truncating a C-string
+consumer. The counted interface hides VM storage and codepoint bookkeeping;
+plugins pass only the readable bytes and their length. The legacy initializer
+layout is unchanged. Require the optional service only for operations that need
+complete text, and report its absence explicitly.
 
 `CALLMETHOD(receiver, descriptor, argc, args, result)` enables a native
 procedure to call back into an object supplied by cREXX. The descriptor uses

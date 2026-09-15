@@ -1,5 +1,85 @@
 # Native inference acceptance controls
 
+Current documentation and QA coverage are mapped in the
+[STEP-07 handoff](../../docs/qa/native-inference-step07/README.md). Use the
+[installed guide and examples](../../lib/plugins/llama/README.md) for user
+workflows. STEP-07 precedes full STEP-06 QA; source/model control history below
+does not replace the current product contract or authorize another timing panel.
+
+## STEP-06 maintained qualification
+
+STEP-07 is approved and STEP-06 sanitizer qualification is authorized. The
+[live ledger](../../docs/qa/native-inference-step06/README.md) tracks completed
+commands, retained inputs, scheduling measurements and open platform gates.
+Use the maintained runner for instrumented build and test execution:
+
+```sh
+tools/asan-run.sh --build-dir cmake-build-debugasan --phase build \
+  --build-target rxllama_qualify_typed --build-jobs 4 \
+  --build-leaks off --no-live-tail
+```
+
+`--build-leaks off` above applies to Apple's unsupported LSan only. Leave leak
+detection enabled on supported Linux builds. Run the same target in normal
+Debug first. Choose explicit `CREXX_LLAMA_QUALIFICATION_MODES` at configuration:
+`cpu,required-gpu` for the actual local M5/Metal path; the default `cpu` does not
+claim a GPU pass. Available targets are `rxllama_qualify_typed`,
+`rxllama_qualify_generation`, `rxllama_qualify_generation_closeout`,
+`rxllama_qualify_embedding_legacy`, `rxllama_qualify_old_host`,
+`rxllama_qualify_package_typed`, `rxllama_qualify_package_generation`, and sustained
+`rxllama_generation_qualify_cpu` / `rxllama_generation_qualify_required_gpu`.
+Native embedding controls are `rxllama_embedding_qualify_cpu`,
+`rxllama_embedding_qualify_required_gpu` and
+`rxllama_embedding_qualify_cross_device`; the last requires a real usable GPU.
+Run each separately in isolation, not as a parallel list of targets.
+
+Functional deadlines are wide hang backstops, not speed criteria. Model-bearing
+subprocesses have thirty minutes, while local operation/barrier waits in the
+functional examples and controls have ten minutes. Shared-worker scopes join
+their finite workload without a whole-workload deadline. The registered real-model
+CTest cases retain `RUN_SERIAL`; explicit qualification targets also run one at
+a time. Concurrent owners inside a test remain required correctness coverage.
+The accepted Release timing workloads and measured thresholds are unchanged;
+their unused hang guards also widen, without replaying the accepted panels.
+
+`qualification_run.py` creates a fresh retained directory under the build's
+`lib/plugins/llama/tests/qualification/`, records exact commands and inherits
+the runner's sanitizer options. Package targets prepare installation prerequisites
+and install into their scratch directory. The original tests retain assertions,
+model identities, both applicable VMs, optimization variants and workload counts.
+S2-QA01 uses live allocator bytes for ASan generation retention, with RSS also
+reported; normal RSS limits and the co-resident guard are unchanged. Instrumented
+timing is diagnostic, not the accepted ordinary Release performance gate.
+
+## Persistent STEP-05 generation
+
+`typed_generation.crexx` and `generation_overhead.crexx` retain the minimum
+public typed/low-level controls. The latter emits fixed-work metrics for the
+accepted integration comparison; running it once in delivery QA only verifies
+semantics and does not repeat the timing panel.
+
+`generation_bridge.cpp` adds an independent same-backend token/text/finish oracle,
+exact bounds, incremental output, cancellation and recovery. With BGE path/hash
+arguments it also runs 100 singles, 20 four-row batches, 1/2/4 concurrent owners
+with private ordered outputs, retained-memory and co-resident model checks.
+`--output-boundary` isolates generated-byte overflow and recovery. Explicit
+`--memory-direct`/`--memory-provider` modes and `generation_memory.crexx` compare
+one/four-context process peaks without loading duplicate reference weights.
+
+Use `generation_toolchain.py BUILD SOURCE MODELS FRESH_OUTPUT cpu,required-gpu`
+for the minimum 16 opt/noopt/both-VM executions. `--closeout` instead runs 24
+executions of the expanded low-level acceptance and installed-source persistent/
+shared-generation examples. Use
+`generation_package_consumer.py PREFIX SOURCE MODELS FRESH_OUTPUT cpu,required-gpu`
+for installed dynamic and relocated native delivery. The examples take hardware
+mode, local GGUF path and SHA256; they construct all owners in their own worker.
+Build the explicit optional provider targets before the scratch install.
+
+These are explicit functional QA aggregates, unregistered until STEP-06 has
+normal/sanitizer scheduling evidence. No sanitizer run or timing replay is
+implied. See [STEP-05](../../docs/planning/native-inference-step-05.md) and its
+[qualification evidence](../../docs/qa/native-inference-step05/README.md).
+
 ## Typed STEP-04 continuation
 
 `typed_configuration.crexx` and `typed_embeddings.crexx` exercise the public C
@@ -54,9 +134,10 @@ Release cost are recorded in [S3-D01](../../docs/planning/native-inference-worke
 The expanded scratch matrix now passes native foreign-handle rejection and four
 workers sharing each real model on CPU/Metal in Debug (114.687 seconds total).
 It remains an explicit target: the expanded sanitizer measurement is outstanding
-and Adrian currently holds sanitizer builds/tests. Earlier dynamic-only timings
+in the now-authorized STEP-06 gate. Earlier dynamic-only timings
 do not qualify its new workload. STEP-04 adds normal local embedding evidence;
-STEP-05 generation and STEP-06 qualification remain open.
+STEP-05 generation now has normal local evidence above; STEP-06 qualification
+remains open.
 
 `direct_control.cpp` is a native test workload calling pinned upstream APIs.
 It uses one model with private contexts, checks real text/token outputs,
@@ -199,7 +280,7 @@ tools/asan-run.sh --build-dir cmake-build-llama-debugasan --phase ctest \
 ```
 
 Run the same focused commands in the normal Debug tree first. Each real-model
-test is serial, with 600 seconds for real-model/co-resident cases and 120 seconds
+test is serial, with 1,800 seconds for real-model/co-resident cases and 120 seconds
 for small fixtures/template; the completion evidence retains measured durations.
 The fixed 100-request/20-batch workload is identical across lanes. Timing budgets
 are enforced only in ordinary Release. ASan's reserved heap/quarantine inflates
@@ -209,7 +290,7 @@ the process-RSS guard. This does not replace Linux LeakSanitizer or GPU memory
 qualification; Apple LeakSanitizer is unavailable and GPU kernels are not ASan
 instrumented. No quarantine setting or sanitizer suppression is added.
 
-## cREXX pre-implementation failure and positive control
+## Historical cREXX pre-implementation failure and positive control
 
 ```sh
 cmake-build-release/bin/crexx tests/native-inference/provider_acceptance.crexx \
@@ -219,7 +300,9 @@ cmake-build-release/bin/crexx lib/plugins/vector/rxvector_test.crexx \
 cmake-build-release/bin/rxvm cmake-build-llama-workload/vector-positive.rxbin
 ```
 
-The provider test currently fails with missing `rxllama` procedures. It tests
+At the STEP-02 baseline the provider test failed with missing `rxllama` procedures.
+STEP-05 now retains passing implementation evidence; the commands and original
+failure below describe the historical control. The test covers
 normal success, rejected configuration, lifecycle, repeated/batch packed output,
 generation and simultaneous model residency, and stale/parent handles once
 implemented. It includes incremental output, active cancellation, wrong
@@ -229,7 +312,7 @@ The existing vector control must
 pass through compile/assemble/link/execution. Neither test uses `WILL_FAIL` or
 a skip to turn an absent feature into a green test.
 
-`provider_worker_acceptance.crexx` is a separate ordinary red test for copied
+`provider_worker_acceptance.crexx` was a separate ordinary red test for copied
 native model-handle rejection in two foreign worker VMs. Its arguments are BGE
 path/hash. `worker_transport_positive.crexx` independently proves the binary
 worker transport shape through compiler, assembler, linker and VM execution.
@@ -267,7 +350,8 @@ not a pure startup measurement or a cREXX provider latency verdict. The Level B
 reducer consumes all ten recorded `CONTROL_JSON` rows, checks correctness and
 fixed counts, and reports mean/range and approximate Student-t 95% mean
 intervals without removing outliers. A known 1..10 series verifies its output.
-Later wrapper comparisons need matched controls and twelve paired rounds;
+The later approved wrapper comparisons used their own matched controls and
+retained verdicts. This historical control does not authorize replay of them;
 absolute samples here do not establish auto-selection or optimal CPU settings.
 
 The completion baseline uses two CPU threads per context for BGE and Metal
@@ -299,5 +383,7 @@ so attached workers need no ambient bytecode search directory.
 product and relocated native CPU/GPU executables. These remain explicit normal
 checks, with no new aggregate CTest registration or early sanitizer execution.
 See [retained evidence](../../docs/qa/native-inference-step04-closeout/README.md).
-The public typed facade/examples are still pending the reserved
-[S4-D03 interface review](../../docs/planning/native-inference-typed-interface-proposal.md).
+The subsequent [S4-D03 C interface](../../docs/planning/native-inference-typed-interface-proposal.md)
+and [typed examples](../../docs/qa/native-inference-typed/README.md) are now
+implemented with normal local qualification. STEP-05 adds generation and
+STEP-07 provides the current installed documentation; STEP-06 retains full QA.

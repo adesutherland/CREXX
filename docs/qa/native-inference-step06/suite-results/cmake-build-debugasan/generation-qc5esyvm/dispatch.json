@@ -1,0 +1,25 @@
+{
+  "suite": "generation",
+  "modes": "cpu,required-gpu",
+  "elapsed_seconds": 247.351,
+  "build": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+  "source": "/Users/adrian/CLionProjects/CREXX",
+  "models": "/Users/adrian/Library/Caches/crexx/native-inference",
+  "asan_options": "detect_leaks=0",
+  "commands": [
+    {
+      "label": "suite",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/generation_toolchain.py",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan",
+        "/Users/adrian/CLionProjects/CREXX",
+        "/Users/adrian/Library/Caches/crexx/native-inference",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/generation-qc5esyvm/work",
+        "cpu,required-gpu"
+      ],
+      "returncode": 0
+    }
+  ],
+  "driver_sha256": "559865a4f752b119c475518448205ddca23d1b23a9a05a2eb6b8c45813fab3fc"
+}

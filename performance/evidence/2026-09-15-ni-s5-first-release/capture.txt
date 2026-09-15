@@ -1,0 +1,1 @@
+PASS: compact cross-runtime timing matrix retained under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-09-15-ni-s5-first-release/timing

@@ -1,0 +1,17 @@
+PASS: exact bytes/rows/tokens, 480+32/481+32 context, UTF-8 rejection, error finish and recovery cpu
+RSS_BEFORE=2002862080
+RSS_SINGLE_20=2002862080
+RSS_SINGLE_40=2002862080
+RSS_SINGLE_60=2002862080
+RSS_SINGLE_80=2002862080
+RSS_SINGLE_100=2002862080
+PASS: 100 singles and 20 four-row batches cpu rss_before=2002862080 rss_after=2002862080 max_growth=0
+MAX_ISOLATED_UNIT_MS=133.932
+MAX_CONCURRENT_UNIT_MS_1=137.219
+PASS: 1 concurrent VM owners x 20 batches, shared_id=1 overlap=1
+MAX_CONCURRENT_UNIT_MS_2=197.395
+PASS: 2 concurrent VM owners x 20 batches, shared_id=1 overlap=2
+MAX_CONCURRENT_UNIT_MS_4=2640.34
+PASS: 4 concurrent VM owners x 20 batches, shared_id=1 overlap=4
+PASS: co-resident embeddings and generation, reserved=1677721600 peak_bytes=2714615808
+PASS: generation direct parity, batching, incremental output, limits, cancellation and recovery cpu

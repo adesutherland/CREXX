@@ -117,6 +117,9 @@ is searched for same-extension imports.
   document the explicit library surface.
 - [SQLite with `rxsqlite`](docs/books/crexx_library_reference/rxsqlite.md)
   documents the installed typed provider and Level G ADDRESS façade.
+- [Local embeddings and generation with llama.rexx](lib/plugins/llama/README.md)
+  documents the optional in-process provider, model downloads, persistent/shared
+  examples and current platform qualification limits.
 - [Concurrency architecture](docs/ai-context/CREXX_CONCURRENCY.md) records the
   ownership, transfer, provider and implementation boundaries for maintainers.
 - [RexxScript user guide](rexxscript/doc/user-guide.md) covers the standalone

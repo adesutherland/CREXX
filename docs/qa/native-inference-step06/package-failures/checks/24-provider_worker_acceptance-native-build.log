@@ -1,0 +1,9 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-2vl6mqwp/installed Ω/bin/crexx'), '--program', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-2vl6mqwp/checks/native workers/provider_worker_acceptance'), PosixPath('/Users/adrian/CLionProjects/CREXX/tests/native-inference/provider_worker_acceptance.crexx'), '--jobs', '1', '--native']
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-2vl6mqwp/checks
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member provider_worker_acceptance
+BUILT: project member provider_worker_acceptance
+BARRIER: link program
+PUBLISHED: program /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-2vl6mqwp/checks/native workers/provider_worker_acceptance.rxbin
+PUBLISHED: native program /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-2vl6mqwp/checks/native workers/provider_worker_acceptance

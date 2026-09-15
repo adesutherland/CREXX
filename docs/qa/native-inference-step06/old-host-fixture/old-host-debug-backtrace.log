@@ -1,0 +1,17 @@
+(lldb) target create "cmake-build-debug/lib/plugins/llama/tests/rxllama_text_old_host"
+Current executable set to '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_text_old_host' (arm64).
+(lldb) settings set -- target.run-args  "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxllama.rxplugin"
+(lldb) run
+Process 85101 launched: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/rxllama_text_old_host' (arm64)
+Process 85101 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+    frame #0: 0x0000000000000000 
+error: memory read failed for 0x0
+Target 0: (rxllama_text_old_host) stopped.
+(lldb) thread backtrace all
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+  * frame #0: 0x0000000000000000 
+    frame #1: 0x000000010003ce8c rxllama.rxplugin`_initfuncs(context=0x000000016fdfe738) at rxllama.c:161:1
+    frame #2: 0x0000000100001420 rxllama_text_old_host`rxpa_initialize_plugin(plugin=0x000000016fdfe7f0, ctx=0x000000016fdfe738) at rxpa.c:269:5
+    frame #3: 0x0000000100000a6c rxllama_text_old_host`main(argc=2, argv=0x000000016fdfef18) at text_old_host.c:24:9
+    frame #4: 0x0000000184ba84e4 dyld`start + 6992

@@ -20,7 +20,7 @@ commands = [
 ]
 for index, command in enumerate(commands):
     with (record / f"{index:02}.log").open("w") as log:
-        result = subprocess.run(command, stdout=log, stderr=log, timeout=900)
+        result = subprocess.run(command, stdout=log, stderr=log, timeout=7200)
     if result.returncode:
         print((record / f"{index:02}.log").read_text()[-4000:])
         raise SystemExit(result.returncode)

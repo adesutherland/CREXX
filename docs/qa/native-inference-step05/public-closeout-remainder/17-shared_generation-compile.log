@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/tmp/ni-s5/public-closeout-remainder/noopt-shared_generation', '/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/shared_generation.crexx']
+rc=0

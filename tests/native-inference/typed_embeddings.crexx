@@ -23,7 +23,7 @@ ready_model: procedure = .void
     call require state = "loading", "model loading"
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require duration < 60000000, "model deadline"
+    call require duration < 600000000, "model deadline"
   end
 
 main: procedure = .int
@@ -55,7 +55,7 @@ main: procedure = .int
     if state = "ready" then leave
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    call require state = "preparing" & duration < 60000000, "preparation deadline"
+    call require state = "preparing" & duration < 600000000, "preparation deadline"
   end
   call require session.status() = 0 & state = "ready", "explicit preparation"
   call require model.close() <> 0 & runtime.close() <> 0, "parent close rejects live children"

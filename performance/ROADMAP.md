@@ -38,6 +38,20 @@ defined in [`AGENTS.md`](AGENTS.md).
 
 ## Activity Register
 
+`NI-S5-P01`: authorized 2026-09-15 with [STEP-05](../docs/planning/native-inference-step-05.md).
+Measure bounded generation glue overhead against matched direct-library CPU/Metal
+controls. If the material Metal excess seen in embeddings recurs, determine its
+root cause with causal controls; another unexplained acceptance is not selected.
+Keep model/backend tuning outside scope, retain the first Release verdict gate,
+and preserve the full generation/batching/ownership requirements.
+The [first Release verdict](evidence/2026-09-15-ni-s5-first-release/README.md) is
+approved by Adrian on 15 September: CPU mean paired -0.00%/+2.66%, Metal
+-16.82%/-2.52% for one/four rows, 104 correct processes and unchanged identities.
+No material positive Metal recurrence was observed; this does not explain or
+close the historical embedding observation. The mandatory first-verdict gate is accepted;
+[S5-05/06 ordinary closeout](../docs/qa/native-inference-step05/README.md) is
+complete. No timing panel was repeated or inference logic tuned.
+
 `NI-S4`: STEP-04 embedding implementation is authorized following approved
 STEP-03 closure. Adrian narrowed performance work to indicative figures and
 cREXX/llama integration overhead. Fixed model/backend controls may isolate glue

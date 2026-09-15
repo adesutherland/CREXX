@@ -27,6 +27,11 @@ typedef struct {
     const double *values; int64_t value_count, rows, dimensions;
     /* Borrow only for the immediate packed-copy operation in this native call. */
     rxllama_glue_probes *probes;
+    size_t text_length;
+    const char *finish;
+    int64_t row;
+    /* Internal oracle view of newly sampled token IDs, valid only this call. */
+    const int32_t *token_ids;
 } rxllama_result;
 enum rxllama_operation {
     RXLLAMA_CONFIG_CREATE, RXLLAMA_CONFIG_INT, RXLLAMA_CONFIG_FLOAT,
@@ -35,7 +40,8 @@ enum rxllama_operation {
     RXLLAMA_MODEL_CANCEL, RXLLAMA_SESSION_OPEN, RXLLAMA_PREPARE,
     RXLLAMA_INFO_TEXT, RXLLAMA_INFO_INT, RXLLAMA_DIAGNOSTIC, RXLLAMA_CLOSE,
     RXLLAMA_REQUEST_OPEN, RXLLAMA_ADD_EMBEDDING, RXLLAMA_SUBMIT,
-    RXLLAMA_PROCESS, RXLLAMA_EMBEDDINGS, RXLLAMA_CANCEL
+    RXLLAMA_PROCESS, RXLLAMA_EMBEDDINGS, RXLLAMA_CANCEL,
+    RXLLAMA_ADD_PROMPT, RXLLAMA_READ_TEXT
 };
 LLAMA_BRIDGE_API uint64_t rxllama_probe_clock_ns(void);
 LLAMA_BRIDGE_API void *rxllama_vm_create(void);

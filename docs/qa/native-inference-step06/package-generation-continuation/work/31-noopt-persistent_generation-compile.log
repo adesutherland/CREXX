@@ -1,0 +1,5 @@
+argv=[PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin/rxc'), '--no-exe-import', '-n', '-i', PosixPath('/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/qualification/package-generation-m6osa3qr/install/bin'), '-o', PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-persistent_generation-dynamic'), PosixPath('/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work/noopt-persistent_generation.crexx')]
+cwd=/private/tmp/crexx-ni-s6.zq0rk0ug/package-resume/work
+rc=0
+Warning in noopt-persistent_generation.crexx @ 92:7 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 59, column 5. Declare this binding explicitly if intentional., "duration"
+1 warning(s) in source file

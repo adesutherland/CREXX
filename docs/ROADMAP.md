@@ -270,13 +270,31 @@ model, and enters Release 1 only through a beta quality gate.
   construction shim, and updates human/agent guidance. All 2,347 ordinary Debug
   tests now have passing evidence from the broad run plus affected rechecks;
   the original failed baseline is retained historically. STEP-04 is closed
-  following acceptance of this report. Generation is next in STEP-05 and has
-  not started. Sanitizer execution and
+  following acceptance of this report. [STEP-05 generation](planning/native-inference-step-05.md)
+  is now locally complete: persistent/batched CPU/Metal generation, owned UTF-8
+  chunks, shared workers and installed/native examples pass. Adrian accepted its
+  first Release comparison; no material positive Metal slowdown recurred. The
+  [closeout evidence](qa/native-inference-step05/README.md) retains 24 additional
+  Debug consumers, 32 installed VM and 16 relocated native runs, plus all 2,347
+  ordinary Debug CTests passing in a fresh broad run. Sanitizer execution and
   Windows/Linux/CUDA/Vulkan qualification remain STEP-06; SAN-009 is still open.
   The [dependency pins and contract](planning/native-inference-step-01.md)
   and live parent plan retain the full scope and remaining qualification boundary.
-  STEP-07 documentation/examples may start or complete before STEP-06 hardware
-  qualification finishes; missing platform evidence remains open. The detailed
+  Adrian's 15 September sequencing direction puts **STEP-07 documentation,
+  model-download/installation guides, runnable examples and review before
+  STEP-06 full QA and acceptance**. Stable step IDs are retained. Focused recipe
+  checks establish documentation readiness; an AC-01–14 coverage map guides
+  subsequent full qualification and final evidence reconciliation. The
+  [installed guide set](../lib/plugins/llama/README.md) and
+  [STEP-07 coverage/review ledger](qa/native-inference-step07/README.md) now hold
+  the completed documentation work. Adrian approved S7-AC-06 on 15 September;
+  STEP-07 is closed and [STEP-06 qualification](qa/native-inference-step06/README.md)
+  is in progress. Local full build/preparation and 2,349/2,349 Apple-ASan tests
+  now pass, alongside focused CPU/Metal and installed/relocated inference checks.
+  Linux/Windows, real CUDA/Vulkan and supported Linux leak qualification remain
+  open. Unchanged
+  valid test evidence is reused; missing platform evidence and SAN-009 remain
+  open. The detailed
   API and package proposal is approved for the planned implementation. This plan does not change the five
   priorities or assign Release 1 scope. Product
   retrieval and graph policy remain in the companion crexx-rag backlog.

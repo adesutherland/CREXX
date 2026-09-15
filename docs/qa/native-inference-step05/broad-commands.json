@@ -1,0 +1,33 @@
+[
+  {
+    "label": "qa-prep-final",
+    "argv": [
+      "cmake",
+      "--build",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+      "--target",
+      "qa-prep",
+      "--parallel",
+      "6"
+    ],
+    "start": "2026-09-15T10:26:45.179347+00:00",
+    "end": "2026-09-15T10:26:45.782555+00:00",
+    "status": 0
+  },
+  {
+    "label": "full-debug",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+      "--parallel",
+      "30",
+      "--output-on-failure",
+      "-LE",
+      "performance-measurement"
+    ],
+    "start": "2026-09-15T10:26:45.782806+00:00",
+    "end": "2026-09-15T10:41:57.709216+00:00",
+    "status": 0
+  }
+]

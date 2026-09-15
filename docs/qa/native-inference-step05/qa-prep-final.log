@@ -1,0 +1,6 @@
+argv=['cmake', '--build', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug', '--target', 'qa-prep', '--parallel', '6']
+started=2026-09-15T10:26:45.179347+00:00
+[0/2] Re-checking globbed directories...
+[1/4] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/rxllama-package-Debug.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake
+[2/4] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_bridge_lifecycle.dir/__/__/__/tests/native-inference/bridge_lifecycle.cpp.o
+[3/4] Linking CXX executable lib/plugins/llama/tests/rxllama_bridge_lifecycle

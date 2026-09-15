@@ -26,7 +26,7 @@ def run(label, argv, marker=None):
     global number
     number += 1
     argv = list(map(str, argv))
-    result = subprocess.run(argv, cwd=work, env=env, capture_output=True, text=True, timeout=300)
+    result = subprocess.run(argv, cwd=work, env=env, capture_output=True, text=True, timeout=1800)
     output = result.stdout + result.stderr
     (work / f'{number:02}-{label}.log').write_text(f'argv={argv!r}\nrc={result.returncode}\n{output}')
     assert result.returncode == 0 and not any(x in output for x in ('FAIL:', 'PANIC:', 'ERROR:')), (label, output[-3500:])

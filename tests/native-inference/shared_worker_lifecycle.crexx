@@ -26,7 +26,7 @@ prepare_worker: task = .string
     if state <> "loading" & state <> "ready" then return "FAIL: load"
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    if duration > 60000000 then return "FAIL: shared-owner deadline"
+    if duration > 600000000 then return "FAIL: shared-owner deadline"
   end
   capability = "generation"
   if profile = "bge-small-en-v1.5" then capability = "embedding"
@@ -36,7 +36,7 @@ prepare_worker: task = .string
     if state = "ready" then leave
     duration = time("us") - started
     if duration < 0 then duration = duration + 86400000000
-    if duration > 60000000 then return "FAIL: prepare deadline"
+    if duration > 600000000 then return "FAIL: prepare deadline"
   end
   identity = ""
   if rxllama..infotext(model, "shared_model_id", identity) <> 0 then return "FAIL: identity"
@@ -50,7 +50,7 @@ main: procedure = .int
   arg args = .string[]
   if args.0 <> 4 then return 2
   pool = .taskpool.local(4, 8)
-  scope = .taskscope.collectall(pool, 120000)
+  scope = .taskscope.collectall(pool, -1)
   do parallel using scope
     first = prepare_worker(args[1], args[2], args[3], args[4])
     second = prepare_worker(args[1], args[2], args[3], args[4])

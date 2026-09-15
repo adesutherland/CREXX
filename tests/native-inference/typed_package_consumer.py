@@ -1,4 +1,6 @@
-"""Explicit typed STEP-04 installed/native checks; no performance or ASan.
+"""Explicit typed installed/native correctness checks; no performance verdict.
+
+In STEP-06, run instrumented builds through the maintained sanitizer runner.
 
 Arguments: INSTALL_PREFIX SOURCE_ROOT MODEL_DIRECTORY FRESH_WORK_DIRECTORY MODES.
 MODES is a comma-separated explicit selection, e.g. cpu,required-gpu on Metal.
@@ -24,13 +26,15 @@ for key in ("CREXX_HOME", "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH",
     clean.pop(key, None)
 number = 0
 records = []
+suffix = ".exe" if os.name == "nt" else ""
+assert (prefix / ("bin/rxbvm" + suffix)).is_file(), "installed portable VM is missing"
 
 
 def run(label, argv, marker=None, environment=None, cwd=None):
     global number
     number += 1
     result = subprocess.run(list(map(str, argv)), cwd=cwd or work, env=environment or env,
-                            capture_output=True, text=True, timeout=300)
+                            capture_output=True, text=True, timeout=1800)
     output = result.stdout + result.stderr
     (work / f"{number:02}-{label}.log").write_text(
         f"argv={argv!r}\ncwd={cwd or work}\nrc={result.returncode}\n{output}")
@@ -59,21 +63,21 @@ for opt in ("opt", "noopt"):
     test_source = work / (test + ".crexx")
     shutil.copy2(original_source, test_source)
     program = work / (test + "-dynamic")
-    run(test + "-compile", [prefix / "bin/rxc", "--no-exe-import", *(["-n"] if opt == "noopt" else []), "-i", prefix / "bin",
+    run(test + "-compile", [prefix / ("bin/rxc" + suffix), "--no-exe-import", *(["-n"] if opt == "noopt" else []), "-i", prefix / "bin",
                              "-o", program, test_source])
-    run(test + "-assemble", [prefix / "bin/rxas", "-o", program, program])
+    run(test + "-assemble", [prefix / ("bin/rxas" + suffix), "-o", program, program])
     linked = str(program) + "-linked"
-    run(test + "-link", [prefix / "bin/rxlink", "-o", linked, program,
+    run(test + "-link", [prefix / ("bin/rxlink" + suffix), "-o", linked, program,
                           prefix / "bin/library", prefix / "bin/classlib", prefix / "bin/rxfnsg"])
     for mode in test_modes:
         for vm in ("rxbvm", "rxtvm"):
-            if (prefix / "bin" / vm).exists():
+            if (prefix / "bin" / (vm + suffix)).exists():
                 run(f"{test}-installed-{vm}-{mode}",
-                    [prefix / "bin" / vm, linked, "-a", mode, model, digest], marker,
+                    [prefix / "bin" / (vm + suffix), linked, "-a", mode, model, digest], marker,
                     environment=clean)
     native = work / (test + " native Ω") / "persistent"
     native.parent.mkdir()
-    run(test + "-native-build", [prefix / "bin/crexx", "--program", native,
+    run(test + "-native-build", [prefix / ("bin/crexx" + suffix), "--program", native,
         test_source, "--jobs", "1", "--native", *(["--nooptimize"] if opt == "noopt" else [])], "PUBLISHED: native program")
     executable = native.with_suffix(".exe") if os.name == "nt" else native
     relocated = work / (test + " relocated Å")

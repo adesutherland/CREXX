@@ -1,0 +1,22 @@
+argv=['sh', '/tmp/crexx-ni-s7.oheu5td2/verify-models.sh']
+cwd=/tmp/crexx-ni-s7.oheu5td2
+rc=0
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100   141  100   141    0     0    873      0 --:--:-- --:--:-- --:--:--   875
+
+100   988  100   988    0     0   3652      0 --:--:-- --:--:-- --:--:--  3652
+
+  0 64.1M    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+ 10 64.1M   10 7184k    0     0  4685k      0  0:00:14  0:00:01  0:00:13 8522k
+ 24 64.1M   24 15.7M    0     0  6370k      0  0:00:10  0:00:02  0:00:08 8757k
+ 38 64.1M   38 24.5M    0     0  7115k      0  0:00:09  0:00:03  0:00:06 8843k
+ 51 64.1M   51 33.3M    0     0  7535k      0  0:00:08  0:00:04  0:00:04 8889k
+ 65 64.1M   65 42.1M    0     0  7809k      0  0:00:08  0:00:05  0:00:03 8922k
+ 79 64.1M   79 50.8M    0     0  7974k      0  0:00:08  0:00:06  0:00:02 8983k
+ 92 64.1M   92 59.3M    0     0  8062k      0  0:00:08  0:00:07  0:00:01 8919k
+100 64.1M  100 64.1M    0     0  8110k      0  0:00:08  0:00:08 --:--:-- 8879k
+Verified: /tmp/crexx-ni-s7.oheu5td2/downloaded-models/bge-small-en-v1.5-f16.gguf
+Verified: /tmp/crexx-ni-s7.oheu5td2/downloaded-models/smollm2-360m-instruct-q8_0.gguf

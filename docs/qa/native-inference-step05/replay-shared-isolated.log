@@ -1,0 +1,2 @@
+/tmp/ni-s5/shared-cpu-rxtvm-isolated.log exit 0 elapsed 63.09338729106821
+PASS: four typed generation workers, 20 ordered batches each, shared weights/private outputs cpu

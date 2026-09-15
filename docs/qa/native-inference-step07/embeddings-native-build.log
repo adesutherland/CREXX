@@ -1,0 +1,9 @@
+argv=['/tmp/crexx-ni-s7.oheu5td2/install/bin/crexx', '--program', '/tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings', '/tmp/crexx-ni-s7.oheu5td2/install/share/crexx/llama/examples/persistent_embeddings.crexx', '--jobs', '1', '--native']
+cwd=/tmp/crexx-ni-s7.oheu5td2/llama-example-work
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member persistent_embeddings
+BUILT: project member persistent_embeddings
+BARRIER: link program
+PUBLISHED: program /tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings.rxbin
+PUBLISHED: native program /tmp/crexx-ni-s7.oheu5td2/llama-example-work/embeddings

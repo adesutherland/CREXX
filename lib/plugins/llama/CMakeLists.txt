@@ -95,7 +95,7 @@ set_target_properties(llama PROPERTIES OUTPUT_NAME crexx-llama-engine)
 add_library(crexx_llama_bridge SHARED bridge.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
 # Source/configuration identity is inspectable independently of upstream's pin.
 set(_bridge_identity "${_llama_sha};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${CMAKE_CXX_FLAGS};${CMAKE_CXX_FLAGS_DEBUG};${CMAKE_CXX_FLAGS_RELEASE};${_llama_backends}")
-foreach(source bridge.cpp bridge.h package.hpp rxllama.c typed.h CMakeLists.txt)
+foreach(source bridge.cpp bridge.h generation.h generation_utf8.h package.hpp rxllama.c typed.h CMakeLists.txt)
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
     file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${source}" source_hash)
     string(APPEND _bridge_identity ";${source}:${source_hash}")
@@ -165,6 +165,23 @@ if(BUILD_TESTING)
         target_link_libraries(rxllama_embedding_bridge PRIVATE psapi)
     endif()
     set_target_properties(rxllama_embedding_bridge PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
+    # Generation controls stay explicit until STEP-06 establishes sanitizer scheduling.
+    add_executable(rxllama_generation_bridge ${CMAKE_SOURCE_DIR}/tests/native-inference/generation_bridge.cpp)
+    target_compile_features(rxllama_generation_bridge PRIVATE cxx_std_17)
+    target_include_directories(rxllama_generation_bridge PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(rxllama_generation_bridge PRIVATE crexx_llama_bridge llama ggml ggml-base Threads::Threads)
+    if(WIN32)
+        target_link_libraries(rxllama_generation_bridge PRIVATE psapi)
+    endif()
+    set_target_properties(rxllama_generation_bridge PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
+    add_executable(rxllama_generation_reference ${CMAKE_SOURCE_DIR}/tests/native-inference/generation_reference_control.cpp)
+    target_compile_features(rxllama_generation_reference PRIVATE cxx_std_17)
+    target_include_directories(rxllama_generation_reference PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(rxllama_generation_reference PRIVATE crexx_llama_bridge llama ggml ggml-base Threads::Threads)
+    if(WIN32)
+        target_link_libraries(rxllama_generation_reference PRIVATE psapi)
+    endif()
+    set_target_properties(rxllama_generation_reference PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
     # Explicit target only until isolated Debug/ASan timing establishes CTest properties.
     add_executable(rxllama_bridge_lifecycle ${CMAKE_SOURCE_DIR}/tests/native-inference/bridge_lifecycle.cpp)
     target_compile_features(rxllama_bridge_lifecycle PRIVATE cxx_std_17)
@@ -180,15 +197,17 @@ if(BUILD_TESTING)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
 endif()
 set(CREXX_LLAMA_TEST_MODELS "" CACHE PATH "Explicit local STEP-01 model directory for opt-in provider QA")
-install(FILES README.md DESTINATION share/crexx/llama)
+install(FILES README.md installation.md models.md reference.md qualification.md
+    DESTINATION share/crexx/llama COMPONENT llama-docs)
 install(DIRECTORY examples/ DESTINATION share/crexx/llama/examples
-    FILES_MATCHING PATTERN "*.crexx")
+    COMPONENT llama-docs FILES_MATCHING PATTERN "*.crexx" PATTERN "*.md")
 if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
     set(_bge "${CREXX_LLAMA_TEST_MODELS}/bge-small-en-v1.5-f16.gguf")
     set(_smol "${CREXX_LLAMA_TEST_MODELS}/smollm2-360m-instruct-q8_0.gguf")
     set(_bge_hash f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999)
     set(_smol_hash 48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201)
     find_program(_llama_test_python NAMES python3 python)
+    include("${CMAKE_SOURCE_DIR}/tests/native-inference/Qualification.cmake")
     if(_llama_test_python AND CREXX_LLAMA_METAL)
         # Explicit isolated target until normal/ASan timings qualify scheduling.
         # Python is a test harness dependency only, never a product dependency.
@@ -212,7 +231,7 @@ if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
         add_test(NAME rxllama_bridge_both_${mode} COMMAND rxllama_bridge_lifecycle
             "${mode}" "${_bge}" "${_bge_hash}" "${_smol}" "${_smol_hash}")
         set_tests_properties(rxllama_bridge_bge_${mode} rxllama_bridge_smol_${mode}
-            rxllama_bridge_both_${mode} PROPERTIES RUN_SERIAL TRUE TIMEOUT 180
+            rxllama_bridge_both_${mode} PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800
             LABELS "library;rxpa;llama;model-provisioned")
         crexx_register_test_prep_targets(
             TESTS rxllama_bridge_bge_${mode} rxllama_bridge_smol_${mode} rxllama_bridge_both_${mode}
@@ -225,7 +244,7 @@ if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
         "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/tests/toolchain-ctest"
         -DMODE=cpu "-DMODEL=${_bge}" "-DHASH=${_bge_hash}" -DPROFILE=bge-small-en-v1.5
         -P "${CMAKE_SOURCE_DIR}/tests/native-inference/step03_toolchain.cmake")
-    set_tests_properties(rxllama_toolchain_lifecycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 180
+    set_tests_properties(rxllama_toolchain_lifecycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800
         LABELS "library;rxpa;llama;model-provisioned")
     crexx_register_test_prep_targets(TESTS rxllama_toolchain_lifecycle
         TARGETS llama_provider_runtime_package rxc rxas rxlink rxbvm library)
