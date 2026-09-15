@@ -950,3 +950,10 @@ local coverage. Retain instrumented/uninstrumented boundaries and Linux leak
 coverage where required; do not imply upstream-engine sanitizer qualification.
 SAN-009 remains open for its actual first-party closure evidence. All other
 OUT-01–05 and AC-01–14 outcomes and non-sanitizer device requirements remain.
+
+
+Adrian subsequently added a Windows/MinGW core-only quality gate for both
+`rxtvm` and `rxbvm`. This fifth configuration retains test evidence without a
+binary download and is required before plugin qualification. It does not change
+the four shipped core archives or the single MSVC Windows base. The pipeline
+plan's MINGW-AC-01/02 preserve this addition alongside the parent criteria.

@@ -150,19 +150,25 @@ def main():
     parser.add_argument('--toolchain', required=True)
     parser.add_argument('--preferred-vm', choices=['rxbvm', 'rxtvm'], required=True)
     parser.add_argument('--commit', required=True)
+    parser.add_argument('--payload', type=Path, help='Finalize an already staged/signed core')
     args = parser.parse_args()
     source, build, output = args.source.resolve(), args.build.resolve(), args.output.resolve()
     cache = (build / 'CMakeCache.txt').read_text()
     assert 'ENABLE_LLAMA:BOOL=OFF' in cache, 'core must be configured without llama'
-    payload = output / 'stage' / ('CREXX-' + args.platform)
-    payload.mkdir(parents=True)
-    shutil.copytree(build / 'bin', payload / 'bin', symlinks=True)
-    shutil.copytree(source / 'examples', payload / 'examples', symlinks=True)
-    shutil.copytree(build / 'example-artifacts', payload / 'examples', dirs_exist_ok=True)
-    for name in ('LICENSE', 'README.md', 'SECURITY.md', 'INSTALL-RUN.md'):
-        shutil.copy2(source / name, payload / name)
-    for name in ('VERSION', 'BUILDINFO'):
-        shutil.copy2(build / 'generated' / name, payload / name)
+    if args.payload:
+        payload = args.payload.resolve()
+        if payload.name != 'CREXX-' + args.platform or not (payload / 'bin').is_dir():
+            raise ValueError('Unexpected staged core payload')
+    else:
+        payload = output / 'stage' / ('CREXX-' + args.platform)
+        payload.mkdir(parents=True)
+        shutil.copytree(build / 'bin', payload / 'bin', symlinks=True)
+        shutil.copytree(source / 'examples', payload / 'examples', symlinks=True)
+        shutil.copytree(build / 'example-artifacts', payload / 'examples', dirs_exist_ok=True)
+        for name in ('LICENSE', 'README.md', 'SECURITY.md', 'INSTALL-RUN.md'):
+            shutil.copy2(source / name, payload / name)
+        for name in ('VERSION', 'BUILDINFO'):
+            shutil.copy2(build / 'generated' / name, payload / name)
     if args.toolchain == 'msvc':
         redist = Path(os.environ['VCToolsRedistDir']) / 'x64'
         runtimes = list(redist.glob('Microsoft.VC*.CRT/*.dll'))
@@ -172,7 +178,7 @@ def main():
     manifest = dict(schema=1, component='core', commit=args.commit, platform=args.platform,
         toolchain=args.toolchain, preferred_vm=args.preferred_vm, llama_enabled=False,
         files={p.relative_to(payload).as_posix(): digest(p)
-               for p in sorted(payload.rglob('*')) if p.is_file()})
+               for p in sorted(payload.rglob('*')) if p.is_file() and p != payload / 'core-package.json'})
     (payload / 'core-package.json').write_text(json.dumps(manifest, indent=2) + '\n')
     asset = output / 'assets' / ('CREXX-user-test-' + args.commit + '-' + args.platform + '.zip')
     archive(payload, asset)

@@ -1,0 +1,12 @@
+{
+  "name": "CREXX-user-test-aade0fd0fe8ae97f5130383165bcf1b835145903-windows-x64.zip",
+  "bytes": 21836575,
+  "sha256": "ca62526dfed26f1c0d4b1c60ce86a998179e6f538111195a27b93490ba1cbcec",
+  "schema": 1,
+  "component": "core",
+  "commit": "aade0fd0fe8ae97f5130383165bcf1b835145903",
+  "platform": "windows-x64",
+  "toolchain": "msvc",
+  "preferred_vm": "rxbvm",
+  "llama_enabled": false
+}

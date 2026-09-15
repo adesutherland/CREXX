@@ -1,0 +1,7 @@
+argv=['D:\\a\\_temp\\core-package\\extracted\\CREXX-windows-x64\\bin\\crexx.exe', '--program', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-core-consumer-5n253a_a\\native\\hello', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-core-consumer-5n253a_a\\hello.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member hello
+BUILT: project member hello
+BARRIER: link program
+PUBLISHED: program C:\Users\RUNNER~1\AppData\Local\Temp\crexx-core-consumer-5n253a_a\native\hello.rxbin
+PUBLISHED: native program C:\Users\RUNNER~1\AppData\Local\Temp\crexx-core-consumer-5n253a_a\native\hello.exe

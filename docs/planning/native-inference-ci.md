@@ -274,7 +274,7 @@ agreed separate release packaging. Earlier pending-approval text is superseded.
 
 ### Numbered implementation sequence
 
-1. [ ] **CI-D01-01:** build and smoke the real llama-free core on all four target
+1. [x] **CI-D01-01:** build and smoke the real llama-free core on all four target
    configurations, with MSVC/`rxbvm` on Windows. Retain exact artifacts and
    semantic checks. No llama compilation or GPU SDK download occurs in this
    stage. All four delivery cores and the Windows/MinGW core-only gate must pass before llama work resumes (CI-AC-02/03/07).
@@ -318,13 +318,13 @@ destination; compaction leaves both stream pointers null on replacement failure,
 then close passes those null pointers to `fclose`. Retain the host failure and
 verify the mechanism with focused controls before claiming repair closure.
 
-1. [ ] **F12-AC-01:** ordinary compaction returns success on Windows/MSVC,
+1. [x] **F12-AC-01:** ordinary compaction returns success on Windows/MSVC,
    retains live key/value pairs and deletions, and survives close/reopen. The
    existing keyaccess opt/noopt tests must assert these outcomes explicitly.
 2. [x] **F12-AC-02:** cleanup after a failed compaction never closes a null
    stream or reports the compaction itself as successful. Preserve the I/O
    error and prove cleanup with a focused failure control.
-3. [ ] **F12-AC-03:** matching focused normal/maintained first-party sanitizer
+3. [x] **F12-AC-03:** matching focused normal/maintained first-party sanitizer
    controls pass, followed by the Windows-only core qualification retry. Reuse
    unaffected platform/core evidence; do not restart inference jobs.
 
@@ -334,7 +334,7 @@ verify the mechanism with focused controls before claiming repair closure.
 2. [x] **F12-02:** use the existing filesystem provider's Windows replace-file
    semantics and guard cleanup of closed streams. Preserve public signatures,
    error codes and ordinary database format (F12-AC-01/02).
-3. [ ] **F12-03:** run focused core controls and the Windows-only retry, then
+3. [x] **F12-03:** run focused core controls and the Windows-only retry, then
    reconcile the four-core gate before resuming plugins (F12-AC-03).
 
 
@@ -392,13 +392,13 @@ evidence only; no MinGW distributable or plugin is shipped. MSVC remains the
 single Windows release core for both Vulkan and CUDA. This strengthens
 CI-AC-02/03/07 and CI-D01-01 without changing the four-core/six-plugin asset count.
 
-1. [ ] **MINGW-AC-01:** Windows/MinGW `ENABLE_LLAMA=OFF` product and core smoke
+1. [x] **MINGW-AC-01:** Windows/MinGW `ENABLE_LLAMA=OFF` product and core smoke
    pass; extracted-core consumer checks explicitly execute both VM variants.
-2. [ ] **MINGW-AC-02:** retain exact source/toolchain and terminal logs; no
+2. [x] **MINGW-AC-02:** retain exact source/toolchain and terminal logs; no
    distributable binary artifact is uploaded. The gate remains a prerequisite
    for plugin qualification and final publication.
-3. [ ] **MINGW-01:** add and run the focused Windows/MinGW diagnostic core job.
-4. [ ] **MINGW-02:** include the same non-shipping gate in the final release
+3. [x] **MINGW-01:** add and run the focused Windows/MinGW diagnostic core job.
+4. [x] **MINGW-02:** include the same non-shipping gate in the final release
    dependency graph; retain focused evidence without duplicating backend QA.
 
 
@@ -418,9 +418,58 @@ the existing six split-package controls. Windows retries also retain any failed
 archive as explicitly unqualified diagnostic data, so later package diagnosis
 can reuse it; the requested MinGW gate retains no binary archive.
 
-- [ ] **F13-AC-01:** the Windows core ZIP completes restricted-environment VM
+- [x] **F13-AC-01:** the Windows core ZIP completes restricted-environment VM
   and relocated native smoke. The final gate still requires the new MinGW run.
 - [x] **F13-01:** repair the lookup and pass both casing controls without
   relaxing runtime PATH isolation.
-- [ ] **F13-02:** retry the Windows configurations and retain terminal evidence;
+- [x] **F13-02:** retry the Windows configurations and retain terminal evidence;
   also exercise the optimized KeyAccess control explicitly on those hosts.
+
+
+### Packaging preparation and current core status
+
+Windows/MSVC `35022668868` at `aade0fd0f` passes 148 core checks, all three focused
+KeyAccess checks, and the extracted core ZIP smoke including relocated native
+execution (2.718 s). This closes CI-F12; its matching Debug/Apple-ASan proof is
+retained and it was a functional failure, not a new sanitizer finding. CI-F13's
+MSVC execution proof passes; MinGW retry `35023122646` still owns its second
+Windows configuration. Earlier MinGW `35021842079` passes 152 core checks but
+fails on that same packaging dictionary lookup before ZIP consumer execution.
+The four shipped core configurations now have passing evidence. MINGW-AC-01/02
+and the fifth-configuration prerequisite remain open until the new run finishes.
+
+PKG-01–04 implementation is prepared in the working tree: the main workflow
+owns four core deliveries, calls the non-shipping MinGW gate, then builds six
+plugin variants against exact matching archives. Twenty-five focused packaging,
+signing and matrix controls pass, plus actionlint. The core finalizer's actual
+ZIP harness passes using the retained hosted ARM core (no new core build).
+The six selected plugin targets have zero core compiler/assembler/linker/VM
+compile commands in the local dependency graph. This is preparation evidence;
+PKG target qualification and the parent CI acceptance remain open. No engine
+was built or plugin test executed during the core-first gate.
+
+Windows Vulkan preparation pins LunarG SDK 1.4.357.0 and its published SHA256,
+using its documented copy-only installation. Metadata source:
+[SDK file index](https://vulkan.lunarg.com/sdk/files.json),
+[unattended installation](https://vulkan.lunarg.com/doc/view/1.4.357.0/windows/getting_started.html).
+The installer has not been downloaded or run in this preparation phase.
+
+
+### Initial five-configuration core gate closed
+
+MinGW retry `35023122646` at `aade0fd0f` passes 152 core checks, three focused
+KeyAccess controls and all twelve extracted-core consumer commands (2.488 s).
+The public `rxvm` copy is verified identical to `rxtvm`; both that entry point
+and `rxbvm` execute opt/noopt programs. Relocated native execution also passes.
+The run uploads exactly one 30,211-byte QA artifact and no binary archive.
+This completes CI-D01-01, MINGW-AC-01/02 and CI-F13. All five core configurations
+have green evidence; plugin qualification may now proceed. The final candidate
+still needs the main split-pipeline result and wider first-party gates.
+
+
+The prepared wider core matrix includes both Windows/MSVC (the shipped base)
+and Windows/MinGW (both VM variants), plus Linux and the two Macs. All these
+comprehensive, graph/stress and sanitizer core configurations explicitly disable
+llama. Plugin jobs keep their four focused adapter/path controls and combined
+fixture/package smoke. These wider gates are still pending; adding the matrix
+rows does not claim a comprehensive pass.

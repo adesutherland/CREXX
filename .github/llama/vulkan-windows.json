@@ -1,0 +1,7 @@
+{
+  "version": "1.4.357.0",
+  "url": "https://sdk.lunarg.com/sdk/download/1.4.357.0/windows/vulkansdk-windows-X64-1.4.357.0.exe",
+  "sha256": "81f474711e9042f4cd22b31b2f7a8870db2e428b21586fb43dd80150be97310d",
+  "bytes": 287971024,
+  "source": "https://vulkan.lunarg.com/sdk/files.json"
+}

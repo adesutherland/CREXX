@@ -20,11 +20,18 @@ commit used to produce the package.
 
 The next inference-enabled delivery is being qualified as a small core download
 plus a separate optional `llama.rexx` plugin download. The core works on its own.
-Choose a plugin for the exact same release/commit and platform, and extract it
-into the same platform directory. Windows uses one MSVC core with `rxvm`
+Choose a plugin for the exact same release/commit and platform. Extract both
+ZIPs into the same parent folder; they contain the same `CREXX-<platform>`
+directory and their contents combine. Windows uses one MSVC core with `rxvm`
 selecting `rxbvm`; either the Vulkan or CUDA plugin uses that same base.
 Linux offers Vulkan or CUDA; Mac uses Metal. Every plugin includes CPU fallback.
 These candidate packages are not yet a published release.
+
+If you installed the core with an installer, extract the plugin ZIP elsewhere
+and copy the contents of its `CREXX-<platform>` folder into the existing cREXX
+installation, preserving the `bin/` and `share/` subdirectories. MinGW source
+builds remain supported and are checked in a separate Windows core QA gate
+through both VM variants; no MinGW binary download is produced.
 
 The plugin supplies `bin/rxllama.rxplugin`, its engine and dependencies under
 `bin/providers`, plus `share/crexx/llama` guides and examples. Keep those files

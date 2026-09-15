@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 
@@ -88,6 +89,64 @@ class SplitPackageTests(unittest.TestCase):
             self.assertEqual(runtime['TEMP'], 'temporary')
             self.assertEqual([k for k in runtime if k.upper() == 'PATH'], ['PATH'])
             self.assertEqual(env[path_key], 'compiler-and-sdk-path')
+
+    def stage_provider(self):
+        renamed = self.root / 'CREXX-windows-x64'
+        self.base.rename(renamed)
+        self.base = renamed
+        archive = self.root / 'core.zip'
+        core.archive(self.base, archive)
+        build = self.root / 'build'
+        providers = build / 'bin/providers'
+        providers.mkdir(parents=True)
+        entries = []
+        for backend in ('cpu', 'vulkan'):
+            file = providers / (backend + '.dll')
+            file.write_bytes((backend + ' unsigned library').encode())
+            entries.append(dict(path=file.name, sha256=core.digest(file), backend=backend))
+        identity = dict(version=1, provider='rxllama', platform='Windows', arch='AMD64', engine='pin')
+        runtime = providers / 'rxllama.runtime.json'
+        runtime.write_text(json.dumps(dict(identity, backends=entries)))
+        (providers / 'rxllama.native.json').write_text(json.dumps(dict(identity,
+            link_libraries=entries[:1], runtime_files=entries + [dict(path=runtime.name, sha256=core.digest(runtime))])))
+        for name in ('rxllama.rxplugin', 'crexx-provider-package.exe'):
+            (build / 'bin' / name).write_bytes(b'plugin input')
+        inventory = build / 'lib/plugins/llama/tests/release-smoke-bootstrap-files.txt'
+        inventory.parent.mkdir(parents=True)
+        inventory.write_text('')
+        self.output = self.root / 'output'
+        self.arguments = ['package-llama-release.py', '--core-archive', str(archive),
+            '--build', str(build), '--output', str(self.output), '--commit', 'a' * 40,
+            '--platform', 'windows-x64', '--toolchain', 'msvc', '--backend', 'vulkan']
+        with patch('sys.argv', self.arguments + ['--stage-only']), patch.object(plugin.subprocess, 'run') as install:
+            plugin.main()
+            self.assertIn('llama-docs', install.call_args.args[0])
+        self.providers = self.output / 'plugin-stage/CREXX-windows-x64/bin/providers'
+
+    def test_signed_plugin_finalization_verifies_both_actual_archives(self):
+        self.stage_provider()
+        file = self.providers / 'vulkan.dll'
+        file.write_bytes(file.read_bytes() + b' verified signature')
+        module('refresh-provider-manifests').refresh(self.providers)
+        with patch('sys.argv', self.arguments + ['--finalize-only']):
+            plugin.main()
+        combined = self.output / 'combined/CREXX-windows-x64'
+        self.assertEqual((combined / 'bin/rxbvm').read_bytes(), b'qualified executable')
+        self.assertEqual((combined / 'bin/providers/vulkan.dll').read_bytes(), file.read_bytes())
+        with zipfile.ZipFile(next((self.output / 'assets').glob('*.zip'))) as archive:
+            self.assertNotIn('CREXX-windows-x64/bin/rxbvm', archive.namelist())
+
+    def test_finalization_rejects_changed_provider_without_refreshed_hashes(self):
+        self.stage_provider()
+        (self.providers / 'vulkan.dll').write_bytes(b'changed after staging')
+        with patch('sys.argv', self.arguments + ['--finalize-only']), self.assertRaisesRegex(ValueError, 'Provider hash mismatch'):
+            plugin.main()
+
+    def test_finalization_rejects_accidental_core_overlap_after_staging(self):
+        self.stage_provider()
+        (self.providers.parent / 'rxbvm').write_bytes(b'core overwrite')
+        with patch('sys.argv', self.arguments + ['--finalize-only']), self.assertRaisesRegex(ValueError, 'overlaps a core file'):
+            plugin.main()
 
 
 if __name__ == '__main__':

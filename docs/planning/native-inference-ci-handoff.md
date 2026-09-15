@@ -8,6 +8,42 @@ was dispatched after the pause request; existing remote jobs were left running.
 
 ## Live continuation — 15 September, after restart
 
+**Latest completed gate:** all five core configurations are green. MinGW
+`35023122646` at `aade0fd0f` passes 152 core tests, three KeyAccess controls and
+twelve extracted-ZIP commands covering `rxvm` (verified `rxtvm` copy), `rxbvm`,
+both optimization modes and relocated native execution. Only the 30,211-byte QA
+artifact was uploaded; no MinGW binaries. CI-D01-01, MINGW-AC-01/02, CI-F12 and
+CI-F13 are closed. Plugin qualification is now authorized to proceed using the
+prepared split pipeline. The paragraphs below retain the intervening history.
+
+**Current checkpoint:** Windows/MSVC run `35022668868` is green at
+`aade0fd0fe8ae97f5130383165bcf1b835145903`: 148 core tests, three focused KeyAccess
+controls (including opt/noopt), and the actual extracted ZIP/native smoke.
+Archive SHA256 is `ca62526dfed26f1c0d4b1c60ce86a998179e6f538111195a27b93490ba1cbcec`
+(21,836,575 bytes). Linux and both Mac core gates remain green at `9caac6dcb`.
+MinGW run `35021842079` passed 152 core tests but hit the same CI-F13 packaging
+lookup already fixed; `35023122646` retries MinGW on `aade0fd0f` and is still
+building. No plugin job has started. Await MinGW's extracted/both-VM proof before
+dispatching inference builds. The main split-pipeline preparation is ready for its candidate commit and
+integrated run; do not mistake static checks for hosted plugin qualification.
+
+The prepared main Build workflow now has four core jobs, a reusable non-shipping
+MinGW gate, and six dependent plugin jobs consuming exact matching core ZIPs.
+Core jobs run core QA; plugin jobs build six provider/helper targets and run
+four focused lifecycle/path controls plus the combined-archive fixture smoke.
+No core compile commands appear in those plugin targets' local Ninja graph.
+Twenty-five artifact/signing/matrix controls and actionlint pass. The new
+`--payload` core finalizer passes its real archived-ARM-core harness; no fresh
+core build is claimed by that local test. Plugin staging/finalization preserves
+core bytes and signed-provider hashes; synthetic ZIP controls pass, but actual
+plugin builds remain gated. Publication collectors now require four core plus
+six plugin ZIPs; copies retain the exact tested ZIP bytes. Core installers and
+existing signing/notarization safeguards remain. MSVC Vulkan has a pinned,
+hash-checked LunarG SDK preparation script; only metadata/HEAD were fetched,
+not the SDK, and it has not run on Windows yet. The wider core matrix now covers both MSVC and MinGW with llama disabled.
+Commit the prepared pipeline and dispatch its integrated candidate run; do not
+publish or move develop while its required gates remain open.
+
 **Latest addition:** Adrian also requires a non-shipping Windows/MinGW core
 quality gate, including both VM variants. Retain logs, not distributable binaries.
 It is a fifth configuration alongside the four release cores and must pass before

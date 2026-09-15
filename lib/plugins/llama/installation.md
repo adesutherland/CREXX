@@ -21,8 +21,8 @@ qualification remains open. See [status](qualification.md).
 
 The candidate release pipeline supplies a llama-free cREXX core and a separate
 optional prebuilt `llama.rexx` package. Download the core and one plugin for the
-exact same release/commit and platform, then extract both into the same platform
-directory. Qualification is in progress; older releases do not acquire this
+exact same release/commit and platform, then extract both ZIPs into the same
+parent folder so their shared `CREXX-<platform>` directory combines. Qualification is in progress; older releases do not acquire this
 feature retrospectively. In the combined installation containing `bin/rxllama.rxplugin` and
 `bin/providers/rxllama.native.json`, no C/C++ build, llama.cpp installation or
 inference server is needed to run ordinary cREXX programs. Keep the package's
@@ -37,12 +37,13 @@ moving or unpacking an installation.
 | Plugin platform/backend | Included inference backends |
 | --- | --- |
 | `linux-x64-vulkan`, `windows-x64-vulkan` | CPU and Vulkan |
-| `macos-arm64`, `macos-x86_64` | CPU and Metal |
+| `macos-arm64-metal`, `macos-x86_64-metal` | CPU and Metal |
 | `linux-x64-cuda`, `windows-x64-cuda` | CPU and NVIDIA CUDA |
 
 CUDA and Vulkan plugins use the same core for their platform. Windows uses
 MSVC for the core and both plugin variants, with `rxvm` selecting `rxbvm`.
-MinGW remains supported for source builds and regression coverage. Install one
+MinGW remains supported for source builds and has a separate core QA gate for
+both VM variants; it does not produce a binary download. Install one
 backend variant at a time and preserve the release/commit match. GPU users need a compatible
 installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
 included. Runtime detection selects from the backends in the chosen package.

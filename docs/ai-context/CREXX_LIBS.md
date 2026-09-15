@@ -1028,7 +1028,9 @@ Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
 approved release design first builds four llama-free core archives, then builds
 only the optional provider/dependency/helper targets and tests them against
 those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
-Core jobs own core QA; backend jobs own llama-specific QA. Core sanitizer jobs
+A fifth Windows/MinGW core-only gate checks both VM variants, retains QA
+evidence without binaries, and must pass before plugin jobs. Core jobs own
+core QA; backend jobs own llama-specific QA. Core sanitizer jobs
 use `ENABLE_LLAMA=OFF` and never compile CUDA. Adapter sanitizer checks concern
 first-party code and may link an uninstrumented upstream engine. The separate
 core/plugin delivery is still under qualification; do not claim it released.

@@ -79,6 +79,25 @@ class MatrixTests(unittest.TestCase):
             if row['platform'] == 'windows' and row['cuda']:
                 self.assertEqual(row['toolchain'], 'msvc')
 
+    def test_core_matrix_is_shared_and_has_no_gpu_build_flags(self):
+        providers = matrix.select('all', 'push', 'refs/heads/develop')
+        cores = matrix.cores_for(providers)['include']
+        self.assertEqual(len(cores), 4)
+        self.assertEqual(len({c['core_platform'] for c in cores}), 4)
+        self.assertEqual(len([c for c in cores if c['platform'] == 'windows']), 1)
+        for core in cores:
+            self.assertFalse(core['cuda'])
+            self.assertNotIn('CREXX_LLAMA_', core['cmake_args'])
+            self.assertNotEqual(core['toolchain'], 'mingw')
+        for row in providers['include']:
+            if row['platform'] == 'windows':
+                self.assertEqual(row['toolchain'], 'msvc')
+                self.assertEqual(row['core_platform'], 'windows-x64')
+        selected = matrix.cores_for(matrix.select('windows-cuda', 'workflow_dispatch',
+                                                'refs/heads/temp/llama-release-qa'))['include']
+        self.assertEqual(len(selected), 1)
+        self.assertEqual(selected[0]['artifact_name'], 'CREXX-windows-x64')
+
 
 if __name__ == '__main__':
     unittest.main()

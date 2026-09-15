@@ -1,11 +1,38 @@
+test_missing_file_is_not_removed_or_blessed (test_llama_release_pipeline.ManifestSigningTests.test_missing_file_is_not_removed_or_blessed) ... ok
+test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency (test_llama_release_pipeline.ManifestSigningTests.test_signing_invalidates_hashes_and_refresh_covers_manifest_dependency) ... ok
+test_unknown_file_is_not_added (test_llama_release_pipeline.ManifestSigningTests.test_unknown_file_is_not_added) ... ok
+test_core_matrix_is_shared_and_has_no_gpu_build_flags (test_llama_release_pipeline.MatrixTests.test_core_matrix_is_shared_and_has_no_gpu_build_flags) ... ok
+test_delivery_names_unique_and_required_backends_present (test_llama_release_pipeline.MatrixTests.test_delivery_names_unique_and_required_backends_present) ... ok
+test_diagnostic_selection_only_on_candidate_manual_runs (test_llama_release_pipeline.MatrixTests.test_diagnostic_selection_only_on_candidate_manual_runs) ... ok
 test_changed_qualified_binary_is_rejected (test_split_release.SplitPackageTests.test_changed_qualified_binary_is_rejected) ... ok
+test_finalization_rejects_accidental_core_overlap_after_staging (test_split_release.SplitPackageTests.test_finalization_rejects_accidental_core_overlap_after_staging) ... ok
+test_finalization_rejects_changed_provider_without_refreshed_hashes (test_split_release.SplitPackageTests.test_finalization_rejects_changed_provider_without_refreshed_hashes) ... ok
 test_matching_core_passes_but_other_commit_or_toolchain_does_not (test_split_release.SplitPackageTests.test_matching_core_passes_but_other_commit_or_toolchain_does_not) ... ok
 test_nonlocal_archive_entries_are_rejected (test_split_release.SplitPackageTests.test_nonlocal_archive_entries_are_rejected) ... ok
 test_plugin_cannot_replace_core_with_different_bytes (test_split_release.SplitPackageTests.test_plugin_cannot_replace_core_with_different_bytes) ... ok
 test_shared_identical_runtime_is_not_duplicated (test_split_release.SplitPackageTests.test_shared_identical_runtime_is_not_duplicated) ... ok
+test_signed_plugin_finalization_verifies_both_actual_archives (test_split_release.SplitPackageTests.test_signed_plugin_finalization_verifies_both_actual_archives) ... ok
+test_windows_restricted_path_handles_environment_key_casing (test_split_release.SplitPackageTests.test_windows_restricted_path_handles_environment_key_casing) ... ok
 test_zip_preserves_public_vm_link_and_execute_permission (test_split_release.SplitPackageTests.test_zip_preserves_public_vm_link_and_execute_permission) ... ok
+test_capture_and_payload_commit (test_windows_release_assets.PublicationTests.test_capture_and_payload_commit) ... ok
+test_cleanup_does_not_delete_newer_asset_with_same_name (test_windows_release_assets.PublicationTests.test_cleanup_does_not_delete_newer_asset_with_same_name) ... ok
+test_corrupt_upload_is_removed (test_windows_release_assets.PublicationTests.test_corrupt_upload_is_removed) ... ok
+test_lost_upload_response_cleans_unique_name (test_windows_release_assets.PublicationTests.test_lost_upload_response_cleans_unique_name) ... ok
+test_publish_both_preserves_unsigned_assets (test_windows_release_assets.PublicationTests.test_publish_both_preserves_unsigned_assets) ... ok
+test_replaced_source_same_name_is_rejected (test_windows_release_assets.PublicationTests.test_replaced_source_same_name_is_rejected) ... ok
+test_source_cannot_be_overwritten (test_windows_release_assets.PublicationTests.test_source_cannot_be_overwritten) ... ok
+test_tag_moves_during_upload_removes_only_own_uploads (test_windows_release_assets.PublicationTests.test_tag_moves_during_upload_removes_only_own_uploads) ... ok
+test_signs_pe_plugins_and_fails_on_signature_error (test_windows_release_assets.SigningTests.test_signs_pe_plugins_and_fails_on_signature_error) ... ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 0.006s
+Ran 25 tests in 0.049s
 
 OK
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpennqkux6/rxllama.native.json
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpsj1fovdo/rxllama.native.json
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpt7kjer6_/output/plugin-stage/CREXX-windows-x64
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp9nxqhd0h/output/plugin-stage/CREXX-windows-x64
+PLUGIN_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpr_2k1ykw/output/plugin-stage/CREXX-windows-x64
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpr_2k1ykw/output/plugin-stage/CREXX-windows-x64/bin/providers/rxllama.native.json
+PACKAGED: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpr_2k1ykw/output/assets/llama.rexx-user-test-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-windows-x64-vulkan.zip
+CONSUMER_PAYLOAD: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpr_2k1ykw/output/combined/CREXX-windows-x64

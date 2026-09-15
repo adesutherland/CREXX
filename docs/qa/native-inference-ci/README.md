@@ -635,3 +635,38 @@ repair and focused isolation control preserve the restricted runtime PATH.
 Seven packaging controls pass. Raw build/test/failure evidence is retained under
 `remote/7425ff241/`. Core correctness is green; extracted Windows ZIP proof is
 still pending, as is the newly requested MinGW/both-VM gate (`35021842079`).
+
+
+### Completed MSVC core and prepared split pipeline
+
+Run `35022668868` at `aade0fd0f` passes 148 core checks and the additional three
+focused KeyAccess controls. Its extracted ZIP passes ten consumer commands,
+including optimized/nonoptimized compilation/assembly/linking/public VM and
+relocated native execution (2.718 s). Archive: 21,836,575 bytes, SHA256
+`ca62526dfed26f1c0d4b1c60ce86a998179e6f538111195a27b93490ba1cbcec`.
+Raw evidence is under `remote/aade0fd0f/`. Earlier MinGW `35021842079` passes
+152 core checks in 56.47 s, then fails the known CI-F13 lookup; its evidence is
+under `remote/25f14aabf/`, and retry `35023122646` is pending.
+
+`local/core-finalization-harness/` checks the staged/signed-payload finalization
+path with the retained real hosted ARM core archive, then executes its extracted
+ZIP and relocated native consumer. It is harness proof, not a fresh current-head
+core build. `local/split-package-controls.log` has 25 passing controls, including
+signed plugin finalization, stale-hash rejection and core-overwrite rejection.
+The updated `local/plugin-only-build-graph.json` covers all six selected plugin
+build/helper targets and finds no core toolchain compilation. The prepared main
+workflow reuses exact core artifacts, keeps MinGW non-shipping, preserves core
+installers and signing guards, and publishes copies of the same tested ZIP bytes.
+Actual split-plugin execution and the Windows Vulkan SDK setup remain untested.
+
+
+### MinGW gate completed
+
+`35023122646` at `aade0fd0f` passes 152 core tests (73.25 s), three focused
+KeyAccess tests (0.22 s) and all twelve actual-ZIP consumer checks (2.488 s).
+`rxvm` is byte-identical to `rxtvm`, and both that entry point and `rxbvm` run
+opt/noopt programs. The relocated native program passes too. The GitHub artifact
+inventory contains only `core-qa-windows-mingw-aade0fd0fe8ae97f5130383165bcf1b835145903`
+(30,211 bytes), with no distributable ZIP. Logs and summaries are retained under
+`remote/aade0fd0f/core-mingw*`. This closes the initial five-configuration core
+prerequisite; it does not yet qualify the new split-plugin jobs or wider gates.

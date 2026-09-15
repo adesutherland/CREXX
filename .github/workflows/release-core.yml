@@ -11,6 +11,10 @@ on:
         options: [all, linux-x64, windows-x64, macos-arm64, macos-x86_64, windows-mingw]
   workflow_call:
     inputs:
+      platform:
+        type: string
+        default: all
+        required: false
       commit:
         type: string
         required: true

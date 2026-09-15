@@ -1,0 +1,21 @@
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	﻿2026-09-15T20:58:52.1125877Z ##[group]Run python scripts/package-core-release.py --source . \
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1126387Z ^[[36;1mpython scripts/package-core-release.py --source . \^[[0m
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1126757Z ^[[36;1m  --build "D:\a\_temp/core-build" --output "D:\a\_temp/core-package" \^[[0m
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1127095Z ^[[36;1m  --platform "windows-mingw" --toolchain "mingw" \^[[0m
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1127674Z ^[[36;1m  --preferred-vm "rxtvm" --commit "25f14aabfa5837b2cce9e2c97527cc6b9ecb445a"^[[0m
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1129794Z shell: D:\a\_temp\setup-msys2\msys2.CMD {0}
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1130029Z env:
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1130180Z   MSYSTEM: MINGW64
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:52.1130346Z ##[endgroup]
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5103199Z Traceback (most recent call last):
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5106751Z   File "D:/a/CREXX/CREXX/scripts/package-core-release.py", line 184, in <module>
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5107204Z     main()
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5107363Z     ~~~~^^
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5107612Z   File "D:/a/CREXX/CREXX/scripts/package-core-release.py", line 177, in main
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5108597Z     smoke(installed, source, args.preferred_vm, logs)
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5108920Z     ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5109327Z   File "D:/a/CREXX/CREXX/scripts/package-core-release.py", line 66, in smoke
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5109737Z     system = Path(env['SystemRoot'])
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5110008Z                   ~~~^^^^^^^^^^^^^^
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5110251Z KeyError: 'SystemRoot'
+Core windows-mingw (mingw)	Package and test the actual core ZIP (MinGW)	2026-09-15T20:58:55.5266163Z ##[error]Process completed with exit code 1.

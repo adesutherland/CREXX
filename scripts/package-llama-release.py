@@ -44,24 +44,8 @@ def add_file(source, relative, plugin, base):
         shutil.copy2(source, target)
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument('--core-archive', type=Path, required=True)
-    p.add_argument('--build', type=Path, required=True)
-    p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--commit', required=True)
-    p.add_argument('--platform', required=True)
-    p.add_argument('--toolchain', required=True)
-    p.add_argument('--backend', choices=['vulkan', 'cuda', 'metal'], required=True)
-    args = p.parse_args()
-    output, build = args.output.resolve(), args.build.resolve()
-    base_name = 'CREXX-' + args.platform
-    core.extract(args.core_archive, output / 'base')
-    base = output / 'base' / base_name
-    manifest = verify_core(base, args.commit, args.platform, args.toolchain)
-    plugin = output / 'plugin-stage' / base_name
-    plugin.mkdir(parents=True)
-    providers = build / 'bin/providers'
+
+def verify_provider(providers, backend):
     native = json.loads((providers / 'rxllama.native.json').read_text())
     runtime = json.loads((providers / 'rxllama.runtime.json').read_text())
     for entry in native['link_libraries'] + native['runtime_files']:
@@ -71,30 +55,62 @@ def main():
         if core.digest(providers / relative) != entry['sha256']:
             raise ValueError('Provider hash mismatch: ' + str(relative))
     backends = [entry['backend'] for entry in runtime['backends']]
-    for required in ['cpu', args.backend]:
+    for required in ['cpu', backend]:
         if not any(name == required or name.startswith(required + '-') for name in backends):
             raise ValueError('Missing packaged backend: ' + required)
-    for file in sorted(providers.rglob('*')):
-        if file.is_file() or file.is_symlink():
-            add_file(file, Path('bin/providers') / file.relative_to(providers), plugin, base)
-    extension = '.exe' if args.platform.startswith('windows-') else ''
-    for name in ['rxllama.rxplugin', 'crexx-provider-package' + extension]:
-        add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
-    if extension:
-        inventory = build / 'lib/plugins/llama/tests/release-smoke-bootstrap-files.txt'
-        for name in inventory.read_text().splitlines():
-            if Path(name).name != name:
-                raise ValueError('Nonlocal bootstrap file: ' + name)
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('--core-archive', type=Path, required=True)
+    p.add_argument('--build', type=Path, required=True)
+    p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--commit', required=True)
+    p.add_argument('--platform', required=True)
+    p.add_argument('--toolchain', required=True)
+    p.add_argument('--backend', choices=['vulkan', 'cuda', 'metal'], required=True)
+    phases = p.add_mutually_exclusive_group()
+    phases.add_argument('--stage-only', action='store_true')
+    phases.add_argument('--finalize-only', action='store_true')
+    args = p.parse_args()
+    output, build = args.output.resolve(), args.build.resolve()
+    base_name = 'CREXX-' + args.platform
+    if not args.finalize_only:
+        core.extract(args.core_archive, output / 'base')
+    base = output / 'base' / base_name
+    manifest = verify_core(base, args.commit, args.platform, args.toolchain)
+    plugin = output / 'plugin-stage' / base_name
+    if not args.finalize_only:
+        plugin.mkdir(parents=True)
+        providers = build / 'bin/providers'
+        verify_provider(providers, args.backend)
+        for file in sorted(providers.rglob('*')):
+            if file.is_file() or file.is_symlink():
+                add_file(file, Path('bin/providers') / file.relative_to(providers), plugin, base)
+        extension = '.exe' if args.platform.startswith('windows-') else ''
+        for name in ['rxllama.rxplugin', 'crexx-provider-package' + extension]:
             add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
-    subprocess.run(['cmake', '--install', str(build), '--prefix', str(plugin),
-                    '--component', 'llama-docs'], check=True, stdout=subprocess.DEVNULL)
+        if extension:
+            inventory = build / 'lib/plugins/llama/tests/release-smoke-bootstrap-files.txt'
+            for name in inventory.read_text().splitlines():
+                if Path(name).name != name:
+                    raise ValueError('Nonlocal bootstrap file: ' + name)
+                add_file(build / 'bin' / name, Path('bin') / name, plugin, base)
+        subprocess.run(['cmake', '--install', str(build), '--prefix', str(plugin),
+                        '--component', 'llama-docs'], check=True, stdout=subprocess.DEVNULL)
+    if args.stage_only:
+        print('PLUGIN_PAYLOAD: ' + str(plugin))
+        return
+    verify_provider(plugin / 'bin/providers', args.backend)
+    for file in plugin.rglob('*'):
+        if file.is_file() and (base / file.relative_to(plugin)).exists():
+            raise ValueError('Plugin stage overlaps a core file: ' + str(file.relative_to(plugin)))
     if list(plugin.rglob('*.gguf')):
         raise ValueError('Model leaked into plugin archive')
     identity = dict(schema=1, component='llama.rexx', commit=args.commit,
         platform=args.platform, toolchain=args.toolchain, backend=args.backend,
         core_archive=args.core_archive.name, core_archive_sha256=core.digest(args.core_archive),
         core_binaries_rebuilt=False, files={file.relative_to(plugin).as_posix(): core.digest(file)
-            for file in sorted(plugin.rglob('*')) if file.is_file()})
+            for file in sorted(plugin.rglob('*')) if file.is_file() and file.name != 'llama-package.json'})
     (plugin / 'llama-package.json').write_text(json.dumps(identity, indent=2) + '\n')
     archive = output / 'assets' / ('llama.rexx-user-test-' + args.commit + '-' +
                                  args.platform + '-' + args.backend + '.zip')

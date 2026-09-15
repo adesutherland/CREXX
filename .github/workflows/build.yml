@@ -40,6 +40,7 @@ jobs:
       display_version: ${{ steps.metadata.outputs.display_version }}
       release_name: ${{ steps.metadata.outputs.release_name }}
       matrix: ${{ steps.matrix.outputs.matrix }}
+      core_matrix: ${{ steps.matrix.outputs.core_matrix }}
 
     steps:
       - name: Checkout version file
@@ -121,13 +122,10 @@ jobs:
     if: github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
     runs-on: ${{ matrix.os }}
     timeout-minutes: 240
-    env:
-      SCCACHE_GHA_ENABLED: "true"
-      SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
 
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.version.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.version.outputs.core_matrix) }}
 
     steps:
       - name: Checkout
@@ -136,73 +134,19 @@ jobs:
           submodules: recursive
           ref: ${{ needs.version.outputs.commit }}
 
-      - name: Update toolchain (MSYS2)
-        if: matrix.toolchain == 'mingw'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            base-devel
-            git
-          pacboy: >-
-            toolchain:p
-            cmake:p
-            ninja:p
-            openssl:p
-            pkgconf:p
-            python:p
-            shaderc:p
-            vulkan-headers:p
-            vulkan-loader:p
-            spirv-headers:p
-
       - name: Python for package validation
         if: matrix.toolchain != 'mingw'
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Vulkan build prerequisites
-        if: matrix.platform == 'linux' && !matrix.cuda
-        shell: bash
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y libvulkan-dev glslc spirv-headers
-
-      - name: Select MSVC with CUDA and C11 atomics support
+      - name: Select MSVC C11 toolchain
         if: matrix.toolchain == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
           toolset: '14.44'
 
-      - name: Cache pinned CUDA build SDK
-        id: cuda-cache
-        if: matrix.cuda
-        uses: actions/cache/restore@v5
-        with:
-          path: ${{ runner.temp }}/crexx-cuda
-          key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
-
-      - name: Assemble pinned CUDA build SDK
-        if: matrix.cuda
-        shell: bash
-        run: python scripts/ci-cuda-toolkit.py --root "${{ runner.temp }}/crexx-cuda" --platform "${{ matrix.platform }}-x86_64"
-
-      - name: Retain verified CUDA SDK before compilation
-        if: matrix.cuda && steps.cuda-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: ${{ runner.temp }}/crexx-cuda
-          key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
-
-      - name: Cache CUDA compiler outputs
-        id: compiler-cache
-        if: matrix.cuda
-        uses: Mozilla-Actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
-        with:
-          version: "v0.16.0"
-
       - name: Configure
         if: matrix.platform != 'windows'
         shell: bash
@@ -214,21 +158,7 @@ jobs:
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \
-            ${{ matrix.cmake_args }}
-
-      - name: Configure
-        if: matrix.toolchain == 'mingw'
-        shell: msys2 {0}
-        run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
-            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
-            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
-            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
-            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
             ${{ matrix.cmake_args }}
 
       - name: Build Release user product
@@ -236,28 +166,12 @@ jobs:
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/build" \
-            --target stage-product stage-optional llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke \
-            --parallel ${{ matrix.build_jobs }}
-
-      - name: Build Release user product
-        if: matrix.toolchain == 'mingw'
-        shell: msys2 {0}
-        run: |
-          cmake --build "${{ runner.temp }}/build" \
-            --target stage-product stage-optional llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke \
+            --target stage-product stage-optional \
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run fast candidate QA
         if: matrix.platform != 'windows'
         shell: bash
-        run: |
-          cmake --build "${{ runner.temp }}/build" \
-            --target qa-smoke \
-            --parallel ${{ matrix.build_jobs }}
-
-      - name: Run fast candidate QA
-        if: matrix.toolchain == 'mingw'
-        shell: msys2 {0}
         run: |
           cmake --build "${{ runner.temp }}/build" \
             --target qa-smoke \
@@ -267,9 +181,9 @@ jobs:
         if: matrix.toolchain == 'msvc'
         shell: cmd
         run: |
-          cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON ${{ matrix.cmake_args }}
+          cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
-          cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke --parallel ${{ matrix.build_jobs }}
+          cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target qa-smoke --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
@@ -289,7 +203,6 @@ jobs:
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "$stage/"
           cp "${{ runner.temp }}/build/generated/VERSION" "$stage/VERSION"
           cp "${{ runner.temp }}/build/generated/BUILDINFO" "$stage/BUILDINFO"
-          cmake --install "${{ runner.temp }}/build" --prefix "$stage" --component llama-docs
 
       - name: Stage release payload
         if: matrix.platform == 'windows'
@@ -305,8 +218,6 @@ jobs:
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md" -Destination $stage
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/VERSION") -Destination (Join-Path $stage "VERSION") -Force
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
-          cmake --install "${{ runner.temp }}/build" --prefix "$stage" --component llama-docs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Configure Apple signing keychain
         id: macos_signing
@@ -525,99 +436,43 @@ jobs:
             fi
           done < <(find "$stage" -type f -print0)
 
-      - name: Refresh verified macOS provider hashes
-        if: matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
-        shell: bash
-        run: python scripts/refresh-provider-manifests.py "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}/bin/providers"
-
-      - name: Preserve CUDA redistributable notices
-        if: matrix.cuda
+      - name: Package and smoke the actual core ZIP
         shell: bash
         run: |
-          mkdir -p "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}/share/crexx/llama/cuda-licenses"
-          cp -R "${{ runner.temp }}/crexx-cuda/licenses/." "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}/share/crexx/llama/cuda-licenses/"
+          python scripts/package-core-release.py --source . --build "${{ runner.temp }}/build" \
+            --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
+            --output "${{ runner.temp }}/core-package" --platform "${{ matrix.core_platform }}" \
+            --toolchain "${{ matrix.toolchain }}" --preferred-vm "${{ matrix.preferred_vm }}" \
+            --commit "${{ needs.version.outputs.commit }}"
 
-      - name: Smoke the final staged runtime (Unix)
-        if: matrix.platform != 'windows'
-        shell: bash
-        run: python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
-
-      - name: Smoke the final staged runtime (MinGW)
-        if: matrix.toolchain == 'mingw'
-        shell: msys2 {0}
-        run: python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke.exe" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
-
-      - name: Smoke the final staged runtime (MSVC)
-        if: matrix.toolchain == 'msvc'
-        shell: pwsh
-        run: |
-          python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$env:GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke.exe" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Record CUDA compiler cache statistics
-        if: always() && matrix.cuda && steps.compiler-cache.outcome == 'success'
-        shell: bash
-        run: |
-          mkdir -p "${{ runner.temp }}/compiler-cache"
-          sccache --show-stats > "${{ runner.temp }}/compiler-cache/stats.txt"
-          sccache --show-stats --stats-format=json > "${{ runner.temp }}/compiler-cache/stats.json"
-          cat "${{ runner.temp }}/compiler-cache/stats.txt"
-
-      - name: Retain package QA evidence
+      - name: Retain core QA evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: package-qa-${{ matrix.artifact_name }}-${{ needs.version.outputs.commit }}
+          name: core-qa-${{ matrix.core_platform }}-${{ needs.version.outputs.commit }}
           path: |
-            ${{ runner.temp }}/release-smoke
+            ${{ runner.temp }}/core-package/qa
             ${{ runner.temp }}/build/Testing/Temporary
-            ${{ runner.temp }}/build/lib/plugins/llama/tests/release-smoke
+            ${{ runner.temp }}/build/CMakeCache.txt
             ${{ runner.temp }}/build/CMakeFiles/CMakeConfigureLog.yaml
-            ${{ runner.temp }}/compiler-cache
-          if-no-files-found: warn
           retention-days: 14
 
-      - name: Package exact-SHA user-test archive
-        if: matrix.platform != 'windows'
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          payload_root="${{ runner.temp }}/release-payload"
-          payload="${{ matrix.artifact_name }}"
-          suffix="${payload#CREXX-}"
-          asset_dir="${{ runner.temp }}/user-test-assets"
-          asset="CREXX-user-test-${{ needs.version.outputs.commit }}-${suffix}.zip"
-
-          mkdir -p "$asset_dir"
-          if [ "${{ matrix.platform }}" = "macos" ]; then
-            (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
-          else
-            (cd "$payload_root" && zip -qry "$asset_dir/$asset" "$payload")
-          fi
-
-      - name: Package exact-SHA user-test archive
-        if: matrix.platform == 'windows'
-        shell: pwsh
-        run: |
-          $payloadRoot = Join-Path "${{ runner.temp }}" "release-payload"
-          $payload = "${{ matrix.artifact_name }}"
-          $suffix = $payload -replace "^CREXX-", ""
-          $assetDir = Join-Path "${{ runner.temp }}" "user-test-assets"
-          $asset = "CREXX-user-test-${{ needs.version.outputs.commit }}-$suffix.zip"
-          $payloadPath = Join-Path $payloadRoot $payload
-          $assetPath = Join-Path $assetDir $asset
-
-          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
-          Compress-Archive -Path $payloadPath -DestinationPath $assetPath -Force
-
-      - name: Upload exact-SHA user-test archive
+      - name: Upload qualified core for consumers and plugin jobs
         uses: actions/upload-artifact@v7
         with:
           name: user-test-${{ needs.version.outputs.commit }}-${{ matrix.artifact_name }}
-          path: ${{ runner.temp }}/user-test-assets/CREXX-user-test-${{ needs.version.outputs.commit }}-*.zip
+          path: ${{ runner.temp }}/core-package/assets/*.zip
           if-no-files-found: error
           retention-days: 14
+
+      - name: Retain unqualified archive after a core packaging failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unqualified-core-${{ matrix.core_platform }}-${{ needs.version.outputs.commit }}
+          path: ${{ runner.temp }}/core-package/assets/*.zip
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Package release asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'
@@ -631,19 +486,35 @@ jobs:
             package_id="${GITHUB_REF_NAME}"
           fi
 
-          payload_root="${{ runner.temp }}/release-payload"
           payload="${{ matrix.artifact_name }}"
           suffix="${payload#CREXX-}"
           asset_dir="${{ runner.temp }}/release-assets"
           asset="CREXX-${package_id}-${suffix}.zip"
 
           mkdir -p "$asset_dir"
-          if [ "${{ matrix.platform }}" = "macos" ]; then
-            (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
-          else
-            (cd "$payload_root" && zip -qry "$asset_dir/$asset" "$payload")
-          fi
+          cp "${{ runner.temp }}/core-package/assets/CREXX-user-test-${{ needs.version.outputs.commit }}-${suffix}.zip" "$asset_dir/$asset"
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
+
+      - name: Package release asset
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:GITHUB_REF -eq "refs/heads/develop") {
+            $packageId = "dev-snapshot"
+          } else {
+            $packageId = $env:GITHUB_REF_NAME
+          }
+
+          $payload = "${{ matrix.artifact_name }}"
+          $suffix = $payload -replace "^CREXX-", ""
+          $assetDir = Join-Path "${{ runner.temp }}" "release-assets"
+          $asset = "CREXX-$packageId-$suffix.zip"
+          $assetPath = Join-Path $assetDir $asset
+
+          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
+          $testedArchive = Join-Path "${{ runner.temp }}" "core-package/assets/CREXX-user-test-${{ needs.version.outputs.commit }}-$suffix.zip"
+          Copy-Item -Path $testedArchive -Destination $assetPath -Force
+          "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Package macOS installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
@@ -692,27 +563,6 @@ jobs:
             --payload-dir "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" \
             --output "$asset_dir/CREXX-dev-snapshot-linux-x64.deb" \
             --display-version "${{ needs.version.outputs.display_version }}"
-
-      - name: Package release asset
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
-        shell: pwsh
-        run: |
-          if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:GITHUB_REF -eq "refs/heads/develop") {
-            $packageId = "dev-snapshot"
-          } else {
-            $packageId = $env:GITHUB_REF_NAME
-          }
-
-          $payloadRoot = Join-Path "${{ runner.temp }}" "release-payload"
-          $payload = "${{ matrix.artifact_name }}"
-          $suffix = $payload -replace "^CREXX-", ""
-          $assetDir = Join-Path "${{ runner.temp }}" "release-assets"
-          $asset = "CREXX-$packageId-$suffix.zip"
-          $assetPath = Join-Path $assetDir $asset
-
-          New-Item -ItemType Directory -Force -Path $assetDir | Out-Null
-          Compress-Archive -Path (Join-Path $payloadRoot $payload) -DestinationPath $assetPath -Force
-          "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Build and test unsigned Windows snapshot installer
         if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'windows' && !matrix.cuda
@@ -844,6 +694,479 @@ jobs:
             security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true
           fi
 
+  mingw-core:
+    name: Windows MinGW core quality gate (no binary delivery)
+    needs: version
+    if: github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
+    uses: ./.github/workflows/release-core.yml
+    with:
+      commit: ${{ needs.version.outputs.commit }}
+      platform: windows-mingw
+
+  llama:
+    name: Plugin ${{ matrix.name }}
+    needs: [version, build, mingw-core]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.version.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ needs.version.outputs.commit }}
+
+      - name: Python for package validation
+        if: matrix.toolchain != 'mingw'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Vulkan build prerequisites
+        if: matrix.platform == 'linux' && !matrix.cuda
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libvulkan-dev glslc spirv-headers
+
+      - name: Select MSVC C11 toolchain
+        if: matrix.toolchain == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          toolset: '14.44'
+
+      - name: Cache pinned Windows Vulkan SDK
+        if: matrix.toolchain == 'msvc' && matrix.backend == 'vulkan'
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/crexx-vulkan
+          key: crexx-vulkan-${{ runner.os }}-${{ hashFiles('.github/llama/vulkan-windows.json') }}
+
+      - name: Prepare pinned Windows Vulkan SDK
+        if: matrix.toolchain == 'msvc' && matrix.backend == 'vulkan'
+        shell: pwsh
+        run: ./scripts/ci-vulkan-sdk.ps1 -Root "${{ runner.temp }}/crexx-vulkan"
+
+      - name: Cache pinned CUDA build SDK
+        id: cuda-cache
+        if: matrix.cuda
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ runner.temp }}/crexx-cuda
+          key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
+
+      - name: Assemble pinned CUDA build SDK
+        if: matrix.cuda
+        shell: bash
+        run: python scripts/ci-cuda-toolkit.py --root "${{ runner.temp }}/crexx-cuda" --platform "${{ matrix.platform }}-x86_64"
+
+      - name: Retain verified CUDA SDK before compilation
+        if: matrix.cuda && steps.cuda-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ runner.temp }}/crexx-cuda
+          key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
+
+      - name: Cache CUDA compiler outputs
+        id: compiler-cache
+        if: matrix.cuda
+        uses: Mozilla-Actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
+        with:
+          version: "v0.16.0"
+
+      - name: Download the qualified matching core
+        uses: actions/download-artifact@v8
+        with:
+          name: user-test-${{ needs.version.outputs.commit }}-CREXX-${{ matrix.core_platform }}
+          path: ${{ runner.temp }}/core-download
+
+      - name: Configure plugin and engine only
+        shell: bash
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
+            -DCMAKE_BUILD_TYPE=Release -DENABLE_LLAMA=ON \
+            -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" \
+            -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
+            -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
+            -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON ${{ matrix.cmake_args }}
+
+      - name: Build plugin, dependency and focused QA targets
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/build" --parallel ${{ matrix.build_jobs }} \
+            --target llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke \
+            rxllama_bridge_lifecycle rxllama_package_utf8_cxx17 rxllama_package_utf8_cxx20
+
+      - name: Check provider lifecycle and package boundaries
+        shell: bash
+        run: |
+          ctest --test-dir "${{ runner.temp }}/build" --parallel 1 --output-on-failure \
+            -R '^rxllama_(backend_probe_cycle|package_windows_paths|package_utf8_cxx(17|20))$'
+
+      - name: Stage optional plugin against the unchanged core
+        shell: bash
+        run: |
+          python scripts/package-llama-release.py --stage-only \
+            --core-archive "${{ runner.temp }}/core-download/CREXX-user-test-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}.zip" \
+            --build "${{ runner.temp }}/build" --output "${{ runner.temp }}/plugin-package" \
+            --commit "${{ needs.version.outputs.commit }}" --platform "${{ matrix.core_platform }}" \
+            --toolchain "${{ matrix.toolchain }}" --backend "${{ matrix.backend }}"
+
+      - name: Configure Apple signing keychain
+        id: macos_signing
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        shell: bash
+        env:
+          APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 }}
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_DEVELOPER_ID_INSTALLER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_BASE64:-}" ]; then
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_BASE64)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD:-}" ]; then
+            missing+=(APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_IDENTITY:-}" ]; then
+            missing+=(APPLE_DEVELOPER_ID_IDENTITY)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "pkg_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping macOS code signing because Apple Developer ID Application secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS signing skipped"
+              echo
+              echo "Apple Developer ID Application secrets are not configured for this repository or fork:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+              echo
+              echo "The workflow will continue and upload unsigned macOS ZIP assets. No macOS .pkg asset is produced by this workflow yet."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          application_certificate_path="${RUNNER_TEMP}/developer-id-application.p12"
+          installer_certificate_path="${RUNNER_TEMP}/developer-id-installer.p12"
+          keychain_path="${RUNNER_TEMP}/crexx-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+
+          summarize_p12_certificate() {
+            local label="$1"
+            local certificate_path="$2"
+            local certificate_password="$3"
+
+            echo "${label} public certificate metadata:"
+            if ! P12_PASSWORD="$certificate_password" openssl pkcs12 \
+              -in "$certificate_path" \
+              -passin env:P12_PASSWORD \
+              -clcerts \
+              -nokeys 2>/dev/null | openssl x509 -noout -subject -issuer -serial -fingerprint -sha256; then
+              echo "::warning::Could not read ${label} public certificate metadata from the .p12 file."
+            fi
+          }
+
+          detect_installer_identity() {
+            local keychain="$1"
+            security find-identity -v -p basic "$keychain" |
+              awk -F\" '/Developer ID Installer:/ { print $2; exit }' ||
+              true
+          }
+
+          normalize_identity() {
+            local value="$1"
+            value="${value//$'\r'/}"
+            value="${value//$'\n'/}"
+            value="$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            if [[ "$value" == \"*\" && "$value" == *\" && ${#value} -ge 2 ]]; then
+              value="${value:1:${#value}-2}"
+              value="$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+            fi
+            printf '%s' "$value"
+          }
+
+          printf '%s' "$APPLE_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 -D > "$application_certificate_path"
+          summarize_p12_certificate "Developer ID Application" \
+            "$application_certificate_path" \
+            "$APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD"
+
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$application_certificate_path" \
+            -k "$keychain_path" \
+            -P "$APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+
+          installer_missing=()
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64:-}" ]; then
+            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64)
+          fi
+          if [ -z "${APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD:-}" ]; then
+            installer_missing+=(APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD)
+          fi
+
+          if [ "${#installer_missing[@]}" -eq 0 ]; then
+            printf '%s' "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64" | base64 -D > "$installer_certificate_path"
+            summarize_p12_certificate "Developer ID Installer" \
+              "$installer_certificate_path" \
+              "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD"
+            security import "$installer_certificate_path" \
+              -k "$keychain_path" \
+              -P "$APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD" \
+              -T /usr/bin/pkgbuild \
+              -T /usr/bin/productbuild \
+              -T /usr/bin/productsign
+            echo "pkg_enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pkg_enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping macOS .pkg packaging because Apple Developer ID Installer secrets are not configured: ${installer_missing[*]}"
+            {
+              echo "### macOS .pkg packaging skipped"
+              echo
+              echo "Apple Developer ID Installer secrets are not configured for this repository or fork:"
+              printf -- "- \`%s\`\n" "${installer_missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          security list-keychains -d user -s "$keychain_path"
+          security default-keychain -s "$keychain_path"
+          security set-key-partition-list -S apple-tool:,apple: -s \
+            -k "$keychain_password" "$keychain_path"
+
+          echo "Valid basic identities in Apple signing keychain:"
+          security find-identity -v -p basic "$keychain_path" || true
+          echo "Valid code-signing identities in Apple signing keychain:"
+          security find-identity -v -p codesigning "$keychain_path" || true
+
+          if [ "${#installer_missing[@]}" -eq 0 ]; then
+            installer_identity="$(detect_installer_identity "$keychain_path")"
+            if [ -z "$installer_identity" ]; then
+              echo "::error::No Developer ID Installer identity was found in the imported Installer .p12. Check APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 contains the Developer ID Installer .p12, not the Developer ID Application .p12 or a .cer file."
+              exit 1
+            fi
+
+            if [ -n "${APPLE_DEVELOPER_ID_INSTALLER_IDENTITY:-}" ]; then
+              configured_installer_identity="$(normalize_identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY")"
+              if [ "$configured_installer_identity" != "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY" ]; then
+                echo "::warning::APPLE_DEVELOPER_ID_INSTALLER_IDENTITY contains surrounding quotes or whitespace; the workflow is using the imported certificate Common Name instead."
+              fi
+              if [ "$configured_installer_identity" != "$installer_identity" ]; then
+                echo "::warning::APPLE_DEVELOPER_ID_INSTALLER_IDENTITY does not match the imported Developer ID Installer certificate Common Name; the workflow is using the imported certificate Common Name instead."
+              fi
+            fi
+
+            {
+              echo "APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED<<__CREXX_INSTALLER_IDENTITY__"
+              printf '%s\n' "$installer_identity"
+              echo "__CREXX_INSTALLER_IDENTITY__"
+            } >> "$GITHUB_ENV"
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
+
+      - name: Sign macOS release payload
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        shell: bash
+        env:
+          APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${APPLE_DEVELOPER_ID_IDENTITY:-}" ]; then
+            echo "APPLE_DEVELOPER_ID_IDENTITY is not set" >&2
+            exit 1
+          fi
+
+          stage="${{ runner.temp }}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}"
+          entitlements="${GITHUB_WORKSPACE}/.github/signing/macos-plugin-host.entitlements"
+          signed_count=0
+
+          while IFS= read -r -d '' file_path; do
+            if ! file "$file_path" | grep -q 'Mach-O'; then
+              continue
+            fi
+
+            file_name="$(basename "$file_path")"
+            sign_args=(--force --timestamp --options runtime --sign "$APPLE_DEVELOPER_ID_IDENTITY")
+
+            case "$file_name" in
+              crexx|rxc|rxvm|rxvme|rxbvm|rxbvme|rxpp|rxdb)
+                sign_args+=(--entitlements "$entitlements")
+                ;;
+            esac
+
+            echo "Signing $file_path"
+            codesign "${sign_args[@]}" "$file_path"
+            signed_count=$((signed_count + 1))
+          done < <(find "$stage" -type f -print0)
+
+          if [ "$signed_count" -eq 0 ]; then
+            echo "No Mach-O files were found to sign" >&2
+            exit 1
+          fi
+
+          echo "Signed $signed_count Mach-O files"
+
+      - name: Verify macOS signatures
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stage="${{ runner.temp }}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}"
+
+          while IFS= read -r -d '' file_path; do
+            if file "$file_path" | grep -q 'Mach-O'; then
+              codesign --verify --strict --verbose=2 "$file_path"
+            fi
+          done < <(find "$stage" -type f -print0)
+
+      - name: Refresh verified macOS provider hashes
+        if: matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        shell: bash
+        run: python scripts/refresh-provider-manifests.py "${{ runner.temp }}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}/bin/providers"
+
+      - name: Preserve CUDA redistributable notices
+        if: matrix.cuda
+        shell: bash
+        run: |
+          mkdir -p "${{ runner.temp }}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}/share/crexx/llama/cuda-licenses"
+          cp -R "${{ runner.temp }}/crexx-cuda/licenses/." "${{ runner.temp }}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}/share/crexx/llama/cuda-licenses/"
+
+      - name: Package plugin and reconstruct the actual downloads
+        shell: bash
+        run: |
+          python scripts/package-llama-release.py --finalize-only \
+            --core-archive "${{ runner.temp }}/core-download/CREXX-user-test-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}.zip" \
+            --build "${{ runner.temp }}/build" --output "${{ runner.temp }}/plugin-package" \
+            --commit "${{ needs.version.outputs.commit }}" --platform "${{ matrix.core_platform }}" \
+            --toolchain "${{ matrix.toolchain }}" --backend "${{ matrix.backend }}"
+
+      - name: Smoke combined core and plugin downloads
+        shell: bash
+        run: |
+          python tests/native-inference/release_smoke.py --source . \
+            --build "${{ runner.temp }}/build" \
+            --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke${{ matrix.platform == 'windows' && '.exe' || '' }}" \
+            --payload "${{ runner.temp }}/plugin-package/combined/CREXX-${{ matrix.core_platform }}" \
+            --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
+
+      - name: Record CUDA compiler cache statistics
+        if: always() && matrix.cuda && steps.compiler-cache.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p "${{ runner.temp }}/compiler-cache"
+          sccache --show-stats > "${{ runner.temp }}/compiler-cache/stats.txt"
+          sccache --show-stats --stats-format=json > "${{ runner.temp }}/compiler-cache/stats.json"
+          cat "${{ runner.temp }}/compiler-cache/stats.txt"
+
+      - name: Retain plugin QA evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-qa-${{ matrix.artifact_name }}-${{ needs.version.outputs.commit }}
+          path: |
+            ${{ runner.temp }}/plugin-package/qa
+            ${{ runner.temp }}/release-smoke
+            ${{ runner.temp }}/build/Testing/Temporary
+            ${{ runner.temp }}/build/CMakeCache.txt
+            ${{ runner.temp }}/build/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ runner.temp }}/compiler-cache
+          retention-days: 14
+
+      - name: Upload qualified optional plugin
+        uses: actions/upload-artifact@v7
+        with:
+          name: user-test-${{ needs.version.outputs.commit }}-${{ matrix.artifact_name }}
+          path: ${{ runner.temp }}/plugin-package/assets/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Name optional plugin release asset
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ needs.version.outputs.channel }}" = "dev-snapshot" ]; then
+            package_id=dev-snapshot
+          else
+            package_id="$GITHUB_REF_NAME"
+          fi
+          mkdir -p "${{ runner.temp }}/release-assets"
+          asset="${{ runner.temp }}/release-assets/llama.rexx-${package_id}-${{ matrix.core_platform }}-${{ matrix.backend }}.zip"
+          cp "${{ runner.temp }}/plugin-package/assets/llama.rexx-user-test-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}-${{ matrix.backend }}.zip" "$asset"
+          echo "CREXX_RELEASE_ASSET=$asset" >> "$GITHUB_ENV"
+
+      - name: Notarize macOS ZIP asset
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          if [ -z "${APPLE_ID:-}" ]; then
+            missing+=(APPLE_ID)
+          fi
+          if [ -z "${APPLE_APP_SPECIFIC_PASSWORD:-}" ]; then
+            missing+=(APPLE_APP_SPECIFIC_PASSWORD)
+          fi
+          if [ -z "${APPLE_TEAM_ID:-}" ]; then
+            missing+=(APPLE_TEAM_ID)
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Skipping macOS notarization because Apple notarization secrets are not configured: ${missing[*]}"
+            {
+              echo "### macOS notarization skipped"
+              echo
+              echo "The macOS ZIP payload was signed, but notarization secrets are not configured:"
+              printf -- "- \`%s\`\n" "${missing[@]}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          xcrun notarytool submit "$CREXX_RELEASE_ASSET" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+      - name: Upload plugin release asset
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact_name }}-release-asset
+          path: ${{ runner.temp }}/release-assets/llama.rexx-*.zip
+          if-no-files-found: error
+
+      - name: Cleanup Apple signing keychain
+        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${APPLE_SIGNING_KEYCHAIN:-}" ]; then
+            security delete-keychain "$APPLE_SIGNING_KEYCHAIN" || true
+          fi
+
   optimizer-parity:
     name: Linux Debug Optimizer Parity
     needs: version
@@ -868,7 +1191,7 @@ jobs:
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
 
       - name: Run optimized/non-optimized correctness parity
         shell: bash
@@ -894,12 +1217,20 @@ jobs:
             build_jobs: 2
             test_jobs: 5
             cmake_args: ""
-          - name: Windows x64
+          - name: Windows x64 MinGW
             os: windows-2025
             platform: windows
+            toolchain: mingw
             build_jobs: 4
             test_jobs: 2
             cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
+          - name: Windows x64 MSVC
+            os: windows-2025
+            platform: windows
+            toolchain: msvc
+            build_jobs: 2
+            test_jobs: 2
+            cmake_args: "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF"
           - name: macOS arm64
             os: macos-15
             platform: macos
@@ -920,8 +1251,15 @@ jobs:
           submodules: recursive
           ref: ${{ needs.version.outputs.commit }}
 
+      - name: Select MSVC C11 toolchain
+        if: matrix.toolchain == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          toolset: '14.44'
+
       - name: Update toolchain (MSYS2)
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         uses: msys2/setup-msys2@v2
         with:
           update: true
@@ -936,7 +1274,7 @@ jobs:
             pkgconf:p
 
       - name: Configure Release qualification build
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
@@ -946,11 +1284,11 @@ jobs:
             -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" \
             -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" \
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
             ${{ matrix.cmake_args }}
 
       - name: Configure Release qualification build
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/qualification" \
@@ -963,7 +1301,7 @@ jobs:
             ${{ matrix.cmake_args }}
 
       - name: Run comprehensive correctness QA
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -971,7 +1309,7 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run comprehensive correctness QA
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -979,7 +1317,7 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run install/package/external-consumer qualification
-        if: matrix.platform != 'windows'
+        if: matrix.toolchain != 'mingw'
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -987,7 +1325,7 @@ jobs:
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run install/package/external-consumer qualification
-        if: matrix.platform == 'windows'
+        if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: |
           cmake --build "${{ runner.temp }}/qualification" \
@@ -999,6 +1337,8 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - build
+      - llama
+      - mingw-core
       - comprehensive
       - version
     if: github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')
@@ -1028,12 +1368,19 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-*.zip' -o -name 'CREXX-*.pkg' \) \
+            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
-          zip_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
-          if [ "$zip_count" != "6" ]; then
-            echo "Expected 6 release ZIP assets, found $zip_count" >&2
+          zip_count="$(find "$asset_dir" -name '*.zip' -type f | wc -l | tr -d ' ')"
+          if [ "$zip_count" != "10" ]; then
+            echo "Expected 4 core and 6 plugin release ZIP assets, found $zip_count" >&2
+            exit 1
+          fi
+
+          core_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
+          plugin_count="$(find "$asset_dir" -name 'llama.rexx-*.zip' -type f | wc -l | tr -d ' ')"
+          if [ "$core_count" != "4" ] || [ "$plugin_count" != "6" ]; then
+            echo "Invalid split: $core_count core ZIPs and $plugin_count plugin ZIPs" >&2
             exit 1
           fi
 
@@ -1095,13 +1442,15 @@ jobs:
           prerelease: ${{ env.PRERELEASE }}
           body_path: ${{ env.RELEASE_NOTES_PATH }}
           fail_on_unmatched_files: true
-          files: ${{ runner.temp }}/release-assets/CREXX-*
+          files: ${{ runner.temp }}/release-assets/*
 
   dev-snapshot:
     name: Publish Dev Snapshot
     runs-on: ubuntu-24.04
     needs:
       - build
+      - llama
+      - mingw-core
       - optimizer-parity
       - version
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
@@ -1152,13 +1501,17 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
-            CREXX-dev-snapshot-linux-x64-cuda.zip
-            CREXX-dev-snapshot-windows-x64-cuda.zip
+            llama.rexx-dev-snapshot-linux-x64-vulkan.zip
+            llama.rexx-dev-snapshot-linux-x64-cuda.zip
+            llama.rexx-dev-snapshot-windows-x64-vulkan.zip
+            llama.rexx-dev-snapshot-windows-x64-cuda.zip
+            llama.rexx-dev-snapshot-macos-arm64-metal.zip
+            llama.rexx-dev-snapshot-macos-x86_64-metal.zip
             CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-windows-x64-unsigned-setup.exe
@@ -1186,7 +1539,7 @@ jobs:
             fi
           done
 
-          asset_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*' -type f | wc -l | tr -d ' ')"
+          asset_count="$(find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name 'llama.rexx-dev-snapshot-*' \) -type f | wc -l | tr -d ' ')"
           if [ "$asset_count" != "${#expected_assets[@]}" ]; then
             echo "Expected ${#expected_assets[@]} dev snapshot assets, found $asset_count" >&2
             find "$asset_dir" -maxdepth 1 -type f -print >&2
@@ -1215,6 +1568,8 @@ jobs:
             echo "- Built: \`${{ needs.version.outputs.timestamp }}\`"
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
+            echo "Core downloads contain cREXX. For local inference, add the matching llama.rexx platform/backend ZIP and download a supported model separately. One MSVC Windows core supports either Vulkan or CUDA. MinGW is a core quality gate only."
+            echo
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
             echo "Windows testers: use \`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe\` for installation, or \`CREXX-dev-snapshot-windows-x64.zip\` as the portable archive. Both are built automatically from commit \`${short_sha}\`. Unsigned applications may show Windows security warnings or be blocked by policy."
             echo
@@ -1223,7 +1578,7 @@ jobs:
             echo '### Automatic asset SHA-256 checksums'
             echo
             echo '```text'
-            (cd "${{ runner.temp }}/dev-snapshot-assets" && sha256sum CREXX-dev-snapshot-*)
+            (cd "${{ runner.temp }}/dev-snapshot-assets" && sha256sum CREXX-dev-snapshot-* llama.rexx-dev-snapshot-*)
             echo '```'
           } > "$notes_file"
 
@@ -1283,7 +1638,7 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | startswith("CREXX-dev-snapshot-") and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
+                --jq '.assets[] | select(.name | (startswith("CREXX-dev-snapshot-") or startswith("llama.rexx-dev-snapshot-")) and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
@@ -1310,7 +1665,7 @@ jobs:
           }
 
           mapfile -t expected_assets < <(
-            find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-*' -type f -exec basename {} \; |
+            find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name 'llama.rexx-dev-snapshot-*' \) -type f -exec basename {} \; |
               sort
           )
           if [ "${#expected_assets[@]}" -eq 0 ]; then
@@ -1369,6 +1724,8 @@ jobs:
           done
 
           for stale_optional_asset in \
+            CREXX-dev-snapshot-linux-x64-cuda.zip \
+            CREXX-dev-snapshot-windows-x64-cuda.zip \
             CREXX-dev-snapshot-macos-arm64.pkg \
             CREXX-dev-snapshot-macos-x86_64.pkg; do
             if ! asset_is_expected "$stale_optional_asset"; then
