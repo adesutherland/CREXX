@@ -275,3 +275,27 @@ This preventive QA correction does **not** explain or repair CI-F07's original
 `local/probe-backstop-debug/`, `local/probe-backstop-asan/` and the input note.
 No broad local replay is warranted for this guard/comment change; exact-head
 hosted gates remain open.
+
+### Windows MinGW package and archive
+
+Run [35004301149](https://github.com/adesutherland/CREXX/actions/runs/35004301149)
+at `4a0924ee1` passes the complete CPU/Vulkan package smoke in 13.483 seconds
+(15 commands). All 14 consumer executions use the restricted Windows-only PATH;
+the native compilation action retains its compiler environment. Public `rxvm`,
+the alternate `rxbvm`, optimized/nonoptimized programs and relocated native
+execution pass. The runner reports zero GPU devices: this is CPU/package proof,
+not actual Vulkan-device qualification. CI-F05 and CI-F08 have target-platform
+repair evidence, and CI-F06's audited loader requirement passes on MinGW.
+The separate MSVC/CUDA package remains open.
+
+The actual downloaded ZIP is 57,562,461 bytes, distinct from its GitHub envelope.
+It preserves the identical `rxvm.exe` copy of preferred `rxtvm.exe`, passes all
+29 provider entry hashes and contains matching bootstrap core DLLs plus the
+three MinGW runtime DLLs beside the executables. No Windows OS DLL, fixture or
+smoke helper is shipped. Evidence: `remote/4a0924ee1/windows.log`, `windows-qa/`,
+`artifacts.json` and `windows-archive-inspection.json`.
+
+All four base platforms now have passing triage packages on their recorded
+revisions. This is not a combined exact-head qualification: both CUDA builds
+and the final Build/Deep Build/Sanitizer workflows remain pending. CI-AC-02/03/
+05/07/08 and CI-03–05 remain open until that evidence is reconciled.
