@@ -7,22 +7,24 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 15 September, after restart
 
-**Newest source / focused retries:** local code HEAD is
-`b4d10adfb7263313f331d12239ac07352c8bc491`, pushed to
-`origin/temp/llama-release-windows-retry`. It contains the CI-F11 helper variable
-rename (`0be70cd69`), CI-F14's two private C11 requirements (`23fd6b8e0`), the
-standalone first-party probe (`7431f33fa`) and guarded Deep selector (`b4d10adfb`).
-Windows Build `35028632018` selects `lane=windows`; Deep `35028634025` selects
-`platform=windows-msvc`. These are focused retries, not a complete new exact-head
-qualification. The older combined run below remains active so its CUDA cache
-work and other useful jobs can finish.
+**Newest source / focused retries:** local HEAD is
+`3aca2dd2797ace911ff0eab8e48db41376687ced`, pushed to
+`origin/temp/llama-release-windows-retry`. CI-F11's helper rename is in
+`0be70cd69`. CI-F14 required both private C11 and MSVC atomics settings:
+`23fd6b8e0` alone was incomplete; `b965c0716` adds the atomics switch and
+`3aca2dd27` accepts CMake's `-std:c11` spelling in the preflight. The quick
+real-MSVC negative/positive compiler gate passes both objects in
+`35030598584`; comprehensive Windows QA is now running. Earlier retry
+`35028634025` retained the missing-atomics error; `35030328193` stopped only
+in the preflight's flag-spelling assertion before any broad build.
 
-CI-F14 passes both controls in normal Debug (2.30 s) and Apple ASan (3.07 s).
-The C++ helper fails/passes the explicit `small` macro control before/after its
-rename. Twenty-seven release/selector controls and actionlint pass. Linux probe
-`35027428540` at `9152850e8` passes with `detect_leaks=1`, ordinary verified engine
-libraries and no upstream build. SAN-009 still awaits the broader supported
-gate. Keep the evidence updates with the authoritative plan at checkpoint.
+Windows Build `35028632018` remains on `b4d10adfb`, with both MSVC and MinGW
+cores green and Windows Vulkan building. Its unchanged production/helper inputs
+remain useful. These are focused retries, not a complete new exact-head gate.
+Normal/Apple-ASan attached-provider controls pass 2/2 in 2.30/3.07 seconds;
+the latest extra flag is MSVC-only. Linux first-party probe `35027428540` passes
+with leak detection enabled and an ordinary verified engine. SAN-009 still
+awaits the broader supported gate. No develop/release publication is authorized.
 
 **Current candidate:** `21666b6bcf0c5a14986652ef0b0a76bddc43611b` is committed
 and pushed. Integrated [Build run 35025115905](https://github.com/adesutherland/CREXX/actions/runs/35025115905)
@@ -30,12 +32,15 @@ was dispatched with `lane=all`. All four shipped core jobs and the non-shipping
 MinGW gate pass on this SHA. Six plugin jobs now consume the matching core
 artifacts from this same run. ARM Metal and Linux Vulkan plugin packages pass.
 Windows Vulkan stops in the QA helper's CI-F11 macro collision; its production
-bridge compiled. Both CUDA jobs remain building. Intel Metal remains in the
-provider lifecycle/path check; elapsed time alone does not establish a new cause.
+bridge compiled. Both CUDA jobs remain building. Intel Metal fails only its serial permanent
+probe after the unchanged 1,800-second backstop; the other three checks pass.
+The bounded archived-bridge replay captures the same Metal compiler-service wait.
 Wider core [Deep Build 35026467548](https://github.com/adesutherland/CREXX/actions/runs/35026467548)
 and [Sanitizer QA 35026470003](https://github.com/adesutherland/CREXX/actions/runs/35026470003)
-are running on this head with llama disabled. Deep Linux and ARM pass, including
-external-consumer checks; MSVC stops at CI-F14. MinGW and Intel remain running.
+are running on this head with llama disabled. Deep Linux, ARM and MinGW pass, including external-consumer checks. MinGW
+passes 2,248 comprehensive tests (881.48 s) and three qualification checks
+(22.72 s), with both VM modes represented. MSVC stops at CI-F14; Intel remains
+running.
 Stress and the 1/5/30-job product equivalence checks pass. Do not publish or move
 `develop`.
 
@@ -51,8 +56,13 @@ Direct Intel GGML-only registration passes three starts in `35026224152`
 not reproduce or close CI-F07. A follow-up matching production's CPU-first
 registration is `35026657758` at `da1a430b8`, using the same archived libraries
 and opt-in capture. It also passes three Intel starts (56.737/0.312/0.249 s);
-its local ARM control passes. CI-F07 remains unresolved. Diagnostic changes
-remain on `temp/llama-release-intel-native`, outside the candidate pipeline.
+its local ARM control passes. CI-F07 remains unresolved. Archived-bridge replay `35029475651` at `50b7bf8fa` reproduces the wait
+without a cREXX VM/compiler/model. Native-C direct GGML (quiet/default logger),
+Python direct GGML and the archived bridge all pass the local ARM control.
+The same-host Intel comparison is now `35030619064` at `f29a8d3b9`. Retain
+its stacks/results before assigning cause. No production Metal change has
+been made. Diagnostic changes remain on `temp/llama-release-intel-native`,
+outside the candidate pipeline.
 
 **Latest completed gate:** all five core configurations are green. MinGW
 `35023122646` at `aade0fd0f` passes 152 core tests, three KeyAccess controls and

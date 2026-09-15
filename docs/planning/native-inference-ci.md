@@ -537,12 +537,12 @@ translation units finds `stdatomic.h` only in this harness's two target variants
 Declare their actual C11 requirement privately, following the neighboring
 native-object test targets. Do not change the public C SDK or global C standard.
 
-1. [ ] **F14-AC-01:** both harness targets declare C11 and MSVC atomics support and retain their existing
+1. [x] **F14-AC-01:** both harness targets declare C11 and MSVC atomics support and retain their existing
    attached-provider lifetime/failure assertions. Verify generated commands and
    focused normal/maintained sanitizer results.
 2. [ ] **F14-AC-02:** MSVC builds and runs the affected core controls and completes
    the broader core gate; the tests remain enabled.
-3. [ ] **F14-01:** retain the host failure/dependency audit, correct the two
+3. [x] **F14-01:** retain the host failure/dependency audit, correct the two
    target requirements and validate focused controls (F14-AC-01).
 4. [ ] **F14-02:** qualify the Windows correction, then reconcile the wider gate
    (F14-AC-02). Reuse unaffected core/plugin evidence and cached engine outputs.
@@ -580,3 +580,26 @@ the SDK error, and the unchanged command must pass. This preflight builds no
 core executable or engine. Retain its commands and negative/positive logs.
 F14-AC-01 and F14-01 are reopened until that Windows proof; unchanged normal and
 Apple sanitizer evidence remains valid for their unaffected commands.
+
+F07-D02 reproduces the wait in the archived bridge alone on Intel
+(`35029475651`, `50b7bf8fa`), with the same Metal compiler-service stack and
+no cREXX VM/model. The earlier direct control used a Python process.
+**F07-D03:** compare tiny native-C direct GGML processes (quiet/default logger),
+the earlier Python direct path and the archived bridge on one Intel runner,
+using identical verified libraries. Retain process/library identities and
+stacks for each bounded diagnostic stop. This controls for native process
+context and logging before assigning the remaining cause; it changes neither
+production code nor normal QA timeout/coverage. Validate the native harness
+on the retained ARM archive first.
+
+The actual MSVC preflight in `35030598584` (`3aca2dd27`) passes both negative
+and positive object controls before starting the comprehensive gate. This
+closes F14-AC-01/F14-01 again, with the unchanged normal/Apple-ASan evidence;
+F14-AC-02 remains open. The preceding preflight-only stop `35030328193`
+was its `/std:c11` assertion rejecting CMake's valid `-std:c11` spelling,
+now corrected; it did not spend a broad-build cycle.
+
+MinGW's full core Deep job at `21666b6bc` is green: 2,248 comprehensive tests
+and three install/package/external-consumer checks. Both VM modes occur in
+the retained log. MINGW-AC-01/02 stay closed; this strengthens the earlier
+152-test smoke and actual-ZIP proof without adding any binary delivery.

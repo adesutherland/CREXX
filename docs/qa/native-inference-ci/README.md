@@ -751,3 +751,45 @@ unchanged. Logs are under `remote/9152850e8/first-party-probe/`.
 The later helper rename affects only the co-residency variable, not this probe
 or bridge implementation. SAN-009 still awaits the broader supported core gate;
 the probe does not qualify models or real GPU inference.
+
+### MinGW comprehensive gate and focused Windows follow-up
+
+Deep `35026467548` at `21666b6bc` passes all 2,248 MinGW comprehensive tests
+(881.48 s), then all three install/package/external-consumer checks (22.72 s).
+Both `rxtvm` and `rxbvm` optimized/unoptimized controls occur in the log.
+`remote/21666b6bc/deep-mingw*` retains this result; the gate ships no binaries.
+
+The CI-F14 C11 declaration alone was incomplete on MSVC. Retry `35028634025`
+requires the atomics switch already used by neighboring targets; the two
+private targets now receive it through their shared configuration. A quick
+preflight compiles both actual CMake commands, first removing only that switch
+to reproduce the SDK error and then using the unchanged commands to pass.
+`35030328193` stopped before compilation because the preflight initially
+expected `/std:c11`, while CMake uses equivalent `-std:c11`. Both commands and
+the failing assertion are retained under `remote/b965c0716/`; the script now
+accepts both spellings. `35030598584` passes the real-MSVC preflight and begins
+comprehensive core QA. This is partial qualification, not a full Deep pass.
+
+The Linux Vulkan plugin ZIP is 24,316,275 bytes, SHA256
+`32877a16567d4542331552ec4cb4d81b55b409c4642695dd229f2f99f6494181`.
+Its combined smoke passes in 16.578 seconds against the exact core ZIP named
+in `remote/21666b6bc/plugin-linux-vulkan/plugin-package/qa/archive.json`.
+
+### Intel archived-bridge reproduction and process-context control
+
+The integrated Intel job at `21666b6bc` passes three checks and times out only
+in `rxllama_backend_probe_cycle` at its serial 1,800-second guard. No sanitizer
+diagnostic occurs. Raw logs/artifacts are under `remote/21666b6bc/plugin-intel*`.
+The small archived-bridge executable reproduces the Metal shader compiler
+service wait in `35029475651` (`50b7bf8fa`), without cREXX VM/compiler/model.
+The opt-in 180-second diagnostic stop and stack are retained in
+`remote/50b7bf8fa/`; they are a failed diagnostic, not a qualification pass.
+
+The next control compares native-C direct GGML with quiet/default logging,
+the earlier Python direct path and the archived bridge on the same host, with
+identical verified libraries. Local ARM passes all four
+(`local/native-process-arm-control/`). The initial local linker control lacked
+the explicit GGML base library; its failure is retained separately under
+`local/native-process-arm-link-control/`. Intel run `35030619064` at
+`f29a8d3b9` is pending. CI-F07 remains open; no production change or relaxed
+normal deadline is implied.

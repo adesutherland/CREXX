@@ -1,0 +1,14 @@
+[
+  {
+    "directory": "D:/a/_temp/qualification",
+    "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\cl.exe\"  /nologo -ID:\\a\\_temp\\qualification\\generated -ID:\\a\\CREXX\\CREXX\\interpreter -ID:\\a\\CREXX\\CREXX\\interpreter\\rxvmplugin -ID:\\a\\CREXX\\CREXX\\inc -ID:\\a\\CREXX\\CREXX\\assembler -ID:\\a\\CREXX\\CREXX\\binutils\\include -ID:\\a\\CREXX\\CREXX\\rxpa -ID:\\a\\CREXX\\CREXX\\platform -ID:\\a\\CREXX\\CREXX\\avl_tree -ID:\\a\\CREXX\\CREXX\\utf8 -ID:\\a\\CREXX\\CREXX\\interpreter\\rxvmplugin\\rxvmplugins\\mc_decimal\\decnumber /DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -std:c11 -MD /experimental:c11atomics /Fotests\\rxpa\\CMakeFiles\\cri17_attached_provider_control-rxvml.dir\\cri17_attached_provider_control.c.obj /Fdtests\\rxpa\\CMakeFiles\\cri17_attached_provider_control-rxvml.dir\\ /FS -c D:\\a\\CREXX\\CREXX\\tests\\rxpa\\cri17_attached_provider_control.c",
+    "file": "D:/a/CREXX/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "D:/a/_temp/qualification/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxvml.dir/cri17_attached_provider_control.c.obj"
+  },
+  {
+    "directory": "D:/a/_temp/qualification",
+    "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Enterprise\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\cl.exe\"  /nologo -DNTHREADED=1 -ID:\\a\\_temp\\qualification\\generated -ID:\\a\\CREXX\\CREXX\\interpreter -ID:\\a\\CREXX\\CREXX\\interpreter\\rxvmplugin -ID:\\a\\CREXX\\CREXX\\inc -ID:\\a\\CREXX\\CREXX\\assembler -ID:\\a\\CREXX\\CREXX\\binutils\\include -ID:\\a\\CREXX\\CREXX\\rxpa -ID:\\a\\CREXX\\CREXX\\platform -ID:\\a\\CREXX\\CREXX\\avl_tree -ID:\\a\\CREXX\\CREXX\\utf8 -ID:\\a\\CREXX\\CREXX\\interpreter\\rxvmplugin\\rxvmplugins\\mc_decimal\\decnumber /DWIN32 /D_WINDOWS /O2 /Ob2 /DNDEBUG -std:c11 -MD /experimental:c11atomics /Fotests\\rxpa\\CMakeFiles\\cri17_attached_provider_control-rxbvml.dir\\cri17_attached_provider_control.c.obj /Fdtests\\rxpa\\CMakeFiles\\cri17_attached_provider_control-rxbvml.dir\\ /FS -c D:\\a\\CREXX\\CREXX\\tests\\rxpa\\cri17_attached_provider_control.c",
+    "file": "D:/a/CREXX/CREXX/tests/rxpa/cri17_attached_provider_control.c",
+    "output": "D:/a/_temp/qualification/tests/rxpa/CMakeFiles/cri17_attached_provider_control-rxbvml.dir/cri17_attached_provider_control.c.obj"
+  }
+]
