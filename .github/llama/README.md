@@ -46,6 +46,14 @@ Windows package retains MinGW/Vulkan. The engine keeps its upstream portable
 CUDA architecture defaults (`GGML_NATIVE=OFF`); CI does not tune or narrow its
 GPU target list. OS graphics drivers are not redistributed.
 
+Windows consumer smoke removes development SDK/toolchain directories from PATH
+while executing the engine, compiler, VMs and relocated native program. Only
+native compilation retains its compiler environment. Small startup DLLs live
+beside the installed executables; large GPU dependencies stay in `bin/providers`.
+This checks package discovery without relying on the runner's development PATH;
+the hosted Windows image still has system runtimes/drivers, so retain dependency
+inspection and separate real-device qualification as well.
+
 After signing a trusted staged payload, verify its signatures before running
 `scripts/refresh-provider-manifests.py`. That script updates only the declared
 file hashes (including the runtime-manifest dependency) and is not installed.

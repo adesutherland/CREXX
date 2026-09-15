@@ -81,7 +81,11 @@ fs::path engine_directory() {
     std::vector<wchar_t> path(32768);
     auto n = GetModuleFileNameW(module, path.data(), DWORD(path.size()));
     require(n && n < path.size(), "cannot locate inference runtime");
-    return fs::path(std::wstring(path.data(), n)).parent_path();
+    auto directory = fs::path(std::wstring(path.data(), n)).parent_path();
+    // Native consumers have adjacent manifests. Installed VM/compiler hosts
+    // use a bootstrap DLL beside the executable and the complete package below.
+    if (!fs::exists(directory / "rxllama.runtime.json")) directory /= "providers";
+    return directory;
 #else
     Dl_info info{};
     require(dladdr(reinterpret_cast<void *>(&rxllama_vm_create), &info) && info.dli_fname, "cannot locate inference runtime");
@@ -139,6 +143,15 @@ void initialize_engine() {
         const auto name = entry.at("backend").get<std::string>();
         try {
             auto file = rxllama_package::verified(dir, entry);
+#ifdef _WIN32
+            // Pinned GGML uses LoadLibraryW, whose dependency search does not
+            // include the supplied DLL's directory. Preload that exact verified
+            // file with local dependency lookup before registering it in GGML.
+            auto library = LoadLibraryExW(file.c_str(), nullptr,
+                LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+            if (!library) throw Failure(-6, "backend/driver unavailable (Windows " + std::to_string(GetLastError()) + ")");
+            probe_leases.push_back(library);
+#endif
             auto reg = ggml_backend_load(rxllama_package::utf8_path(file).c_str());
             if (!reg) throw Failure(-6, "backend/driver unavailable");
             loaded_backends.push_back(reg);

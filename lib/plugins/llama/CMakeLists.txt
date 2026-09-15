@@ -105,7 +105,7 @@ set_target_properties(llama PROPERTIES OUTPUT_NAME crexx-llama-engine)
 add_library(crexx_llama_bridge SHARED bridge.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
 # Source/configuration identity is inspectable independently of upstream's pin.
 set(_bridge_identity "${_llama_sha};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${CMAKE_CXX_FLAGS};${CMAKE_CXX_FLAGS_DEBUG};${CMAKE_CXX_FLAGS_RELEASE};${_llama_backends}")
-foreach(source bridge.cpp bridge.h generation.h generation_utf8.h package.hpp rxllama.c typed.h CMakeLists.txt)
+foreach(source bridge.cpp bridge.h generation.h generation_utf8.h package.hpp rxllama.c typed.h CMakeLists.txt WindowsBootstrap.cmake)
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
     file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${source}" source_hash)
     string(APPEND _bridge_identity ";${source}:${source_hash}")
@@ -151,6 +151,24 @@ add_rxpa_provider_package(llama_provider PROVIDER_ID rxllama
     RUNTIME_FILES ${_llama_extra_runtime}
     RUNTIME_SEARCH_DIRECTORIES ${_llama_runtime_search_dirs}
     BACKEND_TARGETS ${_llama_backends})
+if(WIN32)
+    # LoadLibrary cannot resolve the public bin/rxllama plugin's imports from
+    # bin/providers. Keep a small executable-adjacent bootstrap; GPU libraries
+    # remain in the complete provider package, loaded by verified absolute path.
+    set(_bootstrap_input "${CMAKE_CURRENT_BINARY_DIR}/rxllama-bootstrap-$<CONFIG>.cmake")
+    set(_bootstrap_content "include(\"${CMAKE_CURRENT_BINARY_DIR}/rxllama-package-$<CONFIG>.cmake\")\n")
+    foreach(target crexx_llama_bridge llama ggml ggml-base)
+        string(APPEND _bootstrap_content "list(APPEND bootstrap_roots \"$<TARGET_FILE:${target}>\")\n")
+    endforeach()
+    foreach(runtime IN LISTS CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+        string(APPEND _bootstrap_content "list(APPEND bootstrap_runtime \"${runtime}\")\n")
+    endforeach()
+    string(APPEND _bootstrap_content "set(inventory \"${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke-bootstrap-files.txt\")\n")
+    file(GENERATE OUTPUT "${_bootstrap_input}" CONTENT "${_bootstrap_content}")
+    add_custom_command(TARGET llama_provider_runtime_package POST_BUILD
+        COMMAND ${CMAKE_COMMAND} "-DINPUT=${_bootstrap_input}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/WindowsBootstrap.cmake" VERBATIM)
+endif()
 add_executable(crexx-provider-package provider_package.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
 target_compile_features(crexx-provider-package PRIVATE cxx_std_17)
 target_include_directories(crexx-provider-package PRIVATE

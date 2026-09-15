@@ -146,6 +146,10 @@ The install contains the toolchain and bytecode in `bin`, the RXPA provider and
 its declared native/runtime manifests, and versioned inference dependencies in
 the provider package locations. The runtime notice is `rxllama-NOTICES.txt`.
 These guides and four examples are in `share/crexx/llama`.
+Windows also places the small bridge/engine core DLLs and their runtime
+dependencies beside the executables in `bin`, so plugin startup needs no SDK
+on PATH. GPU libraries remain in `bin/providers`; verified backend loading
+resolves their dependencies there. Keep the entire installed directory together.
 
 Start with [model provisioning](models.md), then follow the complete
 [example commands](examples/README.md). Use the chosen prefix's `bin/crexx`

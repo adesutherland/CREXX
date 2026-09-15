@@ -43,7 +43,7 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    verifies fixture identity and required backends, and runs outside the build
    tree using the staged runtime. Test helpers and fixture weights are not
    accidentally shipped as user runtime dependencies.
-6. [ ] **CI-AC-06:** branch-scoped cancellation and rerun controls work; failures
+6. [x] **CI-AC-06:** branch-scoped cancellation and rerun controls work; failures
    preserve logs. Deadline-sensitive work is serial within each host, using
    wide hang guards. New smoke is measured alone in normal Debug and maintained
    ASan before CTest registration. No model-quality/performance workload enters
@@ -113,3 +113,29 @@ then its registered serial CTest passed (28.20/45.57 seconds). Workflow validati
 and 14 publication/signing/matrix controls pass.
 [Retained evidence](../qa/native-inference-ci/README.md) records scope and inputs.
 CI-03/04 remain open until the candidate packages and wider hosted jobs finish.
+
+## Windows portability follow-up within CI-03/04
+
+The main candidate's useful Linux/CUDA and Mac jobs continue while diagnostic
+branches `temp/llama-release-windows` (MSVC/CUDA) and
+`temp/llama-release-mingw` test ordinary portability repairs. These branches
+cannot publish; the final combined candidate still needs CI-AC-07.
+
+The Windows loader audit identifies an unmet existing CI-OUT-01/CI-AC-03/05
+requirement: executable/plugin startup and backend dependencies must resolve
+without a development SDK on PATH. Preserve the API and provider package:
+
+1. Copy only the bridge/engine core DLLs and their runtime dependencies beside
+   installed executables; keep the complete native/backend package in
+   `bin/providers`. Do not duplicate the large CUDA libraries in `bin`.
+2. Locate that trusted provider directory from the installed bootstrap copy;
+   native applications retain their existing adjacent manifest/dependencies.
+   Load verified Windows backends with dependency lookup scoped to their DLL
+   directory, retaining the existing process-lifetime ownership.
+3. Prove the final Windows package and relocated native application with the
+   development SDK/toolchain PATH removed during execution. The native-build
+   action retains its necessary compiler environment. Retain normal/ASan
+   focused controls and target Windows results before closing this repair.
+
+This is a source-audit finding until Windows execution reaches this boundary;
+the earlier compiler failures do not themselves prove a loader failure.
