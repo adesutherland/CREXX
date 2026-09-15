@@ -1,12 +1,58 @@
 # Native inference CI restart handoff — 15 September 2026
 
-Status: Adrian resumed with "continue" after the restart. This is the historical
-pause snapshot; the live pipeline ledger records subsequent work. Source/workflow changes were committed and
-pushed to `origin/temp/llama-release-combined` at `c10b9115e` (resolve the full
-SHA from git). This note is intentionally an uncommitted handoff. No new CI run
-was dispatched after the pause request; existing remote jobs were left running.
+Status: active qualification on `origin/temp/llama-release-combined`. The
+authoritative [pipeline plan](native-inference-ci.md) retains the complete
+vision, acceptance criteria and implementation steps. The older snapshots below
+are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 15 September, after restart
+
+**Newest source / focused retries:** local code HEAD is
+`b4d10adfb7263313f331d12239ac07352c8bc491`, pushed to
+`origin/temp/llama-release-windows-retry`. It contains the CI-F11 helper variable
+rename (`0be70cd69`), CI-F14's two private C11 requirements (`23fd6b8e0`), the
+standalone first-party probe (`7431f33fa`) and guarded Deep selector (`b4d10adfb`).
+Windows Build `35028632018` selects `lane=windows`; Deep `35028634025` selects
+`platform=windows-msvc`. These are focused retries, not a complete new exact-head
+qualification. The older combined run below remains active so its CUDA cache
+work and other useful jobs can finish.
+
+CI-F14 passes both controls in normal Debug (2.30 s) and Apple ASan (3.07 s).
+The C++ helper fails/passes the explicit `small` macro control before/after its
+rename. Twenty-seven release/selector controls and actionlint pass. Linux probe
+`35027428540` at `9152850e8` passes with `detect_leaks=1`, ordinary verified engine
+libraries and no upstream build. SAN-009 still awaits the broader supported
+gate. Keep the evidence updates with the authoritative plan at checkpoint.
+
+**Current candidate:** `21666b6bcf0c5a14986652ef0b0a76bddc43611b` is committed
+and pushed. Integrated [Build run 35025115905](https://github.com/adesutherland/CREXX/actions/runs/35025115905)
+was dispatched with `lane=all`. All four shipped core jobs and the non-shipping
+MinGW gate pass on this SHA. Six plugin jobs now consume the matching core
+artifacts from this same run. ARM Metal and Linux Vulkan plugin packages pass.
+Windows Vulkan stops in the QA helper's CI-F11 macro collision; its production
+bridge compiled. Both CUDA jobs remain building. Intel Metal remains in the
+provider lifecycle/path check; elapsed time alone does not establish a new cause.
+Wider core [Deep Build 35026467548](https://github.com/adesutherland/CREXX/actions/runs/35026467548)
+and [Sanitizer QA 35026470003](https://github.com/adesutherland/CREXX/actions/runs/35026470003)
+are running on this head with llama disabled. Deep Linux and ARM pass, including
+external-consumer checks; MSVC stops at CI-F14. MinGW and Intel remain running.
+Stress and the 1/5/30-job product equivalence checks pass. Do not publish or move
+`develop`.
+
+Next: retain the integrated core/plugin results, diagnose any concrete failures,
+complete CUDA cache evidence and the required wider core QA on the final
+candidate. CI-F07's Intel Metal compiler-service wait and SAN-009's supported
+Linux first-party closure remain open. CI-F11's private-buffer repair still
+needs actual MSVC plugin build proof. Real-device/model/provenance criteria in
+the parent plan are unchanged and are not closed by a fixture pass.
+
+Direct Intel GGML-only registration passes three starts in `35026224152`
+(`1a2d3dbc8`): 53.938/0.266/0.233 seconds, no bridge/VM/model present. This does
+not reproduce or close CI-F07. A follow-up matching production's CPU-first
+registration is `35026657758` at `da1a430b8`, using the same archived libraries
+and opt-in capture. It also passes three Intel starts (56.737/0.312/0.249 s);
+its local ARM control passes. CI-F07 remains unresolved. Diagnostic changes
+remain on `temp/llama-release-intel-native`, outside the candidate pipeline.
 
 **Latest completed gate:** all five core configurations are green. MinGW
 `35023122646` at `aade0fd0f` passes 152 core tests, three KeyAccess controls and

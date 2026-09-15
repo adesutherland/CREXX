@@ -1,0 +1,78 @@
+{
+  "outcome": "passed",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-linux-x64.zip",
+  "archive_sha256": "c6b5752f27f5bd87471ddabccbe2461834cd719598a7d68dfe503a8a48d6cf3c",
+  "sources": {
+    "/home/runner/work/CREXX/CREXX/lib/plugins/llama/bridge.cpp": "700b525193859d0ff1527a1dd942376e5d0b974be8d761eb74f15c9d70e43298",
+    "/home/runner/work/CREXX/CREXX/lib/plugins/llama/bridge.h": "3385831b83721b9f6a9f9e9eca8dcf7e6e91e132e39a96db389d9a30a44b9c1e",
+    "/home/runner/work/CREXX/CREXX/lib/plugins/llama/package.hpp": "07e4923081a9e7dbdf26f207e14d8beb204798d8d6eefe13429281a25a6773f3",
+    "/home/runner/work/CREXX/CREXX/lib/plugins/llama/generation.h": "b21136a6dfc1690623f2ba4192fab64bb065ffa447fc4f7ddcb7ec03bfd428e6",
+    "/home/runner/work/CREXX/CREXX/lib/plugins/llama/generation_utf8.h": "7182468f8495646af2735821b55f49d520d18a7e8466c84fcc5f7a62dda40a03",
+    "/home/runner/work/CREXX/CREXX/binutils/rxsha256.c": "f575b31b355fce031f066d27273006e4ff2a3e90c103b0435220faea31b3409a",
+    "/home/runner/work/CREXX/CREXX/tests/native-inference/bridge_lifecycle.cpp": "2261e4e0268513f4cccb1d1ec07c2e58d188e6335fd8e316e4236352aa7c47da",
+    "/home/runner/work/_temp/llama-headers/include/llama.h": "3d1b18eda626c1b9ecf5bda0798e65b974a8f70f30d56726610633a980cb4160",
+    "/home/runner/work/_temp/llama-headers/ggml/include/ggml.h": "34192eac913444df9dc1d23025a618448cdee1ee7d78597af4979d8edc77b695",
+    "/home/runner/work/_temp/llama-headers/ggml/include/ggml-backend.h": "46d84cb998105f871240864fd0f55446939a2fe86c5c281afa63a010fb1f65a2",
+    "/home/runner/work/_temp/llama-headers/vendor/nlohmann/json.hpp": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63"
+  },
+  "upstream_instrumented": false,
+  "upstream_built": false,
+  "scope": "SAN-009 first-party probe; no model or real-device qualification",
+  "commands": [
+    {
+      "label": "ordinary-engine-symbols",
+      "returncode": 0,
+      "elapsed_seconds": 0.882
+    },
+    {
+      "label": "debug-configure",
+      "returncode": 0,
+      "elapsed_seconds": 3.804
+    },
+    {
+      "label": "debug-graph",
+      "returncode": 0,
+      "elapsed_seconds": 0.001
+    },
+    {
+      "label": "debug-build",
+      "returncode": 0,
+      "elapsed_seconds": 3.269
+    },
+    {
+      "label": "debug-symbols",
+      "returncode": 0,
+      "elapsed_seconds": 0.03
+    },
+    {
+      "label": "debug-ctest",
+      "returncode": 0,
+      "elapsed_seconds": 1.998
+    },
+    {
+      "label": "asan-configure",
+      "returncode": 0,
+      "elapsed_seconds": 0.25
+    },
+    {
+      "label": "asan-graph",
+      "returncode": 0,
+      "elapsed_seconds": 0.002
+    },
+    {
+      "label": "asan-build",
+      "returncode": 0,
+      "elapsed_seconds": 4.399
+    },
+    {
+      "label": "asan-symbols",
+      "returncode": 0,
+      "elapsed_seconds": 0.03
+    },
+    {
+      "label": "asan-ctest",
+      "returncode": 0,
+      "elapsed_seconds": 1.78
+    }
+  ]
+}

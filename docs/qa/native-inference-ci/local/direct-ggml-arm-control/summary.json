@@ -1,0 +1,54 @@
+{
+  "outcome": "passed",
+  "scope": "direct GGML registration attribution only; no bridge, VM, model or engine rebuild",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-arm64.zip",
+  "archive_sha256": "47e894f0c7e63e5441b25696138c6862ac70dd57f0101bf4a5b0dee465dd5b82",
+  "libraries": [
+    {
+      "path": "libcrexx-ggml.0.23.0.dylib",
+      "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+    },
+    {
+      "path": "libcrexx-ggml.dylib",
+      "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+    },
+    {
+      "path": "libcrexx-ggml.0.dylib",
+      "sha256": "49f74344d8939aabf37b60c5945624bd8121c6f3343bf5d4c1a55fa03faf7760"
+    },
+    {
+      "path": "libcrexx-ggml-base.0.23.0.dylib",
+      "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+    },
+    {
+      "path": "libcrexx-ggml-base.dylib",
+      "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+    },
+    {
+      "path": "libcrexx-ggml-base.0.dylib",
+      "sha256": "d6aa3d0e6a98bd12c60e3959b2188eee84f3e95df0a661d0b8dc739e91a63449"
+    },
+    {
+      "path": "libcrexx-ggml-cpu.so",
+      "sha256": "8478acfc7d43f830d361b9f157ee413dc36d1b8bfbae48ae5ef828289832ef24"
+    },
+    {
+      "path": "libcrexx-ggml-metal.so",
+      "sha256": "20abce3816c1a588c7a4a7d86dd1cccd6fa2a5602c80f4ce61c6c01783f4c713"
+    }
+  ],
+  "work": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-direct-ggml-8h7jpznp",
+  "capture_after": 180,
+  "commands": [
+    {
+      "label": "direct-1",
+      "returncode": 0,
+      "elapsed_seconds": 13.467
+    },
+    {
+      "label": "direct-2",
+      "returncode": 0,
+      "elapsed_seconds": 0.09
+    }
+  ]
+}

@@ -3,7 +3,8 @@
 Status: implementation authorized by Adrian, 15 September 2026. This is the
 STEP-06 pipeline work package under [the authoritative plan](native-inference-backlog.md),
 preserving OUT-01–05 and AC-01–14. It does not replace real-device qualification
-with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
+with a fixture pass. Main qualification branch: `origin/temp/llama-release-combined`; focused
+retries use the named candidate branches in the live handoff.
 
 ## Vision and outcomes
 
@@ -473,3 +474,89 @@ comprehensive, graph/stress and sanitizer core configurations explicitly disable
 llama. Plugin jobs keep their four focused adapter/path controls and combined
 fixture/package smoke. These wider gates are still pending; adding the matrix
 rows does not claim a comprehensive pass.
+
+### CI-F07 direct-library attribution control
+
+The retained Intel stack waits inside `ggml_metal_library_compile_all` and
+Apple's synchronous compiler service. Source inspection at the existing pin
+confirms that `GGML_METAL_EMBED_LIBRARY=ON` embeds shader source and compiles it
+at runtime. The alternate precompiled-library mode exists, but its packaging,
+device compatibility and effect on this stall are unproven. No production build
+policy or upstream shader code is changed by this diagnosis.
+
+1. [x] **F07-AC-01:** a bounded standalone control loads only the exact archived
+   GGML libraries, without the cREXX bridge, VM, model or compiler. Verify the
+   archive and copied library hashes and retain loaded-image identities.
+2. [x] **F07-AC-02:** run that control on Intel Mac with opt-in stack capture.
+   A matching stalled direct call attributes the wait below the cREXX bridge;
+   a passing replay does not explain or close the intermittent failure.
+3. [x] **F07-D01:** validate the diagnostic harness locally against a retained
+   ARM archive, then run it on the existing isolated Intel diagnostic branch.
+   Reuse the compiled engine; neither a full build nor a model download is needed.
+   Serves F07-AC-01/02 and the existing CI-AC-05/07 investigation.
+
+### SAN-009 supported first-party closure within the agreed scope
+
+The hosted core sanitizer deliberately disables llama. To cover the repaired
+first-party probe without rebuilding or instrumenting the upstream engine,
+reuse a SHA-verified ordinary Linux provider archive and the exact pinned
+headers. A private standalone CMake test builds only `bridge.cpp`, first-party
+SHA256 support and the existing permanent lifecycle/probe executable. This
+adds no production API/build option or broad model workload.
+
+1. [x] **LP-AC-01:** the probe's engine/backend files retain their ordinary
+   archive hashes; only first-party targets are built/instrumented. Retain the
+   build graph, source/header/archive identities and instrumentation inspection.
+2. [x] **LP-AC-02:** the same permanent probe passes normal Debug and ASan/LSan
+   on Linux, with leak detection enabled and logs retained through
+   `tools/asan-run.sh`. No CUDA SDK, engine rebuild or model download is used.
+3. [ ] **LP-AC-03:** combine this focused result with the retained original
+   Apple trigger/full proof and the current full supported core sanitizer gate
+   before disposing of SAN-009. A probe alone does not close the item or the
+   remaining model/device criteria.
+4. [x] **LP-01:** prepare the isolated harness and verify it locally against
+   retained ordinary runtime libraries; then run the same source on a separate
+   Linux diagnostic branch. Serves LP-AC-01/02.
+5. [ ] **LP-02:** retain and inspect the focused and wider results, register any
+   new first-party finding, and reconcile SAN-009's closure checks. Serves
+   LP-AC-03 and existing CI-AC-07; no scope waiver is implied.
+
+### Integrated Windows follow-ups: CI-F11 and CI-F14
+
+Windows Vulkan at `21666b6bc` builds the production bridge, then finds the same
+SDK `small` macro collision in the lifecycle QA helper's private runtime-handle
+variable. Keep this under CI-F11: the affected helper and repair share the
+established cause. The actual helper translation unit fails with `-Dsmall=char`
+locally before its identifier is renamed. No runtime/API change is needed.
+
+**CI-F14:** the new MSVC comprehensive core gate stops compiling
+`cri17_attached_provider_control.c`: its C90 target includes the private VM's
+C11 atomics. The full compile command lacks `/std:c11`; the SDK explicitly
+rejects that mode. A preprocessing audit of all 172 local first-party C90
+translation units finds `stdatomic.h` only in this harness's two target variants.
+Declare their actual C11 requirement privately, following the neighboring
+native-object test targets. Do not change the public C SDK or global C standard.
+
+1. [x] **F14-AC-01:** both harness targets declare C11 and retain their existing
+   attached-provider lifetime/failure assertions. Verify generated commands and
+   focused normal/maintained sanitizer results.
+2. [ ] **F14-AC-02:** MSVC builds and runs the affected core controls and completes
+   the broader core gate; the tests remain enabled.
+3. [x] **F14-01:** retain the host failure/dependency audit, correct the two
+   target requirements and validate focused controls (F14-AC-01).
+4. [ ] **F14-02:** qualify the Windows correction, then reconcile the wider gate
+   (F14-AC-02). Reuse unaffected core/plugin evidence and cached engine outputs.
+
+Manual Deep QA now has an explicit core-platform selector so this MSVC retry
+does not repeat all passing platforms, build-parallelism checks or stress work.
+The default and scheduled gate retain all five core configurations and the
+existing independent checks. A selected-platform run is reported as partial
+qualification, never a complete Deep pass.
+
+The direct GGML controls pass locally and in Intel runs `35026224152` and
+`35026657758`; CI-F07 itself remains unresolved. Linux first-party probe
+`35027428540` passes Debug/ASan-LSan (CTest 1.08/1.77 s) with ordinary engine
+files; the broader gate still keeps LP-AC-03 and SAN-009 open. CI-F14 passes
+normal/Apple-ASan 2/2 controls and generated C11 command inspection. Its Windows
+retry is `35028634025`, while helper/package retry `35028632018` covers CI-F11.
+Both use `b4d10adfb`; full combined qualification remains a separate gate.

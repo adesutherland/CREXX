@@ -1,0 +1,17 @@
+argv=['/home/runner/work/CREXX/CREXX/tools/asan-run.sh', '--build-dir', '/home/runner/work/_temp/first-party-probe/debug', '--no-live-tail', '--phase', 'ctest', '--regex', '^rxllama_backend_probe_cycle$', '--test-jobs', '1', '--leaks', 'on']
+ASan run directory: /home/runner/work/_temp/first-party-probe/debug/asan-logs/20260915-214621-ctest
+==> ctest
+    log: /home/runner/work/_temp/first-party-probe/debug/asan-logs/20260915-214621-ctest/ctest.log
+==> ctest passed
+Command: ctest --test-dir /home/runner/work/_temp/first-party-probe/debug --output-on-failure --stop-on-failure -R \^rxllama_backend_probe_cycle\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=1
+
+Internal ctest changing into directory: /home/runner/work/_temp/first-party-probe/debug
+Test project /home/runner/work/_temp/first-party-probe/debug
+    Start 1: rxllama_backend_probe_cycle
+1/1 Test #1: rxllama_backend_probe_cycle ......   Passed    0.96 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   1.08 sec
+ASan run complete: /home/runner/work/_temp/first-party-probe/debug/asan-logs/20260915-214621-ctest

@@ -1,0 +1,22 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^cri17_attached_provider_control- --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 2413: cri17_attached_provider_control-rxvml
+1/2 Test #2413: cri17_attached_provider_control-rxvml ....   Passed    1.21 sec
+    Start 2414: cri17_attached_provider_control-rxbvml
+2/2 Test #2414: cri17_attached_provider_control-rxbvml ...   Passed    1.04 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+comprehensive    =   2.25 sec*proc (2 tests)
+concurrency      =   2.25 sec*proc (2 tests)
+cri-17           =   2.25 sec*proc (2 tests)
+interpreter      =   2.25 sec*proc (2 tests)
+negative         =   2.25 sec*proc (2 tests)
+provider         =   2.25 sec*proc (2 tests)
+regression       =   2.25 sec*proc (2 tests)
+rxpa             =   2.25 sec*proc (2 tests)
+
+Total Test time (real) =   2.30 sec

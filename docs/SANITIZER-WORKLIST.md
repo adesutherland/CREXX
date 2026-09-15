@@ -94,6 +94,19 @@ STEP-03 closure and the named STEP-06
 native-inference release-QA handoff, owned by Codex under his direction.
 SAN-009 remains open and release-blocking; no sanitizer suppression is authorized.
 
+- **Supported first-party probe, 2026-09-15:** isolated Linux run
+  `35027428540` at `9152850e8` passes the permanent probe in normal Debug and
+  ASan/LSan with `detect_leaks=1`. It rebuilds only the current first-party
+  bridge, SHA256 support and probe harness. The ordinary engine/backend files
+  come from the verified `76df02be3` release-layout archive; symbol inspection
+  and unchanged file hashes confirm they were neither rebuilt nor instrumented.
+  Build graphs, identities and maintained-runner logs are retained under
+  `docs/qa/native-inference-ci/remote/9152850e8/first-party-probe/`.
+  The equivalent local ARM control passes with Apple's documented leak limit.
+  The subsequent CI-F11 change only renames the helper's private co-residency
+  variable; it does not change the probe entry point or bridge implementation.
+  Full core Linux ASan/LSan `35026470003` is still pending, so the item stays open.
+
 - **First-party scope clarification, 2026-09-15:** Adrian explicitly limits
   the maintained sanitizer programme to cREXX code, excluding upstream
   llama.cpp/CUDA qualification. Hosted core jobs now build without llama;

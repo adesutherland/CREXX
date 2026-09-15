@@ -1,0 +1,13 @@
+{
+  "command": "python3 -B -m unittest discover -s scripts/tests -p 'test_*release*.py'",
+  "result": "27 tests passed",
+  "elapsed_seconds": 0.078,
+  "evidence_source": "captured terminal output; no repeated test invocation",
+  "actionlint": "build.yml, deep-build.yml, release-core.yml and sanitizers.yml passed",
+  "inputs": {
+    "scripts/ci-core-qa-matrix.py": "25151f2242f6fc96893496f2a03d63868732cc97d5d2f2611c51c9b793de2189",
+    "scripts/tests/test_llama_release_pipeline.py": "fec63f1a6fe14994200b89e1da2abcb8af55cd4e797a1f2b404746e51ae3cf46",
+    ".github/qa/core-matrix.json": "03958fb418f32942f094dda9b9f4370fdd54e0210c3adfd26782cbdb5c157648",
+    ".github/workflows/deep-build.yml": "a375b8002e1f591d796f4deeb77c18e42b957134c44c98197b380ef06bbb6245"
+  }
+}

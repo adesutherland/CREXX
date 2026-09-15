@@ -1,0 +1,7 @@
+argv=['D:/a/_temp/core-package/extracted/CREXX-windows-mingw/bin/crexx.exe', '--program', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-gmkow15w/native/hello', 'D:/a/_temp/msys64/tmp/crexx-core-consumer-gmkow15w/hello.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member hello
+BUILT: project member hello
+BARRIER: link program
+PUBLISHED: program D:/a/_temp/msys64/tmp/crexx-core-consumer-gmkow15w/native/hello.rxbin
+PUBLISHED: native program D:/a/_temp/msys64/tmp/crexx-core-consumer-gmkow15w/native/hello.exe

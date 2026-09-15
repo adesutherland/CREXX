@@ -670,3 +670,84 @@ inventory contains only `core-qa-windows-mingw-aade0fd0fe8ae97f5130383165bcf1b83
 (30,211 bytes), with no distributable ZIP. Logs and summaries are retained under
 `remote/aade0fd0f/core-mingw*`. This closes the initial five-configuration core
 prerequisite; it does not yet qualify the new split-plugin jobs or wider gates.
+
+### Integrated split-delivery run
+
+The implemented pipeline is committed at
+`21666b6bcf0c5a14986652ef0b0a76bddc43611b` on
+`origin/temp/llama-release-combined`. [Run 35025115905](https://github.com/adesutherland/CREXX/actions/runs/35025115905)
+selects all lanes: four shipped cores plus the non-shipping MinGW gate first,
+then six plugin jobs consuming the matching core ZIPs from the same run.
+All five integrated core jobs pass. Linux/ARM/Intel pass 162 core tests each
+(53.44/80.25/98.10 s); Windows/MSVC passes 148 (68.28 s); Windows/MinGW passes
+152 (71.73 s), plus its three focused KeyAccess controls (0.23 s). Every actual
+core ZIP passes its applicable VM/opt/noopt and relocated native consumers.
+MinGW again uploads QA evidence only. Raw evidence is under `remote/21666b6bc/`.
+The six dependent plugin jobs are running. Wider llama-free core gates on the
+same SHA are Deep Build `35026467548` and Sanitizer QA `35026470003`; neither is
+yet a terminal qualification result.
+
+### Direct GGML Intel startup control
+
+The bounded control at `1a2d3dbc8` verifies the retained archive and extracts
+only its GGML libraries. It calls `ggml_backend_load` through Python ctypes,
+records loaded images, and requires a Metal device; no cREXX bridge, VM, model
+or engine build participates. Local ARM passes two starts in 13.467/0.090 s
+(`local/direct-ggml-arm-control/`). The initial harness needed to resolve ZIP
+symlink entries before hashing library contents; that harness-only assertion
+and the corrected result are retained.
+
+Intel run `35026224152` passes three starts in 53.938/0.266/0.233 s
+(`remote/1a2d3dbc8/`). This is a successful control, not a reproduced root cause
+or closure of CI-F07. Follow-up `35026657758` at `da1a430b8` also matches
+production's CPU-variant probing and CPU-before-Metal registration, retaining
+probe DSOs. Its local ARM control passes
+(`local/direct-ggml-cpu-first-arm-control/`); the hosted result is pending.
+
+The CPU-first Intel follow-up also passes all three starts
+(56.737/0.312/0.249 s), retained under `remote/da1a430b8/`. This completes the
+bounded direct-library control, without reproducing or closing CI-F07.
+
+### Integrated package results and Windows corrections
+
+At `21666b6bc`, ARM Metal and Linux Vulkan pass the split core/plugin smoke.
+The ARM plugin is 2,449,354 bytes, SHA256
+`500738cd34658fe91bad3fecda9364374ae713e521a7431c421345af1d14b0a1`.
+Its actual ZIP contains no core tools, fixture or QA executable; the smoke
+passes 15 commands in 113.535 s. The required companion core SHA is retained
+in `plugin-arm64/plugin-package/qa/archive.json`. Platform logs and summaries
+are under `remote/21666b6bc/`; other plugin variants remain pending or failed as
+described below.
+
+The Windows Vulkan production bridge compiles, but its lifecycle helper still
+used the SDK-reserved identifier `small`. This is CI-F11's same macro mechanism,
+now fixed in `0be70cd69`. The actual helper translation unit fails before and
+passes after with `-Dsmall=char`; see `local/msvc-helper-small-control/`.
+
+Deep MSVC stops before CTest because both attached-provider controls inherit
+C90 while including private VM C11 atomics (CI-F14). A preprocessing audit of
+172 local first-party C90 units identifies only those two commands as including
+`stdatomic.h`. Commit `23fd6b8e0` declares C11 privately for them. Both existing
+controls pass in normal Debug (2.30 s) and maintained Apple ASan (3.07 s), and
+the generated commands select C11. Evidence is under `local/c90-atomics-audit/`
+and `local/c11-attached-control/`. No public SDK or runtime source changes.
+
+Deep's optional platform selector is guarded to candidate manual runs; ordinary,
+scheduled and non-candidate runs keep the complete matrix and independent gates.
+The 27 release/selector controls and actionlint pass. Windows-only package
+`35028632018` and comprehensive `35028634025` retry at `b4d10adfb` without
+cancelling the other useful jobs at `21666b6bc`. These partial retries do not
+constitute a new full exact-head gate.
+
+### Supported Linux first-party ownership probe
+
+`tests/native-inference/first-party-probe/` imports verified ordinary libraries
+and builds only the first-party bridge, SHA256 support and permanent probe.
+Local ARM controls pass (`local/first-party-probe-arm/`). Linux `35027428540`
+at `9152850e8` passes matching Debug/ASan-LSan CTests in 1.08/1.77 seconds,
+with `detect_leaks=1`, verified source/archive identities, no upstream compile
+commands and no upstream sanitizer symbols. Ordinary engine hashes remain
+unchanged. Logs are under `remote/9152850e8/first-party-probe/`.
+The later helper rename affects only the co-residency variable, not this probe
+or bridge implementation. SAN-009 still awaits the broader supported core gate;
+the probe does not qualify models or real GPU inference.

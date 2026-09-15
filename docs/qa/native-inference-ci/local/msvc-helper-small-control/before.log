@@ -1,0 +1,10 @@
+tests/native-inference/bridge_lifecycle.cpp:99:5: warning: 'auto' storage class specifier is not permitted in C++11, and will not be supported in future releases [-Wauto-storage-class]
+   99 |     auto small=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;
+      |     ^~~~
+tests/native-inference/bridge_lifecycle.cpp:99:15: error: expected unqualified-id
+   99 |     auto small=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;
+      |               ^
+tests/native-inference/bridge_lifecycle.cpp:100:42: error: expected '(' for function-style cast or type construction
+  100 |     vm.reject(RXLLAMA_MODEL_OPEN,{h(small),s(argv[2]),s(argv[3]),s("bge-small-en-v1.5"),h(low)});
+      |                                     ~~~~~^
+1 warning and 2 errors generated.

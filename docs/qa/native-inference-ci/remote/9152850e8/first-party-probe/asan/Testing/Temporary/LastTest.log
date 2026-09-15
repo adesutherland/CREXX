@@ -1,0 +1,18 @@
+Start testing: Sep 15 21:46 UTC
+----------------------------------------------------------
+1/1 Testing: rxllama_backend_probe_cycle
+1/1 Test: rxllama_backend_probe_cycle
+Command: "/home/runner/work/_temp/first-party-probe/asan/rxllama_bridge_lifecycle" "--probe-cycle"
+Directory: /home/runner/work/_temp/first-party-probe/asan
+"rxllama_backend_probe_cycle" start time: Sep 15 21:46 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   1.77 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_backend_probe_cycle" end time: Sep 15 21:46 UTC
+"rxllama_backend_probe_cycle" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Sep 15 21:46 UTC

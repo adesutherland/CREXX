@@ -1,0 +1,19 @@
+argv=['cmake', '-S', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/first-party-probe', '-B', '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/debug', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Debug', '-DCREXX_SOURCE=/Users/adrian/CLionProjects/CREXX', '-DLLAMA_SOURCE=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/_deps/crexx_llama_source-src', '-DPROVIDER_DIRECTORY=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/debug/providers', '-DPROBE_ASAN=OFF']
+-- The C compiler identification is AppleClang 21.0.0.21000101
+-- The CXX compiler identification is AppleClang 21.0.0.21000101
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-first-party-probe-s3i1j4ri/debug

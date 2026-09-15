@@ -1,0 +1,9 @@
+Command: cmake --build /home/runner/work/_temp/first-party-probe/asan --target rxllama_bridge_lifecycle --parallel 2
+ASAN_OPTIONS=detect_leaks=1
+
+[1/6] Building C object CMakeFiles/crexx_llama_bridge.dir/home/runner/work/CREXX/CREXX/binutils/rxsha256.c.o
+[2/6] Building CXX object CMakeFiles/rxllama_bridge_lifecycle.dir/home/runner/work/CREXX/CREXX/tests/native-inference/bridge_lifecycle.cpp.o
+[3/6] Building CXX object CMakeFiles/crexx_llama_bridge.dir/home/runner/work/CREXX/CREXX/lib/plugins/llama/bridge.cpp.o
+[4/6] Linking CXX shared library providers/libcrexx-llama.so.1
+[5/6] Creating library symlink providers/libcrexx-llama.so
+[6/6] Linking CXX executable rxllama_bridge_lifecycle

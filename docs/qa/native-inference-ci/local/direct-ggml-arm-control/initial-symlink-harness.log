@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-intel-native-x82yhe8s/.github/diagnostics/llama-ggml-replay.py", line 115, in <module>
+    main()
+    ~~~~^^
+  File "/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-intel-native-x82yhe8s/.github/diagnostics/llama-ggml-replay.py", line 67, in main
+    assert hashlib.sha256(data).hexdigest() == entry['sha256']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
