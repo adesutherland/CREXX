@@ -238,3 +238,22 @@ superseded before completion. These diagnostic revisions are not final combined
 qualification. CI-AC-06 is checked: cancellation/rerun isolation, retained
 failure logs, measured serial smoke, generous hang guards and absence of model
 benchmarks are established. CI-AC-02/03/05/07/08 and CI-03–05 remain open.
+
+### Intel Mac isolated replay
+
+Diagnostic run [35002901578](https://github.com/adesutherland/CREXX/actions/runs/35002901578)
+at `e39916f2a` passes the **entire** package smoke (224.287 s; 15 commands),
+including CPU and actual `MTL0` computation, both optimization/VM paths and the
+relocated native program. The engine completes in about 76 s, before the
+explicit 120-second diagnostic capture condition; no stack is sampled and no
+process is terminated. The later VM/native calls account for the rest of the
+smoke. These are fixture/packaging durations, not model-performance findings.
+
+The downloaded user-test ZIP preserves `rxvm -> rxbvm`, verifies all 29 declared
+provider entries and excludes fixture/helper files. Raw logs, summary and archive
+inspection are under `remote/e39916f2a/`. The original `2bc56249d` 30-minute
+engine stall is not reproduced or explained. Do not claim a runtime repair or
+silently relabel that first result as a pass. CI-F07 awaits the ordinary final
+candidate run and retains its original evidence; no deadline, device exclusion
+or inference algorithm was changed to obtain this replay. The diagnostic-only
+workflow override remains outside the main candidate.
