@@ -1,4 +1,4 @@
-name: Intel archived bridge stall diagnosis
+name: Intel native versus Python engine startup diagnosis
 on:
   push:
     branches: [temp/llama-release-intel-native]
@@ -24,7 +24,7 @@ jobs:
           run-id: 35013130021
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/candidate
-      - name: Call the archived bridge probe without a cREXX VM
+      - name: Compare direct native and Python GGML with the archived bridge
         shell: bash
         run: |
           python .github/diagnostics/llama-bridge-probe.py \
@@ -35,6 +35,6 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: intel-archived-bridge-stall-diagnosis
+          name: intel-native-process-startup-diagnosis
           path: ${{ runner.temp }}/bridge-probe
           retention-days: 14
