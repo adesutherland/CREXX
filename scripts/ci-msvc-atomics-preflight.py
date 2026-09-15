@@ -25,7 +25,7 @@ def main(build):
     results = []
     for index, row in enumerate(rows, 1):
         command = row['command']
-        if '/std:c11' not in command or command.count('/experimental:c11atomics') != 1:
+        if not any(flag in command for flag in ('/std:c11', '-std:c11')) or command.count('/experimental:c11atomics') != 1:
             raise RuntimeError('Generated command must declare both C11 and MSVC atomics')
         # Ninja creates object directories at configure time. Newer CMake also
         # supplies the output path explicitly; handle it when available.
