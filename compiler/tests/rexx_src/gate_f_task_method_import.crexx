@@ -4,6 +4,11 @@ namespace gate_f_task_method_import
 
 main: procedure = .int
   worker = .workbox(40)
+  /* NI-S4-QA01: imported task returns may resolve after their named factories.
+     Cover implicit lowering as well as the explicit local/process blocks. */
+  named_worker = .workbox.from_channel(worker.to_channel())
+  implicit_answer = named_worker.result(2)
+  if implicit_answer.answer() <> 42 then return 9
   pool = .taskpool.local(1, 2)
   scope = .taskscope.collectall(pool, 60000)
   answer = do parallel using scope

@@ -1731,6 +1731,27 @@ static ASTNode *task_statement_expression(ASTNode *node) {
     }
 }
 
+/* Import resolution can attach a task definition before its call/argument
+ * types converge. Lowering mutates the source tree, so wait for those types
+ * instead of mistaking an unresolved result for a non-transferable value and
+ * leaving a partial block without its LEAVE WITH. Ordinary calls are captured
+ * into temporaries by the same lowering and must also have resolved types. */
+static int task_call_types_ready(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 1;
+    if (node->node_type == PROCEDURE || node->node_type == METHOD ||
+        node->node_type == FACTORY || node->node_type == MATCH) return 1;
+    if ((node->node_type == FUNCTION || node->node_type == MEMBER_CALL ||
+         node->node_type == FACTORY_CALL) && node->value_type == TP_UNKNOWN) {
+        return 0;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        if (!task_call_types_ready(child)) return 0;
+    }
+    return 1;
+}
+
 walker_result rxcp_task_calls_walker(walker_direction direction,
                                      ASTNode *node,
                                      void *payload) {
@@ -1743,6 +1764,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
         ast_chld(node, ERROR, 0)) return result_normal;
     expression = task_statement_expression(node);
     if (node->node_type == PARALLEL_BLOCK_EXPR) {
+        if (!task_call_types_ready(node)) return result_normal;
         if (!task_lower_parallel_block_expression(context, node) &&
             !ast_chld(node, ERROR, 0)) {
             mknd_err(node, "TASK_LOWERING_FAILED");
@@ -1750,6 +1772,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
         return result_normal;
     }
     if (node->node_type == PARALLEL_DO) {
+        if (!task_call_types_ready(node)) return result_normal;
         if (!task_lower_parallel_do(context, node) && !ast_chld(node, ERROR, 0)) {
             mknd_err(node, "TASK_LOWERING_FAILED");
         }
@@ -1758,6 +1781,7 @@ walker_result rxcp_task_calls_walker(walker_direction direction,
     if (!expression || expression->node_type == BLOCK_EXPR ||
         !task_subtree_has_call(expression)) return result_normal;
     if (!task_calls_language_valid(context, expression)) return result_normal;
+    if (!task_call_types_ready(expression)) return result_normal;
     if (!task_result_contracts_valid(context, expression)) return result_normal;
 
     if (task_inside_task_callable(expression)) {
