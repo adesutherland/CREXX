@@ -623,3 +623,15 @@ GPU SDK or CUDA is built for this repair.
 
 The operating-system behavior matches Microsoft's [rename documentation](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/rename-wrename?view=msvc-170)
 and [fclose null-argument contract](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fclose-fcloseall?view=msvc-170).
+
+
+### Windows/MSVC core retry and CI-F13 packaging harness
+
+Run `35021253099`, SHA `7425ff241`, passes all 148 core tests (73.18 s), including
+`keyaccess_test_noopt` and the deliberate replacement-failure cleanup control.
+The ZIP smoke then stops before consumer execution on `KeyError: SystemRoot`:
+Python's Windows environment dictionary uses uppercase `SYSTEMROOT`. The casing
+repair and focused isolation control preserve the restricted runtime PATH.
+Seven packaging controls pass. Raw build/test/failure evidence is retained under
+`remote/7425ff241/`. Core correctness is green; extracted Windows ZIP proof is
+still pending, as is the newly requested MinGW/both-VM gate (`35021842079`).

@@ -400,3 +400,27 @@ CI-AC-02/03/07 and CI-D01-01 without changing the four-core/six-plugin asset cou
 3. [ ] **MINGW-01:** add and run the focused Windows/MinGW diagnostic core job.
 4. [ ] **MINGW-02:** include the same non-shipping gate in the final release
    dependency graph; retain focused evidence without duplicating backend QA.
+
+
+## CI-F13 — Windows core package environment lookup
+
+MSVC retry `35021253099` builds and passes 148/148 core checks (73.18 s), including
+both repaired KeyAccess smoke controls. Packaging then fails before consumer
+execution because the Python environment dictionary contains `SYSTEMROOT`,
+while the harness requested `SystemRoot`. This is a packaging harness defect,
+not a new VM failure. Preserve this successful core result and the failing
+trace under `remote/7425ff241/`.
+
+The repair handles Windows environment names case-insensitively and retains
+only the OS directories in execution PATH. A focused casing control covers
+both spellings and prevents any development SDK PATH leakage. It passes with
+the existing six split-package controls. Windows retries also retain any failed
+archive as explicitly unqualified diagnostic data, so later package diagnosis
+can reuse it; the requested MinGW gate retains no binary archive.
+
+- [ ] **F13-AC-01:** the Windows core ZIP completes restricted-environment VM
+  and relocated native smoke. The final gate still requires the new MinGW run.
+- [x] **F13-01:** repair the lookup and pass both casing controls without
+  relaxing runtime PATH isolation.
+- [ ] **F13-02:** retry the Windows configurations and retain terminal evidence;
+  also exercise the optimized KeyAccess control explicitly on those hosts.

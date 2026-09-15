@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import ntpath
 import os
 from pathlib import Path
 import shutil
@@ -54,6 +55,15 @@ def extract(archive_path, destination):
             target.symlink_to(link)
 
 
+def windows_execution_environment(env):
+    # dict(os.environ) has uppercase keys on Windows; callers can also supply
+    # the conventional mixed-case spelling. Windows variable names ignore case.
+    system = next(value for key, value in env.items() if key.upper() == 'SYSTEMROOT')
+    runtime = {key: value for key, value in env.items() if key.upper() != 'PATH'}
+    runtime['PATH'] = ';'.join((ntpath.join(system, 'System32'), system))
+    return runtime
+
+
 def smoke(prefix, source, preferred_vm, logs):
     work = Path(tempfile.mkdtemp(prefix='crexx-core-consumer-'))
     extension = '.exe' if os.name == 'nt' else ''
@@ -63,8 +73,7 @@ def smoke(prefix, source, preferred_vm, logs):
         env.pop(key, None)
     execution = dict(env)
     if os.name == 'nt':
-        system = Path(env['SystemRoot'])
-        execution['PATH'] = os.pathsep.join(map(str, (system / 'System32', system)))
+        execution = windows_execution_environment(env)
     records = []
     started = time.monotonic()
     outcome = 'failed'

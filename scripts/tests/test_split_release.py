@@ -80,6 +80,15 @@ class SplitPackageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Nonlocal archive'):
             core.extract(archive, self.root/'extracted')
 
+    def test_windows_restricted_path_handles_environment_key_casing(self):
+        for system_key, path_key in [('SYSTEMROOT', 'PATH'), ('SystemRoot', 'Path')]:
+            env = {system_key: 'C:\\Windows', path_key: 'compiler-and-sdk-path', 'TEMP': 'temporary'}
+            runtime = core.windows_execution_environment(env)
+            self.assertEqual(runtime['PATH'], 'C:\\Windows\\System32;C:\\Windows')
+            self.assertEqual(runtime['TEMP'], 'temporary')
+            self.assertEqual([k for k in runtime if k.upper() == 'PATH'], ['PATH'])
+            self.assertEqual(env[path_key], 'compiler-and-sdk-path')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -114,6 +114,20 @@ jobs:
         if: matrix.toolchain == 'mingw'
         shell: msys2 {0}
         run: cmake --build "${{ runner.temp }}/core-build" --target qa-smoke --parallel 2
+      - name: Check focused KeyAccess modes
+        if: matrix.toolchain == 'msvc'
+        shell: bash
+        run: |
+          cmake --build "${{ runner.temp }}/core-build" --target keyaccess_test keyaccess_compact_failure_test --parallel 2
+          ctest --test-dir "${{ runner.temp }}/core-build" -R '^keyaccess_(test_(opt|noopt)|compact_failure)$' --parallel 1 --output-on-failure
+
+      - name: Check focused KeyAccess modes (MinGW)
+        if: matrix.toolchain == 'mingw'
+        shell: msys2 {0}
+        run: |
+          cmake --build "${{ runner.temp }}/core-build" --target keyaccess_test keyaccess_compact_failure_test --parallel 2
+          ctest --test-dir "${{ runner.temp }}/core-build" -R '^keyaccess_(test_(opt|noopt)|compact_failure)$' --parallel 1 --output-on-failure
+
       - name: Package and test the actual core ZIP
         if: matrix.toolchain != 'mingw'
         shell: bash
@@ -149,3 +163,11 @@ jobs:
           path: ${{ runner.temp }}/core-package/assets/*.zip
           if-no-files-found: error
           retention-days: 14
+      - name: Retain failed core archive for packaging diagnosis
+        if: failure() && matrix.toolchain != 'mingw'
+        uses: actions/upload-artifact@v7
+        with:
+          name: unqualified-core-${{ matrix.platform }}-${{ inputs.commit || github.sha }}
+          path: ${{ runner.temp }}/core-package/assets/*.zip
+          if-no-files-found: ignore
+          retention-days: 7
