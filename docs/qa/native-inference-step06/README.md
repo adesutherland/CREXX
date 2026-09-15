@@ -24,7 +24,7 @@ is not an acceptance waiver.
 | New nested aggregates | Keep explicit/unregistered until normal and sanitizer isolation measurements establish scheduling/timeouts. |
 | Complete local Apple-ASan | Full build/preparation pass; 2,349/2,349 CTests pass in 2,278.82 s through `tools/asan-run.sh`, `20260915-150827-full`. No sanitizer diagnostics in retained logs. Apple LSan unsupported; no supported leak check disabled. |
 | Installed/native/offline/failure workflows | Both STEP-07 native examples pass under enforced network denial with live listener controls. Apple-ASan typed embedding and generation installed/native matrices pass, as do package dependency/fallback/cache/worker failure controls. Target OS/device proof remains open. |
-| Linux / Windows / CUDA / Vulkan | Pending actual host/device access and identity. |
+| Linux / Windows / CUDA / Vulkan | Hosted package qualification is active on isolated candidate branches. Linux CPU/Vulkan and macOS arm64 CPU/Metal fixture packages pass at `2bc56249d`; Windows portability retries, Intel Mac and CUDA builds are pending. Real BGE/Smol device cells remain open. See the [pipeline ledger](../native-inference-ci/README.md). |
 | Model provenance | Exact GGUFs verified, including fresh documented Smol download. [S6-D01](../../planning/native-inference-model-provenance-proposal.md) reproducibility/compatibility QA is complete. Adrian directed a QA focus without overcomplication; approved pins/downloads unchanged, no adoption/distribution work. Historical original-artifact ancestry remains unproven. |
 | Final acceptance | Parent AC-01–14 remain open. No sanitizer-clean or release-ready claim. |
 
@@ -56,7 +56,8 @@ input change or a newly reproduced concern.
 S6-01–04 and S6-07 are complete. S6-05 remains open for the outstanding target
 delivery/failure scenarios, S6-06 for actual Linux/Windows/real CUDA/Vulkan and
 supported Linux ASan/LSan proof, and S6-08 for final whole-plan reconciliation.
-Codex owns those gates under Adrian's direction; external host/device access is
+Codex owns those gates under Adrian's direction. GitHub host/package testing is
+active; remaining real-device access and full supported-platform proof are
 pending. The [current parent disposition](../../planning/native-inference-backlog.md#step-06-parent-acceptance-disposition--15-september-2026)
 preserves each AC-01–14 and its unmet condition. SAN-009 remains release-blocking.
 
