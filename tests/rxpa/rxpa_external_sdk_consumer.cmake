@@ -16,6 +16,7 @@ foreach(consumer_file IN ITEMS
         sdk_probe.c
         sdk_probe.crexx
         sdk_const_probe.cpp
+        sdk_incremental_link.cmake
         rx_hash_installed.crexx
         rxsqlite_installed.crexx
         rxsqlite_address_installed.crexx
@@ -146,8 +147,24 @@ run_checked("configure external plugin from installed CREXX package"
 
 run_checked("build external plugin verbosely"
         COMMAND "${CMAKE_COMMAND}" --build "${consumer_build}"
-                --target _cri07_sdk_probe _cri08_const_consumers --verbose
+                --target _cri07_sdk_probe _cri08_const_consumers rxpa_incremental_consumers --verbose
         WORKING_DIRECTORY "${WORK_ROOT}")
+
+include("${consumer_build}/incremental-paths.cmake")
+foreach(consumer IN LISTS incremental_consumers)
+    run_checked("initial static archive value: ${consumer}"
+        COMMAND "${consumer}" 41 WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
+file(WRITE "${consumer_build}/incremental-library.c"
+    "int rxincremental_init_;\nint incremental_value(void) { return 42; }\n")
+run_checked("rebuild after static archive source changes"
+    COMMAND "${CMAKE_COMMAND}" --build "${consumer_build}"
+        --target rxpa_incremental_consumers --verbose
+    WORKING_DIRECTORY "${WORK_ROOT}")
+foreach(consumer IN LISTS incremental_consumers)
+    run_checked("updated static archive value: ${consumer}"
+        COMMAND "${consumer}" 42 WORKING_DIRECTORY "${WORK_ROOT}")
+endforeach()
 
 set(plugin "${plugin_dir}/rx_cri07_sdk_probe.rxplugin")
 set(cpp_plugin "${plugin_dir}/rx_cri08_const_cpp.rxplugin")

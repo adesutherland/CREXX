@@ -189,6 +189,11 @@ endfunction()
 
 # Function to configure the linker for a static declaration library ensuring the library is linked into the executable
 function(configure_linker_for_decl_lib target pluginId)
+    # Linker flags containing a target path do not give Unix generators a
+    # relink dependency. Keep both build order and archive freshness explicit.
+    add_dependencies(${target} ${pluginId}_decl)
+    set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS
+        "$<TARGET_FILE:${pluginId}_decl>")
     if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -209,6 +214,9 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_lib target pluginId)
+    add_dependencies(${target} ${pluginId}_static)
+    set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS
+        "$<TARGET_FILE:${pluginId}_static>")
     cmake_parse_arguments(RXPA_STATIC_LINK "" "PROVIDER_ID" "" ${ARGN})
     if(RXPA_STATIC_LINK_PROVIDER_ID)
         set(_crexx_static_provider_id "${RXPA_STATIC_LINK_PROVIDER_ID}")
@@ -236,6 +244,9 @@ endfunction()
 
 # Function to configure the linker for a static definition library ensuring the library is linked into the executable
 function(configure_linker_for_static_lib_rel target dirId pluginId)
+    add_dependencies(${target} ${pluginId}_static)
+    set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS
+        "$<TARGET_FILE:${pluginId}_static>")
     if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
         # For Visual Studio Compiler
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
