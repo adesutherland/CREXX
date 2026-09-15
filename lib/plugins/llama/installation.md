@@ -7,9 +7,15 @@ supplies the inference libraries; model files are downloaded separately. There
 is no inference server to start. Model provisioning and building need network
 access unless their inputs are already available; inference uses local files.
 
-This is the current development implementation. CPU and Metal have local macOS
-evidence. Windows/Linux and CUDA/Vulkan recipes below are qualification recipes,
-not claims that those platforms have passed. See [status](qualification.md).
+Source builds keep `ENABLE_LLAMA=OFF` by default. Add `-DENABLE_LLAMA=ON` to
+experiment with the provider; CPU is included, Metal defaults on for macOS,
+and CUDA/Vulkan remain explicit SDK-dependent choices. The candidate binary
+release pipeline enables and packages these dependencies for recipients.
+
+This is the current development implementation. Both trained models have local
+macOS CPU/Metal evidence. Generated-fixture package checks also pass on the
+recorded Linux, Windows MinGW and Intel Mac candidates; wider and real-device
+qualification remains open. See [status](qualification.md).
 
 ## Using a binary package
 

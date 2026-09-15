@@ -21,7 +21,27 @@ and profile rejection, plus installed VM and relocated native consumers.
 It does not establish BGE retrieval quality, Smol output quality or execution
 on unavailable GPUs. Neither `develop` promotion nor a release is implied.
 
-## Platform and delivery matrix
+## Generated-fixture package evidence
+
+These checks exercise installed VM and relocated native consumers, provider
+integrity/discovery/rejection and bounded engine computations. They do not use
+the trained BGE/Smol models. Revisions differ during triage; complete final
+candidate Build, Deep Build and Sanitizer gates remain open.
+
+| Package | Triage result | Actual fixture computation |
+| --- | --- | --- |
+| Linux x64 CPU/Vulkan | Pass at `2bc56249d`; downloaded archive checked. | CPU; runner reports no GPU. |
+| Windows x64 MinGW CPU/Vulkan | Pass at `4a0924ee1`; downloaded archive and restricted-PATH consumers checked. | CPU; runner reports no GPU. |
+| macOS arm64 CPU/Metal | Pass at `2bc56249d`; downloaded archive checked. | CPU and Metal. |
+| macOS x86_64 CPU/Metal | Pass at `e39916f2a`; downloaded archive checked. | CPU and Metal. Earlier 30-minute stall remains unexplained. |
+| Linux x64 CPU/CUDA | Pass at `2bc56249d`; downloaded archive, redistributables and notices checked. | CPU; runner reports no GPU. |
+| Windows x64 MSVC CPU/CUDA | Pending. | No claim. |
+
+The pipeline evidence ledger retains job identities, archive hashes and failures.
+Use `rxvm` as the public entry point: archive inspection verifies its relative
+selected-VM symlink on Unix/macOS and identical executable copy on Windows.
+
+## Trained-model platform and delivery matrix
 
 | Target / backend | BGE embeddings and Smol generation | Installed VM / relocated native | Remaining proof |
 | --- | --- | --- | --- |
@@ -32,9 +52,9 @@ on unavailable GPUs. Neither `develop` promotion nor a release is implied.
 | Linux / CUDA and Vulkan | Backend integration present; real-device qualification pending for each selected cell. | Pending. | Actual GPU/driver identity, computation, numerics, memory, sharing and packaging. |
 | Windows / CUDA and Vulkan | Backend integration present; real-device qualification pending for each selected cell. | Pending. | Actual GPU/driver identity, computation, numerics, memory, sharing and DLL deployment. |
 
-GitHub OS runner labels do not establish GPU capability. Apple Intel, Windows
-ARM and other combinations have no evidence here and are not implied by another
-cell's result. Unavailable agreed hardware cells remain open for an explicit
+GitHub OS runner labels do not establish GPU capability. The Intel Mac fixture
+check above does not supply trained-model evidence. Windows ARM and other
+combinations are not implied by another cell's result. Unavailable agreed hardware cells remain open for an explicit
 disposition; no documentation claim silently removes them from acceptance.
 
 | Capability | Current contract |

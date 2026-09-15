@@ -299,3 +299,55 @@ All four base platforms now have passing triage packages on their recorded
 revisions. This is not a combined exact-head qualification: both CUDA builds
 and the final Build/Deep Build/Sanitizer workflows remain pending. CI-AC-02/03/
 05/07/08 and CI-03–05 remain open until that evidence is reconciled.
+
+### Combined wider gate dispatch
+
+Combined candidate `cabc668cf242a969994dc750f6a71d41b15d385e` is frozen on
+`origin/temp/llama-release-combined`. [Deep Build QA 35007946063](https://github.com/adesutherland/CREXX/actions/runs/35007946063)
+and [Sanitizer QA 35007947861](https://github.com/adesutherland/CREXX/actions/runs/35007947861)
+are running; no pass is claimed. Linux leak detection remains enabled.
+The auxiliary branch's create-event Build run `35007934305` only executes
+metadata/guard checks: every package job is skipped, so it supplies no package
+qualification. The final complete Build matrix remains to run on the combined
+candidate after CUDA triage. Initial run identities are retained under
+`remote/cabc668cf/`; neither existing CUDA job was cancelled by this dispatch.
+
+### CI-F10 — GCC sanitizer allocation header packaging
+
+Linux ASan/LSan job `104512384642` in combined run `35007947861` fails during
+compilation of the existing `rxllama_generation_bridge` QA executable:
+`sanitizer/allocator_interface.h` is absent from the installed GCC 13 headers.
+No test ran and no sanitizer memory diagnostic appears. Retained complete build
+and driver logs are in `remote/cabc668cf/linux-sanitizer/` and
+`linux-sanitizer.log`. This is a QA compiler/header portability finding, not a
+new SAN memory finding or a reason to disable leak detection.
+
+GCC 13's public source declares and implements
+`__sanitizer_get_current_allocated_bytes`. Use its exact C declaration when the
+header is unavailable; retain the installed header on toolchains that provide
+it. The allocation measurement, 32 MiB bound and model workload are unchanged.
+Normal/ASan focused proof and supported Linux retry remain required. Sources:
+[GCC public declaration](https://github.com/gcc-mirror/gcc/blob/releases/gcc-13.3.0/libsanitizer/include/sanitizer/allocator_interface.h)
+and [implementation](https://github.com/gcc-mirror/gcc/blob/releases/gcc-13.3.0/libsanitizer/asan/asan_stats.cpp).
+
+Combined package run `35008896953` was started on `cabc668cf`, then cancelled
+early after CI-F10 made a follow-up candidate necessary. Cancellation supplies
+no pass. The already useful older Windows CUDA diagnosis and wider Deep/Mac
+ASan checks are retained; complete exact-head gates still belong to the final
+combined candidate after fixes.
+
+The CI-F10 declaration change passes the same explicit generation qualification
+target in normal Debug (83.1685 s) and Apple ASan (109.027 s), including 100
+singles, 20 four-row batches, private/shared workers and co-resident models.
+ASan records 1,456 bytes of retained live-allocation growth against the unchanged
+32 MiB guard. These are correctness-run durations, not new performance verdicts.
+Evidence: `local/allocator-debug/`, `local/allocator-asan/`, `allocator-inputs.json`.
+The hosted GCC retry remains the missing-header branch's platform proof.
+
+The Linux CUDA triage package at `2bc56249d` passes 161 smoke-tier checks and
+the final consumer smoke (33.524 s, 15 commands, zero actual GPU devices).
+Its full product build takes 1 h 54 m 30 s with two build jobs and all pinned
+upstream portable CUDA architectures. The downloaded 786,190,716-byte user ZIP
+retains `rxvm -> rxtvm`, passes 34 provider entry hashes (following relative
+in-archive library links), and includes CUDA runtime/cuBLAS libraries and notices.
+No fixture/helper is shipped. See `remote/2bc56249d/linux-cuda*`.

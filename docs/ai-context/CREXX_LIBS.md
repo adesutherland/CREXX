@@ -1022,7 +1022,9 @@ wrappers. Do not silently re-pin models to close the recorded conversion
 provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
 
 The candidate binary-delivery work is tracked by numbered CI-OUT/CI-AC/CI
-steps in [the pipeline plan](../planning/native-inference-ci.md). Release
+steps in [the pipeline plan](../planning/native-inference-ci.md). Ordinary source
+builds default to `ENABLE_LLAMA=OFF`; explicit opt-in includes CPU, defaults to
+Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. Release
 workflows enable `ENABLE_LLAMA` and explicitly build both provider packaging
 targets. Their small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
