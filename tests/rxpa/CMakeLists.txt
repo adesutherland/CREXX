@@ -153,12 +153,14 @@ endfunction()
 add_executable(cri17_attached_provider_control-rxvml
         cri17_attached_provider_control.c)
 target_link_libraries(cri17_attached_provider_control-rxvml PRIVATE rxvml)
+target_compile_features(cri17_attached_provider_control-rxvml PRIVATE c_std_11)
 crexx_configure_cri17_attached_control(
         cri17_attached_provider_control-rxvml)
 
 add_executable(cri17_attached_provider_control-rxbvml
         cri17_attached_provider_control.c)
 target_link_libraries(cri17_attached_provider_control-rxbvml PRIVATE rxbvml)
+target_compile_features(cri17_attached_provider_control-rxbvml PRIVATE c_std_11)
 target_compile_definitions(cri17_attached_provider_control-rxbvml PRIVATE
         NTHREADED=1)
 crexx_configure_cri17_attached_control(
