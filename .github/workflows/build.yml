@@ -256,11 +256,11 @@ jobs:
         shell: cmd
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON ${{ matrix.cmake_args }}
-          if errorlevel 1 exit /b %errorlevel%
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional llama_provider_runtime_package crexx-provider-package rxllama_release_engine_smoke --parallel ${{ matrix.build_jobs }}
-          if errorlevel 1 exit /b %errorlevel%
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target qa-smoke --parallel ${{ matrix.build_jobs }}
-          if errorlevel 1 exit /b %errorlevel%
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
 
       - name: Stage release payload
         if: matrix.platform != 'windows'
