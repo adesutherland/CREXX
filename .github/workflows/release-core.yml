@@ -3,6 +3,12 @@ on:
   push:
     branches: [temp/llama-release-core]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Core configuration to qualify (all for the release gate)
+        type: choice
+        default: all
+        options: [all, linux-x64, windows-x64, macos-arm64, macos-x86_64]
   workflow_call:
     inputs:
       commit:
@@ -14,34 +20,42 @@ concurrency:
   group: release-core-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 jobs:
+  configurations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - id: select
+        env:
+          SELECTED_PLATFORM: ${{ inputs.platform || 'all' }}
+        shell: python
+        run: |
+          import json, os
+          configurations = [
+              dict(platform="linux-x64", os="ubuntu-24.04", toolchain="gcc",
+                   vm="rxtvm", cmake_args=""),
+              dict(platform="windows-x64", os="windows-2025", toolchain="msvc",
+                   vm="rxbvm", cmake_args="-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF"),
+              dict(platform="macos-arm64", os="macos-15", toolchain="clang",
+                   vm="rxbvm", cmake_args="-DCMAKE_OSX_ARCHITECTURES=arm64"),
+              dict(platform="macos-x86_64", os="macos-15-intel", toolchain="clang",
+                   vm="rxbvm", cmake_args="-DCMAKE_OSX_ARCHITECTURES=x86_64"),
+          ]
+          selected = os.environ["SELECTED_PLATFORM"]
+          rows = [row for row in configurations if selected in ("all", row["platform"])]
+          if not rows:
+              raise SystemExit("Unknown core platform: " + selected)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("matrix=" + json.dumps({"include": rows}) + "\n")
   core:
+    needs: configurations
     name: Core ${{ matrix.platform }} (${{ matrix.toolchain }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux-x64
-            os: ubuntu-24.04
-            toolchain: gcc
-            vm: rxtvm
-            cmake_args: ''
-          - platform: windows-x64
-            os: windows-2025
-            toolchain: msvc
-            vm: rxbvm
-            cmake_args: '-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF'
-          - platform: macos-arm64
-            os: macos-15
-            toolchain: clang
-            vm: rxbvm
-            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=arm64'
-          - platform: macos-x86_64
-            os: macos-15-intel
-            toolchain: clang
-            vm: rxbvm
-            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=x86_64'
+      matrix: ${{ fromJSON(needs.configurations.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v5
         with:

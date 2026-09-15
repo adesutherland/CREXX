@@ -1,0 +1,330 @@
+Command: cmake --build cmake-build-debugasan --target keyaccess_test keyaccess_compact_failure_test --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.g1791970b10a3.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260807T121554Z
+-- CREXX Build Commit: 1791970b10a3
+-- CMake Generator: Unix Makefiles
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=generator default
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: -fsanitize=address -fno-omit-frame-pointer
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always -fsanitize=address -fno-omit-frame-pointer
+-- Linker flags for executables: -fsanitize=address
+-- Linker flags for shared libs: -fsanitize=address
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- llama.cpp version: 0.4.0
+CMAKE_BUILD_TYPE=Debug
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: arm64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- Accelerate framework found
+-- ARM detected
+-- Checking for ARM features using flags:
+-- Adding CPU backend variant ggml-cpu:  
+-- Metal framework found
+-- Including METAL backend
+-- ggml version: 0.23.0
+-- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- Building with ODBC support enabled.
+-- Configuring done (1.2s)
+-- Generating done (2.3s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+[  5%] Built target rxbin
+[ 10%] Built target dslsyntax_parser
+[ 15%] Built target re2c_objects_autogen_ver_to_vernum
+[ 15%] Built target re2c_objects_autogen
+[ 15%] Built target lemon
+[ 15%] Built target avl_tree
+[ 21%] Built target platform
+[ 21%] Built target rxvmmemory
+[ 21%] Built target decnumber
+[ 21%] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[ 21%] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.o
+[ 21%] Built target rxlink
+/Users/adrian/CLionProjects/CREXX/rxpa/rxpa.c:158:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  158 |         sprintf(full_file_name, "%s/%s", dir, file_name);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 21%] Building C object lib/plugins/keyaccess/CMakeFiles/_keyaccess.dir/keyaccess.c.o
+/Users/adrian/CLionProjects/CREXX/rxpa/rxpa.c:192:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  192 |         sprintf(relative_path, "./%s", full_file_name);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmsock.c:65:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmsock.c:65:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmintp.c:95:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmintp.c:95:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 21%] Linking C static library ../bin/librxpa.a
+[ 21%] Built target rxpa
+[ 21%] Linking C shared module ../../../bin/rx_keyaccess.rxplugin
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+2 warnings generated.
+[ 21%] Built target rxvm_platform_objects
+[ 21%] Built target _keyaccess
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmexecutor.c:13:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmexecutor.c:13:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[ 21%] Built target rxvmref
+[ 21%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[ 36%] Built target re2c
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmload.c:42:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvmload.c:42:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__([ 36%] Built target rxvmplugin
+_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmload.c:1290:18: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 1290 |             else sprintf(full_file_name, "%s.rxplugin", file_name);
+      |                  ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxspawn.c:68:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxspawn.c:68:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/interpreter/rxspawn.c:877:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  877 |         sprintf(candidate, "%s/%s", directory, exe);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+3 warnings generated.
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpacallmethod.c.o
+[ 36%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+3 warnings generated.
+[ 42%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxpacallmethod.c:32:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxpacallmethod.c:32:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxpafuncs.c:34:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxpafuncs.c:34:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvml/rxvm_run.c:30:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvml/../rxvmvars.h:2897:13: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 2897 |             sprintf(formatted_output, scientific_format, coefficient, exponent);
+      |             ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+In file included from /Users/adrian/CLionProjects/CREXX/interpreter/rxvml/rxvm_run.c:30:
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvml/../rxvmvars.h:3032:5: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+ 3032 |     sprintf(formatted_output, engineering_format, eng_exp);
+      |     ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+2 warnings generated.
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_opt.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow.c.o
+[ 42%] Built target mc_decimal_manual
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_batch.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_graph.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_rewrite.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_signal.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_use.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_proof.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasgrmr.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxasassm.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxaslib.c.o
+[ 42%] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_dsl.c.o
+[ 42%] Linking C static library ../bin/librxaslib.a
+[ 47%] Built target rxaslib
+[ 47%] Building C object assembler/CMakeFiles/rxas.dir/rxasmain.c.o
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:262:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  262 |         sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+/Users/adrian/CLionProjects/CREXX/assembler/rxasmain.c:270:9: warning: 'sprintf' is deprecated: This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead. [-Wdeprecated-declarations]
+  270 |         sprintf(combined_location, ".;%s", exe_path);
+      |         ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_stdio.h:278:1: note: 'sprintf' has been explicitly marked deprecated here
+  278 | __deprecated_msg("This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of sprintf(3), it is highly recommended that you use snprintf(3) instead.")
+      | ^
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:227:48: note: expanded from macro '__deprecated_msg'
+  227 |         #define __deprecated_msg(_msg) __attribute__((__deprecated__(_msg)))
+      |                                                       ^
+2 warnings generated.
+[ 47%] Linking C executable ../bin/rxas
+[ 47%] Built target rxas
+[ 47%] cREXX assemble _elapsed ...
+==93073==AddressSanitizer: detect_leaks is not supported on this platform.
+/bin/sh: line 1: 93073 Abort trap: 6           /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas -o _elapsed /Users/adrian/CLionProjects/CREXX/lib/rxfnsb/rxas/_elapsed
+make[3]: *** [lib/rxfnsb/rxas/_elapsed.rxbin] Error 134
+make[2]: *** [lib/rxfnsb/rxas/CMakeFiles/library-rxas.dir/all] Error 2
+make[2]: *** Waiting for unfinished jobs....
+2 warnings generated.
+[ 47%] Built target rxbvm_core_objects
+make[1]: *** [lib/plugins/keyaccess/CMakeFiles/keyaccess_test.dir/rule] Error 2
+make: *** [keyaccess_test] Error 2

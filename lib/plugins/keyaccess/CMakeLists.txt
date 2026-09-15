@@ -28,4 +28,14 @@ crexx_add_rexx_opt_matrix(
 )
 
 enable_testing()
+add_executable(keyaccess_compact_failure_test keyaccess_compact_failure_test.c)
+set_target_properties(keyaccess_compact_failure_test PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(keyaccess_compact_failure_test PRIVATE
+        ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_BINARY_DIR}/generated)
+add_test(NAME keyaccess_compact_failure COMMAND keyaccess_compact_failure_test)
+# Compaction currently uses shared temporary names within its working directory.
+set_tests_properties(keyaccess_test_noopt keyaccess_test_opt keyaccess_compact_failure
+        PROPERTIES RESOURCE_LOCK keyaccess_compaction TIMEOUT 300)
 crexx_label_smoke_tests(keyaccess_test_noopt)
+crexx_label_smoke_tests(keyaccess_compact_failure PREP_TARGETS keyaccess_compact_failure_test)

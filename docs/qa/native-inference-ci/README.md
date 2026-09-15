@@ -559,8 +559,8 @@ is implied.
 ### Approved core-first restart
 
 Core-only run `35018374738` at `9caac6dcb` builds with `ENABLE_LLAMA=OFF` on
-Linux/GCC, Windows/MSVC 14.44, ARM Mac and Intel Mac. ARM Mac and Linux are now
-green; Windows and Intel are still building. Their actual extracted archives
+Linux/GCC, Windows/MSVC 14.44, ARM Mac and Intel Mac. Linux and both Macs are green; Windows compiles but fails the KeyAccess
+compaction test (146/147 pass, CI-F12 below). Their actual extracted archives
 exercise optimized/nonoptimized compilation, assembly, linking, the public
 selected VM and applicable alternative, plus relocated native execution.
 No inference SDK or model is downloaded. Logs/artifacts are retained under
@@ -588,3 +588,38 @@ These interrupted cold-population observations are not warm-run savings or
 completed CUDA package proof. Cancelled sanitizer `35009830830` artifacts have
 no observed ASan/LSan or compile diagnostic; they remain cancelled, not passed.
 Their logs are preserved under `remote/0f35b970e/` and `remote/76df02be3/`.
+
+
+### CI-F12 — Windows core KeyAccess compaction
+
+The first core-only run `35018374738` is terminal. All three Unix core jobs pass
+161/161 tests: Linux 67.82 s, ARM Mac 66.90 s, Intel Mac 112.02 s. Intel's actual
+extracted ZIP smoke also passes (3.712 s); its archive is 20,302,974 bytes,
+SHA256 `8a7bbae4ad346e7a9f5ca1bbe678df0ebb5358bf96aaad78b7eccdc336b4a8fe`.
+The Windows/MSVC job `104547463919` builds successfully, then its unasserted
+compaction/close sequence aborts with `0xc0000409`. Logs and CTest artifacts are
+retained under `remote/9caac6dcb/`.
+
+MSVC CRT `rename` refuses an existing destination. The compaction replacement
+therefore fails after closing both original streams, leaving null pointers;
+`closekey` passed those to `fclose`. A permanent C control uses the actual plugin
+with real failing filesystem replacement and intercepts only null closes so it
+can report the defect without aborting its test host. Before repair it reports
+two null closes. The ordinary opt/noopt Rexx test now checks compaction's return,
+49 live records, a retained value and deletion, then closes/reopens and checks
+again to bypass cached values. Windows replacement now uses the existing FS
+provider's `MoveFileExA(..., MOVEFILE_REPLACE_EXISTING)` pattern. Cleanup checks
+whether streams remain open and reports actual close errors. Public signatures
+and database format are unchanged; two-file replacement is not newly atomic.
+
+The three controls share a CTest resource lock because existing compaction uses
+working-directory temporary names, with a 300-second hang backstop. The C test
+stays outside the shipped bin directory. Normal Debug passes all three in 0.44 s, and Apple ASan passes the same three
+in 0.73 s (`local/keyaccess-compaction/`). The initial ASan build stopped on
+Apple's unsupported leak option; the completed run uses the documented Apple
+leak-off setting. Supported Linux leak qualification remains open. Windows-only
+hosted qualification is next. No upstream engine,
+GPU SDK or CUDA is built for this repair.
+
+The operating-system behavior matches Microsoft's [rename documentation](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/rename-wrename?view=msvc-170)
+and [fclose null-argument contract](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fclose-fcloseall?view=msvc-170).

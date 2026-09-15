@@ -19,15 +19,19 @@ Build `35013130021`, sanitizer `35009830830` and MSVC diagnostic `35017440732`
 were cancelled to implement that sequence. Preserve their evidence; cancellation
 is not a pass. `.github/workflows/release-core.yml` and
 `scripts/package-core-release.py` implement the new initial core gate; their
-hosted result is not yet available. No further approval is needed for CI-D01.
+hosted result is recorded below. No further approval is needed for CI-D01.
 
 Core-only run `35018374738` at `9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2`
 is on `origin/temp/llama-release-core`. Jobs: Linux `104547463711`, Intel Mac
 `104547463876`, Windows/MSVC `104547463919`, ARM Mac `104547463953`. All configured
-successfully; last seen building (ARM already checking core correctness).
-The branch-create Build `35018374629` contains metadata/guards only and is not
-the core qualification result. Do not push more work to the core branch while
-that run is useful; its push trigger cancels an earlier run on the same branch.
+successfully. Linux and both Mac jobs pass all 161 checks and the extracted
+core ZIP consumer smoke. Windows compiles but passes only 146/147 checks:
+`keyaccess_test_noopt` aborts after compaction. CI-F12 in the authoritative plan
+owns the MSVC replace-file and null-stream cleanup repair. The new ordinary
+failure control reproduces two null closes before repair; the repaired Debug
+control and both Rexx modes pass. Matching Apple-ASan also passes all three controls (0.73 s). A Windows-only
+retry is next. No inference build should start yet. The workflow now permits a
+single platform on manual dispatch, avoiding unnecessary passing-platform reruns.
 
 Post-core-checkpoint preparation in the main worktree: Deep QA now explicitly
 disables llama; installation/human/agent guidance describes the approved split;

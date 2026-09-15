@@ -305,6 +305,45 @@ SAN-009 remains open for its actual first-party closure evidence. This approved
 scope does not require upstream-engine sanitizer cleanliness or GPU sanitizer
 coverage, and does not waive a first-party finding.
 
+## CI-F12 — Windows core KeyAccess compaction failure
+
+Vision: the MSVC core must compact an ordinary KeyAccess database, preserve its
+records, and close safely. This is core qualification under CI-D01-01; no llama
+or GPU rebuild is involved. Core run `35018374738` passes 146/147 Windows checks
+but `keyaccess_test_noopt` exits `0xc0000409` after printing "Closing database".
+Inspection identifies a Windows CRT mismatch: `rename` refuses an existing
+destination; compaction leaves both stream pointers null on replacement failure,
+then close passes those null pointers to `fclose`. Retain the host failure and
+verify the mechanism with focused controls before claiming repair closure.
+
+1. [ ] **F12-AC-01:** ordinary compaction returns success on Windows/MSVC,
+   retains live key/value pairs and deletions, and survives close/reopen. The
+   existing keyaccess opt/noopt tests must assert these outcomes explicitly.
+2. [x] **F12-AC-02:** cleanup after a failed compaction never closes a null
+   stream or reports the compaction itself as successful. Preserve the I/O
+   error and prove cleanup with a focused failure control.
+3. [ ] **F12-AC-03:** matching focused normal/maintained first-party sanitizer
+   controls pass, followed by the Windows-only core qualification retry. Reuse
+   unaffected platform/core evidence; do not restart inference jobs.
+
+1. [x] **F12-01:** retain the Windows failure and tighten the ordinary functional
+   compaction assertions; establish a bounded replacement-failure control
+   (F12-AC-01/02).
+2. [x] **F12-02:** use the existing filesystem provider's Windows replace-file
+   semantics and guard cleanup of closed streams. Preserve public signatures,
+   error codes and ordinary database format (F12-AC-01/02).
+3. [ ] **F12-03:** run focused core controls and the Windows-only retry, then
+   reconcile the four-core gate before resuming plugins (F12-AC-03).
+
+
+F12 local evidence: the new failure control reports two null closes without the
+repair; the three repaired controls pass normal Debug (0.44 s) and Apple ASan
+(0.73 s), retained under `local/keyaccess-compaction/` in the CI evidence pack.
+The initial ASan invocation used the runner's default leak option, which Apple
+rejects before test execution; the completed run uses the documented Apple
+`--build-leaks off`/`--leaks off` capability setting. Supported Linux leak
+qualification remains required. Only KeyAccess and its core toolchain prerequisites
+were built, with no engine/GPU build. F12-AC-01/03 remain open for Windows.
 
 Cache evidence limit: GitHub caches are scoped to the current/default branch
 (and the PR base for PR runs). This repository's default branch is `master`;
