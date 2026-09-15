@@ -96,8 +96,8 @@ static void co_resident(char **argv) {
     check(vm.call(RXLLAMA_INFO_INT,{h(rt),s("reserved_bytes")}).integer==0,"two-model cleanup");
     auto low=vm.call(RXLLAMA_CONFIG_CREATE).handle;
     vm.call(RXLLAMA_CONFIG_INT,{h(low),s("memory_bytes"),i(1024)});
-    auto small=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;
-    vm.reject(RXLLAMA_MODEL_OPEN,{h(small),s(argv[2]),s(argv[3]),s("bge-small-en-v1.5"),h(low)});
+    auto low_runtime=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;
+    vm.reject(RXLLAMA_MODEL_OPEN,{h(low_runtime),s(argv[2]),s(argv[3]),s("bge-small-en-v1.5"),h(low)});
     std::cout << "PASS: co-resident two-model four-session admission/cleanup " << argv[1] << " reserved=" << reserved << " peak_bytes=" << peak << '\n';
 }
 int main(int argc, char **argv) {
