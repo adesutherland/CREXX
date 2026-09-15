@@ -351,3 +351,28 @@ upstream portable CUDA architectures. The downloaded 786,190,716-byte user ZIP
 retains `rxvm -> rxtvm`, passes 34 provider entry hashes (following relative
 in-archive library links), and includes CUDA runtime/cuBLAS libraries and notices.
 No fixture/helper is shipped. See `remote/2bc56249d/linux-cuda*`.
+
+CI-F10 repair commit `489559ec4` and its retained evidence/docs form combined
+candidate `0f35b970e` on `origin/temp/llama-release-combined`.
+[Sanitizer retry 35009830830](https://github.com/adesutherland/CREXX/actions/runs/35009830830)
+is dispatched with the complete Linux/Mac matrix and Linux leaks enabled.
+This retry supersedes the earlier sanitizer candidate; cancellation is not a
+Mac pass. Earlier Deep Build and MSVC CUDA runs remain useful triage. Final
+Build/Deep/Sanitizer exact-head closure is still open.
+
+### CUDA compiler cache
+
+Adrian explicitly approved caching the CUDA engine on 15 September after the
+1 h 54 m 30 s Linux cold build. Both CUDA jobs now use the prebuilt sccache
+v0.16.0 through the action's pinned v0.0.11 commit
+`fc920bf0ec8de6ee65d409111f7ec508035751ba`. Explicit C/C++/CUDA launchers prevent
+GGML's automatic wrapper from being layered a second time. GitHub Actions stores
+the compiler outputs; source/header, compiler and option keys remain intact.
+Cache server I/O failure falls back to the ordinary compiler. This does not
+remove GPU architectures, alter the engine pin or change recipient dependencies.
+
+Text/JSON statistics are retained with package QA. `actionlint` and the same
+14 publication/signing/matrix controls pass (`local/compiler-cache-validation.log`).
+A first populated run and subsequent warm Linux/Windows CUDA evidence remain
+required by CI-AC-09; no build-time saving is claimed yet. The ordinary source
+build still defaults to `ENABLE_LLAMA=OFF`.
