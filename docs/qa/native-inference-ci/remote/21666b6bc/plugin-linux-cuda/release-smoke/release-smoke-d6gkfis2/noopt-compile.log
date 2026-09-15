@@ -1,0 +1,1 @@
+argv=['/home/runner/work/_temp/plugin-package/combined/CREXX-linux-x64/bin/rxc', '--no-exe-import', '-n', '-i', '/home/runner/work/_temp/plugin-package/combined/CREXX-linux-x64/bin', '-o', '/tmp/crexx-release-smoke-2inaxqgu/noopt', '/tmp/crexx-release-smoke-2inaxqgu/smoke.crexx']

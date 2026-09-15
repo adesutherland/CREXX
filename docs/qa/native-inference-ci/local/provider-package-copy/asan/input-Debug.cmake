@@ -1,0 +1,5 @@
+set(platform "Darwin")
+set(provider copy_control)
+set(arch "arm64")
+set(engine fixture)
+set(runtime_files "/tmp/crexx-package-copy-asan/a/libcopy_root_a.dylib" "/tmp/crexx-package-copy-asan/b/libcopy_root_b.dylib" "/tmp/crexx-package-copy-asan/a/libcopy-dependency.dylib")

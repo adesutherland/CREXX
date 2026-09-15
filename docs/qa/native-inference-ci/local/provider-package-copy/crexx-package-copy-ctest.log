@@ -1,0 +1,7 @@
+Test project /tmp/crexx-package-copy-debug
+    Start 1: provider_package_copy
+1/1 Test #1: provider_package_copy ............   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.09 sec

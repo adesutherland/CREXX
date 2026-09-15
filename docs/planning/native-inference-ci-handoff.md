@@ -7,6 +7,19 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 15 September, after restart
 
+**Latest packaging repair:** code HEAD `99a28ce7d` is on
+`origin/temp/llama-release-windows-retry`; Build `35031332714` retries Windows
+Vulkan with both core gates first and a tiny package preflight before the engine.
+CI-F15 reproduced the scanner inspecting original SDK/source locations after
+copying files into the package. The writer now scans those published roots;
+no conflict/missing-dependency checks are weakened. Normal/ASan-built tiny
+fixtures pass both complete-package and missing-dependency controls in 0.09 s.
+The prior Windows Vulkan run compiled every plugin/helper binary successfully,
+then stopped in this scanner. No new runtime/API change was required.
+
+The paragraphs below retain earlier exact retry heads; this packaging-only
+change does not invalidate their unaffected core runtime results.
+
 **Newest source / focused retries:** local HEAD is
 `3aca2dd2797ace911ff0eab8e48db41376687ced`, pushed to
 `origin/temp/llama-release-windows-retry`. CI-F11's helper rename is in
@@ -32,15 +45,19 @@ was dispatched with `lane=all`. All four shipped core jobs and the non-shipping
 MinGW gate pass on this SHA. Six plugin jobs now consume the matching core
 artifacts from this same run. ARM Metal and Linux Vulkan plugin packages pass.
 Windows Vulkan stops in the QA helper's CI-F11 macro collision; its production
-bridge compiled. Both CUDA jobs remain building. Intel Metal fails only its serial permanent
+bridge compiled. Linux CUDA passes (760,721,716-byte plugin ZIP; 23.494 s smoke). It records
+1,476 cache hits/1,254 misses and one write error: useful partial reuse, with
+full warm evidence still pending. Windows CUDA remains building on the older
+head, which still contains the known helper/scanner issues; preserve its cache
+work until terminal. Intel Metal fails only its serial permanent
 probe after the unchanged 1,800-second backstop; the other three checks pass.
 The bounded archived-bridge replay captures the same Metal compiler-service wait.
 Wider core [Deep Build 35026467548](https://github.com/adesutherland/CREXX/actions/runs/35026467548)
 and [Sanitizer QA 35026470003](https://github.com/adesutherland/CREXX/actions/runs/35026470003)
 are running on this head with llama disabled. Deep Linux, ARM and MinGW pass, including external-consumer checks. MinGW
 passes 2,248 comprehensive tests (881.48 s) and three qualification checks
-(22.72 s), with both VM modes represented. MSVC stops at CI-F14; Intel remains
-running.
+(22.72 s), with both VM modes represented. MSVC stops at CI-F14 and has its focused retry. Intel also passes all
+2,326 comprehensive tests and three qualification checks.
 Stress and the 1/5/30-job product equivalence checks pass. Do not publish or move
 `develop`.
 
@@ -59,8 +76,11 @@ and opt-in capture. It also passes three Intel starts (56.737/0.312/0.249 s);
 its local ARM control passes. CI-F07 remains unresolved. Archived-bridge replay `35029475651` at `50b7bf8fa` reproduces the wait
 without a cREXX VM/compiler/model. Native-C direct GGML (quiet/default logger),
 Python direct GGML and the archived bridge all pass the local ARM control.
-The same-host Intel comparison is now `35030619064` at `f29a8d3b9`. Retain
-its stacks/results before assigning cause. No production Metal change has
+The same-host Intel comparison `35030619064` at `f29a8d3b9` passes all four
+controls in 77.110/0.284/83.992/0.498 seconds. The bridge follows earlier direct
+initialization, so this does not close its intermittent cold-start failure or
+prove a speed comparison. Captured failing stacks remain the evidence of the
+Metal compiler-service wait. No production Metal change has
 been made. Diagnostic changes remain on `temp/llama-release-intel-native`,
 outside the candidate pipeline.
 

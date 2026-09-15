@@ -614,13 +614,35 @@ The intended outcome is to inspect dependencies of the actual published files
 without weakening missing/conflicting dependency checks or choosing arbitrary
 DLL versions. No production API or backend selection changes are needed.
 
-1. [ ] **F15-AC-01:** a small ordinary shared-library fixture reproduces the
+1. [x] **F15-AC-01:** a small ordinary shared-library fixture reproduces the
    duplicate-location scan failure before the repair, then passes with all
    runtime hashes retained after scanning the published files.
 2. [ ] **F15-AC-02:** the actual MSVC fixture and Windows Vulkan package pass;
    distinct unresolved dependencies still fail rather than being ignored.
-3. [ ] **F15-01:** retain the failed package log, reproduce with tiny libraries,
+3. [x] **F15-01:** retain the failed package log, reproduce with tiny libraries,
    and correct the scan roots to the already-published paths (F15-AC-01).
 4. [ ] **F15-02:** run the tiny Windows package preflight before retrying the
    optional plugin build; retain actual archive/runtime smoke (F15-AC-02).
    Preserve the ongoing core, CUDA and Intel diagnostic results.
+
+F15-AC-01 passes with a real dylib reproducer: the original scan reports
+two conflicting paths to identical bytes, while scanning the published roots
+passes and retains every file hash. The permanent tiny-library control also
+requires an omitted dependency to fail. Normal and ASan-built fixture checks
+each take 0.09 s; these are packaging scans, not sanitizer execution coverage.
+Windows retry `35031332714` uses `99a28ce7d`; its package preflight runs before
+the optional engine build. F15-AC-02 remains pending actual Windows evidence.
+
+Intel core Deep completes 2,326 tests and three qualification checks at
+`21666b6bc`. Intel process-context control `35030619064` passes native quiet,
+native default, Python direct and archived bridge starts in
+77.110/0.284/83.992/0.498 seconds. These are sequential controls on one host,
+not an unconfounded speed comparison. The bridge ran after direct calls;
+CI-F07's cold startup failure and captured compiler-service wait remain open.
+No precompiled-Metal packaging or other engine/runtime change has been made.
+
+Linux CUDA `35025115905` passes its split archive smoke at `21666b6bc`. Its
+760,721,716-byte plugin ZIP is separate from the core; smoke takes 23.494 s.
+Compiler caching shows 1,476 hits/1,254 misses (54.07%) and one write error.
+This proves useful partial reuse; complete warm-repeat and Windows CUDA
+evidence remain outstanding under CI-AC-09.

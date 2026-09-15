@@ -793,3 +793,35 @@ the explicit GGML base library; its failure is retained separately under
 `local/native-process-arm-link-control/`. Intel run `35030619064` at
 `f29a8d3b9` is pending. CI-F07 remains open; no production change or relaxed
 normal deadline is implied.
+
+### CI-F15 published dependency scan and subsequent results
+
+Windows Vulkan `35028632018` at `b4d10adfb` compiles all plugin/helper binaries
+then fails packaging because the scanner sees `MSVCP140.dll` in both the
+original Visual Studio redistributable directory and the copied provider
+directory. Logs are under `remote/b4d10adfb/plugin-windows-vulkan*`. A tiny
+real-library fixture reproduces this without any engine build. Scanning the
+already-published files resolves the duplicate location; missing dependencies
+still fail. `local/provider-package-copy/` retains before/after, normal and
+ASan-built fixture proof (0.09 s each). No instrumented library execution or
+upstream sanitizer coverage is claimed by this packaging test.
+
+Commit `99a28ce7d` adds the permanent private fixture and runs it before
+optional engine builds. Build `35031332714` is the Windows retry; its result
+is pending. Existing Windows core and MSVC atomics corrections remain intact.
+
+Intel core Deep at `21666b6bc` is green: 2,326 comprehensive tests (1,239.70 s)
+and three qualification checks (44.25 s), retained under `remote/21666b6bc/deep-intel*`.
+The native/Python Intel control `35030619064` passes all four calls in
+77.110/0.284/83.992/0.498 seconds (`remote/f29a8d3b9/`). The sequential order
+can affect cached initialization; this neither compares throughput nor closes
+CI-F07's captured cold-start wait. No production Metal change has been made.
+
+Linux CUDA's split plugin at `21666b6bc` passes, with archive SHA256
+`6c354d8b1699c4212a35f0c73fb5155aa7e967c8757881be7042f67ff64fb333`
+and size 760,721,716 bytes. Combined archive smoke takes 23.494 s against the
+exact core named in its package metadata. Cache statistics show 1,476 hits and
+1,254 misses (54.07%), with one write error; useful partial reuse is established,
+not a fully warmed-cache cost verdict. Evidence is under
+`remote/21666b6bc/plugin-linux-cuda*`. Windows CUDA and broad sanitizers remain
+pending; no develop or release promotion has occurred.
