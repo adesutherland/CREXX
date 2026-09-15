@@ -156,3 +156,14 @@ The corrected trigger is verified by a subsequent diagnostic push at `78308cf38`
 no extra run starts and the selected job stays active. Windows dependency retry
 `35004301149` runs the product inputs at `4a0924ee1`; a workflow/docs-only branch
 update need not repeat its unchanged compiler/runtime checks.
+
+## Combined candidate wider qualification
+
+After all four base package lanes pass their recorded triage revisions, push
+the combined fixes to `temp/llama-release-combined` for explicit Deep Build and
+Sanitizer QA. This manual-only candidate branch preserves the still-useful
+Linux CUDA run on `temp/llama-release-qa` and MSVC CUDA diagnostic run. It has no
+diagnostic workflow override and no publication authority. Once CUDA triage
+settles, run the complete Build matrix on the same combined candidate; any
+further product/build change must be reflected in the final exact-head gates.
+CI-AC-07 and CI-04 remain open until those terminal results are recorded.
