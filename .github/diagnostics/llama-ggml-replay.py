@@ -30,6 +30,25 @@ def direct(directory):
         print('LOADED_IMAGES: ' + json.dumps(names), flush=True)
         assert not any('libcrexx-llama' in name or 'rxvm' in name for name in names)
 
+    # Match production's CPU-first registration and retain feature-probe DSOs.
+    # This is still upstream GGML only; no bridge or model is present.
+    probes = []
+    candidates = list(directory.glob('libcrexx-ggml-cpu*.so'))
+    best = None
+    best_score = 0
+    for candidate in candidates:
+        probe = ctypes.CDLL(str(candidate))
+        probes.append(probe)
+        if len(candidates) == 1:
+            score = 1
+        else:
+            probe.ggml_backend_score.restype = ctypes.c_int
+            score = probe.ggml_backend_score()
+        if score > best_score:
+            best, best_score = candidate, score
+    assert best is not None, 'no usable CPU variant'
+    print('DIRECT_STAGE: ggml_backend_load(' + best.name + ')', flush=True)
+    assert ggml.ggml_backend_load(os.fsencode(best)), 'CPU registration failed'
     images()
     print('DIRECT_STAGE: ggml_backend_load(metal)', flush=True)
     reg = ggml.ggml_backend_load(os.fsencode(directory / 'libcrexx-ggml-metal.so'))
