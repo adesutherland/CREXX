@@ -1,0 +1,10 @@
+{
+  "targets": [
+    "llama_provider_runtime_package",
+    "crexx-provider-package",
+    "rxllama_release_engine_smoke"
+  ],
+  "commands": 279,
+  "core_toolchain_compile_commands": 0,
+  "scope": "local CMake dependency graph inspection; no build launched; target-host result still required"
+}

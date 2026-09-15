@@ -1024,9 +1024,15 @@ provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
 The candidate binary-delivery work is tracked by numbered CI-OUT/CI-AC/CI
 steps in [the pipeline plan](../planning/native-inference-ci.md). Ordinary source
 builds default to `ENABLE_LLAMA=OFF`; explicit opt-in includes CPU, defaults to
-Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. Release
-workflows enable `ENABLE_LLAMA` and explicitly build both provider packaging
-targets. Their small generated-fixture smoke does not relax the public model
+Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
+approved release design first builds four llama-free core archives, then builds
+only the optional provider/dependency/helper targets and tests them against
+those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
+Core jobs own core QA; backend jobs own llama-specific QA. Core sanitizer jobs
+use `ENABLE_LLAMA=OFF` and never compile CUDA. Adapter sanitizer checks concern
+first-party code and may link an uninstrumented upstream engine. The separate
+core/plugin delivery is still under qualification; do not claim it released.
+The small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
 fixture weights outside the user payload. Rehash declared provider manifests
 only after a trusted staging/signing step has verified signatures, before

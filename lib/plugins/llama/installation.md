@@ -19,9 +19,11 @@ qualification remains open. See [status](qualification.md).
 
 ## Using a binary package
 
-The candidate release pipeline builds the provider into the downloadable cREXX
-packages. Qualification is in progress; older releases do not acquire this
-feature retrospectively. In a package containing `bin/rxllama.rxplugin` and
+The candidate release pipeline supplies a llama-free cREXX core and a separate
+optional prebuilt `llama.rexx` package. Download the core and one plugin for the
+exact same release/commit and platform, then extract both into the same platform
+directory. Qualification is in progress; older releases do not acquire this
+feature retrospectively. In the combined installation containing `bin/rxllama.rxplugin` and
 `bin/providers/rxllama.native.json`, no C/C++ build, llama.cpp installation or
 inference server is needed to run ordinary cREXX programs. Keep the package's
 `bin` directory intact, then follow [model provisioning](models.md) and the
@@ -32,15 +34,16 @@ the package's compiler/platform: a relative symlink on macOS/Linux and an
 executable copy on Windows. Keep that entry point with the rest of `bin` when
 moving or unpacking an installation.
 
-| Package suffix | Included inference backends |
+| Plugin platform/backend | Included inference backends |
 | --- | --- |
-| `linux-x64`, `windows-x64` | CPU and Vulkan |
+| `linux-x64-vulkan`, `windows-x64-vulkan` | CPU and Vulkan |
 | `macos-arm64`, `macos-x86_64` | CPU and Metal |
 | `linux-x64-cuda`, `windows-x64-cuda` | CPU and NVIDIA CUDA |
 
-CUDA ZIPs are complete alternative installations, not overlays for another
-package. In particular, Windows CUDA uses MSVC while the ordinary Windows
-package uses MinGW; keep each package together. GPU users need a compatible
+CUDA and Vulkan plugins use the same core for their platform. Windows uses
+MSVC for the core and both plugin variants, with `rxvm` selecting `rxbvm`.
+MinGW remains supported for source builds and regression coverage. Install one
+backend variant at a time and preserve the release/commit match. GPU users need a compatible
 installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
 included. Runtime detection selects from the backends in the chosen package.
 CUDA builds retain the pinned engine's portable architecture defaults for the

@@ -932,3 +932,21 @@ proof. Neither changes product inference, RXPA, compiler or VM runtime logic.
 The generation package continuation retains the original failure and combines
 18 prior passing executions with all 30 remaining passing executions. No
 completed valid ordinary full suite or accepted Release panel is repeated.
+
+### Subsequent delivery and QA direction — 15 September 2026
+
+Adrian approved the revised CI-D01 delivery in the existing
+[pipeline plan](native-inference-ci.md): qualify llama-free Linux, Windows/MSVC,
+ARM Mac and Intel Mac cores first; then build only the optional plugin and its
+dependencies against those exact core artifacts. One Windows MSVC/`rxbvm` base
+supports either Vulkan or CUDA. Ship separate core/plugin downloads, with model
+files still separate. Core jobs run core QA; plugin jobs run only their relevant
+adapter/package/fixture checks, avoiding duplicate core builds and full tests.
+
+He also explicitly limits sanitizer qualification to first-party cREXX code.
+The hosted core gate excludes llama and CUDA. Separate first-party adapter
+checks may use an uninstrumented upstream engine, with ARM Mac practical for
+local coverage. Retain instrumented/uninstrumented boundaries and Linux leak
+coverage where required; do not imply upstream-engine sanitizer qualification.
+SAN-009 remains open for its actual first-party closure evidence. All other
+OUT-01–05 and AC-01–14 outcomes and non-sanitizer device requirements remain.

@@ -18,14 +18,21 @@ file, and a small `examples/` directory.
 `BUILDINFO` includes the base version, build channel, timestamp, and source
 commit used to produce the package.
 
-Packages containing `bin/rxllama.rxplugin` also supply in-process llama.cpp
-inference. Keep `bin/providers` intact and follow the included
-`share/crexx/llama` guides and examples. Download a supported model separately;
-running ordinary cREXX programs needs no C/C++ build or separate llama.cpp
-installation. Linux/Windows packages include CPU/Vulkan, Mac packages include
-CPU/Metal, and the additional `-cuda` ZIPs are complete CPU/CUDA alternatives.
-GPU use requires a compatible driver. Do not mix files from different ZIPs.
-Older releases without the provider do not support this feature.
+The next inference-enabled delivery is being qualified as a small core download
+plus a separate optional `llama.rexx` plugin download. The core works on its own.
+Choose a plugin for the exact same release/commit and platform, and extract it
+into the same platform directory. Windows uses one MSVC core with `rxvm`
+selecting `rxbvm`; either the Vulkan or CUDA plugin uses that same base.
+Linux offers Vulkan or CUDA; Mac uses Metal. Every plugin includes CPU fallback.
+These candidate packages are not yet a published release.
+
+The plugin supplies `bin/rxllama.rxplugin`, its engine and dependencies under
+`bin/providers`, plus `share/crexx/llama` guides and examples. Keep those files
+together. Download a supported model separately; running programs needs no
+C/C++ build, separate llama.cpp installation or build SDK. GPU use requires a
+compatible driver. Install one matching backend variant, and do not combine
+different releases or toolchains. Older releases without the provider do not
+acquire this feature automatically.
 
 You can run tools by using their full path, for example:
 

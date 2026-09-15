@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "scripts/package-core-release.py": "4f2c84b3d0f9d99d8dffdc49540e100efae762a3ff32c8de0b1a30c43b36500a",
+    "scripts/package-llama-release.py": "4a5655b8904db5ffebea4635e81f5262a084b206c46cb28fec35a11a7849a7b5",
+    "scripts/tests/test_split_release.py": "40990aa1b283f4607294971558d842e4252fab3b22cea493cc4f13076f75234c"
+  },
+  "checks": "6 split-package controls; 20 release-related controls; actionlint core/deep/sanitizer workflows",
+  "plugin_target_execution": "not started before four-core gate"
+}

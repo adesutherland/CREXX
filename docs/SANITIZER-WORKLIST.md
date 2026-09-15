@@ -94,6 +94,16 @@ STEP-03 closure and the named STEP-06
 native-inference release-QA handoff, owned by Codex under his direction.
 SAN-009 remains open and release-blocking; no sanitizer suppression is authorized.
 
+- **First-party scope clarification, 2026-09-15:** Adrian explicitly limits
+  the maintained sanitizer programme to cREXX code, excluding upstream
+  llama.cpp/CUDA qualification. Hosted core jobs now build without llama;
+  adapter ownership checks are a separate gate and may link an ordinary
+  uninstrumented engine. Reuse the retained instrumented Apple regression
+  evidence above/below rather than repeating upstream builds. Supported Linux
+  first-party ASan/LSan closure evidence is still required; a core-only pass
+  does not close this provider finding. Resume it after the approved four-core
+  gate. This is no suppression or waiver of the first-party defect.
+
 - **STEP-06 commencement, 2026-09-15:** Adrian approved the completed STEP-07
   documentation/examples and the planned transition to full QA. The earlier
   sanitizer hold is lifted for the named STEP-06 qualification gate, owned by

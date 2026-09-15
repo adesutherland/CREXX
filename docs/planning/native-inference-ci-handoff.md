@@ -21,6 +21,26 @@ is not a pass. `.github/workflows/release-core.yml` and
 `scripts/package-core-release.py` implement the new initial core gate; their
 hosted result is not yet available. No further approval is needed for CI-D01.
 
+Core-only run `35018374738` at `9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2`
+is on `origin/temp/llama-release-core`. Jobs: Linux `104547463711`, Intel Mac
+`104547463876`, Windows/MSVC `104547463919`, ARM Mac `104547463953`. All configured
+successfully; last seen building (ARM already checking core correctness).
+The branch-create Build `35018374629` contains metadata/guards only and is not
+the core qualification result. Do not push more work to the core branch while
+that run is useful; its push trigger cancels an earlier run on the same branch.
+
+Post-core-checkpoint preparation in the main worktree: Deep QA now explicitly
+disables llama; installation/human/agent guidance describes the approved split;
+`scripts/package-llama-release.py` stages only provider files onto an extracted
+qualified core, verifies identity and unchanged core hashes, emits a separate
+plugin ZIP and re-extracts both ZIPs for consumer testing. Six new packaging
+controls pass (20 total release-related controls pass). **The plugin packaging
+script is not yet wired into Build CREXX or target-platform tested.** That work
+must replace the old combined-product build/QA and six-complete-ZIP publication
+assumptions, preserve signing/installers, and provide the Windows MSVC Vulkan
+SDK. Do not describe release packaging as completed yet. No plugin build/test
+should start before the four core jobs pass.
+
 Intel replay `35016898785` now has a captured stack: our consumer is waiting
 inside GGML Metal library initialization and Apple's synchronous Metal shader
 compiler service. Retained evidence: `remote/3875270c6/intel-native/`. This

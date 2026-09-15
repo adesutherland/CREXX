@@ -1,0 +1,12 @@
+{
+  "name": "CREXX-user-test-9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2-linux-x64.zip",
+  "bytes": 25356046,
+  "sha256": "9f7c815e6408fb6fec52edbf89e8045adaaa3aecb518a43983678065e056298b",
+  "schema": 1,
+  "component": "core",
+  "commit": "9caac6dcb47dbacc9f8011ab0f9a2e53acf5feb2",
+  "platform": "linux-x64",
+  "toolchain": "gcc",
+  "preferred_vm": "rxtvm",
+  "llama_enabled": false
+}

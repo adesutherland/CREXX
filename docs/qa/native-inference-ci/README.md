@@ -555,3 +555,36 @@ wait during backend initialization, before model inference. It does not alone
 prove why the service failed to respond. Defer this plugin investigation until
 the four independent core builds pass; no timeout relaxation or GPU removal
 is implied.
+
+### Approved core-first restart
+
+Core-only run `35018374738` at `9caac6dcb` builds with `ENABLE_LLAMA=OFF` on
+Linux/GCC, Windows/MSVC 14.44, ARM Mac and Intel Mac. ARM Mac and Linux are now
+green; Windows and Intel are still building. Their actual extracted archives
+exercise optimized/nonoptimized compilation, assembly, linking, the public
+selected VM and applicable alternative, plus relocated native execution.
+No inference SDK or model is downloaded. Logs/artifacts are retained under
+`remote/9caac6dcb/`; this does not mark the four-core gate complete.
+
+ARM Mac passes 161 core checks (66.90 s), followed by the extracted-core smoke
+(2.206 s). Its ZIP is 19,671,021 bytes, SHA256
+`79aa05859a0dc80281bef9bc967cfa8d26f8a2f1cbdae5718146cb1990757788`, and selects
+`rxbvm`. The smoke harness itself was checked locally against copied Release
+tools (`local/core-package-harness/`); that is harness proof, not another fresh
+core build.
+
+`local/plugin-only-build-graph.json` confirms the three selected plugin targets
+do not compile core compiler/assembler/linker/VM objects. Six package controls
+verify core identity, rejection of changed binaries, refusal to overwrite core
+files, sharing of identical runtime DLLs, ZIP executable/symlink preservation
+and rejection of nonlocal entries (`local/split-package-controls.log`). The
+plugin packager emits an add-on ZIP and reconstructs both downloads for smoke;
+its workflow integration and target qualification are still pending.
+
+Cancelled combined run `35013130021` retains partial compiler-cache data:
+Linux has 1,692 misses/17 hits, Windows 1,256 misses/12 hits. There are no compiler
+failures in those cache snapshots; one/two cache writes failed respectively.
+These interrupted cold-population observations are not warm-run savings or
+completed CUDA package proof. Cancelled sanitizer `35009830830` artifacts have
+no observed ASan/LSan or compile diagnostic; they remain cancelled, not passed.
+Their logs are preserved under `remote/0f35b970e/` and `remote/76df02be3/`.
