@@ -257,3 +257,21 @@ silently relabel that first result as a pass. CI-F07 awaits the ordinary final
 candidate run and retains its original evidence; no deadline, device exclusion
 or inference algorithm was changed to obtain this replay. The diagnostic-only
 workflow override remains outside the main candidate.
+
+### Cold backend initialization guard
+
+The permanent `rxllama_backend_probe_cycle` also calls `initialize_engine`.
+At the pinned source, Metal registration constructs its device and shader
+library before it returns (`ggml-metal.cpp`, `ggml-metal-device.m`). A first
+Intel consumer process in the replay takes about 70 seconds; this is a whole
+consumer observation, not an isolated shader/compiler performance measurement.
+Its prior 30-second probe guard was therefore too narrow for this platform
+risk. Widen it to the existing 1,800-second backend hang backstop and retain
+`RUN_SERIAL=TRUE`, the exact probe/reopen calls and sanitizer diagnostics.
+
+This preventive QA correction does **not** explain or repair CI-F07's original
+1,800-second engine stall. The same permanent probe passes normal Debug
+(0.66 s) and Apple ASan (1.02 s), with its scheduling properties inspected:
+`local/probe-backstop-debug/`, `local/probe-backstop-asan/` and the input note.
+No broad local replay is warranted for this guard/comment change; exact-head
+hosted gates remain open.

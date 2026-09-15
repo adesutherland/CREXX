@@ -250,7 +250,10 @@ if(BUILD_TESTING)
         target_link_libraries(rxllama_bridge_lifecycle PRIVATE psapi)
     endif()
     add_test(NAME rxllama_backend_probe_cycle COMMAND rxllama_bridge_lifecycle --probe-cycle)
-    set_tests_properties(rxllama_backend_probe_cycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 30 LABELS "library;rxpa;llama;regression")
+    # initialize_engine also registers Metal, including cold shader-library
+    # creation. A cold Intel hosted consumer takes about 70s; this ownership
+    # control must not impose an incidental startup-speed limit.
+    set_tests_properties(rxllama_backend_probe_cycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 LABELS "library;rxpa;llama;regression")
     crexx_register_test_prep_targets(TESTS rxllama_backend_probe_cycle TARGETS llama_provider_runtime_package rxllama_bridge_lifecycle)
     set_target_properties(rxllama_bridge_lifecycle PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")

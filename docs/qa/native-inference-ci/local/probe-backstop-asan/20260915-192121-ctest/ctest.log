@@ -1,0 +1,17 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^rxllama_backend_probe_cycle\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1742: rxllama_backend_probe_cycle
+1/1 Test #1742: rxllama_backend_probe_cycle ......   Passed    1.02 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =   1.02 sec*proc (1 test)
+library          =   1.02 sec*proc (1 test)
+llama            =   1.02 sec*proc (1 test)
+regression       =   1.02 sec*proc (1 test)
+rxpa             =   1.02 sec*proc (1 test)
+
+Total Test time (real) =   1.06 sec

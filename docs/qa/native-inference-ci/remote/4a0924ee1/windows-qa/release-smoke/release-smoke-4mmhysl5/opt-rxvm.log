@@ -1,0 +1,2 @@
+argv=['D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxvm.exe', 'D:/a/_temp/msys64/tmp/crexx-release-smoke-opgwgmcs/opt-linked', '-a', 'D:/a/_temp/msys64/tmp/crexx-release-smoke-opgwgmcs/fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']
+PASS: public llama release provider discovery, profile rejection and cleanup

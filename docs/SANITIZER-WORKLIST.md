@@ -117,6 +117,15 @@ SAN-009 remains open and release-blocking; no sanitizer suppression is authorize
   Supported Linux ASan/LSan remains outstanding.
   The item stays open.
 
+- **Hosted cold-start guard, 2026-09-15:** the probe also performs full backend
+  initialization, including Metal library creation. Widen its serial CTest hang
+  backstop from 30 to 1,800 seconds after observing a roughly 70-second cold
+  Intel consumer in the package campaign. The unchanged permanent probe passes
+  normal Debug (0.66 s) and Apple ASan (1.02 s); see
+  [pipeline guard evidence](qa/native-inference-ci/README.md#cold-backend-initialization-guard).
+  This is not a suppression or an explanation of the separate original Intel
+  engine stall. SAN-009 still requires supported Linux ASan/LSan closure.
+
 - Affected revision: baseline `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`
   plus the uncommitted STEP-03 provider implementation.
 - Original trigger: `tools/asan-run.sh --build-dir cmake-build-debugasan

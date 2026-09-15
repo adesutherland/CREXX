@@ -1,0 +1,7 @@
+{
+  "timeout_seconds": 1800,
+  "run_serial": true,
+  "workload_unchanged": true,
+  "cmake_sha256": "e37d33983a002efadce1dd1ec0f9ddd11c48c9622faf1768a25b3817df4973e1",
+  "note": "The normal pass precedes a comment-only wording clarification; the test command, serial property, timeout and product behavior are identical."
+}
