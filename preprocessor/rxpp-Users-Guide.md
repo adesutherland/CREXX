@@ -1058,9 +1058,9 @@ An optional descriptive keyword may also be placed before the callback name:
 
 The keyword does not change the callback semantics; it provides a more descriptive form of the declaration.
 
-#### `##PROGRAM`, `##LIBRARY` and `##RULE`
+#### `##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE`
 
-`##PROGRAM`, `##LIBRARY` and `##RULE` are aliases for `##DATA`. They use the same block collection, array generation, and optional callback mechanism. The different directive names make the intended purpose of the embedded content clearer.
+`##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE` are aliases for `##DATA`. They use the same block collection, array generation, and optional callback mechanism. The directive names have no semantic effect and are alternative spellings only.
 
 For example, a program can be described as:
 
@@ -1087,6 +1087,8 @@ prolog.crexx
 crexxcallback.crexx
 ##END
 ```
+
+`##RELATION relation-name [keyword] [callback]` is simply an alternative spelling of the corresponding `##DATA` form.
 
 After the `prolog` array has been generated, RXPP emits, in effect:
 

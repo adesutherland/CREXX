@@ -558,10 +558,11 @@ GetPrecomp: procedure
       else if ucmd = '##EMIT'    then stype.LineNo='EMIT'
       else if ucmd = '##USE'     then call cmd_include lineNo,line,2
       else if ucmd = '##COPYBLOCK' then call cmd_copyBlock lineNo,line
-      else if ucmd = '##DATA'    then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
-      else if ucmd = '##PROGRAM' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
-      else if ucmd = '##LIBRARY' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
-      else if ucmd = '##RULE' then call cmd_data lineNo,line,word(line,2),word(line,3),word(line,4)
+      else if ucmd = '##DATA'    then call cmd_data lineNo,line
+      else if ucmd = '##RELATION' then call cmd_data lineNo,line
+      else if ucmd = '##PROGRAM' then call cmd_data lineNo,line
+      else if ucmd = '##LIBRARY' then call cmd_data lineNo,line
+      else if ucmd = '##RULE' then call cmd_data lineNo,line
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
  ##     else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
@@ -1554,8 +1555,25 @@ return
  * ------------------------------------------------------------------
  */
 CMD_data: procedure
-  arg line_no=.int,line=.string,array='_data',onto='',callback=''
+  arg line_no=.int,line=.string,array=''
   stype.line_no= 'D'
+  onto=.string
+  callback=.string
+  line=qstripcomment('/*','*/',line)   /* remove comments */
+  wi=wordindex(line,2)
+  qpi=qpos('##',line,wi)   /* remove end of line comment, must start after 2. word */
+  if qpi=0 then qpi=qpos('--',line,wi)
+  if qpi>1 then line=substr(line,1,qpi-1)
+  if array='' then do
+     array=word(line,2)
+     onto= word(line,3)
+     callback= word(line,4)
+  end
+  else do
+     onto= word(line,2)
+     callback= word(line,3)
+  end
+
   if onto \='' & callback ='' then callback=onto
   j=0
   i = .int

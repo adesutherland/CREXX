@@ -70,8 +70,10 @@ onto the authored RXPP buffer.
 `##DATA name [callback]` captures free-form lines through `##END` as array
 assignments. When the optional callback name is present, RXPP emits
 `call callback name` after the complete array has been generated. The original
-`##DATA name` form remains array-only. `##PROGRAM name [callback]` and
-`##LIBRARY name [callback]` are thin aliases for the same conversion path.
+`##DATA name` form remains array-only. `##RELATION name [callback]`,
+`##PROGRAM name [callback]`, and `##LIBRARY name [callback]` are thin aliases
+for the same conversion path;
+their names have no semantic effect.
 
 ## Build metadata directives
 

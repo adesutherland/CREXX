@@ -30,7 +30,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 - [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
   - [`##USE file`](#use-file)
   - [`##DATA array-name [keyword] [callback]`](#data-array-name-keyword-callback)
-  - [`##PROGRAM`, `##LIBRARY`, and `##RULE`](#program-library-and-rule)
+  - [`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`](#relation-program-library-and-rule)
   - [`##SYSxxx`](#sysxxx)
   - [`##CFLAG values`](#cflag-values)
   - [`##SET var value`](#set-var-value)
@@ -665,11 +665,12 @@ MYTEXT.1 = "This is a line with 'inner quotes'"
 MYTEXT.2 = 'This is a simple line'
 ```
 
-### `##PROGRAM`, `##LIBRARY`, and `##RULE`
+### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
 
-`##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for `##DATA`. They use
-the same block-processing mechanism and generate the same Rexx string-array
-representation. Their names express the intended role of the collected data.
+`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for
+`##DATA`. They use the same block-processing mechanism and generate the same
+Rexx string-array representation. The directive names have no semantic effect;
+they are alternative spellings only.
 
 They support the same optional keyword and callback forms as `##DATA`:
 
@@ -684,6 +685,14 @@ They support the same optional keyword and callback forms as `##DATA`:
 
 ##RULE rule-name
     rule source
+##END
+```
+
+The equivalent alternative spelling is:
+
+```rexx
+##RELATION relation-name callback
+    relation source
 ##END
 ```
 
