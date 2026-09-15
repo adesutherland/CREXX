@@ -1,4 +1,4 @@
-name: Intel native stall diagnosis
+name: Intel direct GGML stall diagnosis
 on:
   push:
     branches: [temp/llama-release-intel-native]
@@ -24,17 +24,17 @@ jobs:
           run-id: 35013130021
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/candidate
-      - name: Replay the already-built native consumer with stack capture
+      - name: Call the archived GGML library without the cREXX bridge
         shell: bash
         run: |
-          python .github/diagnostics/llama-native-replay.py \
+          python .github/diagnostics/llama-ggml-replay.py \
             --archive "${{ runner.temp }}/candidate/CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-x86_64.zip" \
             --sha256 91a4fb9f8347d582789fc1ee986cc0d646236d145de0c6ffe2ffaa30e49f187c \
-            --source "$GITHUB_WORKSPACE" --output-root "${{ runner.temp }}/native-replay" \
-            --repeat 5 --capture-after 180
+            --output-root "${{ runner.temp }}/direct-ggml" \
+            --repeat 3 --capture-after 180
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: intel-native-stall-diagnosis
-          path: ${{ runner.temp }}/native-replay
+          name: intel-direct-ggml-stall-diagnosis
+          path: ${{ runner.temp }}/direct-ggml
           retention-days: 14
