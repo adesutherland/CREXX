@@ -1,6 +1,8 @@
 # Measured in isolation: Debug 44.5s, Apple ASan 48.3s (15 September 2026).
 # CI also invokes this harness once against its final signed/staged payload.
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke-default-vm.txt"
+    CONTENT "${CREXX_DEFAULT_VM_TARGET}\n")
 add_executable(rxllama_release_engine_smoke "${CMAKE_SOURCE_DIR}/tests/native-inference/release_engine_smoke.cpp")
 target_compile_features(rxllama_release_engine_smoke PRIVATE cxx_std_17)
 target_include_directories(rxllama_release_engine_smoke PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

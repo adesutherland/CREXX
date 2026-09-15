@@ -32,9 +32,10 @@ package. In particular, Windows CUDA uses MSVC while the ordinary Windows
 package uses MinGW; keep each package together. GPU users need a compatible
 installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
 included. Runtime detection selects from the backends in the chosen package.
-The CUDA builds target compute capabilities 6.1, 7.5, 8.0, 8.6 and 8.9 directly,
-with 9.0 code/PTX for supported newer devices; real-device qualification remains
-separate from compiling and packaging those targets.
+CUDA builds retain the pinned engine's portable architecture defaults for the
+selected toolkit. Some devices compile the supplied PTX on first use, which can
+add startup time; keep the model/session prepared for repeated work. Real-device
+qualification remains separate from compiling and packaging those targets.
 
 The release contains these guides, examples and dependency notices, but no
 model weights. The tiny random-weight developer fixture is not a useful model

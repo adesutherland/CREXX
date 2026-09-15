@@ -149,6 +149,7 @@ jobs:
             shaderc:p
             vulkan-headers:p
             vulkan-loader:p
+            spirv-headers:p
 
       - name: Python for package validation
         if: matrix.toolchain != 'mingw'
@@ -161,7 +162,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y libvulkan-dev glslc
+          sudo apt-get install -y libvulkan-dev glslc spirv-headers
 
       - name: Select CUDA-compatible MSVC v142
         if: matrix.toolchain == 'msvc'
@@ -171,8 +172,9 @@ jobs:
           toolset: '14.29'
 
       - name: Cache pinned CUDA build SDK
+        id: cuda-cache
         if: matrix.cuda
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: ${{ runner.temp }}/crexx-cuda
           key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
@@ -181,6 +183,13 @@ jobs:
         if: matrix.cuda
         shell: bash
         run: python scripts/ci-cuda-toolkit.py --root "${{ runner.temp }}/crexx-cuda" --platform "${{ matrix.platform }}-x86_64"
+
+      - name: Retain verified CUDA SDK before compilation
+        if: matrix.cuda && steps.cuda-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ runner.temp }}/crexx-cuda
+          key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
 
       - name: Configure
         if: matrix.platform != 'windows'

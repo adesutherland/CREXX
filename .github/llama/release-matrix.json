@@ -63,7 +63,7 @@
       "test_jobs": 5,
       "backends": "cpu,cuda",
       "cuda": true,
-      "cmake_args": "-DCREXX_LLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"61-real;75-real;80-real;86-real;89-real;90\""
+      "cmake_args": "-DCREXX_LLAMA_CUDA=ON"
     },
     {
       "id": "windows-cuda",
@@ -76,7 +76,7 @@
       "test_jobs": 2,
       "backends": "cpu,cuda",
       "cuda": true,
-      "cmake_args": "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"61-real;75-real;80-real;86-real;89-real;90\""
+      "cmake_args": "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_CUDA=ON"
     }
   ]
 }

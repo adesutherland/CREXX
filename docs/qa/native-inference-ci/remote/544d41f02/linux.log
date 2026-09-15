@@ -1,0 +1,477 @@
+﻿2026-09-15T16:13:00.3766967Z Current runner version: '2.337.0'
+2026-09-15T16:13:00.3790346Z ##[group]Runner Image Provisioner
+2026-09-15T16:13:00.3791562Z Hosted Compute Agent
+2026-09-15T16:13:00.3792472Z Version: 20260828.587
+2026-09-15T16:13:00.3793459Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+2026-09-15T16:13:00.3794458Z Build Date: 2026-08-28T16:44:25Z
+2026-09-15T16:13:00.3795663Z Worker ID: {d59f7068-f9e5-450a-a211-0227040d64b2}
+2026-09-15T16:13:00.3796665Z Azure Region: eastus
+2026-09-15T16:13:00.3797532Z ##[endgroup]
+2026-09-15T16:13:00.3799634Z ##[group]Operating System
+2026-09-15T16:13:00.3800407Z Ubuntu
+2026-09-15T16:13:00.3801282Z 24.04.5
+2026-09-15T16:13:00.3801978Z LTS
+2026-09-15T16:13:00.3802741Z ##[endgroup]
+2026-09-15T16:13:00.3803532Z ##[group]Runner Image
+2026-09-15T16:13:00.3804472Z Image: ubuntu-24.04
+2026-09-15T16:13:00.3805247Z Version: 20260907.300.1
+2026-09-15T16:13:00.3807182Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+2026-09-15T16:13:00.3809247Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+2026-09-15T16:13:00.3810561Z ##[endgroup]
+2026-09-15T16:13:00.3812148Z ##[group]GITHUB_TOKEN Permissions
+2026-09-15T16:13:00.3814562Z Contents: read
+2026-09-15T16:13:00.3815642Z Metadata: read
+2026-09-15T16:13:00.3816440Z ##[endgroup]
+2026-09-15T16:13:00.3819270Z Secret source: Actions
+2026-09-15T16:13:00.3820527Z Cache mode: write
+2026-09-15T16:13:00.3821781Z Prepare workflow directory
+2026-09-15T16:13:00.4179635Z Prepare all required actions
+2026-09-15T16:13:00.4234570Z Getting action download info
+2026-09-15T16:13:00.6515159Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+2026-09-15T16:13:00.8289933Z Download action repository 'msys2/setup-msys2@v2' (SHA:66cd2cce69caa17b53920067426061ca1de3a884)
+2026-09-15T16:13:00.9359597Z Download action repository 'actions/setup-python@v6' (SHA:ece7cb06caefa5fff74198d8649806c4678c61a1)
+2026-09-15T16:13:01.0340299Z Download action repository 'ilammy/msvc-dev-cmd@v1' (SHA:0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+2026-09-15T16:13:01.1411717Z Download action repository 'actions/cache@v5' (SHA:caa296126883cff596d87d8935842f9db880ef25)
+2026-09-15T16:13:01.4240105Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-09-15T16:13:01.6710082Z Complete job name: Linux x64
+2026-09-15T16:13:01.7662665Z ##[group]Run actions/checkout@v5
+2026-09-15T16:13:01.7663884Z with:
+2026-09-15T16:13:01.7664645Z   submodules: recursive
+2026-09-15T16:13:01.7665683Z   ref: 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:01.7666732Z   repository: adesutherland/CREXX
+2026-09-15T16:13:01.7673745Z   token: ***
+2026-09-15T16:13:01.7674518Z   ssh-strict: true
+2026-09-15T16:13:01.7675313Z   ssh-user: git
+2026-09-15T16:13:01.7676209Z   persist-credentials: true
+2026-09-15T16:13:01.7677064Z   clean: true
+2026-09-15T16:13:01.7677868Z   sparse-checkout-cone-mode: true
+2026-09-15T16:13:01.7678811Z   fetch-depth: 1
+2026-09-15T16:13:01.7679595Z   fetch-tags: false
+2026-09-15T16:13:01.7680398Z   show-progress: true
+2026-09-15T16:13:01.7681197Z   lfs: false
+2026-09-15T16:13:01.7681968Z   set-safe-directory: true
+2026-09-15T16:13:01.7682863Z   allow-unsafe-pr-checkout: false
+2026-09-15T16:13:01.7683990Z ##[endgroup]
+2026-09-15T16:13:01.8487903Z Syncing repository: adesutherland/CREXX
+2026-09-15T16:13:01.8490409Z ##[group]Getting Git version info
+2026-09-15T16:13:01.8491631Z Working directory is '/home/runner/work/CREXX/CREXX'
+2026-09-15T16:13:01.8493470Z [command]/usr/bin/git version
+2026-09-15T16:13:02.4410837Z git version 2.55.0
+2026-09-15T16:13:02.4426648Z ##[endgroup]
+2026-09-15T16:13:02.4441169Z Temporarily overriding HOME='/home/runner/work/_temp/7b987a3f-185f-477c-9930-afdc4764d984' before making global git config changes
+2026-09-15T16:13:02.4442491Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T16:13:02.4447321Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-15T16:13:02.4492820Z Deleting the contents of '/home/runner/work/CREXX/CREXX'
+2026-09-15T16:13:02.4498247Z ##[group]Initializing the repository
+2026-09-15T16:13:02.4502116Z [command]/usr/bin/git init /home/runner/work/CREXX/CREXX
+2026-09-15T16:13:02.4579696Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-09-15T16:13:02.4580846Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-09-15T16:13:02.4581547Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-09-15T16:13:02.4582000Z hint: call:
+2026-09-15T16:13:02.4582342Z hint:
+2026-09-15T16:13:02.4582821Z hint: 	git config --global init.defaultBranch <name>
+2026-09-15T16:13:02.4583279Z hint:
+2026-09-15T16:13:02.4583607Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-09-15T16:13:02.4584217Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-09-15T16:13:02.4584798Z hint:
+2026-09-15T16:13:02.4585188Z hint: 	git branch -m <name>
+2026-09-15T16:13:02.4585765Z hint:
+2026-09-15T16:13:02.4586291Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-09-15T16:13:02.4587034Z Initialized empty Git repository in /home/runner/work/CREXX/CREXX/.git/
+2026-09-15T16:13:02.4590422Z [command]/usr/bin/git remote add origin https://github.com/adesutherland/CREXX
+2026-09-15T16:13:02.4651855Z ##[endgroup]
+2026-09-15T16:13:02.4652665Z ##[group]Disabling automatic garbage collection
+2026-09-15T16:13:02.4653300Z [command]/usr/bin/git config --local gc.auto 0
+2026-09-15T16:13:02.4654452Z ##[endgroup]
+2026-09-15T16:13:02.4654921Z ##[group]Setting up auth
+2026-09-15T16:13:02.4656871Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T16:13:02.4690505Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T16:13:02.4953980Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T16:13:02.4978872Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T16:13:02.5160619Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T16:13:02.5185687Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T16:13:02.5364322Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T16:13:02.5391195Z ##[endgroup]
+2026-09-15T16:13:02.5391827Z ##[group]Fetching the repository
+2026-09-15T16:13:02.5397929Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:08.4100341Z From https://github.com/adesutherland/CREXX
+2026-09-15T16:13:08.4100999Z  * branch              544d41f02de50d97598b21fb4a09a8a05756b7e7 -> FETCH_HEAD
+2026-09-15T16:13:08.4103510Z ##[endgroup]
+2026-09-15T16:13:08.4104063Z ##[group]Determining the checkout info
+2026-09-15T16:13:08.4106110Z ##[endgroup]
+2026-09-15T16:13:08.4111898Z [command]/usr/bin/git sparse-checkout disable
+2026-09-15T16:13:08.4148877Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-09-15T16:13:08.5661776Z ##[group]Checking out the ref
+2026-09-15T16:13:08.5666894Z [command]/usr/bin/git checkout --progress --force 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:09.6153783Z Updating files:  52% (19460/37401)
+2026-09-15T16:13:09.6321634Z Updating files:  53% (19823/37401)
+2026-09-15T16:13:09.6441929Z Updating files:  54% (20197/37401)
+2026-09-15T16:13:09.6618816Z Updating files:  55% (20571/37401)
+2026-09-15T16:13:09.6746151Z Updating files:  56% (20945/37401)
+2026-09-15T16:13:09.6836139Z Updating files:  57% (21319/37401)
+2026-09-15T16:13:09.6977863Z Updating files:  58% (21693/37401)
+2026-09-15T16:13:09.7116749Z Updating files:  59% (22067/37401)
+2026-09-15T16:13:09.7242188Z Updating files:  60% (22441/37401)
+2026-09-15T16:13:09.7459617Z Updating files:  61% (22815/37401)
+2026-09-15T16:13:09.7627110Z Updating files:  62% (23189/37401)
+2026-09-15T16:13:09.7769937Z Updating files:  63% (23563/37401)
+2026-09-15T16:13:09.7963800Z Updating files:  64% (23937/37401)
+2026-09-15T16:13:09.9937064Z Updating files:  65% (24311/37401)
+2026-09-15T16:13:10.0452821Z Updating files:  66% (24685/37401)
+2026-09-15T16:13:10.0544860Z Updating files:  67% (25059/37401)
+2026-09-15T16:13:10.0703402Z Updating files:  68% (25433/37401)
+2026-09-15T16:13:10.0849334Z Updating files:  69% (25807/37401)
+2026-09-15T16:13:10.3285786Z Updating files:  70% (26181/37401)
+2026-09-15T16:13:10.3412118Z Updating files:  71% (26555/37401)
+2026-09-15T16:13:10.3538524Z Updating files:  72% (26929/37401)
+2026-09-15T16:13:10.3707951Z Updating files:  73% (27303/37401)
+2026-09-15T16:13:10.3922388Z Updating files:  74% (27677/37401)
+2026-09-15T16:13:10.4094543Z Updating files:  75% (28051/37401)
+2026-09-15T16:13:10.4272033Z Updating files:  76% (28425/37401)
+2026-09-15T16:13:10.4477690Z Updating files:  77% (28799/37401)
+2026-09-15T16:13:10.4668881Z Updating files:  78% (29173/37401)
+2026-09-15T16:13:10.4851811Z Updating files:  79% (29547/37401)
+2026-09-15T16:13:10.5041469Z Updating files:  80% (29921/37401)
+2026-09-15T16:13:10.5282962Z Updating files:  81% (30295/37401)
+2026-09-15T16:13:10.5498391Z Updating files:  82% (30669/37401)
+2026-09-15T16:13:10.5684592Z Updating files:  83% (31043/37401)
+2026-09-15T16:13:10.5781418Z Updating files:  84% (31417/37401)
+2026-09-15T16:13:10.5877981Z Updating files:  85% (31791/37401)
+2026-09-15T16:13:10.5960387Z Updating files:  86% (32165/37401)
+2026-09-15T16:13:10.6080374Z Updating files:  86% (32373/37401)
+2026-09-15T16:13:10.6413508Z Updating files:  87% (32539/37401)
+2026-09-15T16:13:10.6693364Z Updating files:  88% (32913/37401)
+2026-09-15T16:13:10.6897798Z Updating files:  89% (33287/37401)
+2026-09-15T16:13:10.7051484Z Updating files:  90% (33661/37401)
+2026-09-15T16:13:10.7197022Z Updating files:  91% (34035/37401)
+2026-09-15T16:13:10.7307150Z Updating files:  92% (34409/37401)
+2026-09-15T16:13:10.7396208Z Updating files:  93% (34783/37401)
+2026-09-15T16:13:10.7496003Z Updating files:  94% (35157/37401)
+2026-09-15T16:13:10.7619004Z Updating files:  95% (35531/37401)
+2026-09-15T16:13:10.7870549Z Updating files:  96% (35905/37401)
+2026-09-15T16:13:10.8039008Z Updating files:  97% (36279/37401)
+2026-09-15T16:13:10.8167003Z Updating files:  98% (36653/37401)
+2026-09-15T16:13:10.8502369Z Updating files:  99% (37027/37401)
+2026-09-15T16:13:10.8502895Z Updating files: 100% (37401/37401)
+2026-09-15T16:13:10.8503434Z Updating files: 100% (37401/37401), done.
+2026-09-15T16:13:10.8838981Z Note: switching to '544d41f02de50d97598b21fb4a09a8a05756b7e7'.
+2026-09-15T16:13:10.8839382Z 
+2026-09-15T16:13:10.8839612Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-09-15T16:13:10.8840046Z changes and commit them, and you can discard any commits you make in this
+2026-09-15T16:13:10.8840440Z state without impacting any branches by switching back to a branch.
+2026-09-15T16:13:10.8840669Z 
+2026-09-15T16:13:10.8840840Z If you want to create a new branch to retain commits you create, you may
+2026-09-15T16:13:10.8841249Z do so (now or later) by using -c with the switch command. Example:
+2026-09-15T16:13:10.8841472Z 
+2026-09-15T16:13:10.8841581Z   git switch -c <new-branch-name>
+2026-09-15T16:13:10.8841734Z 
+2026-09-15T16:13:10.8841839Z Or undo this operation with:
+2026-09-15T16:13:10.8841973Z 
+2026-09-15T16:13:10.8842060Z   git switch -
+2026-09-15T16:13:10.8842175Z 
+2026-09-15T16:13:10.8842356Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-09-15T16:13:10.8842601Z 
+2026-09-15T16:13:10.8842989Z HEAD is now at 544d41f0 ci(llama): package GPU runtimes and qualify isolated candidates
+2026-09-15T16:13:10.8910877Z ##[endgroup]
+2026-09-15T16:13:10.8911372Z ##[group]Setting up auth for fetching submodules
+2026-09-15T16:13:10.8917789Z [command]/usr/bin/git config --global http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-09-15T16:13:10.8949307Z [command]/usr/bin/git config --global --unset-all url.https://github.com/.insteadOf
+2026-09-15T16:13:10.8976907Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf git@github.com:
+2026-09-15T16:13:10.9000040Z [command]/usr/bin/git config --global --add url.https://github.com/.insteadOf org-4367482@github.com:
+2026-09-15T16:13:10.9021452Z ##[endgroup]
+2026-09-15T16:13:10.9021942Z ##[group]Fetching submodules
+2026-09-15T16:13:10.9025108Z [command]/usr/bin/git submodule sync --recursive
+2026-09-15T16:13:10.9239152Z [command]/usr/bin/git -c protocol.version=2 submodule update --init --force --depth=1 --recursive
+2026-09-15T16:13:10.9459259Z [command]/usr/bin/git submodule foreach --recursive git config --local gc.auto 0
+2026-09-15T16:13:10.9666503Z ##[endgroup]
+2026-09-15T16:13:10.9667034Z ##[group]Persisting credentials for submodules
+2026-09-15T16:13:10.9672271Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'url\.https\:\/\/github\.com\/\.insteadOf' && git config --local --unset-all 'url.https://github.com/.insteadOf' || :"
+2026-09-15T16:13:10.9882976Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic ***' && git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-09-15T16:13:11.0097712Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'git@github.com:'
+2026-09-15T16:13:11.0305840Z [command]/usr/bin/git submodule foreach --recursive git config --local --add 'url.https://github.com/.insteadOf' 'org-4367482@github.com:'
+2026-09-15T16:13:11.0511529Z ##[endgroup]
+2026-09-15T16:13:11.0549801Z [command]/usr/bin/git log -1 --format=%H
+2026-09-15T16:13:11.0573419Z 544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:11.0812843Z ##[group]Run actions/setup-python@v6
+2026-09-15T16:13:11.0813097Z with:
+2026-09-15T16:13:11.0813286Z   python-version: 3.12
+2026-09-15T16:13:11.0813500Z   check-latest: false
+2026-09-15T16:13:11.0815942Z   token: ***
+2026-09-15T16:13:11.0816153Z   update-environment: true
+2026-09-15T16:13:11.0816385Z   allow-prereleases: false
+2026-09-15T16:13:11.0816602Z   freethreaded: false
+2026-09-15T16:13:11.0816815Z ##[endgroup]
+2026-09-15T16:13:11.1857013Z ##[group]Installed versions
+2026-09-15T16:13:11.1927939Z Successfully set up CPython (3.12.14)
+2026-09-15T16:13:11.1928506Z ##[endgroup]
+2026-09-15T16:13:11.2039952Z ##[group]Run sudo apt-get update -qq
+2026-09-15T16:13:11.2040284Z [36;1msudo apt-get update -qq[0m
+2026-09-15T16:13:11.2040578Z [36;1msudo apt-get install -y libvulkan-dev glslc[0m
+2026-09-15T16:13:11.2083783Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T16:13:11.2084090Z env:
+2026-09-15T16:13:11.2084329Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:11.2084700Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T16:13:11.2085058Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:11.2085379Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:11.2085916Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:11.2086247Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T16:13:11.2086524Z ##[endgroup]
+2026-09-15T16:13:17.0051495Z Reading package lists...
+2026-09-15T16:13:17.1909719Z Building dependency tree...
+2026-09-15T16:13:17.1916028Z Reading state information...
+2026-09-15T16:13:17.3224337Z The following additional packages will be installed:
+2026-09-15T16:13:17.3226415Z   libshaderc1
+2026-09-15T16:13:17.3615967Z The following NEW packages will be installed:
+2026-09-15T16:13:17.3620215Z   glslc libshaderc1 libvulkan-dev
+2026-09-15T16:13:17.3765323Z 0 upgraded, 3 newly installed, 0 to remove and 64 not upgraded.
+2026-09-15T16:13:17.3765980Z Need to get 3738 kB of archives.
+2026-09-15T16:13:17.3766454Z After this operation, 35.2 MB of additional disk space will be used.
+2026-09-15T16:13:17.3767012Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-09-15T16:13:17.4089079Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libshaderc1 amd64 2023.8-1build1 [2423 kB]
+2026-09-15T16:13:17.6047988Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 glslc amd64 2023.8-1build1 [76.0 kB]
+2026-09-15T16:13:17.6128407Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libvulkan-dev amd64 1.3.275.0-1build1 [1239 kB]
+2026-09-15T16:13:17.8423597Z Fetched 3738 kB in 0s (14.3 MB/s)
+2026-09-15T16:13:17.8641014Z Selecting previously unselected package libshaderc1:amd64.
+2026-09-15T16:13:17.8843900Z (Reading database ... 
+2026-09-15T16:13:17.8844247Z (Reading database ... 5%
+2026-09-15T16:13:17.8844528Z (Reading database ... 10%
+2026-09-15T16:13:17.8844753Z (Reading database ... 15%
+2026-09-15T16:13:17.8844961Z (Reading database ... 20%
+2026-09-15T16:13:17.8845167Z (Reading database ... 25%
+2026-09-15T16:13:17.8845648Z (Reading database ... 30%
+2026-09-15T16:13:17.8845971Z (Reading database ... 35%
+2026-09-15T16:13:17.8846298Z (Reading database ... 40%
+2026-09-15T16:13:17.8846637Z (Reading database ... 45%
+2026-09-15T16:13:17.8846954Z (Reading database ... 50%
+2026-09-15T16:13:17.8892910Z (Reading database ... 55%
+2026-09-15T16:13:18.0511175Z (Reading database ... 60%
+2026-09-15T16:13:18.6359550Z (Reading database ... 65%
+2026-09-15T16:13:18.9061714Z (Reading database ... 70%
+2026-09-15T16:13:19.0321382Z (Reading database ... 75%
+2026-09-15T16:13:19.2495396Z (Reading database ... 80%
+2026-09-15T16:13:19.7428169Z (Reading database ... 85%
+2026-09-15T16:13:19.9484902Z (Reading database ... 90%
+2026-09-15T16:13:20.1418545Z (Reading database ... 95%
+2026-09-15T16:13:20.1418863Z (Reading database ... 100%
+2026-09-15T16:13:20.1419171Z (Reading database ... 201818 files and directories currently installed.)
+2026-09-15T16:13:20.1459863Z Preparing to unpack .../libshaderc1_2023.8-1build1_amd64.deb ...
+2026-09-15T16:13:20.1745115Z Unpacking libshaderc1:amd64 (2023.8-1build1) ...
+2026-09-15T16:13:20.4469600Z Selecting previously unselected package glslc.
+2026-09-15T16:13:20.4578804Z Preparing to unpack .../glslc_2023.8-1build1_amd64.deb ...
+2026-09-15T16:13:20.4586714Z Unpacking glslc (2023.8-1build1) ...
+2026-09-15T16:13:20.4799764Z Selecting previously unselected package libvulkan-dev:amd64.
+2026-09-15T16:13:20.4909110Z Preparing to unpack .../libvulkan-dev_1.3.275.0-1build1_amd64.deb ...
+2026-09-15T16:13:20.4920775Z Unpacking libvulkan-dev:amd64 (1.3.275.0-1build1) ...
+2026-09-15T16:13:20.8643958Z Setting up libvulkan-dev:amd64 (1.3.275.0-1build1) ...
+2026-09-15T16:13:20.8758319Z Setting up libshaderc1:amd64 (2023.8-1build1) ...
+2026-09-15T16:13:20.8779082Z Setting up glslc (2023.8-1build1) ...
+2026-09-15T16:13:20.8803283Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-09-15T16:13:20.8823452Z Not building database; man-db/auto-update is not 'true'.
+2026-09-15T16:13:20.8834976Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+2026-09-15T16:13:22.3790371Z 
+2026-09-15T16:13:22.3791067Z Running kernel seems to be up-to-date.
+2026-09-15T16:13:22.3791369Z 
+2026-09-15T16:13:22.3791518Z No services need to be restarted.
+2026-09-15T16:13:22.3791740Z 
+2026-09-15T16:13:22.3791879Z No containers need to be restarted.
+2026-09-15T16:13:22.3792105Z 
+2026-09-15T16:13:22.3792268Z No user sessions are running outdated binaries.
+2026-09-15T16:13:22.3792531Z 
+2026-09-15T16:13:22.3792803Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-09-15T16:13:23.2998950Z ##[group]Run cmake -S . -G Ninja -B "/home/runner/work/_temp/build" \
+2026-09-15T16:13:23.2999534Z [36;1mcmake -S . -G Ninja -B "/home/runner/work/_temp/build" \[0m
+2026-09-15T16:13:23.2999864Z [36;1m  -DCMAKE_BUILD_TYPE=Release \[0m
+2026-09-15T16:13:23.3000118Z [36;1m  -DCREXX_QA_CTEST_JOBS=5 \[0m
+2026-09-15T16:13:23.3000396Z [36;1m  -DCREXX_VERSION_OVERRIDE="1.0.0-beta.3" \[0m
+2026-09-15T16:13:23.3000684Z [36;1m  -DCREXX_BUILD_CHANNEL="local" \[0m
+2026-09-15T16:13:23.3000962Z [36;1m  -DCREXX_BUILD_TIMESTAMP="20260915T161253Z" \[0m
+2026-09-15T16:13:23.3001318Z [36;1m  -DCREXX_BUILD_COMMIT="544d41f02de50d97598b21fb4a09a8a05756b7e7" \[0m
+2026-09-15T16:13:23.3001698Z [36;1m  -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \[0m
+2026-09-15T16:13:23.3002004Z [36;1m  -DCREXX_LLAMA_VULKAN=ON[0m
+2026-09-15T16:13:23.3033772Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-09-15T16:13:23.3034062Z env:
+2026-09-15T16:13:23.3034357Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:23.3034713Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T16:13:23.3035079Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:23.3035398Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:23.3036013Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:23.3036366Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T16:13:23.3036655Z ##[endgroup]
+2026-09-15T16:13:27.2352565Z -- The C compiler identification is GNU 13.3.0
+2026-09-15T16:13:29.2515398Z -- The CXX compiler identification is GNU 13.3.0
+2026-09-15T16:13:29.4980703Z -- Detecting C compiler ABI info
+2026-09-15T16:13:29.7631233Z -- Detecting C compiler ABI info - done
+2026-09-15T16:13:29.7759129Z -- Check for working C compiler: /usr/bin/cc - skipped
+2026-09-15T16:13:29.7836787Z -- Detecting C compile features
+2026-09-15T16:13:29.7842358Z -- Detecting C compile features - done
+2026-09-15T16:13:29.8163438Z -- Detecting CXX compiler ABI info
+2026-09-15T16:13:29.9276584Z -- Detecting CXX compiler ABI info - done
+2026-09-15T16:13:29.9408730Z -- Check for working CXX compiler: /usr/bin/c++ - skipped
+2026-09-15T16:13:29.9411693Z -- Detecting CXX compile features
+2026-09-15T16:13:29.9417513Z -- Detecting CXX compile features - done
+2026-09-15T16:13:29.9781476Z -- CMake Version: 3.31.6
+2026-09-15T16:13:29.9781971Z -- CREXX Version: crexx-1.0.0-beta.3+local.g544d41f02de5
+2026-09-15T16:13:29.9782480Z -- CREXX Build Channel: local
+2026-09-15T16:13:29.9782860Z -- CREXX Build Timestamp: 20260915T161253Z
+2026-09-15T16:13:29.9783252Z -- CREXX Build Commit: 544d41f02de5
+2026-09-15T16:13:29.9783613Z -- CMake Generator: Ninja
+2026-09-15T16:13:29.9784167Z -- cREXX build resources: profile=portable, vm-compile=2, native-link=2, backend=Ninja pools
+2026-09-15T16:13:30.0027254Z -- Fetching DSL-Syntax-Highlighter develop from https://github.com/adesutherland/DSL-Syntax-Highlighter.git
+2026-09-15T16:13:30.7103418Z -- Performing Test cxxflag__W
+2026-09-15T16:13:30.7602926Z -- Performing Test cxxflag__W - Success
+2026-09-15T16:13:30.7608812Z -- Performing Test cxxflag__Wall
+2026-09-15T16:13:30.8101710Z -- Performing Test cxxflag__Wall - Success
+2026-09-15T16:13:30.8107603Z -- Performing Test cxxflag__Wextra
+2026-09-15T16:13:30.8615720Z -- Performing Test cxxflag__Wextra - Success
+2026-09-15T16:13:30.8622186Z -- Performing Test cxxflag__Weffc__
+2026-09-15T16:13:30.9117157Z -- Performing Test cxxflag__Weffc__ - Success
+2026-09-15T16:13:30.9123467Z -- Performing Test cxxflag__pedantic
+2026-09-15T16:13:30.9607791Z -- Performing Test cxxflag__pedantic - Success
+2026-09-15T16:13:30.9613347Z -- Performing Test cxxflag__Wformat_2
+2026-09-15T16:13:31.0107503Z -- Performing Test cxxflag__Wformat_2 - Success
+2026-09-15T16:13:31.0113082Z -- Performing Test cxxflag__Wredundant_decls
+2026-09-15T16:13:31.0611434Z -- Performing Test cxxflag__Wredundant_decls - Success
+2026-09-15T16:13:31.0617603Z -- Performing Test cxxflag__Wsuggest_attribute_format
+2026-09-15T16:13:31.1137245Z -- Performing Test cxxflag__Wsuggest_attribute_format - Success
+2026-09-15T16:13:31.1142818Z -- Performing Test cxxflag__Wconversion
+2026-09-15T16:13:31.1656907Z -- Performing Test cxxflag__Wconversion - Success
+2026-09-15T16:13:31.1666584Z -- Performing Test cxxflag__Wsign_conversion
+2026-09-15T16:13:31.2187466Z -- Performing Test cxxflag__Wsign_conversion - Success
+2026-09-15T16:13:31.2193156Z -- Performing Test cxxflag__Werror_return_type
+2026-09-15T16:13:31.2689625Z -- Performing Test cxxflag__Werror_return_type - Success
+2026-09-15T16:13:31.2695387Z -- Performing Test cxxflag__Weverything
+2026-09-15T16:13:31.2912412Z -- Performing Test cxxflag__Weverything - Failed
+2026-09-15T16:13:31.2918465Z -- Performing Test cxxflag__fdiagnostics_color_always
+2026-09-15T16:13:31.3506050Z -- Performing Test cxxflag__fdiagnostics_color_always - Success
+2026-09-15T16:13:31.3506615Z -- C compiler flags: 
+2026-09-15T16:13:31.3507382Z -- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wsuggest-attribute=format -Wconversion -Wsign-conversion -Werror=return-type -fdiagnostics-color=always 
+2026-09-15T16:13:31.3508072Z -- Linker flags for executables: 
+2026-09-15T16:13:31.3508309Z -- Linker flags for shared libs: 
+2026-09-15T16:13:31.3508559Z -- Release C compiler flags: -O3 -DNDEBUG
+2026-09-15T16:13:31.3508827Z -- Release C++ compiler flags: -O3 -DNDEBUG
+2026-09-15T16:13:31.3509083Z -- Release linker flags for executables: 
+2026-09-15T16:13:31.3509338Z -- Release linker flags for shared libs: 
+2026-09-15T16:13:31.5528834Z -- Looking for sys/types.h
+2026-09-15T16:13:31.7600355Z -- Looking for sys/types.h - found
+2026-09-15T16:13:31.7601282Z -- Looking for sys/stat.h
+2026-09-15T16:13:31.8160679Z -- Looking for sys/stat.h - found
+2026-09-15T16:13:31.8161208Z -- Looking for fcntl.h
+2026-09-15T16:13:31.8672514Z -- Looking for fcntl.h - found
+2026-09-15T16:13:31.8673074Z -- Looking for unistd.h
+2026-09-15T16:13:31.9249164Z -- Looking for unistd.h - found
+2026-09-15T16:13:31.9250323Z -- Looking for io.h
+2026-09-15T16:13:31.9530926Z -- Looking for io.h - not found
+2026-09-15T16:13:31.9535095Z -- Writing config.h
+2026-09-15T16:13:31.9855649Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+2026-09-15T16:13:32.1821847Z -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+2026-09-15T16:13:32.1830586Z -- Found Threads: TRUE
+2026-09-15T16:13:33.0245133Z -- cREXX VM handler panel: profile-20
+2026-09-15T16:13:33.1394606Z -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")
+2026-09-15T16:13:33.1398014Z -- cREXX VM core socket TLS backend: OPENSSL
+2026-09-15T16:13:33.1401671Z -- cREXX product VM: rxvm -> rxtvm (GNU)
+2026-09-15T16:13:39.7689709Z CMAKE_BUILD_TYPE=Release
+2026-09-15T16:13:39.7690028Z -- llama.cpp version: 0.4.0
+2026-09-15T16:13:39.7702160Z -- Found Git: /usr/bin/git (found version "2.55.0")
+2026-09-15T16:13:39.7721338Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T16:13:39.7738723Z fatal: not a git repository (or any of the parent directories): .git
+2026-09-15T16:13:39.7877840Z -- The ASM compiler identification is GNU
+2026-09-15T16:13:39.7894777Z -- Found assembler: /usr/bin/cc
+2026-09-15T16:13:39.8440969Z -- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+2026-09-15T16:13:39.8593956Z -- CMAKE_SYSTEM_PROCESSOR: x86_64
+2026-09-15T16:13:39.8594489Z -- GGML_SYSTEM_ARCH: x86
+2026-09-15T16:13:39.8612078Z -- Including CPU backend
+2026-09-15T16:13:39.8616269Z -- x86 detected
+2026-09-15T16:13:39.8618335Z -- Adding CPU backend variant ggml-cpu-x64:  
+2026-09-15T16:13:39.8621864Z -- x86 detected
+2026-09-15T16:13:39.8624124Z -- Adding CPU backend variant ggml-cpu-sse42: -msse4.2 GGML_SSE42
+2026-09-15T16:13:39.8627622Z -- x86 detected
+2026-09-15T16:13:39.8629921Z -- Adding CPU backend variant ggml-cpu-sandybridge: -msse4.2;-mavx GGML_SSE42;GGML_AVX
+2026-09-15T16:13:39.8633225Z -- x86 detected
+2026-09-15T16:13:39.8635917Z -- Adding CPU backend variant ggml-cpu-ivybridge: -msse4.2;-mf16c;-mavx GGML_SSE42;GGML_F16C;GGML_AVX
+2026-09-15T16:13:39.8639183Z -- x86 detected
+2026-09-15T16:13:39.8641734Z -- Adding CPU backend variant ggml-cpu-piledriver: -msse4.2;-mf16c;-mfma;-mavx GGML_SSE42;GGML_F16C;GGML_FMA;GGML_AVX
+2026-09-15T16:13:39.8646158Z -- x86 detected
+2026-09-15T16:13:39.8648603Z -- Adding CPU backend variant ggml-cpu-haswell: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2
+2026-09-15T16:13:39.8652299Z -- x86 detected
+2026-09-15T16:13:39.8655640Z -- Adding CPU backend variant ggml-cpu-skylakex: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512
+2026-09-15T16:13:39.8659122Z -- x86 detected
+2026-09-15T16:13:39.8662584Z -- Adding CPU backend variant ggml-cpu-cannonlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI
+2026-09-15T16:13:39.8666100Z -- x86 detected
+2026-09-15T16:13:39.8669510Z -- Adding CPU backend variant ggml-cpu-cascadelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI
+2026-09-15T16:13:39.8672858Z -- x86 detected
+2026-09-15T16:13:39.8676585Z -- Adding CPU backend variant ggml-cpu-icelake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI
+2026-09-15T16:13:39.8679858Z -- x86 detected
+2026-09-15T16:13:39.8683423Z -- Adding CPU backend variant ggml-cpu-cooperlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T16:13:39.8686820Z -- x86 detected
+2026-09-15T16:13:39.8690546Z -- Adding CPU backend variant ggml-cpu-zen4: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16
+2026-09-15T16:13:39.8693538Z -- x86 detected
+2026-09-15T16:13:39.8696654Z -- Adding CPU backend variant ggml-cpu-alderlake: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavxvnni GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX_VNNI
+2026-09-15T16:13:39.8700403Z -- x86 detected
+2026-09-15T16:13:39.8704429Z -- Adding CPU backend variant ggml-cpu-sapphirerapids: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2;-mavx512f;-mavx512cd;-mavx512vl;-mavx512dq;-mavx512bw;-mavx512vbmi;-mavx512vnni;-mavx512bf16;-mamx-tile;-mamx-int8 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2;GGML_AVX512;GGML_AVX512_VBMI;GGML_AVX512_VNNI;GGML_AVX512_BF16;GGML_AMX_TILE;GGML_AMX_INT8
+2026-09-15T16:13:39.9379298Z -- Found Vulkan: /usr/lib/x86_64-linux-gnu/libvulkan.so (found version "1.3.275") found components: glslc missing components: glslangValidator
+2026-09-15T16:13:39.9627996Z CMake Error at /home/runner/work/_temp/build/_deps/crexx_llama_source-src/ggml/src/ggml-vulkan/CMakeLists.txt:14 (find_package):
+2026-09-15T16:13:39.9628893Z   Could not find a package configuration file provided by "SPIRV-Headers"
+2026-09-15T16:13:39.9629417Z   with any of the following names:
+2026-09-15T16:13:39.9629641Z 
+2026-09-15T16:13:39.9629786Z     SPIRV-HeadersConfig.cmake
+2026-09-15T16:13:39.9630135Z     spirv-headers-config.cmake
+2026-09-15T16:13:39.9630350Z 
+2026-09-15T16:13:39.9630628Z   Add the installation prefix of "SPIRV-Headers" to CMAKE_PREFIX_PATH or set
+2026-09-15T16:13:39.9631549Z   "SPIRV-Headers_DIR" to a directory containing one of the above files.  If
+2026-09-15T16:13:39.9632179Z   "SPIRV-Headers" provides a separate development package or SDK, be sure it
+2026-09-15T16:13:39.9632827Z   has been installed.
+2026-09-15T16:13:39.9633009Z 
+2026-09-15T16:13:39.9633015Z 
+2026-09-15T16:13:39.9672051Z -- Configuring incomplete, errors occurred!
+2026-09-15T16:13:40.0008545Z ##[error]Process completed with exit code 1.
+2026-09-15T16:13:40.0137499Z ##[group]Run actions/upload-artifact@v7
+2026-09-15T16:13:40.0137745Z with:
+2026-09-15T16:13:40.0138049Z   name: package-qa-CREXX-linux-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7
+2026-09-15T16:13:40.0139381Z   path: /home/runner/work/_temp/release-smoke
+/home/runner/work/_temp/build/Testing/Temporary
+/home/runner/work/_temp/build/lib/plugins/llama/tests/release-smoke
+/home/runner/work/_temp/build/CMakeFiles/CMakeConfigureLog.yaml
+
+2026-09-15T16:13:40.0140088Z   if-no-files-found: warn
+2026-09-15T16:13:40.0140305Z   retention-days: 14
+2026-09-15T16:13:40.0140513Z   compression-level: 6
+2026-09-15T16:13:40.0151203Z   overwrite: false
+2026-09-15T16:13:40.0151417Z   include-hidden-files: false
+2026-09-15T16:13:40.0151635Z   archive: true
+2026-09-15T16:13:40.0151832Z env:
+2026-09-15T16:13:40.0152072Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:40.0152450Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib/pkgconfig
+2026-09-15T16:13:40.0152833Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:40.0153146Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:40.0153469Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.14/x64
+2026-09-15T16:13:40.0153791Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.14/x64/lib
+2026-09-15T16:13:40.0154063Z ##[endgroup]
+2026-09-15T16:13:40.1306480Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-09-15T16:13:40.1308088Z The least common ancestor is /home/runner/work/_temp. This will be the root directory of the artifact
+2026-09-15T16:13:40.1308763Z With the provided path, there will be 1 file uploaded
+2026-09-15T16:13:40.1309260Z Artifact name is valid!
+2026-09-15T16:13:40.1309508Z Root directory input is valid!
+2026-09-15T16:13:40.2916487Z Uploading artifact: package-qa-CREXX-linux-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7.zip
+2026-09-15T16:13:40.2949855Z Beginning upload of artifact content to blob storage
+2026-09-15T16:13:40.3496219Z Uploaded bytes 7459
+2026-09-15T16:13:40.3625225Z Finished uploading artifact content to blob storage!
+2026-09-15T16:13:40.3626216Z SHA256 digest of uploaded artifact is 5f18e21358b909e447bcf310a32f7d7a3f84c82a6272abf46337de3221b1928f
+2026-09-15T16:13:40.3627148Z Finalizing artifact upload
+2026-09-15T16:13:40.5869431Z Artifact package-qa-CREXX-linux-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7 successfully finalized. Artifact ID 10406048430
+2026-09-15T16:13:40.5870485Z Artifact package-qa-CREXX-linux-x64-544d41f02de50d97598b21fb4a09a8a05756b7e7 has been successfully uploaded! Final size is 7459 bytes. Artifact ID is 10406048430
+2026-09-15T16:13:40.5872227Z Artifact download URL: https://github.com/adesutherland/CREXX/actions/runs/34993532373/artifacts/10406048430
+2026-09-15T16:13:40.6062590Z Post job cleanup.
+2026-09-15T16:13:40.6728199Z [command]/usr/bin/git version
+2026-09-15T16:13:40.6757671Z git version 2.55.0
+2026-09-15T16:13:40.6785144Z Temporarily overriding HOME='/home/runner/work/_temp/d692025d-923c-448c-b83d-e17f3a5cedf5' before making global git config changes
+2026-09-15T16:13:40.6786865Z Adding repository directory to the temporary git global config as a safe directory
+2026-09-15T16:13:40.6789979Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/CREXX/CREXX
+2026-09-15T16:13:40.7174818Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-09-15T16:13:40.7204657Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-09-15T16:13:40.7424899Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-09-15T16:13:40.7770348Z http.https://github.com/.extraheader
+2026-09-15T16:13:40.7779806Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-09-15T16:13:40.8286987Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-09-15T16:13:40.8521218Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-09-15T16:13:40.8549071Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-09-15T16:13:40.8886577Z Cleaning up orphan processes

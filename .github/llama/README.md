@@ -36,7 +36,9 @@ CUDA build inputs are NVIDIA 12.9.1 component archives pinned by size/SHA256 in
 `cuda-12.9.1.json`. `scripts/ci-cuda-toolkit.py` assembles and caches the SDK and
 retains component licenses in the provider notice and user guides. Windows CUDA
 uses the installed MSVC v142/14.29 toolset supported by this CUDA line; the base
-Windows package retains MinGW/Vulkan. OS graphics drivers are not redistributed.
+Windows package retains MinGW/Vulkan. The engine keeps its upstream portable
+CUDA architecture defaults (`GGML_NATIVE=OFF`); CI does not tune or narrow its
+GPU target list. OS graphics drivers are not redistributed.
 
 After signing a trusted staged payload, verify its signatures before running
 `scripts/refresh-provider-manifests.py`. That script updates only the declared

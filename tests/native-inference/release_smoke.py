@@ -37,6 +37,8 @@ def main():
     p.add_argument('--backends', default='cpu')
     a = p.parse_args()
     source, build, helper = a.source.resolve(), a.build.resolve(), a.helper.resolve()
+    preferred_vm = (build / 'lib/plugins/llama/tests/release-smoke-default-vm.txt').read_text().strip()
+    assert preferred_vm in ('rxbvm', 'rxtvm'), preferred_vm
     a.output_root.mkdir(parents=True, exist_ok=True)
     logs = Path(tempfile.mkdtemp(prefix='release-smoke-', dir=a.output_root.resolve()))
     work = Path(tempfile.mkdtemp(prefix='crexx-release-smoke-'))
@@ -97,6 +99,7 @@ def main():
         assert (prefix / ('bin/rxllama.rxplugin')).is_file()
         assert (prefix / ('bin/crexx-provider-package' + suffix)).is_file()
         assert (prefix / ('bin/rxbvm' + suffix)).is_file()
+        assert (prefix / ('bin/rxvm' + suffix)).is_file()
         assert not list(prefix.rglob('*.gguf')), 'fixture/model leaked into release'
         for name in ('README.md', 'installation.md', 'models.md', 'reference.md', 'qualification.md',
                      'examples/persistent_embeddings.crexx', 'examples/shared_embeddings.crexx',
@@ -136,7 +139,9 @@ def main():
             linked = work / (mode + '-linked')
             run(mode + '-link', [prefix / ('bin/rxlink' + suffix), '-o', linked, program,
                 prefix / 'bin/library', prefix / 'bin/classlib', prefix / 'bin/rxfnsg'])
-            for vm in ('rxbvm', 'rxtvm'):
+            # Exercise the user's public entry point and the alternate engine
+            # where available, without running the preferred engine twice.
+            for vm in ('rxvm', *[v for v in ('rxbvm', 'rxtvm') if v != preferred_vm]):
                 binary = prefix / 'bin' / (vm + suffix)
                 if binary.exists():
                     run(mode + '-' + vm, [binary, linked, '-a', fixture, fixture_info['sha256']], marker)
@@ -163,6 +168,7 @@ def main():
         (logs / 'summary.json').write_text(json.dumps({'outcome': outcome,
             'elapsed_seconds': round(time.monotonic() - started, 3), 'commands': records,
             'work': str(work), 'build': str(build), 'required_backends': a.backends,
+            'preferred_vm': preferred_vm,
             'model_downloads': 0, 'scope': 'package and fixture smoke; not full BGE/Smol or device qualification'}, indent=2) + '\n')
         if outcome == 'passed':
             shutil.rmtree(work)

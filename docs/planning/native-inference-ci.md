@@ -24,7 +24,7 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
 
 ## Numbered acceptance criteria
 
-1. [ ] **CI-AC-01:** the candidate contains the accepted implementation and
+1. [x] **CI-AC-01:** the candidate contains the accepted implementation and
    current remote RXPP changes, with both parents retained. Neither remote
    `develop` nor a GitHub release is modified during qualification.
 2. [ ] **CI-AC-02:** the ordinary four release archives contain a complete
