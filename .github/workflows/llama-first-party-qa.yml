@@ -1,0 +1,60 @@
+name: First-party llama bridge ownership QA
+on:
+  push:
+    branches: [temp/llama-release-adapter-qa]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-CREXX-linux-x64
+          run-id: 35013130021
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/ordinary-provider
+      - name: Obtain only pinned headers and verify their source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://codeload.github.com/ggml-org/llama.cpp/tar.gz/5266f24da75dc449bd56cbed7addb9c8e4a6a73e \
+            --output "${{ runner.temp }}/llama-source.tar.gz"
+          printf '%s  %s\n' 2de0d87eda4696e9f6bbd771d4c623267f4e95856cce6f99793f91522f993e43 \
+            "${{ runner.temp }}/llama-source.tar.gz" | sha256sum --check
+          mkdir "${{ runner.temp }}/llama-headers"
+          tar -xzf "${{ runner.temp }}/llama-source.tar.gz" --strip-components=1 -C "${{ runner.temp }}/llama-headers"
+      - name: Build and check only first-party bridge code in Debug and ASan-LSan
+        shell: bash
+        run: |
+          python tests/native-inference/first-party-probe/run.py \
+            --archive "${{ runner.temp }}/ordinary-provider/CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-linux-x64.zip" \
+            --sha256 c6b5752f27f5bd87471ddabccbe2461834cd719598a7d68dfe503a8a48d6cf3c \
+            --source . --llama-source "${{ runner.temp }}/llama-headers" \
+            --output "${{ runner.temp }}/first-party-probe"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: first-party-bridge-ownership-qa
+          path: |
+            ${{ runner.temp }}/first-party-probe/*.log
+            ${{ runner.temp }}/first-party-probe/*.json
+            ${{ runner.temp }}/first-party-probe/debug/CMakeCache.txt
+            ${{ runner.temp }}/first-party-probe/asan/CMakeCache.txt
+            ${{ runner.temp }}/first-party-probe/debug/asan-logs
+            ${{ runner.temp }}/first-party-probe/asan/asan-logs
+            ${{ runner.temp }}/first-party-probe/debug/Testing/Temporary
+            ${{ runner.temp }}/first-party-probe/asan/Testing/Temporary
+          if-no-files-found: error
+          retention-days: 14
