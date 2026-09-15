@@ -1,0 +1,40 @@
+name: Intel native stall diagnosis
+on:
+  push:
+    branches: [temp/llama-release-intel-native]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  replay:
+    runs-on: macos-15-intel
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v8
+        with:
+          name: user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-CREXX-macos-x86_64
+          run-id: 35013130021
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/candidate
+      - name: Replay the already-built native consumer with stack capture
+        shell: bash
+        run: |
+          python .github/diagnostics/llama-native-replay.py \
+            --archive "${{ runner.temp }}/candidate/CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-x86_64.zip" \
+            --sha256 91a4fb9f8347d582789fc1ee986cc0d646236d145de0c6ffe2ffaa30e49f187c \
+            --source "$GITHUB_WORKSPACE" --output-root "${{ runner.temp }}/native-replay" \
+            --repeat 5 --capture-after 180
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: intel-native-stall-diagnosis
+          path: ${{ runner.temp }}/native-replay
+          retention-days: 14
