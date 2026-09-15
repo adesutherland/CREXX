@@ -528,7 +528,7 @@ jobs:
       - name: Smoke the final staged runtime (Unix)
         if: matrix.platform != 'windows'
         shell: bash
-        run: python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
+        run: python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke" --capture-engine-after 120
 
       - name: Smoke the final staged runtime (MinGW)
         if: matrix.toolchain == 'mingw'
