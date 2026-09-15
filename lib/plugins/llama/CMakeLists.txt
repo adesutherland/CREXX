@@ -161,6 +161,20 @@ set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
     include("${CMAKE_SOURCE_DIR}/tests/native-inference/ReleaseSmoke.cmake")
+    foreach(standard 17 20)
+        set(path_test rxllama_package_utf8_cxx${standard})
+        add_executable(${path_test} "${CMAKE_SOURCE_DIR}/tests/native-inference/package_utf8.cpp")
+        set_target_properties(${path_test} PROPERTIES
+            CXX_STANDARD ${standard} CXX_STANDARD_REQUIRED TRUE CXX_EXTENSIONS FALSE
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
+        target_include_directories(${path_test} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+            "${crexx_llama_source_SOURCE_DIR}/vendor" "${CMAKE_SOURCE_DIR}/binutils/include")
+        target_compile_definitions(${path_test} PRIVATE
+            CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}" CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+        add_test(NAME ${path_test} COMMAND ${path_test})
+        set_tests_properties(${path_test} PROPERTIES LABELS "library;rxpa;llama;filesystem;correctness")
+        crexx_register_test_prep_targets(TESTS ${path_test} TARGETS ${path_test})
+    endforeach()
     add_executable(rxllama_text_old_host ${CMAKE_SOURCE_DIR}/tests/native-inference/text_old_host.c)
     target_include_directories(rxllama_text_old_host PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
     target_link_libraries(rxllama_text_old_host PRIVATE rxpa CREXX::RXPA)

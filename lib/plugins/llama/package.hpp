@@ -12,6 +12,12 @@ extern "C" {
 namespace rxllama_package {
 namespace fs = std::filesystem;
 using json = nlohmann::json;
+// C++20 changes path::u8string() to char8_t; C engine APIs still take UTF-8
+// bytes through char pointers. Preserve those bytes without locale conversion.
+inline std::string utf8_path(const fs::path &path) {
+    const auto encoded = path.u8string();
+    return {reinterpret_cast<const char *>(encoded.data()), encoded.size()};
+}
 inline std::string hash(const fs::path &p, const std::atomic<bool> *cancel = nullptr) {
     std::ifstream file(p, std::ios::binary);
     if (!file) throw std::runtime_error("cannot open package/model file");

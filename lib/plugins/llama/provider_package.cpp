@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
         // Revalidate actual bytes before a project-cache hit, without copying.
         for (const auto &entry : manifest.at("runtime_files")) (void)verified(root, entry);
         std::vector<std::string> links;
-        for (const auto &entry : manifest.at("link_libraries")) links.push_back(verified(root, entry).u8string());
+        for (const auto &entry : manifest.at("link_libraries")) links.push_back(utf8_path(verified(root, entry)));
         if (fingerprint) { std::cout << hash(source) << '\n'; return 0; }
         if (std::string(argv[3]) != "GNU" && std::string(argv[3]) != "MSVC") throw std::runtime_error("unsupported compiler style");
         auto destination = fs::absolute(fs::u8path(argv[2])).parent_path();
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
             auto dest = destination / fs::u8path(name);
             if (fs::exists(dest)) {
                 auto actual = hash(dest);
-                if (actual == entry.at("sha256")) continue;
+                if (actual == entry.at("sha256").get<std::string>()) continue;
                 if (!owned.count(name) || owned.at(name) != actual) throw std::runtime_error("unowned runtime dependency collision");
             }
             copies.emplace_back(path, dest);

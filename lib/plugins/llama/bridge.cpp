@@ -139,7 +139,7 @@ void initialize_engine() {
         const auto name = entry.at("backend").get<std::string>();
         try {
             auto file = rxllama_package::verified(dir, entry);
-            auto reg = ggml_backend_load(file.u8string().c_str());
+            auto reg = ggml_backend_load(rxllama_package::utf8_path(file).c_str());
             if (!reg) throw Failure(-6, "backend/driver unavailable");
             loaded_backends.push_back(reg);
         } catch (const std::exception &e) {
@@ -386,7 +386,7 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
             params.progress_callback_user_data = raw;
             std::string placement;
             placement_log = &placement;
-            auto model = llama_model_load_from_file(path.u8string().c_str(), params);
+            auto model = llama_model_load_from_file(rxllama_package::utf8_path(path).c_str(), params);
             placement_log = nullptr;
             require(model != nullptr, "upstream model load failed");
             if (llama_model_n_embd_out(model) != (embedding ? 384 : 960)) { llama_model_free(model); throw Failure(-1, "model dimension differs from profile"); }
