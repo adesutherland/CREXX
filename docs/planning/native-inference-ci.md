@@ -537,12 +537,12 @@ translation units finds `stdatomic.h` only in this harness's two target variants
 Declare their actual C11 requirement privately, following the neighboring
 native-object test targets. Do not change the public C SDK or global C standard.
 
-1. [x] **F14-AC-01:** both harness targets declare C11 and retain their existing
+1. [ ] **F14-AC-01:** both harness targets declare C11 and MSVC atomics support and retain their existing
    attached-provider lifetime/failure assertions. Verify generated commands and
    focused normal/maintained sanitizer results.
 2. [ ] **F14-AC-02:** MSVC builds and runs the affected core controls and completes
    the broader core gate; the tests remain enabled.
-3. [x] **F14-01:** retain the host failure/dependency audit, correct the two
+3. [ ] **F14-01:** retain the host failure/dependency audit, correct the two
    target requirements and validate focused controls (F14-AC-01).
 4. [ ] **F14-02:** qualify the Windows correction, then reconcile the wider gate
    (F14-AC-02). Reuse unaffected core/plugin evidence and cached engine outputs.
@@ -560,3 +560,23 @@ files; the broader gate still keeps LP-AC-03 and SAN-009 open. CI-F14 passes
 normal/Apple-ASan 2/2 controls and generated C11 command inspection. Its Windows
 retry is `35028634025`, while helper/package retry `35028632018` covers CI-F11.
 Both use `b4d10adfb`; full combined qualification remains a separate gate.
+
+**F07-D02 — isolate the archived bridge:** the direct GGML controls passed,
+while the integrated Intel provider lifecycle check remains running unusually
+long. Next compile only a tiny C executable calling the archived bridge's
+existing permanent probe entry point, with no cREXX VM/compiler or model. Verify
+the archive/library hashes, exercise the same entry point as the current CTest,
+and retain an opt-in stack capture if it stalls. Run the local ARM control first,
+then the isolated Intel diagnostic branch. This bounds the remaining
+bridge-versus-process-context question; passing controls still do not close
+CI-F07, and no production code or normal deadline changes are authorized by it.
+
+CI-F14 follow-up: the first MSVC retry `35028634025` proves that declaring C11
+alone was incomplete. MSVC also requires `/experimental:c11atomics`, already
+used by neighboring VM-header consumers. Put both requirements in the shared
+private harness configuration. Before another broad build, compile both actual
+CMake-generated object commands: removing just the atomics switch must reproduce
+the SDK error, and the unchanged command must pass. This preflight builds no
+core executable or engine. Retain its commands and negative/positive logs.
+F14-AC-01 and F14-01 are reopened until that Windows proof; unchanged normal and
+Apple sanitizer evidence remains valid for their unaffected commands.

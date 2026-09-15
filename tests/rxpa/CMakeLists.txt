@@ -121,6 +121,11 @@ set_tests_properties(
         TIMEOUT 60)
 
 function(crexx_configure_cri17_attached_control TARGET_NAME)
+    # The private VM header exposes C11 atomics to this test harness.
+    target_compile_features(${TARGET_NAME} PRIVATE c_std_11)
+    if(MSVC)
+        target_compile_options(${TARGET_NAME} PRIVATE /experimental:c11atomics)
+    endif()
     target_include_directories(${TARGET_NAME} PRIVATE
             ${CMAKE_SOURCE_DIR}/interpreter
             ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -153,14 +158,12 @@ endfunction()
 add_executable(cri17_attached_provider_control-rxvml
         cri17_attached_provider_control.c)
 target_link_libraries(cri17_attached_provider_control-rxvml PRIVATE rxvml)
-target_compile_features(cri17_attached_provider_control-rxvml PRIVATE c_std_11)
 crexx_configure_cri17_attached_control(
         cri17_attached_provider_control-rxvml)
 
 add_executable(cri17_attached_provider_control-rxbvml
         cri17_attached_provider_control.c)
 target_link_libraries(cri17_attached_provider_control-rxbvml PRIVATE rxbvml)
-target_compile_features(cri17_attached_provider_control-rxbvml PRIVATE c_std_11)
 target_compile_definitions(cri17_attached_provider_control-rxbvml PRIVATE
         NTHREADED=1)
 crexx_configure_cri17_attached_control(

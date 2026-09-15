@@ -163,6 +163,12 @@ jobs:
             -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF -DENABLE_PARSER_MODE=OFF \
             ${{ matrix.cmake_args }}
 
+      - name: Check MSVC atomics before the broad build
+        if: matrix.toolchain == 'msvc'
+        shell: bash
+        run: |
+          python scripts/ci-msvc-atomics-preflight.py "${{ runner.temp }}/qualification"
+
       - name: Run comprehensive correctness QA
         if: matrix.toolchain != 'mingw'
         shell: bash
@@ -203,6 +209,7 @@ jobs:
           path: |
             ${{ runner.temp }}/qualification/Testing/Temporary
             ${{ runner.temp }}/qualification/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ runner.temp }}/qualification/atomics-preflight
           if-no-files-found: warn
           retention-days: 14
 
