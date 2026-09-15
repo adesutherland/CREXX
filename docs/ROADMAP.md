@@ -269,8 +269,9 @@ model, and enters Release 1 only through a beta quality gate.
   lowering and static archive relinking, removes the obsolete `linearfit` Rexx
   construction shim, and updates human/agent guidance. All 2,347 ordinary Debug
   tests now have passing evidence from the broad run plus affected rechecks;
-  the original failed baseline is retained historically. Final public-contract/STEP-04 closure
-  review remains open. Generation is STEP-05. Sanitizer execution and
+  the original failed baseline is retained historically. STEP-04 is closed
+  following acceptance of this report. Generation is next in STEP-05 and has
+  not started. Sanitizer execution and
   Windows/Linux/CUDA/Vulkan qualification remain STEP-06; SAN-009 is still open.
   The [dependency pins and contract](planning/native-inference-step-01.md)
   and live parent plan retain the full scope and remaining qualification boundary.

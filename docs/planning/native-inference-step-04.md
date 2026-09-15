@@ -1,8 +1,9 @@
 # STEP-04 — Persistent embedding batches
 
-Status: local STEP-04 implementation and acceptance work complete, 14 September
-2026; ready for Adrian's public-contract and phase-closure review. Authorized
-after STEP-03 closure; the accepted performance verdict remains unchanged.
+Status: STEP-04 closed, 15 September 2026, following Adrian's acceptance of
+the factory cleanup/regression report and confirmation of phase completion.
+The implemented public contract and accepted performance verdict are unchanged.
+STEP-06 retains the expressly assigned sanitizer/platform qualification.
 Parent scope: [complete plan](native-inference-backlog.md), OUT-01–05,
 CREXX-NI-01–07 and AC-01–14. Implementation started from
 `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`. The 15 September checkpoint below
@@ -93,7 +94,7 @@ numeric owner. Reuse model/context allocations across requests. A model/context
 per call would violate persistence; one decode per row would discard true batching.
 New eager cross-request caches or backend scheduling mechanisms are unnecessary.
 
-## Current handoff — local STEP-04 complete; closure review
+## Implementation and acceptance history — STEP-04 now closed
 
 S4-01 is complete. S4-02/03 implement the accepted native request slice and
 Adrian-approved S4-D01 length-aware text correction. The original NUL failure now
@@ -153,8 +154,9 @@ with durable diagnostics, failed-construction values, complete text, ordered
 cover twenty persistent batches and four workers sharing weights with private
 sessions. Its own preimplementation failures and delivery evidence are retained
 in the [typed completion bundle](../qa/native-inference-typed/README.md).
-The final public-contract and phase-closure review remain Adrian's decisions;
-no new API alternative, model default or language syntax has been selected.
+At this capture, final public-contract and phase-closure review remained with
+Adrian; the 15 September closure below supersedes that pending status. No new
+API alternative, model default or language syntax has been selected.
 
 SAN-009 remains open under STEP-06 native-inference release QA, owned by Codex
 under Adrian's direction. Its repaired probe lifetime and prior provider ASan
@@ -167,8 +169,8 @@ full Debug run, commit, push or STEP-05 work occurred.
 Adrian's continuation explicitly requires finishing this sequence and ticking
 the documented acceptance criteria. The completed C RXPA dependency is not
 STEP-04 closure. S4-05a–d are now complete against the unchanged S4-D03
-contract as a reviewable candidate. Final public-contract/phase acceptance is
-not inferred; all documented local implementation and evidence work is complete.
+contract as a reviewable candidate at this capture. The completed regression
+follow-up and 15 September closure below supply the subsequent disposition.
 
 1. [x] **S4-05a (S4-AC-01–04):** Complete focused request row/token/byte boundaries,
    cancellation/state/recovery, CPU/Metal comparisons and actual shared-model
@@ -225,8 +227,8 @@ Debug or sanitizer qualification.
 
 **Next action at typed capture:** Adrian's review of the completed public
 contract and STEP-04 closure. The 15 September follow-up below records the later regression failure and
-its completed repair/qualification. Public-contract and phase-closure review
-remain with Adrian. No implementation/test/documentation item is left midway
+its completed repair/qualification and phase closure. No
+implementation/test/documentation item is left midway
 in this local step. STEP-05 generation has not begun; STEP-06 retains SAN-009 and the complete
 platform/sanitizer gate. STEP-07 documentation/examples may overlap STEP-06 as
 already approved. No scope item is removed to obtain local closure.
@@ -359,5 +361,26 @@ workaround without changing statistical kernels or public spelling. Human and
 agent references now use executable C bindings; historical evidence is labelled.
 All 2,347 ordinary Debug tests have current or dependency-verified reusable
 passing evidence. No Step 5 generation work or Step 6 sanitizer/platform work
-has been advanced; SAN-009 remains open under Codex/Adrian. Next action remains
-Adrian's public-contract/STEP-04 closure review, followed by authorized STEP-05.
+has been advanced; SAN-009 remains open under Codex/Adrian. The closure below
+supersedes the previous next action of public-contract/STEP-04 review.
+
+
+### STEP-04 closure — 15 September 2026
+
+Adrian accepted the completed factory-cleanup/regression report ("Good") and
+asked whether this closes Step 4. STEP-04 is now recorded as closed: S4-01–05,
+S4-AC-01–06, S4-05a–d, S4-B-01–03 and the QA01/QA02 follow-ups are complete.
+The implemented typed public contract, packed results, persistent/shared-model
+examples, accepted indicative performance evidence and human/agent guidance
+remain the delivered scope. The final implementation is `cd11b332b123813016a47f57006275b0fe162fe9`;
+its compiler and archive-link repairs are separately reviewable in the preceding
+commits. All 2,347 ordinary tests have the passing evidence described above.
+
+This phase closure preserves all parent OUT-01–05, CREXX-NI-01–07 and AC-01–14
+obligations. STEP-05 generation is next and has not started. STEP-06 retains
+maintained sanitizers, S3-D01/S4-D01/native-object/typed-call qualification,
+Windows/Linux/CUDA/Vulkan proof and open, release-blocking SAN-009, owned by
+Codex under Adrian's direction. STEP-07 may overlap hardware qualification as
+approved. This is not release or complete native-inference programme closure.
+No code/test/build input changed for this closure record, so retained test and
+performance evidence is reused without rerunning it.

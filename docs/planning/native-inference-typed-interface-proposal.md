@@ -1,14 +1,16 @@
 # S4-D03 — Typed native llama interface
 
 Status: implementation and normal local F-AC-01–04 verification complete,
-14 September 2026; captured in the requested 15 September baseline. Final
-public-contract/closure review remains open. The subsequent
+14 September 2026; captured in the requested 15 September baseline. The
+implemented public contract is retained in the 15 September STEP-04 closure
+after the accepted factory-cleanup/regression report. The subsequent
 [QA01/QA02 repair and factory cleanup](../qa/native-inference-qa01/README.md)
 completes ordinary local regression coverage for all 2,347 tests using the full
 run and affected rechecks. Platform/sanitizer qualification remains STEP-06.
 The presented names/return contracts are unchanged.
-The STEP-04 Release verdict is accepted. This is the concrete candidate for the
-public spelling review reserved by [STEP-01](native-inference-step-01.md#proposed-public-contract).
+The STEP-04 Release verdict is accepted. This records the delivered public
+spelling selected through [STEP-01](native-inference-step-01.md#proposed-public-contract)
+and the completed typed-interface review/implementation.
 Parent outcomes and criteria remain in [STEP-04](native-inference-step-04.md)
 and the complete native-inference plan. Adrian has selected completion of the
 generic [C RXPA object surface](rxpa-native-objects.md) as its implementation

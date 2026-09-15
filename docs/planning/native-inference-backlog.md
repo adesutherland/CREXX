@@ -1,8 +1,9 @@
 # Native inference requirements and implementation plan
 
 Status: plan, STEP-01 and STEP-02 output approved by Adrian, 2026-09-14;
-STEP-03 closure is approved; STEP-04 implementation and local acceptance work
-are complete at the bounded capture point. The 15 September full-regression
+STEP-03 closure is approved; STEP-04 is closed on 15 September following
+completion and acceptance of its implementation, factory cleanup and regression
+follow-ups. STEP-05 generation is next and unstarted. The 15 September full-regression
 preparation exposed NI-S4-QA01 in existing HTTP consumers. Its compiler repair,
 the authorized C factory cleanup and the separate QA02 static archive dependency
 repair now have [complete ordinary local coverage](../qa/native-inference-qa01/README.md)
@@ -608,7 +609,7 @@ open/release-blocking SAN-009 and S3-D01/S4-D01/native-object/typed-call proof.
 | AC-14 | Typed C contracts/reference and installed persistent/shared-worker embedding examples complete. Every local/parent criterion reconciled. | Generation examples and final capability/packaging matrix; STEP-07 may overlap hardware qualification. |
 
 OUT-01–05 and CREXX-NI-01–07 retain their complete scope. STEP-01/02 completion and
-STEP-03 closure approvals stand; STEP-04 is ready for closure review; STEP-05/06/07
+STEP-03 closure approvals stand; STEP-04 is closed; STEP-05/06/07
 retain the sequencing and overlap already approved. Future takeovers must use
 this disposition together with the full criterion definitions, not just the
 latest completed implementation dependency.
@@ -634,6 +635,6 @@ latest completed implementation dependency.
   and affected rechecks now account for all 2,347 tests (2,305 unchanged broad
   passes plus 42 distinct rechecked tests). No test was disabled or assertion
   weakened. [The evidence](../qa/native-inference-qa01/README.md) ticks S4-B-02
-  and all numbered QA01/QA02 criteria. Public-contract/STEP-04 closure review
-  remains with Adrian; STEP-05 is unstarted and STEP-06 retains SAN-009,
+  and all numbered QA01/QA02 criteria. Adrian accepted the report and STEP-04
+  is recorded as closed. STEP-05 is unstarted and STEP-06 retains SAN-009,
   maintained sanitizers, platform and release qualification.
