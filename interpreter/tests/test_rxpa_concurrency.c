@@ -804,7 +804,7 @@ static int test_branch_free_binding(void) {
     rxinimod(&first);
     if (rxldmodp(&first) <= 0) failed = 1;
     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct ||
+    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct ||
         context_procedure_invoker(&first, "e3b.binding_reentrant") !=
                 rxvm_callfunc_direct) {
         failed = 1;
@@ -1003,7 +1003,7 @@ static void *transition_thread_entry(void *unused) {
 }
 #endif
 
-static int test_legacy_transition_quiescence(void) {
+static int test_legacy_transition_quiescence(int suspend_for_startup) {
     rxvm_context first;
     proc_runtime *first_legacy;
     rxvm_memory_worker *previous_worker;
@@ -1021,7 +1021,7 @@ static int test_legacy_transition_quiescence(void) {
     rxinimod(&first);
     if (rxldmodp(&first) <= 0) binding_failures++;
     first_legacy = context_find_procedure(&first, "e3b.binding_legacy");
-    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_direct) {
+    if (!first_legacy || first_legacy->native_invoker != rxvm_callfunc_legacy_direct) {
         binding_failures++;
     }
 
@@ -1052,6 +1052,18 @@ static int test_legacy_transition_quiescence(void) {
     gate_lock(&binding_gate);
     if (binding_gate.maximum_active) binding_failures++;
     gate_unlock(&binding_gate);
+
+    if (suspend_for_startup && execution_started) {
+        if (!rxpa_compatibility_suspend_thread()) abort();
+        gate_lock(&binding_gate);
+        while (!binding_gate.maximum_active) gate_wait(&binding_gate);
+        gate_unlock(&binding_gate);
+        rxpa_compatibility_resume_thread();
+        if (first.rxpa_compatibility.execution_depth != 1u ||
+            !first_legacy || first_legacy->native_invoker != rxvm_callfunc) {
+            binding_failures++;
+        }
+    }
 
     if (execution_started) {
         rxpa_compatibility_execution_leave(&first.rxpa_compatibility);
@@ -1594,7 +1606,10 @@ int main(int argc, char **argv) {
         return test_bound_legacy_serialization();
     }
     if (strcmp(argv[1], "transition") == 0) {
-        return test_legacy_transition_quiescence();
+        return test_legacy_transition_quiescence(0);
+    }
+    if (strcmp(argv[1], "startup-transition") == 0) {
+        return test_legacy_transition_quiescence(1);
     }
     if (strcmp(argv[1], "legacy") == 0) return test_call_policy(0u, 1);
     if (strcmp(argv[1], "recursive") == 0) return test_recursive_legacy_call();

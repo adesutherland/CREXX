@@ -2158,6 +2158,14 @@ rxvm_executor *rxvm_executor_create_attached(
         queue_capacity > SIZE_MAX / sizeof(*executor->workers[0].queue)) {
         return 0;
     }
+    /* The child can trigger legacy invoker rebinding while this thread waits
+     * for startup. Park all nested VM executions, but never a live legacy C
+     * callback or protected provider callback. Keep the boundary through join
+     * on failure so a partially started child can finish its cold transition. */
+    if (!rxpa_compatibility_suspend_thread()) {
+        if (result_out) *result_out = RXVM_EXECUTOR_WORKER_START_FAILED;
+        return 0;
+    }
     executor = (rxvm_executor *)calloc(1u, sizeof(*executor));
     if (!executor) {
         result = RXVM_EXECUTOR_OUT_OF_MEMORY;
@@ -2249,6 +2257,7 @@ rxvm_executor *rxvm_executor_create_attached(
         if (result != RXVM_EXECUTOR_OK) goto fail;
     }
 
+    rxpa_compatibility_resume_thread();
     if (result_out) *result_out = RXVM_EXECUTOR_OK;
     return executor;
 
@@ -2260,6 +2269,7 @@ fail:
     }
     if (executor) executor->runtime = 0;
     executor_storage_destroy(executor);
+    rxpa_compatibility_resume_thread();
     if (result_out) *result_out = result;
     return 0;
 }

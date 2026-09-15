@@ -224,6 +224,13 @@ void rxvm_callfunc_direct(void* function, int args, value** argv,
     rxpa_compat_pool_slot = saved_compat_slot;
 }
 
+void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
+                                 value* ret, value* signal) {
+    rxpa_compatibility_callback_enter();
+    rxvm_callfunc_direct(function, args, argv, ret, signal);
+    rxpa_compatibility_callback_leave();
+}
+
 void rxvm_callfunc(void* function, int args, value** argv, value* ret,
                    value* signal) {
     rxpa_compatibility_enter();

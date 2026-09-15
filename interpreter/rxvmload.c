@@ -2273,7 +2273,7 @@ static void bind_rxpa_runtime_policy(rxvm_context *context,
     } else if (!rxpa_compatibility_bind_legacy(
                        &context->rxpa_compatibility,
                        &runtime->native_invoker,
-                       rxvm_callfunc_direct, rxvm_callfunc)) {
+                       rxvm_callfunc_legacy_direct, rxvm_callfunc)) {
         RX_PANIC_OOM("bind legacy rxpa procedure",
                      sizeof(runtime->native_invoker), runtime->name);
     }

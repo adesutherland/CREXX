@@ -711,6 +711,8 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc_direct(void* function, int args, value** argv,
                           value* ret, value* signal);
+void rxvm_callfunc_legacy_direct(void* function, int args, value** argv,
+                                 value* ret, value* signal);
 void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* signal);
 void rxvm_callfunc_session(void* binding, int args, value** argv,
                            value* ret, value* signal);

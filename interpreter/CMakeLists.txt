@@ -714,6 +714,22 @@ target_include_directories(test_rxpa_concurrency PRIVATE
         ../platform ../avl_tree ../utf8 ../inc)
 target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
 
+add_executable(test_rxpa_worker_startup tests/test_rxpa_worker_startup.c)
+target_include_directories(test_rxpa_worker_startup PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_worker_startup rxvml Threads::Threads)
+foreach(mode IN ITEMS attached callback)
+    add_test(NAME rxpa_worker_startup_${mode}
+        COMMAND test_rxpa_worker_startup ${mode}
+                ${CMAKE_CURRENT_BINARY_DIR}/test_program_generation_control.rxbin)
+    set_tests_properties(rxpa_worker_startup_${mode} PROPERTIES
+        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
+    crexx_register_test_prep_targets(TESTS rxpa_worker_startup_${mode}
+        TARGETS test_rxpa_worker_startup test_program_generation_control_bins)
+endforeach()
+
 add_executable(test_rxpa_odbc tests/test_rxpa_odbc.c)
 target_include_directories(test_rxpa_odbc PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -822,6 +838,12 @@ add_test(NAME rxpa_bound_legacy_serialization
         COMMAND test_rxpa_concurrency bound-legacy)
 add_test(NAME rxpa_legacy_transition_quiescence
         COMMAND test_rxpa_concurrency transition)
+add_test(NAME rxpa_worker_startup_transition
+        COMMAND test_rxpa_concurrency startup-transition)
+set_tests_properties(rxpa_worker_startup_transition PROPERTIES
+        TIMEOUT 30 LABELS "interpreter;worker;plugins;rxpa;regression")
+crexx_register_test_prep_targets(TESTS rxpa_worker_startup_transition
+        TARGETS test_rxpa_concurrency)
 set_tests_properties(rxvmmemory_allocator PROPERTIES
         LABELS "interpreter;memory")
 set_tests_properties(rxvmworker_lifecycle PROPERTIES

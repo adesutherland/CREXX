@@ -1,0 +1,24 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1158: rxpa_worker_startup_attached
+    Start 1159: rxpa_worker_startup_callback
+1/2 Test #1158: rxpa_worker_startup_attached .....***Timeout  30.05 sec
+
+2/2 Test #1159: rxpa_worker_startup_callback .....***Timeout  30.06 sec
+
+
+0% tests passed, 2 tests failed out of 2
+
+Label Time Summary:
+comprehensive    =  60.11 sec*proc (2 tests)
+interpreter      =  60.11 sec*proc (2 tests)
+plugins          =  60.11 sec*proc (2 tests)
+regression       =  60.11 sec*proc (2 tests)
+rxpa             =  60.11 sec*proc (2 tests)
+worker           =  60.11 sec*proc (2 tests)
+
+Total Test time (real) =  30.10 sec
+
+The following tests FAILED:
+	1158 - rxpa_worker_startup_attached (Timeout)            comprehensive interpreter plugins regression rxpa worker
+	1159 - rxpa_worker_startup_callback (Timeout)            comprehensive interpreter plugins regression rxpa worker
+Errors while running CTest

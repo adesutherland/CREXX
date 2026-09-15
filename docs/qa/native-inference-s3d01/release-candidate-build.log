@@ -1,0 +1,51 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gc2cf28a4f5c6.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260903T090430Z
+-- CREXX Build Commit: c2cf28a4f5c6
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Release C compiler flags: -O3 -DNDEBUG
+-- Release C++ compiler flags: -O3 -DNDEBUG
+-- Release linker flags for executables: 
+-- Release linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (0.9s)
+-- Generating done (0.7s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-release
+[0/4] Re-checking globbed directories...
+[1/26] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.o
+[2/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmprogram.c.o
+[3/26] Linking C static library bin/librxvmref.a
+[4/26] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.o
+[5/26] Linking C static library bin/librxvmplugin.a
+[6/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_process.c.o
+[7/26] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[8/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel.c.o
+[9/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmactive.c.o
+[10/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmexecutor.c.o
+[11/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmchannel_child.c.o
+[12/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/interrupt.c.o
+[13/26] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.o
+[14/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmload.c.o
+[15/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/exitfunc.c.o
+[16/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxcrexxcmd.c.o
+[17/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[18/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpacallmethod.c.o
+[19/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxpafuncs.c.o
+[20/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvml/rxvm_run.c.o
+[21/26] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxvmintp.c.o
+[22/26] Linking C executable bin/rxbvm
+[23/26] Creating rxvm symlink to rxbvm

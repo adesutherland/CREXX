@@ -1,0 +1,52 @@
+{
+  "baseline_head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "source_files": {
+    "interpreter/rxpacompat.c": "fc026e6ab1d564d289c8338d51785cb4db3a28ef51e22c432cbedce1f6218531",
+    "interpreter/rxpacompat.h": "93ab0eb6df2e1d81e7be712d55b1c81287e398700ea07fed138712e1cc46fa8c",
+    "interpreter/rxpafuncs.c": "d148184325f342a78cc2f50ad5aed8ca2eb38851eb12c96c31afa83888702285",
+    "interpreter/rxvmload.c": "8e1f70f13839cd470007f9cc3a3088d43b3decccdc3035a33518e631c8e7492f",
+    "interpreter/rxvmexecutor.c": "db6553794c49acf3dd7e9eddb29431a122e93477beff3ab74ec37ccdd34e1f23",
+    "interpreter/rxvmintp.h": "3e5210a3ad42a12f937ecaaeef7402b7e04270db0a4835ed1646f17c4f724613",
+    "interpreter/CMakeLists.txt": "5f2667f1c1d6994b7a1ec5597b9e71cc91464ae48c402d18b7e4231f9f8787c6",
+    "interpreter/tests/test_rxpa_concurrency.c": "c0be3399b9b04ae758ad16f29914857a4888b73fafb21f8ce407715baa22c1ef",
+    "interpreter/tests/test_rxpa_worker_startup.c": "7fbc35d4a6c5eb24f8f66e3f4779f9f188e395121b6158b0afcfa77c9c6ca997",
+    "tests/native-inference/worker_transport_positive.crexx": "470cf1309c8770f9246d2c26fa220fa4e4d6ca2456571d8c613f0fec05096983",
+    "performance/tools/run_cross_runtime_matrix.crexx": "94cccffcd95bc6804ef4fd1989cde41694230f0f0bc04811907067b193811abe",
+    "docs/qa/native-inference-s3d01/summarize_paired.crexx": "2d4044cf8e49e3c260aa267dbd1126867a0add3562476cbbf97575a2b89ecd1f",
+    "tests/performance/rxpa_call_legacy.crexx": "60eed7b25100f5acd3f95fa6556e3969a128895e97d1ed2bdb3be8890d21186d",
+    "tests/performance/rxpa_call_reentrant.crexx": "3731355c17a4ac28bde08059920d1d82e65c07d9d583912a2201b12cca7bdde0",
+    "tests/performance/rxpa_call_session.crexx": "2c0b453cd490eab3baaffdadfef2ff7c570d1caf2fca6cd4f05dad15fd372121",
+    "tests/rxpa/rxpa_call_kernel.c": "a0c2798026f4e19ac7b522b9daebf3481bc84b1ed4c27cc8a4f6418a678056f9"
+  },
+  "artifacts": {
+    "cmake-build-release/bin/rxvm": "5cdc727cdac2b24fc6ee83e746874febc426f4a871879143a3f6ea33b2f77e88",
+    "cmake-build-release/bin/library.rxbin": "7e47630f21b1b134cd208688d4fcca2a4a5d96dae7756e63ecc02c802c11e031",
+    "cmake-build-release/bin/crexx": "084090d34a40b1210a1518f9a4441c20e373c71be6ebbe026f1975204e84d72b",
+    "cmake-build-release/bin/rxvme": "7c9cd7dd5d5901057b797593aa45c40d1a43ec0cc8de48459f40c0cac70cf9a0",
+    "cmake-build-debug/interpreter/test_rxpa_concurrency": "911413110b58883e0b4e60cad8463616431f515f809f6e32e1ec37ca108b3a25",
+    "cmake-build-debug/interpreter/test_rxpa_worker_startup": "069023b1efc19fd74ac2a4ca6480d7beaad8a52ef0825d06036771780ebdf16d",
+    "cmake-build-release/tests/performance/s3d01_rxpa_legacy.rxbin": "5276816c22e0313aa1f78a5b8eef0fb0f8a0e42cd7a75c2580357612c9e84530",
+    "cmake-build-release/tests/rxpa/rx_rxpa_bench_legacy.rxplugin": "c7d20b64d4dc076f73a3de60a509af5c0f22582c53b357d25dbb88065547ce2f",
+    "cmake-build-release/tests/performance/s3d01_rxpa_reentrant.rxbin": "ead58ecce6cbb7ee2ec523bc537aabee7b9f74c4623b806ae653503cda00607d",
+    "cmake-build-release/tests/rxpa/rx_rxpa_bench_reentrant.rxplugin": "0c2901aba8007fd146ce44fba9e69c43f95687c9134b26f153346248d153f755",
+    "cmake-build-release/tests/performance/s3d01_rxpa_session.rxbin": "caa14495ba5064d1657a876d6ec3ac688bd32319f241c7fc9da710ef7d2d9527",
+    "cmake-build-release/tests/rxpa/rx_rxpa_bench_session.rxplugin": "6edc001b795970f645976161c228b436da1fc43118272910ef14fd9e08d74e25"
+  },
+  "baseline_vm": {
+    "path": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-s3d01-release-baseline-3jms9yfv/rxvm",
+    "sha256": "ed01834e9fbf6664529bc35135373dd9e05505d67834022528e55be063a345e6"
+  },
+  "native_positive": {
+    "path": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-s3d01-native-ppup88nd/positive",
+    "sha256": "7c6ea969b3b685289b6317b0749505c43288f6e93c987f42821667c45f5845b1"
+  },
+  "release_flags": [
+    "CMAKE_BUILD_TYPE:STRING=Release",
+    "CMAKE_C_COMPILER:STRING=/usr/bin/cc",
+    "CMAKE_C_FLAGS:STRING=",
+    "CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG",
+    "CMAKE_MAKE_PROGRAM:UNINITIALIZED=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja",
+    "CREXX_VM_PROFILING:BOOL=OFF"
+  ],
+  "sanitizer_latest_unchanged": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/asan-logs/20260914-152638-ctest"
+}

@@ -1,0 +1,21 @@
+{
+  "files": {
+    "tests/native-inference/step03_package_consumer.py": "5474f72f4f279294da8ffb519d7e3b4b83bae1a9586824d07998046c24684c9c",
+    "tests/native-inference/step03_install_qualification.py": "f943f76ae87fbfc4f837cacd94b302d55455b8b65321cbe0a2e3223e7d5ff586",
+    "lib/plugins/llama/CMakeLists.txt": "fdb7d1b60b512f3abce6d11b5ab0a82e5194a151264b21723dc09ba8f494864d",
+    "interpreter/rxpacompat.c": "fc026e6ab1d564d289c8338d51785cb4db3a28ef51e22c432cbedce1f6218531",
+    "interpreter/rxpacompat.h": "93ab0eb6df2e1d81e7be712d55b1c81287e398700ea07fed138712e1cc46fa8c",
+    "interpreter/rxpafuncs.c": "d148184325f342a78cc2f50ad5aed8ca2eb38851eb12c96c31afa83888702285",
+    "interpreter/rxvmexecutor.c": "db6553794c49acf3dd7e9eddb29431a122e93477beff3ab74ec37ccdd34e1f23",
+    "interpreter/rxvmload.c": "8e1f70f13839cd470007f9cc3a3088d43b3decccdc3035a33518e631c8e7492f",
+    "interpreter/rxvmintp.h": "3e5210a3ad42a12f937ecaaeef7402b7e04270db0a4835ed1646f17c4f724613",
+    "cmake-build-debug/bin/crexx": "7711d1b2b6fd4e4ee42825752a4e403f1c13a5d10692167dfdb406a9875b75d5",
+    "cmake-build-debug/bin/rxvme": "8e7491d1d2d5a0c211a68a6817d00f51b75791016de02133eb362b6e002036e6",
+    "cmake-build-debug/bin/rxbvm": "abb1bcac6141cdfd8020da907ab9f133a2dd00f713bd38c31843feda5c4619de"
+  },
+  "native_programs": {
+    "provider_worker_acceptance": "6090971bc934db9774dc9d856c7e86689f83b99f4e39634ef19a97428d51d03a",
+    "shared_worker_lifecycle": "3cc416a3127138d16a60b58d72a439f2d3e2e10cb4b64c43ed7f18b4491e359c",
+    "worker_transport_positive": "42301bf830118e849f59f6e263940368d278cf739a9754737f8393dd58fc2a60"
+  }
+}
