@@ -174,6 +174,18 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    `remote/473fb6894/windows.log`;
    [CMake path-normalization policy](https://cmake.org/cmake/help/latest/policy/CMP0207.html).
 
+9. **CI-F09 — Delayed push event overrides a diagnostic selection:** manual
+   Windows run `35003939480` at `4a0924ee1` was cancelled by push run
+   `35003947618`, whose event arrived five seconds later and selected all six
+   lanes. The new selected retry is
+   [35004301149](https://github.com/adesutherland/CREXX/actions/runs/35004301149).
+   Restrict automatic candidate pushes to `temp/llama-release-qa`; auxiliary
+   `temp/llama-release-*` branches remain available for explicit manual lane
+   selection. Develop/master/tag safeguards and branch-scoped cancellation are
+   unchanged. `actionlint` and the 14 publication/signing/matrix controls pass.
+   Live verification of the corrected diagnostic trigger is pending; this
+   reopens CI-AC-06 until the retry behavior is confirmed.
+
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
 CMake's selected default so it does not duplicate the preferred VM execution.

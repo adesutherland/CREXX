@@ -7,8 +7,10 @@ use the same staging/smoke path as eventual publication. No trained GGUF is
 downloaded. The 4.8 MB generated fixture lives under `tests/native-inference` and
 is excluded from user archives, as is the engine test executable.
 
-Push `temp/llama-release-*` to run the package matrix. Manual candidate runs may
-select `base`, `cuda`, or one named lane. Selection cannot narrow a develop/tag
+Push `temp/llama-release-qa` to run the full package matrix. Other
+`temp/llama-release-*` diagnostic branches are manual-only, avoiding a delayed
+push event that cancels a selected lane and starts the whole matrix. Manual
+candidate runs may select `base`, `cuda`, or one named lane. Selection cannot narrow a develop/tag
 publication matrix. The separate Deep Build and Sanitizer workflows are
 dispatched against the same candidate branch after package triage:
 
