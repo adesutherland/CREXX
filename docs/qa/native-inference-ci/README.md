@@ -137,6 +137,24 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    hosted compiler failures did not reach this boundary, so this finding must
    not be described as a reproduced Windows loader failure yet.
 
+7. **CI-F07 — Intel Mac engine-helper hang, cause unclassified:** job
+   `104473761974` in run `34996258242` at `2bc56249d` completes Release build
+   and fast QA, then the first isolated engine process reaches its 1,800-second
+   child hang guard. No helper marker or sanitizer diagnostic was emitted; the
+   retained log only contains its launch command. This does not establish a
+   model-performance regression, a scheduling-only failure or a sanitizer defect.
+   Evidence: `remote/2bc56249d/macos-intel.log` and `macos-intel-qa/`.
+   Add flushed engine stage messages, then replay the same fixture workload on
+   an isolated diagnostic branch. Its explicit `--capture-engine-after` option
+   may sample and stop a stuck macOS engine for diagnosis; that stop fails the
+   run and cannot be reported as qualification. Ordinary smoke retains its full
+   workload and wide backstop. The permanent cause/repair and platform closure
+   remain pending. Normal and Apple-ASan package smoke with stage markers pass
+   (27.84/43.55 s), under `local/engine-stages-debug/` and
+   `local/engine-stages-asan/`. A deliberately delayed helper proves the
+   diagnostic mode captures a nonempty stack, stops its own child and reports
+   failure rather than success: `local/stack-capture-control/`.
+
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
 CMake's selected default so it does not duplicate the preferred VM execution.

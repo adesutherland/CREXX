@@ -1,0 +1,6 @@
+Command: cmake --build cmake-build-debug --target rxllama_release_engine_smoke --parallel 4
+ASAN_OPTIONS=detect_leaks=1
+
+[0/2] Re-checking globbed directories...
+[1/3] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_release_engine_smoke.dir/__/__/__/tests/native-inference/release_engine_smoke.cpp.o
+[2/3] Linking CXX executable lib/plugins/llama/tests/rxllama_release_engine_smoke

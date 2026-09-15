@@ -43,6 +43,7 @@ using Model = std::unique_ptr<llama_model, decltype(&llama_model_free)>;
 using Context = std::unique_ptr<llama_context, decltype(&llama_free)>;
 
 static void exercise(const char *path, ggml_backend_dev_t gpu, const std::string &name) {
+    std::cerr << "SMOKE_STAGE: " << name << " model load\n";
     auto mp = llama_model_default_params();
     ggml_backend_dev_t placement[] = {gpu, nullptr};
     mp.devices = placement; mp.n_gpu_layers = gpu ? 999 : 0;
@@ -55,12 +56,14 @@ static void exercise(const char *path, ggml_backend_dev_t gpu, const std::string
     cp.n_ctx = 256; cp.n_batch = 8; cp.n_ubatch = 8; cp.n_seq_max = 2;
     cp.n_threads = 2; cp.n_threads_batch = 2;
     cp.pooling_type = LLAMA_POOLING_TYPE_NONE;
+    std::cerr << "SMOKE_STAGE: " << name << " private contexts\n";
     Context generation(llama_init_from_model(model.get(), cp), llama_free);
     cp.embeddings = true;
     Context embedding(llama_init_from_model(model.get(), cp), llama_free);
     require(generation && embedding, "private contexts sharing one model");
     std::vector<llama_token> first;
     for (int repeat = 0; repeat < 2; ++repeat) {
+        std::cerr << "SMOKE_STAGE: " << name << " generation repeat " << repeat << '\n';
         llama_memory_clear(llama_get_memory(generation.get()), true);
         Batch prefill;
         prefill.add(3, 0, 0); prefill.add(4, 1, 0);
@@ -85,6 +88,7 @@ static void exercise(const char *path, ggml_backend_dev_t gpu, const std::string
         else require(sampled == first, "repeat request isolation");
     }
     Batch tokens;
+    std::cerr << "SMOKE_STAGE: " << name << " embeddings\n";
     tokens.add(3, 0, 0); tokens.add(4, 1, 0);
     tokens.add(5, 0, 1); tokens.add(6, 1, 1);
     require(llama_decode(embedding.get(), tokens.batch) == 0, "embedding extraction");
@@ -105,7 +109,9 @@ static void exercise(const char *path, ggml_backend_dev_t gpu, const std::string
 int main(int argc, char **argv) {
     try {
         require(argc == 2, "usage: release_engine_smoke FIXTURE");
+        std::cerr << "SMOKE_STAGE: runtime discovery\n";
         Host host; // Use production discovery and verified package paths.
+        std::cerr << "SMOKE_STAGE: runtime ready\n";
         exercise(argv[1], nullptr, "CPU");
         int gpus = 0;
         for (size_t i = 0; i < ggml_backend_dev_count(); ++i) {

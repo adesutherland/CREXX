@@ -1,0 +1,25 @@
+SMOKE_RECORD=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-stack-capture-control-yv5k720i/release-smoke-sfzxzxzm
+PASS: stage-guides
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 75, in run
+    child.wait(timeout=a.capture_engine_after)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1279, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2076, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-o16bnf9k/engine/delayed-engine', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-o16bnf9k/fixture.gguf']' timed out after 1 seconds
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 218, in <module>
+    main()
+    ~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 159, in main
+    run('engine', [copied_helper, fixture], 'PASS: release engine smoke', cwd=engine, consumer=True)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 84, in run
+    raise RuntimeError('Engine stopped after diagnostic stack capture; this is not a qualification result')
+RuntimeError: Engine stopped after diagnostic stack capture; this is not a qualification result

@@ -54,6 +54,13 @@ This checks package discovery without relying on the runner's development PATH;
 the hosted Windows image still has system runtimes/drivers, so retain dependency
 inspection and separate real-device qualification as well.
 
+For a macOS engine hang, the smoke harness accepts an explicit diagnostic
+`--capture-engine-after N`. If the engine is still running then, the harness
+captures its stack with `sample`, stops that child and fails the run. Use this
+only on a diagnostic branch; it is not a shorter qualification deadline or a
+pass. Normal workflows omit the option and retain the ordinary workload and
+1,800-second child hang guard. Engine stage markers identify how far it reached.
+
 After signing a trusted staged payload, verify its signatures before running
 `scripts/refresh-provider-manifests.py`. That script updates only the declared
 file hashes (including the runtime-manifest dependency) and is not installed.

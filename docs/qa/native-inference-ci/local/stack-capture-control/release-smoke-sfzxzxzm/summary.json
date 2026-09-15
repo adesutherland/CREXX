@@ -1,0 +1,26 @@
+{
+  "outcome": "failed",
+  "elapsed_seconds": 4.581,
+  "commands": [
+    {
+      "label": "stage-guides",
+      "argv": [
+        "cmake",
+        "--install",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+        "--prefix",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-o16bnf9k/payload",
+        "--component",
+        "llama-docs"
+      ],
+      "returncode": 0,
+      "consumer_environment": false
+    }
+  ],
+  "work": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-o16bnf9k",
+  "build": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+  "required_backends": "cpu",
+  "preferred_vm": "rxbvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

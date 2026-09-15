@@ -1,0 +1,11 @@
+{
+  "outcome": "failed",
+  "elapsed_seconds": 1800.256,
+  "commands": [],
+  "work": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-sjyr7vva",
+  "build": "/Users/runner/work/_temp/build",
+  "required_backends": "cpu,metal",
+  "preferred_vm": "rxbvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

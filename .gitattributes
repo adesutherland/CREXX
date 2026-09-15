@@ -7,5 +7,5 @@ lib/plugins/sqlite/vendor/sqlite3.c text eol=lf -whitespace
 lib/plugins/sqlite/vendor/sqlite3.h text eol=lf -whitespace
 
 # Retained QA evidence has byte-level SHA256SUMS, including Windows CRLF logs.
-docs/qa/native-inference-ci/local/** -text
-docs/qa/native-inference-ci/remote/** -text
+docs/qa/native-inference-ci/local/** -text -whitespace
+docs/qa/native-inference-ci/remote/** -text -whitespace

@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+import time
+print("CONTROL: deliberately waiting", flush=True)
+time.sleep(60)
