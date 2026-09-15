@@ -139,3 +139,12 @@ without a development SDK on PATH. Preserve the API and provider package:
 
 This is a source-audit finding until Windows execution reaches this boundary;
 the earlier compiler failures do not themselves prove a loader failure.
+
+CI-F07 subsequently identifies an Intel Mac engine-helper hang at `2bc56249d`.
+The separate branch `temp/llama-release-intel-diagnostic` at `e39916f2a` runs
+manual lane `macos-intel` in [35002901578](https://github.com/adesutherland/CREXX/actions/runs/35002901578).
+Its only changes from shared diagnostic-support commit `dd6e3155d` are the
+explicit 120-second stack-capture request and its branch-only note. Do not merge
+that workflow override into the candidate. A diagnostic stop fails; the normal
+qualification backstop and workload remain unchanged. Cause and platform closure
+remain open in [the pipeline ledger](../qa/native-inference-ci/README.md).
