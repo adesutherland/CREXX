@@ -67,6 +67,14 @@ strings, ordinary identifiers, keywords, numbers, and operators. It does not yet
 project generated CREXX semantic tokens or included-file macro definitions back
 onto the authored RXPP buffer.
 
+`##DATA name [callback]` captures free-form lines through `##END` as array
+assignments. When the optional callback name is present, RXPP emits
+`call callback name` after the complete array has been generated. The original
+`##DATA name` form remains array-only. `##RELATION name [callback]`,
+`##PROGRAM name [callback]`, and `##LIBRARY name [callback]` are thin aliases
+for the same conversion path;
+their names have no semantic effect.
+
 ## Build metadata directives
 
 Recent additions separate macro discovery from output placement:
@@ -143,6 +151,11 @@ rxlink generated.rxbin external1.rxbin external2.rxbin ...
 
 The linked result is not automatically executed.
 
+`##LINKGO` takes no arguments and is valid only when `##LINK` is also present.
+It marks the recipe for the `crexx.exe` driver, which runs the linked member
+after a successful link. The ordinary `##LINK` recipe remains link-only; it
+never requests execution.
+
 Compilation or assembly errors stop the recipe before linking. The driver
 continues processing later command-line source members after a successful
 recipe; `##NORUN` also applies to its own member without changing the command's
@@ -174,6 +187,7 @@ external runtime/link modules:
 import|data_CallCatalog
 external|../lib/CallCatalog.rxbin
 link|CallCatalog_linked
+linkgo|1
 norun|1
 ```
 

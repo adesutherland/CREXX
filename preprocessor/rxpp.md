@@ -29,7 +29,8 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 - [📚 Sample Macros](#-sample-macros)
 - [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
   - [`##USE file`](#use-file)
-  - [`##DATA array-name`](#data-array-name)
+  - [`##DATA array-name [keyword] [callback]`](#data-array-name-keyword-callback)
+  - [`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`](#relation-program-library-and-rule)
   - [`##SYSxxx`](#sysxxx)
   - [`##CFLAG values`](#cflag-values)
   - [`##SET var value`](#set-var-value)
@@ -614,13 +615,18 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 ---
 
-### `##DATA array-name`
+### `##DATA array-name [keyword] [callback]`
 
 The **##DATA** directive allows you to define literal data lines directly within the source file. These lines are assigned to a REXX stem array under the specified array-name.
 
 Each line is initially read as written, with surrounding quotes (single or double) preserved to retain the intended string content. Quotes within strings are not escaped or altered during this step.
 
 ***Note:*** If a line contains a macro call or preprocessor variable, it will be expanded in a later preprocessing stage. So while the line is treated as a literal string at first, it may still undergo transformation before reaching the final output.
+
+An optional callback may be specified after the array name. RXPP emits
+`call callback array-name` after the complete array has been generated. An
+optional keyword may precede the callback name; the keyword is syntactic and
+does not change the callback behavior.
 
 **Use Case:** This mechanism is useful for embedding configuration values, data records, or script fragments directly in the source, without relying on external files.
 
@@ -658,6 +664,41 @@ MYTEXT.0 = 2
 MYTEXT.1 = "This is a line with 'inner quotes'"
 MYTEXT.2 = 'This is a simple line'
 ```
+
+### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
+
+`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE` are thin aliases for
+`##DATA`. They use the same block-processing mechanism and generate the same
+Rexx string-array representation. The directive names have no semantic effect;
+they are alternative spellings only.
+
+They support the same optional keyword and callback forms as `##DATA`:
+
+```rexx
+##PROGRAM program-name
+    source-file
+##END
+
+##LIBRARY library-name callback
+    source-file
+##END
+
+##RULE rule-name
+    rule source
+##END
+```
+
+The equivalent alternative spelling is:
+
+```rexx
+##RELATION relation-name callback
+    relation source
+##END
+```
+
+These directives only collect source or other free-form lines. They do not
+compile, link, or execute the collected members; such processing can be
+provided by an optional callback.
 
 ### `##SYSxxx`
 
