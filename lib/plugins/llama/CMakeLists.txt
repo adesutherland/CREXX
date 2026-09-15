@@ -13,6 +13,16 @@ set(CREXX_LLAMA_ARCHIVE "" CACHE FILEPATH "Offline copy of the pinned llama.cpp 
 option(CREXX_LLAMA_METAL "Package the Metal backend" ${APPLE})
 option(CREXX_LLAMA_CUDA "Package the CUDA backend (requires build-time toolkit)" OFF)
 option(CREXX_LLAMA_VULKAN "Package the Vulkan backend (requires build-time SDK)" OFF)
+set(CREXX_LLAMA_CUDA_NOTICE "$ENV{CREXX_LLAMA_CUDA_NOTICE}" CACHE FILEPATH
+    "CUDA redistributable license/notice file to retain with provider consumers")
+set(_llama_runtime_search_dirs "")
+if(CREXX_LLAMA_CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    list(APPEND _llama_runtime_search_dirs "${CUDAToolkit_BIN_DIR}" "${CUDAToolkit_LIBRARY_DIR}")
+    if(NOT EXISTS "${CREXX_LLAMA_CUDA_NOTICE}")
+        message(FATAL_ERROR "CUDA packaging requires CREXX_LLAMA_CUDA_NOTICE with the redistributable license/notice text")
+    endif()
+endif()
 set(_llama_sha 5266f24da75dc449bd56cbed7addb9c8e4a6a73e)
 set(_llama_archive_sha 2de0d87eda4696e9f6bbd771d4c623267f4e95856cce6f99793f91522f993e43)
 if(CREXX_LLAMA_ARCHIVE)
@@ -124,6 +134,10 @@ set_target_properties(llama_provider PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE
 set(_llama_notices "${_llama_provider_dir}/rxllama-NOTICES.txt")
 file(READ "${crexx_llama_source_SOURCE_DIR}/LICENSE" _llama_license)
 file(WRITE "${_llama_notices}" "llama.rexx runtime uses llama.cpp ${_llama_sha} and ggml.\n\n${_llama_license}")
+if(CREXX_LLAMA_CUDA)
+    file(READ "${CREXX_LLAMA_CUDA_NOTICE}" _llama_cuda_notice)
+    file(APPEND "${_llama_notices}" "\nCUDA redistributable dependency notices:\n\n${_llama_cuda_notice}\n")
+endif()
 set(_llama_extra_runtime "${_llama_notices}")
 if(MSVC)
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
@@ -135,6 +149,7 @@ add_rxpa_provider_package(llama_provider PROVIDER_ID rxllama
     RUNTIME_TARGETS crexx_llama_bridge ${_llama_runtime}
     ENGINE_ID "${_llama_sha}"
     RUNTIME_FILES ${_llama_extra_runtime}
+    RUNTIME_SEARCH_DIRECTORIES ${_llama_runtime_search_dirs}
     BACKEND_TARGETS ${_llama_backends})
 add_executable(crexx-provider-package provider_package.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
 target_compile_features(crexx-provider-package PRIVATE cxx_std_17)
@@ -145,6 +160,7 @@ target_compile_definitions(crexx-provider-package PRIVATE
 set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
+    include("${CMAKE_SOURCE_DIR}/tests/native-inference/ReleaseSmoke.cmake")
     add_executable(rxllama_text_old_host ${CMAKE_SOURCE_DIR}/tests/native-inference/text_old_host.c)
     target_include_directories(rxllama_text_old_host PRIVATE ${CMAKE_SOURCE_DIR}/rxpa)
     target_link_libraries(rxllama_text_old_host PRIVATE rxpa CREXX::RXPA)

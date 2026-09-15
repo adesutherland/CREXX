@@ -18,6 +18,15 @@ file, and a small `examples/` directory.
 `BUILDINFO` includes the base version, build channel, timestamp, and source
 commit used to produce the package.
 
+Packages containing `bin/rxllama.rxplugin` also supply in-process llama.cpp
+inference. Keep `bin/providers` intact and follow the included
+`share/crexx/llama` guides and examples. Download a supported model separately;
+running ordinary cREXX programs needs no C/C++ build or separate llama.cpp
+installation. Linux/Windows packages include CPU/Vulkan, Mac packages include
+CPU/Metal, and the additional `-cuda` ZIPs are complete CPU/CUDA alternatives.
+GPU use requires a compatible driver. Do not mix files from different ZIPs.
+Older releases without the provider do not support this feature.
+
 You can run tools by using their full path, for example:
 
 ```sh

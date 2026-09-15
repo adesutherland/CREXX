@@ -12,6 +12,15 @@ plan is `docs/planning/native-inference-backlog.md`; current coverage and review
 are tracked in `docs/qa/native-inference-step07/README.md` and the live
 `docs/qa/native-inference-step06/README.md` qualification ledger.
 
+The separate `temp/llama-release-qa` candidate is adding prebuilt CPU/GPU
+delivery and a generated-fixture smoke test. Its numbered outcomes, criteria
+and workflow results are tracked in `docs/planning/native-inference-ci.md`.
+Routine CI downloads no trained model: its sub-5-MiB fixture checks engine
+generation/embedding plumbing, package integrity, public-provider discovery
+and profile rejection, plus installed VM and relocated native consumers.
+It does not establish BGE retrieval quality, Smol output quality or execution
+on unavailable GPUs. Neither `develop` promotion nor a release is implied.
+
 ## Platform and delivery matrix
 
 | Target / backend | BGE embeddings and Smol generation | Installed VM / relocated native | Remaining proof |

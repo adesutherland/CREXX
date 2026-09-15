@@ -1,0 +1,187 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 44.527,
+  "commands": [
+    {
+      "label": "stage-guides",
+      "argv": [
+        "cmake",
+        "--install",
+        "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+        "--prefix",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload",
+        "--component",
+        "llama-docs"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "engine",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/engine/rxllama_release_engine_smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "altered-backend-rejected",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/engine/rxllama_release_engine_smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf"
+      ],
+      "returncode": 1
+    },
+    {
+      "label": "missing-manifest-rejected",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/engine/rxllama_release_engine_smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf"
+      ],
+      "returncode": 1
+    },
+    {
+      "label": "opt-compile",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxc",
+        "--no-exe-import",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/smoke.crexx"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-assemble",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxas",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-link",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/library",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/classlib",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxfnsg"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxbvm",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt-linked",
+        "-a",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxtvm",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxtvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/opt-linked",
+        "-a",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-compile",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxc",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/smoke.crexx"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-assemble",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxas",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-link",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxlink",
+        "-o",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt-linked",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/library",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/classlib",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxfnsg"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxbvm",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxbvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt-linked",
+        "-a",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxtvm",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/rxtvm",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/noopt-linked",
+        "-a",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "native-build",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/payload/bin/crexx",
+        "--program",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/native/smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "relocated-native",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/relocated/smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    }
+  ],
+  "work": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-f0dmlt8j",
+  "build": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+  "required_backends": "cpu",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

@@ -1,0 +1,2 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-4qb5zpnb/relocated/smoke', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-4qb5zpnb/fixture.gguf', 'bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de']
+PASS: public llama release provider discovery, profile rejection and cleanup

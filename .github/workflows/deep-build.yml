@@ -5,6 +5,10 @@ on:
     - cron: '23 2 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
+
 permissions:
   contents: read
   actions: read
@@ -70,7 +74,7 @@ jobs:
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     strategy:
       fail-fast: false
@@ -122,6 +126,13 @@ jobs:
             ninja:p
             openssl:p
             pkgconf:p
+            python:p
+
+      - name: Python for package smoke
+        if: matrix.platform != 'windows'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
 
       - name: Configure Release qualification build
         if: matrix.platform != 'windows'
@@ -132,7 +143,7 @@ jobs:
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_BUILD_CHANNEL=nightly \
             -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \
             ${{ matrix.cmake_args }}
 
       - name: Configure Release qualification build
@@ -144,6 +155,7 @@ jobs:
             -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} \
             -DCREXX_BUILD_CHANNEL=nightly \
             -DCREXX_BUILD_COMMIT="${{ needs.assurance-gate.outputs.target_sha }}" \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON -DENABLE_PARSER_MODE=OFF \
             ${{ matrix.cmake_args }}
 
       - name: Run comprehensive correctness QA
@@ -177,13 +189,25 @@ jobs:
           cmake --build "${{ runner.temp }}/qualification" \
             --target qa-qualification \
             --parallel ${{ matrix.build_jobs }}
+
+      - name: Retain comprehensive qualification logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: comprehensive-logs-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/qualification/Testing/Temporary
+            ${{ runner.temp }}/qualification/lib/plugins/llama/tests/release-smoke
+            ${{ runner.temp }}/qualification/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: warn
+          retention-days: 14
 
   parallel-product:
     name: Release product jobs ${{ matrix.jobs }}
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     strategy:
       fail-fast: false
@@ -305,7 +329,7 @@ jobs:
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     steps:
       - name: Checkout

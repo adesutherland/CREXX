@@ -559,6 +559,13 @@ Use the [approved coverage map](../qa/native-inference-step07/README.md) and
 [live STEP-06 evidence ledger](../qa/native-inference-step06/README.md) together.
 Do not replace a parent criterion with a smaller local test list.
 
+Adrian subsequently authorized [release-pipeline and remote-branch qualification](native-inference-ci.md):
+ship the compiled provider/runtime with release archives, use small fixture smoke
+in routine CI without downloading large models, and qualify on a separate
+`origin` branch before considering promotion to `develop`. CI-OUT-01–03,
+CI-AC-01–08 and CI-01–05 govern that bounded work package without removing the
+remaining parent model/device requirements.
+
 1. [x] **S6-01 — Freeze inputs and reconcile evidence:** record source/build/model
    identities, available hosts/devices and prior test validity; reuse unchanged
    ordinary full-suite and accepted Release evidence. Record S7 closure. Serves

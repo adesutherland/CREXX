@@ -1,0 +1,46 @@
+/** Small public-provider release smoke; no trained model is needed.
+ * @param args generated GGUF path and its recorded SHA256
+ * @return zero after discovery, profile rejection and cleanup pass
+ */
+options levelg floats_binary
+namespace llama_release_smoke
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import llama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+main: procedure = .int
+  arg args = .string[]
+  call require args[0] = 2, "fixture path and SHA256"
+  config = .llama..configuration()
+  call require config.status() = 0, "native configuration factory"
+  call require config.set_text("hardware_mode", "cpu") = 0, "explicit CPU"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, runtime.diagnostic().message()
+  call require runtime.device_count() > 0, "packaged device discovery"
+  model = runtime.model(args[1], args[2], "smollm2-360m-instruct", config)
+  call require model.status() = 0, "model admission"
+  started = time("us")
+  state = ""
+  do forever
+    state = model.state()
+    call require model.status() = 0, "inspect model state"
+    if state <> "loading" then leave
+    elapsed = time("us") - started
+    if elapsed < 0 then elapsed = elapsed + 86400000000
+    call require elapsed < 600000000, "model load hang backstop"
+  end
+  call require state = "failed", "scratch must not impersonate the public model: " || state
+  call require model.info_text("error") = "artifact is not the pinned model profile", "specific profile rejection"
+  call require model.close() = 0 & model.close() = 0, "failed model cleanup"
+  call require runtime.info_int("reserved_bytes") = 0, "reservation cleanup"
+  call require runtime.close() = 0, "runtime cleanup"
+  call require config.close() = 0, "configuration cleanup"
+  say "PASS: public llama release provider discovery, profile rejection and cleanup"
+  return 0

@@ -1,0 +1,2 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-p5mw0zi4/engine/rxllama_release_engine_smoke', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-p5mw0zi4/fixture.gguf']
+FAIL: filesystem error: in file_size: No such file or directory ["/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-p5mw0zi4/engine/rxllama.runtime.json"]

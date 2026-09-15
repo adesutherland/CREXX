@@ -11,6 +11,38 @@ This is the current development implementation. CPU and Metal have local macOS
 evidence. Windows/Linux and CUDA/Vulkan recipes below are qualification recipes,
 not claims that those platforms have passed. See [status](qualification.md).
 
+## Using a binary package
+
+The candidate release pipeline builds the provider into the downloadable cREXX
+packages. Qualification is in progress; older releases do not acquire this
+feature retrospectively. In a package containing `bin/rxllama.rxplugin` and
+`bin/providers/rxllama.native.json`, no C/C++ build, llama.cpp installation or
+inference server is needed to run ordinary cREXX programs. Keep the package's
+`bin` directory intact, then follow [model provisioning](models.md) and the
+[examples](examples/README.md).
+
+| Package suffix | Included inference backends |
+| --- | --- |
+| `linux-x64`, `windows-x64` | CPU and Vulkan |
+| `macos-arm64`, `macos-x86_64` | CPU and Metal |
+| `linux-x64-cuda`, `windows-x64-cuda` | CPU and NVIDIA CUDA |
+
+CUDA ZIPs are complete alternative installations, not overlays for another
+package. In particular, Windows CUDA uses MSVC while the ordinary Windows
+package uses MinGW; keep each package together. GPU users need a compatible
+installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
+included. Runtime detection selects from the backends in the chosen package.
+The CUDA builds target compute capabilities 6.1, 7.5, 8.0, 8.6 and 8.9 directly,
+with 9.0 code/PTX for supported newer devices; real-device qualification remains
+separate from compiling and packaging those targets.
+
+The release contains these guides, examples and dependency notices, but no
+model weights. The tiny random-weight developer fixture is not a useful model
+and is deliberately excluded. Download a supported BGE or Smol model using
+the model guide. Creating a native executable with `crexx --native` still needs
+a C toolchain on the author's machine; its recipient needs only that prepared
+application's complete runtime package and model files.
+
 ## Building and installing on macOS or Linux
 
 Start at the root of a cREXX checkout containing `lib/plugins/llama`. Install a
@@ -42,6 +74,12 @@ driver. Backend options select what gets packaged; runtime detection can only
 use those packaged backends. An installed GPU driver is still required on a
 discrete-GPU target. Runtime selection is described in [the reference](reference.md).
 
+CUDA builds also require `-DCREXX_LLAMA_CUDA_NOTICE=/absolute/path/to/notices.txt`
+containing the NVIDIA redistributable license/notices for the packaged runtime
+components. The CI SDK provisioner assembles this file from the pinned component
+licenses. Its contents become part of `rxllama-NOTICES.txt`, so native application
+packages retain them as well as the ordinary release ZIP.
+
 Build `llama_provider_runtime_package` and `crexx-provider-package` explicitly:
 `stage-optional` alone can leave an older adapter or missing dependency metadata
 in an otherwise working install. Retain the install's `bin` directory intact,
@@ -69,7 +107,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Install failed' }
 ```
 
 For NVIDIA CUDA, add `-DCREXX_LLAMA_CUDA=ON` to configure with a compatible CUDA
-toolkit and driver installed. For Vulkan, add `-DCREXX_LLAMA_VULKAN=ON` with the
+toolkit and driver installed, and supply `CREXX_LLAMA_CUDA_NOTICE` as above.
+For Vulkan, add `-DCREXX_LLAMA_VULKAN=ON` with the
 Vulkan SDK and a Vulkan-capable driver. A CPU-only build needs neither GPU SDK.
 Do not assume an ordinary Windows CI runner supplies a real GPU. MSVC supplies
 `rxbvm.exe` and the product `rxvm.exe`; a second VM executable is not required.

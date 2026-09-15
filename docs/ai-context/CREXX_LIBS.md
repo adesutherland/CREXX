@@ -1021,8 +1021,19 @@ Do not interpret the historical STEP-01 Rexx-facade proposal as authority to add
 wrappers. Do not silently re-pin models to close the recorded conversion
 provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
 
+The candidate binary-delivery work is tracked by numbered CI-OUT/CI-AC/CI
+steps in [the pipeline plan](../planning/native-inference-ci.md). Release
+workflows enable `ENABLE_LLAMA` and explicitly build both provider packaging
+targets. Their small generated-fixture smoke does not relax the public model
+hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
+fixture weights outside the user payload. Rehash declared provider manifests
+only after a trusted staging/signing step has verified signatures, before
+final-payload smoke; runtime consumers must still reject changed hashes.
+
 `add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
-`BACKEND_TARGETS`, `RUNTIME_FILES` and `ENGINE_ID`. Its runtime-package target
+`BACKEND_TARGETS`, `RUNTIME_FILES`, `RUNTIME_SEARCH_DIRECTORIES` and `ENGINE_ID`.
+Search directories locate redistributable SDK dependencies at build time only;
+they are not runtime search overrides or user manifest paths. Its runtime-package target
 writes relative, hashed `.native.json` and `.runtime.json` files. The native
 driver invokes `crexx-provider-package` only for selected providers carrying
 metadata; the helper validates dependencies before copying or emitting linker

@@ -32,6 +32,7 @@ if(platform STREQUAL "Darwin")
     list(APPEND system_dependencies "^/usr/lib/")
 endif()
 file(GET_RUNTIME_DEPENDENCIES LIBRARIES ${scan_files}
+    DIRECTORIES "${output}" ${runtime_search_directories}
     RESOLVED_DEPENDENCIES_VAR dependencies
     UNRESOLVED_DEPENDENCIES_VAR missing
     PRE_EXCLUDE_REGEXES

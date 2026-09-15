@@ -8,6 +8,10 @@ on:
     - cron: '47 3 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
+
 permissions:
   contents: read
   actions: read
@@ -73,8 +77,8 @@ jobs:
     needs: assurance-gate
     if: needs.assurance-gate.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
-    # Full Linux ASan/LSan now needs about 102 minutes with Unicode conformance.
-    timeout-minutes: 120
+    # Hang backstop; serial nested aggregates carry their own measured guards.
+    timeout-minutes: 240
 
     strategy:
       fail-fast: false
@@ -96,6 +100,11 @@ jobs:
           submodules: recursive
           ref: ${{ needs.assurance-gate.outputs.target_sha }}
 
+      - name: Python for bounded package smoke
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
       - name: Configure instrumented Debug build
         shell: bash
         run: |
@@ -106,7 +115,7 @@ jobs:
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
             -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \
             ${{ matrix.cmake_args }}
 
       - name: Full instrumented build and CTest
@@ -135,7 +144,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: sanitizer-logs-${{ matrix.platform }}
-          path: ${{ runner.temp }}/debugasan/asan-logs
+          path: |
+            ${{ runner.temp }}/debugasan/asan-logs
+            ${{ runner.temp }}/debugasan/lib/plugins/llama/tests/release-smoke
           if-no-files-found: error
           retention-days: 14
 

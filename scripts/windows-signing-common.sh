@@ -28,4 +28,7 @@ sign_windows_payload() {
   done < <(find "$directory" -type f -print0)
   [[ "$count" -gt 0 ]] || { echo "No signable Windows files in $directory" >&2; return 1; }
   echo "Verified signatures on $count Windows files."
+  if [[ -d "$directory/bin/providers" ]]; then
+    python3 "$(dirname "${BASH_SOURCE[0]}")/refresh-provider-manifests.py" "$directory/bin/providers"
+  fi
 }

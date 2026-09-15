@@ -1,0 +1,82 @@
+{
+  "include": [
+    {
+      "id": "linux",
+      "name": "Linux x64",
+      "os": "ubuntu-24.04",
+      "platform": "linux",
+      "toolchain": "gcc",
+      "artifact_name": "CREXX-linux-x64",
+      "build_jobs": 2,
+      "test_jobs": 5,
+      "backends": "cpu,vulkan",
+      "cuda": false,
+      "cmake_args": "-DCREXX_LLAMA_VULKAN=ON"
+    },
+    {
+      "id": "windows",
+      "name": "Windows x64",
+      "os": "windows-2025",
+      "platform": "windows",
+      "toolchain": "mingw",
+      "artifact_name": "CREXX-windows-x64",
+      "build_jobs": 4,
+      "test_jobs": 2,
+      "backends": "cpu,vulkan",
+      "cuda": false,
+      "cmake_args": "-DCREXX_FORCE_SYSTEM_OPENSSL=ON -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_VULKAN=ON"
+    },
+    {
+      "id": "macos-arm64",
+      "name": "macOS arm64",
+      "os": "macos-15",
+      "platform": "macos",
+      "toolchain": "clang",
+      "artifact_name": "CREXX-macos-arm64",
+      "build_jobs": 2,
+      "test_jobs": 5,
+      "backends": "cpu,metal",
+      "cuda": false,
+      "cmake_args": "-DCMAKE_OSX_ARCHITECTURES=arm64"
+    },
+    {
+      "id": "macos-intel",
+      "name": "macOS x86_64",
+      "os": "macos-15-intel",
+      "platform": "macos",
+      "toolchain": "clang",
+      "artifact_name": "CREXX-macos-x86_64",
+      "build_jobs": 2,
+      "test_jobs": 5,
+      "backends": "cpu,metal",
+      "cuda": false,
+      "cmake_args": "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+    },
+    {
+      "id": "linux-cuda",
+      "name": "Linux x64 CUDA",
+      "os": "ubuntu-24.04",
+      "platform": "linux",
+      "toolchain": "gcc",
+      "artifact_name": "CREXX-linux-x64-cuda",
+      "build_jobs": 2,
+      "test_jobs": 5,
+      "backends": "cpu,cuda",
+      "cuda": true,
+      "cmake_args": "-DCREXX_LLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"61-real;75-real;80-real;86-real;89-real;90\""
+    },
+    {
+      "id": "windows-cuda",
+      "name": "Windows x64 CUDA (MSVC)",
+      "os": "windows-2025",
+      "platform": "windows",
+      "toolchain": "msvc",
+      "artifact_name": "CREXX-windows-x64-cuda",
+      "build_jobs": 2,
+      "test_jobs": 2,
+      "backends": "cpu,cuda",
+      "cuda": true,
+      "cmake_args": "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=\"61-real;75-real;80-real;86-real;89-real;90\""
+    }
+  ]
+}
