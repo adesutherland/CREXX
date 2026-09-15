@@ -183,8 +183,9 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    `temp/llama-release-*` branches remain available for explicit manual lane
    selection. Develop/master/tag safeguards and branch-scoped cancellation are
    unchanged. `actionlint` and the 14 publication/signing/matrix controls pass.
-   Live verification of the corrected diagnostic trigger is pending; this
-   reopens CI-AC-06 until the retry behavior is confirmed.
+   Pushing `78308cf38` then starts no automatic run and leaves selected Windows
+   run `35004301149` active; retained branch/run API records are in
+   `remote/78308cf38/`. CI-AC-06 is checked again after this live control.
 
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using

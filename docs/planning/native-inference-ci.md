@@ -43,7 +43,7 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    verifies fixture identity and required backends, and runs outside the build
    tree using the staged runtime. Test helpers and fixture weights are not
    accidentally shipped as user runtime dependencies.
-6. [ ] **CI-AC-06:** branch-scoped cancellation and rerun controls work; failures
+6. [x] **CI-AC-06:** branch-scoped cancellation and rerun controls work; failures
    preserve logs. Deadline-sensitive work is serial within each host, using
    wide hang guards. New smoke is measured alone in normal Debug and maintained
    ASan before CTest registration. No model-quality/performance workload enters
@@ -152,6 +152,7 @@ remain open in [the pipeline ledger](../qa/native-inference-ci/README.md).
 CI-F09 reopens CI-AC-06: a delayed push event superseded a manual Windows-only
 selection and launched the full matrix. Automatic package pushes now name only
 `temp/llama-release-qa`; auxiliary candidate branches use manual dispatch.
-The corrected behavior still needs live confirmation. Windows dependency retry
+The corrected trigger is verified by a subsequent diagnostic push at `78308cf38`:
+no extra run starts and the selected job stays active. Windows dependency retry
 `35004301149` runs the product inputs at `4a0924ee1`; a workflow/docs-only branch
 update need not repeat its unchanged compiler/runtime checks.
