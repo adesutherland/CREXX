@@ -77,6 +77,65 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    unsupported-compiler override or runtime code workaround is added.
    Evidence: `remote/58b7c749d/windows-cuda.log` and
    `cuda-host-compiler-control.txt`. The target build remains the closure check.
+4. **CI-F04 — MSVC aliases in filesystem/platform providers:** run
+   [34996258242](https://github.com/adesutherland/CREXX/actions/runs/34996258242)
+   at `2bc56249d` confirms successful CUDA/MSVC 14.44 configuration and VM core
+   compilation, then fails linking `rxfs.rxplugin` because MSVC lacks `S_ISDIR`
+   and `S_ISREG`. Add guarded Windows mode-bit definitions, matching the existing
+   file-I/O provider pattern. The same log also reports `FILE *`/`int` mismatches
+   at the platform provider's two `popen` calls: MSVC requires `_popen` and
+   `_pclose`. Add those MSVC aliases; no filesystem or UI contract changes.
+   The existing eight filesystem/platform optimized/nonoptimized VM controls
+   pass in normal Debug (0.79 s) and maintained Apple ASan (1.18 s), following
+   matching focused builds. Evidence: `local/msvc-portability-debug/` and
+   `local/msvc-portability-asan/`. The target MSVC build remains pending.
+   Log: `remote/2bc56249d/windows-cuda.log`.
+
+   Source inspection also found that the C++ bridge includes Windows headers
+   before its `std::min(...)` calls without `NOMINMAX`. Define that conventional
+   guard before `windows.h`; this is a source-audit correction, not an error
+   already reached in the hosted log above. Normal/Apple-ASan bridge/package
+   builds and smoke pass (28.54/44.57 s), retained under
+   `local/windows-macros-debug/` and `local/windows-macros-asan/`. Windows
+   compilation remains the relevant platform proof.
+
+   The same failed job returned `-1`; CMD's `if errorlevel 1` tests only values
+   at least 1, so it incorrectly continued into `qa-smoke` and retried the failed
+   link. The MSVC configure/build/check step now exits on any nonzero code.
+   This corrects workflow failure handling without excluding a test.
+
+5. **CI-F05 — C++20 UTF-8 path boundary:** MinGW GCC 16.2 in the same
+   `2bc56249d` run defaults to C++20 and rejects `char8_t*` arguments to the
+   engine's UTF-8 `char*` APIs. Preserve the encoded path bytes in an explicit
+   `std::string` helper, shared by bridge and native packager. The packager also
+   reads its expected JSON hash explicitly as a string to avoid a C++20
+   comparison overload incompatibility. Both actual translation units now pass
+   a local C++20 compile control; the original failures are retained under
+   `local/cxx20-before.log` and `local/cxx20-provider-comparison-before.log`.
+   Permanent ASCII/non-ASCII path controls run as C++17 and C++20. Both controls
+   and package smoke pass in normal Debug (28.43 s total) and maintained Apple
+   ASan (45.38 s total): `local/cxx20-debug/`, `local/cxx20-asan/`. Target MinGW
+   build/smoke is still required. Hosted failure: `remote/2bc56249d/windows.log`.
+
+6. **CI-F06 — Windows executable/backend dependency lookup (source audit):**
+   the complete provider package puts DLLs and MSVC redistributables in
+   `bin/providers`, while the compiler and public plugin copy live in `bin`.
+   RXPA uses `LoadLibraryA`; pinned GGML uses `LoadLibraryW`. A full DLL path
+   alone does not make its directory a dependency search location. The repair
+   copies only bridge/engine core DLLs and their runtime dependency closure to
+   `bin`; GPU DLLs remain in `bin/providers`. The bridge finds the installed
+   package from that bootstrap copy and preloads verified Windows backends with
+   `LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR`, retaining process-lifetime ownership.
+   Native consumers retain adjacent dependencies/manifests. Consumer smoke now
+   removes SDK/toolchain PATH entries; native compilation keeps its compiler
+   environment. A test-only bootstrap inventory checks the declared root DLLs.
+   No new public API, provider manifest schema or model qualification is added.
+   Normal/Apple-ASan builds and package smoke pass (28.48/44.07 s), retained
+   under `local/windows-bootstrap-debug/` and `local/windows-bootstrap-asan/`.
+   These validate the unchanged Unix paths and harness; Windows execution is
+   still the platform closure check. The earlier
+   hosted compiler failures did not reach this boundary, so this finding must
+   not be described as a reproduced Windows loader failure yet.
 
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
@@ -99,6 +158,13 @@ GitHub artifact digest
 `6c18bbbbab425e16a0fef085af06e78863b7daf5ad5d586afc66b1cdb3c0b17b`.
 Artifact metadata is retained in `remote/544d41f02/artifacts.json`.
 
+The strengthened public-entry smoke also passes on macOS arm64 at `2bc56249d`.
+The downloaded archive retains `bin/rxvm -> rxbvm`, all 16 declared provider
+file hashes pass, and neither the fixture nor smoke helper is shipped.
+Evidence: `remote/2bc56249d/macos-arm64-qa/` and
+`macos-arm64-archive-inspection.json`; the latter records the user ZIP's own
+size/hash separately from GitHub's artifact envelope digest.
+
 The other unfinished first-run package jobs may be superseded by the corrected
 candidate; cancellation is not a pass. Keep unavailable real-device
 and model-provenance acceptance visible in the parent plan; fixture success
@@ -106,3 +172,19 @@ does not close those items. CUDA SDK caching now saves verified inputs before
 compilation, allowing a failed build to reuse its SDK on retry.
 The corrected CUDA matrix also preserves the pinned engine's portable
 architecture defaults instead of supplying a narrower CI-specific target list.
+
+The Linux CPU/Vulkan package at `2bc56249d` is also green: final package smoke
+passes in 16.785 seconds, with CPU computation and zero GPU devices reported.
+The downloaded archive preserves `bin/rxvm -> rxtvm`; all 31 declared provider
+entries pass their hashes and no fixture/helper is included. Evidence:
+`remote/2bc56249d/linux-qa/`, `linux.log`, `linux-archive-inspection.json`.
+This is package/CPU proof, not real Vulkan-device qualification.
+
+Diagnostic Windows branches retain useful other-platform work on the main
+candidate. MSVC/CUDA run [34998653921](https://github.com/adesutherland/CREXX/actions/runs/34998653921)
+is at `ae8c19681`; MinGW run [35000816874](https://github.com/adesutherland/CREXX/actions/runs/35000816874)
+is at `473fb6894`, including CI-F05/06. The prior MinGW run at `fff73ce08` was
+superseded before completion. These diagnostic revisions are not final combined
+qualification. CI-AC-06 is checked: cancellation/rerun isolation, retained
+failure logs, measured serial smoke, generous hang guards and absence of model
+benchmarks are established. CI-AC-02/03/05/07/08 and CI-03–05 remain open.

@@ -1,0 +1,12 @@
+Command: cmake --build cmake-build-debug --target rxplatform_test --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[0/2] Re-checking globbed directories...
+[1/9] Building C object lib/plugins/platform/CMakeFiles/_platform_static.dir/rxplatform.c.o
+[2/9] Building C object lib/plugins/platform/CMakeFiles/_platform.dir/rxplatform.c.o
+[3/9] Linking C shared module bin/rxplatform.rxplugin
+[4/9] Linking C static library bin/rxplatform_static.a
+[5/9] Generating rxplatform_rxbvm_noopt.rxbin
+[6/9] Generating rxplatform_rxtvm_opt.rxbin
+[7/9] Generating rxplatform_rxbvm_opt.rxbin
+[8/9] Generating rxplatform_rxtvm_noopt.rxbin

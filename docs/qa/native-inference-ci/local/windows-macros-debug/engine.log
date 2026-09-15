@@ -1,0 +1,4 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-rsfjcpyl/engine/rxllama_release_engine_smoke', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-rsfjcpyl/fixture.gguf']
+PASS: packaged engine CPU repeated two-row generation and finite embeddings
+PASS: packaged engine MTL0 repeated two-row generation and finite embeddings
+PASS: release engine smoke; actual_gpu_devices=1

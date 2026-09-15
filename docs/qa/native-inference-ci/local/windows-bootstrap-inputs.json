@@ -1,0 +1,6 @@
+{
+  "lib/plugins/llama/CMakeLists.txt": "d8d9a2eea6e21a8c1701133635e779c91079c8ed2d24e0cc34539fd37ba68d40",
+  "lib/plugins/llama/WindowsBootstrap.cmake": "4c3349dc3b7743f4bbf19d835c21937b17daec78ba2f481683c7d4b33dc9922d",
+  "lib/plugins/llama/bridge.cpp": "700b525193859d0ff1527a1dd942376e5d0b974be8d761eb74f15c9d70e43298",
+  "tests/native-inference/release_smoke.py": "0f1c4524d5aeca9e6184c0a797efd8dde12a298d59ddf907cba884444f5cfdff"
+}

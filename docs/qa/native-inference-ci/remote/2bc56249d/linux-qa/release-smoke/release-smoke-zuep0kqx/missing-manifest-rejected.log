@@ -1,0 +1,2 @@
+argv=['/tmp/crexx-release-smoke-9yqk2bf0/engine/rxllama_release_engine_smoke', '/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf']
+FAIL: filesystem error: cannot get file size: No such file or directory [/tmp/crexx-release-smoke-9yqk2bf0/engine/rxllama.runtime.json]

@@ -1,0 +1,11 @@
+{
+  "outcome": "passed",
+  "artifact_id": 10407894634,
+  "commit": "2bc56249d6eda5fd33c8817948b34d93788564c5",
+  "archive": "CREXX-user-test-2bc56249d6eda5fd33c8817948b34d93788564c5-linux-x64.zip",
+  "bytes": 49740278,
+  "sha256": "d00a27088ad87ed055044e02ca886f4933addb3ba2eaa1d0aa3c19ed084dfc3e",
+  "rxvm": "relative symlink to rxtvm",
+  "provider_files_checked": 31,
+  "fixture_or_helper_shipped": false
+}

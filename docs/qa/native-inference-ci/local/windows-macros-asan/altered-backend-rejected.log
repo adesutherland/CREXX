@@ -1,0 +1,2 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-90x6rt8f/engine/rxllama_release_engine_smoke', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-90x6rt8f/fixture.gguf']
+FAIL: no usable verified CPU backend variant

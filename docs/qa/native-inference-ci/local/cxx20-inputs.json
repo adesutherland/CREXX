@@ -1,0 +1,7 @@
+{
+  "lib/plugins/llama/CMakeLists.txt": "8f69eb1ec75a738ac68da7481e49057cdfb3c68ce6b8d122603ab3605e51b2ff",
+  "lib/plugins/llama/package.hpp": "07e4923081a9e7dbdf26f207e14d8beb204798d8d6eefe13429281a25a6773f3",
+  "lib/plugins/llama/provider_package.cpp": "afb9f3db7e4eff1c20af2c7f7d7344fd8d21474fd0c8a0b455e7776fb6a1c845",
+  "lib/plugins/llama/bridge.cpp": "18cb5fca637417469b078724173de0721abd0377f704a7afb0470d1181688455",
+  "tests/native-inference/package_utf8.cpp": "d2b014e3bf72436f2c423330d3094e7918a2dbeed04f178c59a1e5da69146d79"
+}

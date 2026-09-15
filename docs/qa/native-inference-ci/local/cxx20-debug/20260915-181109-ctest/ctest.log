@@ -1,0 +1,23 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^\(rxllama_package_utf8_cxx\(17\|20\)\|rxllama_release_package_smoke\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1738: rxllama_release_package_smoke
+1/3 Test #1738: rxllama_release_package_smoke ....   Passed   27.93 sec
+    Start 1739: rxllama_package_utf8_cxx17
+2/3 Test #1739: rxllama_package_utf8_cxx17 .......   Passed    0.25 sec
+    Start 1740: rxllama_package_utf8_cxx20
+3/3 Test #1740: rxllama_package_utf8_cxx20 .......   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+comprehensive    =   0.46 sec*proc (2 tests)
+correctness      =   0.46 sec*proc (2 tests)
+filesystem       =   0.46 sec*proc (2 tests)
+library          =  28.39 sec*proc (3 tests)
+llama            =  28.39 sec*proc (3 tests)
+qualification    =  27.93 sec*proc (1 test)
+rxpa             =  28.39 sec*proc (3 tests)
+
+Total Test time (real) =  28.43 sec

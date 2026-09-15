@@ -1,0 +1,175 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 16.785,
+  "commands": [
+    {
+      "label": "engine",
+      "argv": [
+        "/tmp/crexx-release-smoke-9yqk2bf0/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "altered-backend-rejected",
+      "argv": [
+        "/tmp/crexx-release-smoke-9yqk2bf0/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf"
+      ],
+      "returncode": 1
+    },
+    {
+      "label": "missing-manifest-rejected",
+      "argv": [
+        "/tmp/crexx-release-smoke-9yqk2bf0/engine/rxllama_release_engine_smoke",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf"
+      ],
+      "returncode": 1
+    },
+    {
+      "label": "opt-compile",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxc",
+        "--no-exe-import",
+        "-i",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt",
+        "/tmp/crexx-release-smoke-9yqk2bf0/smoke.crexx"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-assemble",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxas",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-link",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxlink",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt-linked",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/library",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/classlib",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxfnsg"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxvm",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxvm",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxbvm",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxbvm",
+        "/tmp/crexx-release-smoke-9yqk2bf0/opt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-compile",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxc",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt",
+        "/tmp/crexx-release-smoke-9yqk2bf0/smoke.crexx"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-assemble",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxas",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-link",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxlink",
+        "-o",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt-linked",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/library",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/classlib",
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxfnsg"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxvm",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxvm",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxbvm",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/rxbvm",
+        "/tmp/crexx-release-smoke-9yqk2bf0/noopt-linked",
+        "-a",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "native-build",
+      "argv": [
+        "/home/runner/work/_temp/release-payload/CREXX-linux-x64/bin/crexx",
+        "--program",
+        "/tmp/crexx-release-smoke-9yqk2bf0/native/smoke",
+        "/tmp/crexx-release-smoke-9yqk2bf0/smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0
+    },
+    {
+      "label": "relocated-native",
+      "argv": [
+        "/tmp/crexx-release-smoke-9yqk2bf0/relocated/smoke",
+        "/tmp/crexx-release-smoke-9yqk2bf0/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0
+    }
+  ],
+  "work": "/tmp/crexx-release-smoke-9yqk2bf0",
+  "build": "/home/runner/work/_temp/build",
+  "required_backends": "cpu,vulkan",
+  "preferred_vm": "rxtvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

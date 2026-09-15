@@ -1,0 +1,6 @@
+{
+  "lib/plugins/fs/rxfs.c": "ccbd88de307d319f574151a9fe050d6442ddb041acbf419d370b48dbac3d0d63",
+  "lib/plugins/platform/rxplatform.c": "f99af68425bd0ea95d5f979bf736977ee47d656e7fb0ccedb63af06b3f1666e7",
+  "lib/plugins/fs/rxfs_test.crexx": "7cd182eb21fb0798f8551c808da5658647a18bf16ed2c5e1997b7db84e9b310f",
+  "lib/plugins/platform/rxplatform_test.crexx": "68bd43f56da9c56da907e58209ead7c77c51fdde7f726ce1a2b343e3548dc107"
+}
