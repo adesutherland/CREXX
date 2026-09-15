@@ -1,0 +1,4 @@
+Pinned archive SHA256: 227b109663b5e57d2718bcabb24a4ba0d9d4e52d958e327dc476f7c28691be85
+Entry: cuda_nvcc-windows-x86_64-12.9.86-archive/include/crt/host_config.h
+#if _MSC_VER < 1910 || _MSC_VER >= 1950
+Control rejects outside [1910, 1950); selected MSVC 14.44 has _MSC_VER 1944.

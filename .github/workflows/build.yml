@@ -164,12 +164,12 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y libvulkan-dev glslc spirv-headers
 
-      - name: Select CUDA-compatible MSVC v142
+      - name: Select MSVC with CUDA and C11 atomics support
         if: matrix.toolchain == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-          toolset: '14.29'
+          toolset: '14.44'
 
       - name: Cache pinned CUDA build SDK
         id: cuda-cache

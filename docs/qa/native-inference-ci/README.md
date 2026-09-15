@@ -66,6 +66,17 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    Evidence: `local/receiver-debug/`, `local/receiver-asan/`. Remote MSVC
    generation is the target-platform closure check. Log:
    `remote/544d41f02/windows-cuda.log`.
+3. **CI-F03 — CUDA host toolset lacks cREXX C11 atomics:** the corrected
+   MSVC regression registration configures successfully in run
+   [34995568477](https://github.com/adesutherland/CREXX/actions/runs/34995568477)
+   at `58b7c749d`. Compilation then fails at `rxvmintp.h:43`: MSVC 14.29 has
+   no `stdatomic.h` and ignores `/experimental:c11atomics`. Select the runner's
+   installed 14.44 (v143) toolset. The pinned NVIDIA archive's actual
+   `crt/host_config.h` accepts `_MSC_VER` from 1910 through 1949; 14.44 is
+   within that check and supplies the required C11 implementation. No
+   unsupported-compiler override or runtime code workaround is added.
+   Evidence: `remote/58b7c749d/windows-cuda.log` and
+   `cuda-host-compiler-control.txt`. The target build remains the closure check.
 
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
