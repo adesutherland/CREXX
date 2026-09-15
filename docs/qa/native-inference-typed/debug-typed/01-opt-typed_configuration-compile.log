@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc', '--no-exe-import', '-i', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin', '-o', '/private/tmp/llama-typed-debug-final/opt-typed_configuration', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/typed_configuration.crexx']
+rc=0

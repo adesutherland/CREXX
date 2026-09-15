@@ -1,0 +1,5 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/worker-cpu-opt/embedding;/Users/adrian/CLionProjects/CREXX/tests/native-inference/shared_worker_embeddings.crexx
+
+Error in shared_worker_embeddings.crexx @ 101:53 - #FUNCTION_NOT_FOUND: Function was not found., "sqrt"
+1 error(s) in source file
+

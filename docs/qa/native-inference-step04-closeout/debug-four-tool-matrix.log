@@ -1,0 +1,14 @@
+-- PASS: four-tool embedding cpu
+embedding_acceptance cpu opt exit=0
+-- PASS: four-tool embedding cpu
+embedding_acceptance cpu noopt exit=0
+-- PASS: four-tool embedding cpu
+shared_worker_embeddings cpu noopt exit=0
+-- PASS: four-tool embedding required-gpu
+embedding_acceptance required-gpu opt exit=0
+-- PASS: four-tool embedding required-gpu
+shared_worker_embeddings required-gpu opt exit=0
+-- PASS: four-tool embedding required-gpu
+embedding_acceptance required-gpu noopt exit=0
+-- PASS: four-tool embedding required-gpu
+shared_worker_embeddings required-gpu noopt exit=0

@@ -705,6 +705,7 @@ install(FILES
         "${CMAKE_BINARY_DIR}/generated/CREXXConfigVersion.cmake"
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxOperationContract.cmake"
         "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/RXPluginFunction.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/rxpa/WriteProviderPackage.cmake"
         DESTINATION "${CREXX_CMAKE_PACKAGE_INSTALL_DIR}")
 
 if(TARGET linked_opt_runtime_artifacts)

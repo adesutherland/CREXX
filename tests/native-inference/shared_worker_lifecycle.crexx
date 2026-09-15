@@ -1,0 +1,67 @@
+/* Real cREXX workers: each owns private handles/context; weights are shared.
+ * The observed owner high-water mark is a barrier immune to worker teardown. */
+options levelg
+namespace rxllama_shared_worker
+import rxfnsb
+import concurrency
+import rxllama
+
+prepare_worker: task = .string
+  arg mode = .string, path = .string, hash = .string, profile = .string
+  config = .binary
+  runtime = .binary
+  model = .binary
+  session = .binary
+  if rxllama..configcreate(config) <> 0 then return "FAIL: config"
+  if rxllama..configtext(config, "hardware_mode", mode) <> 0 then return "FAIL: mode"
+  if rxllama..runtimeopen(config, runtime) <> 0 then return "FAIL: runtime"
+  if rxllama..modelopen(runtime, path, hash, profile, config, model) <> 0 then return "FAIL: model"
+  started = time("us")
+  state = ""
+  owners = 0
+  do forever
+    if rxllama..modelstate(model, state) <> 0 then return "FAIL: state"
+    if rxllama..infoint(model, "peak_owner_count", owners) <> 0 then return "FAIL: owners"
+    if state = "ready" & owners = 4 then leave
+    if state <> "loading" & state <> "ready" then return "FAIL: load"
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    if duration > 60000000 then return "FAIL: shared-owner deadline"
+  end
+  capability = "generation"
+  if profile = "bge-small-en-v1.5" then capability = "embedding"
+  if rxllama..sessionopen(model, capability, config, session) <> 0 then return "FAIL: session"
+  do forever
+    if rxllama..prepare(session, 128, state) <> 0 then return "FAIL: prepare"
+    if state = "ready" then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    if duration > 60000000 then return "FAIL: prepare deadline"
+  end
+  identity = ""
+  if rxllama..infotext(model, "shared_model_id", identity) <> 0 then return "FAIL: identity"
+  if rxllama..close(session) <> 0 then return "FAIL: session close"
+  if rxllama..close(model) <> 0 then return "FAIL: model close"
+  if rxllama..close(runtime) <> 0 then return "FAIL: runtime close"
+  if rxllama..close(config) <> 0 then return "FAIL: config close"
+  return identity
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 4 then return 2
+  pool = .taskpool.local(4, 8)
+  scope = .taskscope.collectall(pool, 120000)
+  do parallel using scope
+    first = prepare_worker(args[1], args[2], args[3], args[4])
+    second = prepare_worker(args[1], args[2], args[3], args[4])
+    third = prepare_worker(args[1], args[2], args[3], args[4])
+    fourth = prepare_worker(args[1], args[2], args[3], args[4])
+  end
+  call pool.close()
+  if pos("FAIL:", first || second || third || fourth) > 0 then do
+    say first second third fourth
+    return 1
+  end
+  if first = "" | first <> second | first <> third | first <> fourth then return 1
+  say "PASS: four cREXX workers share one model with private preparation" args[1] args[4]
+  return 0

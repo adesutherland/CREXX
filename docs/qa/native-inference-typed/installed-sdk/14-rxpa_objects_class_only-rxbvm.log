@@ -1,0 +1,3 @@
+argv=[PosixPath('/private/tmp/rxpa-typed-followup-installed/installed Ω/bin/rxbvm'), '/private/tmp/rxpa-typed-followup-installed/rxpa_objects_class_only-dynamic-linked']
+rc=0
+PASS: C native class-only provider loading

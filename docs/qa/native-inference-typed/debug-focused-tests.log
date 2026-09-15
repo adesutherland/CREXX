@@ -1,0 +1,155 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start  656: inline_receiver_signal_cleanup
+      Start  602: interface_named_factory_source_import_run_noopt
+      Start  604: interface_named_factory_binary_import_run_noopt
+      Start  603: interface_named_factory_source_import_run_opt
+      Start  605: interface_named_factory_binary_import_run_opt
+      Start  527: interface_factory_tiebreak_run_noopt
+ 1/55 Test  #527: interface_factory_tiebreak_run_noopt ..............   Passed    1.98 sec
+      Start  584: interface_named_factory_same_module_run_noopt
+ 2/55 Test  #605: interface_named_factory_binary_import_run_opt .....   Passed    3.46 sec
+      Start  586: interface_named_factory_tiebreak_run_noopt
+ 3/55 Test  #603: interface_named_factory_source_import_run_opt .....   Passed    3.55 sec
+      Start  588: interface_named_factory_no_impl_run_noopt
+ 4/55 Test  #604: interface_named_factory_binary_import_run_noopt ...   Passed    3.62 sec
+      Start  585: interface_named_factory_same_module_run_opt
+ 5/55 Test  #602: interface_named_factory_source_import_run_noopt ...   Passed    3.64 sec
+      Start  587: interface_named_factory_tiebreak_run_opt
+ 6/55 Test  #584: interface_named_factory_same_module_run_noopt .....   Passed    1.75 sec
+      Start  528: interface_factory_tiebreak_run_opt
+ 7/55 Test  #656: inline_receiver_signal_cleanup ....................   Passed    4.37 sec
+      Start  589: interface_named_factory_no_impl_run_opt
+ 8/55 Test  #586: interface_named_factory_tiebreak_run_noopt ........   Passed    1.63 sec
+      Start  163: interface_match_without_factory_fail
+ 9/55 Test  #585: interface_named_factory_same_module_run_opt .......   Passed    1.56 sec
+      Start  847: inline_indexed_attr_factory_lifetime_run_noopt
+10/55 Test  #588: interface_named_factory_no_impl_run_noopt .........   Passed    1.66 sec
+      Start  747: inline_test_factory_arg_scope_run_noopt
+11/55 Test  #587: interface_named_factory_tiebreak_run_opt ..........   Passed    1.60 sec
+      Start  745: inline_test_named_factory_selector_run_noopt
+12/55 Test  #528: interface_factory_tiebreak_run_opt ................   Passed    1.58 sec
+      Start  848: inline_indexed_attr_factory_lifetime_run_opt
+13/55 Test  #589: interface_named_factory_no_impl_run_opt ...........   Passed    1.55 sec
+      Start  849: inline_indexed_attr_factory_lifetime_shape
+14/55 Test  #163: interface_match_without_factory_fail ..............   Passed    1.35 sec
+      Start  748: inline_test_factory_arg_scope_run_opt
+15/55 Test  #847: inline_indexed_attr_factory_lifetime_run_noopt ....   Passed    1.55 sec
+      Start  746: inline_test_named_factory_selector_run_opt
+16/55 Test  #747: inline_test_factory_arg_scope_run_noopt ...........   Passed    1.53 sec
+      Start  297: inline_test_named_factory_selector_noopt
+17/55 Test  #848: inline_indexed_attr_factory_lifetime_run_opt ......   Passed    1.48 sec
+      Start  298: inline_test_named_factory_selector_opt
+18/55 Test  #745: inline_test_named_factory_selector_run_noopt ......   Passed    1.55 sec
+      Start  165: interface_factory_return_type_fail
+19/55 Test  #165: interface_factory_return_type_fail ................   Passed    0.34 sec
+      Start 2489: rxpa_native_payload_funcs_static_noopt
+20/55 Test  #849: inline_indexed_attr_factory_lifetime_shape ........   Passed    1.33 sec
+      Start 2487: rxpa_native_payload_funcs_dynamic_noopt
+21/55 Test #2487: rxpa_native_payload_funcs_dynamic_noopt ...........   Passed    0.14 sec
+      Start 2493: rxpa_native_unwind_funcs_static_noopt
+22/55 Test #2489: rxpa_native_payload_funcs_static_noopt ............   Passed    0.47 sec
+      Start 2491: rxpa_native_unwind_funcs_dynamic_noopt
+23/55 Test #2493: rxpa_native_unwind_funcs_static_noopt .............   Passed    0.21 sec
+      Start 2465: rxpa_callmethod_static_run_noopt
+24/55 Test #2465: rxpa_callmethod_static_run_noopt ..................   Passed    0.14 sec
+      Start 2490: rxpa_native_payload_funcs_static_opt
+25/55 Test #2491: rxpa_native_unwind_funcs_dynamic_noopt ............   Passed    0.14 sec
+      Start 2488: rxpa_native_payload_funcs_dynamic_opt
+26/55 Test #2490: rxpa_native_payload_funcs_static_opt ..............   Passed    0.09 sec
+      Start 2450: rxpa_callmethod_run_noopt
+27/55 Test #2488: rxpa_native_payload_funcs_dynamic_opt .............   Passed    0.09 sec
+      Start 1327: persistent_worker_executor-rxvml
+28/55 Test  #748: inline_test_factory_arg_scope_run_opt .............   Passed    1.40 sec
+      Start 2464: rxpa_classdecl_static_compile_opt
+29/55 Test #2450: rxpa_callmethod_run_noopt .........................   Passed    0.14 sec
+      Start 2460: rxpa_classdecl_static_compile_noopt
+30/55 Test  #297: inline_test_named_factory_selector_noopt ..........   Passed    1.28 sec
+      Start 2459: rxpa_classdecl_dynamic_compile_noopt
+31/55 Test  #298: inline_test_named_factory_selector_opt ............   Passed    1.27 sec
+      Start 2463: rxpa_classdecl_dynamic_compile_opt
+32/55 Test  #746: inline_test_named_factory_selector_run_opt ........   Passed    1.39 sec
+      Start 1159: rxpa_worker_startup_attached
+33/55 Test #1327: persistent_worker_executor-rxvml ..................   Passed    0.47 sec
+      Start 1357: persistent_worker_executor-rxtvml
+34/55 Test #1159: rxpa_worker_startup_attached ......................   Passed    0.75 sec
+      Start 1342: persistent_worker_executor-rxbvml
+35/55 Test #1357: persistent_worker_executor-rxtvml .................   Passed    1.09 sec
+      Start 1347: persistent_worker_executor-rxbvml-native-return
+36/55 Test #1347: persistent_worker_executor-rxbvml-native-return ...   Passed    0.16 sec
+      Start 1362: persistent_worker_executor-rxtvml-native-return
+37/55 Test #1362: persistent_worker_executor-rxtvml-native-return ...   Passed    0.02 sec
+      Start 1332: persistent_worker_executor-rxvml-native-return
+38/55 Test #1332: persistent_worker_executor-rxvml-native-return ....   Passed    0.02 sec
+      Start 2494: rxpa_native_unwind_funcs_static_opt
+39/55 Test #2494: rxpa_native_unwind_funcs_static_opt ...............   Passed    0.12 sec
+      Start 2492: rxpa_native_unwind_funcs_dynamic_opt
+40/55 Test #1342: persistent_worker_executor-rxbvml .................   Passed    0.89 sec
+      Start 1158: rxpa_host_text_services
+41/55 Test #2492: rxpa_native_unwind_funcs_dynamic_opt ..............   Passed    0.10 sec
+      Start 2466: rxpa_callmethod_static_run_opt
+42/55 Test #2466: rxpa_callmethod_static_run_opt ....................   Passed    0.11 sec
+      Start 2451: rxpa_callmethod_run_opt
+43/55 Test #2451: rxpa_callmethod_run_opt ...........................   Passed    0.12 sec
+      Start 1193: rxaspanicaddresstests
+44/55 Test #1193: rxaspanicaddresstests .............................   Passed    0.03 sec
+      Start 1194: rxaspanicsourcetests
+45/55 Test #1194: rxaspanicsourcetests ..............................   Passed    0.04 sec
+      Start 1160: rxpa_worker_startup_callback
+46/55 Test #1160: rxpa_worker_startup_callback ......................   Passed    0.01 sec
+      Start 1254: gate_f_channel_local_rxtvm
+47/55 Test #1158: rxpa_host_text_services ...........................   Passed    0.38 sec
+      Start 1253: gate_f_channel_local_rxbvm
+48/55 Test #1254: gate_f_channel_local_rxtvm ........................   Passed    0.04 sec
+      Start    4: rxgraph_unit
+49/55 Test    #4: rxgraph_unit ......................................   Passed    0.01 sec
+      Start 1183: rxpa_worker_startup_transition
+50/55 Test #1253: gate_f_channel_local_rxbvm ........................   Passed    0.03 sec
+51/55 Test #1183: rxpa_worker_startup_transition ....................   Passed    0.36 sec
+52/55 Test #2459: rxpa_classdecl_dynamic_compile_noopt ..............   Passed    4.93 sec
+53/55 Test #2463: rxpa_classdecl_dynamic_compile_opt ................   Passed    4.93 sec
+54/55 Test #2464: rxpa_classdecl_static_compile_opt .................   Passed    5.58 sec
+55/55 Test #2460: rxpa_classdecl_static_compile_noopt ...............   Passed    5.46 sec
+
+100% tests passed, 0 tests failed out of 55
+
+Label Time Summary:
+callback             =   0.51 sec*proc (4 tests)
+channels             =   0.07 sec*proc (2 tests)
+classes              =   0.51 sec*proc (4 tests)
+compiler             =   5.70 sec*proc (2 tests)
+comprehensive        =  67.60 sec*proc (52 tests)
+concurrency          =   2.72 sec*proc (9 tests)
+concurrency-sp01     =   2.65 sec*proc (6 tests)
+concurrency-sp02     =   0.07 sec*proc (2 tests)
+concurrency-sp03     =   0.01 sec*proc (1 test)
+concurrency-sp04     =   0.07 sec*proc (2 tests)
+concurrency-sp08     =   0.27 sec*proc (5 tests)
+correctness          =   4.37 sec*proc (1 test)
+e5                   =   2.65 sec*proc (6 tests)
+f1c                  =   0.07 sec*proc (2 tests)
+fallback             =   0.20 sec*proc (3 tests)
+flow                 =   4.37 sec*proc (1 test)
+gate-e               =   2.65 sec*proc (6 tests)
+gate-f               =   0.07 sec*proc (2 tests)
+industrial           =   2.65 sec*proc (6 tests)
+inlining             =   5.70 sec*proc (2 tests)
+interpreter          =   4.72 sec*proc (16 tests)
+lifecycle            =   0.27 sec*proc (5 tests)
+linked_opt           =  22.58 sec*proc (16 tests)
+macos                =   2.65 sec*proc (6 tests)
+native               =   0.20 sec*proc (3 tests)
+optimizer-parity     =   1.88 sec*proc (12 tests)
+perf3                =   2.71 sec*proc (8 tests)
+plugins              =   1.50 sec*proc (4 tests)
+private              =   2.65 sec*proc (6 tests)
+receiver             =   4.37 sec*proc (1 test)
+register-lifetime    =   1.33 sec*proc (1 test)
+regression           =   3.33 sec*proc (9 tests)
+rxpa                 =   2.01 sec*proc (8 tests)
+signals              =   4.37 sec*proc (1 test)
+smoke                =   5.86 sec*proc (3 tests)
+sparse               =   0.20 sec*proc (3 tests)
+static               =   0.25 sec*proc (2 tests)
+worker               =   1.12 sec*proc (3 tests)
+
+Total Test time (real) =  13.55 sec

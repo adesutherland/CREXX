@@ -1,0 +1,164 @@
+/* STEP-04 real worker requests: data crosses workers, native handles do not.
+ * Compare each private worker against its own isolated eight-row baseline. */
+options levelg floats_binary
+namespace rxllama_worker_embeddings
+import rxfnsb
+import rxfnsg
+import rxvector
+import rxfloat
+import concurrency
+import rxllama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+ready_model: procedure = .void
+  arg model = .binary
+  started = time("us")
+  do forever
+    state = ""
+    call require rxllama..modelstate(model, state) = 0, "model state"
+    if state = "ready" then return
+    call require state = "loading", "model loading"
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "model deadline"
+  end
+
+ready_session: procedure = .void
+  arg session = .binary
+  started = time("us")
+  do forever
+    state = ""
+    call require rxllama..prepare(session, 512, state) = 0, "session preparation"
+    if state = "ready" then return
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "session deadline"
+  end
+
+batch: procedure = .packedfloat
+  arg session = .binary, config = .binary, seed = .int
+  request = .binary
+  call require rxllama..requestopen(session, config, request) = 0, "request open"
+  do row = 1 to 8
+    admitted = 0
+    text = "Worker " || seed || " document " || row || " describes a cat near a window."
+    call require rxllama..addembedding(request, text, "document", admitted) = 0 & admitted = row, "ordered worker input"
+  end
+  call require rxllama..submit(request) = 0, "worker submit"
+  state = ""
+  call require rxllama..process(request, 1, state) = 0 & state = "complete", "whole batch completion"
+  decodes = 0
+  call require rxllama..infoint(request, "decode_calls", decodes) = 0 & decodes = 1, "one worker decode"
+  values = .packedfloat(0)
+  rows = 0
+  dimensions = 0
+  call require rxllama..embeddings(request, values, rows, dimensions) = 0, "worker output"
+  call require rows = 8 & dimensions = 384 & values.size() = 3072, "worker shape"
+  call require rxllama..close(request) = 0, "worker request close"
+  return values
+
+embed_worker: task = .string
+  arg mode = .string, path = .string, hash = .string, seed = .int, expected_bytes = .binary
+  config = .binary
+  runtime = .binary
+  model = .binary
+  session = .binary
+  call require rxllama..configcreate(config) = 0, "worker config"
+  call require rxllama..configtext(config, "hardware_mode", mode) = 0, "worker mode"
+  call require rxllama..runtimeopen(config, runtime) = 0, "worker runtime"
+  call require rxllama..modelopen(runtime, path, hash, "bge-small-en-v1.5", config, model) = 0, "worker model"
+  call ready_model model
+  started = time("us")
+  do forever
+    owners = 0
+    call require rxllama..infoint(model, "peak_owner_count", owners) = 0, "worker shared owners"
+    if owners = 5 then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "four worker barrier"
+  end
+  call require rxllama..sessionopen(model, "embedding", config, session) = 0, "worker session"
+  call ready_session session
+  expected = .packedfloat.fromBinary(expected_bytes)
+  do iteration = 1 to 20
+    values = batch(session, config, seed)
+    do row = 0 to 7
+      dot = 0.0
+      aa = 0.0
+      bb = 0.0
+      do d = 0 to 383
+        a = values.get(row * 384 + d)
+        b = expected.get(row * 384 + d)
+        call require a = a & abs(a - b) <= 0.00001, "isolated/concurrent coordinate tripwire"
+        dot = dot + a * b
+        aa = aa + a * a
+        bb = bb + b * b
+      end
+      call require abs(aa - 1.0) <= 0.00002 & dot / rxfloat..sqrt(aa * bb) >= 0.999999, "isolated/concurrent norm/cosine"
+    end
+    encoded = rxvector..encodef32le(values)
+    call require binlength(encoded) = 8 * 384 * 4, "existing rxvector f32 storage"
+    decoded = rxvector..decodef32le(encoded)
+    call require rxvector..cosine(values, decoded) >= 0.999999, "existing rxvector packed consumer"
+  end
+  loads = 0
+  completed = 0
+  call require rxllama..infoint(model, "load_count", loads) = 0 & loads = 1, "shared single load"
+  call require rxllama..infoint(session, "completed_requests", completed) = 0 & completed = 20, "private completion count"
+  identity = ""
+  call require rxllama..infotext(model, "shared_model_id", identity) = 0, "worker model identity"
+  call require rxllama..close(session) = 0, "worker session close"
+  call require rxllama..close(model) = 0, "worker model close"
+  call require rxllama..close(runtime) = 0, "worker runtime close"
+  call require rxllama..close(config) = 0, "worker config close"
+  return identity
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 3 then return 2
+  config = .binary
+  runtime = .binary
+  model = .binary
+  session = .binary
+  call require rxllama..configcreate(config) = 0, "baseline config"
+  call require rxllama..configtext(config, "hardware_mode", args[1]) = 0, "baseline mode"
+  call require rxllama..runtimeopen(config, runtime) = 0, "baseline runtime"
+  call require rxllama..modelopen(runtime, args[2], args[3], "bge-small-en-v1.5", config, model) = 0, "baseline model"
+  call ready_model model
+  call require rxllama..sessionopen(model, "embedding", config, session) = 0, "baseline session"
+  call ready_session session
+  one = batch(session, config, 1)
+  two = batch(session, config, 2)
+  three = batch(session, config, 3)
+  four = batch(session, config, 4)
+  first_bytes = snapshot one.binary()
+  second_bytes = snapshot two.binary()
+  third_bytes = snapshot three.binary()
+  fourth_bytes = snapshot four.binary()
+  call require rxllama..close(session) = 0, "baseline session close"
+  identity = ""
+  call require rxllama..infotext(model, "shared_model_id", identity) = 0, "baseline identity"
+  pool = .taskpool.local(4, 8)
+  scope = .taskscope.collectall(pool, 120000)
+  do parallel using scope
+    first = embed_worker(args[1], args[2], args[3], 1, first_bytes)
+    second = embed_worker(args[1], args[2], args[3], 2, second_bytes)
+    third = embed_worker(args[1], args[2], args[3], 3, third_bytes)
+    fourth = embed_worker(args[1], args[2], args[3], 4, fourth_bytes)
+  end
+  call pool.close()
+  call require identity <> "" & first = identity & second = identity & third = identity & fourth = identity, "one model allocation across workers"
+  owners = 0
+  call require rxllama..infoint(model, "owner_count", owners) = 0 & owners = 1, "worker owners released"
+  call require rxllama..close(model) = 0, "baseline model close"
+  reserved = 0
+  call require rxllama..infoint(runtime, "reserved_bytes", reserved) = 0 & reserved = 0, "baseline reservations released"
+  call require rxllama..close(runtime) = 0, "baseline runtime close"
+  call require rxllama..close(config) = 0, "baseline config close"
+  say "PASS: four embedding workers, 20 ordered batches each, shared weights/private outputs and rxvector" args[1]
+  return 0

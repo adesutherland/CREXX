@@ -568,6 +568,8 @@ typedef struct rxvm_active_state {
      * correlated worker mailbox through this worker-owned callback. */
     void *external_mailbox_owner;
     sig_atomic_t (*external_mailbox_claim)(void *owner);
+    /* Optional synchronous callback outcome, scoped by run_with_signal(). */
+    int *callback_signal;
 } rxvm_active_state;
 
 /* Runtime context */
@@ -641,6 +643,9 @@ rxsignal rxvm_getsignalcode(char* signalText);
 int initialz();
 int finalize();
 int run(rxvm_context *context, int argc, char *argv[]);
+/* Internal typed external-call boundary: zero means successful RETURN;
+ * genuine signals/startup/EXIT failures remain distinct from value fields. */
+int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]);
 
 /* Checked thread-local locator for the worker-owned active VM context. */
 rxvm_context *rxvm_active_context_current(void);

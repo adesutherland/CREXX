@@ -1,0 +1,86 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle;/Users/adrian/CLionProjects/CREXX/tests/native-inference/lifecycle_acceptance.crexx
+
+Warning in lifecycle_acceptance.crexx @ 6:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink;-o;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle-linked;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/library
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-measure/lifecycle-linked;-a;cpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999;bge-small-en-v1.5
+
+=================================================================
+==82639==ERROR: AddressSanitizer: odr-violation (0x00010d3f7320):
+  [1] size=4 'ggml_arm_arch_features' /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+  [2] size=4 'ggml_arm_arch_features' /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+These globals were registered at these points:
+  [1]:
+    #0 0x000105ecfcb4 in __asan_register_globals+0xa0 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13cb4)
+    #1 0x000105efb640 in __asan::AsanApplyToGlobals(void (*)(__asan_global*, unsigned long), void const*)+0x7c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3f640)
+    #2 0x000105ecfbf8 in __asan_register_image_globals+0x34 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13bf8)
+    #3 0x00010d2a5908 in asan.module_ctor+0x18 (libcrexx-ggml-cpu.so:arm64+0xd908)
+    #4 0x000184bd6a24 in invocation function for block in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const::$_0::operator()() const+0xb0 (dyld:arm64e+0x4ea24)
+    #5 0x000184be1a88 in invocation function for block in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x13c (dyld:arm64e+0x59a88)
+    #6 0x000184c21fa8 in invocation function for block in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x134 (dyld:arm64e+0x99fa8)
+    #7 0x000184c1e9a0 in mach_o::UnsafeHeader::forEachLoadCommand(void (load_command const*, bool&) block_pointer) const+0xcc (dyld:arm64e+0x969a0)
+    #8 0x000184c20248 in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x78 (dyld:arm64e+0x98248)
+    #9 0x000184be157c in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x200 (dyld:arm64e+0x5957c)
+    #10 0x000184bd1390 in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const+0x20c (dyld:arm64e+0x49390)
+    #11 0x000184bc9ccc in dyld4::JustInTimeLoader::runInitializers(dyld4::RuntimeState&) const+0x20 (dyld:arm64e+0x41ccc)
+    #12 0x000184bd1aac in dyld4::Loader::runInitializersBottomUp(dyld4::RuntimeState&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&) const+0x234 (dyld:arm64e+0x49aac)
+    #13 0x000184bd6abc in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const::$_0::operator()() const+0x70 (dyld:arm64e+0x4eabc)
+    #14 0x000184bd1d94 in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const+0x2c8 (dyld:arm64e+0x49d94)
+    #15 0x000184ba02c8 in dyld4::APIs::dlopen_from(char const*, int, void*)::$_0::operator()() const+0x90c (dyld:arm64e+0x182c8)
+    #16 0x000184b94000 in dyld4::APIs::dlopen_from(char const*, int, void*)+0x458 (dyld:arm64e+0xc000)
+    #17 0x000184b93b00 in dyld4::APIs::dlopen(char const*, int)+0x74 (dyld:arm64e+0xbb00)
+    #18 0x000105eecf24 in dlopen+0x188 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x30f24)
+    #19 0x00010cd61518 in (anonymous namespace)::cpu_score(std::__1::__fs::filesystem::path const&) bridge.cpp:95
+    #20 0x00010cd3dc80 in (anonymous namespace)::initialize_engine() bridge.cpp:119
+    #21 0x00010cd37308 in rxllama_call bridge.cpp:477
+    #22 0x000105ea29c4 in invoke rxllama.c:59
+    #23 0x000105ea1d44 in runtimeopen rxllama.c:82
+    #24 0x00010532cb64 in rxvm_callfunc_direct rxpafuncs.c:211
+    #25 0x00010532d744 in rxvm_callfunc_session rxpafuncs.c:255
+    #26 0x000105057604 in rxvm_call_native_procedure rxvmintp.h:723
+    #27 0x000104f8730c in rxvm_run_owned_core rxvmhandlers_system.inc:1169
+    #28 0x000104f04664 in run rxvmintp.c:7149
+    #29 0x000105339f24 in rxvm_call rxvm_run.c:422
+
+  [2]:
+    #0 0x000105ecfcb4 in __asan_register_globals+0xa0 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13cb4)
+    #1 0x000105efb640 in __asan::AsanApplyToGlobals(void (*)(__asan_global*, unsigned long), void const*)+0x7c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3f640)
+    #2 0x000105ecfbf8 in __asan_register_image_globals+0x34 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13bf8)
+    #3 0x00010d2a5908 in asan.module_ctor+0x18 (libcrexx-ggml-cpu.so:arm64+0xd908)
+    #4 0x000184bd6a24 in invocation function for block in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const::$_0::operator()() const+0xb0 (dyld:arm64e+0x4ea24)
+    #5 0x000184be1a88 in invocation function for block in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x13c (dyld:arm64e+0x59a88)
+    #6 0x000184c21fa8 in invocation function for block in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x134 (dyld:arm64e+0x99fa8)
+    #7 0x000184c1e9a0 in mach_o::UnsafeHeader::forEachLoadCommand(void (load_command const*, bool&) block_pointer) const+0xcc (dyld:arm64e+0x969a0)
+    #8 0x000184c20248 in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x78 (dyld:arm64e+0x98248)
+    #9 0x000184be157c in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x200 (dyld:arm64e+0x5957c)
+    #10 0x000184bd1390 in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const+0x20c (dyld:arm64e+0x49390)
+    #11 0x000184bc9ccc in dyld4::JustInTimeLoader::runInitializers(dyld4::RuntimeState&) const+0x20 (dyld:arm64e+0x41ccc)
+    #12 0x000184bd1aac in dyld4::Loader::runInitializersBottomUp(dyld4::RuntimeState&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&) const+0x234 (dyld:arm64e+0x49aac)
+    #13 0x000184bd6abc in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const::$_0::operator()() const+0x70 (dyld:arm64e+0x4eabc)
+    #14 0x000184bd1d94 in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const+0x2c8 (dyld:arm64e+0x49d94)
+    #15 0x000184ba02c8 in dyld4::APIs::dlopen_from(char const*, int, void*)::$_0::operator()() const+0x90c (dyld:arm64e+0x182c8)
+    #16 0x000184b94000 in dyld4::APIs::dlopen_from(char const*, int, void*)+0x458 (dyld:arm64e+0xc000)
+    #17 0x000184b93b00 in dyld4::APIs::dlopen(char const*, int)+0x74 (dyld:arm64e+0xbb00)
+    #18 0x000105eecf24 in dlopen+0x188 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x30f24)
+    #19 0x00010cd61518 in (anonymous namespace)::cpu_score(std::__1::__fs::filesystem::path const&) bridge.cpp:95
+    #20 0x00010cd3dc80 in (anonymous namespace)::initialize_engine() bridge.cpp:119
+    #21 0x00010cd37308 in rxllama_call bridge.cpp:477
+    #22 0x000105ea29c4 in invoke rxllama.c:59
+    #23 0x000105ea1d44 in runtimeopen rxllama.c:82
+    #24 0x00010532cb64 in rxvm_callfunc_direct rxpafuncs.c:211
+    #25 0x00010532d744 in rxvm_callfunc_session rxpafuncs.c:255
+    #26 0x000105057604 in rxvm_call_native_procedure rxvmintp.h:723
+    #27 0x000104f8730c in rxvm_run_owned_core rxvmhandlers_system.inc:1169
+    #28 0x000104f04664 in run rxvmintp.c:7149
+    #29 0x000105339f24 in rxvm_call rxvm_run.c:422
+
+==82639==HINT: if you don't care about these errors you may set ASAN_OPTIONS=detect_odr_violation=0
+SUMMARY: AddressSanitizer: odr-violation: global 'ggml_arm_arch_features' at /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+==82639==ABORTING
+

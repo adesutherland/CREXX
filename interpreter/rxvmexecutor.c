@@ -993,7 +993,7 @@ static int executor_run_external(rxvm_context *context,
     context->ext_args = arguments;
     context->ext_ret = return_value;
     dummy_argv[0] = (char *)"rxvm_executor";
-    run_status = run(context, 0, dummy_argv);
+    run_status = rxvm_run_external_status(context, 0, dummy_argv);
     context->ext_proc = saved_proc;
     context->ext_argc = saved_argc;
     context->ext_args = saved_args;
@@ -1610,16 +1610,9 @@ static rxvm_executor_request_state executor_worker_call(
     run_status = executor_run_external(context, procedure, request->argc,
                                        arguments, return_value);
 
-    /* run() historically returns an integer procedure result as its process
-     * status for an external entry.  An unhandled signal also returns a
-     * non-zero status, but leaves the fresh external return cell unchanged.
-     * Preserve ordinary non-zero task results and classify only a status that
-     * was not published through the external integer return cell as an
-     * execution failure.  Non-integer external returns normally finish with
-     * status zero. */
-    if (run_status != 0 &&
-        (expected_result != RXVM_EXECUTOR_REGISTER_INTEGER ||
-         return_value->int_value != (rxinteger)run_status)) {
+    /* Status is independent of every returned value's physical integer field,
+     * including strings from native methods and full-width integer results. */
+    if (run_status != 0) {
         goto execution_failed;
     }
 

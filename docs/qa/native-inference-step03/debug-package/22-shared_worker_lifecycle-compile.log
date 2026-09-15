@@ -1,0 +1,5 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-ech3ylik/installed Ω/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-ech3ylik/installed Ω/bin'), '-o', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-ech3ylik/checks/shared_worker_lifecycle'), PosixPath('/Users/adrian/CLionProjects/CREXX/tests/native-inference/shared_worker_lifecycle.crexx')]
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-ech3ylik/checks
+rc=0
+Warning in shared_worker_lifecycle.crexx @ 37:5 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 27, column 5. Declare this binding explicitly if intentional., "duration"
+1 warning(s) in source file

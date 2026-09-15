@@ -247,9 +247,31 @@ model, and enters Release 1 only through a beta quality gate.
   complete; [the STEP-02 report](planning/native-inference-step-02.md) retains
   CPU/Metal, persistence/sharing, cancellation, scratch, normal/ASan and Release
   measurement evidence, including failed historical controls and timing
-  uncertainty. STEP-03 has not started. The
-  [dependency pins and proposed concrete contract](planning/native-inference-step-01.md)
-  record source/artifact inspection, not implemented or qualified support.
+  uncertainty. [STEP-03](planning/native-inference-step-03.md) is implemented
+  through local CPU/Metal lifecycle, shared ownership and packaging controls;
+  the native-worker transition repair and its measured legacy-call cost are
+  approved, native four-worker CPU/Metal controls pass, and all 2,314
+  non-measurement Debug CTests pass. Adrian approved STEP-03 closure with the
+  remaining SAN-009/S3-D01 sanitizer proof assigned to STEP-06 native-inference
+  release QA, owned by Codex under his direction. STEP-04 native embedding
+  requests and S4-D01 complete-text handling pass normal CPU/Metal controls,
+  including real workers, both VM/optimization modes and installed/native
+  consumers. Adrian accepted the indicative Release overhead and unresolved
+  Metal variation. The [typed C llama API and installed persistent/shared-worker
+  examples](planning/native-inference-typed-interface-proposal.md) now pass their
+  normal local acceptance and delivery checks: 28 Debug and 42 installed/relocated
+  native Release runs across CPU/Metal and optimization/VM modes. The generic
+  [C RXPA object surface](planning/rxpa-native-objects.md) and its interface-only
+  provider/typed callback-return repairs also pass focused and installed SDK checks.
+  [S4-05 and S4-AC-01–06](planning/native-inference-step-04.md) are ticked complete
+  locally with retained evidence. The requested 15 September baseline also
+  retains [NI-S4-QA01](qa/native-inference-baseline/README.md): fresh full QA
+  preparation fails existing HTTP request/get compilation, so the current
+  full regression gate is incomplete. Final public-contract/STEP-04 closure
+  review remains open. Generation is STEP-05. Sanitizer execution and
+  Windows/Linux/CUDA/Vulkan qualification remain STEP-06; SAN-009 is still open.
+  The [dependency pins and contract](planning/native-inference-step-01.md)
+  and live parent plan retain the full scope and remaining qualification boundary.
   STEP-07 documentation/examples may start or complete before STEP-06 hardware
   qualification finishes; missing platform evidence remains open. The detailed
   API and package proposal is approved for the planned implementation. This plan does not change the five

@@ -5,6 +5,13 @@ Status: complete, 2026-09-14; output ready for review. Authorized by Adrian afte
 [authoritative plan](native-inference-backlog.md) retains all OUT, NI, AC and
 STEP IDs. No production provider implementation is part of this step.
 
+Subsequent direction, 2026-09-14: Adrian narrowed current performance work to
+indicative figures and cREXX/llama glue overhead. The results below remain
+historical evidence; use the [live plan](native-inference-backlog.md#performance-scope-clarified-by-adrian--2026-09-14)
+and [STEP-04](native-inference-step-04.md) for current performance scope. Do not
+restart upstream/model benchmarking or fastest-configuration sweeps from this
+earlier control record.
+
 The outcome of this step is a reproducible direct llama.cpp control and
 ordinary failing provider acceptance coverage, with limits fixed before the
 provider candidate exists. Hardware absence remains explicit; local results

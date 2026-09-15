@@ -1,0 +1,18 @@
+Mon Sep 14 16:54:00 UTC 2026
+Darwin 25.6.0 arm64
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+17:54  up 16 days, 15:48, 2 users, load averages: 2.99 3.46 3.57
+ 38.4 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.7 qemu-system-aarch64
+ 20.5 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+ 15.3 /usr/libexec/sysmond
+  7.7 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  5.5 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+  5.2 /usr/libexec/syspolicyd
+  3.3 /System/Library/PrivateFrameworks/MediaAnalysis.framework/Versions/A/mediaanalysisd
+  2.7 /Users/adrian/Library/Caches/JetBrains/CLion2026.1/acp-agents/.runtimes/node/24.13.0/npm-cache/_npx/b310e49100cf8d6c/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex
+  2.5 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend

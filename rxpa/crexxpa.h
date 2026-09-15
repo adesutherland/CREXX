@@ -105,6 +105,47 @@ typedef int (*rxpa_session_enter_v2)(void *session,
                                      void **previous);
 typedef void (*rxpa_session_leave_v2)(void *previous);
 
+/* Immutable host services, negotiated independently of the legacy initializer.
+ * A session may retain this table for its lifetime. A string view is read-only,
+ * need not have a trailing NUL, and expires on mutation of that value (including
+ * reentrant calls that mutate it) or native-call return, whichever comes first.
+ * Length counts UTF-8 bytes, including embedded U+0000. No allocation or copy is
+ * made. Callers must own any bytes retained beyond that boundary. */
+#define RXPA_HOST_SERVICES_ABI_V1 1u
+typedef int (*rxpa_string_view_v1)(rxpa_attribute_value value,
+                                   const char **data, size_t *byte_length);
+/* Publish a loaded concrete class on a plugin-built value. This preserves all
+ * payload/attribute data and clears the uninitialized-object flag. On failure
+ * it returns -1 without modifying the value. No factory is invoked. Use only
+ * borrowed value handles in the active VM call; never retain those handles. */
+typedef int (*rxpa_object_set_type_v1)(rxpa_attribute_value value,
+                                      const char *class_name);
+typedef struct rxpa_host_services_v1 {
+    size_t struct_size;
+    uint32_t abi_version;
+    rxpa_string_view_v1 string_view;
+    rxpa_object_set_type_v1 object_set_type; /* Optional complete sized tail. */
+} rxpa_host_services_v1;
+static inline int rxpa_host_has_string_view(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, string_view) + sizeof(host->string_view) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->string_view;
+}
+static inline int rxpa_host_has_object_set_type(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, object_set_type) + sizeof(host->object_set_type) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->object_set_type;
+}
+static inline int rxpa_set_object_type(const rxpa_host_services_v1 *host,
+                                       rxpa_attribute_value value,
+                                       const char *class_name) {
+    return rxpa_host_has_object_set_type(host)
+            ? host->object_set_type(value, class_name) : -1;
+}
+#define SETOBJECTTYPE(host, value, class_name) \
+    rxpa_set_object_type((host), (value), (class_name))
+typedef void *(*rxpa_session_create_with_host_v1)(const rxpa_host_services_v1 *host);
+
 typedef struct rxpa_plugin_manifest_v2 {
     size_t struct_size;
     uint32_t abi_version;
@@ -114,6 +155,10 @@ typedef struct rxpa_plugin_manifest_v2 {
     rxpa_session_destroy_v2 session_destroy;
     rxpa_session_enter_v2 session_enter;
     rxpa_session_leave_v2 session_leave;
+    /* Optional sized tail. Old factories remain mandatory for session plugins;
+     * return NULL there when the plugin requires services unavailable to an old
+     * host. Modern hosts prefer this factory and never retry the old one. */
+    rxpa_session_create_with_host_v1 session_create_with_host;
 } rxpa_plugin_manifest_v2;
 
 typedef const rxpa_plugin_manifest_v2 *(*rxpa_plugin_query_v2)(void);
@@ -348,7 +393,7 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
     static const rxpa_plugin_manifest_v2 \
             RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
         sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
-        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0, 0 \
     }; \
     RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
         return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
@@ -356,11 +401,16 @@ static rxpa_initctxptr _rxpa_context = &_rxpa_initctx;
 #define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
                                   enter_function, leave_function, \
                                   query_function) \
+    RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+        enter_function, leave_function, query_function, 0)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function) \
     static const rxpa_plugin_manifest_v2 \
             RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
         sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
         RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
-        (destroy_function), (enter_function), (leave_function) \
+        (destroy_function), (enter_function), (leave_function), (host_create_function) \
     }; \
     RXPA_EXTERN_C EXPORT const rxpa_plugin_manifest_v2 *_rxpa_query_v2(void) { \
         return &RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID); \
@@ -497,7 +547,7 @@ void rxpa_resetsayexit(); /* Set Say exit function */
     static const rxpa_plugin_manifest_v2 \
             RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
         sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
-        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0 \
+        RXPA_STRINGIFY(PLUGIN_ID), (query_function), 0, 0, 0, 0, 0 \
     }; \
     INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
         rxpa_register_static_plugin_manifest_v2( \
@@ -506,11 +556,16 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
                                   enter_function, leave_function, \
                                   query_function) \
+    RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+        enter_function, leave_function, query_function, 0)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function) \
     static const rxpa_plugin_manifest_v2 \
             RXPA_PLUGIN_MANIFEST_V2_NAME(PLUGIN_ID) = { \
         sizeof(rxpa_plugin_manifest_v2), RXPA_PLUGIN_MANIFEST_ABI_V2, \
         RXPA_STRINGIFY(PLUGIN_ID), (query_function), (create_function), \
-        (destroy_function), (enter_function), (leave_function) \
+        (destroy_function), (enter_function), (leave_function), (host_create_function) \
     }; \
     INITIALIZER(UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)) \
         rxpa_register_static_plugin_manifest_v2( \
@@ -522,6 +577,9 @@ void rxpa_resetsayexit(); /* Set Say exit function */
 #define RXPA_PLUGIN_SESSION_AWARE(create_function, destroy_function, \
                                   enter_function, leave_function, \
                                   query_function)
+#define RXPA_PLUGIN_SESSION_WITH_HOST(create_function, destroy_function, \
+                                      enter_function, leave_function, \
+                                      query_function, host_create_function)
 #endif
 
 // Macro is used to register a procedure - static linkage
@@ -622,10 +680,48 @@ SETIARRAY(pnum,indx,value);};
   #endif
 #endif
 
+/* Declare and bind native members. Owner/member must be string literals;
+ * class types in type/args must be fully qualified. Methods receive the
+ * receiver as ARG0, followed by declared arguments. Factories and match
+ * functions receive only declared arguments; factories construct RETURN.
+ * Keeping the symbol convention here also supports DECL_ONLY consumers. */
+#define ADDMETHODPROC(func, owner, member, type, args) \
+    ADDMETHOD(owner, member, type, args); \
+    ADDPROC(func, owner "." member, "b", type, args)
+#define ADDDEFAULTMETHODPROC(func, owner, member, type, args) \
+    ADDDEFAULTMETHOD(owner, member, type, args); \
+    ADDPROC(func, owner "." member, "b", type, args)
+#define ADDFACTORYPROC(func, owner, type, args) \
+    ADDFACTORY(owner, "*", type, args); \
+    ADDPROC(func, owner ".\xc2\xa7" "factory", "b", type, args)
+#define ADDNAMEDFACTORYPROC(func, owner, member, type, args) \
+    ADDFACTORY(owner, member, type, args); \
+    ADDPROC(func, owner ".\xc2\xa7" "factory." member, "b", type, args)
+#define ADDMATCHPROC(func, owner, args) \
+    ADDPROC(func, owner ".\xc2\xa7" "match", "b", ".int", args)
+#define ADDNAMEDMATCHPROC(func, owner, member, args) \
+    ADDPROC(func, owner ".\xc2\xa7" "match." member, "b", ".int", args)
+
 // Macro to set the SIGNAL ATTR
 #define RETURNSIGNAL(signal, details) {SETINT(SIGNAL,(signal)); SETSTRING(SIGNAL,(details)); return;}
 
 // Macro to Reset Signal
 #define RESETSIGNAL {SETINT(SIGNAL,SIGNAL_NONE); SETSTRING(SIGNAL, "");}
+
+/* Native method entry supplies the same uninitialized-receiver guard emitted
+ * for Rexx methods. Use this with ADDMETHODPROC/ADDDEFAULTMETHODPROC. Factories
+ * and match functions have no implicit receiver and use PROCEDURE instead. */
+#define METHODPROCEDURE(p) \
+    PROCEDURE(EXPAND_AND_CONCATENATE(_rxpa_method_body_, p)); \
+    PROCEDURE(p) { \
+        if (NUM_ARGS < 1 || !_arg || !ARG0) { \
+            RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "Native method requires a receiver") \
+        } \
+        if (!ISINITIALIZED(ARG0)) { \
+            RETURNSIGNAL(SIGNAL_OBJECT_NOT_INITIALIZED, "Native method receiver is not initialized") \
+        } \
+        EXPAND_AND_CONCATENATE(_rxpa_method_body_, p)(_numargs, _arg, _return, _signal); \
+    } \
+    PROCEDURE(EXPAND_AND_CONCATENATE(_rxpa_method_body_, p))
 
 #endif // CREXX_PA_H_

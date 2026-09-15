@@ -714,6 +714,30 @@ target_include_directories(test_rxpa_concurrency PRIVATE
         ../platform ../avl_tree ../utf8 ../inc)
 target_link_libraries(test_rxpa_concurrency rxvml Threads::Threads)
 
+# Direct S4-D01 ABI/text tests: no nested builds or model inference.
+add_executable(test_rxpa_host_services tests/test_rxpa_host_services.c)
+target_include_directories(test_rxpa_host_services PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR} ./rxvmplugin ../assembler ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+target_link_libraries(test_rxpa_host_services rxvml Threads::Threads)
+foreach(kind IN ITEMS modern old)
+    add_library(rxpa_host_fixture_${kind} MODULE tests/rxpa_host_service_fixture.c)
+    target_link_libraries(rxpa_host_fixture_${kind} PRIVATE CREXX::RXPA)
+    target_compile_definitions(rxpa_host_fixture_${kind} PRIVATE
+        BUILD_DLL PLUGIN_ID=host_fixture_${kind})
+    if(kind STREQUAL "old")
+        target_compile_definitions(rxpa_host_fixture_${kind} PRIVATE OLD_MANIFEST)
+    endif()
+    set_target_properties(rxpa_host_fixture_${kind} PROPERTIES
+        PREFIX "" SUFFIX ".rxplugin")
+    add_dependencies(test_rxpa_host_services rxpa_host_fixture_${kind})
+endforeach()
+add_test(NAME rxpa_host_text_services COMMAND test_rxpa_host_services
+        $<TARGET_FILE:rxpa_host_fixture_old> $<TARGET_FILE:rxpa_host_fixture_modern>)
+set_tests_properties(rxpa_host_text_services PROPERTIES TIMEOUT 30
+        LABELS "interpreter;plugins;rxpa;regression")
+crexx_register_test_prep_targets(TESTS rxpa_host_text_services TARGETS test_rxpa_host_services)
+
 add_executable(test_rxpa_worker_startup tests/test_rxpa_worker_startup.c)
 target_include_directories(test_rxpa_worker_startup PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

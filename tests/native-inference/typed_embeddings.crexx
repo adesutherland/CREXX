@@ -1,0 +1,133 @@
+/* F-AC-02/03: typed persistent embedding contract, not a speed benchmark. */
+options levelg floats_binary
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import rxunicode
+import rxvector
+import llama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+ready_model: procedure = .void
+  arg model = .llama..model
+  started = time("us")
+  do forever
+    state = model.state()
+    call require model.status() = 0, "model state"
+    if state = "ready" then return
+    call require state = "loading", "model loading"
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require duration < 60000000, "model deadline"
+  end
+
+main: procedure = .int
+  arg args = .string[]
+  if args[0] <> 3 then return 2
+  config = .llama..configuration()
+  call require config.status() = 0, "config"
+  call require config.set_text("hardware_mode", args[1]) = 0, "hardware mode"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, "runtime"
+  call require runtime.device_count() > 0, "device discovery"
+  call require runtime.device_info(1, "name") <> "", "device inspection"
+  bad = runtime.model(args[2], args[3], "unsupported-profile", config)
+  call require bad.status() <> 0 & bad.close() = 0, "failed model constructor safe close"
+  model = runtime.model(args[2], args[3], "bge-small-en-v1.5", config)
+  call require model.status() = 0, "model"
+  call ready_model model
+  call require model.info_text("embedding_spec") <> "", "embedding identity"
+  if args[1] = "required-gpu" then call require model.info_int("gpu_layers") > 0, "real GPU placement"
+  session = model.embedding_session(config)
+  call require session.status() = 0, "session"
+  premature = session.request(config)
+  call require premature.status() <> 0 & premature.close() = 0, "request before preparation"
+  state = ""
+  started = time("us")
+  do forever
+    state = session.prepare(512)
+    call require session.status() = 0, "preparation status"
+    if state = "ready" then leave
+    duration = time("us") - started
+    if duration < 0 then duration = duration + 86400000000
+    call require state = "preparing" & duration < 60000000, "preparation deadline"
+  end
+  call require session.status() = 0 & state = "ready", "explicit preparation"
+  call require model.close() <> 0 & runtime.close() <> 0, "parent close rejects live children"
+  rows = .string[]
+  rows[1] = "A cat sits near the window."
+  rows[2] = "Unicode: café, Ω and 日本語."
+  limited = .llama..configuration()
+  call require limited.set_text("hardware_mode", args[1]) = 0, "matching request hardware policy"
+  call require limited.set_int("request_tokens", 512) = 0, "matching row token limit"
+  call require limited.set_int("request_rows", 1) = 0, "row admission limit"
+  partial = session.request(limited)
+  call require partial.status() = 0, "limited request"
+  call require partial.add_all(rows, "document") <> 0, "partial add_all failure"
+  failure = partial.diagnostic()
+  code = failure.code()
+  message = failure.message()
+  call require code <> 0 & failure.operation() = "addembedding", "original row diagnostic retained"
+  call require partial.state() = "cancelled", "partial add_all cancels request"
+  call require failure.code() = code & failure.message() = message, "snapshot survives state call"
+  incomplete = partial.result()
+  call require incomplete.status() <> 0 & incomplete.rows() = 0 & incomplete.values().size() = 0, "no partial output"
+  call require partial.close() = 0 & limited.close() = 0, "failed request cleanup"
+  request = session.request(config)
+  busy = session.request(config)
+  call require busy.status() <> 0 & busy.close() = 0, "one active request"
+  nul = .rxunicode..decode("00"x as .binary, "UTF-8")
+  call require request.add("cat" || nul || "suffix", "document") = 1, "complete NUL text admission"
+  call require request.info_int("input_bytes") = 10, "input is not truncated at NUL"
+  call require request.add("cat", "query" || nul || "suffix") = 0, "complete role rejection"
+  call require request.status() <> 0, "add status distinct from row"
+  call require request.add("", "document") = 2, "empty input accepted explicitly"
+  call require request.cancel() = 0 & request.state() = "cancelled", "explicit cancellation"
+  call require request.close() = 0, "cancel close"
+  do iteration = 1 to 20
+    request = session.request(config)
+    call require request.status() = 0, "persistent request"
+    call require request.add_all(rows, "document") = 0, "ordered add_all"
+    call require request.state() = "building", "add_all does not submit"
+    early = request.result()
+    call require early.status() <> 0 & early.values().size() = 0, "result before completion"
+    call require request.submit() = 0, "submit"
+    call require request.process(1) = "complete" & request.status() = 0, "bounded indivisible batch"
+    call require request.info_int("decode_calls") = 1, "real batch decode"
+    result = request.result()
+    call require result.status() = 0 & result.rows() = 2 & result.dimensions() = 384, "result shape"
+    call require request.close() = 0, "request close before reading result"
+    values = result.values()
+    call require values.size() = 768, "packed result survives request"
+    encoded = rxvector..encodef32le(values)
+    decoded = rxvector..decodef32le(encoded)
+    call require binlength(encoded) = 3072 & rxvector..cosine(values, decoded) >= 0.999999, "existing vector consumer"
+    original = values.get(0)
+    call values.set(0, 99.0)
+    fresh = result.values()
+    call require fresh.get(0) = original, "values returns independent owned copy"
+    do row = 0 to 1
+      norm = 0.0
+      do dim = 0 to 383
+        v = fresh.get(row * 384 + dim)
+        call require v = v & abs(v) <= 1.00002, "finite coordinate"
+        norm = norm + v * v
+      end
+      call require abs(norm - 1.0) <= 0.00002, "normalized row"
+    end
+  end
+  call require model.info_int("load_count") = 1, "one model load"
+  call require session.info_int("completed_requests") = 20, "persistent completion count"
+  alias = session
+  call require alias.close() = 0, "copied session close"
+  call require session.prepare(512) = "" & session.status() <> 0, "closed session checked"
+  call require session.close() = 0 & model.close() = 0, "reverse shutdown"
+  call require runtime.info_int("reserved_bytes") = 0, "reservations released"
+  call require runtime.close() = 0 & config.close() = 0, "owner shutdown"
+  say "PASS: typed llama embeddings"
+  return 0

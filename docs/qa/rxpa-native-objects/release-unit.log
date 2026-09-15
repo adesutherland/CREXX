@@ -1,0 +1,18 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start    4: rxgraph_unit
+1/2 Test    #4: rxgraph_unit .....................   Passed    0.31 sec
+    Start 1158: rxpa_host_text_services
+2/2 Test #1158: rxpa_host_text_services ..........   Passed    0.66 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+comprehensive       =   0.97 sec*proc (2 tests)
+concurrency         =   0.31 sec*proc (1 test)
+concurrency-sp03    =   0.31 sec*proc (1 test)
+interpreter         =   0.66 sec*proc (1 test)
+plugins             =   0.66 sec*proc (1 test)
+regression          =   0.66 sec*proc (1 test)
+rxpa                =   0.66 sec*proc (1 test)
+
+Total Test time (real) =   1.02 sec

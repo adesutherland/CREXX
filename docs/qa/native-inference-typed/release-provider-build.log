@@ -1,0 +1,13 @@
+[0/2] Re-checking globbed directories...
+[1/13] Building C object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/__/__/__/binutils/rxsha256.c.o
+[2/13] Building C object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/__/__/__/binutils/rxsha256.c.o
+[3/13] Building C object lib/plugins/llama/CMakeFiles/llama_provider_static.dir/rxllama.c.o
+[4/13] Building C object lib/plugins/llama/CMakeFiles/llama_provider.dir/rxllama.c.o
+[5/13] Building CXX object lib/plugins/llama/CMakeFiles/crexx-provider-package.dir/provider_package.cpp.o
+[6/13] Linking CXX executable bin/crexx-provider-package
+[7/13] Building CXX object lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/bridge.cpp.o
+[8/13] Linking CXX shared library bin/providers/libcrexx-llama.1.dylib
+[9/13] Creating library symlink bin/providers/libcrexx-llama.dylib
+[10/13] Linking C shared module bin/rxllama.rxplugin
+[11/13] Linking C static library bin/rxllama_static.a
+[12/13] cd /Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-release/lib/plugins/llama/rxllama-package-Release.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake

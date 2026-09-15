@@ -1,0 +1,96 @@
+/* STEP-02 ordinary pre-implementation RXPA acceptance.
+ * A missing rxllama provider is a failure, never an expected-pass wrapper.
+ * Run explicitly until aggregate scheduling has been qualified. */
+options levelb floats_binary
+import rxfnsb
+import rxfnsg
+import rxllama
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: rxllama" label
+  return 1
+
+elapsed: procedure = .int
+  arg started = .int
+  duration = time("us") - started
+  if duration < 0 then duration = duration + 86400000000
+  return duration
+
+ready_model: procedure = .int
+  arg model = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..modelstate(model, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state <> "loading" then return 1
+  end
+  say "FAIL: model preparation deadline"
+  return 1
+
+ready_session: procedure = .int
+  arg session = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..prepare(session, 512, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state = "failed" | state = "cancelled" then return 1
+  end
+  say "FAIL: session preparation deadline"
+  return 1
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 4 then return 2
+  config = .binary
+  runtime = .binary
+  model = .binary
+  peer = .binary
+  session = .binary
+  if rxllama..configcreate(config) <> 0 then return 1
+  errors = check(rxllama..configtext(config, "hardware_mode", args[1]) = 0, "mode")
+  errors = errors + check(rxllama..configint(config, "memory_bytes", 4294967296) = 0, "memory")
+  errors = errors + check(rxllama..configint(config, "max_sessions", 1) = 0, "session admission")
+  errors = errors + check(rxllama..configint(config, "unknown", 1) <> 0, "unknown option")
+  errors = errors + check(rxllama..configtext(config, "memory_bytes", "1") <> 0, "wrong option type")
+  if rxllama..runtimeopen(config, runtime) <> 0 then return 1
+  count = 0
+  errors = errors + check(rxllama..devicecount(runtime, count) = 0 & count > 0, "inventory")
+  if rxllama..modelopen(runtime, args[2], args[3], args[4], config, model) <> 0 then return 1
+  if rxllama..modelopen(runtime, args[2], args[3], args[4], config, peer) <> 0 then return 1
+  if ready_model(model) <> 0 | ready_model(peer) <> 0 then return 1
+  identity = ""
+  other = ""
+  errors = errors + check(rxllama..infotext(model, "shared_model_id", identity) = 0, "shared identity")
+  errors = errors + check(rxllama..infotext(peer, "shared_model_id", other) = 0 & identity = other, "shared allocation")
+  capability = "generation"
+  if args[4] = "bge-small-en-v1.5" then capability = "embedding"
+  if rxllama..sessionopen(model, capability, config, session) <> 0 then return 1
+  extra = .binary
+  errors = errors + check(rxllama..sessionopen(peer, capability, config, extra) <> 0, "saturation rejected")
+  errors = errors + check(rxllama..close(model) <> 0, "parent busy")
+  errors = errors + check(rxllama..close(runtime) <> 0, "runtime busy")
+  if ready_session(session) <> 0 then return 1
+  if ready_session(session) <> 0 then return 1
+  loads = 0
+  errors = errors + check(rxllama..infoint(model, "load_count", loads) = 0 & loads = 1, "load once")
+  copy = session
+  errors = errors + check(rxllama..close(session) = 0, "session close")
+  state = ""
+  errors = errors + check(rxllama..prepare(copy, 128, state) <> 0, "closed copied handle")
+  errors = errors + check(rxllama..close(copy) = 0, "idempotent close")
+  errors = errors + check(rxllama..close(model) = 0, "model close")
+  if rxllama..sessionopen(peer, capability, config, extra) <> 0 then return 1
+  if ready_session(extra) <> 0 then return 1
+  errors = errors + check(rxllama..close(extra) = 0, "peer session close")
+  errors = errors + check(rxllama..close(peer) = 0, "peer close")
+  reserved = -1
+  errors = errors + check(rxllama..infoint(runtime, "reserved_bytes", reserved) = 0 & reserved = 0, "reservations released")
+  errors = errors + check(rxllama..close(runtime) = 0, "runtime close")
+  errors = errors + check(rxllama..close(config) = 0, "config close")
+  if errors <> 0 then return 1
+  say "PASS: rxllama lifecycle" args[1] args[4]
+  return 0

@@ -1,0 +1,141 @@
+Start testing: Sep 14 15:26 BST
+----------------------------------------------------------
+1734/2499 Testing: rxllama_backend_probe_cycle
+1734/2499 Test: rxllama_backend_probe_cycle
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "--probe-cycle"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_backend_probe_cycle" start time: Sep 14 15:26 BST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.89 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_backend_probe_cycle" end time: Sep 14 15:26 BST
+"rxllama_backend_probe_cycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1735/2499 Testing: rxllama_bridge_bge_cpu
+1735/2499 Test: rxllama_bridge_bge_cpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "cpu" "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf" "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" "bge-small-en-v1.5"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_bge_cpu" start time: Sep 14 15:26 BST
+Output:
+----------------------------------------------------------
+PASS: bridge lifecycle cpu bge-small-en-v1.5 shared_owners=4
+<end of output>
+Test time =   4.89 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_bge_cpu" end time: Sep 14 15:26 BST
+"rxllama_bridge_bge_cpu" time elapsed: 00:00:04
+----------------------------------------------------------
+
+1736/2499 Testing: rxllama_bridge_smol_cpu
+1736/2499 Test: rxllama_bridge_smol_cpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "cpu" "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf" "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201" "smollm2-360m-instruct"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_smol_cpu" start time: Sep 14 15:26 BST
+Output:
+----------------------------------------------------------
+PASS: bridge lifecycle cpu smollm2-360m-instruct shared_owners=4
+<end of output>
+Test time =  35.23 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_smol_cpu" end time: Sep 14 15:27 BST
+"rxllama_bridge_smol_cpu" time elapsed: 00:00:35
+----------------------------------------------------------
+
+1737/2499 Testing: rxllama_bridge_both_cpu
+1737/2499 Test: rxllama_bridge_both_cpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "cpu" "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf" "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf" "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_both_cpu" start time: Sep 14 15:27 BST
+Output:
+----------------------------------------------------------
+PASS: co-resident two-model four-session admission/cleanup cpu reserved=3690987520 peak_bytes=1784807424
+<end of output>
+Test time =  19.65 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_both_cpu" end time: Sep 14 15:27 BST
+"rxllama_bridge_both_cpu" time elapsed: 00:00:19
+----------------------------------------------------------
+
+1738/2499 Testing: rxllama_bridge_bge_required-gpu
+1738/2499 Test: rxllama_bridge_bge_required-gpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "required-gpu" "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf" "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" "bge-small-en-v1.5"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_bge_required-gpu" start time: Sep 14 15:27 BST
+Output:
+----------------------------------------------------------
+PASS: bridge lifecycle required-gpu bge-small-en-v1.5 shared_owners=4
+<end of output>
+Test time =  10.11 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_bge_required-gpu" end time: Sep 14 15:27 BST
+"rxllama_bridge_bge_required-gpu" time elapsed: 00:00:10
+----------------------------------------------------------
+
+1739/2499 Testing: rxllama_bridge_smol_required-gpu
+1739/2499 Test: rxllama_bridge_smol_required-gpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "required-gpu" "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf" "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201" "smollm2-360m-instruct"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_smol_required-gpu" start time: Sep 14 15:27 BST
+Output:
+----------------------------------------------------------
+PASS: bridge lifecycle required-gpu smollm2-360m-instruct shared_owners=4
+<end of output>
+Test time =  57.62 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_smol_required-gpu" end time: Sep 14 15:28 BST
+"rxllama_bridge_smol_required-gpu" time elapsed: 00:00:57
+----------------------------------------------------------
+
+1740/2499 Testing: rxllama_bridge_both_required-gpu
+1740/2499 Test: rxllama_bridge_both_required-gpu
+Command: "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_bridge_lifecycle" "required-gpu" "/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf" "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" "/Users/adrian/Library/Caches/crexx/native-inference/smollm2-360m-instruct-q8_0.gguf" "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_bridge_both_required-gpu" start time: Sep 14 15:28 BST
+Output:
+----------------------------------------------------------
+PASS: co-resident two-model four-session admission/cleanup required-gpu reserved=3690987520 peak_bytes=1452326912
+<end of output>
+Test time =  19.61 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_bridge_both_required-gpu" end time: Sep 14 15:29 BST
+"rxllama_bridge_both_required-gpu" time elapsed: 00:00:19
+----------------------------------------------------------
+
+1741/2499 Testing: rxllama_toolchain_lifecycle
+1741/2499 Test: rxllama_toolchain_lifecycle
+Command: "/opt/homebrew/bin/cmake" "-DBUILD=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan" "-DSOURCE=/Users/adrian/CLionProjects/CREXX" "-DOUTPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/toolchain-ctest" "-DMODE=cpu" "-DMODEL=/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf" "-DHASH=f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" "-DPROFILE=bge-small-en-v1.5" "-P" "/Users/adrian/CLionProjects/CREXX/tests/native-inference/step03_toolchain.cmake"
+Directory: /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama
+"rxllama_toolchain_lifecycle" start time: Sep 14 15:29 BST
+Output:
+----------------------------------------------------------
+-- PASS: four-tool lifecycle cpu bge-small-en-v1.5
+<end of output>
+Test time =  10.59 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_toolchain_lifecycle" end time: Sep 14 15:29 BST
+"rxllama_toolchain_lifecycle" time elapsed: 00:00:10
+----------------------------------------------------------
+
+End testing: Sep 14 15:29 BST
+
+library = 158.60 sec*proc
+
+llama = 158.60 sec*proc
+
+model-provisioned = 157.71 sec*proc
+
+regression =   0.89 sec*proc
+
+rxpa = 158.60 sec*proc
+

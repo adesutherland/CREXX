@@ -1,0 +1,22 @@
+[
+  {
+    "fixture": "rxpa_objects",
+    "executable": "/private/tmp/rxpa-typed-followup-installed/rxpa_objects relocated \u00c5/consumer",
+    "sha256": "a3a229832a9562431a50ff3e6915d36e40f02ccb29a5b0a16a6efb5d1961a0f0"
+  },
+  {
+    "fixture": "rxpa_objects_class_only",
+    "executable": "/private/tmp/rxpa-typed-followup-installed/rxpa_objects_class_only relocated \u00c5/consumer",
+    "sha256": "4b88a2b3212b9bfe80e91eefb83ec7a8b0eab837d33dbbecdbfb3eb30f74bfa0"
+  },
+  {
+    "fixture": "rxpa_objects_workers",
+    "executable": "/private/tmp/rxpa-typed-followup-installed/rxpa_objects_workers relocated \u00c5/consumer",
+    "sha256": "c07899f90a6d397e4e3263d748e37b9a5abae2579be9adef87b6964c9f7008de"
+  },
+  {
+    "fixture": "rxpa_objects_text_worker",
+    "executable": "/private/tmp/rxpa-typed-followup-installed/rxpa_objects_text_worker relocated \u00c5/consumer",
+    "sha256": "bd0bf6836a58b3ada7c7b36d03961bdb831a131b5eb29d77ba8552010bf92126"
+  }
+]

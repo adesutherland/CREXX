@@ -1,0 +1,23 @@
+[0/2] Re-checking globbed directories...
+[1/3] Building C object binutils/CMakeFiles/test_rxgraph.dir/tests/test_rxgraph.c.o
+[2/3] Linking C executable bin/test_rxgraph
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 4: rxgraph_unit
+1/1 Test #4: rxgraph_unit .....................***Failed  Error regular expression found in output. Regex=[FAIL:]  0.32 sec
+FAIL: find factory bucket
+FAIL: deserialize valid graph
+FAIL: deserialize split graph sections
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+comprehensive       =   0.32 sec*proc (1 test)
+concurrency         =   0.32 sec*proc (1 test)
+concurrency-sp03    =   0.32 sec*proc (1 test)
+
+Total Test time (real) =   0.36 sec
+
+The following tests FAILED:
+	  4 - rxgraph_unit (Failed)                             comprehensive concurrency concurrency-sp03
+Errors while running CTest

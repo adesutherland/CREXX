@@ -2428,7 +2428,9 @@ static int compare_runtime_interface_factory_key(const char *interface_name,
 
 static int runtime_member_kind_is_method(const string_constant *kind_symbol) {
     if (!kind_symbol || kind_symbol->string_len < 6) return 0;
-    return memcmp(kind_symbol->string, "method", 6) == 0;
+    return memcmp(kind_symbol->string, "method", 6) == 0 ||
+           (kind_symbol->string_len == 12 &&
+            memcmp(kind_symbol->string, "final method", 12) == 0);
 }
 
 static int runtime_member_kind_is_final(const string_constant *kind_symbol) {
@@ -2875,6 +2877,24 @@ static char *build_runtime_match_proc_name(const char *class_name,
     return proc_name;
 }
 
+/* C members have no bytecode frame. Invoke through their load-selected RXPA
+ * policy, retaining session/legacy reentry and an independent signal cell.
+ * These synchronous callbacks are already inside the owning worker's run(). */
+static int run_with_signal(rxvm_context *context, int argc, char *argv[],
+                           int *callback_signal);
+
+static int invoke_runtime_native_member(rxvm_context *context,
+                                         proc_runtime *procedure, int argc,
+                                         value **args, value *result) {
+    value *signal = value_f_in(context->worker.memory_worker);
+    int signal_code;
+    if (!signal) return SIGNAL_FAILURE;
+    rxvm_call_native_procedure(procedure, argc, args, result, signal);
+    signal_code = (int)signal->int_value;
+    value_free(signal);
+    return signal_code;
+}
+
 static int invoke_runtime_factory_match(rxvm_context *context,
                                         proc_runtime *match_proc,
                                         rxinteger argc,
@@ -2885,6 +2905,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
     value **saved_ext_args;
     value *saved_ext_ret;
     value *match_ret;
+    int native_failure = 0;
     char *dummy_argv[] = {"rxvm_factory_match"};
 
     if (score_out) *score_out = 1;
@@ -2908,7 +2929,12 @@ static int invoke_runtime_factory_match(rxvm_context *context,
         return 0;
     }
 
-    run(context, 0, dummy_argv);
+    if (!match_proc->binarySpace) {
+        native_failure = invoke_runtime_native_member(context, match_proc,
+                (int)argc, args, match_ret) != SIGNAL_NONE;
+    } else {
+        run(context, 0, dummy_argv);
+    }
     if (score_out) *score_out = match_ret->int_value;
 
     value_free(match_ret);
@@ -2918,7 +2944,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
     context->ext_args = saved_ext_args;
     context->ext_ret = saved_ext_ret;
 
-    return 1;
+    return !native_failure;
 }
 
 static int add_runtime_interface_factory_entry(rxvm_context *context,
@@ -3261,7 +3287,6 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
     rx_callable_signature expected_signature;
     size_t index;
     int initialization_rc;
-    int integer_result;
     int run_status;
 
     if (!context || !receiver || !method_descriptor || !*method_descriptor ||
@@ -3274,8 +3299,6 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
     if (!rx_sig_parse_descriptor(method_descriptor, &expected_signature)) {
         return SIGNAL_INVALID_ARGUMENTS;
     }
-    integer_result = strcmp(expected_signature.return_type, ".int") == 0 ||
-                     strcmp(expected_signature.return_type, ".boolean") == 0;
     rx_sig_free(&expected_signature);
 
     class_name = runtime_value_type_name(receiver, &class_name_length);
@@ -3333,15 +3356,14 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
         return SIGNAL_FAILURE;
     }
 
-    /* run() is deliberately nested here. It owns the same-thread worker
-     * recursion and active-context stack, while the trampoline above preserves
-     * the native procedure that requested this callback. As at the executor
-     * boundary, a non-zero status is a legitimate integer method result only
-     * when the external return cell contains that same value. Otherwise it is
-     * an unhandled signal from the nested invocation. */
-    run_status = run(context, 0, dummy_argv);
-    if (run_status != 0 &&
-        (!integer_result || method_result->int_value != (rxinteger)run_status)) {
+    /* Rexx callbacks recursively enter the owning worker; C callbacks use
+     * their loaded RXPA policy. Neither the integer result nor a cached integer
+     * field in a non-integer result is an execution status. */
+    run_status = method->binarySpace
+            ? rxvm_run_external_status(context, 0, dummy_argv)
+            : invoke_runtime_native_member(context, method, (int)argc + 1,
+                                            method_args, method_result);
+    if (run_status != 0) {
         context->ext_proc = saved_ext_proc;
         context->ext_argc = saved_ext_argc;
         context->ext_args = saved_ext_args;
@@ -5242,17 +5264,27 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     }
 }
 
+/* A callback's outer caller still has the opportunity to handle this signal.
+ * Record it separately from a numeric result and defer terminal diagnostics. */
+static int rxvm_capture_callback_signal(rxvm_context *context, int code) {
+    if (!context->active.callback_signal) return 0;
+    *context->active.callback_signal = code;
+    return 1;
+}
+
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
 if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
     if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
-        if (payload__ && payload__->string_length) { \
-            fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
-        } else { \
-            fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
+        if (!rxvm_capture_callback_signal(context, (int)is_interrupt)) { \
+            if (payload__ && payload__->string_length) { \
+                fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
+            } else { \
+                fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
+            } \
+            print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
         } \
-        print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
         value_zero(interrupt_action_value); \
         rc = (int)is_interrupt; \
         free_frame(temp_frame); \
@@ -6435,13 +6467,15 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             /* Halt */
             DEBUG("TRACE - INTR HANDLER -> HALT %s\n", interrupt_to_string(last_interrupt));
             /* Print error message to stderr */
-            if (interrupt_object[last_interrupt]->string_length) {
-                fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
-            } else {
-                fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
-                print_runtime_panic_location(context,
-                                             last_interrupted_module[last_interrupt],
-                                             last_interrupted_address[last_interrupt]);
+            if (!rxvm_capture_callback_signal(context, (int)last_interrupt)) {
+                if (interrupt_object[last_interrupt]->string_length) {
+                    fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
+                } else {
+                    fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(last_interrupt));
+                    print_runtime_panic_location(context,
+                                                 last_interrupted_module[last_interrupt],
+                                                 last_interrupted_address[last_interrupt]);
+                }
             }
             rc = (int)last_interrupt;
             RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(last_interrupt,
@@ -7116,10 +7150,14 @@ START_OF_INSTRUCTIONS
 #undef rc
 #undef context
 
-int run(rxvm_context *context, int argc, char *argv[]) {
+static int run_with_signal(rxvm_context *context, int argc, char *argv[],
+                           int *callback_signal) {
     rxvm_worker_transition_result transition;
     rxvm_context *previous_active_context;
+    int *previous_callback_signal;
     int rc;
+
+    if (callback_signal) *callback_signal = SIGNAL_NONE;
 
     transition = rxvm_worker_begin_execution(&context->worker);
 
@@ -7146,7 +7184,10 @@ int run(rxvm_context *context, int argc, char *argv[]) {
     }
 
     previous_active_context = rxvm_active_context_enter(context);
+    previous_callback_signal = context->active.callback_signal;
+    context->active.callback_signal = callback_signal;
     rc = rxvm_run_owned_core(context, argc, argv);
+    context->active.callback_signal = previous_callback_signal;
     rxvm_active_context_leave(previous_active_context);
     rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
     if (rxvm_worker_end_execution(&context->worker) !=
@@ -7154,4 +7195,20 @@ int run(rxvm_context *context, int argc, char *argv[]) {
         abort();
     }
     return rc;
+}
+
+int run(rxvm_context *context, int argc, char *argv[]) {
+    return run_with_signal(context, argc, argv, NULL);
+}
+
+int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]) {
+    int signal = SIGNAL_NONE;
+    int status = run_with_signal(context, argc, argv, &signal);
+    if (signal != SIGNAL_NONE) return signal;
+    /* RET historically publishes the physical integer field as process status,
+     * even for a string/object return. Preserve run()'s process contract while
+     * giving typed calls an independent success/failure result. A failed setup
+     * or nonzero EXIT leaves the fresh external return cell untouched. */
+    if (status && (!context->ext_ret || (int)context->ext_ret->int_value != status)) return status;
+    return 0;
 }

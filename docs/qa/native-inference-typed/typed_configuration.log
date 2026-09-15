@@ -1,0 +1,10 @@
+Warning in typed_configuration.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsb"
+1 warning(s) in source file
+Error in typed_configuration.crexx @ 16:12 - #CLASS_NOT_FOUND: Class was not found., ".llama..configuration"
+Error in typed_configuration.crexx @ 22:3 - #UNKNOWN_TYPE: Type was not found., "saved = config.diagnostic"
+Error in typed_configuration.crexx @ 23:3 - #UNKNOWN_TYPE: Type was not found., "code = saved.code"
+Error in typed_configuration.crexx @ 24:3 - #UNKNOWN_TYPE: Type was not found., "operation = saved.operation"
+Error in typed_configuration.crexx @ 25:3 - #UNKNOWN_TYPE: Type was not found., "message = saved.message"
+Error in typed_configuration.crexx @ 31:3 - #UNKNOWN_TYPE: Type was not found., "alias = config"
+Error in typed_configuration.crexx @ 34:12 - #CLASS_NOT_FOUND: Class was not found., ".llama..runtime(config)"
+7 error(s) in source file

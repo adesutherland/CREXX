@@ -127,7 +127,14 @@ static int rxpa_query_manifest_v2(void *handle,
                          (manifest->session_enter != NULL) +
                          (manifest->session_leave != NULL);
     if (session_hook_count != 0u && session_hook_count != 4u) return -1;
-    *manifest_copy = *manifest;
+    memset(manifest_copy, 0, sizeof(*manifest_copy));
+    memcpy(manifest_copy, manifest, minimum_size);
+    if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                 sizeof(manifest->session_create_with_host)) {
+        if (manifest->session_create_with_host && session_hook_count != 4u) return -1;
+        manifest_copy->session_create_with_host = manifest->session_create_with_host;
+    }
+    manifest_copy->struct_size = sizeof(*manifest_copy);
     return 1;
 }
 

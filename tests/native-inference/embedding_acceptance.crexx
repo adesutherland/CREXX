@@ -1,0 +1,188 @@
+/* STEP-04 permanent embedding slice of the STEP-02 acceptance contract.
+ * Explicit only until STEP-06 sanitizer scheduling qualification. */
+options levelb floats_binary
+import rxfnsb
+import rxfnsg
+import rxllama
+import rxunicode
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: rxllama" label
+  return 1
+
+elapsed: procedure = .int
+  arg started = .int
+  duration = time("us") - started
+  if duration < 0 then duration = duration + 86400000000
+  return duration
+
+ready_model: procedure = .int
+  arg model = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..modelstate(model, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state <> "loading" then return 1
+  end
+  say "FAIL: model preparation deadline"
+  return 1
+
+ready_session: procedure = .int
+  arg session = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..prepare(session, 512, state) <> 0 then return 1
+    if state = "ready" then return 0
+    if state = "failed" | state = "cancelled" then return 1
+  end
+  say "FAIL: session preparation deadline"
+  return 1
+
+complete_request: procedure = .int
+  arg request = .binary
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..process(request, 512, state) <> 0 then return 1
+    if state = "complete" then return 0
+    if state <> "running" then return 1
+  end
+  say "FAIL: request deadline"
+  return 1
+
+rejected_model: procedure = .int
+  arg runtime = .binary, path = .string, hash = .string, config = .binary
+  model = .binary
+  if rxllama..modelopen(runtime, path, hash, "bge-small-en-v1.5", config, model) <> 0 then return 0
+  started = time("us")
+  do while elapsed(started) < 60000000
+    state = ""
+    if rxllama..modelstate(model, state) <> 0 then return 1
+    if state = "failed" then return check(rxllama..close(model) = 0, "failed model close")
+    if state <> "loading" then return 1
+  end
+  return 1
+
+embedding_failures: procedure = .int
+  arg session = .binary, config = .binary
+  request = .binary
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  errors = check(rxllama..submit(request) <> 0, "empty batch rejected")
+  errors = errors + check(rxllama..close(request) = 0, "empty request close")
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  row = 0
+  status = rxllama..addembedding(request, copies("a ", 513), "document", row)
+  if status = 0 then errors = errors + check(rxllama..submit(request) <> 0, "oversized batch rejected")
+  errors = errors + check(rxllama..close(request) = 0, "invalid request close")
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  values = .packedfloat(0)
+  rows = 0
+  dimensions = 0
+  errors = errors + check(rxllama..embeddings(request, values, rows, dimensions) <> 0, "no incomplete embedding publication")
+  errors = errors + check(rxllama..close(request) = 0, "capability failure close")
+  return errors
+
+embedding_request: procedure = .int
+  arg session = .binary, config = .binary, count = .int
+  request = .binary
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  errors = 0
+  status = .int
+  i = .int
+  do i = 1 to count
+    row = 0
+    text = "A cat sits by the window. Row " || i
+    status = rxllama..addembedding(request, text, "document", row)
+    errors = errors + check(status = 0 & row = i, "ordered embedding admission")
+  end
+  errors = errors + check(rxllama..submit(request) = 0, "embedding submit")
+  errors = errors + check(complete_request(request) = 0, "embedding completion")
+  values = .packedfloat(0)
+  rows = 0
+  dimensions = 0
+  status = rxllama..embeddings(request, values, rows, dimensions)
+  errors = errors + check(status = 0 & rows = count & dimensions = 384, "embedding shape")
+  errors = errors + check(values.size() = count * 384, "packed vector length")
+  if values.size() = count * 384 then do r = 0 to count - 1
+    squared_norm = 0.0
+    do d = 0 to 383
+      value = values.get(r * 384 + d)
+      errors = errors + check(value = value & abs(value) <= 1.0, "finite normalized coordinate")
+      squared_norm = squared_norm + value * value
+    end
+    errors = errors + check(abs(squared_norm - 1.0) <= 0.00002, "unit embedding norm")
+  end
+  errors = errors + check(rxllama..close(request) = 0, "request close")
+  errors = errors + check(rxllama..close(request) = 0, "idempotent close")
+  errors = errors + check(rxllama..submit(request) <> 0, "closed request rejected")
+  return errors
+
+embedding_text_ownership: procedure = .int
+  arg session = .binary, config = .binary
+  request = .binary
+  if rxllama..requestopen(session, config, request) <> 0 then return 1
+  text = "cat" || .rxunicode..decode("00"x as .binary, "UTF-8") || " dog"
+  row = 0
+  errors = check(rxllama..addembedding(request, text, "document", row) = 0, "NUL text admission")
+  text = "caller changed its input after admission"
+  bytes = 0
+  errors = errors + check(rxllama..infoint(request, "input_bytes", bytes) = 0 & bytes = 8, "complete owned bytes")
+  errors = errors + check(rxllama..submit(request) = 0, "owned text submit")
+  tokens = 0
+  errors = errors + check(rxllama..infoint(request, "input_tokens", tokens) = 0 & tokens = 4, "complete owned tokenizer input")
+  errors = errors + check(complete_request(request) = 0, "NUL completion")
+  values = .packedfloat(0)
+  rows = 0
+  dimensions = 0
+  errors = errors + check(rxllama..embeddings(request, values, rows, dimensions) = 0, "NUL output")
+  errors = errors + check(rxllama..close(request) = 0, "NUL request close")
+  errors = errors + check(values.size() = 384, "packed output survives request close")
+  return errors
+
+main: procedure = .int
+  arg args = .string[]
+  if args.0 <> 3 then return 2
+  config = .binary
+  runtime = .binary
+  model = .binary
+  session = .binary
+  if rxllama..configcreate(config) <> 0 then return 1
+  if rxllama..configtext(config, "hardware_mode", args[1]) <> 0 then return 1
+  if rxllama..runtimeopen(config, runtime) <> 0 then return 1
+  if rxllama..modelopen(runtime, args[2], args[3], "bge-small-en-v1.5", config, model) <> 0 then return 1
+  if ready_model(model) <> 0 then return 1
+  if rxllama..sessionopen(model, "embedding", config, session) <> 0 then return 1
+  if ready_session(session) <> 0 then return 1
+  errors = embedding_failures(session, config) + embedding_text_ownership(session, config)
+  do i = 1 to 100
+    errors = errors + embedding_request(session, config, 1)
+  end
+  do i = 1 to 20
+    errors = errors + embedding_request(session, config, 8)
+  end
+  loads = 0
+  errors = errors + check(rxllama..infoint(model, "load_count", loads) = 0 & loads = 1, "persistent weights")
+  request = .binary
+  other = .binary
+  errors = errors + check(rxllama..requestopen(session, config, request) = 0, "request open")
+  errors = errors + check(rxllama..requestopen(session, config, other) <> 0, "one active request")
+  errors = errors + check(rxllama..close(session) <> 0, "request retains session")
+  row = 0
+  errors = errors + check(rxllama..addembedding(request, "cat", "query", row) = 0, "query")
+  errors = errors + check(rxllama..submit(request) = 0, "cancel submit")
+  errors = errors + check(rxllama..cancel(request) = 0, "cancel")
+  state = ""
+  errors = errors + check(rxllama..process(request, 512, state) = 0 & state = "cancelled", "cancel state")
+  errors = errors + check(rxllama..close(request) = 0, "cancel close")
+  errors = errors + embedding_request(session, config, 4)
+  errors = errors + check(rxllama..close(session) = 0, "session close")
+  errors = errors + check(rxllama..close(model) = 0, "model close")
+  errors = errors + check(rxllama..close(runtime) = 0, "runtime close")
+  errors = errors + check(rxllama..close(config) = 0, "config close")
+  if errors <> 0 then return 1
+  say "PASS: rxllama persistent embedding acceptance" args[1]
+  return 0

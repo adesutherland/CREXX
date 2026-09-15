@@ -38,6 +38,46 @@ defined in [`AGENTS.md`](AGENTS.md).
 
 ## Activity Register
 
+`NI-S4`: STEP-04 embedding implementation is authorized following approved
+STEP-03 closure. Adrian narrowed performance work to indicative figures and
+cREXX/llama integration overhead. Fixed model/backend controls may isolate glue
+cost; model-quality studies, upstream speed investigations and configuration
+sweeps are outside scope. The first Release decision remains bounded to this
+question; see [STEP-04](../docs/planning/native-inference-step-04.md). The
+[first Release verdict](evidence/2026-09-14-ni-s4-first-release/README.md) is now
+retained; Adrian has since accepted the verdict and follow-up below. CPU overhead
+is within variation;
+Metal triggers **NI-S4-P01**, +18.90%/+21.53% mean paired one/eight-row overhead
+with substantial variation. Adrian subsequently authorized
+[phase probes](evidence/2026-09-14-ni-s4-glue-probes/README.md). They show combined
+normalization/conversion/copy below 0.2% of request time and about 99% inside
+decode/synchronization, with one packed publication per request. His conditional
+acceptance of required conversion cost is recorded; it does not explain the
+original GPU difference. No conversion/copy or upstream repair is indicated.
+Adrian's subsequent [12-pair probes-disabled replay](evidence/2026-09-14-ni-s4-quiet-release/README.md)
+retains CPU means -0.52%/-0.87% and Metal +19.69%/+21.27%, with Metal paired
+medians +8.37%/+6.96%. The tripwire persists with substantial variation; the
+Metal difference between request medians is about 0.24 ms. No input changed for
+the replay and no outlier was removed. Adrian accepted this indicative overhead
+and variation on 2026-09-14. NI-S4-P01
+is dispositioned as an accepted observation with unresolved cause; it is not a
+repair or a 5% tripwire pass. S4-04 is accepted and functional S4-05 may proceed.
+No further timing or upstream investigation is selected. Remaining
+SAN-009/S3-D01 sanitizer proof is assigned to STEP-06, owned by Codex under
+Adrian's direction.
+
+`S3-D01`: Adrian approved the native worker startup deadlock repair on
+2026-09-14. The [bounded design and acceptance record](../docs/planning/native-inference-worker-transition-proposal.md)
+owns this correctness repair and its first ordinary Release native-call overhead
+check. The frozen candidate passes 14 focused Debug controls and native worker
+startup. Its 12-pair legacy-call result is +2.85% mean elapsed time (95% interval
++1.45% to +4.24%); reentrant/session controls show no clear change. Adrian accepted
+this per-legacy-call cost on 2026-09-14. The expanded native four-worker BGE/Smol
+CPU/Metal package matrix and all 2,314 non-measurement Debug CTests now pass;
+source and measured Release identities are unchanged, so no timing was repeated.
+No broad performance programme is reopened; sanitizer
+execution remains on Adrian's current hold.
+
 `CHANNEL-LIFETIME-01`: explicit completed-request release and bounded bookkeeping.
 Adrian accepted the first Release verdict and 2.51 MiB retained-request RSS
 tradeoff on 2026-09-09. Documentation and full local Debug/Apple-ASan correctness

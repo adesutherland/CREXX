@@ -1,0 +1,31 @@
+{
+  "baseline_head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "branch": "develop",
+  "scope": "uncommitted STEP-03/STEP-04/S4-D01 plus authorized opt-in NI-S4-P01 probes; no representation change",
+  "probes": "CREXX_LLAMA_GLUE_PROBES=1; BUILD_TESTING ON; VM profiling OFF; probes default OFF",
+  "source_files": {
+    "lib/plugins/llama/bridge.h": "23edda511fad1bdf8c81f3791bbeb8f2b49114e76dc12f1bf2b73617439c31b4",
+    "lib/plugins/llama/bridge.cpp": "affcfe9ba2ec854623204965757c76268aa27a0a41e1eb8f7307655c928d3f98",
+    "lib/plugins/llama/rxllama.c": "78d03394e1b63d5bdcf20ee53d979139fcb64d9102abef3a537e6022e3370999",
+    "lib/plugins/llama/CMakeLists.txt": "12948573c5f2ab9eaa41fe8c18830a6975f325756392fd29f5cbdcd7f2f3f8a3",
+    "tests/native-inference/embedding_bridge.cpp": "0905580dab0ee0754b5c75821dcd1753957323e98cd3c7d974b1098f4ded8900",
+    "tests/native-inference/embedding_reference_control.cpp": "410af4c1b85cd8efa8f388c425e5bb7873ebef82b031b886d0ab50fcd71fa94f",
+    "tests/performance/ni_s4_embedding_probes.crexx": "4ee5f4349e4070b505450c0db3911fc728f32752c7985ec499b4d4323b22a24d",
+    "performance/tools/run_cross_runtime_matrix.crexx": "94cccffcd95bc6804ef4fd1989cde41694230f0f0bc04811907067b193811abe",
+    "performance/evidence/2026-09-14-ni-s4-glue-probes/summarize_probes.crexx": "710d569a62d410e127b3a15e1ff7ddf691e7de57343615be6e65068011bf9905"
+  },
+  "artifacts": {
+    "cmake-build-release/CMakeCache.txt": "acecebdd5d3c54c69feecc55c0a1ea6410dd25cee9ac447a2f883ad216140e31",
+    "cmake-build-release/bin/rxvm": "e7791889bde7da77b5087706a3d1f33d2ac4e1f7c1ab2f72f663126068db1cd6",
+    "cmake-build-release/bin/rxllama.rxplugin": "2fe8deac32244828ab887e508738db94947aa9e8e45d9f660a9ba2955dfb614a",
+    "cmake-build-release/bin/providers/libcrexx-llama.1.dylib": "3ebc039f8150ee15cc45cdba12824e551c489403cb41ff51c19be27a423ac124",
+    "cmake-build-release/bin/library.rxbin": "2a2b5445390f760438ad62790cafb0a875f7bd13de76407c8e81a8b47203f674",
+    "cmake-build-release/lib/plugins/llama/tests/rxllama_embedding_reference": "d6262260ca223acdc1fd78abb2bee0d40ffbda7a267169f378a9d1bca07bb0c0",
+    "cmake-build-release/lib/plugins/llama/tests/rxllama_embedding_bridge": "dcb88f2b8812db125215caa2aa5dbb8572280ce388a3f76051027c7a336e25d4",
+    "cmake-build-release/tests/performance/ni-s4-probes-linked.rxbin": "ce4b28e1e44f334273b9de09264409febce1ef5be745fa24ca648a865c1b9b64",
+    "cmake-build-release/tests/performance/ni-s4-matrix-linked.rxbin": "6b8d1d860d09d847f1079a54340248db44bc99e2414c781782319621f81e4354",
+    "cmake-build-release/tests/performance/ni-s4-probe-summary-linked.rxbin": "3cf2da39b64ff98ab1c48681423a00495d75d595c0cf0fbd5b837f2f57bd21d0"
+  },
+  "capture": "4 balanced pairs per fixed case; diagnostic only; snapshots outside warm loop; 30 warm requests each",
+  "sanitizer": "not run; STEP-06 owned by Codex under Adrian direction"
+}

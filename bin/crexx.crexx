@@ -745,7 +745,7 @@ do i=.int(1) to filenames[0]
     end
     if RC\=0 then return RC
 
-    providerRc = appendNativeProviderArgs(staticLinkArgs, providerRequirements, rxpath, dirsep, nativeCompilerStyle, platformUpper)
+    providerRc = appendNativeProviderArgs(staticLinkArgs, providerRequirements, rxpath, dirsep, nativeCompilerStyle, platformUpper, outputStem)
     if providerRc \= 0 then return providerRc
 
     packArgs = .string[]
@@ -1292,9 +1292,9 @@ end
 return failed
 
 projectNativeKey: procedure = .string
-arg projectKey = .string, rxbin = .string, driver = .string, configRoot = .string, dirsep = .string
+arg projectKey = .string, rxbin = .string, driver = .string, configRoot = .string, dirsep = .string, requirementsFile = .string
 state = rxhash..sha256init()
-state = projectKeyText(state, 'crexx-project-native/v1')
+state = projectKeyText(state, 'crexx-project-native/v2')
 state = projectKeyText(state, projectKey)
 state = projectKeyText(state, projectFileHash(rxbin))
 state = projectKeyText(state, projectFileHash(driver))
@@ -1302,6 +1302,61 @@ state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || '
 state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_cflags_argv'))
 state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_ldflags_argv'))
 state = projectKeyText(state, projectFileHash(configRoot || 'bin' || dirsep || 'crexx_native_libs_argv'))
+/* Only providers selected by rxlink participate. Check their actual package
+ * bytes before accepting a cache hit; metadata is declarative, never a hook. */
+state = projectKeyText(state, projectFileHash(requirementsFile))
+if fileExists(requirementsFile) then do
+  header = linein(requirementsFile)
+  if header <> 'CREXX-RXPA-REQUIREMENTS 1' then do
+    call lineout requirementsFile
+    return ''
+  end
+  seen = ';'
+  tab = '09'X
+  do while lines(requirementsFile)
+    line = linein(requirementsFile)
+    if line = '' then iterate
+    firstTab = pos(tab, line)
+    rest = substr(line, firstTab + 1)
+    secondTab = pos(tab, rest)
+    if firstTab = 0 | secondTab = 0 then do
+      call lineout requirementsFile
+      return ''
+    end
+    provider = left(rest, secondTab - 1)
+    if pos(';' || provider || ';', seen) > 0 then iterate
+    seen = seen || provider || ';'
+    providerBase = configRoot || 'bin' || dirsep || 'providers' || dirsep || provider
+    do suffixIndex = .int(1) to 4
+      suffix = word('.a .lib _static.a _static.lib', suffixIndex)
+      state = projectKeyText(state, projectFileHash(providerBase || suffix))
+    end
+    metadata = providerBase || '.native.json'
+    state = projectKeyText(state, projectFileHash(metadata))
+    if fileExists(metadata) then do
+      packageArgs = .string[]
+      packageOut = .string[]
+      packageErr = .string[]
+      helper = configRoot || 'bin' || dirsep || 'crexx-provider-package'
+      if fileExists(helper || '.exe') then helper = helper || '.exe'
+      call appendArrayValue packageArgs, helper
+      call appendArrayValue packageArgs, '--fingerprint'
+      call appendArrayValue packageArgs, metadata
+      address crexx "run :packageArgs[]" output packageOut error packageErr
+      if RC <> 0 | packageOut[0] <> 1 then do
+        call lineout requirementsFile
+        say 'native provider package validation failed:' provider
+        do messageIndex = .int(1) to packageErr[0]
+          say packageErr[messageIndex]
+        end
+        return ''
+      end
+      state = projectKeyText(state, projectFileHash(helper))
+      state = projectKeyText(state, packageOut[1])
+    end
+  end
+  call lineout requirementsFile
+end
 return rxhash..sha256finalhex(state)
 
 projectPackageNative: procedure = .int
@@ -1320,7 +1375,9 @@ rxbin = outputBase || '.rxbin'
 nativeOutput = outputBase
 if isWindowsPlatform(platformName) then nativeOutput = outputBase || '.exe'
 nativeStamp = workRoot || '/native.action.sha256'
-nativeKey = projectNativeKey(projectKey, rxbin, driver, rxpath, dirsep)
+requirementsFile = outputBase || '_linked.rxproviders'
+nativeKey = projectNativeKey(projectKey, rxbin, driver, rxpath, dirsep, requirementsFile)
+if nativeKey = '' then return 1
 if projectActionCurrent(nativeOutput, nativeStamp, nativeKey) then do
   say 'SKIP: native program current' nativeOutput
   return 0
@@ -1351,6 +1408,9 @@ end
 call appendArrayValue argv, outputBase || '.crexx'
 if projectRunArgv('package native project program', argv) <> 0 then return 1
 if rxfs..isfile(nativeOutput) = 0 then return 1
+/* The initial link creates the selected-provider file. Stamp that final set. */
+nativeKey = projectNativeKey(projectKey, rxbin, driver, rxpath, dirsep, requirementsFile)
+if nativeKey = '' then return 1
 if projectWriteStamp(nativeStamp, nativeKey) <> 0 then return 1
 say 'PUBLISHED: native program' nativeOutput
 return 0
@@ -1884,7 +1944,7 @@ if fileExists(staticModule) then return staticModule
 return ''
 
 appendNativeProviderArgs: procedure = .int
-arg expose current = .string[], requirementsFile = .string, rxpath = .string, dirsep = .string, compilerStyle = .string, platformName = .string
+arg expose current = .string[], requirementsFile = .string, rxpath = .string, dirsep = .string, compilerStyle = .string, platformName = .string, outputStem = .string
 header = .string
 line = .string
 status = .string
@@ -1902,6 +1962,7 @@ required = .int
 seenProviders = .string
 requiredProviders = .string
 
+dependencyArgs = .string[]
 providerDir = rxpath || 'bin' || dirsep || 'providers' || dirsep
 if compilerStyle = 'MSVC' then staticSuffix = '.lib'
 else staticSuffix = '.a'
@@ -1987,6 +2048,27 @@ do while lines(requirementsFile)
     end
     iterate
   end
+  metadata = providerDir || providerId || '.native.json'
+  if fileExists(metadata) then do
+    packageArgs = .string[]
+    packageOut = .string[]
+    packageErr = .string[]
+    call appendArrayValue packageArgs, rxpath || 'bin' || dirsep || 'crexx-provider-package'
+    call appendArrayValue packageArgs, metadata
+    call appendArrayValue packageArgs, outputStem
+    call appendArrayValue packageArgs, compilerStyle
+    address crexx "run :packageArgs[]" output packageOut error packageErr
+    if RC <> 0 then do
+      call lineout requirementsFile
+      do messageIndex = .int(1) to packageErr[0]
+        say packageErr[messageIndex]
+      end
+      return 2
+    end
+    do dependencyIndex = .int(1) to packageOut[0]
+      if packageOut[dependencyIndex] <> '' then call appendArrayUnique dependencyArgs, packageOut[dependencyIndex]
+    end
+  end
   if compilerStyle = 'MSVC' then
     call appendArrayValue current, '/WHOLEARCHIVE:' || staticPath
   else if isMacPlatform(platformName) then
@@ -1998,6 +2080,7 @@ do while lines(requirementsFile)
   end
 end
 call lineout requirementsFile
+call appendArrayValues current, dependencyArgs
 return 0
 
 appendMsvcLibrary: procedure

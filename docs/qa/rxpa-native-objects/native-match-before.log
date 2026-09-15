@@ -1,0 +1,32 @@
+(lldb) target create "cmake-build-debug/bin/rxbvm"
+Current executable set to '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm' (arm64).
+(lldb) settings set -- target.run-args  "/tmp/rxpa-objects-expanded-after/noopt-linked"
+(lldb) run
+PASS: C native factory and concrete method binding
+Process 58646 launched: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm' (arm64)
+Process 58646 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x14)
+    frame #0: 0x0000000100006ae4 rxbvm`rxvm_run_owned_core(context=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfba00) at rxvmintp.c:6282:9
+   6279	                RXVM_PROFILE_FRAME_LAST_ACTIVATION, RXVM_PROFILE_CALL_SUCCESS,
+   6280	                0, procedure->binarySpace->module->module_number,
+   6281	                procedure->start, 0, 0);
+-> 6282	        VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
+    	        ^
+   6283	        /* Arguments (passed as individual objects) */
+   6284	        {
+   6285	            int i;
+Target 0: (rxbvm) stopped.
+(lldb) bt 12
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x14)
+  * frame #0: 0x0000000100006ae4 rxbvm`rxvm_run_owned_core(context=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfba00) at rxvmintp.c:6282:9
+    frame #1: 0x0000000100003350 rxbvm`run(context=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfba00) at rxvmintp.c:7149:10
+    frame #2: 0x000000010008f660 rxbvm`invoke_runtime_factory_match(context=0x000000016fdfe3f0, match_proc=0x0000000c2c800a80, argc=1, args=0x0000000c2c836300, score_out=0x000000016fdfba20) at rxvmintp.c:2911:5
+    frame #3: 0x000000010008edc0 rxbvm`resolve_runtime_graph_factory(context=0x000000016fdfe3f0, binding=0x0000000c2cba14e8, argc=1, args=0x0000000c2c836300, factory_out=0x000000016fdfbb10, error_out=0x000000016fdfbb08) at rxvmintp.c:4184:15
+    frame #4: 0x000000010007b6c4 rxbvm`rxvm_handler_SRCFPROCSEL_REG_STRING_REG(rxvm_state=0x000000016fdfdb08) at rxvmhandlers_system.inc:544:1
+    frame #5: 0x0000000100120960 rxbvm`rxvm_invoke_outlined_handler(function=(rxbvm`rxvm_handler_SRCFPROCSEL_REG_STRING_REG at rxvmhandlers_system.inc:544), state=0x000000016fdfdb08) at rxvmintp.c:5623:12
+    frame #6: 0x00000001000335f8 rxbvm`rxvm_run_owned_core(context=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfef28) at rxvmintp.c:6973:17
+    frame #7: 0x0000000100003350 rxbvm`run(context=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfef28) at rxvmintp.c:7149:10
+    frame #8: 0x00000001000d9900 rxbvm`rxvm_call(ctx=0x000000016fdfe3f0, proc_name="main", argc=0, argv=0x000000016fdfef28) at rxvm_run.c:422:10
+    frame #9: 0x00000001000d9c54 rxbvm`rxvm_run(ctx=0x000000016fdfe3f0, argc=0, argv=0x000000016fdfef28) at rxvm_run.c:453:12
+    frame #10: 0x00000001000e1fa8 rxbvm`main(argc=2, argv=0x000000016fdfef18) at rxvmmain.c:451:10
+    frame #11: 0x0000000184ba84e4 dyld`start + 6992

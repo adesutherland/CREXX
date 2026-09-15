@@ -1,0 +1,5 @@
+argv=[PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/installed Ω/bin/crexx'), '--program', PosixPath('/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks/project Ω/persistent'), PosixPath('/Users/adrian/CLionProjects/CREXX/tests/native-inference/lifecycle_acceptance.crexx'), '--jobs', '1', '--native']
+cwd=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks
+rc=0
+SKIP: project current /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks/project Ω/persistent.rxbin
+SKIP: native program current /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-qualified-Å-urg8mwnn/checks/project Ω/persistent

@@ -1,0 +1,4 @@
+Warning in rxpa_objects_class_only.crexx @ 3:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxpa_objects"
+1 warning(s) in source file
+Error in rxpa_objects_class_only.crexx @ 6:14 - #CLASS_NOT_FOUND: Class was not found., ".box.from(42)"
+1 error(s) in source file

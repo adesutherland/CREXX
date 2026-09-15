@@ -1,0 +1,135 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- CMake Version: 4.3.2
+-- CREXX Version: crexx-1.0.0-beta.3+local.gc2cf28a4f5c6.dirty
+-- CREXX Build Channel: local
+-- CREXX Build Timestamp: 20260903T090430Z
+-- CREXX Build Commit: c2cf28a4f5c6
+-- CMake Generator: Ninja
+-- cREXX build resources: profile=developer-fast, vm-compile=4, native-link=6, backend=Ninja pools
+-- Using local DSL-Syntax-Highlighter at /Users/adrian/CLionProjects/CREXX/../DSL-Syntax-Highlighter
+-- C compiler flags: 
+-- C++ compiler flags:  -W -Wall -Wextra -Weffc++ -pedantic -Wformat=2 -Wredundant-decls -Wconversion -Wsign-conversion -Werror=return-type -Weverything -Wno-unknown-warning-option -Wno-reserved-id-macro -Wno-padded -Wno-nested-anon-types -Wno-reserved-identifier -Wno-shadow-field-in-constructor -Wno-undefined-func-template -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unsafe-pointer-arithmetic -Wno-unsafe-buffer-usage -Wno-exit-time-destructors -Wno-switch-enum -fdiagnostics-color=always 
+-- Linker flags for executables: 
+-- Linker flags for shared libs: 
+-- Debug C compiler flags: -g
+-- Debug C++ compiler flags: -g
+-- Debug linker flags for executables: 
+-- Debug linker flags for shared libs: 
+-- cREXX VM handler panel: profile-20
+-- cREXX VM core socket TLS backend: NETWORK
+-- cREXX product VM: rxvm -> rxbvm (AppleClang)
+-- llama.cpp version: 0.4.0
+CMAKE_BUILD_TYPE=Debug
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: arm64
+-- GGML_SYSTEM_ARCH: ARM
+-- Including CPU backend
+-- Accelerate framework found
+-- ARM detected
+-- Checking for ARM features using flags:
+-- Adding CPU backend variant ggml-cpu:  
+-- Metal framework found
+-- Including METAL backend
+-- ggml version: 0.23.0
+-- ggml commit:  5266f24da75dc449bd56cbed7addb9c8e4a6a73e
+-- Legacy OpenSSL socket plugin is disabled; use VM core sockets/rxsocket instead.
+-- GTK Gui support is disabled, skipping subdirectory.
+-- ODBC support is disabled; building the mock-driver qualification target only.
+-- Configuring done (1.1s)
+-- Generating done (0.7s)
+-- Build files have been written to: /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+[0/4] Re-checking globbed directories...
+[1/89] Building C object interpreter/CMakeFiles/rxpashim.dir/rxpashim.c.o
+[2/89] Building C object interpreter/CMakeFiles/rxpa_host_fixture_old.dir/tests/rxpa_host_service_fixture.c.o
+[3/89] Building C object interpreter/CMakeFiles/rxpa_host_fixture_modern.dir/tests/rxpa_host_service_fixture.c.o
+[4/89] Linking CXX shared library bin/providers/libcrexx-llama.1.dylib
+[5/89] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvmlib.c.o
+[6/89] Building C object lib/plugins/CMakeFiles/_rxpa_session_failure.dir/__/__/interpreter/tests/rxpa_session_failure_plugin.c.o
+[7/89] Building C object lib/plugins/float/CMakeFiles/float.dir/rxfloat.c.o
+[8/89] Building C object lib/plugins/float/CMakeFiles/float_static.dir/rxfloat.c.o
+[9/89] Building C object lib/plugins/stats/CMakeFiles/stats.dir/rxstats.c.o
+[10/89] Building C object lib/plugins/stats/CMakeFiles/stats_static.dir/rxstats.c.o
+[11/89] Building C object interpreter/CMakeFiles/rxbvml.dir/rxvml.c.o
+[12/89] Building C object lib/plugins/vector/CMakeFiles/vector_static.dir/rxvector.c.o
+[13/89] Building C object lib/plugins/stack/CMakeFiles/_stack_static.dir/stack.c.o
+[14/89] Building C object lib/plugins/stack/CMakeFiles/_stack.dir/stack.c.o
+[15/89] Building C object lib/plugins/vector/CMakeFiles/vector.dir/rxvector.c.o
+[16/89] Creating library symlink bin/providers/libcrexx-llama.dylib
+[17/89] Building C object lib/plugins/cipher/CMakeFiles/_cipher.dir/cipher.c.o
+[18/89] Building C object lib/plugins/cipher/CMakeFiles/_cipher_static.dir/cipher.c.o
+[19/89] Building C object lib/plugins/hash/CMakeFiles/_hash.dir/rx_hash.c.o
+[20/89] Building C object lib/plugins/hash/CMakeFiles/_hash_static.dir/rx_hash.c.o
+[21/89] Building C object lib/plugins/llama/CMakeFiles/llama_provider_static.dir/rxllama.c.o
+[22/89] Building C object lib/plugins/strings/CMakeFiles/_strings.dir/strings.c.o
+[23/89] Building C object lib/plugins/getpi/CMakeFiles/_getpi.dir/getpi.c.o
+[24/89] Building C object lib/plugins/id/CMakeFiles/id.dir/id.c.o
+[25/89] Building C object lib/plugins/fs/CMakeFiles/fs.dir/rxfs.c.o
+[26/89] Building C object lib/plugins/id/CMakeFiles/id_static.dir/id.c.o
+[27/89] Building C object lib/plugins/fs/CMakeFiles/fs_static.dir/rxfs.c.o
+[28/89] Building C object lib/plugins/platform/CMakeFiles/_platform_static.dir/rxplatform.c.o
+[29/89] Building C object lib/plugins/platform/CMakeFiles/_platform.dir/rxplatform.c.o
+[30/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.o
+[31/89] Building C object interpreter/CMakeFiles/rxbvm.dir/rxvmmain.c.o
+[32/89] Building C object interpreter/CMakeFiles/rxtvm.dir/rxvmmain.c.o
+[33/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmexecutor.c.o
+[34/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel.c.o
+[35/89] Linking C static library bin/librxpashim.a
+[36/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_process.c.o
+[37/89] Linking C static library bin/librxvml.a
+[38/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_child.c.o
+[39/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.o
+[40/89] Linking C static library bin/librxbvml.a
+[41/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.o
+[42/89] Building C object interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+[43/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.o
+[44/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.o
+[45/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.o
+[46/89] Building C object compiler/CMakeFiles/rxclib.dir/rxcpfunc.c.o
+[47/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.o
+[48/89] Building C object interpreter/CMakeFiles/test_rxpa_host_services.dir/tests/test_rxpa_host_services.c.o
+/Users/adrian/CLionProjects/CREXX/interpreter/tests/test_rxpa_host_services.c:76:54: warning: incompatible pointer types passing 'rxpa_attribute_value[1]' (aka 'void *[1]') to parameter of type 'value **' (aka 'struct value **') [-Wincompatible-pointer-types]
+   76 |             rxvm_call_native_procedure(procedure, 1, argv, &ret, &sig);
+      |                                                      ^~~~
+/Users/adrian/CLionProjects/CREXX/interpreter/rxvmintp.h:722:51: note: passing argument to parameter 'argv' here
+  722 |                                           value **argv, value *ret,
+      |                                                   ^
+1 warning generated.
+[49/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpacallmethod.c.o
+[50/89] Linking C shared module interpreter/rxpa_host_fixture_modern.rxplugin
+[51/89] Linking C shared module interpreter/rxpa_host_fixture_old.rxplugin
+[52/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.o
+[53/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.o
+[54/89] Linking C shared module bin/rx_rxpa_session_failure.rxplugin
+[55/89] Linking C shared module bin/rxfloat.rxplugin
+[56/89] Linking C shared module bin/rxstats.rxplugin
+[57/89] Linking C static library bin/librxclib.a
+[58/89] Linking C static library bin/rxfloat_static.a
+[59/89] Linking C static library bin/rxstats_static.a
+[60/89] Linking C shared module bin/rxvector.rxplugin
+[61/89] Linking C shared module bin/rx_stack.rxplugin
+[62/89] Linking C static library bin/rx_stack_static.a
+[63/89] Linking C static library bin/rxvector_static.a
+[64/89] Linking C shared module bin/rx_cipher.rxplugin
+[65/89] Linking C static library bin/rx_cipher_static.a
+[66/89] Linking C shared module bin/rx_hash.rxplugin
+[67/89] Linking C shared module bin/rxllama.rxplugin
+[68/89] Linking C static library bin/rx_hash_static.a
+[69/89] Linking C shared module bin/rx_strings.rxplugin
+[70/89] Linking C static library bin/rxllama_static.a
+[71/89] Linking C shared module bin/rx_getpi.rxplugin
+[72/89] Linking C shared module bin/rxid.rxplugin
+[73/89] Linking C shared module bin/rxfs.rxplugin
+[74/89] Linking C static library bin/rxid_static.a
+[75/89] Linking C static library bin/rxfs_static.a
+[76/89] Linking C shared module bin/rxplatform.rxplugin
+[77/89] Linking C static library bin/rxplatform_static.a
+[78/89] Linking C executable bin/rxc
+[79/89] Linking C executable bin/rxbvm
+[80/89] Linking C executable interpreter/test_rxpa_host_services
+[81/89] Linking C executable interpreter/test_rxpa_concurrency
+[82/89] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.o
+[83/89] Linking C executable bin/rxtvm
+[84/89] cd /Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama && /opt/homebrew/bin/cmake -DINPUT=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/rxllama-package-Debug.cmake -P /Users/adrian/CLionProjects/CREXX/rxpa/WriteProviderPackage.cmake
+[85/89] Building CXX object lib/plugins/llama/CMakeFiles/rxllama_embedding_bridge.dir/__/__/__/tests/native-inference/embedding_bridge.cpp.o
+[86/89] Linking CXX executable lib/plugins/llama/tests/rxllama_embedding_bridge

@@ -286,6 +286,34 @@ int rxcp_import_name_may_load_namespace(Context *context,
     return 0;
 }
 
+dpa *rxcp_native_interface_factories(Context *context, const char *interface_name,
+                                    const char *factory_suffix) {
+    struct class_tree_wrapper *it;
+    dpa *functions = dpa_f();
+    if (!context || !context->master_context || !interface_name || !factory_suffix ||
+        !context->master_context->importable_class_tree) return functions;
+    avl_tree_for_each_in_order(it, context->master_context->importable_class_tree,
+                               struct class_tree_wrapper, index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+        if (!candidate || candidate->contract_type != CLASS_DEF) continue;
+        for (i = 0; i < candidate->implements_count; ++i) {
+            if (candidate->implements_fqnames[i] &&
+                !strcmp(candidate->implements_fqnames[i], interface_name)) {
+                char *name = mprintf("%s%s", candidate->fqname, factory_suffix);
+                imported_func *function = rxcp_find_imported_function_exact(context, name);
+                /* Bytecode provider linking retains its existing contract.
+                 * Native dependencies must name a real, checked callable. */
+                if (function && function->provider_id && *function->provider_id)
+                    dpa_add(functions, function);
+                free(name);
+                break;
+            }
+        }
+    }
+    return functions;
+}
+
 int rxcp_import_name_has_interface_provider(Context *context,
                                             const char *import_name,
                                             const char *interface_fqname) {

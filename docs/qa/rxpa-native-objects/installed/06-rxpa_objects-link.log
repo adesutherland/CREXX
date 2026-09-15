@@ -1,0 +1,2 @@
+argv=[PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/installed Ω/bin/rxlink'), '-o', '/private/tmp/rxpa-objects-installed-20260914-final/rxpa_objects-dynamic-linked', PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/rxpa_objects-dynamic'), PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/installed Ω/bin/library'), PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/installed Ω/bin/classlib'), PosixPath('/private/tmp/rxpa-objects-installed-20260914-final/installed Ω/bin/rxfnsg')]
+rc=0

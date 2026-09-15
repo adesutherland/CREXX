@@ -1,0 +1,21 @@
+PASS: embedding_acceptance-compile
+PASS: embedding_acceptance-assemble
+PASS: embedding_acceptance-link
+PASS: embedding_acceptance-installed-rxbvm-cpu
+PASS: embedding_acceptance-installed-rxtvm-cpu
+PASS: embedding_acceptance-installed-rxbvm-required-gpu
+PASS: embedding_acceptance-installed-rxtvm-required-gpu
+PASS: embedding_acceptance-native-build
+PASS: embedding_acceptance-relocated-native-cpu
+PASS: embedding_acceptance-relocated-native-required-gpu
+PASS: shared_worker_embeddings-compile
+PASS: shared_worker_embeddings-assemble
+PASS: shared_worker_embeddings-link
+PASS: shared_worker_embeddings-installed-rxbvm-cpu
+PASS: shared_worker_embeddings-installed-rxtvm-cpu
+PASS: shared_worker_embeddings-installed-rxbvm-required-gpu
+PASS: shared_worker_embeddings-installed-rxtvm-required-gpu
+PASS: shared_worker_embeddings-native-build
+PASS: shared_worker_embeddings-relocated-native-cpu
+PASS: shared_worker_embeddings-relocated-native-required-gpu
+PASS: STEP-04 installed and relocated native embedding/worker consumers

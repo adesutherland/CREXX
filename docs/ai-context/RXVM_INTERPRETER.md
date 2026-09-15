@@ -105,6 +105,20 @@ before `main`. An optional record permits provider discovery to miss, but does
 not suppress the ordinary unresolved-procedure checks if the callable is
 actually required by the program.
 
+Native interface factories retain concrete callable/provider dependencies even
+when the consumer has no direct call to an implementing class. Runtime factory
+selection still chooses among loaded candidates; discovery uses the same
+checked provider metadata and trusted roots as other native imports.
+
+The internal `rxvm_run_external_status()` boundary is used by typed worker
+execution and Rexx callbacks from `CALLMETHOD`. Its callers provide a fresh
+external return cell. It captures unhandled signals separately and reports zero
+for successful returns, including nonzero/wide integers and strings or objects
+whose independent physical integer field is nonzero. Startup and nonzero EXIT
+failures remain failures. The historical `run()` process-status contract is
+unchanged. Permanent controls include `tests/rxpa/rxpa_objects_text_worker.crexx`
+and the existing real signal/unwind and worker executor tests.
+
 ## 2. Core Internal Structs
 
 ### `rxvm_context`
@@ -586,15 +600,29 @@ code.
 Every native `proc_runtime` carries an internal capability word in the 64-bit
 alignment slot after `locals` and a load-selected invoker. A procedure from a
 plugin with a valid version-1 `PROCESS_REENTRANT` manifest binds permanently to
-the direct adapter. An unmarked procedure also binds direct while exactly one
-legacy-capable VM is live. Registering a second legacy-capable VM quiesces
+the direct adapter. An unmarked procedure binds a direct legacy adapter while
+exactly one legacy-capable VM is live. That adapter records callback entry/exit
+in thread-local state. Registering a second legacy-capable VM quiesces
 direct legacy execution, rebinds all live legacy invoker slots to the recursive
 locked adapter and makes that mode sticky for the process lifetime. A
 reentrant-only VM is not registered with this legacy coordinator and cannot
 cause the transition.
 
 `run()` announces and leaves the VM execution boundary to the cold coordinator;
-load and teardown register or remove owned invoker slots. Ordinary native calls
+each thread retains an allocation-free list of its active contexts, including
+nested A -> B -> A execution. Synchronous attached-worker startup parks every
+context on that thread without changing its execution depth, allowing a child
+to complete a cold legacy transition. Every success/failure path resumes the
+parent after any transition, including cleanup/join of partially started workers.
+Startup inside a live legacy callback or while holding the recursive
+compatibility lock returns `RXVM_EXECUTOR_WORKER_START_FAILED`, mapped to channel
+provider failure. Such callbacks can still hold shared plugin state and cannot
+be declared quiescent. This covers protected initialization and native-payload
+callbacks as well as procedure callbacks; ordinary recursive legacy calls remain
+supported. Process-reentrant and session-affine procedure adapters retain their
+separate call paths.
+
+Load and teardown register or remove owned invoker slots. Ordinary native calls
 load the already-selected invoker and contain no capability branch, catalogue
 lock or coordinator lock. Plugin initialization remains serialized because
 legacy dynamic plugins copy the helper table into the DSO-static
@@ -1009,14 +1037,23 @@ type tests and interface dispatch. Graph-backed descriptors are materialized by
 name/length plus graph/ID identity and reach precomputed assignability and
 dispatch views. VM-only synthetic types use immutable static descriptors.
 Class factories stamp object values with `setobjtype`, and later VM lookups use
-that concrete descriptor when resolving interface member calls. Copy, move and
-zero operations therefore transfer or clear one pointer rather than duplicating
+that concrete descriptor when resolving interface member calls. C providers
+publish the same identity through the sized RXPA `object_set_type` host service.
+It resolves a loaded class before modifying the destination; native module
+metadata is materialized into a checked graph lazily and retained by that VM's
+module. Unknown/interface targets fail without changing the value; publication
+preserves the provider's representation and clears the uninitialized marker.
+Copy, move and zero operations therefore transfer or clear one pointer rather than duplicating
 name, length, graph and ID fields on every value.
 Bare object class defaults are represented as ordinary object type metadata plus
 the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
 that state, while `setobjtype` clears it when a factory has produced an
 initialized object. The VM-private flag partition keeps this lifecycle marker
 out of public register flag writes such as `settp`.
+RXPA post-call UTF-8 validation refreshes text certificates without clearing
+this initialization marker, including on receivers/children untouched by a
+failing native method. String-writer helpers that reset value state must not
+be used for that validation-only operation.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset the VM-private UTF lookup cache to the start of the
@@ -1303,9 +1340,18 @@ RXPA exposes the same nested runtime capability as `CALLMETHOD` (and the
 explicit-signal `CALLMETHODX`) in `crexxpa.h`. The VM derives the concrete class
 from the receiver's runtime type, resolves and signature-checks the canonical
 method descriptor through the ordinary runtime method registry, prepends the
-receiver to the argument vector, and enters `run()` recursively. The helper is
-synchronous and requires the current same-thread `rxvm_active_context`; it does
+receiver to the argument vector, and invokes the resolved body. Bytecode methods
+enter the owning worker recursively; native methods and factory match functions
+use the procedure's loaded RXPA session/legacy policy without creating a bytecode
+frame. The helper is synchronous and requires the current same-thread `rxvm_active_context`; it does
 not create a background VM or permit plugins to retain VM value handles.
+The callback entry saves/restores a separate signal outcome in active state.
+A signal escaping a nested Rexx method is returned to the native caller before
+terminal reporting, so an outer Rexx handler can catch it without a false panic.
+Native method signals likewise remain separate from integer results, even if
+the two numbers coincide. Callback integer results retain their full `rxinteger`
+width despite the legacy `run()` process status being an `int`. Outermost
+uncaught signals retain normal panic/location reporting.
 
 The ADDRESS sandbox/stem helpers use direct VM-layout mutation for the standard
 `.standardaddresssandbox` and `.standardaddressstem` classes, with nested method

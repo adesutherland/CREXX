@@ -1,0 +1,2 @@
+-- PASS: four-tool lifecycle cpu smollm2-360m-instruct
+-- PASS: four-tool lifecycle required-gpu smollm2-360m-instruct

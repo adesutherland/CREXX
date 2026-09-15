@@ -1,0 +1,5 @@
+argv=[PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/installed Ω/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/installed Ω/bin'), '-o', PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/embedding_acceptance-dynamic'), PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/embedding_acceptance.crexx')]
+cwd=/private/tmp/crexx-s4-installed.NQTmfd/consumer checks
+rc=0
+Warning in embedding_acceptance.crexx @ 164:6 - #NOT_IN_SAME_SCOPE: Implicit use creates a separate binding; the earlier same-named binding is at line 161, column 6. Declare this binding explicitly if intentional., "i"
+1 warning(s) in source file

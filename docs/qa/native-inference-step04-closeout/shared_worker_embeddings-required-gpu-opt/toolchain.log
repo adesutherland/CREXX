@@ -1,0 +1,17 @@
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc;--no-exe-import;-i;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin;-o;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding;/Users/adrian/CLionProjects/CREXX/tests/native-inference/shared_worker_embeddings.crexx
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas;-o;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink;-o;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding-linked;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib;/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding-linked;-a;required-gpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: four embedding workers, 20 ordered batches each, shared weights/private outputs and rxvector required-gpu
+
+
+COMMAND: /Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm;/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-step04-closeout/shared_worker_embeddings-required-gpu-opt/embedding-linked;-a;required-gpu;/Users/adrian/Library/Caches/crexx/native-inference/bge-small-en-v1.5-f16.gguf;f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
+PASS: four embedding workers, 20 ordered batches each, shared weights/private outputs and rxvector required-gpu
+
+

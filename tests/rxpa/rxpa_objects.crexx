@@ -1,0 +1,117 @@
+options levelb
+namespace rxpa_objects_test
+import rxpa_objects
+
+main: procedure = .int
+  if lifetime() \= 0 then return 20
+  native = make(10)
+  direct = .box(20)
+  named = .box.from(30)
+  if native.read() \= 10 | direct.add(2) \= 22 | named.read() \= 30 then do
+    say "FAIL: C native member binding"
+    return 1
+  end
+  say "PASS: C native factory and concrete method binding"
+  if <typeof>(native) \= ".rxpa_objects..box" | <typeof>(direct) \= ".rxpa_objects..box" | <typeof>(named) \= ".rxpa_objects..box" then do
+    say "FAIL: C native class identity" <typeof>(native) <typeof>(direct) <typeof>(named)
+    return 1
+  end
+  object = native as .object
+  if \(object is .box) | \initialized(native) then return 2
+  contract = object as .counter
+  if contract.add(7) \= 17 | contract.read() \= 17 then return 3
+  selected = .counter(40)
+  if selected.read() \= 40 | <typeof>(selected) \= ".rxpa_objects..box" then return 4
+  selected_named = .counter.from(50)
+  if selected_named.read() \= 50 then return 5
+  if contract.doubled() \= 34 then return 6
+  amount = 99
+  call direct.exchange(amount)
+  if amount \= 22 | direct.read() \= 99 then return 7
+  target = .callback_impl()
+  if native.callback(target) \= 11 | native.read() \= 11 then return 8
+  if invalid_inputs(object) \= 0 then return 9
+  if restamp(object, "") = 0 | restamp(object, "rxpa_objects.missing") = 0 | restamp(object, "rxpa_objects.counter") = 0 | restamp(object, ".int") = 0 then return 10
+  if <typeof>(object) \= ".rxpa_objects..box" | (object as .box).read() \= 10 then return 11
+  ignored = .int
+  uninitialized = .box
+  caught = 0
+  do
+    ignored = uninitialized.read()
+  on signal object_not_initialized
+    caught = 1
+  end
+  if caught \= 1 then return 12
+  raw = uninitialized as .object
+  if initialized(raw) then return 13
+  if restamp(raw, ".rxpa_objects..box") \= 0 | \initialized(raw) then return 14
+  caught = 0
+  do
+    native = .box(-1)
+  on signal invalid_arguments
+    caught = 1
+  end
+  if caught \= 1 | native.read() \= 11 then return 15
+  caught = 0
+  do
+    ignored = native.callback(.failing_callback())
+  on signal division_by_zero
+    caught = 1
+  end
+  if caught \= 1 then return 16
+  caught = 0
+  do
+    selected = .counter(-1)
+  on signal function_not_found
+    caught = 1
+  end
+  if caught \= 1 then return 17
+  caught = 0
+  do
+    ignored = native.nested_fail()
+  on signal division_by_zero
+    caught = 1
+  end
+  if caught \= 1 | native.read() \= 11 then return 18
+  if native.callback(.large_callback()) \= 5000000000 then return 19
+  large = .counter(5000000000)
+  if large.doubled() \= 10000000000 then return 21
+  say "PASS: C native objects, factories, identity and interface dispatch"
+  return 0
+
+lifetime: procedure = .int
+  before = counts("live")
+  first = .box(1)
+  second = first
+  if second.read() \= 1 then return 1
+  first = .box(2)
+  if first.read() \= 2 | second.read() \= 1 then return 2
+  first = .box
+  second = .box
+  if counts("live") \= before | counts("copies") < 1 | counts("finalized") < 1 then do
+    say "FAIL: C object payload ownership" before counts("live") counts("copies") counts("finalized")
+    return 3
+  end
+  return 0
+
+callback_impl: class implements .callback
+  *: factory
+    return
+  apply: method = .int
+    arg value = .rxpa_objects..counter
+    return value.add(1)
+
+failing_callback: class implements .callback
+  *: factory
+    return
+  apply: method = .int
+    arg value = .rxpa_objects..counter
+    divisor = 0
+    return value.read() / divisor
+
+large_callback: class implements .callback
+  *: factory
+    return
+  apply: method = .int
+    arg value = .rxpa_objects..counter
+    return 5000000000

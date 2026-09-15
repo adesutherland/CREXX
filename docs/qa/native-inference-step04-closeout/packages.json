@@ -1,0 +1,48 @@
+[
+  {
+    "test": "embedding_acceptance",
+    "relocated": "/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/embedding_acceptance relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-base.0.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-base.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-cpu.so": "295c783cacea299e7ddfb4ba8eade4775c6f0ad858d9444a372d404dac615e59",
+      "libcrexx-ggml-metal.so": "5264279a33a0ca918064ccf40ab1be983176042fb4e7309efa9b25839b78aca9",
+      "libcrexx-ggml.0.23.0.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-ggml.0.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-ggml.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-llama-engine.0.4.0.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama-engine.0.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama-engine.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama.1.dylib": "a970e79ae8d03f95bc25000c0f984cc56cf24e19eb68896d271c9bfad69023f1",
+      "libcrexx-llama.dylib": "a970e79ae8d03f95bc25000c0f984cc56cf24e19eb68896d271c9bfad69023f1",
+      "persistent": "233c8abddfd283e118d2805c0bc735a259eee35058a70ed45b47b53dd1437dce",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "a5e7e5169c6560cc52f82db2bfa843ff093472e859d9b6e777e7ecdba166dbac",
+      "rxllama.runtime.json": "f8d7bd36336553ce469bec4b597f0197c17f2e95c11fc0089cd382681c1ed42e"
+    }
+  },
+  {
+    "test": "shared_worker_embeddings",
+    "relocated": "/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings relocated \u00c5",
+    "files": {
+      "libcrexx-ggml-base.0.23.0.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-base.0.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-base.dylib": "8f2e34e81100c594831a8dec5830b9552478f015ecdf89d2e93f995f2392b50a",
+      "libcrexx-ggml-cpu.so": "295c783cacea299e7ddfb4ba8eade4775c6f0ad858d9444a372d404dac615e59",
+      "libcrexx-ggml-metal.so": "5264279a33a0ca918064ccf40ab1be983176042fb4e7309efa9b25839b78aca9",
+      "libcrexx-ggml.0.23.0.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-ggml.0.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-ggml.dylib": "c5b0733094a9e970dc9561385c9ba27086ae7022d8086f73b8009e6251e0b559",
+      "libcrexx-llama-engine.0.4.0.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama-engine.0.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama-engine.dylib": "2cb941726ff276dad409aa96ef2f49317cdbf271a2b04391145c9987833ffc23",
+      "libcrexx-llama.1.dylib": "a970e79ae8d03f95bc25000c0f984cc56cf24e19eb68896d271c9bfad69023f1",
+      "libcrexx-llama.dylib": "a970e79ae8d03f95bc25000c0f984cc56cf24e19eb68896d271c9bfad69023f1",
+      "persistent": "21acd7710debcabf0389953636fcdee64a42e4229d1cfe7d02cb1bda6f1e5bc7",
+      "rxllama-NOTICES.txt": "a2d2a19a4d8e5af9a8043a12d4705d685ad7d9eaf80e2882d2db2660e485bcd7",
+      "rxllama.native.json": "a5e7e5169c6560cc52f82db2bfa843ff093472e859d9b6e777e7ecdba166dbac",
+      "rxllama.runtime.json": "f8d7bd36336553ce469bec4b597f0197c17f2e95c11fc0089cd382681c1ed42e"
+    }
+  }
+]

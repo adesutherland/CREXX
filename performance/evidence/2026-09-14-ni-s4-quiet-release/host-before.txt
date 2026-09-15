@@ -1,0 +1,100 @@
+Mon Sep 14 17:54:59 UTC 2026
+Darwin 25.6.0 arm64
+Apple M5
+25769803776
+10
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Battery Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 0
+ networkoversleep     0
+ sleep                1
+ lessbright           1
+ tcpkeepalive         1
+ disksleep            10
+AC Power:
+ Sleep On Power Button 1
+ lowpowermode         0
+ standby              1
+ ttyskeepawake        1
+ hibernatemode        3
+ powernap             1
+ hibernatefile        /var/vm/sleepimage
+ displaysleep         20
+ womp                 1
+ networkoversleep     0
+ sleep                0
+ tcpkeepalive         1
+ disksleep            10
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+18:54  up 16 days, 16:49, 1 user, load averages: 2.10 1.88 1.69
+ 41.0 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 21.6 qemu-system-aarch64
+ 11.8 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  9.1 /Applications/ChatGPT.app/Contents/Resources/codex
+  4.9 /bin/zsh
+  4.6 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  0.8 /Applications/ChatGPT.app/Contents/Resources/codex-code-mode-host
+  0.6 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+  0.5 /System/Library/DriverExtensions/AppleCentauriAlpha.dext/AppleCentauriAlpha
+  0.4 /usr/libexec/opendirectoryd
+  0.4 /usr/libexec/logd
+  0.4 /usr/libexec/airportd
+Processes: 499 total, 2 running, 497 sleeping, 3187 threads 
+2026/09/14 18:54:59
+Load Avg: 2.10, 1.88, 1.69 
+CPU usage: 7.5% user, 13.52% sys, 79.41% idle 
+SharedLibs: 695M resident, 145M data, 104M linkedit.
+MemRegions: 191100 total, 4018M resident, 160M private, 3234M shared.
+PhysMem: 18G used (3240M wired, 5240M compressor), 4822M unused.
+VM: 209T vsize, 6144M framework vsize, 3900748(0) swapins, 5737292(0) swapouts.
+Networks: packets: 405961157/32G in, 401130428/36G out.
+Disks: 588222489/8062G read, 78733536/2358G written.
+
+PID    COMMAND          %CPU
+94997  ssh              0.0 
+94406  qemu-system-aarc 0.0 
+94350  netbiosd         0.0 
+94074  node_repl        0.0 
+94073  node             0.0 
+94072  node_repl        0.0 
+94071  node             0.0 
+91407  com.apple.Safari 0.0 
+91301  distnoted        0.0 
+90890  crashpad_handler 0.0 
+90815  Codex (Service)  0.0 
+90814  Codex (Service)  0.0 
+Processes: 499 total, 3 running, 496 sleeping, 3195 threads 
+2026/09/14 18:55:00
+Load Avg: 2.25, 1.91, 1.70 
+CPU usage: 9.60% user, 3.52% sys, 86.86% idle 
+SharedLibs: 695M resident, 145M data, 104M linkedit.
+MemRegions: 0 total, 0B resident, 160M private, 3234M shared.
+PhysMem: 18G used (3245M wired, 5240M compressor), 4823M unused.
+VM: 209T vsize, 6144M framework vsize, 3900748(0) swapins, 5737292(0) swapouts.
+Networks: packets: 405961172/32G in, 401130429/36G out.
+Disks: 588222490/8062G read, 78733545/2358G written.
+
+PID    COMMAND          %CPU
+94406  qemu-system-aarc 56.4
+599    WindowServer     29.9
+32806  Codex (Service)  12.3
+32870  Codex (Renderer) 8.0 
+0      kernel_task      7.9 
+54210  top              4.1 
+32859  codex            1.2 
+32798  ChatGPT          1.1 
+1099   ControlCenter    0.2 
+88694  AppleCentauriAlp 0.2 
+765    searchpartyd     0.2 
+606    runningboardd    0.2 

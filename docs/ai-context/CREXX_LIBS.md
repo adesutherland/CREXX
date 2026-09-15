@@ -651,10 +651,10 @@ Plugins can be compiled in two ways:
 
 An unmodified RXPA plugin remains valid in a multi-VM process. The host treats
 it as a **legacy process-shared plugin**. While the process has only one VM that
-has loaded a legacy plugin, its procedures use the same direct adapter as the
-single-threaded product. Loading a legacy plugin into a second VM starts one
-cold, sticky transition: the host waits for existing direct legacy execution
-to leave its VM execution boundary, rebinds every live legacy procedure to one
+has loaded a legacy plugin, its procedures use a direct legacy adapter that
+records callback entry and exit on the current thread. Loading a legacy plugin
+into a second VM starts one cold, sticky transition: the host waits for existing
+direct legacy execution to leave its VM execution boundary, rebinds every live legacy procedure to one
 process-wide recursive compatibility lock, and publishes the new load only
 after rebinding. A VM that loads only process-reentrant plugins does not trigger
 the transition. Once concurrent legacy mode has been entered, later legacy
@@ -664,8 +664,19 @@ This is conservative because the existing initializer ABI has no way to prove
 that the plugin's C statics, its dependencies, or its error paths tolerate
 concurrent entry. Recursive locking allows a legacy plugin to make a nested
 call that reaches another legacy RXPA procedure without deadlocking. The cold
-transition can wait for a long-running legacy-capable VM invocation to return;
-plugin load must not assume that publication is instantaneous.
+transition can wait for a long-running legacy-capable VM invocation to return
+or reach the attached-worker startup boundary; plugin load must not assume
+that publication is instantaneous.
+
+Attached-worker startup temporarily parks every active VM on the calling
+thread, including nested VM execution, so a child can finish the transition
+while the parent waits. Startup from inside a live legacy callback or protected
+initializer/payload callback fails with the existing worker-start/channel
+provider-failure result: shared C state cannot safely be parked mid-callback.
+All success and failure paths restore the parent's execution state. This does
+not change the procedure ABI or the separate process-reentrant/session-affine
+dispatch paths. See the [interpreter protocol](RXVM_INTERPRETER.md) and
+[S3-D01 repair record](../planning/native-inference-worker-transition-proposal.md).
 
 An audited plugin that is safe for concurrent entry can opt in by adding one
 file-scope declaration after including `crexxpa.h`:
@@ -773,6 +784,17 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
 
 - `ARG(n)`: Retrieves the opaque handle for the *n*th argument.
 
+- Complete UTF-8 text (including U+0000): session plugins may use
+  `RXPA_PLUGIN_SESSION_WITH_HOST(old_create, destroy, enter, leave, capabilities,
+  create_with_host)`. Check `rxpa_host_has_string_view(host)` before retaining the
+  immutable callback in the session. `host->string_view(value, &data, &bytes)`
+  returns zero and a borrowed read-only view on success; it allocates/copies
+  nothing and makes no NUL-termination promise. Its lifetime ends at value
+  mutation/reentrant mutation or native-call return. Copy any retained input into
+  provider-owned bounded storage. The V2 manifest tail is size checked on dynamic
+  and static paths; the unversioned initializer and old factories are unchanged.
+  A service-requiring plugin must return NULL from its old factory and reject
+  calls without a session on pre-V2 hosts, rather than silently using GETSTRING.
 - `GETINT()`, `GETFLOAT()`, `GETSTRING()`: Extracts the native C value from a register handle.
 
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
@@ -961,6 +983,24 @@ collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
 RXBIN dependency, runtime lookup, and native archive identity consistently
 `rxplatform`.
 
+### `rxllama` native inference lifecycle
+
+The optional `ENABLE_LLAMA` build adds the session-aware llama.rexx / `rxllama`
+provider. Its STEP-03 surface supplies configuration, packaged CPU/GPU discovery,
+asynchronous model ownership, private contexts, explicit preparation, inspection
+and cleanup. Embedding and generation request APIs are later approved steps.
+See [the provider guide](../../lib/plugins/llama/README.md) for exact build and
+runtime boundaries and [STEP-03](../planning/native-inference-step-03.md) for
+qualification status, including remaining sanitizer and platform gates.
+
+`add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
+`BACKEND_TARGETS`, `RUNTIME_FILES` and `ENGINE_ID`. Its runtime-package target
+writes relative, hashed `.native.json` and `.runtime.json` files. The native
+driver invokes `crexx-provider-package` only for selected providers carrying
+metadata; the helper validates dependencies before copying or emitting linker
+arguments. Native project caching also revalidates the selected package bytes.
+Providers without this metadata retain the established archive-only delivery.
+
 ### `rxsqlite` typed database provider
 
 `rxsqlite` is a standard session-aware RXPA provider rather than an incubator
@@ -1040,15 +1080,15 @@ contract that Rexx source would normally declare.
 ```c
 LOADFUNCS
 ADDINTERFACE("demo.environment");
-ADDFACTORY("demo.environment", "*", ".environment", "name=.string");
+ADDFACTORY("demo.environment", "*", ".demo..environment", "name=.string");
 ADDMETHOD("demo.environment", "describe", ".string", "");
 
 ADDCLASS("demo.nativeenvironment");
 ADDIMPLEMENTS("demo.nativeenvironment", "demo.environment");
-ADDFACTORY("demo.nativeenvironment", "*", ".nativeenvironment", "name=.string");
+ADDFACTORY("demo.nativeenvironment", "*", ".demo..nativeenvironment", "name=.string");
 ADDMETHOD("demo.nativeenvironment", "describe", ".string", "");
 
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
+ADDPROC(make_env, "demo.make", "b", ".demo..environment", "");
 ENDLOADFUNCS
 ```
 
@@ -1097,15 +1137,17 @@ PROCEDURE(invoke)
 ```
 
 The receiver must be a live, initialized cREXX object. The descriptor is the
-canonical `rxsig1|name|return_type|arguments` form and is checked against the
+canonical `rxsig1|name|return_type|arguments` form, with fully qualified user
+types in the argument signature, and is checked against the
 concrete receiver class at runtime. The argument array and result are borrowed
 RXPA handles; the call copies the result into the supplied result slot and
 copies receiver/argument mutations back before it returns. `CALLMETHODX` is the
 same operation with an explicit signal handle for native callbacks outside the
 lexical `PROCEDURE` body.
 
-An unhandled signal raised by the cREXX method is propagated through the RXPA
-signal handle. Ordinary non-zero `.int` and `.boolean` method results remain
+A signal escaping a nested cREXX or C method is propagated through the RXPA
+signal handle. A catchable callback signal does not print a terminal panic;
+an uncaught outer program signal retains the ordinary panic diagnostic. Ordinary non-zero `.int` and `.boolean` method results remain
 ordinary results rather than being confused with signal status codes.
 
 The call is same-thread, synchronous, and valid only while an RXPA procedure is
@@ -1115,24 +1157,107 @@ trampoline and recursively enters the existing worker lifecycle, so the cREXX
 method may itself call RXPA procedures. Legacy plugin calls use the recursive
 compatibility lane, which prevents that nested native re-entry from deadlocking.
 
-Declaration is not construction. `ADDCLASS`, `ADDINTERFACE`,
-`ADDIMPLEMENTS`, and the member macros tell the compiler and VM that a contract
-exists, but they do not by themselves run a factory or stamp class identity on
-a return value. Existing RXPA return helpers such as `SETSTRING`, `SETINT`, and
-array attribute helpers fill a return value slot; factory/class construction is
-still a separate operation.
+### Constructing and binding objects entirely in C
 
-That means a native procedure can advertise a typed signature, for example:
+Declare the class before dependent signatures, bind C bodies with the member
+macros below, then publish the concrete class with `SETOBJECTTYPE`. A typed
+return declaration alone does not establish runtime class identity. This
+surface is implemented in the working tree; platform/sanitizer qualification
+is tracked in [RXPA native objects](../planning/rxpa-native-objects.md).
 
 ```c
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
+/* active_host comes from this VM's session_create_with_host(host) callback.
+ * Require rxpa_host_has_object_set_type(host) when creating the session. */
+PROCEDURE(make_counter)
+{
+    SETNUMATTRS(RETURN, 1);
+    SETINT(GETATTR(RETURN, 0), GETINT(ARG0));
+    if (SETOBJECTTYPE(active_host, RETURN, "demo.counter") != 0) {
+        RETURNSIGNAL(SIGNAL_FAILURE, "Cannot publish demo.counter")
+    }
+    RESETSIGNAL
+}
+METHODPROCEDURE(add_counter)
+{
+    rxinteger total = GETINT(GETATTR(ARG0, 0)) + GETINT(ARG1);
+    SETINT(GETATTR(ARG0, 0), total);
+    SETINT(RETURN, total);
+    RESETSIGNAL
+}
+LOADFUNCS
+ADDCLASS("demo.counter");
+ADDFACTORYPROC(make_counter, "demo.counter", ".demo..counter", "initial=.int");
+ADDNAMEDFACTORYPROC(make_counter, "demo.counter", "from", ".demo..counter", "initial=.int");
+ADDMETHODPROC(add_counter, "demo.counter", "add", ".int", "amount=.int");
+ENDLOADFUNCS
 ```
 
-but the C body must still create or receive an object value that has the right
-shape and class identity. For complete object creation today, use a small Rexx
-factory/class shim to create the typed Rexx object, and let that object
-delegate selected work to native C functions. A future RXPA helper should cover
-the pure-C operation of constructing/stamping a typed object directly.
+The consumer can use `.demo..counter(10)`, `.demo..counter.from(10)` and
+`counter.add(2)`, with ordinary type identity, casts and interface dispatch.
+The complete executable session, ownership and callback example is
+[`tests/rxpa/rxpa_objects.c`](../../tests/rxpa/rxpa_objects.c), with its
+[Rexx consumer](../../tests/rxpa/rxpa_objects.crexx).
+
+| Binding | Declaration and body |
+| --- | --- |
+| `ADDMETHODPROC(fn, owner, member, type, args)` | Concrete method; use `METHODPROCEDURE(fn)` |
+| `ADDDEFAULTMETHODPROC(fn, owner, member, type, args)` | Interface default method; use `METHODPROCEDURE(fn)` |
+| `ADDFACTORYPROC(fn, owner, type, args)` | Default factory; use `PROCEDURE(fn)` |
+| `ADDNAMEDFACTORYPROC(fn, owner, member, type, args)` | Named factory; use `PROCEDURE(fn)` |
+| `ADDMATCHPROC(fn, owner, args)` | Default factory selection score; use `PROCEDURE(fn)` |
+| `ADDNAMEDMATCHPROC(fn, owner, member, args)` | Named factory selection score; use `PROCEDURE(fn)` |
+
+Owner/member/type/argument strings in these macros are string literals.
+Owners use metadata names such as `demo.counter`; user types in signatures use
+fully qualified source names such as `.demo..counter`. These bindings emit both
+metadata and callable symbols and work with dynamic, static and `DECL_ONLY`
+providers. Keep C bodies/session code under `#ifndef DECL_ONLY`, as in the
+fixture. `ADDFACTORY` and `ADDMETHOD` remain useful for interface declarations
+that have no body. Default interface implementations use the existing final
+method metadata. An implementing class's match body supplies an integer score
+for interface factory selection; a nonpositive score rejects that candidate.
+
+An interface-only factory consumer also retains each known native factory's
+ordinary callable/provider dependency. It does not need an earlier concrete
+constructor or an unrelated native call to load the provider. Native array
+member descriptors use the canonical unbounded spelling `[*]`; ordinary source
+declarations may still use `[]`.
+
+A native method receives the implicit receiver in `ARG0`; declared arguments
+start at `ARG1`. Use `METHODPROCEDURE` to enforce the ordinary
+`OBJECT_NOT_INITIALIZED` receiver guard before the body touches its attributes.
+Factories and match bodies have no implicit receiver: their declared arguments
+start at `ARG0`, and factories construct `RETURN`. Receiver mutations and
+`expose` arguments follow the existing call/copyback rules. Native payload
+copy/finalize hooks still govern resources; the type service adds no ownership
+registry and does not make VM value handles transferable between workers.
+
+The typed [llama.rexx example](../../lib/plugins/llama/README.md) uses this C
+surface for configuration/runtime/model/session/request owners, diagnostic
+snapshots and owned packed results. Its persistent and four-worker examples
+retain the same VM ownership and existing packed/vector representation.
+
+`SETOBJECTTYPE(host, value, name)` returns zero on success and -1 on failure.
+It is an optional, size-checked tail in `rxpa_host_services_v1`, obtained through
+`RXPA_PLUGIN_SESSION_WITH_HOST`; it does not extend `rxpa_initctx`. Check
+`rxpa_host_has_object_set_type(host)` before requiring the feature. Prefix-only,
+partial-tail, unknown-version and null-service hosts are rejected safely.
+Existing plugins that only use earlier host services continue to work.
+
+The operation requires an active owning VM call and a borrowed live value.
+It resolves a loaded concrete class (`demo.counter` or `.demo..counter`),
+preserves the value's payload/attributes and other flags, and clears the
+uninitialized-object marker. It neither allocates fields nor calls a factory:
+the C provider must construct a valid representation first. Unknown classes,
+interfaces, builtins, missing arguments and calls outside an active VM fail
+without changing the destination. On construction failure, clean up any
+provider-owned resources not yet attached to a managed value and report the
+signal/status appropriate to the public API. Do not retain the value handle.
+
+Native module type graphs are created lazily on the first successful lookup
+and retained by that VM's module. Repeated construction reuses the graph;
+there is no graph rebuild for each method call. This is not a new model-loading
+or inference boundary.
 
 Ordering matters when a native procedure signature references a class or
 interface type. Put the relevant `ADDCLASS`/`ADDINTERFACE` metadata before the
@@ -1144,7 +1269,7 @@ LOADFUNCS
 ADDINTERFACE("demo.environment");
 ADDMETHOD("demo.environment", "describe", ".string", "");
 
-ADDPROC(make_env, "demo.make", "b", ".environment", "");
+ADDPROC(make_env, "demo.make", "b", ".demo..environment", "");
 ENDLOADFUNCS
 ```
 

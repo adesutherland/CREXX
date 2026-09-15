@@ -1,0 +1,17 @@
+Mon Sep 14 16:54:48 UTC 2026
+Now drawing from 'AC Power'
+ -InternalBattery-0 (id=35324003)	100%; charged; 0:00 remaining present: true
+Note: No thermal warning level has been recorded
+Note: No performance warning level has been recorded
+Note: No CPU power status has been recorded
+17:54  up 16 days, 15:49, 2 users, load averages: 3.17 3.43 3.55
+ 38.3 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.2 qemu-system-aarch64
+ 15.8 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Service).app/Contents/MacOS/Codex (Service)
+  7.2 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/152.0.7977.83/Helpers/Codex (Renderer).app/Contents/MacOS/Codex (Renderer)
+  5.0 /usr/libexec/syspolicyd
+  4.0 /usr/libexec/sysmond
+  2.4 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/152.0.7977.83/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper
+  2.3 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend
+  2.2 /Applications/CLion.app/Contents/MacOS/clion
+  2.0 /Applications/CLion.app/Contents/plugins/clion-radler/DotFiles/macos-arm64/Rider.Backend

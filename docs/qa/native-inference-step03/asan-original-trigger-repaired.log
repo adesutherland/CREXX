@@ -1,0 +1,47 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260914-144800-build
+==> build
+    log: cmake-build-debugasan/asan-logs/20260914-144800-build/build.log
+==> build passed
+Command: cmake --build cmake-build-debugasan --target rxllama_toolchain_measure --parallel 4
+ASAN_OPTIONS=detect_leaks=0
+
+[  0%] Built target rxbin
+[  3%] Built target dslsyntax_parser
+[  3%] Built target re2c_objects_autogen_ver_to_vernum
+[  3%] Built target ggml-base
+[  3%] Built target lemon
+[  3%] Built target avl_tree
+[  3%] Built target platform
+[  7%] Built target re2c_objects_autogen
+[  7%] Built target rxpa
+[  7%] Built target rxvmmemory
+[ 11%] Built target rxbvm_core_objects
+[ 11%] Built target rxlink
+[ 11%] Built target decnumber
+[ 11%] Built target rxvm_platform_objects
+[ 11%] Built target rxpashim
+[ 11%] Built target rxvmref
+[ 18%] Built target ggml-metal
+[ 22%] Built target ggml-cpu
+[ 22%] Built target rxvmplugin
+[ 25%] Built target ggml
+[ 25%] Built target mc_decimal_manual
+[ 25%] Built target rxbvml
+[ 25%] Built target rxbvm
+[ 37%] Built target re2c
+[ 40%] Built target rxaslib
+[ 40%] Built target rxas
+[ 40%] Built target library-rxas
+[ 51%] Built target rxclib
+[ 77%] Built target llama
+[ 77%] Built target rxc
+[ 77%] Built target crexx_llama_bridge
+[100%] Built target library-rexx
+[100%] Built target llama_provider
+[100%] Built target llama_provider_static
+[100%] Built target library
+[100%] Built target llama_provider_runtime_package
+-- PASS: four-tool lifecycle cpu bge-small-en-v1.5
+Elapsed time (seconds): 19.8271
+[100%] Built target rxllama_toolchain_measure
+ASan run complete: cmake-build-debugasan/asan-logs/20260914-144800-build

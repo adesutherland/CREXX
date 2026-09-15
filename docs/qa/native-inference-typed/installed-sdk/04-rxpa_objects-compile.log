@@ -1,0 +1,2 @@
+argv=[PosixPath('/private/tmp/rxpa-typed-followup-installed/installed Ω/bin/rxc'), '--no-exe-import', '-i', PosixPath('/private/tmp/rxpa-typed-followup-installed/installed Ω/bin'), '-o', PosixPath('/private/tmp/rxpa-typed-followup-installed/rxpa_objects-dynamic'), PosixPath('/private/tmp/rxpa-typed-followup-installed/rxpa_objects.crexx')]
+rc=0

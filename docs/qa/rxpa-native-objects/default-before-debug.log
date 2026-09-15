@@ -1,0 +1,21 @@
+(lldb) target create "cmake-build-debug/bin/rxbvm"
+Current executable set to '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm' (arm64).
+(lldb) settings set -- target.run-args  "/tmp/rxpa-objects-default-before/noopt-linked"
+(lldb) breakpoint set -f rxpacallmethod.c -l 77
+Breakpoint 1: where = rxbvm`rxvm_object_set_type + 268 at rxpacallmethod.c:77:18, address = 0x00000001000d3028
+(lldb) run
+Process 57863 launched: '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm' (arm64)
+Process 57863 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+    frame #0: 0x00000001000d3028 rxbvm`rxvm_object_set_type(destination=0x0000000803447518, class_name="rxpa_objects.box") at rxpacallmethod.c:77:18
+   74  	             * Cache once on that owner; free_module releases it after values.
+   75  	             * A failed build never publishes an incomplete graph. */
+   76  	            file->semantic_graph = rx_graph_build_crexx(&file, 1u, &error);
+-> 77  	            free(error);
+    	                 ^
+   78  	        }
+   79  	        graph = file->semantic_graph;
+   80  	        if (!graph) continue;
+Target 0: (rxbvm) stopped.
+(lldb) frame variable error
+(char *) error = 0x000000010075c2b0 "semantic graph metadata error in module /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxpa/providers/rx_rxpa_objects.rxplugin at offset 1832: member declaration has an unknown kind"

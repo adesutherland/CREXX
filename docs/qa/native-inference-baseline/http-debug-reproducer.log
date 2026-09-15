@@ -1,0 +1,3 @@
+Error in ts_http_server_failures.crexx @ 19:16 - #RETURNS_VOID: Expression does not return a value., "client.get(\"/failure\", .httpheaders.empty"
+Error in ts_http_server_failures.crexx @ 19:16 - #RETVAL_MISSING: RETURN value is required., "client.get(\"/failure\", .httpheaders.empty"
+2 error(s) in source file

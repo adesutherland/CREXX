@@ -53,6 +53,12 @@ void rxvm_addinterface(char* name, char* option, char* type);
 void rxvm_addimplements(char* name, char* interface_name);
 void rxvm_addmember(char* owner, char* kind, char* member, char* type, char* args);
 char* rxvm_getstring(rxpa_attribute_value attributeValue);
+int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *length);
+int rxvm_object_set_type(rxpa_attribute_value destination, const char *class_name);
+static const rxpa_host_services_v1 rxpa_host_services = {
+    sizeof(rxpa_host_services_v1), RXPA_HOST_SERVICES_ABI_V1, rxvm_string_view,
+    rxvm_object_set_type
+};
 void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
 rxinteger rxvm_getint(rxpa_attribute_value attributeValue);
@@ -1928,7 +1934,9 @@ static int rxpa_context_create_session(
         return -1;
     }
     if (rxpa_context_find_session(context, manifest->plugin_id)) return 0;
-    session = manifest->session_create();
+    session = manifest->session_create_with_host
+            ? manifest->session_create_with_host(&rxpa_host_services)
+            : manifest->session_create();
     if (!session) return -1;
     instance = rxvm_load_memory_alloc(
             context->rxvm_context->worker.memory_worker, sizeof(*instance));
@@ -2358,6 +2366,9 @@ static int validate_static_plugin_manifest_v2(
                          (manifest->session_destroy != NULL) +
                          (manifest->session_enter != NULL) +
                          (manifest->session_leave != NULL);
+    if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                 sizeof(manifest->session_create_with_host) &&
+        manifest->session_create_with_host && session_hook_count != 4u) return 0;
     return session_hook_count == 0u || session_hook_count == 4u;
 }
 
@@ -2432,7 +2443,12 @@ void rxvm_register_static_plugin_manifest_v2(
     entry->valid = (unsigned char)valid;
     memset(&entry->manifest, 0, sizeof(entry->manifest));
     if (valid) {
-        entry->manifest = *manifest;
+        memcpy(&entry->manifest, manifest,
+               offsetof(rxpa_plugin_manifest_v2, session_leave) + sizeof(manifest->session_leave));
+        if (manifest->struct_size >= offsetof(rxpa_plugin_manifest_v2, session_create_with_host) +
+                                     sizeof(manifest->session_create_with_host))
+            entry->manifest.session_create_with_host = manifest->session_create_with_host;
+        entry->manifest.struct_size = sizeof(entry->manifest);
         entry->manifest.plugin_id = entry->plugin_id;
     }
     RXPA_CATALOGUE_UNLOCK();

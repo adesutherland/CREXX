@@ -1,0 +1,33 @@
+{
+  "recorded_utc": "2026-09-14T20:10:28.949276+00:00",
+  "head": "c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8",
+  "branch": "develop",
+  "host": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "scope": "Uncommitted C RXPA completion over retained native-inference STEP03/04 work",
+  "sanitizer_rerun": false,
+  "legacy_rxpa_initctx_identical_to_HEAD": true,
+  "legacy_layout_sha256": "4ef374901d03fd28563ef824e908b2f1df69ab0cf6ea328475c10d913a21cfa0",
+  "installed_header_matches_working_tree": true,
+  "source_sha256": {
+    "binutils/rxgraph.c": "1dc351da57a98011502c65bb2289e56beeeace477f033616f619f0028ee33d4b",
+    "binutils/tests/test_rxgraph.c": "ec24b10c21f6e54dd0df29a02e12763287d4bd896761175115fa9cd3bfa5acc1",
+    "compiler/rxcp_ast_core.c": "9ad3623f20d7e723d159e84eb01f9789d73799cb8fb77c65d62acd8d6c2205b0",
+    "compiler/rxcpsymb.c": "463b0ab12d25ee6a47bb25bb010853f9733b3a5271ba2aecd338ee0211d7d6e2",
+    "interpreter/rxpacallmethod.c": "8639af131c392da5350c31200e452d9f6a3df9c31fb9405540137ceaf93df872",
+    "interpreter/rxpafuncs.c": "4d1841ea4bae417a714eda2feda44b37b52402be94ca7a7dfb447df8b59975c5",
+    "interpreter/rxvmintp.c": "fa1259ea14faf14590461035308979fd6f9a64f338ae2697f808e0739ec984f7",
+    "interpreter/rxvmintp.h": "0086fbccb486bc28e6ac4ab303618462878397107522919db8218820d0c778e3",
+    "interpreter/rxvmload.c": "8819dc4b3aa6e3dc43d84e743703de9e1ce40b85f0613d26f61aaca2e0b2a951",
+    "interpreter/tests/test_rxpa_host_services.c": "d2a504bce279a688e3e8dcbd49c849737e93d7fb591a37528f2fa9b7624ecb7a",
+    "rxpa/crexxpa.h": "711ce37c1a6c7cebf098a52272f35a27a937261208b8c8a4e896c41ae04c5d2a",
+    "tests/rxpa/CMakeLists.txt": "00101b3fbc24d5547e1826c3b280bd8ec6d262e70ee8e1b4f073d23af7289633",
+    "tests/rxpa/rxpa_objects.c": "60b32117d43841b36c9ce44d956a964549854b2781fa39ec727be935e851d7e8",
+    "tests/rxpa/rxpa_objects.crexx": "e3e2b79bf0f09e5f66fd84b347d92dacf38dfdd82a187bc2173b80dd15ada3fa",
+    "tests/rxpa/rxpa_objects_class_only.crexx": "596236bc17c0b4bff488b0ae8c0fc845273572e63ed5373ece79b843a61ff241",
+    "tests/rxpa/rxpa_objects_workers.crexx": "50b8657794bd3b48cd21bb9ddafaa8f4a415fd5e9f65d63c0806bb70acd2a1b0",
+    "tests/rxpa/rxpa_objects_callback_compile.crexx": "b1422fd43a0bb390dbefbbd4873717b1b19dbc7f4d43942b20559e2ab4d66df7",
+    "tests/rxpa/rxpa_objects_cpp.cpp": "7741f7d0b938f4316687e1c43f408bb7ae2da4e9b4fc2dbad024f06fdc928d85",
+    "tests/rxpa/check_native_objects.cmake": "d59d5c75caf370d8b756eab0325682a93778f4510f8069d3b8e8561f351ac470",
+    "tests/rxpa/check_native_objects_package.py": "63b2d9d24ac20dea97c8c44c9853c46b52bf98c275e0fbff85573debace15eec"
+  }
+}

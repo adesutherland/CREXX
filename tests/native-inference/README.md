@@ -1,9 +1,62 @@
 # Native inference acceptance controls
 
-These are STEP-02 controls for the approved
+## Typed STEP-04 continuation
+
+`typed_configuration.crexx` and `typed_embeddings.crexx` exercise the public C
+typed interface. Runnable persistent and shared-worker consumers live in
+`lib/plugins/llama/examples` and are installed with the provider. Use
+`typed_toolchain.py BUILD SOURCE MODELS FRESH_OUTPUT cpu,required-gpu` for the
+explicit normal four-tool/optimization/VM matrix. Use
+`typed_package_consumer.py PREFIX SOURCE MODELS FRESH_OUTPUT cpu,required-gpu`
+for both installed optimization modes and relocated native consumers. Select
+hardware modes actually available on the host. Build the explicit optional
+`llama_provider_runtime_package` and `crexx-provider-package` targets before
+installation; the examples/demo `stage-optional` target does not select them.
+
+These scripts remain explicit, unregistered aggregates until STEP-06 establishes
+sanitizer scheduling. They are functional integration checks and do not repeat
+the accepted timing panel. [Typed evidence](../../docs/qa/native-inference-typed/README.md)
+and the [S4-D03 checklist](../../docs/planning/native-inference-typed-interface-proposal.md)
+track acceptance; the generic C RXPA dependency alone does not close STEP-04.
+
+These retain STEP-02 controls and STEP-03 implementation qualification for the approved
 [llama.rexx plan](../../docs/planning/native-inference-backlog.md).
 The [STEP-02 record](../../docs/planning/native-inference-step-02.md) defines
-thresholds and current gaps. Nothing here installs or implements `rxllama`.
+thresholds and historical gaps. The optional provider is implemented under
+`lib/plugins/llama`; [STEP-03](../../docs/planning/native-inference-step-03.md)
+owns its lifecycle qualification; STEP-04 owns embedding and typed API evidence.
+
+## STEP-03 provider checks
+
+STEP-03 closure is approved with remaining sanitizer proof assigned to STEP-06.
+The STEP-04 embedding controls are `embedding_acceptance.crexx`,
+`embedding_bridge.cpp` and `step04_toolchain.cmake`. They remain explicit tests;
+`embedding_text_boundary.crexx` retains the original S4-D01 failure and now passes
+after the approved length-aware host-service correction. See
+the [S4-D01 evidence](../../docs/qa/native-inference-s4d01/README.md) and
+[live plan](../../docs/planning/native-inference-step-04.md) before continuing.
+
+Configure the main build with `ENABLE_LLAMA`, the verified source archive and
+`CREXX_LLAMA_TEST_MODELS`. Build `llama_provider_runtime_package`,
+`rxllama_bridge_lifecycle`, `crexx-provider-package` and the ordinary tools before
+running `ctest -R '^rxllama_'`. Model-free backend probing, real CPU/Metal
+lifecycle/co-residency and four-tool checks are registered with serial scheduling.
+The optional `rxllama_package_measure` target performs an isolated scratch
+install, package metadata failure controls, selected-provider native-cache
+invalidation, external relocation, missing GPU/runtime metadata checks and actual
+dynamic and native cREXX worker ownership. Its Python scripts are functional QA, not product
+dependencies or performance-programme orchestration. Use the maintained ASan
+runner for the same target in the sanitizer build.
+
+The ordinary provider-free native worker positive control originally exposed
+S3-D01, a legacy-provider transition deadlock. Its approved repair and accepted
+Release cost are recorded in [S3-D01](../../docs/planning/native-inference-worker-transition-proposal.md).
+The expanded scratch matrix now passes native foreign-handle rejection and four
+workers sharing each real model on CPU/Metal in Debug (114.687 seconds total).
+It remains an explicit target: the expanded sanitizer measurement is outstanding
+and Adrian currently holds sanitizer builds/tests. Earlier dynamic-only timings
+do not qualify its new workload. STEP-04 adds normal local embedding evidence;
+STEP-05 generation and STEP-06 qualification remain open.
 
 `direct_control.cpp` is a native test workload calling pinned upstream APIs.
 It uses one model with private contexts, checks real text/token outputs,
@@ -229,3 +282,22 @@ whole-prefill references. Use the explicitly named bounded128 capture cells for
 the final generation control; BGE is unchanged. Timing is for one active context
 during the warm serial phase; concurrent worker admission/latency remains later
 provider qualification.
+
+## STEP-04 embedding functional closeout
+
+Following Adrian's accepted Release verdict, `embedding_bridge.cpp` also checks
+exact request row/token/byte bounds, query 512/513 limits, cancellation/recovery
+and CPU/GPU parity. For the latter, run
+`rxllama_embedding_bridge cross-device MODEL SHA256`.
+`shared_worker_embeddings.crexx` compares four real workers' 20 eight-row batches
+against their isolated baselines and consumes the packed results with rxvector.
+`step04_toolchain.cmake` accepts PROGRAM, MARKER and NO_OPT in addition to its
+existing explicit inputs; it links the core, class and Level-G library images
+so attached workers need no ambient bytecode search directory.
+
+`step04_package_consumer.py` checks copied sources through a scratch installed
+product and relocated native CPU/GPU executables. These remain explicit normal
+checks, with no new aggregate CTest registration or early sanitizer execution.
+See [retained evidence](../../docs/qa/native-inference-step04-closeout/README.md).
+The public typed facade/examples are still pending the reserved
+[S4-D03 interface review](../../docs/planning/native-inference-typed-interface-proposal.md).

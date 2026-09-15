@@ -32,6 +32,7 @@
 #include "rxcp_types.h"
 #include "rxflags.h"
 #include "rxbin.h"
+#include "rxcpdary.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
@@ -40,6 +41,7 @@ typedef struct walker_payload {
     Context *context;
     int globals;
     FILE *file;
+    dpa *emitted_native_dependencies; /* borrowed imported_func pointers */
 } walker_payload;
 
 /* Output Marshalling */

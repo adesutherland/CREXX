@@ -1,0 +1,5 @@
+Warning in shape.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsb"
+1 warning(s) in source file
+native 2 1 .object 1
+factory 2 1 .rxstats..linearfit 1
+native via object .object 0

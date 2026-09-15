@@ -1,0 +1,8 @@
+argv=[PosixPath('/private/tmp/rxpa-typed-followup-installed/installed Ω/bin/crexx'), '--program', PosixPath('/private/tmp/rxpa-typed-followup-installed/rxpa_objects_text_worker native Ω/consumer'), PosixPath('/private/tmp/rxpa-typed-followup-installed/rxpa_objects_text_worker.crexx'), '--jobs', '1', '--native']
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member rxpa_objects_text_worker
+BUILT: project member rxpa_objects_text_worker
+BARRIER: link program
+PUBLISHED: program /private/tmp/rxpa-typed-followup-installed/rxpa_objects_text_worker native Ω/consumer.rxbin
+PUBLISHED: native program /private/tmp/rxpa-typed-followup-installed/rxpa_objects_text_worker native Ω/consumer

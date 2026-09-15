@@ -1,0 +1,83 @@
+ASan run directory: cmake-build-debugasan/asan-logs/20260914-145529-ctest
+==> ctest
+    log: cmake-build-debugasan/asan-logs/20260914-145529-ctest/ctest.log
+==> ctest failed with rc 8
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^rxllama_backend_probe_cycle\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1734: rxllama_backend_probe_cycle
+1/1 Test #1734: rxllama_backend_probe_cycle ......Subprocess aborted***Exception:   1.28 sec
+=================================================================
+==86271==ERROR: AddressSanitizer: odr-violation (0x00010c497320):
+  [1] size=4 'ggml_arm_arch_features' /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+  [2] size=4 'ggml_arm_arch_features' /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+These globals were registered at these points:
+  [1]:
+    #0 0x00010382bcb4 in __asan_register_globals+0xa0 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13cb4)
+    #1 0x000103857640 in __asan::AsanApplyToGlobals(void (*)(__asan_global*, unsigned long), void const*)+0x7c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3f640)
+    #2 0x00010382bbf8 in __asan_register_image_globals+0x34 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13bf8)
+    #3 0x00010c345908 in asan.module_ctor+0x18 (libcrexx-ggml-cpu.so:arm64+0xd908)
+    #4 0x000184bd6a24 in invocation function for block in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const::$_0::operator()() const+0xb0 (dyld:arm64e+0x4ea24)
+    #5 0x000184be1a88 in invocation function for block in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x13c (dyld:arm64e+0x59a88)
+    #6 0x000184c21fa8 in invocation function for block in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x134 (dyld:arm64e+0x99fa8)
+    #7 0x000184c1e9a0 in mach_o::UnsafeHeader::forEachLoadCommand(void (load_command const*, bool&) block_pointer) const+0xcc (dyld:arm64e+0x969a0)
+    #8 0x000184c20248 in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x78 (dyld:arm64e+0x98248)
+    #9 0x000184be157c in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x200 (dyld:arm64e+0x5957c)
+    #10 0x000184bd1390 in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const+0x20c (dyld:arm64e+0x49390)
+    #11 0x000184bc9ccc in dyld4::JustInTimeLoader::runInitializers(dyld4::RuntimeState&) const+0x20 (dyld:arm64e+0x41ccc)
+    #12 0x000184bd1aac in dyld4::Loader::runInitializersBottomUp(dyld4::RuntimeState&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&) const+0x234 (dyld:arm64e+0x49aac)
+    #13 0x000184bd6abc in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const::$_0::operator()() const+0x70 (dyld:arm64e+0x4eabc)
+    #14 0x000184bd1d94 in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const+0x2c8 (dyld:arm64e+0x49d94)
+    #15 0x000184ba02c8 in dyld4::APIs::dlopen_from(char const*, int, void*)::$_0::operator()() const+0x90c (dyld:arm64e+0x182c8)
+    #16 0x000184b94000 in dyld4::APIs::dlopen_from(char const*, int, void*)+0x458 (dyld:arm64e+0xc000)
+    #17 0x000184b93b00 in dyld4::APIs::dlopen(char const*, int)+0x74 (dyld:arm64e+0xbb00)
+    #18 0x000103848f24 in dlopen+0x188 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x30f24)
+    #19 0x000103155bb4 in (anonymous namespace)::cpu_score(std::__1::__fs::filesystem::path const&) bridge.cpp:99
+    #20 0x000103152de8 in rxllama_test_probe_cycle bridge.cpp:448
+    #21 0x000102e426e0 in main bridge_lifecycle.cpp:101
+    #22 0x000184ba84e0 in start+0x1b4c (dyld:arm64e+0x204e0)
+
+  [2]:
+    #0 0x00010382bcb4 in __asan_register_globals+0xa0 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13cb4)
+    #1 0x000103857640 in __asan::AsanApplyToGlobals(void (*)(__asan_global*, unsigned long), void const*)+0x7c (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x3f640)
+    #2 0x00010382bbf8 in __asan_register_image_globals+0x34 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x13bf8)
+    #3 0x00010c345908 in asan.module_ctor+0x18 (libcrexx-ggml-cpu.so:arm64+0xd908)
+    #4 0x000184bd6a24 in invocation function for block in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const::$_0::operator()() const+0xb0 (dyld:arm64e+0x4ea24)
+    #5 0x000184be1a88 in invocation function for block in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x13c (dyld:arm64e+0x59a88)
+    #6 0x000184c21fa8 in invocation function for block in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x134 (dyld:arm64e+0x99fa8)
+    #7 0x000184c1e9a0 in mach_o::UnsafeHeader::forEachLoadCommand(void (load_command const*, bool&) block_pointer) const+0xcc (dyld:arm64e+0x969a0)
+    #8 0x000184c20248 in mach_o::UnsafeHeader::forEachSection(void (mach_o::UnsafeHeader::SectionInfo const&, bool&) block_pointer) const+0x78 (dyld:arm64e+0x98248)
+    #9 0x000184be157c in dyld3::MachOAnalyzer::forEachInitializer(Diagnostics&, dyld3::MachOAnalyzer::VMAddrConverter const&, void (unsigned int) block_pointer, void const*) const+0x200 (dyld:arm64e+0x5957c)
+    #10 0x000184bd1390 in dyld4::Loader::findAndRunAllInitializers(dyld4::RuntimeState&) const+0x20c (dyld:arm64e+0x49390)
+    #11 0x000184bc9ccc in dyld4::JustInTimeLoader::runInitializers(dyld4::RuntimeState&) const+0x20 (dyld:arm64e+0x41ccc)
+    #12 0x000184bd1aac in dyld4::Loader::runInitializersBottomUp(dyld4::RuntimeState&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&, lsl::Vector<AuthenticatedValue<dyld4::Loader const*>>&) const+0x234 (dyld:arm64e+0x49aac)
+    #13 0x000184bd6abc in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const::$_0::operator()() const+0x70 (dyld:arm64e+0x4eabc)
+    #14 0x000184bd1d94 in dyld4::Loader::runInitializersBottomUpPlusUpwardLinks(dyld4::RuntimeState&) const+0x2c8 (dyld:arm64e+0x49d94)
+    #15 0x000184ba02c8 in dyld4::APIs::dlopen_from(char const*, int, void*)::$_0::operator()() const+0x90c (dyld:arm64e+0x182c8)
+    #16 0x000184b94000 in dyld4::APIs::dlopen_from(char const*, int, void*)+0x458 (dyld:arm64e+0xc000)
+    #17 0x000184b93b00 in dyld4::APIs::dlopen(char const*, int)+0x74 (dyld:arm64e+0xbb00)
+    #18 0x000103848f24 in dlopen+0x188 (libclang_rt.asan_osx_dynamic.dylib:arm64e+0x30f24)
+    #19 0x000103155bb4 in (anonymous namespace)::cpu_score(std::__1::__fs::filesystem::path const&) bridge.cpp:99
+    #20 0x000103152de8 in rxllama_test_probe_cycle bridge.cpp:448
+    #21 0x000102e426e0 in main bridge_lifecycle.cpp:101
+    #22 0x000184ba84e0 in start+0x1b4c (dyld:arm64e+0x204e0)
+
+==86271==HINT: if you don't care about these errors you may set ASAN_OPTIONS=detect_odr_violation=0
+SUMMARY: AddressSanitizer: odr-violation: global 'ggml_arm_arch_features' at /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/_deps/crexx_llama_source-src/ggml/src/ggml-cpu/ggml-cpu.c in libcrexx-ggml-cpu.so
+==86271==ABORTING
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+library       =   1.28 sec*proc (1 test)
+llama         =   1.28 sec*proc (1 test)
+regression    =   1.28 sec*proc (1 test)
+rxpa          =   1.28 sec*proc (1 test)
+
+Total Test time (real) =   1.33 sec
+
+The following tests FAILED:
+	1734 - rxllama_backend_probe_cycle (Subprocess aborted)  library llama regression rxpa
+Errors while running CTest

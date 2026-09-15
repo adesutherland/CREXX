@@ -265,6 +265,97 @@ add_dynamic_plugin_target(_rxpa_classdecl rxpa_classdecl.c)
 localize_test_plugin_output(_rxpa_classdecl)
 add_dependencies(_rxpa_classdecl rxpa library rxvm rxc)
 
+# Runnable C-only objects, unlike the metadata-only classdecl fixture above.
+# The explicit four-tool matrix is not registered as a nested CTest aggregate
+# until isolated sanitizer scheduling evidence is obtained in STEP-06.
+add_dynamic_plugin_target(_rxpa_objects rxpa_objects.c)
+add_static_plugin_target(_rxpa_objects rxpa_objects.c)
+localize_test_plugin_output(_rxpa_objects)
+add_rxpa_provider_package(_rxpa_objects
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+add_decl_plugin_target(_rxpa_objects rxpa_objects.c)
+add_executable(rxc_objects_static EXCLUDE_FROM_ALL "${CMAKE_SOURCE_DIR}/compiler/rxc_main.c")
+target_include_directories(rxc_objects_static PRIVATE ${CMAKE_SOURCE_DIR}/platform)
+configure_linker_for_decl_lib(rxc_objects_static _rxpa_objects)
+target_link_libraries(rxc_objects_static rxclib _rxpa_objects_decl)
+foreach(engine IN ITEMS rxbvm rxtvm)
+    if(engine STREQUAL "rxtvm" AND MSVC)
+        continue()
+    endif()
+    set(object_vm objects_${engine})
+    add_executable(${object_vm} EXCLUDE_FROM_ALL
+            ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
+            $<TARGET_OBJECTS:${engine}_core_objects>)
+    target_compile_features(${object_vm} PRIVATE c_std_11)
+    if(MSVC)
+        target_compile_options(${object_vm} PRIVATE /experimental:c11atomics)
+    endif()
+    if(engine STREQUAL "rxbvm")
+        target_compile_definitions(${object_vm} PRIVATE NTHREADED=1)
+    endif()
+    configure_linker_for_static_lib(${object_vm} _rxpa_objects)
+    enable_rxpa_test_vm_platform(${object_vm})
+    target_link_libraries(${object_vm} rxvmplugin rxvmref rxbin mc_decimal_manual
+            avl_tree rxpa rxpashim _rxpa_objects_static)
+    target_include_directories(${object_vm} PRIVATE
+            ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
+            ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/assembler
+            ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/platform
+            ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/inc)
+endforeach()
+
+# Individual VM regressions build their artifacts through the normal QA prep
+# targets. CTest itself launches one VM per case: no nested build or matrix.
+# The larger explicit toolchain/package scripts remain unregistered aggregates.
+set(_object_artifacts)
+foreach(fixture IN ITEMS rxpa_objects rxpa_objects_class_only rxpa_objects_workers rxpa_objects_text_worker)
+    foreach(mode IN ITEMS noopt opt)
+        set(_object_flags)
+        if(mode STREQUAL "noopt")
+            set(_object_flags -n)
+        endif()
+        set(_object_program "${CMAKE_CURRENT_BINARY_DIR}/${fixture}_${mode}")
+        add_custom_command(OUTPUT "${_object_program}-linked.rxbin"
+                COMMAND $<TARGET_FILE:rxc> --no-exe-import ${_object_flags}
+                        -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+                        -o "${_object_program}" "${CMAKE_CURRENT_SOURCE_DIR}/${fixture}.crexx"
+                COMMAND $<TARGET_FILE:rxas> -o "${_object_program}" "${_object_program}"
+                COMMAND $<TARGET_FILE:rxlink> -o "${_object_program}-linked" "${_object_program}"
+                        "${CMAKE_BINARY_DIR}/bin/library"
+                        "${CMAKE_BINARY_DIR}/bin/classlib"
+                        "${CMAKE_BINARY_DIR}/bin/rxfnsg"
+                DEPENDS rxc rxas rxlink compiler_exit_bin _rxpa_objects library classlib rxfnsg
+                        "${CMAKE_CURRENT_SOURCE_DIR}/${fixture}.crexx"
+                VERBATIM)
+        list(APPEND _object_artifacts "${_object_program}-linked.rxbin")
+        foreach(engine IN ITEMS rxbvm rxtvm)
+            if(NOT TARGET objects_${engine})
+                continue()
+            endif()
+            foreach(delivery IN ITEMS dynamic static)
+                set(_object_runner ${engine})
+                if(delivery STREQUAL "static")
+                    set(_object_runner objects_${engine})
+                endif()
+                set(_object_test "${fixture}_${delivery}_${engine}_${mode}")
+                add_test(NAME ${_object_test}
+                        COMMAND $<TARGET_FILE:${_object_runner}> "${_object_program}-linked")
+                set_tests_properties(${_object_test} PROPERTIES
+                        LABELS "rxpa;native-objects;classes;regression;${delivery};optimizer-parity"
+                        ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers"
+                        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:|ERROR:"
+                        TIMEOUT 90)
+                if(fixture STREQUAL "rxpa_objects_workers" OR fixture STREQUAL "rxpa_objects_text_worker")
+                    set_tests_properties(${_object_test} PROPERTIES PROCESSORS 3)
+                endif()
+                crexx_register_test_prep_targets(TESTS ${_object_test}
+                        TARGETS rxpa_objects_artifacts ${_object_runner})
+            endforeach()
+        endforeach()
+    endforeach()
+endforeach()
+add_custom_target(rxpa_objects_artifacts ALL DEPENDS ${_object_artifacts})
+
 # Native-to-cREXX callback fixture. The native procedure synchronously calls a
 # descriptor-checked method on the interface object supplied by Rexx.
 add_dynamic_plugin_target(_rxpa_callmethod rxpa_callmethod.c)

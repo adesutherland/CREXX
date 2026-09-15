@@ -1,0 +1,9 @@
+argv=[PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/installed Ω/bin/crexx'), '--program', PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings native Ω/persistent'), PosixPath('/private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings.crexx'), '--jobs', '1', '--native']
+cwd=/private/tmp/crexx-s4-installed.NQTmfd/consumer checks
+rc=0
+WAVE: project compile/assemble jobs=1
+START: project member shared_worker_embeddings
+BUILT: project member shared_worker_embeddings
+BARRIER: link program
+PUBLISHED: program /private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings native Ω/persistent.rxbin
+PUBLISHED: native program /private/tmp/crexx-s4-installed.NQTmfd/consumer checks/shared_worker_embeddings native Ω/persistent

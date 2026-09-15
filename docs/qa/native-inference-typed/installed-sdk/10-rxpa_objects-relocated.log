@@ -1,0 +1,4 @@
+argv=[PosixPath('/private/tmp/rxpa-typed-followup-installed/rxpa_objects relocated Å/consumer')]
+rc=0
+PASS: C native factory and concrete method binding
+PASS: C native objects, factories, identity and interface dispatch

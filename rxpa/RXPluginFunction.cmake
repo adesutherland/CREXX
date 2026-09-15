@@ -111,7 +111,8 @@ endfunction()
 # packaging.  The historical <id>_static.a/.lib archive remains available for
 # compatibility with existing consumers.
 function(add_rxpa_provider_package plugin_name)
-    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY;PROVIDER_ID" "" ${ARGN})
+    cmake_parse_arguments(RXPA_PROVIDER "" "OUTPUT_DIRECTORY;PROVIDER_ID;ENGINE_ID"
+        "LINK_TARGETS;RUNTIME_TARGETS;BACKEND_TARGETS;RUNTIME_FILES" ${ARGN})
     set(_crexx_dynamic_target ${plugin_name})
     set(_crexx_static_target ${plugin_name}_static)
     if(RXPA_PROVIDER_PROVIDER_ID)
@@ -153,6 +154,37 @@ function(add_rxpa_provider_package plugin_name)
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "$<TARGET_FILE:${_crexx_static_target}>"
                     "${_crexx_provider_dir}/$<TARGET_FILE_NAME:${_crexx_static_target}>")
+    if(RXPA_PROVIDER_LINK_TARGETS OR RXPA_PROVIDER_RUNTIME_TARGETS)
+        set(_package_input "${CMAKE_CURRENT_BINARY_DIR}/${_crexx_provider_id}-package-$<CONFIG>.cmake")
+        set(_package_content "set(provider \"${_crexx_provider_id}\")\nset(output \"${_crexx_provider_dir}\")\nset(platform \"${CMAKE_SYSTEM_NAME}\")\nset(arch \"${CMAKE_SYSTEM_PROCESSOR}\")\nset(engine \"${RXPA_PROVIDER_ENGINE_ID}\")\n")
+        foreach(_target IN LISTS RXPA_PROVIDER_LINK_TARGETS)
+            string(APPEND _package_content "list(APPEND link_files \"$<TARGET_LINKER_FILE:${_target}>\")\n")
+        endforeach()
+        foreach(_target IN LISTS RXPA_PROVIDER_RUNTIME_TARGETS)
+            string(APPEND _package_content "list(APPEND runtime_files \"$<TARGET_FILE:${_target}>\")\n")
+            get_target_property(_type ${_target} TYPE)
+            if(_type STREQUAL "SHARED_LIBRARY")
+                string(APPEND _package_content "list(APPEND runtime_files \"$<TARGET_LINKER_FILE:${_target}>\")\n")
+                if(NOT WIN32)
+                    string(APPEND _package_content "list(APPEND runtime_files \"$<TARGET_SONAME_FILE:${_target}>\")\n")
+                endif()
+            endif()
+        endforeach()
+        foreach(_file IN LISTS RXPA_PROVIDER_RUNTIME_FILES)
+            string(APPEND _package_content "list(APPEND runtime_files \"${_file}\")\n")
+        endforeach()
+        foreach(_target IN LISTS RXPA_PROVIDER_BACKEND_TARGETS)
+            string(REGEX REPLACE "^ggml-" "" _backend "${_target}")
+            string(APPEND _package_content "list(APPEND backend_files \"${_backend}|$<TARGET_FILE:${_target}>\")\n")
+        endforeach()
+        file(GENERATE OUTPUT "${_package_input}" CONTENT "${_package_content}")
+        add_custom_target(${plugin_name}_runtime_package ALL
+            COMMAND ${CMAKE_COMMAND} "-DINPUT=${_package_input}"
+                -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/WriteProviderPackage.cmake"
+            DEPENDS ${_crexx_dynamic_target} ${_crexx_static_target}
+                ${RXPA_PROVIDER_LINK_TARGETS} ${RXPA_PROVIDER_RUNTIME_TARGETS}
+            VERBATIM)
+    endif()
 endfunction()
 
 # Function to configure the linker for a static declaration library ensuring the library is linked into the executable

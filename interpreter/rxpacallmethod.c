@@ -31,6 +31,66 @@
 #include "rxvmintp.h"
 #include "rxvmvars.h"
 
+static int native_module_declares_class(const module_file *file, const char *name) {
+    int offset;
+    size_t length = strlen(name);
+    if (!file || !file->native) return 0;
+    /* Native metadata is created by the checked loader callbacks, not read
+     * from an unchecked RXBIN. Only the declaring module needs a graph. */
+    for (offset = file->header.meta_head; offset != -1;) {
+        const meta_entry *entry = (const meta_entry *)(file->constant + offset);
+        if (entry->base.type == META_CLASS) {
+            const meta_class_constant *cls = (const meta_class_constant *)entry;
+            const string_constant *symbol = (const string_constant *)(file->constant + cls->symbol);
+            if (symbol->string_len == length && !memcmp(symbol->string, name, length)) return 1;
+        }
+        offset = entry->next;
+    }
+    return 0;
+}
+
+/* Native construction is deliberately separate from the context-light RXPA
+ * value helpers. The descriptor belongs to a loaded immutable graph; it is
+ * never plugin-owned and cannot outlive this VM's values. Resolve everything
+ * before touching the destination, including rejecting interface/builtin types.
+ * This is the same final publication as SETOBJTYPE, with a checked name lookup
+ * for C callers that cannot embed an RXAS graph operand. */
+int rxvm_object_set_type(rxpa_attribute_value destination,
+                         const char *class_name) {
+    rxvm_context *context = rxvm_active_context_current();
+    const RxGraphTypeRef *type_ref = NULL;
+    char *canonical;
+    size_t index;
+    if (!context || !destination || !class_name || !*class_name) return -1;
+    canonical = rx_graph_normalize_type_name(class_name);
+    if (!canonical) return -1;
+    for (index = 0; index < context->num_modules; ++index) {
+        module_file *file = context->modules[index]->file;
+        const RxGraph *graph;
+        if (!file) continue;
+        if (!file->semantic_graph && native_module_declares_class(file, canonical)) {
+            char *error = NULL;
+            /* Native module files are VM-local and immutable after load.
+             * Cache once on that owner; free_module releases it after values.
+             * A failed build never publishes an incomplete graph. */
+            file->semantic_graph = rx_graph_build_crexx(&file, 1u, &error);
+            free(error);
+        }
+        graph = file->semantic_graph;
+        if (!graph) continue;
+        RxGraphId type = rx_graph_find_type(graph, canonical);
+        if (type != RX_GRAPH_NONE && rx_graph_type_kind(graph, type) == RX_GRAPH_TYPE_CLASS) {
+            type_ref = rx_graph_type_ref(graph, type);
+            break;
+        }
+    }
+    free(canonical);
+    if (!type_ref) return -1;
+    ((value *)destination)->object_type = type_ref;
+    clear_value_uninitialized_object((value *)destination);
+    return 0;
+}
+
 static void rxpa_callmethod_set_signal(value *signal,
                                        rxsignal code,
                                        const char *message) {

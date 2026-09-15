@@ -313,6 +313,9 @@ Symbol *ensure_class_imported(Context *context, const char *class_name, size_t c
  * Unlike ordinary source lookup, this does not require the consumer source to
  * import the producer's dependency namespace independently. */
 imported_func *rxcp_find_imported_function_exact(Context *context, const char *fqname);
+/* Borrowed native factory records; caller owns the returned pointer array. */
+dpa *rxcp_native_interface_factories(Context *context, const char *interface_name,
+                                    const char *factory_suffix);
 Symbol *ensure_function_imported_exact(Context *context,
                                        const char *fqname,
                                        size_t fqname_length);

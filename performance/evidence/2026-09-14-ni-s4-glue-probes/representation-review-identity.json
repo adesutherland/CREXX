@@ -1,0 +1,13 @@
+{
+  "checkout": "/Users/adrian/CLionProjects/crexx-rag",
+  "head": "dd96144bb3689ad4da4a9a43c8df914555402877",
+  "read_only": true,
+  "files": {
+    "crexx/providers/provider_contract.crexx": "2818e055f5c502a4ac90576919cd80df2d8bc4ef885706a2994f3ce2c765e5ec",
+    "crexx/providers/industrial_provider.crexx": "bcf0bd59e3d9d3cad5522914b45492bb2acaf1fa42739d7016041dc134cfce00",
+    "crexx/application/ragschema.crexx": "3d0f3517454cfc5cafd387ef6a678e6084514e5cbfcd2271f95e0270053bcd2d",
+    "crexx/application/ragembedding.crexx": "d309acf1df9327f299dcf7363f0b19bde3d5c0e4f64a193877b0b5764bd0c43c",
+    "crexx/application/ragretrieval.crexx": "5589f0120127d48cc6ecec6c9b882b7a8b196f2cc7b2b93c777cc62c27269b7e"
+  },
+  "review": "No live database or sidecar opened; source review only; unrelated dirty work preserved"
+}

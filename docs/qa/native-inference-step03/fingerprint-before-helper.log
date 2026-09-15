@@ -1,0 +1,3 @@
+rc=2
+
+native provider package: usage: crexx-provider-package MANIFEST OUTPUT_STEM GNU|MSVC

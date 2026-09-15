@@ -1,0 +1,2 @@
+argv=['/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink', '-o', '/private/tmp/llama-typed-debug-final/opt-typed_configuration-linked', '/private/tmp/llama-typed-debug-final/opt-typed_configuration', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib', '/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg']
+rc=0

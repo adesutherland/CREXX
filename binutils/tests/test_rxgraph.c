@@ -244,6 +244,13 @@ int main(void) {
                                                    3u,
                                                    9u),
                   "add factory declaration");
+    ok &= require(rx_graph_builder_add_declaration(builder,
+                                                   box,
+                                                   factory_member,
+                                                   RX_GRAPH_MEMBER_FACTORY,
+                                                   3u,
+                                                   10u),
+                  "add native concrete factory declaration without interface bucket");
     ok &= require(rx_graph_builder_add_dispatch(builder, box, describe, callable),
                   "add dispatch row");
     ok &= require(rx_graph_builder_add_dispatch(

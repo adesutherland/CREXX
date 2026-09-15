@@ -77,6 +77,78 @@ CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
 AddressSanitizer or LeakSanitizer diagnostic appears in either retained
 artifact.
 
+## Open findings from native inference integration
+
+Status at 2026-09-14: SAN-009 is open in the uncommitted native-inference
+implementation. Its reproduced probe-lifetime repair and local Debug/Apple-ASan
+checks pass; required broader platform proof remains outstanding.
+
+### SAN-009 — CPU backend probe unload/reload re-registers Apple-ASan globals
+
+Status: open; local repair established, platform qualification pending. Discovered
+2026-09-14 during STEP-03. Owner: the STEP-03 implementation agent. Adrian's
+subsequent direction is to diagnose/fix SAN-009 while he reviews S3-D01, but
+**do not rerun the sanitizer yet**. The source/evidence review below confirms
+the existing repair; further sanitizer builds and tests are on hold pending
+his direction. Required platform proof remains open. Adrian subsequently approved STEP-03 closure and the named STEP-06
+native-inference release-QA handoff, owned by Codex under his direction.
+SAN-009 remains open and release-blocking; no sanitizer suppression is authorized.
+
+- Affected revision: baseline `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`
+  plus the uncommitted STEP-03 provider implementation.
+- Original trigger: `tools/asan-run.sh --build-dir cmake-build-debugasan
+  --phase build --build-target rxllama_toolchain_measure --build-leaks off`,
+  with `ENABLE_LLAMA=ON`, the pinned archive and explicit test models. The first
+  rxbvm lifecycle reports an ODR violation for `ggml_arm_arch_features` while
+  the bridge probes the packaged CPU backend.
+- Retained [original report](qa/native-inference-step03/asan-odr-original.log).
+  The scanner also copied the compiler's sanitizer runtime into the package.
+  Excluding/removing that copy did **not** repair the reproducer. That initial
+  hypothesis is not the cause established by the controlled experiment.
+- Reproduced cause: first-party `cpu_score()` calls `dlopen`, probes capabilities,
+  then `dlclose`; the subsequent load re-registers instrumented Mach-O globals.
+  The permanent `rxllama_backend_probe_cycle` control fails with the original
+  close behavior restored and passes when probe references remain resident.
+  The controlled reversion changed only the Unix probe close operation, then
+  restored the repaired source. See
+  [permanent regression before repair](qa/native-inference-step03/asan-probe-cycle-red.log).
+- Repair: retain probe DSOs for process lifetime, skip an unnecessary feature
+  probe when only one CPU variant is packaged, and follow pinned upstream's
+  process-lifetime backend-DSO policy. No engine inference mathematics changed.
+  Upstream `ggml/src/ggml-backend-reg.cpp` explicitly retains its loaded DSOs
+  because backend background threads can outlive registry destruction.
+  Instrumentation runtimes are independently excluded from product bundles.
+- Before the S3-D01 VM edit, matching Debug/Apple-ASan probe, six CPU/Metal bridge controls and
+  four-tool lifecycle all pass (8/8 in each build). The full scratch-install,
+  native relocation and dynamic-worker matrices also pass in both builds.
+  The existing native-project contract passes in both builds. See
+  [the retained evidence index](qa/native-inference-step03/README.md).
+  These observations do not close broader platform gates.
+- Follow-up review, 2026-09-14, after Adrian's sanitizer hold: inspected
+  `cpu_score()`, engine cleanup, the permanent probe-cycle control, the retained
+  original/reversion failures and pinned upstream registry destruction. The
+  repair was already present in the working tree; no further source correction
+  is needed for the reproduced failure. All 20 source/test/build-input hashes
+  and both recorded build configurations match `source-and-configuration.json`;
+  all 99 retained evidence checksums passed before this documentation update.
+  Existing test results above predate the hold and are reused, not new runs.
+  No build or test was launched, no interpreter source changed, and S3-D01
+  remains under review. Backend-library residency is process-wide; model and
+  private-context allocations still follow their ordinary release paths.
+- Adrian subsequently approved S3-D01 and accepted its measured per-legacy-call
+  cost. The expanded native/dynamic model-worker matrix and all 2,314
+  non-measurement CTests pass in normal Debug;
+  the earlier sanitizer evidence predates that VM repair and matrix expansion.
+  Adrian subsequently approved STEP-03 closure and assigned the remaining
+  proof to STEP-06 native-inference release QA, owned by Codex under his
+  direction. Include S3-D01, the expanded native matrix and its isolated sanitizer
+  scheduling measurement alongside the SAN-009 regression and broad platform
+  gates. The sanitizer hold remains until STEP-06; SAN-009 is still open.
+- Closure requires the permanent regression, matching normal/maintained sanitizer
+  checks, the original trigger and applicable broad platform gates in
+  [the sanitizer guide](ai-context/CREXX_ASAN_TESTING.md). Apple LSan is unsupported;
+  supported Linux ASan/LSan remains required. STEP-06 is the explicitly approved named gate.  No release-ready or sanitizer-clean claim.
+
 ## Findings closed on 2026-09-12
 
 ### SAN-008 — array size shorthand reads beyond an imported array's bounds table
