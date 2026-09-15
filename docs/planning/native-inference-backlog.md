@@ -3,8 +3,10 @@
 Status: plan, STEP-01 and STEP-02 output approved by Adrian, 2026-09-14;
 STEP-03 closure is approved; STEP-04 implementation and local acceptance work
 are complete at the bounded capture point. The 15 September full-regression
-preparation exposed NI-S4-QA01 in existing HTTP consumers; that qualification
-failure remains open in the [baseline record](../qa/native-inference-baseline/README.md). Remaining
+preparation exposed NI-S4-QA01 in existing HTTP consumers. Its compiler repair,
+the authorized C factory cleanup and the separate QA02 static archive dependency
+repair now have [complete ordinary local coverage](../qa/native-inference-qa01/README.md)
+for all 2,347 selected tests through the broad run and affected rechecks. Remaining
 sanitizer and platform qualification is assigned to STEP-06.
 The original requirements were captured on 10–11 September 2026. Adrian's
 14 September direction requires GPU support from the first delivery, runtime
@@ -602,7 +604,7 @@ open/release-blocking SAN-009 and S3-D01/S4-D01/native-object/typed-call proof.
 | AC-10 | Exact pinned artifacts/build/profile and inspectable identity retained. | Previously recorded conversion-provenance resolution and full provisioning qualification. |
 | AC-11 | Scratch-installed imports, both VMs and relocated native CPU/Metal examples use declared package dependencies; external C/C++ SDK passes. | Every target OS, CPU-only-host/backend/driver and Windows runtime-dependency qualification. |
 | AC-12 | Bounded embedding Release verdict accepted; no model tuning or performance rerun. NI-S4-P01 remains an accepted unexplained Metal observation. | Generation glue verdict and remaining product qualification; no claim that the 5% tripwire was met or its cause repaired. |
-| AC-13 | Current focused native-object/factory/executor/compatibility regressions and four-tool/static/installed/native consumer checks pass. | Final broader, maintained sanitizer and exact-head hosted gates required before publication. |
+| AC-13 | Focused native-object/factory/executor/compatibility and four-tool/static/installed/native checks pass. QA01/QA02 repair and C carrier cleanup account for all 2,347 ordinary Debug tests through broad plus affected evidence. | Maintained sanitizer, remaining platform and exact-head hosted gates required before publication. |
 | AC-14 | Typed C contracts/reference and installed persistent/shared-worker embedding examples complete. Every local/parent criterion reconciled. | Generation examples and final capability/packaging matrix; STEP-07 may overlap hardware qualification. |
 
 OUT-01–05 and CREXX-NI-01–07 retain their complete scope. STEP-01/02 completion and
@@ -619,5 +621,19 @@ latest completed implementation dependency.
   RETURNS_VOID/RETVAL_MISSING (NI-S4-QA01), independently reproduced. The requested
   checkpoint retains this failure alongside the prior focused/typed successes;
   it is not full-regression-qualified. No compiler repair or sanitizer rerun is
-  included in this follow-up. Next: diagnose NI-S4-QA01, retain ordinary controls
-  and complete the full normal regression gate; STEP-05 remains unstarted.
+  included in that baseline capture. The repair below supersedes its next action;
+  STEP-05 remains unstarted.
+
+- **Regression repair and native factory cleanup, 2026-09-15:** QA01 waits for
+  imported call types before task lowering. The obsolete `statsvalue.crexx`
+  construction/accessor shim is removed; `rxstats.linearfit` now belongs to its C
+  provider with the same factory, coefficients and owned-value semantics, plus
+  correct concrete identity on native results. Human/agent guidance is updated.
+  QA02 separately repairs static archive relink dependencies in the SDK helpers.
+  The full run completed 2,337 passes, nine failures and one timeout; corrections
+  and affected rechecks now account for all 2,347 tests (2,305 unchanged broad
+  passes plus 42 distinct rechecked tests). No test was disabled or assertion
+  weakened. [The evidence](../qa/native-inference-qa01/README.md) ticks S4-B-02
+  and all numbered QA01/QA02 criteria. Public-contract/STEP-04 closure review
+  remains with Adrian; STEP-05 is unstarted and STEP-06 retains SAN-009,
+  maintained sanitizers, platform and release qualification.

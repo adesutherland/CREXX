@@ -1,0 +1,64 @@
+interpreter/test_rxpa_concurrency:
+  input: C_EXECUTABLE_LINKER__test_rxpa_concurrency_Debug
+    interpreter/CMakeFiles/test_rxpa_concurrency.dir/tests/test_rxpa_concurrency.c.o
+    | bin/librxvml.a
+    | bin/librxpashim.a
+    | bin/librxvmplugin.a
+    | bin/rxvm_mc_decimal_manual.a
+    | bin/libplatform.a
+    | bin/libdecnumber.a
+    | bin/libavl_tree.a
+    | bin/librxpa.a
+    | bin/librxvmref.a
+    | bin/librxvmmemory.a
+    | bin/librxbin.a
+    | bin/rx_cipher_static.a
+    | bin/rx_hash_static.a
+    | bin/rx_stack_static.a
+    | bin/rxid_static.a
+    | bin/rxfloat_static.a
+    | bin/rxstats_static.a
+    | bin/rxvector_static.a
+    | bin/rxfs_static.a
+    | bin/rxplatform_static.a
+    || bin/libavl_tree.a
+    || bin/libdecnumber.a
+    || bin/libplatform.a
+    || bin/librxbin.a
+    || bin/librxpa.a
+    || bin/librxpashim.a
+    || bin/librxvml.a
+    || bin/librxvmmemory.a
+    || bin/librxvmplugin.a
+    || bin/librxvmref.a
+    || bin/rx_cipher.rxplugin
+    || bin/rx_cipher_static.a
+    || bin/rx_getpi.rxplugin
+    || bin/rx_hash.rxplugin
+    || bin/rx_hash_static.a
+    || bin/rx_rxpa_session_failure.rxplugin
+    || bin/rx_stack.rxplugin
+    || bin/rx_stack_static.a
+    || bin/rx_strings.rxplugin
+    || bin/rxfloat.rxplugin
+    || bin/rxfloat_static.a
+    || bin/rxfs.rxplugin
+    || bin/rxfs_static.a
+    || bin/rxid.rxplugin
+    || bin/rxid_static.a
+    || bin/rxplatform.rxplugin
+    || bin/rxplatform_static.a
+    || bin/rxstats.rxplugin
+    || bin/rxstats_static.a
+    || bin/rxvector.rxplugin
+    || bin/rxvector_static.a
+    || bin/rxvm_mc_decimal_manual.a
+  outputs:
+    qa-prep-comprehensive
+    concurrency_test_artifacts
+    CMakeFiles/concurrency-qa
+    /Users/adrian/CLionProjects/CREXX/cmake-build-debug/CMakeFiles/concurrency-qa
+    CMakeFiles/qa-comprehensive
+    /Users/adrian/CLionProjects/CREXX/cmake-build-debug/CMakeFiles/qa-comprehensive
+    test_rxpa_concurrency
+    interpreter/all

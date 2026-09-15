@@ -4,7 +4,6 @@ set(RXFNSG_REXX_MODULES
   integer
   decimal
   packednumeric
-  statsvalue
   unicode_casefold
   unicode_case_mapping
   unicode_codec

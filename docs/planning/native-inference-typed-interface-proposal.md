@@ -2,8 +2,11 @@
 
 Status: implementation and normal local F-AC-01–04 verification complete,
 14 September 2026; captured in the requested 15 September baseline. Final
-public-contract/closure review and the newly found NI-S4-QA01 broad regression
-failure remain open; see the [baseline record](../qa/native-inference-baseline/README.md). The presented names/return contracts are unchanged.
+public-contract/closure review remains open. The subsequent
+[QA01/QA02 repair and factory cleanup](../qa/native-inference-qa01/README.md)
+completes ordinary local regression coverage for all 2,347 tests using the full
+run and affected rechecks. Platform/sanitizer qualification remains STEP-06.
+The presented names/return contracts are unchanged.
 The STEP-04 Release verdict is accepted. This is the concrete candidate for the
 public spelling review reserved by [STEP-01](native-inference-step-01.md#proposed-public-contract).
 Parent outcomes and criteria remain in [STEP-04](native-inference-step-04.md)
@@ -183,9 +186,11 @@ and static declarations. The proposed public surface is therefore not tied to
 Rexx-written declarations. A [focused review](../qa/native-inference-native-surface-review/README.md)
 established that the then-remaining gap was supported pure-C construction of
 objects with correct runtime class identity; declaration and native payload
-publication alone do not establish it. The existing stats native return has
-working concrete accessors but reports `.object`, whereas its Rexx factory
-reports `.rxstats..linearfit`, in both optimized and unoptimized diagnostics.
+publication alone do not establish it. At that checkpoint the stats native
+return had working concrete accessors but reported `.object`, whereas its Rexx
+factory reported `.rxstats..linearfit`, in both optimization modes. The later
+15 September shim cleanup moves that carrier to C RXPA and requires runtime
+identity for native and factory results; see QA01-AC-05 in STEP-04.
 
 Adrian subsequently selected “complete the C RXPA surface”. The generic
 [RXPA completion plan](rxpa-native-objects.md) now owns checked native class

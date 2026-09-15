@@ -84,6 +84,14 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   gates. Sanitizer worklist requirements below still apply to actual
   first-party sanitizer findings.
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
+- For native object providers, use the C RXPA factories/method bindings and
+  checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
+  Do not add duplicate Rexx construction or forwarding classes when those C
+  bindings already implement the contract. Use `tests/rxpa/rxpa_objects.c` and
+  `lib/plugins/llama/typed.h` as executable examples; `rxpa_classdecl` is only a
+  metadata compilation fixture. Preserve Rexx classes that still own behavior.
+  When replacing a shim, remove its obsolete source/build entries and update
+  human and agent guides together; mark retained historical evidence as such.
 - Treat library development as an opportunity to validate the complete product
   toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and
   `rxvm`, and a library-discovered defect in any of those layers should gain a

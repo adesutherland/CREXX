@@ -264,10 +264,12 @@ model, and enters Release 1 only through a beta quality gate.
   [C RXPA object surface](planning/rxpa-native-objects.md) and its interface-only
   provider/typed callback-return repairs also pass focused and installed SDK checks.
   [S4-05 and S4-AC-01–06](planning/native-inference-step-04.md) are ticked complete
-  locally with retained evidence. The requested 15 September baseline also
-  retains [NI-S4-QA01](qa/native-inference-baseline/README.md): fresh full QA
-  preparation fails existing HTTP request/get compilation, so the current
-  full regression gate is incomplete. Final public-contract/STEP-04 closure
+  locally with retained evidence. The 15 September [QA01/QA02 repair and C
+  factory cleanup](qa/native-inference-qa01/README.md) fixes imported task
+  lowering and static archive relinking, removes the obsolete `linearfit` Rexx
+  construction shim, and updates human/agent guidance. All 2,347 ordinary Debug
+  tests now have passing evidence from the broad run plus affected rechecks;
+  the original failed baseline is retained historically. Final public-contract/STEP-04 closure
   review remains open. Generation is STEP-05. Sanitizer execution and
   Windows/Linux/CUDA/Vulkan qualification remain STEP-06; SAN-009 is still open.
   The [dependency pins and contract](planning/native-inference-step-01.md)

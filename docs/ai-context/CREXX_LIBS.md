@@ -757,7 +757,8 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxstats`, `rxvector`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxvector`, `rxid`, `rxfs`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Mixed V2 procedures | `rxstats` | Scalar statistics and immutable `linearfit` accessors remain process-reentrant. The C `linearfit` factory and regression result publication use the owning VM's checked type service through session-affine calls. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 
@@ -986,11 +987,13 @@ RXBIN dependency, runtime lookup, and native archive identity consistently
 ### `rxllama` native inference lifecycle
 
 The optional `ENABLE_LLAMA` build adds the session-aware llama.rexx / `rxllama`
-provider. Its STEP-03 surface supplies configuration, packaged CPU/GPU discovery,
-asynchronous model ownership, private contexts, explicit preparation, inspection
-and cleanup. Embedding and generation request APIs are later approved steps.
+provider. `import llama` exposes typed configuration, runtime, model, embedding
+session, request, result and diagnostic objects implemented directly in C RXPA.
+Load and prepare once, then process repeated inputs or batches using private
+contexts over shared compatible model weights. CPU/GPU discovery, inspection
+and cleanup remain explicit. Generation requests remain STEP-05.
 See [the provider guide](../../lib/plugins/llama/README.md) for exact build and
-runtime boundaries and [STEP-03](../planning/native-inference-step-03.md) for
+runtime boundaries and [STEP-04](../planning/native-inference-step-04.md) for
 qualification status, including remaining sanitizer and platform gates.
 
 `add_rxpa_provider_package` accepts optional `LINK_TARGETS`, `RUNTIME_TARGETS`,
@@ -1075,7 +1078,9 @@ post-release language work.
 
 RXPA can also publish class/interface contract metadata to the compiler and VM.
 Use this when a native or hybrid provider needs to expose the same class-shaped
-contract that Rexx source would normally declare.
+contract that Rexx source would normally declare. The following snippet declares
+an interface only. For executable concrete factories and methods, use the C
+bindings in [Constructing and binding objects entirely in C](#constructing-and-binding-objects-entirely-in-c).
 
 ```c
 LOADFUNCS
@@ -1083,12 +1088,6 @@ ADDINTERFACE("demo.environment");
 ADDFACTORY("demo.environment", "*", ".demo..environment", "name=.string");
 ADDMETHOD("demo.environment", "describe", ".string", "");
 
-ADDCLASS("demo.nativeenvironment");
-ADDIMPLEMENTS("demo.nativeenvironment", "demo.environment");
-ADDFACTORY("demo.nativeenvironment", "*", ".demo..nativeenvironment", "name=.string");
-ADDMETHOD("demo.nativeenvironment", "describe", ".string", "");
-
-ADDPROC(make_env, "demo.make", "b", ".demo..environment", "");
 ENDLOADFUNCS
 ```
 
@@ -1159,10 +1158,17 @@ compatibility lane, which prevents that nested native re-entry from deadlocking.
 
 ### Constructing and binding objects entirely in C
 
+Use the RXPA CMake linker helpers for static and declaration providers. They
+retain the platform whole-archive/init-symbol flags and track archive changes
+as relink inputs. A build-order dependency alone can leave an executable with
+an older provider; the installed SDK regression checks incremental relinking.
+
 Declare the class before dependent signatures, bind C bodies with the member
 macros below, then publish the concrete class with `SETOBJECTTYPE`. A typed
-return declaration alone does not establish runtime class identity. This
-surface is implemented in the working tree; platform/sanitizer qualification
+return declaration alone does not establish runtime class identity. Publish
+these bindings directly from the provider; a duplicate Rexx factory or
+forwarding class is unnecessary. Existing Rexx classes with their own behavior
+remain valid implementations. This surface is implemented; platform/sanitizer qualification
 is tracked in [RXPA native objects](../planning/rxpa-native-objects.md).
 
 ```c

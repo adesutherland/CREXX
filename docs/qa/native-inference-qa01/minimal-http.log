@@ -1,0 +1,3 @@
+Error in minimal_http.crexx @ 9:14 - #RETURNS_VOID: Expression does not return a value., "client.get(\"/failure\", .httpheaders.empty"
+Error in minimal_http.crexx @ 9:14 - #RETVAL_MISSING: RETURN value is required., "client.get(\"/failure\", .httpheaders.empty"
+2 error(s) in source file

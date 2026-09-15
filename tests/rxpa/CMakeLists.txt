@@ -481,9 +481,11 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_signature_diagnostics PROPERTIES
         LABELS "compiler;diagnostics;rxpa;runtime;optimizer"
-        # This composite contract launches 20 instrumented compiler,
-        # assembler, and VM subprocesses. Under a full parallel sanitizer run
-        # it needs the repository's established long-test allowance.
+        # This 20-subprocess aggregate timed out at 300 s in parallel Debug,
+        # then passed unchanged in isolation in 67.53 s (2026-09-15).
+        # Isolate the existing workload; retain the established time budget.
+        # Maintained sanitizer scheduling proof remains in STEP-06.
+        RUN_SERIAL TRUE
         TIMEOUT 300)
 
 foreach(_mode IN ITEMS noopt opt)

@@ -1,0 +1,108 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 1740: rxllama_bridge_smol_cpu
+ 1/40 Test #1740: rxllama_bridge_smol_cpu .........................   Passed   17.09 sec
+      Start 1743: rxllama_bridge_smol_required-gpu
+ 2/40 Test #1743: rxllama_bridge_smol_required-gpu ................   Passed   16.71 sec
+      Start 1741: rxllama_bridge_both_cpu
+ 3/40 Test #1741: rxllama_bridge_both_cpu .........................   Passed    6.03 sec
+      Start 1744: rxllama_bridge_both_required-gpu
+ 4/40 Test #1744: rxllama_bridge_both_required-gpu ................   Passed    5.81 sec
+      Start 1745: rxllama_toolchain_lifecycle
+ 5/40 Test #1745: rxllama_toolchain_lifecycle .....................   Passed    3.57 sec
+      Start  903: address_exit_extended_parse
+      Start  904: address_inline_then_parse
+      Start 1691: rxpa_bundled_getpi_concurrency
+      Start 1158: rxpa_host_text_services
+      Start 1159: rxpa_worker_startup_attached
+      Start 1183: rxpa_worker_startup_transition
+      Start 1689: rxpa_bundled_stack_concurrency
+      Start 1687: rxpa_bundled_cipher_concurrency
+      Start 1690: rxpa_bundled_strings_concurrency
+      Start 1694: rxpa_bundled_stats_concurrency
+      Start 2416: rxpa_invalid_manifest_is_legacy
+      Start 1688: rxpa_bundled_hash_concurrency
+      Start 1693: rxpa_bundled_float_concurrency
+      Start 1696: rxpa_bundled_fs_concurrency
+      Start 1697: rxpa_bundled_platform_concurrency
+      Start 1695: rxpa_bundled_vector_concurrency
+      Start 1692: rxpa_bundled_id_concurrency
+      Start 1160: rxpa_worker_startup_callback
+      Start 2415: rxpa_process_reentrant_manifest
+      Start 1698: rxpa_dynamic_session_factory_failure_rollback
+      Start 2417: rxpa_dynamic_context_ownership
+      Start 1176: rxpa_float_static_alias_binding
+      Start 1182: rxpa_legacy_transition_quiescence
+      Start 1181: rxpa_bound_legacy_serialization
+      Start 1180: rxpa_branch_free_load_binding
+      Start 1179: rxpa_legacy_recursive_reentry
+      Start 1172: rxpa_static_catalogue_replay
+      Start 1173: rxpa_static_session_lifecycle
+      Start 1174: rxpa_session_factory_failure_rollback
+      Start 1175: rxpa_session_manifest_fail_closed
+ 6/40 Test #1698: rxpa_dynamic_session_factory_failure_rollback ...   Passed    0.24 sec
+      Start 1177: rxpa_legacy_call_serialization
+ 7/40 Test #1175: rxpa_session_manifest_fail_closed ...............***Failed    0.24 sec
+Malformed RXPA V2 manifest did not fail closed
+
+ 8/40 Test #2416: rxpa_invalid_manifest_is_legacy .................   Passed    0.25 sec
+ 9/40 Test #2415: rxpa_process_reentrant_manifest .................   Passed    0.24 sec
+10/40 Test #1176: rxpa_float_static_alias_binding .................   Passed    0.24 sec
+      Start 1178: rxpa_process_reentrant_overlap
+11/40 Test #1688: rxpa_bundled_hash_concurrency ...................   Passed    0.25 sec
+12/40 Test #1695: rxpa_bundled_vector_concurrency .................   Passed    0.25 sec
+13/40 Test #2417: rxpa_dynamic_context_ownership ..................   Passed    0.25 sec
+14/40 Test #1179: rxpa_legacy_recursive_reentry ...................   Passed    0.24 sec
+15/40 Test #1172: rxpa_static_catalogue_replay ....................   Passed    0.24 sec
+16/40 Test #1689: rxpa_bundled_stack_concurrency ..................   Passed    0.25 sec
+17/40 Test #1693: rxpa_bundled_float_concurrency ..................   Passed    0.25 sec
+18/40 Test #1696: rxpa_bundled_fs_concurrency .....................   Passed    0.25 sec
+19/40 Test #1180: rxpa_branch_free_load_binding ...................   Passed    0.25 sec
+20/40 Test #1173: rxpa_static_session_lifecycle ...................***Failed    0.25 sec
+RXPA static session lifecycle failed: failures=1 created=2 destroyed=2 live=0 ids=32/32 overlap=2
+
+21/40 Test #1174: rxpa_session_factory_failure_rollback ...........   Passed    0.24 sec
+22/40 Test #1183: rxpa_worker_startup_transition ..................   Passed    0.25 sec
+23/40 Test #1687: rxpa_bundled_cipher_concurrency .................   Passed    0.25 sec
+24/40 Test #1690: rxpa_bundled_strings_concurrency ................   Passed    0.25 sec
+25/40 Test #1697: rxpa_bundled_platform_concurrency ...............   Passed    0.25 sec
+26/40 Test #1181: rxpa_bound_legacy_serialization .................   Passed    0.25 sec
+27/40 Test #1694: rxpa_bundled_stats_concurrency ..................   Passed    0.25 sec
+28/40 Test #1692: rxpa_bundled_id_concurrency .....................   Passed    0.25 sec
+29/40 Test #1182: rxpa_legacy_transition_quiescence ...............   Passed    0.25 sec
+30/40 Test #1177: rxpa_legacy_call_serialization ..................   Passed    0.01 sec
+31/40 Test #1178: rxpa_process_reentrant_overlap ..................   Passed    0.01 sec
+32/40 Test #1691: rxpa_bundled_getpi_concurrency ..................   Passed    0.27 sec
+33/40 Test #1158: rxpa_host_text_services .........................   Passed    0.46 sec
+34/40 Test  #904: address_inline_then_parse .......................   Passed    0.57 sec
+35/40 Test  #903: address_exit_extended_parse .....................   Passed    0.59 sec
+36/40 Test #1160: rxpa_worker_startup_callback ....................   Passed    0.68 sec
+37/40 Test #1159: rxpa_worker_startup_attached ....................   Passed    0.68 sec
+      Start 1742: rxllama_bridge_bge_required-gpu
+38/40 Test #1742: rxllama_bridge_bge_required-gpu .................   Passed    3.01 sec
+      Start 1739: rxllama_bridge_bge_cpu
+39/40 Test #1739: rxllama_bridge_bge_cpu ..........................   Passed    3.01 sec
+      Start 1738: rxllama_backend_probe_cycle
+40/40 Test #1738: rxllama_backend_probe_cycle .....................   Passed    0.12 sec
+
+95% tests passed, 2 tests failed out of 40
+
+Label Time Summary:
+bundled              =   2.99 sec*proc (12 tests)
+comprehensive        =  64.52 sec*proc (40 tests)
+concurrency          =   2.95 sec*proc (14 tests)
+concurrency-sp01     =   2.95 sec*proc (14 tests)
+interpreter          =   8.01 sec*proc (30 tests)
+library              =  55.35 sec*proc (8 tests)
+llama                =  55.35 sec*proc (8 tests)
+model-provisioned    =  55.23 sec*proc (7 tests)
+plugins              =   8.01 sec*proc (30 tests)
+regression           =   2.19 sec*proc (5 tests)
+rxpa                 =  63.37 sec*proc (38 tests)
+worker               =   7.55 sec*proc (29 tests)
+
+Total Test time (real) =  56.08 sec
+
+The following tests FAILED:
+	1173 - rxpa_static_session_lifecycle (Failed)            comprehensive concurrency concurrency-sp01 interpreter plugins rxpa worker
+	1175 - rxpa_session_manifest_fail_closed (Failed)        comprehensive concurrency concurrency-sp01 interpreter plugins rxpa worker
+Errors while running CTest

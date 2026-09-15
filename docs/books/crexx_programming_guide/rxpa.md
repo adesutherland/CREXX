@@ -269,6 +269,34 @@ beyond the lifetime of the active outer RXPA call. Because `callmethod` is an
 appended pre-release initializer callback and `rxpa_initctx` has no negotiated
 size, plugins using it must be rebuilt together with the host.
 
+### Native factories and methods
+
+A native provider can own an entire class implementation. Use `ADDCLASS` and
+`ADDIMPLEMENTS` for its contract, `ADDFACTORYPROC` or `ADDNAMEDFACTORYPROC` for
+construction, and `ADDMETHODPROC` for C method bodies. Interface declarations
+use `ADDINTERFACE`, `ADDFACTORY` and `ADDMETHOD`; declarations alone do not bind
+executable bodies.
+
+Factories use `PROCEDURE`, read declared arguments from `ARG0`, initialize
+`RETURN` and publish its concrete class with `SETOBJECTTYPE(host, RETURN, name)`.
+Get the host through `RXPA_PLUGIN_SESSION_WITH_HOST` and check
+`rxpa_host_has_object_set_type(host)` when creating the session. A return-type
+annotation alone does not set the object's runtime type. Methods use
+`METHODPROCEDURE`, with the initialized receiver in `ARG0` and declared
+arguments starting at `ARG1`. Native payload copy/finalize hooks retain their
+ordinary ownership rules.
+
+This replaces the former need for a Rexx construction shim around native
+results. Keep one implementation of each factory; retain Rexx implementations
+when they provide behavior of their own. See the complete
+[C provider](../../../tests/rxpa/rxpa_objects.c) and its
+[Rexx consumer](../../../tests/rxpa/rxpa_objects.crexx), the
+[binding reference](../../ai-context/CREXX_LIBS.md#constructing-and-binding-objects-entirely-in-c),
+and the [typed llama example](../../../lib/plugins/llama/README.md).
+The `rxpa_classdecl` fixture only tests metadata compilation and is not an
+executable object-construction example. Platform and sanitizer qualification
+remain tracked in the [native-object plan](../../planning/rxpa-native-objects.md).
+
 The Signal values are:
 
 | Signal     | Purpose                                     |

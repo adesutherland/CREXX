@@ -1,0 +1,27 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1708: rxstats_packedint_rejected
+1/5 Test #1708: rxstats_packedint_rejected .......   Passed    0.52 sec
+    Start 1709: rxstats_rxbvm_noopt
+2/5 Test #1709: rxstats_rxbvm_noopt ..............   Passed    0.68 sec
+    Start 1710: rxstats_rxbvm_opt
+3/5 Test #1710: rxstats_rxbvm_opt ................   Passed    0.09 sec
+    Start 1711: rxstats_rxtvm_noopt
+4/5 Test #1711: rxstats_rxtvm_noopt ..............   Passed    0.47 sec
+    Start 1712: rxstats_rxtvm_opt
+5/5 Test #1712: rxstats_rxtvm_opt ................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+comprehensive       =   1.85 sec*proc (5 tests)
+library             =   1.85 sec*proc (5 tests)
+linked_opt          =   0.18 sec*proc (2 tests)
+math                =   1.85 sec*proc (5 tests)
+negative            =   0.52 sec*proc (1 test)
+optimizer-parity    =   1.33 sec*proc (4 tests)
+packed              =   1.85 sec*proc (5 tests)
+plugins             =   1.85 sec*proc (5 tests)
+rxpa                =   1.85 sec*proc (5 tests)
+stats               =   1.85 sec*proc (5 tests)
+
+Total Test time (real) =   1.90 sec

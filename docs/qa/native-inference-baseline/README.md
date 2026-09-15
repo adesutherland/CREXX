@@ -1,7 +1,10 @@
 # STEP-04 baseline and complete normal Debug regression — 15 September 2026
 
-Status: normal Debug preparation failed; the current full-suite result is
-**not established**. The requested baseline captures this known qualification gap. Adrian requested the baseline
+Historical capture: normal Debug preparation failed at this baseline; its
+full-suite result was **not established**. The later
+[QA01/QA02 repair and C factory cleanup](../native-inference-qa01/README.md)
+now supplies complete ordinary local coverage through a full run plus affected
+rechecks. The original failure and logs below are preserved unchanged. The requested baseline captures this known qualification gap. Adrian requested the baseline
 commit and complete regression status after the RXPA changes.
 
 The earlier full 2,314-test Debug run belongs to STEP-03 and predates the latest

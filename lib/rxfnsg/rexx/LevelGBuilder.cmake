@@ -134,7 +134,6 @@ set(_stage_g_product_sources
   "${CMAKE_CURRENT_SOURCE_DIR}/integer.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/decimal.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/packednumeric.crexx"
-  "${CMAKE_CURRENT_SOURCE_DIR}/statsvalue.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/unicode.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/httpcodec.crexx"
   "${CMAKE_CURRENT_SOURCE_DIR}/httpcore.crexx"

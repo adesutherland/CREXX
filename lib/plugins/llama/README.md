@@ -5,6 +5,11 @@ Import `rxfnsg` for packed results and `rxvector` for vector operations. The
 inference runtime and packaged backends run inside the cREXX process. Provision
 model files separately; query execution needs no model server or Python.
 
+The typed contracts, factories and methods are declared and implemented in
+[`typed.h`](typed.h) through C RXPA. There is no separate Rexx facade module to
+maintain or copy. Application examples below use `import llama`; the procedural
+`rxllama` entry points remain compatibility and low-level acceptance interfaces.
+
 This implementation supports persistent BGE-small EN v1.5 embeddings. Generation
 requests are STEP-05. Normal local CPU/Metal evidence does not qualify the pending
 Windows/Linux/CUDA/Vulkan or STEP-06 sanitizer matrix. SAN-009 remains open under
@@ -34,7 +39,7 @@ comparing each worker's twenty batches with its isolated reference. Both example
 are installed under `share/crexx/llama/examples`. Run with hardware mode, local
 GGUF path and its SHA256. They are functional demonstrations, not speed benchmarks.
 
-For example, use the installed wrapper:
+For example, use the installed `crexx` build command:
 
 ```sh
 crexx --program embeddings persistent_embeddings.crexx --native

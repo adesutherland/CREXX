@@ -348,14 +348,12 @@ main: procedure = .int
   integer_source = source_dir || "/integer.crexx"
   decimal_source = source_dir || "/decimal.crexx"
   packednumeric_source = source_dir || "/packednumeric.crexx"
-  statsvalue_source = source_dir || "/statsvalue.crexx"
   httpcodec_source = source_dir || "/httpcodec.crexx"
   httpcore_source = source_dir || "/httpcore.crexx"
 
   integer_key = action_key(tool_identity || ":integer:-x", integer_source, library, classlib)
   decimal_key = action_key(tool_identity || ":decimal:-x", decimal_source, library, classlib)
   packednumeric_key = action_key(tool_identity || ":packednumeric:-x", packednumeric_source, library, classlib)
-  statsvalue_key = action_key(tool_identity || ":statsvalue:-x", statsvalue_source, library, classlib)
   httpcodec_key = action_key(tool_identity || ":httpcodec:-x", httpcodec_source, library, classlib)
   httpcore_key = action_key(tool_identity || ":httpcore:-x", httpcore_source, library, classlib)
 
@@ -369,7 +367,6 @@ main: procedure = .int
   call queue_compile wave1, "integer", integer_source, members_root || "/integer", base_imports, rxc, rxas, cmake, integer_key, 0
   call queue_compile wave1, "decimal", decimal_source, members_root || "/decimal", base_imports, rxc, rxas, cmake, decimal_key, 0
   call queue_compile wave1, "packednumeric", packednumeric_source, members_root || "/packednumeric", base_imports, rxc, rxas, cmake, packednumeric_key, 0
-  call queue_compile wave1, "statsvalue", statsvalue_source, members_root || "/statsvalue", base_imports, rxc, rxas, cmake, statsvalue_key, 0
   call queue_compile wave1, "httpcodec", httpcodec_source, members_root || "/httpcodec", base_imports, rxc, rxas, cmake, httpcodec_key, 0
   call queue_compile wave1, "httpcore", httpcore_source, members_root || "/httpcore", base_imports, rxc, rxas, cmake, httpcore_key, 0
   if run_task_wave(pool, worker_target, wave1, "G1 independent base members") <> 0 then do
@@ -790,8 +787,7 @@ main: procedure = .int
   names[1] = "integer"
   names[2] = "decimal"
   names[3] = "packednumeric"
-  names[4] = "statsvalue"
-  next_name = 5
+  next_name = 4
   if scope_name = "all" then do
     names[next_name] = "unicode_casefold"
     names[next_name + 1] = "unicode_case_mapping"

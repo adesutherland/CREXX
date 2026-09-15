@@ -8,7 +8,11 @@ not a replacement for the full [native-inference plan](native-inference-backlog.
 Baseline HEAD: `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`, with existing
 STEP-03/04 work retained at that capture. Adrian requested the baseline commit
 on 15 September; the later [broad regression attempt](../qa/native-inference-baseline/README.md)
-exposed NI-S4-QA01. The focused results below are not a full-suite pass.
+exposed NI-S4-QA01. The subsequent [QA01/QA02 repair](../qa/native-inference-qa01/README.md)
+now accounts for all 2,347 ordinary Debug tests through the full run and affected
+rechecks. It also removes the obsolete `rxstats.linearfit` Rexx construction
+shim in favor of its C provider. The original focused results below remain
+separate evidence; platform/sanitizer/release qualification is still open.
 
 ## Vision and intended outcomes
 

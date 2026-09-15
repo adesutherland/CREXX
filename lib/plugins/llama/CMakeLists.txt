@@ -239,3 +239,7 @@ if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
         DEPENDS llama_provider_runtime_package rxc rxas rxlink rxbvm library
         VERBATIM)
 endif()
+
+# Publish the registered test prerequisites to qa-prep; otherwise an existing
+# lifecycle executable can retain an older internal bridge argument layout.
+crexx_finalize_directory_qa_tiers()

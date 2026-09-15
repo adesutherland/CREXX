@@ -78,22 +78,21 @@ The RXPA public surface also exposes:
 - class/interface metadata declarations such as `ADDCLASS`,
   `ADDINTERFACE`, `ADDIMPLEMENTS`, `ADDFACTORY`, and `ADDMETHOD`
 
-Current RXPA tests already prove native payload copy/finalizer hooks fire. They
-do not yet expose a pure native class constructor that stamps a returned object
-without a Rexx shim.
+Current RXPA tests prove native payload copy/finalizer hooks and pure C object
+construction through the checked `SETOBJECTTYPE` host service. See
+[the executable native object example](../../tests/rxpa/rxpa_objects.c) and
+[RXPA construction guidance](CREXX_LIBS.md#constructing-and-binding-objects-entirely-in-c).
 
 ### Class and Interface Runtime
 
 The VM has runtime class/interface metadata and dispatch. Rexx source can define
 interfaces and classes, and RXPA can publish matching metadata. Existing docs
-also state that native code can advertise contracts, but object construction is
-not yet a full pure-C path: complete class-shaped construction generally still
-uses a small Rexx factory/class shim.
-
-That is acceptable for an IO design. We can define public interfaces and Rexx
-wrapper classes in Level B, with native payload stored inside an attribute or
-the object value itself. Native methods can operate on the payload while Rexx
-code sees a normal object.
+describe C factories and methods with runtime class identity. Native endpoint
+providers can bind these directly with `ADDFACTORYPROC`,
+`ADDNAMEDFACTORYPROC`, `ADDMETHODPROC` and `SETOBJECTTYPE`; no Rexx construction
+shim is required. Rexx implementations can still provide array/string/null
+behavior behind the same public interfaces. Public IO endpoints remain proposed;
+the new RXPA capability does not itself implement this IO plan.
 
 ### ADDRESS Runtime
 
@@ -416,28 +415,25 @@ Deliverables:
 
 No public language surface needs to change yet.
 
-### Stage 2: Rexx-Visible IO Interfaces and Wrapper Classes
+### Stage 2: Rexx-Visible IO Interfaces and Implementations
 
 Status: proposed.
 
-Add Level B interfaces/classes in a new library module, likely under `rxfnsb` or
-an internal `_rxio` namespace.
+Publish native endpoint contracts and bindings through RXPA. Add the Rexx
+implementations in a library module, likely under `rxfnsb` or an internal
+`_rxio` namespace; final IO API design is still pending.
 
 Deliverables:
 
 - `rxio.input`
 - `rxio.output`
 - `rxio.stream`
-- native wrapper class
+- C endpoint implementation with owned native payload
 - array/string/null Rexx implementations
 - RXPA declaration metadata if native functions are exposed directly
 
-This stage should decide whether the native wrapper object is created by:
-
-- a Rexx factory that calls native payload setup functions, or
-- a new RXPA helper that stamps class identity from C
-
-The Rexx factory is lower risk for the first pass.
+Use the existing checked RXPA construction service for C endpoint objects.
+Do not add a duplicate Rexx factory solely to establish their class identity.
 
 ### Stage 3: ADDRESS Redirect Migration
 

@@ -608,13 +608,21 @@ That metadata is sufficient for import reconstruction of class/interface
 headers without parsing procedure bodies. Imported stubs are not re-exported as
 new local contracts, and richer imported stubs replace poorer duplicates.
 
+Task lowering waits until the participating task calls and ordinary calls have
+resolved return types. Import reconstruction may attach a callable definition
+one validation iteration before its call has a type. Rewriting at that point
+can leave a partial implicit/parallel block and produce misleading
+`RETURNS_VOID` / `RETVAL_MISSING` diagnostics. `rxcp_task_lower.c` therefore
+defers the rewrite until call types converge, preserving the source expression
+and the normal invalid-type diagnostics in the meantime.
+
 Dynamic RXPA discovery stages initializer callbacks before reconstructing any
 declaration. The initializer runs under the platform loader mutex, so `ADDPROC`
 and class/interface callbacks only collect their metadata at that point. After
 the initializer returns and releases the mutex, `rxc` imports class/interface
 metadata first and then parses the procedure declarations while the provider
 remains open. This ordering permits a native procedure to return a namespaced
-Rexx class such as `.rxstats..linearfit` without recursively reopening the
+Rexx class such as `.rxfnsg..packedfloat` (returned by `rxvector`) without recursively reopening the
 provider or deadlocking the loader.
 
 ### Runtime dispatch

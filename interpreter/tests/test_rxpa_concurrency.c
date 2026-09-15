@@ -300,12 +300,26 @@ static int call_bound_session(rxvm_context *context) {
     return failed;
 }
 
+/* Bundled providers may also own sessions. Inspect the probe by identity,
+ * never by its position in the shared per-context session list. */
+static rxpa_session_instance *find_test_session(rxvm_context *context,
+                                               const char *plugin_id) {
+    rxpa_session_instance *instance;
+    for (instance = context->rxpa_sessions; instance; instance = instance->next) {
+        if (strcmp(instance->plugin_id, plugin_id) == 0) return instance;
+    }
+    return NULL;
+}
+
 static void run_static_session_context(int index) {
     rxvm_context context;
+    rxpa_session_instance *instance;
     int failed = 0;
     memset(&context, 0, sizeof(context));
     rxinimod(&context);
-    if (rxldmodp(&context) <= 0 || !context.rxpa_sessions ||
+    if (rxldmodp(&context) <= 0 ||
+        !(instance = find_test_session(&context, "e3-session-probe")) ||
+        !instance->session ||
         context_procedure_invoker(&context, "e3.session_probe") !=
                 rxvm_callfunc_session ||
         context_procedure_invoker(&context, "e3.session_reentrant") !=
@@ -314,8 +328,7 @@ static void run_static_session_context(int index) {
         context_procedure_capabilities(&context, "e3.session_legacy") != 0u) {
         failed = 1;
     } else {
-        session_ids[index] =
-                ((test_plugin_session *)context.rxpa_sessions->session)->id;
+        session_ids[index] = ((test_plugin_session *)instance->session)->id;
     }
 
     gate_lock(&session_gate);
@@ -478,7 +491,9 @@ static int test_malformed_session_manifest(void) {
     if (rxldmodp(&context) <= 0 || malformed_factory_called != 0 ||
         context_procedure_capabilities(&context,
                                        "e3.session_malformed") != 0u ||
-        context.rxpa_sessions) failed = 1;
+        context_procedure_invoker(&context, "e3.session_malformed") !=
+                rxvm_callfunc_legacy_direct ||
+        find_test_session(&context, "e3-session-malformed")) failed = 1;
     rxfremod(&context);
     if (failed) {
         fprintf(stderr, "Malformed RXPA V2 manifest did not fail closed\n");
@@ -1216,6 +1231,42 @@ static int test_procedure_manifest(const char *directory,
     return 0;
 }
 
+static int test_stats_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxstats.mean", "rxstats.stddev", "rxstats.covariance",
+        "rxstats.correlation", "rxstats.linearfit.slope",
+        "rxstats.linearfit.intercept"
+    };
+    static const char *publication[] = {
+        "rxstats.regression", "rxstats.linearfit.\xc2\xa7" "factory"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) failed = 1;
+        }
+        for (i = 0; i < sizeof(publication) / sizeof(publication[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, publication[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) failed = 1;
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA statistics publication/reentrant policy failed\n");
+    return failed;
+}
+
 static char *copy_plugin_base(const char *file_name) {
     static const char suffix[] = ".rxplugin";
     size_t length = strlen(file_name);
@@ -1557,8 +1608,11 @@ static int test_dynamic_session_factory_failure(const char *directory,
 int main(int argc, char **argv) {
     if (argc != 2) {
         if (argc == 5 && strcmp(argv[1], "bundled") == 0) {
-            if (test_manifest(argv[2], argv[3],
-                              RXPA_PLUGIN_CAP_PROCESS_REENTRANT) != 0) {
+            int manifest_failed = strcmp(argv[4], "stats") == 0
+                    ? test_stats_manifest(argv[2], argv[3])
+                    : test_manifest(argv[2], argv[3],
+                                    RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+            if (manifest_failed) {
                 return 1;
             }
             return test_dynamic_context_ownership(

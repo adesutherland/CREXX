@@ -1,4 +1,6 @@
-/* Regression: eager RXPA scan must not re-enter a provider initializer. */
+/* Regression: eager RXPA scan must not re-enter a provider initializer.
+   rxvector still returns the Rexx-owned packedfloat class from rxfnsg; the
+   former rxstats.linearfit Rexx carrier has moved into its native provider. */
 options levelb
 
 main: procedure = .int

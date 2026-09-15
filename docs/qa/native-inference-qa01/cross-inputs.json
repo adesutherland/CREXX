@@ -1,0 +1,30 @@
+[
+  {
+    "compiler": "old",
+    "library": "old",
+    "rc": 0,
+    "compiler_sha": "0634244573c18796f2dde41f18cb80270e5b4280b0c276f067579c1c499917a9",
+    "library_sha": "eb7010598f76ee350f5b1cb35b4b550a6cec302b16caf14ae9f7d8914a2575e3"
+  },
+  {
+    "compiler": "old",
+    "library": "new",
+    "rc": 0,
+    "compiler_sha": "0634244573c18796f2dde41f18cb80270e5b4280b0c276f067579c1c499917a9",
+    "library_sha": "8701f71f517314519e7fc0d1b48d7879662ba7d1dc0a87ca3d01073841c09d42"
+  },
+  {
+    "compiler": "new",
+    "library": "old",
+    "rc": 2,
+    "compiler_sha": "e2c94e93c625ff555a78f7c6a4fe74e0aac3c1ce09ddfc8d557c23a0ca4a2557",
+    "library_sha": "eb7010598f76ee350f5b1cb35b4b550a6cec302b16caf14ae9f7d8914a2575e3"
+  },
+  {
+    "compiler": "new",
+    "library": "new",
+    "rc": 2,
+    "compiler_sha": "e2c94e93c625ff555a78f7c6a4fe74e0aac3c1ce09ddfc8d557c23a0ca4a2557",
+    "library_sha": "8701f71f517314519e7fc0d1b48d7879662ba7d1dc0a87ca3d01073841c09d42"
+  }
+]

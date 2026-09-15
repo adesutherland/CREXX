@@ -231,6 +231,27 @@ main: procedure = .int
   manual_fit = .linearfit(-2.5, 7.0)
   failures = failures + check_close(manual_fit.slope(), -2.5, 0.0, "linearfit factory slope")
   failures = failures + check_close(manual_fit.intercept(), 7.0, 0.0, "linearfit factory intercept")
+  native_object = fit as .object
+  factory_object = manual_fit as .object
+  if <typeof>(fit) <> ".rxstats..linearfit" | \(native_object is .linearfit) | \(factory_object is .linearfit) then do
+    say "FAIL: linearfit native/factory runtime identity"
+    failures = failures + 1
+  end
+  failures = failures + check_close((native_object as .linearfit).slope(), 2.0, 0.0, "native result cast")
+  copied_fit = manual_fit
+  manual_fit = .linearfit(8.0, 9.0)
+  failures = failures + check_close(copied_fit.slope(), -2.5, 0.0, "linearfit owned copy")
+  empty_fit = .linearfit
+  caught = 0
+  do
+    ignored = empty_fit.slope()
+  on signal object_not_initialized
+    caught = 1
+  end
+  if caught <> 1 then do
+    say "FAIL: linearfit uninitialized receiver guard"
+    failures = failures + 1
+  end
 
   values_after_ref = values.binary()
   values_after = snapshot values_after_ref

@@ -3,6 +3,7 @@
 #include <array>
 #include <chrono>
 #include <condition_variable>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <set>

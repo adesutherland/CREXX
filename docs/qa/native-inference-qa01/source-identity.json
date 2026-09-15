@@ -1,0 +1,29 @@
+{
+  "head": "6a330665507933a7bd06427d42923f777b78dbeb",
+  "branch": "develop",
+  "scope": "Tracked existing non-Markdown files excluding docs and retained performance evidence; removed paths recorded in diff",
+  "file_count": 7399,
+  "input_manifest_sha256": "382fe1423220bcd1a49e2c12061d043d4607b3ae29a9ccb5869d3e20e4597207",
+  "changed_files": [
+    "M\tAGENTS.md",
+    "M\tcompiler/rxcp_task_lower.c",
+    "M\tcompiler/tests/rexx_src/gate_f_task_method_import.crexx",
+    "M\tdocs/ai-context/CREXX_ARCHITECTURE.md",
+    "M\tdocs/ai-context/CREXX_IO_PIPE_WORKING.md",
+    "M\tdocs/ai-context/CREXX_LIBS.md",
+    "M\tdocs/books/crexx_library_reference/rxstats.md",
+    "M\tdocs/books/crexx_programming_guide/rxpa.md",
+    "M\tdocs/planning/native-inference-step-04.md",
+    "M\tdocs/planning/native-inference-typed-interface-proposal.md",
+    "M\tdocs/qa/native-inference-native-surface-review/README.md",
+    "M\tlib/plugins/llama/README.md",
+    "M\tlib/plugins/stats/rxstats.c",
+    "M\tlib/plugins/stats/rxstats_test.crexx",
+    "M\tlib/rxfnsg/rexx/CMakeLists.txt",
+    "M\tlib/rxfnsg/rexx/LevelGBuilder.cmake",
+    "D\tlib/rxfnsg/rexx/statsvalue.crexx",
+    "M\ttests/rxpa/external_sdk/rcc5de_installed.crexx",
+    "M\ttests/rxpa/rxpa_native_return_class_import.crexx",
+    "M\ttools/build-system/build_stage_g.crexx"
+  ]
+}

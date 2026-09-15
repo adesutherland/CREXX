@@ -1,5 +1,15 @@
 # Native typed surface review — 14 September 2026
 
+**Historical pre-implementation evidence.** The construction gap described
+below was subsequently addressed by the [C RXPA object surface](../../planning/rxpa-native-objects.md).
+Current providers use C factory/method bindings and `SETOBJECTTYPE`; do not copy
+the former shim recommendation. Use the [executable C example](../../../tests/rxpa/rxpa_objects.c)
+and [current guide](../../ai-context/CREXX_LIBS.md#constructing-and-binding-objects-entirely-in-c).
+The original measurements and `shape.crexx` remain unchanged as historical
+evidence. The 15 September `linearfit` shim removal and identity repair are
+tracked separately under QA01-AC-05 in [STEP-04](../../planning/native-inference-step-04.md);
+these older logs must not be used as the current result.
+
 Adrian asked whether the native interface can expose the proposed llama surface.
 RXPA already declares class/interface/factory/method metadata through ADDCLASS,
 ADDINTERFACE, ADDIMPLEMENTS, ADDFACTORY and ADDMETHOD. Both dynamic and static

@@ -6,7 +6,9 @@ after STEP-03 closure; the accepted performance verdict remains unchanged.
 Parent scope: [complete plan](native-inference-backlog.md), OUT-01–05,
 CREXX-NI-01–07 and AC-01–14. Implementation started from
 `c2cf28a4f5c66430b4c2cc4d49b00ae720675ab8`. The 15 September checkpoint below
-commits STEP-03/04 with the newly discovered broad regression gap retained.
+commits STEP-03/04 with the then-open broad regression gap retained. The
+subsequent QA01 compiler repair, C factory cleanup and QA02 link dependency
+repair now complete the ordinary local regression gate; see the evidence below.
 
 ## Vision and intended outcomes
 
@@ -14,8 +16,8 @@ An ordinary cREXX program prepares a BGE embedding session once, submits repeate
 single inputs and real bounded batches, obtains ordered packed vectors, and
 closes requests without reloading weights or leaking private state. CPU and GPU
 use the same API and ownership contract. This step implements the approved
-native request interface; its typed Level-G convenience facade remains part of
-the public library delivery, with source documentation and runnable examples.
+native request interface; its typed public facade is implemented directly in
+C RXPA, with source documentation and runnable Level G consumer examples.
 Generation remains STEP-05. Windows/Linux/CUDA/Vulkan and maintained sanitizer
 qualification remain STEP-06, including the approved SAN-009/S3-D01 handoff.
 
@@ -222,9 +224,10 @@ C/C++ SDK/native controls pass. This is focused current evidence, not a new full
 Debug or sanitizer qualification.
 
 **Next action at typed capture:** Adrian's review of the completed public
-contract and STEP-04 closure. The 15 September follow-up below supersedes this
-next action with the newly discovered full-regression qualification failure. No implementation/test/documentation item is left midway in this local
-step. STEP-05 generation has not begun; STEP-06 retains SAN-009 and the complete
+contract and STEP-04 closure. The 15 September follow-up below records the later regression failure and
+its completed repair/qualification. Public-contract and phase-closure review
+remain with Adrian. No implementation/test/documentation item is left midway
+in this local step. STEP-05 generation has not begun; STEP-06 retains SAN-009 and the complete
 platform/sanitizer gate. STEP-07 documentation/examples may overlap STEP-06 as
 already approved. No scope item is removed to obtain local closure.
 
@@ -242,7 +245,7 @@ It does not advance generation or the held STEP-06 sanitizer/platform gate.
 1. [x] **S4-B-01:** Verify the current implementation hashes match the final typed
    acceptance capture and inventory the complete baseline, excluding generated
    Python caches and retaining original outcomes/criteria/evidence.
-2. [ ] **S4-B-02:** Prepare all ordinary QA artifacts with `qa-prep`, run the full
+2. [x] **S4-B-02:** Prepare all ordinary QA artifacts with `qa-prep`, run the full
    Debug CTest selection excluding `performance-measurement`, and retain the
    exact selection, result and source identity. Report any failure explicitly;
    earlier focused passes cannot stand in for this result.
@@ -254,12 +257,107 @@ It does not advance generation or the held STEP-06 sanitizer/platform gate.
 Live evidence: [baseline regression record](../qa/native-inference-baseline/README.md).
 
 
-**Current broad qualification result:** S4-B-02 remains open. `qa-prep` failed
-with NI-S4-QA01: existing HTTP server clients report RETURNS_VOID/RETVAL_MISSING
-for request/get results. The standalone current-compiler failure is retained in
-the baseline record. Its cause is not yet attributed. The requested commit is a
-checkpoint including this gap, not a full-regression-qualified baseline. S4's
-bounded typed/native results remain recorded; overall AC-13 and release closure
-remain open. Do not describe the earlier 2,314 or 87 focused passes as covering
-this failed current broad preparation. No production repair has been made in
-this baseline follow-up.
+**Current broad qualification result:** S4-B-02 is complete through the
+[QA01/QA02 repair and factory-cleanup evidence](../qa/native-inference-qa01/README.md).
+The task lowerer now waits for imported call types before mutating the AST;
+existing HTTP compilation and all four permanent imported-task controls pass.
+The initial full Debug invocation completed with 2,337 passes, nine failures
+and one timeout. All were resolved, including QA/test expectations and stale
+static/llama test preparation. Final coverage accounts for all 2,347 tests:
+2,305 unchanged broad passes plus 42 distinct affected tests with passing
+rechecks. This is combined evidence, not a single green full invocation.
+No selected test is disabled; no assertion was weakened. The baseline's original
+failed preparation remains historical evidence. Overall AC-13 retains STEP-06
+sanitizer/platform and exact-head hosted gates; SAN-009 remains open and release
+blocking. The accepted inference performance verdict is unchanged.
+
+
+## NI-S4-QA01 repair — authorized 15 September 2026
+
+Vision: restore existing HTTP return-type compilation without losing native C
+construction, named/interface factories or typed callbacks. Finish S4-B-02 on
+the repaired code. Keep every original OUT/NI/AC requirement and the sanitizer
+hold; no language/API redesign or upstream inference/performance work is selected.
+
+### Numbered acceptance criteria
+
+1. [x] **QA01-AC-01:** Retain a minimal ordinary failure plus positive controls,
+   and attribute the failure using compiler/import identity or controlled history.
+2. [x] **QA01-AC-02:** Correct the responsible compiler/import mechanism; preserve
+   HTTP and native-object contracts, ordinary optimized/unoptimized and both VM
+   paths. New regression and existing affected HTTP/RXPA controls pass.
+3. [x] **QA01-AC-03:** Complete `qa-prep` and all ordinary Debug CTests excluding
+   performance measurements. Retain exact selection/results/source identity;
+   report independent failures, with no hidden skips or weakened assertions.
+4. [x] **QA01-AC-04:** Reconcile NI-S4-QA01/S4-B-02 and parent AC-13 with evidence.
+   Maintain STEP-06 sanitizer/platform/SAN-009 obligations and the accepted
+   performance verdict. Do not infer release or generation completion.
+5. [x] **QA01-AC-05:** Remove the native-result Rexx construction workaround
+   selected by Adrian on 15 September: move `rxstats.linearfit` construction and
+   accessors into its C provider, remove `statsvalue.crexx`, its CMake lists and
+   Level B build-controller entries,
+   and preserve factory spelling, coefficients, value-copy behavior, signals and
+   RexxDoc coverage. Native/factory results retain concrete type through `.object`.
+   Review human/agent guidance and clearly separate historical evidence from
+   current executable examples. Do not migrate unrelated behavioral adapters.
+
+### Numbered implementation steps
+
+1. [x] **QA01-01 (AC-01):** Reduce HTTP failure, compare compiler/import inputs,
+   inspect relevant AST/symbol metadata and establish the regression before repair.
+2. [x] **QA01-02 (AC-01/02):** Add permanent failing coverage and apply the minimal
+   correction; validate focused HTTP, named/interface factory and C RXPA behavior.
+3. [x] **QA01-03 (AC-02/03):** Prepare and run the full ordinary Debug regression
+   selection on frozen repaired sources; classify and resolve any new failures.
+4. [x] **QA01-04 (AC-04):** Retain diagnosis, checks and source identities and
+   update the live acceptance/roadmap records. Sanitizers remain held for STEP-06.
+5. [x] **QA01-05 (AC-05):** Before final QA01-03 qualification, retain a failing
+   native-result identity control, migrate the `linearfit` carrier to C RXPA,
+   remove its Rexx shim/build entries, verify dynamic/static/native consumers,
+   and update current documentation. Keep the statistical kernels unchanged.
+
+The added outcome is one authoritative native factory implementation and useful
+examples for both human and agent authors. `llama` already satisfies that source
+ownership. `Id`/`Os` convenience APIs, `KeyDB` lifecycle policy, HTTP/task
+contracts, SQLite ADDRESS handling and VM-backed packed classes own separate
+behavior; the presence of native calls alone does not make them duplicate shims.
+
+
+### NI-S4-QA02 — static plugin archive freshness
+
+A separate build-system cause was exposed by the factory cleanup: Unix linker
+flags embed the static archive path without making it a relink input. An
+archive can rebuild while a consumer retains its older plugin. This is a
+first-party incremental-build defect, distinct from QA01's compiler timing.
+It is not a sanitizer finding.
+
+Vision: every native/static consumer must run the current provider after an
+incremental build, including consumers of the installed SDK helpers. Preserve
+existing whole-archive/init-symbol linking and platform behavior.
+
+1. [x] **QA02-AC-01 / QA02-01:** Retain a failing executable check and its initial
+   positive control for declaration, static and relative helper forms. After
+   the library changes from 41 to 42, all three old executables still return 41.
+2. [x] **QA02-AC-02 / QA02-02:** Add target ordering and archive file dependencies
+   to the three helpers, with a permanent incremental consumer in the existing
+   installed SDK qualification. Do not alter linker flags or runtime code.
+3. [x] **QA02-AC-03 / QA02-03:** Rebuild QA prerequisites and run the installed
+   regression. Requalify affected ordinary tests and retain final source/build
+   identities. Preserve the Step 6 sanitizer/platform gate and its owner.
+
+Evidence and final disposition are retained with the
+[QA01/QA02 record](../qa/native-inference-qa01/README.md). This does not reopen
+accepted inference performance work or start STEP-05.
+
+
+### Final follow-up acceptance, 15 September 2026
+
+All QA01/QA02 checkboxes above are backed by the
+[retained diagnosis, before/after controls and per-test ledger](../qa/native-inference-qa01/README.md).
+The native `linearfit` factory/accessors replace the former Rexx construction
+workaround without changing statistical kernels or public spelling. Human and
+agent references now use executable C bindings; historical evidence is labelled.
+All 2,347 ordinary Debug tests have current or dependency-verified reusable
+passing evidence. No Step 5 generation work or Step 6 sanitizer/platform work
+has been advanced; SAN-009 remains open under Codex/Adrian. Next action remains
+Adrian's public-contract/STEP-04 closure review, followed by authorized STEP-05.

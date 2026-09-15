@@ -1,6 +1,6 @@
 # Statistics with `rxstats`
 
-`rxstats` is the process-reentrant Level G native provider for bulk statistics
+`rxstats` is the Level G native provider for bulk statistics
 over `.packedfloat` owners. The provider borrows their host-native payloads
 read-only for each call: it does not box elements, call `binary()`, copy the
 buffer, or retain a payload pointer.
@@ -25,11 +25,19 @@ call values.set(2, 3.0)
 say rxstats..mean(values)
 ```
 
-`.linearfit` is a small immutable Rexx value class in the `rxstats`
-namespace. Its public factory accepts slope and intercept values, and its
-`slope()` and `intercept()` methods expose the named results. Its packed
-payload remains private; the class is only a result carrier, not a second Rexx
-implementation of the statistics algorithms.
+`.linearfit` is an immutable value class declared and implemented by the C
+`rxstats` provider. Its public factory `.linearfit(slope, intercept)` and its
+`slope()` / `intercept()` methods keep the same spelling. Both explicit
+construction and `regression()` results carry `.rxstats..linearfit` runtime
+identity, including through `.object` casts. Copies own independent packed
+coefficients. The payload remains private, and an uninitialized `.linearfit`
+signals `OBJECT_NOT_INITIALIZED` on method access.
+
+The former `statsvalue.crexx` construction/accessor shim is removed. Use the
+C bindings in [rxstats.c](../../../lib/plugins/stats/rxstats.c) as the
+implementation reference. Object construction uses the owning VM's checked
+RXPA type service; `mean`, `stddev`, `covariance`, `correlation` and the
+immutable accessors remain process-reentrant. This changes no statistical calculation.
 
 The implementation uses Neumaier-compensated shifted-origin sums for means,
 second moments, covariance, and regression. An ill-conditioned central moment

@@ -1,0 +1,15 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 2456: rxpa_signature_diagnostics
+1/1 Test #2456: rxpa_signature_diagnostics .......   Passed   67.53 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler         =  67.53 sec*proc (1 test)
+comprehensive    =  67.53 sec*proc (1 test)
+diagnostics      =  67.53 sec*proc (1 test)
+optimizer        =  67.53 sec*proc (1 test)
+runtime          =  67.53 sec*proc (1 test)
+rxpa             =  67.53 sec*proc (1 test)
+
+Total Test time (real) =  67.62 sec
