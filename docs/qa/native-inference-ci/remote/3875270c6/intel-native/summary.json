@@ -1,0 +1,25 @@
+{
+  "outcome": "failed",
+  "scope": "isolated native stall diagnosis; no full-package or performance qualification",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-x86_64.zip",
+  "archive_sha256": "91a4fb9f8347d582789fc1ee986cc0d646236d145de0c6ffe2ffaa30e49f187c",
+  "work": "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-native-replay-hc1perfm",
+  "capture_after": 180,
+  "requested_repetitions": 5,
+  "commands": [
+    {
+      "label": "native-build",
+      "argv": [
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-native-replay-hc1perfm/payload/CREXX-macos-x86_64/bin/crexx",
+        "--program",
+        "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-native-replay-hc1perfm/native/smoke",
+        "/Users/runner/work/CREXX/CREXX/tests/native-inference/release_provider_smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 39.409
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "outcome": "passed",
+  "artifact_id": 10414454335,
+  "commit": "76df02be3c4d89118bd8d4e4e68308c47f76366e",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-windows-x64.zip",
+  "bytes": 57563071,
+  "sha256": "655dee96725df28ed2237412e0b8f0bed64c4964fd6ed108e82a89b0ea4593a9",
+  "rxvm": "identical executable copy of rxtvm.exe",
+  "provider_files_checked": 29,
+  "bootstrap_copies_verified": [
+    "crexx-ggml-base.dll",
+    "crexx-ggml.dll",
+    "libcrexx-llama-engine.dll",
+    "libcrexx-llama.dll",
+    "libgcc_s_seh-1.dll",
+    "libstdc++-6.dll",
+    "libwinpthread-1.dll"
+  ],
+  "fixture_or_helper_shipped": false
+}

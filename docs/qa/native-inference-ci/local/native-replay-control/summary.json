@@ -1,0 +1,45 @@
+{
+  "outcome": "passed",
+  "scope": "isolated native stall diagnosis; no full-package or performance qualification",
+  "archive": "CREXX-user-test-76df02be3c4d89118bd8d4e4e68308c47f76366e-macos-arm64.zip",
+  "archive_sha256": "47e894f0c7e63e5441b25696138c6862ac70dd57f0101bf4a5b0dee465dd5b82",
+  "work": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm",
+  "capture_after": 180,
+  "requested_repetitions": 2,
+  "commands": [
+    {
+      "label": "native-build",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/payload/CREXX-macos-arm64/bin/crexx",
+        "--program",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/native/smoke",
+        "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_provider_smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 11.169
+    },
+    {
+      "label": "relocated-1",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/relocated/smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 1.699
+    },
+    {
+      "label": "relocated-2",
+      "argv": [
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/relocated/smoke",
+        "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "elapsed_seconds": 0.183
+    }
+  ]
+}

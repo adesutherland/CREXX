@@ -1,0 +1,190 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 13.487,
+  "commands": [
+    {
+      "label": "engine",
+      "argv": [
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/engine/rxllama_release_engine_smoke.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "altered-backend-rejected",
+      "argv": [
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/engine/rxllama_release_engine_smoke.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "missing-manifest-rejected",
+      "argv": [
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/engine/rxllama_release_engine_smoke.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf"
+      ],
+      "returncode": 1,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-compile",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxc.exe",
+        "--no-exe-import",
+        "-i",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-assemble",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxas.exe",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-link",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxlink.exe",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt-linked",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/library",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/classlib",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxvm",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxvm.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt-linked",
+        "-a",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "opt-rxbvm",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxbvm.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/opt-linked",
+        "-a",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-compile",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxc.exe",
+        "--no-exe-import",
+        "-n",
+        "-i",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/smoke.crexx"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-assemble",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxas.exe",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-link",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxlink.exe",
+        "-o",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt-linked",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/library",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/classlib",
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxfnsg"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxvm",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxvm.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt-linked",
+        "-a",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "noopt-rxbvm",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/rxbvm.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/noopt-linked",
+        "-a",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    },
+    {
+      "label": "native-build",
+      "argv": [
+        "D:/a/_temp/release-payload/CREXX-windows-x64/bin/crexx.exe",
+        "--program",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/native/smoke",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/smoke.crexx",
+        "--jobs",
+        "1",
+        "--native"
+      ],
+      "returncode": 0,
+      "consumer_environment": false
+    },
+    {
+      "label": "relocated-native",
+      "argv": [
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/relocated/smoke.exe",
+        "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x/fixture.gguf",
+        "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"
+      ],
+      "returncode": 0,
+      "consumer_environment": true
+    }
+  ],
+  "work": "D:/a/_temp/msys64/tmp/crexx-release-smoke-66pgnn9x",
+  "build": "D:/a/_temp/build",
+  "required_backends": "cpu,vulkan",
+  "preferred_vm": "rxtvm",
+  "model_downloads": 0,
+  "scope": "package and fixture smoke; not full BGE/Smol or device qualification"
+}

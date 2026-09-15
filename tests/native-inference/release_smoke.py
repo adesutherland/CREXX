@@ -38,10 +38,14 @@ def main():
     p.add_argument('--backends', default='cpu')
     p.add_argument('--capture-engine-after', type=int, default=0,
                    help='macOS diagnostic: sample and stop an engine still running after N seconds; a diagnostic stop is not a qualification pass')
+    p.add_argument('--capture-command-after', type=int, default=0,
+                   help='macOS diagnostic: sample and stop any smoke command still running after N seconds; a diagnostic stop is not a qualification pass')
     a = p.parse_args()
     source, build, helper = a.source.resolve(), a.build.resolve(), a.helper.resolve()
     if a.capture_engine_after and (sys.platform != 'darwin' or not 1 <= a.capture_engine_after < 1800):
         p.error('--capture-engine-after requires macOS and 1..1799 seconds')
+    if a.capture_command_after and (sys.platform != 'darwin' or not 1 <= a.capture_command_after < 1800):
+        p.error('--capture-command-after requires macOS and 1..1799 seconds')
     preferred_vm = (build / 'lib/plugins/llama/tests/release-smoke-default-vm.txt').read_text().strip()
     assert preferred_vm in ('rxbvm', 'rxtvm'), preferred_vm
     a.output_root.mkdir(parents=True, exist_ok=True)
@@ -69,19 +73,20 @@ def main():
         with path.open('w', encoding='utf-8') as log:
             log.write('argv=' + repr(argv) + '\n'); log.flush()
             child_env = env or (execution if consumer else clean)
-            if label == 'engine' and a.capture_engine_after:
+            capture_after = a.capture_command_after or (a.capture_engine_after if label == 'engine' else 0)
+            if capture_after:
                 with subprocess.Popen(argv, cwd=cwd, env=child_env, stdout=log, stderr=log) as child:
                     try:
-                        child.wait(timeout=a.capture_engine_after)
+                        child.wait(timeout=capture_after)
                     except subprocess.TimeoutExpired:
                         try:
-                            with (logs / 'engine-sampler.log').open('w') as sampler:
+                            with (logs / (label + '-sampler.log')).open('w') as sampler:
                                 subprocess.run(['/usr/bin/sample', str(child.pid), '3', '1', '-file',
-                                                str(logs / 'engine-stack.txt')], stdout=sampler,
+                                                str(logs / (label + '-stack.txt'))], stdout=sampler,
                                                stderr=sampler, timeout=30, check=False)
                         finally:
                             child.kill(); child.wait()
-                        raise RuntimeError('Engine stopped after diagnostic stack capture; this is not a qualification result')
+                        raise RuntimeError(label + ' stopped after diagnostic stack capture; this is not a qualification result')
                     result = child
             else:
                 result = subprocess.run(argv, cwd=cwd, env=child_env, stdout=log,

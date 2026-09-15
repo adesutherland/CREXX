@@ -1,0 +1,3 @@
+argv=['/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/engine/rxllama_release_engine_smoke', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+FAIL: no usable verified CPU backend variant

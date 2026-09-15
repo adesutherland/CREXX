@@ -6,6 +6,80 @@ pushed to `origin/temp/llama-release-combined` at `c10b9115e` (resolve the full
 SHA from git). This note is intentionally an uncommitted handoff. No new CI run
 was dispatched after the pause request; existing remote jobs were left running.
 
+## Live continuation — 15 September, after restart
+
+**Latest authority supersedes the older continuation bullets below:** Adrian
+approved separate core/plugin downloads and one MSVC Windows base. First build
+and qualify llama-free cores on all four target platforms; only after all pass
+resume plugin work. Plugin jobs must consume the already-built exact core and
+run llama-only QA, avoiding duplicate core compilation/tests. Core sanitizer
+jobs use `ENABLE_LLAMA=OFF`, no CUDA and no upstream engine instrumentation;
+first-party adapter checks are separate with an ordinary engine where practical.
+Build `35013130021`, sanitizer `35009830830` and MSVC diagnostic `35017440732`
+were cancelled to implement that sequence. Preserve their evidence; cancellation
+is not a pass. `.github/workflows/release-core.yml` and
+`scripts/package-core-release.py` implement the new initial core gate; their
+hosted result is not yet available. No further approval is needed for CI-D01.
+
+Intel replay `35016898785` now has a captured stack: our consumer is waiting
+inside GGML Metal library initialization and Apple's synchronous Metal shader
+compiler service. Retained evidence: `remote/3875270c6/intel-native/`. This
+locates the stall but does not yet prove its underlying driver/service cause.
+Leave this plugin investigation until the core gate passes.
+
+- Current committed local/origin-combined source: `76df02be3c4d89118bd8d4e4e68308c47f76366e`.
+- Build `35013130021` at that SHA passes all four standard packages. Linux and
+  each Mac pass 161 fast checks; Windows passes 151. All pass 15 package commands;
+  Windows has 14 restricted-PATH executions. All four downloaded archives were
+  inspected; evidence is under `remote/76df02be3/` (new evidence not yet committed).
+- Linux/Windows CUDA jobs in that run are the first sccache-populating builds.
+  Cache setup succeeded on both and GitHub already contains compiler objects;
+  cold statistics and a warm run remain required. Old MSVC/CUDA `34998653921`
+  now fails adapter compilation due to the SDK `small` macro (CI-F11).
+- Older Deep `35007946063` is terminal: Linux/ARM pass 2329+4; Intel passes 2329
+  then 3/4 qualification tests; Windows passes 2250/2251. Windows lifecycle
+  missing-DLL startup is fixed in `76df02be3` with per-test PATH lookup and local
+  Debug/ASan probe proof (0.71/0.82 s), but Windows comprehensive retry is pending.
+- Intel Deep's failure is the final relocated native smoke process timing out
+  at 1800 seconds after all preceding commands pass. Same unchanged workload
+  separately passes in the new Intel package (188.948 s). Cause remains CI-F07,
+  unclassified; no sanitizer diagnostic. Do not dismiss it because the retry passes.
+- `release_smoke.py` adds opt-in `--capture-command-after` to extend
+  existing macOS sample-and-stop diagnostics beyond just the engine. Normal
+  execution/guards are unchanged. A diagnostic stop remains failure. Local
+  normal/Apple-ASan smoke targets pass (27.866/45.068 s); a deliberately delayed
+  compiler confirms stack capture and diagnostic failure. Evidence is under
+  `local/command-capture-*`. Isolated Intel native replay uses the already-built
+  archive on branch `temp/llama-release-intel-native`, commit `3875270c6`, run
+  `35016898785`. No engine build or ordinary full QA replay is selected.
+- CI-F11 repair `935e9bbfd` renames only the private buffer `small` to
+  `token_piece`. Identical actual-TU macro control fails before and passes after;
+  the bridge builds in normal Debug and Apple ASan. Branch-only MSVC object
+  check `temp/llama-release-msvc-compile` at `63a6e1004` verifies the target
+  compiler without rebuilding the CUDA engine. Hosted confirmation is pending.
+- Adrian challenged the repeated failures. Keep the next work narrow: MSVC
+  adapter compilation and Intel stack diagnosis. Preserve useful active jobs;
+  do not start another broad qualification cycle before these are understood.
+- Sanitizer `35009830830` at `0f35b970e` is still running Linux/Mac full QA;
+  Linux leaks are ON. SAN-009 stays open. Inspect failures before unrelated work.
+- **Pending user decision:** CI-D01 is drafted in the existing pipeline plan.
+  Adrian asked about separating the already-built plugin, one Windows base for
+  Vulkan/CUDA, and MSVC Vulkan. Pinned upstream supports MSVC Vulkan. Proposed
+  delivery is separate core/plugin archives and one MSVC Windows base, retaining
+  MinGW source/regression support. This changes the existing separate MinGW
+  binary requirement, so an async approval question is pending. Do not infer
+  approval from elapsed time or the user's performance correction.
+- Adrian corrected the VM framing: accepted performance favours `rxbvm`; do not
+  call portability a slowdown or reopen benchmarks. `performance/RESULTS.md`
+  confirms the Apple scorecard direction; it is not a new MSVC/GCC comparison.
+- Size comparison against current dev-snapshot: ARM Mac 19.9->22.1 MB, Intel
+  20.9->29.8, Linux 26.2->49.7, Windows 25.4->57.6, Linux CUDA 786.2 MB total.
+  Models excluded. Exact baseline/candidate sizes are retained. Splitting is
+  proposed only; current running builds remain useful either way.
+
+The older pause snapshot below is historical. Read the live ledger and pending
+CI-D01 decision before acting on its earlier next steps.
+
 ## Scope and authority
 
 Read `AGENTS.md`, the complete vision/criteria in

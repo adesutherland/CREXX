@@ -3,6 +3,15 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+The hosted core gate explicitly uses `ENABLE_LLAMA=OFF`. Adrian clarified on
+15 September 2026 that sanitizer QA covers first-party cREXX code, not upstream
+llama.cpp or CUDA. Do not add CUDA SDK/backend builds to this gate. Separate
+adapter ownership checks may instrument our bridge/RXPA code while linking an
+ordinary uninstrumented engine; record that boundary and use ARM Mac where
+practical. This does not waive first-party findings or claim coverage inside
+an uninstrumented dependency. See the native-inference pipeline plan for the
+remaining adapter/platform acceptance and SAN-009 closure work.
+
 ## Defect ownership and closure
 
 `docs/SANITIZER-WORKLIST.md` is the canonical live register for maintained

@@ -1,0 +1,7 @@
+argv=['/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/payload/CREXX-macos-arm64/bin/crexx', '--program', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/native/smoke', '/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_provider_smoke.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member release_provider_smoke
+BUILT: project member release_provider_smoke
+BARRIER: link program
+PUBLISHED: program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/native/smoke.rxbin
+PUBLISHED: native program /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-native-replay-n4uslgrm/native/smoke

@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "provider": "rxllama",
+  "platform": "Windows",
+  "arch": "AMD64",
+  "engine": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "link_libraries": [
+    {
+      "path": "libcrexx-llama.dll.a",
+      "sha256": "ffbde2a0584c569b40c13ec76e490bb5a1bdefa05303b537248098c6109f911a"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "libcrexx-llama.dll",
+      "sha256": "8c61ab3020a4e68322998888e57710fa50234a7f30ebad5887484e43ce2146f7"
+    },
+    {
+      "path": "libcrexx-llama.dll.a",
+      "sha256": "ffbde2a0584c569b40c13ec76e490bb5a1bdefa05303b537248098c6109f911a"
+    },
+    {
+      "path": "libcrexx-llama-engine.dll",
+      "sha256": "db6ceac33c3896d80e15bb4189ae06b3ed4ea639ac9b6b33c3488cada8d28940"
+    },
+    {
+      "path": "libcrexx-llama-engine.dll.a",
+      "sha256": "15cb164f6d3adc5cc4036839005c143fa87adbf1022c43cabce74d50a30173be"
+    },
+    {
+      "path": "crexx-ggml.dll",
+      "sha256": "20b4cb5f6cd1b34a87533f19ec3099e8234d7dd2db1a3db6077c626c55cdd48d"
+    },
+    {
+      "path": "libcrexx-ggml.dll.a",
+      "sha256": "0f5d164d3f4812101c1be2522b0a48dfc6308c9d2f4a416472a83e908c60d09f"
+    },
+    {
+      "path": "crexx-ggml-base.dll",
+      "sha256": "1fd547ca09b04beff55777864be0eb2a99ea551423825b45b92c592eed88b598"
+    },
+    {
+      "path": "libcrexx-ggml-base.dll.a",
+      "sha256": "290745af68e6c986344feefba0031ec77067cad333bf0de9947eaef340eae6f9"
+    },
+    {
+      "path": "crexx-ggml-cpu-x64.dll",
+      "sha256": "2fed2afc5377fe77505d3cae4c9e7f07d6a62e4fce61a362fe83c9945d4dd35e"
+    },
+    {
+      "path": "crexx-ggml-cpu-sse42.dll",
+      "sha256": "00eaa6cc537fb6b91175a2d6cabc4226a777725c3af0d1f7e61fd3bc12543c7e"
+    },
+    {
+      "path": "crexx-ggml-cpu-sandybridge.dll",
+      "sha256": "8151c92b591d12a6ac3d521d85f268094d9997a364f71940e6c0933d8f94fb57"
+    },
+    {
+      "path": "crexx-ggml-cpu-ivybridge.dll",
+      "sha256": "bd7cd7ff840e233302325122c5aeac9816c30923758cd593e7b75f473f6a35bf"
+    },
+    {
+      "path": "crexx-ggml-cpu-piledriver.dll",
+      "sha256": "5383031708437b04bf89432e14e2e9bd9cff765f9a05e5457c8b0a3738fc327c"
+    },
+    {
+      "path": "crexx-ggml-cpu-haswell.dll",
+      "sha256": "bef38c498919aac9e00287cc1f8242a0b600591692e4332ba8736c9b2a8eecba"
+    },
+    {
+      "path": "crexx-ggml-cpu-skylakex.dll",
+      "sha256": "df808de4b316c7fbb69f41bc09e9da8ba3d4057fc25f81e8e757409995546b10"
+    },
+    {
+      "path": "crexx-ggml-cpu-cannonlake.dll",
+      "sha256": "a29e59cef47fdcf1218e2b8e2a50da59e11c96ea7b5bbfca3696350d6beff498"
+    },
+    {
+      "path": "crexx-ggml-cpu-cascadelake.dll",
+      "sha256": "781e6d528d443bb52d6d0fcee7e25e8be04f8b7cbf18eea754a1afa7689503e7"
+    },
+    {
+      "path": "crexx-ggml-cpu-icelake.dll",
+      "sha256": "be2068f21123dcf5aecfc5cdaeecd4a8b792ac3e12696cf1f7964f5fe67b1a42"
+    },
+    {
+      "path": "crexx-ggml-cpu-cooperlake.dll",
+      "sha256": "4a5177b17ab68116b293ce13ddfa27092c7b8ea34fb12a35d770b36ed9dad404"
+    },
+    {
+      "path": "crexx-ggml-cpu-zen4.dll",
+      "sha256": "2e9af5a479e84e7c191a15f71f6d269df9b948e2e47387d3d288505a4d552108"
+    },
+    {
+      "path": "crexx-ggml-cpu-alderlake.dll",
+      "sha256": "777902bef98d13a3b1c87c57e9a1ea2fa0caf55aecd651c3e82f54bb5ef7bb90"
+    },
+    {
+      "path": "crexx-ggml-cpu-sapphirerapids.dll",
+      "sha256": "72cd436f596256cc9451d01c6408a73ff4fa87772c61d46a79cc85a04bcf02d6"
+    },
+    {
+      "path": "crexx-ggml-vulkan.dll",
+      "sha256": "8a67d058c86a762f5ee451a9df250de5bee8cae69f0b59bd569896f020b6d88c"
+    },
+    {
+      "path": "rxllama-NOTICES.txt",
+      "sha256": "6cebb8a51fc18e71df2dd15fd97375bd2bbf004a8643a8b15f1aaaf555275665"
+    },
+    {
+      "path": "libgcc_s_seh-1.dll",
+      "sha256": "b37c1770c8ca092700875845b34918803ee6311573eba1c32ff4b1166e4a0e1e"
+    },
+    {
+      "path": "libstdc++-6.dll",
+      "sha256": "887c21dbe2a211ac4d1a790e4f608b7dee27fae12352856963004e7a715d2e6c"
+    },
+    {
+      "path": "libwinpthread-1.dll",
+      "sha256": "2da71960a872bd1e59b60377f798f285ce630106509d6bd1d75e553f16218b7b"
+    },
+    {
+      "path": "rxllama.runtime.json",
+      "sha256": "8c87037894d557cb613e64475b2eea92c98e5d65f963dd756ea8f59b1697ba00"
+    }
+  ]
+}

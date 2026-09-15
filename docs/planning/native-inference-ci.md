@@ -27,12 +27,16 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
 1. [x] **CI-AC-01:** the candidate contains the accepted implementation and
    current remote RXPP changes, with both parents retained. Neither remote
    `develop` nor a GitHub release is modified during qualification.
-2. [ ] **CI-AC-02:** the ordinary four release archives contain a complete
-   llama provider: CPU/Vulkan on Linux and Windows; CPU/Metal on both Mac
-   architectures. The archive includes documentation, examples and notices.
-3. [ ] **CI-AC-03:** additional complete Linux and Windows CUDA archives include
-   CPU fallback and their redistributable dependencies. Windows CUDA uses a
-   compatible MSVC build; existing MinGW delivery is retained separately.
+2. [ ] **CI-AC-02:** four independently usable llama-free core archives pass on
+   the target Linux/GCC, Windows/MSVC, ARM Mac/Clang and Intel Mac/Clang
+   configurations before llama is added. Separate matching plugin archives
+   supply CPU/Vulkan on Linux/Windows and CPU/Metal on Mac, with documentation,
+   examples and notices. Verify actual extracted core and core-plus-plugin ZIPs.
+3. [ ] **CI-AC-03:** separate Linux and Windows CUDA plugin archives include
+   CPU fallback and redistributable dependencies. One Windows MSVC core with
+   `rxvm` selecting `rxbvm` works with either Vulkan or CUDA, including native
+   generation and relocated execution. MinGW source/regression support remains;
+   a separate MinGW binary delivery is no longer required (approved CI-D01).
    GPU build/package success does not assert real-device execution.
 4. [x] **CI-AC-04:** smoke uses a generated fixture smaller than 5 MiB, with
    generator/source/seed/toolchain/hash provenance, no large model download and
@@ -50,7 +54,12 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    the routine candidate pipeline.
 7. [ ] **CI-AC-07:** the candidate release builds/smokes and wider core Deep
    Build/Sanitizer QA gates have terminal results for the exact candidate SHA.
-   Linux ASan/LSan keeps leak detection enabled. Retained unchanged local tests
+   Linux ASan/LSan keeps leak detection enabled for first-party cREXX code.
+   Core sanitizer jobs use `ENABLE_LLAMA=OFF` and build no CUDA backend/SDK.
+   Separate first-party adapter checks may link an ordinary uninstrumented
+   engine; ARM Mac is the practical local integration host. Do not instrument
+   or qualify upstream llama.cpp/CUDA under this sanitizer work package.
+   Retained unchanged local tests
    are reused; new RXPP inputs are covered by hosted qualification.
 8. [ ] **CI-AC-08:** human/agent guides, parent acceptance status and artifact
    evidence describe exactly what is shipped and tested. Remaining real-GPU,
@@ -198,3 +207,109 @@ This is compiler-output reuse in the existing build graph, not a new binary
 engine ABI or a user-installed NVIDIA dependency. Cache misses, eviction or
 changed engine/toolchain/settings can still cost a cold build. It extends
 CI-03/04 with CI-AC-09 and leaves all earlier criteria open as recorded.
+
+
+## Restart continuation — candidate 76df02be3
+
+Adrian resumed after restart. The Windows Deep Build run at `cabc668cf` passes
+2,250/2,251 checks; its only failure is the lifecycle helper's missing build-tree
+DLL search location (CI-F06 follow-up). Scoped CTest PATH setup is repaired and
+the unchanged probe passes local Debug/Apple-ASan checks. Linux and ARM Mac
+pass all 2,329 comprehensive and four package tests. Their evidence is retained.
+
+Combined candidate `76df02be3c4d89118bd8d4e4e68308c47f76366e` is pushed only to
+`origin/temp/llama-release-combined`. [Build 35013130021](https://github.com/adesutherland/CREXX/actions/runs/35013130021)
+starts all six complete packages with CUDA compiler caching enabled. This is
+the first cache-populating run, not evidence of warm reuse. Prior useful Intel
+Deep Build, Linux/Mac sanitizer and MSVC/CUDA triage runs continue; terminal
+results and final exact-candidate gates remain open. No criterion is closed
+by dispatch, and no develop/release publication occurs.
+
+
+## CI-D01 — approved separate downloads and common Windows base
+
+Status: approved by Adrian on 15 September: run the core without llama on every
+target configuration first; only after those pass add llama, and implement the
+agreed separate release packaging. Earlier pending-approval text is superseded.
+
+### Vision and intended outcomes
+
+1. Keep the ordinary cREXX download small. Users add one prebuilt llama.rexx
+   package for their platform/backend and separately provision a model; they
+   need no inference SDK, compiler or server to run their programs.
+2. Supply one Windows MSVC base with `rxvm` selecting `rxbvm`, usable with either
+   the MSVC CPU/Vulkan or CPU/CUDA plugin package. Adrian notes the accepted
+   performance results favour the portable VM; no new performance programme
+   is selected. Retain MinGW source-build support and its regression coverage.
+3. Compile once per required toolchain/configuration, then split the verified
+   outputs into core/plugin artifacts. Preserve CPU fallback, GPU support,
+   native consumers, documentation, manifests, dependencies and notices.
+   Adrian explicitly requested reuse of the already-built core: plugin jobs
+   consume its exact artifact, build only plugin/dependency/helper targets, and
+   test against those unchanged core binaries. Do not rebuild the cREXX product
+   in each Vulkan/CUDA job. One Windows MSVC base serves both variants.
+4. Keep QA aligned with the component, as Adrian explicitly requested: core
+   jobs run cREXX tests; plugin jobs run only relevant llama adapter, lifecycle,
+   packaging and fixture smoke checks. Reuse the core result instead of running
+   its full suite again for each backend. Combined installed/native consumers
+   remain the integration proof, without retesting model quality or throughput.
+
+### Accepted acceptance amendments (stable existing IDs)
+
+1. **CI-AC-02:** replace the four complete base archives with independently usable
+   core archives plus matching CPU/Vulkan (Linux/Windows) or CPU/Metal (Mac)
+   plugin archives; verify core-only use and installation from the actual ZIPs.
+2. **CI-AC-03:** provide additional complete CUDA plugin archives for Linux and
+   Windows, including CPU fallback and redistributable dependencies. The same
+   Windows MSVC core must pass with either backend variant, including native
+   generation and relocated execution. This replaces the separate complete
+   MSVC CUDA base and the requirement to retain a separate MinGW binary
+   delivery; MinGW source-build support and regression coverage remain.
+3. **CI-AC-05/08:** verify installed core-plus-plugin artifacts through the
+   existing restricted-environment smoke; retain package identities, version/
+   platform compatibility, guides and unambiguous backend selection instructions.
+   Every other CI/parent criterion remains unchanged and visibly open as before.
+
+### Numbered implementation sequence
+
+1. [ ] **CI-D01-01:** build and smoke the real llama-free core on all four target
+   configurations, with MSVC/`rxbvm` on Windows. Retain exact artifacts and
+   semantic checks. No llama compilation or GPU SDK download occurs in this
+   stage. All four must pass before llama work resumes (CI-AC-02/03/07).
+2. [ ] **CI-D01-02:** after the core gate, qualify MSVC Vulkan and the other
+   plugin variants; partition staged output into core and self-contained plugin
+   archives, preserving native/static inputs and runtime DLL closure. Ensure
+   installer behavior and human/agent guidance agree (CI-AC-02/03/05/08).
+3. [ ] **CI-D01-03:** smoke core alone and the actual recombined downloads, including
+   both Windows backend variants against one base. Complete the exact-candidate
+   Build/Deep/Sanitizer gates and retain warm CUDA cache proof before proposing
+   promotion (CI-AC-01 through CI-AC-09).
+
+The approved distribution contract is now separate core/plugin downloads.
+Implementation and target proof remain open; do not describe the split as
+already delivered. Existing evidence is preserved, but previous combined CUDA,
+sanitizer and MSVC adapter diagnostic runs were cancelled when Adrian selected
+the core-first sequence. Cancellation is not a pass and cache hits remain unproven.
+
+CI-04 execution refinement after Adrian's concern about repeated failures:
+the core-first gate above supersedes the intervening isolated-diagnosis order.
+Preserve CI-F07/11 evidence and resume those plugin findings after all four core
+builds pass. No acceptance requirement is removed by this change of sequence.
+
+Sanitizer scope clarification, explicitly requested by Adrian on 15 September:
+the maintained gate concerns our code, not upstream llama.cpp or CUDA.
+The core workflow must be independent of inference dependencies. Our adapter
+ownership/failure checks remain separate and may use an uninstrumented engine;
+record instrumented/uninstrumented boundaries and Mac capability limits.
+SAN-009 remains open for its actual first-party closure evidence. This approved
+scope does not require upstream-engine sanitizer cleanliness or GPU sanitizer
+coverage, and does not waive a first-party finding.
+
+
+Cache evidence limit: GitHub caches are scoped to the current/default branch
+(and the PR base for PR runs). This repository's default branch is `master`;
+cache entries populated on the isolated candidate branch do not automatically
+warm `develop` or a new release tag. The first build in a new eligible scope
+can therefore be cold. Preserve the current same-branch cold/warm proof and
+report this boundary; do not change branch publication policy to warm a cache.
+See [GitHub cache access restrictions](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache).

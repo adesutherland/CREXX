@@ -1,0 +1,97 @@
+name: Release core qualification
+on:
+  push:
+    branches: [temp/llama-release-core]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      commit:
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: release-core-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+jobs:
+  core:
+    name: Core ${{ matrix.platform }} (${{ matrix.toolchain }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            os: ubuntu-24.04
+            toolchain: gcc
+            vm: rxtvm
+            cmake_args: ''
+          - platform: windows-x64
+            os: windows-2025
+            toolchain: msvc
+            vm: rxbvm
+            cmake_args: '-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF'
+          - platform: macos-arm64
+            os: macos-15
+            toolchain: clang
+            vm: rxbvm
+            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=arm64'
+          - platform: macos-x86_64
+            os: macos-15-intel
+            toolchain: clang
+            vm: rxbvm
+            cmake_args: '-DCMAKE_OSX_ARCHITECTURES=x86_64'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ inputs.commit || github.sha }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.toolchain == 'msvc'
+        with:
+          arch: x64
+          toolset: '14.44'
+      - name: Configure core without inference dependencies
+        shell: bash
+        run: |
+          cmake -S . -G Ninja -B "${{ runner.temp }}/core-build" \
+            -DCMAKE_BUILD_TYPE=Release -DENABLE_LLAMA=OFF \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DCREXX_QA_CTEST_JOBS=5 \
+            -DCREXX_BUILD_CHANNEL=local \
+            -DCREXX_BUILD_COMMIT="${{ inputs.commit || github.sha }}" \
+            ${{ matrix.cmake_args }}
+      - name: Build core product
+        shell: bash
+        run: cmake --build "${{ runner.temp }}/core-build" --target stage-product stage-optional --parallel 2
+      - name: Check core correctness
+        shell: bash
+        run: cmake --build "${{ runner.temp }}/core-build" --target qa-smoke --parallel 2
+      - name: Package and test the actual core ZIP
+        shell: bash
+        run: |
+          python scripts/package-core-release.py --source . \
+            --build "${{ runner.temp }}/core-build" --output "${{ runner.temp }}/core-package" \
+            --platform "${{ matrix.platform }}" --toolchain "${{ matrix.toolchain }}" \
+            --preferred-vm "${{ matrix.vm }}" --commit "${{ inputs.commit || github.sha }}"
+      - name: Retain core evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: core-qa-${{ matrix.platform }}-${{ inputs.commit || github.sha }}
+          path: |
+            ${{ runner.temp }}/core-package/qa
+            ${{ runner.temp }}/core-build/Testing/Temporary
+            ${{ runner.temp }}/core-build/CMakeCache.txt
+            ${{ runner.temp }}/core-build/CMakeFiles/CMakeConfigureLog.yaml
+          retention-days: 14
+      - name: Retain qualified core for plugin jobs
+        uses: actions/upload-artifact@v7
+        with:
+          name: core-${{ matrix.platform }}-${{ inputs.commit || github.sha }}
+          path: ${{ runner.temp }}/core-package/assets/*.zip
+          if-no-files-found: error
+          retention-days: 14

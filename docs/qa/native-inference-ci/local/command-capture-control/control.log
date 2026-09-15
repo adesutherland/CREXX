@@ -1,0 +1,29 @@
+SMOKE_RECORD=/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-command-capture-control-ipmeky6i/logs/release-smoke-4cg6zq6r
+PASS: engine
+PASS: altered-backend-rejected
+PASS: missing-manifest-rejected
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 80, in run
+    child.wait(timeout=capture_after)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1279, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2076, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-command-capture-control-ipmeky6i/payload/bin/rxc', '--no-exe-import', '-i', '/private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-command-capture-control-ipmeky6i/payload/bin', '-o', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-9onttiu0/opt', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-release-smoke-9onttiu0/smoke.crexx']' timed out after 5 seconds
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 223, in <module>
+    main()
+    ~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 181, in main
+    run(mode + '-compile', [prefix / ('bin/rxc' + suffix), '--no-exe-import',
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        *(['-n'] if mode == 'noopt' else []), '-i', prefix / 'bin', '-o', program, src], consumer=True)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 89, in run
+    raise RuntimeError(label + ' stopped after diagnostic stack capture; this is not a qualification result')
+RuntimeError: opt-compile stopped after diagnostic stack capture; this is not a qualification result

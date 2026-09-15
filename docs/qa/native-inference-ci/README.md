@@ -5,6 +5,15 @@ Candidate: `temp/llama-release-qa`. The accepted baseline is `12647a91aa7e9`,
 merged with remote RXPP `b5b827489` by `c1de1670812a`. Publication is not authorized
 by a partial or pending result.
 
+Latest approved delivery sequence (15 September): separate core and plugin
+downloads, one MSVC Windows base, all four llama-free core builds first, then
+plugin-only builds/tests against the exact qualified core artifacts. Core
+sanitizers exclude llama/CUDA; adapter checks remain separate and first-party.
+Earlier combined jobs and the outstanding MSVC compile diagnostic were cancelled
+for this sequence. Older proposed/pending wording below is historical; CI-D01
+in the live plan records the approved contract. Core and plugin QA are separated
+so backend variants do not rebuild or repeat the cREXX core suite.
+
 ## Local checks before remote qualification
 
 | Check | Result | Retained evidence |
@@ -405,3 +414,144 @@ The same probe passes after focused normal/Apple-ASan builds (0.71/0.82 s),
 retained under `local/windows-probe-debug/` and `local/windows-probe-asan/`.
 The Windows-only environment branch still requires the hosted target result;
 these local checks establish that the ownership workload remains intact.
+
+
+### Download size and possible post-build split — discussion only
+
+Adrian asked whether the already-built plugin should be a separate download.
+The current `dev-snapshot` (`b5b827489`) ZIPs are 19.9 MB ARM Mac, 20.9 MB Intel
+Mac, 26.2 MB Linux and 25.4 MB Windows. Retained candidate archives are 22.1,
+29.8, 49.7 and 57.6 MB respectively; Linux CUDA is 786.2 MB. These are decimal
+compressed MB without models; differences also include other revision/build
+inputs. Exact sizes and an indicative provider-entry breakdown are retained in
+`local/download-size-comparison.json`. Windows CUDA remains unmeasured.
+
+Recommendation for Adrian's decision: retain a single build per toolchain,
+then create a small core archive and an optional matching llama.rexx archive
+containing its engine, backends, dependencies, examples and notices. Preserve
+the version/platform/toolchain match, including the MSVC CUDA variant. Verify
+core-only execution and reconstruction of the complete installed payload from
+core plus plugin before the existing restricted-environment smoke. This would
+reduce ordinary download size, not CUDA compilation work. It is a proposed
+delivery change only; CI-AC-02/03 and the currently authorized complete archives
+remain unchanged until Adrian decides. Existing running builds remain useful.
+
+### Combined 76df02be3 package results (in progress)
+
+ARM Mac job `104529899383` in Build `35013130021` passes 161 fast checks and
+all 15 package commands (113.861 s), with actual CPU/MTL0 fixture computation.
+The downloaded ZIP is 22,144,155 bytes, retains `rxvm -> rxbvm`, passes all 16
+provider entry hashes and contains no fixture/helper. Log, package QA and
+archive inspection are retained under `remote/76df02be3/macos-arm64*`. Other
+platforms and cache warm-reuse evidence remain pending.
+
+Adrian additionally asked whether the same Windows base would work with both
+Vulkan and CUDA. This is the intended interchangeability criterion for the
+proposed split, not an already demonstrated property: the present Vulkan lane
+uses MinGW and the CUDA lane uses MSVC. Before adopting the split, prove the
+same base with either complete plugin package, including native executable
+generation and its static/import-library toolchain requirements. Existing
+separate complete-ZIP passes do not establish cross-toolchain interchangeability.
+
+Adrian asked whether Vulkan can also use MSVC. The pinned upstream Vulkan
+CMake file has explicit MSVC support and its build guide includes Visual Studio
+with the Windows Vulkan SDK. A consistent MSVC base plus MSVC Vulkan/CUDA
+plugin variants is feasible to qualify. Switching the default Windows base
+would also select cREXX's portable `rxbvm` instead of MinGW's default `rxtvm`;
+this execution tradeoff was reported to Adrian. No default-toolchain change or
+MinGW removal has been approved or implemented.
+
+Adrian corrected the framing of that VM difference: `rxbvm` is the faster
+option in the accepted performance results. Do not present portability as an
+inherent slowdown or reopen the accepted performance programme. Reuse retained
+platform/compiler-labelled evidence; this clarification does not itself supply
+a new MSVC-versus-MinGW timing result. Focus the proposed MSVC Vulkan follow-up
+on build, package and consumer compatibility.
+
+
+### CI-F07 follow-up — intermittent relocated native stall
+
+Deep Intel job `104512381773` at `cabc668cf` passes all 2,329 comprehensive
+checks and three of four qualification tests. Package smoke reaches all 15
+preceding commands, including CPU/Metal engine, both optimized/nonoptimized VMs
+and native generation, then its relocated native process reaches the unchanged
+1,800-second guard with no program output. Retained full logs and individual
+command records are in `remote/cabc668cf/deep-macos-intel*`. No sanitizer
+diagnostic is present. Keep this on CI-F07 while its cause is unclassified.
+
+The separately scheduled `76df02be3` Intel package run passes the same unchanged
+smoke workload (188.948 s, 15 commands) and 161 fast checks. Product sources and
+the smoke program/harness are unchanged between these revisions; the intervening
+CMake change is Windows test lookup and the QA header change is ASan-only. This
+is useful isolated replay evidence, not an explanation of the intermittent stall.
+
+Extend the existing opt-in macOS diagnostic capture to any named smoke command,
+so the next stalled relocated consumer yields a stack before termination. The
+normal workload/backstops remain unchanged; a diagnostic stop fails explicitly.
+A separate Intel diagnostic branch supplies the opt-in flag, never the ordinary
+release workflow. Do not start another complete Deep run merely to repeat a
+timeout with no additional diagnostic evidence.
+
+The new non-engine diagnostic path has a causal control: a temporary staged
+compiler deliberately sleeps, while the real engine checks complete first.
+`--capture-command-after 5` captures a 7,992-byte stack for `opt-compile`, stops
+that process and returns a diagnostic failure. The control passes only when
+that failure and nonempty stack are observed; see `local/command-capture-control/`.
+The ordinary package workload also passes in normal Debug (27.866 s) and
+maintained Apple ASan (45.068 s) after this option is added. Exact runner logs,
+input hashes and smoke records are under `local/command-capture-{debug,asan}/`
+and `local/command-capture-inputs.json`. No default timeout or package behavior
+changes, and no ordinary full QA is repeated for this diagnostic option.
+
+All four standard package lanes at `76df02be3` are now green. Windows passes
+151 fast checks (parser-mode checks are disabled in that lane as configured)
+and 15 smoke commands, with 14 restricted-PATH executions (13.487 s). Linux
+passes 161 plus 15 smoke commands (17.190 s). Both Mac lanes pass 161 plus 15
+commands, including real Metal fixture execution. All four actual downloaded
+ZIPs pass retained manifest, public-VM and fixture/helper-exclusion inspection.
+This does not close the separate Deep Intel intermittent stall, Windows probe
+retry, CUDA package/cache proof or exact-head sanitizer gates.
+
+The isolated Intel native replay is branch `temp/llama-release-intel-native`,
+commit `3875270c6`, run `35016898785`. It reuses the SHA-checked Intel archive
+from Build `35013130021`, compiles only the tiny native consumer, then relocates
+and repeats it up to five times. A 180-second diagnostic stop captures a stack
+and fails; the ordinary qualification guard is unchanged. The helper's local
+ARM control passes native compilation and two relocated executions
+(`local/native-replay-control/`). No engine rebuild or model download is used.
+
+### CI-F11 — MSVC Windows SDK macro collision
+
+The old MSVC/CUDA diagnostic `34998653921` at `ae8c19681` finishes CUDA
+compilation, then fails compiling our adapter at `generation.h:39`. The SDK
+defines `small` as `char`; our `char small[256]` becomes an invalid declaration.
+Rename this private buffer to `token_piece`, retaining its size and every
+generation operation. The actual bridge translation unit reproduces the
+failure with the SDK macro before the rename and passes after it; ordinary
+Debug and maintained Apple-ASan bridge builds also pass. Evidence and the
+Microsoft header reference are in `local/msvc-small-control/README.md`.
+
+The 190,722,959-byte remote log is preserved losslessly as
+`remote/ae8c19681/windows-cuda.log.gz`, with original byte count/hash alongside
+it and the QA artifact in `windows-cuda-qa/`. This is a first-party compile
+portability defect, not a CUDA computation or sanitizer finding. Its permanent
+regression is the actual MSVC provider build; target confirmation remains open.
+
+Adrian challenged the repeated failures on 15 September. The next work is
+narrowed to this MSVC compile check and isolated Intel diagnosis, preserving
+useful running CUDA/cache and sanitizer jobs. Do not launch another broad
+qualification cycle until those failures are understood. The branch-only
+MSVC diagnostic `temp/llama-release-msvc-compile` at `63a6e1004` configures a CPU
+build and compiles only the actual adapter object before any engine build.
+This does not adopt CI-D01, change the release matrix or close its criteria.
+
+Subsequent instruction supersedes the diagnostic order above: CI-D01 is now
+approved with the core-first gate and existing combined jobs cancelled.
+The Intel replay did capture the stall. Its main thread waits in
+`initialize_engine -> ggml_metal_library_init -> dispatch_group_wait`, while
+Metal compiler threads wait for Apple's synchronous compiler service reply.
+The stack in `remote/3875270c6/intel-native/relocated-1-stack.txt` locates the
+wait during backend initialization, before model inference. It does not alone
+prove why the service failed to respond. Defer this plugin investigation until
+the four independent core builds pass; no timeout relaxation or GPU removal
+is implied.

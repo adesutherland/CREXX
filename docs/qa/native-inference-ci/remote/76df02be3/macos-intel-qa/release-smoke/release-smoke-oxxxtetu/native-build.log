@@ -1,0 +1,7 @@
+argv=['/Users/runner/work/_temp/release-payload/CREXX-macos-x86_64/bin/crexx', '--program', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/native/smoke', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/smoke.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member smoke
+BUILT: project member smoke
+BARRIER: link program
+PUBLISHED: program /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/native/smoke.rxbin
+PUBLISHED: native program /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-release-smoke-a0ybiwup/native/smoke

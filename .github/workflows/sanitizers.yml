@@ -100,7 +100,7 @@ jobs:
           submodules: recursive
           ref: ${{ needs.assurance-gate.outputs.target_sha }}
 
-      - name: Python for bounded package smoke
+      - name: Python for core QA
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -115,7 +115,7 @@ jobs:
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
             -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=ON \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
             ${{ matrix.cmake_args }}
 
       - name: Full instrumented build and CTest
@@ -146,7 +146,6 @@ jobs:
           name: sanitizer-logs-${{ matrix.platform }}
           path: |
             ${{ runner.temp }}/debugasan/asan-logs
-            ${{ runner.temp }}/debugasan/lib/plugins/llama/tests/release-smoke
           if-no-files-found: error
           retention-days: 14
 

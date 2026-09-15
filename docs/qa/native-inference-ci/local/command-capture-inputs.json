@@ -1,0 +1,10 @@
+{
+  "source_parent": "76df02be3c4d89118bd8d4e4e68308c47f76366e",
+  "files": {
+    "tests/native-inference/release_smoke.py": "6e048e4370c0ee1d46f41b1430c557d7357c232375203596af25a13554f9e2dc",
+    "tests/native-inference/release_provider_smoke.crexx": "234df34010c5d14f89ac352117c22bc903b5efc33a0c5c0197a782afd0523557"
+  },
+  "normal_smoke_seconds": 27.866,
+  "apple_asan_smoke_seconds": 45.068,
+  "scope": "opt-in diagnostic capture; unchanged default workload and timeout; no broad QA repeat"
+}
