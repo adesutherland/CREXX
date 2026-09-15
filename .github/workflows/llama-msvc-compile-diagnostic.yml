@@ -1,0 +1,46 @@
+name: MSVC adapter compile diagnosis
+on:
+  push:
+    branches: [temp/llama-release-msvc-compile]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compile:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          toolset: '14.44'
+      - name: Configure CPU build and compile only the failing adapter object
+        shell: cmd
+        run: |
+          mkdir "${{ runner.temp }}\compile-evidence"
+          cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_PARSER_MODE=OFF -DENABLE_LLAMA=ON > "${{ runner.temp }}\compile-evidence\configure.log" 2>&1
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
+          cmake --build "${{ runner.temp }}/build" --target lib/plugins/llama/CMakeFiles/crexx_llama_bridge.dir/bridge.cpp.obj --parallel 1 > "${{ runner.temp }}\compile-evidence\bridge.log" 2>&1
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
+      - name: Retain target compiler inputs and SDK macro
+        if: always()
+        shell: pwsh
+        run: |
+          $out = "${{ runner.temp }}/compile-evidence"
+          $header = Join-Path $env:WindowsSdkDir "Include/$env:WindowsSDKVersion/shared/rpcndr.h"
+          Select-String -Path $header -Pattern '^#define small ' | Out-File "$out/sdk-macro.txt"
+          Copy-Item "${{ runner.temp }}/build/CMakeCache.txt" $out -ErrorAction SilentlyContinue
+          Get-Content "$out/bridge.log" -Tail 30 -ErrorAction SilentlyContinue
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: msvc-adapter-compile
+          path: ${{ runner.temp }}/compile-evidence
+          retention-days: 14
