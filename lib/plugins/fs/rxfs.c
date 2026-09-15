@@ -10,6 +10,12 @@
 #include <direct.h>
 #include <io.h>
 #include <windows.h>
+#ifndef S_ISDIR
+#define S_ISDIR(mode) (((mode) & _S_IFMT) == _S_IFDIR)
+#endif
+#ifndef S_ISREG
+#define S_ISREG(mode) (((mode) & _S_IFMT) == _S_IFREG)
+#endif
 #define RXFS_CHDIR _chdir
 #define RXFS_GETCWD _getcwd
 #define RXFS_MKDIR(path) _mkdir(path)
