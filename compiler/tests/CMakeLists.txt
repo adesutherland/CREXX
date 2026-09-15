@@ -3791,13 +3791,19 @@ add_test(NAME signal_crossed_loop_cleanup_opt_rewrites
 set_tests_properties(signal_crossed_loop_cleanup_opt_rewrites PROPERTIES
         LABELS "compiler;flow;signals;correctness;linked_opt")
 
+set(_inline_receiver_threaded_vm)
+# Compiler tests are declared before the interpreter targets. Use the shared
+# capability decision, not TARGET existence at this point in configuration.
+if(CREXX_THREADED_VM_SUPPORTED)
+    set(_inline_receiver_threaded_vm "-DRXTVM=$<TARGET_FILE:rxtvm>")
+endif()
 add_test(NAME inline_receiver_signal_cleanup
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DRXDAS=$<TARGET_FILE:rxdas>
                  -DRXLINK=$<TARGET_FILE:rxlink>
-                 -DRXTVM=$<TARGET_FILE:rxtvm>
+                 ${_inline_receiver_threaded_vm}
                  -DRXBVM=$<TARGET_FILE:rxbvm>
                  -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
                  -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
