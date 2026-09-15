@@ -8,6 +8,13 @@ was dispatched after the pause request; existing remote jobs were left running.
 
 ## Live continuation — 15 September, after restart
 
+**Latest addition:** Adrian also requires a non-shipping Windows/MinGW core
+quality gate, including both VM variants. Retain logs, not distributable binaries.
+It is a fifth configuration alongside the four release cores and must pass before
+plugin qualification. MSVC remains the one Windows release base. See MINGW-AC-01/02
+and MINGW-01/02 in the authoritative plan. The Windows/MSVC repair retry is
+`35021253099` at `7425ff241`; MinGW dispatch follows this workflow update.
+
 **Latest authority supersedes the older continuation bullets below:** Adrian
 approved separate core/plugin downloads and one MSVC Windows base. First build
 and qualify llama-free cores on all four target platforms; only after all pass

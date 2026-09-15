@@ -29,7 +29,8 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    `develop` nor a GitHub release is modified during qualification.
 2. [ ] **CI-AC-02:** four independently usable llama-free core archives pass on
    the target Linux/GCC, Windows/MSVC, ARM Mac/Clang and Intel Mac/Clang
-   configurations before llama is added. Separate matching plugin archives
+   configurations before llama is added. A fifth Windows/MinGW core-only gate
+   verifies both VM variants and retains QA evidence without publishing binaries. Separate matching plugin archives
    supply CPU/Vulkan on Linux/Windows and CPU/Metal on Mac, with documentation,
    examples and notices. Verify actual extracted core and core-plus-plugin ZIPs.
 3. [ ] **CI-AC-03:** separate Linux and Windows CUDA plugin archives include
@@ -37,6 +38,7 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    `rxvm` selecting `rxbvm` works with either Vulkan or CUDA, including native
    generation and relocated execution. MinGW source/regression support remains;
    a separate MinGW binary delivery is no longer required (approved CI-D01).
+   The later approved Windows/MinGW core gate remains mandatory.
    GPU build/package success does not assert real-device execution.
 4. [x] **CI-AC-04:** smoke uses a generated fixture smaller than 5 MiB, with
    generator/source/seed/toolchain/hash provenance, no large model download and
@@ -275,7 +277,7 @@ agreed separate release packaging. Earlier pending-approval text is superseded.
 1. [ ] **CI-D01-01:** build and smoke the real llama-free core on all four target
    configurations, with MSVC/`rxbvm` on Windows. Retain exact artifacts and
    semantic checks. No llama compilation or GPU SDK download occurs in this
-   stage. All four must pass before llama work resumes (CI-AC-02/03/07).
+   stage. All four delivery cores and the Windows/MinGW core-only gate must pass before llama work resumes (CI-AC-02/03/07).
 2. [ ] **CI-D01-02:** after the core gate, qualify MSVC Vulkan and the other
    plugin variants; partition staged output into core and self-contained plugin
    archives, preserving native/static inputs and runtime DLL closure. Ensure
@@ -352,3 +354,49 @@ warm `develop` or a new release tag. The first build in a new eligible scope
 can therefore be cold. Preserve the current same-branch cold/warm proof and
 report this boundary; do not change branch publication policy to warm a cache.
 See [GitHub cache access restrictions](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache).
+
+### CI-D01-02 packaging implementation checklist
+
+The existing release Build workflow must implement the approved split, not just
+its diagnostic workflow. Preparation may proceed while the core retry runs;
+no plugin compilation or plugin QA starts before the four-core gate passes.
+
+1. [ ] **PKG-01:** preserve the version, signing, notarization and installer
+   safeguards while making the four product jobs llama-free. Finalize and test
+   the actual signed/staged core ZIP, with manifest hashes taken after signing.
+2. [ ] **PKG-02:** six dependent plugin jobs download the exact matching core
+   artifact from the same workflow/SHA. Build only adapter/engine/package/helper
+   targets; use MSVC for both Windows backends and retain CUDA compiler caching.
+   No core compilation, whole-core suite or upstream sanitizer is in these jobs.
+3. [ ] **PKG-03:** sign only the plugin payload where configured, refresh its
+   provider hashes, create a separate ZIP and test the actual combined downloads
+   without changing any core bytes. Retain CPU fixture and relevant adapter/
+   lifecycle controls, with no trained-model download. Core and plugin manifests
+   identify the source, platform, toolchain and required companion archive.
+4. [ ] **PKG-04:** publication collectors require four core plus six plugin ZIPs;
+   installers remain core-only. Preserve existing Windows signing publication
+   guards and optional notarized Mac installer rules. Human/agent download
+   instructions and exact-candidate qualification must match this delivery.
+
+This checklist serves CI-AC-02/03/05/07/08/09 and does not authorize publication.
+The initial Windows-only repair retry is run `35021253099` at
+`7425ff2417715b7e4f285d225867c0501fcb0002`, on `temp/llama-release-combined`.
+
+
+### Windows MinGW core quality gate — subsequent approved addition
+
+Adrian explicitly requested a fifth configuration on 15 September: Windows
+MinGW builds and runs core-only QA, including optimized/nonoptimized semantic
+consumer checks through both `rxtvm` and `rxbvm`. It uploads logs/identity/test
+evidence only; no MinGW distributable or plugin is shipped. MSVC remains the
+single Windows release core for both Vulkan and CUDA. This strengthens
+CI-AC-02/03/07 and CI-D01-01 without changing the four-core/six-plugin asset count.
+
+1. [ ] **MINGW-AC-01:** Windows/MinGW `ENABLE_LLAMA=OFF` product and core smoke
+   pass; extracted-core consumer checks explicitly execute both VM variants.
+2. [ ] **MINGW-AC-02:** retain exact source/toolchain and terminal logs; no
+   distributable binary artifact is uploaded. The gate remains a prerequisite
+   for plugin qualification and final publication.
+3. [ ] **MINGW-01:** add and run the focused Windows/MinGW diagnostic core job.
+4. [ ] **MINGW-02:** include the same non-shipping gate in the final release
+   dependency graph; retain focused evidence without duplicating backend QA.
