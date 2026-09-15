@@ -603,3 +603,24 @@ MinGW's full core Deep job at `21666b6bc` is green: 2,248 comprehensive tests
 and three install/package/external-consumer checks. Both VM modes occur in
 the retained log. MINGW-AC-01/02 stay closed; this strengthens the earlier
 152-test smoke and actual-ZIP proof without adding any binary delivery.
+
+### CI-F15 — package dependency scan mixes source and published locations
+
+Windows Vulkan `35028632018` at `b4d10adfb` builds all plugin/helper targets,
+then `WriteProviderPackage.cmake` reports conflicting `MSVCP140.dll` paths in
+the Visual Studio redist and already-copied provider directory. The package
+writer copies declared runtime files first but scans their original locations.
+The intended outcome is to inspect dependencies of the actual published files
+without weakening missing/conflicting dependency checks or choosing arbitrary
+DLL versions. No production API or backend selection changes are needed.
+
+1. [ ] **F15-AC-01:** a small ordinary shared-library fixture reproduces the
+   duplicate-location scan failure before the repair, then passes with all
+   runtime hashes retained after scanning the published files.
+2. [ ] **F15-AC-02:** the actual MSVC fixture and Windows Vulkan package pass;
+   distinct unresolved dependencies still fail rather than being ignored.
+3. [ ] **F15-01:** retain the failed package log, reproduce with tiny libraries,
+   and correct the scan roots to the already-published paths (F15-AC-01).
+4. [ ] **F15-02:** run the tiny Windows package preflight before retrying the
+   optional plugin build; retain actual archive/runtime smoke (F15-AC-02).
+   Preserve the ongoing core, CUDA and Intel diagnostic results.

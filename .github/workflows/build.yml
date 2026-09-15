@@ -786,6 +786,15 @@ jobs:
           name: user-test-${{ needs.version.outputs.commit }}-CREXX-${{ matrix.core_platform }}
           path: ${{ runner.temp }}/core-download
 
+      - name: Check dependency scanning with tiny package libraries
+        shell: bash
+        run: |
+          cmake -S tests/rxpa/provider-package-copy -G Ninja \
+            -B "${{ runner.temp }}/package-scan" -DCMAKE_BUILD_TYPE=Release \
+            ${{ matrix.platform == 'windows' && '-DCMAKE_C_COMPILER=cl' || '' }}
+          cmake --build "${{ runner.temp }}/package-scan" --parallel 2
+          ctest --test-dir "${{ runner.temp }}/package-scan" --output-on-failure
+
       - name: Configure plugin and engine only
         shell: bash
         run: |
@@ -1087,6 +1096,10 @@ jobs:
             ${{ runner.temp }}/build/CMakeCache.txt
             ${{ runner.temp }}/build/CMakeFiles/CMakeConfigureLog.yaml
             ${{ runner.temp }}/compiler-cache
+            ${{ runner.temp }}/package-scan/Testing/Temporary
+            ${{ runner.temp }}/package-scan/proof/*.log
+            ${{ runner.temp }}/package-scan/proof/*.cmake
+            ${{ runner.temp }}/package-scan/proof/complete/*.json
           retention-days: 14
 
       - name: Upload qualified optional plugin

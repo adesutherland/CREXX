@@ -24,7 +24,11 @@ foreach(path IN LISTS publish_files)
 endforeach()
 # Retain redistributable SDK/runtime dependencies. OS libraries and installed
 # GPU drivers are platform prerequisites, not copied system installations.
-set(scan_files ${runtime_files})
+set(scan_files "")
+foreach(path IN LISTS runtime_files)
+    get_filename_component(name "${path}" NAME)
+    list(APPEND scan_files "${output}/${name}")
+endforeach()
 list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll)$")
 list(REMOVE_DUPLICATES scan_files)
 set(system_dependencies "^/System/Library/" "${crexx_windows_system_dll_regex}"
