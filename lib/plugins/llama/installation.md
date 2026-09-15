@@ -21,6 +21,11 @@ inference server is needed to run ordinary cREXX programs. Keep the package's
 `bin` directory intact, then follow [model provisioning](models.md) and the
 [examples](examples/README.md).
 
+Use `rxvm` as the VM entry point. It selects the preferred implementation for
+the package's compiler/platform: a relative symlink on macOS/Linux and an
+executable copy on Windows. Keep that entry point with the rest of `bin` when
+moving or unpacking an installation.
+
 | Package suffix | Included inference backends |
 | --- | --- |
 | `linux-x64`, `windows-x64` | CPU and Vulkan |

@@ -571,7 +571,7 @@ jobs:
           if [ "${{ matrix.platform }}" = "macos" ]; then
             (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
           else
-            (cd "$payload_root" && zip -qr "$asset_dir/$asset" "$payload")
+            (cd "$payload_root" && zip -qry "$asset_dir/$asset" "$payload")
           fi
 
       - name: Package exact-SHA user-test archive
@@ -619,7 +619,7 @@ jobs:
           if [ "${{ matrix.platform }}" = "macos" ]; then
             (cd "$payload_root" && ditto -c -k --norsrc --keepParent "$payload" "$asset_dir/$asset")
           else
-            (cd "$payload_root" && zip -qr "$asset_dir/$asset" "$payload")
+            (cd "$payload_root" && zip -qry "$asset_dir/$asset" "$payload")
           fi
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 

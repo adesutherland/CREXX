@@ -32,6 +32,11 @@ Deep Build qualification and full sanitizer QA include it through CTest.
 The broad hosted jobs use 240-minute outer backstops. Actual GPU presence and
 fixture computation are logged; an OS label is not device evidence.
 
+Package smoke executes the public `rxvm` entry point and checks its connection
+to the configured preferred VM. Linux ZIPs use `zip -y` to preserve relative
+symlinks; macOS `ditto` preserves them already. Windows uses the selected
+executable copy. The alternate VM is also exercised where supported.
+
 CUDA build inputs are NVIDIA 12.9.1 component archives pinned by size/SHA256 in
 `cuda-12.9.1.json`. `scripts/ci-cuda-toolkit.py` assembles and caches the SDK and
 retains component licenses in the provider notice and user guides. Windows CUDA

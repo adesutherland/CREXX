@@ -71,6 +71,13 @@ Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
 CMake's selected default so it does not duplicate the preferred VM execution.
 Unix uses a symlink and Windows a copy; production selection is unchanged.
+The follow-up archive inspection found Linux's `zip` invocation dereferenced
+that link. Both candidate/release ZIP commands now use `-y`; macOS's existing
+`ditto` path already retains links. A small archive/extract control passes for
+both tools (`local/archive-links.json`). The smoke now verifies a relative
+selected-VM symlink on Unix or identical selected-VM bytes on Windows, then
+executes `rxvm`. The strengthened smoke passes Debug (28.17 s) and Apple ASan
+(45.48 s): `local/entry-link-debug/`, `local/entry-link-asan/`.
 
 The first-run **macOS arm64 package is green**: package smoke passed in 121.597
 seconds, including actual `MTL0` computation, dynamic VM consumers and relocated

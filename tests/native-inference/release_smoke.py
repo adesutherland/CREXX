@@ -82,7 +82,7 @@ def main():
             prefix = a.payload.resolve()
         else:
             prefix = work / 'payload'
-            shutil.copytree(build / 'bin', prefix / 'bin')
+            shutil.copytree(build / 'bin', prefix / 'bin', symlinks=True)
             run('stage-guides', ['cmake', '--install', build, '--prefix', prefix, '--component', 'llama-docs'])
         providers = prefix / 'bin/providers'
         manifest = json.loads((providers / 'rxllama.native.json').read_text())
@@ -100,6 +100,13 @@ def main():
         assert (prefix / ('bin/crexx-provider-package' + suffix)).is_file()
         assert (prefix / ('bin/rxbvm' + suffix)).is_file()
         assert (prefix / ('bin/rxvm' + suffix)).is_file()
+        entry = prefix / ('bin/rxvm' + suffix)
+        selected = prefix / 'bin' / (preferred_vm + suffix)
+        if os.name == 'nt':
+            assert sha(entry) == sha(selected), 'rxvm differs from its selected VM'
+        else:
+            assert entry.is_symlink(), 'rxvm must retain its installed symlink'
+            assert os.readlink(entry) == preferred_vm, 'rxvm must use a relative selected-VM link'
         assert not list(prefix.rglob('*.gguf')), 'fixture/model leaked into release'
         for name in ('README.md', 'installation.md', 'models.md', 'reference.md', 'qualification.md',
                      'examples/persistent_embeddings.crexx', 'examples/shared_embeddings.crexx',
