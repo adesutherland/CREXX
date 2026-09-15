@@ -1,0 +1,7 @@
+argv=['/tmp/crexx-release-smoke-cmyg_28t/payload/bin/crexx', '--program', '/tmp/crexx-release-smoke-cmyg_28t/native/smoke', '/tmp/crexx-release-smoke-cmyg_28t/smoke.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member smoke
+BUILT: project member smoke
+BARRIER: link program
+PUBLISHED: program /tmp/crexx-release-smoke-cmyg_28t/native/smoke.rxbin
+PUBLISHED: native program /tmp/crexx-release-smoke-cmyg_28t/native/smoke

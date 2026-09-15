@@ -1,0 +1,13 @@
+argv=['cmake', '--install', '/home/runner/work/_temp/qualification', '--prefix', '/tmp/crexx-release-smoke-cmyg_28t/payload', '--component', 'llama-docs']
+-- Install configuration: "Release"
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/README.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/installation.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/models.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/reference.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/qualification.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples/persistent_embeddings.crexx
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples/shared_embeddings.crexx
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples/README.md
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples/shared_generation.crexx
+-- Installing: /tmp/crexx-release-smoke-cmyg_28t/payload/share/crexx/llama/examples/persistent_generation.crexx

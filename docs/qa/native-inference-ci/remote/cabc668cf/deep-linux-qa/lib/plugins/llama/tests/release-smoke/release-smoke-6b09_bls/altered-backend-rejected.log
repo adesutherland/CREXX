@@ -1,0 +1,3 @@
+argv=['/tmp/crexx-release-smoke-cmyg_28t/engine/rxllama_release_engine_smoke', '/tmp/crexx-release-smoke-cmyg_28t/fixture.gguf']
+SMOKE_STAGE: runtime discovery
+FAIL: no usable verified CPU backend variant

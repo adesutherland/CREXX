@@ -254,6 +254,12 @@ if(BUILD_TESTING)
     # creation. A cold Intel hosted consumer takes about 70s; this ownership
     # control must not impose an incidental startup-speed limit.
     set_tests_properties(rxllama_backend_probe_cycle PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800 LABELS "library;rxpa;llama;regression")
+    if(WIN32)
+        # These QA executables live below tests/, away from the packaged DLLs.
+        # Scope their build-tree lookup to this test, never installed consumers.
+        set_tests_properties(rxllama_backend_probe_cycle PROPERTIES
+            ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:crexx_llama_bridge>")
+    endif()
     crexx_register_test_prep_targets(TESTS rxllama_backend_probe_cycle TARGETS llama_provider_runtime_package rxllama_bridge_lifecycle)
     set_target_properties(rxllama_bridge_lifecycle PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
@@ -295,6 +301,11 @@ if(BUILD_TESTING AND CREXX_LLAMA_TEST_MODELS)
         set_tests_properties(rxllama_bridge_bge_${mode} rxllama_bridge_smol_${mode}
             rxllama_bridge_both_${mode} PROPERTIES RUN_SERIAL TRUE TIMEOUT 1800
             LABELS "library;rxpa;llama;model-provisioned")
+        if(WIN32)
+            set_tests_properties(rxllama_bridge_bge_${mode} rxllama_bridge_smol_${mode}
+                rxllama_bridge_both_${mode} PROPERTIES
+                ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:crexx_llama_bridge>")
+        endif()
         crexx_register_test_prep_targets(
             TESTS rxllama_bridge_bge_${mode} rxllama_bridge_smol_${mode} rxllama_bridge_both_${mode}
             TARGETS llama_provider_runtime_package rxllama_bridge_lifecycle)

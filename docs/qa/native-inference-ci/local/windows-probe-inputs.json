@@ -1,0 +1,6 @@
+{
+  "parent_sha": "c10b9115e7631a26ca0e4272ca9b85124b1a420a",
+  "cmake_sha256": "e76c0b46d04ce73b6c9d0383672c96bb87b3e04d46b2139bc9b21123bf2140aa",
+  "scope": "Windows CTest helper DLL search only; installed consumer PATH unchanged",
+  "hosted_failing_test": "104512381634: rxllama_backend_probe_cycle 0xc0000135"
+}

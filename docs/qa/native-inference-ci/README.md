@@ -376,3 +376,32 @@ Text/JSON statistics are retained with package QA. `actionlint` and the same
 A first populated run and subsequent warm Linux/Windows CUDA evidence remain
 required by CI-AC-09; no build-time saving is claimed yet. The ordinary source
 build still defaults to `ENABLE_LLAMA=OFF`.
+
+
+### Resumed wider QA and Windows build-tree probe follow-up
+
+Adrian resumed after restart. Deep run `35007946063` at `cabc668cf` passes
+2,329 comprehensive checks plus all four install/package qualification tests
+on Linux and ARM Mac. Retained logs and artifacts are `remote/cabc668cf/deep-linux*`
+and `deep-macos-arm64*`. Intel Mac has reached package qualification.
+Windows passes 2,250/2,251 comprehensive checks; its sole failure is
+`rxllama_backend_probe_cycle`, exit `0xc0000135` before any helper output.
+Its command launches `lib/plugins/llama/tests/rxllama_bridge_lifecycle.exe`,
+while its imported DLLs are in `bin/providers`, outside executable-directory
+and PATH lookup. The exact command and empty startup failure are retained in
+`deep-windows.log` and `deep-windows-qa/Testing/Temporary/LastTest.log`.
+
+This extends CI-F06's Windows dependency-lookup finding to the build-tree QA
+executable. Set a per-test Windows PATH prepend to the bridge target directory
+for the probe and other CTests using the same lifecycle helper. The package
+prerequisite remains mandatory. This does not change the installed consumer
+PATH, package layout, model workload or wide timeout. The existing failing
+probe is the permanent regression; hosted Windows confirmation remains required.
+CMake's scoped [environment modification](https://cmake.org/cmake/help/latest/prop_test/ENVIRONMENT_MODIFICATION.html)
+affects only the named tests. No sanitizer memory finding is present in this
+Windows result. Normal/Apple-ASan focused results will be retained below.
+
+The same probe passes after focused normal/Apple-ASan builds (0.71/0.82 s),
+retained under `local/windows-probe-debug/` and `local/windows-probe-asan/`.
+The Windows-only environment branch still requires the hosted target result;
+these local checks establish that the ownership workload remains intact.
