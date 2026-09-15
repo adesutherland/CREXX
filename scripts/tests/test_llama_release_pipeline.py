@@ -18,6 +18,7 @@ def module(name):
 
 refresh = module('refresh-provider-manifests')
 matrix = module('ci-release-matrix')
+core_qa = module('ci-core-qa-matrix')
 
 
 class ManifestSigningTests(unittest.TestCase):
@@ -61,6 +62,24 @@ class ManifestSigningTests(unittest.TestCase):
 
 
 class MatrixTests(unittest.TestCase):
+    def test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate(self):
+        for event, ref in [('schedule', 'refs/heads/develop'),
+                           ('workflow_dispatch', 'refs/heads/develop'),
+                           ('push', 'refs/heads/temp/llama-release-qa')]:
+            rows, full = core_qa.select('windows-msvc', event, ref)
+            self.assertTrue(full)
+            self.assertEqual(len(rows['include']), 5)
+            self.assertEqual({r.get('toolchain') for r in rows['include'] if r['platform'] == 'windows'},
+                             {'msvc', 'mingw'})
+
+    def test_deep_candidate_retry_selects_only_requested_core(self):
+        rows, full = core_qa.select('windows-msvc', 'workflow_dispatch',
+                                   'refs/heads/temp/llama-release-combined')
+        self.assertFalse(full)
+        self.assertEqual([r['toolchain'] for r in rows['include']], ['msvc'])
+        with self.assertRaises(ValueError):
+            core_qa.select('unknown', 'workflow_dispatch', 'refs/heads/temp/llama-release-qa')
+
     def test_diagnostic_selection_only_on_candidate_manual_runs(self):
         candidate = 'refs/heads/temp/llama-release-qa'
         self.assertEqual(len(matrix.select('windows', 'workflow_dispatch', candidate)['include']), 1)

@@ -1,0 +1,7 @@
+[
+  {"selection":"linux-x64","name":"Linux x64","os":"ubuntu-24.04","platform":"linux","build_jobs":2,"test_jobs":5,"cmake_args":""},
+  {"selection":"windows-mingw","name":"Windows x64 MinGW","os":"windows-2025","platform":"windows","toolchain":"mingw","build_jobs":4,"test_jobs":2,"cmake_args":"-DCREXX_FORCE_SYSTEM_OPENSSL=ON"},
+  {"selection":"windows-msvc","name":"Windows x64 MSVC","os":"windows-2025","platform":"windows","toolchain":"msvc","build_jobs":2,"test_jobs":2,"cmake_args":"-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF"},
+  {"selection":"macos-arm64","name":"macOS arm64","os":"macos-15","platform":"macos","build_jobs":2,"test_jobs":5,"cmake_args":"-DCMAKE_OSX_ARCHITECTURES=arm64"},
+  {"selection":"macos-x86_64","name":"macOS x86_64","os":"macos-15-intel","platform":"macos","build_jobs":2,"test_jobs":5,"cmake_args":"-DCMAKE_OSX_ARCHITECTURES=x86_64"}
+]

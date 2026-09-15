@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '23 2 * * *'
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Core platform to qualify (all for the complete Deep gate)
+        type: choice
+        default: all
+        options: [all, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,6 +26,8 @@ jobs:
     outputs:
       should_run: ${{ steps.decision.outputs.should_run }}
       target_sha: ${{ steps.target.outputs.target_sha }}
+      core_matrix: ${{ steps.matrix.outputs.core_matrix }}
+      full_gate: ${{ steps.matrix.outputs.full_gate }}
 
     steps:
       - name: Resolve the commit to qualify
@@ -39,6 +47,21 @@ jobs:
             )"
           fi
           echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Read the exact candidate QA matrix
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.target.outputs.target_sha }}
+          sparse-checkout: |
+            .github/qa
+            scripts
+
+      - name: Select core configurations
+        id: matrix
+        shell: bash
+        env:
+          SELECTED_PLATFORM: ${{ inputs.platform || 'all' }}
+        run: python scripts/ci-core-qa-matrix.py
 
       - name: Look for successful deep assurance of this develop commit
         id: qualified
@@ -78,40 +101,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Linux x64
-            os: ubuntu-24.04
-            platform: linux
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: ""
-          - name: Windows x64 MinGW
-            os: windows-2025
-            platform: windows
-            toolchain: mingw
-            build_jobs: 4
-            test_jobs: 2
-            cmake_args: "-DCREXX_FORCE_SYSTEM_OPENSSL=ON"
-          - name: Windows x64 MSVC
-            os: windows-2025
-            platform: windows
-            toolchain: msvc
-            build_jobs: 2
-            test_jobs: 2
-            cmake_args: "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF"
-          - name: macOS arm64
-            os: macos-15
-            platform: macos
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
-          - name: macOS x86_64
-            os: macos-15-intel
-            platform: macos
-            build_jobs: 2
-            test_jobs: 5
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+      matrix: ${{ fromJSON(needs.assurance-gate.outputs.core_matrix) }}
 
     steps:
       - name: Checkout
@@ -219,7 +209,7 @@ jobs:
   parallel-product:
     name: Release product jobs ${{ matrix.jobs }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
 
@@ -341,7 +331,7 @@ jobs:
   stress:
     name: Isolated Debug stress QA
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
 
