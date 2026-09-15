@@ -155,6 +155,25 @@ concurrency. Remote `develop` remained `b5b827489d781f9e42d305ef264a22d2c1c42cb6
    diagnostic mode captures a nonempty stack, stops its own child and reports
    failure rather than success: `local/stack-capture-control/`.
 
+8. **CI-F08 — MinGW runtime scan locations and Windows separators:** run
+   [35000816874](https://github.com/adesutherland/CREXX/actions/runs/35000816874)
+   at `473fb6894` now compiles and links the C++ bridge, engine and native
+   packager, closing CI-F05's target compiler failure. It fails in
+   `WriteProviderPackage.cmake` because `libgcc_s_seh-1.dll`, `libstdc++-6.dll`
+   and `libwinpthread-1.dll` are not found. Pass the actual C++ compiler's
+   directory explicitly to the build-time dependency scanner; consumer PATH
+   remains restricted. The same log exposes mixed Windows path separators in
+   CMake's default old CMP0207 behavior. Share a filter that handles both forms,
+   opt into normalization when supported, and retain positive compiler/SDK
+   controls so redistributables are not excluded as system files. The permanent
+   path control fails with the old filter (`local/windows-dependencies-before.log`)
+   and passes with the corrected shared filter. Both this control and package
+   smoke pass in normal Debug (27.98 s total) and Apple ASan (43.50 s total),
+   under `local/windows-dependencies-debug/` and `local/windows-dependencies-asan/`.
+   Target Windows package results remain pending. Hosted evidence:
+   `remote/473fb6894/windows.log`;
+   [CMake path-normalization policy](https://cmake.org/cmake/help/latest/policy/CMP0207.html).
+
 Adrian reaffirmed the public `rxvm` entry-point contract during triage. Package
 smoke now calls `rxvm` and the alternate implementation when available, using
 CMake's selected default so it does not duplicate the preferred VM execution.

@@ -1,0 +1,7 @@
+{
+  "lib/plugins/llama/CMakeLists.txt": "971f25672f3f4af3fe2ae789308aeeda7c0d4ed23f21e411c1bfd390ba0ad9d1",
+  "lib/plugins/llama/WindowsBootstrap.cmake": "8b0c170748e18212e4db3f03e9df8e81b2b0d77ef87f548994e640d8cba4e020",
+  "rxpa/WriteProviderPackage.cmake": "feb4b9798056c2abeb67aa65c5284982fc5a9479a9320125a8cbda0e826c910c",
+  "rxpa/RuntimePackagePaths.cmake": "9c0c88588f37ee2f6e55861b5c75df2a4ed16a45f481c71f456145a8b35fa2c7",
+  "tests/native-inference/package_windows_paths.cmake": "b4f4e30890b2961c415099f5a86ecf254bc64f1bd1ec01094b9372c023c2c562"
+}

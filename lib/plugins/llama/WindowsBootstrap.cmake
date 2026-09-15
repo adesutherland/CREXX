@@ -1,12 +1,13 @@
 # MIT. Executable-adjacent Windows imports, without duplicating GPU payloads.
 include("${INPUT}")
+include("${CMAKE_CURRENT_LIST_DIR}/../../../rxpa/RuntimePackagePaths.cmake" NO_POLICY_SCOPE)
 get_filename_component(bin "${output}" DIRECTORY)
 file(GET_RUNTIME_DEPENDENCIES LIBRARIES ${bootstrap_roots}
     DIRECTORIES "${output}" ${runtime_search_directories}
     RESOLVED_DEPENDENCIES_VAR bootstrap_dependencies
     UNRESOLVED_DEPENDENCIES_VAR missing
     PRE_EXCLUDE_REGEXES "api-ms-.*" "ext-ms-.*"
-    POST_EXCLUDE_REGEXES ".*/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]/[Ss][Yy][Ss][Tt][Ee][Mm]32/.*")
+    POST_EXCLUDE_REGEXES "${crexx_windows_system_dll_regex}")
 if(missing)
     message(FATAL_ERROR "Unresolved inference bootstrap dependencies: ${missing}")
 endif()

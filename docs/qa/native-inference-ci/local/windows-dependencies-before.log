@@ -1,0 +1,4 @@
+CMake Error at tests/native-inference/package_windows_paths.cmake:8 (message):
+  System DLL would be redistributed: C:\Windows\system32/kernel32.dll
+
+

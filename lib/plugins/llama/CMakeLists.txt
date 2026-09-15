@@ -16,6 +16,12 @@ option(CREXX_LLAMA_VULKAN "Package the Vulkan backend (requires build-time SDK)"
 set(CREXX_LLAMA_CUDA_NOTICE "$ENV{CREXX_LLAMA_CUDA_NOTICE}" CACHE FILEPATH
     "CUDA redistributable license/notice file to retain with provider consumers")
 set(_llama_runtime_search_dirs "")
+if(WIN32)
+    # GET_RUNTIME_DEPENDENCIES needs explicit MinGW redistributable locations;
+    # it does not infer the compiler's DLL directory from the development PATH.
+    get_filename_component(_llama_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    list(APPEND _llama_runtime_search_dirs "${_llama_compiler_dir}")
+endif()
 if(CREXX_LLAMA_CUDA)
     find_package(CUDAToolkit REQUIRED)
     list(APPEND _llama_runtime_search_dirs "${CUDAToolkit_BIN_DIR}" "${CUDAToolkit_LIBRARY_DIR}")
@@ -179,6 +185,11 @@ set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
     include("${CMAKE_SOURCE_DIR}/tests/native-inference/ReleaseSmoke.cmake")
+    add_test(NAME rxllama_package_windows_paths
+        COMMAND ${CMAKE_COMMAND} "-DROOT=${CMAKE_SOURCE_DIR}"
+            -P "${CMAKE_SOURCE_DIR}/tests/native-inference/package_windows_paths.cmake")
+    set_tests_properties(rxllama_package_windows_paths PROPERTIES
+        LABELS "library;rxpa;llama;filesystem;correctness")
     foreach(standard 17 20)
         set(path_test rxllama_package_utf8_cxx${standard})
         add_executable(${path_test} "${CMAKE_SOURCE_DIR}/tests/native-inference/package_utf8.cpp")

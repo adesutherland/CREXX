@@ -1,5 +1,6 @@
 # cREXX License (MIT). Build-time hash/metadata generation; never executable hooks.
 include("${INPUT}")
+include("${CMAKE_CURRENT_LIST_DIR}/RuntimePackagePaths.cmake" NO_POLICY_SCOPE)
 function(json_string out value)
     string(REPLACE "\\" "\\\\" value "${value}")
     string(REPLACE "\"" "\\\"" value "${value}")
@@ -26,7 +27,7 @@ endforeach()
 set(scan_files ${runtime_files})
 list(FILTER scan_files INCLUDE REGEX "\\.(dylib|so([.][0-9]+)*|dll)$")
 list(REMOVE_DUPLICATES scan_files)
-set(system_dependencies "^/System/Library/" ".*/[Ww][Ii][Nn][Dd][Oo][Ww][Ss]/[Ss][Yy][Ss][Tt][Ee][Mm]32/.*"
+set(system_dependencies "^/System/Library/" "${crexx_windows_system_dll_regex}"
     ".*/(libc|libm|libdl|libpthread|librt|ld-linux[^/]*)\\.so.*")
 if(platform STREQUAL "Darwin")
     list(APPEND system_dependencies "^/usr/lib/")
