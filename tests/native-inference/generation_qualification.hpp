@@ -12,7 +12,15 @@
 # define NI_QUALIFICATION_ASAN 0
 #endif
 #if NI_QUALIFICATION_ASAN
-# include <sanitizer/allocator_interface.h>
+# if __has_include(<sanitizer/allocator_interface.h>)
+#  include <sanitizer/allocator_interface.h>
+# else
+#  include <cstddef>
+// GCC libasan implements this public sanitizer API, but some distributions
+// omit allocator_interface.h from their installed development headers.
+// Preserve the live-allocation check using its upstream C declaration.
+extern "C" std::size_t __sanitizer_get_current_allocated_bytes(void);
+# endif
 #endif
 #ifdef __APPLE__
 #include <mach/mach.h>
