@@ -121,6 +121,9 @@ jobs:
     if: github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))
     runs-on: ${{ matrix.os }}
     timeout-minutes: 240
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
 
     strategy:
       fail-fast: false
@@ -192,6 +195,13 @@ jobs:
         with:
           path: ${{ runner.temp }}/crexx-cuda
           key: crexx-cuda-${{ runner.os }}-${{ hashFiles('.github/llama/cuda-12.9.1.json') }}
+
+      - name: Cache CUDA compiler outputs
+        id: compiler-cache
+        if: matrix.cuda
+        uses: Mozilla-Actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
+        with:
+          version: "v0.16.0"
 
       - name: Configure
         if: matrix.platform != 'windows'
@@ -544,6 +554,15 @@ jobs:
           python tests/native-inference/release_smoke.py --build "${{ runner.temp }}/build" --source "$env:GITHUB_WORKSPACE" --helper "${{ runner.temp }}/build/lib/plugins/llama/tests/rxllama_release_engine_smoke.exe" --payload "${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}" --backends "${{ matrix.backends }}" --output-root "${{ runner.temp }}/release-smoke"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Record CUDA compiler cache statistics
+        if: always() && matrix.cuda && steps.compiler-cache.outcome == 'success'
+        shell: bash
+        run: |
+          mkdir -p "${{ runner.temp }}/compiler-cache"
+          sccache --show-stats > "${{ runner.temp }}/compiler-cache/stats.txt"
+          sccache --show-stats --stats-format=json > "${{ runner.temp }}/compiler-cache/stats.json"
+          cat "${{ runner.temp }}/compiler-cache/stats.txt"
+
       - name: Retain package QA evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -554,6 +573,7 @@ jobs:
             ${{ runner.temp }}/build/Testing/Temporary
             ${{ runner.temp }}/build/lib/plugins/llama/tests/release-smoke
             ${{ runner.temp }}/build/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ runner.temp }}/compiler-cache
           if-no-files-found: warn
           retention-days: 14
 

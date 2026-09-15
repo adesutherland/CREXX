@@ -63,7 +63,7 @@
       "test_jobs": 5,
       "backends": "cpu,cuda",
       "cuda": true,
-      "cmake_args": "-DCREXX_LLAMA_CUDA=ON"
+      "cmake_args": "-DCREXX_LLAMA_CUDA=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_CUDA_COMPILER_LAUNCHER=sccache"
     },
     {
       "id": "windows-cuda",
@@ -76,7 +76,7 @@
       "test_jobs": 2,
       "backends": "cpu,cuda",
       "cuda": true,
-      "cmake_args": "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_CUDA=ON"
+      "cmake_args": "-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DENABLE_PARSER_MODE=OFF -DCREXX_LLAMA_CUDA=ON -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_CUDA_COMPILER_LAUNCHER=sccache"
     }
   ]
 }

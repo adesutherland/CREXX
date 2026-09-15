@@ -57,6 +57,12 @@ with a fixture pass. Candidate branch: `temp/llama-release-qa` on `origin`.
    model/provenance and release gates remain visible; green fixture checks do
    not silently close them.
 
+9. [ ] **CI-AC-09:** CUDA jobs reuse unchanged compiler outputs without weakening
+   source/toolchain/flag identity or the final package smoke. Retain cold and
+   warm cache statistics on Linux/NVCC and Windows/MSVC/NVCC. A cache miss or
+   eviction may require a cold build; it must never select a different engine,
+   remove GPU architectures or require recipients to install a CUDA SDK.
+
 ## Numbered implementation steps
 
 1. [x] **CI-01 — Freeze the candidate:** checkpoint accepted STEP-05/06/07 work
@@ -167,3 +173,28 @@ diagnostic workflow override and no publication authority. Once CUDA triage
 settles, run the complete Build matrix on the same combined candidate; any
 further product/build change must be reflected in the final exact-head gates.
 CI-AC-07 and CI-04 remain open until those terminal results are recorded.
+
+## CUDA build cost and compiler reuse
+
+The first complete Linux CUDA build takes 1 h 54 m 30 s with two build jobs;
+its consumer smoke takes 33.524 s. NVIDIA's CUDA runtime/cuBLAS components are
+already downloaded as pinned binary redistributables. The expensive work is
+compiling the pinned llama.cpp/GGML CUDA kernels for its portable architecture
+set. Adrian raised the recurring runner cost and explicitly approved caching the CUDA
+engine on 15 September.
+
+1. **CACHE-01:** keep source builds opt-in and standard CPU/Vulkan packages
+   small; retain complete separate CUDA ZIPs and all existing CI outcomes.
+2. **CACHE-02:** install pinned prebuilt sccache only in the CUDA jobs. Use
+   explicit C/C++/CUDA compiler launchers so the pinned GGML auto-detection does
+   not add a second wrapper. Use the GitHub Actions cache and preserve compiler,
+   source/header and option identity; no permissive cache-key overrides.
+3. **CACHE-03:** retain cache statistics, then verify reuse with a warm CUDA
+   candidate run on the same branch. Final package checks still execute; cache
+   reuse itself is not a correctness or GPU-device pass. Do not claim the
+   recurring cost is resolved before actual Linux and Windows hit evidence.
+
+This is compiler-output reuse in the existing build graph, not a new binary
+engine ABI or a user-installed NVIDIA dependency. Cache misses, eviction or
+changed engine/toolchain/settings can still cost a cold build. It extends
+CI-03/04 with CI-AC-09 and leaves all earlier criteria open as recorded.
