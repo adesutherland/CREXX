@@ -1,0 +1,7 @@
+Run 35109939178 at 68f4a7564: native install/provider/reinstall/remove passed on both Mac platforms; final core-only QA used an unwritable installed example directory.
+
+installer-qa-macos-arm64-68f4a75640cea39d9a23156bfe54217a39a000f7/proof/core-after-remove.log
+> rxc: Can't open output file /Users/runner/work/_temp/cREXX installed with spaces/examples/hello
+
+installer-qa-macos-x86_64-68f4a75640cea39d9a23156bfe54217a39a000f7/proof/core-after-remove.log
+> rxc: Can't open output file /Users/runner/work/_temp/cREXX installed with spaces/examples/hello

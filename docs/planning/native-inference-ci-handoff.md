@@ -10,8 +10,12 @@ are chronological evidence; this live section supersedes their pending actions.
 **Installer addition (CI-D04):** Adrian authorized implementing separate Windows
 and Mac plugin installers now, locating/checking an installed matching core.
 The canonical criteria are INST-AC-01–04 / INST-01–03 in the pipeline plan.
-Mac local lifecycle/rollback and installed-provider controls pass; native hosted
-installer and signed/offline Gatekeeper proof remain open. Mac concern explicitly
+Mac local and native hosted lifecycle/provider controls pass on ARM and Intel:
+run `35110318683` at packaging revision `be8fbf4e5`, with 13 controls per host and
+unchanged retained `f10e70ee5` core/plugin binaries. Evidence is under
+`remote/be8fbf4e5-installers/`. The earlier run's final core example used a
+root-owned output directory; QA and installer completion guidance are corrected.
+Signed/offline Gatekeeper proof remains open. Mac concern explicitly
 means Gatekeeper/notarization checks: staple the notarized package; never promise
 macOS makes no Apple network requests. Windows CUDA/Vulkan coexistence is a
 pending user choice (both stored/one active versus remove before switching).
@@ -28,7 +32,7 @@ earlier automatic relevant-change proposal and is recorded in the authoritative
 plan and human/agent guides; workflow selection is not yet changed. CI-06 and
 CI-AC-10 remain open. Preserve the current candidate's complete qualification.
 
-**Current integration candidate:** `2b897caa55fbe564c6d12966db6fea349f327986`
+**Product merge baseline:** `2b897caa55fbe564c6d12966db6fea349f327986`
 on `origin/temp/llama-release-combined`, merging repaired develop
 `17e844441ed87e1f6e0d5f1f0d3bb4bee8db6187`. Adrian explicitly requested the
 merge and affected retest. The prior policy/roadmap documentation is preserved

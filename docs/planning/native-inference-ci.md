@@ -1133,3 +1133,16 @@ working-directory error, not an installer/provider failure. Copy the example to
 a writable directory for that check; the core installer's completion text needs
 the same correction. Rerun only this retained-artifact installer workflow. Signed
 and offline Gatekeeper proof remain separate; no product/engine rebuild follows.
+
+**Mac native lifecycle qualified:** the corrected focused run
+[35110318683](https://github.com/adesutherland/CREXX/actions/runs/35110318683) at
+`be8fbf4e5` passes on both ARM and Intel Mac. Each runs 13 focused controls and
+actual core/plugin `.pkg` installation, installed compile/assemble/link/provider
+execution, reinstall, plugin-only removal and core execution afterward from a
+writable directory. Evidence and checksums are retained under
+`docs/qa/native-inference-ci/remote/be8fbf4e5-installers/`; product binaries are
+unchanged retained `f10e70ee5` artifacts. No product/engine/CUDA build, model
+download or sanitizer campaign was run. The Mac portions of INST-AC-01–03 now
+have native runner proof; whole criteria remain unchecked for Windows and the
+separate signed/offline checks. INST-AC-04 remains open. The code and evidence
+are on the candidate branches; no develop promotion or release is authorized.

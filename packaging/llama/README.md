@@ -39,9 +39,11 @@ copy rolls back; an abrupt power loss can leave `.llama-install-lock` and a
 `.llama-transaction.*` recovery directory. Preserve these and inspect the prior
 files before clearing a stale lock. Never run two installers against one core.
 
-The manual `llama-installer-qa.yml` reuses a successful Build run's artifacts and
+The manual `llama-installer-qa.yml` (also triggered on its dedicated
+`temp/llama-installer-qa` branch) reuses a successful Build run's artifacts and
 does not compile cREXX, llama.cpp or CUDA. It exercises native Mac package install,
-reinstall, provider smoke and removal on disposable ARM/Intel runners. Unsigned
+reinstall, provider smoke and removal on disposable ARM/Intel runners. Run
+`35110318683` passes these checks on both platforms. Unsigned
 lifecycle proof does not close signing or offline Gatekeeper acceptance. Real
 offline first-install/run proof must use the final signed/stapled package on a
 fresh Mac; do not simulate success by clearing quarantine or disabling Gatekeeper.
