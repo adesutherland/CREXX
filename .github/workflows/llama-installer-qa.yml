@@ -11,9 +11,9 @@ on:
         type: string
         default: '35076278681'
       platform:
-        description: Focused installer platform
+        description: Focused installer or installed-library QA platform
         type: choice
-        options: [windows, mac, all]
+        options: [windows, mac, linux, all]
         default: windows
       cuda:
         description: Include retained Windows CUDA payload (no engine compilation)
@@ -38,7 +38,7 @@ permissions:
 
 jobs:
   linux-filesystem:
-    if: github.event_name == 'workflow_dispatch' && inputs.platform == 'all'
+    if: github.event_name == 'workflow_dispatch' && (inputs.platform == 'all' || inputs.platform == 'linux')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -78,7 +78,7 @@ jobs:
             ${{ runner.temp }}/source-jobs.json
           retention-days: 14
   mac:
-    if: github.event_name == 'workflow_dispatch' && inputs.platform != 'windows'
+    if: github.event_name == 'workflow_dispatch' && (inputs.platform == 'mac' || inputs.platform == 'all')
     name: Installer lifecycle ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -229,7 +229,7 @@ jobs:
           retention-days: 14
 
   windows:
-    if: github.event_name == 'push' || inputs.platform != 'mac'
+    if: github.event_name == 'push' || inputs.platform == 'windows' || inputs.platform == 'all'
     runs-on: windows-latest
     timeout-minutes: 45
     # GitHub restricts draft-release visibility to callers with push access.
