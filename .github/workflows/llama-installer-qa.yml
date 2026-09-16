@@ -19,6 +19,10 @@ on:
         description: Include retained Windows CUDA payload (no engine compilation)
         type: boolean
         default: false
+      signed_mac:
+        description: Use the retained signed/stapled Mac installers and verify offline installation
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -95,6 +99,7 @@ jobs:
           PY
           python3 -m unittest discover -s scripts/tests -p test_llama_installer.py -v > "$RUNNER_TEMP/proof/controls.log" 2>&1
       - name: Install core and plugin from real native packages
+        if: '!inputs.signed_mac'
         env:
           PLATFORM: ${{ matrix.platform }}
         run: |
@@ -123,6 +128,33 @@ jobs:
           "$installed/bin/crexx" "$RUNNER_TEMP/core consumer/hello.crexx" > "$RUNNER_TEMP/proof/core-after-remove.log" 2>&1
           grep -q 'hello CREXX world!' "$RUNNER_TEMP/proof/core-after-remove.log"
           echo 'Unsigned native installer lifecycle passed; signing/notarization/offline Gatekeeper are separate gates.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Download signed core installer
+        if: inputs.signed_mac
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run }}
+          name: CREXX-${{ matrix.platform }}-release-asset
+          path: ${{ runner.temp }}/signed/core
+      - name: Download signed plugin installer
+        if: inputs.signed_mac
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run }}
+          name: llama.rexx-${{ matrix.platform }}-${{ matrix.backend }}-release-asset
+          path: ${{ runner.temp }}/signed/plugin
+      - name: Verify signed installation with network interfaces disabled
+        if: inputs.signed_mac
+        shell: bash
+        run: |
+          set -euo pipefail
+          core_pkgs=("$RUNNER_TEMP/signed/core/"*.pkg)
+          plugin_pkgs=("$RUNNER_TEMP/signed/plugin/"*.pkg)
+          test "${#core_pkgs[@]}" = 1 && test "${#plugin_pkgs[@]}" = 1
+          sudo env GITHUB_ACTIONS=true "$(command -v python3)" scripts/test-macos-signed-installers.py \
+            --core-pkg "${core_pkgs[0]}" --plugin-pkg "${plugin_pkgs[0]}" \
+            --logs "$RUNNER_TEMP/proof/signed-offline"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -21,8 +21,8 @@ $description
 Options:
   -R, --repo OWNER/REPO       GitHub repository. Defaults to current repo.
   -t, --tag TAG              Release tag. $default_tag_help
-  -a, --asset NAME           Windows ZIP asset. Defaults to the only matching
-                             unsigned Windows ZIP in the release.
+  -a, --asset NAME           Core or plugin Windows ZIP. Defaults to the core
+                             unsigned Windows ZIP; select a plugin explicitly.
       --keep-unsigned        Keep the original unsigned asset after the signed
                              asset is visible in the release.
       --delete-unsigned      Delete the original ZIP after publication (versioned
@@ -191,7 +191,7 @@ EOF
         printf '%s\n' "${release_assets[@]}" |
           grep -Ei '\.zip$' |
           grep -Evi -- '(^|[-_.])signed([-_.]|\.zip$)' |
-          grep -Ei 'win|windows'
+          grep -Ei '^CREXX-.*(win|windows)'
       )
     fi
 
@@ -275,9 +275,13 @@ EOF
   unzip -q "$input_zip" -d "$unpacked_dir"
 
   local buildinfo payload_dir
-  buildinfo="$(find "$unpacked_dir" -maxdepth 2 -name BUILDINFO -type f)"
-  [[ -n "$buildinfo" && "$buildinfo" != *$'\n'* ]] || die "expected one payload BUILDINFO"
+  buildinfo="$(find "$unpacked_dir" -maxdepth 2 \( -name BUILDINFO -o -name llama-package.json \) -type f)"
+  [[ -n "$buildinfo" && "$buildinfo" != *$'\n'* ]] || die "expected one core BUILDINFO or plugin manifest"
   payload_dir="$(dirname "$buildinfo")"
+  if [[ -f "$payload_dir/llama-package.json" ]]; then
+    with_installer=0
+    echo 'Signing the plugin ZIP. Use sign-windows-packages.py for matching core/plugin installers.'
+  fi
   python3 "$release_helper" payload --state "$source_state" "$payload_dir"
   sign_windows_payload "$payload_dir" "$provider" "$certum_alias" "$tsa_url"
 

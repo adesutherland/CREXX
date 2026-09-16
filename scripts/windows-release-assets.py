@@ -83,8 +83,19 @@ def download(state, path):
 
 
 def verify_payload(state, directory):
+    directory = Path(directory)
+    manifests = [directory / name for name in ('core-package.json', 'llama-package.json')
+                 if (directory / name).is_file()]
+    if manifests:
+        if len(manifests) != 1:
+            raise RuntimeError('Expected a separate core or plugin payload')
+        data = json.loads(manifests[0].read_text())
+        if data.get('commit') != state['commit'] or data.get('platform') != 'windows-x64':
+            raise RuntimeError('Package identity does not match the release tag commit/platform')
+        if manifests[0].name == 'llama-package.json':
+            return
     fields = dict(line.split("=", 1) for line in
-                  (Path(directory) / "BUILDINFO").read_text().splitlines() if "=" in line)
+                  (directory / "BUILDINFO").read_text().splitlines() if "=" in line)
     if fields.get("commit") != state["commit"]:
         raise RuntimeError("ZIP BUILDINFO does not match the release tag commit")
 

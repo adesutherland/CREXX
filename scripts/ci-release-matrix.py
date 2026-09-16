@@ -1,4 +1,4 @@
-"""Select diagnostic lanes without allowing partial publication matrices."""
+"""Full releases include CUDA; routine CI uses base, manual runs choose lanes."""
 import json
 import os
 from pathlib import Path
@@ -7,8 +7,12 @@ from pathlib import Path
 def select(lane, event, ref):
     matrix = json.loads((Path(__file__).resolve().parents[1] /
                          '.github/llama/release-matrix.json').read_text())
-    if event != 'workflow_dispatch' or not ref.startswith('refs/heads/temp/llama-release-'):
+    if event in ('create', 'workflow_dispatch') and ref.startswith('refs/tags/v'):
         lane = 'all'
+    elif event != 'workflow_dispatch':
+        lane = 'base'
+    else:
+        lane = lane or 'base'
     if lane != 'all':
         matrix['include'] = [item for item in matrix['include'] if
                              (lane == 'base' and not item['cuda']) or
@@ -37,7 +41,7 @@ def cores_for(matrix):
 
 
 if __name__ == '__main__':
-    selected = select(os.environ.get('CREXX_CANDIDATE_LANE', 'all'),
+    selected = select(os.environ.get('CREXX_CANDIDATE_LANE', 'base'),
                       os.environ['GITHUB_EVENT_NAME'], os.environ['GITHUB_REF'])
     encoded = json.dumps(selected, separators=(',', ':'))
     with open(os.environ['GITHUB_OUTPUT'], 'a') as f:

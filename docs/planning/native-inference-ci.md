@@ -80,7 +80,7 @@ retries use the named candidate branches in the live handoff.
    eviction may require a cold build; it must never select a different engine,
    remove GPU architectures or require recipients to install a CUDA SDK.
 
-10. [ ] **CI-AC-10:** workflow selection implements CI-D03: every full release
+10. [x] **CI-AC-10:** workflow selection implements CI-D03: every full release
     build, including beta, requires both CUDA plugin packages from the release
     candidate's exact core/source identity and successful focused package smoke.
     Outside full release builds, CUDA runs only when explicitly selected through
@@ -111,12 +111,12 @@ retries use the named candidate branches in the live handoff.
    update this checklist and parent criteria, and make the green candidate
    reviewable before promotion. Serves CI-AC-08; depends on CI-01–04. Creating
    the candidate is not permission to publish an unqualified snapshot.
-6. [ ] **CI-06 — Apply the approved CUDA cadence:** implement and document the
+6. [x] **CI-06 — Apply the approved CUDA cadence:** implement and document the
    CI-D03 release-build/manual-only selection after the current candidate qualification,
    retaining mandatory complete-release gates and cache identity. Add focused
    workflow-selection controls and verify the full-release collector still
-   requires both CUDA packages. Serves CI-AC-03/07/08/09/10; policy is approved,
-   but no workflow implementation is included in the decision-record update.
+   requires both CUDA packages. Serves CI-AC-03/07/08/09/10; implemented and covered by the
+   final-delivery selection/collector controls recorded below.
 
 ## Design boundaries
 
@@ -138,8 +138,8 @@ retries use the named candidate branches in the live handoff.
   fallback, notices/dependencies and separate real-device qualification gates.
   Do not move SDK installation onto recipients. This amends routine CI cadence,
   not the promised full-release payload or the current frozen qualification
-  run. Workflow selection is still pending CI-06/CI-AC-10; existing default
-  dispatch selects all lanes. A skipped CUDA run cannot qualify or publish a
+  run. CI-06/CI-AC-10 now implement this selection; manual dispatch
+  defaults to the non-CUDA `base` lanes. A skipped CUDA run cannot qualify or publish a
   full release.
 
 - **CI-D02, approved 16 September 2026:** ship the Intel Mac plugin CPU-only.
@@ -1064,7 +1064,7 @@ criteria open, without blocking independent implementation and build proof.
   actual CUDA/Vulkan computation. Reuse accepted local model, numeric and glue
   performance evidence; no new model benchmark or provenance project follows.
 
-1. [ ] **F19-AC-01:** CI-D03 selection and snapshot/release collection agree;
+1. [x] **F19-AC-01:** CI-D03 selection and snapshot/release collection agree;
    stable/beta/manual and push/PR/snapshot controls pass. Serves CI-AC-10/CI-06.
 2. [ ] **F19-AC-02:** final signed core and plugin archives have consistent
    identities/hashes and pass a combined consumer smoke. Retain actual Mac
@@ -1075,7 +1075,7 @@ criteria open, without blocking independent implementation and build proof.
    according to documented ownership rules. Retain platform-specific evidence,
    VM selection, runtime dependency and mismatched-version diagnostics.
    Serves PKG-04 and CI-AC-02/03/05/08.
-4. [ ] **F19-01:** finish CI-06's event/asset-selection implementation and focused
+4. [x] **F19-01:** finish CI-06's event/asset-selection implementation and focused
    controls; do not rebuild models or CUDA for the policy controls (F19-AC-01).
 5. [ ] **F19-02:** adapt Windows signing to explicit core/plugin artifacts and
    verified final manifest identities, then provide non-publishing candidate
@@ -1276,3 +1276,37 @@ remain separate open work. Retained product binaries are still `f10e70ee5`;
 the source additions enter the next ordinary core build through standard rxfs.
 No engine/VM rebuild, large-model download, broad sanitizer repeat, develop
 promotion or release publication was performed for this closure.
+
+
+### Approved final-delivery execution — 16 September
+
+The clean merge `85a9f5cffdbbec31a816ab9ad347e658f1fd6b40` includes
+`origin/develop` through `94f2f228c` (#699). No merge conflicts or compiler
+redesign were required. Normal product build and 20 focused import/RXPA/rxfs
+checks pass. The package smoke initially found stale local staged provider
+hashes; rebuilding its declared prerequisite target resolved those. It then
+exposed a CTest registration omission: the default `cpu` expectation rejected a
+Metal-enabled package. ReleaseSmoke.cmake now passes configured backends, as
+hosted callers already did. The unchanged workload passes in 26.72 seconds;
+serial scheduling and its wide timeout remain intact. No engine behavior changed.
+
+F19-AC-01/F19-01 are verified: 37 release/publication/signing controls pass,
+including actual collector scripts with complete and missing-input sets.
+Routine push/PR/snapshot selection excludes CUDA; stable/beta tags require both
+CUDA variants, and manual branch dispatch respects explicit lane selection.
+Snapshot refresh removes obsolete CUDA/signed derivatives; complete release
+collection explicitly requires all six named plugin ZIPs.
+
+F19-02/INST-02 implementation adds final package/manager hash refresh and a
+non-publishing paired Windows signer, retains one native manager artifact for
+both installers, and enables explicit candidate Mac signing/notarization.
+SimplySign's initial CKR_FUNCTION_FAILED probe was retried after Adrian logged
+in; real Authenticode signing and verification then passed. This credential
+probe is not full signed-delivery qualification. A dedicated disposable-host Mac
+check installs and runs the signed/stapled payload with active network interfaces
+down, restores them in `finally`, and has an independent restoration watchdog.
+Actual signed/offline results remain pending the combined candidate run.
+
+Evidence: `docs/qa/native-inference-ci/local/final-delivery/`. Reuse #699's
+retained full normal/focused ASan and the unchanged previous Deep/core sanitizer
+results. No develop promotion, release publication or hardware waiver occurs.

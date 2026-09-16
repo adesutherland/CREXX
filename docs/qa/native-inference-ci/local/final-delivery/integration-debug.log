@@ -1,0 +1,85 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start   24: binary_storage_selector_dependencies
+      Start   22: global_import_types
+      Start   18: binary_forward_dependencies
+      Start  638: source_import_contract_stub_covariant_cycle
+ 1/21 Test  #638: source_import_contract_stub_covariant_cycle ....   Passed    0.68 sec
+      Start  635: source_import_contract_stub_implements
+ 2/21 Test  #635: source_import_contract_stub_implements .........   Passed    0.71 sec
+      Start 2428: rxpa_objects_static_rxbvm_noopt
+ 3/21 Test #2428: rxpa_objects_static_rxbvm_noopt ................   Passed    0.37 sec
+      Start 2433: rxpa_objects_dynamic_rxtvm_opt
+ 4/21 Test #2433: rxpa_objects_dynamic_rxtvm_opt .................   Passed    0.91 sec
+      Start 2432: rxpa_objects_static_rxbvm_opt
+ 5/21 Test #2432: rxpa_objects_static_rxbvm_opt ..................   Passed    0.37 sec
+      Start 2431: rxpa_objects_dynamic_rxbvm_opt
+ 6/21 Test #2431: rxpa_objects_dynamic_rxbvm_opt .................   Passed    0.37 sec
+      Start 2427: rxpa_objects_dynamic_rxbvm_noopt
+ 7/21 Test #2427: rxpa_objects_dynamic_rxbvm_noopt ...............   Passed    0.37 sec
+      Start 2429: rxpa_objects_dynamic_rxtvm_noopt
+ 8/21 Test #2429: rxpa_objects_dynamic_rxtvm_noopt ...............   Passed    0.38 sec
+      Start 2434: rxpa_objects_static_rxtvm_opt
+ 9/21 Test #2434: rxpa_objects_static_rxtvm_opt ..................   Passed    0.38 sec
+      Start 2430: rxpa_objects_static_rxtvm_noopt
+10/21 Test #2430: rxpa_objects_static_rxtvm_noopt ................   Passed    0.37 sec
+      Start 1769: rxfs_rxbvm_noopt
+11/21 Test #1769: rxfs_rxbvm_noopt ...............................   Passed    0.07 sec
+      Start 1771: rxfs_rxtvm_noopt
+12/21 Test #1771: rxfs_rxtvm_noopt ...............................   Passed    0.07 sec
+      Start 1770: rxfs_rxbvm_opt
+13/21 Test #1770: rxfs_rxbvm_opt .................................   Passed    0.05 sec
+      Start 1772: rxfs_rxtvm_opt
+14/21 Test #1772: rxfs_rxtvm_opt .................................   Passed    0.04 sec
+      Start 1162: rxpa_host_text_services
+15/21 Test #1162: rxpa_host_text_services ........................   Passed    0.02 sec
+16/21 Test   #18: binary_forward_dependencies ....................   Passed    8.08 sec
+17/21 Test   #22: global_import_types ............................   Passed   10.61 sec
+18/21 Test   #24: binary_storage_selector_dependencies ...........   Passed   14.96 sec
+      Start 1742: rxllama_release_package_smoke
+19/21 Test #1742: rxllama_release_package_smoke ..................***Failed    0.18 sec
+SMOKE_RECORD=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/release-smoke/release-smoke-189ik5wn
+PASS: stage-guides
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 225, in <module>
+    main()
+    ~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 127, in main
+    assert sha(providers / relative) == entry['sha256'], entry['path']
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: libcrexx-llama.1.dylib
+
+      Start   19: source_import_private_dependency_convergence
+20/21 Test   #19: source_import_private_dependency_convergence ...   Passed   10.86 sec
+      Start   20: source_import_private_dependency_provider
+21/21 Test   #20: source_import_private_dependency_provider ......   Passed   14.32 sec
+
+95% tests passed, 1 tests failed out of 21
+
+Label Time Summary:
+binary              =  14.96 sec*proc (1 test)
+classes             =   3.52 sec*proc (8 tests)
+compiler            =  60.21 sec*proc (7 tests)
+comprehensive       =  38.09 sec*proc (17 tests)
+dynamic             =   2.03 sec*proc (4 tests)
+filesystem          =   0.23 sec*proc (4 tests)
+imports             =  60.21 sec*proc (7 tests)
+incremental         =  48.21 sec*proc (4 tests)
+inline              =  25.18 sec*proc (2 tests)
+interpreter         =   0.02 sec*proc (1 test)
+library             =   0.41 sec*proc (5 tests)
+linked_opt          =   0.09 sec*proc (2 tests)
+llama               =   0.18 sec*proc (1 test)
+native-objects      =   3.52 sec*proc (8 tests)
+optimizer-parity    =   3.75 sec*proc (12 tests)
+plugins             =   0.25 sec*proc (5 tests)
+qualification       =   0.18 sec*proc (1 test)
+regression          =  62.35 sec*proc (14 tests)
+rxpa                =   3.94 sec*proc (14 tests)
+smoke               =  25.88 sec*proc (3 tests)
+static              =   1.49 sec*proc (4 tests)
+
+Total Test time (real) =  40.36 sec
+
+The following tests FAILED:
+	1742 - rxllama_release_package_smoke (Failed)            library llama qualification rxpa
+Errors while running CTest

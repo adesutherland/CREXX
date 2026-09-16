@@ -10,10 +10,18 @@ target_link_libraries(rxllama_release_engine_smoke PRIVATE crexx_llama_bridge ll
 set_target_properties(rxllama_release_engine_smoke PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests"
     BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${_llama_origin}")
+set(_llama_smoke_backends cpu)
+foreach(_backend METAL CUDA VULKAN)
+    if(CREXX_LLAMA_${_backend})
+        string(TOLOWER "${_backend}" _backend_name)
+        string(APPEND _llama_smoke_backends ",${_backend_name}")
+    endif()
+endforeach()
 set(_llama_release_smoke_command
     "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/native-inference/release_smoke.py"
         --build "${CMAKE_BINARY_DIR}" --source "${CMAKE_SOURCE_DIR}"
         --helper $<TARGET_FILE:rxllama_release_engine_smoke>
+        --backends "${_llama_smoke_backends}"
         --output-root "${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke")
 add_custom_target(rxllama_release_smoke_prerequisites
     DEPENDS rxllama_release_engine_smoke llama_provider_runtime_package

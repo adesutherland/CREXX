@@ -72,6 +72,15 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "BUILDINFO"):
             assets.verify_payload(state, self.root)
 
+    def test_plugin_identity_uses_its_manifest_without_buildinfo(self):
+        import json
+        path = self.root / 'llama-package.json'
+        path.write_text(json.dumps(dict(commit=self.commit, platform='windows-x64')))
+        assets.verify_payload(self.state, self.root)
+        path.write_text(json.dumps(dict(commit='b'*40, platform='windows-x64')))
+        with self.assertRaisesRegex(RuntimeError, 'Package identity'):
+            assets.verify_payload(self.state, self.root)
+
     def test_replaced_source_same_name_is_rejected(self):
         self.info["assets"][0]["id"] = 2
         with self.assertRaisesRegex(RuntimeError, "changed"):

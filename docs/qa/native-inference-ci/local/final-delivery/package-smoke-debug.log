@@ -1,0 +1,28 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1742: rxllama_release_package_smoke
+1/1 Test #1742: rxllama_release_package_smoke ....***Failed    0.16 sec
+SMOKE_RECORD=/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/release-smoke/release-smoke-6n8yguci
+PASS: stage-guides
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 225, in <module>
+    main()
+    ~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/release_smoke.py", line 131, in main
+    assert all(x == 'cpu' or x.startswith('cpu-') for x in names), names
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ['cpu', 'metal']
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+library          =   0.16 sec*proc (1 test)
+llama            =   0.16 sec*proc (1 test)
+qualification    =   0.16 sec*proc (1 test)
+rxpa             =   0.16 sec*proc (1 test)
+
+Total Test time (real) =   0.20 sec
+
+The following tests FAILED:
+	1742 - rxllama_release_package_smoke (Failed)            library llama qualification rxpa
+Errors while running CTest

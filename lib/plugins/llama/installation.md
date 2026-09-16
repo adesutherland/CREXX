@@ -101,9 +101,9 @@ CUDA variants; valid compiler-cache reuse is allowed. Otherwise CUDA builds and
 tests run only on explicit manual GitHub Actions requests. Ordinary push, PR and
 development-snapshot CI does not select CUDA. Smoke means small package/load/
 fixture checks within the selected CUDA build, not a separate routine test job.
-That CI selection change is planned, not yet implemented (CI-D03 in the
-[pipeline plan](../../../docs/planning/native-inference-ci.md)). This policy does
-not claim that the candidate packages have already been released.
+CI-D03 is implemented in workflow selection and snapshot/release asset checks.
+Manual dispatch defaults to `base`; choose `all` or a CUDA lane explicitly.
+This policy does not claim that the candidate packages have already been released.
 
 CUDA and Vulkan plugins use the same core for their platform. Windows uses
 MSVC for the core and both plugin variants, with `rxvm` selecting `rxbvm`.
@@ -261,3 +261,31 @@ diagnostic can be produced; check package completeness and the driver first.
 | Unowned runtime dependency collision | Use a fresh application output directory or deliberately manage the old package; the helper will not overwrite unrelated files. |
 | Required GPU unavailable | Confirm the backend was packaged, the driver/device is usable and the configured memory budget admits the model/context. Inspect device inventory and `selection`. |
 | Windows cleanup cannot remove generated files | Finish/stop leftover build or VM processes, then retry sequentially in that build tree. |
+
+## Maintainer signing of split Windows packages
+
+The Build run retains a `llama-manager-<commit>-windows-x64` artifact shared by
+both backend installers. Download it and the exact matching core/plugin ZIPs.
+With SimplySign Desktop logged in, prepare signed archives and installers without
+publishing or rebuilding the engine:
+
+```sh
+python3 scripts/sign-windows-packages.py \
+  --core /path/CREXX-user-test-COMMIT-windows-x64.zip \
+  --plugin /path/llama.rexx-user-test-COMMIT-windows-x64-vulkan.zip \
+  --plugin /path/llama.rexx-user-test-COMMIT-windows-x64-cuda.zip \
+  --manager /path/unpacked-manager --output /path/new-signed-output
+```
+
+The helper validates matching identities and original hashes, signs/verifies PE
+payloads, refreshes provider and package manifests, preserves the selected
+`rxvm.exe` copy, and signs the native manager, NSIS helpers, uninstallers and
+installers. `signed-delivery.json` records input/output hashes. Omit the CUDA
+argument for a Vulkan-only development snapshot. Recipient machines need none
+of these packaging tools. Signing, native Windows consumer QA and publication
+remain separately recorded actions.
+
+The older release-asset signer defaults explicitly to the **core** ZIP; use
+`--asset` to select a plugin ZIP. That single-asset operation does not build a
+plugin installer. Use the paired-input helper above for installers so their
+core hash expectations describe the same signed core users will install.

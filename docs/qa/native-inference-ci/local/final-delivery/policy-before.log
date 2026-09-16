@@ -1,0 +1,25 @@
+...F.F...
+======================================================================
+FAIL: test_collectors_require_correct_plugin_sets (test_llama_release_pipeline.MatrixTests.test_collectors_require_correct_plugin_sets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/scripts/tests/test_llama_release_pipeline.py", line 104, in test_collectors_require_correct_plugin_sets
+    self.assertIn(backend, release)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: 'linux-x64-cuda' not found in '\n        shell: bash\n        run: |\n          set -euo pipefail\n\n          download_dir="${{ runner.temp }}/downloaded-release-assets"\n          asset_dir="${{ runner.temp }}/release-assets"\n          mkdir -p "$asset_dir"\n\n          find "$download_dir" \\\n            \\( -name \'CREXX-*.zip\' -o -name \'llama.rexx-*.zip\' -o -name \'CREXX-*.pkg\' -o -name \'llama.rexx-*.pkg\' \\) \\\n            -type f -exec cp {} "$asset_dir/" \\;\n\n          zip_count="$(find "$asset_dir" -name \'*.zip\' -type f | wc -l | tr -d \' \')"\n          if [ "$zip_count" != "10" ]; then\n            echo "Expected 4 core and 6 plugin release ZIP assets, found $zip_count" >&2\n            exit 1\n          fi\n\n          core_count="$(find "$asset_dir" -name \'CREXX-*.zip\' -type f | wc -l | tr -d \' \')"\n          plugin_count="$(find "$asset_dir" -name \'llama.rexx-*.zip\' -type f | wc -l | tr -d \' \')"\n          if [ "$core_count" != "4" ] || [ "$plugin_count" != "6" ]; then\n            echo "Invalid split: $core_count core ZIPs and $plugin_count plugin ZIPs" >&2\n            exit 1\n          fi\n\n          pkg_count="$(find "$asset_dir" -name \'CREXX-*.pkg\' -type f | wc -l | tr -d \' \')"\n          if [ "$pkg_count" != "0" ] && [ "$pkg_count" != "2" ]; then\n            echo "Expected 0 or 2 release PKG assets, found $pkg_count" >&2\n            exit 1\n          fi\n          plugin_pkg_count="$(find "$asset_dir" -name \'llama.rexx-*.pkg\' -type f | wc -l | tr -d \' \')"\n          if [ "$plugin_pkg_count" != "$pkg_count" ]; then\n            echo "Core and plugin Mac installer counts differ" >&2\n            exit 1\n          fi\n\n          ls -lh "$asset_dir"\n\n'
+
+======================================================================
+FAIL: test_cuda_only_for_release_or_explicit_manual_selection (test_llama_release_pipeline.MatrixTests.test_cuda_only_for_release_or_explicit_manual_selection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/scripts/tests/test_llama_release_pipeline.py", line 87, in test_cuda_only_for_release_or_explicit_manual_selection
+    self.assertEqual(len(rows), 4)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+AssertionError: 6 != 4
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.006s
+
+FAILED (failures=2)
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmpbj3ayv7y/rxllama.native.json
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmp9v4u4484/rxllama.native.json

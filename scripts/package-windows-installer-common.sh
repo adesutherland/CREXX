@@ -317,7 +317,7 @@ EOF
         lower="$(printf '%s' "$candidate" | tr '[:upper:]' '[:lower:]')"
         case "$lower" in
           *.zip)
-            if [[ "$lower" == *win* || "$lower" == *windows* ]]; then
+            if [[ "$lower" == crexx-* && ( "$lower" == *win* || "$lower" == *windows* ) ]]; then
               candidates+=("$candidate")
               if [[ "$lower" == *-signed.zip ]]; then
                 signed_candidates+=("$candidate")

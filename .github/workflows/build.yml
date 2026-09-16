@@ -16,10 +16,14 @@ on:
   workflow_dispatch:
     inputs:
       lane:
-        description: Candidate lane (publication always builds every package)
+        description: Manual lanes (all includes CUDA; tagged releases always require all)
         type: choice
-        default: all
+        default: base
         options: [all, base, cuda, linux, windows, macos-arm64, macos-intel, linux-cuda, windows-cuda]
+      sign_candidate:
+        description: Sign/notarize candidate artifacts without publishing (trusted llama candidate branches only)
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -107,7 +111,7 @@ jobs:
         id: matrix
         shell: bash
         env:
-          CREXX_CANDIDATE_LANE: ${{ inputs.lane || 'all' }}
+          CREXX_CANDIDATE_LANE: ${{ inputs.lane || 'base' }}
         run: python3 scripts/ci-release-matrix.py
 
       - name: Check Windows publication safeguards
@@ -224,7 +228,7 @@ jobs:
 
       - name: Configure Apple signing keychain
         id: macos_signing
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
@@ -382,8 +386,15 @@ jobs:
           echo "enabled=true" >> "$GITHUB_OUTPUT"
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
 
+      - name: Require signing identities for explicit candidate proof
+        if: github.event_name == 'workflow_dispatch' && inputs.sign_candidate && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          test '${{ steps.macos_signing.outputs.enabled }}' = true
+          test '${{ steps.macos_signing.outputs.pkg_enabled }}' = true
+
       - name: Sign macOS release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
@@ -426,7 +437,7 @@ jobs:
           echo "Signed $signed_count Mach-O files"
 
       - name: Verify macOS signatures
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -478,7 +489,7 @@ jobs:
           retention-days: 7
 
       - name: Package release asset
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform != 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform != 'windows'
         shell: bash
         run: |
           set -euo pipefail
@@ -487,6 +498,7 @@ jobs:
             package_id="dev-snapshot"
           else
             package_id="${GITHUB_REF_NAME}"
+            if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then package_id="candidate-${GITHUB_SHA}"; fi
           fi
 
           payload="${{ matrix.artifact_name }}"
@@ -499,13 +511,14 @@ jobs:
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
 
       - name: Package release asset
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'windows'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'windows'
         shell: pwsh
         run: |
           if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:GITHUB_REF -eq "refs/heads/develop") {
             $packageId = "dev-snapshot"
           } else {
             $packageId = $env:GITHUB_REF_NAME
+            if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") { $packageId = "candidate-$env:GITHUB_SHA" }
           }
 
           $payload = "${{ matrix.artifact_name }}"
@@ -520,7 +533,7 @@ jobs:
           "CREXX_RELEASE_ASSET=$assetPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Package macOS installer
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -538,6 +551,7 @@ jobs:
             package_id="dev-snapshot"
           else
             package_id="${GITHUB_REF_NAME}"
+            if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then package_id="candidate-${GITHUB_SHA}"; fi
           fi
 
           payload="${{ matrix.artifact_name }}"
@@ -577,7 +591,7 @@ jobs:
           & "$env:GITHUB_WORKSPACE/.github/scripts/build-windows-installer.ps1" -Payload $payload -Installer $installer -Commit '${{ needs.version.outputs.commit }}'
 
       - name: Report macOS package status
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos'
         shell: bash
         run: |
           set -euo pipefail
@@ -593,7 +607,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notarize macOS ZIP asset
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -631,7 +645,7 @@ jobs:
             --wait
 
       - name: Notarize and staple macOS installer
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -680,8 +694,24 @@ jobs:
           mkdir -p "${{ runner.temp }}/release-assets"
           cp "$CREXX_MACOS_PKG_ASSET" "${{ runner.temp }}/release-assets/"
 
+      - name: Build shared native Rexx plugin manager
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          python scripts/build-llama-manager.py --core "${{ runner.temp }}/core-package/extracted/CREXX-windows-x64" --output "${{ runner.temp }}/llama-manager"
+          if ($LASTEXITCODE) { throw 'Native manager build failed' }
+
+      - name: Retain native manager for both Windows plugin installers
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v7
+        with:
+          name: llama-manager-${{ needs.version.outputs.commit }}-windows-x64
+          path: ${{ runner.temp }}/llama-manager
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload packaged asset
-        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}-release-asset
@@ -689,7 +719,7 @@ jobs:
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
-        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos'
         shell: bash
         run: |
           set -euo pipefail
@@ -843,7 +873,7 @@ jobs:
 
       - name: Configure Apple signing keychain
         id: macos_signing
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERTIFICATE_BASE64 }}
@@ -1001,8 +1031,15 @@ jobs:
           echo "enabled=true" >> "$GITHUB_OUTPUT"
           echo "APPLE_SIGNING_KEYCHAIN=$keychain_path" >> "$GITHUB_ENV"
 
+      - name: Require signing identities for explicit candidate proof
+        if: github.event_name == 'workflow_dispatch' && inputs.sign_candidate && matrix.platform == 'macos'
+        shell: bash
+        run: |
+          test '${{ steps.macos_signing.outputs.enabled }}' = true
+          test '${{ steps.macos_signing.outputs.pkg_enabled }}' = true
+
       - name: Sign macOS release payload
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_DEVELOPER_ID_IDENTITY: ${{ secrets.APPLE_DEVELOPER_ID_IDENTITY }}
@@ -1045,7 +1082,7 @@ jobs:
           echo "Signed $signed_count Mach-O files"
 
       - name: Verify macOS signatures
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -1125,7 +1162,7 @@ jobs:
           retention-days: 14
 
       - name: Name optional plugin release asset
-        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))
         shell: bash
         run: |
           set -euo pipefail
@@ -1133,6 +1170,7 @@ jobs:
             package_id=dev-snapshot
           else
             package_id="$GITHUB_REF_NAME"
+            if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then package_id="candidate-${GITHUB_SHA}"; fi
           fi
           mkdir -p "${{ runner.temp }}/release-assets"
           asset="${{ runner.temp }}/release-assets/llama.rexx-${package_id}-${{ matrix.core_platform }}-${{ matrix.backend }}.zip"
@@ -1140,7 +1178,7 @@ jobs:
           echo "CREXX_RELEASE_ASSET=$asset" >> "$GITHUB_ENV"
 
       - name: Notarize macOS ZIP asset
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -1178,7 +1216,7 @@ jobs:
             --wait
 
       - name: Package, notarize and staple optional macOS plugin installer
-        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
         shell: bash
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -1204,7 +1242,7 @@ jobs:
           cp "$pkg" "${CREXX_RELEASE_ASSET%.zip}.pkg"
 
       - name: Upload plugin release asset
-        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
+        if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}-release-asset
@@ -1212,7 +1250,7 @@ jobs:
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
-        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos'
+        if: always() && (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos'
         shell: bash
         run: |
           set -euo pipefail
@@ -1430,6 +1468,13 @@ jobs:
             exit 1
           fi
 
+          expected_plugin_assets=(linux-x64-vulkan linux-x64-cuda windows-x64-vulkan windows-x64-cuda macos-arm64-metal macos-x86_64-cpu)
+          for variant in "${expected_plugin_assets[@]}"; do
+            test -f "$asset_dir/llama.rexx-${GITHUB_REF_NAME}-${variant}.zip" || {
+              echo "Missing full-release plugin: $variant" >&2; exit 1;
+            }
+          done
+
           core_count="$(find "$asset_dir" -name 'CREXX-*.zip' -type f | wc -l | tr -d ' ')"
           plugin_count="$(find "$asset_dir" -name 'llama.rexx-*.zip' -type f | wc -l | tr -d ' ')"
           if [ "$core_count" != "4" ] || [ "$plugin_count" != "6" ]; then
@@ -1565,9 +1610,7 @@ jobs:
           expected_assets=(
             CREXX-dev-snapshot-linux-x64.zip
             llama.rexx-dev-snapshot-linux-x64-vulkan.zip
-            llama.rexx-dev-snapshot-linux-x64-cuda.zip
             llama.rexx-dev-snapshot-windows-x64-vulkan.zip
-            llama.rexx-dev-snapshot-windows-x64-cuda.zip
             llama.rexx-dev-snapshot-macos-arm64-metal.zip
             llama.rexx-dev-snapshot-macos-x86_64-cpu.zip
             CREXX-dev-snapshot-linux-x64.deb
@@ -1786,6 +1829,14 @@ jobs:
           for stale_optional_asset in \
             CREXX-dev-snapshot-linux-x64-cuda.zip \
             CREXX-dev-snapshot-windows-x64-cuda.zip \
+            llama.rexx-dev-snapshot-linux-x64-cuda.zip \
+            llama.rexx-dev-snapshot-windows-x64-cuda.zip \
+            llama.rexx-dev-snapshot-windows-x64-cuda-signed.zip \
+            llama.rexx-dev-snapshot-windows-x64-cuda-signed-setup.exe \
+            llama.rexx-dev-snapshot-windows-x64-vulkan-signed.zip \
+            llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe \
+            llama.rexx-dev-snapshot-macos-arm64-metal.pkg \
+            llama.rexx-dev-snapshot-macos-x86_64-cpu.pkg \
             CREXX-dev-snapshot-macos-arm64.pkg \
             CREXX-dev-snapshot-macos-x86_64.pkg; do
             if ! asset_is_expected "$stale_optional_asset"; then
