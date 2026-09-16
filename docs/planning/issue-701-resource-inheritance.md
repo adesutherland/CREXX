@@ -156,3 +156,39 @@ parent standard handles (16 cases). Retained baseline/current/build logs under
 attribution. The separate FOPEN test incorrectly assumed POSIX append position
 and exclusive-x support on every Windows CRT. It now compares those behaviors
 to the same host's ordinary fopen, while still requiring private creation.
+
+
+At `bd19a94ddd597459eb1fa01cae1cf33294d063b5`, Child Inheritance QA
+35086663828 completes successfully on all four platforms: Linux, macOS,
+MSVC and MinGW. Raw artifacts are retained in `docs/qa/issue-701/remote-bd19a94/`.
+The separate MSVC configure repair is `b50e4f3d7`; it changes registration only.
+Additional missing/invalid Windows-standard-handle and handle-count cleanup
+controls are being added before freezing final qualification inputs.
+
+The diagnostic fixture forces three independent failures using a native fake
+compiler/assembler: missing output, an unwritable stamp path, and a conflicting
+rename destination. Tasks retain two-worker concurrency. Debug passes, measured
+in isolation at 2.99 seconds (`/tmp/crexx-701-diagnostic-measure.x1jWgq`). Its
+shared parent directory is created before task submission, as in the real
+project-builder layout. ASan measurement is pending. The initial ASan build
+reached its test command with an earlier generated command lacking the worker
+import path; that configuration error is corrected, with no sanitizer finding.
+
+Required final gates: local normal Debug core CTest (exclude only the separately
+owned performance-measurement tier); focused maintained Apple ASan including
+inheritance, file-open, child lifecycle and diagnostic controls; hosted
+Child Inheritance QA, Deep Build QA and full Sanitizer QA on hotfix. Deep covers
+comprehensive core/install/package and isolated stress checks, so an additional
+manual Build comprehensive run would duplicate it. After promotion, automatic
+Build CREXX and CodeQL must reach terminal success; no manual version tag/release.
+Linux sanitizer keeps build/test leaks enabled. Performance/model/GPU work is
+outside this task. The separate llama checkout and its runs remain untouched.
+
+
+The diagnostic matrix passes under maintained Apple ASan in 14 seconds, runner
+`cmake-build-debugasan/asan-logs/20260916-114934-build`. Registered only after
+Debug/ASan measurements as `crexx_project_worker_diagnostics`, with RUN_SERIAL,
+its existing bin workspace resource lock and a 180-second hang guard. No retry
+or change to project-worker concurrency. The operation diagnostics preserve all
+existing RexxDoc blocks. STEP-02/03 complete for implementation; full acceptance
+still awaits the qualification gates, including the final expanded Windows tests.
