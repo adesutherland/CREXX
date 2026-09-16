@@ -64,6 +64,15 @@ purpose is to find issues for prompt remedial work after integration; that work
 may justify a targeted repeat of the relevant deep gate. This is an intentional
 tradeoff to keep development feedback and publication fast.
 
+Avoidable testing delay is an engineering cost, not evidence of diligence.
+It delays integration and user feedback, occupies runners, and blocks useful
+work. Before adding a long run, identify the unresolved risk, why retained or
+focused evidence is insufficient, and why the expected benefit justifies its
+elapsed-time cost. Choose the smallest decisive check. Repeating unchanged
+valid tests or routinely holding development publication for overnight assurance
+is a process defect to correct, not the safe default. Do not accumulate extra
+checks simply to obtain more green results.
+
 Additional pre-publication qualification is an exception: for example an
 explicitly agreed novel native-inference change, a release candidate, or repair
 and closure of an actual sanitizer finding. Record the concrete risk, additional

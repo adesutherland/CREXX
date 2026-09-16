@@ -303,3 +303,14 @@ qualification is reused. STEP-01..04 are complete. STEP-05/AC-08 remain pending
 normal develop promotion and the automatic Build CREXX/CodeQL terminal results.
 Final result bookkeeping will be retained on hotfix without a second pointless
 develop publication solely to update the evidence ledger.
+
+
+Repair and guidance promoted atomically from hotfix to develop at
+`bcea0f71bbfeaa263b274155317e7162de187f0a`. Refreshed remote develop remained
+`b5b827489d781f9e42d305ef264a22d2c1c42cb6`; both ancestry checks passed and the
+non-force push succeeded. The separate main/llama checkout was untouched.
+Automatic post-promotion checks: Build CREXX 35093060282 and CodeQL 35093060306,
+both pending at this entry. No extra overnight lane was dispatched. Cancelled
+Sanitizer QA 35088228552 reached terminal `cancelled`; its retained partial
+logs contain no ASan/LSan diagnostic or failed/timeout test. Partial completion
+is not a full sanitizer pass.

@@ -247,7 +247,10 @@ for explicitly agreed higher-risk work, release qualification, or closure of an
 actual first-party sanitizer finding. Record the reason and required scope in
 the work plan. The SAN worklist's broad closure requirements, supported Linux
 leak detection and prohibition on unapproved suppressions remain unchanged.
-See `AGENTS.md` for the canonical development-publication policy.
+Account for elapsed-time and integration-delay costs before selecting an extra
+long run; prefer focused checks and retained valid evidence for the concrete
+unresolved risk. See `AGENTS.md` for the canonical development-publication
+policy.
 
 ## Exploratory UBSan
 

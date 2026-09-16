@@ -322,6 +322,12 @@ sanitizer finding. A request to qualify an ordinary fix does not by itself
 require every assurance lane. Reuse unchanged valid test evidence and check the
 normal automatic publication workflows without dispatching extra overnight jobs.
 
+Elapsed time is part of the QA decision: an unnecessary test run delays
+integration and user feedback and consumes runner capacity. Additional long
+checks must address a specific unresolved risk whose expected benefit justifies
+that delay. Prefer the smallest decisive check and retained valid evidence;
+more green runs are not a goal in themselves.
+
 The other hosted lanes remain independent of artifact availability. Linux
 Debug optimizer parity runs for PRs and `develop`. After `develop` changes, the
 next scheduled deep QA run performs comprehensive and install/package
