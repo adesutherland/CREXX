@@ -1124,3 +1124,12 @@ and explicitly activate one, or reject a second backend until the first is
 removed. Do not assume an answer, overlay them, or infer simultaneous in-process
 backend support. Windows validation groundwork is independent; native Windows
 installer lifecycle/registration and its QA must follow the chosen behavior.
+
+Hosted Mac run `35109939178` at `68f4a7564` passes actual native core/plugin
+installation, installed public-provider smoke, reinstall and removal on both
+ARM and Intel. Its final core-only demonstration fails because the harness
+tries to compile beside a root-owned installed example. This is a reproduced QA
+working-directory error, not an installer/provider failure. Copy the example to
+a writable directory for that check; the core installer's completion text needs
+the same correction. Rerun only this retained-artifact installer workflow. Signed
+and offline Gatekeeper proof remain separate; no product/engine rebuild follows.

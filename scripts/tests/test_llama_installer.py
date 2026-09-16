@@ -117,6 +117,14 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'overlaps'):
             installer.prepare(self.core, self.plugin, self.root / 'other')
 
+    def test_signing_mode_cannot_be_mixed_with_unsigned_qa(self):
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts/package-llama-installer.py'),
+            '--core', str(self.core), '--plugin', str(self.plugin),
+            '--output', str(self.root / 'bad.pkg'), '--unsigned-qa', '--sign-identity', 'test'],
+            capture_output=True, text=True, timeout=120)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.root / 'bad.pkg').exists())
+
     @unittest.skipIf(os.name == 'nt', 'Mac shell rollback control')
     def test_partial_copy_failure_restores_previous_plugin(self):
         self.run_helper('install')

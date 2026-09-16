@@ -108,7 +108,9 @@ jobs:
           run_admin installer -pkg "$RUNNER_TEMP/llama-qa.pkg" -target / > "$RUNNER_TEMP/proof/plugin-reinstall.log" 2>&1
           run_admin sh "$installed/.llama-installer/manage.sh" remove "$installed" > "$RUNNER_TEMP/proof/remove.log" 2>&1
           test ! -e "$installed/bin/rxllama.rxplugin"
-          "$installed/bin/crexx" "$installed/examples/hello.crexx" > "$RUNNER_TEMP/proof/core-after-remove.log" 2>&1
+          mkdir -p "$RUNNER_TEMP/core consumer"
+          cp "$installed/examples/hello.crexx" "$RUNNER_TEMP/core consumer/hello.crexx"
+          "$installed/bin/crexx" "$RUNNER_TEMP/core consumer/hello.crexx" > "$RUNNER_TEMP/proof/core-after-remove.log" 2>&1
           grep -q 'hello CREXX world!' "$RUNNER_TEMP/proof/core-after-remove.log"
           echo 'Unsigned native installer lifecycle passed; signing/notarization/offline Gatekeeper are separate gates.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
