@@ -265,13 +265,61 @@ static void windows_case(const char *self, int mask, int std_inheritable) {
     DeleteFileA(file); DeleteFileA(moved); DeleteFileA(report);
     CloseHandle(ready); CloseHandle(release); free(error);
 }
+
+#ifndef RXSPAWN_TEST_BASELINE
+static void missing_standard_controls(const char *self) {
+    DWORD ids[3] = {STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+    HANDLE saved[3], nul;
+    int i, mask, invalid;
+    nul = CreateFileA("NUL", GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (nul == INVALID_HANDLE_VALUE) abort();
+    for (i = 0; i < 3; i++) saved[i] = GetStdHandle(ids[i]);
+    for (invalid = 0; invalid < 2; invalid++) for (mask = 0; mask < 8; mask++) {
+        char mask_text[16];
+        const char *args[] = {self, "missing-stdio", mask_text};
+        SHELLDATA missing = {0};
+        int command_rc = -1, rc, failure_rc;
+        DWORD handles_before, handles_after;
+        char *error = NULL;
+        snprintf(mask_text, sizeof(mask_text), "%d", mask);
+        for (i = 0; i < 3; i++) SetStdHandle(ids[i],
+                mask & (1 << i) ? nul : (invalid ? INVALID_HANDLE_VALUE : NULL));
+        GetProcessHandleCount(GetCurrentProcess(), &handles_before);
+        rc = shellspawn_argv_snapshot(args, 3, NULL, NULL, NULL, NULL,
+                NULL, 0, NULL, NULL, NULL, NULL, &command_rc, &error);
+        free(error); error = NULL;
+        missing.file_path = copy_string("crexx-701-executable-does-not-exist.exe");
+        if (!missing.file_path) abort();
+        /* Direct launch reaches CreateProcess after duplicates/allowlist exist. */
+        failure_rc = launchChild(&missing, &error);
+        GetProcessHandleCount(GetCurrentProcess(), &handles_after);
+        for (i = 0; i < 3; i++) SetStdHandle(ids[i], saved[i]);
+        CHECK(rc == 0 && command_rc == 7, "missing standard handles preserved");
+        CHECK(failure_rc != 0, "missing executable remains a launch failure");
+        CHECK(handles_before == handles_after, "launch success/failure release private handles");
+        free(error);
+    }
+    CloseHandle(nul);
+}
+#endif
 int main(int argc, char **argv) {
     int mask;
+    if (argc == 3 && !strcmp(argv[1], "missing-stdio")) {
+        DWORD ids[3] = {STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE};
+        int i, expected = atoi(argv[2]);
+        for (i = 0; i < 3; i++) {
+            HANDLE h = GetStdHandle(ids[i]);
+            int present = h && h != INVALID_HANDLE_VALUE;
+            if (present != !!(expected & (1 << i))) return 23;
+        }
+        return 7;
+    }
     if (argc == 9 && !strcmp(argv[1], "probe")) {
         HANDLE h = (HANDLE)(uintptr_t)strtoull(argv[2], NULL, 10);
         HANDLE ready = OpenEventA(EVENT_MODIFY_STATE, FALSE, argv[3]);
         HANDLE release = OpenEventA(SYNCHRONIZE, FALSE, argv[4]);
-        DWORD flags, n;
+        DWORD n;
         char byte;
         BY_HANDLE_FILE_INFORMATION info;
         int inherited = GetFileInformationByHandle(h, &info) &&
@@ -294,6 +342,7 @@ int main(int argc, char **argv) {
     for (mask = 0; mask < 8; mask++) windows_case(argv[0], mask, 1);
 #ifndef RXSPAWN_TEST_BASELINE
     for (mask = 0; mask < 8; mask++) windows_case(argv[0], mask, 0);
+    missing_standard_controls(argv[0]);
 #endif
     printf("Windows inheritance: %d failures\n", failures);
     return failures ? 1 : 0;
