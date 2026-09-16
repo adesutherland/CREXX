@@ -8,8 +8,9 @@ are chronological evidence; this live section supersedes their pending actions.
 ## Live continuation — 16 September
 
 **Promoted:** remote develop is `8ed983afdc2dad723b14f7a84d985c1c5ea88b32`,
-fast-forward from `94f2f228c`; candidate history is retained. Monitor normal Build
-`35150686647` and CodeQL `35150686250`. Heartbeat
+fast-forward from `94f2f228c`; candidate history is retained. Normal Build
+`35150686647` and CodeQL `35150686250` are terminal success. PROM integration
+criteria are complete; retain these results without repeating broad QA. Heartbeat
 `qualify-llama-develop-integration` is ACTIVE every 15 minutes; pause it after
 normal checks and independent cleanup are disposed of. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
@@ -33,8 +34,8 @@ needed for this runner test; do not request another login tonight.
 
 **21:59 UTC monitor:** Build `35150686647` is terminal success, including all
 four core jobs, MinGW, optimizer parity, all four routine plugins and development
-snapshot publication. CUDA is correctly absent. CodeQL `35150686250` is still
-performing analysis. Keep the 15-minute cadence; no extra assurance dispatch.
+snapshot publication. CUDA is correctly absent. CodeQL `35150686250` also
+completed successfully. Only independent WINQA/draft cleanup remains. Keep the 15-minute cadence; no extra assurance dispatch.
 
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic

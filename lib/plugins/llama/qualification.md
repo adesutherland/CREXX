@@ -35,8 +35,9 @@ merged and CI-D03 selection/collection is implemented. The combined candidate
 `35143588581`. Its Mac installer-only failure has passing packaging and fresh-host
 offline replacements (`35149300574`, `35149778131`). The promoted revision's
 normal Build `35150686647` also passes, including development snapshot publication.
-CodeQL and optional signed Windows installer follow-up are tracked in the live
-status record; neither a full signed release nor real-device closure is implied.
+CodeQL `35150686250` also passes. Optional signed Windows installer follow-up
+is tracked in the live status record; neither a full signed release nor
+real-device closure is implied.
 
 | Package | Complete baseline result (`f10e70ee5`) | Actual fixture computation |
 | --- | --- | --- |

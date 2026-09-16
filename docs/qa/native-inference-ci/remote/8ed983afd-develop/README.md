@@ -11,8 +11,8 @@ and digests. CUDA is absent as required by routine CI-D03 cadence; both CUDA
 packages have separate passing manual-candidate evidence at `21a5e9410`.
 
 [CodeQL 35150686250](https://github.com/adesutherland/CREXX/actions/runs/35150686250)
-remains in progress at this checkpoint. PROM-AC-03 stays open until its terminal
-result. No unchanged Deep/sanitizer gate was dispatched again.
+is also terminal success; `codeql.json` retains its exact revision and result.
+PROM-AC-03/PROM-02 are complete. No unchanged Deep/sanitizer gate was dispatched again.
 
 Windows signed installer QA is an optional independent follow-up. The ordinary
 snapshot Windows assets remain explicitly unsigned. No full version release or

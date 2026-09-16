@@ -984,7 +984,8 @@ Adrian approved promotion when sufficiently qualified and explicitly made
 Windows signing an optional later distribution step. `8ed983afd` is now in
 remote `develop`; normal Build `35150686647` passes four core packages, MinGW,
 optimizer parity, four routine plugin packages and development snapshot
-publication. CodeQL remains under the pipeline plan's PROM monitoring gate.
+publication. CodeQL `35150686250` also passes; the pipeline plan's PROM
+integration gate is complete.
 The final manually selected candidate `21a5e9410` also passes both CUDA package
 smokes; ordinary pushes/snapshots do not select CUDA. Actual signed/stapled Mac
 installers pass fresh-host offline Gatekeeper/install/consumer checks on ARM and

@@ -21,8 +21,8 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 **Develop integrated:** `8ed983afd` is promoted and normal
 [Build 35150686647](https://github.com/adesutherland/CREXX/actions/runs/35150686647)
 passes, including optimizer parity, all four cores, MinGW, all four routine
-plugins and development snapshot publication. CodeQL `35150686250` remains in
-progress. Routine CUDA exclusion matches CI-D03; the full manual candidate run
+plugins and development snapshot publication. CodeQL `35150686250` also passes. The normal development
+integration gates are complete. Routine CUDA exclusion matches CI-D03; the full manual candidate run
 below supplies the CUDA evidence.
 
 All four cores, the MinGW gate and six plugin smoke

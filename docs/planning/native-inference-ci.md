@@ -69,7 +69,7 @@ retries use the named candidate branches in the live handoff.
    or qualify upstream llama.cpp/CUDA under this sanitizer work package.
    Retained unchanged local tests
    are reused; new RXPP inputs are covered by hosted qualification.
-8. [ ] **CI-AC-08:** human/agent guides, parent acceptance status and artifact
+8. [x] **CI-AC-08:** human/agent guides, parent acceptance status and artifact
    evidence describe exactly what is shipped and tested. Remaining real-GPU,
    model/provenance and release gates remain visible; green fixture checks do
    not silently close them.
@@ -107,7 +107,7 @@ retries use the named candidate branches in the live handoff.
    exercise selected fast lanes first, repair failures with focused controls,
    then run required wider workflows on the resulting exact SHA. Retain logs
    and cancel superseded candidate runs. Serves CI-AC-01/06/07.
-5. [ ] **CI-05 — Reconcile and report:** record terminal run/artifact identities,
+5. [x] **CI-05 — Reconcile and report:** record terminal run/artifact identities,
    update this checklist and parent criteria, and make the green candidate
    reviewable before promotion. Serves CI-AC-08; depends on CI-01–04. Creating
    the candidate is not permission to publish an unqualified snapshot.
@@ -418,7 +418,7 @@ no plugin compilation or plugin QA starts before the four-core gate passes.
 1. [ ] **PKG-01:** preserve the version, signing, notarization and installer
    safeguards while making the four product jobs llama-free. Finalize and test
    the actual signed/staged core ZIP, with manifest hashes taken after signing.
-2. [ ] **PKG-02:** six dependent plugin jobs download the exact matching core
+2. [x] **PKG-02:** six dependent plugin jobs download the exact matching core
    artifact from the same workflow/SHA. Build only adapter/engine/package/helper
    targets; use MSVC for both Windows backends and retain CUDA compiler caching.
    No core compilation, whole-core suite or upstream sanitizer is in these jobs.
@@ -427,7 +427,7 @@ no plugin compilation or plugin QA starts before the four-core gate passes.
    without changing any core bytes. Retain CPU fixture and relevant adapter/
    lifecycle controls, with no trained-model download. Core and plugin manifests
    identify the source, platform, toolchain and required companion archive.
-4. [ ] **PKG-04:** publication collectors require four core plus six plugin ZIPs;
+4. [x] **PKG-04:** publication collectors require four core plus six plugin ZIPs;
    core installers remain core-only; CI-D04 adds separate optional plugin
    installers for Windows and Mac. Preserve existing Windows signing publication
    guards and optional notarized Mac installer rules. Human/agent download
@@ -1369,7 +1369,7 @@ Avoid repeated Deep/sanitizer/CUDA work when unchanged qualified evidence exists
    checks on ARM and Intel. Installed Linux rxfs passes `35149445867`.
 2. [x] **PROM-AC-02:** promote without overwriting newer develop changes; retain
    the exact promoted commit and inherited qualification boundaries.
-3. [ ] **PROM-AC-03:** the promoted revision's normal automatic Build and CodeQL
+3. [x] **PROM-AC-03:** the promoted revision's normal automatic Build and CodeQL
    checks reach green, with any actual failures diagnosed and repaired using
    focused regressions. Do not dispatch extra overnight assurance by default.
 4. [x] **PROM-AC-04:** optional Windows signing is visibly separate from
@@ -1378,7 +1378,7 @@ Avoid repeated Deep/sanitizer/CUDA work when unchanged qualified evidence exists
    follow-up. Future develop signing may wait until morning without blocking CI.
 5. [x] **PROM-01:** reconcile the accepted evidence and promote the clean
    candidate to develop (PROM-AC-01/02/04).
-6. [ ] **PROM-02:** follow the automatic runs at a light cadence, repair failures,
+6. [x] **PROM-02:** follow the automatic runs at a light cadence, repair failures,
    retain final results and stop monitoring when green (PROM-AC-03).
 
 
@@ -1441,3 +1441,14 @@ candidate run supplies CUDA delivery evidence. CodeQL remains in progress.
 WINQA's optional signed-installer retry is `35155144009` at `a6c989d85`; it
 reuses the same signed files and private draft. F19-AC-02/INST-AC-04 remain open
 until its native Windows result, although Mac signed/offline proof has passed.
+
+
+**Development integration complete:** normal Build `35150686647` and CodeQL
+`35150686250` are terminal success on promoted `8ed983afd`. PROM-AC-03/PROM-02
+close with [terminal metadata](../qa/native-inference-ci/remote/8ed983afd-develop/README.md).
+CI-AC-08/CI-05 reconcile the human/agent guides, parent acceptance and exact
+artifact boundaries; open signed-Windows and real-device criteria remain named.
+PKG-02 is proved by the all-six retained-core plugin jobs; PKG-04 by actual split
+snapshot publication, the full-release collector controls and native installer
+lifecycle evidence. This is development completion, not full release acceptance.
+The heartbeat continues only for the independent WINQA result and draft cleanup.
