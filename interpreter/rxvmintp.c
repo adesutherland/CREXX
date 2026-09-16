@@ -61,6 +61,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxsignature.h"
+#include "rxvmfile.h"
 #include <ctype.h>
 #include <limits.h>
 #include <locale.h>

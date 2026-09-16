@@ -2992,7 +2992,6 @@ RXVM_HANDLER(RXHASH_REG_REG_REG, VM_ADVANCE(3);
 RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
         DEBUG("TRACE - FOPEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
-            int fd;
             char* filename = reg2nullstring(op2R);
             char* mode = reg2nullstring(op3R);
 
@@ -3004,25 +3003,7 @@ RXVM_HANDLER(FOPEN_REG_REG_REG, VM_ADVANCE(3);
             } else if (strcmp(filename, "stdin") == 0) {
                 op1R->int_value = (rxinteger)stdin;
             } else {
-                /* Otherwise we open the file normally */
-                op1R->int_value = (rxinteger)fopen(filename, mode);
-
-                /* If the open succeeds, add the FD_CLOEXEC so that the file is not available to an ADDRESSed command! */
-                if (op1R->int_value) {
-                    RXVM_WINDOWS_ONLY(
-                    // On Windows, get the underlying OS HANDLE from the C-runtime file descriptor.
-                    intptr_t handle = _get_osfhandle(_fileno((FILE*)op1R->int_value));
-                    if (handle != -1) {
-                        // Set the handle to be non-inheritable. This is the equivalent
-                        // of POSIX's FD_CLOEXEC flag.
-                        SetHandleInformation((HANDLE)handle, HANDLE_FLAG_INHERIT, 0);
-                    }
-                    )
-                    RXVM_NONWINDOWS_ONLY(
-                    fd = fileno((FILE*)op1R->int_value);
-                    fcntl(fd, F_SETFD, FD_CLOEXEC);
-                    )
-                }
+                op1R->int_value = (rxinteger)rxvm_private_fopen(filename, mode);
             }
             free(filename);
             free(mode);
