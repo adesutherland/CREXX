@@ -592,7 +592,7 @@ endforeach()
 add_test(
   NAME ts_http_policy_skipped_copy_reassignment_shape
   COMMAND ${CMAKE_COMMAND}
-          -DRXAS_SOURCE=${CMAKE_CURRENT_BINARY_DIR}/ts_http_policy_rxtvm_opt.rxas
+          -DRXAS_SOURCE=${CMAKE_CURRENT_BINARY_DIR}/ts_http_policy_rxbvm_opt.rxas
           -P ${CMAKE_SOURCE_DIR}/cmake/CheckFlowSkippedCopyReassignment.cmake
 )
 set_tests_properties(
