@@ -1538,7 +1538,7 @@ jobs:
             llama.rexx-dev-snapshot-windows-x64-vulkan.zip
             llama.rexx-dev-snapshot-windows-x64-cuda.zip
             llama.rexx-dev-snapshot-macos-arm64-metal.zip
-            llama.rexx-dev-snapshot-macos-x86_64-metal.zip
+            llama.rexx-dev-snapshot-macos-x86_64-cpu.zip
             CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-windows-x64-unsigned-setup.exe

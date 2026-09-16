@@ -5,6 +5,39 @@ authoritative [pipeline plan](native-inference-ci.md) retains the complete
 vision, acceptance criteria and implementation steps. The older snapshots below
 are chronological evidence; this live section supersedes their pending actions.
 
+## Live continuation — 16 September
+
+Adrian authorized fixes and reruns, including CPU-only Intel Mac delivery
+(CI-D02). The current repair batch fixes CI-F16's MSVC-only HTTP shape artifact
+path and CI-F17's inconsistent CRT selection. The core used the active
+`VCToolsRedistDir` (14.51), while the plugin's independent CMake search chose
+14.44. The plugin now uses the active redist's actual CRT directory; its
+pre-build hash comparison rejects any difference from the qualified core.
+The final overlap guard remains intact. Intel's matrix/asset/docs are CPU-only;
+ARM Metal and Windows/Linux GPU requirements remain unchanged.
+
+Local checks: 30 packaging/signing/matrix controls pass, including runtime
+mismatch/ambiguity and CPU-only rejection controls. The existing HTTP shape
+assertions pass against the generated `rxbvm` artifact. Workflow lint passes.
+Target reruns are still required; see R16/F16/F17/D02 criteria in the plan.
+
+Terminal baseline results: core sanitizer run `35026470003` passes both hosts,
+2,340 tests each; Linux build and test leak detection stayed on. Together with
+the retained independent first-party bridge probe, this closes SAN-009. It
+asserts no sanitizer coverage inside an uninstrumented engine. All five core
+Build jobs and Linux/ARM/Intel/MinGW Deep jobs passed at `21666b6bc`.
+MSVC Deep retry `35030598584` passed 2,129/2,130 tests; only CI-F16 failed.
+Windows Vulkan retry `35031332714` passed compilation, the dependency scanner
+and all four plugin controls before CI-F17 stopped staging. Windows CUDA's
+older build completed engine compilation but stopped at the already-repaired
+helper macro collision CI-F11. ARM Metal, Linux Vulkan and Linux CUDA packages
+passed; Intel Metal timed out and has the explicit CI-D02 disposition.
+
+Next: push this repair batch only to the isolated candidate, run the full
+Build matrix and exact-candidate core Deep/Sanitizer workflows, preserve CUDA
+cache results, and reconcile every terminal result. No develop promotion or
+release publication. Real-device/model criteria remain open where unverified.
+
 ## Live continuation — 15 September, after restart
 
 **Latest packaging repair:** code HEAD `99a28ce7d` is on

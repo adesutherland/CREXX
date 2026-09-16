@@ -825,3 +825,38 @@ exact core named in its package metadata. Cache statistics show 1,476 hits and
 not a fully warmed-cache cost verdict. Evidence is under
 `remote/21666b6bc/plugin-linux-cuda*`. Windows CUDA and broad sanitizers remain
 pending; no develop or release promotion has occurred.
+
+
+### 16 September — CI-F16, CI-F17 and Intel disposition
+
+- CI-F16: MSVC Deep `35030598584` builds successfully and passes 2,129/2,130
+  tests. The HTTP optimized shape check hardcodes the unbuilt `rxtvm` artifact.
+  Use the always-generated `rxbvm` artifact with the same assertions. Local
+  generated-code inspection passes; target Deep retry remains required.
+- CI-F17: Windows Vulkan `35031332714` passes the tiny dependency scan (1.13 s),
+  plugin/helper build and four controls (0.51 s). Staging correctly rejects a
+  different `concrt140.dll`. Both developer environments select redist 14.51,
+  but CMake independently finds 14.44. The repair selects the active environment
+  consistently, checks the actual CRT directory name, and compares all runtime
+  hashes with the qualified core before engine compilation. Missing/different
+  bytes still fail, and the final no-overwrite guard is unchanged.
+- CI-D02: Adrian authorized Intel CPU-only binary delivery. The pinned Metal
+  startup stall is retained as an unsupported delivery capability, not a
+  repaired engine finding. Matrix, asset name and human/agent guides reflect
+  this. ARM Metal and Linux/Windows Vulkan/CUDA remain required.
+- Local evidence: `local/sept16-repairs/` contains 30 passing focused controls,
+  unchanged HTTP assertions on portable VM assembly, and clean workflow lint.
+- Sanitizer `35026470003` at `21666b6bc` passes Linux and Apple, 2,340 tests each,
+  with Linux build/test leak detection enabled. Logs/settings and terminal job
+  metadata are retained; the separate first-party probe plus prior regression
+  and original-trigger evidence now closes SAN-009. No upstream instrumentation
+  or real-device/model qualification is implied.
+- Windows CUDA at `21666b6bc` stopped in the old helper macro collision after
+  engine compilation; the complete job log is retained compressed. Its repair
+  is already in the candidate. CUDA package and warm-cache proof remain open.
+
+Primary platform references for CI-D02: [Apple Metal support](https://support.apple.com/en-us/102894)
+includes Intel Macs; [llama.cpp supported backends](https://github.com/ggml-org/llama.cpp/blob/master/README.md)
+lists Apple Silicon for Metal. Neither establishes a fix for our captured
+compiler-service wait. The explicit delivery decision, not a universal hardware
+claim, is the reason for the Intel CPU package.

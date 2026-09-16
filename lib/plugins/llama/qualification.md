@@ -33,7 +33,7 @@ candidate Build, Deep Build and Sanitizer gates remain open.
 | Linux x64 CPU/Vulkan | Pass at `2bc56249d`; downloaded archive checked. | CPU; runner reports no GPU. |
 | Windows x64 MinGW CPU/Vulkan | Pass at `4a0924ee1`; downloaded archive and restricted-PATH consumers checked. | CPU; runner reports no GPU. |
 | macOS arm64 CPU/Metal | Pass at `2bc56249d`; downloaded archive checked. | CPU and Metal. |
-| macOS x86_64 CPU/Metal | Pass at `e39916f2a`; downloaded archive checked. | CPU and Metal. Earlier 30-minute stall remains unexplained. |
+| macOS x86_64 CPU | CPU-only delivery approved (CI-D02); revised package qualification pending. | Earlier CPU/Metal fixture pass at `e39916f2a` is historical; repeated cold Metal stalls make Intel Metal unsupported for this delivery. |
 | Linux x64 CPU/CUDA | Pass at `2bc56249d`; downloaded archive, redistributables and notices checked. | CPU; runner reports no GPU. |
 | Windows x64 MSVC CPU/CUDA | Pending. | No claim. |
 

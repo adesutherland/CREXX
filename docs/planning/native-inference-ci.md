@@ -32,7 +32,8 @@ retries use the named candidate branches in the live handoff.
    the target Linux/GCC, Windows/MSVC, ARM Mac/Clang and Intel Mac/Clang
    configurations before llama is added. A fifth Windows/MinGW core-only gate
    verifies both VM variants and retains QA evidence without publishing binaries. Separate matching plugin archives
-   supply CPU/Vulkan on Linux/Windows and CPU/Metal on Mac, with documentation,
+   supply CPU/Vulkan on Linux/Windows, CPU/Metal on ARM Mac and CPU on Intel Mac,
+   with documentation,
    examples and notices. Verify actual extracted core and core-plus-plugin ZIPs.
 3. [ ] **CI-AC-03:** separate Linux and Windows CUDA plugin archives include
    CPU fallback and redistributable dependencies. One Windows MSVC core with
@@ -99,6 +100,17 @@ retries use the named candidate branches in the live handoff.
    the candidate is not permission to publish an unqualified snapshot.
 
 ## Design boundaries
+
+- **CI-D02, approved 16 September 2026:** ship the Intel Mac plugin CPU-only.
+  Intel Metal is unsupported for this delivery; omit its backend at build time.
+  Many Intel Macs support Metal, but the pinned engine's cold initialization
+  stalls inside the hosted Metal compiler service (CI-F07), with no verified
+  upstream remedy for that mechanism. This is a delivery scope amendment,
+  not a claim that Metal cannot exist on Intel or that the engine defect was
+  repaired. ARM Metal and Windows/Linux Vulkan/CUDA remain required. This
+  amends CI-AC-02's Intel delivery and its application of parent OUT-02,
+  AC-02/03/07; all other parent
+  outcomes and criteria stay in force.
 
 - The pinned upstream `test-llama-archs.cpp` generates a 4,763,872-byte dense
   llama fixture already exercised in STEP-02. BERT fixtures are not supported
@@ -646,3 +658,38 @@ Linux CUDA `35025115905` passes its split archive smoke at `21666b6bc`. Its
 Compiler caching shows 1,476 hits/1,254 misses (54.07%) and one write error.
 This proves useful partial reuse; complete warm-repeat and Windows CUDA
 evidence remain outstanding under CI-AC-09.
+
+## 16 September repair and qualification continuation
+
+Vision: complete the approved four-core/six-plugin delivery on the isolated
+candidate branch, preserving unchanged core bytes and useful target-platform
+QA. Fix concrete Windows packaging/test selection defects, deliver a working
+Intel CPU package under CI-D02, and retain full exact-candidate hosted results
+before any promotion. No engine performance campaign or upstream sanitizer
+build is added.
+
+1. [ ] **F16-AC-01:** MSVC's HTTP optimized-copyback shape test reads an artifact
+   actually generated for its portable VM and retains every existing assertion.
+   Its focused run and the complete MSVC Deep gate pass.
+2. [ ] **F17-AC-01:** core and plugin select the active developer environment's
+   MSVC redistributables consistently. A pre-build comparison with the qualified
+   core rejects missing/different runtime bytes, and both final Windows plugin
+   archives pass with the core-overwrite guard intact.
+3. [ ] **D02-AC-01:** the Intel archive contains CPU backends and no Metal
+   backend; the complete extracted archive smoke passes. Human/agent guides and
+   published asset names identify Intel CPU-only support explicitly.
+4. [ ] **R16-AC-01:** all required candidate Build, Deep and first-party core
+   Sanitizer jobs reach terminal success on the final code/test inputs; record
+   exact SHAs, archives and CUDA cache statistics. CI-AC-07/09 stay open until
+   their required evidence is reconciled.
+5. [ ] **R16-01:** repair the MSVC artifact path (CI-F16), retain focused proof,
+   and rerun MSVC Deep. Serves F16-AC-01; no compiler rewrite change.
+6. [ ] **R16-02:** repair the reproduced 14.51 environment versus 14.44 CMake
+   CRT selection (CI-F17), add cheap positive/mismatch checks before engine
+   compilation, and retry Windows packaging. Serves F17-AC-01.
+7. [ ] **R16-03:** implement CI-D02 in matrix, package validation and guides;
+   rerun Intel CPU packaging. Serves D02-AC-01.
+8. [ ] **R16-04:** retain the now-green core sanitizer results and reconcile
+   SAN-009's separate first-party bridge proof; dispatch/reconcile the complete
+   candidate gates after focused repairs. Serves R16-AC-01 and CI-AC-07/08/09.
+   Preserve the existing real-device/model qualification boundaries.

@@ -24,7 +24,8 @@ Choose a plugin for the exact same release/commit and platform. Extract both
 ZIPs into the same parent folder; they contain the same `CREXX-<platform>`
 directory and their contents combine. Windows uses one MSVC core with `rxvm`
 selecting `rxbvm`; either the Vulkan or CUDA plugin uses that same base.
-Linux offers Vulkan or CUDA; Mac uses Metal. Every plugin includes CPU fallback.
+Linux offers Vulkan or CUDA; ARM Mac uses Metal and Intel Mac is CPU-only.
+Intel Metal is unsupported for this delivery. Every plugin includes CPU support.
 These candidate packages are not yet a published release.
 
 If you installed the core with an installer, extract the plugin ZIP elsewhere

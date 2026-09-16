@@ -206,6 +206,14 @@ is proposed.
 
 ### Initial platform matrix
 
+Delivery amendment approved 16 September 2026 (CI-D02): the additional Intel
+Mac binary package is CPU-only. Intel Metal is unsupported in this delivery
+after repeated compiler-service startup stalls; retain that evidence instead
+of calling the Metal failure repaired. This limits the Intel delivery's
+application of OUT-02 and AC-02/03/07. The ARM Metal and Windows/Linux CUDA and
+Vulkan requirements below remain unchanged. See the numbered continuation in
+[the pipeline plan](native-inference-ci.md).
+
 | Platform | CPU path | GPU paths required for initial qualification | Evidence status |
 | --- | --- | --- | --- |
 | macOS arm64 | Native CPU | Apple Metal | Open |

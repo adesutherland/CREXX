@@ -94,7 +94,13 @@ class MatrixTests(unittest.TestCase):
         self.assertEqual(len({r['artifact_name'] for r in rows}), 6)
         for row in rows:
             self.assertIn('cpu', row['backends'].split(','))
-            self.assertEqual(len(row['backends'].split(',')), 2)
+            if row['id'] == 'macos-intel':
+                self.assertEqual(row['backend'], 'cpu')
+                self.assertEqual(row['backends'], 'cpu')
+                self.assertIn('-DCREXX_LLAMA_METAL=OFF', row['cmake_args'])
+                self.assertEqual(row['artifact_name'], 'llama.rexx-macos-x86_64-cpu')
+            else:
+                self.assertEqual(len(row['backends'].split(',')), 2)
             if row['platform'] == 'windows' and row['cuda']:
                 self.assertEqual(row['toolchain'], 'msvc')
 

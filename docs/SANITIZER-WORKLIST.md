@@ -77,22 +77,37 @@ CTest phases take 3,708.62 seconds on macOS and 4,385.57 seconds on Linux. No
 AddressSanitizer or LeakSanitizer diagnostic appears in either retained
 artifact.
 
-## Open findings from native inference integration
+## Native inference integration finding
 
-Status at 2026-09-14: SAN-009 is open in the uncommitted native-inference
-implementation. Its reproduced probe-lifetime repair and local Debug/Apple-ASan
-checks pass; required broader platform proof remains outstanding.
+Status at 2026-09-16: SAN-009 is closed within the approved first-party scope.
+The platform and packaging acceptance criteria remain separate release gates.
 
 ### SAN-009 — CPU backend probe unload/reload re-registers Apple-ASan globals
 
-Status: open; local repair established, platform qualification pending. Discovered
+Status: closed 2026-09-16. Discovered
 2026-09-14 during STEP-03. Current owner: Codex, STEP-06 qualification. Adrian's
 initial direction was to diagnose/fix SAN-009 while he reviewed S3-D01, but
 **do not rerun the sanitizer yet**. That historical hold lasted until the
 STEP-06 approval below. Required platform proof remains open. Adrian approved
 STEP-03 closure and the named STEP-06
 native-inference release-QA handoff, owned by Codex under his direction.
-SAN-009 remains open and release-blocking; no sanitizer suppression is authorized.
+The historical pending statements below are superseded by this closure record;
+no sanitizer suppression was used.
+
+- **Closure, 2026-09-16:** the permanent original/reversion reproducer, matching
+  Debug/Apple-ASan regression, original four-tool lifecycle trigger and full
+  local 2,349-test Apple-ASan gate are retained below. The separate Linux
+  first-party probe passes Debug and ASan/LSan at `9152850e8` with ordinary,
+  unchanged engine libraries and leak detection enabled. Broad core Sanitizer
+  QA [35026470003](https://github.com/adesutherland/CREXX/actions/runs/35026470003)
+  at `21666b6bcf0c5a14986652ef0b0a76bddc43611b` now passes both platforms:
+  Linux 2,340/2,340 tests (4,493.34 s, build/test leaks on), Apple 2,340/2,340
+  (4,506.68 s, unsupported Apple LSan off). Build, preparation and CTest logs
+  contain no sanitizer diagnostic. Retained logs/settings/job identities are
+  under `docs/qa/native-inference-ci/remote/21666b6bc/sanitizer-{linux,macos}/`.
+  The bridge/CPU residency repair is unchanged; intervening Windows packaging
+  and helper-variable fixes do not alter it. This closes SAN-009, not overall
+  native-inference delivery or real-GPU qualification.
 
 - **Supported first-party probe, 2026-09-15:** isolated Linux run
   `35027428540` at `9152850e8` passes the permanent probe in normal Debug and

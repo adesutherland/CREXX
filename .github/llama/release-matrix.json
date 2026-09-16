@@ -47,18 +47,18 @@
     },
     {
       "id": "macos-intel",
-      "name": "macOS x86_64 Metal",
+      "name": "macOS x86_64 CPU",
       "os": "macos-15-intel",
       "platform": "macos",
       "toolchain": "clang",
-      "artifact_name": "llama.rexx-macos-x86_64-metal",
+      "artifact_name": "llama.rexx-macos-x86_64-cpu",
       "build_jobs": 2,
       "test_jobs": 5,
-      "backends": "cpu,metal",
+      "backends": "cpu",
       "cuda": false,
-      "cmake_args": "-DCMAKE_OSX_ARCHITECTURES=x86_64",
+      "cmake_args": "-DCMAKE_OSX_ARCHITECTURES=x86_64 -DCREXX_LLAMA_METAL=OFF",
       "core_platform": "macos-x86_64",
-      "backend": "metal"
+      "backend": "cpu"
     },
     {
       "id": "linux-cuda",

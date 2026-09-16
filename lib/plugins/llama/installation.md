@@ -37,7 +37,8 @@ moving or unpacking an installation.
 | Plugin platform/backend | Included inference backends |
 | --- | --- |
 | `linux-x64-vulkan`, `windows-x64-vulkan` | CPU and Vulkan |
-| `macos-arm64-metal`, `macos-x86_64-metal` | CPU and Metal |
+| `macos-arm64-metal` | CPU and Metal |
+| `macos-x86_64-cpu` | CPU only |
 | `linux-x64-cuda`, `windows-x64-cuda` | CPU and NVIDIA CUDA |
 
 CUDA and Vulkan plugins use the same core for their platform. Windows uses
@@ -47,6 +48,11 @@ both VM variants; it does not produce a binary download. Install one
 backend variant at a time and preserve the release/commit match. GPU users need a compatible
 installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
 included. Runtime detection selects from the backends in the chosen package.
+Intel Mac Metal is unsupported in this delivery: the pinned engine repeatedly
+stalled during Metal compiler-service initialization on the Intel runner. The
+Intel CPU package omits Metal, so startup does not enter that path. This does
+not imply that all Intel Macs lack Metal hardware support. ARM Mac Metal is
+included.
 CUDA builds retain the pinned engine's portable architecture defaults for the
 selected toolkit. Some devices compile the supplied PTX on first use, which can
 add startup time; keep the model/session prepared for repeated work. Real-device
@@ -82,8 +88,9 @@ cmake --build build-llama --target stage-c1-toolchain stage-product stage-option
 cmake --install build-llama --prefix "$crexx_prefix"
 ```
 
-Metal defaults to ON on Apple builds. CPU support is included with every package.
-To build a CPU-only package, add `-DCREXX_LLAMA_METAL=OFF` at configure time.
+Metal defaults to ON on Apple source builds. On Intel Mac, add
+`-DCREXX_LLAMA_METAL=OFF` to use the supported CPU-only configuration. CPU support
+is included with every package. Intel Metal source experiments are unqualified.
 For Linux CUDA or Vulkan, add **one** of `-DCREXX_LLAMA_CUDA=ON` or
 `-DCREXX_LLAMA_VULKAN=ON` and install the matching build SDK/toolkit and device
 driver. Backend options select what gets packaged; runtime detection can only

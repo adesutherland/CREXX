@@ -1028,6 +1028,11 @@ Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
 approved release design first builds four llama-free core archives, then builds
 only the optional provider/dependency/helper targets and tests them against
 those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
+ARM Mac ships CPU/Metal; Intel Mac ships CPU only (`CREXX_LLAMA_METAL=OFF`).
+CI-D02 explicitly excludes Intel Metal from this delivery after repeated
+compiler-service startup stalls. Do not restore that backend or claim its
+failure repaired from a successful CPU package check. Source defaults still
+enable Metal on Apple; Intel builders must explicitly disable it.
 A fifth Windows/MinGW core-only gate checks both VM variants, retains QA
 evidence without binaries, and must pass before plugin jobs. Core jobs own
 core QA; backend jobs own llama-specific QA. Core sanitizer jobs
