@@ -7,6 +7,33 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Latest terminal/live state:** compiled product remains `21a5e9410`.
+Build `35143588581` is terminal: four cores, MinGW and all six plugin smoke
+checks pass; its only failures are the two Mac installer requirement invocations.
+The correction at `0a6a8cbf9` is qualified locally. Packaging retry `35149300574`
+passes actual Mac signing/notarization/stapling on both hosts, then exposes the
+QA-only misuse of online `stapler validate` while offline. Corrected fresh-host
+Mac run `35149778131` at `0dd6a855e` **passes on ARM and Intel** using those
+retained packages: Gatekeeper/install/consumer offline, then online ticket
+comparison; network restoration also passes. Linux
+installed rxfs run `35149445867` passes. Inspect those exact runs for status.
+
+Windows complete inputs are under `/tmp/crexx-final-21a5e9410/{core,vulkan,cuda,manager}`.
+The first signing attempt (`signing.log`) lost SimplySign access mid-payload;
+a fresh probe also failed. Adrian reconnected after the async question.
+The second attempt is running with output `signed-retry/` and log
+`signing-retry.log` in that directory; inspect its process/output before starting
+another attempt. Private staging draft **390272446** now exists at
+`qa-llama-signing-21a5e9410925cac7e4f577119e4e09fe6393d7f4`; it is unpublished and
+its tag does not exist. Five completed files are uploading (`upload-first.log`);
+wait for final signing before uploading CUDA setup and `signed-delivery.json`.
+Delete this draft after retaining Windows QA evidence. Then run
+Windows-only installer QA with `source_run=35143588581`, `platform=windows`,
+`cuda=true`, `signed_mac=true`, `repackage_signed_mac=true` (the latter two
+explicitly permit the already repaired original Mac packaging failure), and
+`signed_windows_release=<draft id>`. Mac/Linux have independent runs and must
+not be needlessly repeated. Delete the draft after retaining Windows results.
+
 **Approved continuation now running:** develop through `94f2f228c` (#699) is
 merged. Product/build candidate `21a5e9410925cac7e4f577119e4e09fe6393d7f4` is
 under [Build 35143588581](https://github.com/adesutherland/CREXX/actions/runs/35143588581),
