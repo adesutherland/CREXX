@@ -1,0 +1,14 @@
+{
+  "name": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-windows-x64-vulkan.zip",
+  "bytes": 24544940,
+  "sha256": "4ece09a3bca3f3d8cf4903623c8cd46377c5eacd9e9a7fcc4b3345c2034a1261",
+  "schema": 1,
+  "component": "llama.rexx",
+  "commit": "31d4974f12454842902224d495e4aafd111c2134",
+  "platform": "windows-x64",
+  "toolchain": "msvc",
+  "backend": "vulkan",
+  "core_archive": "CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-windows-x64.zip",
+  "core_archive_sha256": "db0abab0aa31210ec9b3f47aeb31bc8b287d7e3b54f4c448062edafbf5d5b687",
+  "core_binaries_rebuilt": false
+}

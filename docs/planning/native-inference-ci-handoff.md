@@ -11,9 +11,21 @@ are chronological evidence; this live section supersedes their pending actions.
 `origin/temp/llama-release-combined`. [Build 35071050120](https://github.com/adesutherland/CREXX/actions/runs/35071050120),
 [Deep Build 35071052712](https://github.com/adesutherland/CREXX/actions/runs/35071052712)
 and [Sanitizer QA 35071054942](https://github.com/adesutherland/CREXX/actions/runs/35071054942)
-are running on this exact SHA. Initial publication/matrix/package guards pass.
-No pass is yet claimed for the new target jobs. Local documentation updates
+are running on this exact SHA. All five core jobs and actual core ZIP smokes
+now pass, including the non-shipping MinGW gate. Both Windows plugin jobs pass
+the new shared-CRT preflight and are compiling. All six plugin jobs started;
+final archive smokes remain pending. Deep stress, all three Release job-count
+builds and RXBIN equivalence pass; comprehensive and sanitizer jobs continue. Local documentation updates
 recording results do not change the frozen workflow source or trigger reruns.
+
+**Windows Vulkan follow-up:** on `31d4974f1`, compilation, all four controls,
+CRT identity, split archive staging/finalization, engine checks, both VM modes
+and native compilation pass. Relocation fails because the manifest repeats
+three identical CRT entries: a second copy tries to overwrite its own hard
+link (WinError 32). CI-F15 now deduplicates identical published path/hash
+entries. The tiny fixture reproduces the metadata error before repair and
+passes normal/ASan-built scans after repair (0.10/0.09 s). A focused Windows
+retry is next; preserve the ongoing CUDA/cache and wider jobs.
 
 Adrian authorized fixes and reruns, including CPU-only Intel Mac delivery
 (CI-D02). The current repair batch fixes CI-F16's MSVC-only HTTP shape artifact

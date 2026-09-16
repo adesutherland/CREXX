@@ -693,3 +693,36 @@ build is added.
    SAN-009's separate first-party bridge proof; dispatch/reconcile the complete
    candidate gates after focused repairs. Serves R16-AC-01 and CI-AC-07/08/09.
    Preserve the existing real-device/model qualification boundaries.
+
+### CI-F15 follow-up — duplicate published runtime entries
+
+At `31d4974f1`, both Windows CRT preflights pass. Windows Vulkan also compiles,
+passes four controls, stages/finalizes the split archive, and passes engine,
+provider and native-build checks. Relocation then fails with WinError 32.
+The retained manifest contains two identical entries each for `msvcp140.dll`,
+`vcruntime140.dll` and `vcruntime140_1.dll`: original SDK paths and copied paths
+survive full-source-path deduplication but describe the same published file.
+The relocation helper's second copy attempts to overwrite its own hard link.
+This continues CI-F15's source-versus-published identity defect; it is not an
+unexplained process lock or a new engine/runtime failure.
+
+1. [x] **F15-AC-03:** the existing tiny native-library fixture fails when its
+   manifest repeats a published dependency, then passes with one entry per
+   identical published path/hash. Missing dependencies still fail. Distinct
+   hashes must not be deduplicated into an arbitrary choice.
+2. [x] **F15-03:** add the failing uniqueness assertion, deduplicate identical
+   serialized runtime entries, and run the existing normal/sanitizer-built
+   tiny fixture. Serves F15-AC-03, retaining its measured serial scheduling.
+3. [ ] **F15-04:** retry Windows Vulkan on an isolated branch and retain full
+   relocated-consumer smoke. Keep the current CUDA/cache and wider core runs
+   alive; unchanged core proof is reused. Final combined qualification remains
+   distinct from this focused repair.
+
+The uniqueness assertion reproduces the duplicate published dependency locally
+before the repair. Exact serialized path/hash deduplication passes the unchanged
+normal fixture in 0.10 s and the sanitizer-built fixture via the maintained
+runner in 0.09 s. The missing-dependency negative still fails as required. These
+are metadata/dependency scans, not instrumented-library execution. Evidence is
+`local/published-runtime-identity/` in the pipeline ledger. Target Windows smoke
+remains open; this repair changes neither core execution nor upstream engine
+inputs, so keep the current broader runs and CUDA cache build alive.

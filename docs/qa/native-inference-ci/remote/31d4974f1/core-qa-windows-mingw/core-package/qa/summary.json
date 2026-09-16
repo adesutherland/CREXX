@@ -1,0 +1,57 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 2.647,
+  "commands": [
+    {
+      "label": "opt-compile",
+      "returncode": 0
+    },
+    {
+      "label": "opt-assemble",
+      "returncode": 0
+    },
+    {
+      "label": "opt-link",
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxvm",
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxbvm",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-compile",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-assemble",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-link",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxvm",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxbvm",
+      "returncode": 0
+    },
+    {
+      "label": "native-build",
+      "returncode": 0
+    },
+    {
+      "label": "relocated-native",
+      "returncode": 0
+    }
+  ],
+  "preferred_vm": "rxtvm",
+  "llama_enabled": false,
+  "work": "D:/a/_temp/msys64/tmp/crexx-core-consumer-je79krv_"
+}

@@ -1,0 +1,4 @@
+CMake Error at /Users/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake:49 (message):
+  Unresolved inference package dependencies: @rpath/libcopy-dependency.dylib
+
+

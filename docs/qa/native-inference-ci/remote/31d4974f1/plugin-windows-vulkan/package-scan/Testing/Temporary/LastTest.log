@@ -1,0 +1,20 @@
+Start testing: Sep 16 08:12 Coordinated Universal Time
+----------------------------------------------------------
+1/1 Testing: provider_package_copy
+1/1 Test: provider_package_copy
+Command: "C:/hostedtoolcache/windows/Python/3.12.10/x64/python3.exe" "D:/a/CREXX/CREXX/tests/rxpa/provider-package-copy/check.py" "D:/a/_temp/package-scan/input-Release.cmake" "D:/a/CREXX/CREXX/rxpa/WriteProviderPackage.cmake" "D:/a/_temp/package-scan/proof"
+Directory: D:/a/_temp/package-scan
+"provider_package_copy" start time: Sep 16 08:12 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+PASS: complete published package dependency control
+PASS: missing published package dependency control
+<end of output>
+Test time =   1.42 sec
+----------------------------------------------------------
+Test Passed.
+"provider_package_copy" end time: Sep 16 08:12 Coordinated Universal Time
+"provider_package_copy" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Sep 16 08:12 Coordinated Universal Time

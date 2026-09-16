@@ -31,6 +31,7 @@ for mode in ('complete', 'missing'):
         assert result.returncode == 0, log_text
         manifest = json.loads((output / 'copy_control.native.json').read_text())
         entries = {entry['path']: entry['sha256'] for entry in manifest['runtime_files']}
+        assert len(entries) == len(manifest['runtime_files']), 'duplicate published runtime dependency'
         for root in roots:
             original = Path(root)
             assert entries[original.name] == hashlib.sha256(original.read_bytes()).hexdigest()

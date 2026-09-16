@@ -1,0 +1,7 @@
+argv=['/home/runner/work/_temp/core-package/extracted/CREXX-linux-x64/bin/crexx', '--program', '/tmp/crexx-core-consumer-id3zgjyn/native/hello', '/tmp/crexx-core-consumer-id3zgjyn/hello.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member hello
+BUILT: project member hello
+BARRIER: link program
+PUBLISHED: program /tmp/crexx-core-consumer-id3zgjyn/native/hello.rxbin
+PUBLISHED: native program /tmp/crexx-core-consumer-id3zgjyn/native/hello

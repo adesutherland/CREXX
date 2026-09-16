@@ -63,6 +63,10 @@ foreach(path IN LISTS runtime_files)
     file_entry(entry "${path}")
     list(APPEND runtime_entries "${entry}")
 endforeach()
+# Declared SDK files and scanned copies can have different source paths but
+# identical published names/hashes. Emit one entry for that published identity;
+# differing hashes remain distinct and cannot silently bless a collision.
+list(REMOVE_DUPLICATES runtime_entries)
 foreach(path IN LISTS link_files)
     file_entry(entry "${path}")
     list(APPEND link_entries "${entry}")

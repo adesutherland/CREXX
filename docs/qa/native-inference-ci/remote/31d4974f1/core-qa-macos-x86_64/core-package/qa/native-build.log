@@ -1,0 +1,7 @@
+argv=['/Users/runner/work/_temp/core-package/extracted/CREXX-macos-x86_64/bin/crexx', '--program', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-core-consumer-plcubsr1/native/hello', '/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-core-consumer-plcubsr1/hello.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member hello
+BUILT: project member hello
+BARRIER: link program
+PUBLISHED: program /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-core-consumer-plcubsr1/native/hello.rxbin
+PUBLISHED: native program /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/crexx-core-consumer-plcubsr1/native/hello
