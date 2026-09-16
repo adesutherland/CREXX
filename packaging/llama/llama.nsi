@@ -28,7 +28,9 @@ ManifestDPIAware true
 
 Name "llama.rexx ${LLAMA_BACKEND} ${LLAMA_VERSION}"
 OutFile "${LLAMA_OUT}"
-InstallDir "$PROGRAMFILES64\CREXX"
+; Leave empty until .onInit so a command-line /D= override is distinguishable.
+; NSIS removes /D= from $CMDLINE before callbacks run.
+InstallDir ""
 BrandingText "cREXX optional native inference"
 Var RegistrationId
 Var InstallerMutex
@@ -49,16 +51,22 @@ Var ActivateArgument
 !insertmacro MUI_LANGUAGE "English"
 
 !macro InitInstaller
+  FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+  FileWrite $2 "Initialize: $EXEPATH | Core: $INSTDIR$\r$\n"
+  FileClose $2
   ${IfNot} ${RunningX64}
     MessageBox MB_ICONSTOP "This plugin requires 64-bit Windows." /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
   SetRegView 64
-  System::Call 'kernel32::CreateMutexW(p 0, i 0, w "Global\CREXX-llama-setup") p.r1'
-  System::Call 'kernel32::GetLastError() i.r0'
+  System::Call 'kernel32::CreateMutexW(p 0, i 0, w "Global\CREXX-llama-setup") p.r1 ?e'
+  Pop $0
   StrCpy $InstallerMutex $1
   ${If} $0 == 183
+    FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+    FileWrite $2 "Another installer owns the mutex.$\r$\n"
+    FileClose $2
     MessageBox MB_ICONSTOP "Another llama.rexx installer is running." /SD IDOK
     SetErrorLevel 1
     Abort
@@ -71,14 +79,12 @@ Var ActivateArgument
 
 Function .onInit
   !insertmacro InitInstaller
-  ; InstallDirRegKey ignores SetRegView. Read the core's 64-bit registration
-  ; explicitly, while preserving an explicit /D= destination.
-  ClearErrors
-  ${GetOptions} "$CMDLINE" "/D=" $2
-  ${If} ${Errors}
-    ReadRegStr $2 HKLM "Software\CREXX\CREXX" "InstallDir"
-    ${If} $2 != ""
-      StrCpy $INSTDIR $2
+  ; InstallDirRegKey ignores SetRegView. A /D= override has already populated
+  ; $INSTDIR and been removed from $CMDLINE by NSIS itself.
+  ${If} $INSTDIR == ""
+    ReadRegStr $INSTDIR HKLM "Software\CREXX\CREXX" "InstallDir"
+    ${If} $INSTDIR == ""
+      StrCpy $INSTDIR "$PROGRAMFILES64\CREXX"
     ${EndIf}
   ${EndIf}
 FunctionEnd
@@ -94,10 +100,10 @@ FunctionEnd
   Pop $0
   Pop $1
   DetailPrint "$1"
+  FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+  FileWrite $2 "Action: ${ACTION}$\r$\nCore: $INSTDIR$\r$\nExit: $0$\r$\n$1$\r$\n"
+  FileClose $2
   ${If} $0 != 0
-    FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" w
-    FileWrite $2 "Action: ${ACTION}$\r$\nCore: $INSTDIR$\r$\nExit: $0$\r$\n$1$\r$\n"
-    FileClose $2
     MessageBox MB_ICONSTOP "llama.rexx could not complete ${ACTION}:$\r$\n$1$\r$\nDetails: $TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" /SD IDOK
     SetErrorLevel 1
     Abort

@@ -29,11 +29,10 @@ def setup(executable, destination=None):
     try:
         run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
             '$p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode', env=env)
-    except subprocess.CalledProcessError:
+    finally:
         for log in Path(tempfile.gettempdir()).glob('crexx-llama-*-installer.log'):
             print(log.read_text(errors='replace'), flush=True)
             shutil.copy2(log, Path(os.environ['RUNNER_TEMP']) / 'proof' / log.name)
-        raise
 
 
 def wait_removed(path):
@@ -41,6 +40,7 @@ def wait_removed(path):
     while path.exists() and time.monotonic() < deadline:
         time.sleep(.2)
     if path.exists():
+        print('Remaining files:', *(str(p.relative_to(path)) for p in path.rglob('*')), sep='\n', flush=True)
         raise RuntimeError('Uninstaller did not remove ' + str(path))
 
 
