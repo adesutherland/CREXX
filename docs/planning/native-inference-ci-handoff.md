@@ -35,6 +35,10 @@ stamp and hold it through rename. This is source-grounded risk, not reproduced
 attribution of the failed run. Silent output/stamp-failure branches also need
 operation diagnostics. F18-AC-01/F18-02 pass; F18-AC-02/F18-03 remain open for
 an explicitly synchronized Windows reproducer and evidence-led repair.
+Related open issue [#701](https://github.com/adesutherland/CREXX/issues/701)
+already records POSIX cross-worker pipe inheritance. Its observed `rxspawn.c`
+blob is identical to the frozen candidate. Coordinate launcher ownership work
+while retaining separate platform reproducers; Windows attribution is unproved.
 
 **Next:** review the six plugin jobs and both sanitizer results, and follow
 CI-F18's bounded Windows reproduction plan without weakening the two-worker

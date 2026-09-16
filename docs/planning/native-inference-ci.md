@@ -857,3 +857,33 @@ The source references above are against the unchanged `f10e70ee5` candidate.
 
 Review evidence is `local/f18-race-review/`; the successful retry log/artifact
 is retained alongside attempt 1 under `remote/f10e70ee5/`.
+
+#### Existing related issue — #701
+
+Adrian's issue review identifies open
+[#701: POSIX child launches inherit unrelated pipe ends, delaying exit completion until sibling workers close](https://github.com/adesutherland/CREXX/issues/701),
+filed 15 September. It records actual macOS cross-worker pipe descriptors and
+delayed child completion in cREXX-RAG. Its generic-launcher diagnosis is closely
+related to CI-F18: an unrelated child retains a resource owned by another
+worker. On POSIX the documented mechanism is an inheritable child pipe end
+surviving exec; on Windows the reviewed risk is incomplete handle allowlisting
+and the file-open/clear-inheritance window. The symptoms and platform mechanisms
+must remain distinct until reproduced; #701 does not prove the Windows stamp
+rename explanation.
+
+The entire `interpreter/rxspawn.c` blob in #701's observed revision
+`037e7939bc29eb91b29ed41e9b1b8debdef6353d` is identical to this candidate:
+Git blob `c88ab671291d5ddf8f5a7d276c553a44babba3b0`. Thus the reported POSIX
+source path remains present, rather than being a historical repair already
+absorbed here. The issue is open with no comments at this review.
+
+Coordinate F18-03 with #701's generic launcher ownership work, retaining
+separate deterministic Windows and POSIX controls. Do not create a duplicate
+public issue or mark either platform repaired from the unchanged green retry.
+Closed #695 (repeated observation during task cleanup), #697 (Darwin exit-time
+EPERM) and #698 (timeout-only sanitizer replay) describe different mechanisms.
+Older #646/#669 stream-inheritance fixes must remain intact: unredirected
+standard streams still need normal prompt/output behavior.
+
+The read-only issue snapshot and source identity comparison are retained in
+`local/f18-race-review/`. No GitHub issue/comment was changed by this review.
