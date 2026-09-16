@@ -222,6 +222,30 @@ model, and enters Release 1 only through a beta quality gate.
   are separate possible changes; none is selected here. Existing import
   discovery, packaged-library autoload and incremental project builds are
   completed capabilities, recorded below.
+- **LLM-API-01 — Common LLM provider interface** (requested 2026-09-16;
+  roadmap item, not implemented or assigned to a release): applications should
+  select hosted HTTP, local-server or in-process `llama.rexx` inference during
+  setup and reuse the same processing surface for supported capabilities.
+  Today only Ollama implements `.llm`; OpenAI, Anthropic and Gemini expose
+  similar methods as separate classes, while `llama.rexx` has its own typed
+  session/request API. The current `.openai` client targets the hosted
+  Responses endpoint, not an arbitrary OpenAI-compatible local server.
+  Design a transport-neutral generation contract and separate embedding
+  capability, with consistent results, errors, limits, finish reasons and
+  capability discovery. Preserve explicit preparation, repeated/batch requests,
+  incremental processing/cancellation and shared native weights. Keep HTTP/JSON
+  diagnostics on provider-specific surfaces and preserve existing callers.
+  Reuse the native C factories/owners; HTTP-only applications must not acquire
+  a mandatory llama dependency. Interchangeability covers supported operations,
+  not identical model output or unsupported feature emulation.
+  **Exit evidence:** one common consumer/conformance suite switches providers;
+  existing HTTP clients remain compatible; native requests retain one prepared
+  model across repeated/batch work; embedding results preserve packed values
+  and model/preprocessing identity so incompatible indexes are not silently
+  reused; optional install and installed/native consumers pass their checks.
+  API/architecture selection and a numbered implementation plan with vision,
+  acceptance criteria and steps require review before implementation. This item
+  does not expand or block the current native-inference release qualification.
 
 ### Evidence-gated performance follow-ons
 

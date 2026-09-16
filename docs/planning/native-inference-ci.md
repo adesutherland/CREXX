@@ -18,6 +18,10 @@ retries use the named candidate branches in the live handoff.
    the public provider is checked for load, discovery, native factories, model
    rejection and cleanup. Public profile/hash checks are unchanged. Retained
    real BGE/Smol tests cover their successful full provider inference paths.
+   Vulkan is the general Windows/Linux plugin download; CUDA remains an
+   optional download built and tested in every full release build, including
+   beta builds, or by explicit manual GitHub Actions request. Ordinary pushes,
+   pull requests and development snapshots do not select CUDA (CI-D03).
 3. **CI-OUT-03:** the remote candidate can be rebuilt, inspected and cancelled
    independently of `develop`. Artifacts/logs identify the exact commit. Wider
    core regression and supported sanitizer workflows qualify that candidate;
@@ -76,6 +80,15 @@ retries use the named candidate branches in the live handoff.
    eviction may require a cold build; it must never select a different engine,
    remove GPU architectures or require recipients to install a CUDA SDK.
 
+10. [ ] **CI-AC-10:** workflow selection implements CI-D03: every full release
+    build, including beta, requires both CUDA plugin packages from the release
+    candidate's exact core/source identity and successful focused package smoke.
+    Outside full release builds, CUDA runs only when explicitly selected through
+    manual GitHub Actions dispatch. Retain selection controls for stable release,
+    beta release, ordinary push/PR/development snapshot (including CUDA-related
+    changes), and manual CUDA selection. An omitted lane is reported as untested,
+    never passed; a partial run cannot publish a full release.
+
 ## Numbered implementation steps
 
 1. [x] **CI-01 — Freeze the candidate:** checkpoint accepted STEP-05/06/07 work
@@ -98,8 +111,36 @@ retries use the named candidate branches in the live handoff.
    update this checklist and parent criteria, and make the green candidate
    reviewable before promotion. Serves CI-AC-08; depends on CI-01–04. Creating
    the candidate is not permission to publish an unqualified snapshot.
+6. [ ] **CI-06 — Apply the approved CUDA cadence:** implement and document the
+   CI-D03 release-build/manual-only selection after the current candidate qualification,
+   retaining mandatory complete-release gates and cache identity. Add focused
+   workflow-selection controls and verify the full-release collector still
+   requires both CUDA packages. Serves CI-AC-03/07/08/09/10; policy is approved,
+   but no workflow implementation is included in the decision-record update.
 
 ## Design boundaries
+
+- **CI-D03, approved and clarified 16 September 2026 — optional CUDA download,
+  release-build/manual-only CUDA testing:** Adrian selected options 1 and 3,
+  then explicitly limited CUDA execution to every full release build (including
+  beta builds) or an explicitly selected manual GitHub Actions request. Keep
+  Vulkan as the general Windows/Linux choice and CUDA as a separate optional
+  NVIDIA plugin download. Full release builds build, package and run focused
+  smoke on Linux and Windows CUDA for convenience and QA assurance, using the
+  same release identity and qualified core as the other plugin variants.
+  Here "smoke" means bounded package/load/tiny-fixture checks within that CUDA
+  build; it is not a separate routine trigger, large-model test or benchmark.
+  Valid compiler-cache reuse remains encouraged; a full release build need not
+  compile the engine cold. Ordinary pushes, pull requests and development
+  snapshots do not automatically build or test CUDA, even after CUDA-related
+  input changes. Such changes can motivate a manual run; the earlier automatic
+  relevant-change proposal is superseded. Retain all six full-release plugin variants, their CPU
+  fallback, notices/dependencies and separate real-device qualification gates.
+  Do not move SDK installation onto recipients. This amends routine CI cadence,
+  not the promised full-release payload or the current frozen qualification
+  run. Workflow selection is still pending CI-06/CI-AC-10; existing default
+  dispatch selects all lanes. A skipped CUDA run cannot qualify or publish a
+  full release.
 
 - **CI-D02, approved 16 September 2026:** ship the Intel Mac plugin CPU-only.
   Intel Metal is unsupported for this delivery; omit its backend at build time.

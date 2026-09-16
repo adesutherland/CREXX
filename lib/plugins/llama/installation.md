@@ -41,6 +41,18 @@ moving or unpacking an installation.
 | `macos-x86_64-cpu` | CPU only |
 | `linux-x64-cuda`, `windows-x64-cuda` | CPU and NVIDIA CUDA |
 
+Choose Vulkan as the general Windows/Linux option, or the separate CUDA plugin
+for NVIDIA. The approved full-release policy includes prebuilt CUDA packages
+for both platforms, even though users need only their chosen variant. Every
+full release build, including beta, must build, package and smoke-test those
+CUDA variants; valid compiler-cache reuse is allowed. Otherwise CUDA builds and
+tests run only on explicit manual GitHub Actions requests. Ordinary push, PR and
+development-snapshot CI does not select CUDA. Smoke means small package/load/
+fixture checks within the selected CUDA build, not a separate routine test job.
+That CI selection change is planned, not yet implemented (CI-D03 in the
+[pipeline plan](../../../docs/planning/native-inference-ci.md)). This policy does
+not claim that the candidate packages have already been released.
+
 CUDA and Vulkan plugins use the same core for their platform. Windows uses
 MSVC for the core and both plugin variants, with `rxvm` selecting `rxbvm`.
 MinGW remains supported for source builds and has a separate core QA gate for

@@ -1028,6 +1028,15 @@ Metal on Apple, and leaves CUDA/Vulkan as separate SDK-dependent choices. The
 approved release design first builds four llama-free core archives, then builds
 only the optional provider/dependency/helper targets and tests them against
 those exact core artifacts. Windows has one MSVC/`rxbvm` base for Vulkan or CUDA.
+CI-D03 makes Vulkan the general Windows/Linux download and CUDA an optional
+separate download that remains mandatory to build/package/smoke for every full
+release build, including beta. Otherwise CUDA runs only on explicit manual
+GitHub Actions requests; ordinary pushes, PRs and development snapshots must
+not automatically select it, even for relevant input changes. Smoke means
+bounded checks inside that selected CUDA build, not a separate routine trigger.
+Valid compiler-cache reuse is allowed. Implementing this cadence remains open
+as CI-06/CI-AC-10. Do not interpret optional installation
+or a skipped routine lane as permission to omit full-release CUDA qualification.
 ARM Mac ships CPU/Metal; Intel Mac ships CPU only (`CREXX_LLAMA_METAL=OFF`).
 CI-D02 explicitly excludes Intel Metal from this delivery after repeated
 compiler-service startup stalls. Do not restore that backend or claim its

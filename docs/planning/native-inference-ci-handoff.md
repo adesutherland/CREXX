@@ -7,6 +7,17 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**New approved release policy (CI-D03):** Vulkan is the general Windows/Linux
+download; CUDA remains an optional separate plugin. Every full release build,
+including beta, must build/package/smoke both CUDA variants against its exact
+qualified core, with valid compiler-cache reuse. Otherwise CUDA runs only on an
+explicit manual GitHub Actions request. Ordinary pushes/PRs/development snapshots
+do not select CUDA, even for relevant input changes. Smoke describes the bounded
+checks inside the selected CUDA build, not another trigger. This supersedes the
+earlier automatic relevant-change proposal and is recorded in the authoritative
+plan and human/agent guides; workflow selection is not yet changed. CI-06 and
+CI-AC-10 remain open. Preserve the current candidate's complete qualification.
+
 **Frozen final candidate:** `f10e70ee5f12ce49cc5088abc867748522d1d19c` remains
 on `origin/temp/llama-release-combined`. No product/test input has changed.
 
