@@ -29,7 +29,6 @@ ManifestDPIAware true
 Name "llama.rexx ${LLAMA_BACKEND} ${LLAMA_VERSION}"
 OutFile "${LLAMA_OUT}"
 InstallDir "$PROGRAMFILES64\CREXX"
-InstallDirRegKey HKLM "Software\CREXX\CREXX" "InstallDir"
 BrandingText "cREXX optional native inference"
 Var RegistrationId
 Var InstallerMutex
@@ -72,6 +71,16 @@ Var ActivateArgument
 
 Function .onInit
   !insertmacro InitInstaller
+  ; InstallDirRegKey ignores SetRegView. Read the core's 64-bit registration
+  ; explicitly, while preserving an explicit /D= destination.
+  ClearErrors
+  ${GetOptions} "$CMDLINE" "/D=" $2
+  ${If} ${Errors}
+    ReadRegStr $2 HKLM "Software\CREXX\CREXX" "InstallDir"
+    ${If} $2 != ""
+      StrCpy $INSTDIR $2
+    ${EndIf}
+  ${EndIf}
 FunctionEnd
 Function un.onInit
   !insertmacro InitInstaller
@@ -86,7 +95,10 @@ FunctionEnd
   Pop $1
   DetailPrint "$1"
   ${If} $0 != 0
-    MessageBox MB_ICONSTOP "llama.rexx could not complete ${ACTION}:$\r$\n$1" /SD IDOK
+    FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" w
+    FileWrite $2 "Action: ${ACTION}$\r$\nCore: $INSTDIR$\r$\nExit: $0$\r$\n$1$\r$\n"
+    FileClose $2
+    MessageBox MB_ICONSTOP "llama.rexx could not complete ${ACTION}:$\r$\n$1$\r$\nDetails: $TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}

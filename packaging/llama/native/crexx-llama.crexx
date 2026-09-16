@@ -105,7 +105,9 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
     payload = stage || '/payload'
   end
   else do
-    info = metadata(safe(root, '.llama-backends/' || backend || '/installer.json'))
+    stored_metadata = safe(root, '.llama-backends/' || backend || '/installer.json')
+    if rxfs..pathkind(stored_metadata) <> 1 then call fail 'Backend is not installed: ' || backend
+    info = metadata(stored_metadata)
     if jsonget(info, 'backend') <> backend then call fail 'Stored backend identity mismatch.'
     payload = stores || '/' || backend || '/payload'
   end
@@ -289,6 +291,7 @@ safe: procedure = .string
 readjson: procedure = .string
   arg path = .string
   call safe_absolute path
+  if rxfs..pathkind(path) <> 1 then call fail 'Missing metadata file: ' || path
   text = readbinary(path) as .string
   if \jsonvalid(text) | jsontype(text, '') <> 'object' then call fail 'Invalid JSON metadata: ' || path
   return text
@@ -402,11 +405,12 @@ publish: procedure = .void expose published
   call safe_absolute target
   call ensure_directory parent(target)
   if rxfs..pathkind(target) <> 0 then call fail 'Publication target exists: ' || target
+  /* Track before I/O: a failed OS copy may leave a partial destination. */
+  call arrayappend published, target
   status = -1
   if hardlink then status = fileop('link', source, target)
   if status <> 0 then status = fileop('copy', source, target)
   call must status, 'publish ' || target
-  call arrayappend published, target
   return
 
 puttext: procedure = .void expose published

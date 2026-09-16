@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import winreg
 import zipfile
@@ -25,8 +26,14 @@ def setup(executable, destination=None):
     # finishes. This is runner orchestration, never shipped switcher logic.
     arguments = '/S' + (' /D=' + str(destination) if destination else '')
     env = dict(os.environ, LLAMA_QA_SETUP=str(executable), LLAMA_QA_SETUP_ARGS=arguments)
-    run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
-        '$p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode', env=env)
+    try:
+        run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
+            '$p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode', env=env)
+    except subprocess.CalledProcessError:
+        for log in Path(tempfile.gettempdir()).glob('crexx-llama-*-installer.log'):
+            print(log.read_text(errors='replace'), flush=True)
+            shutil.copy2(log, Path(os.environ['RUNNER_TEMP']) / 'proof' / log.name)
+        raise
 
 
 def wait_removed(path):

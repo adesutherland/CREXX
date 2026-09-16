@@ -120,7 +120,7 @@ class NativeManagerTests(unittest.TestCase):
 
     def test_unknown_backend_rejected(self):
         self.run_tool('install', 'vulkan')
-        self.run_tool('use', 'cuda', success=False, installed=True)
+        self.assertIn('Backend is not installed: cuda', self.run_tool('use', 'cuda', success=False, installed=True))
         self.assertIn('Active backend: vulkan', self.run_tool('status', installed=True))
 
     def test_tampered_store_rejected(self):
