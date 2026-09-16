@@ -66,8 +66,8 @@ Var ActivateArgument
   ${EndIf}
   InitPluginsDir
   SetOutPath "$PLUGINSDIR"
-  File /oname=installer.json "${LLAMA_STAGE}/installer.json"
-  File /r "${LLAMA_STAGE}/tool"
+  File /oname=installer.json "${LLAMA_STAGE}\installer.json"
+  File /r "${LLAMA_STAGE}\tool"
 !macroend
 
 Function .onInit
@@ -100,7 +100,7 @@ Section "Install ${LLAMA_BACKEND} backend (required)" SecInstall
   SectionIn RO
   Call ValidateCore
   SetOutPath "$PLUGINSDIR"
-  File /r "${LLAMA_STAGE}/payload"
+  File /r "${LLAMA_STAGE}\payload"
   Call InstallPlugin
 SectionEnd
 Section /o "Make ${LLAMA_BACKEND} the active backend" SecActivate

@@ -138,8 +138,16 @@ def main():
                 raise ValueError('Manager/core identity mismatch')
             if 'bin/crexx-llama.exe' not in manager['files']:
                 raise ValueError('Windows native cREXX manager is missing')
+            bootstrap = manager.get('bootstrap_files', {})
+            core_files = json.loads((args.core / 'core-package.json').read_text())['files']
+            for name, expected in bootstrap.items():
+                local_name(name)
+                target = args.manager / name
+                if (name in manager['files'] or core_files.get(name) != expected or
+                        not target.resolve().is_relative_to(args.manager.resolve()) or digest(target) != expected):
+                    raise ValueError('Manager bootstrap does not match core: ' + name)
             actual = {p.relative_to(args.manager).as_posix() for p in args.manager.rglob('*') if p.is_file()}
-            if actual != set(manager['files']) | {'manager.json'}:
+            if actual != set(manager['files']) | set(bootstrap) | {'manager.json'}:
                 raise ValueError('Unlisted manager files')
             shutil.copytree(args.manager, work / 'tool')
         if not args.unsigned_qa and not args.prepare_only:

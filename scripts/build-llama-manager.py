@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -86,7 +87,16 @@ def build(core, output):
         for name in ('rxfs.c', 'rxfs_ops.h'):
             shutil.copy2(ROOT / 'lib/plugins/fs' / name, source_dir / name)
         files = {p.relative_to(output).as_posix(): digest(p) for p in sorted(output.rglob('*')) if p.is_file()}
-        metadata = dict(schema=1, core_commit=commit, files=files)
+        bootstrap = {}
+        if windows:
+            # NSIS runs the manager from its temporary directory before it can
+            # validate the core. Carry the core's app-local CRT there too. These
+            # bytes are already core-owned and are never installed a second time.
+            for name, expected in manifest['files'].items():
+                if re.fullmatch(r'bin/(?:vcruntime|msvcp|vccorlib|concrt)[^/]*\.dll', name, re.I):
+                    shutil.copy2(core / name, output / name)
+                    bootstrap[name] = expected
+        metadata = dict(schema=1, core_commit=commit, files=files, bootstrap_files=bootstrap)
         (output / 'manager.json').write_text(json.dumps(metadata, indent=2) + '\n')
         print('Built cREXX native manager: ' + str(output))
 
