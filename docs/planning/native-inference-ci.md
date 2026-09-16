@@ -1085,14 +1085,14 @@ Stapling supplies local notarization evidence; it does not promise that macOS
 will never contact Apple or disable its security policies. Do not remove user
 quarantine attributes or bypass Gatekeeper to claim success.
 
-1. [ ] **INST-AC-01:** Windows and Mac installers discover/select a matching
+1. [x] **INST-AC-01:** Windows and Mac installers discover/select a matching
    installed core; absent, ambiguous, altered or incompatible cores fail before
    copying. Retain positive and negative controls, including paths with spaces.
-2. [ ] **INST-AC-02:** install/reinstall/remove affects only declared plugin
+2. [x] **INST-AC-02:** install/reinstall/remove affects only declared plugin
    files, preserves core hashes/VM selection, PATH and models, and detects mixed
    backends. Copy failures preserve/recover the previous installation. Retain
    focused lifecycle and failure controls; document core upgrade ordering.
-3. [ ] **INST-AC-03:** actual installer outputs contain complete dependencies,
+3. [x] **INST-AC-03:** actual installer outputs contain complete dependencies,
    notices and final matching manifests, with no models/fixture/SDK. Installed
    provider/toolchain smoke succeeds using retained candidate binaries on Mac
    and Windows; no core or CUDA rebuild is required for these packaging tests.
@@ -1100,11 +1100,11 @@ quarantine attributes or bypass Gatekeeper to claim success.
    stapled; Windows installers/payload are signed through the maintained signing
    path. Signature/hash and offline Mac evidence are retained separately from
    unsigned lifecycle tests; unavailable credentials leave that proof open.
-5. [ ] **INST-01:** implement package validation, discovery and safe plugin
+5. [x] **INST-01:** implement package validation, discovery and safe plugin
    lifecycle helpers and native installer wrappers (INST-AC-01/02).
 6. [ ] **INST-02:** connect retained-artifact packaging/QA and release signing
    paths; run the focused controls on both platforms (INST-AC-03/04).
-7. [ ] **INST-03:** update user/agent guides and handoff with installation,
+7. [x] **INST-03:** update user/agent guides and handoff with installation,
    removal, core-upgrade and Gatekeeper behavior, then reconcile evidence and
    open delivery gates without claiming broader product closure (all INST ACs).
 
@@ -1161,21 +1161,32 @@ ordinary sources and requires `--args` for program arguments; it has no automati
 source, but the `crexxsaa` executable is a cache-maintenance tool, not a general
 script runner. Do not introduce a new compilation cache for this small utility.
 
-8. [ ] **INST-AC-05:** the delivered switcher is implemented in cREXX and
+8. [x] **INST-AC-05:** the delivered switcher is implemented in cREXX and
    installed identically by either backend installer; installing/removing one
    variant preserves the shared tool while the other remains. Retain source,
    compiled-tool identity and native install/switch/remove proof with no Python,
    SDK or first-run compilation requirement. An installed tool must work even
    when no inference backend is active; it must not import `llama` itself.
-9. [ ] **INST-04:** replace the draft Windows shell switcher with the cREXX
+9. [x] **INST-04:** replace the draft Windows shell switcher with the cREXX
    management program, reuse the existing compile/link/native-packaging path,
    and qualify the public command plus safe switching controls. Use the approved
    standalone native command. Serves INST-AC-02/03/05; preserve
    the completed Mac lifecycle evidence and separate signing/offline gates.
 
-The uncommitted Windows installer/helper draft has not passed Windows native
-QA. Its current PowerShell switching implementation is not the accepted final
-delivery; do not package or publish it as satisfying INST-AC-05.
+The PowerShell manager is removed. The native Rexx command and standard `rxfs`
+additions are committed; actual unsigned Windows installer lifecycle passes in
+the focused retained-artifact runner recorded below. Local native-manager
+controls pass 14/14. The `rxfs` contract passes all four VM/optimization cells
+in ordinary Debug and maintained Apple ASan; Apple LeakSanitizer is unavailable.
+Retained inputs and logs are under
+`docs/qa/native-inference-ci/local/native-manager/`.
+Windows native install/provider/reinstall succeeded, but removal exposed a
+reinstall error: the manager ignored the returned `jsonmembers` count on a reused
+array and retired stale entries. The application fix at `182516b4a` has a
+failing-before/passing-after regression and complete payload lifecycle proof
+locally. Focused manual Windows run `35119980116` passes both actual Vulkan and
+CUDA installers using retained binaries. See the pipeline evidence ledger and
+closure below. INST-04 is complete; signing/release acceptance remains open.
 
 INST-04 implementation sequence, amended at Adrian's request to fill gaps in
 the main libraries: (1) implement CLI, JSON/hash verification, ownership and
@@ -1187,8 +1198,7 @@ Ordinary copies share the guard; explicit close releases it for all aliases;
 last-reference/VM teardown releases any remaining OS handle. Locks stay VM-local.
 The filesystem provider owns no backend-selection/installation policy and
 introduces no runtime ABI. (3) compile/package this utility with the expanded
-static `rxfs` against the retained core runtime
-against the retained core SDK and replace every Windows installer call to the
+static `rxfs` against the retained core runtime and SDK, replacing every Windows installer call to the
 PowerShell helper; (4) retain focused mutation/failure controls and actual
 Windows native installer/provider lifecycle evidence. The packaging toolchain
 may use Python/PowerShell on runners; the delivered switcher must not invoke
@@ -1216,6 +1226,28 @@ writable directory. Evidence and checksums are retained under
 `docs/qa/native-inference-ci/remote/be8fbf4e5-installers/`; product binaries are
 unchanged retained `f10e70ee5` artifacts. No product/engine/CUDA build, model
 download or sanitizer campaign was run. The Mac portions of INST-AC-01–03 now
-have native runner proof; whole criteria remain unchecked for Windows and the
-separate signed/offline checks. INST-AC-04 remains open. The code and evidence
+have native runner proof; Windows was still open at that checkpoint and is
+qualified below. INST-AC-04 remains open. The code and evidence
 are on the candidate branches; no develop promotion or release is authorized.
+
+**Windows native Rexx lifecycle qualified:** focused manual run
+[35119980116](https://github.com/adesutherland/CREXX/actions/runs/35119980116)
+at `182516b4a` passes the native rxfs contract and 14 manager controls, plus
+actual Vulkan/CUDA installer coexistence, preserved active choice, SDK-free
+native command switching, installed four-tool public-provider smoke for each
+variant, active reinstall with all declared hashes intact, independent backend
+removal and shared-tool removal only after the last backend. Core/model/environment
+preservation, core execution afterward, and backend registration cleanup on
+core uninstall also pass. Evidence and checksums are under
+`docs/qa/native-inference-ci/remote/182516b4a-installers/`. The run identifies the
+Windows compiler/linker and source revision; local compiled-tool hashes and
+before/after controls are retained under `local/native-manager/`. Future workflow
+artifacts additionally retain the generated Windows manager manifest.
+
+This closes INST-01/03/04 and the unsigned functional INST-AC-01/02/03/05.
+INST-02 and INST-AC-04 remain open for the release signing/publishing path and
+real offline Gatekeeper proof. CI-06/F19 and parent hardware/model qualification
+remain separate open work. Retained product binaries are still `f10e70ee5`;
+the source additions enter the next ordinary core build through standard rxfs.
+No engine/VM rebuild, large-model download, broad sanitizer repeat, develop
+promotion or release publication was performed for this closure.

@@ -1,0 +1,30 @@
+RUN: C:\Program Files (x86)/NSIS/makensis.exe /V2 /DCREXX_PAYLOAD_DIR=D:\a\_temp\core\CREXX-windows-x64 /DCREXX_OUTFILE=D:\a\_temp\core-qa-setup.exe D:\a\CREXX\CREXX\packaging\windows\crexx.nsi
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\package-llama-installer.py --core D:\a\_temp\core\CREXX-windows-x64 --plugin D:\a\_temp\plugin-vulkan\CREXX-windows-x64 --manager D:\a\_temp\manager --unsigned-qa --makensis C:\Program Files (x86)/NSIS/makensis.exe --output D:\a\_temp\llama-vulkan-qa-setup.exe
+Packaged optional plugin installer: D:\a\_temp\llama-vulkan-qa-setup.exe
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+cREXX: D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+Installed: vulkan (f10e70ee5f12ce49cc5088abc867748522d1d19c)
+
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+Already active: vulkan
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\test-llama-installed.py --prefix D:\a\_temp\cREXX installed with spaces --logs D:\a\_temp\proof\consumer-vulkan
+PASS: installed compile
+PASS: installed assemble
+PASS: installed link
+PASS: installed run
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+Already active: vulkan
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Traceback (most recent call last):
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 145, in <module>
+    main()
+    ~~~~^^
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 114, in main
+    wait_removed(store)
+    ~~~~~~~~~~~~^^^^^^^
+  File "D:\a\CREXX\CREXX\scripts\test-llama-windows-installer.py", line 44, in wait_removed
+    raise RuntimeError('Uninstaller did not remove ' + str(path))
+RuntimeError: Uninstaller did not remove D:\a\_temp\cREXX installed with spaces\.llama-backends\vulkan

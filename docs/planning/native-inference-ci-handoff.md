@@ -27,12 +27,23 @@ belong in standard `rxfs`, not a private plugin. New reusable operations are
 `pathkind`, `abspath`, non-overwriting `copy`/`hardlink`/`move`, and VM-owned
 `fileguard(path, mode)` with `held`/`status`/`close`. INST-AC-05 / INST-04 retain
 the cREXX tool, shared ownership and no-first-run-compilation requirements.
-Thirteen local native-manager lifecycle/failure controls and the four normal
-Debug rxfs VM/optimization cells pass; focused ASan and actual Windows native
-installer QA are in progress. Do not assume the ordinary
-driver uses the hosted `crexxsaa` source cache; it currently does not. Next work
-is focused Windows retained-artifact lifecycle QA, not a VM/CUDA rebuild or a
-repeat of unchanged Mac installer tests. `build-llama-manager.py` builds only
+Fourteen local native-manager lifecycle/failure controls and all four rxfs
+VM/optimization cells pass in normal Debug and maintained Apple ASan (Apple
+LeakSanitizer unavailable). Actual unsigned Windows installer QA passes.
+Local logs/input identities are under `local/native-manager/`. Reinstall's stale
+JSON member array is repaired at `182516b4a`; both the small permanent regression
+and complete retained payload pass locally. Manual Windows run `35119980116`
+passes both actual Vulkan and CUDA installer coexistence, switching, installed
+provider smoke, active reinstall, independent removal, shared-tool lifecycle,
+core/model/environment preservation and core uninstall registration cleanup.
+It also passes the native rxfs contract and 14 controls. Evidence is under
+`remote/182516b4a-installers/`; no engine was rebuilt. Earlier `361f67a52`
+diagnostics prove this was a manager error, not a library or Windows-only error.
+INST-01/03/04 and functional INST-AC-01/02/03/05 are checked. INST-02/AC-04,
+CI-06/F19 signing/release integration, offline Gatekeeper and parent real-device/
+model gates remain open. Do not repeat unchanged native lifecycle tests for the
+documentation/evidence closeout. Do not assume the ordinary driver uses the
+hosted `crexxsaa` source cache; it currently does not. `build-llama-manager.py` builds only
 the small current rxfs/tool and links retained core runtime archives; it must
 not alter the retained core payload. Reuse one manager tree for both variants.
 

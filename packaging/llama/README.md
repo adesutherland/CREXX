@@ -4,8 +4,9 @@ The authoritative scope and outstanding qualification are CI-D04 / INST-AC-01–
 in `docs/planning/native-inference-ci.md`. Mac lifecycle is implemented. Windows
 coexistence is approved: retain both complete variants with one explicitly
 active. The Windows installer uses the native `crexx-llama` program authored in
-cREXX; the PowerShell manager has been removed. Windows native QA remains a
-separate gate until its focused runner finishes.
+cREXX; the PowerShell manager has been removed. Focused Windows run
+`35119980116` passes actual Vulkan/CUDA coexistence, switching, provider smoke,
+reinstall and independent removal. Signing remains a separate gate.
 These are separate
 add-ons to a matching core. Do not change core binaries or download models.
 
@@ -26,7 +27,7 @@ of `--unsigned-qa`. Native code must already have valid Developer ID signatures;
 an installer signature cannot legitimize unsigned payloads. The existing Mac
 release job packages the verified signed inputs, then notarizes, staples and
 assesses the final `.pkg` before adding it to the release assets. Portable ZIPs
-remain available. Windows' eventual wrapper uses the maintained signing helper
+remain available. The Windows wrapper uses the maintained signing helper
 contract for NSIS helper DLLs, embedded uninstaller and final executable.
 
 Either Windows backend installer must supply the same compiled cREXX switcher
@@ -65,10 +66,14 @@ copy rolls back; an abrupt power loss can leave `.llama-install-lock` and a
 files before clearing a stale lock. Never run two installers against one core.
 
 The manual `llama-installer-qa.yml` (also triggered on its dedicated
-`temp/llama-installer-qa` branch) reuses a successful Build run's artifacts and
-does not compile cREXX, llama.cpp or CUDA. It exercises native Mac package install,
-reinstall, provider smoke and removal on disposable ARM/Intel runners. Run
-`35110318683` passes these checks on both platforms. Unsigned
+`temp/llama-installer-qa` branch) reuses a successful Build run's artifacts.
+Windows builds only the small `rxfs` provider and native Rexx manager against
+the retained core; no VM, llama.cpp or CUDA build is involved. Dedicated branch
+pushes select Windows; manual dispatch can select Mac, Windows or both, and
+optionally include the retained Windows CUDA archive. It exercises native
+installation, reinstall, provider smoke and removal on disposable runners. Run
+`35110318683` passes these checks on both Mac platforms; `35119980116` passes
+the Windows lifecycle with both actual backends and 14 manager controls. Unsigned
 lifecycle proof does not close signing or offline Gatekeeper acceptance. Real
 offline first-install/run proof must use the final signed/stapled package on a
 fresh Mac; do not simulate success by clearing quarantine or disabling Gatekeeper.

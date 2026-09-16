@@ -1,0 +1,18 @@
+test_changed_core_and_payload_rejected (test_llama_manager.NativeManagerTests.test_changed_core_and_payload_rejected) ... ok
+test_coexist_switch_reinstall_and_independent_removal (test_llama_manager.NativeManagerTests.test_coexist_switch_reinstall_and_independent_removal) ... ok
+test_concurrent_mutation_refused (test_llama_manager.NativeManagerTests.test_concurrent_mutation_refused) ... ok
+test_failed_publication_rolls_back (test_llama_manager.NativeManagerTests.test_failed_publication_rolls_back) ... ok
+test_in_use_files_refuse_switch (test_llama_manager.NativeManagerTests.test_in_use_files_refuse_switch) ... ok
+test_installer_activation_option (test_llama_manager.NativeManagerTests.test_installer_activation_option) ... ok
+test_interrupted_transaction_refused (test_llama_manager.NativeManagerTests.test_interrupted_transaction_refused) ... ok
+test_removal_protects_upgraded_core_ownership (test_llama_manager.NativeManagerTests.test_removal_protects_upgraded_core_ownership) ... ok
+test_removing_active_does_not_select_other (test_llama_manager.NativeManagerTests.test_removing_active_does_not_select_other) ... ok
+test_tampered_store_rejected (test_llama_manager.NativeManagerTests.test_tampered_store_rejected) ... ok
+test_unknown_backend_rejected (test_llama_manager.NativeManagerTests.test_unknown_backend_rejected) ... ok
+test_unknown_management_schema_refused (test_llama_manager.NativeManagerTests.test_unknown_management_schema_refused) ... ok
+test_unowned_file_preserved (test_llama_manager.NativeManagerTests.test_unowned_file_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 4.238s
+
+OK

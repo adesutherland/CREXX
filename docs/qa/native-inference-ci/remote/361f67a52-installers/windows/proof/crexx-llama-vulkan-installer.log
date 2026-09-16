@@ -1,0 +1,6 @@
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 1
+ERROR: Missing package file: D:/a/_temp/cREXX installed with spaces/bin/crexx-provider-package.exe
+llama.rexx operation failed; no backend change is committed.
+

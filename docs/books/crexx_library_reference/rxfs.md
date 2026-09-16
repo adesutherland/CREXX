@@ -20,10 +20,11 @@ minimal bootstrap core.
 | `hardlink(source, target)` | Create another name for a regular file on the same filesystem, refusing an existing target. Return 0 or -8. |
 | `move(source, target)` | Rename a file/directory without replacing an existing target. Return 0 or -8. Supported on Windows, macOS and Linux with `renameat2`; fail explicitly elsewhere. |
 
-Mutating functions retain the historical integer status convention: zero is
-success where no count is returned; negative values distinguish missing,
-permission, general I/O, open, and write failures. Invalid arity or an
-unrepresentably long path raises `INVALID_ARGUMENTS`.
+The older mutating functions retain their historical integer status convention:
+zero is success where no count is returned; negative values distinguish missing,
+permission, general I/O, open, and write failures. The added transfer operations
+use the simpler 0/-8 contract shown above; `abspath` returns empty on failure.
+Invalid arity raises `INVALID_ARGUMENTS`.
 
 `rxfs` replaces the filesystem subset of the retired broad `system` plugin.
 The `crexx` compiler driver now links only `rxfs`, its actual native provider

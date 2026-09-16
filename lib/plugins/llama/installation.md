@@ -19,8 +19,9 @@ qualification remains open. See [status](qualification.md).
 
 ## Using a binary package
 
-Separate plugin installers are being added under CI-D04; they are not yet a
-qualified release feature. The Mac `.pkg` checks the existing cREXX package
+Separate plugin installers are implemented under CI-D04. Unsigned native
+lifecycle checks pass on ARM/Intel Mac and Windows with both Vulkan/CUDA;
+signing and final release acceptance remain open. The Mac `.pkg` checks the existing cREXX package
 receipt (normally `/usr/local/crexx`) and any supplied `CREXX_HOME`/`REXX_HOME`
 locations, then installs only into one exact matching core. Missing, ambiguous,
 altered or incompatible installations stop before plugin copying. Core and

@@ -894,3 +894,59 @@ and the runtime must be at least as new as the newest toolset in the application
 See [Microsoft's C++ runtime FAQ](https://learn.microsoft.com/en-us/lifecycle/faq/visual-c-faq).
 Here the 14.44 compiler and active 14.51 redist are recorded in both job logs;
 package hash equality remains the concrete combined-delivery control.
+
+### 16 September — native Rexx installer manager and standard rxfs
+
+Adrian requires the Windows manager to be authored in Rexx and its reusable OS
+primitives to fill gaps in the main libraries. `crexx-llama` uses `rxjson`,
+`rxhash` and the existing `rxfs`; the PowerShell manager is deleted. New standard
+filesystem operations cover no-follow path inspection, absolute paths,
+non-overwriting copy/link/move and owning file guards. The build consumes retained
+core runtime archives and compiles only this small provider and Rexx utility.
+
+`local/native-manager/` retains four passing ordinary Debug rxfs cells and the
+same four maintained Apple ASan cells, including guard aliases, explicit close,
+last-value finalization and lock contention. Apple LeakSanitizer is unavailable;
+no supported leak check is disabled and no broad sanitizer claim follows. The
+final local native build and all 14 manager failure/lifecycle controls pass.
+
+Windows run `35117773600` at `23be4af49` passes the native filesystem contract,
+13 manager controls, actual core/plugin installation into a path containing
+spaces, registered-core discovery, SDK-free public-provider compile/assemble/
+link/execute, and plugin reinstall. The native uninstall invocation returns but
+the backend store remains; that lifecycle gate fails. Its exact logs are under
+`remote/23be4af49-installers/`. This is not a Windows lifecycle pass. The focused
+retry retains initialization and command output even when the NSIS bootstrap
+returns zero, and preserves explicit `/D=` destinations using NSIS's initialized
+`$INSTDIR` (NSIS removes `/D=` from `$CMDLINE` before callbacks). No core/engine/
+CUDA rebuild follows these wrapper checks.
+
+The retry `35118785590` at `361f67a52` identifies a missing projected plugin file
+after successful reinstall, so removal correctly refuses the incomplete state.
+This reproduces locally with the complete retained Windows payload and a small
+15-file manifest: the Rexx manager ignores `jsonmembers`' returned count when
+reusing an array for a shorter manifest. As documented, that API does not clear
+older entries beyond the returned count. Those stale plugin names are wrongly
+retired during the shared-tool replacement. This is an application error, not
+an rxfs, JSON library, NSIS or Windows-only defect.
+
+`182516b4a` uses returned member counts throughout the manager. The permanent
+active-reinstall control fails before the repair and passes afterward, along
+with all 14 manager controls. The full retained Windows payload also passes
+local install/reinstall/remove and every projected hash after each install.
+`remote/361f67a52-installers/` retains the diagnostic failure; local before/after
+logs are under `local/native-manager/`. Manual Windows run
+[35119980116](https://github.com/adesutherland/CREXX/actions/runs/35119980116)
+at `182516b4a` is **success**. It passes the native rxfs contract and 14 manager
+controls, actual Vulkan/CUDA coexistence, preserved selection, SDK-free switching,
+four-tool installed-provider smoke for each variant, active reinstall with full
+hash verification, independent removals, shared-tool retention/removal,
+core/model/environment preservation and core-uninstall registration cleanup.
+Terminal metadata and all proof logs are retained with checksums under
+`remote/182516b4a-installers/`. The Windows build identity is the source revision,
+retained core identity and compiler/linker log; that run did not upload its
+generated manager hash manifest. Local compiled-tool hashes are retained, and
+future uploads additionally include the Windows manifest. This evidence capture
+addition changes no compilation or test input and does not require repeating
+the successful lifecycle. The run builds no core/engine/CUDA code and downloads
+no model. Signing/offline Gatekeeper and wider release gates remain open.

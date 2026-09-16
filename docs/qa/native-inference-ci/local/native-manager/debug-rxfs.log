@@ -1,0 +1,22 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1767: rxfs_rxbvm_noopt
+1/4 Test #1767: rxfs_rxbvm_noopt .................   Passed    0.20 sec
+    Start 1768: rxfs_rxbvm_opt
+2/4 Test #1768: rxfs_rxbvm_opt ...................   Passed    0.04 sec
+    Start 1769: rxfs_rxtvm_noopt
+3/4 Test #1769: rxfs_rxtvm_noopt .................   Passed    0.07 sec
+    Start 1770: rxfs_rxtvm_opt
+4/4 Test #1770: rxfs_rxtvm_opt ...................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive       =   0.35 sec*proc (4 tests)
+filesystem          =   0.35 sec*proc (4 tests)
+library             =   0.35 sec*proc (4 tests)
+linked_opt          =   0.08 sec*proc (2 tests)
+optimizer-parity    =   0.35 sec*proc (4 tests)
+plugins             =   0.35 sec*proc (4 tests)
+rxpa                =   0.35 sec*proc (4 tests)
+
+Total Test time (real) =   0.40 sec

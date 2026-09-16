@@ -1070,8 +1070,10 @@ executable written in cREXX, using `rxjson`, `rxhash` and the expanded standard
 `rxfs`. The PowerShell manager is removed. `status`/`use vulkan`/`use cuda`
 do not load inference, invoke a shell, compile source or use a first-run cache.
 Keep the command while either variant remains installed. Portable ZIP paths
-still collide and cannot simply be overlaid. Track Windows native proof in
-INST-04; do not infer it from the local portable controls.
+still collide and cannot simply be overlaid. INST-04 has actual Windows native
+installer proof from run `35119980116` at `182516b4a`, covering both backends,
+switching, reinstall and removal. This closes unsigned functional lifecycle;
+final signing and release/offline Gatekeeper gates remain separate.
 The small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
 fixture weights outside the user payload. Rehash declared provider manifests

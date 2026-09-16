@@ -1,0 +1,333 @@
+RUN: C:\Program Files (x86)/NSIS/makensis.exe /V2 /DCREXX_PAYLOAD_DIR=D:\a\_temp\core\CREXX-windows-x64 /DCREXX_OUTFILE=D:\a\_temp\core-qa-setup.exe D:\a\CREXX\CREXX\packaging\windows\crexx.nsi
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\package-llama-installer.py --core D:\a\_temp\core\CREXX-windows-x64 --plugin D:\a\_temp\plugin-vulkan\CREXX-windows-x64 --manager D:\a\_temp\manager --unsigned-qa --makensis C:\Program Files (x86)/NSIS/makensis.exe --output D:\a\_temp\llama-vulkan-qa-setup.exe
+Packaged optional plugin installer: D:\a\_temp\llama-vulkan-qa-setup.exe
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+cREXX: D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+Installed: vulkan (f10e70ee5f12ce49cc5088abc867748522d1d19c)
+
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\package-llama-installer.py --core D:\a\_temp\core\CREXX-windows-x64 --plugin D:\a\_temp\plugin-cuda\CREXX-windows-x64 --manager D:\a\_temp\manager --unsigned-qa --makensis C:\Program Files (x86)/NSIS/makensis.exe --output D:\a\_temp\llama-cuda-qa-setup.exe
+Packaged optional plugin installer: D:\a\_temp\llama-cuda-qa-setup.exe
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+cREXX: D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+Installed: vulkan (f10e70ee5f12ce49cc5088abc867748522d1d19c)
+Installed: cuda (f10e70ee5f12ce49cc5088abc867748522d1d19c)
+
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+Already active: vulkan
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\test-llama-installed.py --prefix D:\a\_temp\cREXX installed with spaces --logs D:\a\_temp\proof\consumer-vulkan
+PASS: installed compile
+PASS: installed assemble
+PASS: installed link
+PASS: installed run
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use cuda
+use completed for cuda in D:/a/_temp/cREXX installed with spaces
+Active backend: cuda
+RUN: C:\hostedtoolcache\windows\Python\3.13.15\x64\python.exe D:\a\CREXX\CREXX\scripts\test-llama-installed.py --prefix D:\a\_temp\cREXX installed with spaces --logs D:\a\_temp\proof\consumer-cuda
+PASS: installed compile
+PASS: installed assemble
+PASS: installed link
+PASS: installed run
+RUN: D:\a\_temp\cREXX installed with spaces\bin\crexx-llama.exe use vulkan
+use completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: D:\a\_temp\cREXX installed with spaces
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\cuda
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: D:\a\_temp\cREXX installed with spaces
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\cuda
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: D:\a\_temp\cREXX installed with spaces
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\vulkan
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: none. Use crexx-llama use <backend> to select another installed variant.
+
+
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\cuda
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: D:\a\_temp\cREXX installed with spaces
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\vulkan
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: none. Use crexx-llama use <backend> to select another installed variant.
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+RUN: powershell.exe -NoProfile -NonInteractive -Command $p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode
+Initialize: D:\a\_temp\llama-cuda-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\cuda
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for cuda in D:/a/_temp/cREXX installed with spaces
+
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: D:\a\_temp\cREXX installed with spaces
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+Initialize: C:\Users\RUNNER~1\AppData\Local\Temp\~nsu1.tmp\Un.exe | Core: D:\a\_temp\cREXX installed with spaces\.llama-backends\vulkan
+Action: remove
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+remove completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: none. Use crexx-llama use <backend> to select another installed variant.
+
+Initialize: D:\a\_temp\llama-vulkan-qa-setup.exe | Core: 
+Action: check-core
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+Verified matching cREXX installation: D:/a/_temp/cREXX installed with spaces
+
+Action: install
+Core: D:\a\_temp\cREXX installed with spaces
+Exit: 0
+install completed for vulkan in D:/a/_temp/cREXX installed with spaces
+Active backend: vulkan
+
+
+PASS: native Rexx switcher and Windows installer lifecycle; signing is a separate gate.

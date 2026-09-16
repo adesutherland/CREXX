@@ -213,4 +213,5 @@ jobs:
           path: |
             ${{ runner.temp }}/proof
             ${{ runner.temp }}/source.json
+            ${{ runner.temp }}/manager/manager.json
           retention-days: 14

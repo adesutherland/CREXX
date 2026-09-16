@@ -1,0 +1,12 @@
+{
+  "revision": "182516b4ac2b57533678103648856fbdfd5c7055",
+  "files": {
+    "lib/plugins/fs/rxfs.c": "646e999efd3b73ac242a28a93f15876f8f08b837d31e6af60c3b237a64c0c204",
+    "lib/plugins/fs/rxfs_ops.h": "efb01bfaa5553b446a6c5cf27a559ddf51710268ca947d803587a19ae4cd9c9e",
+    "lib/plugins/fs/rxfs_test.crexx": "b72389dc9805044222984933564e7458810cfabddb37e0c2998ee7ce222c01be",
+    "packaging/llama/native/crexx-llama.crexx": "31521c32b141d72dbb8d299c1f1518cbf4d8064d7acde13b27488ffae3621bc8",
+    "scripts/build-llama-manager.py": "a5b8e2f34a4495f422b875c7be14a240bbd887557d1407cffa3865dca25e1375",
+    "scripts/tests/test_llama_manager.py": "c9be5ced212d57a8803565a6612928e96cd5599dae609f3eea8f3ef6b4b19c13"
+  },
+  "scope": "Debug and Apple ASan rxfs matrix (four cells each), unchanged filesystem inputs since 8080a948a. Final native build, 14 lifecycle/failure controls and complete retained Windows-payload byte lifecycle pass locally. Before/after reinstall controls show the corrected use of jsonmembers returned counts. Apple LeakSanitizer unavailable; no broad sanitizer, Windows execution or engine QA is implied by local logs."
+}
