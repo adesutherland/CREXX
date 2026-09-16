@@ -33,7 +33,7 @@ Prepare an evidence-backed update for existing #701 without posting it.
   operations with useful diagnostics, without retrying away failures.
 - [x] AC-07: focused Debug/maintained sanitizer, broader core regression and
   target-platform gates pass; unverified platform cells remain explicit.
-- [ ] AC-08: retain exact revisions, commands, logs and outcomes; promote the
+- [x] AC-08: retain exact revisions, commands, logs and outcomes; promote the
   qualified repair to develop and check required post-promotion workflows to
   honest terminal status.
 
@@ -193,7 +193,7 @@ existing RexxDoc blocks. STEP-02/03 complete for implementation; full acceptance
 still awaits the qualification gates, including the final expanded Windows tests.
 
 
-## Final candidate qualification (in progress)
+## Final candidate qualification (complete under approved scope)
 
 Code candidate: `135b9254fffdd0c9a8e963d1092c68bb273bf66b`, pushed to hotfix.
 All 32,616 non-documentation tracked input hashes are frozen in
@@ -208,7 +208,7 @@ is faster and does not replace the conservative scheduling evidence.
 Hosted exact-candidate gates:
 - Child Inheritance QA: 35088226165 (success, all four platforms).
 - Deep Build QA: 35088225950 (success, all required jobs).
-- Sanitizer QA: 35088228552 (cancellation requested by Adrian; not a full sanitizer pass).
+- Sanitizer QA: 35088228552 (terminal cancelled at Adrian's direction; not a full sanitizer pass).
 Local full Debug build and QA prep passed before the final CTest sweep. Broad
 CTest excludes only performance-measurement; no other local build runs alongside.
 No promotion has occurred. Original acceptance IDs and full vision remain active.
@@ -301,8 +301,8 @@ state the default and exception policy consistently. No workflow trigger changes
 are needed. Runtime/test/build inputs remain identical to 135b9254f, so broad
 qualification is reused. STEP-01..04 are complete. STEP-05/AC-08 remain pending
 normal develop promotion and the automatic Build CREXX/CodeQL terminal results.
-Final result bookkeeping will be retained on hotfix without a second pointless
-develop publication solely to update the evidence ledger.
+Final documentation-only bookkeeping will reuse the unchanged qualification
+evidence without triggering another CI run.
 
 
 Repair and guidance promoted atomically from hotfix to develop at
@@ -314,3 +314,44 @@ both pending at this entry. No extra overnight lane was dispatched. Cancelled
 Sanitizer QA 35088228552 reached terminal `cancelled`; its retained partial
 logs contain no ASan/LSan diagnostic or failed/timeout test. Partial completion
 is not a full sanitizer pass.
+
+
+## Completion under Adrian's corrected publication policy
+
+All product acceptance criteria and STEP-01..05 are complete. The qualified
+repair reached develop in `bcea0f71bbfeaa263b274155317e7162de187f0a`; the
+explicit delay-cost wording reached both branches in documentation-only
+`0cdad1c5c44322a4ba9a311312a09990857ac7d4`. Canonical AGENTS.md now makes
+unnecessary testing delay a concrete engineering cost, requires a specific
+unresolved risk and justification for long exceptions, and treats habitual
+retesting of unchanged valid inputs as a process defect. The sanitizer guide,
+build guide and historical Phase 4 policy pointer are aligned.
+
+Normal Build CREXX **35093060282 is terminal success** at the promoted repair
+revision: all four Release product/functional jobs and Linux optimizer parity
+pass. Comprehensive/release creation jobs are correctly skipped for an ordinary
+develop push. The rolling snapshot publish step correctly declines to replace
+the snapshot because a newer documentation-only develop commit exists. Exact-SHA
+user-test artifacts remain attached to the successful run. No release/tag was
+created by this task.
+
+CodeQL **35093060306 remains in progress at closeout**, in its analysis step.
+It is background assurance, not an extra completion gate under Adrian's explicit
+core-build/functional-success policy. The earlier agent-selected requirement
+to hold this task for every automatic assurance result is superseded by that
+policy. Its result is recorded as pending, not success; no CodeQL workflow was
+cancelled. The local status poller was stopped so it does not become unattended
+background work. Terminal Build metadata, the pending CodeQL snapshot and the
+snapshot guard log are retained in `docs/qa/issue-701/post-promotion/`. AC-08 is
+verified for the required core/functional publication scope, with this remaining
+background result explicit.
+
+Final verification finds zero changes across all 32,616 frozen runtime/test/build
+inputs and no non-documentation changes since `135b9254f`. Documentation-only
+follow-ups use the supported `[skip ci]` commit marker to avoid duplicate runs;
+they do not relabel older results as checks executed on a newer SHA. The full
+sanitizer workflow remains cancelled, not qualified; focused Apple ASan is 7/7,
+and full Linux ASan/LSan coverage remains a nightly assurance responsibility.
+The Windows mechanism is reproduced and repaired; CI-F18 historical attribution
+remains unproved. The separate main/llama checkout and its qualification were
+untouched. The issue-701 update remains a draft and was not posted.

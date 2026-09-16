@@ -2,7 +2,8 @@
 
 The generic launcher repair and qualification-policy clarification reached
 `develop` at `bcea0f71bbfeaa263b274155317e7162de187f0a`, through persistent
-`hotfix`. Core qualification passed; normal post-promotion checks are running.
+`hotfix`. Core qualification and the normal Build CREXX publication workflow passed.
+CodeQL continues as background analysis and is not claimed as complete.
 
 The POSIX regression forces B to launch while A's stdout writer is still open
 in the parent. The defective launcher lets B retain it. With the repair, A's
@@ -39,7 +40,7 @@ Evidence so far:
 - Hosted Linux and macOS ARM64 comprehensive: each 2,292 correctness plus three install/package tests pass.
 - [Deep Build QA](https://github.com/adesutherland/CREXX/actions/runs/35088225950): success on the exact candidate, all supported platforms and install/package checks.
 - The optional full sanitizer run was cancelled at Adrian's direction after the appropriate core/functional gates passed. Full Linux ASan/LSan is not claimed.
-- Develop: `bcea0f71bbfeaa263b274155317e7162de187f0a`; automatic Build CREXX 35093060282 and CodeQL 35093060306 are pending. Update terminal results before posting.
+- Develop repair revision: `bcea0f71bbfeaa263b274155317e7162de187f0a`. [Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/35093060282) is terminal success. [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35093060306) is still running as background assurance; refresh its status before posting. Subsequent commits change documentation/evidence only and reuse the unchanged code qualification.
 
 No RAG workaround, model workload, issue comment, release or version tag is part
 of this repair.
