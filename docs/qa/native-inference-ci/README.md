@@ -29,8 +29,16 @@ its `--nooptimize` two-worker build after only one member reports completion.
 It is not a timeout; the aggregate already runs serially. The identical-SHA
 Deep MinGW control passes this test in 34.35 seconds, all 2,248 comprehensive
 tests and three qualification checks. Cause remains unresolved (CI-F18).
-All plugin jobs were skipped, not failed or passed. Attempt 2 is a single
-failed/dependent-job retry with debug logging; unchanged green jobs are reused.
+All plugin jobs were skipped in attempt 1. Attempt 2's MinGW job
+`104749506781` passes 152/152 smoke tests, three KeyAccess checks and core
+package smoke; the project contract takes 33.93 seconds. The six plugin jobs
+have started using the unchanged green cores. The original failure is retained
+alongside `mingw-retry.log` and `core-mingw-retry/`; a retry pass is not repair.
+
+The bounded race review (`local/f18-race-review/`) finds no competing-test root
+collision in this gate. It identifies a Windows runtime handle-inheritance
+window and missing worker operation diagnostics for targeted reproduction;
+see CI-F18 in the plan. No product/test/build input changed during review.
 
 [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
 is still running. No product repair, sanitizer pass, complete candidate or

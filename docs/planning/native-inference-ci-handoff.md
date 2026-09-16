@@ -21,17 +21,26 @@ on `origin/temp/llama-release-combined`. No product/test input has changed.
   is an unexplained exit 1 in a two-member build, not a timeout. All six
   plugins are consequently skipped. CI-F18 in the plan retains the failure
   and identical-SHA passing MinGW Deep control; no root cause is asserted.
-  Attempt 2 reruns only failed/dependent jobs with debug logging. Preserve
-  the green core artifacts; do not restart Deep or change scheduling blindly.
+  Attempt 2 now passes the MinGW gate: 152/152 smoke tests, three KeyAccess
+  checks and package smoke; project contract 33.93 seconds. All six plugin
+  jobs have started, reusing the four green core artifacts.
 - [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
   remains running on Linux and ARM Mac, with llama disabled. Leave it running.
 
-**Next:** inspect the MinGW diagnostic retry, then the dependent six plugin
-jobs and both sanitizer results. If MinGW repeats the silent failure, retain
-its member workspace and add targeted operation diagnostics before further
-reruns. A retry pass is not root-cause repair. Retain terminal logs/artifacts
+**Race review:** no competing-test/workspace cause was found in the failing
+152-test gate. CI-F18 records a Windows runtime inheritance window: partial
+redirects bypass the child handle allowlist, while VM file opens clear
+inheritance after opening. A child could inherit another worker's temporary
+stamp and hold it through rename. This is source-grounded risk, not reproduced
+attribution of the failed run. Silent output/stamp-failure branches also need
+operation diagnostics. F18-AC-01/F18-02 pass; F18-AC-02/F18-03 remain open for
+an explicitly synchronized Windows reproducer and evidence-led repair.
+
+**Next:** review the six plugin jobs and both sanitizer results, and follow
+CI-F18's bounded Windows reproduction plan without weakening the two-worker
+contract. A retry pass is not root-cause repair. Retain terminal logs/artifacts
 under `docs/qa/native-inference-ci/remote/f10e70ee5/`, reconcile
-CI-AC-02/03/05/07/08/09, F18-AC-01 and R16-AC-01/R16-02/R16-04. No develop
+CI-AC-02/03/05/07/08/09, F18-AC-02 and R16-AC-01/R16-02/R16-04. No develop
 promotion, release publication, repeated unchanged local broad QA or
 upstream/model sanitizer campaign is authorized by this qualification.
 

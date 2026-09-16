@@ -782,10 +782,10 @@ are controls, not a diagnosed cause for the separate failure.
 1. [x] **F18-01:** retain the failed job/CTest log, build configuration and
    same-SHA passing Deep control; inspect the actual error before changing
    product code or scheduling. Evidence: `remote/f10e70ee5/` in the CI ledger.
-2. [ ] **F18-AC-01:** the mandatory MinGW core gate succeeds on the frozen
+2. [x] **F18-AC-01:** the mandatory MinGW core gate succeeds on the frozen
    candidate. Retain the first failure and the diagnostic retry separately;
    a retry pass alone must not be described as a repaired root cause.
-3. [ ] **F18-02:** rerun only failed/dependent Build jobs once with diagnostic
+3. [x] **F18-02:** rerun only failed/dependent Build jobs once with diagnostic
    logging on the unchanged SHA. If the failure recurs, retain the failing
    member workspace and add operation-level diagnostics before a focused
    reproducer/repair; do not repeatedly rerun until green. Serves F18-AC-01
@@ -796,3 +796,64 @@ cancelled or counted as passing. Deep is not repeated. CI-AC-02/03/05/07/08/09
 and R16-AC-01 stay open while the mandatory retry and plugin delivery remain
 incomplete. No change to `develop`, release publication or model/GPU acceptance
 is implied.
+
+#### CI-F18 race review and unchanged retry — 16 September
+
+Attempt 2's MinGW job `104749506781` passes all 152 smoke tests, three
+KeyAccess checks and the package smoke. The project-build contract passes in
+33.93 seconds. All six dependent plugin jobs have now started. Retain both
+attempts; the retry does not establish a repaired root cause.
+
+The review finds no competing-test explanation in this gate: all 152 remote
+smoke names match the inspected local registrations, no explicit writable
+`WORK_ROOT`/`WORK_DIR`/`OUTPUT_DIR`/`BINARY_DIR` is shared by those registrations,
+and the project test has a single registration, private root, resource lock and
+`RUN_SERIAL=TRUE`. The workflow runs preparation, CTest and packaging in sequence.
+This scan is not proof that every dynamically constructed test path is unique.
+Within the project test, each `execute_process` finishes before the next edit;
+member output/stamp paths are distinct; `scope.join`, `scope.close` and
+`pool.close` precede controller publication and the next invocation. The Unix
+moving-input control deliberately changes a source during compilation, but it
+does not execute on the failing Windows host. Do not remove the intended
+two-worker concurrency or add sleeps to make this test green.
+
+Two source findings warrant targeted follow-up, without asserting that either
+has reproduced the runner failure:
+
+- **Windows handle-inheritance race window:** `rxspawn.c:4141` enables the
+  handle allowlist only when stdin, stdout and stderr are all redirected.
+  `crexx_build_worker.crexx:54` redirects only stdout/stderr; the argv path
+  preserves absent stdin at `rxspawn.c:2032`, and `CreateProcessW` still receives
+  `bInheritHandles=TRUE` at line 4364. That permits unrelated inheritable
+  handles from another worker to enter the child. The VM FOPEN handler clears
+  inheritance only after `fopen` (`rxvmhandlers_string.inc:3008–3018`), leaving
+  an open-to-clear window. If another worker launches in that window, the child
+  can retain a temporary stamp file after its owner closes it, potentially
+  making the Windows rename fail. The code/OS mechanism is identified; its
+  attribution to this particular CI failure remains unproved.
+- **Diagnostic gap:** missing assembled output and stamp write/rename failure
+  return the same silent 1 (`crexx_build_worker.crexx:78–82,173–175`); the
+  controller suppresses the failing task's integer value (`crexx.crexx:1290`).
+  Therefore the existing failure log cannot distinguish these branches.
+
+Microsoft documents unrestricted inheritance as a multithreaded launch hazard
+and provides the handle allowlist for this purpose:
+[CreateProcessW](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw).
+The CRT also supports opening files without inheritance:
+[fopen](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-wfopen).
+The source references above are against the unchanged `f10e70ee5` candidate.
+
+4. [ ] **F18-AC-02:** a deterministic Windows regression establishes whether
+   partial-redirection launches inherit another owner's handle; both MSVC and
+   MinGW controls identify the child handle and rename outcome. Any repair
+   preserves inherited standard-stream behavior and intentional worker
+   concurrency; do not claim causal closure solely from a green retry.
+5. [ ] **F18-03:** construct a bounded Windows reproducer with explicit
+   synchronization and a fully redirected control, then repair the proved
+   mechanism with focused tests. Add operation-level worker diagnostics and
+   retain the failing workspace when reproducing. Serves F18-AC-02 and
+   CI-AC-07. This review changes no runtime/test/build input and leaves current
+   plugin and sanitizer runs undisturbed.
+
+Review evidence is `local/f18-race-review/`; the successful retry log/artifact
+is retained alongside attempt 1 under `remote/f10e70ee5/`.
