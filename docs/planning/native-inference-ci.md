@@ -1018,6 +1018,17 @@ on affected import/provider behavior. The [live status table](../qa/native-infer
 records exact run/revision boundaries. Parent hardware/model criteria and actual
 signed/offline proof remain open; no scope change or promotion is implied.
 
+**Execution approved 16 September:** Adrian approved this continuation after
+the overall status review. Preserve the existing vision and ACs above. Execute
+F19-01/02/03 and INST-02, merging current develop #699 into the candidate first
+and retaining a focused import/provider integration check. Then run one combined
+Build/package qualification with all six plugins explicitly selected, including
+non-publishing Mac signing/notarization checks and Windows retained-artifact
+signing where credentials permit. Reuse unchanged Deep/sanitizer evidence.
+No develop promotion, release/tag publication or silent hardware waiver is
+authorized by this approval. Credential or device limitations keep their named
+criteria open, without blocking independent implementation and build proof.
+
 - The four-core/six-plugin split, unchanged core reuse, packaged dependencies,
   fixture smoke and CUDA compiler cache are implemented. All six variants pass
   Build `35076278681` at `f10e70ee5`; the later inheritance merge has its bounded
