@@ -428,7 +428,8 @@ no plugin compilation or plugin QA starts before the four-core gate passes.
    lifecycle controls, with no trained-model download. Core and plugin manifests
    identify the source, platform, toolchain and required companion archive.
 4. [ ] **PKG-04:** publication collectors require four core plus six plugin ZIPs;
-   installers remain core-only. Preserve existing Windows signing publication
+   core installers remain core-only; CI-D04 adds separate optional plugin
+   installers for Windows and Mac. Preserve existing Windows signing publication
    guards and optional notarized Mac installer rules. Human/agent download
    instructions and exact-candidate qualification must match this delivery.
 
@@ -991,3 +992,135 @@ attribution remains unproved; do not describe its green rerun as causal proof.
 The requested merge/retest is complete. No new broad/real-device qualification,
 CUDA workflow implementation, develop promotion or release publication is
 claimed. Documentation-only closeout preserves the tested runtime/build inputs.
+
+### CI-F19 — Release policy, signing and installer audit — 16 September
+
+Adrian requests current status against CI-D03, separate distribution, signing,
+installers and remaining product tests. This is a read-only implementation audit
+plus this durable finding; no workflow, signer, installer or product was changed.
+Vision: the agreed split delivery must survive final signing and installation,
+with CUDA restricted to full release builds (including beta) or explicit manual
+GitHub Actions requests. Green unsigned candidate ZIPs alone do not verify it.
+
+Findings against `d612e66c2` (runtime/build inputs unchanged from `2b897caa5`):
+
+- The four-core/six-plugin split, unchanged core reuse, packaged dependencies,
+  fixture smoke and CUDA compiler cache are implemented. All six variants pass
+  Build `35076278681` at `f10e70ee5`; the later inheritance merge has its bounded
+  local/MinGW proof above. This is not a new full release qualification.
+- CI-D03 is still documentation only. A direct call of
+  `scripts/ci-release-matrix.py:select` returns six plugins/two CUDA lanes for
+  ordinary develop pushes, PRs and even manual `base` selection on develop.
+  Candidate-branch manual `base` correctly selects four. The dev-snapshot
+  collector also requires both CUDA ZIPs; changing only the matrix will break
+  snapshot publication. Full release collection must still require all six.
+- Mac core/plugin signing, signature verification, post-signing provider hash
+  refresh and notarization are wired. The candidate's successful manual Build
+  run skipped actual signing, notarization and installer steps, as verified
+  from its terminal job metadata. Trusted non-publishing candidate qualification
+  of these publication-only paths is still needed.
+- Windows signing uses maintainer scripts rather than runner credentials.
+  `sign-windows-asset-common.sh` selects a single Windows ZIP and identifies its
+  root by `BUILDINFO`; `package-windows-installer-common.sh` also selects one
+  Windows ZIP. Split releases make automatic selection ambiguous, and plugin
+  archives contain `llama-package.json` rather than `BUILDINFO`.
+  `windows-signing-common.sh` refreshes provider manifests after verified
+  signatures, but does not refresh `core-package.json` or `llama-package.json`.
+  A temporary positive/negative control confirms that unchanged core bytes pass
+  `verify_core`, while a simulated signing byte change fails `Core file changed`.
+  This control tests hash handling, not a real Authenticode signature.
+- Installers are correctly core-only under PKG-04. Windows install/reinstall/
+  uninstall QA exists, but its standalone workflow always selects current
+  develop; it cannot yet select this retained candidate. Its smoke does not add
+  either optional plugin. Plugin ZIP instructions cover a portable shared
+  directory, not the installed Windows/Mac/Linux prefix and upgrade lifecycle.
+- Remaining trained-model/real-device coverage stays as recorded in the parent
+  plan. Tiny fixture CPU execution does not prove Windows/Linux BGE/Smol or
+  actual CUDA/Vulkan computation. Reuse accepted local model, numeric and glue
+  performance evidence; no new model benchmark or provenance project follows.
+
+1. [ ] **F19-AC-01:** CI-D03 selection and snapshot/release collection agree;
+   stable/beta/manual and push/PR/snapshot controls pass. Serves CI-AC-10/CI-06.
+2. [ ] **F19-AC-02:** final signed core and plugin archives have consistent
+   identities/hashes and pass a combined consumer smoke. Retain actual Mac
+   signature/notarization and Windows signing evidence, distinguishing unsigned
+   and signed assets. Serves PKG-01/03/04 and CI-AC-05/08.
+3. [ ] **F19-AC-03:** a retained candidate can be installed as core-only, extended
+   with its matching optional plugin, used, upgraded/reinstalled and removed
+   according to documented ownership rules. Retain platform-specific evidence,
+   VM selection, runtime dependency and mismatched-version diagnostics.
+   Serves PKG-04 and CI-AC-02/03/05/08.
+4. [ ] **F19-01:** finish CI-06's event/asset-selection implementation and focused
+   controls; do not rebuild models or CUDA for the policy controls (F19-AC-01).
+5. [ ] **F19-02:** adapt Windows signing to explicit core/plugin artifacts and
+   verified final manifest identities, then provide non-publishing candidate
+   signing/installer checks that reuse compiled artifacts (F19-AC-02/03).
+6. [ ] **F19-03:** reconcile the package checklist, installed guides and remaining
+   hardware cells with retained evidence. Repeat only affected checks; broad
+   unchanged core/sanitizer suites are not needed for this audit or documentation.
+   Normal final release build gates remain separate (F19-AC-01–03, CI-AC-08).
+
+### CI-D04 — Approved optional plugin installers — 16 September
+
+Adrian explicitly requests implementation now. Preserve the small core and
+separate portable ZIPs; additionally supply Windows and Mac plugin installers
+which find/check an existing cREXX installation and copy the matching plugin
+there. The intended outcome is an ordinary install experience with no compiler,
+Python, inference SDK, server or model download required by the installer.
+Models remain separately provisioned user data. This extends PKG-04 and
+F19-AC-03; it does not change CUDA cadence or authorize publication.
+
+On Windows use the registered core location, with an explicit directory choice
+for portable installs. On Mac discover the core package receipt/default location
+or an explicitly selected installation. Never silently choose between ambiguous
+installations. Check exact source/platform/toolchain identity and packaged hashes
+before mutation. Copy only plugin-owned files, preserve core/VM selection and
+environment settings, and reject overlapping or incompatible payloads. Support
+reinstall and removal of the plugin without deleting core files or models.
+
+Adrian's Mac concern is Gatekeeper/notarization network checks. Sign contained
+code and the installer, notarize and staple the ticket to the final `.pkg`;
+retain signature/ticket validation and an offline installation/execution check.
+Stapling supplies local notarization evidence; it does not promise that macOS
+will never contact Apple or disable its security policies. Do not remove user
+quarantine attributes or bypass Gatekeeper to claim success.
+
+1. [ ] **INST-AC-01:** Windows and Mac installers discover/select a matching
+   installed core; absent, ambiguous, altered or incompatible cores fail before
+   copying. Retain positive and negative controls, including paths with spaces.
+2. [ ] **INST-AC-02:** install/reinstall/remove affects only declared plugin
+   files, preserves core hashes/VM selection, PATH and models, and detects mixed
+   backends. Copy failures preserve/recover the previous installation. Retain
+   focused lifecycle and failure controls; document core upgrade ordering.
+3. [ ] **INST-AC-03:** actual installer outputs contain complete dependencies,
+   notices and final matching manifests, with no models/fixture/SDK. Installed
+   provider/toolchain smoke succeeds using retained candidate binaries on Mac
+   and Windows; no core or CUDA rebuild is required for these packaging tests.
+4. [ ] **INST-AC-04:** release Mac plugin packages are signed, notarized and
+   stapled; Windows installers/payload are signed through the maintained signing
+   path. Signature/hash and offline Mac evidence are retained separately from
+   unsigned lifecycle tests; unavailable credentials leave that proof open.
+5. [ ] **INST-01:** implement package validation, discovery and safe plugin
+   lifecycle helpers and native installer wrappers (INST-AC-01/02).
+6. [ ] **INST-02:** connect retained-artifact packaging/QA and release signing
+   paths; run the focused controls on both platforms (INST-AC-03/04).
+7. [ ] **INST-03:** update user/agent guides and handoff with installation,
+   removal, core-upgrade and Gatekeeper behavior, then reconcile evidence and
+   open delivery gates without claiming broader product closure (all INST ACs).
+
+Implementation checkpoint: Mac package generation, receipt/environment
+discovery, exact core/file checks, transactional copying, reinstall and removal
+are implemented. Twelve local controls pass, including ambiguous discovery,
+concurrent-operation rejection, tampering and injected copy-failure rollback.
+An actual generated unsigned `.pkg` was expanded and its embedded installer
+installed retained `f10e70ee5` ARM binaries into a temporary prefix; the existing
+four-tool public-provider smoke and reinstall/removal pass. This is not yet a
+native Installer.app, signed/notarized or offline Gatekeeper pass. The new
+`llama-installer-qa.yml` reuses retained binaries for native Mac installer QA.
+
+Adrian then raised Windows users installing both CUDA and Vulkan. Existing
+archives overlap. A required decision is pending: preserve both side by side
+and explicitly activate one, or reject a second backend until the first is
+removed. Do not assume an answer, overlay them, or infer simultaneous in-process
+backend support. Windows validation groundwork is independent; native Windows
+installer lifecycle/registration and its QA must follow the chosen behavior.

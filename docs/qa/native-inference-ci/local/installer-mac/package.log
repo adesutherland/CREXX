@@ -1,0 +1,5 @@
+argv=['python3', 'scripts/package-llama-installer.py', '--core', '/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64', '--plugin', '/tmp/crexx-plugin-installers-retained/unpacked-plugin/CREXX-macos-arm64', '--unsigned-qa', '--output', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx final installer proof pxo0iygd/llama.pkg']
+pkgbuild: Adding top-level preinstall script
+pkgbuild: Adding top-level postinstall script
+pkgbuild: Wrote package to /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx final installer proof pxo0iygd/llama.pkg
+Packaged optional plugin installer: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx final installer proof pxo0iygd/llama.pkg

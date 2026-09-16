@@ -1048,6 +1048,13 @@ core QA; backend jobs own llama-specific QA. Core sanitizer jobs
 use `ENABLE_LLAMA=OFF` and never compile CUDA. Adapter sanitizer checks concern
 first-party code and may link an uninstrumented upstream engine. The separate
 core/plugin delivery is still under qualification; do not claim it released.
+CI-D04 adds separate optional Mac/Windows plugin installers which must locate
+and verify a matching installed core before copying plugin-owned files. Track
+INST-AC-01–04 in the pipeline plan; local Mac lifecycle checks are not native
+hosted, signing/notarization or offline Gatekeeper proof. Staple the Mac package
+ticket; do not disable quarantine/Gatekeeper or promise no Apple network access.
+Windows side-by-side CUDA/Vulkan behavior awaits Adrian's choice; their existing
+ZIP paths collide and cannot simply be overlaid. Preserve this decision gate.
 The small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
 fixture weights outside the user payload. Rehash declared provider manifests

@@ -7,6 +7,16 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Installer addition (CI-D04):** Adrian authorized implementing separate Windows
+and Mac plugin installers now, locating/checking an installed matching core.
+The canonical criteria are INST-AC-01–04 / INST-01–03 in the pipeline plan.
+Mac local lifecycle/rollback and installed-provider controls pass; native hosted
+installer and signed/offline Gatekeeper proof remain open. Mac concern explicitly
+means Gatekeeper/notarization checks: staple the notarized package; never promise
+macOS makes no Apple network requests. Windows CUDA/Vulkan coexistence is a
+pending user choice (both stored/one active versus remove before switching).
+Do not silently overlay their colliding filenames or select an answer.
+
 **New approved release policy (CI-D03):** Vulkan is the general Windows/Linux
 download; CUDA remains an optional separate plugin. Every full release build,
 including beta, must build/package/smoke both CUDA variants against its exact

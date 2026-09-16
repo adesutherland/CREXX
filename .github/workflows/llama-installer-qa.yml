@@ -1,0 +1,121 @@
+name: llama.rexx Installer QA
+
+on:
+  push:
+    branches: [temp/llama-installer-qa]
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: Successful Build run whose core/plugin binaries are reused
+        required: true
+        type: string
+        default: '35076278681'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mac:
+    name: Installer lifecycle ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-arm64
+            backend: metal
+            os: macos-15
+          - platform: macos-x86_64
+            backend: cpu
+            os: macos-15-intel
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Resolve retained product identity
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run || '35076278681' }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads((Path(os.environ['RUNNER_TEMP']) / 'source.json').read_text())
+          assert run['conclusion'] == 'success' and run['path'] == '.github/workflows/build.yml'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('commit=' + run['head_sha'] + '\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write('Retained binaries: ' + run['head_sha'] + '; installer scripts: ' + os.environ['GITHUB_SHA'] + '\n')
+          PY
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run || '35076278681' }}
+          name: user-test-${{ steps.source.outputs.commit }}-CREXX-${{ matrix.platform }}
+          path: ${{ runner.temp }}/retained/core
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run || '35076278681' }}
+          name: user-test-${{ steps.source.outputs.commit }}-llama.rexx-${{ matrix.platform }}-${{ matrix.backend }}
+          path: ${{ runner.temp }}/retained/plugin
+      - name: Unpack and run installer controls
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/proof"
+          python3 - <<'PY'
+          import importlib.util, os
+          from pathlib import Path
+          spec = importlib.util.spec_from_file_location('core', 'scripts/package-core-release.py')
+          core = importlib.util.module_from_spec(spec); spec.loader.exec_module(core)
+          root = Path(os.environ['RUNNER_TEMP']) / 'retained'
+          for kind in ('core', 'plugin'):
+              archives = list((root / kind).glob('*.zip'))
+              assert len(archives) == 1
+              core.extract(archives[0], root / (kind + '-unpacked'))
+          PY
+          python3 -m unittest discover -s scripts/tests -p test_llama_installer.py -v > "$RUNNER_TEMP/proof/controls.log" 2>&1
+      - name: Install core and plugin from real native packages
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          # Disposable runner only: never point this lifecycle at a user's core.
+          test "$GITHUB_ACTIONS" = true
+          # Keep retained logs owned by the runner, not root.
+          run_admin() { sudo "$@"; }
+          if pkgutil --pkg-info org.crexx.crexx >/dev/null 2>&1; then exit 1; fi
+          core="$RUNNER_TEMP/retained/core-unpacked/CREXX-$PLATFORM"
+          plugin="$RUNNER_TEMP/retained/plugin-unpacked/CREXX-$PLATFORM"
+          installed="$RUNNER_TEMP/cREXX installed with spaces"
+          scripts/package-macos-pkg.sh --payload-dir "$core" --install-root "$installed" \
+            --command-link-dir "$RUNNER_TEMP/command links" --no-background-image \
+            --output "$RUNNER_TEMP/core-qa.pkg" > "$RUNNER_TEMP/proof/core-package.log" 2>&1
+          python3 scripts/package-llama-installer.py --core "$core" --plugin "$plugin" \
+            --unsigned-qa --output "$RUNNER_TEMP/llama-qa.pkg" > "$RUNNER_TEMP/proof/plugin-package.log" 2>&1
+          run_admin installer -pkg "$RUNNER_TEMP/core-qa.pkg" -target / > "$RUNNER_TEMP/proof/core-install.log" 2>&1
+          run_admin installer -pkg "$RUNNER_TEMP/llama-qa.pkg" -target / > "$RUNNER_TEMP/proof/plugin-install.log" 2>&1
+          python3 scripts/test-llama-installed.py --prefix "$installed" --logs "$RUNNER_TEMP/proof/consumer"
+          run_admin installer -pkg "$RUNNER_TEMP/llama-qa.pkg" -target / > "$RUNNER_TEMP/proof/plugin-reinstall.log" 2>&1
+          run_admin sh "$installed/.llama-installer/manage.sh" remove "$installed" > "$RUNNER_TEMP/proof/remove.log" 2>&1
+          test ! -e "$installed/bin/rxllama.rxplugin"
+          "$installed/bin/crexx" "$installed/examples/hello.crexx" > "$RUNNER_TEMP/proof/core-after-remove.log" 2>&1
+          grep -q 'hello CREXX world!' "$RUNNER_TEMP/proof/core-after-remove.log"
+          echo 'Unsigned native installer lifecycle passed; signing/notarization/offline Gatekeeper are separate gates.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: installer-qa-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/proof
+            ${{ runner.temp }}/source.json
+          retention-days: 14

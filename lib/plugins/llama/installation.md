@@ -19,6 +19,33 @@ qualification remains open. See [status](qualification.md).
 
 ## Using a binary package
 
+Separate plugin installers are being added under CI-D04; they are not yet a
+qualified release feature. The Mac `.pkg` checks the existing cREXX package
+receipt (normally `/usr/local/crexx`) and any supplied `CREXX_HOME`/`REXX_HOME`
+locations, then installs only into one exact matching core. Missing, ambiguous,
+altered or incompatible installations stop before plugin copying. Core and
+plugin must have the same release/commit, platform and toolchain. The installers
+do not download models or change PATH or the preferred VM.
+
+Close programs using the plugin before installing or removing it. The Mac
+installer can be rerun for the same release. To remove an installer-managed
+plugin while retaining the core and models, run:
+
+```sh
+sudo sh /usr/local/crexx/.llama-installer/manage.sh remove /usr/local/crexx
+```
+
+Use your actual core directory if different. Remove the plugin before upgrading
+the core, then install the matching plugin release. Changed plugin files are
+reported rather than silently deleted. Package receipts can remain after removal;
+the installed file/ownership checks determine whether the plugin is present.
+
+Release Mac plugin packages must have signed code, a signed installer and a
+stapled notarization ticket. The ticket provides local notarization evidence for
+offline installation; it does not disable Gatekeeper or guarantee macOS never
+contacts Apple. Windows installer coexistence behavior is awaiting a decision;
+continue to use only one of the existing portable ZIP variants per directory.
+
 The candidate release pipeline supplies a llama-free cREXX core and a separate
 optional prebuilt `llama.rexx` package. Download the core and one plugin for the
 exact same release/commit and platform, then extract both ZIPs into the same

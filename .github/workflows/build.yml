@@ -1177,12 +1177,38 @@ jobs:
             --team-id "$APPLE_TEAM_ID" \
             --wait
 
+      - name: Package, notarize and staple optional macOS plugin installer
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          # Both inputs already have verified signatures and final manifests.
+          # Keep the .pkg out of release-assets until notarization succeeds.
+          pkg="${RUNNER_TEMP}/llama.rexx-${{ matrix.core_platform }}-${{ matrix.backend }}.pkg"
+          python3 scripts/package-llama-installer.py \
+            --core "${RUNNER_TEMP}/plugin-package/base/CREXX-${{ matrix.core_platform }}" \
+            --plugin "${RUNNER_TEMP}/plugin-package/plugin-stage/CREXX-${{ matrix.core_platform }}" \
+            --output "$pkg" --version '${{ needs.version.outputs.display_version }}' \
+            --sign-identity "$APPLE_DEVELOPER_ID_INSTALLER_IDENTITY_DETECTED" \
+            --keychain "$APPLE_SIGNING_KEYCHAIN"
+          pkgutil --check-signature "$pkg"
+          xcrun notarytool submit "$pkg" --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$pkg"
+          xcrun stapler validate "$pkg"
+          spctl --assess --type install --verbose=4 "$pkg"
+          cp "$pkg" "${CREXX_RELEASE_ASSET%.zip}.pkg"
+
       - name: Upload plugin release asset
         if: github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}-release-asset
-          path: ${{ runner.temp }}/release-assets/llama.rexx-*.zip
+          path: ${{ runner.temp }}/release-assets/llama.rexx-*
           if-no-files-found: error
 
       - name: Cleanup Apple signing keychain
@@ -1395,7 +1421,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' \) \
+            \( -name 'CREXX-*.zip' -o -name 'llama.rexx-*.zip' -o -name 'CREXX-*.pkg' -o -name 'llama.rexx-*.pkg' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           zip_count="$(find "$asset_dir" -name '*.zip' -type f | wc -l | tr -d ' ')"
@@ -1414,6 +1440,11 @@ jobs:
           pkg_count="$(find "$asset_dir" -name 'CREXX-*.pkg' -type f | wc -l | tr -d ' ')"
           if [ "$pkg_count" != "0" ] && [ "$pkg_count" != "2" ]; then
             echo "Expected 0 or 2 release PKG assets, found $pkg_count" >&2
+            exit 1
+          fi
+          plugin_pkg_count="$(find "$asset_dir" -name 'llama.rexx-*.pkg' -type f | wc -l | tr -d ' ')"
+          if [ "$plugin_pkg_count" != "$pkg_count" ]; then
+            echo "Core and plugin Mac installer counts differ" >&2
             exit 1
           fi
 
@@ -1528,7 +1559,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -1551,6 +1582,8 @@ jobs:
             expected_assets+=(
               CREXX-dev-snapshot-macos-arm64.pkg
               CREXX-dev-snapshot-macos-x86_64.pkg
+              llama.rexx-dev-snapshot-macos-arm64-metal.pkg
+              llama.rexx-dev-snapshot-macos-x86_64-cpu.pkg
             )
           elif [ "$pkg_count" != "0" ]; then
             echo "Expected 0 or 2 dev snapshot macOS PKG assets, found $pkg_count" >&2

@@ -1,0 +1,5 @@
+argv=['python3', 'scripts/test-llama-installed.py', '--prefix', '/tmp/crexx-plugin-installers-retained/unpacked-core/CREXX-macos-arm64', '--logs', '/Users/adrian/CLionProjects/CREXX/docs/qa/native-inference-ci/local/installer-mac/consumer']
+PASS: installed compile
+PASS: installed assemble
+PASS: installed link
+PASS: installed run
