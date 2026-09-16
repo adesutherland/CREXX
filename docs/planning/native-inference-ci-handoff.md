@@ -7,6 +7,18 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Frozen final candidate:** `f10e70ee5f12ce49cc5088abc867748522d1d19c` is on
+`origin/temp/llama-release-combined`. The complete [Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681),
+[Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
+and [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
+are running on this exact SHA. Do not change code/test inputs or restart green
+local checks. Await terminal results and preserve artifacts, then reconcile
+CI-AC-02/03/05/07/08/09 and R16-AC-01/R16-02/R16-04. The earlier sanitizer run
+`35071054942` was deliberately cancelled as superseded; available partial logs
+contain no sanitizer diagnostic and are retained as cancelled, not passing.
+The completed `21666b6bc` core and separate Linux probe still support SAN-009
+closure. No develop promotion or release publication is authorized by this run.
+
 **Final repair proof:** `f749203a7559a46fac23f7f0cf30f86c6cf1b4af` on
 `origin/temp/llama-release-windows-retry` passes the entire Windows Vulkan run
 `35073667866`, including the final relocated native consumer. The shared
