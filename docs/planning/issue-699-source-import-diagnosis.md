@@ -61,7 +61,7 @@ main CREXX/llama checkout or the downstream RAG checkout; no model workloads.
   No broad build/test or hosted qualification was needed for assessment.
 
 **Assessment status:** AC-01 through AC-04 complete. Repair/delivery now authorized;
-AC-05 and AC-06 complete; AC-07 open pending publication checks. The historical assessment evidence remains valid.
+AC-05 through AC-07 complete. The historical assessment evidence remains valid.
 
 - **STEP-05 (AC-05):** inspect exact inline-dependency and namespace visibility
   handling; implement the smallest correction consistent with existing contracts.
@@ -77,7 +77,15 @@ AC-05 and AC-06 complete; AC-07 open pending publication checks. The historical 
   Focused maintained Apple ASan is green (7/7). Full normal correctness is green
   (2,294/2,294, 792.65 s). Frozen implementation/test inputs still match.
 - **STEP-07 (AC-07):** commit/push qualified hotfix, promote to develop, then check normal
-  automatic publication gates and reconcile post-promotion outcomes. In progress.
+  automatic publication gates and reconcile post-promotion outcomes. Complete.
+  Repair `f786b15d86a66b52c8ab1ce631054afc7a5937e8` was pushed to hotfix and
+  fast-forwarded to develop. Automatic [Build CREXX 35120521324](https://github.com/adesutherland/CREXX/actions/runs/35120521324)
+  and [CodeQL 35120521311](https://github.com/adesutherland/CREXX/actions/runs/35120521311)
+  both completed successfully for that exact revision. Release product/smoke/package
+  jobs passed on Linux x64, Windows MinGW x64 and both macOS architectures;
+  Linux optimizer parity passed 742/742. Terminal JSON and job logs are retained
+  in the [repair report](../qa/issue-699-20260916/repair.md). No extra hosted matrix
+  was dispatched. The evidence-only closeout retains identical qualified inputs.
 
 ## Initial evidence
 

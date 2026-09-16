@@ -67,10 +67,29 @@ builds. Each declares `rxc`, `rxas`, `library` and `classlib` preparation target
 - Full normal correctness: `cmake --build cmake-build-debug --target
   qa-comprehensive --parallel 8` — **2,294/2,294 pass**, 792.65 s CTest time;
   `repair-evidence/full-correctness.log.gz`.
-- Hotfix publication and develop promotion: local qualification complete; publication next.
-- Automatic publication workflows: pending promotion; no manual deep or full
-  sanitizer matrix dispatched. Normal workflows run on develop, not hotfix.
+- Hotfix publication and develop promotion: repair
+  `f786b15d86a66b52c8ab1ce631054afc7a5937e8` pushed to hotfix and fast-forwarded
+  to develop after local qualification completed.
+- Automatic publication workflows for that revision:
+  [Build CREXX 35120521324](https://github.com/adesutherland/CREXX/actions/runs/35120521324)
+  and [CodeQL 35120521311](https://github.com/adesutherland/CREXX/actions/runs/35120521311)
+  both completed successfully. No manual deep or full
+  sanitizer matrix dispatched.
 
 `repair-evidence/qualified-inputs.json` freezes the production/test inputs so
 documentation bookkeeping and history-only promotion can reuse valid evidence.
-Platform cells without completed hosted evidence remain unverified.
+The four hosted Release product/smoke/package jobs are green: Linux x64,
+Windows x64 (MinGW/MSYS2), macOS ARM64 and macOS x86_64. Linux Debug optimizer
+parity passed **742/742** tests (196.63 s). CodeQL completed successfully.
+Retained `repair-evidence/hosted-*.log.gz` files contain the completed job logs;
+`hosted-build.json` and `hosted-codeql.json` record exact-SHA terminal job
+outcomes; `hosted-log-hashes.json` records compressed and uncompressed hashes. Smoke suites passed
+166/166 on each Unix platform and 156/156 on Windows; both new regressions are
+explicitly present and passed on all four platforms.
+The normal publication workflow does not include MSVC or full cross-platform
+sanitizers; those cells are not claimed here. Its comprehensive and release jobs
+are skipped by design for this develop push.
+
+The final evidence-only closeout commit uses `[skip ci]`: production, test and
+build inputs are identical to the qualified repair revision. No duplicate broad
+run is justified by recording the completed results.
