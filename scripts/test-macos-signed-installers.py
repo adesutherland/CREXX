@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import time
 
 
 def main():
@@ -37,6 +38,9 @@ def main():
     curl = ['/usr/bin/curl', '--silent', '--show-error', '--fail', '--head',
             '--connect-timeout', '5', '--max-time', '15', 'https://www.apple.com']
     run('online-positive-control', curl)
+    for kind, pkg in (('core', args.core_pkg), ('plugin', args.plugin_pkg)):
+        run(kind + '-download-quarantine', ['/usr/bin/xattr', '-w', 'com.apple.quarantine',
+                                          f'0081;{int(time.time()):x};cREXX QA;', pkg])
     inventory = subprocess.check_output(['/sbin/ifconfig', '-a'], text=True)
     interfaces = [name for name, flags in re.findall(r'^(\w+): flags=[0-9a-fA-F]+<([^>]+)>', inventory, re.M)
                   if name != 'lo0' and 'UP' in flags.split(',')]

@@ -1,0 +1,8 @@
+test_matching_private_artifacts_are_staged (test_signed_delivery_qa.SignedTransportTests.test_matching_private_artifacts_are_staged) ... ok
+test_signed_artifact_requires_the_exact_qualified_unsigned_input (test_signed_delivery_qa.SignedTransportTests.test_signed_artifact_requires_the_exact_qualified_unsigned_input) ... ok
+test_wrong_commit_or_public_release_is_rejected (test_signed_delivery_qa.SignedTransportTests.test_wrong_commit_or_public_release_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.005s
+
+OK

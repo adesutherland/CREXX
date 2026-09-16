@@ -33,6 +33,51 @@ permissions:
   actions: read
 
 jobs:
+  linux-filesystem:
+    if: github.event_name == 'workflow_dispatch' && inputs.platform == 'all'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Resolve retained core identity
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads((Path(os.environ['RUNNER_TEMP']) / 'source.json').read_text())
+          assert run['conclusion'] == 'success' and run['path'] == '.github/workflows/build.yml'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('commit=' + run['head_sha'] + '\n')
+          PY
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run }}
+          name: user-test-${{ steps.source.outputs.commit }}-CREXX-linux-x64
+          path: ${{ runner.temp }}/retained
+      - name: Exercise installed standard filesystem library
+        run: |
+          set -euo pipefail
+          unzip -q "$RUNNER_TEMP/retained/"*.zip -d "$RUNNER_TEMP/core"
+          python3 scripts/test-installed-filesystem.py --prefix "$RUNNER_TEMP/core/CREXX-linux-x64" --logs "$RUNNER_TEMP/proof"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: installed-rxfs-linux-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/proof
+            ${{ runner.temp }}/source.json
+          retention-days: 14
   mac:
     if: github.event_name == 'workflow_dispatch' && inputs.platform != 'windows'
     name: Installer lifecycle ${{ matrix.platform }}

@@ -7,6 +7,32 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Approved continuation now running:** develop through `94f2f228c` (#699) is
+merged. Product/build candidate `21a5e9410925cac7e4f577119e4e09fe6393d7f4` is
+under [Build 35143588581](https://github.com/adesutherland/CREXX/actions/runs/35143588581),
+explicit `lane=all`, `sign_candidate=true`. CI-D03 selection and collector
+implementation is complete (37 local controls); 20 focused integration tests
+and the corrected package smoke pass. The local CTest registration now passes
+configured CPU/GPU backends, matching the existing hosted calls. ARM Mac core
+has passed signing/notarization; inspect the live run for other terminal states.
+No unchanged Deep/full sanitizer repeat was dispatched.
+
+Subsequent commits change only installer QA/evidence, preserving those compiled
+product/build inputs. Once Build is green, download its exact Windows core,
+both plugins and `llama-manager-<commit>-windows-x64`; run
+`scripts/sign-windows-packages.py` locally. Adrian logged into SimplySign after
+the initial credential probe failed; actual Authenticode signing/verification
+now passes. Do not mistake that probe for signed-delivery closure. Stage final
+outputs in the temporary private draft described in F19, then dispatch
+`llama-installer-qa.yml` with that `source_run`, `platform=all`, `cuda=true`,
+`signed_mac=true`, and `signed_windows_release=<private draft id>`. The signed
+Windows path verifies original unsigned input hashes and exercises real signed
+setup/payload/uninstallers; Mac verifies quarantined stapled packages offline on
+fresh disposable hosts; Linux exercises the new standard filesystem operations
+using the retained core, without rebuilding. Retain results, delete the private
+staging draft, reconcile F19/INST criteria and report before develop promotion.
+There is no authorization to publish a release/tag or promote to develop.
+
 **Overall readiness audit at `09d4ffaf2`:** all four core packages, the MinGW
 gate and six plugins passed Build `35076278681` attempt 2 at `f10e70ee5`;
 Deep `35076281099` and core Sanitizer `35076283269` passed on that same baseline.
