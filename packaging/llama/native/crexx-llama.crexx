@@ -1,0 +1,487 @@
+/**
+ * Native cREXX management command shared by the Windows llama.rexx installers.
+ * Installers own elevation and registry entries. This program owns selection,
+ * manifest validation, file ownership, publication and rollback. It imports no
+ * inference backend and works when no backend is active. MIT licence.
+ *
+ * @example crexx-llama status
+ * @example crexx-llama use vulkan
+ * @example crexx-llama use cuda
+ */
+options levelb
+import rxfnsb
+import rxjson
+import rxhash
+import rxfs
+
+main: procedure = .int expose root transaction saved_from saved_to published directories operation_guard leases
+  arg argv = .string[]
+  root = ''; transaction = ''
+  operation_guard = .rxfs..fileguard
+  leases = .rxfs..fileguard[]
+  saved_from = .string[]; saved_to = .string[]
+  published = .string[]; directories = .string[]
+  result = 1
+  do
+    result = run(argv)
+  on signal
+    say 'llama.rexx operation failed; no backend change is committed.'
+    result = 1
+  end
+  if transaction <> '' then do
+    do
+      call rollback
+    on signal
+      say 'Recovery needed. Preserve and inspect:' transaction
+      call fileop 'unlock', '', ''
+      return 1
+    end
+  end
+  call fileop 'unlock', '', ''
+  return result
+
+/** Parse the public command and installer-only operations without a shell. */
+run: procedure = .int expose root transaction saved_from saved_to published directories
+  arg argv = .string[]
+  action = 'status'; backend = ''; stage = ''; activate = 0
+  info = .string; payload = .string; names = .string[]
+  if argv[0] > 0 then action = argv[1]
+  if action = '--help' | action = 'help' then do
+    say 'crexx-llama status [--root DIR]'
+    say 'crexx-llama use vulkan|cuda [--root DIR]'
+    say 'Close programs using llama.rexx before switching.'
+    say 'A system-wide installation requires an administrator terminal.'
+    return 0
+  end
+  i = 2
+  do while i <= argv[0]
+    item = argv[i]
+    select
+      when item = '--root' | item = '--stage' then do
+        i = i + 1
+        if i > argv[0] then call fail 'Missing directory after ' || item
+        if item = '--root' then root = argv[i]
+        else stage = argv[i]
+      end
+      when item = '--activate' then activate = 1
+      when (item = 'vulkan' | item = 'cuda') & backend = '' then backend = item
+      otherwise call fail 'Unknown argument: ' || item
+    end
+    i = i + 1
+  end
+  if wordpos(action, 'status use check-core check install remove') = 0 then call fail 'Unknown command: ' || action
+  if root = '' then root = parent(rxfs..loadpath())
+  root = translate(rxfs..abspath(root), '/', '\')
+  do while right(root, 1) = '/'; root = left(root, length(root) - 1); end
+  if root = '' | rxfs..pathkind(root) <> 2 then call fail 'Select an existing cREXX installation with --root.'
+  call safe_absolute root
+  state = safe(root, '.llama-installer')
+  stores = safe(root, '.llama-backends')
+  active = ''
+  if rxfs..pathkind(state || '/active.json') <> 0 then active = metadata(state || '/active.json')
+  if action = 'status' then do
+    say 'cREXX:' root
+    selected = 'none'
+    if active <> '' then selected = jsonget(active, 'backend')
+    say 'Active backend:' selected
+    do i = 1 to 2
+      name = word('vulkan cuda', i)
+      location = safe(root, '.llama-backends/' || name || '/installer.json')
+      if rxfs..pathkind(location) = 1 then do
+        installed = metadata(location)
+        say 'Installed:' name '(' || jsonget(installed, 'commit') || ')'
+      end
+    end
+    return 0
+  end
+  if action = 'use' | action = 'remove' then
+    if backend = '' then call fail 'Specify vulkan or cuda.'
+  if wordpos(action, 'check-core check install') > 0 then do
+    if stage = '' then call fail 'Installer operation requires --stage.'
+    stage = translate(rxfs..abspath(stage), '/', '\')
+    call safe_absolute stage
+    info = metadata(safe(stage, 'installer.json'))
+    backend = jsonget(info, 'backend')
+    payload = stage || '/payload'
+  end
+  else do
+    info = metadata(safe(root, '.llama-backends/' || backend || '/installer.json'))
+    if jsonget(info, 'backend') <> backend then call fail 'Stored backend identity mismatch.'
+    payload = stores || '/' || backend || '/payload'
+  end
+  store = stores || '/' || backend
+  expected = jsonget(info, 'plugin_files')
+  call validate_files expected
+  core = readjson(safe(root, 'core-package.json'))
+  call disjoint expected, jsonget(core, 'files')
+  if action <> 'remove' then do
+    if jsonget(core, 'component') <> 'core' | jsonget(core, 'llama_enabled') <> 'false' then call fail 'A llama-free core is required.'
+    do i = 1 to 3
+      key = word('commit platform toolchain', i)
+      if jsonget(info, key) <> jsonget(core, key) then call fail 'Core/plugin identity mismatch: ' || key
+    end
+    call check_files root, jsonget(info, 'core_files')
+  end
+  if action <> 'check-core' then call check_files payload, expected
+  if action = 'check' | action = 'check-core' then do
+    say 'Verified matching cREXX installation:' root
+    return 0
+  end
+  lockid = rxhash..sha256hex(lower(root) as .binary)
+  if fileop('lock', root || '/.llama-operation.lock', lockid) <> 0 then call fail 'Another plugin operation is running for this installation.'
+  /* Re-read and verify under the lock, not just before waiting for it. */
+  entries = .string[]
+  call must rxfs..listdir(root, entries), 'list core directory'
+  do i = 1 to entries[0]
+    if left(entries[i], 19) = '.llama-transaction-' then call fail 'An interrupted operation needs recovery: ' || entries[i]
+  end
+  if rxfs..pathkind(state || '/active.json') <> 0 then active = metadata(state || '/active.json')
+  else active = ''
+  call check_files payload, expected
+  if action <> 'remove' then call check_files root, jsonget(info, 'core_files')
+  if rxfs..pathkind(store) <> 0 then do
+    oldinfo = metadata(store || '/installer.json')
+    if jsonget(oldinfo, 'backend') <> backend then call fail 'Stored backend identity mismatch.'
+    call check_files store || '/payload', jsonget(oldinfo, 'plugin_files')
+    call owned_store store, '', jsonget(oldinfo, 'plugin_files')
+  end
+  manager = ''
+  if rxfs..pathkind(state || '/manager.json') <> 0 then do
+    manager = readjson(state || '/manager.json')
+    if jsonget(manager, 'schema') <> '1' then call fail 'Unsupported management format; use its matching installer.'
+    call check_files root, jsonget(manager, 'files')
+    call disjoint jsonget(manager, 'files'), jsonget(core, 'files')
+  end
+  incoming = ''
+  if action = 'install' then do
+    incoming = readjson(safe(stage, 'tool/manager.json'))
+    if jsonget(incoming, 'schema') <> '1' then call fail 'Unsupported management format.'
+    if jsonget(incoming, 'core_commit') <> jsonget(info, 'commit') then call fail 'Management tool/core identity mismatch.'
+    call check_files stage || '/tool', jsonget(incoming, 'files')
+    call disjoint expected, jsonget(incoming, 'files')
+    call disjoint jsonget(core, 'files'), jsonget(incoming, 'files')
+    call unowned jsonget(incoming, 'files'), jsonget(manager, 'files')
+  end
+  project = action = 'use'
+  unproject = 0
+  if active <> '' then do
+    call disjoint jsonget(active, 'plugin_files'), jsonget(core, 'files')
+    call check_files root, jsonget(active, 'plugin_files')
+    if action = 'use' & jsonget(active, 'backend') = backend then do
+      say 'Already active:' backend
+      return 0
+    end
+    if action = 'remove' & jsonget(active, 'backend') = backend then unproject = 1
+  end
+  if action = 'install' then
+    if active = '' | activate | jsonget(active, 'backend') = backend then project = 1
+  if project then call unowned expected, jsonget(active, 'plugin_files')
+  if project | unproject then
+    if active <> '' then do
+      call jsonmembers jsonget(active, 'plugin_files'), '', names
+      do i = 1 to names[0]
+        if fileop('lease', safe(root, names[i]), '') <> 0 then call fail 'Plugin file is in use or not writable. Close cREXX programs and retry: ' || names[i]
+      end
+    end
+  transaction = root || '/.llama-transaction-current'
+  call must fileop('mkdir', transaction, ''), 'create transaction directory'
+  if action = 'install' then do
+    call retire store
+    call copy_files payload, store || '/payload', expected, 0
+    call publish stage || '/installer.json', store || '/installer.json', 0
+    payload = store || '/payload'
+  end
+  if project | unproject then do
+    if active <> '' then do
+      /* Retire the entry point first; publish it last. */
+      oldfiles = jsonget(active, 'plugin_files')
+      if member_hash(oldfiles, 'bin/rxllama.rxplugin') <> '' then call retire root || '/bin/rxllama.rxplugin'
+      call jsonmembers oldfiles, '', names
+      do i = 1 to names[0]
+        if names[i] <> 'bin/rxllama.rxplugin' then call retire safe(root, names[i])
+      end
+    end
+    if project then do
+      call copy_files payload, root, expected, 1
+      call check_files root, expected
+    end
+    call retire state || '/active.json'
+    if project then call publish store || '/installer.json', state || '/active.json', 0
+  end
+  if action = 'install' then do
+    if manager <> '' then do
+      call jsonmembers jsonget(manager, 'files'), '', names
+      do i = 1 to names[0]; call retire safe(root, names[i]); end
+    end
+    call copy_files stage || '/tool', root, jsonget(incoming, 'files'), 0
+    call retire state || '/manager.json'
+    call publish stage || '/tool/manager.json', state || '/manager.json', 0
+    call retire state || '/registration-id'
+    call puttext state || '/registration-id', lockid
+  end
+  if action = 'remove' then do
+    call retire store
+    other = 'cuda'
+    if backend = 'cuda' then other = 'vulkan'
+    if rxfs..pathkind(stores || '/' || other || '/installer.json') = 0 then do
+      call jsonmembers jsonget(manager, 'files'), '', names
+      do i = 1 to names[0]; call retire safe(root, names[i]); end
+      call retire state
+    end
+  end
+  /* Publication is complete. Cleanup cannot undo a committed selection. */
+  completed = transaction; transaction = ''
+  call fileop 'release', '', ''
+  call remove_tree completed
+  say action 'completed for' backend 'in' root
+  if project then say 'Active backend:' backend
+  if unproject then say 'Active backend: none. Use crexx-llama use <backend> to select another installed variant.'
+  return 0
+
+fail: procedure = .void
+  arg message = .string
+  say 'ERROR:' message
+  call raise 'FAILURE', message, ''
+  return
+
+must: procedure = .void
+  arg status = .int, operation = .string
+  if status < 0 then call fail 'Cannot ' || operation
+  return
+
+parent: procedure = .string
+  arg path = .string
+  position = lastpos('/', translate(path, '/', '\'))
+  if position = 1 then return '/'
+  if position = 0 then return ''
+  return left(path, position - 1)
+
+safe_absolute: procedure = .void
+  arg path = .string
+  walk = path
+  do while walk <> '' & walk <> '/'
+    if rxfs..pathkind(walk) < 0 then call fail 'Refusing inaccessible file, junction or symlink: ' || walk
+    walk = parent(walk)
+  end
+  return
+
+safe: procedure = .string
+  arg prefix = .string, name = .string
+  if name = '' | left(name, 1) = '/' then call fail 'Empty or absolute package path.'
+  forbidden = '\:' || '0d0a0900'x || '*?"<>|'
+  do i = 1 to length(forbidden)
+    if pos(substr(forbidden, i, 1), name) > 0 then call fail 'Unsafe package path: ' || name
+  end
+  rest = name
+  do while rest <> ''
+    split = pos('/', rest)
+    part = rest
+    if split > 0 then part = left(rest, split - 1)
+    if part = '' | part = '.' | part = '..' | right(part, 1) = '.' | right(part, 1) = ' ' then call fail 'Unsafe package path: ' || name
+    if split = 0 then leave
+    rest = substr(rest, split + 1)
+    if rest = '' then call fail 'Unsafe package path: ' || name
+  end
+  path = prefix || '/' || name
+  call safe_absolute path
+  return path
+
+readjson: procedure = .string
+  arg path = .string
+  call safe_absolute path
+  text = readbinary(path) as .string
+  if \jsonvalid(text) | jsontype(text, '') <> 'object' then call fail 'Invalid JSON metadata: ' || path
+  return text
+
+metadata: procedure = .string
+  arg path = .string
+  text = readjson(path)
+  if jsonget(text, 'schema') <> '1' | jsonget(text, 'platform') <> 'windows-x64' | jsonget(text, 'toolchain') <> 'msvc' then call fail 'Unsupported installer metadata: ' || path
+  if wordpos(jsonget(text, 'backend'), 'vulkan cuda') = 0 then call fail 'Unsupported backend metadata.'
+  call validate_files jsonget(text, 'core_files')
+  call validate_files jsonget(text, 'plugin_files')
+  return text
+
+member_hash: procedure = .string
+  arg files = .string, name = .string
+  if files = '' then return ''
+  document = .rxjson..jsondocument(files)
+  node = document.member(document.root(), name)
+  if node <= 0 then return ''
+  return document.node_get(node)
+
+validate_files: procedure = .void
+  arg files = .string
+  if jsontype(files, '') <> 'object' | jsoncount(files, '') < 1 then call fail 'Missing file manifest.'
+  names = .string[]
+  call jsonmembers files, '', names
+  do i = 1 to names[0]
+    hash = member_hash(files, names[i])
+    if length(hash) <> 64 | verify(hash, '0123456789abcdef') <> 0 then call fail 'Invalid SHA256: ' || names[i]
+    do j = 1 to i - 1
+      if lower(names[i]) = lower(names[j]) then call fail 'Duplicate file identity: ' || names[i]
+    end
+  end
+  return
+
+check_files: procedure = .void
+  arg prefix = .string, files = .string
+  call validate_files files
+  names = .string[]
+  call jsonmembers files, '', names
+  do i = 1 to names[0]
+    path = safe(prefix, names[i])
+    if rxfs..pathkind(path) <> 1 then call fail 'Missing package file: ' || path
+    if rxhash..sha256filehex(path) <> member_hash(files, names[i]) then call fail 'Changed or incompatible file: ' || path
+  end
+  return
+
+disjoint: procedure = .void
+  arg first = .string, second = .string
+  a = .string[]; b = .string[]
+  call jsonmembers first, '', a
+  call jsonmembers second, '', b
+  do i = 1 to a[0]
+    do j = 1 to b[0]
+      if lower(a[i]) = lower(b[j]) then call fail 'Overlapping file ownership: ' || a[i]
+    end
+    if lower(a[i]) = 'core-package.json' then call fail 'Plugin overlaps core metadata.'
+  end
+  return
+
+unowned: procedure = .void expose root
+  arg incoming = .string, owned = .string
+  names = .string[]
+  call jsonmembers incoming, '', names
+  do i = 1 to names[0]
+    if rxfs..pathkind(safe(root, names[i])) <> 0 & member_hash(owned, names[i]) = '' then call fail 'Refusing to overwrite an unowned file: ' || names[i]
+  end
+  return
+
+owned_store: procedure = .void
+  arg base = .string, relative = .string, files = .string
+  path = base
+  if relative <> '' then path = safe(base, relative)
+  entries = .string[]
+  call must rxfs..listdir(path, entries), 'list backend store'
+  do i = 1 to entries[0]
+    name = entries[i]
+    if relative <> '' then name = relative || '/' || name
+    target = safe(base, name)
+    if rxfs..pathkind(target) = 2 then call owned_store base, name, files
+    else if name <> 'installer.json' & name <> 'uninstall.exe' then
+      if left(name, 8) <> 'payload/' | member_hash(files, substr(name, 9)) = '' then call fail 'Unowned file in backend store: ' || target
+  end
+  return
+
+ensure_directory: procedure = .void expose directories
+  arg path = .string
+  if path = '' | path = '/' | right(path, 1) = ':' then return
+  call safe_absolute path
+  kind = rxfs..pathkind(path)
+  if kind = 2 then return
+  if kind <> 0 then call fail 'Directory path is occupied: ' || path
+  call ensure_directory parent(path)
+  call must fileop('mkdir', path, ''), 'create directory ' || path
+  call arrayappend directories, path
+  return
+
+retire: procedure = .void expose transaction saved_from saved_to
+  arg path = .string
+  call safe_absolute path
+  if rxfs..pathkind(path) = 0 then return
+  backup = transaction || '/saved-' || (saved_from[0] + 1)
+  call must fileop('move', path, backup), 'retain previous file ' || path
+  call arrayappend saved_from, path
+  call arrayappend saved_to, backup
+  return
+
+publish: procedure = .void expose published
+  arg source = .string, target = .string, hardlink = .int
+  call safe_absolute source
+  call safe_absolute target
+  call ensure_directory parent(target)
+  if rxfs..pathkind(target) <> 0 then call fail 'Publication target exists: ' || target
+  status = -1
+  if hardlink then status = fileop('link', source, target)
+  if status <> 0 then status = fileop('copy', source, target)
+  call must status, 'publish ' || target
+  call arrayappend published, target
+  return
+
+puttext: procedure = .void expose published
+  arg target = .string, text = .string
+  call ensure_directory parent(target)
+  call arrayappend published, target
+  call writebinary target, text as .binary
+  return
+
+copy_files: procedure = .void
+  arg source = .string, target = .string, files = .string, hardlink = .int
+  names = .string[]
+  call jsonmembers files, '', names
+  do i = 1 to names[0]
+    if names[i] <> 'bin/rxllama.rxplugin' then call publish safe(source, names[i]), safe(target, names[i]), hardlink
+  end
+  if member_hash(files, 'bin/rxllama.rxplugin') <> '' then call publish safe(source, 'bin/rxllama.rxplugin'), safe(target, 'bin/rxllama.rxplugin'), hardlink
+  return
+
+remove_tree: procedure = .void
+  arg path = .string
+  call safe_absolute path
+  kind = rxfs..pathkind(path)
+  if kind = 0 then return
+  if kind = 1 then do
+    call must fileop('delete', path, ''), 'delete ' || path
+    return
+  end
+  entries = .string[]
+  call must rxfs..listdir(path, entries), 'list cleanup directory'
+  do i = 1 to entries[0]; call remove_tree safe(path, entries[i]); end
+  call must fileop('rmdir', path, ''), 'remove directory ' || path
+  return
+
+rollback: procedure = .void expose transaction saved_from saved_to published directories
+  i = .int
+  do i = published[0] to 1 by -1; call remove_tree published[i]; end
+  do i = directories[0] to 1 by -1
+    if rxfs..pathkind(directories[i]) = 2 then call must fileop('rmdir', directories[i], ''), 'remove new directory during rollback'
+  end
+  do i = saved_from[0] to 1 by -1
+    call must fileop('move', saved_to[i], saved_from[i]), 'restore ' || saved_from[i]
+  end
+  call fileop 'release', '', ''
+  call remove_tree transaction
+  transaction = ''
+  say 'Previous installation restored.'
+  return
+
+/* Small internal dispatch keeps transactional call sites uniform. The actual
+ * operations are reusable public rxfs capabilities, not installer helpers. */
+fileop: procedure = .int expose operation_guard leases
+  arg operation = .string, first = .string, second = .string
+  select
+    when operation = 'mkdir' then return rxfs..mkdir(first)
+    when operation = 'rmdir' then return rxfs..rmdir(first)
+    when operation = 'delete' then return rxfs..delete(first)
+    when operation = 'move' then return rxfs..move(first, second)
+    when operation = 'copy' then return rxfs..copy(first, second)
+    when operation = 'link' then return rxfs..hardlink(first, second)
+    when operation = 'lock' then do
+      operation_guard = .rxfs..fileguard(first, 'exclusive')
+      return operation_guard.status()
+    end
+    when operation = 'lease' then do
+      guard = .rxfs..fileguard(first, 'lease')
+      status = guard.status()
+      if status = 0 then leases[leases[0] + 1] = guard
+      return status
+    end
+    when operation = 'release' | operation = 'unlock' then do
+      do i = 1 to leases[0]; call leases[i].close(); end
+      if operation = 'unlock' & initialized(operation_guard) then call operation_guard.close()
+      return 0
+    end
+    otherwise return -1
+  end
+  return -1

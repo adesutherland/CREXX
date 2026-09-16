@@ -28,6 +28,17 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
   native providers replacing the historical mixed `rxmath` and broad `system`
   bundles)
 
+`rxfs` also provides `pathkind` (no-follow final-path inspection), `abspath`,
+non-overwriting `copy`/`hardlink`/`move`, and the C-bound `.rxfs..fileguard(path,
+mode)` owner. Modes are explicit `exclusive` (nonblocking lock-file acquisition)
+and `lease` (existing-file write/delete sharing on Windows; cooperative flock on
+Unix). Use `held()`, `status()` and explicit idempotent `close()`; copies share
+the resource, and last-value/VM teardown finalizes it. Lexical scope exit is not
+a promise of immediate finalization. Guards are VM-local and cannot be worker
+message handles. Reuse these main-library facilities in tools instead of adding
+private OS plugins or shell wrappers. See the human `rxfs` reference and
+`lib/plugins/fs/rxfs_test.crexx` for executable ownership/failure controls.
+
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
 
@@ -1050,11 +1061,17 @@ first-party code and may link an uninstrumented upstream engine. The separate
 core/plugin delivery is still under qualification; do not claim it released.
 CI-D04 adds separate optional Mac/Windows plugin installers which must locate
 and verify a matching installed core before copying plugin-owned files. Track
-INST-AC-01–04 in the pipeline plan; local Mac lifecycle checks are not native
-hosted, signing/notarization or offline Gatekeeper proof. Staple the Mac package
+INST-AC-01–05 in the pipeline plan; native Mac lifecycle evidence exists for
+ARM and Intel, but signing/notarization and offline Gatekeeper remain open. Staple the Mac package
 ticket; do not disable quarantine/Gatekeeper or promise no Apple network access.
-Windows side-by-side CUDA/Vulkan behavior awaits Adrian's choice; their existing
-ZIP paths collide and cannot simply be overlaid. Preserve this decision gate.
+Windows coexistence is approved: both variants are stored separately with one
+explicitly active. Either installer supplies the shared `crexx-llama` native
+executable written in cREXX, using `rxjson`, `rxhash` and the expanded standard
+`rxfs`. The PowerShell manager is removed. `status`/`use vulkan`/`use cuda`
+do not load inference, invoke a shell, compile source or use a first-run cache.
+Keep the command while either variant remains installed. Portable ZIP paths
+still collide and cannot simply be overlaid. Track Windows native proof in
+INST-04; do not infer it from the local portable controls.
 The small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
 fixture weights outside the user payload. Rehash declared provider manifests

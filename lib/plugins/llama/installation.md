@@ -43,8 +43,32 @@ the installed file/ownership checks determine whether the plugin is present.
 Release Mac plugin packages must have signed code, a signed installer and a
 stapled notarization ticket. The ticket provides local notarization evidence for
 offline installation; it does not disable Gatekeeper or guarantee macOS never
-contacts Apple. Windows installer coexistence behavior is awaiting a decision;
-continue to use only one of the existing portable ZIP variants per directory.
+contacts Apple.
+
+The Windows installers keep Vulkan and CUDA in separate backend directories.
+Either installer supplies the same **native cREXX program**, `crexx-llama`:
+
+```text
+crexx-llama status
+crexx-llama use vulkan
+crexx-llama use cuda
+```
+
+Close programs using llama.rexx before switching; use an administrator terminal
+for a system-wide installation. Installing a second backend preserves the active
+choice unless you select its activation checkbox. Switching checks the matching
+core and file hashes and restores the prior files if publication fails. Models,
+PATH and core binaries remain unchanged. There is no PowerShell switcher,
+first-run compilation, inference initialization or model download.
+
+Remove each backend through its own Windows installed-app entry. Removing an
+inactive variant leaves the active variant alone; removing the active one leaves
+no active plugin until you explicitly select another installed variant. The
+shared management program remains while either variant is installed. Previously
+packaged native applications retain their own bundled dependencies. Portable ZIP
+variants still share filenames: use only one ZIP variant per directory.
+Installer qualification remains tracked in CI-D04; these instructions do not
+claim a published/signed release.
 
 The candidate release pipeline supplies a llama-free cREXX core and a separate
 optional prebuilt `llama.rexx` package. Download the core and one plugin for the

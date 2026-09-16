@@ -18,12 +18,18 @@ main: procedure = .int
   source = directory || "/source.txt"
   target = directory || "/target.txt"
   renamed = directory || "/renamed.txt"
+  copied = directory || "/copied.txt"
+  linked = directory || "/linked.txt"
+  lockfile = directory || "/operation.lock"
   entries = .string[]
   failures = 0
 
   ignored = rxfs..delete(source)
   ignored = rxfs..delete(target)
   ignored = rxfs..delete(renamed)
+  ignored = rxfs..delete(copied)
+  ignored = rxfs..delete(linked)
+  ignored = rxfs..delete(lockfile)
   ignored = rxfs..rmdir(directory)
 
   failures = failures + fail("mkdir", rxfs..mkdir(directory), 0)
@@ -40,6 +46,39 @@ main: procedure = .int
   list_count = rxfs..listdir(directory, entries)
   failures = failures + fail("listdir count", list_count, 2)
   failures = failures + fail("listdir array", entries[0], 2)
+  failures = failures + fail("pathkind file", rxfs..pathkind(source), 1)
+  failures = failures + fail("pathkind directory", rxfs..pathkind(directory), 2)
+  failures = failures + fail("pathkind missing", rxfs..pathkind(copied), 0)
+  failures = failures + fail("copy", rxfs..copy(source, copied), 0)
+  failures = failures + fail("copy refuses overwrite", rxfs..copy(source, copied), -8)
+  failures = failures + fail("move refuses overwrite", rxfs..move(copied, source), -8)
+  failures = failures + fail("hardlink", rxfs..hardlink(source, linked), 0)
+  failures = failures + fail("hardlink refuses overwrite", rxfs..hardlink(source, linked), -8)
+  if (readbinary(copied) as .string) <> 'alpha' | (readbinary(linked) as .string) <> 'alpha' then do
+    say 'FAIL: copied/linked bytes'
+    failures = failures + 1
+  end
+  failures = failures + fail("delete copy", rxfs..delete(copied), 0)
+  failures = failures + fail("move", rxfs..move(linked, copied), 0)
+  failures = failures + fail("move removes source", rxfs..pathkind(linked), 0)
+  failures = failures + fail("delete moved file", rxfs..delete(copied), 0)
+  guard = .rxfs..fileguard(lockfile, 'exclusive')
+  failures = failures + fail("lock acquired", guard.held(), 1)
+  failures = failures + fail("lock status", guard.status(), 0)
+  contender = .rxfs..fileguard(lockfile, 'exclusive')
+  failures = failures + fail("lock contention", contender.held(), 0)
+  alias = guard
+  failures = failures + fail("shared guard close", alias.close(), 0)
+  failures = failures + fail("original closed", guard.held(), 0)
+  failures = failures + fail("idempotent close", guard.close(), 0)
+  failures = failures + fail("owned guard", finalized_guard(lockfile), 1)
+  guard = .rxfs..fileguard(lockfile, 'exclusive')
+  failures = failures + fail("last value finalizer released", guard.held(), 1)
+  failures = failures + fail("close reacquired", guard.close(), 0)
+  guard = .rxfs..fileguard(source, 'lease')
+  failures = failures + fail("lease acquired", guard.held(), 1)
+  failures = failures + fail("close lease", guard.close(), 0)
+  failures = failures + fail("delete lock file", rxfs..delete(lockfile), 0)
   failures = failures + fail("delete source", rxfs..delete(source), 0)
   failures = failures + fail("delete renamed", rxfs..delete(renamed), 0)
   failures = failures + fail("rmdir", rxfs..rmdir(directory), 0)
@@ -52,3 +91,11 @@ main: procedure = .int
   if failures > 0 then return 1
   say "PASS: rxfs public contract"
   return 0
+
+finalized_guard: procedure = .int
+  arg path = .string
+  guard = .rxfs..fileguard(path, 'exclusive')
+  held = guard.held()
+  /* Cached VM frames need not clear all values at lexical scope exit. */
+  guard = .rxfs..fileguard
+  return held

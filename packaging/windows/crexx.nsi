@@ -169,6 +169,16 @@ SectionEnd
 Section "Uninstall"
   SetRegView 64
 
+  ; Optional backend installers have independent entries, scoped to this core.
+  ; The core removal owns the entire installation tree, including their stores.
+  IfFileExists "$INSTDIR\.llama-installer\registration-id" 0 no_llama_registration
+    FileOpen $0 "$INSTDIR\.llama-installer\registration-id" r
+    FileRead $0 $1
+    FileClose $0
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\CREXX.llama.$1.vulkan"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\CREXX.llama.$1.cuda"
+  no_llama_registration:
+
   Call un.RemoveInstallBinFromPath
 
   ReadRegStr $0 HKLM "${CREXX_ENV_KEY}" "CREXX_HOME"

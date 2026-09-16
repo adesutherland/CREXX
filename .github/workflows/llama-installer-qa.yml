@@ -10,6 +10,15 @@ on:
         required: true
         type: string
         default: '35076278681'
+      platform:
+        description: Focused installer platform
+        type: choice
+        options: [windows, mac, all]
+        default: windows
+      cuda:
+        description: Include retained Windows CUDA payload (no engine compilation)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -17,6 +26,7 @@ permissions:
 
 jobs:
   mac:
+    if: github.event_name == 'workflow_dispatch' && inputs.platform != 'windows'
     name: Installer lifecycle ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -117,6 +127,89 @@ jobs:
         if: always()
         with:
           name: installer-qa-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/proof
+            ${{ runner.temp }}/source.json
+          retention-days: 14
+
+  windows:
+    if: github.event_name == 'push' || inputs.platform != 'mac'
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Resolve retained product identity
+        id: source
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run || '35076278681' }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:SOURCE_RUN -notmatch '^\d+$') { throw 'Invalid source run' }
+          $json = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN"
+          if ($LASTEXITCODE) { throw 'Cannot read source run' }
+          $json | Set-Content "$env:RUNNER_TEMP/source.json"
+          $run = $json | ConvertFrom-Json
+          if ($run.conclusion -ne 'success' -or $run.path -ne '.github/workflows/build.yml') { throw 'Unqualified source run' }
+          "commit=$($run.head_sha)" >> $env:GITHUB_OUTPUT
+          git fetch --no-tags --depth=1 origin $run.head_sha
+          if ($LASTEXITCODE) { throw 'Cannot fetch retained SDK headers' }
+          New-Item -ItemType Directory "$env:RUNNER_TEMP/proof" | Out-Null
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run || '35076278681' }}
+          name: user-test-${{ steps.source.outputs.commit }}-CREXX-windows-x64
+          path: ${{ runner.temp }}/retained/core
+      - name: Compile only rxfs and native Rexx manager; run focused controls
+        shell: pwsh
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = @(Get-ChildItem "$env:RUNNER_TEMP/retained/core/*.zip")
+          if ($zip.Count -ne 1) { throw 'Expected one core archive' }
+          Expand-Archive -LiteralPath $zip[0].FullName -DestinationPath "$env:RUNNER_TEMP/core"
+          $core = "$env:RUNNER_TEMP/core/CREXX-windows-x64"
+          python scripts/build-llama-manager.py --core $core --output "$env:RUNNER_TEMP/manager" *> "$env:RUNNER_TEMP/proof/manager-build.log"
+          if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/manager-build.log" -Tail 60; throw 'Native manager build failed' }
+          $env:LLAMA_MANAGER = "$env:RUNNER_TEMP/manager"
+          python -m unittest discover -s scripts/tests -p test_llama_manager.py -v *> "$env:RUNNER_TEMP/proof/manager-tests.log"
+          if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/manager-tests.log" -Tail 100; throw 'Manager controls failed' }
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run || '35076278681' }}
+          name: user-test-${{ steps.source.outputs.commit }}-llama.rexx-windows-x64-vulkan
+          path: ${{ runner.temp }}/retained/vulkan
+      - uses: actions/download-artifact@v8
+        if: inputs.cuda == true
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run || '35076278681' }}
+          name: user-test-${{ steps.source.outputs.commit }}-llama.rexx-windows-x64-cuda
+          path: ${{ runner.temp }}/retained/cuda
+      - name: Native installers and installed provider lifecycle
+        shell: pwsh
+        env:
+          INCLUDE_CUDA: ${{ inputs.cuda && '1' || '0' }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $nsis = "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
+          if (!(Test-Path $nsis)) { choco install nsis --yes --no-progress }
+          if (!(Test-Path $nsis)) { throw 'NSIS unavailable' }
+          python scripts/test-llama-windows-installer.py --work "$env:RUNNER_TEMP" --makensis $nsis *> "$env:RUNNER_TEMP/proof/native-installer.log"
+          if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/native-installer.log" -Tail 100; throw 'Native installer lifecycle failed' }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: installer-qa-windows-${{ github.sha }}
           path: |
             ${{ runner.temp }}/proof
             ${{ runner.temp }}/source.json

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Wrap already qualified core/plugin payloads; never build the product/engine.
 
-Python is a packaging dependency only. Recipients use the native installer and
-the OS shell/PowerShell. Input manifests must describe final (post-signing) bytes.
+Python is a packaging dependency only. Windows recipients use the native cREXX
+manager. Input manifests must describe final (post-signing) bytes.
 """
 import argparse
 import hashlib
@@ -118,6 +118,8 @@ def main():
     parser.add_argument('--keychain')
     signing.add_argument('--sign-helper', type=Path)
     parser.add_argument('--makensis', default='makensis')
+    parser.add_argument('--manager', type=Path,
+                        help='Prebuilt native cREXX management tree (required for Windows)')
     args = parser.parse_args()
     args.output = args.output.resolve()
     if not re.fullmatch('[A-Za-z0-9.+~-]+', args.version):
@@ -128,12 +130,24 @@ def main():
         work = Path(temporary)
         meta = prepare(args.core, args.plugin, work)
         windows = meta['platform'].startswith('windows-')
-        if windows and not args.prepare_only and not (ROOT / 'packaging/llama/llama.nsi').exists():
-            parser.error('Windows installer wrapper awaits the CI-D04 backend coexistence decision')
+        if windows:
+            if not args.manager:
+                parser.error('Windows requires --manager from build-llama-manager.py')
+            manager = verify_manifest(args.manager, 'manager.json')
+            if manager.get('schema') != 1 or manager.get('core_commit') != meta['commit']:
+                raise ValueError('Manager/core identity mismatch')
+            if 'bin/crexx-llama.exe' not in manager['files']:
+                raise ValueError('Windows native cREXX manager is missing')
+            actual = {p.relative_to(args.manager).as_posix() for p in args.manager.rglob('*') if p.is_file()}
+            if actual != set(manager['files']) | {'manager.json'}:
+                raise ValueError('Unlisted manager files')
+            shutil.copytree(args.manager, work / 'tool')
         if not args.unsigned_qa and not args.prepare_only:
             verify_signatures(args.core, args.plugin, windows)
-        extension = 'ps1' if windows else 'sh'
-        shutil.copy2(ROOT / 'packaging/llama' / ('manage.' + extension), work / ('manage.' + extension))
+            if windows:
+                verify_signatures(args.manager, args.manager, True)
+        if not windows:
+            shutil.copy2(ROOT / 'packaging/llama/manage.sh', work / 'manage.sh')
         if args.prepare_only:
             shutil.copytree(work, args.output)
             print('Prepared installer inputs: ' + str(args.output))

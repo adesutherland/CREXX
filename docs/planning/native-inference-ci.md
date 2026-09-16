@@ -1118,12 +1118,85 @@ four-tool public-provider smoke and reinstall/removal pass. This is not yet a
 native Installer.app, signed/notarized or offline Gatekeeper pass. The new
 `llama-installer-qa.yml` reuses retained binaries for native Mac installer QA.
 
-Adrian then raised Windows users installing both CUDA and Vulkan. Existing
-archives overlap. A required decision is pending: preserve both side by side
-and explicitly activate one, or reject a second backend until the first is
-removed. Do not assume an answer, overlay them, or infer simultaneous in-process
-backend support. Windows validation groundwork is independent; native Windows
-installer lifecycle/registration and its QA must follow the chosen behavior.
+Adrian then raised Windows users installing both CUDA and Vulkan and approved
+keeping both separately with one explicitly active. The Windows installer stores
+complete verified variants under `.llama-backends/<backend>` and projects only
+the active variant into the existing canonical runtime paths. Use hard links on
+the same volume where supported, with a verified copy fallback; do not duplicate
+CUDA files unnecessarily or change the runtime/ABI. This does not enable both
+backends in one process. Existing separately packaged native applications retain
+their own dependencies and are unaffected by this installation's selection.
+
+The installed `crexx-llama status`, `crexx-llama use vulkan` and
+`crexx-llama use cuda` commands are the switching surface. Installing a second
+variant preserves the current selection unless its activation option is chosen.
+Switching verifies core/variant identity and hashes, serializes installer work,
+refuses in-use files, and rolls back failures. A system-wide install requires an
+administrator terminal. No model download or environment-variable change occurs.
+Removing the active backend leaves no active plugin until the user selects
+another installed variant; it must not silently switch. INST-AC-02/03 additionally
+require coexistence, explicit switching, failed/in-use switching, independent
+removal and unchanged core/model controls. Implement within INST-01–03; retain
+all other criteria and signing/offline gates.
+
+**cREXX switcher requirement, 16 September:** Adrian requires the shared
+switcher to be a cREXX program, supplied by either Windows plugin installer.
+The draft PowerShell command wrapper is superseded; a cREXX wrapper that merely
+delegates the whole switch to that script would not satisfy this requirement.
+Keep command parsing, backend selection, manifest/ownership validation and
+transaction orchestration in cREXX. Reuse existing libraries, with narrowly
+scoped native filesystem/locking primitives only where the operating system
+requires them. Keep installation-specific registry/elevation/signing actions
+in the native installer. Both installers supply the same versioned management
+program, preserve it while either backend remains, and never overwrite a newer
+incompatible management format silently.
+
+The approved delivery is the standalone native `crexx-llama` executable written
+in cREXX, plus its source. Adrian explicitly authorized replacing PowerShell
+before publication. Either backend installer supplies it; recipients need
+neither a C compiler nor a first-run compilation cache. No core-driver dispatch
+change is required. The current `crexx` driver compiles
+ordinary sources and requires `--args` for program arguments; it has no automatic
+`crexxsaa` source-cache delegation. `crexxsaa_run_source()` does cache hosted
+source, but the `crexxsaa` executable is a cache-maintenance tool, not a general
+script runner. Do not introduce a new compilation cache for this small utility.
+
+8. [ ] **INST-AC-05:** the delivered switcher is implemented in cREXX and
+   installed identically by either backend installer; installing/removing one
+   variant preserves the shared tool while the other remains. Retain source,
+   compiled-tool identity and native install/switch/remove proof with no Python,
+   SDK or first-run compilation requirement. An installed tool must work even
+   when no inference backend is active; it must not import `llama` itself.
+9. [ ] **INST-04:** replace the draft Windows shell switcher with the cREXX
+   management program, reuse the existing compile/link/native-packaging path,
+   and qualify the public command plus safe switching controls. Use the approved
+   standalone native command. Serves INST-AC-02/03/05; preserve
+   the completed Mac lifecycle evidence and separate signing/offline gates.
+
+The uncommitted Windows installer/helper draft has not passed Windows native
+QA. Its current PowerShell switching implementation is not the accepted final
+delivery; do not package or publish it as satisfying INST-AC-05.
+
+INST-04 implementation sequence, amended at Adrian's request to fill gaps in
+the main libraries: (1) implement CLI, JSON/hash verification, ownership and
+rollback in Level B using existing `rxjson`/`rxhash`; (2) reuse `rxfs` and add its
+missing reusable filesystem primitives and an owning `fileguard` class for
+nonblocking exclusive locks/Windows file leases. Use native RXPA factories and
+finalization, not raw process-global handles or an installer-private provider.
+Ordinary copies share the guard; explicit close releases it for all aliases;
+last-reference/VM teardown releases any remaining OS handle. Locks stay VM-local.
+The filesystem provider owns no backend-selection/installation policy and
+introduces no runtime ABI. (3) compile/package this utility with the expanded
+static `rxfs` against the retained core runtime
+against the retained core SDK and replace every Windows installer call to the
+PowerShell helper; (4) retain focused mutation/failure controls and actual
+Windows native installer/provider lifecycle evidence. The packaging toolchain
+may use Python/PowerShell on runners; the delivered switcher must not invoke
+them or require them. Only the small filesystem provider/tool are rebuilt for
+this focused check; no engine/VM rebuild or model download follows. Normal core
+builds will acquire the library additions through the existing `rxfs` targets.
+Retain ordinary and sanitizer-focused `rxfs` lifecycle controls (including
+copy/close/finalization and contention) separately from Windows installer QA.
 
 Hosted Mac run `35109939178` at `68f4a7564` passes actual native core/plugin
 installation, installed public-provider smoke, reinstall and removal on both

@@ -9,7 +9,7 @@ are chronological evidence; this live section supersedes their pending actions.
 
 **Installer addition (CI-D04):** Adrian authorized implementing separate Windows
 and Mac plugin installers now, locating/checking an installed matching core.
-The canonical criteria are INST-AC-01–04 / INST-01–03 in the pipeline plan.
+The canonical criteria are INST-AC-01–05 / INST-01–04 in the pipeline plan.
 Mac local and native hosted lifecycle/provider controls pass on ARM and Intel:
 run `35110318683` at packaging revision `be8fbf4e5`, with 13 controls per host and
 unchanged retained `f10e70ee5` core/plugin binaries. Evidence is under
@@ -17,9 +17,24 @@ unchanged retained `f10e70ee5` core/plugin binaries. Evidence is under
 root-owned output directory; QA and installer completion guidance are corrected.
 Signed/offline Gatekeeper proof remains open. Mac concern explicitly
 means Gatekeeper/notarization checks: staple the notarized package; never promise
-macOS makes no Apple network requests. Windows CUDA/Vulkan coexistence is a
-pending user choice (both stored/one active versus remove before switching).
-Do not silently overlay their colliding filenames or select an answer.
+macOS makes no Apple network requests. Windows CUDA/Vulkan coexistence is
+approved: keep both complete variants separately with one explicitly active;
+installing the second preserves the current selection unless activation is
+chosen. Adrian requires the common switcher to be a cREXX program installed by
+either variant. The PowerShell manager is removed; `crexx-llama` is now a native
+executable authored in Rexx. At Adrian's further direction its OS capabilities
+belong in standard `rxfs`, not a private plugin. New reusable operations are
+`pathkind`, `abspath`, non-overwriting `copy`/`hardlink`/`move`, and VM-owned
+`fileguard(path, mode)` with `held`/`status`/`close`. INST-AC-05 / INST-04 retain
+the cREXX tool, shared ownership and no-first-run-compilation requirements.
+Thirteen local native-manager lifecycle/failure controls and the four normal
+Debug rxfs VM/optimization cells pass; focused ASan and actual Windows native
+installer QA are in progress. Do not assume the ordinary
+driver uses the hosted `crexxsaa` source cache; it currently does not. Next work
+is focused Windows retained-artifact lifecycle QA, not a VM/CUDA rebuild or a
+repeat of unchanged Mac installer tests. `build-llama-manager.py` builds only
+the small current rxfs/tool and links retained core runtime archives; it must
+not alter the retained core payload. Reuse one manager tree for both variants.
 
 **New approved release policy (CI-D03):** Vulkan is the general Windows/Linux
 download; CUDA remains an optional separate plugin. Every full release build,
