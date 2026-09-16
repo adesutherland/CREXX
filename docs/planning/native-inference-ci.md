@@ -1334,3 +1334,15 @@ terminal source metadata and retain that validation. Repackage/notarize/staple
 the unchanged signed Mac payload in the installer QA workflow, then perform the
 same offline check. Do not rebuild core/engines or call the original run green;
 the terminal packaging retry must be recorded as its replacement evidence.
+
+**Packaging retry `35149300574`:** both Mac packages now pass real signing,
+notarization, stapling and online Gatekeeper. Both offline QA hosts correctly
+disable networking, reject the unsigned control and validate the core signature,
+but the harness incorrectly invokes `stapler validate` while offline. Apple's
+installed `stapler(1)` documentation explicitly requires Internet access for
+validation against the latest ticket; both logs show the expected CloudKit
+network error 68. Move that online comparison after the offline proof. Retry on
+fresh hosts using these already signed packages, without online Gatekeeper or
+ticket validation beforehand, to avoid warming their notarization cache. Retain
+quarantine, unsigned rejection, actual offline assessment/install/execution and
+network restoration. INST-AC-04 stays open until that full proof passes.

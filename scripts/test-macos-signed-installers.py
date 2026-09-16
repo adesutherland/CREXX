@@ -67,13 +67,12 @@ def main():
                                                     'install', '--verbose=4', unsigned], expect=1)
         for kind, pkg in (('core', args.core_pkg), ('plugin', args.plugin_pkg)):
             run(kind + '-signature', ['/usr/sbin/pkgutil', '--check-signature', pkg])
-            run(kind + '-ticket', ['/usr/bin/xcrun', 'stapler', 'validate', pkg])
             run(kind + '-gatekeeper', ['/usr/sbin/spctl', '--assess', '--type', 'install', '--verbose=4', pkg])
             run(kind + '-install', ['/usr/sbin/installer', '-pkg', pkg, '-target', '/'])
         run('installed-consumer', [sys.executable, Path(__file__).with_name('test-llama-installed.py'),
                                   '--prefix', prefix, '--logs', args.logs / 'consumer'])
         run('still-offline-control', curl, expect=1)
-        outcome = 'passed'
+        outcome = 'offline-passed'
     finally:
         restored = True
         for name in interfaces:
@@ -86,6 +85,18 @@ def main():
             interfaces_restored=restored, checks=records), indent=2) + '\n')
         if not restored:
             raise RuntimeError('Interface restoration incomplete; watchdog retained')
+    # stapler validate deliberately compares with Apple's latest online ticket.
+    # Run it AFTER the offline consumer proof, so it cannot warm that host's
+    # notarization cache before Gatekeeper makes its offline decision.
+    outcome = 'failed'
+    try:
+        run('restored-online-control', curl + ['--retry', '6', '--retry-all-errors', '--retry-delay', '2'])
+        for kind, pkg in (('core', args.core_pkg), ('plugin', args.plugin_pkg)):
+            run(kind + '-ticket-online-after-install', ['/usr/bin/xcrun', 'stapler', 'validate', pkg])
+        outcome = 'passed'
+    finally:
+        (args.logs / 'summary.json').write_text(json.dumps(dict(outcome=outcome,
+            interfaces_restored=restored, checks=records), indent=2) + '\n')
     print('PASS: signed/stapled core and plugin install and consumer with networking disabled')
 
 

@@ -23,6 +23,10 @@ on:
         description: Use the retained signed/stapled Mac installers and verify offline installation
         type: boolean
         default: false
+      mac_package_run:
+        description: Optional prior installer QA run with successfully signed/notarized plugin packages for fresh-host offline QA
+        type: string
+        default: ''
       repackage_signed_mac:
         description: Retry only Mac installer packaging from qualified signed ZIPs; permit that sole source Build failure
         type: boolean
@@ -177,15 +181,34 @@ jobs:
           name: CREXX-${{ matrix.platform }}-release-asset
           path: ${{ runner.temp }}/signed/core
       - name: Download signed plugin installer
-        if: inputs.signed_mac && !inputs.repackage_signed_mac
+        if: inputs.signed_mac && !inputs.repackage_signed_mac && inputs.mac_package_run == ''
         uses: actions/download-artifact@v8
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.source_run }}
           name: llama.rexx-${{ matrix.platform }}-${{ matrix.backend }}-release-asset
           path: ${{ runner.temp }}/signed/plugin
+      - name: Verify the retained signed plugin packaging source
+        if: inputs.signed_mac && inputs.mac_package_run != ''
+        id: mac_package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAC_PACKAGE_RUN: ${{ inputs.mac_package_run }}
+          PRODUCT_COMMIT: ${{ steps.source.outputs.commit }}
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          python3 scripts/resolve-macos-installer-source.py
+      - name: Download the retained signed plugin package
+        if: inputs.signed_mac && inputs.mac_package_run != ''
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.mac_package_run }}
+          name: signed-plugin-installer-${{ matrix.platform }}-${{ steps.mac_package.outputs.revision }}
+          path: ${{ runner.temp }}/signed/plugin
       - name: Repackage and notarize retained signed Mac plugin
-        if: inputs.signed_mac && inputs.repackage_signed_mac
+        if: inputs.signed_mac && inputs.repackage_signed_mac && inputs.mac_package_run == ''
         env:
           APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 }}
           APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD }}
@@ -201,7 +224,7 @@ jobs:
             "$RUNNER_TEMP/signed/plugin/llama.rexx-candidate-${{ steps.source.outputs.commit }}-${{ matrix.platform }}-${{ matrix.backend }}.pkg" \
             > "$RUNNER_TEMP/proof/repackage.log" 2>&1 || { tail -80 "$RUNNER_TEMP/proof/repackage.log"; exit 1; }
       - uses: actions/upload-artifact@v7
-        if: inputs.signed_mac && inputs.repackage_signed_mac
+        if: inputs.signed_mac && inputs.repackage_signed_mac && inputs.mac_package_run == ''
         with:
           name: signed-plugin-installer-${{ matrix.platform }}-${{ github.sha }}
           path: ${{ runner.temp }}/signed/plugin/*.pkg
