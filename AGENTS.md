@@ -47,6 +47,36 @@ For tasks that write or edit Level B `.rexx`, start with `docs/ai-context/CREXX_
 
 For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the current protocol reference. The pre-release command-only native callback registration form has been retired; use the current environment object/function protocol and `rxvml_address_register_callback_environment(ctx, name, id, command_cb, function_cb, userdata)`. ADDRESS host-variable anchors (`:name` and `${name}`) are compiler auto-expose syntax only; their command meaning belongs to the selected environment handler.
 
+## Development publication and overnight assurance
+
+For ordinary changes, a successful core product build and appropriate functional
+regressions are sufficient to promote to `develop`. Run focused tests for the
+affected behavior and the relevant normal correctness suite; retain evidence for
+the code/test/build inputs actually qualified. The normal automatic publication
+workflows provide Release product/smoke, optimizer-parity and CodeQL checks.
+Do not turn every development publication into release qualification.
+
+Full hosted deep/comprehensive matrices, build-graph comparisons, stress and
+full Linux ASan/LSan/macOS ASan assurance normally run overnight. Do not manually
+dispatch them, or wait for them before ordinary `develop` publication, merely
+because a change touches the compiler/runtime or is called a hotfix. Their
+purpose is to find issues for prompt remedial work after integration; that work
+may justify a targeted repeat of the relevant deep gate. This is an intentional
+tradeoff to keep development feedback and publication fast.
+
+Additional pre-publication qualification is an exception: for example an
+explicitly agreed novel native-inference change, a release candidate, or repair
+and closure of an actual sanitizer finding. Record the concrete risk, additional
+checks and why they gate that work in its plan. Do not infer the exception from
+general requests to test, qualify, publish or obtain green CI. Preserve explicit
+user-required gates. Actual first-party sanitizer findings still follow the
+SAN worklist and closure rules below; overnight scheduling does not waive known
+defects or permit unsupported sanitizer-clean/release-ready claims.
+
+Reuse unchanged valid evidence. Promotion, history-only merges and documentation
+edits do not require repeating broad testing. Check the automatic publication
+workflows for the pushed revision without dispatching extra overnight lanes.
+
 ## Working Rules
 
 - For tasks that change compiler logic, syntax, scoping, or architecture, present a numbered implementation plan before editing.
@@ -57,8 +87,9 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
   test/build input has changed. Verify that with the relevant diff or tree
   hashes and reuse the retained evidence. A history-only merge or
   documentation-only commit does not by itself invalidate completed testing.
-  Exact-SHA hosted workflows required for publication remain separate gates;
-  they do not justify repeating unchanged local QA.
+  Normal automatic publication workflows remain separate checks; use the
+  development-publication policy above to choose gates, and do not infer a
+  requirement to dispatch overnight assurance or repeat unchanged local QA.
 - Before registering or materially expanding an aggregate CTest that launches
   nested builds, compilers, assemblers, linkers, VMs, or scenario matrices,
   measure it in isolation in normal Debug and the maintained sanitizer build.

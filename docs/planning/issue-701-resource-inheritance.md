@@ -17,21 +17,21 @@ Prepare an evidence-backed update for existing #701 without posting it.
 
 ## Acceptance criteria
 
-- [ ] AC-01: deterministic POSIX regression observes A's exit/completion while
+- [x] AC-01: deterministic POSIX regression observes A's exit/completion while
   sibling B remains alive, without unrelated pipe ends retaining EOF.
-- [ ] AC-02: deterministic Windows controls establish/prevent unintended handle
+- [x] AC-02: deterministic Windows controls establish/prevent unintended handle
   inheritance for absent, partial and complete standard-stream redirection on
   both MSVC and MinGW; explicitly investigate temporary-file rename behavior.
-- [ ] AC-03: regressions fail on defective baseline and pass after repair, using
+- [x] AC-03: regressions fail on defective baseline and pass after repair, using
   barriers/handshakes or bounded fault injection, not sleeps or lucky retries.
-- [ ] AC-04: document ownership of pipe/file creation, inheritance flags, child
+- [x] AC-04: document ownership of pipe/file creation, inheritance flags, child
   setup and failure cleanup, covering creation-to-flag windows and both ends.
-- [ ] AC-05: interactive stdin, prompt visibility, inherited stdout/stderr,
+- [x] AC-05: interactive stdin, prompt visibility, inherited stdout/stderr,
   explicit captures, output draining, cancellation, exit status and teardown
   remain correct; retain #646/#669/#678/#697 behavior.
-- [ ] AC-06: worker failures distinguish missing output, stamp write and rename
+- [x] AC-06: worker failures distinguish missing output, stamp write and rename
   operations with useful diagnostics, without retrying away failures.
-- [ ] AC-07: focused Debug/maintained sanitizer, broader core regression and
+- [x] AC-07: focused Debug/maintained sanitizer, broader core regression and
   target-platform gates pass; unverified platform cells remain explicit.
 - [ ] AC-08: retain exact revisions, commands, logs and outcomes; promote the
   qualified repair to develop and check required post-promotion workflows to
@@ -70,9 +70,8 @@ independently reproduced. No extra project-worker serialization is proposed.
 
 ## Qualification ledger
 
-All cells pending: macOS Debug, macOS ASan (LSan unsupported), Linux Debug,
-Linux ASan/LSan, Windows MSVC, Windows MinGW; hotfix hosted gates and develop
-post-promotion workflows. STEP-01 in progress; STEP-02..05 open.
+Current status is recorded in the final candidate section below. Earlier
+entries retain the investigation chronology and do not override that status.
 
 ## STEP-02/03 implementation evidence and ownership (16 September)
 
@@ -192,3 +191,115 @@ its existing bin workspace resource lock and a 180-second hang guard. No retry
 or change to project-worker concurrency. The operation diagnostics preserve all
 existing RexxDoc blocks. STEP-02/03 complete for implementation; full acceptance
 still awaits the qualification gates, including the final expanded Windows tests.
+
+
+## Final candidate qualification (in progress)
+
+Code candidate: `135b9254fffdd0c9a8e963d1092c68bb273bf66b`, pushed to hotfix.
+All 32,616 non-documentation tracked input hashes are frozen in
+`docs/qa/issue-701/local-final/frozen-inputs.json.gz` (uncompressed manifest
+SHA256 `aad62f034d47497a6f4f92973cc052a820bfd51a9133d5246cccc6174cfe5aa0`).
+Both final focused panels pass 7/7: Debug 4.96s at
+`cmake-build-debug/asan-logs/20260916-120345-ctest`; maintained Apple ASan 7.00s at
+`cmake-build-debugasan/asan-logs/20260916-120503-ctest`. Logs retained in local-final.
+The isolated cold diagnostic measurement remains 14s; subsequent warm execution
+is faster and does not replace the conservative scheduling evidence.
+
+Hosted exact-candidate gates:
+- Child Inheritance QA: 35088226165 (success, all four platforms).
+- Deep Build QA: 35088225950 (success, all required jobs).
+- Sanitizer QA: 35088228552 (cancellation requested by Adrian; not a full sanitizer pass).
+Local full Debug build and QA prep passed before the final CTest sweep. Broad
+CTest excludes only performance-measurement; no other local build runs alongside.
+No promotion has occurred. Original acceptance IDs and full vision remain active.
+
+
+Child Inheritance QA **35088226165 succeeds on the final candidate**, all four
+platforms. This includes the additional 16 Windows cases for NULL/invalid
+standard handles and unchanged parent handle counts after both successful and
+failed CreateProcess paths. Final artifacts are under
+`docs/qa/issue-701/remote-135b925/inheritance/`. AC-01/02/03/04/06 are verified;
+AC-05/07/08 remain open pending broad qualification and promotion.
+
+
+Local broad normal Debug passes **2,306/2,306**, 902.27 seconds, no retries or
+failures. Runner: `cmake-build-debug/asan-logs/20260916-120546-ctest`. Retained
+`docs/qa/issue-701/local-final/broad-debug.log.gz`. Command:
+
+```sh
+tools/asan-run.sh --build-dir cmake-build-debug --phase ctest --test-jobs 30 --exclude-label '^performance-measurement$' --keep-going --no-live-tail --tail-lines 25
+```
+
+The sweep includes the interactive/TTY stdin and prompt tests, optimized and
+unoptimized ADDRESS captures/arrays/transfers, process byte-provider lifecycle,
+POSIX termination and launch diagnostics, project-build contract (96.20s),
+process runtime (83.17s), and deterministic worker diagnostics (2.61s).
+All 32,616 frozen inputs still match. Hosted comprehensive Linux and macOS ARM64
+also pass: each 2,292 correctness tests plus three install/package/external
+consumer tests. Windows/Intel macOS comprehensive and both full sanitizer jobs
+remain pending. No source or test change, no repeat broad local run.
+
+
+AC-05 is verified by the completed local broad sweep, focused Debug/ASan
+lifecycle controls, and completed Linux/Apple ARM64/Windows comprehensive
+matrices. The existing stdin/prompt, ADDRESS flush/capture/array-transfer,
+terminal process-group, typed-timeout, cancellation and teardown regressions
+remain active. Windows comprehensive passes 2,214 correctness tests plus three
+install/package/external-consumer tests; worker diagnostics pass there in 0.80s.
+AC-07 (remaining full hosted gates) and AC-08 (promotion/post-promotion) are open.
+
+
+## Publication-policy clarification during qualification
+
+Adrian questioned why overnight assurance was being treated as an every-publish
+gate. Live inspection confirms that `Building_cRexx.md` and the workflow YAML
+retain fast PR/develop publication, scheduled deep/comprehensive assurance, and
+scheduled full sanitizers. The two long runs above were explicitly dispatched
+for this task by the agent, not triggered by hotfix publication. The agent
+acknowledged overbroad gate selection; full build-graph checks and entire
+sanitizer suites are not automatic requirements for every runtime repair.
+The sanitizer guide's mandatory-CI/required-branch-check wording and AGENTS'
+unspecified required-publication-gate language need clearer alignment with the
+current build guide. No workflow trigger or general QA policy has been changed.
+Deep QA has already passed; the existing sanitizer run remains active. This
+question alone is not recorded as approval to cancel it or weaken the original
+acceptance criteria. Do not dispatch these long workflows again merely for
+promotion or documentation-only bookkeeping; reuse unchanged evidence.
+
+
+Deep Build QA **35088225950 is terminal success** at the exact code candidate.
+Linux, macOS ARM64 and macOS Intel each pass 2,292 correctness tests; Windows
+passes 2,214. Each platform also passes all three install/package/external
+consumer checks. Isolated Debug stress passes 9/9. Release jobs 1/5/30,
+immediate no-op, missing-dependency and change-closure controls pass, with
+identical bytecode manifests. Logs, manifests and terminal job metadata are
+retained under `docs/qa/issue-701/remote-135b925/deep/` and `deep-status.json`.
+The scheduled-only assurance-marker job is skipped on this manual dispatch;
+that is expected and is not a missing product check. Full sanitizer results
+remain pending.
+
+
+## Approved publication-policy correction and remaining closeout
+
+Adrian explicitly directed on 16 September: update guidance so core build and
+functional success suffice for normal develop integration; deeper pre-publish
+work is an exception (for example novel llama work); nightly findings can be
+repaired the next morning. He asked whether appropriate tests had passed and,
+if so, to cancel the remaining long run and move on.
+
+The evidence is sufficient: 2,306 local Debug tests, focused Debug/Apple ASan
+7/7 each, baseline-negative/current-positive controls on Linux, macOS, MSVC and
+MinGW, plus the already completed full cross-platform Deep QA. AC-07 is
+therefore verified under the explicitly corrected scope. The still-running
+full sanitizer workflow 35088228552 was cancelled at his direction; it must not
+be cited as full Linux ASan/LSan or macOS ASan success. There is no new observed
+first-party sanitizer finding. This replaces the agent's overbroad manual-gate
+selection above, without weakening the product behavior criteria.
+
+Canonical AGENTS.md, the sanitizer guide and the programming build guide now
+state the default and exception policy consistently. No workflow trigger changes
+are needed. Runtime/test/build inputs remain identical to 135b9254f, so broad
+qualification is reused. STEP-01..04 are complete. STEP-05/AC-08 remain pending
+normal develop promotion and the automatic Build CREXX/CodeQL terminal results.
+Final result bookkeeping will be retained on hotfix without a second pointless
+develop publication solely to update the evidence ledger.

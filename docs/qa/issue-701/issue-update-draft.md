@@ -1,7 +1,7 @@
 # Draft update for #701 — not posted
 
-The generic launcher repair is on the persistent `hotfix` branch; promotion and
-full core qualification are still pending.
+The generic launcher repair is on the persistent `hotfix` branch; core qualification has
+passed and develop promotion is in progress.
 
 The POSIX regression forces B to launch while A's stdout writer is still open
 in the parent. The defective launcher lets B retain it. With the repair, A's
@@ -18,21 +18,27 @@ uses private standard-handle duplicates and an allowlist for every combination.
 All 16 cases (eight redirect masks, inheritable/private parent std handles) pass:
 the unrelated file is absent, rename succeeds while B remains alive, and intended
 stdin/stdout/stderr work. FOPEN now creates files privately rather than clearing
-inheritance after opening.
+inheritance after opening. Another 16 controls cover NULL/invalid standard
+handles, and handle counts remain unchanged after successful launches and
+CreateProcess failure cleanup.
 
 This demonstrates the proposed Windows mechanism. It does **not** attribute the
 historical CI-F18 silent project-build failure to that mechanism. Worker
-diagnostics are being qualified to distinguish missing assembled output, stamp
+diagnostics now distinguish missing assembled output, stamp
 write/NOTREADY, and stamp rename failures without retries.
 
 Evidence so far:
 
 - Baseline launcher blob: `c88ab671291d5ddf8f5a7d276c553a44babba3b0`.
 - Baseline source revision: `b5b827489d781f9e42d305ef264a22d2c1c42cb6`.
-- [Four-platform deterministic controls](https://github.com/adesutherland/CREXX/actions/runs/35086663828): success at `bd19a94ddd597459eb1fa01cae1cf33294d063b5`.
-- Focused local Debug and maintained Apple ASan: both pass; Apple LSan is unsupported.
-- Full Linux ASan/LSan, broader core gates, final revision and develop promotion:
-  pending; fill in terminal evidence before posting this draft.
+- Final code candidate: `135b9254fffdd0c9a8e963d1092c68bb273bf66b`.
+- [Four-platform deterministic controls](https://github.com/adesutherland/CREXX/actions/runs/35088226165): success on that exact candidate.
+- Focused local Debug and maintained Apple ASan: both 7/7 pass; Apple LSan is unsupported.
+- Broad local Debug: 2,306/2,306 pass in 902.27 seconds, without retries.
+- Hosted Linux and macOS ARM64 comprehensive: each 2,292 correctness plus three install/package tests pass.
+- [Deep Build QA](https://github.com/adesutherland/CREXX/actions/runs/35088225950): success on the exact candidate, all supported platforms and install/package checks.
+- The optional full sanitizer run was cancelled at Adrian's direction after the appropriate core/functional gates passed. Full Linux ASan/LSan is not claimed.
+- Develop promotion and its normal automatic checks are pending; update before posting.
 
 No RAG workaround, model workload, issue comment, release or version tag is part
 of this repair.

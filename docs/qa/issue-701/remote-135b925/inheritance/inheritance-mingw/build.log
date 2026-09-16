@@ -1,0 +1,56 @@
+[0/2] Re-checking globbed directories...
+[1/56] Building C object platform/CMakeFiles/platform.dir/rxinteger.c.obj
+[2/56] Building C object interpreter/CMakeFiles/rxvmref.dir/rxvmref.c.obj
+[3/56] Building C object platform/CMakeFiles/platform.dir/platform.c.obj
+[4/56] Building C object interpreter/CMakeFiles/rxvmref.dir/rxpacompat.c.obj
+[5/56] Building C object interpreter/CMakeFiles/rxvmmemory.dir/rxvmmemory.c.obj
+[6/56] Linking C static library bin\libplatform.a
+[7/56] Linking C static library bin\librxvmmemory.a
+[8/56] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decContext.c.obj
+[9/56] Linking C static library bin\librxvmref.a
+[10/56] Building C object avl_tree/CMakeFiles/avl_tree.dir/avl_tree.c.obj
+[11/56] Building C object binutils/CMakeFiles/rxbin.dir/rxbin.c.obj
+[12/56] Building C object binutils/CMakeFiles/rxbin.dir/rxsignature.c.obj
+[13/56] Building C object interpreter/rxvmplugin/CMakeFiles/rxvmplugin.dir/rxvmplugin_framework.c.obj
+[14/56] Building C object binutils/CMakeFiles/rxbin.dir/rxsha256.c.obj
+[15/56] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/decnumber.dir/decnumber/decNumber.c.obj
+[16/56] Linking C static library bin\librxvmplugin.a
+[17/56] Building C object binutils/CMakeFiles/rxbin.dir/rxbin007.c.obj
+[18/56] Linking C static library bin\libdecnumber.a
+[19/56] Building C object interpreter/rxvmplugin/rxvmplugins/mc_decimal/CMakeFiles/mc_decimal_manual.dir/mc_decimal.c.obj
+[20/56] Linking C static library bin\libavl_tree.a
+[21/56] Building C object binutils/CMakeFiles/rxbin.dir/rxgraph.c.obj
+[22/56] Linking C static library bin\librxbin.a
+[23/56] Building C object rxpa/CMakeFiles/rxpa.dir/rxpa.c.obj
+[24/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmworker.c.obj
+[25/56] Building C object interpreter/CMakeFiles/rxvml.dir/rxvmlib.c.obj
+[26/56] Building C object interpreter/CMakeFiles/rxvm_platform_objects.dir/rxvmsock.c.obj
+[27/56] Linking C static library bin\rxvm_mc_decimal_manual.a
+[28/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprogram.c.obj
+[29/56] Linking C static library bin\librxpa.a
+[30/56] Building C object interpreter/CMakeFiles/rxvml.dir/rxvml.c.obj
+[31/56] Building C object interpreter/CMakeFiles/test_rxvmfile.dir/tests/test_rxvmfile.c.obj
+[32/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmexecutor.c.obj
+[33/56] Building C object interpreter/CMakeFiles/test_rxspawn_inheritance.dir/tests/test_rxspawn_inheritance.c.obj
+[34/56] Linking C executable bin\test_rxvmfile.exe
+[35/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel.c.obj
+[36/56] Building C object interpreter/CMakeFiles/test_rxspawn_inheritance_baseline.dir/tests/test_rxspawn_inheritance.c.obj
+[37/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_process.c.obj
+[38/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessprotocol.c.obj
+[39/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmintp.c.obj
+[40/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmprocessworker.c.obj
+[41/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmbyteendpoint.c.obj
+[42/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_byte.c.obj
+[43/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmactive.c.obj
+[44/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmchannel_child.c.obj
+[45/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvmload.c.obj
+[46/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/interrupt.c.obj
+[47/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxcrexxcmd.c.obj
+[48/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/exitfunc.c.obj
+[49/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxspawn.c.obj
+[50/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpacallmethod.c.obj
+[51/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxpafuncs.c.obj
+[52/56] Building C object interpreter/CMakeFiles/rxtvm_core_objects.dir/rxvml/rxvm_run.c.obj
+[53/56] Linking C static library bin\librxvml.a
+[54/56] Linking C executable bin\test_rxspawn_inheritance_baseline.exe
+[55/56] Linking C executable bin\test_rxspawn_inheritance.exe

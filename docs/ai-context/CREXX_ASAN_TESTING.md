@@ -216,7 +216,7 @@ continue with the sanitizer tree rather than blocking the whole investigation.
 If `cmake-build-debug` is not configured locally, skip the plain Debug check and
 record that the command was validated only in the sanitizer tree.
 
-## Mandatory CI gates
+## Overnight assurance and exceptional qualification
 
 `.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs for
 each workflow invocation:
@@ -233,10 +233,21 @@ replace these jobs with a CTest-only step or mark either job
 `continue-on-error`.  Logs are uploaded even when a job fails so the first
 build-time or test-time report remains attributable.
 
-After the workflow is committed, configure its stable `Linux x64 ASan/LSan`
-and `macOS arm64 ASan` check names as required checks in the repository's
-branch protection or ruleset.  Workflow YAML cannot set that repository-level
-merge policy by itself.
+These full jobs are mandatory **when this workflow is invoked**; they are
+not mandatory before every `develop` publication. Ordinary development changes
+can be integrated after the core build and appropriate functional tests pass,
+with relevant focused sanitizer checks when warranted. Full sanitizer assurance
+normally runs overnight on the current `develop` revision. Investigate and fix
+findings promptly, repeating the relevant deep scope when the repair requires it.
+Do not manually dispatch this workflow or make its two job names universal
+`develop` branch requirements merely to publish an ordinary fix.
+
+Additional pre-publication sanitizer qualification is a documented exception
+for explicitly agreed higher-risk work, release qualification, or closure of an
+actual first-party sanitizer finding. Record the reason and required scope in
+the work plan. The SAN worklist's broad closure requirements, supported Linux
+leak detection and prohibition on unapproved suppressions remain unchanged.
+See `AGENTS.md` for the canonical development-publication policy.
 
 ## Exploratory UBSan
 
