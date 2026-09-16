@@ -7,10 +7,12 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
-**Promoted:** remote develop is `8ed983afdc2dad723b14f7a84d985c1c5ea88b32`,
-fast-forward from `94f2f228c`; candidate history is retained. Normal Build
-`35150686647` and CodeQL `35150686250` are terminal success. PROM integration
-criteria are complete; retain these results without repeating broad QA. Heartbeat
+**Promoted:** remote develop is now `59fc02eb905ea2a0878e4055b7114921d5e6a294`.
+It fast-forwards the green `8ed983afd` integration with only the qualified Windows
+installer QA repair and documentation/evidence. Normal Build `35157087747` and
+CodeQL `35157087467` are running for this follow-up. The original Build
+`35150686647` and CodeQL `35150686250` remain terminal success on `8ed983afd`.
+Retain these results without repeating broad QA. Heartbeat
 `qualify-llama-develop-integration` is ACTIVE every 15 minutes; pause it after
 normal checks and independent cleanup are disposed of. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
@@ -24,9 +26,9 @@ Private draft 390272446 is deleted (confirmed 404), its tag is absent, and local
 signed files remain at `/tmp/crexx-final-21a5e9410/signed-retry`. No further
 artifact upload/download or signing login is needed for that closed qualification.
 
-**Next action:** promote the qualified QA-only repair and closeout to develop
-under the existing authority, then lightly check its normal automatic Build and
-CodeQL. Preserve the green `8ed983afd` product evidence and do not dispatch Deep,
+**Next action:** lightly check normal automatic Build `35157087747` and CodeQL
+`35157087467` on the already promoted `59fc02eb9` follow-up. Preserve the green
+`8ed983afd` product evidence and do not dispatch Deep,
 ASan or CUDA again. Once that follow-up is green, retain terminal metadata on the
 candidate branch without pushing another evidence-only develop revision, pause
 the heartbeat and report completion. No public version release is authorized.

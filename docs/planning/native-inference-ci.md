@@ -1478,3 +1478,13 @@ under the existing remediation authority. Its ordinary automatic develop checks
 remain a separate follow-up; retain all unchanged product and broad QA evidence.
 Future Windows snapshot/release signing is still an optional later distribution
 step. Parent hardware/model conditions and full-release authorization are unchanged.
+
+Promotion follow-up: `59fc02eb905ea2a0878e4055b7114921d5e6a294` fast-forwards
+develop with the qualified QA-only repair and closeout. Product sources are
+unchanged from the green `8ed983afd` integration.
+
+7. [ ] **PROM-03:** check normal automatic Build `35157087747` and CodeQL
+   `35157087467` for the promoted QA follow-up (same PROM-AC-03 condition).
+   Retain terminal proof on the candidate branch, pause the heartbeat and report
+   once green. Do not push another evidence-only develop revision and start an
+   unnecessary automatic-build cycle. Windows QA and private cleanup are closed.
