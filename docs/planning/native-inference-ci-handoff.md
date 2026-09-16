@@ -7,6 +7,25 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Promoted:** remote develop is `8ed983afdc2dad723b14f7a84d985c1c5ea88b32`,
+fast-forward from `94f2f228c`; candidate history is retained. Monitor normal Build
+`35150686647` and CodeQL `35150686250`. Heartbeat
+`qualify-llama-develop-integration` is ACTIVE every 15 minutes; pause it after
+normal checks and independent cleanup are disposed of. Do not dispatch broad
+extra assurance or make Windows signing an integration gate.
+
+**Optional signed Windows follow-up:** all six signed files and
+`signed-delivery.json` exist in `/tmp/crexx-final-21a5e9410/signed-retry`.
+Both upload processes are still active: exec sessions 10806 (first five files,
+`upload-first.log`) and 11459 (CUDA setup plus record, `upload-final.log`).
+Inspect their exit/logs or live processes before retrying. Private draft
+390272446 must remain unpublished. When all seven assets are `uploaded`, compare
+GitHub SHA256 digests with the local signed-delivery record, then dispatch the
+Windows-only command described below. No signing credential is needed for this
+runner test. Retain its terminal proof and delete only draft 390272446; confirm
+its tag never exists. If the optional follow-up cannot complete, report it for
+morning without holding otherwise-green development integration.
+
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic
 CI. Windows signing is an optional final distribution step and may wait until

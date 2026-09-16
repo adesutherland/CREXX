@@ -1367,7 +1367,7 @@ Avoid repeated Deep/sanitizer/CUDA work when unchanged qualified evidence exists
    `35149300574` signs/notarizes/staples both plugin installers; fresh-host
    `35149778131` passes offline Gatekeeper/install/consumer and subsequent ticket
    checks on ARM and Intel. Installed Linux rxfs passes `35149445867`.
-2. [ ] **PROM-AC-02:** promote without overwriting newer develop changes; retain
+2. [x] **PROM-AC-02:** promote without overwriting newer develop changes; retain
    the exact promoted commit and inherited qualification boundaries.
 3. [ ] **PROM-AC-03:** the promoted revision's normal automatic Build and CodeQL
    checks reach green, with any actual failures diagnosed and repaired using
@@ -1376,7 +1376,17 @@ Avoid repeated Deep/sanitizer/CUDA work when unchanged qualified evidence exists
    integration acceptance. The candidate's local signed archives/installers
    completed after reconnection; actual signed installer QA remains a separate
    follow-up. Future develop signing may wait until morning without blocking CI.
-5. [ ] **PROM-01:** reconcile the accepted evidence and promote the clean
+5. [x] **PROM-01:** reconcile the accepted evidence and promote the clean
    candidate to develop (PROM-AC-01/02/04).
 6. [ ] **PROM-02:** follow the automatic runs at a light cadence, repair failures,
    retain final results and stop monitoring when green (PROM-AC-03).
+
+
+Promotion completed: `8ed983afdc2dad723b14f7a84d985c1c5ea88b32` fast-forwarded
+remote develop from `94f2f228c` on 16 September, preserving all history and no
+concurrent changes. Normal automatic Build `35150686647` and CodeQL
+`35150686250` are running. PROM-AC-03/PROM-02 remain open until terminal green.
+The thread heartbeat `qualify-llama-develop-integration` checks every 15 minutes,
+remediates actionable failures and stays quiet on unchanged status. Local final
+Windows signing succeeded; its optional retained-artifact installer QA and
+private draft cleanup continue independently, without gating this promotion.

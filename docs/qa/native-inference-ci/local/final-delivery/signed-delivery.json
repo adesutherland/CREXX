@@ -1,0 +1,61 @@
+{
+  "commit": "21a5e9410925cac7e4f577119e4e09fe6393d7f4",
+  "platform": "windows-x64",
+  "inputs": {
+    "/private/tmp/crexx-final-21a5e9410/core/CREXX-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64.zip": "0d9537e78f2bd67b1ced777cf1c1f046e4e9d954a93f8cce9bcc6457b7f3ad3d",
+    "/private/tmp/crexx-final-21a5e9410/vulkan/llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-vulkan.zip": "3f624f0c5cf932a2a73f976e0d7062fcca42ae5896150fe4863b3f91ad5cc25d",
+    "/private/tmp/crexx-final-21a5e9410/cuda/llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-cuda.zip": "0b5d4166f01b25c97f53e4734003862aeacf0e2a98ddd9bdee869b557d9c25a8"
+  },
+  "manager_input": {
+    "schema": 1,
+    "core_commit": "21a5e9410925cac7e4f577119e4e09fe6393d7f4",
+    "files": {
+      "bin/crexx-llama.exe": "51358fd2cdf370a6485712d4fd06e03f0deeecda051336ed8e5bc40225970a5e",
+      "share/llama-management/crexx-llama.crexx": "760762e889bb794f14b67384fbd1141e22af3211019557b663015a8d23d672f7",
+      "share/llama-management/rxfs.c": "346e243a91363e80cb66c6a9e272637fefb746bafc7377e565275ad0415003dd",
+      "share/llama-management/rxfs_ops.h": "b3087d133cd6913cad82b328d07046d6f8bbc0aaea82cc056c364c55411848b9"
+    },
+    "bootstrap_files": {
+      "bin/concrt140.dll": "54716f0738af891f283d213b5c8d11b25896bb8ee3097d301eae718560cf974e",
+      "bin/msvcp140.dll": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca",
+      "bin/msvcp140_1.dll": "206c931bf90fdad8816de3b5e2ef80b2bcaa9406c89ecc05fe6fddffe251e982",
+      "bin/msvcp140_2.dll": "d50d7883f20d1dc6191768d3746f52dd9cac89c346ffaed5be1f110c2f34a838",
+      "bin/msvcp140_atomic_wait.dll": "3d0cbfaa1bf3eecf5a3f4491d2960ee803cb994f30292c6adc4a07c498f60e2b",
+      "bin/msvcp140_codecvt_ids.dll": "8a65c7596ef2e6938731f5a1058e7e40145b6d97967cc649231a076b9a608d78",
+      "bin/vccorlib140.dll": "09f93d5ff96ae09767f3e1af3cdd43a5a58f2598654fc63089429bb6f9f4737f",
+      "bin/vcruntime140.dll": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7",
+      "bin/vcruntime140_1.dll": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e",
+      "bin/vcruntime140_threads.dll": "40f39e8cee5f5a531b4010e18b807e8fe265b908dc58f959ecb7ebc6ea6cb11a"
+    }
+  },
+  "manager_signed": {
+    "schema": 1,
+    "core_commit": "21a5e9410925cac7e4f577119e4e09fe6393d7f4",
+    "files": {
+      "bin/crexx-llama.exe": "39870a02eca25483b779d2e0f2269df32a10bfa2398658082628a4c93683f4b3",
+      "share/llama-management/crexx-llama.crexx": "760762e889bb794f14b67384fbd1141e22af3211019557b663015a8d23d672f7",
+      "share/llama-management/rxfs.c": "346e243a91363e80cb66c6a9e272637fefb746bafc7377e565275ad0415003dd",
+      "share/llama-management/rxfs_ops.h": "b3087d133cd6913cad82b328d07046d6f8bbc0aaea82cc056c364c55411848b9"
+    },
+    "bootstrap_files": {
+      "bin/concrt140.dll": "d06b713b0b0e7f3be1c487bce30823df0caf96b48d36201c8bf71b8f8e07ddf7",
+      "bin/msvcp140.dll": "9ae472ddcfecc4c0d08161ae8df67ea04cd83deb2eebf1f129c7f9722055f1dc",
+      "bin/msvcp140_1.dll": "fb281885908ae596bcbd6b94f61a30463aed774e5b358cfb425cb6ec91e17121",
+      "bin/msvcp140_2.dll": "988474d4ec64c84ab154257674b3e109663f872a85cb51506ad1c00e44c166c0",
+      "bin/msvcp140_atomic_wait.dll": "cb9a59e06c1042cedb7e6c91541fc4147b4f8fc24296849b3317c08c855b3c3b",
+      "bin/msvcp140_codecvt_ids.dll": "3e3c17986d55b6e69b77c26f883d3f9655e0ab365129908ba63535311804a067",
+      "bin/vccorlib140.dll": "2d60be78c23e670316a838e9dd59cadbfc4f439fbe4e3a92f0ad6d65cb214733",
+      "bin/vcruntime140.dll": "c8be034bcdad5b335714050807d8dafa44f5091086918b5f3b179be45b66b18f",
+      "bin/vcruntime140_1.dll": "2a1a4b9ba1bce68d272860808da4887232330e8021f73391d2731508e4992c97",
+      "bin/vcruntime140_threads.dll": "122f047c22ca55dcf92f0a3f3cfc8fb70c13b431c9f3654b9a06d757d7ed3d27"
+    }
+  },
+  "files": {
+    "CREXX-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-signed.zip": "7995dd4bb696e79f93d84384e0f88e024b7535a95e00b860a0952dfaa400188b",
+    "llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-vulkan-signed.zip": "44d593dcbd5d0abeb7d290caa80fc661bb6faa8f2bf0c27b53c504cf6ab62469",
+    "llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-cuda-signed.zip": "7de55f27b1c878a502b3cc8e846e2b4ed53dd48ef717d2de564783da9647d87b",
+    "CREXX-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-signed-setup.exe": "85f367799d202c99d2cf0a4cd81611cd6d8d0b8dd32ecfc13c0732b5e7c3e0a9",
+    "llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-vulkan-signed-setup.exe": "25e9162d1eb48a85bcab65fa1ad8273d10766ffcb114db3079fe5a9bf0226183",
+    "llama.rexx-user-test-21a5e9410925cac7e4f577119e4e09fe6393d7f4-windows-x64-cuda-signed-setup.exe": "370760f97df5250a7f0911d997f1c91ec34995087ca6759888beae7fda8068cf"
+  }
+}
