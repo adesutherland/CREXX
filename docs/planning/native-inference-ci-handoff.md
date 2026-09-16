@@ -1,20 +1,22 @@
 # Native inference CI restart handoff — 15 September 2026
 
-Status: active qualification on `origin/temp/llama-release-combined`. The
+Status: development integration and monitoring complete; final evidence is on
+`origin/temp/llama-release-combined`. The
 authoritative [pipeline plan](native-inference-ci.md) retains the complete
 vision, acceptance criteria and implementation steps. The older snapshots below
 are chronological evidence; this live section supersedes their pending actions.
 
-## Live continuation — 16 September
+## Final handoff — 17 September (UK)
 
 **Promoted:** remote develop is now `59fc02eb905ea2a0878e4055b7114921d5e6a294`.
 It fast-forwards the green `8ed983afd` integration with only the qualified Windows
 installer QA repair and documentation/evidence. Normal Build `35157087747` and
-CodeQL `35157087467` are running for this follow-up. The original Build
+CodeQL `35157087467` are both terminal success for this follow-up. The original Build
 `35150686647` and CodeQL `35150686250` remain terminal success on `8ed983afd`.
-Retain these results without repeating broad QA. Heartbeat
-`qualify-llama-develop-integration` is ACTIVE every 15 minutes; pause it after
-normal checks and independent cleanup are disposed of. Do not dispatch broad
+Retain these results without repeating broad QA. PROM-03 is complete; heartbeat
+`qualify-llama-develop-integration` is paused. Final exact-head metadata and all
+core/plugin QA artifacts are retained under
+`docs/qa/native-inference-ci/remote/59fc02eb9-develop/`. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
 
 **Optional signed Windows follow-up complete:** `35155144009` succeeds at
@@ -26,12 +28,12 @@ Private draft 390272446 is deleted (confirmed 404), its tag is absent, and local
 signed files remain at `/tmp/crexx-final-21a5e9410/signed-retry`. No further
 artifact upload/download or signing login is needed for that closed qualification.
 
-**Next action:** lightly check normal automatic Build `35157087747` and CodeQL
-`35157087467` on the already promoted `59fc02eb9` follow-up. Preserve the green
-`8ed983afd` product evidence and do not dispatch Deep,
-ASan or CUDA again. Once that follow-up is green, retain terminal metadata on the
-candidate branch without pushing another evidence-only develop revision, pause
-the heartbeat and report completion. No public version release is authorized.
+**No further integration action:** the published development snapshot is green.
+This final evidence-only closeout stays on the candidate branch; do not push it
+to develop merely to repeat automatic builds. Future Windows snapshot signing
+is optional and needs the then-current artifacts; do not publish the older QA
+signed set as a newer snapshot. Parent trained-model/real-device acceptance
+remains open, and no public version release is authorized.
 
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic

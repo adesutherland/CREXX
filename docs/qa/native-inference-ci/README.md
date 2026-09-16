@@ -18,6 +18,14 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 
 ## Current overall status — 16 September
 
+**Final development closeout, 17 September (UK):** promoted `59fc02eb9` passes
+normal [Build 35157087747](https://github.com/adesutherland/CREXX/actions/runs/35157087747)
+and [CodeQL 35157087467](https://github.com/adesutherland/CREXX/actions/runs/35157087467).
+The development snapshot is published. [Terminal metadata and QA artifacts](remote/59fc02eb9-develop/README.md)
+close PROM-03; the light monitor is paused. Windows signed-installer qualification
+and private staging cleanup are complete as recorded below. Signing the current
+Windows snapshot remains optional; parent real-device/model acceptance stays open.
+
 **Develop integrated:** `8ed983afd` is promoted and normal
 [Build 35150686647](https://github.com/adesutherland/CREXX/actions/runs/35150686647)
 passes, including optimizer parity, all four cores, MinGW, all four routine

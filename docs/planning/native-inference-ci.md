@@ -1483,8 +1483,15 @@ Promotion follow-up: `59fc02eb905ea2a0878e4055b7114921d5e6a294` fast-forwards
 develop with the qualified QA-only repair and closeout. Product sources are
 unchanged from the green `8ed983afd` integration.
 
-7. [ ] **PROM-03:** check normal automatic Build `35157087747` and CodeQL
+7. [x] **PROM-03:** check normal automatic Build `35157087747` and CodeQL
    `35157087467` for the promoted QA follow-up (same PROM-AC-03 condition).
    Retain terminal proof on the candidate branch, pause the heartbeat and report
    once green. Do not push another evidence-only develop revision and start an
    unnecessary automatic-build cycle. Windows QA and private cleanup are closed.
+
+**Final monitoring closure — 17 September (UK):** both follow-up workflows are
+terminal success on `59fc02eb9`, and the development snapshot is published.
+[Final metadata and all core/plugin QA artifacts](../qa/native-inference-ci/remote/59fc02eb9-develop/README.md)
+are retained. PROM-03 is complete; pause the heartbeat. Keep this evidence-only
+closeout on the candidate branch. Windows signing remains optional, and no full
+version release or remaining parent hardware/model acceptance is implied.
