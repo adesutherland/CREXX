@@ -1,0 +1,45 @@
+Command: ctest --test-dir cmake-build-debug --output-on-failure -R \^\(rxspawn_.\*\|rxvmfile_private_open\|crexx_address_unredirected_flush\|rxvmchannel_byte_provider\|crexx_project_worker_diagnostics\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX-hotfix/cmake-build-debug
+    Start 1155: rxspawn_resource_inheritance
+1/7 Test #1155: rxspawn_resource_inheritance .......   Passed    0.30 sec
+    Start 1156: rxvmfile_private_open
+2/7 Test #1156: rxvmfile_private_open ..............   Passed    0.21 sec
+    Start 1157: crexx_address_unredirected_flush
+3/7 Test #1157: crexx_address_unredirected_flush ...   Passed    0.22 sec
+    Start 1158: rxspawn_posix_termination
+4/7 Test #1158: rxspawn_posix_termination ..........   Passed    0.01 sec
+    Start 1159: rxspawn_posix_launch_diagnostic
+5/7 Test #1159: rxspawn_posix_launch_diagnostic ....   Passed    0.21 sec
+    Start 1167: rxvmchannel_byte_provider
+6/7 Test #1167: rxvmchannel_byte_provider ..........   Passed    0.51 sec
+    Start 2492: crexx_project_worker_diagnostics
+7/7 Test #2492: crexx_project_worker_diagnostics ...   Passed    3.45 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+address               =   0.22 sec*proc (1 test)
+byte-endpoint         =   0.51 sec*proc (1 test)
+channels              =   0.51 sec*proc (1 test)
+comprehensive         =   0.95 sec*proc (4 tests)
+concurrency           =   4.48 sec*proc (5 tests)
+concurrency-sp03      =   0.51 sec*proc (1 test)
+concurrency-sp04      =   0.51 sec*proc (1 test)
+diagnostic            =   0.21 sec*proc (1 test)
+diagnostics           =   3.45 sec*proc (1 test)
+driver                =   3.45 sec*proc (1 test)
+f1d                   =   0.51 sec*proc (1 test)
+gate-f                =   0.51 sec*proc (1 test)
+interpreter           =   1.46 sec*proc (6 tests)
+perf3                 =   0.51 sec*proc (1 test)
+posix                 =   0.22 sec*proc (2 tests)
+provider-reference    =   0.51 sec*proc (1 test)
+regression            =   3.45 sec*proc (1 test)
+runtime               =   0.22 sec*proc (1 test)
+sanitizer             =   0.52 sec*proc (3 tests)
+smoke                 =   3.97 sec*proc (3 tests)
+spawn                 =   4.18 sec*proc (5 tests)
+
+Total Test time (real) =   4.96 sec

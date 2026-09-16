@@ -78,8 +78,22 @@ make_directory: procedure = .int
 write_stamp: procedure = .int
   arg path = .string, key = .string
   temporary = path || ".tmp"
-  if writebinary(temporary, key as .binary) <> length(key) then return 1
-  if rxfs..rename(temporary, path) <> 0 then return 1
+  written = .int
+  do
+    written = writebinary(temporary, key as .binary)
+  on signal notready as problem
+    say "FAILED: write project stamp" temporary problem.message()
+    return 1
+  end
+  if written <> length(key) then do
+    say "FAILED: write project stamp" temporary "bytes=" || written "expected=" || length(key)
+    return 1
+  end
+  rename_rc = rxfs..rename(temporary, path)
+  if rename_rc <> 0 then do
+    say "FAILED: rename project stamp" temporary "to" path "rc=" || rename_rc
+    return 1
+  end
   return 0
 
 /** The check and compile must receive the same resolver and compiler options. */
@@ -171,7 +185,10 @@ compilework: class implements .taskwork
     if run_argv("assemble project member " || stem, assemble) <> 0 then return .channelvalue.integer_value(1)
 
     output = output_base || ".rxbin"
-    if rxfs..isfile(output) = 0 then return .channelvalue.integer_value(1)
+    if rxfs..isfile(output) = 0 then do
+      say "FAILED: missing assembled project output" output
+      return .channelvalue.integer_value(1)
+    end
     if write_stamp(work_dir || "/action.sha256", key) <> 0 then return .channelvalue.integer_value(1)
     say "BUILT: project member" stem
     return .channelvalue.integer_value(0)

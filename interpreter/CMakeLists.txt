@@ -529,6 +529,33 @@ foreach(_rxvm_core_target IN LISTS _crexx_vm_core_targets)
     endif()
 endforeach()
 if(BUILD_TESTING)
+    add_executable(test_rxspawn_inheritance tests/test_rxspawn_inheritance.c)
+    target_include_directories(test_rxspawn_inheritance PRIVATE
+            . ./rxvmplugin ../assembler ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    target_link_libraries(test_rxspawn_inheritance PRIVATE rxvml Threads::Threads)
+    add_test(NAME rxspawn_resource_inheritance COMMAND test_rxspawn_inheritance)
+    set_tests_properties(rxspawn_resource_inheritance PROPERTIES
+            LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
+            CREXX_PREP_TARGETS test_rxspawn_inheritance TIMEOUT 180)
+    add_executable(test_rxvmfile tests/test_rxvmfile.c)
+    target_include_directories(test_rxvmfile PRIVATE .)
+    add_test(NAME rxvmfile_private_open COMMAND test_rxvmfile)
+    set_tests_properties(rxvmfile_private_open PROPERTIES
+            LABELS "interpreter;spawn;sanitizer;concurrency;smoke"
+            CREXX_PREP_TARGETS test_rxvmfile TIMEOUT 60)
+    if(RXSPAWN_BASELINE_SOURCE)
+        add_executable(test_rxspawn_inheritance_baseline EXCLUDE_FROM_ALL
+                tests/test_rxspawn_inheritance.c)
+        target_include_directories(test_rxspawn_inheritance_baseline PRIVATE
+                . ./rxvmplugin ../assembler ../binutils/include
+                ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+        target_compile_definitions(test_rxspawn_inheritance_baseline PRIVATE
+                RXSPAWN_TEST_SOURCE="${RXSPAWN_BASELINE_SOURCE}"
+                RXSPAWN_TEST_BASELINE=1)
+        target_link_libraries(test_rxspawn_inheritance_baseline PRIVATE rxvml Threads::Threads)
+    endif()
+
     add_executable(test_rxcrexxcmd_flush tests/test_rxcrexxcmd_flush.c)
     target_include_directories(test_rxcrexxcmd_flush PRIVATE
             . ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa

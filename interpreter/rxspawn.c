@@ -132,6 +132,40 @@ static RXSPAWN_THREAD_LOCAL const RXSPAWN_SNAPSHOT_OVERRIDE
  * status writer and delay EOF until that child exits.  This mutex covers only
  * pipe setup and fork; child execution remains fully parallel. */
 static pthread_mutex_t rxspawn_posix_launch_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/* Caller holds the launch mutex. Keep pipe ends above stdio so dup2 cannot
+ * clobber another intended stream when the host has closed descriptors 0..2. */
+static int rxspawn_private_pipe_locked(int handles[2]) {
+    int i, saved_errno;
+    if (pipe(handles) != 0) return -1;
+    for (i = 0; i < 2; i++) {
+        if (handles[i] < 3) {
+            int replacement = fcntl(handles[i], F_DUPFD_CLOEXEC, 3);
+            if (replacement < 0) goto failed;
+            close(handles[i]);
+            handles[i] = replacement;
+        } else if (fcntl(handles[i], F_SETFD, FD_CLOEXEC) < 0) goto failed;
+    }
+    return 0;
+failed:
+    saved_errno = errno;
+    close(handles[0]); close(handles[1]);
+    handles[0] = handles[1] = -1;
+    errno = saved_errno;
+    return -1;
+}
+
+static int rxspawn_private_pipe(int handles[2]) {
+    int rc, saved_errno;
+    rc = pthread_mutex_lock(&rxspawn_posix_launch_mutex);
+    if (rc) { errno = rc; return -1; }
+    rc = rxspawn_private_pipe_locked(handles);
+    saved_errno = errno;
+    (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
+    errno = saved_errno;
+    return rc;
+}
+
 #endif
 
 #ifdef _WIN32
@@ -700,10 +734,23 @@ static char *windows_search_executable(const char *name,
 }
 
 static void windows_release_startup_attributes(STARTUPINFOEXW *startup) {
-    if (!startup || !startup->lpAttributeList) return;
-    DeleteProcThreadAttributeList(startup->lpAttributeList);
-    rxspawn_memory_free(startup->lpAttributeList);
-    startup->lpAttributeList = NULL;
+    HANDLE handles[3];
+    int i;
+    if (!startup) return;
+    if (startup->lpAttributeList) {
+        DeleteProcThreadAttributeList(startup->lpAttributeList);
+        rxspawn_memory_free(startup->lpAttributeList);
+        startup->lpAttributeList = NULL;
+    }
+    handles[0] = startup->StartupInfo.hStdInput;
+    handles[1] = startup->StartupInfo.hStdOutput;
+    handles[2] = startup->StartupInfo.hStdError;
+    for (i = 0; i < 3; i++) {
+        if (handles[i] && handles[i] != INVALID_HANDLE_VALUE) CloseHandle(handles[i]);
+    }
+    startup->StartupInfo.hStdInput = NULL;
+    startup->StartupInfo.hStdOutput = NULL;
+    startup->StartupInfo.hStdError = NULL;
 }
 
 static char *windows_resolve_application_path(const char *command,
@@ -1336,7 +1383,7 @@ static int redirect_pipe_start(REDIRECT *redirect,
         DWORD thread_id;
         attributes.nLength = sizeof(attributes);
         attributes.lpSecurityDescriptor = NULL;
-        attributes.bInheritHandle = TRUE;
+        attributes.bInheritHandle = FALSE;
         if (!CreatePipe(&read_handle, &write_handle, &attributes, 0)) {
             redirect->lastError = (int)GetLastError();
             goto failed;
@@ -1392,7 +1439,7 @@ failed:
     {
         int handles[2];
         int create_rc;
-        if (pipe(handles) != 0) {
+        if (rxspawn_private_pipe(handles) != 0) {
             redirect->errorCode = 1;
             redirect->lastError = errno;
             redirect->errorSource = 5;
@@ -2611,7 +2658,7 @@ void nullredr(value* redirect_reg) {
 
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.bInheritHandle = TRUE;
+    sa.bInheritHandle = FALSE;
     sa.lpSecurityDescriptor = NULL;
 
     // Open the NUL device for reading
@@ -2634,8 +2681,8 @@ void nullredr(value* redirect_reg) {
 
 #else
 
-    redirect->hRead = open("/dev/null", O_RDONLY);
-    redirect->hWrite = open("/dev/null", O_WRONLY);
+    redirect->hRead = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    redirect->hWrite = open("/dev/null", O_WRONLY | O_CLOEXEC);
 
 #endif
 }
@@ -2662,146 +2709,11 @@ void redirectOutput(value* redirect_reg, value* string_reg, unsigned char transf
     if (!redirect) return;
     redirect->receiver = string_reg;
 
-#ifdef _WIN32
-
-    redirect->hRead = INVALID_HANDLE_VALUE;
-    redirect->hWrite = INVALID_HANDLE_VALUE;
-    HANDLE hReadTmp;
-
-    SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE}; // Set the bInheritHandle flag: the pipe is inheritable
-
-    // We Create a pipe
-    if (!CreatePipe(&hReadTmp, &redirect->hWrite, &sa, 0))
-    {
-        // Error - try and clean-up
-        redirect->errorCode = 1;
-        redirect->lastError = (int)GetLastError();
-        return;
-    }
-
-    // Make a non-inheritable duplicate of the reading side of the pipe
-    if (!DuplicateHandle(GetCurrentProcess(), hReadTmp,
-                         GetCurrentProcess(),
-                         &redirect->hRead, // Address of new handle.
-                         0, FALSE, // Make it uninheritable.
-                         DUPLICATE_SAME_ACCESS))
-    {
-        DWORD last_error = GetLastError();
-        // Error - try and clean-up
-        CloseHandle(hReadTmp);
-        CloseHandle(redirect->hWrite);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 2;
-        redirect->lastError = (int)last_error;
-        return;
-    }
-
-    /* We don't want this inheritable handle */
-    if (!CloseHandle(hReadTmp))
-    {
-        DWORD last_error = GetLastError();
-        // Error - try and clean-up
-        CloseHandle(redirect->hRead);
-        CloseHandle(redirect->hWrite);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 3;
-        redirect->lastError = (int)last_error;
-        return;
-    }
-    hReadTmp = NULL;
-
-#else
-
-    int temppipe[2];    // This holds the fd for the input & output of the pipe ([0] for reading, [1] for writing)
-    redirect->hRead = -1;
-    redirect->hWrite = -1;
-
-    if (pipe(temppipe)) {
-        redirect->errorCode = 1;
-        return;
-    }
-    redirect->hRead = temppipe[0];
-    redirect->hWrite = temppipe[1];
-
-#endif
-
-    /* Transfer the parent read end into a non-VM single-owner completion. */
     completion = redirect_completion_create(transfer_mode);
-    if (!completion) {
-        redirect->errorCode = 1;
-#ifdef _WIN32
-        CloseHandle(redirect->hRead);
-        CloseHandle(redirect->hWrite);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-#else
-        close(redirect->hRead);
-        close(redirect->hWrite);
-        redirect->hRead = -1;
-        redirect->hWrite = -1;
-#endif
-        return;
-    }
-    completion->io_handle = redirect->hRead;
-    redirect->hRead = REDIRECT_INVALID_IO_HANDLE;
-    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
-        redirect->errorCode = 1;
-        redirect->lastError = errno;
-        redirect->errorSource = 8;
-#ifdef _WIN32
-        CloseHandle(redirect->hWrite);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-#else
-        close(redirect->hWrite);
-        redirect->hWrite = -1;
-#endif
+    if (!completion) { redirect->errorCode = 1; return; }
+    if (redirect_pipe_start(redirect, completion, 1) != 0) {
         redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
     }
-    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
-    redirect->completion = completion;
-
-    /* Launch the thread that owns and drains the output read end. */
-#ifdef _WIN32
-    redirect->thread = CreateThread(NULL, 0, OutputCaptureThread,
-                                    (LPVOID)completion, 0, NULL);
-    if (redirect->thread == NULL) {
-        DWORD last_error = GetLastError();
-        CloseHandle(redirect->hWrite);
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 5;
-        redirect->lastError = (int)last_error;
-        completion->errorCode = 1;
-        completion->lastError = (int)last_error;
-        completion->errorSource = 5;
-        redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-#else
-    {
-        int create_rc = pthread_create(&(redirect->thread), NULL,
-                                       OutputCaptureThread, (void *)completion);
-        if (create_rc) {
-            close(redirect->hWrite);
-            redirect->hWrite = -1;
-            redirect->errorCode = 1;
-            redirect->lastError = create_rc;
-            completion->errorCode = 1;
-            completion->lastError = create_rc;
-            completion->errorSource = 5;
-            redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
-            redirect_completion_destroy(completion);
-            redirect->completion = NULL;
-            return;
-        }
-    }
-#endif
-
-    redirect->has_thread = 1;
 }
 
 static int redirect_capture_chunk(REDIRECT_COMPLETION *completion,
@@ -2962,149 +2874,9 @@ void redirectInput(value* redirect_reg, value* string_reg, unsigned char transfe
         redirect_completion_destroy(completion);
         return;
     }
-    redirect->completion = completion;
-
-#ifdef _WIN32
-
-    redirect->hRead = INVALID_HANDLE_VALUE;
-    redirect->hWrite = INVALID_HANDLE_VALUE;
-
-    HANDLE hWriteTmp;
-    SECURITY_ATTRIBUTES sa;
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-    sa.lpSecurityDescriptor = NULL;
-    sa.bInheritHandle = TRUE;
-
-    // We Create a pipe
-    if (!CreatePipe(&(redirect->hRead),&hWriteTmp,  &sa, 0))
-    {
-        // Error - try and clean-up
-        redirect->errorCode = 1;
-        redirect->lastError = (int)GetLastError();
+    if (redirect_pipe_start(redirect, completion, 0) != 0) {
         redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
     }
-
-    // Make a non-inheritable write handle to the pipe (i.e. the parent end)
-    if (!DuplicateHandle(GetCurrentProcess(), hWriteTmp,
-                         GetCurrentProcess(),
-                         &(redirect->hWrite), // Address of new handle.
-                         0, FALSE, // Make it uninheritable.
-                         DUPLICATE_SAME_ACCESS))
-    {
-        DWORD last_error = GetLastError();
-        // Error - try and clean-up
-        CloseHandle(hWriteTmp);
-        CloseHandle(redirect->hRead);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 2;
-        redirect->lastError = (int)last_error;
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-
-    /* We don't want this closeable handle */
-    if (!CloseHandle(hWriteTmp))
-    {
-        DWORD last_error = GetLastError();
-        // Error - try and clean-up
-        CloseHandle(redirect->hRead);
-        CloseHandle(redirect->hWrite);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->hWrite = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 3;
-        redirect->lastError = (int)last_error;
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-
-    completion->io_handle = redirect->hWrite;
-    redirect->hWrite = INVALID_HANDLE_VALUE;
-    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
-        redirect->errorCode = 1;
-        redirect->lastError = errno;
-        redirect->errorSource = 8;
-        CloseHandle(redirect->hRead);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
-
-    {
-    DWORD threadID;
-    redirect->thread = CreateThread(NULL, 0, InputSnapshotThread,
-                                    completion, 0, &threadID);
-    if (redirect->thread == NULL)
-    {
-        DWORD last_error = GetLastError();
-        CloseHandle(redirect->hRead);
-        redirect->hRead = INVALID_HANDLE_VALUE;
-        redirect->errorCode = 4;
-        redirect->lastError = (int)last_error;
-        completion->errorCode = 1;
-        completion->lastError = (int)last_error;
-        completion->errorSource = 5;
-        redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-    }
-
-#else
-
-    int temppipe[2];    // This holds the fd for the input & output of the pipe
-
-    redirect->hRead = -1;
-    redirect->hWrite = -1;
-
-    // Create a pipe
-    if (pipe(temppipe)) {
-        redirect->errorCode = 1;
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-    redirect->hRead = temppipe[0];
-    redirect->hWrite = temppipe[1];
-
-    completion->io_handle = redirect->hWrite;
-    redirect->hWrite = -1;
-    if (redirect_completion_restrict_child_inheritance(completion) != 0) {
-        redirect->errorCode = 1;
-        redirect->lastError = errno;
-        redirect->errorSource = 8;
-        close(redirect->hRead);
-        redirect->hRead = -1;
-        redirect_completion_destroy(completion);
-        redirect->completion = NULL;
-        return;
-    }
-    completion->terminal_state = REDIRECT_COMPLETION_RUNNING;
-    {
-        int create_rc = pthread_create(&(redirect->thread), NULL,
-                                       InputSnapshotThread, (void *)completion);
-        if (create_rc) {
-            close(redirect->hRead);
-            redirect->hRead = -1;
-            redirect->errorCode = 2;
-            redirect->lastError = create_rc;
-            completion->errorCode = 1;
-            completion->lastError = create_rc;
-            completion->errorSource = 5;
-            redirect_completion_publish(completion, REDIRECT_COMPLETION_FAILED);
-            redirect_completion_destroy(completion);
-            redirect->completion = NULL;
-            return;
-        }
-    }
-#endif
-    redirect->has_thread = 1;
 }
 
 static int redirect_write_chunk_to_child(REDIRECT_COMPLETION *completion,
@@ -4123,7 +3895,8 @@ int launchChild(SHELLDATA* data, char **errorText) {
     HANDLE inheritedHandles[3];
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_information;
     int inheritedHandleCount;
-    int useHandleList;
+    HANDLE sourceHandles[3];
+    HANDLE *targetHandles[3];
     int i;
 
     // Set up the start up info struct.
@@ -4131,35 +3904,45 @@ int launchChild(SHELLDATA* data, char **errorText) {
     si.StartupInfo.cb = sizeof(STARTUPINFOEXW);
     si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
 
-    si.StartupInfo.hStdOutput = (data->pOutput && data->pOutput->hWrite != INVALID_HANDLE_VALUE) ? data->pOutput->hWrite : GetStdHandle(STD_OUTPUT_HANDLE);
-    si.StartupInfo.hStdError = (data->pError && data->pError->hWrite != INVALID_HANDLE_VALUE) ? data->pError->hWrite : GetStdHandle(STD_ERROR_HANDLE);
-    si.StartupInfo.hStdInput = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
+    sourceHandles[0] = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
+    sourceHandles[1] = (data->pOutput && data->pOutput->hWrite != INVALID_HANDLE_VALUE) ? data->pOutput->hWrite : GetStdHandle(STD_OUTPUT_HANDLE);
+    sourceHandles[2] = (data->pError && data->pError->hWrite != INVALID_HANDLE_VALUE) ? data->pError->hWrite : GetStdHandle(STD_ERROR_HANDLE);
+    targetHandles[0] = &si.StartupInfo.hStdInput;
+    targetHandles[1] = &si.StartupInfo.hStdOutput;
+    targetHandles[2] = &si.StartupInfo.hStdError;
 
-    int flags = CREATE_UNICODE_ENVIRONMENT; // UTF16 Environment Variables
+    int flags = CREATE_UNICODE_ENVIRONMENT;
     attributeListSize = 0;
     inheritedHandleCount = 0;
-    useHandleList = data->pInput && data->pOutput && data->pError
-        && data->pInput->hRead != INVALID_HANDLE_VALUE
-        && data->pOutput->hWrite != INVALID_HANDLE_VALUE
-        && data->pError->hWrite != INVALID_HANDLE_VALUE;
-    if (useHandleList) {
-        /* Restrict Windows child inheritance to the stdio handles for this
-         * spawn, otherwise nested ADDRESS runs can inherit unrelated pipes. */
-        inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdInput;
-        inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdOutput;
-        if (si.StartupInfo.hStdError != si.StartupInfo.hStdOutput) {
-            inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdError;
+    /* Each spawn owns private inheritable duplicates; all concurrent launches
+     * use allowlists. Never change the parent's standard-handle flags. */
+    for (i = 0; i < 3; i++) {
+        if (!sourceHandles[i] || sourceHandles[i] == INVALID_HANDLE_VALUE) {
+            *targetHandles[i] = sourceHandles[i];
+            continue;
         }
-
+        if (!DuplicateHandle(GetCurrentProcess(), sourceHandles[i],
+                GetCurrentProcess(), targetHandles[i], 0, TRUE,
+                DUPLICATE_SAME_ACCESS)) {
+            Error("Failure duplicating child standard stream", errorText);
+            windows_release_startup_attributes(&si);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        inheritedHandles[inheritedHandleCount++] = *targetHandles[i];
+    }
+    if (inheritedHandleCount) {
         InitializeProcThreadAttributeList(NULL, 1, 0, &attributeListSize);
         si.lpAttributeList = rxspawn_memory_alloc(attributeListSize);
         if (!si.lpAttributeList) {
+            windows_release_startup_attributes(&si);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
         if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &attributeListSize)) {
             rxspawn_memory_free(si.lpAttributeList);
             si.lpAttributeList = NULL;
+            windows_release_startup_attributes(&si);
             CleanUp(data);
             return SHELLSPAWN_FAILURE;
         }
@@ -4171,6 +3954,8 @@ int launchChild(SHELLDATA* data, char **errorText) {
             return SHELLSPAWN_FAILURE;
         }
         flags |= EXTENDED_STARTUPINFO_PRESENT;
+    } else {
+        si.StartupInfo.cb = sizeof(STARTUPINFOW);
     }
 
     /* Build the child environment. A CREXX logical-state snapshot is already
@@ -4361,7 +4146,8 @@ int launchChild(SHELLDATA* data, char **errorText) {
     }
 
     /* Start the child process */
-    if (!CreateProcessW(wideApplicationPath,wideFilePath,NULL,NULL,TRUE,
+    if (!CreateProcessW(wideApplicationPath,wideFilePath,NULL,NULL,
+                       inheritedHandleCount ? TRUE : FALSE,
                        flags,pszNewEnvironment,wideWorkingDirectory,
                        &si.StartupInfo,&data->ChildProcessInfo))
     {
@@ -4425,23 +4211,13 @@ int launchChild(SHELLDATA* data, char **errorText) {
         return SHELLSPAWN_FAILURE;
     }
 
-    if (pipe(launch_status_pipe) != 0) {
+    if (rxspawn_private_pipe_locked(launch_status_pipe) != 0) {
         int saved_errno = errno;
         (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
         errno = saved_errno;
         Error("Failure creating child launch status pipe", errorText);
         return SHELLSPAWN_FAILURE;
     }
-    if (fcntl(launch_status_pipe[1], F_SETFD, FD_CLOEXEC) != 0) {
-        int saved_errno = errno;
-        close(launch_status_pipe[0]);
-        close(launch_status_pipe[1]);
-        (void)pthread_mutex_unlock(&rxspawn_posix_launch_mutex);
-        ErrorCode("Failure protecting child launch status pipe",
-                  saved_errno, errorText);
-        return SHELLSPAWN_FAILURE;
-    }
-
     if ((data->ChildProcessPID = fork()) == -1) {
         int saved_errno = errno;
         close(launch_status_pipe[0]);
@@ -4583,19 +4359,25 @@ int launchChild(SHELLDATA* data, char **errorText) {
 
     /* Duplicate to replace standard streams */
     if (data->pInput && data->pInput->hRead != -1) {
-        if (dup2(data->pInput->hRead, STDIN_FILENO) < 0) {
+        if ((data->pInput->hRead == STDIN_FILENO
+                ? fcntl(STDIN_FILENO, F_SETFD, 0)
+                : dup2(data->pInput->hRead, STDIN_FILENO)) < 0) {
             rxspawn_child_launch_fail(launch_status_pipe[1],
                                       RXSPAWN_CHILD_STDIN, errno);
         }
     }
     if (data->pOutput && data->pOutput->hWrite != -1) {
-        if (dup2(data->pOutput->hWrite, STDOUT_FILENO) < 0) {
+        if ((data->pOutput->hWrite == STDOUT_FILENO
+                ? fcntl(STDOUT_FILENO, F_SETFD, 0)
+                : dup2(data->pOutput->hWrite, STDOUT_FILENO)) < 0) {
             rxspawn_child_launch_fail(launch_status_pipe[1],
                                       RXSPAWN_CHILD_STDOUT, errno);
         }
     }
     if (data->pError && data->pError->hWrite != -1) {
-        if (dup2(data->pError->hWrite, STDERR_FILENO) < 0) {
+        if ((data->pError->hWrite == STDERR_FILENO
+                ? fcntl(STDERR_FILENO, F_SETFD, 0)
+                : dup2(data->pError->hWrite, STDERR_FILENO)) < 0) {
             rxspawn_child_launch_fail(launch_status_pipe[1],
                                       RXSPAWN_CHILD_STDERR, errno);
         }

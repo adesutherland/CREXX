@@ -885,6 +885,19 @@ an error. The PID remains reserved until ordinary `waitpid` reaps it, then the
 existing group-only descendant cleanup runs. There is no direct-PID fallback
 after reaping.
 
+Concurrent launches inherit only their selected standard streams. POSIX redirect
+and launch-status pipe creation protects both ends with close-on-exec under the
+same short launch mutex used by fork; pipe descriptors stay above 0..2. The
+child duplicates its own endpoints onto stdio before exec. Windows creates
+private pipes and uses spawn-owned inheritable standard-handle duplicates with
+an explicit HANDLE_LIST for every redirection combination, including inherited
+standard streams; no valid streams means inheritance is disabled. Parent stream
+flags are never changed. Startup cleanup releases duplicates on every path.
+Legacy string/array and byte-endpoint redirects share pipe creation and cleanup.
+FOPEN creates private files atomically (Windows N, Linux e, Darwin O_CLOEXEC),
+so no sibling can capture a temporary file in an open-to-clear interval.
+See `docs/planning/issue-701-resource-inheritance.md` for ownership and evidence.
+
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array
 redirects onto these two providers and apply captured output only on the
 controlling execution. The retired source mnemonics `spawn`, `redir2str`,

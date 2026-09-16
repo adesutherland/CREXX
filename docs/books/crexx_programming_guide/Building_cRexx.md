@@ -312,6 +312,22 @@ path, run `qa-smoke`, then upload one archive per supported platform. The
 archive name and its `BUILDINFO` contain the exact PR-head or `develop` SHA.
 It is a user-test candidate, not a qualified or signed release.
 
+A successful core product build and appropriate functional regressions are
+sufficient for ordinary integration into `develop`. Full overnight assurance
+is intentionally allowed to find issues for remedial work the next day; it is
+not an every-publish gate. Manual deep or full sanitizer qualification before
+integration is an exception with a documented risk and agreed scope, such as
+novel native-inference work, release qualification, or closure of a known
+sanitizer finding. A request to qualify an ordinary fix does not by itself
+require every assurance lane. Reuse unchanged valid test evidence and check the
+normal automatic publication workflows without dispatching extra overnight jobs.
+
+Elapsed time is part of the QA decision: an unnecessary test run delays
+integration and user feedback and consumes runner capacity. Additional long
+checks must address a specific unresolved risk whose expected benefit justifies
+that delay. Prefer the smallest decisive check and retained valid evidence;
+more green runs are not a goal in themselves.
+
 The other hosted lanes remain independent of artifact availability. Linux
 Debug optimizer parity runs for PRs and `develop`. After `develop` changes, the
 next scheduled deep QA run performs comprehensive and install/package

@@ -928,3 +928,47 @@ standard streams still need normal prompt/output behavior.
 
 The read-only issue snapshot and source identity comparison are retained in
 `local/f18-race-review/`. No GitHub issue/comment was changed by this review.
+
+#### CI-F18 repair integration and focused retest — 16 September
+
+Adrian confirms the reported defect is fixed and requests a retest, explicitly
+authorizing the merge. Vision: incorporate the qualified #701 repair from
+`origin/develop` at `17e844441ed87e1f6e0d5f1f0d3bb4bee8db6187` into this
+llama candidate and verify the affected project-build behavior. Preserve
+concurrent workers and prior full-suite evidence; do not repeat CUDA, model,
+Deep or full sanitizer qualification for this bounded integration check.
+
+The hotfix's [authoritative record](issue-701-resource-inheritance.md) retains
+deterministic baseline-negative/repaired-positive controls on Linux, macOS,
+MSVC and MinGW (run `35088226165`, code `135b9254f`). Windows reproduces unwanted
+handle inheritance and blocked rename, then proves exclusion/success after the
+repair. This establishes the mechanism, not attribution of the original silent
+F18 failure. Worker diagnostics now identify missing output and stamp write/
+rename failures. Reuse those exact-source controls rather than rerunning them
+solely for a merge SHA.
+
+1. [ ] **F18-RAC-01:** the merge includes the unchanged qualified launcher,
+   atomic file-open helper, worker diagnostics and permanent regressions.
+   Retain source-blob identity comparison. Resolve the two overlapping MSVC
+   test-registration repairs by preserving this branch's capability-based
+   selection and optional runner list, then run that test locally.
+2. [ ] **F18-RAC-02:** focused ordinary Debug inheritance/file-open, stream,
+   lifecycle, worker diagnostics, project-build and merge-resolution checks
+   pass on the combined tree, with retained command/log evidence.
+3. [ ] **F18-RAC-03:** the previously failing Windows/MinGW core qualification
+   passes on the merged candidate, including the project-build contract and
+   new inheritance/diagnostic regressions. Retain terminal hosted artifacts.
+   Other platform mechanism controls reuse the unchanged hotfix evidence.
+4. [ ] **F18-R01:** merge develop and verify repaired input identities;
+   serves F18-RAC-01. No develop publication or API change is part of this work.
+5. [ ] **F18-R02:** run the focused local panel and manually dispatch only
+   `release-core.yml` with `platform=windows-mingw` on the candidate branch;
+   serves F18-RAC-02/03. This is the smallest existing hosted lane that repeats
+   F18's original environment without rebuilding any inference backend.
+6. [ ] **F18-R03:** retain results, reconcile F18-AC-02/F18-03 and the handoff;
+   serves F18-RAC-01–03. Keep original incident attribution qualified.
+
+Previous candidate `f10e70ee5` now has terminal success for Build `35076278681`,
+Deep `35076281099` and core Sanitizer `35076283269`; these remain that revision's
+results, not new full-suite results on the merged tree. CI-D03's future workflow
+cadence and parent real-device/model criteria remain separately open.

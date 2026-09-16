@@ -1,0 +1,18 @@
+[  0%] Built target avl_tree
+[  0%] Built target rxpa
+[  0%] Built target platform
+[  0%] Built target rxbin
+[  0%] Built target decnumber
+[  0%] Built target rxvm_platform_objects
+[  0%] Building C object interpreter/CMakeFiles/rxbvm_core_objects.dir/rxspawn.c.o
+[  0%] Built target rxvmmemory
+[  0%] Built target rxvmref
+[  0%] Built target rxvmplugin
+[  0%] Built target mc_decimal_manual
+[  0%] Built target rxbvm_core_objects
+[  0%] Linking C static library ../bin/librxvml.a
+[100%] Built target rxvml
+[100%] Building C object interpreter/CMakeFiles/test_rxspawn_inheritance.dir/tests/test_rxspawn_inheritance.c.o
+[100%] Linking C executable ../bin/test_rxspawn_inheritance
+[100%] Built target test_rxspawn_inheritance
+POSIX inheritance: 0 failures

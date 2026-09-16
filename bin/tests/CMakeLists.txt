@@ -597,6 +597,27 @@ set_tests_properties(crexx_process_runtime PROPERTIES
     RUN_SERIAL TRUE
     TIMEOUT 600)
 
+add_executable(project_failure_helper project_failure_helper.c)
+set(issue701_diagnostic_command ${CMAKE_COMMAND}
+        -DCREXX=$<TARGET_FILE:crexx>
+        -DHELPER=$<TARGET_FILE:project_failure_helper>
+        -DWORKER=${_crexx_build_worker_rxbin}
+        -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/issue701-diagnostics
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/project_worker_failures.crexx
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/project_worker_failures.cmake)
+add_custom_target(qa-issue701-diagnostics
+        COMMAND ${issue701_diagnostic_command}
+        DEPENDS crexx project_failure_helper)
+
+add_test(NAME crexx_project_worker_diagnostics COMMAND ${issue701_diagnostic_command})
+set_tests_properties(crexx_project_worker_diagnostics PROPERTIES
+        LABELS "driver;spawn;diagnostics;concurrency;regression;smoke"
+        CREXX_PREP_TARGETS "crexx;project_failure_helper"
+        RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK}
+        # Isolated matrix: Debug 2.99s, Apple ASan 14s. Keep nested compiler
+        # work out of the broad pool; 180s is a functional hang guard.
+        RUN_SERIAL TRUE TIMEOUT 180)
+
 function(crexx_isolate_bin_test_environment)
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
     foreach(_crexx_test IN LISTS _crexx_tests)
