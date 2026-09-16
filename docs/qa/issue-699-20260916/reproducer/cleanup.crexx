@@ -1,0 +1,7 @@
+options levelg
+namespace issue699cleanup expose closeoutput
+import rxfnsb
+closeoutput: procedure = .void expose closed
+  closed = .int
+  call closefile "stdout"
+  return

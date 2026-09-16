@@ -536,6 +536,20 @@ remain intact. `binary_forward_dependencies` proves that an unused `_rxsysb`
 source extension stays excluded while a real consumer still imports it, tracks
 its body and rejects an invalid call, in both optimization modes.
 
+Source discovery distinguishes a materialized dependency's namespace scope from
+an actual namespace import. An exact inline dependency such as `closefile`'s
+`_rxsysb._close` may create a declaration scope without authorizing the loading
+of unrelated `_rxsysb` source extensions. `source_import_file_is_visible()` checks
+the current program's own namespace and its live `IMPORT` nodes, including parsed
+header imports under `REXX_OPTIONS` and compiler-generated file imports. It does
+not traverse executable bodies or imported declaration stubs. This prevents
+speculative source-import cycles from consuming unfinished array or interface
+contracts; it does not add general support for arbitrary source-import cycles.
+The `source_import_private_dependency_convergence` and `_provider` tests retain
+the #699 failures, opt/noopt and binary controls, unused-body dependency checks,
+and explicit/generated/own-namespace extension validation. Inline payloads,
+exact callable lookup and legitimate extension imports remain enabled.
+
 Storage selectors have a separate syntax-role boundary. The compact suffixes
 in `<sizeof..float>`, `<at..u8>`, `<packed..float>` and `<compare..u8>` use
 leaf `CLASS` nodes, but describe binary storage, not object values. Existing

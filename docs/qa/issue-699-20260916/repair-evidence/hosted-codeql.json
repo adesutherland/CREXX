@@ -1,0 +1,101 @@
+{
+  "conclusion": "success",
+  "createdAt": "2026-09-16T16:13:37Z",
+  "headSha": "f786b15d86a66b52c8ab1ce631054afc7a5937e8",
+  "jobs": [
+    {
+      "completedAt": "2026-09-16T17:03:53Z",
+      "conclusion": "success",
+      "databaseId": 104876837765,
+      "name": "Analyze (cpp)",
+      "startedAt": "2026-09-16T16:13:40Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-16T16:13:41Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-16T16:13:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:13:50Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-09-16T16:13:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:10Z",
+          "conclusion": "success",
+          "name": "Initialize CodeQL",
+          "number": 3,
+          "startedAt": "2026-09-16T16:13:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:14:25Z",
+          "conclusion": "success",
+          "name": "Configure CMake",
+          "number": 4,
+          "startedAt": "2026-09-16T16:14:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T16:31:30Z",
+          "conclusion": "success",
+          "name": "Build",
+          "number": 5,
+          "startedAt": "2026-09-16T16:14:25Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T17:03:49Z",
+          "conclusion": "success",
+          "name": "Perform CodeQL Analysis",
+          "number": 6,
+          "startedAt": "2026-09-16T16:31:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T17:03:49Z",
+          "conclusion": "success",
+          "name": "Post Perform CodeQL Analysis",
+          "number": 10,
+          "startedAt": "2026-09-16T17:03:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T17:03:50Z",
+          "conclusion": "success",
+          "name": "Post Initialize CodeQL",
+          "number": 11,
+          "startedAt": "2026-09-16T17:03:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T17:03:50Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 12,
+          "startedAt": "2026-09-16T17:03:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-16T17:03:50Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 13,
+          "startedAt": "2026-09-16T17:03:50Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521311/job/104876837765"
+    }
+  ],
+  "status": "completed",
+  "updatedAt": "2026-09-16T17:03:54Z",
+  "url": "https://github.com/adesutherland/CREXX/actions/runs/35120521311"
+}

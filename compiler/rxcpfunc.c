@@ -3244,7 +3244,29 @@ static void ensure_importable_source_header(importable_file *file, RexxLevel cli
     file->header_scanned = 1;
 }
 
+static int source_node_imports_namespace(ASTNode *node, const char *namespace_name) {
+    ASTNode *child;
+    if (!node) return 0;
+    if (node->node_type == IMPORT && node->child) {
+        char *name = rxcp_normalize_source_symbol_name(node->child->node_string,
+                                                      node->child->node_string_length,
+                                                      0, 1);
+        int matches = name && strcmp(name, namespace_name) == 0;
+        free(name);
+        return matches;
+    }
+    /* Parsed header imports are children of REXX_OPTIONS; generated imports
+     * can be direct file children. Never inspect executable or imported bodies. */
+    if (node->node_type != PROGRAM_FILE && node->node_type != REXX_OPTIONS) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (source_node_imports_namespace(child, namespace_name)) return 1;
+    }
+    return 0;
+}
+
 static int source_import_file_is_visible(Context *context, importable_file *file) {
+    ASTNode *program;
+    Scope *namespace_scope;
     if (!file || file->type != REXX_FILE) return 1;
 
     ensure_importable_source_header(file,
@@ -3254,7 +3276,23 @@ static int source_import_file_is_visible(Context *context, importable_file *file
     if (!file->namespace_name || !file->namespace_name[0]) return 1;
     if (!context || !context->ast || !context->ast->scope) return 1;
 
-    return find_visible_namespace_scope(context, 0, file->namespace_name) != 0;
+    namespace_scope = find_visible_namespace_scope(context, 0, file->namespace_name);
+    if (!namespace_scope) return 0;
+
+    /* A materialized callable/class dependency also creates a namespace scope.
+     * It does not import every source extension in that namespace. In particular,
+     * closefile's exact inline dependency on _rxsysb._close must not recursively
+     * load unrelated source bodies while their callers' contracts are unfinished.
+     * Use the current program's own namespace and actual IMPORT nodes (including
+     * compiler-generated imports); keep imported declaration stubs out of this
+     * source-discovery decision. Recheck live nodes so later imports remain usable.
+     */
+    for (program = context->ast->child; program; program = program->sibling) {
+        if (program->node_type != PROGRAM_FILE) continue;
+        if (program->scope == namespace_scope) return 1;
+        if (source_node_imports_namespace(program, file->namespace_name)) return 1;
+    }
+    return 0;
 }
 
 /* The dependency checker uses exactly the resolver's header interpretation. */

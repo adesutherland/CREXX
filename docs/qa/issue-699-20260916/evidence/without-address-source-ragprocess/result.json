@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/Users/adrian/.local/bin/rxc",
+    "-s",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application/config;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application/config/profiles;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application/surfaces;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application/tests;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/providers;/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/providers/tests",
+    "-i",
+    "/Users/adrian/.local/bin/providers;/Users/adrian/.local/bin",
+    "--project-dependencies",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/ragprocess/deps",
+    "--import-resolution-report",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/ragprocess/imports.json",
+    "-o",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/ragprocess/ragprocess",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/without-address-source/crexx/application/ragprocess.crexx"
+  ],
+  "rc": 0,
+  "elapsed": 7.452663625124842
+}
