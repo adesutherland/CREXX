@@ -29,9 +29,11 @@ These checks exercise installed VM and relocated native consumers, provider
 integrity/discovery/rejection and bounded engine computations. They do not use
 the trained BGE/Smol models. The complete Build matrix, Deep Build and core
 Sanitizer gates all passed at `f10e70ee5`. Later inheritance and installer changes
-have focused passing evidence on their recorded revisions. The latest candidate
-still needs the newer develop #699 fix and CI-D03/signing completion; these
-earlier passes are not a final integrated-delivery or signed-release verdict.
+have focused passing evidence on their recorded revisions. Develop #699 is now
+merged and CI-D03 selection/collection is implemented. The combined candidate
+`21a5e9410` is undergoing Build `35143588581`, including non-publishing Mac
+signing/notarization, followed by signed installer checks. Until those checks
+finish, earlier passes are not a final integrated-delivery or signed-release verdict.
 
 | Package | Complete baseline result (`f10e70ee5`) | Actual fixture computation |
 | --- | --- | --- |

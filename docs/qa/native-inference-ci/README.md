@@ -18,6 +18,16 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 
 ## Current overall status — 16 September
 
+**Approved continuation in progress:** product/build candidate `21a5e9410`
+contains the #699 merge, CUDA scheduling/collector changes and maintained split
+signing fixes. [Build 35143588581](https://github.com/adesutherland/CREXX/actions/runs/35143588581)
+runs all six plugins explicitly with candidate Mac signing enabled, without
+publishing. Local integration passes 20 focused tests plus corrected package
+smoke; 37 release/signing controls pass. Subsequent commits add retained-artifact
+signed installer QA and evidence only; they do not change compiled product/build
+inputs. Actual signed Windows and offline Mac runner outcomes remain pending.
+The audit below is the prior baseline, retained to explain the different revisions.
+
 Live GitHub audit at checkout `09d4ffaf2c10a4eab832cb2061d10d57ce36e290`:
 the complete earlier build matrix and subsequent focused installer checks are
 green, but the final integrated delivery is not yet qualified for promotion.
@@ -46,13 +56,11 @@ and [CodeQL 35120521311](https://github.com/adesutherland/CREXX/actions/runs/351
 pass. That is qualification of the fix's own inputs, not its combination with
 this branch's MSVC, provider and packaging changes.
 
-Outstanding work remains under CI-06/F19 and the installer criteria: implement
-the approved CUDA event/asset-selection policy; adapt Windows split-asset
-signing and refresh all affected manifests; retain actual signed/notarized
-package proof; integrate #699 and qualify the resulting build/package inputs.
-One combined final Build/package check can cover the changed delivery inputs,
-with CUDA explicitly selected for that complete candidate. Reuse unchanged
-Deep/sanitizer evidence and run focused import/provider integration checks.
+The subsequently approved implementation closes CI-06 and F19-AC-01: CUDA
+event/asset selection, Windows split-asset signing/hash refresh and #699
+integration are implemented. The combined Build/package run and actual
+signed/notarized/offline installer proof remain underway. Retain the unchanged
+Deep/sanitizer evidence and the recorded focused import/provider integration checks.
 The parent real-device/model criteria remain open independently; tiny-fixture
 build success does not close them. No promotion or publication has occurred.
 

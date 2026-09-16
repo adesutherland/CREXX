@@ -73,8 +73,11 @@ blocked by Windows security policy.
 
 When present, prefer `CREXX-dev-snapshot-windows-x64-signed-setup.exe` for
 installation or `CREXX-dev-snapshot-windows-x64-signed.zip` for portable use.
-The maintainer's `scripts/sign-windows-dev-snapshot.sh` signs the complete
-payload and installer and publishes both. Unsigned downloads remain available.
+The maintainer's `scripts/sign-windows-dev-snapshot.sh` signs the core payload
+and installer and publishes both. Optional llama.rexx installers use the matching
+core/plugin signing procedure in [the installation guide](lib/plugins/llama/installation.md#maintainer-signing-of-split-windows-packages).
+Choose the core and plugin installers from the same signed delivery set.
+Unsigned downloads remain available.
 Each new snapshot replaces the automatic assets and removes the previous signed
 assets and legacy installers, so old code is not offered as the current build.
 Check the release's commit and installed `BUILDINFO`/`VERSION` for build identity.
