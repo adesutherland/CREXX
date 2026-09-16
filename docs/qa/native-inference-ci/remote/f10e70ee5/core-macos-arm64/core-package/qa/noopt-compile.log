@@ -1,0 +1,1 @@
+argv=['/Users/runner/work/_temp/core-package/extracted/CREXX-macos-arm64/bin/rxc', '--no-exe-import', '-n', '-i', '/Users/runner/work/_temp/core-package/extracted/CREXX-macos-arm64/bin', '-o', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-core-consumer-y0x0gjly/noopt', '/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-core-consumer-y0x0gjly/hello.crexx']

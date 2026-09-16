@@ -7,72 +7,49 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
-**Frozen final candidate:** `f10e70ee5f12ce49cc5088abc867748522d1d19c` is on
-`origin/temp/llama-release-combined`. The complete [Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681),
-[Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
-and [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
-are running on this exact SHA. Do not change code/test inputs or restart green
-local checks. Await terminal results and preserve artifacts, then reconcile
-CI-AC-02/03/05/07/08/09 and R16-AC-01/R16-02/R16-04. The earlier sanitizer run
-`35071054942` was deliberately cancelled as superseded; available partial logs
-contain no sanitizer diagnostic and are retained as cancelled, not passing.
-The completed `21666b6bc` core and separate Linux probe still support SAN-009
-closure. No develop promotion or release publication is authorized by this run.
+**Frozen final candidate:** `f10e70ee5f12ce49cc5088abc867748522d1d19c` remains
+on `origin/temp/llama-release-combined`. No product/test input has changed.
 
-**Final repair proof:** `f749203a7559a46fac23f7f0cf30f86c6cf1b4af` on
-`origin/temp/llama-release-windows-retry` passes the entire Windows Vulkan run
-`35073667866`, including the final relocated native consumer. The shared
-manifest deduplication repair is verified; no assertion or overwrite guard was
-removed. Local Debug/ASan-built tiny fixtures reproduce the old error and pass
-the repair. All targeted repair steps now have proof; final combined gates
-remain to run on the frozen revision after this evidence checkpoint.
+- [Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
+  is terminal **success**: all five comprehensive configurations, their
+  install/package checks, stress, Release jobs 1/5/30 and RXBIN equivalence.
+  Linux and both Macs pass 2,326 tests each, MSVC 2,130 and MinGW 2,248;
+  each platform also passes its three external-consumer qualification checks.
+- [Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681)
+  attempt 1 passes all four shipped cores, but its non-shipping MinGW gate
+  fails `crexx_project_build_contract` (151/152 smoke tests pass). The failure
+  is an unexplained exit 1 in a two-member build, not a timeout. All six
+  plugins are consequently skipped. CI-F18 in the plan retains the failure
+  and identical-SHA passing MinGW Deep control; no root cause is asserted.
+  Attempt 2 reruns only failed/dependent jobs with debug logging. Preserve
+  the green core artifacts; do not restart Deep or change scheduling blindly.
+- [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
+  remains running on Linux and ARM Mac, with llama disabled. Leave it running.
 
-**Retained previous combined baseline:** `31d4974f1` passes all five core Build
-jobs, all five comprehensive Deep jobs, stress, Release job-count builds and
-RXBIN equivalence. Intel CPU, ARM Metal, Linux Vulkan and Linux CUDA archives
-pass. Both Windows plugins compile/package and pass all earlier smoke commands,
-then hit the same duplicate-entry relocation defect now repaired at `f749203a7`.
-Linux CUDA records 2,726 hits/four misses (99.85%); Windows CUDA records 2,640
-hits/five misses (99.81%). One/three cache write errors remain recorded. Caches
-are retained. The downloaded Intel CPU ZIP contains CPU variants, no Metal
-backend, and no model fixture. F16 and D02 are closed; SAN-009 has its separate
-retained first-party closure. Other real-device/model criteria remain open.
+**Next:** inspect the MinGW diagnostic retry, then the dependent six plugin
+jobs and both sanitizer results. If MinGW repeats the silent failure, retain
+its member workspace and add targeted operation diagnostics before further
+reruns. A retry pass is not root-cause repair. Retain terminal logs/artifacts
+under `docs/qa/native-inference-ci/remote/f10e70ee5/`, reconcile
+CI-AC-02/03/05/07/08/09, F18-AC-01 and R16-AC-01/R16-02/R16-04. No develop
+promotion, release publication, repeated unchanged local broad QA or
+upstream/model sanitizer campaign is authorized by this qualification.
 
-**Next:** checkpoint these results, push the final combined candidate, supersede
-the older running sanitizer workflow, and dispatch the complete Build/Deep/core
-Sanitizer workflows once on the frozen final revision. No promotion, release or
-new broad local/model/upstream sanitizer run. Final gate identities go here.
+**Earlier repair evidence:** `f749203a7` passes the complete Windows Vulkan
+run `35073667866`, including relocated native execution. At `31d4974f1`, all
+five cores and Deep configurations pass; ARM Metal, Intel CPU, Linux Vulkan
+and Linux CUDA archives pass. Both Windows plugins stop only at the duplicate
+manifest-entry relocation defect repaired in `f749203a7`. Linux CUDA records
+2,726 hits/four misses and Windows CUDA 2,640 hits/five misses, with one/three
+cache write errors retained. Intel CPU excludes Metal and the fixture. F16,
+D02 and F15's targeted repair proof are closed; final Windows CUDA and combined
+delivery remain open.
 
-Adrian authorized fixes and reruns, including CPU-only Intel Mac delivery
-(CI-D02). The current repair batch fixes CI-F16's MSVC-only HTTP shape artifact
-path and CI-F17's inconsistent CRT selection. The core used the active
-`VCToolsRedistDir` (14.51), while the plugin's independent CMake search chose
-14.44. The plugin now uses the active redist's actual CRT directory; its
-pre-build hash comparison rejects any difference from the qualified core.
-The final overlap guard remains intact. Intel's matrix/asset/docs are CPU-only;
-ARM Metal and Windows/Linux GPU requirements remain unchanged.
-
-Local checks: 30 packaging/signing/matrix controls pass, including runtime
-mismatch/ambiguity and CPU-only rejection controls. The existing HTTP shape
-assertions pass against the generated `rxbvm` artifact. Workflow lint passes.
-Target reruns are still required; see R16/F16/F17/D02 criteria in the plan.
-
-Terminal baseline results: core sanitizer run `35026470003` passes both hosts,
-2,340 tests each; Linux build and test leak detection stayed on. Together with
-the retained independent first-party bridge probe, this closes SAN-009. It
-asserts no sanitizer coverage inside an uninstrumented engine. All five core
-Build jobs and Linux/ARM/Intel/MinGW Deep jobs passed at `21666b6bc`.
-MSVC Deep retry `35030598584` passed 2,129/2,130 tests; only CI-F16 failed.
-Windows Vulkan retry `35031332714` passed compilation, the dependency scanner
-and all four plugin controls before CI-F17 stopped staging. Windows CUDA's
-older build completed engine compilation but stopped at the already-repaired
-helper macro collision CI-F11. ARM Metal, Linux Vulkan and Linux CUDA packages
-passed; Intel Metal timed out and has the explicit CI-D02 disposition.
-
-Next: push this repair batch only to the isolated candidate, run the full
-Build matrix and exact-candidate core Deep/Sanitizer workflows, preserve CUDA
-cache results, and reconcile every terminal result. No develop promotion or
-release publication. Real-device/model criteria remain open where unverified.
+**Sanitizer boundary:** SAN-009 is closed by the retained `21666b6bc` broad
+core results and separate Linux first-party bridge probe. The superseded
+`35071054942` run was cancelled, not passed. That closure does not replace the
+current final-candidate sanitizer gate or establish upstream/real-device/model
+qualification. Parent acceptance and unavailable hardware cells remain open.
 
 ## Live continuation — 15 September, after restart
 

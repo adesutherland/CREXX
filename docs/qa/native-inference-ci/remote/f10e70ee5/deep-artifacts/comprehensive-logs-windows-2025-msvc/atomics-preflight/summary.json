@@ -1,0 +1,30 @@
+[
+  {
+    "index": 1,
+    "mode": "negative",
+    "returncode": 2,
+    "elapsed_seconds": 0.2189999999999941,
+    "passed": true
+  },
+  {
+    "index": 1,
+    "mode": "positive",
+    "returncode": 0,
+    "elapsed_seconds": 0.23399999999998045,
+    "passed": true
+  },
+  {
+    "index": 2,
+    "mode": "negative",
+    "returncode": 2,
+    "elapsed_seconds": 0.0630000000000166,
+    "passed": true
+  },
+  {
+    "index": 2,
+    "mode": "positive",
+    "returncode": 0,
+    "elapsed_seconds": 0.09299999999998931,
+    "passed": true
+  }
+]

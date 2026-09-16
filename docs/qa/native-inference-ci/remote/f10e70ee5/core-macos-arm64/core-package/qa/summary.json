@@ -1,0 +1,57 @@
+{
+  "outcome": "passed",
+  "elapsed_seconds": 2.598,
+  "commands": [
+    {
+      "label": "opt-compile",
+      "returncode": 0
+    },
+    {
+      "label": "opt-assemble",
+      "returncode": 0
+    },
+    {
+      "label": "opt-link",
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxvm",
+      "returncode": 0
+    },
+    {
+      "label": "opt-rxtvm",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-compile",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-assemble",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-link",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxvm",
+      "returncode": 0
+    },
+    {
+      "label": "noopt-rxtvm",
+      "returncode": 0
+    },
+    {
+      "label": "native-build",
+      "returncode": 0
+    },
+    {
+      "label": "relocated-native",
+      "returncode": 0
+    }
+  ],
+  "preferred_vm": "rxbvm",
+  "llama_enabled": false,
+  "work": "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/crexx-core-consumer-y0x0gjly"
+}

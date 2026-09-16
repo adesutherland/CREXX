@@ -14,6 +14,29 @@ for this sequence. Older proposed/pending wording below is historical; CI-D01
 in the live plan records the approved contract. Core and plugin QA are separated
 so backend variants do not rebuild or repeat the cREXX core suite.
 
+## Latest exact-candidate status — 16 September
+
+`f10e70ee5` remains frozen on `origin/temp/llama-release-combined`.
+[Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
+is green on all five platforms, stress, Release jobs 1/5/30 and RXBIN
+identity. `remote/f10e70ee5/` retains the terminal metadata, compressed full
+log, focused summary and all eight evidence artifacts.
+
+[Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681)
+attempt 1 passes four shipped cores but fails the MinGW smoke gate at
+`crexx_project_build_contract`: 151/152 pass. The silent exit 1 occurs during
+its `--nooptimize` two-worker build after only one member reports completion.
+It is not a timeout; the aggregate already runs serially. The identical-SHA
+Deep MinGW control passes this test in 34.35 seconds, all 2,248 comprehensive
+tests and three qualification checks. Cause remains unresolved (CI-F18).
+All plugin jobs were skipped, not failed or passed. Attempt 2 is a single
+failed/dependent-job retry with debug logging; unchanged green jobs are reused.
+
+[Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
+is still running. No product repair, sanitizer pass, complete candidate or
+publication is claimed by this checkpoint. The chronological records below
+retain earlier failures and their separate repairs.
+
 ## Local checks before remote qualification
 
 | Check | Result | Retained evidence |

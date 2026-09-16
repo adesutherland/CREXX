@@ -758,3 +758,41 @@ evidence checkpoint and run the complete required hosted gates once. Supersede
 the older in-progress `31d4974f1` sanitizer run; its baseline closure evidence
 already exists, and the final run must include the shared-writer repair. No
 unchanged broad local suite or model/upstream sanitizer campaign is repeated.
+
+### CI-F18 — MinGW project-build failure on the frozen candidate
+
+Vision: finish the same four-core/six-plugin qualification without discarding
+green exact-candidate evidence or masking an intermittent core failure.
+
+Build `35076278681` attempt 1 at `f10e70ee5` passes all four shipped core
+jobs. The non-shipping MinGW gate passes 151/152 smoke tests, then blocks all
+plugin jobs. `crexx_project_build_contract` fails after 4.29 seconds during
+the `--nooptimize` two-member wave: both members start, only `projectbeta`
+reports completion, and the controller returns 1 without an operation-level
+diagnostic. This is not a timeout. The test already uses `RUN_SERIAL` and a
+900-second hang guard; neither weakening concurrency nor extending a timeout
+is justified by this evidence.
+
+The full Deep Build `35076281099` passes at the identical SHA, including
+2,248 MinGW tests and three install/package checks. The same project-build
+contract passes there in 34.35 seconds. All other comprehensive platforms,
+stress, Release job-count builds and bytecode equivalence are green. These
+are controls, not a diagnosed cause for the separate failure.
+
+1. [x] **F18-01:** retain the failed job/CTest log, build configuration and
+   same-SHA passing Deep control; inspect the actual error before changing
+   product code or scheduling. Evidence: `remote/f10e70ee5/` in the CI ledger.
+2. [ ] **F18-AC-01:** the mandatory MinGW core gate succeeds on the frozen
+   candidate. Retain the first failure and the diagnostic retry separately;
+   a retry pass alone must not be described as a repaired root cause.
+3. [ ] **F18-02:** rerun only failed/dependent Build jobs once with diagnostic
+   logging on the unchanged SHA. If the failure recurs, retain the failing
+   member workspace and add operation-level diagnostics before a focused
+   reproducer/repair; do not repeatedly rerun until green. Serves F18-AC-01
+   and CI-AC-02/07. Attempt 2 was dispatched on 16 September.
+
+Core Sanitizer QA `35076283269` remains running on both hosts; it is not
+cancelled or counted as passing. Deep is not repeated. CI-AC-02/03/05/07/08/09
+and R16-AC-01 stay open while the mandatory retry and plugin delivery remain
+incomplete. No change to `develop`, release publication or model/GPU acceptance
+is implied.
