@@ -99,6 +99,9 @@ foreach(mode IN ITEMS opt noopt)
     endif()
 
     foreach(runner IN ITEMS "${RXTVM}" "${RXBVM}")
+        if(NOT runner)
+            continue()
+        endif()
         execute_process(
                 COMMAND "${runner}" "${WORK}/linked_${mode}.rxbin"
                 WORKING_DIRECTORY "${WORK}"

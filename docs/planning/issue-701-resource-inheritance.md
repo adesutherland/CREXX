@@ -138,3 +138,11 @@ STEP-01 complete; STEP-02/03 in progress; platform acceptance remains open.
 Focused maintained Apple ASan also passes 2/2 (0.97 seconds),
 `cmake-build-debugasan/asan-logs/20260916-113823-ctest`; no sanitizer diagnostic.
 Apple leak checking is disabled only for its documented unsupported capability.
+
+Initial hosted controls at `502fb28dc080342df7a2db0a1e8f272915e8517e`, run
+35086216671: Linux and macOS baseline-negative/current-positive pass. MSVC is
+blocked before compilation by an existing test-registration bug:
+`inline_receiver_signal_cleanup` unconditionally names nonexistent `rxtvm`.
+Retained MSVC configure log in `docs/qa/issue-701/remote-502fb28/msvc/`.
+A separate ordinary CMake repair supplies the threaded VM only where built,
+retaining the portable VM test on MSVC. It does not change compiler semantics.
