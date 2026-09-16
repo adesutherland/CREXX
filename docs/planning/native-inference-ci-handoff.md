@@ -14,17 +14,19 @@ fast-forward from `94f2f228c`; candidate history is retained. Monitor normal Bui
 normal checks and independent cleanup are disposed of. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
 
-**Optional signed Windows follow-up:** all six signed files and
-`signed-delivery.json` exist in `/tmp/crexx-final-21a5e9410/signed-retry`.
-Both upload processes are still active: exec sessions 10806 (first five files,
-`upload-first.log`) and 11459 (CUDA setup plus record, `upload-final.log`).
-Inspect their exit/logs or live processes before retrying. Private draft
-390272446 must remain unpublished. When all seven assets are `uploaded`, compare
-GitHub SHA256 digests with the local signed-delivery record, then dispatch the
-Windows-only command described below. No signing credential is needed for this
-runner test. Retain its terminal proof and delete only draft 390272446; confirm
-its tag never exists. If the optional follow-up cannot complete, report it for
-morning without holding otherwise-green development integration.
+**Optional signed Windows follow-up:** run `35153176156` is dispatched at
+installer QA revision `9048acdc1`, reusing the exact qualified `21a5e9410` core,
+both plugins and locally signed output. Both upload processes exited zero; all
+seven private assets match the local final SHA256 record. Evidence begins at
+`docs/qa/native-inference-ci/remote/9048acdc1-windows-signed/`. Private draft
+390272446 must remain unpublished. Retain the run's terminal proof, then delete
+only that draft and confirm its tag never exists. No signing credential is
+needed for this runner test; do not request another login tonight.
+
+**21:35 UTC monitor:** all four develop core jobs, MinGW and Linux optimizer
+parity pass in Build `35150686647`. Its four routine plugin jobs are running;
+CUDA is correctly absent. CodeQL `35150686250` is performing analysis. No new
+failures or remediation. Keep the 15-minute cadence; no extra assurance dispatch.
 
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic
@@ -46,21 +48,14 @@ retained packages: Gatekeeper/install/consumer offline, then online ticket
 comparison; network restoration also passes. Linux
 installed rxfs run `35149445867` passes. Inspect those exact runs for status.
 
-Windows complete inputs are under `/tmp/crexx-final-21a5e9410/{core,vulkan,cuda,manager}`.
-The first signing attempt (`signing.log`) lost SimplySign access mid-payload;
-a fresh probe also failed. Adrian reconnected after the async question.
-The second attempt completed successfully with output `signed-retry/` and log
-`signing-retry.log` in that directory; inspect its process/output before starting
-another attempt. Private staging draft **390272446** now exists at
-`qa-llama-signing-21a5e9410925cac7e4f577119e4e09fe6393d7f4`; it is unpublished and
-its tag does not exist. Five completed files are uploading (`upload-first.log`);
-wait for final signing before uploading CUDA setup and `signed-delivery.json`.
-Delete this draft after retaining Windows QA evidence. Then run
-Windows-only installer QA with `source_run=35143588581`, `platform=windows`,
-`cuda=true`, `signed_mac=true`, `repackage_signed_mac=true` (the latter two
-explicitly permit the already repaired original Mac packaging failure), and
-`signed_windows_release=<draft id>`. Mac/Linux have independent runs and must
-not be needlessly repeated. Delete the draft after retaining Windows results.
+Windows complete inputs and final signed outputs remain under
+`/tmp/crexx-final-21a5e9410/`. The first attempt lost SimplySign access; Adrian
+reconnected, and the complete retry passed. `signed-retry/signed-delivery.json`
+and the local/final-delivery retained record bind inputs and outputs. Private
+QA draft 390272446 has no corresponding tag. The separate Windows runner check
+above reuses all artifacts; it rebuilds neither core nor CUDA.
+
+### Earlier execution snapshots
 
 **Approved continuation now running:** develop through `94f2f228c` (#699) is
 merged. Product/build candidate `21a5e9410925cac7e4f577119e4e09fe6393d7f4` is
