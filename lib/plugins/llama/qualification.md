@@ -30,14 +30,16 @@ candidate Build, Deep Build and Sanitizer gates remain open.
 
 | Package | Triage result | Actual fixture computation |
 | --- | --- | --- |
-| Linux x64 CPU/Vulkan | Pass at `2bc56249d`; downloaded archive checked. | CPU; runner reports no GPU. |
-| Windows x64 MinGW CPU/Vulkan | Pass at `4a0924ee1`; downloaded archive and restricted-PATH consumers checked. | CPU; runner reports no GPU. |
-| macOS arm64 CPU/Metal | Pass at `2bc56249d`; downloaded archive checked. | CPU and Metal. |
-| macOS x86_64 CPU | CPU-only delivery approved (CI-D02); revised package qualification pending. | Earlier CPU/Metal fixture pass at `e39916f2a` is historical; repeated cold Metal stalls make Intel Metal unsupported for this delivery. |
-| Linux x64 CPU/CUDA | Pass at `2bc56249d`; downloaded archive, redistributables and notices checked. | CPU; runner reports no GPU. |
-| Windows x64 MSVC CPU/CUDA | Pending. | No claim. |
+| Linux x64 CPU/Vulkan | Pass at `31d4974f1`; split archives and native relocation checked. | CPU; runner reports no GPU. |
+| Windows x64 MSVC CPU/Vulkan | Pass at `f749203a7`, including restricted-PATH VM/native consumers and unique runtime metadata. | CPU; runner reports no GPU. |
+| macOS arm64 CPU/Metal | Pass at `31d4974f1`; split archives and native relocation checked. | CPU and Metal. |
+| macOS x86_64 CPU | Pass at `31d4974f1`; downloaded archive has CPU variants and no Metal backend. | CPU. Intel Metal is unsupported for this delivery (CI-D02). |
+| Linux x64 CPU/CUDA | Pass at `31d4974f1`; split archive, redistributables, notices and native relocation checked. | CPU; runner reports no GPU. |
+| Windows x64 MSVC CPU/CUDA | Build/package and early smoke pass at `31d4974f1`; final relocation awaits the combined manifest repair retry. | CPU engine smoke; full package qualification pending. |
 
 The pipeline evidence ledger retains job identities, archive hashes and failures.
+Historical MinGW plugin checks at `4a0924ee1` remain evidence for that source
+configuration; MinGW now has a mandatory core-only QA gate and no binary delivery.
 Use `rxvm` as the public entry point: archive inspection verifies its relative
 selected-VM symlink on Unix/macOS and identical executable copy on Windows.
 

@@ -1,0 +1,12 @@
+{
+  "name": "CREXX-user-test-f749203a7559a46fac23f7f0cf30f86c6cf1b4af-windows-mingw.zip",
+  "bytes": 24947614,
+  "sha256": "14b3144b09c4d86b633ea2815adcf181809d84bddbdec7341ef7c858603dbe77",
+  "schema": 1,
+  "component": "core",
+  "commit": "f749203a7559a46fac23f7f0cf30f86c6cf1b4af",
+  "platform": "windows-mingw",
+  "toolchain": "mingw",
+  "preferred_vm": "rxtvm",
+  "llama_enabled": false
+}

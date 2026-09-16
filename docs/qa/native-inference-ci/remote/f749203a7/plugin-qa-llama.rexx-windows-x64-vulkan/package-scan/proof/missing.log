@@ -1,0 +1,4 @@
+CMake Error at D:/a/CREXX/CREXX/rxpa/WriteProviderPackage.cmake:49 (message):
+  Unresolved inference package dependencies: copy-dependency.dll
+
+

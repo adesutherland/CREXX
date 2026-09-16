@@ -1,0 +1,6 @@
+set(platform "Windows")
+set(provider copy_control)
+set(arch "AMD64")
+set(engine fixture)
+set(runtime_files "D:/a/_temp/package-scan/a/copy_root_a.dll" "D:/a/_temp/package-scan/b/copy_root_b.dll" "D:/a/_temp/package-scan/a/copy-dependency.dll")
+set(output "D:/a/_temp/package-scan/proof/complete")

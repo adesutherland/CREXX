@@ -1,0 +1,23 @@
+{
+  "archive": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-macos-x86_64-cpu.zip",
+  "bytes": 9141464,
+  "sha256": "aaacf714432c0497319ad3e6d68325eaeecb35066d949c30795f971c5cb8c740",
+  "backends": [
+    "cpu-x64",
+    "cpu-sse42",
+    "cpu-sandybridge",
+    "cpu-ivybridge",
+    "cpu-piledriver",
+    "cpu-haswell",
+    "cpu-skylakex",
+    "cpu-cannonlake",
+    "cpu-cascadelake",
+    "cpu-icelake",
+    "cpu-cooperlake",
+    "cpu-zen4",
+    "cpu-alderlake",
+    "cpu-sapphirerapids"
+  ],
+  "metal_files": [],
+  "model_files": []
+}

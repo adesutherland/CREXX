@@ -7,25 +7,29 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
-**Frozen candidate:** `31d4974f12454842902224d495e4aafd111c2134` is on
-`origin/temp/llama-release-combined`. [Build 35071050120](https://github.com/adesutherland/CREXX/actions/runs/35071050120),
-[Deep Build 35071052712](https://github.com/adesutherland/CREXX/actions/runs/35071052712)
-and [Sanitizer QA 35071054942](https://github.com/adesutherland/CREXX/actions/runs/35071054942)
-are running on this exact SHA. All five core jobs and actual core ZIP smokes
-now pass, including the non-shipping MinGW gate. Both Windows plugin jobs pass
-the new shared-CRT preflight and are compiling. All six plugin jobs started;
-final archive smokes remain pending. Deep stress, all three Release job-count
-builds and RXBIN equivalence pass; comprehensive and sanitizer jobs continue. Local documentation updates
-recording results do not change the frozen workflow source or trigger reruns.
+**Final repair proof:** `f749203a7559a46fac23f7f0cf30f86c6cf1b4af` on
+`origin/temp/llama-release-windows-retry` passes the entire Windows Vulkan run
+`35073667866`, including the final relocated native consumer. The shared
+manifest deduplication repair is verified; no assertion or overwrite guard was
+removed. Local Debug/ASan-built tiny fixtures reproduce the old error and pass
+the repair. All targeted repair steps now have proof; final combined gates
+remain to run on the frozen revision after this evidence checkpoint.
 
-**Windows Vulkan follow-up:** on `31d4974f1`, compilation, all four controls,
-CRT identity, split archive staging/finalization, engine checks, both VM modes
-and native compilation pass. Relocation fails because the manifest repeats
-three identical CRT entries: a second copy tries to overwrite its own hard
-link (WinError 32). CI-F15 now deduplicates identical published path/hash
-entries. The tiny fixture reproduces the metadata error before repair and
-passes normal/ASan-built scans after repair (0.10/0.09 s). A focused Windows
-retry is next; preserve the ongoing CUDA/cache and wider jobs.
+**Retained previous combined baseline:** `31d4974f1` passes all five core Build
+jobs, all five comprehensive Deep jobs, stress, Release job-count builds and
+RXBIN equivalence. Intel CPU, ARM Metal, Linux Vulkan and Linux CUDA archives
+pass. Both Windows plugins compile/package and pass all earlier smoke commands,
+then hit the same duplicate-entry relocation defect now repaired at `f749203a7`.
+Linux CUDA records 2,726 hits/four misses (99.85%); Windows CUDA records 2,640
+hits/five misses (99.81%). One/three cache write errors remain recorded. Caches
+are retained. The downloaded Intel CPU ZIP contains CPU variants, no Metal
+backend, and no model fixture. F16 and D02 are closed; SAN-009 has its separate
+retained first-party closure. Other real-device/model criteria remain open.
+
+**Next:** checkpoint these results, push the final combined candidate, supersede
+the older running sanitizer workflow, and dispatch the complete Build/Deep/core
+Sanitizer workflows once on the frozen final revision. No promotion, release or
+new broad local/model/upstream sanitizer run. Final gate identities go here.
 
 Adrian authorized fixes and reruns, including CPU-only Intel Mac delivery
 (CI-D02). The current repair batch fixes CI-F16's MSVC-only HTTP shape artifact

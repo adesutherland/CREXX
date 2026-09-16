@@ -1,0 +1,7 @@
+argv=['/home/runner/work/_temp/plugin-package/combined/CREXX-linux-x64/bin/crexx', '--program', '/tmp/crexx-release-smoke-x0zsaldb/native/smoke', '/tmp/crexx-release-smoke-x0zsaldb/smoke.crexx', '--jobs', '1', '--native']
+WAVE: project compile/assemble jobs=1
+START: project member smoke
+BUILT: project member smoke
+BARRIER: link program
+PUBLISHED: program /tmp/crexx-release-smoke-x0zsaldb/native/smoke.rxbin
+PUBLISHED: native program /tmp/crexx-release-smoke-x0zsaldb/native/smoke

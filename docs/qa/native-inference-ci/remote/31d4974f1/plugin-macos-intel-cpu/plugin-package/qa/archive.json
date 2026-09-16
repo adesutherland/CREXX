@@ -1,0 +1,14 @@
+{
+  "name": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-macos-x86_64-cpu.zip",
+  "bytes": 9141464,
+  "sha256": "aaacf714432c0497319ad3e6d68325eaeecb35066d949c30795f971c5cb8c740",
+  "schema": 1,
+  "component": "llama.rexx",
+  "commit": "31d4974f12454842902224d495e4aafd111c2134",
+  "platform": "macos-x86_64",
+  "toolchain": "clang",
+  "backend": "cpu",
+  "core_archive": "CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-macos-x86_64.zip",
+  "core_archive_sha256": "e1a11f73c4ee54fa22ca9108cdf767a221462a15f38f38df66be78e84ca11c54",
+  "core_binaries_rebuilt": false
+}

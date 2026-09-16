@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "provider": "rxllama",
+  "platform": "Windows",
+  "arch": "AMD64",
+  "engine": "5266f24da75dc449bd56cbed7addb9c8e4a6a73e",
+  "link_libraries": [
+    {
+      "path": "crexx-llama.lib",
+      "sha256": "9407a49ecac5b6ab0d515d9958b3c0176179426c4c7245299e0a0f1df0f4b689"
+    }
+  ],
+  "runtime_files": [
+    {
+      "path": "crexx-llama.dll",
+      "sha256": "2d960cdf069c164d37f2b1b31509d7e4981d7b96b79365460fbe7ba843910230"
+    },
+    {
+      "path": "crexx-llama.lib",
+      "sha256": "9407a49ecac5b6ab0d515d9958b3c0176179426c4c7245299e0a0f1df0f4b689"
+    },
+    {
+      "path": "crexx-llama-engine.dll",
+      "sha256": "76e3ef6b1bc55998335f67efa7844295fb16eaf650e1b07046c99edc7f1dcda3"
+    },
+    {
+      "path": "crexx-llama-engine.lib",
+      "sha256": "ee45db63558ad2ef4409dd9867869d27c96cec82656e2a65201df5a0b6ac378e"
+    },
+    {
+      "path": "crexx-ggml.dll",
+      "sha256": "ddf77346634f86ea490490179f7af067666c45a2835de91df6b1508549f51f12"
+    },
+    {
+      "path": "crexx-ggml.lib",
+      "sha256": "60560b971f944683f5e8b2be274827439094171bc84c928aab73305601b97a38"
+    },
+    {
+      "path": "crexx-ggml-base.dll",
+      "sha256": "083b3a1f2baba1cf010b55755e22d4c60361c9ab5a8f2d416f19d649eaab232d"
+    },
+    {
+      "path": "crexx-ggml-base.lib",
+      "sha256": "8c1ab7e9e911b11f75c239276fa4c58d6e24225da314b5e3d6f0fba0c5cf7bcb"
+    },
+    {
+      "path": "crexx-ggml-cpu-x64.dll",
+      "sha256": "008435d4c6b3a76f8769d89570bd10fbca31b606e5184049d569628fc15f7912"
+    },
+    {
+      "path": "crexx-ggml-cpu-sse42.dll",
+      "sha256": "2bcd9aef805c00fa8e731a1a4aad29ce4848308dc0a5e55b3d6b746d5960faa1"
+    },
+    {
+      "path": "crexx-ggml-cpu-sandybridge.dll",
+      "sha256": "ef013578efff3c9184fd71d2cd18da6728c3524afe63abc3a1ba091ffa24e217"
+    },
+    {
+      "path": "crexx-ggml-cpu-haswell.dll",
+      "sha256": "69364ede5edcd310860c5dce973d11b61845345caca3bd7484c4078755092dc9"
+    },
+    {
+      "path": "crexx-ggml-cpu-skylakex.dll",
+      "sha256": "c407e0638122ac4717296b420f3a54dbe30f041fc5d41c9d835f1f4749791686"
+    },
+    {
+      "path": "crexx-ggml-cpu-cannonlake.dll",
+      "sha256": "b04c7dc6f6e6bf3c4fb7497589d0d1f8a443f7c96add36ad668759daa6fc5ea5"
+    },
+    {
+      "path": "crexx-ggml-cpu-cascadelake.dll",
+      "sha256": "60c0fde8efd9606a479faa340cd00c551383d77a0662377ee1b4c179db235b08"
+    },
+    {
+      "path": "crexx-ggml-cpu-icelake.dll",
+      "sha256": "7cd00688398d26d5754807b7bde511b4b280533ebc63bdd727e9d54ec91e9b2d"
+    },
+    {
+      "path": "crexx-ggml-cpu-alderlake.dll",
+      "sha256": "f9683ad63b0b1020f99c03af88dae4a6ef26768cbe10dd1326adbed163a5fd24"
+    },
+    {
+      "path": "crexx-ggml-cuda.dll",
+      "sha256": "2b970bc01d0f8b85a23e0aaeb09f68d2e49c72bfe4478c3e5ef5fd6a3bb8d518"
+    },
+    {
+      "path": "rxllama-NOTICES.txt",
+      "sha256": "f873308616905442a3788a8cab217fa4f2f84d7eb21dfb88a50875608a011568"
+    },
+    {
+      "path": "concrt140.dll",
+      "sha256": "54716f0738af891f283d213b5c8d11b25896bb8ee3097d301eae718560cf974e"
+    },
+    {
+      "path": "msvcp140.dll",
+      "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+    },
+    {
+      "path": "msvcp140_1.dll",
+      "sha256": "206c931bf90fdad8816de3b5e2ef80b2bcaa9406c89ecc05fe6fddffe251e982"
+    },
+    {
+      "path": "msvcp140_2.dll",
+      "sha256": "d50d7883f20d1dc6191768d3746f52dd9cac89c346ffaed5be1f110c2f34a838"
+    },
+    {
+      "path": "msvcp140_atomic_wait.dll",
+      "sha256": "3d0cbfaa1bf3eecf5a3f4491d2960ee803cb994f30292c6adc4a07c498f60e2b"
+    },
+    {
+      "path": "msvcp140_codecvt_ids.dll",
+      "sha256": "8a65c7596ef2e6938731f5a1058e7e40145b6d97967cc649231a076b9a608d78"
+    },
+    {
+      "path": "vccorlib140.dll",
+      "sha256": "09f93d5ff96ae09767f3e1af3cdd43a5a58f2598654fc63089429bb6f9f4737f"
+    },
+    {
+      "path": "vcruntime140.dll",
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+    },
+    {
+      "path": "vcruntime140_1.dll",
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+    },
+    {
+      "path": "vcruntime140_threads.dll",
+      "sha256": "40f39e8cee5f5a531b4010e18b807e8fe265b908dc58f959ecb7ebc6ea6cb11a"
+    },
+    {
+      "path": "msvcp140.dll",
+      "sha256": "7c26614e1d733892c2deac7e245ce115504b1d80592dd0a01b08e3e5a55f89ca"
+    },
+    {
+      "path": "vcruntime140.dll",
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+    },
+    {
+      "path": "vcruntime140_1.dll",
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+    },
+    {
+      "path": "cublas64_12.dll",
+      "sha256": "90052a83efd1b57a8e3616a6590b335855f81b814a4f16eecb7b5bf6d1b1d4eb"
+    },
+    {
+      "path": "cublasLt64_12.dll",
+      "sha256": "c3a05ea244c937314afec09f87b91f814c7e27977681f6c67eb51bb06ced3a4a"
+    },
+    {
+      "path": "cudart64_12.dll",
+      "sha256": "760c38928bbe5759f7b31ed6692599eb7ec83cedd5702e84c2b72028a89837e1"
+    },
+    {
+      "path": "rxllama.runtime.json",
+      "sha256": "2a860f7d56904af55d83f9a6207389ac5a657c863cff867eb435d1cd92d00d3c"
+    }
+  ]
+}

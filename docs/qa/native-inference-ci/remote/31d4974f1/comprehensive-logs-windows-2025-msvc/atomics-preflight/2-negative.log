@@ -1,0 +1,2 @@
+cri17_attached_provider_control.c
+C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.44.35207\include\vcruntime_c11_stdatomic.h(12): fatal error C1189: #error:  "C atomic support is not enabled"

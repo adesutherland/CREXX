@@ -1,0 +1,7 @@
+{
+  "same_file": true,
+  "error_type": "SameFileError",
+  "message": "PosixPath('/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmplp3fqbxp/runtime.dll') and PosixPath('/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/tmplp3fqbxp/relocated.dll') are the same file",
+  "processes_started": 0,
+  "source_bytes_unchanged": true
+}

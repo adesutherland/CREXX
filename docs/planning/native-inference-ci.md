@@ -552,7 +552,7 @@ native-object test targets. Do not change the public C SDK or global C standard.
 1. [x] **F14-AC-01:** both harness targets declare C11 and MSVC atomics support and retain their existing
    attached-provider lifetime/failure assertions. Verify generated commands and
    focused normal/maintained sanitizer results.
-2. [ ] **F14-AC-02:** MSVC builds and runs the affected core controls and completes
+2. [x] **F14-AC-02:** MSVC builds and runs the affected core controls and completes
    the broader core gate; the tests remain enabled.
 3. [x] **F14-01:** retain the host failure/dependency audit, correct the two
    target requirements and validate focused controls (F14-AC-01).
@@ -629,11 +629,11 @@ DLL versions. No production API or backend selection changes are needed.
 1. [x] **F15-AC-01:** a small ordinary shared-library fixture reproduces the
    duplicate-location scan failure before the repair, then passes with all
    runtime hashes retained after scanning the published files.
-2. [ ] **F15-AC-02:** the actual MSVC fixture and Windows Vulkan package pass;
+2. [x] **F15-AC-02:** the actual MSVC fixture and Windows Vulkan package pass;
    distinct unresolved dependencies still fail rather than being ignored.
 3. [x] **F15-01:** retain the failed package log, reproduce with tiny libraries,
    and correct the scan roots to the already-published paths (F15-AC-01).
-4. [ ] **F15-02:** run the tiny Windows package preflight before retrying the
+4. [x] **F15-02:** run the tiny Windows package preflight before retrying the
    optional plugin build; retain actual archive/runtime smoke (F15-AC-02).
    Preserve the ongoing core, CUDA and Intel diagnostic results.
 
@@ -668,26 +668,26 @@ Intel CPU package under CI-D02, and retain full exact-candidate hosted results
 before any promotion. No engine performance campaign or upstream sanitizer
 build is added.
 
-1. [ ] **F16-AC-01:** MSVC's HTTP optimized-copyback shape test reads an artifact
+1. [x] **F16-AC-01:** MSVC's HTTP optimized-copyback shape test reads an artifact
    actually generated for its portable VM and retains every existing assertion.
    Its focused run and the complete MSVC Deep gate pass.
 2. [ ] **F17-AC-01:** core and plugin select the active developer environment's
    MSVC redistributables consistently. A pre-build comparison with the qualified
    core rejects missing/different runtime bytes, and both final Windows plugin
    archives pass with the core-overwrite guard intact.
-3. [ ] **D02-AC-01:** the Intel archive contains CPU backends and no Metal
+3. [x] **D02-AC-01:** the Intel archive contains CPU backends and no Metal
    backend; the complete extracted archive smoke passes. Human/agent guides and
    published asset names identify Intel CPU-only support explicitly.
 4. [ ] **R16-AC-01:** all required candidate Build, Deep and first-party core
    Sanitizer jobs reach terminal success on the final code/test inputs; record
    exact SHAs, archives and CUDA cache statistics. CI-AC-07/09 stay open until
    their required evidence is reconciled.
-5. [ ] **R16-01:** repair the MSVC artifact path (CI-F16), retain focused proof,
+5. [x] **R16-01:** repair the MSVC artifact path (CI-F16), retain focused proof,
    and rerun MSVC Deep. Serves F16-AC-01; no compiler rewrite change.
 6. [ ] **R16-02:** repair the reproduced 14.51 environment versus 14.44 CMake
    CRT selection (CI-F17), add cheap positive/mismatch checks before engine
    compilation, and retry Windows packaging. Serves F17-AC-01.
-7. [ ] **R16-03:** implement CI-D02 in matrix, package validation and guides;
+7. [x] **R16-03:** implement CI-D02 in matrix, package validation and guides;
    rerun Intel CPU packaging. Serves D02-AC-01.
 8. [ ] **R16-04:** retain the now-green core sanitizer results and reconcile
    SAN-009's separate first-party bridge proof; dispatch/reconcile the complete
@@ -713,7 +713,7 @@ unexplained process lock or a new engine/runtime failure.
 2. [x] **F15-03:** add the failing uniqueness assertion, deduplicate identical
    serialized runtime entries, and run the existing normal/sanitizer-built
    tiny fixture. Serves F15-AC-03, retaining its measured serial scheduling.
-3. [ ] **F15-04:** retry Windows Vulkan on an isolated branch and retain full
+3. [x] **F15-04:** retry Windows Vulkan on an isolated branch and retain full
    relocated-consumer smoke. Keep the current CUDA/cache and wider core runs
    alive; unchanged core proof is reused. Final combined qualification remains
    distinct from this focused repair.
@@ -726,3 +726,35 @@ are metadata/dependency scans, not instrumented-library execution. Evidence is
 `local/published-runtime-identity/` in the pipeline ledger. Target Windows smoke
 remains open; this repair changes neither core execution nor upstream engine
 inputs, so keep the current broader runs and CUDA cache build alive.
+
+MSVC and MinGW comprehensive QA now pass on `31d4974f1` in `35071052712`;
+F16-AC-01/R16-01 are closed. Intel CPU `35071050120` passes its complete
+archive smoke; the downloaded 9,141,464-byte ZIP has only CPU backends and no
+Metal library or model fixture. D02-AC-01/R16-03 are closed. SHA256:
+`aaacf714432c0497319ad3e6d68325eaeecb35066d949c30795f971c5cb8c740`.
+Windows focused retry `35073667866` uses `f749203a7` with the published-entry
+repair; final Windows relocation remains open. Other jobs are preserved.
+
+Linux CUDA also passes at `31d4974f1`: 2,726 cache hits and four misses (99.85%),
+zero read errors and one write error. CUDA, device-code and PTX cache categories
+report 100% hits; the one CUBIN and three C/C++ misses remain visible. The
+plugin-target build took 18m31s; this is build/cache evidence, not inference
+performance. CI-AC-09's Windows warm result and final CUDA package remain open.
+
+Full Deep workflow `35071052712` is now green on all five platforms at
+`31d4974f1`. Windows CUDA's terminal failure is the same duplicate manifest
+entry at native relocation; all earlier controls/package steps pass. It records
+2,640 cache hits/five misses (99.81%) and three write errors. Both platforms
+therefore have genuine warm-cache observations; final Windows CUDA delivery
+and final combined qualification remain open. The generic writer is used by
+other RXPA providers too: after the focused Windows repair passes, freeze the
+combined revision and run the required final hosted gates once on that revision.
+
+Windows Vulkan retry `35073667866` is green at `f749203a7`, including the
+strengthened tiny fixture, CRT identity, all four provider controls, archive
+hash/overlap guards and final relocated native execution without SDK paths.
+F15-AC-02 and F15-04 are closed. Freeze the final combined revision after this
+evidence checkpoint and run the complete required hosted gates once. Supersede
+the older in-progress `31d4974f1` sanitizer run; its baseline closure evidence
+already exists, and the final run must include the shared-writer repair. No
+unchanged broad local suite or model/upstream sanitizer campaign is repeated.

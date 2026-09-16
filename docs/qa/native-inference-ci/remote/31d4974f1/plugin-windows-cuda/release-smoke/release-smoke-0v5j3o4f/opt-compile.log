@@ -1,0 +1,1 @@
+argv=['D:\\a\\_temp\\plugin-package\\combined\\CREXX-windows-x64\\bin\\rxc.exe', '--no-exe-import', '-i', 'D:\\a\\_temp\\plugin-package\\combined\\CREXX-windows-x64\\bin', '-o', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-release-smoke-m0l6bfj_\\opt', 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\crexx-release-smoke-m0l6bfj_\\smoke.crexx']

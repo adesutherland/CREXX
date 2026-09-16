@@ -1,0 +1,14 @@
+{
+  "name": "llama.rexx-user-test-31d4974f12454842902224d495e4aafd111c2134-linux-x64-vulkan.zip",
+  "bytes": 24316478,
+  "sha256": "aa459a59824ac6ec160789fcc835535eb26801ea523542091bf5a2e81ee500bf",
+  "schema": 1,
+  "component": "llama.rexx",
+  "commit": "31d4974f12454842902224d495e4aafd111c2134",
+  "platform": "linux-x64",
+  "toolchain": "gcc",
+  "backend": "vulkan",
+  "core_archive": "CREXX-user-test-31d4974f12454842902224d495e4aafd111c2134-linux-x64.zip",
+  "core_archive_sha256": "02e723f97ef5ab2fa5bd1278805161fbfb1e3f909d93e753781d59d98368bce7",
+  "core_binaries_rebuilt": false
+}

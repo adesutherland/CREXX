@@ -1,0 +1,81 @@
+Start testing: Sep 16 08:33 Coordinated Universal Time
+----------------------------------------------------------
+1613/2328 Testing: rxllama_package_windows_paths
+1613/2328 Test: rxllama_package_windows_paths
+Command: "C:/Program Files/CMake/bin/cmake.exe" "-DROOT=D:/a/CREXX/CREXX" "-P" "D:/a/CREXX/CREXX/tests/native-inference/package_windows_paths.cmake"
+Directory: D:/a/_temp/build/lib/plugins/llama
+"rxllama_package_windows_paths" start time: Sep 16 08:33 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+-- PASS: Windows system and compiler/SDK dependency paths
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_package_windows_paths" end time: Sep 16 08:33 Coordinated Universal Time
+"rxllama_package_windows_paths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1614/2328 Testing: rxllama_package_utf8_cxx17
+1614/2328 Test: rxllama_package_utf8_cxx17
+Command: "D:/a/_temp/build/lib/plugins/llama/tests/rxllama_package_utf8_cxx17.exe"
+Directory: D:/a/_temp/build/lib/plugins/llama
+"rxllama_package_utf8_cxx17" start time: Sep 16 08:33 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+PASS: UTF-8 package path bytes
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_package_utf8_cxx17" end time: Sep 16 08:33 Coordinated Universal Time
+"rxllama_package_utf8_cxx17" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1615/2328 Testing: rxllama_package_utf8_cxx20
+1615/2328 Test: rxllama_package_utf8_cxx20
+Command: "D:/a/_temp/build/lib/plugins/llama/tests/rxllama_package_utf8_cxx20.exe"
+Directory: D:/a/_temp/build/lib/plugins/llama
+"rxllama_package_utf8_cxx20" start time: Sep 16 08:33 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+PASS: UTF-8 package path bytes
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_package_utf8_cxx20" end time: Sep 16 08:33 Coordinated Universal Time
+"rxllama_package_utf8_cxx20" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1616/2328 Testing: rxllama_backend_probe_cycle
+1616/2328 Test: rxllama_backend_probe_cycle
+Command: "D:/a/_temp/build/lib/plugins/llama/tests/rxllama_bridge_lifecycle.exe" "--probe-cycle"
+Directory: D:/a/_temp/build/lib/plugins/llama
+"rxllama_backend_probe_cycle" start time: Sep 16 08:33 Coordinated Universal Time
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.89 sec
+----------------------------------------------------------
+Test Passed.
+"rxllama_backend_probe_cycle" end time: Sep 16 08:33 Coordinated Universal Time
+"rxllama_backend_probe_cycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 16 08:33 Coordinated Universal Time
+
+comprehensive =   0.93 sec*proc
+
+correctness =   0.04 sec*proc
+
+filesystem =   0.04 sec*proc
+
+library =   0.93 sec*proc
+
+llama =   0.93 sec*proc
+
+regression =   0.89 sec*proc
+
+rxpa =   0.93 sec*proc
+

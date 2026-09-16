@@ -1,0 +1,20 @@
+Start testing: Sep 16 08:11 UTC
+----------------------------------------------------------
+1/1 Testing: provider_package_copy
+1/1 Test: provider_package_copy
+Command: "/Users/runner/hostedtoolcache/Python/3.12.10/x64/bin/python3.12" "/Users/runner/work/CREXX/CREXX/tests/rxpa/provider-package-copy/check.py" "/Users/runner/work/_temp/package-scan/input-Release.cmake" "/Users/runner/work/CREXX/CREXX/rxpa/WriteProviderPackage.cmake" "/Users/runner/work/_temp/package-scan/proof"
+Directory: /Users/runner/work/_temp/package-scan
+"provider_package_copy" start time: Sep 16 08:11 UTC
+Output:
+----------------------------------------------------------
+PASS: complete published package dependency control
+PASS: missing published package dependency control
+<end of output>
+Test time =   2.12 sec
+----------------------------------------------------------
+Test Passed.
+"provider_package_copy" end time: Sep 16 08:11 UTC
+"provider_package_copy" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Sep 16 08:11 UTC
