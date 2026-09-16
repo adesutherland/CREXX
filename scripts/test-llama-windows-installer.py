@@ -57,10 +57,22 @@ def machine_env():
         return values
 
 
+def verify_signatures(root):
+    run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
+        '$ErrorActionPreference="Stop"; '
+        'Get-ChildItem -LiteralPath $env:LLAMA_SIGNED_ROOT -Recurse -File | '
+        'Where-Object { $_.Extension -in ".exe", ".dll", ".rxplugin" } | ForEach-Object { '
+        '$sig=Get-AuthenticodeSignature -LiteralPath $_.FullName; '
+        'if ($sig.Status -ne "Valid") { throw "Invalid signature: $($_.FullName): $($sig.Status)" }; '
+        'Write-Output "Verified $($_.FullName)" }',
+        env=dict(os.environ, LLAMA_SIGNED_ROOT=str(root)))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--work', type=Path, required=True)
     p.add_argument('--makensis', required=True)
+    p.add_argument('--signed-set', type=Path, help='Verified signed-delivery.json and sibling installers')
     args = p.parse_args()
     if os.environ.get('GITHUB_ACTIONS') != 'true':
         raise RuntimeError('Disposable GitHub runner only')
@@ -72,8 +84,13 @@ def main():
     before = machine_env()
     nsis = args.makensis
     core_setup = work / 'core-qa-setup.exe'
-    run(nsis, '/V2', '/DCREXX_PAYLOAD_DIR=' + str(core), '/DCREXX_OUTFILE=' + str(core_setup),
-        ROOT / 'packaging/windows/crexx.nsi')
+    signed_files = json.loads(args.signed_set.read_text())['files'] if args.signed_set else None
+    if signed_files:
+        verify_signatures(args.signed_set.parent)
+        core_setup = args.signed_set.parent / next(n for n in signed_files if n.startswith('CREXX-') and n.endswith('-setup.exe'))
+    else:
+        run(nsis, '/V2', '/DCREXX_PAYLOAD_DIR=' + str(core), '/DCREXX_OUTFILE=' + str(core_setup),
+            ROOT / 'packaging/windows/crexx.nsi')
     setup(core_setup, installed)
     if not (installed / 'core-package.json').is_file():
         raise RuntimeError('Native core installation failed')
@@ -89,9 +106,12 @@ def main():
             archive.extractall(unpacked)
         plugin = unpacked / 'CREXX-windows-x64'
         output = work / ('llama-' + backend + '-qa-setup.exe')
-        run(sys.executable, ROOT / 'scripts/package-llama-installer.py', '--core', core,
-            '--plugin', plugin, '--manager', work / 'manager', '--unsigned-qa',
-            '--makensis', nsis, '--output', output)
+        if signed_files:
+            output = args.signed_set.parent / next(n for n in signed_files if n.endswith('-' + backend + '-signed-setup.exe'))
+        else:
+            run(sys.executable, ROOT / 'scripts/package-llama-installer.py', '--core', core,
+                '--plugin', plugin, '--manager', work / 'manager', '--unsigned-qa',
+                '--makensis', nsis, '--output', output)
         installers[backend] = output
         # No /D: exercise discovery of the core's registered installation.
         setup(output)
@@ -100,6 +120,8 @@ def main():
         print(status)
         if 'Active backend: vulkan' not in status:
             raise RuntimeError('Second installer changed the active backend')
+    if signed_files:
+        verify_signatures(installed)
     model = installed / 'user-model.gguf'
     model.write_bytes(b'user-owned data')
     sdk_free = dict(os.environ, PATH=os.pathsep.join([str(Path(os.environ['SystemRoot']) / 'System32'), os.environ['SystemRoot']]))
@@ -146,7 +168,8 @@ def main():
             continue
         winreg.CloseKey(handle)
         raise RuntimeError('Stale backend uninstall registration: ' + key)
-    print('PASS: native Rexx switcher and Windows installer lifecycle; signing is a separate gate.')
+    print('PASS: native Rexx switcher and Windows installer lifecycle; ' +
+          ('actual signed payload/setup/uninstallers verified.' if signed_files else 'unsigned qualification.'))
 
 
 if __name__ == '__main__':

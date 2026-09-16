@@ -1307,6 +1307,15 @@ check installs and runs the signed/stapled payload with active network interface
 down, restores them in `finally`, and has an independent restoration watchdog.
 Actual signed/offline results remain pending the combined candidate run.
 
+The Windows signing key remains local. Signed-artifact runner QA uses a
+temporary **private draft** staging release named `qa-llama-signing-<commit>`
+solely for artifact transfer; never publish it or create its tag. The runner
+checks draft status, target commit, GitHub digests, signed-output digests and
+the exact unsigned input archives from the qualified Build run. It then verifies
+Authenticode on setup/payload/uninstallers and exercises the existing installed
+provider/coexistence/reinstall/removal workload. Delete the staging draft after
+retaining terminal evidence. This is QA transport, not a user release.
+
 Evidence: `docs/qa/native-inference-ci/local/final-delivery/`. Reuse #699's
 retained full normal/focused ASan and the unchanged previous Deep/core sanitizer
 results. No develop promotion, release publication or hardware waiver occurs.

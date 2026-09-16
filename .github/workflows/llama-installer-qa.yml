@@ -23,6 +23,10 @@ on:
         description: Use the retained signed/stapled Mac installers and verify offline installation
         type: boolean
         default: false
+      signed_windows_release:
+        description: Private draft QA release ID with signed artifacts from source_run (empty selects unsigned QA)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -168,6 +172,11 @@ jobs:
     if: github.event_name == 'push' || inputs.platform != 'mac'
     runs-on: windows-latest
     timeout-minutes: 45
+    # GitHub restricts draft-release visibility to callers with push access.
+    # The job only reads the private staging release; it never publishes it.
+    permissions:
+      contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -199,6 +208,7 @@ jobs:
           name: user-test-${{ steps.source.outputs.commit }}-CREXX-windows-x64
           path: ${{ runner.temp }}/retained/core
       - name: Compile only rxfs and native Rexx manager; run focused controls
+        if: inputs.signed_windows_release == ''
         shell: pwsh
         env:
           PYTHONDONTWRITEBYTECODE: '1'
@@ -231,12 +241,21 @@ jobs:
         env:
           INCLUDE_CUDA: ${{ inputs.cuda && '1' || '0' }}
           PYTHONDONTWRITEBYTECODE: '1'
+          GH_TOKEN: ${{ github.token }}
+          SIGNED_QA_RELEASE: ${{ inputs.signed_windows_release }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
         run: |
           $ErrorActionPreference = 'Stop'
           $nsis = "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
           if (!(Test-Path $nsis)) { choco install nsis --yes --no-progress }
           if (!(Test-Path $nsis)) { throw 'NSIS unavailable' }
-          python scripts/test-llama-windows-installer.py --work "$env:RUNNER_TEMP" --makensis $nsis *> "$env:RUNNER_TEMP/proof/native-installer.log"
+          $signedArgs = @()
+          if ($env:SIGNED_QA_RELEASE) {
+            python scripts/fetch-signed-windows-qa.py --release-id $env:SIGNED_QA_RELEASE --commit $env:SOURCE_COMMIT --work "$env:RUNNER_TEMP"
+            if ($LASTEXITCODE) { throw 'Signed candidate download/identity check failed' }
+            $signedArgs = @('--signed-set', "$env:RUNNER_TEMP/signed/signed-delivery.json")
+          }
+          python scripts/test-llama-windows-installer.py --work "$env:RUNNER_TEMP" --makensis $nsis @signedArgs *> "$env:RUNNER_TEMP/proof/native-installer.log"
           if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/native-installer.log" -Tail 100; throw 'Native installer lifecycle failed' }
       - uses: actions/upload-artifact@v7
         if: always()
