@@ -180,8 +180,8 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
   if project then call unowned expected, jsonget(active, 'plugin_files')
   if project | unproject then
     if active <> '' then do
-      call jsonmembers jsonget(active, 'plugin_files'), '', names
-      do i = 1 to names[0]
+      name_count = jsonmembers(jsonget(active, 'plugin_files'), '', names)
+      do i = 1 to name_count
         if fileop('lease', safe(root, names[i]), '') <> 0 then call fail 'Plugin file is in use or not writable. Close cREXX programs and retry: ' || names[i]
       end
     end
@@ -198,8 +198,8 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
       /* Retire the entry point first; publish it last. */
       oldfiles = jsonget(active, 'plugin_files')
       if member_hash(oldfiles, 'bin/rxllama.rxplugin') <> '' then call retire root || '/bin/rxllama.rxplugin'
-      call jsonmembers oldfiles, '', names
-      do i = 1 to names[0]
+      name_count = jsonmembers(oldfiles, '', names)
+      do i = 1 to name_count
         if names[i] <> 'bin/rxllama.rxplugin' then call retire safe(root, names[i])
       end
     end
@@ -212,8 +212,10 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
   end
   if action = 'install' then do
     if manager <> '' then do
-      call jsonmembers jsonget(manager, 'files'), '', names
-      do i = 1 to names[0]; call retire safe(root, names[i]); end
+      /* jsonmembers returns the written count; it does not truncate a reused
+       * array. Never retire stale plugin entries beyond the manager manifest. */
+      name_count = jsonmembers(jsonget(manager, 'files'), '', names)
+      do i = 1 to name_count; call retire safe(root, names[i]); end
     end
     call copy_files stage || '/tool', root, jsonget(incoming, 'files'), 0
     call retire state || '/manager.json'
@@ -226,8 +228,8 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
     other = 'cuda'
     if backend = 'cuda' then other = 'vulkan'
     if rxfs..pathkind(stores || '/' || other || '/installer.json') = 0 then do
-      call jsonmembers jsonget(manager, 'files'), '', names
-      do i = 1 to names[0]; call retire safe(root, names[i]); end
+      name_count = jsonmembers(jsonget(manager, 'files'), '', names)
+      do i = 1 to name_count; call retire safe(root, names[i]); end
       call retire state
     end
   end
@@ -317,8 +319,8 @@ validate_files: procedure = .void
   arg files = .string
   if jsontype(files, '') <> 'object' | jsoncount(files, '') < 1 then call fail 'Missing file manifest.'
   names = .string[]
-  call jsonmembers files, '', names
-  do i = 1 to names[0]
+  name_count = jsonmembers(files, '', names)
+  do i = 1 to name_count
     hash = member_hash(files, names[i])
     if length(hash) <> 64 | verify(hash, '0123456789abcdef') <> 0 then call fail 'Invalid SHA256: ' || names[i]
     do j = 1 to i - 1
@@ -331,8 +333,8 @@ check_files: procedure = .void
   arg prefix = .string, files = .string
   call validate_files files
   names = .string[]
-  call jsonmembers files, '', names
-  do i = 1 to names[0]
+  name_count = jsonmembers(files, '', names)
+  do i = 1 to name_count
     path = safe(prefix, names[i])
     if rxfs..pathkind(path) <> 1 then call fail 'Missing package file: ' || path
     if rxhash..sha256filehex(path) <> member_hash(files, names[i]) then call fail 'Changed or incompatible file: ' || path
@@ -342,10 +344,10 @@ check_files: procedure = .void
 disjoint: procedure = .void
   arg first = .string, second = .string
   a = .string[]; b = .string[]
-  call jsonmembers first, '', a
-  call jsonmembers second, '', b
-  do i = 1 to a[0]
-    do j = 1 to b[0]
+  a_count = jsonmembers(first, '', a)
+  b_count = jsonmembers(second, '', b)
+  do i = 1 to a_count
+    do j = 1 to b_count
       if lower(a[i]) = lower(b[j]) then call fail 'Overlapping file ownership: ' || a[i]
     end
     if lower(a[i]) = 'core-package.json' then call fail 'Plugin overlaps core metadata.'
@@ -355,8 +357,8 @@ disjoint: procedure = .void
 unowned: procedure = .void expose root
   arg incoming = .string, owned = .string
   names = .string[]
-  call jsonmembers incoming, '', names
-  do i = 1 to names[0]
+  name_count = jsonmembers(incoming, '', names)
+  do i = 1 to name_count
     if rxfs..pathkind(safe(root, names[i])) <> 0 & member_hash(owned, names[i]) = '' then call fail 'Refusing to overwrite an unowned file: ' || names[i]
   end
   return
@@ -423,8 +425,8 @@ puttext: procedure = .void expose published
 copy_files: procedure = .void
   arg source = .string, target = .string, files = .string, hardlink = .int
   names = .string[]
-  call jsonmembers files, '', names
-  do i = 1 to names[0]
+  name_count = jsonmembers(files, '', names)
+  do i = 1 to name_count
     if names[i] <> 'bin/rxllama.rxplugin' then call publish safe(source, names[i]), safe(target, names[i]), hardlink
   end
   if member_hash(files, 'bin/rxllama.rxplugin') <> '' then call publish safe(source, 'bin/rxllama.rxplugin'), safe(target, 'bin/rxllama.rxplugin'), hardlink

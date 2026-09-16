@@ -98,6 +98,23 @@ class NativeManagerTests(unittest.TestCase):
         self.run_tool('use', 'vulkan', installed=True)
         self.assert_core()
 
+    def test_active_reinstall_preserves_every_projected_file(self):
+        # A real backend has many more files than the shared manager. Exercise
+        # both directory depth and the shrinking manifest iteration count.
+        for directory in ('plugin-vulkan', 'stage-vulkan'):
+            shutil.rmtree(self.work / directory)
+        self.stages['vulkan'] = self.stage('vulkan', {
+            'bin/providers/extra-' + str(i) + '.dll': b'backend dependency'
+            for i in range(12)
+        })
+        self.run_tool('install', 'vulkan')
+        self.run_tool('install', 'vulkan')
+        metadata = json.loads((self.stages['vulkan'] / 'installer.json').read_text())
+        for name, expected in metadata['plugin_files'].items():
+            self.assertEqual(installer.digest(self.root / name), expected, name)
+        self.run_tool('remove', 'vulkan')
+        self.assert_core()
+
     def test_installer_activation_option(self):
         self.run_tool('install', 'vulkan')
         self.run_tool('install', 'cuda', extra=['--activate'])

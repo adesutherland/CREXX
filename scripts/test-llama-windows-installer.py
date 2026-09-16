@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Disposable Windows runner: native core/plugin setup with retained binaries."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -107,7 +108,14 @@ def main():
         run(sys.executable, ROOT / 'scripts/test-llama-installed.py', '--prefix', installed,
             '--logs', work / ('proof/consumer-' + backend))
     run(manager, 'use', 'vulkan', env=sdk_free)
-    setup(installers['vulkan'])
+    setup(installers['vulkan'], installed)
+    # Check the full projection after commit/cleanup, including manifests larger
+    # than the shared tool's. A successful installer exit is not sufficient.
+    manifest = json.loads((installed / 'llama-package.json').read_text())
+    for name, expected in manifest['files'].items():
+        with (installed / name).open('rb') as stream:
+            if hashlib.file_digest(stream, 'sha256').hexdigest() != expected:
+                raise RuntimeError('Reinstall changed declared file: ' + name)
     for backend in reversed(backends):
         store = installed / '.llama-backends' / backend
         setup(store / 'uninstall.exe')

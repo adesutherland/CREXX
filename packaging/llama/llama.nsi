@@ -52,6 +52,7 @@ Var ActivateArgument
 
 !macro InitInstaller
   FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+  FileSeek $2 0 END
   FileWrite $2 "Initialize: $EXEPATH | Core: $INSTDIR$\r$\n"
   FileClose $2
   ${IfNot} ${RunningX64}
@@ -65,6 +66,7 @@ Var ActivateArgument
   StrCpy $InstallerMutex $1
   ${If} $0 == 183
     FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+    FileSeek $2 0 END
     FileWrite $2 "Another installer owns the mutex.$\r$\n"
     FileClose $2
     MessageBox MB_ICONSTOP "Another llama.rexx installer is running." /SD IDOK
@@ -101,6 +103,7 @@ FunctionEnd
   Pop $1
   DetailPrint "$1"
   FileOpen $2 "$TEMP\crexx-llama-${LLAMA_BACKEND}-installer.log" a
+  FileSeek $2 0 END
   FileWrite $2 "Action: ${ACTION}$\r$\nCore: $INSTDIR$\r$\nExit: $0$\r$\n$1$\r$\n"
   FileClose $2
   ${If} $0 != 0
