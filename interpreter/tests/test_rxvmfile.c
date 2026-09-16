@@ -26,6 +26,8 @@ static FILE *checked_open(const char *path, const char *mode) {
 int main(void) {
     char path[1024];
     FILE *fp;
+    long append_position;
+    int exclusive_opened, exclusive_errno;
 #ifdef _WIN32
     char root[MAX_PATH];
     GetTempPathA(sizeof(root), root);
@@ -42,17 +44,28 @@ int main(void) {
     CHECK(fwrite("one", 1, 3, fp) == 3, "write binary");
     CHECK(fseek(fp, 0, SEEK_SET) == 0 && fgetc(fp) == 'o', "update read");
     fclose(fp);
+    fp = fopen(path, "ab");
+    if (!fp) return 2;
+    append_position = ftell(fp);
+    fclose(fp);
     fp = checked_open(path, "ab");
     if (!fp) return 2;
-    CHECK(ftell(fp) == 3, "initial append position");
+    CHECK(ftell(fp) == append_position, "initial append position matches host CRT");
     CHECK(fwrite("two", 1, 3, fp) == 3, "append"); fclose(fp);
     fp = checked_open(path, "rb");
     if (!fp) return 2;
     CHECK(fseek(fp, 0, SEEK_END) == 0 && ftell(fp) == 6, "append retains bytes");
     fclose(fp);
     errno = 0;
+    fp = fopen(path, "wbx");
+    exclusive_opened = fp != NULL;
+    exclusive_errno = errno;
+    if (fp) fclose(fp);
+    errno = 0;
     fp = rxvm_private_fopen(path, "wbx");
-    CHECK(fp == NULL && errno == EEXIST, "exclusive open preserves existing file");
+    CHECK((fp != NULL) == exclusive_opened &&
+          (fp != NULL || errno == exclusive_errno),
+          "exclusive mode retains host CRT capability and errno");
     if (fp) fclose(fp);
     CHECK(remove(path) == 0, "file cleanup");
     fp = rxvm_private_fopen(path, "rb");

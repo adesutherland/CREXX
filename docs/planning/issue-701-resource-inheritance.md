@@ -146,3 +146,13 @@ blocked before compilation by an existing test-registration bug:
 Retained MSVC configure log in `docs/qa/issue-701/remote-502fb28/msvc/`.
 A separate ordinary CMake repair supplies the threaded VM only where built,
 retaining the portable VM test on MSVC. It does not change compiler semantics.
+
+MinGW run 35086216671 proves the Windows mechanism: baseline masks 0..6
+inherit the unrelated file and rename fails with ERROR_SHARING_VIOLATION (32);
+fully redirected mask 7 is the passing control. Repaired masks 0..7 all exclude
+the file and rename succeeds while B is alive, for both inheritable and private
+parent standard handles (16 cases). Retained baseline/current/build logs under
+`remote-502fb28/mingw/`. This proves the proposed mechanism, not historical F18
+attribution. The separate FOPEN test incorrectly assumed POSIX append position
+and exclusive-x support on every Windows CRT. It now compares those behaviors
+to the same host's ordinary fopen, while still requiring private creation.
