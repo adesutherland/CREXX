@@ -17,6 +17,7 @@ static wchar_t *rxfs_wide(const char *s) {
 
 PROCEDURE(path_kind) {
     int result = -1;
+    if (NUM_ARGS != 1) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.PATHKIND expects one path") }
 #ifdef _WIN32
     wchar_t *p = rxfs_wide(GETSTRING(ARG0));
     if (p) {
@@ -38,6 +39,7 @@ PROCEDURE(path_kind) {
 
 PROCEDURE(absolute_path) {
     char output[32768];
+    if (NUM_ARGS != 1) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.ABSPATH expects one path") }
     output[0] = 0;
 #ifdef _WIN32
     wchar_t resolved[32768];
@@ -50,7 +52,10 @@ PROCEDURE(absolute_path) {
 #else
     /* Do not realpath away a symlink before the Rexx safety walk. */
     const char *p = GETSTRING(ARG0);
-    if (p[0] == '/') snprintf(output, sizeof(output), "%s", p);
+    if (p[0] == '/') {
+        int written = snprintf(output, sizeof(output), "%s", p);
+        if (written < 0 || (size_t)written >= sizeof(output)) output[0] = 0;
+    }
     else if (getcwd(output, sizeof(output))) {
         size_t n = strlen(output);
         if (n + strlen(p) + 2 < sizeof(output)) { output[n++] = '/'; strcpy(output + n, p); }
@@ -111,9 +116,18 @@ static int rxfs_transfer(const char *source, const char *target, int operation) 
 #endif
     return result;
 }
-PROCEDURE(copy_file) { RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 0)); RESETSIGNAL }
-PROCEDURE(hard_link) { RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 1)); RESETSIGNAL }
-PROCEDURE(move_file) { RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 2)); RESETSIGNAL }
+PROCEDURE(copy_file) {
+    if (NUM_ARGS != 2) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.COPY expects source and target") }
+    RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 0)); RESETSIGNAL
+}
+PROCEDURE(hard_link) {
+    if (NUM_ARGS != 2) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.HARDLINK expects source and target") }
+    RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 1)); RESETSIGNAL
+}
+PROCEDURE(move_file) {
+    if (NUM_ARGS != 2) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.MOVE expects source and target") }
+    RETURNINT(rxfs_transfer(GETSTRING(ARG0), GETSTRING(ARG1), 2)); RESETSIGNAL
+}
 
 /* VM-owned guards use existing RXPA native values. Copies share one owner;
  * explicit close closes all aliases, and the last finalizer closes the OS
@@ -199,9 +213,11 @@ static void rxfs_guard_copy(void *destination, void *source) {
 static void rxfs_guard_finalize(void *value) { rxfs_guard_release(rxfs_guard_resource(value)); }
 PROCEDURE(make_guard) {
     rxfs_guard *guard;
-    const char *mode = NUM_ARGS > 1 ? GETSTRING(ARG1) : "exclusive";
-    int lease = !strcmp(mode, "lease");
-    if (NUM_ARGS < 1 || NUM_ARGS > 2 || (!lease && strcmp(mode, "exclusive"))) {
+    const char *mode;
+    int lease;
+    if (NUM_ARGS != 2) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.FILEGUARD expects a path and explicit mode") }
+    mode = GETSTRING(ARG1); lease = !strcmp(mode, "lease");
+    if (!lease && strcmp(mode, "exclusive")) {
         RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "RXFS.FILEGUARD expects a path and exclusive or lease mode")
     }
     if (!rxfs_current || !rxpa_host_has_object_set_type(rxfs_current->host)) {
@@ -220,6 +236,13 @@ PROCEDURE(make_guard) {
                 guard->handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE | (lease ? DELETE : 0),
                     lease ? FILE_SHARE_DELETE : 0, NULL, lease ? OPEN_EXISTING : OPEN_ALWAYS,
                     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+                if (guard->handle != INVALID_HANDLE_VALUE) {
+                    BY_HANDLE_FILE_INFORMATION info;
+                    if (!GetFileInformationByHandle(guard->handle, &info) ||
+                        (info.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY))) {
+                        CloseHandle(guard->handle); guard->handle = INVALID_HANDLE_VALUE;
+                    }
+                }
             }
             free(path);
         }

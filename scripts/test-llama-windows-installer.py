@@ -19,6 +19,16 @@ def run(*args, **kwargs):
     subprocess.run(list(map(str, args)), check=True, timeout=1800, **kwargs)
 
 
+def setup(executable, destination=None):
+    # NSIS requires /D= to be the unquoted remainder of its command line. The
+    # existing core QA uses Start-Process -Wait so any bootstrap child also
+    # finishes. This is runner orchestration, never shipped switcher logic.
+    arguments = '/S' + (' /D=' + str(destination) if destination else '')
+    env = dict(os.environ, LLAMA_QA_SETUP=str(executable), LLAMA_QA_SETUP_ARGS=arguments)
+    run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
+        '$p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode', env=env)
+
+
 def wait_removed(path):
     deadline = time.monotonic() + 180
     while path.exists() and time.monotonic() < deadline:
@@ -53,10 +63,10 @@ def main():
         raise RuntimeError('QA prefix already exists')
     before = machine_env()
     nsis = args.makensis
-    setup = work / 'core-qa-setup.exe'
-    run(nsis, '/V2', '/DCREXX_PAYLOAD_DIR=' + str(core), '/DCREXX_OUTFILE=' + str(setup),
+    core_setup = work / 'core-qa-setup.exe'
+    run(nsis, '/V2', '/DCREXX_PAYLOAD_DIR=' + str(core), '/DCREXX_OUTFILE=' + str(core_setup),
         ROOT / 'packaging/windows/crexx.nsi')
-    run(setup, '/S', '/D=' + str(installed))
+    setup(core_setup, installed)
     if not (installed / 'core-package.json').is_file():
         raise RuntimeError('Native core installation failed')
     core_environment = machine_env()
@@ -76,7 +86,7 @@ def main():
             '--makensis', nsis, '--output', output)
         installers[backend] = output
         # No /D: exercise discovery of the core's registered installation.
-        run(output, '/S')
+        setup(output)
         manager = installed / 'bin/crexx-llama.exe'
         status = subprocess.check_output([str(manager), 'status'], text=True)
         print(status)
@@ -90,10 +100,10 @@ def main():
         run(sys.executable, ROOT / 'scripts/test-llama-installed.py', '--prefix', installed,
             '--logs', work / ('proof/consumer-' + backend))
     run(manager, 'use', 'vulkan', env=sdk_free)
-    run(installers['vulkan'], '/S')
+    setup(installers['vulkan'])
     for backend in reversed(backends):
         store = installed / '.llama-backends' / backend
-        run(store / 'uninstall.exe', '/S')
+        setup(store / 'uninstall.exe')
         wait_removed(store)
     if manager.exists() or (installed / 'bin/rxllama.rxplugin').exists():
         raise RuntimeError('Plugin files survived last removal')
@@ -107,9 +117,9 @@ def main():
         raise RuntimeError('Core smoke failed after plugin removal')
     (work / 'proof/core-after-removal.log').write_text(output)
     # Reinstall one variant to exercise core uninstall registration cleanup.
-    run(installers['vulkan'], '/S')
+    setup(installers['vulkan'])
     registration = (installed / '.llama-installer/registration-id').read_text()
-    run(installed / 'Uninstall.exe', '/S')
+    setup(installed / 'Uninstall.exe')
     wait_removed(installed)
     if machine_env() != before:
         raise RuntimeError('Core uninstaller did not restore environment')
