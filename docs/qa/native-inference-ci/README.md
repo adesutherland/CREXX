@@ -16,34 +16,30 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 
 ## Latest exact-candidate status — 16 September
 
-`f10e70ee5` remains frozen on `origin/temp/llama-release-combined`.
-[Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
-is green on all five platforms, stress, Release jobs 1/5/30 and RXBIN
-identity. `remote/f10e70ee5/` retains the terminal metadata, compressed full
-log, focused summary and all eight evidence artifacts.
+Current tested integration candidate: `2b897caa55fbe564c6d12966db6fea349f327986`,
+merging the #701 repair from develop `17e844441`. Adrian requested this merge
+and bounded retest. [The result record](remote/2b897caa5/README.md) retains the
+terminal [MinGW core run 35104282036](https://github.com/adesutherland/CREXX/actions/runs/35104282036):
+155/155 smoke tests, three KeyAccess checks and actual extracted-core/relocated
+native package checks pass. The original project-build contract passes in
+31.59 seconds. Local focused Debug passes 9/9 in 91.90 seconds; source-blob
+identity, commands and logs are under `local/f18-merged-retest/`.
 
-[Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681)
-attempt 1 passes four shipped cores but fails the MinGW smoke gate at
-`crexx_project_build_contract`: 151/152 pass. The silent exit 1 occurs during
-its `--nooptimize` two-worker build after only one member reports completion.
-It is not a timeout; the aggregate already runs serially. The identical-SHA
-Deep MinGW control passes this test in 34.35 seconds, all 2,248 comprehensive
-tests and three qualification checks. Cause remains unresolved (CI-F18).
-All plugin jobs were skipped in attempt 1. Attempt 2's MinGW job
-`104749506781` passes 152/152 smoke tests, three KeyAccess checks and core
-package smoke; the project contract takes 33.93 seconds. The six plugin jobs
-have started using the unchanged green cores. The original failure is retained
-alongside `mingw-retry.log` and `core-mingw-retry/`; a retry pass is not repair.
+The hotfix's deterministic baseline-negative/repaired-positive controls pass on
+Linux, macOS, MSVC and MinGW (`35088226165`, retained in `docs/qa/issue-701/`).
+The nine relevant repaired/regression sources are identical in the merge.
+F18-AC-02/F18-03 and F18-RAC-01–03/F18-R01–03 are complete. This repairs the
+proved resource-inheritance mechanism and verifies combined-candidate behavior;
+it does not retrospectively attribute the original silent CI failure.
 
-The bounded race review (`local/f18-race-review/`) finds no competing-test root
-collision in this gate. It identifies a Windows runtime handle-inheritance
-window and missing worker operation diagnostics for targeted reproduction;
-see CI-F18 in the plan. No product/test/build input changed during review.
-
-[Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
-is still running. No product repair, sanitizer pass, complete candidate or
-publication is claimed by this checkpoint. The chronological records below
-retain earlier failures and their separate repairs.
+The previous `f10e70ee5` candidate has terminal success for Build `35076278681`
+attempt 2 (four core archives, the MinGW gate and six plugins), Deep `35076281099`
+(five comprehensive configurations, stress and build-graph equivalence) and
+core Sanitizer `35076283269`. Those remain results on their recorded SHA.
+The original MinGW failure and unchanged retry evidence are retained under
+`remote/f10e70ee5/`; earlier chronology below is historical. No CUDA/model,
+Deep or full sanitizer run was repeated for this focused merge/retest. Parent
+platform/model and CI-D03 cadence work remain open; no publication is implied.
 
 ## Local checks before remote qualification
 

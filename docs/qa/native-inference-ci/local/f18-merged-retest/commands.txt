@@ -1,0 +1,5 @@
+Candidate: 2b897caa55fbe564c6d12966db6fea349f327986
+cmake --build cmake-build-debug --target crexx rxvme rxbvme rxdas test_rxspawn_inheritance test_rxvmfile test_rxcrexxcmd_flush test_rxspawn_posix_termination test_rxspawn_diagnostics test_rxvmchannel_byte project_failure_helper --parallel 4
+ctest --test-dir cmake-build-debug --parallel 1 --output-on-failure -R '^(rxspawn_.*|rxvmfile_private_open|crexx_address_unredirected_flush|rxvmchannel_byte_provider|crexx_project_worker_diagnostics|crexx_project_build_contract|inline_receiver_signal_cleanup)$'
+gh workflow run release-core.yml --repo adesutherland/CREXX --ref temp/llama-release-combined -f platform=windows-mingw
+Hosted run: 35104282036

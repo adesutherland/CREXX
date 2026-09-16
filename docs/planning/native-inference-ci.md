@@ -884,12 +884,12 @@ The CRT also supports opening files without inheritance:
 [fopen](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-wfopen).
 The source references above are against the unchanged `f10e70ee5` candidate.
 
-4. [ ] **F18-AC-02:** a deterministic Windows regression establishes whether
+4. [x] **F18-AC-02:** a deterministic Windows regression establishes whether
    partial-redirection launches inherit another owner's handle; both MSVC and
    MinGW controls identify the child handle and rename outcome. Any repair
    preserves inherited standard-stream behavior and intentional worker
    concurrency; do not claim causal closure solely from a green retry.
-5. [ ] **F18-03:** construct a bounded Windows reproducer with explicit
+5. [x] **F18-03:** construct a bounded Windows reproducer with explicit
    synchronization and a fully redirected control, then repair the proved
    mechanism with focused tests. Add operation-level worker diagnostics and
    retain the failing workspace when reproducing. Serves F18-AC-02 and
@@ -947,28 +947,47 @@ F18 failure. Worker diagnostics now identify missing output and stamp write/
 rename failures. Reuse those exact-source controls rather than rerunning them
 solely for a merge SHA.
 
-1. [ ] **F18-RAC-01:** the merge includes the unchanged qualified launcher,
+1. [x] **F18-RAC-01:** the merge includes the unchanged qualified launcher,
    atomic file-open helper, worker diagnostics and permanent regressions.
    Retain source-blob identity comparison. Resolve the two overlapping MSVC
    test-registration repairs by preserving this branch's capability-based
    selection and optional runner list, then run that test locally.
-2. [ ] **F18-RAC-02:** focused ordinary Debug inheritance/file-open, stream,
+2. [x] **F18-RAC-02:** focused ordinary Debug inheritance/file-open, stream,
    lifecycle, worker diagnostics, project-build and merge-resolution checks
    pass on the combined tree, with retained command/log evidence.
-3. [ ] **F18-RAC-03:** the previously failing Windows/MinGW core qualification
+3. [x] **F18-RAC-03:** the previously failing Windows/MinGW core qualification
    passes on the merged candidate, including the project-build contract and
    new inheritance/diagnostic regressions. Retain terminal hosted artifacts.
    Other platform mechanism controls reuse the unchanged hotfix evidence.
-4. [ ] **F18-R01:** merge develop and verify repaired input identities;
+4. [x] **F18-R01:** merge develop and verify repaired input identities;
    serves F18-RAC-01. No develop publication or API change is part of this work.
-5. [ ] **F18-R02:** run the focused local panel and manually dispatch only
+5. [x] **F18-R02:** run the focused local panel and manually dispatch only
    `release-core.yml` with `platform=windows-mingw` on the candidate branch;
    serves F18-RAC-02/03. This is the smallest existing hosted lane that repeats
    F18's original environment without rebuilding any inference backend.
-6. [ ] **F18-R03:** retain results, reconcile F18-AC-02/F18-03 and the handoff;
+6. [x] **F18-R03:** retain results, reconcile F18-AC-02/F18-03 and the handoff;
    serves F18-RAC-01–03. Keep original incident attribution qualified.
 
 Previous candidate `f10e70ee5` now has terminal success for Build `35076278681`,
 Deep `35076281099` and core Sanitizer `35076283269`; these remain that revision's
 results, not new full-suite results on the merged tree. CI-D03's future workflow
 cadence and parent real-device/model criteria remain separately open.
+
+Local integration passes all nine focused Debug checks in 91.90 seconds on
+`2b897caa5`; build log, exact commands and source identities are retained in
+`local/f18-merged-retest/` under the pipeline QA ledger. No code/test input
+changed after that run. Hosted MinGW retest
+[35104282036](https://github.com/adesutherland/CREXX/actions/runs/35104282036)
+is terminal **success** on the same candidate: 155/155 core smoke checks,
+including resource inheritance, atomic private file opening, worker diagnostics
+and the project-build contract (31.59 seconds); three KeyAccess checks; and
+actual extracted-core execution across both optimization/VM modes plus a
+relocated native consumer. Evidence is retained under `remote/2b897caa5/`.
+
+F18-RAC-01–03 and F18-R01–03 are complete. F18-AC-02/F18-03 now close against
+the retained deterministic MSVC/MinGW hotfix controls, unchanged repaired input
+identities and this combined-candidate retest. Original silent-incident
+attribution remains unproved; do not describe its green rerun as causal proof.
+The requested merge/retest is complete. No new broad/real-device qualification,
+CUDA workflow implementation, develop promotion or release publication is
+claimed. Documentation-only closeout preserves the tested runtime/build inputs.

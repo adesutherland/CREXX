@@ -1,0 +1,62 @@
+{
+  "candidate": "2b897caa55fbe564c6d12966db6fea349f327986",
+  "repair": "17e844441ed87e1f6e0d5f1f0d3bb4bee8db6187",
+  "qualified_repair_code": "135b9254fffdd0c9a8e963d1092c68bb273bf66b",
+  "reused_hosted_inheritance_run": 35088226165,
+  "files": [
+    {
+      "path": "interpreter/rxspawn.c",
+      "candidate_blob": "3a3d696865965d7da276ed975536a825e12158d2",
+      "repair_blob": "3a3d696865965d7da276ed975536a825e12158d2",
+      "identical": true
+    },
+    {
+      "path": "interpreter/rxvmfile.h",
+      "candidate_blob": "0e67a25c4e7ad41fa13a643ea91f968a36edc539",
+      "repair_blob": "0e67a25c4e7ad41fa13a643ea91f968a36edc539",
+      "identical": true
+    },
+    {
+      "path": "interpreter/rxvmhandlers_string.inc",
+      "candidate_blob": "db5ccdce5a14fbb5fa01a192f9c48fb5d99c8494",
+      "repair_blob": "db5ccdce5a14fbb5fa01a192f9c48fb5d99c8494",
+      "identical": true
+    },
+    {
+      "path": "interpreter/tests/test_rxspawn_inheritance.c",
+      "candidate_blob": "c1ecfc3c1f588398dc3a87b6292caa0d5dd01a6a",
+      "repair_blob": "c1ecfc3c1f588398dc3a87b6292caa0d5dd01a6a",
+      "identical": true
+    },
+    {
+      "path": "interpreter/tests/test_rxvmfile.c",
+      "candidate_blob": "f3c6abd0bcee34d3efb6ea708d5a99724f9a2727",
+      "repair_blob": "f3c6abd0bcee34d3efb6ea708d5a99724f9a2727",
+      "identical": true
+    },
+    {
+      "path": "bin/crexx_build_worker.crexx",
+      "candidate_blob": "de0f178310bc9d3ccf99ff225598d269bf8c4c4b",
+      "repair_blob": "de0f178310bc9d3ccf99ff225598d269bf8c4c4b",
+      "identical": true
+    },
+    {
+      "path": "bin/tests/project_failure_helper.c",
+      "candidate_blob": "ad04d9e7aae38a05820fd1a65dce7e69bc43f3a7",
+      "repair_blob": "ad04d9e7aae38a05820fd1a65dce7e69bc43f3a7",
+      "identical": true
+    },
+    {
+      "path": "bin/tests/project_worker_failures.cmake",
+      "candidate_blob": "ae556ac11aa7df08a30bec670a7970af3bccad02",
+      "repair_blob": "ae556ac11aa7df08a30bec670a7970af3bccad02",
+      "identical": true
+    },
+    {
+      "path": "bin/tests/rexx_src/project_worker_failures.crexx",
+      "candidate_blob": "79ef143aaab6fc498101fddd45ecfebe462e09f8",
+      "repair_blob": "79ef143aaab6fc498101fddd45ecfebe462e09f8",
+      "identical": true
+    }
+  ]
+}

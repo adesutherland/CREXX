@@ -1,0 +1,57 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start  656: inline_receiver_signal_cleanup
+1/9 Test  #656: inline_receiver_signal_cleanup .....   Passed    3.50 sec
+    Start 1155: rxspawn_resource_inheritance
+2/9 Test #1155: rxspawn_resource_inheritance .......   Passed    0.29 sec
+    Start 1156: rxvmfile_private_open
+3/9 Test #1156: rxvmfile_private_open ..............   Passed    0.23 sec
+    Start 1157: crexx_address_unredirected_flush
+4/9 Test #1157: crexx_address_unredirected_flush ...   Passed    0.23 sec
+    Start 1158: rxspawn_posix_termination
+5/9 Test #1158: rxspawn_posix_termination ..........   Passed    0.24 sec
+    Start 1159: rxspawn_posix_launch_diagnostic
+6/9 Test #1159: rxspawn_posix_launch_diagnostic ....   Passed    0.24 sec
+    Start 1170: rxvmchannel_byte_provider
+7/9 Test #1170: rxvmchannel_byte_provider ..........   Passed    0.49 sec
+    Start 2520: crexx_project_build_contract
+8/9 Test #2520: crexx_project_build_contract .......   Passed   84.23 sec
+    Start 2541: crexx_project_worker_diagnostics
+9/9 Test #2541: crexx_project_worker_diagnostics ...   Passed    2.40 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+address               =   0.23 sec*proc (1 test)
+autoload              =  84.23 sec*proc (1 test)
+build                 =  84.23 sec*proc (1 test)
+byte-endpoint         =   0.49 sec*proc (1 test)
+channels              =   0.49 sec*proc (1 test)
+compiler              =   3.50 sec*proc (1 test)
+comprehensive         =   4.70 sec*proc (5 tests)
+concurrency           =   3.65 sec*proc (5 tests)
+concurrency-sp03      =   0.49 sec*proc (1 test)
+concurrency-sp04      =   0.49 sec*proc (1 test)
+correctness           =   3.50 sec*proc (1 test)
+diagnostic            =   0.24 sec*proc (1 test)
+diagnostics           =   2.40 sec*proc (1 test)
+driver                =  86.63 sec*proc (2 tests)
+f1d                   =   0.49 sec*proc (1 test)
+flow                  =   3.50 sec*proc (1 test)
+gate-f                =   0.49 sec*proc (1 test)
+incremental           =  84.23 sec*proc (1 test)
+inlining              =   3.50 sec*proc (1 test)
+interpreter           =   1.72 sec*proc (6 tests)
+linked_opt            =   3.50 sec*proc (1 test)
+parallel              =  84.23 sec*proc (1 test)
+perf3                 =   0.49 sec*proc (1 test)
+posix                 =   0.48 sec*proc (2 tests)
+provider-reference    =   0.49 sec*proc (1 test)
+receiver              =   3.50 sec*proc (1 test)
+regression            =  86.63 sec*proc (2 tests)
+runtime               =   0.23 sec*proc (1 test)
+sanitizer             =   0.75 sec*proc (3 tests)
+signals               =   3.50 sec*proc (1 test)
+smoke                 =  87.15 sec*proc (4 tests)
+spawn                 =   3.40 sec*proc (5 tests)
+
+Total Test time (real) =  91.90 sec

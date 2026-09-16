@@ -18,46 +18,47 @@ earlier automatic relevant-change proposal and is recorded in the authoritative
 plan and human/agent guides; workflow selection is not yet changed. CI-06 and
 CI-AC-10 remain open. Preserve the current candidate's complete qualification.
 
-**Frozen final candidate:** `f10e70ee5f12ce49cc5088abc867748522d1d19c` remains
-on `origin/temp/llama-release-combined`. No product/test input has changed.
+**Current integration candidate:** `2b897caa55fbe564c6d12966db6fea349f327986`
+on `origin/temp/llama-release-combined`, merging repaired develop
+`17e844441ed87e1f6e0d5f1f0d3bb4bee8db6187`. Adrian explicitly requested the
+merge and affected retest. The prior policy/roadmap documentation is preserved
+in `884247264`. Two overlapping MSVC test-registration conflicts preserve this
+branch's capability-based VM selection and optional runner list.
 
-- [Deep Build 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
-  is terminal **success**: all five comprehensive configurations, their
-  install/package checks, stress, Release jobs 1/5/30 and RXBIN equivalence.
-  Linux and both Macs pass 2,326 tests each, MSVC 2,130 and MinGW 2,248;
-  each platform also passes its three external-consumer qualification checks.
-- [Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681)
-  attempt 1 passes all four shipped cores, but its non-shipping MinGW gate
-  fails `crexx_project_build_contract` (151/152 smoke tests pass). The failure
-  is an unexplained exit 1 in a two-member build, not a timeout. All six
-  plugins are consequently skipped. CI-F18 in the plan retains the failure
-  and identical-SHA passing MinGW Deep control; no root cause is asserted.
-  Attempt 2 now passes the MinGW gate: 152/152 smoke tests, three KeyAccess
-  checks and package smoke; project contract 33.93 seconds. All six plugin
-  jobs have started, reusing the four green core artifacts.
-- [Sanitizer QA 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
-  remains running on Linux and ARM Mac, with llama disabled. Leave it running.
+**Bounded retest:** the existing plan's F18-RAC-01–03 / F18-R01–03 own this
+integration. The nine qualified launcher/file-open/worker diagnostic and
+regression source blobs match the hotfix exactly; identity evidence is under
+`local/f18-merged-retest/`. Reuse hotfix Child Inheritance QA `35088226165`
+(Linux/macOS/MSVC/MinGW) and focused Debug/Apple-ASan evidence for those
+unchanged mechanisms. The combined tree rebuilt successfully and all nine focused ordinary Debug
+checks pass (91.90 seconds), including the project-build contract. Manual [MinGW core run 35104282036](https://github.com/adesutherland/CREXX/actions/runs/35104282036)
+passes the original F18 environment with llama disabled: 155/155 core smoke,
+three KeyAccess checks and extracted-package/relocated-native smoke. The
+project-build contract passes in 31.59 seconds; source identity and terminal
+artifacts are retained under `local/f18-merged-retest/` and `remote/2b897caa5/`. No CUDA/backend,
+Deep or full sanitizer run was dispatched for this retest. Preserve deliberate
+worker concurrency; no runtime redesign is introduced.
 
-**Race review:** no competing-test/workspace cause was found in the failing
-152-test gate. CI-F18 records a Windows runtime inheritance window: partial
-redirects bypass the child handle allowlist, while VM file opens clear
-inheritance after opening. A child could inherit another worker's temporary
-stamp and hold it through rename. This is source-grounded risk, not reproduced
-attribution of the failed run. Silent output/stamp-failure branches also need
-operation diagnostics. F18-AC-01/F18-02 pass; F18-AC-02/F18-03 remain open for
-an explicitly synchronized Windows reproducer and evidence-led repair.
-Related open issue [#701](https://github.com/adesutherland/CREXX/issues/701)
-already records POSIX cross-worker pipe inheritance. Its observed `rxspawn.c`
-blob is identical to the frozen candidate. Coordinate launcher ownership work
-while retaining separate platform reproducers; Windows attribution is unproved.
+**Previous candidate evidence:** at `f10e70ee5`, Build `35076278681` attempt 2,
+Deep `35076281099` and core Sanitizer `35076283269` are all terminal success.
+Build includes all six plugins; Deep covers five comprehensive configurations,
+stress, Release jobs 1/5/30 and RXBIN equivalence. These remain valid historical
+results on that SHA, not new full qualification of `2b897caa5`.
 
-**Next:** review the six plugin jobs and both sanitizer results, and follow
-CI-F18's bounded Windows reproduction plan without weakening the two-worker
-contract. A retry pass is not root-cause repair. Retain terminal logs/artifacts
-under `docs/qa/native-inference-ci/remote/f10e70ee5/`, reconcile
-CI-AC-02/03/05/07/08/09, F18-AC-02 and R16-AC-01/R16-02/R16-04. No develop
-promotion, release publication, repeated unchanged local broad QA or
-upstream/model sanitizer campaign is authorized by this qualification.
+**Defect disposition:** the separate hotfix session reproduced and repaired
+POSIX resource inheritance and Windows unrelated-handle inheritance/blocked
+rename, preserving standard streams and adding worker publication diagnostics.
+Its authoritative record is `issue-701-resource-inheritance.md`. This closes
+the reproduced mechanism and its integration checks; it does not prove
+that mechanism caused the original silent F18 run. GitHub #701 still has no
+posted closure update; do not post one from this task.
+
+**Retest complete:** F18-RAC-01–03/F18-R01–03 and F18-AC-02/F18-03 are checked
+with retained evidence. No more testing is needed for this bounded request.
+Parent real-device/model criteria and CI-D03 workflow cadence remain separately
+open; do not repeat unchanged broad tests or infer develop/release publication
+from this integration result. Documentation-only closeout reuses the tested
+`2b897caa5` runtime/test/build inputs.
 
 **Earlier repair evidence:** `f749203a7` passes the complete Windows Vulkan
 run `35073667866`, including relocated native execution. At `31d4974f1`, all
