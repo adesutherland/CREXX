@@ -38,6 +38,10 @@ def main():
     curl = ['/usr/bin/curl', '--silent', '--show-error', '--fail', '--head',
             '--connect-timeout', '5', '--max-time', '15', 'https://www.apple.com']
     run('online-positive-control', curl)
+    run('gatekeeper-policy', ['/usr/sbin/spctl', '--status'])
+    unsigned = args.logs / 'unsigned-control.pkg'
+    run('unsigned-control-package', ['/usr/bin/pkgbuild', '--nopayload', '--identifier',
+                                     'org.crexx.qa.unsigned', '--version', '1.0', unsigned])
     for kind, pkg in (('core', args.core_pkg), ('plugin', args.plugin_pkg)):
         run(kind + '-download-quarantine', ['/usr/bin/xattr', '-w', 'com.apple.quarantine',
                                           f'0081;{int(time.time()):x};cREXX QA;', pkg])
@@ -59,6 +63,8 @@ def main():
         for name in interfaces:
             run('network-down-' + name, ['/sbin/ifconfig', name, 'down'])
         run('offline-negative-control', curl, expect=1)
+        run('unsigned-gatekeeper-negative-control', ['/usr/sbin/spctl', '--assess', '--type',
+                                                    'install', '--verbose=4', unsigned], expect=1)
         for kind, pkg in (('core', args.core_pkg), ('plugin', args.plugin_pkg)):
             run(kind + '-signature', ['/usr/sbin/pkgutil', '--check-signature', pkg])
             run(kind + '-ticket', ['/usr/bin/xcrun', 'stapler', 'validate', pkg])
