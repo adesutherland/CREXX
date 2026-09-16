@@ -336,6 +336,9 @@ jobs:
             python scripts/fetch-signed-windows-qa.py --release-id $env:SIGNED_QA_RELEASE --commit $env:SOURCE_COMMIT --work "$env:RUNNER_TEMP"
             if ($LASTEXITCODE) { throw 'Signed candidate download/identity check failed' }
             $signedArgs = @('--signed-set', "$env:RUNNER_TEMP/signed/signed-delivery.json")
+            $env:WINDOWS_SIGNED_CONTROL = (Get-ChildItem "$env:RUNNER_TEMP/signed/CREXX-*-setup.exe").FullName
+            python -m unittest discover -s scripts/tests -p test_windows_installer_signatures.py -v *> "$env:RUNNER_TEMP/proof/signature-controls.log"
+            if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/signature-controls.log" -Tail 100; throw 'Native signature controls failed' }
           }
           python scripts/test-llama-windows-installer.py --work "$env:RUNNER_TEMP" --makensis $nsis @signedArgs *> "$env:RUNNER_TEMP/proof/native-installer.log"
           if ($LASTEXITCODE) { Get-Content "$env:RUNNER_TEMP/proof/native-installer.log" -Tail 100; throw 'Native installer lifecycle failed' }

@@ -1390,3 +1390,24 @@ The thread heartbeat `qualify-llama-develop-integration` checks every 15 minutes
 remediates actionable failures and stays quiet on unchanged status. Local final
 Windows signing succeeded; its optional retained-artifact installer QA and
 private draft cleanup continue independently, without gating this promotion.
+
+### Signed Windows QA environment repair — 16 September
+
+Vision: complete the optional signed installer check using the already signed
+`21a5e9410` artifacts, without a new engine build or signing session. Run
+`35153176156` failed before signature assessment: Python inherited PowerShell
+7's module search path and passed it to Windows PowerShell, which could not load
+`Microsoft.PowerShell.Security`. Microsoft documents this intermediate-process
+case in [about_PSModulePath](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-7.6).
+This is a QA host environment failure, not evidence of a bad signature.
+
+1. [ ] **WINQA-AC-01:** a native Windows regression reproduces module shadowing
+   with the inherited environment; the repaired child verifies a real signed
+   executable and still rejects an unsigned executable.
+2. [ ] **WINQA-AC-02:** the retained signed core and both plugin installers pass
+   the existing complete native lifecycle, without modifying signed artifacts.
+3. [ ] **WINQA-01:** reset only the child Windows PowerShell module search path
+   to its normal defaults; add the focused native control (WINQA-AC-01).
+4. [ ] **WINQA-02:** rerun only Windows retained-artifact QA, retain the result
+   and remove the private draft after disposition (WINQA-AC-02). A real need for
+   new signing remains a morning follow-up, not an integration blocker.

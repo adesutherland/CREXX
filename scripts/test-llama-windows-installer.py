@@ -21,12 +21,22 @@ def run(*args, **kwargs):
     subprocess.run(list(map(str, args)), check=True, timeout=1800, **kwargs)
 
 
+def powershell_env(**variables):
+    # pwsh -> Python -> powershell.exe retains PS7's module paths. Unlike a
+    # direct pwsh launch, Python does not remove incompatible PS7 modules.
+    # These QA children need only Windows PowerShell's standard system modules.
+    env = {key: value for key, value in os.environ.items()
+           if key.upper() != 'PSMODULEPATH'}
+    env.update(variables)
+    return env
+
+
 def setup(executable, destination=None):
     # NSIS requires /D= to be the unquoted remainder of its command line. The
     # existing core QA uses Start-Process -Wait so any bootstrap child also
     # finishes. This is runner orchestration, never shipped switcher logic.
     arguments = '/S' + (' /D=' + str(destination) if destination else '')
-    env = dict(os.environ, LLAMA_QA_SETUP=str(executable), LLAMA_QA_SETUP_ARGS=arguments)
+    env = powershell_env(LLAMA_QA_SETUP=str(executable), LLAMA_QA_SETUP_ARGS=arguments)
     try:
         run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
             '$p = Start-Process -FilePath $env:LLAMA_QA_SETUP -ArgumentList $env:LLAMA_QA_SETUP_ARGS -Wait -PassThru; exit $p.ExitCode', env=env)
@@ -60,12 +70,13 @@ def machine_env():
 def verify_signatures(root):
     run('powershell.exe', '-NoProfile', '-NonInteractive', '-Command',
         '$ErrorActionPreference="Stop"; '
+        'Import-Module Microsoft.PowerShell.Security -ErrorAction Stop; '
         'Get-ChildItem -LiteralPath $env:LLAMA_SIGNED_ROOT -Recurse -File | '
         'Where-Object { $_.Extension -in ".exe", ".dll", ".rxplugin" } | ForEach-Object { '
         '$sig=Get-AuthenticodeSignature -LiteralPath $_.FullName; '
         'if ($sig.Status -ne "Valid") { throw "Invalid signature: $($_.FullName): $($sig.Status)" }; '
         'Write-Output "Verified $($_.FullName)" }',
-        env=dict(os.environ, LLAMA_SIGNED_ROOT=str(root)))
+        env=powershell_env(LLAMA_SIGNED_ROOT=str(root)))
 
 
 def main():

@@ -14,7 +14,12 @@ fast-forward from `94f2f228c`; candidate history is retained. Monitor normal Bui
 normal checks and independent cleanup are disposed of. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
 
-**Optional signed Windows follow-up:** run `35153176156` is dispatched at
+**Optional signed Windows follow-up:** run `35153176156` failed before signature
+assessment because the Windows PowerShell child inherited incompatible PS7
+module paths through Python. WINQA-AC-01/02 in the pipeline plan own the bounded
+QA environment repair and native signed/unsigned regression. Rerun only this
+Windows job with unchanged signed files; no signing login or build is needed.
+The failed run at
 installer QA revision `9048acdc1`, reusing the exact qualified `21a5e9410` core,
 both plugins and locally signed output. Both upload processes exited zero; all
 seven private assets match the local final SHA256 record. Evidence begins at
@@ -23,10 +28,10 @@ seven private assets match the local final SHA256 record. Evidence begins at
 only that draft and confirm its tag never exists. No signing credential is
 needed for this runner test; do not request another login tonight.
 
-**21:35 UTC monitor:** all four develop core jobs, MinGW and Linux optimizer
-parity pass in Build `35150686647`. Its four routine plugin jobs are running;
-CUDA is correctly absent. CodeQL `35150686250` is performing analysis. No new
-failures or remediation. Keep the 15-minute cadence; no extra assurance dispatch.
+**22:00 UTC monitor:** Build `35150686647` is terminal success, including all
+four core jobs, MinGW, optimizer parity, all four routine plugins and development
+snapshot publication. CUDA is correctly absent. CodeQL `35150686250` is still
+performing analysis. Keep the 15-minute cadence; no extra assurance dispatch.
 
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic
