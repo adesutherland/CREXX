@@ -1004,6 +1004,20 @@ GitHub Actions requests. Green unsigned candidate ZIPs alone do not verify it.
 
 Findings against `d612e66c2` (runtime/build inputs unchanged from `2b897caa5`):
 
+Current-status reconciliation at `09d4ffaf2`, 16 September: the findings below
+are the original audit snapshot. CI-D04 subsequently implemented the native
+Mac/Windows plugin installers and Rexx manager; their actual unsigned lifecycle
+checks pass (`35110318683` and `35119980116`), satisfying F19-AC-03. F19-AC-01/02
+remain open: current workflow selection still includes routine CUDA, and the
+maintainer Windows signer still assumes one ZIP and omits core/plugin manifest
+refresh after signing. The latest develop #699 fix (`f786b15d8`, plus evidence
+at `94f2f228c`) has green Build/CodeQL but is not in this candidate. Integrate it
+and finish these existing delivery steps before one combined final Build/package
+check; reuse unchanged broad Deep/sanitizer evidence and focus integration tests
+on affected import/provider behavior. The [live status table](../qa/native-inference-ci/README.md#current-overall-status--16-september)
+records exact run/revision boundaries. Parent hardware/model criteria and actual
+signed/offline proof remain open; no scope change or promotion is implied.
+
 - The four-core/six-plugin split, unchanged core reuse, packaged dependencies,
   fixture smoke and CUDA compiler cache are implemented. All six variants pass
   Build `35076278681` at `f10e70ee5`; the later inheritance merge has its bounded
@@ -1045,7 +1059,7 @@ Findings against `d612e66c2` (runtime/build inputs unchanged from `2b897caa5`):
    identities/hashes and pass a combined consumer smoke. Retain actual Mac
    signature/notarization and Windows signing evidence, distinguishing unsigned
    and signed assets. Serves PKG-01/03/04 and CI-AC-05/08.
-3. [ ] **F19-AC-03:** a retained candidate can be installed as core-only, extended
+3. [x] **F19-AC-03:** a retained candidate can be installed as core-only, extended
    with its matching optional plugin, used, upgraded/reinstalled and removed
    according to documented ownership rules. Retain platform-specific evidence,
    VM selection, runtime dependency and mismatched-version diagnostics.

@@ -1,9 +1,11 @@
 # Native inference binary delivery evidence
 
 Live work package: [numbered pipeline plan](../../planning/native-inference-ci.md).
-Candidate: `temp/llama-release-qa`. The accepted baseline is `12647a91aa7e9`,
-merged with remote RXPP `b5b827489` by `c1de1670812a`. Publication is not authorized
-by a partial or pending result.
+Remote candidate: `temp/llama-release-combined` (local checkout branch
+`temp/llama-release-qa`). The original accepted baseline is `12647a91aa7e9`,
+merged with remote RXPP `b5b827489` by `c1de1670812a`; later integration and
+installer revisions are distinguished below. Publication is not authorized by
+a partial or pending result.
 
 Latest approved delivery sequence (15 September): separate core and plugin
 downloads, one MSVC Windows base, all four llama-free core builds first, then
@@ -14,7 +16,47 @@ for this sequence. Older proposed/pending wording below is historical; CI-D01
 in the live plan records the approved contract. Core and plugin QA are separated
 so backend variants do not rebuild or repeat the cREXX core suite.
 
-## Latest exact-candidate status — 16 September
+## Current overall status — 16 September
+
+Live GitHub audit at checkout `09d4ffaf2c10a4eab832cb2061d10d57ce36e290`:
+the complete earlier build matrix and subsequent focused installer checks are
+green, but the final integrated delivery is not yet qualified for promotion.
+These are results on different revisions, not one all-green current-head run.
+
+| Scope | Terminal result and source identity | Boundary |
+| --- | --- | --- |
+| Four core packages, MinGW core gate, all six llama plugins | [Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681), attempt 2, success at `f10e70ee5` | Includes Linux/Windows CUDA and Vulkan, ARM Metal and Intel CPU; publication-only signing was skipped. |
+| Five comprehensive core configurations, stress and build-graph equivalence | [Deep 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099), success at `f10e70ee5` | Retain this evidence; do not repeat unchanged broad tests. |
+| Linux ASan/LSan and ARM Mac ASan | [Sanitizer 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269), success at `f10e70ee5` | Core only; Linux leaks enabled. No upstream llama/CUDA instrumentation claim. |
+| #701 integration and original MinGW environment | [Core 35104282036](https://github.com/adesutherland/CREXX/actions/runs/35104282036), success at `2b897caa5` | Focused local and hosted integration checks described below. |
+| Actual Mac plugin installer lifecycle, ARM and Intel | [Installer 35110318683](https://github.com/adesutherland/CREXX/actions/runs/35110318683), success at `be8fbf4e5` | Uses retained `f10e70ee5` binaries; unsigned, not offline Gatekeeper proof. |
+| Actual Windows Vulkan/CUDA coexistence, native Rexx switching and reinstall/remove | [Installer 35119980116](https://github.com/adesutherland/CREXX/actions/runs/35119980116), success at `182516b4a` | Uses retained `f10e70ee5` binaries plus the current small rxfs/manager build. Unsigned; no engine rebuild. |
+
+The red Windows installer runs on `temp/llama-installer-qa`, including
+`35118785590`, precede and are superseded by the successful corrected manual run
+`35119980116` on `temp/llama-release-combined`. Keep their diagnostics as
+historical evidence, not as the current installer verdict. The latest
+`09d4ffaf2` changes only evidence/docs and the uploaded manager-manifest path;
+it does not change the successful installer's runtime/test inputs.
+
+Remote `develop` has advanced to `94f2f228c`: compiler fix #699 at `f786b15d8`
+plus an evidence-only commit. It is not merged into this candidate. Its own
+[Build 35120521324](https://github.com/adesutherland/CREXX/actions/runs/35120521324)
+and [CodeQL 35120521311](https://github.com/adesutherland/CREXX/actions/runs/35120521311)
+pass. That is qualification of the fix's own inputs, not its combination with
+this branch's MSVC, provider and packaging changes.
+
+Outstanding work remains under CI-06/F19 and the installer criteria: implement
+the approved CUDA event/asset-selection policy; adapt Windows split-asset
+signing and refresh all affected manifests; retain actual signed/notarized
+package proof; integrate #699 and qualify the resulting build/package inputs.
+One combined final Build/package check can cover the changed delivery inputs,
+with CUDA explicitly selected for that complete candidate. Reuse unchanged
+Deep/sanitizer evidence and run focused import/provider integration checks.
+The parent real-device/model criteria remain open independently; tiny-fixture
+build success does not close them. No promotion or publication has occurred.
+
+## Retained #701 integration status — 16 September
 
 Current tested integration candidate: `2b897caa55fbe564c6d12966db6fea349f327986`,
 merging the #701 repair from develop `17e844441`. Adrian requested this merge

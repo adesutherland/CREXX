@@ -2,7 +2,7 @@
 
 [Guide index](README.md) · [Install](installation.md) · [Reference](reference.md)
 
-Status as of 15 September 2026: embeddings and generation have normal and
+Status as of 16 September 2026: embeddings and generation have normal and
 Apple-ASan macOS CPU/Metal evidence, including installed and relocated native
 consumers. Adrian approved STEP-07's completed guides/examples on 15 September;
 the broad local Apple-ASan gate now passes 2,349/2,349 tests. STEP-06 remains open
@@ -12,9 +12,11 @@ plan is `docs/planning/native-inference-backlog.md`; current coverage and review
 are tracked in `docs/qa/native-inference-step07/README.md` and the live
 `docs/qa/native-inference-step06/README.md` qualification ledger.
 
-The separate `temp/llama-release-qa` candidate is adding prebuilt CPU/GPU
-delivery and a generated-fixture smoke test. Its numbered outcomes, criteria
-and workflow results are tracked in `docs/planning/native-inference-ci.md`.
+The separate remote `temp/llama-release-combined` candidate (local branch
+`temp/llama-release-qa`) supplies prebuilt CPU/GPU delivery and a generated-fixture
+smoke test. Its numbered outcomes and criteria are tracked in
+`docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#current-overall-status--16-september)
+distinguishes tested revisions and outstanding integration/release work.
 Routine CI downloads no trained model: its sub-5-MiB fixture checks engine
 generation/embedding plumbing, package integrity, public-provider discovery
 and profile rejection, plus installed VM and relocated native consumers.
@@ -25,17 +27,28 @@ on unavailable GPUs. Neither `develop` promotion nor a release is implied.
 
 These checks exercise installed VM and relocated native consumers, provider
 integrity/discovery/rejection and bounded engine computations. They do not use
-the trained BGE/Smol models. Revisions differ during triage; complete final
-candidate Build, Deep Build and Sanitizer gates remain open.
+the trained BGE/Smol models. The complete Build matrix, Deep Build and core
+Sanitizer gates all passed at `f10e70ee5`. Later inheritance and installer changes
+have focused passing evidence on their recorded revisions. The latest candidate
+still needs the newer develop #699 fix and CI-D03/signing completion; these
+earlier passes are not a final integrated-delivery or signed-release verdict.
 
-| Package | Triage result | Actual fixture computation |
+| Package | Complete baseline result (`f10e70ee5`) | Actual fixture computation |
 | --- | --- | --- |
-| Linux x64 CPU/Vulkan | Pass at `31d4974f1`; split archives and native relocation checked. | CPU; runner reports no GPU. |
-| Windows x64 MSVC CPU/Vulkan | Pass at `f749203a7`, including restricted-PATH VM/native consumers and unique runtime metadata. | CPU; runner reports no GPU. |
-| macOS arm64 CPU/Metal | Pass at `31d4974f1`; split archives and native relocation checked. | CPU and Metal. |
-| macOS x86_64 CPU | Pass at `31d4974f1`; downloaded archive has CPU variants and no Metal backend. | CPU. Intel Metal is unsupported for this delivery (CI-D02). |
-| Linux x64 CPU/CUDA | Pass at `31d4974f1`; split archive, redistributables, notices and native relocation checked. | CPU; runner reports no GPU. |
-| Windows x64 MSVC CPU/CUDA | Build/package and early smoke pass at `31d4974f1`; final relocation awaits the combined manifest repair retry. | CPU engine smoke; full package qualification pending. |
+| Linux x64 CPU/Vulkan | Pass; split archives and native relocation checked. | CPU; runner reports no GPU. |
+| Windows x64 MSVC CPU/Vulkan | Pass, including restricted-PATH VM/native consumers and unique runtime metadata. | CPU; runner reports no GPU. |
+| macOS arm64 CPU/Metal | Pass; split archives and native relocation checked. | CPU and Metal. |
+| macOS x86_64 CPU | Pass; archive has CPU variants and no Metal backend. | CPU. Intel Metal is unsupported for this delivery (CI-D02). |
+| Linux x64 CPU/CUDA | Pass; split archive, redistributables, notices and native relocation checked. | CPU; runner reports no GPU. |
+| Windows x64 MSVC CPU/CUDA | Pass, including the repaired final native relocation and manifest checks. | CPU; runner reports no GPU. |
+
+[Build 35076278681](https://github.com/adesutherland/CREXX/actions/runs/35076278681)
+attempt 2 includes all six plugins, four core archives and the MinGW core gate.
+[Deep 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
+and [Sanitizer 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
+pass on the same baseline. Subsequent actual unsigned Mac and Windows installer
+lifecycle tests also pass using those retained binaries. Signed/notarized and
+offline Gatekeeper evidence remains open; see the current status table above.
 
 The pipeline evidence ledger retains job identities, archive hashes and failures.
 Historical MinGW plugin checks at `4a0924ee1` remain evidence for that source
@@ -92,7 +105,9 @@ These scheduling costs are not new performance measurements.
 The complete local Apple-ASan build, QA preparation and 2,349 CTests also pass,
 with no sanitizer diagnostic in the retained logs. The ASan selection adds two
 available SQLite-ODBC VM tests to the 2,347 names from the retained normal run.
-Apple LeakSanitizer is unsupported; Linux leak proof remains required.
+Apple LeakSanitizer is unsupported. Later Linux core ASan/LSan and separate
+first-party bridge leak checks passed as recorded in the SAN-009 closure below;
+these do not establish upstream-engine sanitizer coverage.
 
 The accepted matched generation glue comparison recorded mean paired differences
 of -0.00%/+2.66% on CPU and -16.82%/-2.52% on Metal for one/four rows. It did not

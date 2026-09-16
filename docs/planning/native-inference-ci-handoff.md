@@ -7,6 +7,26 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Overall readiness audit at `09d4ffaf2`:** all four core packages, the MinGW
+gate and six plugins passed Build `35076278681` attempt 2 at `f10e70ee5`;
+Deep `35076281099` and core Sanitizer `35076283269` passed on that same baseline.
+The later #701 integration and Mac/Windows installers have the focused green
+results below. These are different tested revisions, not a single final-head
+qualification. The red runs on `temp/llama-installer-qa` are superseded by
+Windows success `35119980116` on `temp/llama-release-combined`.
+The [live evidence table](../qa/native-inference-ci/README.md#current-overall-status--16-september)
+is the concise current status; older snapshots below retain historical context.
+
+Remote `develop` is now `94f2f228c`, containing #699 (`f786b15d8`) and its
+evidence-only follow-up; neither is in this candidate. The fix's own Build
+`35120521324` and CodeQL `35120521311` pass. Next integration work must merge
+that fix into the candidate, preserve both branches' tests and verify affected
+import/provider behavior. Complete approved CI-06/F19 cadence and split-signing
+work before one combined final Build/package check. Reuse unchanged Deep and
+sanitizer evidence; no broad repeat is justified by this status/doc audit.
+Actual signed/offline installer and parent real-device/model criteria remain
+open. This audit changes documentation only and does not promote to develop.
+
 **Installer addition (CI-D04):** Adrian authorized implementing separate Windows
 and Mac plugin installers now, locating/checking an installed matching core.
 The canonical criteria are INST-AC-01–05 / INST-01–04 in the pipeline plan.
