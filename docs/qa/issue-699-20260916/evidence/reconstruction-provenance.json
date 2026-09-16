@@ -1,0 +1,14 @@
+{
+  "downstreamRevision": "ab7943d42d459c7d8fc6e146f7709dfac7a2d827",
+  "compiler": "17e844441ed87e1f6e0d5f1f0d3bb4bee8db6187",
+  "reconstruction": "replace call lineout stream with call closefile stream in ragtrace",
+  "sourceRoots": [
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/config/profiles",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/surfaces",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/application/tests",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers",
+    "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-699-diagnosis-x3bmprce/crexx/providers/tests"
+  ]
+}

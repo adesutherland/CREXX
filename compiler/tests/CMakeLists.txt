@@ -157,6 +157,22 @@ set_tests_properties(binary_forward_dependencies PROPERTIES
     LABELS "compiler;imports;incremental;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvme;library;classlib")
 
+foreach(kind IN ITEMS convergence provider)
+    add_test(NAME source_import_private_dependency_${kind}
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DBIN=${CMAKE_BINARY_DIR}/bin
+            -DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/fixtures/issue699
+            -DKIND=${kind}
+            -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/source_import_private_dependency_${kind}_ws
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/source_import_private_dependency.cmake)
+    set_tests_properties(source_import_private_dependency_${kind} PROPERTIES
+        LABELS "compiler;imports;inline;incremental;regression;smoke"
+        CREXX_PREP_TARGETS "rxc;rxas;library;classlib"
+        # Each test runs an isolated opt/noopt import-control matrix.
+        RUN_SERIAL TRUE TIMEOUT 300)
+endforeach()
+
 add_test(NAME inline_return_conversions
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>

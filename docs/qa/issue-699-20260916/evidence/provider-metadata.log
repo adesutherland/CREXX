@@ -1,0 +1,86 @@
+LOADDETAIL file=rag_address_environment.crexx parent=ragtrace.crexx
+0   rxc                                 0x0000000104bfc8a4 parseRexxFileForFunctions + 184
+1   rxc                                 0x0000000104bf7d30 load_another_file + 728
+2   rxc                                 0x0000000104bfa408 sym_imva + 244
+3   rxc                                 0x0000000104bebf30 validate_symbol_in_scope + 3124
+4   rxc                                 0x0000000104d386d8 scp_4all + 148
+5   rxc                                 0x0000000104beb27c validate_symbols + 72
+6   rxc                                 0x0000000104beb2dc validate_symbols + 168
+7   rxc                                 0x0000000104bf20e4 validate_ast + 2056
+8   rxc                                 0x0000000104bf3c74 rxcp_val + 24
+9   rxc                                 0x0000000104bfcd84 parseRexxFileForFunctions + 1432
+10  rxc                                 0x0000000104bf7d30 load_another_file + 728
+11  rxc                                 0x0000000104bfc214 rxcp_scan_imports + 52
+12  rxc                                 0x0000000104bf1acc validate_ast + 496
+13  rxc                                 0x0000000104bf3c74 rxcp_val + 24
+14  rxc                                 0x0000000104bfcd84 parseRexxFileForFunctions + 1432
+15  rxc                                 0x0000000104bf7d30 load_another_file + 728
+16  rxc                                 0x0000000104bfc214 rxcp_scan_imports + 52
+17  rxc                                 0x0000000104bf1acc validate_ast + 496
+18  rxc                                 0x0000000104bf3c74 rxcp_val + 24
+19  rxc                                 0x0000000104bfcd84 parseRexxFileForFunctions + 1432
+20  rxc                                 0x0000000104bf7d30 load_another_file + 728
+21  rxc                                 0x0000000104bf90a8 sym_imcls + 592
+22  rxc                                 0x0000000104bf9720 ensure_class_imported + 116
+23  rxc                                 0x0000000104befeac node_to_type + 2464
+24  rxc                                 0x0000000104be5c94 structure_symbols_walker + 1064
+25  rxc                                 0x0000000104c13900 ast_wlkr + 64
+26  rxc                                 0x0000000104c1396c ast_wlkr + 172
+27  rxc                                 0x0000000104c1396c ast_wlkr + 172
+28  rxc                                 0x0000000104c1396c ast_wlkr + 172
+29  rxc                                 0x0000000104bf1ac4 validate_ast + 488
+30  rxc                                 0x0000000104bf3c74 rxcp_val + 24
+31  rxc                                 0x0000000104bfcd84 parseRexxFileForFunctions + 1432
+MISSINGIFACEDETAIL .ragworkprovider
+SIGNATUREDETAIL fqname=ragapplicationprovider.ragapplicationprovider context=ragapplicationprovider.crexx count=0 errors=1
+SIGNATUREDETAIL fqname=ragapplicationprovider.ragapplicationprovider context=ragproduct.crexx count=0 errors=1
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=1 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=2 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=3 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=4 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=5 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=6 site=1350
+ASSIGNDETAIL from=ragapplicationprovider to=ragworkprovider fromsym=ragapplicationprovider.ragapplicationprovider tosym=ragworktypes.ragworkprovider fromclass=1 tointerface=1 master=1 context=ragprocess.crexx
+TYPEDETAIL line=587 file=ragprocess.crexx name=provider value=8/ragapplicationprovider target=8/ragworkprovider iteration=7 site=1350
+Warning in ragprocess.crexx @ 359:6 - #NOT_IN_SAME_SCOPE line="352" column="5", "index"
+Warning in ragprocess.crexx @ 410:8 - #NOT_IN_SAME_SCOPE line="392" column="6", "i"
+Warning in ragprocess.crexx @ 421:6 - #NOT_IN_SAME_SCOPE line="392" column="6", "i"
+Warning in ragprocess.crexx @ 430:6 - #NOT_IN_SAME_SCOPE line="392" column="6", "i"
+Warning in ragprocess.crexx @ 499:147 - #NOT_IN_SAME_SCOPE line="498" column="73", "ignored"
+Warning in ragprocess.crexx @ 546:73 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 547:147 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 563:7 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 569:7 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 615:40 - #NOT_IN_SAME_SCOPE line="561" column="7", "detail"
+Warning in ragprocess.crexx @ 625:53 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 630:5 - #NOT_IN_SAME_SCOPE line="542" column="84", "ignored"
+Warning in ragprocess.crexx @ 665:142 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 668:5 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 687:7 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 694:6 - #NOT_IN_SAME_SCOPE line="681" column="6", "i"
+Warning in ragprocess.crexx @ 695:5 - #NOT_IN_SAME_SCOPE line="682" column="5", "worker_id"
+Warning in ragprocess.crexx @ 744:10 - #NOT_IN_SAME_SCOPE line="681" column="6", "i"
+Warning in ragprocess.crexx @ 761:11 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 764:11 - #NOT_IN_SAME_SCOPE line="759" column="11", "terminal"
+Warning in ragprocess.crexx @ 764:32 - #NOT_IN_SAME_SCOPE line="759" column="32", "detail"
+Warning in ragprocess.crexx @ 766:11 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 796:7 - #NOT_IN_SAME_SCOPE line="776" column="9", "previous_id"
+Warning in ragprocess.crexx @ 799:11 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 828:11 - #NOT_IN_SAME_SCOPE line="696" column="5", "arguments"
+Warning in ragprocess.crexx @ 829:11 - #NOT_IN_SAME_SCOPE line="697" column="5", "envelope"
+Warning in ragprocess.crexx @ 830:11 - #NOT_IN_SAME_SCOPE line="698" column="5", "request"
+Warning in ragprocess.crexx @ 847:5 - #NOT_IN_SAME_SCOPE line="664" column="78", "ignored"
+Warning in ragprocess.crexx @ 848:8 - #NOT_IN_SAME_SCOPE line="681" column="6", "i"
+Warning in ragprocess.crexx @ 855:3 - #NOT_IN_SAME_SCOPE line="730" column="5", "controller_state"
+Warning in ragprocess.crexx @ 855:54 - #NOT_IN_SAME_SCOPE line="730" column="32", "controller_detail"
+Warning in ragprocess.crexx @ 959:41 - #NOT_IN_SAME_SCOPE line="954" column="59", "ignored"
+Warning in ragprocess.crexx @ 970:41 - #NOT_IN_SAME_SCOPE line="965" column="59", "ignored"
+33 warning(s) in source file
+Error in ragprocess.crexx @ 588:103 - #TYPE_MISMATCH, "provider"
+1 error(s) in source file

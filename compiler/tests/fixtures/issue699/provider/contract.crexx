@@ -1,0 +1,8 @@
+options levelg
+namespace contract expose providercontract consume
+import issue699cleanup
+providercontract: interface
+  value: method = .int
+consume: procedure = .void
+  arg provider = .providercontract
+  return

@@ -1,0 +1,23 @@
+LOADDETAIL file=rag_address_environment.crexx parent=ragtrace.crexx
+0   rxc                                 0x000000010020c5d4 parseRexxFileForFunctions + 184
+1   rxc                                 0x0000000100207a60 load_another_file + 728
+2   rxc                                 0x000000010020a138 sym_imva + 244
+3   rxc                                 0x00000001001fbf30 validate_symbol_in_scope + 3124
+4   rxc                                 0x00000001003482c0 scp_4all + 148
+5   rxc                                 0x00000001001fb27c validate_symbols + 72
+6   rxc                                 0x00000001001fb2dc validate_symbols + 168
+7   rxc                                 0x0000000100201ff4 validate_ast + 2056
+8   rxc                                 0x0000000100203b84 rxcp_val + 24
+9   rxc                                 0x000000010020cab4 parseRexxFileForFunctions + 1432
+10  rxc                                 0x0000000100207a60 load_another_file + 728
+11  rxc                                 0x000000010020bf44 rxcp_scan_imports + 52
+12  rxc                                 0x00000001002019dc validate_ast + 496
+13  rxc                                 0x0000000100203b84 rxcp_val + 24
+14  rxc                                 0x000000010021787c rxcmain + 6072
+15  rxc                                 0x00000001001f5860 main + 40
+16  dyld                                0x0000000184ba84e4 start + 6992
+TRACE rxcp_val_sym.c:1676 validate_symbol_in_scope iteration=14 name=fields
+DETAIL file=ragcommandutil.crexx scope=commandeffectrecords old=0/1 new=0/0 class=? node=ragcommandutil.crexx line=99
+TRACE rxcp_val_sym.c:1676 validate_symbol_in_scope iteration=15 name=fields
+DETAIL file=ragcommandutil.crexx scope=commandeffectrecords old=0/1 new=0/0 class=? node=ragcommandutil.crexx line=99
+INTERNAL_CONVERGENCE_ERROR: Loop failed to converge. Active flags: 0x0002
