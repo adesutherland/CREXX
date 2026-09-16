@@ -19,6 +19,9 @@ assessment because the Windows PowerShell child inherited incompatible PS7
 module paths through Python. WINQA-AC-01/02 in the pipeline plan own the bounded
 QA environment repair and native signed/unsigned regression. Rerun only this
 Windows job with unchanged signed files; no signing login or build is needed.
+Retry `35155144009` is running at `a6c989d85`; inspect its terminal result next.
+Do not integrate this QA-only repair into develop until that focused result;
+retain unchanged product evidence and avoid another broad manual run.
 The failed run at
 installer QA revision `9048acdc1`, reusing the exact qualified `21a5e9410` core,
 both plugins and locally signed output. Both upload processes exited zero; all
@@ -28,7 +31,7 @@ seven private assets match the local final SHA256 record. Evidence begins at
 only that draft and confirm its tag never exists. No signing credential is
 needed for this runner test; do not request another login tonight.
 
-**22:00 UTC monitor:** Build `35150686647` is terminal success, including all
+**21:59 UTC monitor:** Build `35150686647` is terminal success, including all
 four core jobs, MinGW, optimizer parity, all four routine plugins and development
 snapshot publication. CUDA is correctly absent. CodeQL `35150686250` is still
 performing analysis. Keep the 15-minute cadence; no extra assurance dispatch.

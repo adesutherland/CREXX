@@ -12,8 +12,8 @@ plan is `docs/planning/native-inference-backlog.md`; current coverage and review
 are tracked in `docs/qa/native-inference-step07/README.md` and the live
 `docs/qa/native-inference-step06/README.md` qualification ledger.
 
-The separate remote `temp/llama-release-combined` candidate (local branch
-`temp/llama-release-qa`) supplies prebuilt CPU/GPU delivery and a generated-fixture
+The delivery qualified on `temp/llama-release-combined` is now integrated into
+`develop` at `8ed983afd`. It supplies prebuilt CPU/GPU delivery and a generated-fixture
 smoke test. Its numbered outcomes and criteria are tracked in
 `docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#current-overall-status--16-september)
 distinguishes tested revisions and outstanding integration/release work.
@@ -21,7 +21,7 @@ Routine CI downloads no trained model: its sub-5-MiB fixture checks engine
 generation/embedding plumbing, package integrity, public-provider discovery
 and profile rejection, plus installed VM and relocated native consumers.
 It does not establish BGE retrieval quality, Smol output quality or execution
-on unavailable GPUs. Neither `develop` promotion nor a release is implied.
+on unavailable GPUs. Development integration is not full release acceptance.
 
 ## Generated-fixture package evidence
 
@@ -31,9 +31,12 @@ the trained BGE/Smol models. The complete Build matrix, Deep Build and core
 Sanitizer gates all passed at `f10e70ee5`. Later inheritance and installer changes
 have focused passing evidence on their recorded revisions. Develop #699 is now
 merged and CI-D03 selection/collection is implemented. The combined candidate
-`21a5e9410` is undergoing Build `35143588581`, including non-publishing Mac
-signing/notarization, followed by signed installer checks. Until those checks
-finish, earlier passes are not a final integrated-delivery or signed-release verdict.
+`21a5e9410` passes all four core, MinGW and six plugin package checks in Build
+`35143588581`. Its Mac installer-only failure has passing packaging and fresh-host
+offline replacements (`35149300574`, `35149778131`). The promoted revision's
+normal Build `35150686647` also passes, including development snapshot publication.
+CodeQL and optional signed Windows installer follow-up are tracked in the live
+status record; neither a full signed release nor real-device closure is implied.
 
 | Package | Complete baseline result (`f10e70ee5`) | Actual fixture computation |
 | --- | --- | --- |
@@ -49,8 +52,10 @@ attempt 2 includes all six plugins, four core archives and the MinGW core gate.
 [Deep 35076281099](https://github.com/adesutherland/CREXX/actions/runs/35076281099)
 and [Sanitizer 35076283269](https://github.com/adesutherland/CREXX/actions/runs/35076283269)
 pass on the same baseline. Subsequent actual unsigned Mac and Windows installer
-lifecycle tests also pass using those retained binaries. Signed/notarized and
-offline Gatekeeper evidence remains open; see the current status table above.
+lifecycle tests also pass using those retained binaries. Actual signed/notarized
+Mac installers now pass fresh-host offline Gatekeeper, installation and consumer
+execution on both architectures. Windows signed lifecycle QA remains separate;
+see the current status table above.
 
 The pipeline evidence ledger retains job identities, archive hashes and failures.
 Historical MinGW plugin checks at `4a0924ee1` remain evidence for that source
@@ -144,7 +149,7 @@ uninstrumented engine. See the [closure record](../../../docs/SANITIZER-WORKLIST
 This does not establish upstream-engine sanitizer coverage.
 
 STEP-06, owned by Codex under Adrian's direction, still owns target-OS/real-GPU coverage, low-memory and driver-failure cases, remaining
-platform package checks and exact-head hosted gates before publication. Local
+platform package checks and final release gates. Local
 enforced-offline and installed/relocated checks have passed. Remaining device
 and model criteria are not closed by the focused Linux ownership probe.
 

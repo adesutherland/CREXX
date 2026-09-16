@@ -977,3 +977,23 @@ MSVC portability. See [the canonical closure](../SANITIZER-WORKLIST.md#san-009--
 This supersedes the earlier SAN-009-pending wording above. AC-09 still needs its
 remaining device/drain and lifecycle qualification; other parent criteria stay
 open. The exact candidate's new pipeline runs are recorded in the CI handoff.
+
+### 16 September development integration
+
+Adrian approved promotion when sufficiently qualified and explicitly made
+Windows signing an optional later distribution step. `8ed983afd` is now in
+remote `develop`; normal Build `35150686647` passes four core packages, MinGW,
+optimizer parity, four routine plugin packages and development snapshot
+publication. CodeQL remains under the pipeline plan's PROM monitoring gate.
+The final manually selected candidate `21a5e9410` also passes both CUDA package
+smokes; ordinary pushes/snapshots do not select CUDA. Actual signed/stapled Mac
+installers pass fresh-host offline Gatekeeper/install/consumer checks on ARM and
+Intel. Windows signed installer QA is an independent follow-up, with no new
+signing login requested overnight.
+
+This updates the delivery evidence for AC-01/11/13/14 without closing their
+full-product conditions. Remaining trained-model OS/device, resource-failure,
+sharing/drain and provenance acceptance stays open as above. Reuse the retained
+same-baseline Deep/core sanitizer gates and approved focused #701/#699 integration
+proof; promotion does not require another unchanged broad campaign. Exact run
+and artifact identities are in [the pipeline ledger](../qa/native-inference-ci/README.md).

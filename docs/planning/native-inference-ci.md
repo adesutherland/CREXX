@@ -32,14 +32,14 @@ retries use the named candidate branches in the live handoff.
 1. [x] **CI-AC-01:** the candidate contains the accepted implementation and
    current remote RXPP changes, with both parents retained. Neither remote
    `develop` nor a GitHub release is modified during qualification.
-2. [ ] **CI-AC-02:** four independently usable llama-free core archives pass on
+2. [x] **CI-AC-02:** four independently usable llama-free core archives pass on
    the target Linux/GCC, Windows/MSVC, ARM Mac/Clang and Intel Mac/Clang
    configurations before llama is added. A fifth Windows/MinGW core-only gate
    verifies both VM variants and retains QA evidence without publishing binaries. Separate matching plugin archives
    supply CPU/Vulkan on Linux/Windows, CPU/Metal on ARM Mac and CPU on Intel Mac,
    with documentation,
    examples and notices. Verify actual extracted core and core-plus-plugin ZIPs.
-3. [ ] **CI-AC-03:** separate Linux and Windows CUDA plugin archives include
+3. [x] **CI-AC-03:** separate Linux and Windows CUDA plugin archives include
    CPU fallback and redistributable dependencies. One Windows MSVC core with
    `rxvm` selecting `rxbvm` works with either Vulkan or CUDA, including native
    generation and relocated execution. MinGW source/regression support remains;
@@ -51,7 +51,7 @@ retries use the named candidate branches in the live handoff.
    no test bypass in the public model loader. Checks cover bounded generation
    and finite embedding extraction in the packaged engine, plus public provider
    behavior through installed VM and relocated native consumers.
-5. [ ] **CI-AC-05:** smoke fails for a missing/altered required package file,
+5. [x] **CI-AC-05:** smoke fails for a missing/altered required package file,
    verifies fixture identity and required backends, and runs outside the build
    tree using the staged runtime. Test helpers and fixture weights are not
    accidentally shipped as user runtime dependencies.
@@ -60,7 +60,7 @@ retries use the named candidate branches in the live handoff.
    wide hang guards. New smoke is measured alone in normal Debug and maintained
    ASan before CTest registration. No model-quality/performance workload enters
    the routine candidate pipeline.
-7. [ ] **CI-AC-07:** the candidate release builds/smokes and wider core Deep
+7. [x] **CI-AC-07:** the candidate release builds/smokes and wider core Deep
    Build/Sanitizer QA gates have terminal results for the exact candidate SHA.
    Linux ASan/LSan keeps leak detection enabled for first-party cREXX code.
    Core sanitizer jobs use `ENABLE_LLAMA=OFF` and build no CUDA backend/SDK.
@@ -74,7 +74,7 @@ retries use the named candidate branches in the live handoff.
    model/provenance and release gates remain visible; green fixture checks do
    not silently close them.
 
-9. [ ] **CI-AC-09:** CUDA jobs reuse unchanged compiler outputs without weakening
+9. [x] **CI-AC-09:** CUDA jobs reuse unchanged compiler outputs without weakening
    source/toolchain/flag identity or the final package smoke. Retain cold and
    warm cache statistics on Linux/NVCC and Windows/MSVC/NVCC. A cache miss or
    eviction may require a cold build; it must never select a different engine,
@@ -99,11 +99,11 @@ retries use the named candidate branches in the live handoff.
    fixture evidence, add package/engine and public-provider controls, measure
    the exact aggregate in normal/ASan isolation, then set scheduling properties.
    Serves CI-AC-04–06; depends on CI-01.
-3. [ ] **CI-03 — Build the complete delivery:** enable provider/package targets,
+3. [x] **CI-03 — Build the complete delivery:** enable provider/package targets,
    add CPU/GPU build prerequisites and complete CUDA variants, stage the same
    payload for branch artifacts and eventual release, and smoke it before upload.
    Serves CI-AC-02/03/05; depends on CI-02. Preserve signing/installer safeguards.
-4. [ ] **CI-04 — Run remote qualification:** push only the candidate branch;
+4. [x] **CI-04 — Run remote qualification:** push only the candidate branch;
    exercise selected fast lanes first, repair failures with focused controls,
    then run required wider workflows on the resulting exact SHA. Retain logs
    and cancel superseded candidate runs. Serves CI-AC-01/06/07.
@@ -564,7 +564,7 @@ adds no production API/build option or broad model workload.
 2. [x] **LP-AC-02:** the same permanent probe passes normal Debug and ASan/LSan
    on Linux, with leak detection enabled and logs retained through
    `tools/asan-run.sh`. No CUDA SDK, engine rebuild or model download is used.
-3. [ ] **LP-AC-03:** combine this focused result with the retained original
+3. [x] **LP-AC-03:** combine this focused result with the retained original
    Apple trigger/full proof and the current full supported core sanitizer gate
    before disposing of SAN-009. A probe alone does not close the item or the
    remaining model/device criteria.
@@ -713,25 +713,25 @@ build is added.
 1. [x] **F16-AC-01:** MSVC's HTTP optimized-copyback shape test reads an artifact
    actually generated for its portable VM and retains every existing assertion.
    Its focused run and the complete MSVC Deep gate pass.
-2. [ ] **F17-AC-01:** core and plugin select the active developer environment's
+2. [x] **F17-AC-01:** core and plugin select the active developer environment's
    MSVC redistributables consistently. A pre-build comparison with the qualified
    core rejects missing/different runtime bytes, and both final Windows plugin
    archives pass with the core-overwrite guard intact.
 3. [x] **D02-AC-01:** the Intel archive contains CPU backends and no Metal
    backend; the complete extracted archive smoke passes. Human/agent guides and
    published asset names identify Intel CPU-only support explicitly.
-4. [ ] **R16-AC-01:** all required candidate Build, Deep and first-party core
+4. [x] **R16-AC-01:** all required candidate Build, Deep and first-party core
    Sanitizer jobs reach terminal success on the final code/test inputs; record
    exact SHAs, archives and CUDA cache statistics. CI-AC-07/09 stay open until
    their required evidence is reconciled.
 5. [x] **R16-01:** repair the MSVC artifact path (CI-F16), retain focused proof,
    and rerun MSVC Deep. Serves F16-AC-01; no compiler rewrite change.
-6. [ ] **R16-02:** repair the reproduced 14.51 environment versus 14.44 CMake
+6. [x] **R16-02:** repair the reproduced 14.51 environment versus 14.44 CMake
    CRT selection (CI-F17), add cheap positive/mismatch checks before engine
    compilation, and retry Windows packaging. Serves F17-AC-01.
 7. [x] **R16-03:** implement CI-D02 in matrix, package validation and guides;
    rerun Intel CPU packaging. Serves D02-AC-01.
-8. [ ] **R16-04:** retain the now-green core sanitizer results and reconcile
+8. [x] **R16-04:** retain the now-green core sanitizer results and reconcile
    SAN-009's separate first-party bridge proof; dispatch/reconcile the complete
    candidate gates after focused repairs. Serves R16-AC-01 and CI-AC-07/08/09.
    Preserve the existing real-device/model qualification boundaries.
@@ -1411,3 +1411,33 @@ This is a QA host environment failure, not evidence of a bad signature.
 4. [ ] **WINQA-02:** rerun only Windows retained-artifact QA, retain the result
    and remove the private draft after disposition (WINQA-AC-02). A real need for
    new signing remains a morning follow-up, not an integration blocker.
+
+
+### Reconciled completed pipeline evidence — 16 September
+
+CI-AC-02/03/05 and CI-03 are satisfied by four core archives, the MinGW gate
+and six plugin package smokes at `21a5e9410` (Build `35143588581`). The retained
+[terminal metadata and QA](../qa/native-inference-ci/remote/21a5e9410/README.md)
+distinguish its Mac installer-only failure from successful compiled payloads;
+Mac packaging/offline repair evidence is recorded under PROM-AC-01. Windows
+runtime identity preflight and both plugin archives also close F17-AC-01/R16-02.
+CI-AC-09 has the original cache-populating and warm runs above plus final Linux
+2,724 hits/6 misses and Windows 2,641 hits/4 misses, with complete package smoke.
+
+CI-AC-07/CI-04 and R16-AC-01/R16-04 reached the originally required same-SHA
+Build/Deep/Sanitizer success at `f10e70ee5` (`35076278681` attempt 2,
+`35076281099`, `35076283269`). LP-AC-03 is satisfied by the canonical SAN-009
+closure and that later broad gate. The subsequent F19 execution approval
+explicitly reuses unchanged Deep/sanitizer evidence, with focused #701/#699
+integration evidence and the final all-six delivery run. These checkmarks do
+not relabel an old run as a current-SHA run. PROM separately owns the normal
+automatic checks of the promoted `8ed983afd` revision; no broad rerun follows
+from its history/docs/installer-QA differences.
+
+The normal develop Build `35150686647` is now terminal success, including
+optimizer parity, MinGW, four cores, four routine plugins and development
+snapshot publication. Routine CUDA exclusion is verified; the manually selected
+candidate run supplies CUDA delivery evidence. CodeQL remains in progress.
+WINQA's optional signed-installer retry is `35155144009` at `a6c989d85`; it
+reuses the same signed files and private draft. F19-AC-02/INST-AC-04 remain open
+until its native Windows result, although Mac signed/offline proof has passed.

@@ -18,7 +18,14 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 
 ## Current overall status — 16 September
 
-**Promotion now approved:** all four cores, the MinGW gate and six plugin smoke
+**Develop integrated:** `8ed983afd` is promoted and normal
+[Build 35150686647](https://github.com/adesutherland/CREXX/actions/runs/35150686647)
+passes, including optimizer parity, all four cores, MinGW, all four routine
+plugins and development snapshot publication. CodeQL `35150686250` remains in
+progress. Routine CUDA exclusion matches CI-D03; the full manual candidate run
+below supplies the CUDA evidence.
+
+All four cores, the MinGW gate and six plugin smoke
 checks pass on `21a5e9410`. The Build run's Mac packaging failure is repaired;
 both signed/stapled plugin installers pass packaging in `35149300574` and actual
 fresh-host offline Gatekeeper/install/consumer QA in `35149778131`. Installed
@@ -28,6 +35,12 @@ optional after integration, permits it to wait until morning, and authorizes
 promotion plus light monitoring/remediation of normal develop CI. Parent
 real-device/model acceptance remains open. Older pending snapshots below are
 historical and do not override this authority or the retained current results.
+
+Optional Windows signed QA `35153176156` failed before signature assessment:
+Windows PowerShell could not load its security module because it inherited PS7
+module paths through Python. The child-environment correction and native
+signed/unsigned control are under Windows-only retry `35155144009` at `a6c989d85`,
+using unchanged signed files. This does not block development integration.
 
 
 **Approved continuation in progress:** product/build candidate `21a5e9410`
