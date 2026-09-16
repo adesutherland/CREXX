@@ -1,0 +1,38 @@
+{
+  "lib/plugins/llama/bridge.cpp": {
+    "recorded": "700b525193859d0ff1527a1dd942376e5d0b974be8d761eb74f15c9d70e43298",
+    "candidate": "700b525193859d0ff1527a1dd942376e5d0b974be8d761eb74f15c9d70e43298",
+    "identical": true
+  },
+  "lib/plugins/llama/bridge.h": {
+    "recorded": "3385831b83721b9f6a9f9e9eca8dcf7e6e91e132e39a96db389d9a30a44b9c1e",
+    "candidate": "3385831b83721b9f6a9f9e9eca8dcf7e6e91e132e39a96db389d9a30a44b9c1e",
+    "identical": true
+  },
+  "lib/plugins/llama/package.hpp": {
+    "recorded": "07e4923081a9e7dbdf26f207e14d8beb204798d8d6eefe13429281a25a6773f3",
+    "candidate": "07e4923081a9e7dbdf26f207e14d8beb204798d8d6eefe13429281a25a6773f3",
+    "identical": true
+  },
+  "lib/plugins/llama/generation.h": {
+    "recorded": "b21136a6dfc1690623f2ba4192fab64bb065ffa447fc4f7ddcb7ec03bfd428e6",
+    "candidate": "b21136a6dfc1690623f2ba4192fab64bb065ffa447fc4f7ddcb7ec03bfd428e6",
+    "identical": true
+  },
+  "lib/plugins/llama/generation_utf8.h": {
+    "recorded": "7182468f8495646af2735821b55f49d520d18a7e8466c84fcc5f7a62dda40a03",
+    "candidate": "7182468f8495646af2735821b55f49d520d18a7e8466c84fcc5f7a62dda40a03",
+    "identical": true
+  },
+  "binutils/rxsha256.c": {
+    "recorded": "f575b31b355fce031f066d27273006e4ff2a3e90c103b0435220faea31b3409a",
+    "candidate": "f575b31b355fce031f066d27273006e4ff2a3e90c103b0435220faea31b3409a",
+    "identical": true
+  },
+  "tests/native-inference/bridge_lifecycle.cpp": {
+    "recorded": "2261e4e0268513f4cccb1d1ec07c2e58d188e6335fd8e316e4236352aa7c47da",
+    "candidate": "5b8022f3fdfc523ee1f33f45cd64c033f18ee0cb6044d2d9c3e0f72096a1f2ea",
+    "identical": false
+  },
+  "helper_change": "diff --git a/tests/native-inference/bridge_lifecycle.cpp b/tests/native-inference/bridge_lifecycle.cpp\nindex 6c2d624c1..0bcaac255 100644\n--- a/tests/native-inference/bridge_lifecycle.cpp\n+++ b/tests/native-inference/bridge_lifecycle.cpp\n@@ -96,8 +96,8 @@ static void co_resident(char **argv) {\n     check(vm.call(RXLLAMA_INFO_INT,{h(rt),s(\"reserved_bytes\")}).integer==0,\"two-model cleanup\");\n     auto low=vm.call(RXLLAMA_CONFIG_CREATE).handle;\n     vm.call(RXLLAMA_CONFIG_INT,{h(low),s(\"memory_bytes\"),i(1024)});\n-    auto small=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;\n-    vm.reject(RXLLAMA_MODEL_OPEN,{h(small),s(argv[2]),s(argv[3]),s(\"bge-small-en-v1.5\"),h(low)});\n+    auto low_runtime=vm.call(RXLLAMA_RUNTIME_OPEN,{h(low)}).handle;\n+    vm.reject(RXLLAMA_MODEL_OPEN,{h(low_runtime),s(argv[2]),s(argv[3]),s(\"bge-small-en-v1.5\"),h(low)});\n     std::cout << \"PASS: co-resident two-model four-session admission/cleanup \" << argv[1] << \" reserved=\" << reserved << \" peak_bytes=\" << peak << '\\n';\n }\n int main(int argc, char **argv) {\n"
+}

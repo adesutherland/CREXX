@@ -860,3 +860,10 @@ includes Intel Macs; [llama.cpp supported backends](https://github.com/ggml-org/
 lists Apple Silicon for Metal. Neither establishes a fix for our captured
 compiler-service wait. The explicit delivery decision, not a universal hardware
 claim, is the reason for the Intel CPU package.
+
+The shared active MSVC runtime also follows Microsoft's documented v14 binary
+compatibility policy: newer redistributables support older compatible toolsets,
+and the runtime must be at least as new as the newest toolset in the application.
+See [Microsoft's C++ runtime FAQ](https://learn.microsoft.com/en-us/lifecycle/faq/visual-c-faq).
+Here the 14.44 compiler and active 14.51 redist are recorded in both job logs;
+package hash equality remains the concrete combined-delivery control.

@@ -117,14 +117,17 @@ preemption. Do not use these examples to claim a hard response-time service leve
 
 ## Open acceptance items
 
-STEP-06, owned by Codex under Adrian's direction, retains SAN-009 as a release
-blocker. Its permanent focused regression, original lifecycle workload and
-expanded local package/worker checks pass under Apple ASan, as does the full
-local gate. Supported Linux ASan/LSan and target-platform closure remain pending.
-The same gate owns target-OS/real-GPU coverage, low-memory and driver-failure cases, remaining
+SAN-009 closed on 16 September after its permanent regression, original
+lifecycle trigger, full Apple-ASan gate, separate Linux first-party bridge
+ASan/LSan proof and both broad core sanitizer gates passed. Linux build/test
+leak detection remained enabled; the separate bridge probe linked an ordinary
+uninstrumented engine. See the [closure record](../../../docs/SANITIZER-WORKLIST.md#san-009--cpu-backend-probe-unloadreload-re-registers-apple-asan-globals).
+This does not establish upstream-engine sanitizer coverage.
+
+STEP-06, owned by Codex under Adrian's direction, still owns target-OS/real-GPU coverage, low-memory and driver-failure cases, remaining
 platform package checks and exact-head hosted gates before publication. Local
-enforced-offline and installed/relocated checks have passed. Apple LeakSanitizer
-limitations need coverage on a supported platform.
+enforced-offline and installed/relocated checks have passed. Remaining device
+and model criteria are not closed by the focused Linux ownership probe.
 
 Exact conversion ancestry for the distributed GGUFs also remains open under
 AC-10; [model hashes and provenance](models.md) distinguish those questions.

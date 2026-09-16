@@ -7,6 +7,14 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**Frozen candidate:** `31d4974f12454842902224d495e4aafd111c2134` is on
+`origin/temp/llama-release-combined`. [Build 35071050120](https://github.com/adesutherland/CREXX/actions/runs/35071050120),
+[Deep Build 35071052712](https://github.com/adesutherland/CREXX/actions/runs/35071052712)
+and [Sanitizer QA 35071054942](https://github.com/adesutherland/CREXX/actions/runs/35071054942)
+are running on this exact SHA. Initial publication/matrix/package guards pass.
+No pass is yet claimed for the new target jobs. Local documentation updates
+recording results do not change the frozen workflow source or trigger reruns.
+
 Adrian authorized fixes and reruns, including CPU-only Intel Mac delivery
 (CI-D02). The current repair batch fixes CI-F16's MSVC-only HTTP shape artifact
 path and CI-F17's inconsistent CRT selection. The core used the active

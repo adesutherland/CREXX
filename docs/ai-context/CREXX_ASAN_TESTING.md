@@ -10,7 +10,8 @@ adapter ownership checks may instrument our bridge/RXPA code while linking an
 ordinary uninstrumented engine; record that boundary and use ARM Mac where
 practical. This does not waive first-party findings or claim coverage inside
 an uninstrumented dependency. See the native-inference pipeline plan for the
-remaining adapter/platform acceptance and SAN-009 closure work.
+remaining adapter/platform acceptance and the worklist for SAN-009's retained
+16 September closure evidence.
 
 ## Defect ownership and closure
 

@@ -965,3 +965,15 @@ Adrian subsequently added a Windows/MinGW core-only quality gate for both
 binary download and is required before plugin qualification. It does not change
 the four shipped core archives or the single MSVC Windows base. The pipeline
 plan's MINGW-AC-01/02 preserve this addition alongside the parent criteria.
+
+### 16 September sanitizer disposition
+
+SAN-009 is now closed: the retained permanent original/reversion probe,
+Debug/Apple-ASan and original-trigger checks, complete local Apple gate, separate
+Linux first-party bridge ASan/LSan proof and full hosted Linux/Apple core gates
+satisfy its closure requirements. The first-party bridge/CPU residency sources
+match the retained Linux proof; only a private helper variable was renamed for
+MSVC portability. See [the canonical closure](../SANITIZER-WORKLIST.md#san-009--cpu-backend-probe-unloadreload-re-registers-apple-asan-globals).
+This supersedes the earlier SAN-009-pending wording above. AC-09 still needs its
+remaining device/drain and lifecycle qualification; other parent criteria stay
+open. The exact candidate's new pipeline runs are recorded in the CI handoff.
