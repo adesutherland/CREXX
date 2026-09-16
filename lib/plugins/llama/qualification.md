@@ -35,9 +35,9 @@ merged and CI-D03 selection/collection is implemented. The combined candidate
 `35143588581`. Its Mac installer-only failure has passing packaging and fresh-host
 offline replacements (`35149300574`, `35149778131`). The promoted revision's
 normal Build `35150686647` also passes, including development snapshot publication.
-CodeQL `35150686250` also passes. Optional signed Windows installer follow-up
-is tracked in the live status record; neither a full signed release nor
-real-device closure is implied.
+CodeQL `35150686250` also passes. Signed Windows installer QA now passes in
+`35155144009` for the retained candidate; neither signed publication of a newer
+snapshot, a full release nor real-device closure is implied.
 
 | Package | Complete baseline result (`f10e70ee5`) | Actual fixture computation |
 | --- | --- | --- |
@@ -55,8 +55,8 @@ and [Sanitizer 35076283269](https://github.com/adesutherland/CREXX/actions/runs/
 pass on the same baseline. Subsequent actual unsigned Mac and Windows installer
 lifecycle tests also pass using those retained binaries. Actual signed/notarized
 Mac installers now pass fresh-host offline Gatekeeper, installation and consumer
-execution on both architectures. Windows signed lifecycle QA remains separate;
-see the current status table above.
+execution on both architectures. Windows signed lifecycle QA also passes for both Vulkan and CUDA using the
+retained candidate; see the current status table above.
 
 The pipeline evidence ledger retains job identities, archive hashes and failures.
 Historical MinGW plugin checks at `4a0924ee1` remain evidence for that source
@@ -166,6 +166,6 @@ gate and six plugin package smokes pass on `21a5e9410`. Mac signed installer
 packaging and fresh-host offline installation/execution pass on ARM and Intel
 (`35149300574`, `35149778131`); installed Linux rxfs passes `35149445867`.
 Windows signing is an optional final distribution step, explicitly separate
-from development integration/testing; its candidate signed installer QA is a
-follow-up. Parent real-device/model limits remain unchanged. See the pipeline
+from development integration/testing; its candidate signed installer QA also
+passes (`35155144009`), without publishing those private QA assets. Parent real-device/model limits remain unchanged. See the pipeline
 plan's PROM criteria for authorized develop promotion and normal CI monitoring.

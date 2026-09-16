@@ -15,27 +15,21 @@ criteria are complete; retain these results without repeating broad QA. Heartbea
 normal checks and independent cleanup are disposed of. Do not dispatch broad
 extra assurance or make Windows signing an integration gate.
 
-**Optional signed Windows follow-up:** run `35153176156` failed before signature
-assessment because the Windows PowerShell child inherited incompatible PS7
-module paths through Python. WINQA-AC-01/02 in the pipeline plan own the bounded
-QA environment repair and native signed/unsigned regression. Rerun only this
-Windows job with unchanged signed files; no signing login or build is needed.
-Retry `35155144009` is running at `a6c989d85`; inspect its terminal result next.
-Do not integrate this QA-only repair into develop until that focused result;
-retain unchanged product evidence and avoid another broad manual run.
-The failed run at
-installer QA revision `9048acdc1`, reusing the exact qualified `21a5e9410` core,
-both plugins and locally signed output. Both upload processes exited zero; all
-seven private assets match the local final SHA256 record. Evidence begins at
-`docs/qa/native-inference-ci/remote/9048acdc1-windows-signed/`. Private draft
-390272446 must remain unpublished. Retain the run's terminal proof, then delete
-only that draft and confirm its tag never exists. No signing credential is
-needed for this runner test; do not request another login tonight.
+**Optional signed Windows follow-up complete:** `35155144009` succeeds at
+QA revision `a6c989d85` with unchanged signed `21a5e9410` files. Native controls
+prove inherited module-path failure, signed acceptance and unsigned rejection;
+full signed setup/payload/uninstaller and both installed backend lifecycles pass.
+Proof: `docs/qa/native-inference-ci/remote/a6c989d85-windows-signed/`.
+Private draft 390272446 is deleted (confirmed 404), its tag is absent, and local
+signed files remain at `/tmp/crexx-final-21a5e9410/signed-retry`. No further
+artifact upload/download or signing login is needed for that closed qualification.
 
-**21:59 UTC monitor:** Build `35150686647` is terminal success, including all
-four core jobs, MinGW, optimizer parity, all four routine plugins and development
-snapshot publication. CUDA is correctly absent. CodeQL `35150686250` also
-completed successfully. Only independent WINQA/draft cleanup remains. Keep the 15-minute cadence; no extra assurance dispatch.
+**Next action:** promote the qualified QA-only repair and closeout to develop
+under the existing authority, then lightly check its normal automatic Build and
+CodeQL. Preserve the green `8ed983afd` product evidence and do not dispatch Deep,
+ASan or CUDA again. Once that follow-up is green, retain terminal metadata on the
+candidate branch without pushing another evidence-only develop revision, pause
+the heartbeat and report completion. No public version release is authorized.
 
 **New authority:** Adrian now explicitly authorizes promotion to develop when
 sufficiently green, followed by light monitoring/remediation of normal automatic
@@ -61,8 +55,8 @@ Windows complete inputs and final signed outputs remain under
 `/tmp/crexx-final-21a5e9410/`. The first attempt lost SimplySign access; Adrian
 reconnected, and the complete retry passed. `signed-retry/signed-delivery.json`
 and the local/final-delivery retained record bind inputs and outputs. Private
-QA draft 390272446 has no corresponding tag. The separate Windows runner check
-above reuses all artifacts; it rebuilds neither core nor CUDA.
+QA draft 390272446 was deleted after the successful Windows runner check above;
+that check reused all artifacts and rebuilt neither core nor CUDA.
 
 ### Earlier execution snapshots
 

@@ -989,8 +989,9 @@ integration gate is complete.
 The final manually selected candidate `21a5e9410` also passes both CUDA package
 smokes; ordinary pushes/snapshots do not select CUDA. Actual signed/stapled Mac
 installers pass fresh-host offline Gatekeeper/install/consumer checks on ARM and
-Intel. Windows signed installer QA is an independent follow-up, with no new
-signing login requested overnight.
+Intel. Windows signed installer QA also passes in `35155144009` using retained
+candidate artifacts; future snapshot/release signing remains an optional later
+step. The temporary private draft was deleted without publishing it or its tag.
 
 This updates the delivery evidence for AC-01/11/13/14 without closing their
 full-product conditions. Remaining trained-model OS/device, resource-failure,

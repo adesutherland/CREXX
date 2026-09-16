@@ -415,14 +415,14 @@ The existing release Build workflow must implement the approved split, not just
 its diagnostic workflow. Preparation may proceed while the core retry runs;
 no plugin compilation or plugin QA starts before the four-core gate passes.
 
-1. [ ] **PKG-01:** preserve the version, signing, notarization and installer
+1. [x] **PKG-01:** preserve the version, signing, notarization and installer
    safeguards while making the four product jobs llama-free. Finalize and test
    the actual signed/staged core ZIP, with manifest hashes taken after signing.
 2. [x] **PKG-02:** six dependent plugin jobs download the exact matching core
    artifact from the same workflow/SHA. Build only adapter/engine/package/helper
    targets; use MSVC for both Windows backends and retain CUDA compiler caching.
    No core compilation, whole-core suite or upstream sanitizer is in these jobs.
-3. [ ] **PKG-03:** sign only the plugin payload where configured, refresh its
+3. [x] **PKG-03:** sign only the plugin payload where configured, refresh its
    provider hashes, create a separate ZIP and test the actual combined downloads
    without changing any core bytes. Retain CPU fixture and relevant adapter/
    lifecycle controls, with no trained-model download. Core and plugin manifests
@@ -1066,7 +1066,7 @@ criteria open, without blocking independent implementation and build proof.
 
 1. [x] **F19-AC-01:** CI-D03 selection and snapshot/release collection agree;
    stable/beta/manual and push/PR/snapshot controls pass. Serves CI-AC-10/CI-06.
-2. [ ] **F19-AC-02:** final signed core and plugin archives have consistent
+2. [x] **F19-AC-02:** final signed core and plugin archives have consistent
    identities/hashes and pass a combined consumer smoke. Retain actual Mac
    signature/notarization and Windows signing evidence, distinguishing unsigned
    and signed assets. Serves PKG-01/03/04 and CI-AC-05/08.
@@ -1077,10 +1077,10 @@ criteria open, without blocking independent implementation and build proof.
    Serves PKG-04 and CI-AC-02/03/05/08.
 4. [x] **F19-01:** finish CI-06's event/asset-selection implementation and focused
    controls; do not rebuild models or CUDA for the policy controls (F19-AC-01).
-5. [ ] **F19-02:** adapt Windows signing to explicit core/plugin artifacts and
+5. [x] **F19-02:** adapt Windows signing to explicit core/plugin artifacts and
    verified final manifest identities, then provide non-publishing candidate
    signing/installer checks that reuse compiled artifacts (F19-AC-02/03).
-6. [ ] **F19-03:** reconcile the package checklist, installed guides and remaining
+6. [x] **F19-03:** reconcile the package checklist, installed guides and remaining
    hardware cells with retained evidence. Repeat only affected checks; broad
    unchanged core/sanitizer suites are not needed for this audit or documentation.
    Normal final release build gates remain separate (F19-AC-01–03, CI-AC-08).
@@ -1121,13 +1121,13 @@ quarantine attributes or bypass Gatekeeper to claim success.
    notices and final matching manifests, with no models/fixture/SDK. Installed
    provider/toolchain smoke succeeds using retained candidate binaries on Mac
    and Windows; no core or CUDA rebuild is required for these packaging tests.
-4. [ ] **INST-AC-04:** release Mac plugin packages are signed, notarized and
+4. [x] **INST-AC-04:** release Mac plugin packages are signed, notarized and
    stapled; Windows installers/payload are signed through the maintained signing
    path. Signature/hash and offline Mac evidence are retained separately from
    unsigned lifecycle tests; unavailable credentials leave that proof open.
 5. [x] **INST-01:** implement package validation, discovery and safe plugin
    lifecycle helpers and native installer wrappers (INST-AC-01/02).
-6. [ ] **INST-02:** connect retained-artifact packaging/QA and release signing
+6. [x] **INST-02:** connect retained-artifact packaging/QA and release signing
    paths; run the focused controls on both platforms (INST-AC-03/04).
 7. [x] **INST-03:** update user/agent guides and handoff with installation,
    removal, core-upgrade and Gatekeeper behavior, then reconcile evidence and
@@ -1401,14 +1401,14 @@ Vision: complete the optional signed installer check using the already signed
 case in [about_PSModulePath](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_psmodulepath?view=powershell-7.6).
 This is a QA host environment failure, not evidence of a bad signature.
 
-1. [ ] **WINQA-AC-01:** a native Windows regression reproduces module shadowing
+1. [x] **WINQA-AC-01:** a native Windows regression reproduces module shadowing
    with the inherited environment; the repaired child verifies a real signed
    executable and still rejects an unsigned executable.
-2. [ ] **WINQA-AC-02:** the retained signed core and both plugin installers pass
+2. [x] **WINQA-AC-02:** the retained signed core and both plugin installers pass
    the existing complete native lifecycle, without modifying signed artifacts.
-3. [ ] **WINQA-01:** reset only the child Windows PowerShell module search path
+3. [x] **WINQA-01:** reset only the child Windows PowerShell module search path
    to its normal defaults; add the focused native control (WINQA-AC-01).
-4. [ ] **WINQA-02:** rerun only Windows retained-artifact QA, retain the result
+4. [x] **WINQA-02:** rerun only Windows retained-artifact QA, retain the result
    and remove the private draft after disposition (WINQA-AC-02). A real need for
    new signing remains a morning follow-up, not an integration blocker.
 
@@ -1452,3 +1452,29 @@ PKG-02 is proved by the all-six retained-core plugin jobs; PKG-04 by actual spli
 snapshot publication, the full-release collector controls and native installer
 lifecycle evidence. This is development completion, not full release acceptance.
 The heartbeat continues only for the independent WINQA result and draft cleanup.
+
+
+### Signed distribution QA closed — 16 September
+
+Windows retained-artifact run `35155144009` succeeds at QA revision `a6c989d85`.
+Its native control reproduces inherited module shadowing, accepts the signed
+positive fixture with the clean child environment and rejects the unsigned
+negative fixture. All three final setup signatures and all installed executable,
+DLL, plugin and uninstaller signatures are valid. Both optional variants install,
+coexist and switch through native Rexx; both four-tool consumer checks pass.
+Reinstall, individual removal, model/core/environment preservation and core
+uninstall registration cleanup pass. Signed input/output hash identity is
+retained with the [terminal proof](../qa/native-inference-ci/remote/a6c989d85-windows-signed/README.md).
+
+This closes WINQA-AC-01/02 and WINQA-01/02. Together with both Mac signed/offline
+passes, it closes F19-AC-02/F19-02/03, INST-AC-04/INST-02 and PKG-01/03 for the
+qualified candidate artifacts. The private transfer draft `390272446` was
+verified private, deleted after proof retention and confirmed absent (HTTP 404);
+its tag does not exist. Local signed files remain for reference, not publication
+as a newer snapshot. No new signing login, engine rebuild or CUDA run was needed.
+
+Promote the focused QA-only correction plus this documentation/evidence closeout
+under the existing remediation authority. Its ordinary automatic develop checks
+remain a separate follow-up; retain all unchanged product and broad QA evidence.
+Future Windows snapshot/release signing is still an optional later distribution
+step. Parent hardware/model conditions and full-release authorization are unchanged.

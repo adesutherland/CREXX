@@ -29,18 +29,22 @@ All four cores, the MinGW gate and six plugin smoke
 checks pass on `21a5e9410`. The Build run's Mac packaging failure is repaired;
 both signed/stapled plugin installers pass packaging in `35149300574` and actual
 fresh-host offline Gatekeeper/install/consumer QA in `35149778131`. Installed
-Linux rxfs passes `35149445867`. Windows signing completed locally; signed
-installer QA is a separate follow-up. Adrian explicitly makes Windows signing
+Linux rxfs passes `35149445867`. Windows signing and native signed
+installer QA are complete for that candidate. Adrian explicitly makes Windows signing
 optional after integration, permits it to wait until morning, and authorizes
 promotion plus light monitoring/remediation of normal develop CI. Parent
 real-device/model acceptance remains open. Older pending snapshots below are
 historical and do not override this authority or the retained current results.
 
-Optional Windows signed QA `35153176156` failed before signature assessment:
-Windows PowerShell could not load its security module because it inherited PS7
-module paths through Python. The child-environment correction and native
-signed/unsigned control are under Windows-only retry `35155144009` at `a6c989d85`,
-using unchanged signed files. This does not block development integration.
+Optional Windows signed QA now passes in
+[run 35155144009](https://github.com/adesutherland/CREXX/actions/runs/35155144009)
+at QA revision `a6c989d85`, using unchanged signed `21a5e9410` artifacts. Its
+native module-path control proves the earlier harness failure and the repair;
+actual setup/payload/uninstaller signatures and the full Vulkan/CUDA installed
+lifecycle pass. [Retained proof](remote/a6c989d85-windows-signed/README.md) also
+records deletion of the temporary private draft and confirms its tag is absent.
+Windows signing remains optional after development integration. This evidence
+qualifies the candidate signing path, not signed publication of a newer snapshot.
 
 
 **Approved continuation in progress:** product/build candidate `21a5e9410`
