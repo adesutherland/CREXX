@@ -1319,3 +1319,18 @@ retaining terminal evidence. This is QA transport, not a user release.
 Evidence: `docs/qa/native-inference-ci/local/final-delivery/`. Reuse #699's
 retained full normal/focused ASan and the unchanged previous Deep/core sanitizer
 results. No develop promotion, release publication or hardware waiver occurs.
+
+**Signed Mac packaging repair, 16 September:** Build `35143588581` passes ARM
+Metal package smoke, then fails constructing its signed installer: `codesign -R`
+treats `anchor apple generic` as a filename. Native `codesign` documentation
+requires `=anchor apple generic` for literal requirement text. A permanent native
+control reproduces the failure with Apple's signed `/bin/ls`; the correction
+passes that control and still rejects an ad-hoc signature (14 controls pass).
+This is an installer verification invocation defect, not an inference failure.
+F19-02/INST-02 remain open. Retry only retained-artifact packaging: accept a failed
+source Build for this explicit retry only if all core/plugin smoke jobs passed
+and its only failed steps are the named Mac installer packaging step. Require
+terminal source metadata and retain that validation. Repackage/notarize/staple
+the unchanged signed Mac payload in the installer QA workflow, then perform the
+same offline check. Do not rebuild core/engines or call the original run green;
+the terminal packaging retry must be recorded as its replacement evidence.

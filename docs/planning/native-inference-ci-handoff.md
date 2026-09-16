@@ -17,8 +17,18 @@ configured CPU/GPU backends, matching the existing hosted calls. ARM Mac core
 has passed signing/notarization; inspect the live run for other terminal states.
 No unchanged Deep/full sanitizer repeat was dispatched.
 
+**Packaging retry:** ARM Metal smoke passes but the subsequent installer
+construction fails because `codesign -R` needs a leading `=` for literal
+requirement text. This is corrected with a native signed/ad-hoc regression.
+Use `repackage_signed_mac=true` as well as `signed_mac=true` for the final
+installer dispatch. The source validator permits a terminal failed Build only
+when all product jobs are qualified and the sole failures are that named Mac
+installer packaging step. The retry notarizes/staples retained signed payloads;
+it does not rebuild engines. Keep the original failed run visible and record
+its successful packaging replacement separately.
+
 Subsequent commits change only installer QA/evidence, preserving those compiled
-product/build inputs. Once Build is green, download its exact Windows core,
+product/build inputs. After the Build jobs finish, download their exact Windows core,
 both plugins and `llama-manager-<commit>-windows-x64`; run
 `scripts/sign-windows-packages.py` locally. Adrian logged into SimplySign after
 the initial credential probe failed; actual Authenticode signing/verification

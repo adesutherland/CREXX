@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       source_run:
-        description: Successful Build run whose core/plugin binaries are reused
+        description: Build run whose qualified core/plugin binaries are reused
         required: true
         type: string
         default: '35076278681'
@@ -21,6 +21,10 @@ on:
         default: false
       signed_mac:
         description: Use the retained signed/stapled Mac installers and verify offline installation
+        type: boolean
+        default: false
+      repackage_signed_mac:
+        description: Retry only Mac installer packaging from qualified signed ZIPs; permit that sole source Build failure
         type: boolean
         default: false
       signed_windows_release:
@@ -50,15 +54,9 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source.json"
-          python3 - <<'PY'
-          import json, os
-          from pathlib import Path
-          run = json.loads((Path(os.environ['RUNNER_TEMP']) / 'source.json').read_text())
-          assert run['conclusion'] == 'success' and run['path'] == '.github/workflows/build.yml'
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              output.write('commit=' + run['head_sha'] + '\n')
-          PY
+          retry=()
+          if [[ "${{ inputs.repackage_signed_mac && inputs.signed_mac }}" == true ]]; then retry+=(--allow-mac-installer-retry); fi
+          python3 scripts/resolve-installer-qa-source.py --run-id "$SOURCE_RUN" "${retry[@]}"
       - uses: actions/download-artifact@v8
         with:
           github-token: ${{ github.token }}
@@ -77,6 +75,7 @@ jobs:
           path: |
             ${{ runner.temp }}/proof
             ${{ runner.temp }}/source.json
+            ${{ runner.temp }}/source-jobs.json
           retention-days: 14
   mac:
     if: github.event_name == 'workflow_dispatch' && inputs.platform != 'windows'
@@ -106,17 +105,9 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > "$RUNNER_TEMP/source.json"
-          python3 - <<'PY'
-          import json, os
-          from pathlib import Path
-          run = json.loads((Path(os.environ['RUNNER_TEMP']) / 'source.json').read_text())
-          assert run['conclusion'] == 'success' and run['path'] == '.github/workflows/build.yml'
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
-              out.write('commit=' + run['head_sha'] + '\n')
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
-              out.write('Retained binaries: ' + run['head_sha'] + '; installer scripts: ' + os.environ['GITHUB_SHA'] + '\n')
-          PY
+          retry=()
+          if [[ "${{ inputs.repackage_signed_mac && inputs.signed_mac }}" == true ]]; then retry+=(--allow-mac-installer-retry); fi
+          python3 scripts/resolve-installer-qa-source.py --run-id "$SOURCE_RUN" "${retry[@]}"
       - uses: actions/download-artifact@v8
         with:
           github-token: ${{ github.token }}
@@ -186,13 +177,36 @@ jobs:
           name: CREXX-${{ matrix.platform }}-release-asset
           path: ${{ runner.temp }}/signed/core
       - name: Download signed plugin installer
-        if: inputs.signed_mac
+        if: inputs.signed_mac && !inputs.repackage_signed_mac
         uses: actions/download-artifact@v8
         with:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.source_run }}
           name: llama.rexx-${{ matrix.platform }}-${{ matrix.backend }}-release-asset
           path: ${{ runner.temp }}/signed/plugin
+      - name: Repackage and notarize retained signed Mac plugin
+        if: inputs.signed_mac && inputs.repackage_signed_mac
+        env:
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_BASE64 }}
+          APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_INSTALLER_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/signed/plugin"
+          bash scripts/repackage-macos-plugin.sh \
+            "$RUNNER_TEMP/retained/core-unpacked/CREXX-${{ matrix.platform }}" \
+            "$RUNNER_TEMP/retained/plugin-unpacked/CREXX-${{ matrix.platform }}" \
+            "$RUNNER_TEMP/signed/plugin/llama.rexx-candidate-${{ steps.source.outputs.commit }}-${{ matrix.platform }}-${{ matrix.backend }}.pkg" \
+            > "$RUNNER_TEMP/proof/repackage.log" 2>&1 || { tail -80 "$RUNNER_TEMP/proof/repackage.log"; exit 1; }
+      - uses: actions/upload-artifact@v7
+        if: inputs.signed_mac && inputs.repackage_signed_mac
+        with:
+          name: signed-plugin-installer-${{ matrix.platform }}-${{ github.sha }}
+          path: ${{ runner.temp }}/signed/plugin/*.pkg
+          if-no-files-found: error
+          retention-days: 14
       - name: Verify signed installation with network interfaces disabled
         if: inputs.signed_mac
         shell: bash
@@ -211,6 +225,7 @@ jobs:
           path: |
             ${{ runner.temp }}/proof
             ${{ runner.temp }}/source.json
+            ${{ runner.temp }}/source-jobs.json
           retention-days: 14
 
   windows:
@@ -237,12 +252,11 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:SOURCE_RUN -notmatch '^\d+$') { throw 'Invalid source run' }
-          $json = gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN"
-          if ($LASTEXITCODE) { throw 'Cannot read source run' }
-          $json | Set-Content "$env:RUNNER_TEMP/source.json"
-          $run = $json | ConvertFrom-Json
-          if ($run.conclusion -ne 'success' -or $run.path -ne '.github/workflows/build.yml') { throw 'Unqualified source run' }
-          "commit=$($run.head_sha)" >> $env:GITHUB_OUTPUT
+          $retry = @()
+          if ('${{ inputs.repackage_signed_mac && inputs.signed_mac }}' -eq 'true') { $retry = @('--allow-mac-installer-retry') }
+          python scripts/resolve-installer-qa-source.py --run-id $env:SOURCE_RUN @retry
+          if ($LASTEXITCODE) { throw 'Unqualified source Build inputs' }
+          $run = Get-Content "$env:RUNNER_TEMP/source.json" -Raw | ConvertFrom-Json
           git fetch --no-tags --depth=1 origin $run.head_sha
           if ($LASTEXITCODE) { throw 'Cannot fetch retained SDK headers' }
           New-Item -ItemType Directory "$env:RUNNER_TEMP/proof" | Out-Null
@@ -309,5 +323,6 @@ jobs:
           path: |
             ${{ runner.temp }}/proof
             ${{ runner.temp }}/source.json
+            ${{ runner.temp }}/source-jobs.json
             ${{ runner.temp }}/manager/manager.json
           retention-days: 14

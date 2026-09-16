@@ -102,7 +102,7 @@ def verify_signatures(core, plugin, windows):
                                            b'\xfe\xed\xfa\xcf', b'\xfe\xed\xfa\xce',
                                            b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca'):
                 subprocess.run(['codesign', '--verify', '--strict', '-R',
-                                'anchor apple generic', str(file)], check=True)
+                                '=anchor apple generic', str(file)], check=True)
 
 
 def main():

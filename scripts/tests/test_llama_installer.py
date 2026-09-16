@@ -15,6 +15,23 @@ installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 
 
+@unittest.skipUnless(sys.platform == 'darwin', 'Requires native Apple signature verification')
+class SignatureTests(unittest.TestCase):
+    def test_apple_signature_passes_and_adhoc_signature_is_rejected(self):
+        with tempfile.TemporaryDirectory(prefix='llama signature ') as tmp:
+            core = Path(tmp) / 'core'
+            plugin = Path(tmp) / 'plugin'
+            core.mkdir()
+            plugin.mkdir()
+            binary = core / 'signed-tool'
+            shutil.copyfile('/bin/ls', binary)
+            installer.verify_signatures(core, plugin, False)
+            subprocess.run(['codesign', '--force', '--sign', '-', str(binary)],
+                           check=True, capture_output=True)
+            with self.assertRaises(subprocess.CalledProcessError):
+                installer.verify_signatures(core, plugin, False)
+
+
 @unittest.skipUnless(sys.platform == 'darwin', 'Mac lifecycle controls; Windows INST-AC coverage awaits CI-D04 coexistence decision')
 class InstallerTests(unittest.TestCase):
     def setUp(self):
