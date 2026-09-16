@@ -153,3 +153,13 @@ AC-10; [model hashes and provenance](models.md) distinguish those questions.
 All parent AC-01–14 remain open for full-product disposition. The local phase
 closures and these guides do not authorize a sanitizer-clean or release-ready
 claim. Final QA will update this page and the coverage ledger with actual evidence.
+
+
+Development integration status, 16 September: all four core packages, the MinGW
+gate and six plugin package smokes pass on `21a5e9410`. Mac signed installer
+packaging and fresh-host offline installation/execution pass on ARM and Intel
+(`35149300574`, `35149778131`); installed Linux rxfs passes `35149445867`.
+Windows signing is an optional final distribution step, explicitly separate
+from development integration/testing; its candidate signed installer QA is a
+follow-up. Parent real-device/model limits remain unchanged. See the pipeline
+plan's PROM criteria for authorized develop promotion and normal CI monitoring.

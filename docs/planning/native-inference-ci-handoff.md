@@ -7,6 +7,15 @@ are chronological evidence; this live section supersedes their pending actions.
 
 ## Live continuation — 16 September
 
+**New authority:** Adrian now explicitly authorizes promotion to develop when
+sufficiently green, followed by light monitoring/remediation of normal automatic
+CI. Windows signing is an optional final distribution step and may wait until
+morning; it must not gate integration or trigger another login request tonight.
+The pipeline plan's PROM-AC-01–04 / PROM-01–02 own this continuation. Public
+version tag/full release publication and parent hardware/model closure remain
+unauthorized/unverified. Earlier no-promotion wording below is superseded.
+
+
 **Latest terminal/live state:** compiled product remains `21a5e9410`.
 Build `35143588581` is terminal: four cores, MinGW and all six plugin smoke
 checks pass; its only failures are the two Mac installer requirement invocations.
@@ -21,7 +30,7 @@ installed rxfs run `35149445867` passes. Inspect those exact runs for status.
 Windows complete inputs are under `/tmp/crexx-final-21a5e9410/{core,vulkan,cuda,manager}`.
 The first signing attempt (`signing.log`) lost SimplySign access mid-payload;
 a fresh probe also failed. Adrian reconnected after the async question.
-The second attempt is running with output `signed-retry/` and log
+The second attempt completed successfully with output `signed-retry/` and log
 `signing-retry.log` in that directory; inspect its process/output before starting
 another attempt. Private staging draft **390272446** now exists at
 `qa-llama-signing-21a5e9410925cac7e4f577119e4e09fe6393d7f4`; it is unpublished and

@@ -18,6 +18,18 @@ so backend variants do not rebuild or repeat the cREXX core suite.
 
 ## Current overall status — 16 September
 
+**Promotion now approved:** all four cores, the MinGW gate and six plugin smoke
+checks pass on `21a5e9410`. The Build run's Mac packaging failure is repaired;
+both signed/stapled plugin installers pass packaging in `35149300574` and actual
+fresh-host offline Gatekeeper/install/consumer QA in `35149778131`. Installed
+Linux rxfs passes `35149445867`. Windows signing completed locally; signed
+installer QA is a separate follow-up. Adrian explicitly makes Windows signing
+optional after integration, permits it to wait until morning, and authorizes
+promotion plus light monitoring/remediation of normal develop CI. Parent
+real-device/model acceptance remains open. Older pending snapshots below are
+historical and do not override this authority or the retained current results.
+
+
 **Approved continuation in progress:** product/build candidate `21a5e9410`
 contains the #699 merge, CUDA scheduling/collector changes and maintained split
 signing fixes. [Build 35143588581](https://github.com/adesutherland/CREXX/actions/runs/35143588581)

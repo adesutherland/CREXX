@@ -1346,3 +1346,37 @@ fresh hosts using these already signed packages, without online Gatekeeper or
 ticket validation beforehand, to avoid warming their notarization cache. Retain
 quarantine, unsigned rejection, actual offline assessment/install/execution and
 network restoration. INST-AC-04 stays open until that full proof passes.
+
+### Development promotion and light monitoring approved — 16 September
+
+Adrian authorizes merging the sufficiently qualified candidate into `develop`,
+then monitoring its normal automatic checks lightly and fixing failures until
+green. He explicitly confirms that **Windows signing is an optional final
+distribution step done later**, not a development integration or testing gate.
+Do not request further signing login tonight. This supersedes the earlier
+no-promotion boundary; it does not authorize a public version tag or full release,
+waive known sanitizer defects, or close the parent real-device/model criteria.
+
+Vision: integrate the working four-core/six-plugin delivery and native installers
+into ordinary development, with normal CI feedback and truthful signing status.
+Avoid repeated Deep/sanitizer/CUDA work when unchanged qualified evidence exists.
+
+1. [x] **PROM-AC-01:** all compiled delivery lanes and relevant integration tests
+   have retained passing evidence. Build `35143588581` passes four cores, MinGW
+   and all six plugin smoke checks. Its Mac packaging-only failures are repaired:
+   `35149300574` signs/notarizes/staples both plugin installers; fresh-host
+   `35149778131` passes offline Gatekeeper/install/consumer and subsequent ticket
+   checks on ARM and Intel. Installed Linux rxfs passes `35149445867`.
+2. [ ] **PROM-AC-02:** promote without overwriting newer develop changes; retain
+   the exact promoted commit and inherited qualification boundaries.
+3. [ ] **PROM-AC-03:** the promoted revision's normal automatic Build and CodeQL
+   checks reach green, with any actual failures diagnosed and repaired using
+   focused regressions. Do not dispatch extra overnight assurance by default.
+4. [x] **PROM-AC-04:** optional Windows signing is visibly separate from
+   integration acceptance. The candidate's local signed archives/installers
+   completed after reconnection; actual signed installer QA remains a separate
+   follow-up. Future develop signing may wait until morning without blocking CI.
+5. [ ] **PROM-01:** reconcile the accepted evidence and promote the clean
+   candidate to develop (PROM-AC-01/02/04).
+6. [ ] **PROM-02:** follow the automatic runs at a light cadence, repair failures,
+   retain final results and stop monitoring when green (PROM-AC-03).
