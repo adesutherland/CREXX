@@ -116,6 +116,9 @@ jobs:
       - name: Check provider signing and release matrix guards
         run: python3 -B -m unittest discover -s scripts/tests -p 'test_llama_release_pipeline.py' -v
 
+      - name: Check split package and shared runtime guards
+        run: python3 -B -m unittest discover -s scripts/tests -p 'test_split_release.py' -v
+
   build:
     name: ${{ matrix.name }}
     needs: version
@@ -806,6 +809,16 @@ jobs:
             -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" \
             -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON ${{ matrix.cmake_args }}
 
+      - name: Check MSVC runtime identity before engine compilation
+        if: matrix.toolchain == 'msvc'
+        shell: bash
+        run: |
+          python scripts/package-llama-release.py --check-msvc-runtime-only \
+            --core-archive "${{ runner.temp }}/core-download/CREXX-user-test-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}.zip" \
+            --build "${{ runner.temp }}/build" --output "${{ runner.temp }}/runtime-preflight" \
+            --commit "${{ needs.version.outputs.commit }}" --platform "${{ matrix.core_platform }}" \
+            --toolchain "${{ matrix.toolchain }}" --backend "${{ matrix.backend }}"
+
       - name: Build plugin, dependency and focused QA targets
         shell: bash
         run: |
@@ -1095,6 +1108,7 @@ jobs:
             ${{ runner.temp }}/build/Testing/Temporary
             ${{ runner.temp }}/build/CMakeCache.txt
             ${{ runner.temp }}/build/CMakeFiles/CMakeConfigureLog.yaml
+            ${{ runner.temp }}/build/lib/plugins/llama/tests/release-smoke-msvc-runtime-files.txt
             ${{ runner.temp }}/compiler-cache
             ${{ runner.temp }}/package-scan/Testing/Temporary
             ${{ runner.temp }}/package-scan/proof/*.log

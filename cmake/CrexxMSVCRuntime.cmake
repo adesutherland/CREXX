@@ -1,0 +1,15 @@
+# Use the selected redistributable's directory naming independently of the
+# compiler toolset: e.g. a VC143 compiler can use the active VC145 runtime.
+function(crexx_msvc_runtime_files output root arch)
+    file(GLOB crt_dirs LIST_DIRECTORIES TRUE "${root}/${arch}/Microsoft.VC*.CRT")
+    list(LENGTH crt_dirs count)
+    if(NOT count EQUAL 1)
+        message(FATAL_ERROR "Expected one MSVC CRT directory in ${root}/${arch}; found ${count}")
+    endif()
+    list(GET crt_dirs 0 crt_dir)
+    file(GLOB runtime_files "${crt_dir}/*.dll")
+    if(NOT runtime_files)
+        message(FATAL_ERROR "MSVC redistributable runtime is missing: ${crt_dir}")
+    endif()
+    set(${output} "${runtime_files}" PARENT_SCOPE)
+endfunction()

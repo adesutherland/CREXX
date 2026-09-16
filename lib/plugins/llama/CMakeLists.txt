@@ -146,9 +146,34 @@ if(CREXX_LLAMA_CUDA)
 endif()
 set(_llama_extra_runtime "${_llama_notices}")
 if(MSVC)
-    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
-    include(InstallRequiredSystemLibraries)
+    # Match package-core-release.py's active developer-environment CRT. CMake's
+    # independent search can choose an older redist than VCToolsRedistDir even
+    # with the same compiler toolset. An explicit CMake override still wins.
+    if(NOT DEFINED MSVC_REDIST_DIR AND DEFINED ENV{VCToolsRedistDir})
+        file(TO_CMAKE_PATH "$ENV{VCToolsRedistDir}" _llama_msvc_redist)
+        set(MSVC_REDIST_DIR "${_llama_msvc_redist}" CACHE PATH "MSVC redistributable root")
+    endif()
+    if(DEFINED MSVC_REDIST_DIR)
+        # Newer compatible redists may use a newer VC directory name than the
+        # selected compiler. Match the actual active redist, not VC<toolset>.
+        if(CMAKE_CXX_COMPILER_ARCHITECTURE_ID STREQUAL "ARM64")
+            set(_llama_msvc_arch arm64)
+        elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(_llama_msvc_arch x64)
+        else()
+            set(_llama_msvc_arch x86)
+        endif()
+        include("${CMAKE_SOURCE_DIR}/cmake/CrexxMSVCRuntime.cmake")
+        crexx_msvc_runtime_files(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS
+            "${MSVC_REDIST_DIR}" "${_llama_msvc_arch}")
+    else()
+        set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+        include(InstallRequiredSystemLibraries)
+    endif()
     list(APPEND _llama_extra_runtime ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+    string(JOIN "\n" _llama_msvc_runtime_inventory ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke-msvc-runtime-files.txt"
+        CONTENT "${_llama_msvc_runtime_inventory}\n")
 endif()
 add_rxpa_provider_package(llama_provider PROVIDER_ID rxllama
     LINK_TARGETS crexx_llama_bridge

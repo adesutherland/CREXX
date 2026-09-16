@@ -55,9 +55,24 @@ def verify_provider(providers, backend):
         if core.digest(providers / relative) != entry['sha256']:
             raise ValueError('Provider hash mismatch: ' + str(relative))
     backends = [entry['backend'] for entry in runtime['backends']]
+    if backend == 'cpu' and any(name != 'cpu' and not name.startswith('cpu-') for name in backends):
+        raise ValueError('Unexpected GPU backend in CPU-only package')
     for required in ['cpu', backend]:
         if not any(name == required or name.startswith(required + '-') for name in backends):
             raise ValueError('Missing packaged backend: ' + required)
+
+
+def verify_msvc_runtime(build, base):
+    inventory = build / 'lib/plugins/llama/tests/release-smoke-msvc-runtime-files.txt'
+    runtimes = [Path(line) for line in inventory.read_text().splitlines() if line]
+    if not runtimes:
+        raise ValueError('MSVC runtime inventory is empty')
+    for runtime in runtimes:
+        qualified = base / 'bin' / runtime.name
+        if not qualified.is_file() or core.digest(qualified) != core.digest(runtime):
+            raise ValueError('MSVC runtime differs from qualified core: ' + runtime.name)
+        print('SHARED_RUNTIME: ' + runtime.name + ' ' + core.digest(runtime))
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -67,10 +82,11 @@ def main():
     p.add_argument('--commit', required=True)
     p.add_argument('--platform', required=True)
     p.add_argument('--toolchain', required=True)
-    p.add_argument('--backend', choices=['vulkan', 'cuda', 'metal'], required=True)
+    p.add_argument('--backend', choices=['cpu', 'vulkan', 'cuda', 'metal'], required=True)
     phases = p.add_mutually_exclusive_group()
     phases.add_argument('--stage-only', action='store_true')
     phases.add_argument('--finalize-only', action='store_true')
+    phases.add_argument('--check-msvc-runtime-only', action='store_true')
     args = p.parse_args()
     output, build = args.output.resolve(), args.build.resolve()
     base_name = 'CREXX-' + args.platform
@@ -78,6 +94,12 @@ def main():
         core.extract(args.core_archive, output / 'base')
     base = output / 'base' / base_name
     manifest = verify_core(base, args.commit, args.platform, args.toolchain)
+    if args.check_msvc_runtime_only:
+        if args.toolchain != 'msvc':
+            raise ValueError('MSVC runtime check requires the MSVC core')
+        verify_msvc_runtime(build, base)
+        print('PASS: plugin CRT matches qualified core before engine compilation')
+        return
     plugin = output / 'plugin-stage' / base_name
     if not args.finalize_only:
         plugin.mkdir(parents=True)

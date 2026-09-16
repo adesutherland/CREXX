@@ -127,6 +127,8 @@ def main():
             assert sha(providers / relative) == entry['sha256'], entry['path']
         runtime = json.loads((providers / 'rxllama.runtime.json').read_text())
         names = [x['backend'] for x in runtime['backends']]
+        if a.backends == 'cpu':
+            assert all(x == 'cpu' or x.startswith('cpu-') for x in names), names
         for expected in a.backends.split(','):
             assert any(x == expected or x.startswith(expected + '-') for x in names), (expected, names)
         assert (prefix / ('bin/rxllama.rxplugin')).is_file()
