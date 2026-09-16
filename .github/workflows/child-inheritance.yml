@@ -1,5 +1,10 @@
 name: Child Inheritance QA
 on:
+  push:
+    branches: [hotfix]
+    paths:
+      - 'interpreter/**'
+      - '.github/workflows/child-inheritance.yml'
   workflow_dispatch:
 permissions:
   contents: read
