@@ -115,7 +115,7 @@ jobs:
         run: python3 scripts/ci-release-matrix.py
 
       - name: Check Windows publication safeguards
-        run: python3 -B -m unittest discover -s scripts/tests -p 'test_windows_release_assets.py' -v
+        run: python3 -B -m unittest discover -s scripts/tests -p 'test_windows*.py' -v
 
       - name: Check provider signing and release matrix guards
         run: python3 -B -m unittest discover -s scripts/tests -p 'test_llama_release_pipeline.py' -v
@@ -1177,6 +1177,42 @@ jobs:
           cp "${{ runner.temp }}/plugin-package/assets/llama.rexx-user-test-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}-${{ matrix.backend }}.zip" "$asset"
           echo "CREXX_RELEASE_ASSET=$asset" >> "$GITHUB_ENV"
 
+      - name: Download matching Windows snapshot installer manager
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'windows' && matrix.backend == 'vulkan'
+        uses: actions/download-artifact@v8
+        with:
+          name: llama-manager-${{ needs.version.outputs.commit }}-windows-x64
+          path: ${{ runner.temp }}/snapshot-installer-qa/manager
+
+      - name: Build and test unsigned Windows llama snapshot installer
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'windows' && matrix.backend == 'vulkan'
+        shell: pwsh
+        timeout-minutes: 30
+        env:
+          INCLUDE_CUDA: '0'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $qa = '${{ runner.temp }}/snapshot-installer-qa'
+          New-Item -ItemType Directory -Force "$qa/core", "$qa/retained/vulkan", "$qa/proof" | Out-Null
+          Copy-Item -Recurse '${{ runner.temp }}/plugin-package/base/CREXX-windows-x64' "$qa/core/"
+          Copy-Item $env:CREXX_RELEASE_ASSET "$qa/retained/vulkan/"
+          $nsis = "${env:ProgramFiles(x86)}/NSIS/makensis.exe"
+          if (!(Test-Path $nsis)) { choco install nsis --yes --no-progress }
+          if (!(Test-Path $nsis)) { throw 'NSIS unavailable' }
+          $env:RUNNER_TEMP = $qa
+          python scripts/test-llama-windows-installer.py --work $qa --makensis $nsis --version '${{ needs.version.outputs.display_version }}' *> "$qa/proof/native-installer.log"
+          if ($LASTEXITCODE) { Get-Content "$qa/proof/native-installer.log" -Tail 100; throw 'Snapshot llama installer lifecycle failed' }
+          Copy-Item "$qa/llama-vulkan-qa-setup.exe" '${{ runner.temp }}/release-assets/llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe'
+
+      - name: Retain Windows llama snapshot installer proof
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/develop' && matrix.platform == 'windows' && matrix.backend == 'vulkan'
+        uses: actions/upload-artifact@v7
+        with:
+          name: snapshot-llama-installer-${{ needs.version.outputs.commit }}-windows-x64
+          path: ${{ runner.temp }}/snapshot-installer-qa/proof
+          retention-days: 14
+
       - name: Notarize macOS ZIP asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.enabled == 'true'
         shell: bash
@@ -1604,7 +1640,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -1616,6 +1652,7 @@ jobs:
             CREXX-dev-snapshot-linux-x64.deb
             CREXX-dev-snapshot-windows-x64.zip
             CREXX-dev-snapshot-windows-x64-unsigned-setup.exe
+            llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
           )
@@ -1676,7 +1713,9 @@ jobs:
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
             echo "Windows testers: use \`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe\` for installation, or \`CREXX-dev-snapshot-windows-x64.zip\` as the portable archive. Both are built automatically from commit \`${short_sha}\`. Unsigned applications may show Windows security warnings or be blocked by policy."
             echo
-            echo "Optional \`CREXX-dev-snapshot-windows-x64-signed-setup.exe\` and \`CREXX-dev-snapshot-windows-x64-signed.zip\` are added together when the maintainer runs \`scripts/sign-windows-dev-snapshot.sh\`. Their payload, embedded uninstaller and setup are signed. Unsigned downloads remain available. Previous signed assets and legacy installers are removed whenever the snapshot is refreshed."
+            echo "Add local inference with \`llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe\` after installing the matching core. Its install, provider, reinstall and removal checks pass before publication."
+            echo
+            echo "Optional signed core and llama Vulkan ZIPs and setup executables are added together when the maintainer runs \`scripts/sign-windows-dev-snapshot.sh\`. Payloads, embedded uninstallers and setups are signed. Unsigned downloads remain available. Previous signed assets and legacy installers are removed whenever the snapshot is refreshed."
             echo
             echo '### Automatic asset SHA-256 checksums'
             echo

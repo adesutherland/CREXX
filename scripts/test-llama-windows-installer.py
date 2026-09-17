@@ -83,6 +83,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--work', type=Path, required=True)
     p.add_argument('--makensis', required=True)
+    p.add_argument('--version', default='1.0.0', help='Version of the generated unsigned plugin setup')
     p.add_argument('--signed-set', type=Path, help='Verified signed-delivery.json and sibling installers')
     args = p.parse_args()
     if os.environ.get('GITHUB_ACTIONS') != 'true':
@@ -122,7 +123,7 @@ def main():
         else:
             run(sys.executable, ROOT / 'scripts/package-llama-installer.py', '--core', core,
                 '--plugin', plugin, '--manager', work / 'manager', '--unsigned-qa',
-                '--makensis', nsis, '--output', output)
+                '--makensis', nsis, '--output', output, '--version', args.version.removeprefix('crexx-'))
         installers[backend] = output
         # No /D: exercise discovery of the core's registered installation.
         setup(output)

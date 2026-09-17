@@ -134,6 +134,41 @@ class PublicationTests(unittest.TestCase):
             assets.publish(self.state, [self.output(self.source["name"])])
         self.assertEqual(self.calls, [])
 
+    def plugin_dependency(self):
+        plugin = dict(self.source, id=2, name='llama.rexx-dev-snapshot-windows-x64-vulkan.zip')
+        self.info['assets'].append(plugin)
+        dependency = dict(self.state, asset=copy.deepcopy(plugin))
+        self.state['dependencies'] = [dependency]
+        return plugin
+
+    def test_four_output_publication_checks_both_inputs(self):
+        self.plugin_dependency()
+        names = ['CREXX-dev-snapshot-windows-x64', 'llama.rexx-dev-snapshot-windows-x64-vulkan']
+        outputs = [self.output(n + suffix) for n in names for suffix in ('-signed.zip', '-signed-setup.exe')]
+        assets.publish(self.state, outputs)
+        self.assertEqual(len(self.info['assets']), 6)
+        self.assertTrue({p.name for p in outputs} <= {a['name'] for a in self.info['assets']})
+
+    def test_plugin_replaced_during_upload_aborts_all_outputs(self):
+        plugin = self.plugin_dependency()
+        self.after_upload = lambda: plugin.update(id=999)
+        with self.assertRaisesRegex(RuntimeError, 'changed'):
+            assets.publish(self.state, [self.output()])
+        self.assertEqual(len(self.info['assets']), 2)
+        self.assertEqual(self.info['assets'][1]['id'], 999)
+
+    def test_mixed_source_commits_rejected(self):
+        self.plugin_dependency()
+        self.state['dependencies'][0]['commit'] = 'b' * 40
+        with self.assertRaisesRegex(RuntimeError, 'same snapshot'):
+            assets.verify(self.state)
+
+    def test_dependency_source_cannot_be_overwritten(self):
+        plugin = self.plugin_dependency()
+        with self.assertRaisesRegex(RuntimeError, 'source ZIP'):
+            assets.publish(self.state, [self.output(plugin['name'])])
+        self.assertEqual(self.calls, [])
+
 
 class SigningTests(unittest.TestCase):
     def test_signs_pe_plugins_and_fails_on_signature_error(self):

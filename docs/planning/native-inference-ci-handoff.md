@@ -1,5 +1,19 @@
 # Native inference CI restart handoff — 15 September 2026
 
+## Windows snapshot installer continuation — 17 September
+
+Active scope is CI-F21 / F21-AC-01–04 in [the pipeline plan](native-inference-ci.md),
+approved by Adrian after finding the missing unsigned/signed llama Windows setup
+assets. Worktree branch: `temp/windows-snapshot-installers-20260917`.
+Implementation and focused local controls pass; evidence is in
+`docs/qa/windows-snapshot-2026-09-17/`. Next: publish the compatible CI/signing
+change, inspect automatic Build/CodeQL and actual unsigned Windows installer
+lifecycle, then run `scripts/sign-windows-dev-snapshot.sh --keep-work` using the
+existing certificate login. Verify all four signed outputs and both setup forms
+on the current snapshot. F21 acceptance remains open until that remote proof.
+If the certificate session expires, report the concrete blocker. No extra broad
+Deep/sanitizer/CUDA dispatch; unchanged F20 evidence below remains valid.
+
 ## Overnight repair continuation — 17 September
 
 Adrian requested diagnosis and repair of overnight Sanitizer and Deep failures.

@@ -69,6 +69,10 @@ def verify(state):
             any(current.get(k) != v for k, v in state["asset"].items()) or
             tag_commit(state["repo"], state["tag"]) != state["commit"]):
         raise RuntimeError("Release changed during packaging/signing; rerun against the new snapshot")
+    for dependency in state.get("dependencies", []):
+        if any(dependency[key] != state[key] for key in ("repo", "tag", "commit", "release_id")):
+            raise RuntimeError("Release inputs do not identify the same snapshot")
+        verify(dependency)
     return info
 
 
@@ -109,7 +113,8 @@ def publish(state, paths):
     paths = [Path(p).resolve() for p in paths]
     if len({p.name for p in paths}) != len(paths):
         raise RuntimeError("Duplicate output asset names")
-    if state["asset"]["name"] in {p.name for p in paths}:
+    sources = [state, *state.get("dependencies", [])]
+    if {s["asset"]["name"] for s in sources} & {p.name for p in paths}:
         raise RuntimeError("Derived assets must not overwrite the source ZIP")
     expected = {p.name: digest(p) for p in paths}
     repo, tag = state["repo"], state["tag"]

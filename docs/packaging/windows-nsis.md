@@ -4,10 +4,12 @@ Status: beta 3 packaging spike. The current versioned release remains
 `v1.0.0-beta.2`; beta 3 installer assets must not be described as released
 until the beta 3 tag and assets exist.
 
-The moving dev snapshot automatically publishes an unsigned NSIS installer and
-portable Windows ZIP from the same staged payload. Windows CI checks silent
+The moving dev snapshot automatically publishes unsigned NSIS installers and
+portable Windows ZIPs for the core and optional Vulkan llama plugin. Windows CI checks silent
 installation, reinstall, file hashes, tool versions, the installed hello example,
-and uninstallation before publishing. Versioned-release installer publication
+and uninstallation before publishing. The llama setup also passes installed
+provider checks and preserves the core, user models and environment on removal.
+Install the core first, then the matching llama setup. Versioned-release installer publication
 remains a maintainer operation.
 
 Snapshot asset names are explicit:
@@ -16,6 +18,10 @@ Snapshot asset names are explicit:
 - `CREXX-dev-snapshot-windows-x64.zip`: automatic portable payload.
 - `CREXX-dev-snapshot-windows-x64-signed-setup.exe`: optional signed installer.
 - `CREXX-dev-snapshot-windows-x64-signed.zip`: optional signed portable payload.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe`: automatic plugin installer.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan.zip`: automatic portable plugin.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe`: optional signed plugin installer.
+- `llama.rexx-dev-snapshot-windows-x64-vulkan-signed.zip`: optional signed portable plugin.
 
 A new snapshot replaces the unsigned assets and removes previous signed assets
 and the legacy ambiguous `CREXX-dev-snapshot-windows-x64-setup.exe`. Signed and
@@ -33,20 +39,27 @@ Then run this one command from the repository:
 scripts/sign-windows-dev-snapshot.sh
 ```
 
-This downloads the unsigned ZIP by immutable GitHub asset ID, verifies its
-SHA-256 and BUILDINFO against the tag, signs/verifies Windows executables,
-libraries and native plugins, and creates the signed ZIP. It then builds NSIS
-from that payload, signs private copies of all three embedded NSIS helper DLLs, signs
-the embedded uninstaller, and signs/verifies the final setup. Both signed
-outputs are uploaded together through staged temporary assets. The unsigned
-ZIP and installer remain available; `--delete-unsigned` is refused for snapshots.
+This downloads the unsigned core and plugin ZIPs by immutable GitHub asset IDs,
+verifies their SHA-256 hashes and source identities against the tag, and retrieves
+the matching native installer manager from a successful Build on the same commit.
+The manager's immutable Actions artifact ID, digest and package/bootstrap hashes
+are checked too. Actions currently retains that manager for 14 days; an expired
+or missing matching artifact is an error, never a reason to use another revision.
+
+The existing paired signer signs/verifies executable payloads and refreshes their
+manifests, then builds both NSIS installers, signs the helper DLLs and embedded
+uninstallers, and signs/verifies the final setups. All four signed outputs are
+uploaded together through staged temporary assets. Unsigned ZIPs and installers
+remain available; `--delete-unsigned` is refused.
 
 No separate installer command or `--upload` is needed for this snapshot signing
 entrypoint. `--dry-run` reports its selected source/options without signing or
-uploading; `--keep-work` retains local output. PROVIDER, CERTUM_ALIAS and TSA_URL
+uploading; `--keep-work` retains local output. `--asset` can restrict selection to
+one unsigned plugin ZIP, always including its matching core. No second invocation
+is needed for the ordinary Vulkan snapshot. PROVIDER, CERTUM_ALIAS and TSA_URL
 still select the existing signing configuration.
 
-Publication verifies the tag commit and source asset identity again before and
+Publication verifies the tag commit and every source ZIP identity again before and
 after promotion. If a new snapshot arrives while signing, the helper refuses
 publication and removes only its own temporary/published asset IDs. Rerun on
 the current snapshot. GitHub publication is a sequence of API operations, not

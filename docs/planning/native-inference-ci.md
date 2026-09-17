@@ -1,5 +1,56 @@
 # Native inference release pipeline and branch qualification
 
+## CI-F21 — Windows snapshot llama installers
+
+Approved by Adrian on 17 September after inspecting the missing setup assets.
+
+**Vision and intended outcome:** the moving development snapshot supplies both
+unsigned and signed Windows Vulkan llama setup executables alongside its ZIPs.
+CI packages and tests the unsigned installer; one ordinary
+`scripts/sign-windows-dev-snapshot.sh` invocation signs and publishes the matching
+core and plugin ZIPs/setups after the existing certificate login. Reuse the
+implemented installer, manager and lifecycle checks. No language/runtime change,
+CUDA expansion or new versioned release is part of this continuation.
+
+### Checkable acceptance criteria
+
+1. [ ] **F21-AC-01:** automatic develop Build tests the actual unsigned Vulkan
+   setup through install/provider/reinstall/removal and requires its publication.
+2. [ ] **F21-AC-02:** default snapshot signing obtains matching core, plugin and
+   native manager inputs, verifies identities/hashes, and publishes four signed
+   outputs; unsigned downloads remain. Source replacement or tag movement aborts
+   publication and removes only uploads owned by the failed invocation.
+3. [ ] **F21-AC-03:** focused packaging/publication regressions, shell/workflow
+   validation and normal automatic Build/CodeQL pass on the promoted change.
+   Retain existing unchanged product and overnight QA; no extra broad dispatch.
+4. [ ] **F21-AC-04:** the current published snapshot contains both missing setup
+   forms, signatures and remote hashes verify, and user documentation describes
+   the single signing command and matching-artifact prerequisites.
+
+### Implementation steps
+
+1. [x] **F21-01:** connect retained manager and native installer lifecycle to the
+   Windows plugin job; extend required asset collection/notes (F21-AC-01).
+2. [x] **F21-02:** orchestrate the existing paired signer with pinned release
+   inputs and exact successful Build manager artifact; cover multi-input races
+   and mismatches with focused controls (F21-AC-02).
+3. [ ] **F21-03:** run focused controls/lint, update guides, publish the compatible
+   change and inspect automatic CI (F21-AC-03).
+4. [ ] **F21-04:** run the single signing command against the new snapshot,
+   verify final assets, retain evidence and close this continuation (F21-AC-04).
+   Signing still requires a live existing certificate session; if it expires,
+   report that concrete external blocker without weakening the criterion.
+
+Local implementation proof: 19 Windows publication/signing controls pass (one
+native Windows signature control requires that platform), and 28 llama packaging
+controls pass (14 native manager controls require a compiled tool). The actual
+snapshot collector rejects the missing llama setup. Actionlint, Bash syntax and
+Python compilation checks pass. A live dry run identifies core/plugin revision
+`d8f59732d`; manager artifact `10483239865` downloads by ID and verifies against
+GitHub SHA-256 and its complete manifest/bootstrap hashes. Evidence is retained
+under `docs/qa/windows-snapshot-2026-09-17/`. Hosted integration and final signing
+remain open. No product source or CTest input changed from the green F20 gates.
+
 ## CI-F20 — 17 September overnight filesystem manifest regression
 
 **Vision and intended outcome:** restore green Deep Build and Sanitizer QA for

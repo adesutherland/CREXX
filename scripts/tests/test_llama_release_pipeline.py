@@ -203,7 +203,8 @@ class MatrixTests(unittest.TestCase):
             names += ['llama.rexx-' + version + '-' + r['core_platform'] + '-' + r['backend'] + '.zip'
                       for r in rows['include']]
             if not full:
-                names += ['CREXX-dev-snapshot-linux-x64.deb', 'CREXX-dev-snapshot-windows-x64-unsigned-setup.exe']
+                names += ['CREXX-dev-snapshot-linux-x64.deb', 'CREXX-dev-snapshot-windows-x64-unsigned-setup.exe',
+                          'llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe']
             with tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
                 source = root / ('downloaded-release-assets' if full else 'downloaded-dev-snapshot-assets')
