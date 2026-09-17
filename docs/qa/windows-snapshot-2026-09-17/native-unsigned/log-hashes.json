@@ -1,0 +1,30 @@
+{
+  "consumer-vulkan/assemble.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "consumer-vulkan/compile.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "consumer-vulkan/link.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "consumer-vulkan/run.log": {
+    "sha256": "76b567047b9fac261ae86cd51fab18ea734a626a82df6126d34405ecdfdc0a5c",
+    "bytes": 78
+  },
+  "core-after-removal.log": {
+    "sha256": "1d03dc731537ddd88d95df746205c6a4578255cd176d8dffc9bd1d755dc61aa3",
+    "bytes": 26
+  },
+  "crexx-llama-vulkan-installer.log": {
+    "sha256": "63f4fee35711c11147fdb287dd5faea342d9a929563dab4f4b6ffa38f9c73394",
+    "bytes": 1979
+  },
+  "native-installer.log": {
+    "sha256": "c4a352d7b7c4a1e293362c925aaf3b1765b6c3982efaeb1256f4d7360775925a",
+    "bytes": 9715
+  }
+}

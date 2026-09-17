@@ -5,14 +5,22 @@
 Active scope is CI-F21 / F21-AC-01–04 in [the pipeline plan](native-inference-ci.md),
 approved by Adrian after finding the missing unsigned/signed llama Windows setup
 assets. Worktree branch: `temp/windows-snapshot-installers-20260917`.
-Implementation and focused local controls pass; evidence is in
-`docs/qa/windows-snapshot-2026-09-17/`. Next: publish the compatible CI/signing
-change, inspect automatic Build/CodeQL and actual unsigned Windows installer
-lifecycle, then run `scripts/sign-windows-dev-snapshot.sh --keep-work` using the
-existing certificate login. Verify all four signed outputs and both setup forms
-on the current snapshot. F21 acceptance remains open until that remote proof.
-If the certificate session expires, report the concrete blocker. No extra broad
-Deep/sanitizer/CUDA dispatch; unchanged F20 evidence below remains valid.
+Implementation `d0feda283857e9470e21fc143f8e2f70fa54ab3b` is on develop;
+automatic Build `35253939469` succeeds, including the new unsigned Windows
+llama setup lifecycle. The default signer built/verified both setups and ZIPs.
+GitHub upload HTTP 500/delayed visibility required recovery of retained signed
+outputs; all four signed hashes now match the published downloads, all unsigned
+forms remain, and no temporary uploads remain. F21-AC-01/02/04 are verified.
+Evidence is in `docs/qa/windows-snapshot-2026-09-17/`.
+
+CodeQL `35253939262` is also terminal success on `d0feda283`. All F21 criteria
+and steps are closed. Final tag/assets inspection confirms the exact revision,
+all eight Windows downloads and no temporary signing uploads. Evidence-only
+closeout stays on this task branch. The maintained user command is
+`scripts/sign-windows-dev-snapshot.sh`; no second plugin invocation is needed.
+No monitoring or signing process remains. Do not rebuild/resign or trigger
+another develop push merely for bookkeeping. No extra broad Deep/sanitizer/CUDA
+dispatch was needed; unchanged F20 evidence below remains valid.
 
 ## Overnight repair continuation — 17 September
 

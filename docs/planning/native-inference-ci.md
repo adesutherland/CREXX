@@ -14,16 +14,16 @@ CUDA expansion or new versioned release is part of this continuation.
 
 ### Checkable acceptance criteria
 
-1. [ ] **F21-AC-01:** automatic develop Build tests the actual unsigned Vulkan
+1. [x] **F21-AC-01:** automatic develop Build tests the actual unsigned Vulkan
    setup through install/provider/reinstall/removal and requires its publication.
-2. [ ] **F21-AC-02:** default snapshot signing obtains matching core, plugin and
+2. [x] **F21-AC-02:** default snapshot signing obtains matching core, plugin and
    native manager inputs, verifies identities/hashes, and publishes four signed
    outputs; unsigned downloads remain. Source replacement or tag movement aborts
    publication and removes only uploads owned by the failed invocation.
-3. [ ] **F21-AC-03:** focused packaging/publication regressions, shell/workflow
+3. [x] **F21-AC-03:** focused packaging/publication regressions, shell/workflow
    validation and normal automatic Build/CodeQL pass on the promoted change.
    Retain existing unchanged product and overnight QA; no extra broad dispatch.
-4. [ ] **F21-AC-04:** the current published snapshot contains both missing setup
+4. [x] **F21-AC-04:** the current published snapshot contains both missing setup
    forms, signatures and remote hashes verify, and user documentation describes
    the single signing command and matching-artifact prerequisites.
 
@@ -34,9 +34,9 @@ CUDA expansion or new versioned release is part of this continuation.
 2. [x] **F21-02:** orchestrate the existing paired signer with pinned release
    inputs and exact successful Build manager artifact; cover multi-input races
    and mismatches with focused controls (F21-AC-02).
-3. [ ] **F21-03:** run focused controls/lint, update guides, publish the compatible
+3. [x] **F21-03:** run focused controls/lint, update guides, publish the compatible
    change and inspect automatic CI (F21-AC-03).
-4. [ ] **F21-04:** run the single signing command against the new snapshot,
+4. [x] **F21-04:** run the single signing command against the new snapshot,
    verify final assets, retain evidence and close this continuation (F21-AC-04).
    Signing still requires a live existing certificate session; if it expires,
    report that concrete external blocker without weakening the criterion.
@@ -49,7 +49,25 @@ Python compilation checks pass. A live dry run identifies core/plugin revision
 `d8f59732d`; manager artifact `10483239865` downloads by ID and verifies against
 GitHub SHA-256 and its complete manifest/bootstrap hashes. Evidence is retained
 under `docs/qa/windows-snapshot-2026-09-17/`. Hosted integration and final signing
-remain open. No product source or CTest input changed from the green F20 gates.
+were open at that checkpoint; final closure follows below. No product source or
+CTest input changed from the green F20 gates.
+
+Hosted Build `35253939469` succeeds at `d0feda283857e9470e21fc143f8e2f70fa54ab3b`.
+Its new Windows llama installer lifecycle passes and the unsigned Vulkan setup is
+published on `dev-snapshot`; native logs and terminal Build metadata are retained
+in the F21 evidence directory. The single signing command verifies 53 core,
+11 manager and 31 plugin PE files and builds both signed setups. GitHub returns
+HTTP 500 saving the core ZIP, and retries expose delayed asset visibility.
+Recover the already-signed outputs without any rebuild/resigning: publish both
+setups, verify/promote the delayed own core ZIP upload, then publish the plugin
+ZIP. All four published signed hashes match `signed-delivery.json`; all four
+unsigned downloads remain and no temporary signing uploads remain. This closes
+F21-AC-02/04; exact recovery and source/digest records are in the evidence folder.
+CodeQL `35253939262` subsequently reaches terminal success on the same exact
+`d0feda283` revision. All F21 criteria and steps are now verified. Final tag and
+asset inspection confirms all eight Windows downloads and no temporary signing
+uploads. Evidence-only closeout stays on the task branch; develop remains at the
+qualified revision. Parent release/device/model acceptance is unchanged.
 
 ## CI-F20 — 17 September overnight filesystem manifest regression
 

@@ -1,0 +1,20 @@
+{
+  "id": 10511264417,
+  "node_id": "MDg6QXJ0aWZhY3QxMDUxMTI2NDQxNw==",
+  "name": "llama-manager-d0feda283857e9470e21fc143f8e2f70fa54ab3b-windows-x64",
+  "size_in_bytes": 1316730,
+  "url": "https://api.github.com/repos/adesutherland/CREXX/actions/artifacts/10511264417",
+  "archive_download_url": "https://api.github.com/repos/adesutherland/CREXX/actions/artifacts/10511264417/zip",
+  "expired": false,
+  "digest": "sha256:c8e43782c2e2806c511030147430765ba548fce84c0406fa9279b644d4bc134e",
+  "created_at": "2026-09-17T17:50:32Z",
+  "updated_at": "2026-09-17T17:50:32Z",
+  "expires_at": "2026-10-01T17:50:30Z",
+  "workflow_run": {
+    "id": 35253939469,
+    "repository_id": 252270288,
+    "head_repository_id": 252270288,
+    "head_branch": "develop",
+    "head_sha": "d0feda283857e9470e21fc143f8e2f70fa54ab3b"
+  }
+}

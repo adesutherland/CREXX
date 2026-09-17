@@ -1,0 +1,895 @@
+Source: CREXX-dev-snapshot-windows-x64.zip @ d0feda283857e9470e21fc143f8e2f70fa54ab3b
+Source: llama.rexx-dev-snapshot-windows-x64-vulkan.zip @ d0feda283857e9470e21fc143f8e2f70fa54ab3b
+Manager: artifact 10511264417 / Build 35253939469
+Working directory: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt
+Signing: bin/rxprecomp.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxprecomp.rxplugin
+Signing: bin/rxplatform.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxplatform.rxplugin
+Signing: bin/rx_treemap.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_treemap.rxplugin
+Signing: bin/rx_strings.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_strings.rxplugin
+Signing: bin/rxas.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxas.exe
+Signing: bin/vcruntime140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/vcruntime140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rx_keyaccess.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_keyaccess.rxplugin
+Signing: bin/crexxsaa.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/crexxsaa.dll
+Signing: bin/rxconsole.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxconsole.rxplugin
+Signing: bin/vccorlib140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/vccorlib140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rx_map.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_map.rxplugin
+Signing: bin/rxbvme.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxbvme.exe
+Signing: bin/concrt140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/concrt140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rxlink.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxlink.exe
+Signing: bin/rxbvm.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxbvm.exe
+Signing: bin/providers/rxplatform.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxplatform.rxplugin
+Signing: bin/providers/rxconsole.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxconsole.rxplugin
+Signing: bin/providers/rxid.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxid.rxplugin
+Signing: bin/providers/rxfs.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxfs.rxplugin
+Signing: bin/providers/rx_hash.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rx_hash.rxplugin
+Signing: bin/providers/rxfloat.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxfloat.rxplugin
+Signing: bin/providers/rxsqlite.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/providers/rxsqlite.rxplugin
+Signing: bin/msvcp140_atomic_wait.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/msvcp140_atomic_wait.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/crexxsaa.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/crexxsaa.exe
+Signing: bin/msvcp140_1.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/msvcp140_1.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rxid.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxid.rxplugin
+Signing: bin/crexx.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/crexx.exe
+Signing: bin/rxdas.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxdas.exe
+Signing: bin/rxfs.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxfs.rxplugin
+Signing: bin/rxvm_mc_decimal.rxvmplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxvm_mc_decimal.rxvmplugin
+Signing: bin/msvcp140_2.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/msvcp140_2.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/crexx-contract.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/crexx-contract.exe
+Signing: bin/rxdb.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxdb.exe
+Signing: bin/rxpp.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxpp.exe
+Signing: bin/rxcpack.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxcpack.exe
+Signing: bin/test_rxvmfile.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/test_rxvmfile.exe
+Signing: bin/msvcp140_codecvt_ids.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/msvcp140_codecvt_ids.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/vcruntime140_1.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/vcruntime140_1.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rx_rxmath.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_rxmath.rxplugin
+Signing: bin/test_rxsha256.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/test_rxsha256.exe
+Signing: bin/rx_llist.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_llist.rxplugin
+Signing: bin/vcruntime140_threads.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/vcruntime140_threads.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/test_rxspawn_inheritance.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/test_rxspawn_inheritance.exe
+Signing: bin/rxvm_db_decimal.rxvmplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxvm_db_decimal.rxvmplugin
+Signing: bin/project_failure_helper.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/project_failure_helper.exe
+Signing: bin/rx_stack.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_stack.rxplugin
+Signing: bin/rx_hash.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rx_hash.rxplugin
+Signing: bin/rxfloat.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxfloat.rxplugin
+Signing: bin/rxsqlite.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxsqlite.rxplugin
+Signing: bin/msvcp140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/msvcp140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/rxvme.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxvme.exe
+Signing: bin/rxc.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rxc.exe
+Signing: bin/rexxscript.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/core/CREXX-windows-x64/bin/rexxscript.exe
+Verified signatures on 53 Windows files.
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/crexx-llama.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/manager/bin/crexx-llama.exe
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Verified signatures on 11 Windows files.
+Signing: bin/crexx-ggml.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/crexx-ggml.dll
+Signing: bin/rxllama.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/rxllama.rxplugin
+Signing: bin/providers/crexx-ggml.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml.dll
+Signing: bin/providers/crexx-ggml-cpu-sse42.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-sse42.dll
+Signing: bin/providers/rxllama.rxplugin
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/rxllama.rxplugin
+Signing: bin/providers/vcruntime140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/vcruntime140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/vccorlib140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/vccorlib140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/concrt140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/concrt140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/msvcp140_atomic_wait.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/msvcp140_atomic_wait.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-cpu-sandybridge.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-sandybridge.dll
+Signing: bin/providers/crexx-ggml-cpu-haswell.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-haswell.dll
+Signing: bin/providers/msvcp140_1.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/msvcp140_1.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-cpu-cannonlake.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-cannonlake.dll
+Signing: bin/providers/msvcp140_2.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/msvcp140_2.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-base.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-base.dll
+Signing: bin/providers/crexx-llama-engine.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-llama-engine.dll
+Signing: bin/providers/crexx-llama.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-llama.dll
+Signing: bin/providers/crexx-ggml-cpu-skylakex.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-skylakex.dll
+Signing: bin/providers/crexx-ggml-cpu-alderlake.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-alderlake.dll
+Signing: bin/providers/msvcp140_codecvt_ids.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/msvcp140_codecvt_ids.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/vcruntime140_1.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/vcruntime140_1.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-cpu-cascadelake.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-cascadelake.dll
+Signing: bin/providers/vcruntime140_threads.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/vcruntime140_threads.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-cpu-x64.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-x64.dll
+Signing: bin/providers/crexx-ggml-cpu-icelake.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-cpu-icelake.dll
+Signing: bin/providers/msvcp140.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/msvcp140.dll
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Signing: bin/providers/crexx-ggml-vulkan.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/crexx-ggml-vulkan.dll
+Signing: bin/crexx-ggml-base.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/crexx-ggml-base.dll
+Signing: bin/crexx-llama-engine.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/crexx-llama-engine.dll
+Signing: bin/crexx-llama.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/crexx-llama.dll
+Signing: bin/crexx-provider-package.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/crexx-provider-package.exe
+Verified signatures on 31 Windows files.
+Refreshed signed provider: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-signed-delivery-46wjw8yw/plugin-0/CREXX-windows-x64/bin/providers/rxllama.native.json
+Unpacking CREXX-dev-snapshot-windows-x64-signed.zip
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Verified signatures on 53 Windows files.
+Payload:         /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T//crexx-nsis.0IIrJQ/unpacked/CREXX-windows-x64
+Version label:   1.0.0-beta.3+dev-snapshot.gd0feda283857
+File version:    1.0.0.0
+Estimated size:  67324 KB
+Output:          /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe
+Wizard bitmap:   /Users/adrian/CLionProjects/CREXX/packaging/windows/assets/crexx-wizard.bmp
+Signing:         enabled
+Command line defined: "CREXX_PAYLOAD_DIR=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T//crexx-nsis.0IIrJQ/unpacked/CREXX-windows-x64"
+Command line defined: "CREXX_OUTFILE=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe"
+Command line defined: "CREXX_DISPLAY_VERSION=1.0.0-beta.3+dev-snapshot.gd0feda283857"
+Command line defined: "CREXX_FILE_VERSION=1.0.0.0"
+Command line defined: "CREXX_ESTIMATED_SIZE_KB=67324"
+Command line defined: "CREXX_WIZARD_BITMAP=/Users/adrian/CLionProjects/CREXX/packaging/windows/assets/crexx-wizard.bmp"
+Command line defined: "CREXX_SIGN_HELPER=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T//crexx-nsis.0IIrJQ/sign-windows-file.sh"
+Command line defined: "CREXX_SIGNED_PLUGIN_DIR=/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T//crexx-nsis.0IIrJQ/nsis-plugins"
+Processing script file: "/Users/adrian/CLionProjects/CREXX/packaging/windows/crexx.nsi" (UTF8)
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-nsis.0IIrJQ/nsis-plugins/System.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-nsis.0IIrJQ/nsis-plugins/nsDialogs.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-nsis.0IIrJQ/nsis-plugins/nsExec.dll
+
+Processed 1 file, writing output (x86-unicode):
+Adding Authenticode signature to /tmp/makensiswvhKtz
+
+Output: "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe"
+Install: 4 pages (256 bytes), 1 section (4120 bytes), 679 instructions (19012 bytes), 424 strings (15890 bytes), 1 language table (286 bytes).
+Uninstall: 4 pages (320 bytes), 1 section (4120 bytes), 429 instructions (12012 bytes), 188 strings (8006 bytes), 1 language table (274 bytes).
+Datablock optimizer saved 1388 KiB (~2.0%).
+
+Using lzma (compress whole) compression.
+
+EXE header size:               52736 / 38912 bytes
+Install code:                          (37980 bytes)
+Install data:                          (67342255 bytes)
+Uninstall code+data:                   (191032 bytes)
+Compressed data:            13730199 / 67571267 bytes
+CRC (0x931CF92B):                  4 / 4 bytes
+
+Total size:                 13782939 / 67610183 bytes (20.3%)
+Signing installer: /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe
+Created /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/CREXX-dev-snapshot-windows-x64-signed-setup.exe
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+80219BF101000000:error:05880106:x509 certificate routines:X509at_get_attr:passed invalid argument:crypto/x509/x509_att.c:63:
+80219BF101000000:error:058C0102:x509 certificate routines:X509_ATTRIBUTE_get0_type:passed a null parameter:crypto/x509/x509_att.c:442:
+80219BF101000000:error:17000064:CMS routines:cms_signerinfo_verify_cert:certificate verify error:crypto/cms/cms_smime.c:290:Verify error: unable to get local issuer certificate
+80219BF101000000:error:10800075:PKCS7 routines:PKCS7_verify:certificate verify error:crypto/pkcs7/pk7_smime.c:298:Verify error: unable to get local issuer certificate
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-installer-z8zqx8jr/signed-nsis-plugins/System.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-installer-z8zqx8jr/signed-nsis-plugins/nsDialogs.dll
+Adding Authenticode signature to /var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llama-installer-z8zqx8jr/signed-nsis-plugins/nsExec.dll
+Adding Authenticode signature to /tmp/makensisismsAL
+Adding Authenticode signature to /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe
+Packaged optional plugin installer: /private/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-snapshot-sign-z83eqwmt/signed/llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe
+Signed archives/installers prepared and verified locally; nothing published.
+Publishing signed core and llama ZIPs/setups for d0feda283857e9470e21fc143f8e2f70fa54ab3b
+HTTP 500: Error saving asset (https://uploads.github.com/repos/adesutherland/CREXX/releases/322483307/assets?label=&name=CREXX-dev-snapshot-windows-x64-signed-sign-2c7d8eddbb6d41c19c53fedccf6ca5e6.tmp.zip)
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/scripts/sign-windows-snapshot.py", line 160, in <module>
+    main()
+    ~~~~^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/sign-windows-snapshot.py", line 153, in main
+    sign_snapshot(state, item, work)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/sign-windows-snapshot.py", line 108, in sign_snapshot
+    assets.publish(state, paths)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/windows-release-assets.py", line 133, in publish
+    gh("release", "upload", tag, str(staged), "-R", repo)
+    ~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/scripts/windows-release-assets.py", line 15, in gh
+    return subprocess.check_output(["gh", *args], text=True)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 473, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['gh', 'release', 'upload', 'dev-snapshot', '/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-sign-upload-j9wwvpfe/CREXX-dev-snapshot-windows-x64-signed-sign-2c7d8eddbb6d41c19c53fedccf6ca5e6.tmp.zip', '-R', 'adesutherland/CREXX']' returned non-zero exit status 1.

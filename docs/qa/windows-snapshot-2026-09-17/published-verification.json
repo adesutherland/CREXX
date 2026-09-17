@@ -1,0 +1,17 @@
+{
+  "commit": "d0feda283857e9470e21fc143f8e2f70fa54ab3b",
+  "release_id": 322483307,
+  "signed": {
+    "CREXX-dev-snapshot-windows-x64-signed.zip": "69a7a02959b3f35a03d2390b6198978b40c9aaf86776531c2dafb28cfd8f7b5d",
+    "llama.rexx-dev-snapshot-windows-x64-vulkan-signed.zip": "d158cb1f978c7d310fd287cb20046e0232a57ce3ae36684a28838168418d3956",
+    "CREXX-dev-snapshot-windows-x64-signed-setup.exe": "f3fcb70918eb625ab0b8b7cc4308adddd1f6c5937a9968246126f1856d132a34",
+    "llama.rexx-dev-snapshot-windows-x64-vulkan-signed-setup.exe": "c00a25b7fcfd5e2a26144160de499e312ac2884703eb1100462bea55c9ff96ae"
+  },
+  "unsigned_preserved": [
+    "CREXX-dev-snapshot-windows-x64.zip",
+    "CREXX-dev-snapshot-windows-x64-unsigned-setup.exe",
+    "llama.rexx-dev-snapshot-windows-x64-vulkan.zip",
+    "llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe"
+  ],
+  "temporary_uploads": []
+}

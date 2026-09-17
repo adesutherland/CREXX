@@ -1,0 +1,28 @@
+{
+  "repo": "adesutherland/CREXX",
+  "tag": "dev-snapshot",
+  "commit": "d0feda283857e9470e21fc143f8e2f70fa54ab3b",
+  "release_id": 322483307,
+  "asset": {
+    "id": 570802814,
+    "name": "CREXX-dev-snapshot-windows-x64.zip",
+    "size": 21950995,
+    "digest": "sha256:4697bb6da75a22d9888ab2b86e4861f2821d933fd437d24ed7b40c261f7e6967",
+    "updated_at": "2026-09-17T18:10:46Z"
+  },
+  "dependencies": [
+    {
+      "repo": "adesutherland/CREXX",
+      "tag": "dev-snapshot",
+      "commit": "d0feda283857e9470e21fc143f8e2f70fa54ab3b",
+      "release_id": 322483307,
+      "asset": {
+        "id": 570804230,
+        "name": "llama.rexx-dev-snapshot-windows-x64-vulkan.zip",
+        "size": 24547934,
+        "digest": "sha256:fec511824fa50182ef6e8271eac2580cd7c7740fec4afe2c679e9db32e848258",
+        "updated_at": "2026-09-17T18:11:02Z"
+      }
+    }
+  ]
+}
