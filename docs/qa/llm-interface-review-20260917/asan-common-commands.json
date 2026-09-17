@@ -1,0 +1,649 @@
+[
+  {
+    "label": "generation-noopt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_driver.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.9019276250619441,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-compile.log"
+  },
+  {
+    "label": "generation-noopt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.08516237512230873,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-assemble.log"
+  },
+  {
+    "label": "generation-noopt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.1988281249068677,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-link.log"
+  },
+  {
+    "label": "generation-noopt-rxbvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.5715277919080108,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-rxbvm.log"
+  },
+  {
+    "label": "generation-noopt-rxtvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.546355291036889,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-noopt-rxtvm.log"
+  },
+  {
+    "label": "embedding-noopt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_embedding.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.8460990418680012,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-compile.log"
+  },
+  {
+    "label": "embedding-noopt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.0895841249730438,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-assemble.log"
+  },
+  {
+    "label": "embedding-noopt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.209618082968518,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-link.log"
+  },
+  {
+    "label": "embedding-noopt-rxbvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "64",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.6301248329691589,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-rxbvm.log"
+  },
+  {
+    "label": "embedding-noopt-rxtvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "64",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.7415160841774195,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-noopt-rxtvm.log"
+  },
+  {
+    "label": "missing-noopt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_missing.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.975922540994361,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-compile.log"
+  },
+  {
+    "label": "missing-noopt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.0869368331041187,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-assemble.log"
+  },
+  {
+    "label": "missing-noopt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.336327000055462,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-link.log"
+  },
+  {
+    "label": "missing-noopt-rxbvm-absent",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/absent.rxplugin",
+      "provider_unavailable"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.486318790819496,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-rxbvm-absent.log"
+  },
+  {
+    "label": "missing-noopt-rxbvm-incompatible",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxfs.rxplugin",
+      "provider_incompatible"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.8728081670124084,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-rxbvm-incompatible.log"
+  },
+  {
+    "label": "missing-noopt-rxtvm-absent",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/absent.rxplugin",
+      "provider_unavailable"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.5076612080447376,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-rxtvm-absent.log"
+  },
+  {
+    "label": "missing-noopt-rxtvm-incompatible",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxfs.rxplugin",
+      "provider_incompatible"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.841499124886468,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-noopt-rxtvm-incompatible.log"
+  },
+  {
+    "label": "http-noopt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt",
+      "/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/ts_llm_http_common.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.8494822918437421,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-compile.log"
+  },
+  {
+    "label": "http-noopt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-n",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.08894691593013704,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-assemble.log"
+  },
+  {
+    "label": "http-noopt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.2102730839978904,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-link.log"
+  },
+  {
+    "label": "http-noopt-rxbvm",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/http_driver_fixture.py",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-linked"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 6.37198079098016,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-rxbvm.log"
+  },
+  {
+    "label": "http-noopt-rxtvm",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/http_driver_fixture.py",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-linked"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 6.548883333802223,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-noopt-rxtvm.log"
+  },
+  {
+    "label": "generation-opt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_driver.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.9994881660677493,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-compile.log"
+  },
+  {
+    "label": "generation-opt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.43611837504431605,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-assemble.log"
+  },
+  {
+    "label": "generation-opt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.5496949579101056,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-link.log"
+  },
+  {
+    "label": "generation-opt-rxbvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 17.096187165938318,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-rxbvm.log"
+  },
+  {
+    "label": "generation-opt-rxtvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.8161122498568147,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/generation-opt-rxtvm.log"
+  },
+  {
+    "label": "embedding-opt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_embedding.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.0483049170579761,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-compile.log"
+  },
+  {
+    "label": "embedding-opt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.36725433310493827,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-assemble.log"
+  },
+  {
+    "label": "embedding-opt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 4.270110375015065,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-link.log"
+  },
+  {
+    "label": "embedding-opt-rxbvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "64",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.9699127089697868,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-rxbvm.log"
+  },
+  {
+    "label": "embedding-opt-rxtvm",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "64",
+      "mean"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.892553084064275,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/embedding-opt-rxtvm.log"
+  },
+  {
+    "label": "missing-opt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_missing.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.066382666816935,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-compile.log"
+  },
+  {
+    "label": "missing-opt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.1485605000052601,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-assemble.log"
+  },
+  {
+    "label": "missing-opt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 3.8995187079999596,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-link.log"
+  },
+  {
+    "label": "missing-opt-rxbvm-absent",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/absent.rxplugin",
+      "provider_unavailable"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.846979167079553,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-rxbvm-absent.log"
+  },
+  {
+    "label": "missing-opt-rxbvm-incompatible",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxfs.rxplugin",
+      "provider_incompatible"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 2.3287060419097543,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-rxbvm-incompatible.log"
+  },
+  {
+    "label": "missing-opt-rxtvm-absent",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/absent.rxplugin",
+      "provider_unavailable"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.8404164998792112,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-rxtvm-absent.log"
+  },
+  {
+    "label": "missing-opt-rxtvm-incompatible",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxfs.rxplugin",
+      "provider_incompatible"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 2.308196624973789,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/missing-opt-rxtvm-incompatible.log"
+  },
+  {
+    "label": "http-opt-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt",
+      "/Users/adrian/CLionProjects/CREXX/lib/rxfnsg/tests_functional/ts_llm_http_common.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.1425396660342813,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-compile.log"
+  },
+  {
+    "label": "http-opt-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.6617427079472691,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-assemble.log"
+  },
+  {
+    "label": "http-opt-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/library.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/classlib.rxbin",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/core-imports/rxfnsg.rxbin"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 4.020052832784131,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-link.log"
+  },
+  {
+    "label": "http-opt-rxbvm",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/http_driver_fixture.py",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-linked"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 8.323252249974757,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-rxbvm.log"
+  },
+  {
+    "label": "http-opt-rxtvm",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/http_driver_fixture.py",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/bin/rxtvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-linked"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 7.844561124918982,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/http-opt-rxtvm.log"
+  },
+  {
+    "label": "fixture-bridge-generation",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "generation",
+      "64"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.4363798750564456,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/fixture-bridge-generation.log"
+  },
+  {
+    "label": "fixture-bridge-embedding",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "embedding",
+      "64"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.35680408403277397,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/fixture-bridge-embedding.log"
+  },
+  {
+    "label": "fixture-bridge-negative",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/rxllama_model_compatibility",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "negative",
+      "64"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.37783287512138486,
+    "log": "/Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/plugins/llama/tests/common-driver/fixture-bridge-negative.log"
+  }
+]

@@ -2,7 +2,7 @@
 
 [Guide index](README.md) · [Install](installation.md) · [Reference](reference.md)
 
-Status as of 16 September 2026: embeddings and generation have normal and
+Status reviewed on 17 September 2026: embeddings and generation have normal and
 Apple-ASan macOS CPU/Metal evidence, including installed and relocated native
 consumers. Adrian approved STEP-07's completed guides/examples on 15 September;
 the broad local Apple-ASan gate now passes 2,349/2,349 tests. STEP-06 remains open
@@ -12,16 +12,39 @@ plan is `docs/planning/native-inference-backlog.md`; current coverage and review
 are tracked in `docs/qa/native-inference-step07/README.md` and the live
 `docs/qa/native-inference-step06/README.md` qualification ledger.
 
-The delivery qualified on `temp/llama-release-combined` is now integrated into
-`develop` at `8ed983afd`. It supplies prebuilt CPU/GPU delivery and a generated-fixture
-smoke test. Its numbered outcomes and criteria are tracked in
+The delivery qualified on `temp/llama-release-combined` was integrated into
+`develop`; final promotion checks passed at `59fc02eb9`. It supplies prebuilt
+CPU/GPU delivery and a generated-fixture smoke test. Its numbered outcomes and criteria are tracked in
 `docs/planning/native-inference-ci.md`; the [current build-status table](../../../docs/qa/native-inference-ci/README.md#current-overall-status--16-september)
 distinguishes tested revisions and outstanding integration/release work.
+The later [17 September Windows snapshot installer change](../../../docs/qa/windows-snapshot-2026-09-17/README.md)
+has its own evidence and pending hosted/signing checks. A result on an earlier
+candidate does not close those later checks.
 Routine CI downloads no trained model: its sub-5-MiB fixture checks engine
 generation/embedding plumbing, package integrity, public-provider discovery
 and profile rejection, plus installed VM and relocated native consumers.
 It does not establish BGE retrieval quality, Smol output quality or execution
 on unavailable GPUs. Development integration is not full release acceptance.
+
+## Common drivers and additional models
+
+The follow-on common API and general GGUF profiles are documented in
+[the common guide](common.md) and [model configuration](models.md). Their
+source-checkout acceptance record is `docs/planning/llm-provider-interface.md`;
+results and artifact identities are in `docs/qa/llm-interface-review-20260917/`.
+These changes preserve the original exact BGE/Smol presets and qualification
+history below. Additional local compatibility checks cover 64-dimensional tiny
+generation, 768-dimensional BGE-base F16/Q4_K_M embeddings, and user-provisioned
+Gemma 4 E4B raw-template generation. Each result applies to its recorded settings.
+It does not establish retrieval quality, all model families or untested GPU cells.
+
+Routine common-driver regression uses an independently generated tiny model and
+byte vocabulary, no trained model or API key. It covers all four HTTP drivers
+with a local server fixture, common native generation/embeddings, package
+absence/incompatibility, owned results and matched upstream embedding output.
+Installed/relocated package checks include a core-only application which catches
+plugin absence and can still use HTTP. Current follow-on platform results remain
+in the linked acceptance ledger; the older matrix below is retained evidence.
 
 ## Generated-fixture package evidence
 
@@ -88,7 +111,7 @@ disposition; no documentation claim silently removes them from acceptance.
 | Shared weights | Compatible owners in one process share immutable weights; contexts and request state stay private. Local 1/2/4-owner evidence. |
 | Embeddings | BGE-small EN v1.5 F16, CLS/L2, 384 dimensions, query/document preparation, packed output. |
 | Generation | SmolLM2 360M Q8_0, independent system/user prompts, greedy decoding, bounded incremental complete UTF-8 and explicit finishes. |
-| Other models/samplers | Not qualified by these examples; arbitrary GGUF support is not promised. |
+| Other models/samplers | Other model artifacts are rejected by the profile/hash allowlist, including alternative quantizations. Only greedy sampling is accepted. See [models](models.md). |
 | Multi-GPU placement / cross-process model registry | Not implemented by this contract; single device and in-process sharing only. |
 | Automatic model downloads / conversation history / RAG index management | Application/provisioning responsibilities. |
 

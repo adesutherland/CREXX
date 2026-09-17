@@ -10,21 +10,33 @@ the repository's `lib/plugins/llama/typed.h` through C RXPA. There is no separat
 maintain or copy. Application examples below use `import llama`; the procedural
 `rxllama` entry points remain compatibility and low-level acceptance interfaces.
 
-This implementation supports persistent BGE-small EN v1.5 embeddings and bounded
-incremental SmolLM2 360M Instruct generation. [STEP-05 local qualification](qualification.md)
-is complete. Normal CPU/Metal evidence does not qualify the pending
-Windows/Linux/CUDA/Vulkan or STEP-06 sanitizer matrix. SAN-009 remains open under
-that release-QA gate. The [model guide](models.md) gives exact download identities
-and records the remaining conversion-provenance gap.
+For ordinary generation, use `import rxfnsg` and `.llm.open(config)` with driver
+`llama`. Ollama and the three hosted providers use the same `.llm` contract.
+The plugin is optional: selecting it when absent raises application-catchable
+`NOTREADY`. [The common-driver guide](common.md) covers setup, errors, requests,
+owned results and the separate `.embedding.open(config)` capability.
+
+General `generation` and `embedding` profiles accept compatible local GGUFs
+with caller-supplied SHA-256 and explicit preprocessing. Dimensions and admission
+reservations come from validated model properties. The original BGE-small F16
+and SmolLM2 Q8_0 profiles remain exact, reproducible presets. They are no longer
+an allowlist for all model use. Compatibility still depends on the pinned
+engine, supported dense model layout, tokenizer and template; see [models](models.md).
+
+Local trained-model CPU/Metal checks and generated-fixture package checks have
+passed on the configurations recorded in [qualification status](qualification.md).
+SAN-009 is closed. Remaining real-device/model and provenance acceptance stays
+open; package smoke tests do not establish trained-model quality or full release
+readiness. Use that status page for the evidence and its limits.
 
 ## Start here
 
 1. [Install the optional provider](installation.md), including GPU build choices
    and Windows instructions.
-2. [Download and verify the two small models](models.md); keep them as separate
+2. [Download and verify the model you need](models.md); keep weights as separate
    data and reuse them offline.
 3. [Build and run the examples](examples/README.md) from the installed package,
-   first persistent batches and then concurrent shared workers.
+   first the common client, then explicit persistent batches and shared workers.
 4. Use the [operating reference](reference.md) for every configuration option,
    device/diagnostic key, memory/ownership rule and error-handling contract.
 5. Check [capability and qualification status](qualification.md) before relying
@@ -36,7 +48,7 @@ criteria; `docs/qa/native-inference-step07/README.md` maps them to documentation
 tests, evidence and remaining QA. Historical STEP-01 Rexx-facade proposals are
 superseded by the implemented C factories documented here.
 
-## Embeddings
+## Advanced typed embeddings
 
 1. Construct `.llama..configuration()`, check `status()` and set options.
 2. Construct `.llama..runtime(config)` and check its status.
@@ -66,7 +78,7 @@ crexx --program embeddings persistent_embeddings.crexx --native
 ./embeddings auto /path/to/bge-small-en-v1.5-f16.gguf f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999
 ```
 
-## Generation
+## Advanced typed generation
 
 Use the same configuration/runtime/load lifecycle with profile
 `smollm2-360m-instruct`, then call `model.generation_session(config)`. Poll

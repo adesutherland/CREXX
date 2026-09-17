@@ -1,0 +1,74 @@
+/** Common driver selection and optional-provider failures need no model or API key. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+
+main: procedure = .int
+  direct = .ollama("test-model")
+  call check pos("Hello", direct.buildBody("Hello")) > 0, "direct Ollama remains constructible"
+  call direct.close()
+  drivers = .string[]
+  drivers.1 = "ollama"
+  drivers.2 = "openai"
+  drivers.3 = "anthropic"
+  drivers.4 = "gemini"
+  config = .llmconfig
+  do i = 1 to drivers.0
+    config = .llmconfig(drivers[i], "test-model")
+    if drivers[i] <> "ollama" then call config.set_text("api_key", "fixture-key")
+    client = .llm.open(config)
+    call check client.driver() = drivers[i], "selected driver"
+    call check client.supports("generation"), "generation capability"
+    call check \client.supports("incremental"), "honest HTTP capability"
+    call check client.prepare(128) = "ready", "HTTP preparation"
+    call check pos("Hello", client.buildBody("Hello")) > 0, "legacy helper"
+    call check client.status() = 0, "helper status"
+    call client.close()
+    call client.close()
+  end
+  caught = 0
+  config = .llmconfig("llama", "missing.gguf")
+  call config.set_text("provider_path", "/not-installed/crexx/rxllama.rxplugin")
+  do
+    missing = .llm.open(config)
+  on signal notready as problem
+    call check pos("provider_unavailable", problem.message()) > 0, "exception category"
+    caught = 1
+  end
+  call check caught = 1, "application catches absent plugin"
+  recovered = .llm("test-model")
+  call check recovered.status() = 0, "HTTP works after caught absence"
+  call recovered.close()
+  caught = 0
+  do
+    unknown = .llm.open(.llmconfig("unknown", "test-model"))
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check caught = 1, "unknown driver cannot fall back"
+  caught = 0
+  do
+    unsupported = .embedding.open(.llmconfig("openai", "test-model"))
+  on signal invalid_arguments as problem
+    call check pos("unsupported_operation", problem.message()) > 0, "embedding capability failure"
+    caught = 1
+  end
+  call check caught = 1, "generation-only driver cannot supply invented embeddings"
+  config = .llmconfig("ollama", "test-model")
+  call config.set_int("output_tokens", 4)
+  caught = 0
+  do
+    invalid = .llm.open(config)
+  on signal invalid_arguments as problem
+    call check pos("output_tokens", problem.message()) > 0, "inapplicable option diagnostic"
+    caught = 1
+  end
+  call check caught = 1, "driver options cannot be silently ignored"
+  say "PASS: common LLM drivers and optional plugin exception"
+  return 0
+
+check: procedure = .void
+  arg okay = .boolean, label = .string
+  if \okay then call raise "INVALID_ARGUMENTS", "FAIL: " || label, ""
+  return

@@ -1,4 +1,6 @@
-# Measured in isolation: Debug 44.5s, Apple ASan 48.3s (15 September 2026).
+# Expanded common-client package checks: Debug 44.2s, Apple ASan 82.6s
+# (17 September 2026); serial scheduling and a 3600s hang backstop cover
+# the installed/relocated compile, VM and native scenarios.
 # CI also invokes this harness once against its final signed/staged payload.
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tests/release-smoke-default-vm.txt"

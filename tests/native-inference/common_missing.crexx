@@ -1,0 +1,25 @@
+/** Run in a core-only consumer, with missing or incompatible provider path. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  config = .llmconfig("llama", "unused.gguf")
+  call config.set_text("provider_path", args[1])
+  caught = 0
+  do
+    client = .llm.open(config)
+  on signal notready as problem
+    if pos(args[2], problem.message()) = 0 then do
+      say "FAIL: wrong provider category" problem.message()
+      return 1
+    end
+    caught = 1
+  end
+  if caught <> 1 | config.text("driver") <> "llama" then return 2
+  recovered = .llm("test-model")
+  if recovered.status() <> 0 then return 3
+  call recovered.close()
+  say "PASS: application catches" args[2] "and continues with HTTP"
+  return 0

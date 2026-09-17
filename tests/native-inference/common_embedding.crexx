@@ -1,0 +1,61 @@
+/** Native embedding capability shares setup, but owns independent packed results. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  config = .llmconfig("llama", args[1])
+  call config.set_text("sha256", args[2])
+  call config.set_text("hardware_mode", "cpu")
+  pooling = "cls"
+  if args.0 > 3 then pooling = args[4]
+  call config.set_text("pooling", pooling)
+  call config.set_text("normalization", "l2")
+  call config.set_text("query_prefix", "Represent this sentence for searching relevant passages: ")
+  call config.set_text("document_prefix", "")
+  call config.set_int("request_tokens", 512)
+  call config.set_int("request_rows", 2)
+  call config.set_int("context_tokens", 256)
+  client = .embedding.open(config)
+  state = client.prepare(128)
+  do while state = "loading" | state = "preparing"
+    state = client.prepare(128)
+  end
+  call check state = "ready", "prepare: " || client.error()
+  texts = .string[]
+  texts.1 = "A red fox."
+  texts.2 = "A blue sky."
+  vectors = client.embed(texts)
+  call check vectors.status() = 0, "embedding: " || vectors.error()
+  call check vectors.rows() = 2 & vectors.dimensions() = args[3] as .int, "dynamic dimensions"
+  packed = vectors.values()
+  call check packed.size() = 2 * vectors.dimensions(), "packed shape"
+  dimensions = vectors.dimensions()
+  do row = 0 to 1
+    norm = 0.0
+    do d = 0 to dimensions - 1
+      value = packed.get(row * dimensions + d)
+      norm = norm + value * value
+    end
+    call check abs(norm - 1.0) < 0.00001, "L2 vector"
+  end
+  identity = vectors.specification()
+  call check pos(args[2], identity) > 0 & pos("query_prefix", identity) > 0, "complete space identity"
+  call client.close()
+  call check vectors.specification() = identity & packed.size() = 2 * dimensions, "owned values after close"
+  call config.set_text("query_prefix", "different prefix: ")
+  changed = .embedding.open(config)
+  state = changed.prepare(128)
+  do while state = "loading" | state = "preparing"
+    state = changed.prepare(128)
+  end
+  other = changed.embed(texts)
+  call check other.status() = 0 & other.specification() <> identity, "changed space cannot reuse index identity"
+  call changed.close()
+  say "PASS: separate common embeddings, packed vectors and space identity"
+  return 0
+check: procedure = .void
+  arg okay = .boolean, label = .string
+  if \okay then call raise "INVALID_ARGUMENTS", "FAIL: " || label, ""
+  return

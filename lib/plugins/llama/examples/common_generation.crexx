@@ -1,0 +1,42 @@
+/** Select a driver during setup; keep the generation consumer unchanged.
+ * @param args DRIVER MODEL PROMPT [SHA256] [CHAT_TEMPLATE] [PROVIDER_PATH]
+ * @return zero on success; diagnostics are printed on failure.
+ */
+options levelg
+import rxfnsb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 3 then do
+    say "Usage: DRIVER MODEL PROMPT [SHA256] [CHAT_TEMPLATE] [PROVIDER_PATH]"
+    return 1
+  end
+  config = .llmconfig(args[1], args[2])
+  if config.text("driver") = "llama" then do
+    if args.0 < 4 then do
+      say "The llama driver requires the local model's SHA-256."
+      return 1
+    end
+    call config.set_text("sha256", args[4])
+    if args.0 >= 5 then call config.set_text("chat_template", args[5])
+    if args.0 >= 6 then call config.set_text("provider_path", args[6])
+  end
+  client = .llm
+  do
+    client = .llm.open(config)
+  on signal notready as problem
+    say problem.message()
+    return 2
+  end
+  result = generate(client, args[3])
+  call client.close()
+  return result
+generate: procedure = .int
+  arg client = .llm, prompt = .string
+  answer = client.generate(prompt)
+  if client.status() <> 0 then do
+    say client.error()
+    return 3
+  end
+  say answer
+  return 0

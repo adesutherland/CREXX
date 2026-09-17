@@ -1,0 +1,161 @@
+[
+  {
+    "label": "common_generation-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation",
+      "/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/common_generation.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.607
+  },
+  {
+    "label": "common_generation-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.024
+  },
+  {
+    "label": "common_generation-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.502
+  },
+  {
+    "label": "common_generation-example",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_generation-linked",
+      "-a",
+      "llama",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "Hello",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "raw"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.363
+  },
+  {
+    "label": "common_embeddings-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings",
+      "/Users/adrian/CLionProjects/CREXX/lib/plugins/llama/examples/common_embeddings.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.588
+  },
+  {
+    "label": "common_embeddings-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.04
+  },
+  {
+    "label": "common_embeddings-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.634
+  },
+  {
+    "label": "common_embeddings-example",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings-linked",
+      "-a",
+      "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-text.gguf",
+      "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+      "mean",
+      "",
+      ""
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.119
+  },
+  {
+    "label": "gemma4-compile",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc",
+      "--no-exe-import",
+      "-i",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4",
+      "/Users/adrian/CLionProjects/CREXX/docs/qa/llm-interface-review-20260917/gemma4-common.crexx"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.623
+  },
+  {
+    "label": "gemma4-assemble",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 0.041
+  },
+  {
+    "label": "gemma4-link",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink",
+      "-o",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4-linked",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 1.602
+  },
+  {
+    "label": "gemma4-E4B-common",
+    "argv": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm",
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4-linked",
+      "-a",
+      "/Users/adrian/Models/gemma4/gemma-4-E4B-it-Q4_0.gguf",
+      "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2"
+    ],
+    "exit": 0,
+    "elapsed_seconds": 76.886
+  }
+]

@@ -25,6 +25,22 @@ cmake --build cmake-build-debug --target llm_address_demo_bin && \
 
 The demo uses `ADDRESS ... GENERATE :prompt INTO ${answer}` internally.
 
+## Native ADDRESS driver
+
+`ADDRESS LLM_NATIVE` selects local in-process llama. Set `CREXX_LLAMA_MODEL` to
+a GGUF path and `CREXX_LLAMA_SHA256` to its expected hash. Optional settings are
+`CREXX_LLAMA_PROFILE`, `CREXX_LLAMA_CHAT_TEMPLATE`, `CREXX_LLAMA_MEMORY_BYTES`
+and `CREXX_LLAMA_PROVIDER_PATH`. The model and hash are never guessed from the
+environment name. Use a supported GGUF template or an explicit template/raw
+override, as described in the [common guide](../../lib/plugins/llama/common.md).
+
+`GENERATE` retains one common `.llm` client across calls; changing the model
+replaces it. The `CLOSE` command/function releases it. Missing or incompatible
+plugins raise application-catchable `NOTREADY` on selection. Existing environment
+aliases retain their meanings, including `LLAMA...` aliases for Ollama models.
+`BODY`, `REQUEST` and `EXTRACT` on the native driver report unsupported operation;
+there is no fabricated HTTP exchange. Embeddings use the separate typed API.
+
 ## Function Demos
 
 OpenAI:

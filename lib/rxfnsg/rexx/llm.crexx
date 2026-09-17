@@ -24,12 +24,23 @@
 
 options levelg
 
-namespace rxfnsg expose llm ollama openai anthropic gemini
+namespace rxfnsg expose llm ollama openai anthropic gemini llmconfig llmrequest llmchunk llmresult embedding embeddingresult llmnative
 import rxfnsb
 import rxjson
 import _rxhttpcore
+import _rxsysb
+import rxfs
 
 llm: interface
+  open: factory
+    arg config = .rxfnsg..llmconfig
+  driver: method = .string
+  supports: method = .boolean
+    arg capability = .string
+  prepare: method = .string
+    arg work_tokens = 128
+  request: method = .rxfnsg..llmrequest
+  lastResult: method = .llmresult
   *: factory
     arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
 
@@ -62,7 +73,7 @@ llm: interface
   /** Close this provider's bounded HTTP connection-owner pool. */
   close: method = .void
 
-ollama: class implements .llm
+ollama: class
   _model = .string
   _host = .string
   _port = .int
@@ -72,11 +83,6 @@ ollama: class implements .llm
   _last_json = .string
   _last_http = .string
   _http = .httpclient
-
-  *: match
-    arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
-    if port = 11434 then return 100
-    return 10
 
   *: factory
     arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
@@ -195,9 +201,11 @@ openai: class
   _last_json = .string
   _last_http = .string
   _http = .httpclient
+  _request_host = .string
+  _request_port = .int
 
   *: factory
-    arg model = "gpt-4.1", apiKey = "", timeout = 120000
+    arg model = "gpt-4.1", apiKey = "", timeout = 120000, origin = "https://api.openai.com"
     _model = _clean_env_value(model)
     _api_key = _clean_env_value(apiKey)
     if _api_key = "" then _api_key = _clean_env_value(getenv("OPENAI_API_KEY"))
@@ -206,7 +214,10 @@ openai: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient.pooled("https://api.openai.com", 2, 8, 8388608, _llm_policy(_timeout))
+    _http = .httpclient.pooled(origin, 2, 8, 8388608, _llm_policy(_timeout))
+    connection = _http.to_channel()
+    _request_host = connection.field("host").as_string()
+    _request_port = connection.field("port").as_integer()
     return
 
   generate: method = .string
@@ -254,7 +265,7 @@ openai: class
     arg prompt = .string
     headers = .httpheaders.json()
     call headers.add("Authorization", "Bearer " || _api_key)
-    return _llm_request("api.openai.com", 443, "/v1/responses", buildBody(prompt), headers)
+    return _llm_request(_request_host, _request_port, "/v1/responses", buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
@@ -331,9 +342,11 @@ anthropic: class
   _last_json = .string
   _last_http = .string
   _http = .httpclient
+  _request_host = .string
+  _request_port = .int
 
   *: factory
-    arg model = "claude-sonnet-4-5", apiKey = "", timeout = 120000
+    arg model = "claude-sonnet-4-5", apiKey = "", timeout = 120000, origin = "https://api.anthropic.com"
     _model = _clean_env_value(model)
     _api_key = _clean_env_value(apiKey)
     if _api_key = "" then _api_key = _clean_env_value(getenv("ANTHROPIC_API_KEY"))
@@ -342,7 +355,10 @@ anthropic: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient.pooled("https://api.anthropic.com", 2, 8, 8388608, _llm_policy(_timeout))
+    _http = .httpclient.pooled(origin, 2, 8, 8388608, _llm_policy(_timeout))
+    connection = _http.to_channel()
+    _request_host = connection.field("host").as_string()
+    _request_port = connection.field("port").as_integer()
     return
 
   generate: method = .string
@@ -404,7 +420,7 @@ anthropic: class
     headers = .httpheaders.json()
     call headers.add("x-api-key", _api_key)
     call headers.add("anthropic-version", "2023-06-01")
-    return _llm_request("api.anthropic.com", 443, "/v1/messages", buildBody(prompt), headers)
+    return _llm_request(_request_host, _request_port, "/v1/messages", buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
@@ -474,9 +490,11 @@ gemini: class
   _last_json = .string
   _last_http = .string
   _http = .httpclient
+  _request_host = .string
+  _request_port = .int
 
   *: factory
-    arg model = "gemini-2.5-flash", apiKey = "", timeout = 120000
+    arg model = "gemini-2.5-flash", apiKey = "", timeout = 120000, origin = "https://generativelanguage.googleapis.com"
     _model = _clean_env_value(model)
     _api_key = _clean_env_value(apiKey)
     if _api_key = "" then _api_key = _clean_env_value(getenv("GOOGLE_API_KEY"))
@@ -486,7 +504,10 @@ gemini: class
     _error = ""
     _last_json = ""
     _last_http = ""
-    _http = .httpclient.pooled("https://generativelanguage.googleapis.com", 2, 8, 8388608, _llm_policy(_timeout))
+    _http = .httpclient.pooled(origin, 2, 8, 8388608, _llm_policy(_timeout))
+    connection = _http.to_channel()
+    _request_host = connection.field("host").as_string()
+    _request_port = connection.field("port").as_integer()
     return
 
   generate: method = .string
@@ -547,7 +568,7 @@ gemini: class
     arg prompt = .string
     headers = .httpheaders.json()
     call headers.add("x-goog-api-key", _api_key)
-    return _llm_request("generativelanguage.googleapis.com", 443, _path(), buildBody(prompt), headers)
+    return _llm_request(_request_host, _request_port, _path(), buildBody(prompt), headers)
 
   extractBody: method = .string
     arg response = .string
@@ -638,3 +659,758 @@ _llm_request: procedure = .string
   arg host = .string, port = .int, path = .string, body = .string, headers = .httpheaders
   wire = http_build_request("POST", host, port, path, body as .binary, headers.content_type(), headers.wire(), "close", "identity")
   return wire as .string
+
+/** Configuration shared by HTTP and optional native drivers. Set before opening.
+ * @param driver explicit provider name @param model HTTP name or local GGUF path
+ */
+llmconfig: class
+  _names = .string[]
+  _values = .string[]
+  _int_names = .string[]
+  _ints = .int[]
+  _supplied = .string[]
+  *: factory
+    arg driver = "ollama", model = ""
+    _names.1 = "driver"
+    _values.1 = lower(strip(driver))
+    _names.2 = "model"
+    _values.2 = model
+    _names.3 = "host"
+    _values.3 = "127.0.0.1"
+    _int_names.1 = "port"
+    _ints.1 = 11434
+    _int_names.2 = "timeout"
+    _ints.2 = 120000
+    return
+  /** Set a text option; unknown keys are diagnosed before opening a driver. */
+  set_text: method = .void
+    arg key = .string, value = .string
+    i = .int
+    key = lower(strip(key))
+    if wordpos(key, "driver model host api_key endpoint provider_path sha256 profile hardware_mode backend devices sampler pooling normalization query_prefix document_prefix chat_template system_prompt") = 0 then call raise "INVALID_ARGUMENTS", "unknown LLM text option: " || key, ""
+    if key = "driver" then value = lower(strip(value))
+    call _remember(key)
+    do i = 1 to _names.0
+      if _names[i] = key then do
+        _values[i] = value
+        return
+      end
+    end
+    i = _names.0 + 1
+    _names[i] = key
+    _values[i] = value
+    return
+  /** Set an integer option; native range validation also occurs at construction. */
+  set_int: method = .void
+    arg key = .string, value = .int
+    i = .int
+    key = lower(strip(key))
+    if wordpos(key, "port timeout memory_bytes vram_bytes max_sessions threads batch_threads context_tokens request_rows request_tokens request_bytes batch_tokens output_tokens seed") = 0 then call raise "INVALID_ARGUMENTS", "unknown LLM integer option: " || key, ""
+    if value < 0 then call raise "INVALID_ARGUMENTS", "negative LLM integer option: " || key, ""
+    call _remember(key)
+    do i = 1 to _int_names.0
+      if _int_names[i] = key then do
+        _ints[i] = value
+        return
+      end
+    end
+    i = _int_names.0 + 1
+    _int_names[i] = key
+    _ints[i] = value
+    return
+  /** Return a configured text value, or empty if absent. */
+  text: method = .string
+    arg key = .string
+    do i = 1 to _names.0
+      if _names[i] = key then return _values[i]
+    end
+    return ""
+  /** Return a configured integer, or -1 if absent (zero remains a real option). */
+  integer: method = .int
+    arg key = .string
+    do i = 1 to _int_names.0
+      if _int_names[i] = key then return _ints[i]
+    end
+    return -1
+  /** Distinguish an explicitly empty text option from an omitted option. */
+  has_text: method = .boolean
+    arg key = .string
+    do i = 1 to _names.0
+      if _names[i] = key then return 1
+    end
+    return 0
+  /** Validate explicit options for the selected transport before creating owners. */
+  validate: method = .void
+    driver = text("driver")
+    allowed = "driver model"
+    select
+      when driver = "llama" then allowed = allowed || " provider_path sha256 profile hardware_mode backend devices sampler pooling normalization query_prefix document_prefix chat_template system_prompt memory_bytes vram_bytes max_sessions threads batch_threads context_tokens request_rows request_tokens request_bytes batch_tokens output_tokens seed"
+      when driver = "ollama" then allowed = allowed || " host port timeout"
+      when wordpos(driver, "openai anthropic gemini") > 0 then allowed = allowed || " api_key endpoint timeout"
+      otherwise call raise "INVALID_ARGUMENTS", "unknown LLM driver: " || driver, ""
+    end
+    do i = 1 to _supplied.0
+      if wordpos(_supplied[i], allowed) = 0 then call raise "INVALID_ARGUMENTS", "unsupported LLM option for " || driver || ": " || _supplied[i], ""
+    end
+    return
+  _remember: method = .void
+    arg key = .string
+    do i = 1 to _supplied.0
+      if _supplied[i] = key then return
+    end
+    i = _supplied.0 + 1
+    _supplied[i] = key
+    return
+
+/** Transport-neutral incremental generation request. Row indexes are one-based. */
+llmrequest: interface
+  add: method = .int
+    arg system = .string, prompt = .string
+  add_all: method = .int
+    arg prompts = .string[], system = .string
+  submit: method = .int
+  process: method = .string
+    arg work_tokens = .int
+  state: method = .string
+  read: method = .rxfnsg..llmchunk
+    arg row = .int
+  cancel: method = .int
+  status: method = .int
+  error: method = .string
+  close: method = .int
+
+/** Owned output delta. A repeated read does not replay text or token counts. */
+llmchunk: class
+  /* Fixed interop layout shared with the optional RXPA driver. */
+  _text = .string with register.1.string
+  _tokens = .int with register.2.int
+  _finish = .string with register.3.string
+  _row = .int with register.4.int
+  _status = .int with register.5.int
+  _error = .string with register.6.string
+  *: factory
+    arg text = .string, tokens = .int, finish = .string, row = .int, status = .int, error = .string
+    _text = text
+    _tokens = tokens
+    _finish = finish
+    _row = row
+    _status = status
+    _error = error
+    return
+  text: method = .string
+    return _text
+  tokens: method = .int
+    return _tokens
+  finish: method = .string
+    return _finish
+  row: method = .int
+    return _row
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+
+/** Owned snapshot of one synchronous generation call. Unknown usage is -1. */
+llmresult: class
+  _text = .string
+  _status = .int
+  _error = .string
+  _driver = .string
+  _category = .string
+  _finish = .string
+  _tokens = .int
+  *: factory
+    arg text = .string, status = .int, error = .string, driver = .string, category = .string, finish = .string, tokens = .int
+    _text = text
+    _status = status
+    _error = error
+    _driver = driver
+    _category = category
+    _finish = finish
+    _tokens = tokens
+    return
+  text: method = .string
+    return _text
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  driver: method = .string
+    return _driver
+  category: method = .string
+    return _category
+  finish: method = .string
+    return _finish
+  tokens: method = .int
+    return _tokens
+
+/** Internal contract only: concrete native implementation is late-loaded RXPA. */
+llmnative: interface
+  *: factory
+    arg config = .rxfnsg..llmconfig, capability = .string
+  prepare: method = .string
+    arg work_tokens = .int
+  request: method = .rxfnsg..llmrequest
+  embed: method = .rxfnsg..embeddingresult
+    arg texts = .string[], role = .string
+  status: method = .int
+  error: method = .string
+  info_int: method = .int
+    arg key = .string
+  info_text: method = .string
+    arg key = .string
+  close: method = .void
+
+/** Embeddings are a separate capability and never masquerade as generated text. */
+embedding: interface
+  open: factory
+    arg config = .rxfnsg..llmconfig
+  prepare: method = .string
+    arg work_tokens = 128
+  embed: method = .rxfnsg..embeddingresult
+    arg texts = .string[], role = "document"
+  status: method = .int
+  error: method = .string
+  close: method = .void
+
+/** Owned packed-vector result and its embedding-space specification. */
+embeddingresult: interface
+  values: method = .rxfnsg..packedfloat
+  rows: method = .int
+  dimensions: method = .int
+  specification: method = .string
+  status: method = .int
+  error: method = .string
+
+_llm_native: procedure = .llmnative
+  arg config = .rxfnsg..llmconfig, capability = .string
+  service = .llmnative
+  available = 1
+  do
+    service = .llmnative(config, capability)
+  on signal function_not_found
+    available = 0
+  end
+  if available then return service
+  filename = config.text("provider_path")
+  if filename = "" then filename = rxfs..loadpath() || "/rxllama.rxplugin"
+  if rxfs..isfile(filename) = 0 then call raise "NOTREADY", "provider_unavailable: llama: plugin not installed at " || filename, ""
+  if loadmodule(filename) <= 0 then call raise "NOTREADY", "provider_incompatible: llama: cannot load plugin or its runtime dependencies at " || filename, ""
+  do
+    service = .llmnative(config, capability)
+  on signal function_not_found
+    call raise "NOTREADY", "provider_incompatible: llama: common driver interface is missing", ""
+  end
+  return service
+
+llm_embedding_client: class implements .embedding
+  _native = .llmnative
+  open: factory
+    arg config = .rxfnsg..llmconfig
+    call config.validate()
+    if config.text("driver") <> "llama" then call raise "INVALID_ARGUMENTS", "unsupported_operation: driver does not provide embeddings", ""
+    _native = _llm_native(config, "embedding")
+    return
+  prepare: method = .string
+    arg work_tokens = 128
+    return _native.prepare(work_tokens)
+  embed: method = .rxfnsg..embeddingresult
+    arg texts = .string[], role = "document"
+    return _native.embed(texts, role)
+  status: method = .int
+    return _native.status()
+  error: method = .string
+    return _native.error()
+  close: method = .void
+    call _native.close()
+    return
+
+/** Common client owns provider selection; callers retain the same .llm type. */
+llm_client: class implements .llm
+  _driver = .string
+  _ollama = .ollama
+  _openai = .openai
+  _anthropic = .anthropic
+  _gemini = .gemini
+  _native = .llmnative
+  _status = .int
+  _error = .string
+  _closed = .boolean
+  _last = .llmresult
+  *: factory
+    arg model = "gemma4:latest", host = "127.0.0.1", port = 11434, timeout = 120000
+    _driver = "ollama"
+    _ollama = .ollama(model, host, port, timeout)
+    _last = .llmresult("", 0, "", _driver, "", "", -1)
+    return
+  open: factory
+    arg config = .rxfnsg..llmconfig
+    call config.validate()
+    _driver = config.text("driver")
+    model = config.text("model")
+    endpoint = config.text("endpoint")
+    select
+      when _driver = "ollama" then do
+        if model = "" then model = "gemma4:latest"
+        _ollama = .ollama(model, config.text("host"), config.integer("port"), config.integer("timeout"))
+      end
+      when _driver = "openai" then do
+        if model = "" then model = "gpt-4.1"
+        if endpoint = "" then endpoint = "https://api.openai.com"
+        _openai = .openai(model, config.text("api_key"), config.integer("timeout"), endpoint)
+      end
+      when _driver = "anthropic" then do
+        if model = "" then model = "claude-sonnet-4-5"
+        if endpoint = "" then endpoint = "https://api.anthropic.com"
+        _anthropic = .anthropic(model, config.text("api_key"), config.integer("timeout"), endpoint)
+      end
+      when _driver = "gemini" then do
+        if model = "" then model = "gemini-2.5-flash"
+        if endpoint = "" then endpoint = "https://generativelanguage.googleapis.com"
+        _gemini = .gemini(model, config.text("api_key"), config.integer("timeout"), endpoint)
+      end
+      when _driver = "llama" then _native = _llm_native(config, "generation")
+      otherwise call raise "INVALID_ARGUMENTS", "unknown LLM driver: " || _driver, ""
+    end
+    _last = .llmresult("", 0, "", _driver, "", "", -1)
+    return
+  driver: method = .string
+    return _driver
+  supports: method = .boolean
+    arg capability = .string
+    if capability = "generation" then return 1
+    if capability = "incremental" | capability = "batch" | capability = "cancellation" then return _driver = "llama"
+    if capability = "http_diagnostics" then return _driver <> "llama"
+    return 0
+  prepare: method = .string
+    arg work_tokens = 128
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return "failed"
+    end
+    if work_tokens <= 0 then do
+      call _fail(-1, "preparation work budget must be positive")
+      return "failed"
+    end
+    if _driver = "llama" then do
+      state = _native.prepare(work_tokens)
+      _status = _native.status()
+      _error = _native.error()
+      return state
+    end
+    call _fail(0, "")
+    return "ready"
+  request: method = .rxfnsg..llmrequest
+    if _closed then call raise "NOTREADY", "client is closed", ""
+    if _driver = "llama" then return _native.request()
+    return .llm_http_request(self)
+  lastResult: method = .llmresult
+    return _last
+  generate: method = .string
+    arg prompt = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      _last = .llmresult("", _status, _error, _driver, "closed", "error", -1)
+      return ""
+    end
+    if _driver = "llama" then do
+      state = prepare(128)
+      do while state = "loading" | state = "preparing"
+        state = prepare(128)
+      end
+      if state <> "ready" then do
+        _last = .llmresult("", _status, _error, _driver, "native", "error", -1)
+        return ""
+      end
+      pending = _native.request()
+      row = pending.add("", prompt)
+      rc = pending.status()
+      if rc = 0 then rc = pending.submit()
+      text = ""
+      tokens = 0
+      finish = ""
+      state = "running"
+      do while rc = 0 & state = "running"
+        state = pending.process(128)
+        rc = pending.status()
+        if rc = 0 then do
+          chunk = pending.read(1)
+          rc = chunk.status()
+          text = text || chunk.text()
+          tokens = tokens + chunk.tokens()
+          finish = chunk.finish()
+        end
+      end
+      _status = rc
+      _error = pending.error()
+      category = ""
+      if rc <> 0 then do
+        category = "native"
+        finish = "error"
+      end
+      _last = .llmresult(text, rc, _error, _driver, category, finish, tokens)
+      call pending.close()
+      if rc = 0 & pending.status() <> 0 then do
+        _status = pending.status()
+        _error = pending.error()
+        _last = .llmresult(text, _status, _error, _driver, "native", "error", tokens)
+      end
+      return text
+    end
+    text = .string
+    if _driver = "ollama" then do
+      text = _ollama.generate(prompt)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      text = _openai.generate(prompt)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      text = _anthropic.generate(prompt)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      text = _gemini.generate(prompt)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    category = ""
+    http_finish = "complete"
+    if _status <> 0 then do
+      http_finish = "error"
+      if _status > 0 then category = "http"
+      else category = "provider"
+    end
+    _last = .llmresult(text, _status, _error, _driver, category, http_finish, -1)
+    return text
+  generateJson: method = .string
+    arg prompt = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.generateJson(prompt)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.generateJson(prompt)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.generateJson(prompt)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.generateJson(prompt)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  buildBody: method = .string
+    arg prompt = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.buildBody(prompt)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.buildBody(prompt)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.buildBody(prompt)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.buildBody(prompt)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  buildRequest: method = .string
+    arg prompt = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.buildRequest(prompt)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.buildRequest(prompt)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.buildRequest(prompt)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.buildRequest(prompt)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  extractBody: method = .string
+    arg response = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.extractBody(response)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.extractBody(response)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.extractBody(response)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.extractBody(response)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  extractText: method = .string
+    arg responseJson = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.extractText(responseJson)
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.extractText(responseJson)
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.extractText(responseJson)
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.extractText(responseJson)
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  lastJson: method = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.lastJson()
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.lastJson()
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.lastJson()
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.lastJson()
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  lastHttp: method = .string
+    if _closed then do
+      call _fail(-3, "client is closed")
+      return ""
+    end
+    if _driver = "llama" then do
+      call _fail(-4, "unsupported_operation: native llama has no HTTP/JSON exchange")
+      return ""
+    end
+    result = .string
+    if _driver = "ollama" then do
+      result = _ollama.lastHttp()
+      _status = _ollama.status()
+      _error = _ollama.error()
+    end
+    else if _driver = "openai" then do
+      result = _openai.lastHttp()
+      _status = _openai.status()
+      _error = _openai.error()
+    end
+    else if _driver = "anthropic" then do
+      result = _anthropic.lastHttp()
+      _status = _anthropic.status()
+      _error = _anthropic.error()
+    end
+    else if _driver = "gemini" then do
+      result = _gemini.lastHttp()
+      _status = _gemini.status()
+      _error = _gemini.error()
+    end
+    return result
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  close: method = .void
+    if _closed then return
+    if _driver = "llama" then do
+      call _native.close()
+      if _native.status() <> 0 then do
+        call _fail(_native.status(), _native.error())
+        return
+      end
+    end
+    if _driver = "ollama" then call _ollama.close()
+    if _driver = "openai" then call _openai.close()
+    if _driver = "anthropic" then call _anthropic.close()
+    if _driver = "gemini" then call _gemini.close()
+    _closed = 1
+    return
+  _fail: method = .void
+    arg code = .int, message = .string
+    _status = code
+    _error = message
+    return
+
+/** A blocking HTTP request honestly advertises one row and no incremental I/O. */
+llm_http_request: class implements .llmrequest
+  _client = .llm
+  _state = .string
+  _prompt = .string
+  _rows = .int
+  _status = .int
+  _error = .string
+  _text = .string
+  _finish = .string
+  _read = .boolean
+  *: factory
+    arg client = .llm
+    _client = client
+    _state = "building"
+    return
+  add: method = .int
+    arg system = .string, prompt = .string
+    if _state <> "building" then return _fail(-7, "request is not building")
+    if _rows <> 0 | system <> "" then return _fail(-4, "unsupported_operation: HTTP request supports one user prompt")
+    _prompt = prompt
+    _rows = 1
+    return 1
+  add_all: method = .int
+    arg prompts = .string[], system = .string
+    if prompts.0 <> 1 then return _fail(-4, "unsupported_operation: HTTP request does not support batches")
+    row = add(system, prompts[1])
+    return _status
+  submit: method = .int
+    if _state <> "building" | _rows <> 1 then return _fail(-7, "request must have one input before submit")
+    _state = "running"
+    return 0
+  process: method = .string
+    arg work_tokens = .int
+    if work_tokens <= 0 | _state <> "running" then do
+      call _fail(-7, "request is not running or work budget is invalid")
+      return _state
+    end
+    _text = _client.generate(_prompt)
+    _status = _client.status()
+    _error = _client.error()
+    if _status <> 0 then do
+      _state = "failed"
+      _finish = "error"
+    end
+    else do
+      _state = "complete"
+      _finish = "complete"
+    end
+    return _state
+  state: method = .string
+    return _state
+  read: method = .rxfnsg..llmchunk
+    arg row = .int
+    if row <> 1 | _rows <> 1 then return .llmchunk("", 0, "error", row, -1, "invalid row")
+    if _read then return .llmchunk("", 0, _finish, row, _status, _error)
+    if _state = "building" | _state = "running" then return .llmchunk("", 0, "", row, 0, "")
+    _read = 1
+    return .llmchunk(_text, -1, _finish, row, _status, _error)
+  cancel: method = .int
+    if _state = "building" | _state = "running" then do
+      _state = "cancelled"
+      _finish = "cancelled"
+    end
+    return 0
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  close: method = .int
+    call cancel()
+    _state = "closed"
+    return 0
+  _fail: method = .int
+    arg code = .int, message = .string
+    _status = code
+    _error = message
+    _state = "failed"
+    _finish = "error"
+    return code

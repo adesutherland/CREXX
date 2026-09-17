@@ -223,14 +223,13 @@ model, and enters Release 1 only through a beta quality gate.
   discovery, packaged-library autoload and incremental project builds are
   completed capabilities, recorded below.
 - **LLM-API-01 — Common LLM provider interface** (requested 2026-09-16;
-  roadmap item, not implemented or assigned to a release): applications should
+  approved implementation in progress; not assigned to a release): applications
   select hosted HTTP, local-server or in-process `llama.rexx` inference during
   setup and reuse the same processing surface for supported capabilities.
-  Today only Ollama implements `.llm`; OpenAI, Anthropic and Gemini expose
-  similar methods as separate classes, while `llama.rexx` has its own typed
-  session/request API. The current `.openai` client targets the hosted
+  `.llm.open(config)` supplies common HTTP/native drivers while retaining
+  the legacy Ollama factory and direct typed native session/request API. The current `.openai` client targets the hosted
   Responses endpoint, not an arbitrary OpenAI-compatible local server.
-  Design a transport-neutral generation contract and separate embedding
+  The implementation supplies a common generation contract and separate embedding
   capability, with consistent results, errors, limits, finish reasons and
   capability discovery. Preserve explicit preparation, repeated/batch requests,
   incremental processing/cancellation and shared native weights. Keep HTTP/JSON
@@ -243,9 +242,15 @@ model, and enters Release 1 only through a beta quality gate.
   model across repeated/batch work; embedding results preserve packed values
   and model/preprocessing identity so incompatible indexes are not silently
   reused; optional install and installed/native consumers pass their checks.
-  API/architecture selection and a numbered implementation plan with vision,
-  acceptance criteria and steps require review before implementation. This item
+  API/architecture selection and the numbered implementation plan were approved
+  on 17 September. This item
   does not expand or block the current native-inference release qualification.
+  The [17 September approved implementation plan](planning/llm-provider-interface.md)
+  records the former two-artifact native restriction and approved D-01–04,
+  LLM-AC-01–10 and LLM-STEP-01–05 for common drivers and broader model compatibility.
+  Selecting an unavailable optional llama plugin must raise an application-catchable
+  exception; common clients must compile/start without that plugin and must not
+  silently fall back to a different driver.
 
 ### Evidence-gated performance follow-ons
 

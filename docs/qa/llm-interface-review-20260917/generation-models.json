@@ -1,0 +1,29 @@
+{
+  "purpose": "Local compatibility checks; no redistribution or language-quality/device qualification claim",
+  "models": [
+    {
+      "file": "stories260K.gguf",
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+      "source": "https://huggingface.co/ggml-org/test-model-stories260K/tree/479896ec924af6d40fd419ab8f4d1eb2101de00d",
+      "provenance": "Previously provisioned local control. Conversion repository has no model card or license declaration; not redistributed in tests.",
+      "dimensions": 64,
+      "profile": "generation",
+      "chat_template": "raw"
+    },
+    {
+      "file": "gemma-4-E4B-it-Q4_0.gguf",
+      "sha256": "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
+      "provenance": "User-provisioned local artifact; not redistributed or represented as a reference distribution",
+      "dimensions": 2560,
+      "profile": "generation",
+      "chat_template": "raw",
+      "memory_bytes": 17179869184,
+      "prompt_source": "gemma4-common.crexx"
+    }
+  ],
+  "hardware_mode": "cpu",
+  "context_tokens": 256,
+  "request_rows": 2,
+  "request_tokens": 512,
+  "output_tokens": 4
+}

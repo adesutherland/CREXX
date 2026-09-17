@@ -11,6 +11,10 @@ import rxfnsb
 import rxfnsg
 
 llmaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _client = .llm
+  _client_model = .string
+  _client_driver = .string
+  _client_open = .boolean
   _driver = .string
   _environment_id = .string
   _environment_name = .string
@@ -67,6 +71,10 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
     if normalized = "DRIVERS" then return llm_complete(request, llm_supported_drivers(), target)
     if normalized = "STATUS" then return llm_complete(request, "" || (_status + 0), target)
     if normalized = "ERROR" then return llm_complete(request, _error, target)
+    if normalized = "CLOSE" then do
+      call _close_client()
+      return llm_complete(request, "", target)
+    end
 
     if normalized = "MODEL" then return llm_complete(request, _model, target)
     if _address_first_chars(normalized, 6) = "MODEL " then do
@@ -115,6 +123,10 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
     if function_name = "MODEL" then return .addressfunctionresponse(0, _model)
     if function_name = "STATUS" then return .addressfunctionresponse(0, "" || (_status + 0))
     if function_name = "ERROR" then return .addressfunctionresponse(0, _error)
+    if function_name = "CLOSE" then do
+      call _close_client()
+      return llm_function_result(_status, "", _error)
+    end
 
     if function_name = "SET_MODEL" then do
       _model = request.get_argument(1)
@@ -145,6 +157,11 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
 
   _body: method = .string
     arg prompt = .string
+    if _driver = "LLAMA" then do
+      _status = -4
+      _error = "unsupported_operation: native llama has no HTTP/JSON exchange"
+      return ""
+    end
     _status = 0
     _error = ""
     if _driver = "OPENAI" then do
@@ -178,6 +195,11 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
 
   _request: method = .string
     arg prompt = .string
+    if _driver = "LLAMA" then do
+      _status = -4
+      _error = "unsupported_operation: native llama has no HTTP/JSON exchange"
+      return ""
+    end
     _status = 0
     _error = ""
     if _driver = "OPENAI" then do
@@ -211,6 +233,11 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
 
   _extract: method = .string
     arg response_json = .string
+    if _driver = "LLAMA" then do
+      _status = -4
+      _error = "unsupported_operation: native llama has no HTTP/JSON exchange"
+      return ""
+    end
     result = .string
     if _driver = "OPENAI" then do
       client = .openai(_model, "demo-key")
@@ -248,69 +275,38 @@ llmaddressenvironment: class implements .addressenvironment .addressinstance .ad
 
   _generate: method = .string
     arg prompt = .string
-    response_json = .string
-    result = .string
-    if _driver = "OPENAI" then do
-      client = .openai(_model)
-      response_json = client.generateJson(prompt)
-      if client.status() <> 0 then do
-        _status = client.status()
-        _error = client.error()
-        call client.close()
-        return ""
+    if _client_open & (_client_model <> _model | _client_driver <> _driver) then call _close_client()
+    if \_client_open then do
+      config = .llmconfig(lower(_driver), _model)
+      if _driver = "LLAMA" then do
+        call config.set_text("sha256", llm_clean_env_value(getenv("CREXX_LLAMA_SHA256")))
+        setting = llm_clean_env_value(getenv("CREXX_LLAMA_PROFILE"))
+        if setting <> "" then call config.set_text("profile", setting)
+        setting = getenv("CREXX_LLAMA_CHAT_TEMPLATE")
+        if setting <> "" then call config.set_text("chat_template", setting)
+        setting = llm_clean_env_value(getenv("CREXX_LLAMA_MEMORY_BYTES"))
+        if setting <> "" then call config.set_int("memory_bytes", setting as .int)
+        setting = llm_clean_env_value(getenv("CREXX_LLAMA_PROVIDER_PATH"))
+        if setting <> "" then call config.set_text("provider_path", setting)
       end
-      result = client.extractText(response_json)
-      _status = client.status()
-      _error = client.error()
-      call client.close()
-      return result
+      _client = .llm.open(config)
+      _client_model = _model
+      _client_driver = _driver
+      _client_open = 1
     end
-    if _driver = "ANTHROPIC" then do
-      client = .anthropic
-      client = .anthropic(_model)
-      response_json = client.generateJson(prompt)
-      if client.status() <> 0 then do
-        _status = client.status()
-        _error = client.error()
-        call client.close()
-        return ""
-      end
-      result = client.extractText(response_json)
-      _status = client.status()
-      _error = client.error()
-      call client.close()
-      return result
-    end
-    if _driver = "GEMINI" then do
-      client = .gemini
-      client = .gemini(_model)
-      response_json = client.generateJson(prompt)
-      if client.status() <> 0 then do
-        _status = client.status()
-        _error = client.error()
-        call client.close()
-        return ""
-      end
-      result = client.extractText(response_json)
-      _status = client.status()
-      _error = client.error()
-      call client.close()
-      return result
-    end
-    client = .llm
-    client = .llm(_model)
-    response_json = client.generateJson(prompt)
-    if client.status() <> 0 then do
-      _status = client.status()
-      _error = client.error()
-      call client.close()
-      return ""
-    end
-    result = client.extractText(response_json)
-    _status = client.status()
-    _error = client.error()
-    call client.close()
+    result = _client.generate(prompt)
+    _status = _client.status()
+    _error = _client.error()
     return result
+
+  _close_client: method = .void
+    if _client_open then do
+      call _client.close()
+      _status = _client.status()
+      _error = _client.error()
+      _client_open = 0
+    end
+    return
 
 llm_finish_command: procedure = .addressresponse
   arg request = .addressrequest, result = .string, target = .string
@@ -347,6 +343,7 @@ llm_driver_registry: procedure = .addressdriverregistry
   call llm_register_openai_driver(registry)
   call llm_register_anthropic_driver(registry)
   call llm_register_gemini_driver(registry)
+  call registry.add("LLAMA", "NATIVE", "")
   return registry
 
 llm_register_ollama_driver: procedure = .void
@@ -387,6 +384,7 @@ llm_model_for_environment: procedure = .string
   configured = .string
 
   alias = llm_environment_alias(env_name)
+  if driver = "LLAMA" then return llm_clean_env_value(getenv("CREXX_LLAMA_MODEL"))
 
   if driver = "OPENAI" then do
     configured = llm_clean_env_value(getenv("OPENAI_MODEL"))

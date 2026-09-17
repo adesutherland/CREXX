@@ -7,6 +7,26 @@ std::string generation_prompt(const std::string &system, const std::string &prom
         "<|im_end|>\n<|im_start|>user\n" + prompt +
         "<|im_end|>\n<|im_start|>assistant\n";
 }
+std::string model_prompt(const ModelSpec &spec, const std::string &system, const std::string &prompt, size_t available) {
+    if (spec.preset) return generation_prompt(system, prompt);
+    const auto &sys = system.empty() ? spec.system_prompt : system;
+    if (spec.chat_template == "raw") {
+        require(sys.empty(), "raw template does not accept a system prompt"); return prompt;
+    }
+    // The engine API accepts C strings. Never silently truncate embedded NULs.
+    require(sys.find('\0') == std::string::npos && prompt.find('\0') == std::string::npos,
+            "chat templates cannot encode embedded NUL; use raw for literal text");
+    std::vector<llama_chat_message> messages;
+    if (!sys.empty()) messages.push_back({"system", sys.c_str()});
+    messages.push_back({"user", prompt.c_str()});
+    auto size = llama_chat_apply_template(spec.chat_template.c_str(), messages.data(), messages.size(), true, nullptr, 0);
+    require(size >= 0, "unsupported chat template");
+    require(size_t(size) <= available, "rendered prompt exceeds request byte limit", -8);
+    std::string rendered(size_t(size), '\0');
+    require(llama_chat_apply_template(spec.chat_template.c_str(), messages.data(), messages.size(), true,
+        rendered.data(), size) == size, "chat template rendering failed");
+    return rendered;
+}
 void add_prompt(Resource &r, const rxllama_argument &system, const rxllama_argument &prompt,
                 rxllama_result &out) {
     auto &q = *r.request;
@@ -19,7 +39,7 @@ void add_prompt(Resource &r, const rxllama_argument &system, const rxllama_argum
             "request byte limit exceeded", -8);
     std::string sys(system.text, system.text_length), user(prompt.text, prompt.text_length);
     valid_utf8(sys); valid_utf8(user);
-    EmbeddingRow row; row.text = generation_prompt(sys, user);
+    EmbeddingRow row; row.text = model_prompt(r.model->spec, sys, user, available);
     require(row.text.size() <= available, "rendered prompt exceeds request byte limit", -8);
     auto bytes = int64_t(row.text.size());
     q.rows.push_back(std::move(row)); q.bytes += bytes; out.integer = int64_t(q.rows.size());

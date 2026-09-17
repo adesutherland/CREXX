@@ -1,5 +1,10 @@
 # Native inference requirements and implementation plan
 
+Follow-on review, 17 September: [LLM-API-01](llm-provider-interface.md) records
+the requested common LLM drivers and removal of the enforced two-artifact model
+restriction. Its proposed decisions/criteria are separate from this approved
+delivery plan and do not replace or close any acceptance item below.
+
 Status: plan, STEP-01 and STEP-02 output approved by Adrian, 2026-09-14;
 STEP-03 closure is approved; STEP-04 is closed on 15 September following
 completion and acceptance of its implementation, factory cleanup and regression

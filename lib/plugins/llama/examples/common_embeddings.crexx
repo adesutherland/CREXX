@@ -1,0 +1,48 @@
+/** Separate embedding capability with explicit preprocessing and packed output.
+ * @param args MODEL SHA256 POOLING QUERY_PREFIX DOCUMENT_PREFIX [PROVIDER_PATH]
+ */
+options levelg
+import rxfnsb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  if args.0 < 5 then do
+    say "Usage: MODEL SHA256 POOLING QUERY_PREFIX DOCUMENT_PREFIX [PROVIDER_PATH]"
+    return 1
+  end
+  config = .llmconfig("llama", args[1])
+  call config.set_text("sha256", args[2])
+  call config.set_text("pooling", args[3])
+  call config.set_text("normalization", "l2")
+  call config.set_text("query_prefix", args[4])
+  call config.set_text("document_prefix", args[5])
+  if args.0 >= 6 then call config.set_text("provider_path", args[6])
+  client = .embedding
+  do
+    client = .embedding.open(config)
+  on signal notready as problem
+    say problem.message()
+    return 2
+  end
+  state = client.prepare(128)
+  do while state = "loading" | state = "preparing"
+    state = client.prepare(128)
+  end
+  if state <> "ready" then do
+    say client.error()
+    call client.close()
+    return 3
+  end
+  texts = .string[]
+  texts.1 = "A red fox."
+  texts.2 = "A blue sky."
+  vectors = client.embed(texts, "document")
+  call client.close()
+  if vectors.status() <> 0 then do
+    say vectors.error()
+    return 4
+  end
+  values = vectors.values()
+  say "Rows:" vectors.rows() "Dimensions:" vectors.dimensions() "Values:" values.size()
+  say "Embedding space:" vectors.specification()
+  return 0

@@ -1,0 +1,34 @@
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-f16.gguf-cls-parity.log
+PASS: generic embedding dimensions=768 repeated requests and cleanup
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-f16.gguf-common.log
+PASS: separate common embeddings, packed vectors and space identity
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-f16.gguf-mean-parity.log
+PASS: generic embedding dimensions=768 repeated requests and cleanup
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-q4_k_m.gguf-cls-parity.log
+PASS: generic embedding dimensions=768 repeated requests and cleanup
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-q4_k_m.gguf-common.log
+PASS: separate common embeddings, packed vectors and space identity
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-base-en-v1.5-q4_k_m.gguf-mean-parity.log
+PASS: generic embedding dimensions=768 repeated requests and cleanup
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/bge-preset-parity.log
+PASS: exact row/token/byte limits, query 512/513, cancellation, failed batch and recovery cpu
+PASS: embedding glue parity, boundaries, batching, private state and cleanup cpu
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/smol-preset-parity.log
+PASS: generation direct parity, batching, incremental output, limits, cancellation and recovery cpu
+
+cmake-build-debug/lib/plugins/llama/tests/common-trained/stories-generation.log
+PASS: generic generation dimensions=64 repeated requests and cleanup
+
+cmake-build-debug/lib/plugins/llama/tests/common-examples/common_embeddings-example.log
+Rows: 2 Dimensions: 64 Values: 128
+
+cmake-build-debug/lib/plugins/llama/tests/common-examples/gemma4-E4B-common.log
+OUTPUT: Hello! How can
+PASS: local Gemma 4 model through common driver

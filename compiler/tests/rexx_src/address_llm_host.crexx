@@ -67,13 +67,14 @@ address_llm_host: procedure = .int
   "BODY :prompt INTO ${body}"
   if jsonget(body, "model") <> "gemma4:latest" then errors = errors + 1
   if jsonget(body, "prompt") <> prompt then errors = errors + 1
+  if addresscall("llm_native", "driver") <> "LLAMA" then errors = errors + 1
   if addresscall("gemma4_latest", "driver") <> "OLLAMA" then errors = errors + 1
   if addresscall("llm_mistral_latest", "driver") <> "OLLAMA" then errors = errors + 1
   if addresscall("llm_mistral_latest", "model") <> "mistral:latest" then errors = errors + 1
   text = addresscall("gemma4_latest", "extract", '{"model":"gemma4:latest","response":"Ollama ok","done":true}')
   if text <> "Ollama ok" then errors = errors + 1
 
-  if addresscall("llm", "drivers") <> "OLLAMA OPENAI ANTHROPIC GEMINI" then errors = errors + 1
+  if addresscall("llm", "drivers") <> "OLLAMA OPENAI ANTHROPIC GEMINI LLAMA" then errors = errors + 1
 
   if errors <> 0 then do
     say "address llm host failures:" errors

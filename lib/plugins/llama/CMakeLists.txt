@@ -111,7 +111,7 @@ set_target_properties(llama PROPERTIES OUTPUT_NAME crexx-llama-engine)
 add_library(crexx_llama_bridge SHARED bridge.cpp ${CMAKE_SOURCE_DIR}/binutils/rxsha256.c)
 # Source/configuration identity is inspectable independently of upstream's pin.
 set(_bridge_identity "${_llama_sha};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${CMAKE_CXX_FLAGS};${CMAKE_CXX_FLAGS_DEBUG};${CMAKE_CXX_FLAGS_RELEASE};${_llama_backends}")
-foreach(source bridge.cpp bridge.h generation.h generation_utf8.h package.hpp rxllama.c typed.h CMakeLists.txt WindowsBootstrap.cmake)
+foreach(source bridge.cpp bridge.h generation.h generation_utf8.h model_spec.h common_driver.h package.hpp rxllama.c typed.h CMakeLists.txt WindowsBootstrap.cmake)
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${source}")
     file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${source}" source_hash)
     string(APPEND _bridge_identity ";${source}:${source_hash}")
@@ -210,6 +210,7 @@ set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
     include("${CMAKE_SOURCE_DIR}/tests/native-inference/ReleaseSmoke.cmake")
+    include("${CMAKE_SOURCE_DIR}/tests/native-inference/CommonDriver.cmake")
     add_test(NAME rxllama_package_windows_paths
         COMMAND ${CMAKE_COMMAND} "-DROOT=${CMAKE_SOURCE_DIR}"
             -P "${CMAKE_SOURCE_DIR}/tests/native-inference/package_windows_paths.cmake")
@@ -290,7 +291,7 @@ if(BUILD_TESTING)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tests")
 endif()
 set(CREXX_LLAMA_TEST_MODELS "" CACHE PATH "Explicit local STEP-01 model directory for opt-in provider QA")
-install(FILES README.md installation.md models.md reference.md qualification.md
+install(FILES README.md common.md installation.md models.md reference.md qualification.md
     DESTINATION share/crexx/llama COMPONENT llama-docs)
 install(DIRECTORY examples/ DESTINATION share/crexx/llama/examples
     COMPONENT llama-docs FILES_MATCHING PATTERN "*.crexx" PATTERN "*.md")

@@ -1,0 +1,230 @@
+LLM interface review: existing Debug artifacts, 2026-09-17
+Source checkout: d0feda283857e9470e21fc143f8e2f70fa54ab3b
+
+SHA256 2fcdd27328cd3b6988408608427268578b5f502d600b9b20313f43eaec53300d lib/rxfnsg/rexx/llm.crexx
+SHA256 700b525193859d0ff1527a1dd942376e5d0b974be8d761eb74f15c9d70e43298 lib/plugins/llama/bridge.cpp
+SHA256 b21136a6dfc1690623f2ba4192fab64bb065ffa447fc4f7ddcb7ec03bfd428e6 lib/plugins/llama/generation.h
+SHA256 c8907de6837d983785dd016383bff016f000d2f4e6320b15393c34f8d88c5423 lib/plugins/llama/typed.h
+SHA256 48c99c6fc8caa8e9345917908177b71d1a3e0c153e8fc85482ede4cba7ccbc48 cmake-build-debug/bin/rxc
+SHA256 be8fab182b27f07b08c7a99f8fcee0fad50ff7584d1b882b7ea7fd4c9d37f04d cmake-build-debug/bin/rxfnsg.rxbin
+SHA256 ee1f23bace2cdaf65047288b181a791f346d09ecf3a3b2512f1f7aaf7cd06467 cmake-build-debug/bin/rxllama.rxplugin
+SHA256 bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de tests/native-inference/fixtures/llama-dense.gguf
+
+EXISTING HTTP TESTS
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1916: ts_llm_ollama_noopt
+1/4 Test #1916: ts_llm_ollama_noopt ..............   Passed    1.13 sec
+    Start 1917: ts_llm_ollama_opt
+2/4 Test #1917: ts_llm_ollama_opt ................   Passed    1.30 sec
+    Start 1918: ts_llm_providers_noopt
+3/4 Test #1918: ts_llm_providers_noopt ...........   Passed    2.59 sec
+    Start 1919: ts_llm_providers_opt
+4/4 Test #1919: ts_llm_providers_opt .............   Passed    1.50 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+comprehensive       =   3.93 sec*proc (3 tests)
+concurrency         =   6.51 sec*proc (4 tests)
+concurrency-sp07    =   6.51 sec*proc (4 tests)
+linked_opt          =   2.79 sec*proc (2 tests)
+optimizer-parity    =   6.51 sec*proc (4 tests)
+smoke               =   2.59 sec*proc (1 test)
+
+Total Test time (real) =   6.57 sec
+
+
+CHECK ollama-assignment
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/ollama", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/ollama.crexx"]
+EXIT 2
+Error in ollama.crexx @ 4:10 - #CLASS_NOT_FOUND: Class was not found., ".ollama(\"test-model\")"
+1 error(s) in source file
+
+
+CHECK openai-assignment
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/openai", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/openai.crexx"]
+EXIT 2
+Error in openai.crexx @ 4:10 - #TYPE_MISMATCH: Type mismatch., ".openai(\"test-model\")"
+1 error(s) in source file
+
+
+CHECK anthropic-assignment
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/anthropic", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/anthropic.crexx"]
+EXIT 2
+Error in anthropic.crexx @ 4:10 - #TYPE_MISMATCH: Type mismatch., ".anthropic(\"test-model\")"
+1 error(s) in source file
+
+
+CHECK gemini-assignment
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/gemini", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/gemini.crexx"]
+EXIT 2
+Error in gemini.crexx @ 4:10 - #TYPE_MISMATCH: Type mismatch., ".gemini(\"test-model\")"
+1 error(s) in source file
+
+
+CHECK profile-compile
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review.crexx"]
+EXIT 0
+
+
+CHECK profile-assemble
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxas", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review"]
+EXIT 0
+
+
+CHECK profile-link
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxlink", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review-linked", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/library", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/classlib", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxfnsg"]
+EXIT 0
+
+
+CHECK profile-rxbvm
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxbvm", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review-linked", "-a", "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-dense.gguf", "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"]
+EXIT 0
+PASS: another model profile rejected before load
+PASS: public llama release provider discovery, profile rejection and cleanup
+
+
+CHECK profile-rxtvm
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxtvm", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/profile_review-linked", "-a", "/Users/adrian/CLionProjects/CREXX/tests/native-inference/fixtures/llama-dense.gguf", "bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de"]
+EXIT 0
+PASS: another model profile rejected before load
+PASS: public llama release provider discovery, profile rejection and cleanup
+
+
+CHECK llm-control
+ARGV ["/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc", "--no-exe-import", "-i", "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin", "-o", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/llm_control", "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-llm-review-aj9r38he/llm_control.crexx"]
+EXIT 0
+
+
+SOURCE anthropic.crexx
+options levelg
+import rxfnsg
+client = .llm
+client = .anthropic("test-model")
+call client.close()
+
+
+SOURCE gemini.crexx
+options levelg
+import rxfnsg
+client = .llm
+client = .gemini("test-model")
+call client.close()
+
+
+SOURCE llm_control.crexx
+options levelg
+import rxfnsg
+client = .llm
+client = .llm("test-model")
+call client.close()
+
+
+SOURCE ollama.crexx
+options levelg
+import rxfnsg
+client = .llm
+client = .ollama("test-model")
+call client.close()
+
+
+SOURCE ollama_direct.crexx
+options levelg
+import rxfnsg
+client = .ollama("test-model")
+call client.close()
+
+
+SOURCE ollama_explicit_args.crexx
+options levelg
+import rxfnsg
+client = .ollama("test-model", "127.0.0.1", 11434, 120000)
+call client.close()
+
+
+SOURCE ollama_qualified.crexx
+options levelg
+import rxfnsg
+client = .rxfnsg..ollama("test-model")
+call client.close()
+
+
+SOURCE openai.crexx
+options levelg
+import rxfnsg
+client = .llm
+client = .openai("test-model")
+call client.close()
+
+
+SOURCE profile_review.crexx
+/** Small public-provider release smoke; no trained model is needed.
+ * @param args generated GGUF path and its recorded SHA256
+ * @return zero after discovery, profile rejection and cleanup pass
+ */
+options levelg floats_binary
+namespace llama_release_smoke
+import rxfnsb
+import _rxsysb
+import rxfnsg
+import llama
+
+require: procedure = .void
+  arg okay = .boolean, message = .string
+  if okay then return
+  call raise "INVALID_ARGUMENTS", "FAIL: " || message, ""
+  return
+
+main: procedure = .int
+  arg args = .string[]
+  call require args[0] = 2, "fixture path and SHA256"
+  config = .llama..configuration()
+  call require config.status() = 0, "native configuration factory"
+  call require config.set_text("hardware_mode", "cpu") = 0, "explicit CPU"
+  runtime = .llama..runtime(config)
+  call require runtime.status() = 0, runtime.diagnostic().message()
+  call require runtime.device_count() > 0, "packaged device discovery"
+  other = runtime.model(args[1], args[2], "another-model", config)
+  call require other.status() <> 0, "unknown profile rejected"
+  call require other.diagnostic().message() = "unqualified model profile", "profile rejection reason"
+  call require other.close() = 0, "rejected owner cleanup"
+  say "PASS: another model profile rejected before load"
+  model = runtime.model(args[1], args[2], "smollm2-360m-instruct", config)
+  call require model.status() = 0, "model admission"
+  started = time("us")
+  state = ""
+  do forever
+    state = model.state()
+    call require model.status() = 0, "inspect model state"
+    if state <> "loading" then leave
+    elapsed = time("us") - started
+    if elapsed < 0 then elapsed = elapsed + 86400000000
+    call require elapsed < 600000000, "model load hang backstop"
+  end
+  call require state = "failed", "scratch must not impersonate the public model: " || state
+  call require model.info_text("error") = "artifact is not the pinned model profile", "specific profile rejection"
+  call require model.close() = 0 & model.close() = 0, "failed model cleanup"
+  call require runtime.info_int("reserved_bytes") = 0, "reservation cleanup"
+  call require runtime.close() = 0, "runtime cleanup"
+  call require config.close() = 0, "configuration cleanup"
+  say "PASS: public llama release provider discovery, profile rejection and cleanup"
+  return 0
+
+
+ADDITIONAL COMPILE OBSERVATION ollama_direct
+Warning in ollama_direct.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+Error in ollama_direct.crexx @ 3:10 - #CLASS_NOT_FOUND: Class was not found., ".ollama(\"test-model\")"
+1 error(s) in source file
+
+
+ADDITIONAL COMPILE OBSERVATION ollama_qualified
+Error in ollama_qualified.crexx @ 3:10 - #CLASS_NOT_FOUND: Class was not found., ".rxfnsg..ollama(\"test-model\")"
+1 error(s) in source file
+
+
+ADDITIONAL COMPILE OBSERVATION ollama_explicit_args
+Warning in ollama_explicit_args.crexx @ 2:8 - #UNUSED_IMPORT: Import is recognised but not used., "rxfnsg"
+1 warning(s) in source file
+Error in ollama_explicit_args.crexx @ 3:10 - #CLASS_NOT_FOUND: Class was not found., ".ollama(\"test-model\", \"127.0.0.1\", 11434, 120000"
+1 error(s) in source file

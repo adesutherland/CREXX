@@ -14,14 +14,18 @@ release pipeline enables and packages these dependencies for recipients.
 
 This is the current development implementation. Both trained models have local
 macOS CPU/Metal evidence. Generated-fixture package checks also pass on the
-recorded Linux, Windows MinGW and Intel Mac candidates; wider and real-device
-qualification remains open. See [status](qualification.md).
+recorded Linux, Windows MSVC and Intel Mac candidates. MinGW has a separate
+core-only QA gate; it is not the Windows binary plugin toolchain. Wider
+trained-model and real-device qualification remains open. See [status](qualification.md).
 
 ## Using a binary package
 
-Separate plugin installers are implemented under CI-D04. Unsigned native
-lifecycle checks pass on ARM/Intel Mac and Windows with both Vulkan/CUDA;
-signing and final release acceptance remain open. The Mac `.pkg` checks the existing cREXX package
+Separate plugin installers are implemented under CI-D04. Retained candidate
+checks cover signed/notarized ARM/Intel Mac installers, fresh-host offline Mac
+execution and signed Windows Vulkan/CUDA installer lifecycle. Those checks do
+not establish that every later snapshot has been signed or that full release
+acceptance is complete; see [qualification status](qualification.md).
+The Mac `.pkg` checks the existing cREXX package
 receipt (normally `/usr/local/crexx`) and any supplied `CREXX_HOME`/`REXX_HOME`
 locations, then installs only into one exact matching core. Missing, ambiguous,
 altered or incompatible installations stop before plugin copying. Core and
@@ -108,9 +112,11 @@ This policy does not claim that the candidate packages have already been release
 CUDA and Vulkan plugins use the same core for their platform. Windows uses
 MSVC for the core and both plugin variants, with `rxvm` selecting `rxbvm`.
 MinGW remains supported for source builds and has a separate core QA gate for
-both VM variants; it does not produce a binary download. Install one
-backend variant at a time and preserve the release/commit match. GPU users need a compatible
-installed device driver, but not the CUDA/Vulkan build SDK. CPU fallback is
+both VM variants; it does not produce a binary download. Portable ZIP installs
+use one backend variant per directory. Windows installers may coexist as
+described above, with one active variant. Preserve the release/commit match.
+GPU users need a compatible installed device driver, but not the CUDA/Vulkan
+build SDK. CPU fallback is
 included. Runtime detection selects from the backends in the chosen package.
 Intel Mac Metal is unsupported in this delivery: the pinned engine repeatedly
 stalled during Metal compiler-service initialization on the Intel runner. The

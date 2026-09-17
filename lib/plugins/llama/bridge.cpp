@@ -4,6 +4,7 @@
 #include "generation_utf8.h"
 #include "llama.h"
 #include "ggml-backend.h"
+#include "gguf.h"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -40,7 +41,9 @@ struct Config {
         {"request_tokens", 4096}, {"request_bytes", MiB}, {"batch_tokens", 0},
         {"output_tokens", 32}, {"seed", 1234}};
     std::map<std::string, std::string> texts {{"hardware_mode", "auto"}, {"backend", "auto"},
-        {"devices", ""}, {"sampler", "greedy"}};
+        {"devices", ""}, {"sampler", "greedy"}, {"pooling", ""}, {"normalization", ""},
+        {"query_prefix", ""}, {"document_prefix", ""}, {"chat_template", ""}, {"system_prompt", ""}};
+    std::set<std::string> explicit_texts;
     std::map<std::string, double> floats {{"temperature", 0.0}};
     int64_t i(const char *k) const { return ints.at(k); }
     const std::string &s(const char *k) const { return texts.at(k); }
@@ -175,7 +178,9 @@ void initialize_engine() {
 
     llama_backend_init(); engine_started = true;
 }
+#include "model_spec.h"
 struct SharedModel {
+    ModelSpec spec;
     std::mutex mutex;
     std::thread loader;
     std::atomic<bool> cancel{false};
@@ -290,7 +295,7 @@ void close(VM &vm, Resource &r) {
         auto &session = *vm.resources.at(r.parent);
         if (session.active_request == r.id) session.active_request = 0;
         runtime(vm, r).reserved -= r.charge; r.charge = 0;
-        r.request.reset();
+        r.request.reset(); r.model.reset();
     }
     if (r.kind == session_kind) r.model.reset();
     if (r.kind == session_kind) { auto &rt = runtime(vm, r); rt.sessions--; rt.reserved -= r.charge; rt.vram_reserved -= r.vram_charge; }
@@ -329,22 +334,16 @@ std::string model_state(Resource &r) {
     if (r.cancelled) return "cancelled";
     std::lock_guard<std::mutex> lock(r.model->mutex); return r.model->state;
 }
-int64_t context_reservation(const Config &c, bool embedding) {
-    // Deliberately conservative admission envelope from STEP-02, not a claim
-    // that upstream exposes a hard allocator cap. Includes graph/scratch/KV.
-    int64_t scale = c.i("context_tokens") * c.i("request_rows");
-    return embedding ? 128 * MiB + scale * 32768 : 128 * MiB + scale * 65536;
-}
 void reserve(Resource &rt, int64_t bytes) {
     require(bytes > 0 && bytes <= rt.config.i("memory_bytes") - rt.reserved, "RAM reservation exceeds runtime budget", -8);
     rt.reserved += bytes;
 }
 std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, const std::string &hash, const std::string &profile, const std::function<void(const SharedModel *)> &admit, int64_t remaining_vram, std::string &selection) {
     require(hash.size() == 64 && hash.find_first_not_of("0123456789abcdef") == std::string::npos, "expected lowercase SHA-256");
-    require(profile == "bge-small-en-v1.5" || profile == "smollm2-360m-instruct", "unqualified model profile");
-    bool embedding = profile == "bge-small-en-v1.5";
-    int64_t weights = embedding ? 160 * MiB : 800 * MiB;
-    int64_t scratch = context_reservation(c, embedding);
+    auto spec = read_model_spec(c, path, profile);
+    bool embedding = spec.embedding;
+    int64_t weights = spec.weights;
+    int64_t scratch = model_context_reservation(c, spec);
     std::lock_guard<std::mutex> lock(engine_mutex);
     const Device *chosen = nullptr;
     selection = "explicit CPU";
@@ -357,13 +356,13 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
             auto budget = std::min<int64_t>(int64_t(available), std::min(c.i("vram_bytes"), remaining_vram));
             if (weights + scratch <= budget) { chosen = &d; break; }
         }
-        if (chosen) selection = "full GPU offload within conservative weight/context reservation; STEP-02 CPU/Metal profile";
+        if (chosen) selection = "full GPU offload within model/configuration admission envelope";
         else {
             require(c.s("hardware_mode") != "required-gpu" && c.s("backend") == "auto" && c.s("devices").empty(), "required GPU/backend/device unavailable or exceeds budget", -6);
             selection = "CPU fallback: no eligible packaged GPU within memory budget; " + discovery_note;
         }
     }
-    auto key = hash + ":" + profile + ":" + engine_id + ":" + (chosen ? chosen->backend + ":" + chosen->name : "cpu");
+    auto key = hash + ":" + profile + ":" + spec.identity.dump() + ":" + engine_id + ":" + (chosen ? chosen->backend + ":" + chosen->name : "cpu");
     for (auto it = models.begin(); it != models.end();) { if (it->second.expired()) it = models.erase(it); else ++it; }
     if (auto existing = models[key].lock()) {
         std::lock_guard<std::mutex> state(existing->mutex);
@@ -374,6 +373,7 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
         }
     }
     auto p = std::make_shared<SharedModel>();
+    p->spec = std::move(spec);
     p->owners = 1; p->hash = hash; p->profile = profile; p->id = std::to_string(next_model++);
     p->gpu = chosen; p->backend = chosen ? chosen->backend : "cpu"; p->device = chosen ? chosen->name : "CPU";
     p->selection = selection; p->weight_reserve = weights; p->session_reserve = scratch;
@@ -390,7 +390,7 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
             // upstream. Models are application-owned immutable provisioning.
             require(rxllama_package::hash(path, &raw->cancel) == raw->hash, "model artifact SHA-256 mismatch");
             const char *expected = embedding ? "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" : "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201";
-            require(raw->hash == expected, "artifact is not the pinned model profile");
+            if (raw->spec.preset) require(raw->hash == expected, "artifact is not the pinned model profile");
             require(!raw->cancel, "model load cancelled");
             auto params = llama_model_default_params();
             ggml_backend_dev_t devices[] = {dev, nullptr};
@@ -402,7 +402,8 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
             auto model = llama_model_load_from_file(rxllama_package::utf8_path(path).c_str(), params);
             placement_log = nullptr;
             require(model != nullptr, "upstream model load failed");
-            if (llama_model_n_embd_out(model) != (embedding ? 384 : 960)) { llama_model_free(model); throw Failure(-1, "model dimension differs from profile"); }
+            try { validate_loaded_model(model, raw->spec); }
+            catch (...) { llama_model_free(model); throw; }
             std::lock_guard<std::mutex> state(raw->mutex);
             raw->model = model; raw->placement = placement;
             auto offload = placement.find("offloaded ");
@@ -419,9 +420,11 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
 }
 void session_open(VM &vm, Resource &m, const Config &config, const std::string &capability, rxllama_result &out) {
     require(model_state(m) == "ready", "model is not ready", -7);
-    bool embedding = m.model->profile == "bge-small-en-v1.5";
+    bool embedding = m.model->spec.embedding;
     require(capability == (embedding ? "embedding" : "generation"), "model capability mismatch");
-    require(!embedding || config.i("context_tokens") <= 512, "BGE context exceeds 512 tokens");
+    require(config.i("context_tokens") <= m.model->spec.context, "requested context exceeds model training context");
+    for (const char *key : {"pooling", "normalization", "query_prefix", "document_prefix", "chat_template", "system_prompt"})
+        require(config.s(key) == m.config.s(key), "session preparation options conflict with loaded model");
     require(config.i("context_tokens") >= 256 && config.i("context_tokens") % 256 == 0, "context must be a supported multiple of 256 tokens");
     require(config.s("hardware_mode") != "cpu" || !m.model->gpu, "session CPU setting conflicts with loaded model");
     require(config.s("hardware_mode") != "required-gpu" || m.model->gpu, "session GPU setting conflicts with loaded model");
@@ -435,7 +438,7 @@ void session_open(VM &vm, Resource &m, const Config &config, const std::string &
     require(rt.sessions < rt.config.i("max_sessions"), "session admission saturated", -8);
     Config snapshot = config;
     auto selection = m.selection;
-    auto charge = context_reservation(config, embedding);
+    auto charge = model_context_reservation(config, m.model->spec);
     if (m.model->gpu) require(charge <= std::min(rt.config.i("vram_bytes"), config.i("vram_bytes")) - rt.vram_reserved, "VRAM session reservation exceeds budget", -8);
     reserve(rt, charge);
     try {
@@ -450,7 +453,7 @@ void prepare(Resource &r, int64_t work) {
     require(work > 0, "preparation work budget must be positive");
     if (r.prepared) return;
     auto begin = Clock::now();
-    bool embedding = r.model->profile == "bge-small-en-v1.5";
+    bool embedding = r.model->spec.embedding;
     if (!r.context) {
         auto p = llama_context_default_params();
         p.n_ctx = uint32_t(r.config.i("context_tokens") * r.config.i("request_rows"));
@@ -461,7 +464,7 @@ void prepare(Resource &r, int64_t work) {
         p.n_threads = int32_t(r.config.i("threads"));
         if (!p.n_threads) p.n_threads = embedding || r.model->gpu ? 2 : 4;
         p.n_threads_batch = r.config.i("batch_threads") ? int32_t(r.config.i("batch_threads")) : p.n_threads;
-        p.embeddings = embedding; p.pooling_type = embedding ? LLAMA_POOLING_TYPE_CLS : LLAMA_POOLING_TYPE_NONE;
+        p.embeddings = embedding; p.pooling_type = embedding ? r.model->spec.pooling : LLAMA_POOLING_TYPE_NONE;
         if (!embedding) { p.n_outputs_max = p.n_seq_max; p.n_outputs_max_per_seq = 1; }
         p.offload_kqv = r.model->gpu; p.op_offload = r.model->gpu; p.no_perf = false;
         r.context = llama_init_from_model(r.model->model, p);
@@ -497,7 +500,7 @@ void prepare(Resource &r, int64_t work) {
     if (embedding) {
         auto values = llama_get_embeddings_seq(r.context, 0);
         require(values != nullptr, "preparation produced no embedding", -6);
-        double norm = 0; for (int i = 0; i < 384; ++i) { require(std::isfinite(values[i]), "nonfinite preparation embedding"); norm += double(values[i]) * values[i]; }
+        double norm = 0; for (int i = 0; i < r.model->spec.dimensions; ++i) { require(std::isfinite(values[i]), "nonfinite preparation embedding"); norm += double(values[i]) * values[i]; }
         require(norm > 0, "zero preparation embedding");
     } else require(llama_get_logits_ith(r.context, -1) != nullptr, "preparation produced no logits", -6);
     if (auto memory = llama_get_memory(r.context)) llama_memory_clear(memory, true);
@@ -506,7 +509,7 @@ void prepare(Resource &r, int64_t work) {
 // Requests retain owned bounded input/results; only their session owns compute state.
 void request_open(VM &vm, Resource &session, const Config &config, rxllama_result &out) {
     require(session.prepared, "session is not prepared", -7);
-    bool generation = session.model->profile == "smollm2-360m-instruct";
+    bool generation = !session.model->spec.embedding;
     require(!session.active_request, "session has an active request", -7);
     config.validate();
     for (const auto &entry : config.ints) {
@@ -521,12 +524,12 @@ void request_open(VM &vm, Resource &session, const Config &config, rxllama_resul
     auto request = std::make_unique<Request>(); request->generation = generation;
     auto charge = config.i("request_bytes") + config.i("request_tokens") * int64_t(sizeof(llama_token)) +
                   config.i("request_rows") * (generation ? config.i("output_tokens") * int64_t(sizeof(llama_token)) + 256
-                                                        : 384 * int64_t(sizeof(double)) + 256);
+                                                        : session.model->spec.dimensions * int64_t(sizeof(double)) + 256);
     if (generation) charge += 2 * config.i("request_bytes");
     auto &rt = runtime(vm, session); reserve(rt, charge);
     try {
         auto &r = make(vm, request_kind, out); r.parent = session.id;
-        r.config = std::move(snapshot); r.request = std::move(request); r.charge = charge;
+        r.config = std::move(snapshot); r.request = std::move(request); r.charge = charge; r.model = session.model;
         session.active_request = r.id;
     } catch (...) { rt.reserved -= charge; throw; }
 }
@@ -560,8 +563,8 @@ void add_embedding(Resource &r, const char *text, size_t length, const std::stri
     require(text, "missing embedding input");
     require(role == "query" || role == "document", "unsupported embedding role");
     require(q.rows.size() < size_t(r.config.i("request_rows")), "request row limit exceeded", -8);
-    const char *prefix = role == "query" ? "Represent this sentence for searching relevant passages: " : "";
-    auto prefix_length = std::strlen(prefix);
+    const auto &prefix = role == "query" ? r.model->spec.query_prefix : r.model->spec.document_prefix;
+    auto prefix_length = prefix.size();
     require(length <= size_t(r.config.i("request_bytes") - q.bytes) &&
             prefix_length <= size_t(r.config.i("request_bytes") - q.bytes) - length, "request byte limit exceeded", -8);
     EmbeddingRow row; row.text = prefix; row.text.append(text, length); valid_utf8(row.text);
@@ -585,7 +588,7 @@ void submit(VM &vm, Resource &r) {
             int count = llama_tokenize(vocab, row.text.data(), int(row.text.size()), nullptr, 0, true, q.generation);
             require(count < 0 && count != INT32_MIN, "tokenizer size failed", -6); count = -count;
             require(q.generation ? count <= r.config.i("context_tokens") - r.config.i("output_tokens")
-                                 : count <= r.config.i("context_tokens") && count <= 512,
+                                 : count <= r.config.i("context_tokens"),
                     "request row exceeds context/token limit");
             require(count <= r.config.i("request_tokens") - total, "request token limit exceeded", -8);
             row.tokens.resize(size_t(count));
@@ -615,7 +618,8 @@ void process_embedding(VM &vm, Resource &r, int64_t work) {
     auto &session = *vm.resources.at(r.parent);
     auto begin = Clock::now();
     try {
-        std::vector<double> output(q.rows.size() * 384);
+        const int dimensions = session.model->spec.dimensions;
+        std::vector<double> output(q.rows.size() * size_t(dimensions));
         struct Batch {
             llama_batch value;
             explicit Batch(int count): value(llama_batch_init(count, 0, 1)) {}
@@ -639,10 +643,10 @@ void process_embedding(VM &vm, Resource &r, int64_t work) {
             const auto values = llama_get_embeddings_seq(session.context, int(row));
             require(values != nullptr, "missing sequence embedding", -6);
             double norm = 0;
-            for (int d = 0; d < 384; ++d) { require(std::isfinite(values[d]), "nonfinite embedding", -6); norm += double(values[d]) * values[d]; }
+            for (int d = 0; d < dimensions; ++d) { require(std::isfinite(values[d]), "nonfinite embedding", -6); norm += double(values[d]) * values[d]; }
             require(norm > 0 && std::isfinite(norm), "invalid embedding norm", -6);
-            norm = std::sqrt(norm);
-            for (int d = 0; d < 384; ++d) output[row * 384 + size_t(d)] = values[d] / norm;
+            norm = session.model->spec.normalize ? std::sqrt(norm) : 1.0;
+            for (int d = 0; d < dimensions; ++d) output[row * size_t(dimensions) + size_t(d)] = values[d] / norm;
         }
         if (vm.probes_enabled) {
             auto normalized = Clock::now();
@@ -728,7 +732,11 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
                 if (key == "backend") require(value == "auto" || value == "cpu" || value == "metal" || value == "cuda" || value == "vulkan", "unknown backend");
                 if (key == "sampler") require(value == "greedy", "unqualified sampler");
                 if (key == "devices") require(value.find(',') == std::string::npos, "multiple device placement awaits qualification");
-                c.texts[key] = value;
+                valid_utf8(value);
+                require(value.size() <= 1024 * 1024, "text option exceeds supported bound");
+                if (key == "pooling") require(value == "cls" || value == "mean" || value == "last", "unsupported pooling; use cls, mean or last");
+                if (key == "normalization") require(value == "l2" || value == "none", "unsupported normalization; use l2 or none");
+                c.texts[key] = value; c.explicit_texts.insert(key);
             }
             c.validate(); r.config = std::move(c); break;
         }
@@ -798,7 +806,7 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
             require(q.state == "complete", "embedding result is not complete", -7);
             out->probes = vm.probes_enabled ? &vm.probes : nullptr;
             out->values = q.values.data(); out->value_count = int64_t(q.values.size());
-            out->rows = int64_t(q.rows.size()); out->dimensions = 384; break;
+            out->rows = int64_t(q.rows.size()); out->dimensions = r.model->spec.dimensions; break;
         }
         case RXLLAMA_CANCEL: {
             auto &r = get(vm, a[0].handle, request_kind); auto &q = *r.request;
@@ -826,6 +834,10 @@ int rxllama_call(void *opaque, int op, const rxllama_argument *a, rxllama_result
                     else if (key == "placement") vm.text = m.placement;
                     else if (key == "generation_spec" && m.profile == "smollm2-360m-instruct") vm.text = "smollm2-360m-instruct;Q8_0;greedy;explicit-system-user-template;bounded-prefill-decode;UTF-8";
                     else if (key == "embedding_spec" && m.profile == "bge-small-en-v1.5") vm.text = "bge-small-en-v1.5;F16;384;CLS;L2;512;query=Represent this sentence for searching relevant passages: ;document=unchanged";
+                    else if ((key == "embedding_spec" && m.spec.embedding) || (key == "generation_spec" && !m.spec.embedding)) {
+                        auto identity = m.spec.identity; identity["sha256"] = m.hash; identity["engine"] = engine_id;
+                        identity["context_tokens"] = r.config.i("context_tokens"); vm.text = identity.dump();
+                    }
                     else throw Failure(-1, "unknown model text property");
                 } else throw Failure(-1, "unknown resource text property");
             } else {

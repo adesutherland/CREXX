@@ -17,6 +17,7 @@ def sha(path):
 
 
 def copy_runtime(source, destination):
+    source, destination = Path(source), Path(destination)
     # CUDA libraries are large. The tests never alter them, so use independent
     # directory entries on the same filesystem; mutable manifests remain copies.
     if source.suffix != '.json':
@@ -148,7 +149,8 @@ def main():
             assert entry.is_symlink(), 'rxvm must retain its installed symlink'
             assert os.readlink(entry) == preferred_vm, 'rxvm must use a relative selected-VM link'
         assert not list(prefix.rglob('*.gguf')), 'fixture/model leaked into release'
-        for name in ('README.md', 'installation.md', 'models.md', 'reference.md', 'qualification.md',
+        for name in ('README.md', 'common.md', 'installation.md', 'models.md', 'reference.md', 'qualification.md',
+                     'examples/common_generation.crexx', 'examples/common_embeddings.crexx',
                      'examples/persistent_embeddings.crexx', 'examples/shared_embeddings.crexx',
                      'examples/persistent_generation.crexx', 'examples/shared_generation.crexx'):
             assert (prefix / 'share/crexx/llama' / name).is_file(), name
@@ -210,6 +212,59 @@ def main():
                 copy_runtime(native.parent / entry['path'], target)
         shutil.rmtree(native.parent)
         run('relocated-native', [relocated / executable.name, fixture, fixture_info['sha256']], marker, cwd=relocated, consumer=True)
+
+        # Common clients compile with core metadata only. This fixture exercises
+        # public text APIs without distributing trained weights in the product.
+        text_info = json.loads((source / 'tests/native-inference/fixtures/text-manifest.json').read_text())
+        text_fixture = source / 'tests/native-inference/fixtures/llama-text.gguf'
+        assert sha(text_fixture) == text_info['sha256']
+        common_source = source / 'tests/native-inference/common_package.crexx'
+        core_imports = work / 'core-imports'
+        core_imports.mkdir()
+        for name in ('library.rxbin', 'classlib.rxbin', 'rxfnsg.rxbin', 'rxcexits.rxbin', 'rxfs.rxplugin', 'rxjson.rxplugin'):
+            item = prefix / 'bin' / name
+            if item.exists(): shutil.copy2(item, core_imports / name)
+        for mode in ('opt', 'noopt'):
+            program = work / ('common-' + mode)
+            run('common-' + mode + '-compile', [prefix / ('bin/rxc' + suffix), '--no-exe-import',
+                *(['-n'] if mode == 'noopt' else []), '-i', core_imports, '-o', program, common_source], consumer=True)
+            run('common-' + mode + '-assemble', [prefix / ('bin/rxas' + suffix), '-o', program, program], consumer=True)
+            linked = work / ('common-' + mode + '-linked')
+            run('common-' + mode + '-link', [prefix / ('bin/rxlink' + suffix), '-o', linked, program,
+                core_imports / 'library', core_imports / 'classlib', core_imports / 'rxfnsg'], consumer=True)
+            for vm in ('rxvm', *[v for v in ('rxbvm', 'rxtvm') if v != preferred_vm]):
+                binary = prefix / 'bin' / (vm + suffix)
+                if binary.exists():
+                    run('common-' + mode + '-' + vm, [binary, linked, '-a', 'present', text_fixture, text_info['sha256']],
+                        'PASS: common package present', consumer=True)
+
+        common_native = work / 'common-native' / 'consumer'
+        common_native.parent.mkdir()
+        run('common-native-build', [prefix / ('bin/crexx' + suffix), '--program', common_native,
+            common_source, '--jobs', '1', '--native'], 'PUBLISHED: native program',
+            env=dict(clean, CREXX_HOME=str(prefix)))
+        assert not (common_native.parent / 'rxllama.native.json').exists(), 'core-only program acquired native inference dependency'
+        common_relocated = work / 'common-relocated'
+        shutil.copytree(common_native.parent, common_relocated)
+        shutil.rmtree(common_native.parent)
+        command = [common_relocated / ('consumer' + suffix)]
+        tail = [text_fixture, text_info['sha256']]
+        run('common-relocated-absent', command + ['provider_unavailable'] + tail,
+            'PASS: common package provider_unavailable', cwd=common_relocated, consumer=True)
+        # A present library without the common native factory is incompatible.
+        shutil.copy2(prefix / 'bin/rxfs.rxplugin', common_relocated / 'rxllama.rxplugin')
+        run('common-relocated-incompatible', command + ['provider_incompatible'] + tail,
+            'PASS: common package provider_incompatible', cwd=common_relocated, consumer=True)
+        shutil.copy2(prefix / 'bin/rxllama.rxplugin', common_relocated / 'rxllama.rxplugin')
+        shutil.copytree(providers, common_relocated / 'providers', copy_function=copy_runtime)
+        if os.name == 'nt':
+            for name in bootstrap:
+                shutil.copy2(prefix / 'bin' / name, common_relocated / name)
+        run('common-relocated-present', command + ['present'] + tail,
+            'PASS: common package present', cwd=common_relocated, consumer=True)
+        (common_relocated / 'rxllama.rxplugin').unlink()
+        run('common-relocated-removed', command + ['provider_unavailable'] + tail,
+            'PASS: common package provider_unavailable', cwd=common_relocated, consumer=True)
         outcome = 'passed'
     finally:
         (logs / 'summary.json').write_text(json.dumps({'outcome': outcome,

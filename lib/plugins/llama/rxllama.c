@@ -157,8 +157,10 @@ WRAP(cancel, RXLLAMA_CANCEL, "h")
 WRAP(addprompt, RXLLAMA_ADD_PROMPT, "hssI")
 WRAP(readtext, RXLLAMA_READ_TEXT, "hiSIS")
 #include "typed.h"
+#include "common_driver.h"
 LOADFUNCS
 LLAMA_TYPED_DECLARATIONS
+LLAMA_COMMON_DECLARATIONS
 ADDPROC(configcreate, "rxllama.configcreate", "b", ".int", "expose config=.binary");
 ADDPROC(configint, "rxllama.configint", "b", ".int", "config=.binary, key=.string, value=.int");
 ADDPROC(configfloat, "rxllama.configfloat", "b", ".int", "config=.binary, key=.string, value=.float");

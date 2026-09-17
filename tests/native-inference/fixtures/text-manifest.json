@@ -1,0 +1,10 @@
+{
+  "file": "llama-text.gguf",
+  "sha256": "6bd94396c4d374fb70d7574ed9f18c11a0a1f3d92b4ec0402b251ab5d94a5825",
+  "bytes": 1187392,
+  "generator": "tests/native-inference/generate_text_fixture.cpp",
+  "seed": 1234,
+  "description": "Standalone generated random F32 weights, norm weights one, output weights zero, and a constructed 512-entry byte vocabulary. No trained model, downloaded tokenizer or corpus input. Not a language-quality model.",
+  "license": "MIT; generated entirely by the accompanying cREXX fixture generator",
+  "command": "generate_text_fixture llama-text.gguf"
+}

@@ -9,9 +9,20 @@ code, with no external training corpus or checkpoint.
 
 This exercises the **packaged engine**, including bounded decoding and finite
 embedding output. It is not a BGE/Smol profile, language-quality example or
-encoder-tokenizer qualification. The public provider must reject it as an
-unqualified profile artifact. It is never installed in a user runtime package.
+encoder-tokenizer qualification. Its tokenizer is deliberately `no_vocab`, so the public text provider rejects it
+with an explicit missing-text-tokenizer diagnostic. It is never installed in a user runtime package.
 
 Regeneration instructions are in [the QA guide](../README.md). Use the manifest
 hash for byte identity: upstream's `std::hash` and random distributions can
 produce different bytes with a different C++ standard library.
+
+## Public text fixture
+
+`llama-text.gguf` is generated entirely by `generate_text_fixture.cpp`, under
+MIT. It contains deterministic random F32 weights (norm weights one, output
+weights zero) and a constructed 512-entry byte vocabulary. No trained checkpoint,
+downloaded tokenizer or corpus is an input. [text-manifest.json](text-manifest.json)
+records the hash, generator and seed. The small 64-dimensional fixture exercises
+public text and packed-embedding plumbing; it is not a language-quality model
+and is never installed. Rebuild the generator against the pinned `ggml-base`
+and run `generate_text_fixture llama-text.gguf` to regenerate it.

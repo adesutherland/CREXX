@@ -1,0 +1,16 @@
+options levelg
+import rxfnsb
+import rxfnsg
+missing: interface
+  *: factory
+    arg config = .llmconfig, capability = .string
+main: procedure = .int
+  config = .llmconfig("llama", "test")
+  say "before" config.text("driver")
+  do
+    unavailable = .missing(config, "generation")
+  on signal function_not_found
+    say "caught"
+  end
+  say "after" config.text("driver")
+  return 0

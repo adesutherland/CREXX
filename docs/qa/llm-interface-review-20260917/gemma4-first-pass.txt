@@ -1,0 +1,7 @@
+OUTPUT: Hello! How can
+PASS: local Gemma 4 model through common driver
+
+Artifact: /Users/adrian/Models/gemma4/gemma-4-E4B-it-Q4_0.gguf
+SHA256: a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2
+Config: CPU, 16 GiB RAM admission budget, context 256, 2 rows, 512 input tokens, 4 output tokens, greedy, raw template with explicit model turn markers.
+Local application-owned provisioning; no redistribution or broad model-quality qualification.

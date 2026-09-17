@@ -1,0 +1,65 @@
+/** All HTTP drivers use exactly the same generation and request consumer. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  drivers = .string[]
+  drivers.1 = "ollama"
+  drivers.2 = "openai"
+  drivers.3 = "anthropic"
+  drivers.4 = "gemini"
+  do i = 1 to drivers.0
+    config = .llmconfig(drivers[i], "test-model")
+    if drivers[i] = "ollama" then call config.set_int("port", args[1] as .int)
+    else do
+      call config.set_text("api_key", "fixture-key")
+      call config.set_text("endpoint", "http://127.0.0.1:" || args[1])
+    end
+    client = .llm.open(config)
+    call consume client
+    call client.close()
+  end
+  say "PASS: all HTTP drivers share generation, requests, results and errors"
+  return 0
+consume: procedure = .void
+  arg client = .llm
+  wire = client.buildRequest("Hello")
+  call check pos("127.0.0.1", wire) > 0, "diagnostics use the configured endpoint"
+  expected = "Hello " || d2c(127757)
+  text = client.generate("Hello " || d2c(127757))
+  call check text = expected & client.status() = 0, client.driver() || " generation: " || client.error()
+  saved = client.lastResult()
+  call check saved.finish() = "complete" & saved.tokens() = -1 & saved.category() = "", "honest unknown finish/usage"
+  pending = client.request()
+  call check pending.add("", "Hello") = 1, "one row"
+  call check pending.submit() = 0, "submit"
+  call check pending.process(1) = "complete", "blocking process"
+  chunk = pending.read(1)
+  call check chunk.text() = expected & chunk.tokens() = -1, "owned request result"
+  again = pending.read(1)
+  call check again.text() = "" & again.tokens() = 0, "no replay"
+  call pending.close()
+  text = client.generate("http-error")
+  call check client.status() = 503, "HTTP status preserved"
+  failure = client.lastResult()
+  call check failure.category() = "http" & failure.finish() = "error", "HTTP error category"
+  text = client.generate("bad-json")
+  call check client.status() < 0, "parse failure status"
+  call check saved.text() = expected & chunk.text() = expected, "owned results survive later failure"
+  text = client.generate("Hello")
+  call check client.status() = 0 & text = expected, "recover after failure"
+  pending = client.request()
+  prompts = .string[]
+  prompts.1 = "one"
+  prompts.2 = "two"
+  call check pending.add("", "already admitted") = 1, "partial request before batch error"
+  call check pending.add_all(prompts, "") < 0, "unsupported batch is explicit"
+  call check pending.submit() < 0, "failed batch cannot submit a shortened result"
+  call pending.close()
+  return
+check: procedure = .void
+  arg okay = .boolean, label = .string
+  if \okay then call raise "INVALID_ARGUMENTS", "FAIL: " || label, ""
+  return

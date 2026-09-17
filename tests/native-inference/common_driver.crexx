@@ -1,0 +1,65 @@
+/** The same typed generation consumer works with the optional native driver. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  config = .llmconfig("llama", args[1])
+  call config.set_text("sha256", args[2])
+  call config.set_text("hardware_mode", "cpu")
+  call config.set_text("chat_template", "raw")
+  call config.set_int("request_tokens", 512)
+  call config.set_int("request_rows", 2)
+  call config.set_int("context_tokens", 256)
+  call config.set_int("output_tokens", 4)
+  client = .llm.open(config)
+  call check client.driver() = "llama", "selected native driver"
+  call check client.supports("incremental"), "incremental capability"
+  state = client.prepare(128)
+  do while state = "loading" | state = "preparing"
+    state = client.prepare(128)
+  end
+  call check state = "ready", "prepare: " || client.error()
+  first = client.generate("Once upon a time")
+  call check client.status() = 0, "first generation: " || client.error()
+  saved_result = client.lastResult()
+  second = client.generate("Once upon a time")
+  call check client.status() = 0, "repeated generation: " || client.error()
+  call check first = second, "repeat deterministic output"
+  call check saved_result.text() = first, "owned result"
+  literal = client.generate("Hello" || d2c(0) || d2c(127757))
+  call check client.status() = 0, "raw prompt preserves NUL and Unicode: " || client.error()
+  pending = client.request()
+  prompts = .string[]
+  prompts.1 = "Once upon a time"
+  prompts.2 = "Hello"
+  call check pending.add_all(prompts, "") = 0, "ordered batch admission"
+  call check pending.submit() = 0, "batch submit"
+  do while pending.state() = "running"
+    state = pending.process(2)
+    call check pending.status() = 0, "bounded process: " || pending.error()
+  end
+  chunk = pending.read(1)
+  call check chunk.status() = 0 & chunk.row() = 1, "owned batch output"
+  call check pending.close() = 0, "request close"
+  live = client.request()
+  call check live.add("", "Hello") = 1, "new request"
+  call check live.cancel() = 0, "cancel"
+  call check live.state() = "cancelled", "cancelled state"
+  call client.close()
+  call check client.status() = 0, "client close"
+  call check live.state() = "closed", "client closes issued children"
+  call check saved_result.text() = first & chunk.row() = 1, "results survive owner closure"
+  call client.close()
+  call config.set_text("model", args[1] || d2c(0) || "ignored-suffix")
+  invalid = .llm.open(config)
+  call check invalid.prepare(128) = "failed", "NUL path must not load its truncated prefix"
+  call check invalid.status() <> 0, "model failure is distinct from plugin absence"
+  call invalid.close()
+  say "PASS: native common driver, persistent requests, batches and owned results"
+  return 0
+check: procedure = .void
+  arg okay = .boolean, label = .string
+  if \okay then call raise "INVALID_ARGUMENTS", "FAIL: " || label, ""
+  return

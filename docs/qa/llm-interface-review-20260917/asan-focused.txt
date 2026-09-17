@@ -1,0 +1,74 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_common_drivers\|ts_llm_.\*\|address_llm_provider\|interface_factory_signal_restore_run_.\*\|inline_receiver_signal_cleanup.\*\|rxpa_native_unwind.\*\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+      Start  531: interface_factory_signal_restore_run_noopt
+ 1/17 Test  #531: interface_factory_signal_restore_run_noopt ...   Passed    1.41 sec
+      Start  532: interface_factory_signal_restore_run_opt
+ 2/17 Test  #532: interface_factory_signal_restore_run_opt .....   Passed    1.42 sec
+      Start  660: inline_receiver_signal_cleanup
+ 3/17 Test  #660: inline_receiver_signal_cleanup ...............   Passed    3.98 sec
+      Start 1021: address_llm_provider
+ 4/17 Test #1021: address_llm_provider .........................   Passed    9.29 sec
+      Start 1745: rxllama_common_drivers
+ 5/17 Test #1745: rxllama_common_drivers .......................   Passed  113.12 sec
+      Start 1882: ts_llm_http_fixture_noopt
+ 6/17 Test #1882: ts_llm_http_fixture_noopt ....................***Failed  Required regular expression not found. Regex=[PASS: all HTTP drivers
+]  0.55 sec
+ERROR reading module file /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/rxfnsg/tests_functional/llm_http_fixture_noopt-linked.rxbin
+
+      Start 1883: ts_llm_http_fixture_opt
+ 7/17 Test #1883: ts_llm_http_fixture_opt ......................***Failed  Required regular expression not found. Regex=[PASS: all HTTP drivers
+]  0.54 sec
+ERROR reading module file /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan/lib/rxfnsg/tests_functional/llm_http_fixture_opt-linked.rxbin
+
+      Start 1923: ts_llm_ollama_noopt
+ 8/17 Test #1923: ts_llm_ollama_noopt ..........................   Passed    2.27 sec
+      Start 1924: ts_llm_ollama_opt
+ 9/17 Test #1924: ts_llm_ollama_opt ............................   Passed    4.03 sec
+      Start 1925: ts_llm_providers_noopt
+10/17 Test #1925: ts_llm_providers_noopt .......................   Passed    6.03 sec
+      Start 1926: ts_llm_providers_opt
+11/17 Test #1926: ts_llm_providers_opt .........................   Passed    4.30 sec
+      Start 1927: ts_llm_common_noopt
+12/17 Test #1927: ts_llm_common_noopt ..........................   Passed    8.04 sec
+      Start 1928: ts_llm_common_opt
+13/17 Test #1928: ts_llm_common_opt ............................   Passed    4.22 sec
+      Start 2509: rxpa_native_unwind_funcs_dynamic_noopt
+14/17 Test #2509: rxpa_native_unwind_funcs_dynamic_noopt .......   Passed    0.17 sec
+      Start 2510: rxpa_native_unwind_funcs_dynamic_opt
+15/17 Test #2510: rxpa_native_unwind_funcs_dynamic_opt .........   Passed    0.21 sec
+      Start 2511: rxpa_native_unwind_funcs_static_noopt
+16/17 Test #2511: rxpa_native_unwind_funcs_static_noopt ........   Passed    0.65 sec
+      Start 2512: rxpa_native_unwind_funcs_static_opt
+17/17 Test #2512: rxpa_native_unwind_funcs_static_opt ..........   Passed    0.19 sec
+
+88% tests passed, 2 tests failed out of 17
+
+Label Time Summary:
+compiler            =  13.27 sec*proc (2 tests)
+comprehensive       = 153.12 sec*proc (13 tests)
+concurrency         =  25.92 sec*proc (5 tests)
+concurrency-sp07    =  25.92 sec*proc (5 tests)
+correctness         = 117.09 sec*proc (2 tests)
+flow                =   3.98 sec*proc (1 test)
+http                =   1.09 sec*proc (2 tests)
+inlining            =   3.98 sec*proc (1 test)
+levelg              =   1.09 sec*proc (2 tests)
+library             = 114.21 sec*proc (3 tests)
+linked_opt          =  18.34 sec*proc (7 tests)
+llama               = 113.12 sec*proc (1 test)
+llm                 =   1.09 sec*proc (2 tests)
+optimizer-parity    =  30.10 sec*proc (10 tests)
+receiver            =   3.98 sec*proc (1 test)
+rxpa                = 113.12 sec*proc (1 test)
+signals             =   3.98 sec*proc (1 test)
+smoke               =   7.29 sec*proc (4 tests)
+stage3              =   9.29 sec*proc (1 test)
+
+Total Test time (real) = 160.46 sec
+
+The following tests FAILED:
+	1882 - ts_llm_http_fixture_noopt (Failed)                http levelg library llm smoke
+	1883 - ts_llm_http_fixture_opt (Failed)                  http levelg library llm smoke
+Errors while running CTest

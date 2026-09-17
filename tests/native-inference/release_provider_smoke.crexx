@@ -18,6 +18,9 @@ require: procedure = .void
 main: procedure = .int
   arg args = .string[]
   call require args[0] = 2, "fixture path and SHA256"
+  legacy = .llm("test-model")
+  call require pos("Hello", legacy.buildBody("Hello")) > 0, "native import preserves legacy Ollama factory"
+  call legacy.close()
   config = .llama..configuration()
   call require config.status() = 0, "native configuration factory"
   call require config.set_text("hardware_mode", "cpu") = 0, "explicit CPU"

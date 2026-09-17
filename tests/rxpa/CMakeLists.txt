@@ -299,6 +299,8 @@ foreach(engine IN ITEMS rxbvm rxtvm)
         target_compile_definitions(${object_vm} PRIVATE NTHREADED=1)
     endif()
     configure_linker_for_static_lib(${object_vm} _rxpa_objects)
+    # The linked Level G library uses rxfs for optional LLM provider discovery.
+    configure_linker_for_static_lib(${object_vm} fs)
     enable_rxpa_test_vm_platform(${object_vm})
     target_link_libraries(${object_vm} rxvmplugin rxvmref rxbin mc_decimal_manual
             avl_tree rxpa rxpashim _rxpa_objects_static)

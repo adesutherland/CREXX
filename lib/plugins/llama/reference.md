@@ -2,11 +2,31 @@
 
 [Guide index](README.md) · [Models](models.md) · [Examples](examples/README.md)
 
-Use `import llama`. The [guide index](README.md#contracts) lists the public
+For the common client, start with [one interface, five drivers](common.md).
+For direct ownership control, use `import llama`. The [guide index](README.md#contracts) lists the public
 typed factories/methods. They are C RXPA bindings; applications do not need
 Rexx factory wrappers, opaque-handle manipulation or float/text conversion
 facades. The procedural `rxllama` interface uses the same engine and ownership
 rules and remains available for low-level integration.
+
+## Model selection
+
+`runtime.model(path, sha256, profile, config)` accepts general `generation` and
+`embedding` profiles, plus exact reference presets `bge-small-en-v1.5` and
+`smollm2-360m-instruct`. Unknown profiles fail immediately. All paths verify the
+actual file against the supplied SHA-256; only the reference presets also check
+a built-in reference hash. General model metadata is validated before tensor
+allocation; see [model compatibility and preprocessing](models.md).
+
+A valid constructor can return a loading owner which later enters `failed`;
+inspect `model.info_text("error")`. A successful constructor alone does not
+establish readiness. The common driver performs this lifecycle through
+`prepare()` / `generate()` and retains the diagnostic.
+
+There is no two-model limit. Compatible owners can share weights while retaining
+private contexts, memory admission and session limits. General model identity
+includes preprocessing and engine identity so incompatible configurations do not
+share an assumed embedding space or generation setup.
 
 ## Status, state and lifetime
 
@@ -55,13 +75,13 @@ except that row/token/byte limits and generation output-token limits may decreas
 | `memory_bytes` | 4,294,967,296 | Positive RAM admission budget per runtime, at most 2^40 bytes. Conservative reservations, not a process RSS hard limit. |
 | `vram_bytes` | 4,294,967,296 | Positive GPU admission budget, at most 2^40; selection also checks reported available device memory. |
 | `max_sessions` | 8 | Positive private-session limit per runtime, at most 64. |
-| `threads` | 0 | 0 selects the fixed profile default: 2 for embeddings or GPU generation, 4 for CPU generation; explicit 1–256. |
+| `threads` | 0 | 0 selects the capability default: 2 for embeddings or GPU generation, 4 for CPU generation; explicit 1–256. |
 | `batch_threads` | 0 | 0 uses the effective `threads`; explicit 1–256. |
-| `context_tokens` | 512 | Tokens per sequence. Session creation requires a multiple of 256: BGE 256/512; generation 256–8192. |
+| `context_tokens` | 512 | Tokens per sequence: multiple of 256, at most 8192 and no larger than model training context. The BGE preset allows 256/512. |
 | `request_rows` | 8 | Maximum rows, 1–8; row × context capacity must not exceed 65,536. |
 | `request_tokens` | 4096 | Aggregate input-token limit, positive and no larger than row × context capacity or 65,536. Includes special tokens/instructions/template. |
 | `request_bytes` | 1,048,576 | Input-byte limit, 1–67,108,864. For generation this separately caps rendered input and accumulated output bytes. |
-| `batch_tokens` | 0 | 0 selects the profile physical batch. BGE needs the entire admitted token batch (explicit value >= `request_tokens`, <=4096); generation permits explicit 1–128. |
+| `batch_tokens` | 0 | 0 selects the capability physical batch. Embeddings need the entire admitted token batch (explicit value >= `request_tokens`, <=4096); generation permits explicit 1–128. |
 | `output_tokens` | 32 | Positive per-row generation output limit, no larger than `context_tokens`; input plus this reservation must fit each sequence. |
 | `seed` | 1234 | Nonnegative, <=2^40; retained configuration identity. Greedy sampling does not use randomness. |
 
@@ -71,12 +91,25 @@ except that row/token/byte limits and generation output-token limits may decreas
 | `set_text("backend", ...)` | `auto` | `auto`, `cpu`, `metal`, `cuda`, `vulkan`; a GPU name is an explicit requirement. |
 | `set_text("devices", ...)` | empty | One inventory device name or ID; no comma-separated multi-device placement. |
 | `set_text("sampler", ...)` | `greedy` | Only `greedy`. |
+| `set_text("pooling", ...)` | unset | General embeddings require `cls`, `mean` or `last`. |
+| `set_text("normalization", ...)` | unset | General embeddings require `l2` or `none`. |
+| `set_text("query_prefix", ...)`, `document_prefix` | unset | General embeddings require both explicitly; empty is valid. |
+| `set_text("chat_template", ...)` | GGUF metadata | General generation: supported engine template or explicit `raw`. |
+| `set_text("system_prompt", ...)` | empty | Default system message for general chat generation; forbidden with raw. |
 | `set_float("temperature", ...)` | 0.0 | Only 0.0. |
 
 Unknown options, nonfinite/unsupported floats, negative integers and conflicting
-hardware settings fail. BGE context, batch and actual allocation constraints
+hardware settings fail. Model context, batch and actual allocation constraints
 are also checked when sessions are created/prepared. A syntactically valid
 setting is not a promise that hardware can allocate it.
+
+General profiles reserve `2 × file_bytes + 128 MiB` for weights, then a
+geometry-dependent envelope for KV state, activations, attention, feed-forward
+scratch and vocabulary output. The estimate uses admitted context/rows and
+validated dimensions, layers, heads and state widths. Bounds are checked before
+engine allocation; exceeding the configured budget returns `-8`. The original
+presets retain their historical reservation formulas. These reservations govern
+admission and cleanup accounting, not the engine's peak allocator consumption.
 
 ## Hardware selection and inspection
 

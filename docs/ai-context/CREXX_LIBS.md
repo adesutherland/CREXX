@@ -299,11 +299,20 @@ module is `options levelg`, builds into `rxfnsg.rxbin`, uses `rxjson`, and sends
 through the public Level G `.httpclient` plus the shared private `_rxhttpcore`.
 It exposes a class-shaped interface in the `rxfnsg` namespace:
 
-- `llm`: provider-selecting interface for the local Ollama default
-- `ollama`: concrete local Ollama implementation over plain HTTP
-- `openai`: concrete OpenAI Responses API implementation over HTTPS
-- `anthropic`: concrete Anthropic Messages API implementation over HTTPS
-- `gemini`: concrete Gemini `generateContent` implementation over HTTPS
+- `.llm.open(.llmconfig(driver,model))`: common generation client for Ollama,
+  OpenAI, Anthropic, Gemini and optional in-process llama.
+- `.llm(model,host,port,timeout)`: compatible factory, always Ollama.
+- `.ollama`, `.openai`, `.anthropic`, `.gemini`: existing concrete HTTP clients.
+- `.llmrequest`, `.llmchunk`, `.llmresult`: requests and owned common output.
+- `.embedding.open(config)`, `.embeddingresult`: independent packed embeddings.
+
+The [common guide](../../lib/plugins/llama/common.md) defines setup, truthful
+capabilities, statuses/finishes and optional-plugin NOTREADY handling. The
+[implementation plan](../planning/llm-provider-interface.md) retains acceptance
+evidence and outstanding platform checks. Native C RXPA bindings implement
+internal `.llmnative`; do not require common consumers to import the optional
+provider. ADDRESS generation uses the common client and explicit `LLM_NATIVE`
+configuration while retaining existing aliases and HTTP helpers.
 
 The first provider posts JSON to a local Ollama `/api/generate` endpoint with
 `stream:false`. It keeps reconstructed HTTP diagnostics plus the decoded JSON
@@ -1025,12 +1034,30 @@ Use [the installed provider guide](../../lib/plugins/llama/README.md),
 [model provisioning](../../lib/plugins/llama/models.md),
 [operating reference](../../lib/plugins/llama/reference.md) and
 [example walkthrough](../../lib/plugins/llama/examples/README.md) as the current
-human/agent contract. The [STEP-07 coverage and review ledger](../qa/native-inference-step07/README.md)
-prepares STEP-06 QA; [STEP-05](../planning/native-inference-step-05.md) retains the
-completed local generation evidence. Preserve that distinction at takeover.
+human/agent contract. The [qualification page](../../lib/plugins/llama/qualification.md)
+distinguishes trained-model CPU/Metal evidence, multi-platform fixture/package
+checks and remaining real-device/model acceptance. SAN-009 is closed in the
+sanitizer worklist; its old STEP-06 handoff is historical. The
+[STEP-07 ledger](../qa/native-inference-step07/README.md) retains documentation
+coverage and [STEP-05](../planning/native-inference-step-05.md) retains the local
+generation evidence. Preserve those evidence boundaries at takeover.
 Do not interpret the historical STEP-01 Rexx-facade proposal as authority to add
 wrappers. Do not silently re-pin models to close the recorded conversion
 provenance gap. CPU/Metal proof does not qualify Windows/Linux/CUDA/Vulkan.
+The common [LLM API](../../lib/plugins/llama/common.md) now selects all five
+drivers through `.llm.open(.llmconfig(driver,model))`. Core-only applications do
+not import llama: the internal `.llmnative` factory is late-loaded from a trusted
+explicit provider path or beside the executable. Missing/incompatible providers
+raise catchable NOTREADY with stable provider_unavailable/provider_incompatible
+message categories. The same native bridge supplies separate `.embedding` results.
+General `generation`/`embedding` profiles validate model geometry and explicit
+preprocessing, with dynamic dimensions and conservative model-dependent admission.
+The two BGE/Smol presets retain their original strict hashes and behavior.
+Keep the fixed `.llmchunk` RXPA attribute layout and fully qualified factory/type
+signatures synchronized with `common_driver.h`. `[*]` is the native unbounded
+array descriptor. The common adapter must reuse existing checked owners and
+registries; do not add a parallel model registry or Rexx native owner facade.
+[LLM-API-01](../planning/llm-provider-interface.md) records acceptance and evidence.
 
 The candidate binary-delivery work is tracked by numbered CI-OUT/CI-AC/CI
 steps in [the pipeline plan](../planning/native-inference-ci.md). Ordinary source
@@ -1063,7 +1090,10 @@ core/plugin delivery is still under qualification; do not claim it released.
 CI-D04 adds separate optional Mac/Windows plugin installers which must locate
 and verify a matching installed core before copying plugin-owned files. Track
 INST-AC-01–05 in the pipeline plan; native Mac lifecycle evidence exists for
-ARM and Intel, but signing/notarization and offline Gatekeeper remain open. Staple the Mac package
+ARM and Intel. Later retained candidate checks also cover signed/notarized Mac
+installers, fresh-host offline Gatekeeper and signed Windows lifecycle; use the
+[pipeline evidence ledger](../qa/native-inference-ci/README.md) for exact inputs
+and results rather than treating an older pending note as current. Staple the Mac package
 ticket; do not disable quarantine/Gatekeeper or promise no Apple network access.
 Windows coexistence is approved: both variants are stored separately with one
 explicitly active. Either installer supplies the shared `crexx-llama` native
@@ -1073,8 +1103,9 @@ do not load inference, invoke a shell, compile source or use a first-run cache.
 Keep the command while either variant remains installed. Portable ZIP paths
 still collide and cannot simply be overlaid. INST-04 has actual Windows native
 installer proof from run `35119980116` at `182516b4a`, covering both backends,
-switching, reinstall and removal. This closes unsigned functional lifecycle;
-final signing and release/offline Gatekeeper gates remain separate.
+switching, reinstall and removal. That is the earlier unsigned functional
+lifecycle baseline. Later candidate signing/offline checks are recorded in the
+ledger; full release and later snapshot publication remain separate claims.
 The small generated-fixture smoke does not relax the public model
 hash/profile gate or replace retained BGE/Smol qualification. Keep helpers and
 fixture weights outside the user payload. Rehash declared provider manifests

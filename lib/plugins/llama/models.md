@@ -1,4 +1,4 @@
-# Download and manage the example models
+# Choose and manage local models
 
 [Guide index](README.md) · [Install](installation.md) · [Examples](examples/README.md)
 
@@ -8,7 +8,58 @@ server or account token is needed for these public files. The provider does not
 download models on startup. Allow about 454 MB for both files, plus build/runtime
 space; the memory required while running is larger than the file sizes.
 
-## Exact example artifacts
+## Which models can I use?
+
+Use the general `generation` or `embedding` profile for a compatible GGUF.
+Supply its real path and expected SHA-256; the loader verifies the bytes before
+loading tensors. No model-name or hash registry must be edited. Different
+quantizations are allowed when supported by the pinned engine and geometry
+checks. Provision models as immutable files while owners are active.
+
+With the [common client](common.md), selecting `.llm.open(config)` defaults to
+`generation`; `.embedding.open(config)` defaults to `embedding`. With the advanced
+typed API, pass that profile to `runtime.model(path,sha256,profile,config)`.
+The old profile names below preserve exact hashes and preparation for repeatable
+reference checks. Do not use a preset name for a different model or override its
+preprocessing; choose a general profile instead.
+
+### General generation
+
+The GGUF needs a text tokenizer and a chat template supported by the pinned
+engine's finite `llama_chat_apply_template` set. You may explicitly set
+`chat_template` to a supported template or `raw`. Raw sends the literal prompt
+and disallows a system prompt; applications own any role markers in that text.
+Unsupported templates fail with an actionable error rather than silently using
+Smol's ChatML. For example, the locally tested Gemma 4 E4B artifact works with
+explicit raw role markers; its newer template is not automatically supported
+by this pinned engine. This does not qualify every Gemma 4 variant.
+
+### General embeddings
+
+Set `pooling` (`cls`, `mean`, `last`), `normalization` (`l2`, `none`),
+`query_prefix` and `document_prefix` explicitly, even when prefixes are empty.
+Follow the model's intended preprocessing. The loader cannot infer retrieval
+quality from its architecture. Output dimensions are read from the model and
+carried into packed results. The complete embedding-space specification belongs
+beside stored vectors; changing it requires compatible re-embedding/indexing.
+
+### Compatibility limits
+
+The provider admits bounded dense decoder-style execution, including the pinned
+engine's BERT embedding path. Expert/MoE, recurrent, hybrid, diffusion and
+encoder-decoder layouts are rejected. Token-only GGUF fixtures cannot serve
+text requests. Context must be a multiple of 256, at most 8192 per sequence and
+no larger than the model's training context; up to eight rows are supported.
+Large models need an explicitly adequate RAM/VRAM budget. Model-dependent
+reservations are conservative admission estimates, not an allocator or RSS cap.
+Unsupported metadata, dimensions, options and limits fail without truncation.
+
+Acceptance of a file is distinct from qualification of that artifact,
+preprocessing, backend and device. Consult [qualification](qualification.md)
+for evidence and remaining platform limits. No automatic download, model-quality
+claim, or RAG index migration accompanies general loading.
+
+## Exact reference presets
 
 | Use / profile | Local filename | Bytes | Expected SHA-256 |
 | --- | --- | ---: | --- |

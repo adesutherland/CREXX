@@ -2,7 +2,15 @@
 
 [Guide index](../README.md) · [Install](../installation.md) · [Models](../models.md)
 
-All four programs load once, explicitly prepare a private context and process
+Start with [common_generation.crexx](common_generation.crexx) for a driver selected
+at setup, or [common_embeddings.crexx](common_embeddings.crexx) for explicit
+pooling/prefixes and packed results. Both import only `rxfnsg`, so they compile
+without the optional plugin. The [common guide](../common.md) explains how a
+native executable finds its optional plugin at execution time; it is not bundled
+by a core-only import. The advanced examples below explicitly import `llama`,
+which retains native provider bundling.
+
+The four advanced typed programs load once, explicitly prepare a private context and process
 repeated work before cleanup. They use the public C RXPA factories through
 `import llama`. The programs are installed beside this page and are also in
 the source checkout's `lib/plugins/llama/examples` directory.

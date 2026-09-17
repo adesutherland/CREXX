@@ -416,11 +416,17 @@ main: procedure = .int
 
   httpserver_source = source_dir || "/httpserver.crexx"
   llm_source = source_dir || "/llm.crexx"
+  llm_imports = imports_root || "/llm"
+  filesystem_plugin = bin_dir || "/rxfs.rxplugin"
+  if prepare_import_root(cmake, llm_imports, filesystem_plugin, "rxfs.rxplugin") <> 0 then do
+    call pool.close()
+    return 1
+  end
   httpserver_key = action_key(tool_identity || ":httpserver:-x", httpserver_source, library, classlib, http_bin, httpcore_bin)
-  llm_key = action_key(tool_identity || ":llm:-x", llm_source, library, classlib, http_bin, httpcore_bin)
+  llm_key = action_key(tool_identity || ":llm:-x", llm_source, library, classlib, http_bin, httpcore_bin, filesystem_plugin)
   wave3 = .channelvalue[]
   call queue_compile wave3, "httpserver", httpserver_source, members_root || "/httpserver", base_imports || ";" || http_public, rxc, rxas, cmake, httpserver_key, 0
-  call queue_compile wave3, "llm", llm_source, members_root || "/llm", base_imports || ";" || http_public, rxc, rxas, cmake, llm_key, 0
+  call queue_compile wave3, "llm", llm_source, members_root || "/llm", base_imports || ";" || http_public || ";" || llm_imports, rxc, rxas, cmake, llm_key, 0
   wave3_rc = run_task_wave(pool, worker_target, wave3, "G3 HTTP consumers")
   if wave3_rc <> 0 then do
     call pool.close()

@@ -12,12 +12,48 @@ set(REXXBINS
   ts_http_service_contract
   ts_llm_ollama
   ts_llm_providers
+  ts_llm_common
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 set(RXFNSG_RPATH ${CMAKE_BINARY_DIR}/bin/rxfnsg)
 
 add_custom_target(testrxfnsg ALL)
+
+# Local server fixture: measured VM legs in the common-driver harness are about
+# 5s Debug / 7s Apple ASan. Keep network-owner topology isolated, with a generous
+# hang backstop. This coverage remains enabled in llama-free core builds.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_custom_target(ts_llm_http_fixture)
+add_dependencies(testrxfnsg ts_llm_http_fixture)
+foreach(_llm_mode noopt opt)
+  set(_llm_flags)
+  if(_llm_mode STREQUAL "noopt")
+    set(_llm_flags -n)
+  endif()
+  set(_llm_program "${CMAKE_CURRENT_BINARY_DIR}/llm_http_fixture_${_llm_mode}")
+  add_custom_command(OUTPUT "${_llm_program}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> --no-exe-import ${_llm_flags}
+      -i "${CMAKE_BINARY_DIR}/bin" -o "${_llm_program}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_llm_http_common.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_llm_flags} -o "${_llm_program}" "${_llm_program}"
+    COMMAND $<TARGET_FILE:rxlink> -o "${_llm_program}-linked" "${_llm_program}"
+      "${LIBRPATH}" "${CMAKE_BINARY_DIR}/bin/classlib" "${RXFNSG_RPATH}"
+    DEPENDS rxc rxas rxlink library classlib rxfnsg compiler_exit_bin
+      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_CURRENT_SOURCE_DIR}/ts_llm_http_common.crexx"
+    VERBATIM)
+  add_custom_target(ts_llm_http_fixture_${_llm_mode} DEPENDS "${_llm_program}-linked.rxbin")
+  add_dependencies(ts_llm_http_fixture ts_llm_http_fixture_${_llm_mode})
+  add_test(NAME ts_llm_http_fixture_${_llm_mode}
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tests/native-inference/http_driver_fixture.py"
+      $<TARGET_FILE:rxbvm> "${_llm_program}-linked.rxbin")
+  set_tests_properties(ts_llm_http_fixture_${_llm_mode} PROPERTIES
+    LABELS "library;llm;http;levelg;smoke" RUN_SERIAL TRUE TIMEOUT 600
+    PASS_REGULAR_EXPRESSION "PASS: all HTTP drivers"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+  crexx_register_test_prep_targets(TESTS ts_llm_http_fixture_${_llm_mode}
+    TARGETS ts_llm_http_fixture_${_llm_mode} rxbvm)
+endforeach()
 
 add_custom_target(ts_math_numeric)
 add_dependencies(testrxfnsg ts_math_numeric)

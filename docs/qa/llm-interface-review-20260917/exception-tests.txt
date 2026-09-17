@@ -1,0 +1,35 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start  531: interface_factory_signal_restore_run_noopt
+1/9 Test  #531: interface_factory_signal_restore_run_noopt ...   Passed    0.59 sec
+    Start  532: interface_factory_signal_restore_run_opt
+2/9 Test  #532: interface_factory_signal_restore_run_opt .....   Passed    0.57 sec
+    Start  660: inline_receiver_signal_cleanup
+3/9 Test  #660: inline_receiver_signal_cleanup ...............   Passed    2.07 sec
+    Start 1922: ts_llm_common_noopt
+4/9 Test #1922: ts_llm_common_noopt ..........................   Passed    4.47 sec
+    Start 1923: ts_llm_common_opt
+5/9 Test #1923: ts_llm_common_opt ............................   Passed    1.82 sec
+    Start 2504: rxpa_native_unwind_funcs_dynamic_noopt
+6/9 Test #2504: rxpa_native_unwind_funcs_dynamic_noopt .......   Passed    0.06 sec
+    Start 2505: rxpa_native_unwind_funcs_dynamic_opt
+7/9 Test #2505: rxpa_native_unwind_funcs_dynamic_opt .........   Passed    0.04 sec
+    Start 2506: rxpa_native_unwind_funcs_static_noopt
+8/9 Test #2506: rxpa_native_unwind_funcs_static_noopt ........   Passed    0.36 sec
+    Start 2507: rxpa_native_unwind_funcs_static_opt
+9/9 Test #2507: rxpa_native_unwind_funcs_static_opt ..........   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+compiler            =   2.07 sec*proc (1 test)
+comprehensive       =   9.94 sec*proc (8 tests)
+correctness         =   2.07 sec*proc (1 test)
+flow                =   2.07 sec*proc (1 test)
+inlining            =   2.07 sec*proc (1 test)
+linked_opt          =   4.53 sec*proc (5 tests)
+optimizer-parity    =   6.78 sec*proc (6 tests)
+receiver            =   2.07 sec*proc (1 test)
+signals             =   2.07 sec*proc (1 test)
+smoke               =   0.06 sec*proc (1 test)
+
+Total Test time (real) =  10.07 sec

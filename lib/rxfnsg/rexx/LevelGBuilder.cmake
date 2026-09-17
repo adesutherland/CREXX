@@ -242,7 +242,8 @@ add_custom_command(
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
-    rxc rxas rxlink rxbvm library classlib compiler_exit_bin
+    "$<TARGET_FILE:fs>"
+    rxc rxas rxlink rxbvm library classlib compiler_exit_bin fs
     "$<TARGET_FILE:rxc>"
     "$<TARGET_FILE:rxas>"
     "$<TARGET_FILE:rxlink>"

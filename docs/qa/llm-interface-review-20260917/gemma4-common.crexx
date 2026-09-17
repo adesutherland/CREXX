@@ -1,0 +1,34 @@
+/** The same typed generation consumer works with the optional native driver. */
+options levelg
+import rxfnsb
+import _rxsysb
+import rxfnsg
+main: procedure = .int
+  arg args = .string[]
+  config = .llmconfig("llama", args[1])
+  call config.set_text("sha256", args[2])
+  call config.set_text("hardware_mode", "cpu")
+  call config.set_text("chat_template", "raw")
+  call config.set_int("request_tokens", 512)
+  call config.set_int("request_rows", 2)
+  call config.set_int("context_tokens", 256)
+  call config.set_int("output_tokens", 4)
+  call config.set_int("memory_bytes", 17179869184)
+  client = .llm.open(config)
+  call check client.driver() = "llama", "selected native driver"
+  call check client.supports("incremental"), "incremental capability"
+  state = client.prepare(128)
+  do while state = "loading" | state = "preparing"
+    state = client.prepare(128)
+  end
+  call check state = "ready", "prepare: " || client.error()
+  result = client.generate("<|turn>user" || "0a"x || "Say hello.<turn|>" || "0a"x || "<|turn>model" || "0a"x)
+  call check client.status() = 0, "generation: " || client.error()
+  say "OUTPUT:" result
+  call client.close()
+  say "PASS: local Gemma 4 model through common driver"
+  return 0
+check: procedure = .void
+  arg okay = .boolean, label = .string
+  if \okay then call raise "INVALID_ARGUMENTS", "FAIL: " || label, ""
+  return
