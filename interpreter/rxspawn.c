@@ -975,7 +975,7 @@ static int split_shell_args(char *text, char **argv) {
 static char *shell_argv_name(const char *shell_path) {
     char *slash;
 
-    slash = strrchr(shell_path, '/');
+    slash = (char *)strrchr(shell_path, '/');
     return slash ? slash + 1 : (char *)shell_path;
 }
 
