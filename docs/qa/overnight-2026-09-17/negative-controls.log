@@ -1,0 +1,52 @@
+guard-reentrant: PASS (rejected with exit 1)
+Mutation: return name && strstr(name, "rxfs.fileguard") ? RXPA_PROCEDURE_CAP_SESSION_AFFINE : RXPA_PROCEDURE_CAP_PROCESS_REENTRANT; -> return RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.§factory
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.held
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.status
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.close
+RXPA filesystem manifest qualification failed: rc=0
+
+filesystem-affine: PASS (rejected with exit 1)
+Mutation: return name && strstr(name, "rxfs.fileguard") ? RXPA_PROCEDURE_CAP_SESSION_AFFINE : RXPA_PROCEDURE_CAP_PROCESS_REENTRANT; -> return RXPA_PROCEDURE_CAP_SESSION_AFFINE;
+RXPA filesystem procedure is not reentrant: rxfs.pathkind
+RXPA filesystem procedure is not reentrant: rxfs.abspath
+RXPA filesystem procedure is not reentrant: rxfs.copy
+RXPA filesystem procedure is not reentrant: rxfs.hardlink
+RXPA filesystem procedure is not reentrant: rxfs.move
+RXPA filesystem procedure is not reentrant: rxfs.cwd
+RXPA filesystem procedure is not reentrant: rxfs.loadpath
+RXPA filesystem procedure is not reentrant: rxfs.chdir
+RXPA filesystem procedure is not reentrant: rxfs.isdir
+RXPA filesystem procedure is not reentrant: rxfs.mkdir
+RXPA filesystem procedure is not reentrant: rxfs.rmdir
+RXPA filesystem procedure is not reentrant: rxfs.delete
+RXPA filesystem procedure is not reentrant: rxfs.rename
+RXPA filesystem procedure is not reentrant: rxfs.isfile
+RXPA filesystem procedure is not reentrant: rxfs.listdir
+RXPA filesystem procedure is not reentrant: rxfs.append
+RXPA filesystem manifest qualification failed: rc=0
+
+missing-destroy: PASS (rejected with exit 1)
+Mutation: RXPA_PLUGIN_SESSION_WITH_HOST(rxfs_old_create, rxfs_destroy, -> RXPA_PLUGIN_SESSION_WITH_HOST(rxfs_old_create, 0,
+RXPA filesystem mixed/session manifest is incomplete
+RXPA filesystem procedure is not reentrant: rxfs.pathkind
+RXPA filesystem procedure is not reentrant: rxfs.abspath
+RXPA filesystem procedure is not reentrant: rxfs.copy
+RXPA filesystem procedure is not reentrant: rxfs.hardlink
+RXPA filesystem procedure is not reentrant: rxfs.move
+RXPA filesystem procedure is not reentrant: rxfs.cwd
+RXPA filesystem procedure is not reentrant: rxfs.loadpath
+RXPA filesystem procedure is not reentrant: rxfs.chdir
+RXPA filesystem procedure is not reentrant: rxfs.isdir
+RXPA filesystem procedure is not reentrant: rxfs.mkdir
+RXPA filesystem procedure is not reentrant: rxfs.rmdir
+RXPA filesystem procedure is not reentrant: rxfs.delete
+RXPA filesystem procedure is not reentrant: rxfs.rename
+RXPA filesystem procedure is not reentrant: rxfs.isfile
+RXPA filesystem procedure is not reentrant: rxfs.listdir
+RXPA filesystem procedure is not reentrant: rxfs.append
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.§factory
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.held
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.status
+RXPA filesystem procedure is not session-affine: rxfs.fileguard.close
+RXPA filesystem manifest qualification failed: rc=0

@@ -1,5 +1,20 @@
 # Native inference CI restart handoff — 15 September 2026
 
+## Overnight repair continuation — 17 September
+
+Adrian requested diagnosis and repair of overnight Sanitizer and Deep failures.
+The active continuation is CI-F20 / F20-AC-01–04 in the existing pipeline plan,
+with SAN-QA-016 in the sanitizer worklist. All six failed lanes at develop
+`59fc02eb9` share the stale rxfs blanket-reentrant manifest assertion; no memory
+diagnostic was observed. The test-only mixed-policy repair passes focused Debug
+16/16, maintained Apple ASan 16/16 and three negative controls. Evidence is in
+`docs/qa/overnight-2026-09-17/`. Next: publish this bounded repair, dispatch Deep
+and Sanitizer on the repaired develop revision, inspect automatic Build/CodeQL,
+retain terminal results, then close F20 and SAN-QA-016. Do not repeat unchanged
+local tests or claim hosted green before completion. Parent release/device/model
+acceptance remains unchanged. This new repair authority supersedes the earlier
+no-further-integration-action statement for this bounded defect.
+
 Status: development integration and monitoring complete; final evidence is on
 `origin/temp/llama-release-combined`. The
 authoritative [pipeline plan](native-inference-ci.md) retains the complete

@@ -489,6 +489,35 @@ focused and broad macOS qualification evidence.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-016 — filesystem concurrency test assumes obsolete plugin-wide policy
+
+Status: open, 2026-09-17; owner Codex under Adrian. QA assertion failure, with
+no observed AddressSanitizer/LeakSanitizer memory diagnostic. The approved
+repair and delivery criteria are CI-F20 / F20-AC-01–04 in
+[`native-inference-ci.md`](planning/native-inference-ci.md).
+
+- Affected revision: develop `59fc02eb905ea2a0878e4055b7114921d5e6a294`.
+  Sanitizer run `35179649593` fails on Linux x64 and macOS arm64; Deep run
+  `35175162069` fails on Linux, Windows and both Mac architectures. All six
+  failures are `rxpa_bundled_fs_concurrency` with
+  `RXPA manifest query failed: rc=0 capabilities=0 handles=1/0`.
+- Reproducer: `ctest --test-dir cmake-build-debug -R
+  '^rxpa_bundled_fs_concurrency$' --output-on-failure`. The unchanged local
+  harness reproduces the identical assertion in 0.02 seconds.
+- Cause: `03bf7855b` added the VM-session-owned `rxfs.fileguard` and converted
+  rxfs to its documented mixed V2 procedure policy. The test still expects the
+  old blanket process-reentrant capability. The library handle count is valid.
+- Retained logs and run metadata: `docs/qa/overnight-2026-09-17/`.
+- Focused qualification: Debug 16/16 (0.91 s) and maintained Apple ASan 16/16
+  (2.58 s) pass, including all bundled plugin concurrency checks, session-load
+  rollback and all four filesystem VM/optimization cells. Three deliberately
+  invalid policy/lifecycle variants are rejected by the repaired test.
+- Next action/closure: verify the full mixed manifest, preserve simultaneous
+  VM calls and teardown checks, prove focused Debug/maintained Apple ASan and
+  negative policy/hook controls, then obtain green Deep and both hosted sanitizer
+  lanes on the repaired inputs. Linux leak detection remains enabled; Apple
+  LeakSanitizer is unavailable. No exclusions or suppression are introduced.
+
 ### SAN-QA-013 — expanded project-build matrix exceeds its aggregate timeout
 
 Status: closed for the observed macOS harness timeout. The expanded permanent

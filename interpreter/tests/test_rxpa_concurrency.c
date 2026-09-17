@@ -1192,9 +1192,9 @@ static int test_manifest(const char *directory, const char *file_name,
         plugin.capabilities != expected_capabilities ||
         rxpa_live_plugin_handle_count() != before + 1u) {
         fprintf(stderr,
-                "RXPA manifest query failed: rc=%d capabilities=%u handles=%zu/%zu\n",
+                "RXPA manifest query failed: rc=%d capabilities=%u expected=%u handles=%zu before=%zu\n",
                 rc, rc == 0 ? plugin.capabilities : 0u,
-                rxpa_live_plugin_handle_count(), before);
+                expected_capabilities, rxpa_live_plugin_handle_count(), before);
         if (rc == 0) rxpa_close_plugin(&plugin);
         return 1;
     }
@@ -1264,6 +1264,57 @@ static int test_stats_manifest(const char *directory, const char *file_name) {
     }
     if (rxpa_live_plugin_handle_count() != before) failed = 1;
     if (failed) fprintf(stderr, "RXPA statistics publication/reentrant policy failed\n");
+    return failed;
+}
+
+static int test_fs_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxfs.pathkind", "rxfs.abspath", "rxfs.copy", "rxfs.hardlink",
+        "rxfs.move", "rxfs.cwd", "rxfs.loadpath", "rxfs.chdir", "rxfs.isdir",
+        "rxfs.mkdir", "rxfs.rmdir", "rxfs.delete", "rxfs.rename", "rxfs.isfile",
+        "rxfs.listdir", "rxfs.append"
+    };
+    static const char *session_affine[] = {
+        "rxfs.fileguard.\xc2\xa7" "factory", "rxfs.fileguard.held",
+        "rxfs.fileguard.status", "rxfs.fileguard.close"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        /* Fileguards own VM-local resources; only stateless procedures may
+         * bypass the session lane. Require the complete lifecycle contract. */
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_destroy ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            fprintf(stderr, "RXPA filesystem mixed/session manifest is incomplete\n");
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) {
+                fprintf(stderr, "RXPA filesystem procedure is not reentrant: %s\n",
+                        reentrant[i]);
+                failed = 1;
+            }
+        }
+        for (i = 0; i < sizeof(session_affine) / sizeof(session_affine[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, session_affine[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) {
+                fprintf(stderr, "RXPA filesystem procedure is not session-affine: %s\n",
+                        session_affine[i]);
+                failed = 1;
+            }
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA filesystem manifest qualification failed: rc=%d\n", rc);
     return failed;
 }
 
@@ -1608,10 +1659,15 @@ static int test_dynamic_session_factory_failure(const char *directory,
 int main(int argc, char **argv) {
     if (argc != 2) {
         if (argc == 5 && strcmp(argv[1], "bundled") == 0) {
-            int manifest_failed = strcmp(argv[4], "stats") == 0
-                    ? test_stats_manifest(argv[2], argv[3])
-                    : test_manifest(argv[2], argv[3],
-                                    RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+            int manifest_failed;
+            if (strcmp(argv[4], "stats") == 0) {
+                manifest_failed = test_stats_manifest(argv[2], argv[3]);
+            } else if (strcmp(argv[4], "fs") == 0) {
+                manifest_failed = test_fs_manifest(argv[2], argv[3]);
+            } else {
+                manifest_failed = test_manifest(argv[2], argv[3],
+                                                RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
+            }
             if (manifest_failed) {
                 return 1;
             }

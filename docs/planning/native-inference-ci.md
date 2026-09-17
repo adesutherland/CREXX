@@ -1,5 +1,61 @@
 # Native inference release pipeline and branch qualification
 
+## CI-F20 — 17 September overnight filesystem manifest regression
+
+**Vision and intended outcome:** restore green Deep Build and Sanitizer QA for
+the published development snapshot, preserving the accepted mixed RXPA policy
+and all existing correctness/concurrency coverage. This continuation repairs
+the test contract introduced by the filesystem work supporting the llama
+installer; it does not change language, runtime or release scope.
+
+**Diagnosis:** scheduled Deep `35175162069` and Sanitizer `35179649593` actually
+check out develop `59fc02eb905ea2a0878e4055b7114921d5e6a294`, despite their
+schedule metadata naming master `48ebc1f61`. All six failing lanes report only
+`rxpa_bundled_fs_concurrency`, with `rc=0 capabilities=0 handles=1/0`. The handle
+count is valid (one newly opened library); the obsolete expectation is the
+plugin-wide process-reentrant flag. Commit `03bf7855b` correctly converted rxfs
+to mixed V2 policy for VM-owned fileguards but omitted the concurrency harness
+update. Local unchanged Debug reproduces the same failure. No ASan/LSan memory
+diagnostic appears in either downloaded sanitizer artifact. Linux stops after
+the first failure; macOS finishes 2,345 tests with only this failure. The
+canonical QA disposition is SAN-QA-016 in `docs/SANITIZER-WORKLIST.md`.
+
+### Checkable acceptance criteria
+
+1. [x] **F20-AC-01:** retain exact failed source/run identities, the local
+   reproducer and complete sanitizer logs; distinguish QA assertions from
+   memory findings. Evidence: `docs/qa/overnight-2026-09-17/`.
+2. [x] **F20-AC-02:** the permanent test verifies zero plugin-wide capability,
+   complete session hooks, reentrant filesystem procedures and session-affine
+   fileguard factory/methods; dynamic load/unload and two-VM ownership remain
+   checked. Focused Debug and maintained Apple ASan pass; negative controls
+   reject an incorrect policy or missing hook without modifying production code.
+3. [ ] **F20-AC-03:** publish the bounded repair to develop without overwriting
+   newer changes, then retain terminal green Deep Build QA, Linux ASan/LSan,
+   macOS ASan and normal automatic Build/CodeQL for the repaired inputs.
+4. [ ] **F20-AC-04:** reconcile the worklist and handoff with exact evidence;
+   preserve original red runs and leave unrelated parent release criteria open.
+
+### Implementation steps
+
+1. [x] **F20-01:** inspect all failed lanes, download evidence and reproduce the
+   unchanged test locally (F20-AC-01).
+2. [x] **F20-02:** add the focused mixed-policy manifest check using the existing
+   statistics test pattern, improve mismatch diagnostics, and validate the
+   bundled concurrency and public filesystem panel (F20-AC-02).
+3. [ ] **F20-03:** after focused green proof, publish and dispatch the two failed
+   workflows on the repaired develop commit; inspect normal publication checks
+   (F20-AC-03). These repeats resolve actual overnight failures and the incomplete
+   Linux sanitizer run. No CUDA engine rebuild or unrelated release qualification
+   is required. Reuse unchanged valid local evidence.
+4. [ ] **F20-04:** retain final results, close SAN-QA-016 only on green platform
+   results, and report the diagnosed cause and outcome (F20-AC-04).
+
+Focused qualification: Debug 16/16 (0.91 s), maintained Apple ASan 16/16
+(2.58 s), and three deliberately wrong policy/lifecycle variants rejected.
+Logs and hashes are retained in the F20 evidence directory. No runtime, library,
+workflow, CTest scheduling or timeout input changed in this repair.
+
 Status: implementation authorized by Adrian, 15 September 2026. This is the
 STEP-06 pipeline work package under [the authoritative plan](native-inference-backlog.md),
 preserving OUT-01–05 and AC-01–14. It does not replace real-device qualification
