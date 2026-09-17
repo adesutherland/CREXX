@@ -4951,7 +4951,8 @@ static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee
 
 /* A native call has no child frame to carry caller_arg_base.  If a branch
  * handler remains in the interrupted frame, recover the call window from the
- * canonical CALL/DCALL or fused-call count operand on that cold signal path. */
+ * canonical CALL/DCALL, factory-selector or fused-call count operand on that
+ * cold signal path. Factory selection can fail before a child frame exists. */
 static int rxsignal_restore_interrupted_call_argument_mapping(
         stack_frame *frame, rxinteger interrupted_module,
         rxinteger interrupted_address
@@ -4978,6 +4979,7 @@ static int rxsignal_restore_interrupted_call_argument_mapping(
     if (address >= space->inst_size) return 0;
     opcode = space->binary[address].instruction.opcode;
     if (opcode != OP_CALL_REG_FUNC_REG &&
+        opcode != OP_SRCFPROCSEL_REG_STRING_REG &&
         opcode != OP_DCALL_REG_REG_REG &&
         opcode != OP_SWAPCALL_REG_FUNC_REG_REG_REG &&
         opcode != OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG &&
