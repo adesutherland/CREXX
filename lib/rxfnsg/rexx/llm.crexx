@@ -70,7 +70,7 @@ llm: interface
 
   lastHttp: method = .string
 
-  /** Close this provider's bounded HTTP connection-owner pool. */
+  /** Close the client and its owned HTTP connections or native resources. */
   close: method = .void
 
 ollama: class

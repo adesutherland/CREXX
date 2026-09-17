@@ -38,5 +38,11 @@
     "tests/native-inference/release_smoke.py": "59357bde15a79405aac486cc41213fcff7b6e95e78f931f8dc90d69c0527516b",
     "tests/rxpa/CMakeLists.txt": "54290d53d8ab2245b694340028f0f351148463b7a34da267a86d62904880168d",
     "tools/build-system/build_stage_g.crexx": "ebd45fce98c1f79cdfca9dfc7328705a12a1e15d52fa1df41e86a44443cc3759"
+  },
+  "documentation_only_followup": {
+    "file": "lib/rxfnsg/rexx/llm.crexx",
+    "tested_sha256": "f2f4548889ee80557342824a48b84046ae6d1f45db24aa3d01fb79dde6241e23",
+    "current_sha256": "71de849ab343ff2c2f28604bb80635c1e51cb43c95a61751f757bf2d7359e32c",
+    "change": "One existing RexxDoc close comment now covers HTTP and native owners; no executable source or line count changed."
   }
 }
