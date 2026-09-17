@@ -491,7 +491,7 @@ focused and broad macOS qualification evidence.
 
 ### SAN-QA-016 — filesystem concurrency test assumes obsolete plugin-wide policy
 
-Status: open, 2026-09-17; owner Codex under Adrian. QA assertion failure, with
+Status: closed, 2026-09-17; owner Codex under Adrian. QA assertion failure, with
 no observed AddressSanitizer/LeakSanitizer memory diagnostic. The approved
 repair and delivery criteria are CI-F20 / F20-AC-01–04 in
 [`native-inference-ci.md`](planning/native-inference-ci.md).
@@ -512,11 +512,15 @@ repair and delivery criteria are CI-F20 / F20-AC-01–04 in
   (2.58 s) pass, including all bundled plugin concurrency checks, session-load
   rollback and all four filesystem VM/optimization cells. Three deliberately
   invalid policy/lifecycle variants are rejected by the repaired test.
-- Next action/closure: verify the full mixed manifest, preserve simultaneous
-  VM calls and teardown checks, prove focused Debug/maintained Apple ASan and
-  negative policy/hook controls, then obtain green Deep and both hosted sanitizer
-  lanes on the repaired inputs. Linux leak detection remains enabled; Apple
-  LeakSanitizer is unavailable. No exclusions or suppression are introduced.
+- Closure: published repair `d8f59732d4d4abeb18ec20509821fd30ecf8962e` passes
+  [Sanitizer QA 35189897956](https://github.com/adesutherland/CREXX/actions/runs/35189897956)
+  with 2,345/2,345 on Linux ASan/LSan and macOS arm64 ASan. Linux build,
+  QA preparation and CTest logs all retain `detect_leaks=1`. No ASan/LSan
+  diagnostic appears in the complete retained artifacts. Apple LeakSanitizer
+  is unavailable. Deep `35189896087`, Build `35189886874` and CodeQL
+  `35189886774` are also terminal success on that exact revision. Deep passes
+  five comprehensive platforms and the original filesystem regression on each.
+  No exclusions, suppression, scheduling or timeout changes were introduced.
 
 ### SAN-QA-013 — expanded project-build matrix exceeds its aggregate timeout
 

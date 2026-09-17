@@ -8,12 +8,18 @@ with SAN-QA-016 in the sanitizer worklist. All six failed lanes at develop
 `59fc02eb9` share the stale rxfs blanket-reentrant manifest assertion; no memory
 diagnostic was observed. The test-only mixed-policy repair passes focused Debug
 16/16, maintained Apple ASan 16/16 and three negative controls. Evidence is in
-`docs/qa/overnight-2026-09-17/`. Next: publish this bounded repair, dispatch Deep
-and Sanitizer on the repaired develop revision, inspect automatic Build/CodeQL,
-retain terminal results, then close F20 and SAN-QA-016. Do not repeat unchanged
-local tests or claim hosted green before completion. Parent release/device/model
-acceptance remains unchanged. This new repair authority supersedes the earlier
-no-further-integration-action statement for this bounded defect.
+`docs/qa/overnight-2026-09-17/`. Repair `d8f59732d4d4abeb18ec20509821fd30ecf8962e`
+is published to develop. Deep `35189896087`, automatic Build `35189886874` and
+CodeQL `35189886774` are terminal success on that exact commit. Sanitizer
+`35189897956` also succeeds: 2,345/2,345 tests on both Linux ASan/LSan and
+ARM Mac ASan, with Linux leak detection enabled throughout. No sanitizer
+diagnostic appears in the retained artifacts. F20 and SAN-QA-016 are closed;
+no repair or monitoring work remains. Final evidence-only bookkeeping is on
+`temp/overnight-qa-20260917`; develop stays at the qualified green commit to
+avoid another unchanged publication cycle. Do not repeat the retained tests.
+Parent release/device/model acceptance remains unchanged. This repair authority
+supersedes the earlier no-further-integration-action statement for this bounded
+defect.
 
 Status: development integration and monitoring complete; final evidence is on
 `origin/temp/llama-release-combined`. The

@@ -30,10 +30,10 @@ canonical QA disposition is SAN-QA-016 in `docs/SANITIZER-WORKLIST.md`.
    fileguard factory/methods; dynamic load/unload and two-VM ownership remain
    checked. Focused Debug and maintained Apple ASan pass; negative controls
    reject an incorrect policy or missing hook without modifying production code.
-3. [ ] **F20-AC-03:** publish the bounded repair to develop without overwriting
+3. [x] **F20-AC-03:** publish the bounded repair to develop without overwriting
    newer changes, then retain terminal green Deep Build QA, Linux ASan/LSan,
    macOS ASan and normal automatic Build/CodeQL for the repaired inputs.
-4. [ ] **F20-AC-04:** reconcile the worklist and handoff with exact evidence;
+4. [x] **F20-AC-04:** reconcile the worklist and handoff with exact evidence;
    preserve original red runs and leave unrelated parent release criteria open.
 
 ### Implementation steps
@@ -43,18 +43,30 @@ canonical QA disposition is SAN-QA-016 in `docs/SANITIZER-WORKLIST.md`.
 2. [x] **F20-02:** add the focused mixed-policy manifest check using the existing
    statistics test pattern, improve mismatch diagnostics, and validate the
    bundled concurrency and public filesystem panel (F20-AC-02).
-3. [ ] **F20-03:** after focused green proof, publish and dispatch the two failed
+3. [x] **F20-03:** after focused green proof, publish and dispatch the two failed
    workflows on the repaired develop commit; inspect normal publication checks
    (F20-AC-03). These repeats resolve actual overnight failures and the incomplete
    Linux sanitizer run. No CUDA engine rebuild or unrelated release qualification
    is required. Reuse unchanged valid local evidence.
-4. [ ] **F20-04:** retain final results, close SAN-QA-016 only on green platform
+4. [x] **F20-04:** retain final results, close SAN-QA-016 only on green platform
    results, and report the diagnosed cause and outcome (F20-AC-04).
 
 Focused qualification: Debug 16/16 (0.91 s), maintained Apple ASan 16/16
 (2.58 s), and three deliberately wrong policy/lifecycle variants rejected.
 Logs and hashes are retained in the F20 evidence directory. No runtime, library,
 workflow, CTest scheduling or timeout input changed in this repair.
+
+**Closed 17 September:** repair `d8f59732d4d4abeb18ec20509821fd30ecf8962e`
+is published on develop. Deep `35189896087`, Sanitizer `35189897956`, normal
+Build `35189886874` and CodeQL `35189886774` all have terminal success on that
+exact commit. Both sanitizer platforms pass 2,345/2,345; Linux keeps leak
+detection enabled for build, QA preparation and CTest. No ASan/LSan diagnostic
+appears in the retained artifacts. Deep passes all five comprehensive platforms,
+their package/external-consumer checks, isolated stress and Release equivalence.
+SAN-QA-016 is closed. Final evidence-only bookkeeping stays on
+`temp/overnight-qa-20260917`, preserving develop at its green qualified commit
+without triggering another unchanged publication cycle. Parent native-inference
+release/device/model criteria are unaffected.
 
 Status: implementation authorized by Adrian, 15 September 2026. This is the
 STEP-06 pipeline work package under [the authoritative plan](native-inference-backlog.md),

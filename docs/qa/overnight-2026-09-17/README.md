@@ -69,6 +69,32 @@ with exit 1. Exact mutations and diagnostics are in `negative-controls.log`.
 
 ## Hosted completion
 
-Pending repaired develop publication and terminal Deep, Sanitizer, Build and
-CodeQL results. Original failures remain retained; this record does not close
-the parent real-device/model/release acceptance criteria.
+Repair `d8f59732d4d4abeb18ec20509821fd30ecf8962e` is published to develop.
+All required workflows have terminal success on that exact commit:
+
+| Gate | Run | Result |
+| --- | --- | --- |
+| Deep Build QA | [35189896087](https://github.com/adesutherland/CREXX/actions/runs/35189896087) | Success: five comprehensive platforms, package/external-consumer checks, stress and Release build equivalence. |
+| Sanitizer QA | [35189897956](https://github.com/adesutherland/CREXX/actions/runs/35189897956) | Success: Linux ASan/LSan and macOS arm64 ASan, 2,345/2,345 each. |
+| Build CREXX | [35189886874](https://github.com/adesutherland/CREXX/actions/runs/35189886874) | Success: all cores, base plugins, optimizer parity and development snapshot publication. |
+| CodeQL | [35189886774](https://github.com/adesutherland/CREXX/actions/runs/35189886774) | Success. |
+
+Deep comprehensive counts: Linux and both Macs 2,331/2,331 each; Windows MinGW
+2,253/2,253; Windows MSVC 2,135/2,135. Every platform passes the repaired
+`rxpa_bundled_fs_concurrency` test, and three package/external-consumer tests
+pass per platform. The complete Deep log and terminal job metadata are retained.
+
+Both sanitizer platforms pass the original filesystem test (Linux 0.03 s,
+Mac 0.09 s). Full CTest elapsed times are 4,698.61 s on Linux and 3,878.52 s
+on Mac. Linux build, QA preparation and CTest logs all record
+`ASAN_OPTIONS=detect_leaks=1`. The complete artifact scan finds no ASan/LSan
+diagnostic. `sanitizer-green-artifacts.tar.gz`, the compressed workflow log and
+terminal JSON retain this evidence. SAN-QA-016 and all CI-F20 criteria/steps
+are closed. Final evidence-only bookkeeping is retained on
+`temp/overnight-qa-20260917`; develop remains at the green repaired commit.
+
+The manual Deep run uses the current develop workflow and its five-platform
+matrix, including MSVC as well as MinGW. The old scheduled workflow ran four
+platforms. Both qualify the same respective develop source SHA named above.
+Original failures remain retained; this record does not close the parent
+real-device/model/release acceptance criteria.
