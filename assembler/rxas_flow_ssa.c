@@ -2267,6 +2267,65 @@ static int flow_ssa_storage_equivalent(
     return right_root && left_root == right_root;
 }
 
+/* Identify incoming storage even through a multi-base or cyclic phi. This
+ * augments, rather than replaces, the existing dynamic/reference effect model:
+ * an attribute path is not itself an incoming base. */
+static int flow_ssa_storage_has_external_base(
+        RxasFlowSsaAnalysis *analysis, size_t storage_id) {
+    const FlowStorageVersion *version;
+    size_t input;
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (!storage_id || storage_id > analysis->storage_version_count) return 0;
+    version = &analysis->storage_versions[storage_id - 1];
+    if (version->kind == RXAS_FLOW_STORAGE_BASE)
+        return version->register_id >= analysis->register_count ||
+               analysis->registers[version->register_id].register_class !=
+                       RXAS_FLOW_REGISTER_LOCAL;
+    if (version->kind != RXAS_FLOW_STORAGE_PHI) return 0;
+    if (analysis->storage_dynamic_marks[storage_id - 1] ==
+        analysis->storage_dynamic_generation) return 0;
+    analysis->storage_dynamic_marks[storage_id - 1] =
+            analysis->storage_dynamic_generation;
+    if (!flow_ssa_consume(analysis, 1)) return 1;
+    for (input = 0; input < version->input_count; input++)
+        if (flow_ssa_storage_has_external_base(
+                    analysis, analysis->storage_inputs[
+                            version->input_offset + input])) return 1;
+    return 0;
+}
+
+static int flow_ssa_storage_is_external_entry(
+        RxasFlowSsaAnalysis *analysis, size_t storage_id) {
+    if (!flow_ssa_storage_dynamic_marks_ready(analysis)) return 1;
+    analysis->storage_dynamic_generation++;
+    if (!analysis->storage_dynamic_generation) {
+        memset(analysis->storage_dynamic_marks, 0,
+               analysis->storage_dynamic_mark_capacity *
+                       sizeof(*analysis->storage_dynamic_marks));
+        analysis->storage_dynamic_generation = 1;
+    }
+    return flow_ssa_storage_has_external_base(analysis, storage_id);
+}
+
+/* Distinct argument/global entry identities are not a no-alias proof. The
+ * other storage can be disjoint only when it resolves to this frame's own
+ * different local base. Exact identity remains a separate query. */
+static int flow_ssa_storage_may_alias_entry(
+        RxasFlowSsaAnalysis *analysis, size_t left, size_t right) {
+    size_t other;
+    size_t other_base;
+    size_t other_register;
+    if (flow_ssa_storage_is_external_entry(analysis, left)) other = right;
+    else if (flow_ssa_storage_is_external_entry(analysis, right)) other = left;
+    else return 0;
+    other_base = flow_ssa_storage_unique_base(analysis, other);
+    if (!other_base) return 1;
+    other_register = analysis->storage_versions[other_base - 1].register_id;
+    return other_register >= analysis->register_count ||
+           analysis->registers[other_register].register_class !=
+                   RXAS_FLOW_REGISTER_LOCAL;
+}
+
 static size_t flow_ssa_resolve_storage(RxasFlowSsaAnalysis *analysis,
                                        size_t state_id, size_t register_id) {
     size_t cache_id;
@@ -2578,6 +2637,8 @@ static int flow_ssa_call_range_clobbers_storage(
         argument_storage = flow_ssa_resolve_storage(
                 analysis, state->parent, reg);
         if (!argument_storage || flow_ssa_storage_equivalent(
+                    analysis, argument_storage, storage_id) ||
+            flow_ssa_storage_may_alias_entry(
                     analysis, argument_storage, storage_id))
             return 1;
     }
@@ -2597,6 +2658,34 @@ static int flow_ssa_state_clobbers_value(
             analysis, state, storage_id);
 }
 
+/* Resolve explicit writes in their existing transfer order for both fresh
+ * queries and cache revalidation. A possible alias invalidates the fact but
+ * cannot donate the written value: the storages need not actually coincide.
+ * Return 1 for an exact write, -1 for a possible write, and 0 for neither. */
+static int flow_ssa_component_update(
+        RxasFlowSsaAnalysis *analysis, const FlowSsaState *state,
+        size_t storage_id, unsigned int component, size_t *value_id) {
+    size_t update_index;
+    if (state->kind != FLOW_SSA_STATE_TRANSFER) return 0;
+    for (update_index = state->value_count; update_index; update_index--) {
+        const FlowValueUpdate *update;
+        size_t target_storage;
+        update = &analysis->value_updates[
+                state->value_offset + update_index - 1];
+        if (update->component != component) continue;
+        target_storage = flow_ssa_resolve_storage(
+                analysis, update->target_state, update->target_register);
+        if (flow_ssa_storage_equivalent(analysis, target_storage, storage_id)) {
+            *value_id = flow_ssa_value_canonical(analysis, update->value_id);
+            return 1;
+        }
+        if (flow_ssa_storage_may_alias_entry(
+                    analysis, target_storage, storage_id))
+            return -1;
+    }
+    return 0;
+}
+
 static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
                                      size_t state_id, size_t storage_id,
                                      unsigned int component) {
@@ -2610,34 +2699,15 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
     cache_id = flow_ssa_value_cache_find(
             analysis, state_id, storage_id, component);
     if (cache_id != RXAS_FLOW_ID_NONE) {
-        int direct_update;
+        int update_kind;
+        size_t updated_value;
         result = flow_ssa_value_canonical(
                 analysis, analysis->value_cache[cache_id].result);
         state = &analysis->states[state_id];
-        direct_update = 0;
-        if (state->kind == FLOW_SSA_STATE_TRANSFER) {
-            size_t update_index;
-            for (update_index = state->value_count; update_index;
-                 update_index--) {
-                FlowValueUpdate *update;
-                size_t target_storage;
-                update = &analysis->value_updates[
-                        state->value_offset + update_index - 1];
-                if (update->component != component) continue;
-                target_storage = flow_ssa_resolve_storage(
-                        analysis, update->target_state,
-                        update->target_register);
-                target_storage = flow_ssa_storage_canonical(
-                        analysis, target_storage);
-                if (flow_ssa_storage_equivalent(
-                            analysis, target_storage, storage_id)) {
-                    direct_update = 1;
-                    break;
-                }
-            }
-        }
-        if (!direct_update && flow_ssa_state_clobbers_value(
-                    analysis, state, storage_id, component)) {
+        update_kind = flow_ssa_component_update(
+                analysis, state, storage_id, component, &updated_value);
+        if (update_kind < 0 || (!update_kind && flow_ssa_state_clobbers_value(
+                    analysis, state, storage_id, component))) {
             if (result >= analysis->value_version_count ||
                 analysis->value_versions[result].kind !=
                         RXAS_FLOW_VALUE_UNKNOWN) {
@@ -2651,32 +2721,12 @@ static size_t flow_ssa_resolve_value(RxasFlowSsaAnalysis *analysis,
     }
     state = &analysis->states[state_id];
     if (state->kind == FLOW_SSA_STATE_TRANSFER) {
-        size_t update_index;
-        int found;
-        found = 0;
+        int update_kind;
         result = RXAS_FLOW_ID_NONE;
-        for (update_index = state->value_count; update_index;
-             update_index--) {
-            FlowValueUpdate *update;
-            size_t target_storage;
-            update = &analysis->value_updates[
-                    state->value_offset + update_index - 1];
-            if (update->component != component) continue;
-            target_storage = flow_ssa_resolve_storage(
-                    analysis, update->target_state,
-                    update->target_register);
-            target_storage = flow_ssa_storage_canonical(
-                    analysis, target_storage);
-            if (!flow_ssa_storage_equivalent(
-                        analysis, target_storage, storage_id))
-                continue;
-            result = flow_ssa_value_canonical(
-                    analysis, update->value_id);
-            found = 1;
-            break;
-        }
-        if (!found) {
-            if (flow_ssa_state_clobbers_value(
+        update_kind = flow_ssa_component_update(
+                analysis, state, storage_id, component, &result);
+        if (update_kind <= 0) {
+            if (update_kind < 0 || flow_ssa_state_clobbers_value(
                         analysis, state, storage_id, component))
                 result = flow_ssa_create_value_version(
                         analysis, RXAS_FLOW_VALUE_UNKNOWN,

@@ -1,0 +1,301 @@
+[0/2] Re-checking globbed directories...
+[1/7] Building C object assembler/CMakeFiles/rxaslib.dir/rxas_flow_ssa.c.o
+[2/7] Linking C static library bin/librxaslib.a
+[3/7] Linking C executable bin/rxas
+[4/7] Linking C executable tests/test_rxas_flow_graph
+[5/7] Generating entry_alias_runtime_rxvm_noopt.rxbin
+[6/7] Generating entry_alias_runtime_rxvm_opt.rxbin
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+      Start 2189: entry_alias_runtime_rxvm_opt
+      Start 2180: rxas_optimizer_successful_guard_flow
+      Start 2097: rxas_flow_graph_contract
+      Start 2181: rxas_optimizer_successful_guard_flow_noopt
+ 1/88 Test #2181: rxas_optimizer_successful_guard_flow_noopt .............   Passed    0.01 sec
+      Start 2146: rxas_optimizer_barrier_bcheckrange
+ 2/88 Test #2189: entry_alias_runtime_rxvm_opt ...........................   Passed    0.02 sec
+      Start 2114: rxas_optimizer_string_literal_reuse
+ 3/88 Test #2146: rxas_optimizer_barrier_bcheckrange .....................   Passed    0.01 sec
+      Start 2172: rxas_optimizer_copied_xtoy_component_placement
+ 4/88 Test #2180: rxas_optimizer_successful_guard_flow ...................   Passed    0.03 sec
+      Start 2170: rxas_optimizer_redundant_xtoy_flow
+ 5/88 Test #2114: rxas_optimizer_string_literal_reuse ....................   Passed    0.03 sec
+      Start 2096: rxas_optimizer_metadata
+ 6/88 Test #2096: rxas_optimizer_metadata ................................   Passed    0.00 sec
+      Start 2117: rxas_optimizer_branch_thread_flow
+ 7/88 Test #2172: rxas_optimizer_copied_xtoy_component_placement .........   Passed    0.03 sec
+      Start 2106: rxas_optimizer_copy_acopy_opt
+ 8/88 Test #2106: rxas_optimizer_copy_acopy_opt ..........................   Passed    0.01 sec
+      Start 2166: rxas_optimizer_swap_round_trip_flow
+ 9/88 Test #2170: rxas_optimizer_redundant_xtoy_flow .....................   Passed    0.04 sec
+      Start 2133: rxas_optimizer_duplicate_linkattr_read_copy_families
+10/88 Test #2117: rxas_optimizer_branch_thread_flow ......................   Passed    0.02 sec
+      Start 2119: rxas_optimizer_unreachable_metadata_epoch
+11/88 Test #2119: rxas_optimizer_unreachable_metadata_epoch ..............   Passed    0.01 sec
+      Start 2108: rxas_optimizer_compare_branch
+12/88 Test #2133: rxas_optimizer_duplicate_linkattr_read_copy_families ...***Failed    0.02 sec
+CMake Error at /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:52 (message):
+  Expected 8 setup and retained reads for four attribute copy families, found
+  9: (^|
+
+  )([ 	]*[A-Za-z_][A-Za-z0-9_]*:[ 	]*)?[ 	]*linkattr1[
+  	]+r[0-9]+,r(0|7|14|21),1[ 	]*(\*|
+
+  |$)
+
+  case: duplicate_linkattr_read_copy_families
+
+  source:
+  /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/duplicate_linkattr_read_copy_families.rxas
+
+  disassembly:
+  /Users/adrian/CLionProjects/CREXX/cmake-build-debug/tests/rxas_optimizer/duplicate_linkattr_read_copy_families/duplicate_linkattr_read_copy_families.rxas
+
+  --- disassembly ---
+
+  
+  *******************************************************************************
+
+  * MODULE -
+  /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/duplicate_linkattr_read_copy_families.rxas
+
+  * DESCRIPTION -
+  /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/duplicate_linkattr_read_copy_families.rxas
+
+
+
+  * CONSTANT POOL - Size 0x98.  Dump of EXPOSED entries only (option -p not
+  used):
+
+
+
+
+
+  * CODE SEGMENT - Size 0x73
+
+
+
+  .globals=0
+
+
+
+  main() .locals=28
+
+                  setattrs r0,1                                * 0x000000:00d9 set number attributes op1.num_attributes = op2
+                  linkattr1 r1,r0,1                            * 0x000003:00cb Link attribute op3 (1 base) of op2 to op1
+                  load r2,"payload"                            * 0x000007:0003 Load op1 with op2
+                  copy r1,r2                                   * 0x00000a:0008 Copy op2 to op1
+                  unlink r1                                    * 0x00000d:00d5 Unlink op1
+                  linkattr1 r3,r0,1                            * 0x00000f:00cb Link attribute op3 (1 base) of op2 to op1
+                  copy r4,r3                                   * 0x000013:0008 Copy op2 to op1
+                  unlink r3                                    * 0x000016:00d5 Unlink op1
+                  linkattr1 r5,r0,1                            * 0x000018:00cb Link attribute op3 (1 base) of op2 to op1
+                  copy r6,r5                                   * 0x00001c:0008 Copy op2 to op1
+                  unlink r5                                    * 0x00001f:00d5 Unlink op1
+                  setattrs r7,1                                * 0x000021:00d9 set number attributes op1.num_attributes = op2
+                  linkattr1 r8,r7,1                            * 0x000024:00cb Link attribute op3 (1 base) of op2 to op1
+                  load r9,17                                   * 0x000028:0001 Load op1 with op2
+                  icopy r8,r9                                  * 0x00002b:0009 Copy Integer op2 to op1
+                  unlink r8                                    * 0x00002e:00d5 Unlink op1
+                  linkattr1 r10,r7,1                           * 0x000030:00cb Link attribute op3 (1 base) of op2 to op1
+                  icopy r11,r10                                * 0x000034:0009 Copy Integer op2 to op1
+                  unlink r10                                   * 0x000037:00d5 Unlink op1
+                  icopy r13,r11                                * 0x000039:0009 Copy Integer op2 to op1
+                  setattrs r14,1                               * 0x00003c:00d9 set number attributes op1.num_attributes = op2
+                  linkattr1 r15,r14,1                          * 0x00003f:00cb Link attribute op3 (1 base) of op2 to op1
+                  load r16,2.5                                 * 0x000043:0002 Load op1 with op2
+                  fcopy r15,r16                                * 0x000046:000a Copy Float op2 to op1
+                  unlink r15                                   * 0x000049:00d5 Unlink op1
+                  linkattr1 r17,r14,1                          * 0x00004b:00cb Link attribute op3 (1 base) of op2 to op1
+                  fcopy r18,r17                                * 0x00004f:000a Copy Float op2 to op1
+                  unlink r17                                   * 0x000052:00d5 Unlink op1
+                  fcopy r20,r18                                * 0x000054:000a Copy Float op2 to op1
+                  setattrs r21,1                               * 0x000057:00d9 set number attributes op1.num_attributes = op2
+                  linkattr1 r22,r21,1                          * 0x00005a:00cb Link attribute op3 (1 base) of op2 to op1
+                  load r23,19d                                 * 0x00005e:0005 Load op1 with op2
+                  dcopy r22,r23                                * 0x000061:000c Copy Decimal op2 to op1
+                  unlink r22                                   * 0x000064:00d5 Unlink op1
+                  linkattr1 r24,r21,1                          * 0x000066:00cb Link attribute op3 (1 base) of op2 to op1
+                  dcopy r25,r24                                * 0x00006a:000c Copy Decimal op2 to op1
+                  unlink r24                                   * 0x00006d:00d5 Unlink op1
+                  dcopy r27,r25                                * 0x00006f:000c Copy Decimal op2 to op1
+                  ret                                          * 0x000072:0030 Return VOID
+
+  
+  *******************************************************************************
+
+
+
+Call Stack (most recent call first):
+  /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:76 (_optimizer_fail)
+  /Users/adrian/CLionProjects/CREXX/tests/rxas_optimizer/check_optimizer.cmake:365 (_count)
+
+
+
+      Start 2118: rxas_optimizer_branch_thread_flow_noopt
+13/88 Test #2166: rxas_optimizer_swap_round_trip_flow ....................   Passed    0.03 sec
+      Start 2129: rxas_optimizer_duplicate_link_read_call_alias
+14/88 Test #2118: rxas_optimizer_branch_thread_flow_noopt ................   Passed    0.01 sec
+      Start 2138: rxas_optimizer_duplicate_linkattr_owner_alias
+15/88 Test #2129: rxas_optimizer_duplicate_link_read_call_alias ..........   Passed    0.01 sec
+      Start 2139: rxas_optimizer_duplicate_linkattr_owner_different
+16/88 Test #2138: rxas_optimizer_duplicate_linkattr_owner_alias ..........   Passed    0.01 sec
+      Start 2130: rxas_optimizer_duplicate_link_read_divergent_phi
+17/88 Test #2139: rxas_optimizer_duplicate_linkattr_owner_different ......   Passed    0.01 sec
+      Start 2137: rxas_optimizer_duplicate_linkattr_source_changed
+18/88 Test #2130: rxas_optimizer_duplicate_link_read_divergent_phi .......   Passed    0.01 sec
+      Start 2115: rxas_optimizer_string_literal_reuse_noopt
+19/88 Test #2137: rxas_optimizer_duplicate_linkattr_source_changed .......   Passed    0.01 sec
+      Start 2126: rxas_optimizer_duplicate_link_read_copy_families
+20/88 Test #2115: rxas_optimizer_string_literal_reuse_noopt ..............   Passed    0.01 sec
+      Start 2174: rxas_optimizer_redundant_constant_flow
+21/88 Test #2108: rxas_optimizer_compare_branch ..........................   Passed    0.06 sec
+      Start 2113: rxas_optimizer_joined_key_fixed_point_private_local
+22/88 Test #2126: rxas_optimizer_duplicate_link_read_copy_families .......   Passed    0.01 sec
+      Start 2176: rxas_optimizer_redundant_absent_flow
+23/88 Test #2174: rxas_optimizer_redundant_constant_flow .................   Passed    0.02 sec
+      Start 2116: rxas_optimizer_local_single_use_copy
+24/88 Test #2113: rxas_optimizer_joined_key_fixed_point_private_local ....   Passed    0.02 sec
+      Start 2111: rxas_optimizer_joined_key_private_local
+25/88 Test #2176: rxas_optimizer_redundant_absent_flow ...................   Passed    0.02 sec
+      Start 2178: rxas_optimizer_redundant_self_copy_flow
+26/88 Test #2116: rxas_optimizer_local_single_use_copy ...................   Passed    0.01 sec
+      Start 2171: rxas_optimizer_redundant_xtoy_flow_noopt
+27/88 Test #2111: rxas_optimizer_joined_key_private_local ................   Passed    0.01 sec
+      Start 2173: rxas_optimizer_copied_xtoy_component_placement_noopt
+28/88 Test #2173: rxas_optimizer_copied_xtoy_component_placement_noopt ...   Passed    0.01 sec
+      Start 2163: rxas_optimizer_nr18_flow_harvest
+29/88 Test #2178: rxas_optimizer_redundant_self_copy_flow ................   Passed    0.02 sec
+      Start 2112: rxas_optimizer_joined_key_private_local_noopt
+30/88 Test #2171: rxas_optimizer_redundant_xtoy_flow_noopt ...............   Passed    0.02 sec
+      Start 2177: rxas_optimizer_redundant_absent_flow_noopt
+31/88 Test #2112: rxas_optimizer_joined_key_private_local_noopt ..........   Passed    0.01 sec
+      Start 2167: rxas_optimizer_swap_round_trip_flow_noopt
+32/88 Test #2177: rxas_optimizer_redundant_absent_flow_noopt .............   Passed    0.01 sec
+      Start 2136: rxas_optimizer_duplicate_linkattr_unproved_signal
+33/88 Test #2167: rxas_optimizer_swap_round_trip_flow_noopt ..............   Passed    0.02 sec
+      Start 2179: rxas_optimizer_redundant_self_copy_flow_noopt
+34/88 Test #2163: rxas_optimizer_nr18_flow_harvest .......................   Passed    0.03 sec
+      Start 2135: rxas_optimizer_duplicate_linkattr_count_changed
+35/88 Test #2136: rxas_optimizer_duplicate_linkattr_unproved_signal ......   Passed    0.02 sec
+      Start 2127: rxas_optimizer_duplicate_link_read_source_changed
+36/88 Test #2179: rxas_optimizer_redundant_self_copy_flow_noopt ..........   Passed    0.01 sec
+      Start 2165: rxas_optimizer_storage_identity_flow
+37/88 Test #2135: rxas_optimizer_duplicate_linkattr_count_changed ........   Passed    0.01 sec
+      Start 2175: rxas_optimizer_redundant_constant_flow_noopt
+38/88 Test #2127: rxas_optimizer_duplicate_link_read_source_changed ......   Passed    0.01 sec
+      Start 2128: rxas_optimizer_duplicate_link_read_detached_changed
+39/88 Test #2097: rxas_flow_graph_contract ...............................   Passed    0.24 sec
+      Start 2110: rxas_optimizer_semantic_batch_flow
+40/88 Test #2128: rxas_optimizer_duplicate_link_read_detached_changed ....   Passed    0.01 sec
+      Start 2161: rxas_optimizer_whole_procedure_panel
+41/88 Test #2175: rxas_optimizer_redundant_constant_flow_noopt ...........   Passed    0.02 sec
+      Start 2168: rxas_optimizer_redundant_itos_flow
+42/88 Test #2165: rxas_optimizer_storage_identity_flow ...................   Passed    0.03 sec
+      Start 2143: rxas_optimizer_barrier_asserttype
+43/88 Test #2110: rxas_optimizer_semantic_batch_flow .....................   Passed    0.02 sec
+      Start 2162: rxas_optimizer_whole_procedure_panel_noopt
+44/88 Test #2143: rxas_optimizer_barrier_asserttype ......................   Passed    0.02 sec
+      Start 2145: rxas_optimizer_barrier_ichkrng
+45/88 Test #2168: rxas_optimizer_redundant_itos_flow .....................   Passed    0.03 sec
+      Start 2144: rxas_optimizer_barrier_assertinitialized
+46/88 Test #2162: rxas_optimizer_whole_procedure_panel_noopt .............   Passed    0.02 sec
+      Start 2158: rxas_optimizer_nr09_class1_boundaries
+47/88 Test #2161: rxas_optimizer_whole_procedure_panel ...................   Passed    0.04 sec
+      Start 2164: rxas_optimizer_nr18_flow_harvest_noopt
+48/88 Test #2145: rxas_optimizer_barrier_ichkrng .........................   Passed    0.01 sec
+      Start 2169: rxas_optimizer_redundant_itos_flow_noopt
+49/88 Test #2144: rxas_optimizer_barrier_assertinitialized ...............   Passed    0.01 sec
+      Start 2156: rxas_optimizer_nr09_class1
+50/88 Test #2158: rxas_optimizer_nr09_class1_boundaries ..................   Passed    0.04 sec
+      Start 2157: rxas_optimizer_nr09_class1_noopt
+51/88 Test #2169: rxas_optimizer_redundant_itos_flow_noopt ...............   Passed    0.04 sec
+      Start 2153: rxas_optimizer_barrier_dltbr
+52/88 Test #2164: rxas_optimizer_nr18_flow_harvest_noopt .................   Passed    0.04 sec
+      Start 2109: rxas_optimizer_compare_branch_noopt
+53/88 Test #2156: rxas_optimizer_nr09_class1 .............................   Passed    0.04 sec
+      Start 2140: rxas_optimizer_barrier_call
+54/88 Test #2153: rxas_optimizer_barrier_dltbr ...........................   Passed    0.01 sec
+      Start 2099: rxas_optimizer_fixed_registers_noopt
+55/88 Test #2140: rxas_optimizer_barrier_call ............................   Passed    0.01 sec
+      Start 2151: rxas_optimizer_barrier_fltbr
+56/88 Test #2157: rxas_optimizer_nr09_class1_noopt .......................   Passed    0.01 sec
+      Start 2142: rxas_optimizer_barrier_srcfproc
+57/88 Test #2109: rxas_optimizer_compare_branch_noopt ....................   Passed    0.02 sec
+      Start 2154: rxas_optimizer_barrier_deqbr
+58/88 Test #2151: rxas_optimizer_barrier_fltbr ...........................   Passed    0.01 sec
+      Start 2150: rxas_optimizer_barrier_fgtbr
+59/88 Test #2099: rxas_optimizer_fixed_registers_noopt ...................   Passed    0.01 sec
+      Start 2152: rxas_optimizer_barrier_dgtbr
+60/88 Test #2142: rxas_optimizer_barrier_srcfproc ........................   Passed    0.01 sec
+      Start 2149: rxas_optimizer_barrier_iltbr
+61/88 Test #2154: rxas_optimizer_barrier_deqbr ...........................   Passed    0.01 sec
+      Start 2159: rxas_optimizer_whole_procedure_flow
+62/88 Test #2152: rxas_optimizer_barrier_dgtbr ...........................   Passed    0.01 sec
+      Start 2104: rxas_optimizer_linkarg_relevant
+63/88 Test #2150: rxas_optimizer_barrier_fgtbr ...........................   Passed    0.01 sec
+      Start 2098: rxas_optimizer_fixed_registers_opt
+64/88 Test #2149: rxas_optimizer_barrier_iltbr ...........................   Passed    0.01 sec
+      Start 2141: rxas_optimizer_barrier_dcall
+65/88 Test #2159: rxas_optimizer_whole_procedure_flow ....................   Passed    0.02 sec
+66/88 Test #2104: rxas_optimizer_linkarg_relevant ........................   Passed    0.01 sec
+      Start 2134: rxas_optimizer_duplicate_linkattr_different
+      Start 2160: rxas_optimizer_whole_procedure_flow_noopt
+67/88 Test #2098: rxas_optimizer_fixed_registers_opt .....................   Passed    0.01 sec
+      Start 2132: rxas_optimizer_duplicate_linkattr_read_bcopy
+68/88 Test #2141: rxas_optimizer_barrier_dcall ...........................   Passed    0.01 sec
+      Start 2148: rxas_optimizer_barrier_igtbr
+69/88 Test #2160: rxas_optimizer_whole_procedure_flow_noopt ..............   Passed    0.01 sec
+      Start 2120: rxas_optimizer_duplicate_link_read
+70/88 Test #2148: rxas_optimizer_barrier_igtbr ...........................   Passed    0.01 sec
+      Start 2103: rxas_optimizer_loadint_unrelated
+71/88 Test #2134: rxas_optimizer_duplicate_linkattr_different ............   Passed    0.01 sec
+      Start 2147: rxas_optimizer_barrier_signal
+72/88 Test #2132: rxas_optimizer_duplicate_linkattr_read_bcopy ...........   Passed    0.01 sec
+      Start 2102: rxas_optimizer_loadint_relevant
+73/88 Test #2120: rxas_optimizer_duplicate_link_read .....................   Passed    0.01 sec
+      Start 2125: rxas_optimizer_duplicate_link_read_bcopy
+74/88 Test #2103: rxas_optimizer_loadint_unrelated .......................   Passed    0.01 sec
+      Start 2131: rxas_optimizer_duplicate_linkattr_read
+75/88 Test #2147: rxas_optimizer_barrier_signal ..........................   Passed    0.01 sec
+      Start 2107: rxas_optimizer_copy_acopy_noopt
+76/88 Test #2102: rxas_optimizer_loadint_relevant ........................   Passed    0.01 sec
+      Start 2105: rxas_optimizer_linkarg_unrelated
+77/88 Test #2131: rxas_optimizer_duplicate_linkattr_read .................   Passed    0.02 sec
+      Start 2101: rxas_optimizer_implicit_inc0_unrelated
+78/88 Test #2125: rxas_optimizer_duplicate_link_read_bcopy ...............   Passed    0.03 sec
+79/88 Test #2107: rxas_optimizer_copy_acopy_noopt ........................   Passed    0.03 sec
+      Start 2124: rxas_optimizer_duplicate_link_read_trace_unrelated
+      Start 2100: rxas_optimizer_implicit_inc0_relevant
+80/88 Test #2105: rxas_optimizer_linkarg_unrelated .......................   Passed    0.04 sec
+      Start 2123: rxas_optimizer_duplicate_link_read_trace_relevant
+81/88 Test #2100: rxas_optimizer_implicit_inc0_relevant ..................   Passed    0.01 sec
+      Start 2121: rxas_optimizer_duplicate_link_read_meta_relevant
+82/88 Test #2101: rxas_optimizer_implicit_inc0_unrelated .................   Passed    0.02 sec
+83/88 Test #2124: rxas_optimizer_duplicate_link_read_trace_unrelated .....   Passed    0.01 sec
+      Start 2122: rxas_optimizer_duplicate_link_read_meta_unrelated
+      Start 2155: rxas_optimizer_barrier_metaloadmodule
+84/88 Test #2123: rxas_optimizer_duplicate_link_read_trace_relevant ......   Passed    0.01 sec
+      Start 2188: entry_alias_runtime_rxvm_noopt
+85/88 Test #2188: entry_alias_runtime_rxvm_noopt .........................   Passed    0.00 sec
+86/88 Test #2121: rxas_optimizer_duplicate_link_read_meta_relevant .......   Passed    0.01 sec
+87/88 Test #2122: rxas_optimizer_duplicate_link_read_meta_unrelated ......   Passed    0.01 sec
+88/88 Test #2155: rxas_optimizer_barrier_metaloadmodule ..................   Passed    0.01 sec
+
+99% tests passed, 1 tests failed out of 88
+
+Label Time Summary:
+comprehensive       =   1.81 sec*proc (87 tests)
+flow                =   0.27 sec*proc (3 tests)
+linked_opt          =   0.02 sec*proc (1 test)
+metadata            =   0.25 sec*proc (2 tests)
+optimizer           =   1.82 sec*proc (88 tests)
+optimizer-parity    =   0.03 sec*proc (2 tests)
+runtime             =   0.03 sec*proc (2 tests)
+rxas                =   1.82 sec*proc (88 tests)
+smoke               =   0.01 sec*proc (1 test)
+
+Total Test time (real) =   0.51 sec
+
+The following tests FAILED:
+	2133 - rxas_optimizer_duplicate_linkattr_read_copy_families (Failed) comprehensive optimizer rxas
+Errors while running CTest

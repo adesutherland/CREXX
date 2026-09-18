@@ -1,0 +1,239 @@
+[0/2] Re-checking globbed directories...
+[1/18] Generating whole_procedure_runtime_rxvm_noopt.rxbin
+[2/18] Generating entry_alias_runtime_rxvm_noopt.rxbin
+[3/18] Generating nr18_flow_runtime_rxvm_noopt.rxbin
+[4/18] Generating storage_identity_runtime_rxvm_noopt.rxbin
+[5/18] Generating nr18_flow_runtime_rxvm_opt.rxbin
+[6/18] Generating whole_procedure_runtime_rxvm_opt.rxbin
+[7/18] Generating storage_identity_runtime_rxvm_opt.rxbin
+[8/18] Generating redundant_itos_runtime_rxvm_noopt.rxbin
+[9/18] Generating copied_xtoy_component_placement_runtime_rxvm_noopt.rxbin
+[10/18] Generating signal_contract_runtime_rxvm_noopt.rxbin
+[11/18] Generating redundant_itos_runtime_rxvm_opt.rxbin
+[12/18] Generating entry_alias_runtime_rxvm_opt.rxbin
+[13/18] Generating copied_xtoy_component_placement_runtime_rxvm_opt.rxbin
+[14/18] Generating signal_contract_runtime_rxvm_opt.rxbin
+[15/18] Generating branch_thread_runtime_rxvm_noopt.rxbin
+[16/18] Generating branch_thread_runtime_rxvm_opt.rxbin
+[17/18] Linking C executable bin/rxc
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+        Start 2180: rxas_optimizer_successful_guard_flow
+        Start 2097: rxas_flow_graph_contract
+        Start 2181: rxas_optimizer_successful_guard_flow_noopt
+        Start 2146: rxas_optimizer_barrier_bcheckrange
+  1/102 Test #2097: rxas_flow_graph_contract ...............................   Passed    0.01 sec
+        Start 2114: rxas_optimizer_string_literal_reuse
+  2/102 Test #2146: rxas_optimizer_barrier_bcheckrange .....................   Passed    0.02 sec
+        Start 2193: signal_contract_runtime_rxvm_opt
+  3/102 Test #2181: rxas_optimizer_successful_guard_flow_noopt .............   Passed    0.02 sec
+        Start 2172: rxas_optimizer_copied_xtoy_component_placement
+  4/102 Test #2180: rxas_optimizer_successful_guard_flow ...................   Passed    0.05 sec
+        Start 2170: rxas_optimizer_redundant_xtoy_flow
+  5/102 Test #2193: signal_contract_runtime_rxvm_opt .......................   Passed    0.03 sec
+        Start 2096: rxas_optimizer_metadata
+  6/102 Test #2114: rxas_optimizer_string_literal_reuse ....................   Passed    0.04 sec
+        Start 2117: rxas_optimizer_branch_thread_flow
+  7/102 Test #2096: rxas_optimizer_metadata ................................   Passed    0.00 sec
+        Start 2197: branch_thread_runtime_rxvm_opt
+  8/102 Test #2172: rxas_optimizer_copied_xtoy_component_placement .........   Passed    0.04 sec
+        Start 2195: copied_xtoy_component_placement_runtime_rxvm_opt
+  9/102 Test #2197: branch_thread_runtime_rxvm_opt .........................   Passed    0.02 sec
+        Start 2106: rxas_optimizer_copy_acopy_opt
+ 10/102 Test #2117: rxas_optimizer_branch_thread_flow ......................   Passed    0.02 sec
+        Start 2191: redundant_itos_runtime_rxvm_opt
+ 11/102 Test #2195: copied_xtoy_component_placement_runtime_rxvm_opt .......   Passed    0.02 sec
+        Start 2166: rxas_optimizer_swap_round_trip_flow
+ 12/102 Test #2106: rxas_optimizer_copy_acopy_opt ..........................   Passed    0.02 sec
+        Start 2133: rxas_optimizer_duplicate_linkattr_read_copy_families
+ 13/102 Test #2191: redundant_itos_runtime_rxvm_opt ........................   Passed    0.02 sec
+        Start 2192: signal_contract_runtime_rxvm_noopt
+ 14/102 Test #2170: rxas_optimizer_redundant_xtoy_flow .....................   Passed    0.05 sec
+        Start 2108: rxas_optimizer_compare_branch
+ 15/102 Test #2192: signal_contract_runtime_rxvm_noopt .....................   Passed    0.00 sec
+        Start 2119: rxas_optimizer_unreachable_metadata_epoch
+ 16/102 Test #2133: rxas_optimizer_duplicate_linkattr_read_copy_families ...   Passed    0.02 sec
+        Start 2118: rxas_optimizer_branch_thread_flow_noopt
+ 17/102 Test #2166: rxas_optimizer_swap_round_trip_flow ....................   Passed    0.03 sec
+        Start 2129: rxas_optimizer_duplicate_link_read_call_alias
+ 18/102 Test #2119: rxas_optimizer_unreachable_metadata_epoch ..............   Passed    0.01 sec
+        Start 2138: rxas_optimizer_duplicate_linkattr_owner_alias
+ 19/102 Test #2118: rxas_optimizer_branch_thread_flow_noopt ................   Passed    0.02 sec
+        Start 2139: rxas_optimizer_duplicate_linkattr_owner_different
+ 20/102 Test #2129: rxas_optimizer_duplicate_link_read_call_alias ..........   Passed    0.01 sec
+        Start 2130: rxas_optimizer_duplicate_link_read_divergent_phi
+ 21/102 Test #2138: rxas_optimizer_duplicate_linkattr_owner_alias ..........   Passed    0.02 sec
+        Start 2137: rxas_optimizer_duplicate_linkattr_source_changed
+ 22/102 Test #2130: rxas_optimizer_duplicate_link_read_divergent_phi .......   Passed    0.01 sec
+        Start 2115: rxas_optimizer_string_literal_reuse_noopt
+ 23/102 Test #2139: rxas_optimizer_duplicate_linkattr_owner_different ......   Passed    0.02 sec
+        Start 2126: rxas_optimizer_duplicate_link_read_copy_families
+ 24/102 Test #2137: rxas_optimizer_duplicate_linkattr_source_changed .......   Passed    0.02 sec
+        Start 2189: entry_alias_runtime_rxvm_opt
+ 25/102 Test #2115: rxas_optimizer_string_literal_reuse_noopt ..............   Passed    0.02 sec
+        Start 2187: storage_identity_runtime_rxvm_opt
+ 26/102 Test #2126: rxas_optimizer_duplicate_link_read_copy_families .......   Passed    0.02 sec
+        Start 2185: nr18_flow_runtime_rxvm_opt
+ 27/102 Test #2108: rxas_optimizer_compare_branch ..........................   Passed    0.08 sec
+        Start 2113: rxas_optimizer_joined_key_fixed_point_private_local
+ 28/102 Test #2189: entry_alias_runtime_rxvm_opt ...........................   Passed    0.03 sec
+        Start 2174: rxas_optimizer_redundant_constant_flow
+ 29/102 Test #2187: storage_identity_runtime_rxvm_opt ......................   Passed    0.03 sec
+        Start 2183: whole_procedure_runtime_rxvm_opt
+ 30/102 Test #2185: nr18_flow_runtime_rxvm_opt .............................   Passed    0.03 sec
+        Start 2176: rxas_optimizer_redundant_absent_flow
+ 31/102 Test #2113: rxas_optimizer_joined_key_fixed_point_private_local ....   Passed    0.02 sec
+        Start 2116: rxas_optimizer_local_single_use_copy
+ 32/102 Test #2174: rxas_optimizer_redundant_constant_flow .................   Passed    0.03 sec
+        Start 2178: rxas_optimizer_redundant_self_copy_flow
+ 33/102 Test #2176: rxas_optimizer_redundant_absent_flow ...................   Passed    0.02 sec
+        Start 2111: rxas_optimizer_joined_key_private_local
+ 34/102 Test #2116: rxas_optimizer_local_single_use_copy ...................   Passed    0.02 sec
+        Start 2171: rxas_optimizer_redundant_xtoy_flow_noopt
+ 35/102 Test #2183: whole_procedure_runtime_rxvm_opt .......................   Passed    0.03 sec
+        Start 2173: rxas_optimizer_copied_xtoy_component_placement_noopt
+ 36/102 Test #2178: rxas_optimizer_redundant_self_copy_flow ................   Passed    0.02 sec
+        Start 2163: rxas_optimizer_nr18_flow_harvest
+ 37/102 Test #2111: rxas_optimizer_joined_key_private_local ................   Passed    0.02 sec
+        Start 2112: rxas_optimizer_joined_key_private_local_noopt
+ 38/102 Test #2173: rxas_optimizer_copied_xtoy_component_placement_noopt ...   Passed    0.02 sec
+        Start 2177: rxas_optimizer_redundant_absent_flow_noopt
+ 39/102 Test #2171: rxas_optimizer_redundant_xtoy_flow_noopt ...............   Passed    0.03 sec
+        Start 2167: rxas_optimizer_swap_round_trip_flow_noopt
+ 40/102 Test #2112: rxas_optimizer_joined_key_private_local_noopt ..........   Passed    0.02 sec
+        Start 2136: rxas_optimizer_duplicate_linkattr_unproved_signal
+ 41/102 Test #2177: rxas_optimizer_redundant_absent_flow_noopt .............   Passed    0.02 sec
+        Start 2179: rxas_optimizer_redundant_self_copy_flow_noopt
+ 42/102 Test #2167: rxas_optimizer_swap_round_trip_flow_noopt ..............   Passed    0.02 sec
+        Start 2165: rxas_optimizer_storage_identity_flow
+ 43/102 Test #2136: rxas_optimizer_duplicate_linkattr_unproved_signal ......   Passed    0.02 sec
+        Start 2135: rxas_optimizer_duplicate_linkattr_count_changed
+ 44/102 Test #2163: rxas_optimizer_nr18_flow_harvest .......................   Passed    0.04 sec
+        Start 2127: rxas_optimizer_duplicate_link_read_source_changed
+ 45/102 Test #2179: rxas_optimizer_redundant_self_copy_flow_noopt ..........   Passed    0.02 sec
+        Start 2175: rxas_optimizer_redundant_constant_flow_noopt
+ 46/102 Test #2135: rxas_optimizer_duplicate_linkattr_count_changed ........   Passed    0.02 sec
+        Start 2128: rxas_optimizer_duplicate_link_read_detached_changed
+ 47/102 Test #2127: rxas_optimizer_duplicate_link_read_source_changed ......   Passed    0.02 sec
+        Start 2110: rxas_optimizer_semantic_batch_flow
+ 48/102 Test #2175: rxas_optimizer_redundant_constant_flow_noopt ...........   Passed    0.02 sec
+        Start 2161: rxas_optimizer_whole_procedure_panel
+ 49/102 Test #2165: rxas_optimizer_storage_identity_flow ...................   Passed    0.03 sec
+        Start 2168: rxas_optimizer_redundant_itos_flow
+ 50/102 Test #2128: rxas_optimizer_duplicate_link_read_detached_changed ....   Passed    0.02 sec
+        Start 2143: rxas_optimizer_barrier_asserttype
+ 51/102 Test #2110: rxas_optimizer_semantic_batch_flow .....................   Passed    0.02 sec
+        Start 2162: rxas_optimizer_whole_procedure_panel_noopt
+ 52/102 Test #2143: rxas_optimizer_barrier_asserttype ......................   Passed    0.02 sec
+        Start 2145: rxas_optimizer_barrier_ichkrng
+ 53/102 Test #2168: rxas_optimizer_redundant_itos_flow .....................   Passed    0.03 sec
+        Start 2144: rxas_optimizer_barrier_assertinitialized
+ 54/102 Test #2161: rxas_optimizer_whole_procedure_panel ...................   Passed    0.04 sec
+        Start 2158: rxas_optimizer_nr09_class1_boundaries
+ 55/102 Test #2162: rxas_optimizer_whole_procedure_panel_noopt .............   Passed    0.03 sec
+        Start 2164: rxas_optimizer_nr18_flow_harvest_noopt
+ 56/102 Test #2145: rxas_optimizer_barrier_ichkrng .........................   Passed    0.02 sec
+        Start 2169: rxas_optimizer_redundant_itos_flow_noopt
+ 57/102 Test #2144: rxas_optimizer_barrier_assertinitialized ...............   Passed    0.02 sec
+        Start 2190: redundant_itos_runtime_rxvm_noopt
+ 58/102 Test #2190: redundant_itos_runtime_rxvm_noopt ......................   Passed    0.01 sec
+        Start 2196: branch_thread_runtime_rxvm_noopt
+ 59/102 Test #2164: rxas_optimizer_nr18_flow_harvest_noopt .................   Passed    0.02 sec
+        Start 2157: rxas_optimizer_nr09_class1_noopt
+ 60/102 Test #2196: branch_thread_runtime_rxvm_noopt .......................   Passed    0.01 sec
+        Start 2156: rxas_optimizer_nr09_class1
+ 61/102 Test #2158: rxas_optimizer_nr09_class1_boundaries ..................   Passed    0.02 sec
+        Start 2194: copied_xtoy_component_placement_runtime_rxvm_noopt
+ 62/102 Test #2169: rxas_optimizer_redundant_itos_flow_noopt ...............   Passed    0.02 sec
+        Start 2153: rxas_optimizer_barrier_dltbr
+ 63/102 Test #2194: copied_xtoy_component_placement_runtime_rxvm_noopt .....   Passed    0.00 sec
+        Start 2109: rxas_optimizer_compare_branch_noopt
+ 64/102 Test #2153: rxas_optimizer_barrier_dltbr ...........................   Passed    0.02 sec
+        Start 2140: rxas_optimizer_barrier_call
+ 65/102 Test #2156: rxas_optimizer_nr09_class1 .............................   Passed    0.02 sec
+        Start 2182: whole_procedure_runtime_rxvm_noopt
+ 66/102 Test #2157: rxas_optimizer_nr09_class1_noopt .......................   Passed    0.02 sec
+        Start 2099: rxas_optimizer_fixed_registers_noopt
+ 67/102 Test #2182: whole_procedure_runtime_rxvm_noopt .....................   Passed    0.01 sec
+        Start 2142: rxas_optimizer_barrier_srcfproc
+ 68/102 Test #2109: rxas_optimizer_compare_branch_noopt ....................   Passed    0.03 sec
+        Start 2151: rxas_optimizer_barrier_fltbr
+ 69/102 Test #2140: rxas_optimizer_barrier_call ............................   Passed    0.02 sec
+        Start 2154: rxas_optimizer_barrier_deqbr
+ 70/102 Test #2099: rxas_optimizer_fixed_registers_noopt ...................   Passed    0.02 sec
+        Start 2150: rxas_optimizer_barrier_fgtbr
+ 71/102 Test #2142: rxas_optimizer_barrier_srcfproc ........................   Passed    0.02 sec
+        Start 2152: rxas_optimizer_barrier_dgtbr
+ 72/102 Test #2151: rxas_optimizer_barrier_fltbr ...........................   Passed    0.02 sec
+        Start 2159: rxas_optimizer_whole_procedure_flow
+ 73/102 Test #2150: rxas_optimizer_barrier_fgtbr ...........................   Passed    0.02 sec
+        Start 2149: rxas_optimizer_barrier_iltbr
+ 74/102 Test #2154: rxas_optimizer_barrier_deqbr ...........................   Passed    0.02 sec
+        Start 2104: rxas_optimizer_linkarg_relevant
+ 75/102 Test #2152: rxas_optimizer_barrier_dgtbr ...........................   Passed    0.02 sec
+        Start 2098: rxas_optimizer_fixed_registers_opt
+ 76/102 Test #2149: rxas_optimizer_barrier_iltbr ...........................   Passed    0.02 sec
+        Start 2141: rxas_optimizer_barrier_dcall
+ 77/102 Test #2104: rxas_optimizer_linkarg_relevant ........................   Passed    0.02 sec
+        Start 2134: rxas_optimizer_duplicate_linkattr_different
+ 78/102 Test #2159: rxas_optimizer_whole_procedure_flow ....................   Passed    0.02 sec
+        Start 2186: storage_identity_runtime_rxvm_noopt
+ 79/102 Test #2098: rxas_optimizer_fixed_registers_opt .....................   Passed    0.02 sec
+        Start 2160: rxas_optimizer_whole_procedure_flow_noopt
+ 80/102 Test #2186: storage_identity_runtime_rxvm_noopt ....................   Passed    0.01 sec
+        Start 2132: rxas_optimizer_duplicate_linkattr_read_bcopy
+ 81/102 Test #2141: rxas_optimizer_barrier_dcall ...........................   Passed    0.02 sec
+        Start 2148: rxas_optimizer_barrier_igtbr
+ 82/102 Test #2134: rxas_optimizer_duplicate_linkattr_different ............   Passed    0.02 sec
+        Start 2120: rxas_optimizer_duplicate_link_read
+ 83/102 Test #2160: rxas_optimizer_whole_procedure_flow_noopt ..............   Passed    0.02 sec
+        Start 2103: rxas_optimizer_loadint_unrelated
+ 84/102 Test #2132: rxas_optimizer_duplicate_linkattr_read_bcopy ...........   Passed    0.02 sec
+        Start 2147: rxas_optimizer_barrier_signal
+ 85/102 Test #2148: rxas_optimizer_barrier_igtbr ...........................   Passed    0.02 sec
+        Start 2125: rxas_optimizer_duplicate_link_read_bcopy
+ 86/102 Test #2120: rxas_optimizer_duplicate_link_read .....................   Passed    0.02 sec
+        Start 2102: rxas_optimizer_loadint_relevant
+ 87/102 Test #2103: rxas_optimizer_loadint_unrelated .......................   Passed    0.02 sec
+        Start 2107: rxas_optimizer_copy_acopy_noopt
+ 88/102 Test #2147: rxas_optimizer_barrier_signal ..........................   Passed    0.02 sec
+        Start 2105: rxas_optimizer_linkarg_unrelated
+ 89/102 Test #2125: rxas_optimizer_duplicate_link_read_bcopy ...............   Passed    0.02 sec
+        Start 2131: rxas_optimizer_duplicate_linkattr_read
+ 90/102 Test #2102: rxas_optimizer_loadint_relevant ........................   Passed    0.02 sec
+        Start 2123: rxas_optimizer_duplicate_link_read_trace_relevant
+ 91/102 Test #2107: rxas_optimizer_copy_acopy_noopt ........................   Passed    0.02 sec
+        Start 2101: rxas_optimizer_implicit_inc0_unrelated
+ 92/102 Test #2105: rxas_optimizer_linkarg_unrelated .......................   Passed    0.02 sec
+        Start 2121: rxas_optimizer_duplicate_link_read_meta_relevant
+ 93/102 Test #2131: rxas_optimizer_duplicate_linkattr_read .................   Passed    0.02 sec
+        Start 2124: rxas_optimizer_duplicate_link_read_trace_unrelated
+ 94/102 Test #2123: rxas_optimizer_duplicate_link_read_trace_relevant ......   Passed    0.02 sec
+        Start 2100: rxas_optimizer_implicit_inc0_relevant
+ 95/102 Test #2101: rxas_optimizer_implicit_inc0_unrelated .................   Passed    0.02 sec
+        Start 2122: rxas_optimizer_duplicate_link_read_meta_unrelated
+ 96/102 Test #2121: rxas_optimizer_duplicate_link_read_meta_relevant .......   Passed    0.02 sec
+        Start 2184: nr18_flow_runtime_rxvm_noopt
+ 97/102 Test #2184: nr18_flow_runtime_rxvm_noopt ...........................   Passed    0.01 sec
+        Start 2155: rxas_optimizer_barrier_metaloadmodule
+ 98/102 Test #2100: rxas_optimizer_implicit_inc0_relevant ..................   Passed    0.02 sec
+        Start 2188: entry_alias_runtime_rxvm_noopt
+ 99/102 Test #2124: rxas_optimizer_duplicate_link_read_trace_unrelated .....   Passed    0.02 sec
+100/102 Test #2188: entry_alias_runtime_rxvm_noopt .........................   Passed    0.00 sec
+101/102 Test #2122: rxas_optimizer_duplicate_link_read_meta_unrelated ......   Passed    0.02 sec
+102/102 Test #2155: rxas_optimizer_barrier_metaloadmodule ..................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 102
+
+Label Time Summary:
+comprehensive       =   2.06 sec*proc (101 tests)
+flow                =   0.10 sec*proc (7 tests)
+linked_opt          =   0.21 sec*proc (8 tests)
+metadata            =   0.02 sec*proc (2 tests)
+optimizer           =   2.08 sec*proc (102 tests)
+optimizer-parity    =   0.25 sec*proc (16 tests)
+runtime             =   0.25 sec*proc (16 tests)
+rxas                =   2.08 sec*proc (102 tests)
+signal              =   0.03 sec*proc (2 tests)
+smoke               =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   0.61 sec

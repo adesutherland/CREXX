@@ -624,6 +624,14 @@ K01-K04 additionally request the sparse use index. The established `-d` flow
 dump has its own explicit diagnostic route. No current production consumer
 requests loop analysis.
 
+Incoming argument/global base identities are not a no-alias guarantee. Shared
+component queries invalidate facts on writes through another possible incoming
+alias, including linked and phi-selected bases; they never transfer a value
+from an alias that is merely possible. The same component-write helper owns
+fresh queries and cached-query revalidation. Exact private-local identities and
+the existing dynamic/reference effect model remain separate. The
+`entry_alias_runtime` optimized/unoptimized regression covers this boundary.
+
 D0.5 adds an exact linear write-once/single-use typed-copy route. One local-
 register census records explicit occurrences plus metadata, TRACE, implicit
 register and call-window observations. `ICOPY`, `FCOPY` or `SCOPY` may bypass

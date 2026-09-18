@@ -1,0 +1,129 @@
+* OPT-BOUNDARY-01: incoming arguments may already share value storage.
+.globals=1
+
+main() .locals=10
+    numsci 18,1,1
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,argument_alias(),r0
+    unlink r2
+    seq r9,r3,"42"
+    brf failed,r9
+
+    load r0,2
+    load r1,41
+    load r2,90
+    call r3,argument_alias(),r0
+    seq r9,r3,"41"
+    brf failed,r9
+
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,detached_value(),r0
+    unlink r2
+    seq r9,r3,"41"
+    brf failed,r9
+
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,linked_alias(),r0
+    unlink r2
+    seq r9,r3,"42"
+    brf failed,r9
+
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,joined_alias(),r0
+    unlink r2
+    seq r9,r3,"42"
+    brf failed,r9
+
+    load r0,2
+    load r1,41
+    link r2,r1
+    call r3,repeated_constant(),r0
+    unlink r2
+    seq r9,r3,"41"
+    brf failed,r9
+
+    load g0,41
+    load r0,1
+    link r1,g0
+    call r3,global_alias(),r0
+    unlink r1
+    seq r9,r3,"42"
+    brf failed,r9
+
+    load g0,41
+    load r0,1
+    link r1,g0
+    call r3,call_alias(),r0
+    unlink r1
+    seq r9,r3,"42"
+    brf failed,r9
+
+    say "PASS: incoming argument alias runtime"
+    ret 0
+failed:
+    say "FAIL: incoming argument alias runtime"
+    ret 1
+
+argument_alias() .locals=0
+    itos a1
+    inc a2
+    itos a1
+    ret a1
+
+detached_value() .locals=1
+    icopy r0,a1
+    inc a2
+    itos r0
+    ret r0
+
+linked_alias() .locals=1
+    link r0,a1
+    itos r0
+    inc a2
+    itos r0
+    unlink r0
+    ret a1
+
+joined_alias() .locals=1
+    brt other,a0
+    link r0,a1
+    br joined
+other:
+    link r0,a2
+joined:
+    itos r0
+    inc a1
+    itos r0
+    unlink r0
+    ret a1
+
+repeated_constant() .locals=0
+    load a1,41
+    inc a2
+    load a1,41
+    itos a1
+    ret a1
+
+global_alias() .locals=0
+    itos a1
+    inc g0
+    itos a1
+    ret a1
+
+call_alias() .locals=0
+    itos a1
+    call mutate_global()
+    itos a1
+    ret a1
+
+mutate_global() .locals=0
+    inc g0
+    ret
