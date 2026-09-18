@@ -1,7 +1,8 @@
 # OPT-BOUNDARY-01 correction
 
 Date: 2026-09-18. Base revision: `15c8a3ba42009ab8b5a9b447aa8c06ce86b9b392`.
-Status: implemented and locally qualified; selected for development publication.
+Status: published to develop in `f7a8b08c1`; combined code head `e99136a1d`
+passed normal Build CREXX and CodeQL. See the defect-batch receipt below.
 The regression contract is valid handwritten assembly whose incoming arguments
 may share storage. The repair preserves the current ISA and calling convention.
 

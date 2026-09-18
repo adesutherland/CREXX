@@ -59,9 +59,32 @@ was an invalid test setup: it does not request a PATH lookup. An unused
 import was also removed from the smoke source before retaining final results.
 Neither test setup correction changes product code.
 
-Normal automatic Build CREXX (Release product/smoke and optimizer parity) and
-CodeQL remain the publication gates for the combined pushed head. Their
-terminal URLs belong in the issue closure receipts. No extra overnight run
-is requested; this record makes no new full sanitizer or release-ready claim.
+## Publication and closure
+
+Published code head: `e99136a1d5725d0c44128f64f505e1b46c64a51f`, comprising alias
+repair `f7a8b08c1`, documentation correction `8453652e9`, and const correction
+plus local evidence `e99136a1d`.
+
+- [Build CREXX 35383125122](https://github.com/adesutherland/CREXX/actions/runs/35383125122)
+  completed successfully for that exact head: Linux x64, macOS ARM64/x86_64,
+  Windows MSVC core products, Windows MinGW correctness, the normal downstream
+  plugin/package jobs, and development-snapshot publication.
+- Linux Debug optimizer parity passed **778/778**, including both permanent
+  alias runtime variants; CTest time was 279.56 seconds. The retained
+  [job log](publication/hosted-parity.log.gz) supplies the exact results.
+- [CodeQL 35383124920](https://github.com/adesutherland/CREXX/actions/runs/35383124920)
+  completed successfully for the same head.
+- [#699](https://github.com/adesutherland/CREXX/issues/699#issuecomment-5734783575),
+  [#700](https://github.com/adesutherland/CREXX/issues/700#issuecomment-5735361709)
+  and [#702](https://github.com/adesutherland/CREXX/issues/702#issuecomment-5735362066)
+  are closed with implementation and qualification evidence.
+
+The [publication receipt](publication/receipt.json) identifies terminal runs,
+issue states and retained artifact hashes. The evidence-only closeout commit
+uses `[skip ci]`: production, test and build inputs are identical to the
+qualified code head. No duplicate suite or workflow is needed to record these
+results. No extra overnight run was dispatched; this record makes no new full
+sanitizer or release-ready claim. The Windows optional-plugin installer was
+unsigned; that successful job does not close the separate signing obligation.
 Unrelated roadmap, architecture-review and native-inference edits are excluded
 from the publication batch. KeyAccess acceptance remains closed.
