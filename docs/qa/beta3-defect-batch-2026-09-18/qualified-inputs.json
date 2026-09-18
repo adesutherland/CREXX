@@ -1,0 +1,17 @@
+{
+  "base_revision": "15c8a3ba42009ab8b5a9b447aa8c06ce86b9b392",
+  "source_sha256": {
+    "assembler/rxas_flow_ssa.c": "609bf1bc182b642f98e421aed6fda5b12ca1656177777035d6680bde142fd263",
+    "tests/CMakeLists.txt": "25ce250d76cd613ec90b36f27ccefe3fcb8382164187a5fcaaca4aa5faa0b90e",
+    "tests/rxas_optimizer/entry_alias_runtime.rxas": "dec94ec8fa55e68d94e40b83fbdedacfd2d47d05d0b10220bec7dbd0d755ef02",
+    "interpreter/rxspawn.c": "6641004509a4e9c1ed9042e769608b308202ee6f6261d40aeb89283223a4523f",
+    "docs/books/crexx_language_reference/binary_memory.md": "204ccbcd01055751f23f9cd4cade77f11c8cdd4ec4d9d954d5d28a56e8918f97",
+    "compiler/rxcpfunc.c": "39a7d29727e572ce85087610a3749773831a9ed00abb6e019dc86ec478d4a32f"
+  },
+  "tool_sha256": {
+    "rxc": "7146840330cec9366eafce0806c3f20539066b1925ba1cf7c0d81c796261c7ea",
+    "rxas": "2bc0f9dc52d7e31f6093651b3a2866ff3306a8a988fe15ddd12e438bdbb641c0",
+    "rxlink": "d49478450512c4f1000d9b1d2037864bc85fb312b5cbd19291542cc6e50d3336",
+    "rxvm": "a0440fc534ad87e0598cd12634503a2968c0dff9836e49c1c9e043981cfcc801"
+  }
+}

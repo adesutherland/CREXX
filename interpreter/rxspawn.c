@@ -1022,11 +1022,11 @@ static int split_shell_args(char *text, char **argv) {
     return count;
 }
 
-static char *shell_argv_name(const char *shell_path) {
-    char *slash;
+static const char *shell_argv_name(const char *shell_path) {
+    const char *slash;
 
     slash = strrchr(shell_path, '/');
-    return slash ? slash + 1 : (char *)shell_path;
+    return slash ? slash + 1 : shell_path;
 }
 
 static char **build_shell_argv(const char *shell_path, const char *args_text, char *buffer, char *command_text) {
@@ -1037,7 +1037,8 @@ static char **build_shell_argv(const char *shell_path, const char *args_text, ch
     argv = rxspawn_memory_alloc(sizeof(char *) * (size_t)(arg_count + 3));
     if (!argv) return NULL;
 
-    argv[0] = shell_argv_name(shell_path);
+    /* POSIX argv is mutable-typed, but spawning does not modify these strings. */
+    argv[0] = (char *)shell_argv_name(shell_path);
     if (arg_count) split_shell_args(buffer, argv + 1);
     argv[arg_count + 1] = command_text;
     argv[arg_count + 2] = NULL;

@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  address system "echo system-ok"
+  address shell "echo shell-ok"
+  return 0

@@ -1,0 +1,93 @@
+[
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3/fixed-fields-before.crexx",
+      "-nocolour",
+      "-optimize"
+    ],
+    "returncode": 2,
+    "log": "doc-before.log"
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3/fixed-fields.crexx",
+      "-nocolour",
+      "-optimize"
+    ],
+    "returncode": 0,
+    "log": "doc-optimize.log"
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3/fixed-fields.crexx",
+      "-nocolour",
+      "-nooptimize"
+    ],
+    "returncode": 0,
+    "log": "doc-nooptimize.log"
+  },
+  {
+    "command": [
+      "/usr/bin/cc",
+      "-DCREXX_VM_HANDLER_PANEL=20",
+      "-DNTHREADED=1",
+      "-I/Users/adrian/CLionProjects/CREXX/cmake-build-debug/generated",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/.",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/./rxvmplugin",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../assembler",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../binutils/include",
+      "-I/Users/adrian/CLionProjects/CREXX/rxpa",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../platform",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../avl_tree",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../utf8",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/../inc",
+      "-I/Users/adrian/CLionProjects/CREXX/interpreter/rxvmplugin/rxvmplugins/mc_decimal/decnumber",
+      "-g",
+      "-std=gnu11",
+      "-arch",
+      "arm64",
+      "-fPIC",
+      "-fcolor-diagnostics",
+      "/Users/adrian/CLionProjects/CREXX/interpreter/rxspawn.c",
+      "-fsyntax-only",
+      "-Werror=incompatible-pointer-types-discards-qualifiers",
+      "-Werror=ignored-qualifiers"
+    ],
+    "cwd": "/Users/adrian/CLionProjects/CREXX/cmake-build-debug",
+    "returncode": 0,
+    "log": "const-compile.log"
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3/shell-smoke.crexx",
+      "-nocolour",
+      "-optimize"
+    ],
+    "environment": {
+      "CREXX_ADDRESS_SHELL": "/bin/sh",
+      "CREXX_ADDRESS_SHELL_ARGS": "-c"
+    },
+    "returncode": 0,
+    "log": "shell-absolute.log"
+  },
+  {
+    "command": [
+      "/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/crexx",
+      "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3/shell-smoke.crexx",
+      "-nocolour",
+      "-optimize"
+    ],
+    "cwd": "/var/folders/nr/7ckzqpl91kz80mcy3316h1tr0000gn/T/crexx-beta3-defect-batch-v__jmrz3",
+    "setup": "shell-relative symlink to /bin/sh in cwd; configured SHELL uses execv, without PATH search",
+    "environment": {
+      "CREXX_ADDRESS_SHELL": "shell-relative",
+      "CREXX_ADDRESS_SHELL_ARGS": "-c"
+    },
+    "returncode": 0,
+    "log": "shell-relative.log"
+  }
+]
