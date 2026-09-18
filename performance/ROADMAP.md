@@ -16,6 +16,16 @@ rejected mechanism decisions in [`DECISIONS.md`](DECISIONS.md).
 
 ## Current Position
 
+**RXJSON-ACCESS-01 — speed verdict accepted, locally qualified for publication
+(18 September).** Five read-only JSON helpers borrow existing immutable binary
+buffers, preserving public ownership and representation. Combined with RAG
+bulk traversal and dictionary duplicate detection, the downstream query took
+3.41/1.64/1.63 seconds versus 10.47 seconds, with identical results. The
+[worklist](../docs/planning/rxjson-accessor-repair-20260918.md) owns the focused
+and normal correctness evidence (451/451 unique passing cases) and approved
+hotfix-to-develop promotion. Hosted checks are separate from this local record.
+This is a bounded library repair, not a new compiler/ABI performance stage.
+
 The completed Apple portfolio-v3 scorecard is strong overall: cREXX is well
 ahead of ooRexx on the common five, ahead of genuine NetRexx on its comparable
 common four, and split seven wins each with CPython across the fourteen Python

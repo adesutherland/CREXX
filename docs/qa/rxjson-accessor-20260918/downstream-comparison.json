@@ -1,0 +1,45 @@
+{
+  "baseline": {
+    "real": 10.47,
+    "user": 8.51,
+    "sys": 0.26
+  },
+  "candidate_trials": [
+    {
+      "trial": 1,
+      "real": 3.41,
+      "user": 1.51,
+      "sys": 0.24,
+      "passages_equal": true,
+      "claims_equal": true,
+      "counts_equal": true
+    },
+    {
+      "trial": 2,
+      "real": 1.64,
+      "user": 1.48,
+      "sys": 0.11,
+      "passages_equal": true,
+      "claims_equal": true,
+      "counts_equal": true
+    },
+    {
+      "trial": 3,
+      "real": 1.63,
+      "user": 1.47,
+      "sys": 0.11,
+      "passages_equal": true,
+      "claims_equal": true,
+      "counts_equal": true
+    }
+  ],
+  "candidate_median_seconds": 1.64,
+  "ratio": 6.384146341463415,
+  "latency_reduction_percent": 84.33619866284623,
+  "passages": 12,
+  "generation": 29748,
+  "vector_scan": "vector-candidates=11006;total-rows=36328;centroids=16;probes=4;dimension=384;backend=rxvector-ivf-flat",
+  "status": "first Release verdict, not accepted or fully qualified",
+  "known_check_failure": "native_embedding_windows first attempt model-load timeout; unchanged replay passed in 11.45s",
+  "embedding_interval": "not separately instrumented in these trials; included in command latency; previous baseline diagnostic was 0.266s"
+}

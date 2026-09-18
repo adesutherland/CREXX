@@ -9,6 +9,11 @@ The legacy functions remain string-oriented. Code that traverses the same JSON
 more than once can instead construct one immutable `.jsondocument` and reuse
 its private structural index.
 
+Indexed reads borrow the document's immutable buffers internally; returned
+strings and child-ID arrays remain independently owned. For an array walk,
+prefer `children()` once and then read those node IDs. Repeated `element()`
+calls walk from the first sibling each time.
+
 ```rexx
 options levelb
 import rxjson
