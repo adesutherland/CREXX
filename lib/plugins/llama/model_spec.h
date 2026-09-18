@@ -66,8 +66,9 @@ ModelSpec read_model_spec(const Config &c, const fs::path &path, const std::stri
     require(file_bytes > 0 && file_bytes <= (UINT64_C(1) << 39), "unsupported model file size", -8);
     s.weights = int64_t(file_bytes) * 2 + 128 * MiB;
     require(s.weights <= c.i("memory_bytes"), "model weight reservation exceeds configured RAM budget", -8);
-    // Metadata-only parsing precedes engine allocation. Model bytes are hashed by
-    // the loader before tensor loading; application provisioning must be immutable.
+    // Metadata-only parsing precedes engine allocation. Model bytes are hashed
+    // before sharing lookup (automatic identity) or by the loader (explicit
+    // verification); application provisioning must remain immutable.
     std::unique_ptr<gguf_context, decltype(&gguf_free)> g(
         gguf_init_from_file(rxllama_package::utf8_path(path).c_str(), {true, nullptr}), gguf_free);
     require(bool(g), "invalid GGUF metadata");

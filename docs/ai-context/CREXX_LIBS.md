@@ -1052,6 +1052,11 @@ raise catchable NOTREADY with stable provider_unavailable/provider_incompatible
 message categories. The same native bridge supplies separate `.embedding` results.
 General `generation`/`embedding` profiles validate model geometry and explicit
 preprocessing, with dynamic dimensions and conservative model-dependent admission.
+Native common setup needs only `.llmconfig("llama", path)` for model selection.
+The optional `sha256` pins expected bytes; omitted/empty computes identity during
+opening before the existing shared-weight lookup, with one synchronous file read.
+Explicit hashes retain background verification; tensor loading stays asynchronous.
+The direct `runtime.model` API accepts an empty hash for the same behavior.
 The two BGE/Smol presets retain their original strict hashes and behavior.
 Keep the fixed `.llmchunk` RXPA attribute layout and fully qualified factory/type
 signatures synchronized with `common_driver.h`. `[*]` is the native unbounded

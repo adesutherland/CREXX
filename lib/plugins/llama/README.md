@@ -16,8 +16,11 @@ The plugin is optional: selecting it when absent raises application-catchable
 `NOTREADY`. [The common-driver guide](common.md) covers setup, errors, requests,
 owned results and the separate `.embedding.open(config)` capability.
 
-General `generation` and `embedding` profiles accept compatible local GGUFs
-with caller-supplied SHA-256 and explicit preprocessing. Dimensions and admission
+General `generation` and `embedding` profiles accept compatible local GGUFs.
+The common client needs only the filename for model selection; an optional
+caller-supplied SHA-256 verifies an expected artifact, otherwise the bridge
+calculates its identity. Embeddings still require explicit preprocessing.
+Dimensions and admission
 reservations come from validated model properties. The original BGE-small F16
 and SmolLM2 Q8_0 profiles remain exact, reproducible presets. They are no longer
 an allowlist for all model use. Compatibility still depends on the pinned

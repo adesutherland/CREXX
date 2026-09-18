@@ -1,0 +1,12 @@
+PASS: generation-noopt-compile (0.87s)
+PASS: generation-noopt-assemble (0.02s)
+PASS: generation-noopt-link (1.73s)
+Traceback (most recent call last):
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_driver_run.py", line 69, in <module>
+    run(label, [vm, linked, '-a', fixture, info['sha256']], 'PASS: native common driver')
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/adrian/CLionProjects/CREXX/tests/native-inference/common_driver_run.py", line 37, in run
+    raise RuntimeError(f'{label}: exit {result.returncode}\n{content[-8000:]}')
+RuntimeError: generation-noopt-rxbvm: exit 7
+PANIC: FAIL: prepare: expected lowercase SHA-256 (SIGNAL INVALID_ARGUMENTS)
+

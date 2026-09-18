@@ -1,5 +1,5 @@
 /** Select a driver during setup; keep the generation consumer unchanged.
- * @param args DRIVER MODEL PROMPT [SHA256] [CHAT_TEMPLATE] [PROVIDER_PATH]
+ * @param args DRIVER MODEL PROMPT [SHA256] [CHAT_TEMPLATE] [PROVIDER_PATH]; empty SHA256 identifies the local file
  * @return zero on success; diagnostics are printed on failure.
  */
 options levelg
@@ -13,11 +13,7 @@ main: procedure = .int
   end
   config = .llmconfig(args[1], args[2])
   if config.text("driver") = "llama" then do
-    if args.0 < 4 then do
-      say "The llama driver requires the local model's SHA-256."
-      return 1
-    end
-    call config.set_text("sha256", args[4])
+    if args.0 >= 4 then call config.set_text("sha256", args[4])
     if args.0 >= 5 then call config.set_text("chat_template", args[5])
     if args.0 >= 6 then call config.set_text("provider_path", args[6])
   end

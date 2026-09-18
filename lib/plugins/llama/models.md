@@ -2,8 +2,9 @@
 
 [Guide index](README.md) · [Install](installation.md) · [Examples](examples/README.md)
 
-The examples take a local GGUF filename and its lowercase SHA-256. Download once,
-verify it, and reuse it for repeated runs. No Hugging Face client, Python, model
+The common generation example takes a local GGUF filename; its lowercase SHA-256
+is optional. The advanced reproducibility examples also take an expected hash.
+Download once and reuse the file for repeated runs. No Hugging Face client, Python, model
 server or account token is needed for these public files. The provider does not
 download models on startup. Allow about 454 MB for both files, plus build/runtime
 space; the memory required while running is larger than the file sizes.
@@ -11,14 +12,18 @@ space; the memory required while running is larger than the file sizes.
 ## Which models can I use?
 
 Use the general `generation` or `embedding` profile for a compatible GGUF.
-Supply its real path and expected SHA-256; the loader verifies the bytes before
-loading tensors. No model-name or hash registry must be edited. Different
+Supply its real path. The bridge calculates SHA-256 for model identity when
+omitted, or verifies a supplied expected SHA-256 before loading tensors.
+Automatic identification reads the file synchronously during opening, before
+looking up shared weights; tensor loading remains asynchronous. No model-name
+or hash registry must be edited. Different
 quantizations are allowed when supported by the pinned engine and geometry
 checks. Provision models as immutable files while owners are active.
 
 With the [common client](common.md), selecting `.llm.open(config)` defaults to
 `generation`; `.embedding.open(config)` defaults to `embedding`. With the advanced
-typed API, pass that profile to `runtime.model(path,sha256,profile,config)`.
+typed API, pass that profile to `runtime.model(path,sha256,profile,config)`;
+an empty `sha256` selects automatic identity.
 The old profile names below preserve exact hashes and preparation for repeatable
 reference checks. Do not use a preset name for a different model or override its
 preprocessing; choose a general profile instead.

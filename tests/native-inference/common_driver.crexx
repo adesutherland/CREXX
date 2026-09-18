@@ -6,7 +6,6 @@ import rxfnsg
 main: procedure = .int
   arg args = .string[]
   config = .llmconfig("llama", args[1])
-  call config.set_text("sha256", args[2])
   call config.set_text("hardware_mode", "cpu")
   call config.set_text("chat_template", "raw")
   call config.set_int("request_tokens", 512)
@@ -28,6 +27,11 @@ main: procedure = .int
   call check client.status() = 0, "repeated generation: " || client.error()
   call check first = second, "repeat deterministic output"
   call check saved_result.text() = first, "owned result"
+  call config.set_text("sha256", args[2])
+  pinned = .llm.open(config)
+  call check pinned.generate("Once upon a time") = first, "optional hash preserves output"
+  call check pinned.status() = 0, "explicit hash: " || pinned.error()
+  call pinned.close()
   literal = client.generate("Hello" || d2c(0) || d2c(127757))
   call check client.status() = 0, "raw prompt preserves NUL and Unicode: " || client.error()
   pending = client.request()
@@ -52,6 +56,13 @@ main: procedure = .int
   call check live.state() = "closed", "client closes issued children"
   call check saved_result.text() = first & chunk.row() = 1, "results survive owner closure"
   call client.close()
+  call config.set_text("sha256", copies("0", 64))
+  mismatch = .llm.open(config)
+  ignored = mismatch.generate("Hello")
+  call check mismatch.status() <> 0, "incorrect explicit hash must fail"
+  call check pos("SHA-256 mismatch", mismatch.error()) > 0, "hash mismatch diagnostic"
+  call mismatch.close()
+  call config.set_text("sha256", "")
   call config.set_text("model", args[1] || d2c(0) || "ignored-suffix")
   invalid = .llm.open(config)
   call check invalid.prepare(128) = "failed", "NUL path must not load its truncated prefix"

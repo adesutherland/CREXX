@@ -149,7 +149,8 @@ TYPED_INT_CALL(typed_info_int, RXLLAMA_INFO_INT, "hs")
  */
 TYPED_TEXT_CALL(typed_info_text, RXLLAMA_INFO_TEXT, "hs")
 /** Start asynchronous loading; compatible owners share immutable model weights.
- * @param path local GGUF @param sha256 pinned digest @param profile supported profile
+ * @param path local GGUF @param sha256 expected digest, or empty to identify the file
+ * @param profile supported profile
  * @param config bounded configuration @return model owner; poll state then prepare.
  */
 METHODPROCEDURE(typed_model) {

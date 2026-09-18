@@ -14,8 +14,12 @@ rules and remains available for low-level integration.
 `runtime.model(path, sha256, profile, config)` accepts general `generation` and
 `embedding` profiles, plus exact reference presets `bge-small-en-v1.5` and
 `smollm2-360m-instruct`. Unknown profiles fail immediately. All paths verify the
-actual file against the supplied SHA-256; only the reference presets also check
-a built-in reference hash. General model metadata is validated before tensor
+actual file against a nonempty supplied SHA-256. An empty SHA-256 calculates
+the file's identity synchronously during opening, before the shared-weight
+lookup; tensor loading remains asynchronous. The common client permits omitting
+the `sha256` option altogether. Automatically identified and explicitly pinned
+owners use the same content identity. Only the reference presets also check
+a built-in reference hash, even when the caller omits it. General model metadata is validated before tensor
 allocation; see [model compatibility and preprocessing](models.md).
 
 A valid constructor can return a loading owner which later enters `failed`;

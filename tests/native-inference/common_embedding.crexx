@@ -6,7 +6,6 @@ import rxfnsg
 main: procedure = .int
   arg args = .string[]
   config = .llmconfig("llama", args[1])
-  call config.set_text("sha256", args[2])
   call config.set_text("hardware_mode", "cpu")
   pooling = "cls"
   if args.0 > 3 then pooling = args[4]
@@ -44,6 +43,7 @@ main: procedure = .int
   call check pos(args[2], identity) > 0 & pos("query_prefix", identity) > 0, "complete space identity"
   call client.close()
   call check vectors.specification() = identity & packed.size() = 2 * dimensions, "owned values after close"
+  call config.set_text("sha256", args[2])
   call config.set_text("query_prefix", "different prefix: ")
   changed = .embedding.open(config)
   state = changed.prepare(128)

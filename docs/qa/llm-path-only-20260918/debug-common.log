@@ -1,0 +1,14 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start 1745: rxllama_common_drivers
+1/1 Test #1745: rxllama_common_drivers ...........   Passed   94.25 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+comprehensive    =  94.25 sec*proc (1 test)
+correctness      =  94.25 sec*proc (1 test)
+library          =  94.25 sec*proc (1 test)
+llama            =  94.25 sec*proc (1 test)
+rxpa             =  94.25 sec*proc (1 test)
+
+Total Test time (real) =  94.31 sec

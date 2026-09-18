@@ -381,3 +381,74 @@ their validated HTTP owner's host/port during construction; the common HTTP
 fixture asserts that diagnostic requests use its configured local endpoint.
 This source/test change invalidates earlier library-input qualification until
 the focused HTTP checks and affected build outputs are refreshed.
+
+## Path-only local model setup, 18 September 2026
+
+Adrian requested that ordinary native generation take just a model filename.
+This usability extension makes `sha256` optional in `.llmconfig("llama", path)`;
+omitting it selects the actual local file. It refines D-01's caller-supplied
+identity requirement without changing the language, ABI, model compatibility,
+optional-provider boundary or existing explicit verification contract.
+
+Vision: an installed native provider can generate from a compatible GGUF using
+the same two setup lines as an HTTP driver. The bridge derives a content hash
+for identity and compatible sharing. Nonempty supplied hashes remain validated
+and verified; reference presets retain their exact pins. The simple example
+must not require a manually calculated digest. No download or new model support
+is in scope. Adrian authorized publication and local installation of the
+qualified change on 18 September; the delivery extension below tracks that work.
+
+| ID | Observable pass condition and evidence | Status |
+| --- | --- | --- |
+| PATH-AC-01 | Common generation with no sha256 option produces the same fixture output as an explicitly pinned client, in both VMs and optimization modes. | Passed in normal Debug and maintained Apple ASan; see the evidence below. |
+| PATH-AC-02 | Derived SHA-256 matches the known fixture digest; inferred and explicit identities share the same model and preserve embedding identity and cleanup. | Passed in normal Debug and maintained Apple ASan. |
+| PATH-AC-03 | Incorrect/malformed supplied hashes, missing files and a wrong reference-preset artifact remain errors. | Passed in normal Debug and maintained Apple ASan. |
+| PATH-AC-04 | Focused Debug and maintained Apple ASan checks pass; current guides, source doc tags and the runnable common example describe path-only setup and optional verification. | Debug/Apple ASan, real-model example, documentation links and preserved doc tags passed. |
+
+1. **PATH-STEP-01** (AC-01–03): add focused controls and reproduce the current
+   failure for omitted SHA-256 before changing the bridge.
+2. **PATH-STEP-02** (AC-01–03; depends on STEP-01): derive a missing hash before
+   the existing content-addressed sharing lookup. Keep supplied-hash loading
+   unchanged; avoid hashing twice for an automatically identified fresh load.
+   Automatic identification reads the file synchronously during open, before
+   asynchronous tensor loading; document this startup behavior.
+3. **PATH-STEP-03** (AC-04; depends on STEP-02): remove the common example's hash
+   requirement and update current human/agent guides while preserving API tags.
+4. **PATH-STEP-04** (AC-01–04; depends on STEP-02/03): build and run the affected
+   common-driver and provider lifecycle checks in normal Debug, then the same
+   focused checks through the maintained sanitizer runner. Record the evidence
+   and local-only delivery status. Do not repeat unchanged broad core QA or
+   dispatch overnight assurance for this bounded provider change.
+
+PATH-STEP-01–04 are complete locally: normal common-driver and two-model CPU
+lifecycle checks passed, followed by the same focused checks in the maintained
+Apple ASan build. Evidence and unchanged input hashes are in
+[the path-only qualification record](../qa/llm-path-only-20260918/README.md).
+At implementation closeout the change was local only. Apple LeakSanitizer is
+unsupported; no new cross-platform/GPU/release qualification is claimed.
+
+### Authorized publication and installation
+
+Deliver the same clean revision to `origin/develop` and `/Users/adrian/.local`,
+including the optional llama provider and runtime package. Reuse unchanged
+Debug/Apple ASan evidence; normal automatic publication workflows provide the
+remaining hosted checks. This is development publication, not a tagged release.
+
+| ID | Observable pass condition and evidence | Status authority |
+| --- | --- | --- |
+| PATH-AC-05 | The qualified implementation is committed and pushed to origin/develop; remote commit matches the delivered revision. | Delivery receipt and remote ref. |
+| PATH-AC-06 | A clean Release product and explicit llama packages install into the existing user prefix; BUILDINFO records that revision with dirty=0, and an installed four-tool path-only real-model smoke succeeds. | Delivery receipt, installed BUILDINFO and smoke log. |
+| PATH-AC-07 | Build CREXX and CodeQL for the published revision reach success, including the normal snapshot publication job. | Immutable Actions/check records attached to the published commit. |
+
+5. **PATH-STEP-05** (AC-05/06; depends on STEP-04): verify qualified input hashes,
+   commit the reviewed change, reconfigure Release for clean revision metadata,
+   and build the product, examples and explicit llama packaging targets.
+6. **PATH-STEP-06** (AC-05–07; depends on STEP-05): push the exact revision, install
+   it, exercise installed rxc/rxas/rxlink/rxvm with filename-only model setup,
+   and wait for its normal automatic workflows. Do not dispatch extra matrices.
+
+Delivery starts after the local implementation criteria above passed. The
+live local receipt is `cmake-build-release/qualification/path-only-delivery.json`;
+it records criterion/step status, exact SHA and retained build/install/smoke and
+hosted evidence without changing the source revision being qualified. Hosted
+status is authoritative in the commit's immutable GitHub check records.

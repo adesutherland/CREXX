@@ -1,0 +1,20 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^\(rxllama_common_drivers\|rxllama_bridge_both_cpu\)\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1745: rxllama_common_drivers
+1/2 Test #1745: rxllama_common_drivers ...........   Passed  320.32 sec
+    Start 1752: rxllama_bridge_both_cpu
+2/2 Test #1752: rxllama_bridge_both_cpu ..........   Passed   34.36 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+comprehensive        = 354.67 sec*proc (2 tests)
+correctness          = 320.32 sec*proc (1 test)
+library              = 354.67 sec*proc (2 tests)
+llama                = 354.67 sec*proc (2 tests)
+model-provisioned    =  34.36 sec*proc (1 test)
+rxpa                 = 354.67 sec*proc (2 tests)
+
+Total Test time (real) = 354.80 sec

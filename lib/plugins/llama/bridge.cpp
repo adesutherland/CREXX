@@ -338,9 +338,13 @@ void reserve(Resource &rt, int64_t bytes) {
     require(bytes > 0 && bytes <= rt.config.i("memory_bytes") - rt.reserved, "RAM reservation exceeds runtime budget", -8);
     rt.reserved += bytes;
 }
-std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, const std::string &hash, const std::string &profile, const std::function<void(const SharedModel *)> &admit, int64_t remaining_vram, std::string &selection) {
-    require(hash.size() == 64 && hash.find_first_not_of("0123456789abcdef") == std::string::npos, "expected lowercase SHA-256");
+std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, const std::string &expected_hash, const std::string &profile, const std::function<void(const SharedModel *)> &admit, int64_t remaining_vram, std::string &selection) {
+    const bool identify_file = expected_hash.empty();
+    require(identify_file || (expected_hash.size() == 64 && expected_hash.find_first_not_of("0123456789abcdef") == std::string::npos), "expected lowercase SHA-256");
     auto spec = read_model_spec(c, path, profile);
+    // Resolve omitted identity before the shared-model lookup, outside the
+    // engine lock. This uses the same content key as explicitly pinned callers.
+    const auto hash = identify_file ? rxllama_package::hash(path) : expected_hash;
     bool embedding = spec.embedding;
     int64_t weights = spec.weights;
     int64_t scratch = model_context_reservation(c, spec);
@@ -382,13 +386,14 @@ std::shared_ptr<SharedModel> open_model(const Config &c, const fs::path &path, c
     admit(raw);
     require(active_loaders < 4, "model loader admission saturated", -8);
     ++active_loaders;
-    try { p->loader = std::thread([raw, path, dev, embedding] {
+    try { p->loader = std::thread([raw, path, dev, embedding, identify_file] {
         struct LoaderSlot { ~LoaderSlot() { --active_loaders; } } slot;
         auto started = Clock::now();
         try {
-            // Hash the actual bytes before passing the same canonical path to
-            // upstream. Models are application-owned immutable provisioning.
-            require(rxllama_package::hash(path, &raw->cancel) == raw->hash, "model artifact SHA-256 mismatch");
+            // Automatically identified files were already hashed before sharing
+            // lookup. Verify supplied identities here before loading tensors.
+            // Models remain application-owned immutable provisioning.
+            if (!identify_file) require(rxllama_package::hash(path, &raw->cancel) == raw->hash, "model artifact SHA-256 mismatch");
             const char *expected = embedding ? "f0b2fef971e8366438bfd2d9aefea1b0115919389448806d290237f638bae999" : "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201";
             if (raw->spec.preset) require(raw->hash == expected, "artifact is not the pinned model profile");
             require(!raw->cancel, "model load cancelled");

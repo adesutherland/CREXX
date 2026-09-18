@@ -28,9 +28,10 @@ The demo uses `ADDRESS ... GENERATE :prompt INTO ${answer}` internally.
 ## Native ADDRESS driver
 
 `ADDRESS LLM_NATIVE` selects local in-process llama. Set `CREXX_LLAMA_MODEL` to
-a GGUF path and `CREXX_LLAMA_SHA256` to its expected hash. Optional settings are
+a GGUF path. Optionally set `CREXX_LLAMA_SHA256` to verify an expected hash;
+otherwise the bridge calculates the file's identity. Other optional settings are
 `CREXX_LLAMA_PROFILE`, `CREXX_LLAMA_CHAT_TEMPLATE`, `CREXX_LLAMA_MEMORY_BYTES`
-and `CREXX_LLAMA_PROVIDER_PATH`. The model and hash are never guessed from the
+and `CREXX_LLAMA_PROVIDER_PATH`. The model path is never guessed from the
 environment name. Use a supported GGUF template or an explicit template/raw
 override, as described in the [common guide](../../lib/plugins/llama/common.md).
 

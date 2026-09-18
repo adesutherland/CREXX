@@ -10,6 +10,18 @@ native executable finds its optional plugin at execution time; it is not bundled
 by a core-only import. The advanced examples below explicitly import `llama`,
 which retains native provider bundling.
 
+For common generation, the native setup can be just:
+
+```rexx
+config = .llmconfig("llama", "/path/to/model.gguf")
+client = .llm.open(config)
+```
+
+`common_generation.crexx` accepts `DRIVER MODEL PROMPT [SHA256] [CHAT_TEMPLATE]
+[PROVIDER_PATH]`. The local model hash is optional; use an empty argument to
+skip it when passing later options. The GGUF must carry a supported chat template
+unless a supported override is supplied. Explicit hashes still verify the file.
+
 The four advanced typed programs load once, explicitly prepare a private context and process
 repeated work before cleanup. They use the public C RXPA factories through
 `import llama`. The programs are installed beside this page and are also in

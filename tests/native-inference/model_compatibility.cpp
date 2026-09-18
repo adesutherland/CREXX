@@ -32,26 +32,29 @@ struct Host {
     void close(rxllama_token t) { call(RXLLAMA_CLOSE,{h(t)}); rxllama_release(t); }
 };
 static void negative_controls(const char *path, const char *hash) {
-    for (const std::string kind : {"hash", "template", "missing-template", "budget", "context", "pooling", "tokenizer"}) {
+    for (const std::string kind : {"hash", "malformed-hash", "missing-file", "preset", "template", "missing-template", "budget", "context", "pooling", "tokenizer"}) {
         Host host; auto c=host.call(RXLLAMA_CONFIG_CREATE).handle;
         host.call(RXLLAMA_CONFIG_TEXT,{h(c),s("hardware_mode"),s("cpu")});
-        if(kind!="missing-template") host.call(RXLLAMA_CONFIG_TEXT,{h(c),s("chat_template"),s(kind=="template"?"unsupported-template-xyz":"raw")});
+        if(kind!="missing-template" && kind!="preset") host.call(RXLLAMA_CONFIG_TEXT,{h(c),s("chat_template"),s(kind=="template"?"unsupported-template-xyz":"raw")});
         if(kind=="budget") host.call(RXLLAMA_CONFIG_INT,{h(c),s("memory_bytes"),i(64*1024*1024)});
         if(kind=="context") host.call(RXLLAMA_CONFIG_INT,{h(c),s("context_tokens"),i(8192)});
         auto rt=host.call(RXLLAMA_RUNTIME_OPEN,{h(c)}).handle;
         auto input=kind=="tokenizer"?(std::filesystem::path(path).parent_path()/"llama-dense.gguf").string():std::string(path);
+        if(kind=="missing-file") input += ".absent";
         auto expected=kind=="tokenizer"?"bb9b0debefdfec589f4c6d94c6bcc38daea64ab20b48eb95809e5c367863f5de":hash;
         if(kind=="hash") expected="0000000000000000000000000000000000000000000000000000000000000000";
+        if(kind=="malformed-hash") expected="invalid";
+        if(kind=="missing-file" || kind=="preset") expected="";
         std::string error;
         try {
-            auto m=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(input.c_str()),s(expected),s(kind=="pooling"?"embedding":"generation"),h(c)}).handle;
+            auto m=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(input.c_str()),s(expected),s(kind=="preset"?"smollm2-360m-instruct":kind=="pooling"?"embedding":"generation"),h(c)}).handle;
             const auto until=std::chrono::steady_clock::now()+std::chrono::minutes(5);
             std::string state;
             do {state=host.call(RXLLAMA_MODEL_STATE,{h(m)}).text; check(std::chrono::steady_clock::now()<until,"negative load hang"); std::this_thread::yield();} while(state=="loading");
             check(state=="failed","invalid model unexpectedly ready");
             error=host.call(RXLLAMA_INFO_TEXT,{h(m),s("error")}).text;
         } catch(const std::exception &e) { error=e.what(); }
-        const char *needle=kind=="hash"?"SHA-256":kind=="budget"?"budget":kind=="context"?"context":kind=="pooling"?"explicit":kind=="tokenizer"?"tokenizer":"template";
+        const char *needle=(kind=="hash" || kind=="malformed-hash")?"SHA-256":kind=="missing-file"?"file":kind=="preset"?"pinned model profile":kind=="budget"?"budget":kind=="context"?"context":kind=="pooling"?"explicit":kind=="tokenizer"?"tokenizer":"template";
         check(error.find(needle)!=std::string::npos,(kind+": wrong diagnostic: "+error).c_str());
         std::cout<<"PASS: rejected "<<kind<<" with actionable diagnostic\n";
     }
@@ -105,7 +108,14 @@ int main(int argc, char **argv) {
             host.call(RXLLAMA_CONFIG_TEXT,{h(c),s("document_prefix"),s("")});
         } else host.call(RXLLAMA_CONFIG_TEXT,{h(c),s("chat_template"),s("raw")});
         auto rt=host.call(RXLLAMA_RUNTIME_OPEN,{h(c)}).handle;
-        auto m=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(argv[1]),s(argv[2]),s(argv[3]),h(c)}).handle;
+        auto m=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(argv[1]),s(""),s(argv[3]),h(c)}).handle;
+        check(std::string(host.call(RXLLAMA_INFO_TEXT,{h(m),s("sha256")}).text)==argv[2],"inferred content hash");
+        auto pinned=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(argv[1]),s(argv[2]),s(argv[3]),h(c)}).handle;
+        const std::string shared_id=host.call(RXLLAMA_INFO_TEXT,{h(m),s("shared_model_id")}).text;
+        check(std::string(host.call(RXLLAMA_INFO_TEXT,{h(pinned),s("shared_model_id")}).text)==shared_id,"inferred and explicit owners share weights");
+        auto inferred=host.call(RXLLAMA_MODEL_OPEN,{h(rt),s(argv[1]),s(""),s(argv[3]),h(c)}).handle;
+        check(std::string(host.call(RXLLAMA_INFO_TEXT,{h(inferred),s("shared_model_id")}).text)==shared_id,"repeated inferred owner shares weights");
+        host.close(inferred); host.close(pinned);
         auto deadline=std::chrono::steady_clock::now()+std::chrono::minutes(5);
         std::string state;
         do {

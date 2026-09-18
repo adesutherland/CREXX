@@ -31,16 +31,23 @@ For local inference, replace only setup:
 
 ```rexx
 config = .llmconfig("llama", "/path/to/model.gguf")
-call config.set_text("sha256", "the-model-file-sha256")
-call config.set_text("hardware_mode", "cpu")
-/* The GGUF must contain a template supported by the pinned engine.
-   Otherwise choose an explicit supported chat_template; raw sends literal text. */
-call config.set_int("output_tokens", 64)
+client = .llm.open(config)
 ```
 
+The filename is enough when the GGUF carries a supported chat template and fits
+the default memory/context budgets. Hardware selection defaults to `auto`.
+To verify an expected artifact, optionally set `sha256` before opening:
+`call config.set_text("sha256", "the-expected-lowercase-sha256")`.
+An omitted or empty hash is calculated from the file during opening, before
+the content-addressed sharing lookup. This startup read is synchronous; tensor
+loading continues asynchronously. Explicit hashes retain background verification.
+Both forms retain the same model identity and compatible weight sharing.
+
 The general native profile defaults to `generation`. It accepts compatible
-GGUFs without a compiled-in model-name/hash list; the supplied hash must still
-match the file. The two original profile names remain strict reference presets.
+GGUFs without a compiled-in model-name/hash list; any supplied hash must still
+match the file. The GGUF must contain a template supported by the pinned engine,
+or use an explicit supported `chat_template`; `raw` sends literal prompt text.
+The two original profile names remain strict reference presets.
 See [models](models.md) before selecting pooling, templates or larger models.
 
 The runnable [common generation example](examples/common_generation.crexx)
@@ -81,9 +88,10 @@ which explicitly imports `llama` retains the existing native bundling behavior.
 
 ## Results, capabilities and lifetime
 
-`generate(prompt)` is synchronous. Native loading/preparation happens on its
-first call and the client retains the model and private context for subsequent
-calls. For startup scheduling, call `prepare(128)` until `ready`; handle terminal
+`generate(prompt)` is synchronous. Native opening starts tensor loading after
+establishing model identity. The first generation waits for loading/preparation,
+and the client retains the model and private context for subsequent calls.
+For startup scheduling, call `prepare(128)` until `ready`; handle terminal
 `failed` and check `status()` / `error()`. Preparation can return `loading` or
 `preparing`. HTTP preparation returns `ready` without contacting a server.
 
@@ -167,7 +175,7 @@ compatibility checks occur when opening or preparing.
 | All | `driver`, `model` |
 | Ollama | `host` (default `127.0.0.1`), `port` (11434), `timeout` (120000 ms) |
 | Hosted HTTP | `api_key`, `endpoint` (origin URL), `timeout` |
-| Native | `sha256`, optional `provider_path`, `profile`; hardware, preprocessing and integer limits from the [reference](reference.md#configuration) |
+| Native | Optional `sha256`, `provider_path`, `profile`; hardware, preprocessing and integer limits from the [reference](reference.md#configuration) |
 
 Explicit options belonging to another driver are rejected at opening. Connection settings do not tune
 native compute; native token/memory settings do not configure hosted generation.
