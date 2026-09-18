@@ -163,6 +163,33 @@ failures = failures + check_int("scan truncated absent", jsonscancontainer('befo
 failures = failures + check_int("scan malformed absent", jsonscancontainer('before {"x":}', 1, scanned, scan_start, scan_after), 0)
 failures = failures + check_int("scan invalid from normalized", jsonscancontainer('[]', 0, scanned, scan_start, scan_after), 1)
 
+/* Read helpers may borrow private buffers, but values returned by the public
+ * surface and copied documents must retain independent ownership. */
+owned_source = '{"items":[{"name":"Gràdh 中","value":7},{"name":"next","value":8}],"escaped":"a\u0000b"}'
+owned_document = .jsondocument(owned_source)
+owned_copy = owned_document
+original_source = owned_source
+owned_source = "caller changed its source"
+owned_items = owned_document.member(owned_document.root(), "items")
+owned_children = .int[]
+failures = failures + check_int("borrowed children count", owned_document.children(owned_items, owned_children), 2)
+first_child = owned_children[1]
+owned_children[1] = 999999
+returned_value = owned_document.node_get(owned_document.member(first_child, "name"))
+failures = failures + check_str("borrowed Unicode value", returned_value, "Gràdh 中")
+returned_value = "caller changed its result"
+failures = failures + check_str("returned value independent", owned_document.get("items.1.name"), "Gràdh 中")
+failures = failures + check_int("returned children independent", owned_document.element(owned_items, 1), first_child)
+failures = failures + check_str("caller source independent", owned_document.source(), original_source)
+failures = failures + check_str("embedded NUL read", owned_document.get("escaped"), "a" || "00"x || "b")
+do ownership_read = 1 to 16
+  failures = failures + check_str("interleaved original read", owned_document.get("items.2.value"), "8")
+  failures = failures + check_str("interleaved copied read", owned_copy.node_get(first_child), '{"name":"Gràdh 中","value":7}')
+end
+owned_document = .jsondocument('{"replacement":true}')
+failures = failures + check_str("copied source independent", owned_copy.source(), original_source)
+failures = failures + check_str("copied index independent", owned_copy.get("items.1.name"), "Gràdh 中")
+
 if failures \= 0 then do
   say "rxjson document failures:" failures
   exit 1
