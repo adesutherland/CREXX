@@ -50,5 +50,31 @@ The user authorized commit on hotfix, push to origin/hotfix and promotion of
 the identical repair commit to origin/develop. The automatic publication
 workflows supply the hosted checks; their terminal result must be verified
 against the pushed SHA. No extra overnight deep, stress or sanitizer workflow
-is dispatched for this ordinary library change. This record establishes local
-publication readiness and does not assert hosted success or release readiness.
+is dispatched for this ordinary library change. The local checks above establish
+publication readiness; their separate hosted result is recorded below. Neither
+is a claim of full release qualification.
+
+## Terminal publication result
+
+Repair `65275452d90dd1d9ed8146650f7059b27ff9c56c` was pushed first to hotfix,
+then to develop. Both exact-repair workflows completed successfully:
+
+- [Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/35387480916):
+  Linux, both Macs, Windows MSVC/MinGW, Linux optimizer parity and all four
+  selected plugin build/package jobs passed.
+- [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35387480593): passed.
+
+`publication.json` retains every job conclusion, including intentionally skipped
+nonselected comprehensive/release jobs. The normal automatic workflow was used;
+no additional overnight assurance was dispatched. macOS plugin jobs reported
+a nonfatal configured installer-certificate-name mismatch and used the imported
+certificate Common Name; their signing/package checks passed.
+
+Develop advanced during CI through documentation commits to `47168a1f1`, which
+explicitly integrates this JSON repair with concurrent defect-batch evidence.
+These commits change no product/test/build input. Hotfix was fast-forwarded to
+that tip before this documentation closeout, preserving the concurrent work.
+The workflow's snapshot-release steps were skipped after the develop advance;
+this is verified source publication and hosted qualification, not a new tagged
+release or global installation. The earlier RAG model-load timeout remains a
+separate retained observation; this CREXX publication does not close it.

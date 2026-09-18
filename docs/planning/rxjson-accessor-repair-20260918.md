@@ -70,8 +70,16 @@ cases ran first and were excluded from the remaining selection. One missing
 terminal-test fixture was built and only its initially unrun case was run.
 The [qualification record](../qa/rxjson-accessor-20260918/README.md) retains
 all results, the initial not-run result, hashes and publication boundary.
-AC-05 is authorized; remote identity and automatic hosted checks are the final
-publication steps.
+AC-05 is complete: repair `65275452d90dd1d9ed8146650f7059b27ff9c56c` was pushed
+to origin/hotfix and then origin/develop. Build CREXX run 35387480916 and CodeQL
+run 35387480593 both completed successfully for that exact repair. All normal
+core platforms, optimizer parity and four selected plugin jobs passed. The
+concurrent develop advance to `47168a1f1` contains only documentation and retains
+the repair; hotfix was fast-forwarded to preserve it before this closeout.
+The [publication receipt](../qa/rxjson-accessor-20260918/publication.json) records
+every job conclusion. Closeout is documentation only, so the qualified product,
+test and build inputs remain unchanged; no new broad testing is warranted.
 Evidence: Scottish `reports/bge-migration-20260918/retrieval-repair-20260918/`.
 This is a single-client, non-representative performance repair; no portfolio,
-RexxCPS, sanitizer, Windows/Linux or release-readiness claim is implied.
+RexxCPS, sanitizer, cross-platform performance or release-readiness claim is
+implied. The ordinary hosted functional/package results are recorded above.

@@ -16,14 +16,18 @@ rejected mechanism decisions in [`DECISIONS.md`](DECISIONS.md).
 
 ## Current Position
 
-**RXJSON-ACCESS-01 — speed verdict accepted, locally qualified for publication
+**RXJSON-ACCESS-01 — published and normal hosted checks green
 (18 September).** Five read-only JSON helpers borrow existing immutable binary
 buffers, preserving public ownership and representation. Combined with RAG
 bulk traversal and dictionary duplicate detection, the downstream query took
 3.41/1.64/1.63 seconds versus 10.47 seconds, with identical results. The
 [worklist](../docs/planning/rxjson-accessor-repair-20260918.md) owns the focused
-and normal correctness evidence (451/451 unique passing cases) and approved
-hotfix-to-develop promotion. Hosted checks are separate from this local record.
+and normal correctness evidence (451/451 unique passing cases). Repair
+`65275452d` is published through hotfix to develop; exact-repair Build CREXX
+and CodeQL passed, including all normal core/plugin jobs and optimizer parity.
+Documentation-only concurrent integration/closeout preserves those qualified
+product/test/build inputs. Global installation and release qualification are
+separate from this source publication.
 This is a bounded library repair, not a new compiler/ABI performance stage.
 
 The completed Apple portfolio-v3 scorecard is strong overall: cREXX is well
