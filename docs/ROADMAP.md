@@ -275,7 +275,7 @@ model, and enters Release 1 only through a beta quality gate.
 
 ### Later platform and service directions
 
-- **19 September, local implementation:** the native provider's
+- **19 September, published to develop:** the native provider's
   [per-layer GGUF repair](planning/native-inference-layer-geometry-20260919.md)
   accepts validated scalar/array KV-head and feed-forward geometry. Scalar
   reservation and resource bounds remain unchanged. Local 12B execution works

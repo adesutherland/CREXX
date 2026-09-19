@@ -66,7 +66,22 @@ also passed; timings during compilation are explicitly not comparative evidence.
 
 Evidence and artifact hashes:
 `/Users/adrian/Documents/ScottishHistory/reports/local-generation-followup-20260919/`
-(`native-manifest.json`, native lane databases/logs and `qa/`). Work is local and
-uncommitted; installed CREXX and published develop are unchanged. No hosted or
-cross-platform closure, memory-reservation optimization or model-quality release
-claim is made by this repair.
+(`native-manifest.json`, native lane databases/logs and `qa/`). Installed CREXX is
+unchanged. No memory-reservation optimization or model-quality release claim is
+made by this repair.
+
+## Publication — 19 September 2026
+
+The user authorized committing and publishing both CREXX and RAG. Product commit
+[`a39696db8079c889cab7867dcf4822c8ec581ea1`](https://github.com/adesutherland/CREXX/commit/a39696db8079c889cab7867dcf4822c8ec581ea1)
+is published atomically to `origin/hotfix` and `origin/develop`. Qualified code,
+test and build inputs were compared with the retained snapshots and are unchanged;
+no local test repeat is required for this publication record. The unrelated local
+develop checkout remains untouched. This is development publication, not a new
+release tag or installation.
+
+Automatic [Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/35448691699)
+and [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35448691583) started
+for that exact product commit. Their terminal results are pending at this record;
+the local qualification above does not claim hosted or cross-platform closure.
+No additional overnight matrix was dispatched.
