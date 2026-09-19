@@ -209,6 +209,16 @@ target_compile_definitions(crexx-provider-package PRIVATE
 set_target_properties(crexx-provider-package PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 if(BUILD_TESTING)
     target_compile_definitions(crexx_llama_bridge PRIVATE CREXX_LLAMA_TESTING=1)
+    add_executable(rxllama_model_geometry ${CMAKE_SOURCE_DIR}/tests/native-inference/model_geometry.cpp)
+    target_compile_features(rxllama_model_geometry PRIVATE cxx_std_17)
+    target_include_directories(rxllama_model_geometry PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${crexx_llama_source_SOURCE_DIR}/vendor" "${CMAKE_SOURCE_DIR}/binutils/include")
+    target_compile_definitions(rxllama_model_geometry PRIVATE
+        CREXX_LLAMA_PLATFORM="${CMAKE_SYSTEM_NAME}" CREXX_LLAMA_ARCH="${CMAKE_SYSTEM_PROCESSOR}")
+    target_link_libraries(rxllama_model_geometry PRIVATE llama ggml-base)
+    add_test(NAME rxllama_model_geometry COMMAND rxllama_model_geometry "${CMAKE_CURRENT_BINARY_DIR}/tests/model-geometry")
+    set_tests_properties(rxllama_model_geometry PROPERTIES LABELS "library;rxpa;llama;correctness" TIMEOUT 30)
+    crexx_register_test_prep_targets(TESTS rxllama_model_geometry TARGETS rxllama_model_geometry)
     include("${CMAKE_SOURCE_DIR}/tests/native-inference/ReleaseSmoke.cmake")
     include("${CMAKE_SOURCE_DIR}/tests/native-inference/CommonDriver.cmake")
     add_test(NAME rxllama_package_windows_paths

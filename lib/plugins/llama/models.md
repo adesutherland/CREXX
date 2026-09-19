@@ -59,6 +59,19 @@ Large models need an explicitly adequate RAM/VRAM budget. Model-dependent
 reservations are conservative admission estimates, not an allocator or RSS cap.
 Unsupported metadata, dimensions, options and limits fail without truncation.
 
+KV head counts and feed-forward widths may be scalar integers or integer arrays
+with exactly one value per layer, matching the pinned engine's metadata forms.
+Every element is checked against the existing positive geometry bounds before
+allocation. Reservation uses the largest value for every layer; it may
+overestimate heterogeneous models. Key/value widths and query-head geometry
+retain their scalar restrictions. This does not relax RAM/VRAM admission.
+
+The 19 September [per-layer repair](../../../docs/planning/native-inference-layer-geometry-20260919.md)
+admits the local Gemma 4 12B Q4_0 artifact: three short native Metal requests
+completed at 512 context tokens. At 4096 tokens the unchanged 20 GiB budget
+still refuses admission. Raw output includes model control markers; parsing,
+template handling and useful answer quality require separate qualification.
+
 Acceptance of a file is distinct from qualification of that artifact,
 preprocessing, backend and device. Consult [qualification](qualification.md)
 for evidence and remaining platform limits. No automatic download, model-quality
