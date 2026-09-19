@@ -20,6 +20,14 @@ Use this authority split:
 
 ## Current Baseline
 
+- RXVECTOR-02 implements the generic C float32 binary owner and exact search in
+  `rxvector`, preserving the packed-double API and RXVIDX/1 format. The local
+  downstream comparison retains all twenty RAG passage orders at the same
+  0.965 s median as USearch, allowing that dependency to be removed. Provider
+  contracts and focused native-memory checks pass; downstream local qualification
+  accounts for 130/130 required cases. No global install or publication is implied.
+  [Bounded acceptance and evidence](planning/rxvector-binary-owner-20260919.md).
+
 - `v1.0.0-beta.2` remains the latest versioned beta tag. Beta 3 material on
   `develop` is work in progress until a `v1.0.0-beta.3` tag and release assets
   exist. The release train has been rebaselined after the extended performance

@@ -15,7 +15,7 @@
 #include "rxvector_kernel.h"
 
 #ifndef RXVECTOR_KERNEL_ONLY
-RXPA_PLUGIN_PROCESS_REENTRANT
+#include "rxvector_owner.h"
 #endif
 
 typedef struct rxvector_sum {
@@ -337,6 +337,46 @@ rxvector_status rxvector_topk_kernel(const rxvector_float_span *vectors,
     return RXVECTOR_OK;
 }
 
+float rxvector_f32le_at(const unsigned char *p)
+{
+    uint32_t bits=(uint32_t)p[0] | (uint32_t)p[1]<<8 |
+                  (uint32_t)p[2]<<16 | (uint32_t)p[3]<<24;
+    float value; memcpy(&value,&bits,sizeof(value)); return value;
+}
+
+rxvector_status rxvector_topk_f32le_kernel(const void *matrix, size_t rows,
+        size_t dimensions, const void *query, size_t requested, rxvector_hit *hits)
+{
+    const unsigned char *vectors=matrix, *q=query;
+    size_t j,row,retained=0; double query_norm=0;
+    if(!vectors || !q || !rows || !dimensions || requested>rows ||
+       rows>SIZE_MAX/dimensions/4 || (requested && !hits)) return RXVECTOR_INVALID_PAYLOAD;
+    for(j=0;j<dimensions;j++) {
+        double value=rxvector_f32le_at(q+j*4);
+        if(!isfinite(value))return RXVECTOR_NONFINITE_INPUT;
+        query_norm+=value*value;
+    }
+    if(!query_norm)return RXVECTOR_ZERO_NORM;
+    for(row=0;row<rows;row++) {
+        double dot=0,norm=0;rxvector_hit hit;
+        for(j=0;j<dimensions;j++) {
+            double value=rxvector_f32le_at(vectors+(row*dimensions+j)*4);
+            if(!isfinite(value))return RXVECTOR_NONFINITE_INPUT;
+            dot+=value*rxvector_f32le_at(q+j*4);norm+=value*value;
+        }
+        if(!norm)return RXVECTOR_ZERO_NORM;
+        hit.score=dot/(sqrt(norm)*sqrt(query_norm));
+        if(hit.score>1.0)hit.score=1.0;else if(hit.score< -1.0)hit.score=-1.0;
+        hit.identity=(int64_t)row;hit.row=row;
+        if(retained<requested){hits[retained]=hit;rxvector_heap_push(hits,retained++);}
+        else if(requested && rxvector_hit_better(&hit,&hits[0])) {
+            hits[0]=hit;rxvector_heap_restore(hits,retained);
+        }
+    }
+    if(requested>1)qsort(hits,requested,sizeof(*hits),rxvector_hit_compare);
+    return RXVECTOR_OK;
+}
+
 #ifndef RXVECTOR_KERNEL_ONLY
 static int rxvector_open_float_span(rxpa_attribute_value value,
                                     rxvector_float_span *span)
@@ -633,6 +673,17 @@ PROCEDURE(topkcosine)
 }
 
 LOADFUNCS
+    ADDCLASS("rxvector.vectorindex");
+    ADDFACTORYPROC(make_vector_index,"rxvector.vectorindex",".rxvector..vectorindex","data=.binary,dimensions=.int,labels=.string[],metadata=.string");
+    ADDPROC(open_vector_index,"rxvector.openindex","b",".int","data=.binary,expose index=.vectorindex,expose error=.string");
+    ADDPROC(decode_vector_index,"rxvector.decodeindex","b",".rxvector..vectorindex","data=.binary");
+    ADDMETHODPROC(encode_vector_index,"rxvector.vectorindex","encode",".binary","");
+    ADDMETHODPROC(vector_index_rows,"rxvector.vectorindex","rows",".int","");
+    ADDMETHODPROC(vector_index_dimensions,"rxvector.vectorindex","dimensions",".int","");
+    ADDMETHODPROC(vector_index_metadata,"rxvector.vectorindex","metadata",".string","");
+    ADDMETHODPROC(vector_index_label,"rxvector.vectorindex","label",".string","row=.int");
+    ADDMETHODPROC(search_vector_index,"rxvector.vectorindex","search",".void","query=.binary,count=.int,expose keys=.packedint,expose scores=.packedfloat");
+    ADDMETHODPROC(close_vector_index,"rxvector.vectorindex","close",".int","");
     ADDPROC(decodef32le, "rxvector.decodef32le", "b", ".rxfnsg..packedfloat",
             "data = .binary");
     ADDPROC(encodef32le, "rxvector.encodef32le", "b", ".binary",

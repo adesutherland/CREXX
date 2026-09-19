@@ -1,0 +1,51 @@
+options levelg
+import rxvector
+import rxfnsg
+import rxfnsb
+main: procedure = .int
+  values=.packedfloat(6)
+  call values.set(0,1.0); call values.set(1,0.0)
+  call values.set(2,1.0); call values.set(3,0.0)
+  call values.set(4,0.0); call values.set(5,1.0)
+  labels=.string[]; labels[1]="α" || "00"x || "tail"; labels[2]="second"; labels[3]="third"
+  original=.vectorindex(rxvector..encodef32le(values),2,labels,"opaque" || "00"x || "metadata")
+  saved=original.encode(); loaded=rxvector..decodeindex(saved)
+  copied=original
+  call original.close()
+  if copied.rows() \= 3 | copied.dimensions() \= 2 | loaded.label(0) \= labels[1] | loaded.metadata() \= "opaque" || "00"x || "metadata" then return 1
+  query_vector=.packedfloat(2); call query_vector.set(0,1.0); call query_vector.set(1,0.0)
+  keys=.packedint(0); scores=.packedfloat(0)
+  call copied.search(rxvector..encodef32le(query_vector),2,keys,scores)
+  if keys.size() \= 2 | keys.get(0) \= 0 | keys.get(1) \= 1 | scores.get(0) \= 1.0 then return 2
+  if loaded.encode() \= saved then return 3
+  call copied.close(); call loaded.close(); call loaded.close()
+  invalid = .vectorindex; error = ""
+  if rxvector..openindex("bad" as .binary,invalid,error) = 0 | error = "" then return 4
+  values2=.packedfloat(514); labels2=.string[]
+  do n=0 to 256; call values2.set(n*2,1.0); labels2[n+1]="tie" || n; end
+  ties=.vectorindex(rxvector..encodef32le(values2),2,labels2,"")
+  call ties.search(rxvector..encodef32le(query_vector),12,keys,scores)
+  do n=0 to 11; if keys.get(n) \= n | scores.get(n) \= 1.0 then return 5; end
+  do
+    call ties.search("0000000000000000"x as .binary,12,keys,scores)
+    return 6
+  on signal invalid_arguments
+    if keys.size() \= 0 | scores.size() \= 0 then return 7
+  end
+  call ties.close()
+  do
+    ignored=ties.rows()
+    return 8
+  on signal invalid_arguments
+    nop
+  end
+  valid=.vectorindex(rxvector..encodef32le(values),2,labels,"")
+  if rxvector..openindex("bad" as .binary,valid,error)=0 then return 9
+  do
+    ignored=valid.rows()
+    return 10
+  on signal invalid_arguments
+    nop
+  end
+  say "RXVECTOR_INDEX_OK"
+  return 0
