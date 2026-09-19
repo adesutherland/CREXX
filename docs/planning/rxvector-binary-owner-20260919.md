@@ -44,14 +44,14 @@ QA. Report any material departure; do not silently trade away results or scope.
 - **AC-05 (passed locally):** One stable full required RAG gate plus exact-input audit,
   documentation and dependency review completes; no repeated unchanged suites.
 
-- **AC-06 (open):** Publish the bounded CREXX code and documentation through
+- **AC-06 (passed):** Publish the bounded CREXX code and documentation through
   hotfix to origin/develop after normal Release product and affected functional
   checks. Check the automatic publication workflows for the exact pushed SHA;
   do not dispatch the separate overnight deep/sanitizer matrices.
-- **AC-07 (open):** Install that clean CREXX revision to the normal user prefix,
+- **AC-07 (passed):** Install that clean CREXX revision to the normal user prefix,
   including matching native-inference runtime/provider packaging, and verify
   installed rxvector/native consumer behavior and package identity.
-- **AC-08 (open):** Point RAG at that published install, qualify the final
+- **AC-08 (passed):** Point RAG at that published install, qualify the final
   130-case required selection once for changed toolchain/artifacts, audit exact
   inputs, baseline/publish origin/main, install and smoke the qualified artifact.
   Preserve scratch-only corpus testing and record remaining scope separately.
@@ -71,12 +71,12 @@ QA. Report any material departure; do not silently trade away results or scope.
    full RAG gate, then report exact artifacts and remaining platform limits
    (AC-01–05).
 
-6. **STEP-06 (active):** Copy only RXVECTOR-02 code/docs to the clean hotfix
+6. **STEP-06 (complete):** Copy only RXVECTOR-02 code/docs to the clean hotfix
    checkout; build and qualify the normal product and focused vector/RXPA
    contracts, publish hotfix/develop, then check automatic gates (AC-06).
-7. **STEP-07 (pending):** Install the exact clean published CREXX cohort and
+7. **STEP-07 (complete):** Install the exact clean published CREXX cohort and
    run installed provider/package acceptance (AC-07).
-8. **STEP-08 (pending):** Rebuild RAG against that cohort, complete final QA,
+8. **STEP-08 (complete):** Rebuild RAG against that cohort, complete final QA,
    baseline/publish/install RAG and record both source/artifact identities (AC-08).
 
 Publication evidence: `/Users/adrian/Documents/ScottishHistory/reports/bge-migration-20260918/rxvector-publication-20260919/`.
@@ -84,10 +84,11 @@ Publication evidence: `/Users/adrian/Documents/ScottishHistory/reports/bge-migra
 Initial local evidence: `/Users/adrian/Documents/ScottishHistory/reports/bge-migration-20260918/rxvector-consolidation-20260919/`.
 
 
-## Current evidence
+## Initial local evidence
 
-STEP-01 through STEP-05 are complete for the initial local scope. STEP-06
-through STEP-08 are the newly authorized publication phase and remain open.
+STEP-01 through STEP-05 are complete for the initial local scope. The subsequent
+publication and installation evidence is recorded below; STEP-06 through STEP-08
+are complete, including terminal automatic CI.
 
 - The new interface failed against the prior provider before implementation;
   existing packed controls passed. `index-baseline.log` retains the missing
@@ -130,4 +131,45 @@ Two QA findings are retained: the staged launcher selected an old PATH runtime
 in 10.91 s; scheduling demand corrected from two to eight slots). No product
 or provider change followed the Release comparison. Closing documentation and
 `qa-final.json` account for the remaining exact-input checks without repeating
-the full selection. Other-platform and Linux leak gates are still unperformed.
+the full selection. RAG other-platform and Linux leak-specific qualification
+remain separate from the ordinary CREXX platform gates recorded below.
+
+## Published source and normal installation
+
+Source `5949ef27efd813b8bb96d23c58717b9a72aad1b9` was committed in the available
+clean hotfix checkout, published to origin/hotfix and origin/develop, and installed
+in `~/.local` with matching native-inference runtime/provider packaging.
+The installed BUILDINFO identifies that exact source with `dirty=0`. The previous
+prefix is preserved in the evidence directory. All pre-existing dirty files in
+the main CREXX checkout remain byte-identical to their initial snapshot.
+
+The normal Release product and native/provider targets built successfully.
+The unique union of essential/smoke, rxvector and RXPA object correctness cases
+passed **210/210 in 51.05 seconds**. The external native consumer built with the
+installed driver and returned `RXVECTOR_INDEX_OK`. Both installed dynamic
+provider locations hash to
+`918a38ee15d965bfcd70c797248bc29bbbaedfb6f703a7c66324f84af57d6c2f`;
+both static archive locations hash to
+`eff583097f198f7a2e330596433bcdc291f854cee992d888cffa662fb378499e`.
+
+Automatic [Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/35438671112)
+and [CodeQL](https://github.com/adesutherland/CREXX/actions/runs/35438670978)
+both passed for that exact SHA. All core platforms, MinGW correctness, Linux
+optimizer parity and four native-provider packages passed; the development
+snapshot was published. The optional comprehensive lane and beta-release job
+were planned skips, not passes. `crexx-build-ci.json` and `crexx-codeql-ci.json`
+retain terminal per-job conclusions. Separate overnight deep/sanitizer workflows
+were not dispatched for this ordinary publication. Documentation-only closeout
+commits preserve the qualified product inputs and installed source identity.
+
+RAG source `7bf0c6bbe7b6b7ab4263137f73cbe86bc67206df` is published to origin/main
+and installed in `~/.local`, built against this normal CREXX cohort. Its full
+required gate passed **130/130 in 720.51 seconds**, with no failures or duplicate
+product executions. The updated documentation check passed in 12.75 s, and the
+exact-input audit accounts for all 130 passes. Installed hashes match the
+qualified artifacts; four fresh CLI and two MCP scratch checks pass. A single
+network-denied local-BGE query preserves all twelve ordered passages, scores and
+claims from the frozen reference. No master corpus processing or beta tag is
+part of this publication. Downstream
+`docs/baseline-publication-20260919.md` and this evidence directory retain the
+source/tree/artifact manifests and remaining acceptance boundaries.

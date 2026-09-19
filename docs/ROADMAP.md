@@ -20,12 +20,15 @@ Use this authority split:
 
 ## Current Baseline
 
-- RXVECTOR-02 implements the generic C float32 binary owner and exact search in
-  `rxvector`, preserving the packed-double API and RXVIDX/1 format. The local
-  downstream comparison retains all twenty RAG passage orders at the same
-  0.965 s median as USearch, allowing that dependency to be removed. Provider
-  contracts and focused native-memory checks pass; downstream local qualification
-  accounts for 130/130 required cases. No global install or publication is implied.
+- RXVECTOR-02 is published through hotfix/develop as `5949ef27efd8` and installed
+  in `~/.local`: generic C float32 binary owner and exact search in `rxvector`,
+  preserving the packed-double API and RXVIDX/1 format. The normal local gate
+  passes 210/210; automatic publication CI closure is recorded with the evidence.
+  The downstream comparison retains all twenty RAG passage orders at the same
+  0.965 s median as USearch, allowing that dependency to be removed. Rebuilt RAG
+  `7bf0c6b` is published to main and installed, with 130/130 required local passes,
+  installed CLI/MCP acceptance and unchanged reference-query passages/scores.
+  RAG platform/endurance and Linux leak-specific assurance remain separate.
   [Bounded acceptance and evidence](planning/rxvector-binary-owner-20260919.md).
 
 - `v1.0.0-beta.2` remains the latest versioned beta tag. Beta 3 material on
