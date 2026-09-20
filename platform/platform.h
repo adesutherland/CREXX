@@ -96,10 +96,9 @@ void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
     rx_panic_out_of_memory((operation), (requested_bytes), (detail), __FILE__, __LINE__, RX_FUNCTION_NAME)
 
 /*
- * Read a file into a returned buffer
- *
- * This function malloc()s the buffer to the right size therefore it needs
- * to be free()d by the caller
+ * Read a seekable file from the beginning, or a sequential stream from its
+ * current position. The caller frees the buffer; two trailing NUL bytes are
+ * provided for scanners. Returns NULL with *bytes == 0 on failure.
  */
 char* file2buf(FILE *file, size_t *bytes);
 

@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#x); return 1; } } while (0)
 int main(void) {
@@ -32,6 +33,31 @@ int main(void) {
     errno=0; CHECK(!dirnxtfl(&dir) && !dir && errno==ENOSYS);
     dirclose(&dir); CHECK(!dir);
     platform_term_save(); platform_term_restore(); platform_install_signal_handlers();
+    /* Empty input still has the two sentinels. Seekable input is rewound. */
+    f=tmpfile(); CHECK(f);
+    bytes=file2buf(f,&n); CHECK(bytes && !n && !bytes[0] && !bytes[1]);
+    free(bytes);
+    CHECK(fwrite(data,1,sizeof data,f)==sizeof data);
+    bytes=file2buf(f,&n); CHECK(bytes && n==sizeof data && !memcmp(bytes,data,n));
+    free(bytes); CHECK(fclose(f)==0);
+    /* A pipe exercises the non-seeking path and multiple growth steps. */
+    {
+        int pipes[2]; unsigned char input[3073]; size_t i;
+        for (i=0;i<sizeof input;i++) input[i]=(unsigned char)i;
+        CHECK(pipe(pipes)==0);
+        CHECK(write(pipes[1],input,sizeof input)==sizeof input);
+        CHECK(close(pipes[1])==0);
+        f=fdopen(pipes[0],"rb"); CHECK(f);
+        bytes=file2buf(f,&n);
+        CHECK(bytes && n==sizeof input && !memcmp(bytes,input,n));
+        CHECK(!bytes[n] && !bytes[n+1]);
+        free(bytes); CHECK(fclose(f)==0);
+    }
+    /* A read error must not be mistaken for an empty input file. */
+    f=fopen("CMSERROR.dat","wb"); CHECK(f);
+    CHECK(fwrite(data,1,sizeof data,f)==sizeof data && fflush(f)==0);
+    n=999; bytes=file2buf(f,&n); CHECK(!bytes && !n && ferror(f));
+    CHECK(fclose(f)==0 && remove("CMSERROR.dat")==0);
     puts("PASS: CMS platform selection and standard I/O lookup");
     return 0;
 }

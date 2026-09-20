@@ -203,42 +203,67 @@ void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
     exit(-1);
 }
 
-/*
- * Read a file into a returned buffer
- *
- * This function malloc()s the buffer to the right size therefore it needs
- * to be free()d by the caller
- */
+/* Sequential streams have no usable length. Retain two scanner sentinels,
+ * check growth before arithmetic, and never return partial data after error. */
+static char *stream2buf(FILE *file, size_t *bytes) {
+    size_t used = 0, capacity = 1024;
+    const size_t limit = (size_t)-1 - 2;
+    char *buff = (char *)malloc(capacity + 2);
+    if (!buff) {
+        RX_REPORT_OOM("malloc file read buffer", capacity + 2, "file2buf");
+        return 0;
+    }
+    for (;;) {
+        size_t n = fread(buff + used, 1, capacity - used, file);
+        used += n;
+        if (ferror(file)) { free(buff); return 0; }
+        if (feof(file)) break;
+        if (!n) { free(buff); return 0; }
+        if (used == capacity) {
+            size_t next = capacity <= limit / 2 ? capacity * 2 : limit;
+            char *grown;
+            if (next <= capacity) { free(buff); return 0; }
+            grown = (char *)realloc(buff, next + 2);
+            if (!grown) {
+                RX_REPORT_OOM("grow file read buffer", next + 2, "file2buf");
+                free(buff);
+                return 0;
+            }
+            buff = grown;
+            capacity = next;
+        }
+    }
+    buff[used] = buff[used + 1] = 0;
+    *bytes = used;
+    return buff;
+}
+
+/* Read a seekable file from the beginning, or a sequential stream from its
+ * current position. The caller frees the buffer, including two NUL sentinels. */
 char* file2buf(FILE *file, size_t *bytes) {
     char *buff;
     size_t n;
     long pos;
-
-    /* Get file size */
+    *bytes = 0;
     if (fseek(file, 0, SEEK_END) != 0) {
-        return 0;
+        clearerr(file);
+        return stream2buf(file, bytes);
     }
     pos = ftell(file);
-    if (pos < 0) {
-        return 0;
-    }
-    *bytes = (size_t)pos;
-    rewind(file);
-
-    /* Allocate buffer and read */
-    buff = (char*) malloc((*bytes + 2) * sizeof(char) );
+    if (pos < 0 || (unsigned long)pos > (size_t)-1 - 2) return 0;
+    if (fseek(file, 0, SEEK_SET) != 0) return 0;
+    buff = (char*)malloc((size_t)pos + 2);
     if (!buff) {
-        RX_REPORT_OOM("malloc file read buffer", *bytes + 2, "file2buf");
+        RX_REPORT_OOM("malloc file read buffer", (size_t)pos + 2, "file2buf");
         return 0;
     }
-    n = fread(buff, 1, *bytes, file);
-    if (n == 0 && *bytes > 0) {
+    n = fread(buff, 1, (size_t)pos, file);
+    if (ferror(file) || (n == 0 && pos > 0)) {
         free(buff);
         return 0;
     }
     *bytes = n;
-    buff[*bytes] = 0;
-    buff[*bytes+1] = 0; /* Add an extra byte for the token peak */
+    buff[n] = buff[n + 1] = 0;
     return buff;
 }
 
