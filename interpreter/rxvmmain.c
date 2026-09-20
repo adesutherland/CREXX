@@ -157,12 +157,19 @@ int main(int argc, char *argv[]) {
     rxvm_context context;
     size_t num_modules;
 
+#ifndef CREXX_VM_SINGLE_THREADED
     platform_install_signal_handlers();
+#endif
 
     /* Private, rebuild-together process-provider worker mode. It is kept out
      * of public help and executes only the versioned framed task protocol. */
     if (argc == 4 && strcmp(argv[1], "--rxvm-process-worker") == 0) {
+#ifdef CREXX_VM_SINGLE_THREADED
+        fputs("RXVM: process workers are not supported in this build\n", stderr);
+        return 2;
+#else
         return rxvm_process_worker_main(argv[2], argv[3]);
+#endif
     }
 
 #ifdef _WIN32

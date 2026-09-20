@@ -40,7 +40,9 @@
 #include "crexx_version.h"
 #include <assert.h>
 #include <signal.h>
+#ifndef CREXX_VM_SINGLE_THREADED
 #include <stdatomic.h>
+#endif
 #include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -738,6 +740,7 @@ struct rxvm_byte_endpoint;
 /* Resolve an internal native-payload redirect endpoint value. */
 REDIRECT *rxspawn_redirect_from_value(value *redirect_reg);
 
+#ifndef CREXX_VM_SINGLE_THREADED
 /* Private reusable child-I/O adapters. Their background owners retain only a
  * C byte endpoint plus copied bytes; they never retain a live Rexx value. */
 REDIRECT *rxspawn_redirect_from_byte_endpoint(
@@ -750,6 +753,8 @@ int rxspawn_redirect_byte_endpoint_destroy(REDIRECT *redirect);
 int rxspawn_redirect_write_close(REDIRECT *redirect,
                                  const char *data,
                                  size_t length);
+
+#endif
 
 /* Get Environment Value
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
@@ -783,6 +788,7 @@ int shellspawn(const char *command,
                int *rc,
                char **errorText);
 
+#ifndef CREXX_VM_SINGLE_THREADED
 int shellspawn_snapshot(const char *command,
                         REDIRECT *pIn,
                         REDIRECT *pOut,
@@ -829,6 +835,8 @@ int shellspawn_argv_snapshot(const char *const *argv,
                              int *termination_reason,
                              int *rc,
                              char **errorText);
+
+#endif
 
 // SPAWN Error codes
 #define SHELLSPAWN_OK         0

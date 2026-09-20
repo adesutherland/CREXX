@@ -2880,7 +2880,12 @@ RXVM_HANDLER(IRAND_REG_REG, VM_ADVANCE(2);
 
             if (op2R->int_value<0) {                 // no seed set
                 if (!hasSeed)  {       // seed still initial, set time based seed
+#ifdef CREXX_VM_NO_CLOCK
+                   SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Automatic random seeding needs a clock service");
+                   DISPATCH;
+#else
                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+#endif
                    srand((unsigned) initSeed);
                    hasSeed = 1;
                 }
@@ -2903,7 +2908,12 @@ RXVM_HANDLER(IRAND_REG_INT, VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)op2I);
              if (op2I<0) {                                // no seed set
                 if (!hasSeed)  {            // seed still initial, set time based seed
+#ifdef CREXX_VM_NO_CLOCK
+                    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Automatic random seeding needs a clock service");
+                    DISPATCH;
+#else
                     initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
+#endif
                     srand(initSeed);
                     hasSeed = 1;
                 }

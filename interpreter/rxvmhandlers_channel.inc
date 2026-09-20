@@ -10,6 +10,33 @@
  * input/output aliasing semantics; the assembler rejects only duplicate
  * output registers. */
 
+#ifdef CREXX_VM_SINGLE_THREADED
+/* Keep bytecode identities and operand widths; fail through the VM signal path. */
+RXVM_HANDLER(CHANOPEN_REG_REG_REG_REG_REG, VM_ADVANCE(5);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+RXVM_HANDLER(CHANSTART_REG_REG_REG_REG_REG, VM_ADVANCE(5);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+RXVM_HANDLER(CHANWAIT_REG_REG_REG_REG, VM_ADVANCE(4);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+RXVM_HANDLER(CHANCANCEL_REG_REG_REG_REG, VM_ADVANCE(4);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+RXVM_HANDLER(CHANCLOSE_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+RXVM_HANDLER(CHANRELEASE_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Channels and workers are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(CHANOPEN_REG_REG_REG_REG_REG, VM_ADVANCE(5);
     DEBUG("TRACE - CHANOPEN R%lu,R%lu,R%lu,R%lu,R%lu\n",
           REG_IDX(1), REG_IDX(2), REG_IDX(3), REG_IDX(4), REG_IDX(5));
@@ -99,3 +126,5 @@ RXVM_HANDLER(CHANRELEASE_REG_REG_REG, VM_ADVANCE(3);
     }
     DISPATCH;
 )
+
+#endif

@@ -8,7 +8,16 @@
 
 #include <stdlib.h>
 
-#if defined(_WIN32)
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* No other execution thread or asynchronous callback exists in this build. */
+typedef unsigned char rxvm_runtime_mutex;
+static void rxvm_runtime_mutex_init(rxvm_runtime_mutex *mutex) {
+    *mutex = 0;
+}
+static void rxvm_runtime_mutex_destroy(rxvm_runtime_mutex *mutex) { (void)mutex; }
+static void rxvm_runtime_mutex_lock(rxvm_runtime_mutex *mutex) { (void)mutex; }
+static void rxvm_runtime_mutex_unlock(rxvm_runtime_mutex *mutex) { (void)mutex; }
+#elif defined(_WIN32)
 #include <windows.h>
 typedef CRITICAL_SECTION rxvm_runtime_mutex;
 static void rxvm_runtime_mutex_init(rxvm_runtime_mutex *mutex) {
@@ -40,7 +49,9 @@ static void rxvm_runtime_mutex_unlock(rxvm_runtime_mutex *mutex) {
 }
 #endif
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVM_WORKER_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXVM_WORKER_THREAD_LOCAL __declspec(thread)
 #else
 #define RXVM_WORKER_THREAD_LOCAL __thread

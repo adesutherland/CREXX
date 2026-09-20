@@ -693,6 +693,12 @@ RXVM_HANDLER(STEMVALUEAT_REG_REG_REG, VM_ADVANCE(3);
 #undef RXSTEM_REQUIRE_RESULT
 
 
+#ifdef CREXX_VM_NO_CLOCK
+RXVM_HANDLER(TIME_REG, VM_ADVANCE(1);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Clock services are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(TIME_REG, VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
@@ -707,7 +713,14 @@ RXVM_HANDLER(TIME_REG, VM_ADVANCE(1);
  */
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_CLOCK
+RXVM_HANDLER(XTIME_REG_STRING, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Clock services are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(XTIME_REG_STRING, VM_ADVANCE(2);
         DEBUG("TRACE - XTIME R%d,\"%s\"\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
 
@@ -747,7 +760,14 @@ RXVM_HANDLER(XTIME_REG_STRING, VM_ADVANCE(2);
  */
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_CLOCK
+RXVM_HANDLER(MTIME_REG, VM_ADVANCE(1);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Clock services are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(MTIME_REG, VM_ADVANCE(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
             {
@@ -772,6 +792,7 @@ RXVM_HANDLER(MTIME_REG, VM_ADVANCE(1);
  */
 
 )
+#endif
 
 RXVM_HANDLER(TRIMR_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - TRIMR (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));

@@ -27,7 +27,10 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <ctype.h>
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_CATALOGUE_LOCK() ((void)0)
+#define RXPA_CATALOGUE_UNLOCK() ((void)0)
+#elif defined(_WIN32)
 #include <windows.h>
 #define RXPA_CATALOGUE_LOCK() AcquireSRWLockExclusive(&rxpa_catalogue_lock)
 #define RXPA_CATALOGUE_UNLOCK() ReleaseSRWLockExclusive(&rxpa_catalogue_lock)
@@ -176,13 +179,17 @@ typedef struct static_metadata_snapshot {
     const char *args;
 } static_metadata_snapshot;
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+/* Catalogue access is synchronous on the sole execution thread. */
+#elif defined(_WIN32)
 static SRWLOCK rxpa_catalogue_lock = SRWLOCK_INIT;
 #else
 static pthread_mutex_t rxpa_catalogue_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_LOADER_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXPA_LOADER_THREAD_LOCAL __declspec(thread)
 #else
 #define RXPA_LOADER_THREAD_LOCAL __thread
@@ -498,7 +505,9 @@ void rxfremod(rxvm_context *context) {
         abort();
     }
 
+#ifndef CREXX_VM_SINGLE_THREADED
     rxvm_channel_context_destroy(context);
+#endif
 
     /* Remove cold coordinator references before procedure storage is freed. */
     rxpa_compatibility_context_destroy(&context->rxpa_compatibility);
@@ -506,8 +515,12 @@ void rxfremod(rxvm_context *context) {
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
     rxvm_free_graph_bindings(context);
+#ifndef CREXX_VM_NO_SOCKETS
     rxvm_socket_free_registry(context);
+#endif
+#ifndef CREXX_VM_SINGLE_THREADED
     rxcrexxcmd_context_state_free(context);
+#endif
     context->active.say_exit = 0;
 
     /* Free Symbol Search Trees */

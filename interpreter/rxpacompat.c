@@ -17,9 +17,16 @@ typedef struct rxpa_compatibility_coordinator {
     unsigned char locked_mode;
 } rxpa_compatibility_coordinator;
 
+#ifdef CREXX_VM_SINGLE_THREADED
+/* Always use the nesting-aware callback path; no cross-thread transition. */
+static rxpa_compatibility_coordinator rxpa_coordinator = {0, 0, 0, 0, 1};
+#else
 static rxpa_compatibility_coordinator rxpa_coordinator;
+#endif
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_COMPAT_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXPA_COMPAT_THREAD_LOCAL __declspec(thread)
 #else
 #define RXPA_COMPAT_THREAD_LOCAL __thread
@@ -38,7 +45,15 @@ void rxpa_compatibility_callback_leave(void) {
     rxpa_callback_depth--;
 }
 
-#ifdef _WIN32
+#if defined(CREXX_VM_SINGLE_THREADED)
+void rxpa_compatibility_enter(void) { rxpa_compatibility_callback_enter(); }
+void rxpa_compatibility_leave(void) { rxpa_compatibility_callback_leave(); }
+static void rxpa_coordinator_enter(void) {}
+static void rxpa_coordinator_leave(void) {}
+/* Waiting would require another execution thread and is a programming error. */
+static void rxpa_coordinator_wait(void) { abort(); }
+static void rxpa_coordinator_broadcast(void) {}
+#elif defined(_WIN32)
 #include <windows.h>
 
 static INIT_ONCE rxpa_compatibility_once = INIT_ONCE_STATIC_INIT;

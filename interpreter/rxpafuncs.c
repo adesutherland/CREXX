@@ -39,7 +39,9 @@ typedef struct rxpa_pool_node {
     struct rxpa_pool_node* next;
 } rxpa_pool_node;
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXPA_THREAD_LOCAL
+#elif defined(_MSC_VER)
 #define RXPA_THREAD_LOCAL __declspec(thread)
 #else
 #define RXPA_THREAD_LOCAL __thread

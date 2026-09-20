@@ -728,6 +728,12 @@ RXVM_HANDLER(ASSERTTYPE_REG_STRING, VM_ADVANCE(2);
 
 )
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKNEW_REG, VM_ADVANCE(1);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKNEW_REG, VM_ADVANCE(1);
             DEBUG("TRACE - SOCKNEW R%lu\n", REG_IDX(1));
             set_int(op1R, rxvm_socket_new(context));
@@ -735,7 +741,14 @@ RXVM_HANDLER(SOCKNEW_REG, VM_ADVANCE(1);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKCLOSE_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKCLOSE_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_close(context, op2R->int_value));
@@ -743,7 +756,14 @@ RXVM_HANDLER(SOCKCLOSE_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKCONNECT_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKCONNECT_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKCONNECT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_connect(context, op1R->int_value, op2R, op3R->int_value);
@@ -751,7 +771,14 @@ RXVM_HANDLER(SOCKCONNECT_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKBIND_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKBIND_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKBIND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_bind(context, op1R->int_value, op2R, op3R->int_value);
@@ -759,7 +786,14 @@ RXVM_HANDLER(SOCKBIND_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKLISTEN_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKLISTEN_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKLISTEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_listen(context, op2R->int_value, op3R->int_value));
@@ -767,7 +801,14 @@ RXVM_HANDLER(SOCKLISTEN_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKACCEPT_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKACCEPT_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKACCEPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_accept(context, op2R->int_value));
@@ -775,7 +816,14 @@ RXVM_HANDLER(SOCKACCEPT_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKSHUTDOWN_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKSHUTDOWN_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSHUTDOWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_shutdown(context, op2R->int_value, op3R->int_value));
@@ -783,7 +831,14 @@ RXVM_HANDLER(SOCKSHUTDOWN_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKSEND_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKSEND_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSEND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_send_string(context, op2R->int_value, op3R));
@@ -791,7 +846,14 @@ RXVM_HANDLER(SOCKSEND_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKSENDB_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKSENDB_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSENDB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_send_binary(context, op2R->int_value, op3R));
@@ -799,7 +861,14 @@ RXVM_HANDLER(SOCKSENDB_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKRECV_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKRECV_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKRECV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_recv_string(context, op1R, op2R->int_value, op3R->int_value);
@@ -807,7 +876,14 @@ RXVM_HANDLER(SOCKRECV_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKRECVB_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKRECVB_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKRECVB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_recv_binary(context, op1R, op2R->int_value, op3R->int_value);
@@ -815,7 +891,14 @@ RXVM_HANDLER(SOCKRECVB_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKPENDING_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKPENDING_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKPENDING R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_pending(context, op2R->int_value));
@@ -823,7 +906,14 @@ RXVM_HANDLER(SOCKPENDING_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKTIMEOUT_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKTIMEOUT_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKTIMEOUT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_timeout(context, op2R->int_value, op3R->int_value));
@@ -831,7 +921,14 @@ RXVM_HANDLER(SOCKTIMEOUT_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKBLOCKING_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKBLOCKING_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKBLOCKING R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_blocking(context, op2R->int_value, op3R->int_value));
@@ -839,7 +936,14 @@ RXVM_HANDLER(SOCKBLOCKING_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKNODELAY_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKNODELAY_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKNODELAY R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_nodelay(context, op2R->int_value, op3R->int_value));
@@ -847,7 +951,14 @@ RXVM_HANDLER(SOCKNODELAY_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKKEEPALIVE_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKKEEPALIVE_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKKEEPALIVE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_keepalive(context, op2R->int_value, op3R->int_value));
@@ -855,7 +966,14 @@ RXVM_HANDLER(SOCKKEEPALIVE_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKPEER_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKPEER_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKPEER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_peer(context, op1R, op2R->int_value);
@@ -863,7 +981,14 @@ RXVM_HANDLER(SOCKPEER_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKLOCAL_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKLOCAL_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKLOCAL R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_local(context, op1R, op2R->int_value);
@@ -871,7 +996,14 @@ RXVM_HANDLER(SOCKLOCAL_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKSTATUS_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKSTATUS_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKSTATUS R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_status(context, op2R->int_value));
@@ -879,7 +1011,14 @@ RXVM_HANDLER(SOCKSTATUS_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKERROR_REG_REG, VM_ADVANCE(2);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKERROR_REG_REG, VM_ADVANCE(2);
             DEBUG("TRACE - SOCKERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_error(context, op1R, op2R->int_value);
@@ -887,7 +1026,14 @@ RXVM_HANDLER(SOCKERROR_REG_REG, VM_ADVANCE(2);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKSTARTTLS_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKSTARTTLS_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSTARTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_starttls(context, op2R->int_value, op3R));
@@ -895,7 +1041,14 @@ RXVM_HANDLER(SOCKSTARTTLS_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
+#ifdef CREXX_VM_NO_SOCKETS
+RXVM_HANDLER(SOCKCONNECTTLS_REG_REG_REG, VM_ADVANCE(3);
+    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Sockets are not supported in this build");
+    DISPATCH;
+)
+#else
 RXVM_HANDLER(SOCKCONNECTTLS_REG_REG_REG, VM_ADVANCE(3);
             DEBUG("TRACE - SOCKCONNECTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
@@ -903,6 +1056,7 @@ RXVM_HANDLER(SOCKCONNECTTLS_REG_REG_REG, VM_ADVANCE(3);
 
 
 )
+#endif
 
 RXVM_HANDLER(CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG, VM_ADVANCE(9);
             DEBUG("TRACE - CNOP R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu\n",

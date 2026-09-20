@@ -98,6 +98,7 @@
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
 
+#ifndef CREXX_VM_NO_CLOCK
 #ifdef _MSC_VER
 typedef struct rxvm_timeval {
     time_t tv_sec;
@@ -136,6 +137,7 @@ static long rxvm_timezone_seconds(void) {
     return timezone;
 }
 #define RXVM_TZNAME tzname
+#endif
 #endif
 
 typedef char rxvm_execution_slot_must_hold_pointer[
@@ -5908,7 +5910,9 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 
 RX_INLINE sig_atomic_t rxvm_compatibility_pending_load(
         volatile sig_atomic_t *pending) {
-#if defined(_WIN32) && defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+    return *pending;
+#elif defined(_WIN32) && defined(_MSC_VER)
     typedef char rxvm_compatibility_pending_must_match_long[
             sizeof(sig_atomic_t) == sizeof(LONG) ? 1 : -1];
     (void)sizeof(rxvm_compatibility_pending_must_match_long);

@@ -35,7 +35,13 @@
 #include "crexx_license.h"
 #include "rxinteger.h"
 
-#if defined(__clang__) || defined(__GNUC__)
+#if defined(CREXX_VM_COMPACT)
+/* Let a size-optimizing compiler share helpers instead of forcing expansion
+ * at every VM handler. This is a code-size policy, not a value/ABI change. */
+# define RX_INLINE static
+# define RX_MOSTLYINLINE static
+# define RX_FLATTEN
+#elif defined(__clang__) || defined(__GNUC__)
 # ifdef NDEBUG  // RELEASE
 #  define RX_INLINE static inline __attribute__((always_inline))
 #  define RX_MOSTLYINLINE static inline
