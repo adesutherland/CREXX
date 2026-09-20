@@ -104,6 +104,7 @@ set(RXVM_CORE_OBJECT_SOURCES
         ../binutils/include/rxbin.h
         ../binutils/include/rxsignature.h
         rxspawn.c
+        rxenv.c
         rxcrexxcmd.c
         rxcrexxcmd.h
         exitfunc.c
