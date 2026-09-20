@@ -61,6 +61,14 @@
 
 #include "platform.h"
 
+/* Keep basic filename handling within the ISO C library surface. */
+static char *platform_copy_string(const char *text) {
+    size_t size = strlen(text) + 1;
+    char *copy = malloc(size);
+    if (copy) memcpy(copy, text, size);
+    return copy;
+}
+
 static void rx_print_bytes(FILE *out, const char *label, unsigned long long bytes) {
     fprintf(out, "  %s: %llu bytes (%.2f MiB)\n",
             label, bytes, (double)bytes / 1048576.0);
@@ -276,7 +284,7 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
         return new_name;
     }
     {
-        char *copy = strdup(name);
+        char *copy = platform_copy_string(name);
         if (!copy) RX_PANIC_OOM("strdup file name", strlen(name) + 1, name);
         return copy;
     }
@@ -487,7 +495,7 @@ int fileexists(char *name, char *type, char *dir) {
     }
 
     /* Multiple directories support */
-    dir_copy = strdup(dir);
+    dir_copy = platform_copy_string(dir);
     if (!dir_copy) RX_PANIC_OOM("strdup file existence directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {
@@ -551,7 +559,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     }
 
     /* Multiple directories support */
-    dir_copy = strdup(dir);
+    dir_copy = platform_copy_string(dir);
     if (!dir_copy) RX_PANIC_OOM("strdup openfile directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {

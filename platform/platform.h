@@ -67,10 +67,10 @@
 #include "cms.h"
 #endif
 
-#if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
-#define RX_FUNCTION_NAME __FUNCTION__
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define RX_FUNCTION_NAME __func__
+#elif defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+#define RX_FUNCTION_NAME __FUNCTION__
 #else
 #define RX_FUNCTION_NAME "unknown"
 #endif

@@ -339,4 +339,7 @@ int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int d
     return 0;
 }
 
+#else
+/* ISO C requires a declaration even when parser integration is disabled. */
+typedef int rxas_parser_integration_disabled;
 #endif
