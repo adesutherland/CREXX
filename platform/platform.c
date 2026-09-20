@@ -59,6 +59,11 @@
 #include <unistd.h>
 #endif
 
+#if defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT)
+/* Supplied by the CMS host runtime, never inherited Linux directory services. */
+#include <dirent.h>
+#endif
+
 #include "platform.h"
 
 /* Keep basic filename handling within the ISO C library surface. */
@@ -609,7 +614,8 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     return stream;
 }
 
-#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
+#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 struct fl_dir {
     DIR *d;
     char *type;
@@ -633,7 +639,8 @@ struct WIN_FILE_DATA {
  */
 char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
-#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
+#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
     if (!ptr) RX_PANIC_OOM("malloc directory iterator", sizeof(struct fl_dir), dir);
@@ -700,7 +707,8 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
  */
 char *dirnxtfl(void **dir_ptr) {
 
-#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
+#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct dirent *dirent;
     struct fl_dir *ptr = *dir_ptr;
@@ -746,7 +754,8 @@ char *dirnxtfl(void **dir_ptr) {
  */
 void dirclose(void **dir_ptr) {
 
-#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
+#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)) || \
+    (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct fl_dir *ptr = *dir_ptr;
 

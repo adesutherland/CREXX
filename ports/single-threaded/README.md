@@ -96,3 +96,23 @@ normal RXAS archive remains outside the sanitizer instrumentation boundary;
 compiler, embedding and VM core are instrumented. On Apple hosts whose runtime
 rejects LeakSanitizer, use `tools/asan-run.sh --build-leaks off` and `--leaks off`;
 retain ASan/UBSan and do not claim leak qualification.
+
+## CMS file discovery
+
+For the experimental CMS ELF platform only, defining `CREXX_CMS_DIRENT`
+selects the existing prefix/type directory filter over a host-supplied
+`dirent.h`, `opendir`, `readdir` and `closedir`. Put that host header ahead of
+generic libc headers. The default CMS configuration still reports `ENOSYS`;
+ordinary desktop and legacy CMS selections are unchanged.
+
+The Mainframe Lab runtime supplies independent, bounded snapshots of the A1
+minidisk, presenting alphanumeric CMS names/types as lowercase `name.type`.
+Only `.` and its empty/`./` aliases are supported; this does not create a POSIX
+directory hierarchy. The runtime owns metadata, record I/O, naming limits and
+mutation semantics. In particular, CMS rename does not replace an existing
+destination atomically, and RXC report temporary naming/publication remains
+unqualified. Enabling discovery does not establish a working CMS compiler.
+
+Native boundary/sanitizer tests and two-origin CMS service fixtures live in
+the lab beside that host runtime. They exercise the actual cREXX filter; the
+complete RXC import path requires its separately packaged executable.
