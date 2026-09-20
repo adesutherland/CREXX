@@ -64,3 +64,35 @@ The reference comparisons exercise optimized and unoptimized argument aliasing,
 copying and nested signal fixtures. Separate controls cover unavailable services,
 worker entry, dynamic loading and execution-owner/memory lifetimes. Native
 success is not proof of CMS compilation, linking, memory capacity or execution.
+
+## Embedded VM and RXC
+
+`rxvm_single_embed` adds the public `rxvml` API to the same core without a VM
+CLI entry point. The legacy native ADDRESS redirection endpoint returns an
+explicit error in this build; structured endpoints and ordinary console output
+retain their existing implementation. The one-thread contract still applies.
+
+The optional `CREXX_BUILD_COMPILER=ON` builds `rxc_single` with this static
+embedding library. Build normal `rxc` and `compiler_exit_bin` first, then set
+`CREXX_HOST_BUILD` to that build directory. This supplies the generated compiler
+parsers/scanners, RXAS archive and reference bytecode. Keep these inputs from
+the same pinned source; do not substitute an unrelated installed compiler.
+The source closure in `compiler.cmake` mirrors the normal compiler, retaining
+Level B/C and compiler-exit behavior. It is an experimental leaf, not the normal
+desktop build or a completed CMS port.
+
+For embedding tests, compile `embedding.crexx` with the normal compiler's
+`-x --no-exe-import` options and assemble it with normal RXAS. Set
+`CREXX_EMBEDDING_FIXTURE` to the resulting RXBIN and run `single_vm_embedding`.
+Its eight create/load/call/free/destroy rounds include 64-bit results, arrays,
+missing procedures, incompatible signatures and unavailable legacy redirects.
+The fixture's `-x` does not disable exits in the compiler comparison.
+
+Set `CREXX_REFERENCE_COMPILER` to the pinned normal `rxc` and build target
+`check_single_rxc` for six optimized/unoptimized source comparisons with exits
+enabled, identical assembly/bytecode/execution results, and an invalid-literal
+control. Run this target in MinSizeRel, Debug and ASan/UBSan builds. The prebuilt
+normal RXAS archive remains outside the sanitizer instrumentation boundary;
+compiler, embedding and VM core are instrumented. On Apple hosts whose runtime
+rejects LeakSanitizer, use `tools/asan-run.sh --build-leaks off` and `--leaks off`;
+retain ASan/UBSan and do not claim leak qualification.

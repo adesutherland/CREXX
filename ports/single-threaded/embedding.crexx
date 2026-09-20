@@ -1,0 +1,6 @@
+options levelb
+namespace labembed expose twice
+
+twice: procedure = .int
+  arg input = .int
+  return input * 2

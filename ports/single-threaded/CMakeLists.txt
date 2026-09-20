@@ -43,6 +43,14 @@ target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1
     RXVM_MEMORY_SLAB_SIZE=${CREXX_VM_SLAB_SIZE}
     RXVM_MEMORY_MAX_STANDARD_SIZE=${CREXX_VM_MAX_POOLED_SIZE})
+# RXC calls the public embedding API; this does not include a VM CLI main.
+add_library(rxvm_single_embed STATIC "${CREXX_SOURCE}/interpreter/rxvml.c")
+target_link_libraries(rxvm_single_embed PUBLIC rxvm_single_core)
+option(CREXX_BUILD_COMPILER "Build RXC against the constrained embedded VM" OFF)
+if(CREXX_BUILD_COMPILER)
+    include("${CMAKE_CURRENT_LIST_DIR}/compiler.cmake")
+endif()
+
 add_executable(rxbvm_single "${CREXX_SOURCE}/interpreter/rxvmmain.c")
 target_link_libraries(rxbvm_single PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
 
@@ -51,6 +59,12 @@ if(BUILD_TESTING)
     add_executable(test_single_state test_state.c)
     target_link_libraries(test_single_state PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
     add_test(NAME single_vm_state COMMAND test_single_state)
+    add_executable(test_single_embed test_embed.c)
+    target_link_libraries(test_single_embed PRIVATE rxvm_single_embed ${CMAKE_DL_LIBS} m)
+    set(CREXX_EMBEDDING_FIXTURE "" CACHE FILEPATH "Compiled embedding.crexx bytecode")
+    if(CREXX_EMBEDDING_FIXTURE)
+        add_test(NAME single_vm_embedding COMMAND test_single_embed "${CREXX_EMBEDDING_FIXTURE}")
+    endif()
 endif()
 set(CREXX_REFERENCE_VM "" CACHE FILEPATH "Normal switch VM for comparison")
 set(CREXX_RXAS "" CACHE FILEPATH "Native RXAS for test fixtures")
@@ -60,4 +74,17 @@ if(BUILD_TESTING AND CREXX_REFERENCE_VM AND CREXX_RXAS)
         "-DRXAS=${CREXX_RXAS}" "-DSOURCE=${CREXX_SOURCE}"
         "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/tests" -P "${CMAKE_CURRENT_SOURCE_DIR}/TestVM.cmake")
     set_tests_properties(single_vm_parity PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
+endif()
+
+# This explicit target also allows isolated Debug/sanitizer timing before a
+# larger compiler test is registered in a broad CTest schedule.
+set(CREXX_REFERENCE_COMPILER "" CACHE FILEPATH "Normal pinned compiler for parity")
+if(BUILD_TESTING AND CREXX_BUILD_COMPILER AND CREXX_REFERENCE_COMPILER)
+    add_custom_target(check_single_rxc
+        COMMAND "${CMAKE_COMMAND}" "-DCOMPILER=$<TARGET_FILE:rxc_single>"
+        "-DREFERENCE=${CREXX_REFERENCE_COMPILER}" "-DRXAS=${CREXX_HOST_BUILD}/bin/rxas"
+        "-DVM=$<TARGET_FILE:rxbvm_single>" "-DLIBDIR=${CREXX_HOST_BUILD}/bin"
+        "-DSOURCE=${CREXX_SOURCE}" "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/compiler-tests"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/TestCompiler.cmake"
+        DEPENDS rxc_single rxbvm_single VERBATIM)
 endif()
