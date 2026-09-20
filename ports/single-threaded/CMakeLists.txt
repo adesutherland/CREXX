@@ -12,6 +12,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CREXX_VM_SLAB_SIZE 4096 CACHE STRING "Bytes per aligned VM allocator slab")
+set(CREXX_VM_MAX_POOLED_SIZE 2048 CACHE STRING "Maximum pooled byte/value allocation")
 
 set(vm_sources
     interpreter/rxvmintp.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
@@ -39,7 +41,8 @@ target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     NTHREADED=1 CREXX_VM_HANDLER_PANEL=20 MANUAL_PLUGIN_LINK=1
     CREXX_VM_STATIC_ONLY=1 CREXX_VM_NO_SOCKETS=1 CREXX_VM_NO_CLOCK=1
     CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1
-    RXVM_MEMORY_SLAB_SIZE=4096 RXVM_MEMORY_MAX_STANDARD_SIZE=2048)
+    RXVM_MEMORY_SLAB_SIZE=${CREXX_VM_SLAB_SIZE}
+    RXVM_MEMORY_MAX_STANDARD_SIZE=${CREXX_VM_MAX_POOLED_SIZE})
 add_executable(rxbvm_single "${CREXX_SOURCE}/interpreter/rxvmmain.c")
 target_link_libraries(rxbvm_single PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
 

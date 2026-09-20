@@ -138,12 +138,16 @@ typedef char rxvm_memory_slab_size_must_be_power_of_two[
         RXVM_MEMORY_SLAB_SIZE != 0u &&
         (RXVM_MEMORY_SLAB_SIZE & (RXVM_MEMORY_SLAB_SIZE - 1u)) == 0u ? 1 : -1];
 typedef char rxvm_memory_standard_size_must_be_power_of_two[
-        RXVM_MEMORY_MAX_STANDARD_SIZE != 0u &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE >= RXVM_MEMORY_ALIGNMENT &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE <= 16384u &&
         (RXVM_MEMORY_MAX_STANDARD_SIZE &
         (RXVM_MEMORY_MAX_STANDARD_SIZE - 1u)) == 0u ? 1 : -1];
 typedef char rxvm_memory_standard_slot_must_fit_slab[
         RXVM_MEMORY_SLAB_SIZE > RXVM_MEMORY_SLAB_HEADER_SIZE &&
         RXVM_MEMORY_MAX_STANDARD_SIZE <=
+            RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE ? 1 : -1];
+typedef char rxvm_memory_reference_slot_must_fit_slab[
+        sizeof(rxvm_reference_cell) <=
             RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE ? 1 : -1];
 typedef char rxvm_memory_smallest_slot_count_must_fit_header[
         (RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE) /

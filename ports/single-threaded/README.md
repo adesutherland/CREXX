@@ -39,6 +39,14 @@ This build selects 4 KiB slabs and a 2 KiB maximum pooled allocation; larger
 byte blocks and value arrays use the existing individually allocated extent
 path. Desktop defaults remain 64 KiB and 16 KiB. Small pools avoid reserving
 up to twice 64 KiB merely to serve a new small allocation class on CMS.
+Configure these with `-DCREXX_VM_SLAB_SIZE=4096` and
+`-DCREXX_VM_MAX_POOLED_SIZE=2048`. Compile-time checks require power-of-two
+sizes, a pooled limit from 16 through 16384 bytes, room for the slab header
+and reference cells, and a slot count that fits its header. These are build
+settings; slab alignment is part of pointer-to-owner lookup and cannot change
+while a VM is running. Builds outside this CMake leaf can set the underlying
+`RXVM_MEMORY_SLAB_SIZE` and `RXVM_MEMORY_MAX_STANDARD_SIZE` macros consistently
+for all VM translation units.
 
 Build on the Mac after building normal RXAS and `rxbvm`:
 
