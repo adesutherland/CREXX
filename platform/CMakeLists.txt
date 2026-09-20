@@ -10,6 +10,16 @@ if(WIN32)
     target_link_libraries(platform PUBLIC psapi)
 endif()
 
+if(UNIX AND BUILD_TESTING)
+    # Deliberately retain Linux aliases to test profile precedence on both hosts.
+    add_executable(platform_cms_harness platform_cms_harness.c platform.c)
+    target_compile_definitions(platform_cms_harness PRIVATE
+            __MAINFRAME_LAB_VM370_4381__=1 __linux__=1 __linux=1)
+    add_test(NAME platform_cms_selection COMMAND platform_cms_harness)
+    set_tests_properties(platform_cms_selection PROPERTIES
+            LABELS "platform;cms" TIMEOUT 30)
+endif()
+
 if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
     add_executable(platform_terminal_harness platform_terminal_harness.c)
     target_link_libraries(platform_terminal_harness PRIVATE platform)

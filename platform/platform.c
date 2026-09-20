@@ -32,7 +32,13 @@
 #include <limits.h>
 #include <errno.h>
 
-#ifdef __linux__
+/* This ASCII/newlib CMS profile is distinct from the legacy __CMS__ runtime.
+ * The cross compiler retains Linux aliases; they do not provide OS services. */
+#if defined(__MAINFRAME_LAB_VM370_4381__)
+#define CREXX_CMS_ELF 1
+#endif
+
+#if defined(__linux__) && !defined(CREXX_CMS_ELF)
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/sysinfo.h>
@@ -47,7 +53,7 @@
 #include <stdint.h>
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(CREXX_CMS_ELF)
 #include <mach-o/dyld.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -63,7 +69,7 @@ static void rx_print_bytes(FILE *out, const char *label, unsigned long long byte
 static unsigned long rx_process_id(void) {
 #ifdef _WIN32
     return (unsigned long)GetCurrentProcessId();
-#elif defined(__linux__) || defined(__APPLE__)
+#elif (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_CMS_ELF)
     return (unsigned long)getpid();
 #else
     return 0;
@@ -113,7 +119,7 @@ static void rx_print_memory_status(FILE *out) {
     } else {
         fprintf(out, "  system memory: unavailable (GlobalMemoryStatusEx failed)\n");
     }
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(CREXX_CMS_ELF)
     struct sysinfo info;
     if (sysinfo(&info) == 0) {
         unsigned long long unit = info.mem_unit ? (unsigned long long)info.mem_unit : 1ULL;
@@ -126,7 +132,7 @@ static void rx_print_memory_status(FILE *out) {
     } else {
         fprintf(out, "  system memory: unavailable (sysinfo failed)\n");
     }
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !defined(CREXX_CMS_ELF)
     long page_size = -1;
     long total_pages = -1;
     long available_pages = -1;
@@ -276,7 +282,7 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
     }
 }
 
-#if !defined(_WIN32) && !defined(__CMS__)
+#if !defined(_WIN32) && !defined(__CMS__) && !defined(CREXX_CMS_ELF)
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -467,8 +473,11 @@ int fileexists(char *name, char *type, char *dir) {
         if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_CMS_ELF)
         result = access(file_name, F_OK) != -1;
+#elif defined(CREXX_CMS_ELF)
+        FILE *probe = fopen(file_name, "rb");
+        if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
         DWORD dwAttrib = GetFileAttributes(file_name);
         result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -491,8 +500,11 @@ int fileexists(char *name, char *type, char *dir) {
             if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_CMS_ELF)
             result = access(file_name, F_OK) != -1;
+#elif defined(CREXX_CMS_ELF)
+            FILE *probe = fopen(file_name, "rb");
+            if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
             DWORD dwAttrib = GetFileAttributes(file_name);
             result = (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
@@ -564,7 +576,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
     return stream;
 }
 
-#if defined(__APPLE__) || defined(__linux__)
+#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
 struct fl_dir {
     DIR *d;
     char *type;
@@ -588,7 +600,7 @@ struct WIN_FILE_DATA {
  */
 char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
 
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
     if (!ptr) RX_PANIC_OOM("malloc directory iterator", sizeof(struct fl_dir), dir);
@@ -636,6 +648,12 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 
     return win_data->fdFile.cFileName;
 
+#elif defined(CREXX_CMS_ELF)
+
+    if (dir_ptr) *dir_ptr = 0;
+    errno = ENOSYS;
+    return 0;
+
 #else
 
     return 0;
@@ -649,7 +667,7 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
  */
 char *dirnxtfl(void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
 
     struct dirent *dirent;
     struct fl_dir *ptr = *dir_ptr;
@@ -677,6 +695,12 @@ char *dirnxtfl(void **dir_ptr) {
     }
     return 0;
 
+#elif defined(CREXX_CMS_ELF)
+
+    if (dir_ptr) *dir_ptr = 0;
+    errno = ENOSYS;
+    return 0;
+
 #else
 
     return 0;
@@ -689,7 +713,7 @@ char *dirnxtfl(void **dir_ptr) {
  */
 void dirclose(void **dir_ptr) {
 
-#if defined(__APPLE__) || defined(__linux__)
+#if (defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_CMS_ELF)
 
     struct fl_dir *ptr = *dir_ptr;
 
@@ -706,6 +730,8 @@ void dirclose(void **dir_ptr) {
     FindClose(win_data->hFind);
     free(win_data);
 
+#elif defined(CREXX_CMS_ELF)
+    if (dir_ptr) *dir_ptr = 0;
 #endif
 
 }
@@ -749,7 +775,7 @@ char* exefqname()
 		exePath[0] = '\0';
 	}
 
-#elif defined(__linux)
+#elif defined(__linux) && !defined(CREXX_CMS_ELF)
 
     char buf[MAXFILEPATH] = {0};
     snprintf(buf, sizeof(buf), "/proc/%d/exe", getpid());
@@ -765,7 +791,7 @@ char* exefqname()
         exePath[len] = '\0';
     }
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !defined(CREXX_CMS_ELF)
 
 	uint32_t bufSize = MAXFILEPATH;
 	if(_NSGetExecutablePath(exePath, &bufSize) != 0)
