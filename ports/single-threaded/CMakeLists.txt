@@ -38,7 +38,8 @@ target_include_directories(rxvm_single_core PUBLIC
 target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     NTHREADED=1 CREXX_VM_HANDLER_PANEL=20 MANUAL_PLUGIN_LINK=1
     CREXX_VM_STATIC_ONLY=1 CREXX_VM_NO_SOCKETS=1 CREXX_VM_NO_CLOCK=1
-    CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1)
+    CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1
+    RXVM_MEMORY_SLAB_SIZE=4096 RXVM_MEMORY_MAX_STANDARD_SIZE=2048)
 add_executable(rxbvm_single "${CREXX_SOURCE}/interpreter/rxvmmain.c")
 target_link_libraries(rxbvm_single PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
 

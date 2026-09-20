@@ -140,7 +140,11 @@ typedef char rxvm_memory_slab_size_must_be_power_of_two[
 typedef char rxvm_memory_standard_size_must_be_power_of_two[
         RXVM_MEMORY_MAX_STANDARD_SIZE != 0u &&
         (RXVM_MEMORY_MAX_STANDARD_SIZE &
-         (RXVM_MEMORY_MAX_STANDARD_SIZE - 1u)) == 0u ? 1 : -1];
+        (RXVM_MEMORY_MAX_STANDARD_SIZE - 1u)) == 0u ? 1 : -1];
+typedef char rxvm_memory_standard_slot_must_fit_slab[
+        RXVM_MEMORY_SLAB_SIZE > RXVM_MEMORY_SLAB_HEADER_SIZE &&
+        RXVM_MEMORY_MAX_STANDARD_SIZE <=
+            RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE ? 1 : -1];
 typedef char rxvm_memory_smallest_slot_count_must_fit_header[
         (RXVM_MEMORY_SLAB_SIZE - RXVM_MEMORY_SLAB_HEADER_SIZE) /
         RXVM_MEMORY_ALIGNMENT <= UINT16_MAX ? 1 : -1];
@@ -317,6 +321,8 @@ static int rxvm_memory_byte_class(size_t size, uint8_t *class_id) {
     uint8_t index;
     size_t wanted = size ? size : 1u;
 
+    if (wanted > RXVM_MEMORY_MAX_STANDARD_SIZE) return 0;
+
     for (index = 0; index < RXVM_MEMORY_BYTE_CLASS_COUNT; index++) {
         if (wanted <= rxvm_memory_byte_sizes[index]) {
             *class_id = index;
@@ -335,7 +341,8 @@ static int rxvm_memory_value_class(size_t count, uint8_t *class_id) {
         capacity <<= 1u;
         index++;
     }
-    if (capacity < wanted) return 0;
+    if (capacity < wanted ||
+        capacity > RXVM_MEMORY_MAX_STANDARD_SIZE / sizeof(value)) return 0;
     *class_id = (uint8_t)(RXVM_MEMORY_BYTE_CLASS_COUNT + index);
     return 1;
 }

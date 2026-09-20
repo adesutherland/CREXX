@@ -70,6 +70,42 @@ int main(void) {
     small = rxvm_memory_alloc_bytes(a.worker.memory_worker, 64);
     CHECK(small != 0);
     CHECK(rxvm_memory_release(small) == RXVM_MEMORY_OK);
+    {
+        const size_t sizes[] = {16, 2048, 2049, 4096, 16384, 16385};
+        unsigned i;
+        for (i = 0; i < sizeof(sizes) / sizeof(sizes[0]); ++i) {
+            unsigned char *block = rxvm_memory_alloc_bytes(a.worker.memory_worker, sizes[i]);
+            CHECK(block != 0);
+            if (!block) return 1;
+            memset(block, 0x37, sizes[i]);
+            CHECK(rxvm_memory_owner(block) == a.worker.memory_worker);
+            resized = rxvm_memory_resize_bytes(a.worker.memory_worker, block,
+                                               sizes[i], sizes[i] + 17000);
+            CHECK(resized != 0);
+            if (!resized) return 1;
+            CHECK(resized[0] == 0x37 && resized[sizes[i] - 1] == 0x37);
+            CHECK(rxvm_memory_release(resized) == RXVM_MEMORY_OK);
+        }
+        rxvm_memory_get_stats(rxvm_runtime_memory_context(runtime), &stats);
+        CHECK(stats.live_allocations == 0);
+    }
+    {
+        const size_t counts[] = {1, 8, 16, 32, 64, 65};
+        unsigned i;
+        for (i = 0; i < sizeof(counts) / sizeof(counts[0]); ++i) {
+            value *values = rxvm_memory_alloc_values(a.worker.memory_worker, counts[i]);
+            CHECK(values != 0);
+            if (!values) return 1;
+            memset(values, 0, counts[i] * sizeof(*values));
+            CHECK(rxvm_memory_owner(values) == a.worker.memory_worker);
+            CHECK(rxvm_memory_release(values) == RXVM_MEMORY_OK);
+        }
+        void *reference = rxvm_memory_alloc_reference_cell(a.worker.memory_worker);
+        CHECK(reference != 0);
+        CHECK(rxvm_memory_release(reference) == RXVM_MEMORY_OK);
+        rxvm_memory_get_stats(rxvm_runtime_memory_context(runtime), &stats);
+        CHECK(stats.live_allocations == 0);
+    }
 
     rxpa_compatibility_context_init(&ca, a.worker.memory_worker);
     rxpa_compatibility_context_init(&cb, b.worker.memory_worker);

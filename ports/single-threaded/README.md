@@ -35,6 +35,10 @@ The portable slab allocator uses ISO C allocation with explicit alignment and
 retains the original pointer for freeing. Its extra alignment reservation must
 be included in working-memory measurements. A 32-bit-pointer layout preserves
 the existing 64-byte slab header; this does not alter the RXBIN format.
+This build selects 4 KiB slabs and a 2 KiB maximum pooled allocation; larger
+byte blocks and value arrays use the existing individually allocated extent
+path. Desktop defaults remain 64 KiB and 16 KiB. Small pools avoid reserving
+up to twice 64 KiB merely to serve a new small allocation class on CMS.
 
 Build on the Mac after building normal RXAS and `rxbvm`:
 
