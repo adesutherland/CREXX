@@ -32,9 +32,9 @@
 #include <limits.h>
 #include <errno.h>
 
-/* This ASCII/newlib CMS profile is distinct from the legacy __CMS__ runtime.
+/* These UTF-8/ASCII-compatible newlib profiles differ from legacy __CMS__.
  * The cross compiler retains Linux aliases; they do not provide OS services. */
-#if defined(__MAINFRAME_LAB_VM370_4381__)
+#if defined(__MAINFRAME_LAB_VM370_4381__) || defined(__MAINFRAME_LAB_CMS20_ESA31__)
 #define CREXX_CMS_ELF 1
 #endif
 

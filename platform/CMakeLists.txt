@@ -18,6 +18,12 @@ if(UNIX AND BUILD_TESTING)
     add_test(NAME platform_cms_selection COMMAND platform_cms_harness)
     set_tests_properties(platform_cms_selection PROPERTIES
             LABELS "platform;cms" TIMEOUT 30)
+    add_executable(platform_cms31_harness platform_cms_harness.c platform.c)
+    target_compile_definitions(platform_cms31_harness PRIVATE
+            __MAINFRAME_LAB_CMS20_ESA31__=1 __linux__=1 __linux=1)
+    add_test(NAME platform_cms31_selection COMMAND platform_cms31_harness)
+    set_tests_properties(platform_cms31_selection PROPERTIES
+            LABELS "platform;cms" TIMEOUT 30)
 endif()
 
 if((APPLE OR CMAKE_SYSTEM_NAME STREQUAL "Linux") AND BUILD_TESTING)
