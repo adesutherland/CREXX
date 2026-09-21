@@ -8,6 +8,10 @@
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#x); return 1; } } while (0)
 int main(void) {
+    CHECK(platform_text_encoding("UTF8")==0);
+    CHECK(platform_text_encoding("utf-8")==0);
+    errno=0;
+    CHECK(platform_text_encoding("unknown")==-1 && errno==EINVAL);
     const unsigned char data[]={0,1,0x7f,0x80,0xff};
     FILE *f=openfile("CMSPROBE","dat",0,"wb");
     CHECK(f);

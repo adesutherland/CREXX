@@ -169,6 +169,7 @@ static void help() {
             "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
             "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
             "  -o output_stem  RXAS output stem or .rxas file\n"
+            "  -E encoding     Source/assembly text encoding (UTF8; CMS runtime may add IBM1047)\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE
@@ -381,6 +382,13 @@ int rxcmain(int argc, char *argv[]) {
         if (strcmp(argv[i], "--help") == 0) {
             help();
             exit(0);
+        }
+
+        if (strcmp(argv[i], "-E") == 0 || strcmp(argv[i], "-e") == 0) {
+            i++;
+            if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                error_and_exit(2, "Missing or unsupported text encoding after -E");
+            continue;
         }
 
 #ifdef ENABLE_PARSER_MODE
@@ -999,7 +1007,14 @@ int rxcmain(int argc, char *argv[]) {
     finish:
 
     /* Close outfile */
-    if (outFile) fclose(outFile);
+    if (outFile) {
+        int write_failed = ferror(outFile);
+        if (fclose(outFile) != 0) write_failed = 1;
+        if (write_failed) {
+            fprintf(stderr, "Can't complete assembly output %s\n", output_file_name);
+            errors = 1;
+        }
+    }
 
     if (!errors && !check_project_dependencies && project_dependencies_path &&
         rxcp_project_dependencies(context, project_dependencies_path, 0) != 0) {

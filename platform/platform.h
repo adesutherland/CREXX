@@ -122,6 +122,12 @@ int fileexists(char *name, char *type, char *dir);
  */
 FILE *openfile(char *name, char *type, char *dir, char *mode);
 
+/* Select the external encoding for source/assembly text opened by openfile.
+ * Binary modes are unaffected. Default desktop text is UTF-8. A selected CMS
+ * runtime may provide native record-text codecs through CREXX_CMS_TEXT_IO.
+ * Call before opening files; 0 succeeds, -1 means unsupported/invalid. */
+int platform_text_encoding(const char *encoding);
+
 /*
  * Get the first file from a directory (or null if there isn't one)
  * (pass the & of void *dir_ptr to hold an opaque directory context)

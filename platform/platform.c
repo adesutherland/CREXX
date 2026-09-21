@@ -38,6 +38,32 @@
 #define CREXX_CMS_ELF 1
 #endif
 
+#if defined(CREXX_CMS_TEXT_IO)
+#if !defined(CREXX_CMS_ELF)
+#error CREXX_CMS_TEXT_IO requires an explicit CMS ELF platform
+#endif
+extern FILE *crexx_cms_text_open(const char *, const char *);
+extern int crexx_cms_text_encoding(const char *);
+#endif
+
+int platform_text_encoding(const char *encoding) {
+#if defined(CREXX_CMS_TEXT_IO)
+    return crexx_cms_text_encoding(encoding);
+#else
+    if (encoding && (!strcmp(encoding,"UTF8") || !strcmp(encoding,"utf8") ||
+                     !strcmp(encoding,"UTF-8") || !strcmp(encoding,"utf-8"))) return 0;
+    errno = EINVAL;
+    return -1;
+#endif
+}
+
+static FILE *platform_open_stream(const char *path, const char *mode) {
+#if defined(CREXX_CMS_TEXT_IO)
+    if (!strchr(mode,'b')) return crexx_cms_text_open(path,mode);
+#endif
+    return fopen(path,mode);
+}
+
 #if defined(__linux__) && !defined(CREXX_CMS_ELF)
 #include <unistd.h>
 #include <dirent.h>
@@ -583,7 +609,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
         if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
-        stream = fopen(file_name, mode);
+        stream = platform_open_stream(file_name, mode);
         free(file_name);
         return stream;
     }
@@ -602,7 +628,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
             if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
-            stream = fopen(file_name, mode);
+            stream = platform_open_stream(file_name, mode);
             free(file_name);
             if (stream) break;
         }

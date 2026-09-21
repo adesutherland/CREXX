@@ -105,6 +105,7 @@ static void help() {
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
         "  -o output_stem  RXBIN output stem or .rxbin file\n"
+        "  -E encoding     Source text encoding (UTF8; CMS runtime may add IBM1047)\n"
         "  -n              No Optimising\n"
         "Notes   :\n"
         "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";
@@ -159,6 +160,12 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+        if (strcmp(argv[i], "-E") == 0 || strcmp(argv[i], "-e") == 0) {
+            i++;
+            if (i >= argc || platform_text_encoding(argv[i]) != 0)
+                error_and_exit(2, "Missing or unsupported text encoding after -E");
+            continue;
+        }
 #ifdef ENABLE_PARSER_MODE
         if (strcmp(argv[i], "--syntaxhighlight") == 0) {
             parser_mode = 1;
