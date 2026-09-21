@@ -23,6 +23,8 @@ if(BUILD_TESTING)
     target_compile_definitions(rxvector_index_core_test PRIVATE RXVECTOR_KERNEL_ONLY)
     target_link_libraries(rxvector_index_core_test PRIVATE crexx_rxpa_sdk ${CREXX_MATH_LIBRARY})
     add_test(NAME rxvector_index_core COMMAND rxvector_index_core_test)
+    crexx_register_test_prep_targets(TESTS rxvector_index_core
+            TARGETS rxvector_index_core_test)
     set_tests_properties(rxvector_index_core PROPERTIES LABELS "library;vector;exact" TIMEOUT 60)
     add_custom_target(rxvector_test ALL)
     set(_rxvector_runners rxbvm)
