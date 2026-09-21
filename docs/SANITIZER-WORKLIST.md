@@ -489,6 +489,33 @@ focused and broad macOS qualification evidence.
 
 ## Qualification infrastructure repairs
 
+### SAN-QA-017 — vector concurrency assertion assumes obsolete plugin-wide policy
+
+Status: open, 2026-09-21; owner Codex under Adrian. QA assertion failure; no
+ASan/LSan memory diagnostic in retained failing artifacts.
+
+- Affected revision: `4468c7d75925cc158a568392f4abe97a59156df6`; introduced
+  with the RXVECTOR-02 owner change `5949ef27e`.
+- Original triggers: Deep `35555049283` and Sanitizer `35559006744` on
+  21 September; same failures in `35484487476` / `35487589362` on 20 September.
+  All platforms fail `rxpa_bundled_vector_concurrency` with
+  `rc=0 capabilities=0 expected=1 handles=1 before=0`. Handle accounting is valid.
+- Reproducer: `ctest --test-dir cmake-build-debug -R
+  '^rxpa_bundled_vector_concurrency$' --output-on-failure`.
+- Cause: the provider now has four process-reentrant procedures and session-affine
+  immutable-owner APIs; the test still requires blanket plugin reentrancy. Deep
+  also exposes the related missing codec-test preparation dependency.
+- Plan/closure: [RXVECTOR-02 AC-09–12](planning/rxvector-binary-owner-20260919.md#overnight-qa-repair-21-september-2026).
+  Retain permanent mixed-policy coverage, focused Debug/Apple ASan, normal QA
+  preparation and exact-head hosted Deep plus Linux ASan/LSan and Apple ASan.
+- Local repair evidence: Debug 21/21 (3.86 s), maintained Apple ASan 21/21
+  (6.84 s), four invalid-provider controls rejected, clean QA preparation and
+  normal correctness 2344/2344 (817.05 s). No product source change or sanitizer
+  diagnostic. Apple LeakSanitizer is unavailable.
+- Evidence: `docs/qa/overnight-2026-09-21/`. Next action: publish and verify
+  terminal exact-head Deep, Linux ASan/LSan and macOS ASan results.
+
+
 ### SAN-QA-016 — filesystem concurrency test assumes obsolete plugin-wide policy
 
 Status: closed, 2026-09-17; owner Codex under Adrian. QA assertion failure, with

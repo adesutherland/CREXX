@@ -1,0 +1,62 @@
+Test project /Users/adrian/CLionProjects/CREXX-overnight-qa-20260921/cmake-build-debug
+      Start 1693: rxpa_bundled_cipher_concurrency
+ 1/21 Test #1693: rxpa_bundled_cipher_concurrency .................   Passed    0.01 sec
+      Start 1694: rxpa_bundled_hash_concurrency
+ 2/21 Test #1694: rxpa_bundled_hash_concurrency ...................   Passed    0.00 sec
+      Start 1695: rxpa_bundled_stack_concurrency
+ 3/21 Test #1695: rxpa_bundled_stack_concurrency ..................   Passed    0.00 sec
+      Start 1696: rxpa_bundled_strings_concurrency
+ 4/21 Test #1696: rxpa_bundled_strings_concurrency ................   Passed    0.00 sec
+      Start 1697: rxpa_bundled_getpi_concurrency
+ 5/21 Test #1697: rxpa_bundled_getpi_concurrency ..................   Passed    0.03 sec
+      Start 1698: rxpa_bundled_id_concurrency
+ 6/21 Test #1698: rxpa_bundled_id_concurrency .....................   Passed    0.00 sec
+      Start 1699: rxpa_bundled_float_concurrency
+ 7/21 Test #1699: rxpa_bundled_float_concurrency ..................   Passed    0.00 sec
+      Start 1700: rxpa_bundled_stats_concurrency
+ 8/21 Test #1700: rxpa_bundled_stats_concurrency ..................   Passed    0.00 sec
+      Start 1701: rxpa_bundled_vector_concurrency
+ 9/21 Test #1701: rxpa_bundled_vector_concurrency .................   Passed    0.00 sec
+      Start 1702: rxpa_bundled_fs_concurrency
+10/21 Test #1702: rxpa_bundled_fs_concurrency .....................   Passed    0.00 sec
+      Start 1703: rxpa_bundled_platform_concurrency
+11/21 Test #1703: rxpa_bundled_platform_concurrency ...............   Passed    0.00 sec
+      Start 1704: rxpa_dynamic_session_factory_failure_rollback
+12/21 Test #1704: rxpa_dynamic_session_factory_failure_rollback ...   Passed    0.00 sec
+      Start 1719: rxvector_index_core
+13/21 Test #1719: rxvector_index_core .............................   Passed    0.28 sec
+      Start 1720: rxvector_rxbvm_noopt
+14/21 Test #1720: rxvector_rxbvm_noopt ............................   Passed    1.03 sec
+      Start 1721: rxvector_rxbvm_opt
+15/21 Test #1721: rxvector_rxbvm_opt ..............................   Passed    0.11 sec
+      Start 1722: rxvector_index_rxbvm_noopt
+16/21 Test #1722: rxvector_index_rxbvm_noopt ......................   Passed    0.60 sec
+      Start 1723: rxvector_index_rxbvm_opt
+17/21 Test #1723: rxvector_index_rxbvm_opt ........................   Passed    0.09 sec
+      Start 1724: rxvector_rxtvm_noopt
+18/21 Test #1724: rxvector_rxtvm_noopt ............................   Passed    0.85 sec
+      Start 1725: rxvector_rxtvm_opt
+19/21 Test #1725: rxvector_rxtvm_opt ..............................   Passed    0.10 sec
+      Start 1726: rxvector_index_rxtvm_noopt
+20/21 Test #1726: rxvector_index_rxtvm_noopt ......................   Passed    0.59 sec
+      Start 1727: rxvector_index_rxtvm_opt
+21/21 Test #1727: rxvector_index_rxtvm_opt ........................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 21
+
+Label Time Summary:
+bundled             =   0.06 sec*proc (12 tests)
+comprehensive       =   3.80 sec*proc (21 tests)
+exact               =   2.37 sec*proc (5 tests)
+interpreter         =   0.06 sec*proc (12 tests)
+library             =   3.74 sec*proc (9 tests)
+linked_opt          =   0.39 sec*proc (4 tests)
+optimizer-parity    =   3.46 sec*proc (8 tests)
+owner               =   1.37 sec*proc (4 tests)
+packed              =   2.10 sec*proc (4 tests)
+plugins             =   3.53 sec*proc (20 tests)
+rxpa                =   3.53 sec*proc (20 tests)
+vector              =   3.74 sec*proc (9 tests)
+worker              =   0.06 sec*proc (12 tests)
+
+Total Test time (real) =   3.86 sec

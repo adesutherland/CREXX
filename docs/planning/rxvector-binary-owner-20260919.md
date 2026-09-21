@@ -173,3 +173,71 @@ claims from the frozen reference. No master corpus processing or beta tag is
 part of this publication. Downstream
 `docs/baseline-publication-20260919.md` and this evidence directory retain the
 source/tree/artifact manifests and remaining acceptance boundaries.
+
+## Overnight QA repair, 21 September 2026
+
+Adrian requested review, diagnosis, repair and publication of the overnight
+GitHub regressions. The intended outcome is a published rxvector QA repair
+that restores the declared mixed RXPA policy checks and makes the native codec
+test available through the comprehensive preparation graph on every platform.
+The existing vector API, implementation and accepted performance remain unchanged.
+Work is isolated in `CREXX-overnight-qa-20260921` on
+`temp/overnight-qa-20260921`; preserve the unrelated dirty main checkout.
+
+The 20/21 September scheduled Deep and Sanitizer workflows actually checked out
+`4468c7d75925cc158a568392f4abe97a59156df6` (their event metadata names master).
+All six platform lanes fail `rxpa_bundled_vector_concurrency`: the harness expects
+plugin-wide reentrancy although RXVECTOR-02 introduced mixed V2 policy. Deep
+additionally cannot find `rxvector_index_core_test`, whose preparation target is
+not registered. The 21 September retained sanitizer logs contain no ASan/LSan
+memory diagnostic; Linux stopped at the assertion, so its remainder is unverified.
+This is QA finding **SAN-QA-017**, not a new product-memory defect.
+
+### Repair acceptance
+
+1. **AC-09 (passed):** Retain exact failed runs/source, reproduce the manifest
+   assertion locally and demonstrate the missing comprehensive dependency.
+2. **AC-10 (passed):** The permanent vector concurrency test checks zero global
+   capability, all four reentrant procedures, all ten session-affine owner
+   entry points and complete session hooks while retaining two-VM lifetime
+   checks. Invalid policy/hook controls must fail. Debug and maintained Apple
+   ASan focused RXPA/vector panels pass with no memory diagnostic.
+3. **AC-11 (passed):** Comprehensive QA preparation builds the codec executable
+   through explicit registration. A clean preparation build, codec execution
+   and relevant normal correctness suite pass without an incidental ALL build.
+4. **AC-12 (open):** Publish the bounded repair to origin/develop; the exact
+   revision passes automatic Build/CodeQL and the affected Deep/Sanitizer
+   hosted gates. Retain terminal evidence and reconcile SAN-QA-017.
+
+### Repair implementation steps
+
+9. **STEP-09 (complete; AC-09):** Inspect and retain hosted failure artifacts;
+   configure the clean worktree and run the unchanged focused reproducer.
+10. **STEP-10 (complete; AC-10):** Add the vector mixed-policy assertion following
+    the existing filesystem pattern and correct the provider policy table.
+    Validate Debug then Apple ASan, including invalid policy/hook controls.
+11. **STEP-11 (complete; AC-11):** Register the codec test preparation dependency;
+    validate clean comprehensive preparation and the normal correctness suite.
+12. **STEP-12 (in progress; AC-12):** Publish only these repairs and supporting
+    evidence, check automatic workflows and dispatch one combined exact-head
+    Deep/Sanitizer repeat. These repeats resolve observed overnight failures;
+    they are not a new routine development-publication requirement. No
+    suppression, exclusion, product/design change or timeout increase is needed.
+
+Evidence directory: `docs/qa/overnight-2026-09-21/`.
+
+Reproduction evidence: `baseline-vector.log` fails with the hosted assertion;
+`baseline-prep.txt` records the missing codec dependency and `repaired-prep.txt`
+records its restoration. `policy-controls/results.json` accepts the real valid
+provider and rejects four deliberately invalid policy/lifecycle variants.
+
+Focused qualification: Debug 21/21 in 3.86 s; maintained Apple ASan 21/21
+in 6.84 s, using the same regex and serial scheduling. The instrumented build
+and tests report no sanitizer diagnostic. Apple leak detection is unavailable;
+the supported Linux ASan/LSan hosted gate remains pending.
+
+Clean `qa-prep-comprehensive` and `stage-product` Debug builds pass. The normal
+essential/smoke/comprehensive correctness selection passes 2344/2344 in
+817.05 s at parallelism 30. The codec was built by its registered QA producer,
+without an incidental ALL build. `qualified-inputs.json` retains code/test
+hashes. Publication and exact-head hosted qualification remain open.

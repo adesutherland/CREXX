@@ -1,0 +1,3 @@
+Source: 4468c7d75925cc158a568392f4abe97a59156df6
+Command: ninja -C cmake-build-debug -t commands qa-prep-comprehensive
+rxvector_index_core_test occurs in closure: False

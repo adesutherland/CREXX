@@ -1,0 +1,5 @@
+RXPA vector procedure is not reentrant: rxvector.decodef32le
+RXPA vector procedure is not reentrant: rxvector.encodef32le
+RXPA vector procedure is not reentrant: rxvector.cosine
+RXPA vector procedure is not reentrant: rxvector.topkcosine
+RXPA vector manifest qualification failed: rc=0
