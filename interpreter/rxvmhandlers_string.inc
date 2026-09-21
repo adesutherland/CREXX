@@ -2875,17 +2875,27 @@ RXVM_HANDLER(BRTPANDT_ID_REG_INT, VM_ADVANCE(3);
 
 )
 
+/* Preprocessor conditionals must stay outside RXVM_HANDLER arguments. */
+#ifdef CREXX_VM_NO_CLOCK
+#define RXVM_INITIAL_RANDOM_SEED()                                             \
+    do {                                                                       \
+        SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED,                               \
+                       "Automatic random seeding needs a clock service");      \
+        DISPATCH;                                                              \
+    } while (0)
+#else
+#define RXVM_INITIAL_RANDOM_SEED()                                             \
+    do {                                                                       \
+        initSeed = (time((time_t *) 0) % (3600 * 24));                           \
+    } while (0)
+#endif
+
 RXVM_HANDLER(IRAND_REG_REG, VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
 
             if (op2R->int_value<0) {                 // no seed set
                 if (!hasSeed)  {       // seed still initial, set time based seed
-#ifdef CREXX_VM_NO_CLOCK
-                   SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Automatic random seeding needs a clock service");
-                   DISPATCH;
-#else
-                   initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
-#endif
+                   RXVM_INITIAL_RANDOM_SEED();
                    srand((unsigned) initSeed);
                    hasSeed = 1;
                 }
@@ -2908,12 +2918,7 @@ RXVM_HANDLER(IRAND_REG_INT, VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)op2I);
              if (op2I<0) {                                // no seed set
                 if (!hasSeed)  {            // seed still initial, set time based seed
-#ifdef CREXX_VM_NO_CLOCK
-                    SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED, "Automatic random seeding needs a clock service");
-                    DISPATCH;
-#else
-                    initSeed = (time((time_t *) 0) % (3600 * 24)); // initial seed still active
-#endif
+                    RXVM_INITIAL_RANDOM_SEED();
                     srand(initSeed);
                     hasSeed = 1;
                 }
@@ -2934,6 +2939,8 @@ RXVM_HANDLER(IRAND_REG_INT, VM_ADVANCE(2);
 
 
 )
+#undef RXVM_INITIAL_RANDOM_SEED
+
 #define FDATE (char const[]){ __DATE__[7], __DATE__[8], ..., ' ', ... , '\0' }
 
 

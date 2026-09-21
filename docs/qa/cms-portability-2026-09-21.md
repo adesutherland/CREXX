@@ -142,3 +142,23 @@ manifest are provided under the external evidence directory's `recovery/`.
 Its patches are generated from Git and checked by reconstructing the complete
 candidate tree in an isolated temporary index. Keep the original eleven-patch
 Lab series until its consumer pins are deliberately updated.
+
+## Publication follow-up: MSVC preprocessing repair
+
+After publication was authorized, the first automatic Windows build exposed
+C5101/C2143 in the two random-seeding handlers: preprocessor directives inside
+function-like macro arguments are nonportable. The clock condition now selects
+a small statement macro outside `RXVM_HANDLER` arguments, with the same
+time-based desktop seed and constrained `NOT_IMPLEMENTED` signal. The helper
+is undefined after the two handlers. Dispatch architecture is unchanged.
+
+Clang rejects the original form with `-Werror=embedded-directive` and accepts
+both repaired clock configurations. Rebuilt desktop threaded/switch VMs pass
+the random regression; optimized/unoptimized CTests pass 2/2. Constrained Debug
+and ASan/UBSan state/embedding/parity pass 3/3 each, and compiler-exit parity
+passes all six comparisons in both configurations. No sanitizer finding arose.
+The retained broad suite predates this bounded repair; these focused checks
+and the final automatic hosted build qualify the changed preprocessing. Hosted
+results are pending at commit time and are retained with the external
+publication receipt. VM/CE agents can fetch cREXX develop directly; this task
+does not modify or publish Mainframe Lab.

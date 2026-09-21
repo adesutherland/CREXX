@@ -152,3 +152,47 @@ All acceptance criteria for this host-QA integration scope are satisfied; the
 commands, results and the remaining Mainframe Lab/application/release gates.
 Private approval proposals are outside this repository. No new design or
 email-derived implementation was included. No push, release or message was sent.
+
+## Authorized publication follow-up
+
+Adrian subsequently authorized committing and publishing the qualified source
+to cREXX develop; VM/CE agents will pull cREXX directly. Mainframe Lab source
+and documents remain unchanged. The initial fast-forward published
+`c606f7801aad571fb399053ee3f6544da3da267f`. Automatic Build CREXX run
+35647466784 exposed an MSVC build error: the new clock conditionals inside
+two `RXVM_HANDLER` macro argument lists trigger C5101/C2143. This is an
+in-scope portability regression, not an approved change to dispatch design.
+
+The intended outcome is the same desktop and constrained random-seeding
+behavior with preprocessing accepted by the maintained host compilers. Move
+only the clock-dependent seed statement into a conditional helper macro
+defined outside handler arguments, following the existing handler-body helper
+pattern. No performance architecture, ISA, integer or capability policy changes.
+
+- [ ] **PUB-01:** all eleven original topics and the QA repairs are present on
+  remote develop, with exact source and recovery identities retained.
+- [x] **PUB-02:** desktop and constrained builds and focused random/seeding
+  regressions pass; retained normal QA remains applicable to unchanged paths.
+- [ ] **PUB-03:** the final revision passes automatic Release product/smoke,
+  optimizer parity and CodeQL checks, including the failing MSVC compilation.
+- [ ] **PUB-04:** original candidate and unrelated work are preserved; VM/CE
+  agents can fetch cREXX directly without this task editing Mainframe Lab.
+
+1. **PUB-STEP-01 / PUB-02:** retain MSVC failure and reproduce the nonportable
+   preprocessing locally before changing the two handlers.
+2. **PUB-STEP-02 / PUB-02:** relocate the conditionals without semantic changes;
+   compile both branches, run focused desktop and constrained tests, and check
+   constrained behavior with the maintained sanitizer runner.
+3. **PUB-STEP-03 / PUB-01,03,04:** commit and fast-forward the repair, wait for
+   normal automatic hosted checks, then refresh local recovery/handoff evidence.
+   No extra overnight workflow is needed for this bounded compiler repair.
+
+PUB-STEP-01/02 complete: Clang `-Werror=embedded-directive` reproduces the
+original nonportable macro form and passes both clock configurations after
+the repair. Both desktop VM engines rebuild; optimized/unoptimized random
+CTests pass 2/2 and the switch VM also reports `PASS: random`. Constrained
+Debug and ASan/UBSan pass state/embedding/parity 3/3 and all six compiler-exit
+parity comparisons. No sanitizer diagnostic occurred. These focused checks
+qualify the sole new code delta; the earlier 2,350-case result remains retained
+evidence for the preceding integration, not a claim that it ran on this repair.
+Final automatic hosted checks remain pending at commit time.
