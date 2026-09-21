@@ -3077,7 +3077,10 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
 
     buff_start = file2buf(context->file_pointer, &bytes);
     /* Close file */
-    fclose(context->file_pointer);
+    if (fclose(context->file_pointer) != 0) {
+        free(buff_start);
+        buff_start = 0;
+    }
     context->file_pointer  = 0;
 
     if (buff_start == NULL) {

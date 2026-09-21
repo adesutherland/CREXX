@@ -719,7 +719,10 @@ int rxcmain(int argc, char *argv[]) {
 
     buff_start = file2buf(context->file_pointer, &bytes);
     /* Close file */
-    fclose(context->file_pointer);
+    if (fclose(context->file_pointer) != 0) {
+        free(buff_start);
+        buff_start = 0;
+    }
     context->file_pointer = 0;
 
     if(buff_start == NULL) {
@@ -1002,7 +1005,6 @@ int rxcmain(int argc, char *argv[]) {
         // pdot_tree(context->ast, "astgraph3", context->file_name);
     }
 #endif
-    if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
 
     finish:
 
@@ -1043,5 +1045,6 @@ int rxcmain(int argc, char *argv[]) {
     if (allocated_output_file_name) free(allocated_output_file_name);
 
     if (errors) return(2);
+    if (debug_mode >= 2) fprintf(stderr, "Compiler Exiting - Success\n");
     return(0);
 }

@@ -57,6 +57,15 @@ int main(void) {
         CHECK(!bytes[n] && !bytes[n+1]);
         free(bytes); CHECK(fclose(f)==0);
     }
+    /* EOF on a non-seekable stream is an empty source, not a read error. */
+    {
+        int pipes[2];
+        CHECK(pipe(pipes)==0 && close(pipes[1])==0);
+        f=fdopen(pipes[0],"rb"); CHECK(f);
+        n=999; bytes=file2buf(f,&n);
+        CHECK(bytes && !n && !bytes[0] && !bytes[1]);
+        free(bytes); CHECK(fclose(f)==0);
+    }
     /* A read error must not be mistaken for an empty input file. */
     f=fopen("CMSERROR.dat","wb"); CHECK(f);
     CHECK(fwrite(data,1,sizeof data,f)==sizeof data && fflush(f)==0);
