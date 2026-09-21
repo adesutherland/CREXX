@@ -2,6 +2,13 @@
 
 The `rxas` assembler is responsible for translating human-readable Intermediate Representation (IR) assembly (`.rxas`) into packed executable bytecode (`.rxbin`) consumed by the `rxvm` interpreter.
 
+RXAS `-E encoding` selects assembly input encoding before opening files.
+Desktop input remains UTF-8; an explicitly selected CMS platform may provide
+the optional [text adapter](../../ports/single-threaded/CMS-TEXT.md). Conversion
+precedes lexical analysis; sequential input is supported and input read/close
+failures are errors. RXBIN output always uses binary I/O and never passes
+through that adapter.
+
 ## 1. Assembler Pipeline
 
 The assembler processes source files through a pipelined, pseudo-two-pass architecture:

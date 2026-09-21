@@ -11,6 +11,16 @@
 before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
 does not run RXPP internally.
 
+The opt-in [single-threaded port](../../ports/single-threaded/README.md) builds
+the same compiler with a constrained embedded VM, retaining compiler exits.
+It leaves the normal desktop configuration and language contracts intact.
+Source buffering accepts sequential streams and retains two scanner sentinels.
+The optional [CMS text adapter](../../ports/single-threaded/CMS-TEXT.md) converts
+external text before source/header/import lexical analysis and after RXC
+assembly emission. It does not change UTF-8 buffers or RXBIN 007. RXC/RXAS
+`-E` selects external encoding before opening files; read/write/close failures
+must prevent success.
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:

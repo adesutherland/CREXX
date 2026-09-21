@@ -5,6 +5,20 @@ uses the actual switch interpreter and RXBIN 007 loader, with unchanged 64-bit
 Rexx integers, values, procedure calls and synchronous language signals.
 The normal top-level desktop build is unchanged.
 
+The intended application C baseline is C99. The primary CMS route is the
+maintained GCC 16.2 cross-toolchain hosted on macOS; its retained target recipes
+use GNU99. A host build requesting C99 does not establish complete strict-C99
+or C90 qualification. Clean, justified legacy GCCCMS/GCCMVS compatibility is
+welcome. Reproduce limitations against the exact compiler/runtime and assess
+the appropriate repair; do not infer new cREXX restrictions from a legacy
+failure. Uncertain trade-offs or design changes require project-owner approval.
+
+`NTHREADED` selects switch dispatch only. It does **not** disable OS workers in
+the ordinary `rxbvm`. This leaf owns the coherent, private set of
+`CREXX_VM_SINGLE_THREADED`, static-only and unavailable-service definitions;
+these are not independently qualified product feature switches. Keep their
+values consistent across all linked VM and embedding translation units.
+
 The process must have one execution thread and no asynchronous callbacks into
 RXVM. Nested execution and multiple contexts on that thread retain their own
 memory owners and restore the active context on return. Internal `rxvm_worker`
@@ -113,6 +127,16 @@ mutation semantics. In particular, CMS rename does not replace an existing
 destination atomically, and RXC report temporary naming/publication remains
 unqualified. Enabling discovery does not establish a working CMS compiler.
 
-Native boundary/sanitizer tests and two-origin CMS service fixtures live in
-the lab beside that host runtime. They exercise the actual cREXX filter; the
-complete RXC import path requires its separately packaged executable.
+Host CTests `platform_cms_selection`, `platform_cms31_selection` and
+`platform_cms_directory` cover selection precedence, source buffering,
+optional directory filters and iterator lifetimes. The two platform selection
+tests use separate working directories so parallel runs cannot remove each
+other's files. `platform_cms_text` exercises the real compiler import path
+against an injected stream provider; see [CMS-TEXT.md](CMS-TEXT.md).
+
+Native runtime tests and two-origin CMS service fixtures remain in Mainframe
+Lab beside that host runtime. A complete CMS RXC import proof still requires
+its separately packaged executable. Historical RXC `-X`/RXAS/RXVM demonstrations
+do not establish 31-bit application execution, compiler-exit memory fit or
+release packaging; small 31-bit runtime/text fixtures establish only their
+tested service boundaries.

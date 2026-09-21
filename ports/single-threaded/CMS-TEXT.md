@@ -23,12 +23,32 @@ defaults to IBM1047 logical records and also supports UTF8 byte streams with
 explicit LF. `-E IBM1047` and `-E UTF8` select these explicitly.
 
 Default desktop behavior is unchanged. It accepts UTF8/UTF-8 and lowercase
-aliases, and rejects unsupported encodings. RXC checks output stream and close
-errors before reporting success. The adapter must reject malformed or
-unrepresentable text without silently substituting characters.
+aliases, and rejects unsupported encodings. Select an encoding before opening
+files; the adapter owns its invocation-wide selection. RXC checks output
+stream and close errors before reporting success. RXC source/header/import
+reads and RXAS input reads also reject a failed close. The adapter must report
+malformed or unrepresentable text through the standard stream error/close
+contracts without silently substituting characters.
 
-Native default/UTF8 assembly and bytecode comparisons pass, as do CLI invalid-
-option controls and platform selection tests. The lab runtime has host mapping,
+Source streams need not support seeking. `file2buf` reads such a stream from
+its current position through EOF, appends two zero scanner sentinels (including
+empty input), and rejects read errors. Seekable files retain the existing
+rewind-and-read behavior. The caller owns the returned buffer and closing the
+stream; closing can still report a deferred conversion or I/O error.
+
+On macOS/Linux, build `check_cms_text` or prepare and run the
+`platform_cms_text` CTest. It uses the real RXC/RXAS entry points, RXLink and VM,
+with an injected non-seekable, short-read stream. A deliberately artificial
+TEST-XOR encoding proves conversion before lexical analysis, including source
+imports. Default UTF-8, explicit UTF8, adapter UTF8 and converted runs must
+produce identical decoded assembly, bytecode, linked image and execution in
+optimized and unoptimized modes. Read, conversion, write and close failures
+must fail the tool; binary files must never enter the text hook.
+
+This test adapter is neither an IBM1047 mapping nor a CMS service emulator.
+It is isolated to test executables and is never linked into the product.
+
+The lab runtime has host mapping,
 record and error controls plus a small CMS 20 guest fixture; actual CMS RXC/RXAS
 source/import tests and historical 24-bit integration remain open. This document
 does not claim a published CMS package or full Unicode console support.

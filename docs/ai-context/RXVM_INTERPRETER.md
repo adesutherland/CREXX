@@ -2,6 +2,16 @@
 
 The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports portable switch dispatch and, on GNU/Clang-family compilers, direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
+The opt-in [single-threaded application port](../../ports/single-threaded/README.md)
+uses the same switch VM, 64-bit Rexx integers and RXBIN 007. `NTHREADED` alone
+only selects dispatch and leaves ordinary OS workers enabled. The port's
+explicit single-thread configuration removes executors/OS workers and keeps
+per-context execution-owner bookkeeping, nested active-context restoration and
+allocator ownership. It must not be called by multiple OS threads or
+asynchronous callbacks. Unavailable channel/socket/clock operations raise
+`NOT_IMPLEMENTED` (12); static-only loading and process-worker entry fail
+explicitly. The port guide owns its supported option bundle and tests.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
