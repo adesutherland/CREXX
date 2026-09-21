@@ -777,8 +777,8 @@ Current bundled classification is deliberately conservative:
 
 | Classification | Bundled examples | Rule |
 | --- | --- | --- |
-| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxvector`, `rxid`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
-| Mixed V2 procedures | `rxstats`, `rxfs` | `rxfs` filesystem functions are process-reentrant; native fileguard factories/methods are VM-session-affine. Scalar statistics and immutable `linearfit` accessors remain process-reentrant. The C `linearfit` factory and regression result publication use the owning VM's checked type service through session-affine calls. |
+| Plugin-wide process-reentrant | `cipher`, `rx_hash`, `rxfloat`, `rxid`, `rxplatform`, `stack`, `strings`, `getpi` | Audited/repaired and marked with `RXPA_PLUGIN_PROCESS_REENTRANT`. `rxfloat` also publishes direct `rxmath` scalar compatibility names; the historical `inlinec`, statistics, hash and UUID mixture and the broad `system` provider are removed. |
+| Mixed V2 procedures | `rxstats`, `rxfs`, `rxvector` | `rxfs` filesystem functions are process-reentrant; native fileguard factories/methods are VM-session-affine. Scalar statistics and immutable `linearfit` accessors remain process-reentrant. The C `linearfit` factory and regression result publication use the owning VM's checked type service through session-affine calls. The four original `rxvector` packed procedures are process-reentrant; its immutable `vectorindex` factory, import procedures and methods use VM-session host services. |
 | Per-VM session | `odbc` | Database procedures are session-affine; `odbc.show_message` is process-reentrant; old hosts use the plugin's default session. |
 | Unqualified | All other bundled plugins | Remain legacy and serialized until their complete state, dependencies, failure paths and teardown have been audited. |
 

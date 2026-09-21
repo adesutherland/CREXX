@@ -1318,6 +1318,59 @@ static int test_fs_manifest(const char *directory, const char *file_name) {
     return failed;
 }
 
+static int test_vector_manifest(const char *directory, const char *file_name) {
+    static const char *reentrant[] = {
+        "rxvector.decodef32le", "rxvector.encodef32le",
+        "rxvector.cosine", "rxvector.topkcosine"
+    };
+    static const char *session_affine[] = {
+        "rxvector.vectorindex.\xc2\xa7" "factory",
+        "rxvector.openindex", "rxvector.decodeindex",
+        "rxvector.vectorindex.encode", "rxvector.vectorindex.rows",
+        "rxvector.vectorindex.dimensions", "rxvector.vectorindex.metadata",
+        "rxvector.vectorindex.label", "rxvector.vectorindex.search",
+        "rxvector.vectorindex.close"
+    };
+    rxpa_loaded_plugin plugin;
+    size_t before = rxpa_live_plugin_handle_count();
+    size_t i;
+    int rc = rxpa_open_plugin((char *)directory, (char *)file_name, &plugin);
+    int failed = rc != 0;
+    if (!failed) {
+        /* Immutable owners still require the owning VM's host services.
+         * Only the original stateless packed procedures bypass its session. */
+        if (!plugin.has_manifest_v2 || plugin.capabilities != 0u ||
+            !plugin.manifest_v2.session_create ||
+            !plugin.manifest_v2.session_create_with_host ||
+            !plugin.manifest_v2.session_destroy ||
+            !plugin.manifest_v2.session_enter || !plugin.manifest_v2.session_leave) {
+            fprintf(stderr, "RXPA vector mixed/session manifest is incomplete\n");
+            failed = 1;
+        }
+        for (i = 0; i < sizeof(reentrant) / sizeof(reentrant[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, reentrant[i]) !=
+                RXPA_PROCEDURE_CAP_PROCESS_REENTRANT) {
+                fprintf(stderr, "RXPA vector procedure is not reentrant: %s\n",
+                        reentrant[i]);
+                failed = 1;
+            }
+        }
+        for (i = 0; i < sizeof(session_affine) / sizeof(session_affine[0]); ++i) {
+            if (rxpa_loaded_plugin_procedure_capabilities(&plugin, session_affine[i]) !=
+                RXPA_PROCEDURE_CAP_SESSION_AFFINE) {
+                fprintf(stderr, "RXPA vector procedure is not session-affine: %s\n",
+                        session_affine[i]);
+                failed = 1;
+            }
+        }
+        if (rxpa_live_plugin_handle_count() != before + 1u) failed = 1;
+        rxpa_close_plugin(&plugin);
+    }
+    if (rxpa_live_plugin_handle_count() != before) failed = 1;
+    if (failed) fprintf(stderr, "RXPA vector manifest qualification failed: rc=%d\n", rc);
+    return failed;
+}
+
 static char *copy_plugin_base(const char *file_name) {
     static const char suffix[] = ".rxplugin";
     size_t length = strlen(file_name);
@@ -1664,6 +1717,8 @@ int main(int argc, char **argv) {
                 manifest_failed = test_stats_manifest(argv[2], argv[3]);
             } else if (strcmp(argv[4], "fs") == 0) {
                 manifest_failed = test_fs_manifest(argv[2], argv[3]);
+            } else if (strcmp(argv[4], "vector") == 0) {
+                manifest_failed = test_vector_manifest(argv[2], argv[3]);
             } else {
                 manifest_failed = test_manifest(argv[2], argv[3],
                                                 RXPA_PLUGIN_CAP_PROCESS_REENTRANT);
