@@ -491,7 +491,7 @@ focused and broad macOS qualification evidence.
 
 ### SAN-QA-017 — vector concurrency assertion assumes obsolete plugin-wide policy
 
-Status: open, 2026-09-21; owner Codex under Adrian. QA assertion failure; no
+Status: closed, 2026-09-21; owner Codex under Adrian. QA assertion failure; no
 ASan/LSan memory diagnostic in retained failing artifacts.
 
 - Affected revision: `4468c7d75925cc158a568392f4abe97a59156df6`; introduced
@@ -512,8 +512,18 @@ ASan/LSan memory diagnostic in retained failing artifacts.
   (6.84 s), four invalid-provider controls rejected, clean QA preparation and
   normal correctness 2344/2344 (817.05 s). No product source change or sanitizer
   diagnostic. Apple LeakSanitizer is unavailable.
-- Evidence: `docs/qa/overnight-2026-09-21/`. Next action: publish and verify
-  terminal exact-head Deep, Linux ASan/LSan and macOS ASan results.
+- Published revision: `45571319f49f2fd4ad09ad4ebf3f337b20482a00`. Build
+  `35574178258`, CodeQL `35574177834` and Deep `35574185432` all pass.
+  All five Deep comprehensive platforms pass both repaired tests.
+- Closure: [Sanitizer QA 35574187408](https://github.com/adesutherland/CREXX/actions/runs/35574187408)
+  is terminal success on that exact revision. Linux ASan/LSan passes 2358/2358
+  (3265.95 s); build, QA preparation and CTest all retain `detect_leaks=1`.
+  macOS arm64 ASan passes 2358/2358 (4122.91 s). Both repaired tests pass on
+  both platforms; no sanitizer diagnostic appears in the complete retained
+  build/preparation/test logs. Apple LeakSanitizer is unavailable and Linux
+  supplies leak qualification. No suppression, exclusion or timeout change.
+- Evidence: `docs/qa/overnight-2026-09-21/`, including full logs, terminal
+  workflow metadata and `hosted/verdict.json`. No remaining action for this item.
 
 
 ### SAN-QA-016 — filesystem concurrency test assumes obsolete plugin-wide policy

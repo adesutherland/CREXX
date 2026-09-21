@@ -1,0 +1,40 @@
+{
+  "qualified_source": "45571319f49f2fd4ad09ad4ebf3f337b20482a00",
+  "workflows": {
+    "Build CREXX": {
+      "id": 35574178258,
+      "conclusion": "success",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574178258"
+    },
+    "CodeQL": {
+      "id": 35574177834,
+      "conclusion": "success",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574177834"
+    },
+    "Deep Build QA": {
+      "id": 35574185432,
+      "conclusion": "success",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574185432"
+    },
+    "Sanitizer QA": {
+      "id": 35574187408,
+      "conclusion": "success",
+      "url": "https://github.com/adesutherland/CREXX/actions/runs/35574187408"
+    }
+  },
+  "sanitizer": {
+    "linux": {
+      "tests": 2358,
+      "seconds": 3265.95,
+      "detect_leaks": true,
+      "diagnostics": 0
+    },
+    "macos": {
+      "tests": 2358,
+      "seconds": 4122.91,
+      "detect_leaks": false,
+      "leak_detection_limit": "Apple LeakSanitizer unavailable; Linux supplies leak qualification",
+      "diagnostics": 0
+    }
+  }
+}

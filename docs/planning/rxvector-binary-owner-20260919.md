@@ -190,7 +190,8 @@ All six platform lanes fail `rxpa_bundled_vector_concurrency`: the harness expec
 plugin-wide reentrancy although RXVECTOR-02 introduced mixed V2 policy. Deep
 additionally cannot find `rxvector_index_core_test`, whose preparation target is
 not registered. The 21 September retained sanitizer logs contain no ASan/LSan
-memory diagnostic; Linux stopped at the assertion, so its remainder is unverified.
+memory diagnostic; Linux stopped at the assertion, so its remainder was
+unverified in that failed run.
 This is QA finding **SAN-QA-017**, not a new product-memory defect.
 
 ### Repair acceptance
@@ -205,7 +206,7 @@ This is QA finding **SAN-QA-017**, not a new product-memory defect.
 3. **AC-11 (passed):** Comprehensive QA preparation builds the codec executable
    through explicit registration. A clean preparation build, codec execution
    and relevant normal correctness suite pass without an incidental ALL build.
-4. **AC-12 (open):** Publish the bounded repair to origin/develop; the exact
+4. **AC-12 (passed):** Publish the bounded repair to origin/develop; the exact
    revision passes automatic Build/CodeQL and the affected Deep/Sanitizer
    hosted gates. Retain terminal evidence and reconcile SAN-QA-017.
 
@@ -218,7 +219,7 @@ This is QA finding **SAN-QA-017**, not a new product-memory defect.
     Validate Debug then Apple ASan, including invalid policy/hook controls.
 11. **STEP-11 (complete; AC-11):** Register the codec test preparation dependency;
     validate clean comprehensive preparation and the normal correctness suite.
-12. **STEP-12 (in progress; AC-12):** Publish only these repairs and supporting
+12. **STEP-12 (complete; AC-12):** Publish only these repairs and supporting
     evidence, check automatic workflows and dispatch one combined exact-head
     Deep/Sanitizer repeat. These repeats resolve observed overnight failures;
     they are not a new routine development-publication requirement. No
@@ -234,10 +235,25 @@ provider and rejects four deliberately invalid policy/lifecycle variants.
 Focused qualification: Debug 21/21 in 3.86 s; maintained Apple ASan 21/21
 in 6.84 s, using the same regex and serial scheduling. The instrumented build
 and tests report no sanitizer diagnostic. Apple leak detection is unavailable;
-the supported Linux ASan/LSan hosted gate remains pending.
+the supported Linux ASan/LSan hosted gate now passes as recorded below.
 
 Clean `qa-prep-comprehensive` and `stage-product` Debug builds pass. The normal
 essential/smoke/comprehensive correctness selection passes 2344/2344 in
 817.05 s at parallelism 30. The codec was built by its registered QA producer,
 without an incidental ALL build. `qualified-inputs.json` retains code/test
-hashes. Publication and exact-head hosted qualification remain open.
+hashes. Publication and exact-head hosted qualification are complete.
+
+Published repair and local evidence: `45571319f49f2fd4ad09ad4ebf3f337b20482a00` on origin/develop.
+Test policy repair `12acea4b3` and QA graph repair `2ec85cd0b` are separate
+reviewable commits. Exact-head Build `35574178258`, CodeQL `35574177834` and Deep `35574185432`
+are terminal success. Deep passes all five comprehensive platforms, three
+Release build widths, RXBIN comparison and isolated stress. Sanitizer
+`35574187408` passes Linux x64 ASan/LSan, 2358/2358 in 3265.95 s, with
+`detect_leaks=1` in build, preparation and CTest and no diagnostic. macOS arm64
+ASan passes 2358/2358 in 4122.91 s with no diagnostic. Apple LeakSanitizer
+is unavailable; the Linux run provides supported leak qualification.
+AC-09 through AC-12 and STEP-09 through STEP-12 are complete; SAN-QA-017 is
+closed. `docs/qa/overnight-2026-09-21/hosted/` retains terminal workflow
+metadata, all comprehensive job logs, complete sanitizer build/preparation/test
+logs and `verdict.json`. Closing documentation changes no qualified code,
+test or build input; the retained results are reused without another broad run.

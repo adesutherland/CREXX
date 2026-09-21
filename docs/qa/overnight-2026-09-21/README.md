@@ -60,7 +60,30 @@ incorrect stateless/owner policy and missing lifecycle hooks are rejected.
 
 ## Hosted qualification
 
-Publication and terminal exact-head Build/CodeQL/Deep/Sanitizer results pending.
+Published `45571319f49f2fd4ad09ad4ebf3f337b20482a00` to origin/develop. [Build 35574178258](https://github.com/adesutherland/CREXX/actions/runs/35574178258), [CodeQL 35574177834](https://github.com/adesutherland/CREXX/actions/runs/35574177834) and [Deep 35574185432](https://github.com/adesutherland/CREXX/actions/runs/35574185432)
+are terminal success. [Sanitizer 35574187408](https://github.com/adesutherland/CREXX/actions/runs/35574187408) passes Linux x64 ASan/LSan: 2358/2358 in 3265.95 s.
+Build, QA preparation and CTest retain `detect_leaks=1`; no sanitizer diagnostic
+appears in their complete retained logs. macOS ASan passes 2358/2358 in
+4122.91 s with no diagnostic; Apple LeakSanitizer is unavailable. Both repaired
+tests pass on both platforms. SAN-QA-017 and RXVECTOR-02 AC-09–12 are closed.
+
+| Deep platform | Correctness | Install/package/consumer | Both repaired tests |
+| --- | ---: | ---: | --- |
+| macOS arm64 | 2344/2344 | 3/3 | Passed |
+| macOS x86_64 | 2344/2344 | 3/3 | Passed |
+| Linux x64 | 2344/2344 | 3/3 | Passed |
+| Windows x64 MSVC | 2146/2146 | 3/3 | Passed |
+| Windows x64 MinGW | 2266/2266 | 3/3 | Passed |
+
+Release builds with 1/5/30 jobs and their RXBIN output comparison pass.
+Isolated Debug stress passes. Automatic core platforms, optimizer parity,
+MinGW correctness, all four native-provider package jobs and development
+snapshot publication pass. The optional comprehensive and beta-release
+jobs in Build are planned skips; Deep provides the comprehensive evidence.
+`hosted/` retains terminal workflow metadata, full comprehensive job logs,
+complete sanitizer build/preparation/CTest logs and the machine-readable
+`verdict.json`. Closing documentation changes no qualified code/test/build
+input; retained results are reused without another broad run.
 The Deep and Sanitizer repeats resolve the observed overnight failures. No
 suppression, test exclusion, product change or timeout increase is introduced.
 
