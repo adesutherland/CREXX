@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath binpath inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -51,12 +51,14 @@ namespace rxpp expose globaldef rxmodule source stype source_origin_file source_
 arg command=.string[]
   internal_testing=0    ## activate only for rxpp internal tests
   env=.os()
-  binPath=env.LoadPath()
+  syslib  = env.LoadPath()
   infile  = .string
   outfile = .string
   maclib  = .string
   verbose = .int
   cnext   = .string
+  dalias  = .string
+
   ElapsedTime=time('us')
 
   do i=1 to command.0
@@ -101,12 +103,14 @@ scriptMacroCounter=0
 syspath=rxppinit(infile,maclib)                   ## init global and environment variables
 call registerScriptMacros inpath                 /* maclib macros have precedence */
 if inpath \= macpath then call registerScriptMacros macpath
-
-  if verbose then say 'CRX0100I ['time('l')'] Pre-Compile pass one'
-  if verbose then say 'CRX0110I ['time('l')'] System Path 'syspath
-  if verbose then say 'CRX0110I ['time('l')'] Input Path  'inpath
-  if verbose then say 'CRX0110I ['time('l')'] Macro Path  'macpath
-  if verbose then say 'CRX0110I ['time('l')'] Build Path  'outpath
+if verbose then do
+   say 'CRX0100I ['time('l')'] Pre-Compile pass one'
+   say 'CRX0110I ['time('l')'] Syslib Path 'syspath
+   say 'CRX0110I ['time('l')'] System Path 'syslib
+   say 'CRX0110I ['time('l')'] Input Path  'inpath
+   say 'CRX0110I ['time('l')'] Macro Path  'macpath
+   say 'CRX0110I ['time('l')'] Build Path  'outpath
+ end
 /* --------------------------------------------------------------------
  * Pass One. Load Macros, Load Source, Expand Macros of Source
  * --------------------------------------------------------------------
@@ -566,8 +570,10 @@ GetPrecomp: procedure
       else if ucmd = '##INPUT'   then call cmd_data lineNo,line,"input"
  ##     else if ucmd = '##PARSE'   then stype.LineNo='PARSE'
       else if ucmd = '##ARRAY'   then call cmd_array  lineNo,line
+      else if ucmd = '##DALIAS'  then call cmd_dalias  lineNo,line
       else if ucmd = '##GLOBAL'  then call cmd_global lineNo,line
       else if substr(ucmd,1,5) = '##SYS'   then call cmd_data lineNo,line, substr(ucmd,3)
+      else if pos('<'ucmd,dalias'>') > 0 then call cmd_data lineNo,line
 ##       else if ucmd = '##????' then do    ## for any new pre compile statement
 ##       end
    end
@@ -597,9 +603,9 @@ return
 
 /* ------------------------------------------------------------------
  * CMD_external: Declare an explicit runtime module dependency.
- * The name is kept verbatim and written to the RXPP manifest as an
- * external|... record.  It is deliberately separate from ordinary
- * compiler imports, which may name consolidated namespaces.
+ * Source-relative and absolute names are normalized before being written to
+ * the manifest. The @runtime/ namespace is preserved so the crexx driver can
+ * resolve it against the installed runtime bin directory.
  * ------------------------------------------------------------------
  */
 CMD_external: procedure
@@ -607,13 +613,14 @@ CMD_external: procedure
   stype.line_no='X'
   module=strip(word(line,2))
   if module='' then do
-    call rxpp_diag 'error','RXPP_EXTERNAL_REQUIRES_MODULE'
-    exit 8
+     call rxpp_diag 'error','RXPP_EXTERNAL_REQUIRES_MODULE'
+     exit 8
   end
-  module=normalisePath(inpath,module)
+  runtimePrefix = translate(left(module,8))
+  if runtimePrefix = '&SYSLIB/' then module=syslib'/'substr(module,9)
+  else module=normalisePath(inpath,module)
   if pos('|'module'|',external_modules'|')=0 then external_modules=external_modules'|'module
 return
-
 /* ------------------------------------------------------------------
  * CMD_link: Declare a linked RXBIN output member for crexx.exe.
  * The directive is metadata only; the driver invokes rxlink after RXPP.
@@ -1374,6 +1381,22 @@ CMD_global: procedure
       else source[lino+i]=ivar'=.'atype'; 'def
       globaldef=globaldef' 'ivar
    end
+return
+/* ------------------------------------------------------------------
+ * CMD_dalias: Implements ##data aliases
+ * ------------------------------------------------------------------
+ */
+CMD_dalias: procedure
+   arg line_no=.int,line=.string
+   stype.line_no= 'D'
+   line=translate(line,,',')
+   line=DropComment(line,3)
+
+   do i=2 to words(line)
+      dalias= dalias '<##'upper(word(line,i))'>'
+   end
+
+      say 12345 dalias
 return
 /* ------------------------------------------------------------------
  * Load macro names from PATH, Content will loaded if used

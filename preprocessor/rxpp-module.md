@@ -134,6 +134,20 @@ They are suppressed from the generated CREXX source:
 `##EXTERNAL` declares an already-built RXBIN module that participates in the
 final stage of the `crexx.exe` build pipeline.
 
+Use the case-insensitive `&syslib/` prefix for RXBINs installed in RXPP's system binary
+directory:
+
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP replaces `&syslib/` with the full path returned by `env.LoadPath()` and
+stores that resolved path in the generated `.inc` manifest. `crexx.exe` then
+uses the manifest path directly. Ordinary external paths remain relative to
+the `.rxpp` source directory.
+
 A normal `.rxpp` build still follows the complete compile pipeline:
 
 ```text
@@ -274,6 +288,7 @@ Detected in `GetPreComp()` and dispatched via `CMD_*` handlers:
 - `##GLOBAL` → `CMD_global`
 - `##STEM` → `CMD_stem`
 - `##DATA / ##RELATION / ##INPUT / ##SYS*` → `CMD_data`
+- `##DALIAS` → `CMD_dalias`
 
 `##DATA name` creates a data array from the lines in the block. A callback may optionally be specified either directly as `##DATA name callback`, 
 or with an optional callback keyword, for example `##DATA name CALL callback`. 
@@ -281,6 +296,12 @@ After the complete data array has been generated, RXPP invokes the callback once
 
 `##RELATION name`, `##PROGRAM name`, `##RULE name` and `##LIBRARY name` are thin aliases for `##DATA name` and
 support the same optional callback forms. Their names have no semantic effect.
+
+`##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
+`##DATA` handler. Registration is order-sensitive: an alias must be declared
+before its first use. The handler normalizes alias names case-insensitively and
+accepts comma- or blank-separated names. The aliases affect directive lookup,
+not the generated data-array name.
 
 
 Also rewrites convenience constructs:

@@ -905,6 +905,20 @@ Adds an existing RXBIN module to the final build stage.
 ##EXTERNAL ../lib/CallCatalog.rxbin
 ```
 
+For RXBINs in the system binary directory, use the case-insensitive `&syslib/` prefix:
+
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP resolves `&syslib/` using the system path returned by `env.LoadPath()` and
+writes the resulting full path into the `.inc` manifest. The compiler driver
+uses that manifest path unchanged, so no corresponding `crexx.crexx` setting
+is required. Other external paths are resolved relative to the `.rxpp` source
+file.
+
 The current `.rxpp` source is still preprocessed, compiled, and assembled
 normally.
 
@@ -1061,6 +1075,32 @@ The keyword does not change the callback semantics; it provides a more descripti
 #### `##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE`
 
 `##RELATION`, `##PROGRAM`, `##LIBRARY` and `##RULE` are aliases for `##DATA`. They use the same block collection, array generation, and optional callback mechanism. The directive names have no semantic effect and are alternative spellings only.
+
+#### `##DALIAS alias1 [, alias2 ...]`
+
+`##DALIAS` defines application-specific directive names that use the `##DATA` block syntax and semantics. Alias names are registered for subsequent input, are matched without regard to case, and may be separated by commas or blanks.
+
+For example, an application that processes configuration entries could define a more descriptive directive name:
+
+```rexx
+##DALIAS CONFIG
+
+##CONFIG settings process_settings
+host localhost
+port 8080
+mode development
+##END
+```
+
+Here `##CONFIG` behaves exactly like `##DATA`: it generates the `settings.` stem from the block contents and invokes:
+
+```rexx
+process_settings settings
+```
+
+The alias declaration must appear before the aliased directive.
+
+`##DALIAS` aliases the **directive name**. It does not define an alias for the generated stem or its contents.
 
 For example, a program can be described as:
 

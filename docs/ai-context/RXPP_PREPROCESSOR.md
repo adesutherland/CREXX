@@ -75,6 +75,22 @@ assignments. When the optional callback name is present, RXPP emits
 for the same conversion path;
 their names have no semantic effect.
 
+`##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
+same `##DATA` conversion path. Alias names may be comma- or blank-separated,
+are matched case-insensitively, and must be declared before use. For example:
+
+```rexx
+##DALIAS config, routes, fixtures
+##config settings load_config
+first record
+second record
+##END
+```
+
+The alias applies to the directive name (`##config`), not to the generated
+`settings.` stem. The aliased form retains the normal optional keyword/callback
+syntax and invokes the callback once after the complete block.
+
 ## Build metadata directives
 
 Recent additions separate macro discovery from output placement:
@@ -109,10 +125,24 @@ runs RXC and RXAS but does not start RXVME. It is the RXPP equivalent of the
 driver's `--noexec` option. A link recipe already stops after RXLINK.
 
 `##EXTERNAL` declares an existing RXBIN module that is added to the final
-runtime or link stage.
+runtime or link stage. The case-insensitive `&syslib/` prefix resolves inside RXPP to
+the system binary directory returned by `env.LoadPath()`. For example:
 
-External paths resolve relative to the input source directory, including when
-the source is a bare filename in the working directory. Each `external|` record
+```rexx
+##EXTERNAL &syslib/library.rxbin
+##EXTERNAL &syslib/classlib.rxbin
+##EXTERNAL &syslib/rxfnsg.rxbin
+```
+
+RXPP writes the resulting full paths to the `external|...` records in the
+`.inc` manifest. The later `crexx.exe` stages consume those manifest paths
+unchanged; no special handling in `crexx.crexx` is required. This keeps the
+same source usable from a development build tree and an installed, flatter
+layout.
+
+Except for `&syslib/` paths, external paths resolve relative to the input source
+directory, including when the source is a bare filename in the working
+directory. Each `external|` record
 holds one complete path; spaces in the source directory must survive manifest
 reading and argv construction. Duplicate declarations match the complete,
 case-preserved path. Resolving an external path must not change the selected

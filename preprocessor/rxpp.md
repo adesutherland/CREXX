@@ -30,6 +30,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
 - [🔧 RXPP Preprocessor Directives (##)](#-rxpp-preprocessor-directives-)
   - [`##USE file`](#use-file)
   - [`##DATA array-name [keyword] [callback]`](#data-array-name-keyword-callback)
+  - [`##DALIAS alias1 [, alias2 ...]`](#dalias-alias1--alias2-)
   - [`##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`](#relation-program-library-and-rule)
   - [`##SYSxxx`](#sysxxx)
   - [`##CFLAG values`](#cflag-values)
@@ -664,6 +665,32 @@ MYTEXT.0 = 2
 MYTEXT.1 = "This is a line with 'inner quotes'"
 MYTEXT.2 = 'This is a simple line'
 ```
+
+### `##DALIAS alias1 [, alias2 ...]`
+
+The **##DALIAS** directive registers additional directive names that use the
+same block-processing behavior as `##DATA`. It aliases the directive keyword,
+not the generated array name. Declare the aliases before using them.
+
+Alias names may be separated by commas or blanks and are matched
+case-insensitively. An aliased directive accepts the same array name, optional
+keyword, optional callback, and `##END` terminator as `##DATA`.
+
+**Syntax:**
+
+```rexx
+##DALIAS config, routes, fixtures
+
+##config settings load_config
+first record
+second record
+##END
+```
+
+This is equivalent to using `##DATA settings load_config`: RXPP generates
+the `settings.` stem and invokes `load_config settings` after the complete
+block has been collected. `##DALIAS` only registers names; it does not emit a
+data array by itself.
 
 ### `##RELATION`, `##PROGRAM`, `##LIBRARY`, and `##RULE`
 
