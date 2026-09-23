@@ -35,7 +35,9 @@ import rxfloat
 import rxfs
 import crexxcallback
 namespace prolog expose PrologCall PrologGetVar PrologCallGet PrologConsultFile,
-                         PrologConsultString PrologFindAll PrologFindAllCount,
+                         PrologConsultString PrologSourceClear,
+                         PrologSourceAppendString PrologSourceAppendArray,
+                         PrologConsultExecute PrologFindAll PrologFindAllCount,
                          PrologFindAllNth PrologReset
 
 /* ======================================================================
@@ -364,6 +366,26 @@ InitEngine: procedure = .void expose TOK QUERYVARMAP LASTTERMCHAR CLCOUNTER BOOT
        Load facts/rules/directives, exactly like consult/1 or the
        standalone interpreter's own file loading.
 
+   PrologSourceClear()
+       Clear only the accumulated Prolog source buffer. This does not
+       change the Prolog knowledge base; use PrologReset() for that.
+
+   PrologSourceAppendString(text)
+       Append Prolog source text to the source buffer. A newline is
+       inserted between successive additions so tokens and clauses cannot
+       accidentally be joined.
+
+   PrologSourceAppendArray(lines)
+       Append every element of a CREXX .string[] to the source buffer in
+       order. The elements are accumulated first, so a clause split over
+       several array elements remains one clause for consultation.
+
+   PrologConsultExecute()
+       Consult the complete accumulated source buffer using the same
+       parser, directive handling, and clause assertion performed by
+       ConsultString(). The source buffer is separate from the Prolog
+       knowledge base and remains available after consultation.
+
    PrologFindAll(goalText, templateVarName)
        Collects every solution's value of templateVarName (a variable
        mentioned in goalText) and returns how many there are. Fetch
@@ -431,6 +453,61 @@ PrologConsultString: procedure = .void expose TOK APIREADY
   arg text = .string
   call InitApiOnce
   call ConsultString text
+  return
+
+/**
+ * Clear the accumulated Prolog source buffer only.
+ *
+ * The Prolog knowledge base is unchanged. Use PrologReset() when the
+ * knowledge base and other Prolog execution state must be reset.
+ */
+PrologSourceClear: procedure = .void expose PROLOGSOURCE
+  /* Clear only the accumulated source text; keep the knowledge base. */
+  PROLOGSOURCE = ''
+  return
+
+/**
+ * Append Prolog source text to the source buffer.
+ *
+ * A newline separates this addition from previous text so successive
+ * additions cannot merge Prolog tokens or clauses.
+ *
+ * @param text Prolog source text to accumulate.
+ */
+PrologSourceAppendString: procedure = .void expose PROLOGSOURCE
+  arg text = .string
+  /* Newline separation prevents adjacent additions from merging tokens. */
+  if PROLOGSOURCE = '' then PROLOGSOURCE = text
+  else PROLOGSOURCE = PROLOGSOURCE || '0a'x || text
+  return
+
+/**
+ * Append all lines in order to the Prolog source buffer.
+ *
+ * The array is accumulated without consulting individual elements, so a
+ * multi-line Prolog rule remains one clause when PrologConsultExecute()
+ * later parses the complete buffer.
+ *
+ * @param lines Ordered Prolog source records.
+ */
+PrologSourceAppendArray: procedure = .void expose PROLOGSOURCE
+  arg lines = .string[]
+  do i = 1 to lines[0]
+    call PrologSourceAppendString lines[i]
+  end
+  return
+
+/**
+ * Parse and consult the complete accumulated Prolog source buffer.
+ *
+ * This calls the existing ConsultString() implementation, which performs
+ * tokenization, parsing, directive handling, and clause assertion. The
+ * source buffer remains separate from the knowledge base and is not cleared.
+ */
+PrologConsultExecute: procedure = .void expose APIREADY PROLOGSOURCE
+  /* The buffer is parsed only here; consultation uses the existing engine. */
+  call InitApiOnce
+  call ConsultString PROLOGSOURCE
   return
 
 PrologFindAll: procedure = .string expose TOK PPOS PVARMAP APIFINDALLRESULTS,
