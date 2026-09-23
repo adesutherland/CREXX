@@ -23,10 +23,6 @@
 ##define ifNull(val,fallback) {val\='' & val | fallback}
 ##define xor(a,b)           {(a | b) & \(a & b)}
 
-##define info(msg)          {say 'INFO:    ' msg}
-##define error(msg)         {say 'ERROR:   ' msg}
-##define warn(msg)          {say 'WARNING: ' msg}
-
 ##define isDigit(string)      {verify(string, '0123456789') = 0}
 ##define isAlpha(string)      {verify(string, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0}
 ##define isBlank(str)         {verify(str, ' ') = 0}

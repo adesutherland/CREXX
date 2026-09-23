@@ -75,6 +75,40 @@ assignments. When the optional callback name is present, RXPP emits
 for the same conversion path;
 their names have no semantic effect.
 
+RXPP initializes these built-in preprocessor variables before source
+expansion: `{date}` (compilation date), `{time}` (compilation time),
+`{syslib}` (system binary/library path), `{syspath}` (system or macro search
+path), `{macpath}` (macro library directory), `{inpath}` (input source
+directory), and `{buildpath}` (generated output directory). The compatibility
+variables `{rxpp_rexx}` (input module/file name) and `{rxpp_date}` (combined
+compilation date and time) are also retained. `{sourcefile}` and
+`{outputfile}` provide normalized input and output file paths. `{platform}`
+and `{rxpp_version}` are derived from the runtime `rxvers` instruction rather
+than manually maintained. References use braces and are substituted at
+compile time, for example:
+
+```rexx
+say 'Build {date} {time}'
+say 'System binaries: {syslib}'
+say 'Output: {buildpath}'
+say 'Version: {rxpp_version} on {platform}'
+```
+
+Names are case-insensitive. `{syslib}` is the value form of the `&syslib/`
+prefix used by `##EXTERNAL`; neither form is a runtime variable. `cflags` and
+`printgen` are initialized control variables, and `##SET` can define
+additional user variables.
+
+Ordinary comments are not expanded. A line beginning with
+`/* RXPP:EXPAND */` opts into expansion and removes the marker before
+replacement. Use a line-comment remainder for generated metadata, for example:
+
+```rexx
+/* RXPP:EXPAND */ -- Created {date} at {time}; RXPP {rxpp_version}
+```
+
+A remainder beginning with `/*` remains protected as an ordinary comment.
+
 `##DALIAS alias1 [, alias2 ...]` registers additional directive names for the
 same `##DATA` conversion path. Alias names may be comma- or blank-separated,
 are matched case-insensitively, and must be declared before use. For example:

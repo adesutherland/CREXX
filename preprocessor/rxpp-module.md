@@ -148,6 +148,23 @@ stores that resolved path in the generated `.inc` manifest. `crexx.exe` then
 uses the manifest path directly. Ordinary external paths remain relative to
 the `.rxpp` source directory.
 
+RXPP also registers the following preprocessor variables before source
+expansion: `{date}`, `{time}`, `{syslib}`, `{syspath}`, `{macpath}`,
+`{inpath}`, `{buildpath}`, `{sourcefile}`, `{outputfile}`, `{platform}`, and
+`{rxpp_version}`. The compatibility variables `{rxpp_rexx}` and `{rxpp_date}`
+are also retained. `{rxpp_version}` and `{platform}` are derived from the
+runtime `rxvers` instruction, so they follow the executable running RXPP
+without a manually duplicated version constant. Braced references are
+replaced with their compile-time values. These are expansion values, not
+runtime variables; `cflags` and `printgen` are control variables initialized
+for preprocessing.
+
+`injectVariable` deliberately leaves ordinary `/* ... */` comments and RXPP
+directive lines unchanged. A line beginning with `/* RXPP:EXPAND */` opts into
+variable expansion; the marker is removed before replacement. The remainder
+must not begin with `/*`, so generated metadata uses a line comment such as
+`-- Created {date} at {time}`.
+
 A normal `.rxpp` build still follows the complete compile pipeline:
 
 ```text

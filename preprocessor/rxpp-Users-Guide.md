@@ -978,6 +978,49 @@ the external modules instead of producing a linked member.
 ### `##SET` / `##UNSET`
 Set compile-time variables.
 
+RXPP also supplies these built-in compile-time variables. Use braces to
+expand them in source, macros, or `##DATA` content:
+
+| Variable | Meaning |
+| --- | --- |
+| `{date}` | Compilation date |
+| `{time}` | Compilation time |
+| `{syslib}` | RXPP system binary/library path |
+| `{syspath}` | RXPP system or macro search path |
+| `{macpath}` | Directory containing the selected macro library |
+| `{inpath}` | Directory containing the input source |
+| `{buildpath}` | Directory containing the generated build output |
+| `{sourcefile}` | Normalized path of the input source file |
+| `{outputfile}` | Normalized path of the generated output file |
+| `{platform}` | Host platform reported by the RXPP runtime |
+| `{rxpp_version}` | CREXX version reported by the RXPP runtime |
+| `{rxpp_rexx}` | Input module/file name (legacy compatibility) |
+| `{rxpp_date}` | Combined compilation date and time (legacy compatibility) |
+
+```rexx
+say 'Build {date} {time}'
+say 'Libraries: {syslib}'
+say 'Source: {inpath}'
+say 'Version: {rxpp_version} on {platform}'
+```
+
+Expansion happens during preprocessing, and the variable names are
+case-insensitive. `{syslib}` is the value form of the `&syslib/` prefix used
+in `##EXTERNAL` declarations. `cflags` and `printgen` are also initialized
+control variables; see the `##CFLAG` and `PRINTGEN` sections. Additional
+user-defined variables can be declared with `##SET`.
+
+Ordinary comments are not expanded. For an opt-in metadata comment, place
+`/* RXPP:EXPAND */` at the beginning of the line:
+
+```rexx
+/* RXPP:EXPAND */ -- Created {date} at {time}; RXPP {rxpp_version}
+/* RXPP:EXPAND */ -- Source {sourcefile}; system library {syslib}
+```
+
+RXPP removes the marker and expands the rest of the line. Use `--` for the
+remaining comment text; a remainder beginning with `/*` remains protected.
+
 ### `##IF` / `##IFN` / `##ELSE` / `##END`
 Conditional compilation.
 

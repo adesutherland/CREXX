@@ -58,6 +58,10 @@ arg command=.string[]
   verbose = .int
   cnext   = .string
   dalias  = .string
+  rexx_version = .string
+  assembler rxvers rexx_version
+  platform = word(rexx_version,1)' 'word(rexx_version,2)
+  rxpp_version = word(rexx_version,3)' 'word(rexx_version,4)
 
   ElapsedTime=time('us')
 
@@ -103,6 +107,13 @@ scriptMacroCounter=0
 syspath=rxppinit(infile,maclib)                   ## init global and environment variables
 call registerScriptMacros inpath                 /* maclib macros have precedence */
 if inpath \= macpath then call registerScriptMacros macpath
+
+syspath=translate(syspath,'/','\')
+syslib=translate(syspath,'/','\')
+inpath=translate(inpath,'/','\')
+outpath=translate(outpath,'/','\')
+macpath=translate(macpath,'/','\')
+
 if verbose then do
    say 'CRX0100I ['time('l')'] Pre-Compile pass one'
    say 'CRX0110I ['time('l')'] Syslib Path 'syspath
@@ -111,6 +122,16 @@ if verbose then do
    say 'CRX0110I ['time('l')'] Macro Path  'macpath
    say 'CRX0110I ['time('l')'] Build Path  'outpath
  end
+ call setvar 'syslib',syslib
+ call setvar 'syspath',syspath
+ call setvar 'macpath',macpath
+ call setvar 'inpath',inpath
+ call setvar 'buildpath',outpath
+ call setvar 'sourcefile',translate(infile,'/','\')
+ call setvar 'outputfile',translate(outfile,'/','\')
+ call setvar 'platform',platform
+ call setvar 'rxpp_version',rxpp_version
+
 /* --------------------------------------------------------------------
  * Pass One. Load Macros, Load Source, Expand Macros of Source
  * --------------------------------------------------------------------
@@ -1923,24 +1944,48 @@ resolveMacro: procedure=.string
     end
 return line
 /* ------------------------------------------------------------------
- * injectVariable: Injects pre-compiler variables ({var}) into text lines.
- * ------------------------------------------------------------------
- */
+ * injectVariable: Inject pre-compiler variables ({var}) into a line.
+ * ------------------------------------------------------------------ */
 injectVariable: procedure=.string
-  arg line2change=.string
-  fp1=pos('{',line2change,1)>0
-  fp2=pos('}',line2change,fp1+1)
-  do while fp1>0 & fp2>0
-     cmt=substr(strip(line2change),1,2)
-     if cmt='/*' | cmt='##' then leave
-     do i=1 to macros_varname.0
-        if macros_varname.i='' then iterate
-        Line2change=ChangeStr(macros_varname.i,line2change,macros_varvalue.i)
-     end
-     fp1=pos('{',line2change,fp2+1)>0
-     fp2=pos('}',line2change,fp2+1)
-  end
-return line2change
+   arg line2change=.string
+   original = line2change
+   testline = strip(line2change)
+
+   marker = '/* RXPP:EXPAND */'
+   force  = pos(marker, upper(testline)) = 1
+
+   if force then line2change = strip(substr(testline, length(marker) + 1))
+   else do
+     cmt = left(testline, 2)
+     if cmt = '/*' | cmt = '##' then return original
+   end
+
+  /* Do not process comments or RXPP directives. */
+   cmt = left(line2change, 2)
+   if cmt = '/*' | cmt = '##' then return line2change
+   start = 1
+
+   do forever
+      open = pos('{', line2change, start)
+      if open = 0 then leave
+
+      close = pos('}', line2change, open + 1)
+      if close = 0 then leave      /* incomplete variable */
+      variable = substr(line2change, open, close - open + 1)
+      found = 0
+      do i = 1 to macros_varname.0
+         if macros_varname.i \= variable then iterate
+         line2change = substr(line2change, 1, open - 1) || macros_varvalue.i || substr(line2change, close + 1)
+       /* Continue after the inserted value. */
+         start = open + length(macros_varvalue.i)
+         found = 1
+         leave
+      end
+
+      if found = 0 then start = close + 1              /* unknown variable */
+   end
+   if force=1 then line2change = '/* 'line2change' */'
+   return line2change
 /* ------------------------------------------------------------------
  * replaceFixArg: Substitutes fixed macro parameters with supplied call arguments (positional + keyword).
  * ------------------------------------------------------------------
@@ -3210,4 +3255,6 @@ rxppinit: procedure=.string
   printgen_flags='all'
   call setvar 'printgen',printgen_flags
   call setvar 'rxpp_date',date()' 'time()
-return translate(strip(syspath),'/','\')
+  call setvar 'date',date()
+  call setvar 'time',time('l')
+  return translate(strip(syspath),'/','\')

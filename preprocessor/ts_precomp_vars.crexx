@@ -1,0 +1,43 @@
+/* RXPP */
+/* ----------------------------------------------------------------------
+ * PRE Compiled on 23 Sep 2026  at 12:40:03
+ * ----------------------------------------------------------------------
+ */
+options levelb
+import rxfnsb
+/* RXPP preprocessor-variable smoke test. */
+/* ##cflags def nset niflink n1buf 2buf 3buf nvars nmaclist includes nosrcmap nmaclog */
+/* Date and time captured when RXPP starts preprocessing the source. */
+/* Precompiled on 23 Sep 2026 at 12:40:03.294041 /* we generate just a comment containing {variables} */ */
+say 'date         = 23 Sep 2026'
+say 'time         = 12:40:03.294041'
+/* RXPP path variables.
+ * These paths are independent; depending on the build or installation
+ * layout, two or more of them may resolve to the same directory.
+ * syslib    - cREXX system library directory
+ * syspath   - system search path
+ * macpath   - macro library search path
+ * inpath    - directory containing the input source
+ * buildpath - directory used for generated build artifacts
+ */
+say 'syslib       = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/cmake-build-release/bin/'
+say 'syspath      = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/cmake-build-release/bin/'
+say 'macpath      = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/cmake-build-release/bin/'
+say 'inpath       = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/preprocessor/'
+say 'buildpath    = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/preprocessor/'
+/* Current RXPP input and generated output files. */
+say 'sourcefile   = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/preprocessor/ts_precomp_vars.rxpp'
+say 'outputfile   = C:/Users/PeterJ/CLionProjects/CREXX/Beta2.1/preprocessor/ts_precomp_vars.crexx'
+/* Target platform known to RXPP. */
+say 'platform     = windows 64'
+/* RXPP/compiler identification.
+ * rxpp_version - cREXX version identifying this RXPP invocation
+ * rxpp_rexx    - name of the RXPP source being processed
+ * rxpp_date    - formatted preprocessing date and time
+ */
+say 'rxpp_version = crexx-1.0.0-beta.3+local.gb24a975b2d03.dirty 20260923'
+say 'rxpp_rexx    = ts_precomp_vars.rxpp'
+say 'rxpp_date    = 23 Sep 2026  12:40:03'
+/* Current RXPP processing flags and generated-source print setting. */
+say 'cflags       =  def nset niflink n1buf 2buf 3buf nvars nmaclist includes nosrcmap nmaclog'
+say 'printgen     = all'
