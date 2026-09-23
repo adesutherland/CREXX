@@ -1,0 +1,64 @@
+/* ---------------------------------------------------------------------
+   CREXXCALLBACK.CREXX  --  default (empty) Prolog-calls-CREXX bridge
+   ---------------------------------------------------------------------
+   prolog.crexx imports this fixed namespace so that Prolog goals like
+
+       crexx_call(some_name, Result).
+       crexx_call(some_name, ArgText, Result).
+
+   can reach out to CREXX code by name. This file MUST exist alongside
+   prolog.crexx for it to compile at all (the import is unconditional),
+   which is why this default, working-but-empty version is shipped in
+   the package -- with this file present unmodified, crexx_call/2,3
+   goals fail with a clear "no callback registered" message instead of
+   a compile error.
+
+   TO MAKE YOUR OWN CREXX FUNCTIONS CALLABLE FROM PROLOG:
+   Keep the "namespace crexxcallback expose CrexxCallDispatch"
+   declaration and the CrexxCallDispatch(name, argtext) signature
+   exactly as they are below (prolog.crexx calls this exact name with
+   exactly these two arguments) -- everything else is yours to change.
+   Add cases to the SELECT below routing `name` to whatever CREXX logic
+   you want reachable from Prolog, and return whatever text you want
+   the calling goal's Result unified with (a value that looks like a
+   number is unified as a number; anything else becomes a quoted atom,
+   so arbitrary text -- spaces, uppercase, anything -- round-trips
+   safely). Then build with build_with_prolog.sh exactly as you would
+   for the caller-calls-Prolog direction -- it already links every
+   .crexx file you point it at, so pointing it at your own
+   crexxcallback.crexx instead of this default one is the only change
+   needed.
+
+   See the comment above SolveCrexxCall in prolog.crexx for the full
+   design rationale (in short: CREXX has no function values/pointers to
+   hand around at runtime, so a fixed, single, well-known dispatch
+   point -- this file -- stands in for that).
+   --------------------------------------------------------------------- */
+options levelb
+namespace crexxcallback expose CrexxCallDispatch
+
+/* CrexxCallDispatch(name, argtext): argtext is '' for crexx_call/2
+   (no-argument form), or the Prolog argument's printed text for
+   crexx_call/3. Return '$NOCALLBACK$' (matching prolog.crexx's
+   CREXXCALL_NOTFOUND sentinel) for any name you haven't implemented --
+   that's what makes an unrecognised name fail with a clear message
+   rather than silently returning something wrong. */
+CrexxCallDispatch: procedure = .string
+  arg name = .string, argtext = .string
+
+  /* -----------------------------------------------------------------
+     Two small working examples -- delete or replace these once you
+     add your own. Try them from Prolog with the default build:
+         crexx_call(hello, Result).            -> Result = 'hello from CREXX'
+         crexx_call(double, 21, Result).        -> Result = 42
+     (use a number or a quoted atom for the argument, not a "double
+     quoted" string -- in this dialect those become lists of character
+     codes, same as standard Prolog, which is very likely not what you
+     want arriving here as argtext.)
+     ----------------------------------------------------------------- */
+  select
+    when name = 'hello' then return 'hello from CREXX'
+    when name = 'double' then return (argtext + argtext)
+    otherwise return '$NOCALLBACK$'
+  end
+  return '$NOCALLBACK$'
