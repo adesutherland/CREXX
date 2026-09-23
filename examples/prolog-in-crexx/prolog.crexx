@@ -1,0 +1,3172 @@
+/* ---------------------------------------------------------------------
+   PROLOG.CREXX  --  A Prolog interpreter written in CREXX (Level B)
+   ---------------------------------------------------------------------
+   A from-scratch Prolog implementation: tokenizer, operator-precedence
+   parser, unification with a trail (for backtracking), a clause
+   database with cut-aware SLD resolution, a useful core of built-in
+   predicates, workspace save/load, and a small set of procedures a
+   CREXX program can call directly to run Prolog goals and read back
+   results -- see the "CREXX-FACING API" section near the end.
+
+   Usage:
+       crexx prolog.crexx                    -- interactive top level
+       crexx prolog.crexx -args prog.pl       -- consult a file, then
+                                                  run its directives /
+                                                  drop to the top level
+
+   At the top level:
+       ?- likes(mary, X).            a query
+       X = wine ;                    (reply with a bare newline for
+                                       "next solution", or ; to ask
+                                       for the next solution)
+       consult('file.pl').           load a file
+       [file].                       shorthand for the same
+       listing.                      list the whole database
+       save('workspace.pl').         save the whole database to a file
+       )help                         session commands (see SysHelp)
+       halt.                         quit
+
+   See PORT_NOTES.md / the accompanying README for the supported
+   subset of ISO Prolog syntax and built-ins, and known limitations.
+   --------------------------------------------------------------------- */
+options levelb numeric_classic
+import rxfnsb
+import rxfloat
+import rxfs
+import crexxcallback
+namespace prolog expose PrologCall PrologGetVar PrologCallGet PrologConsultFile,
+                         PrologConsultString PrologFindAll PrologFindAllCount,
+                         PrologFindAllNth PrologReset
+
+/* ======================================================================
+   MAIN DRIVER  (must be the first code in the file: in CREXX, only the
+   source lines before the first "name: procedure" become the runnable
+   implicit main() -- so, as in the apl.crexx port, all top-level driver
+   logic must come first, and every subroutine is defined below it.)
+   ====================================================================== */
+call InitEngine
+parse arg srcfile
+if srcfile \= '' then do
+  if FileExists(srcfile) \= '1' then do
+    say 'prolog: cannot open source file:' srcfile
+    exit 1
+  end
+  call ConsultFile srcfile
+end
+call RunTopLevel
+exit 0
+
+FileExists: procedure = .string
+  arg fn = .string
+  if lines(fn) = -1 then return '0'
+  return '1'
+
+/* ======================================================================
+   TERM ENCODING
+   A term is a plain .string using a small set of reserved control-byte
+   tags (bytes '01'x-'07'x can never occur in ordinary Prolog source
+   text, so they are safe as unambiguous internal markers):
+
+     '01'x   escaped space -- ONLY ever appears inside the text of a
+             quoted atom/string that originally contained a literal
+             space; every OTHER kind of term is built with no raw
+             spaces in it at all. That in turn means a list of terms
+             can always be safely stored as an ordinary space-separated
+             .string (see the "goal list" helpers below) without ever
+             risking a space inside one term being mistaken for a
+             separator between two terms.
+     '02'x   VARIABLE tag: '02'x || internal-var-name
+     '03'x   QUOTED-ATOM tag: '03'x || text (text has spaces escaped to
+             '01'x). Preserves atoms that must not be re-parsed as a
+             plain identifier, e.g. 'Hello World' or '+'.
+     '04'x   COMPOUND tag: '04'x || functor || ('06'x || arg)* || '07'x
+     '06'x   argument separator (inside a compound only)
+     '07'x   argument-list terminator (inside a compound only)
+
+   A plain, untagged term is either an ordinary unquoted atom (letters/
+   digits/underscore starting lowercase, a run of symbol characters
+   like ':-' or '=..', or one of the solo atoms '!' ';' '[]') or a
+   number, exactly as written (numbers are never tagged; IsNumber just
+   checks the text's shape, the same trick used in the apl.crexx port's
+   IsNumTok).
+   ====================================================================== */
+InitTags: procedure = .void expose TSPACE TVAR TQATOM TCOMP TARGSEP TARGEND
+  TSPACE = '01'x
+  TVAR   = '02'x
+  TQATOM = '03'x
+  TCOMP  = '04'x
+  TARGSEP = '06'x
+  TARGEND = '07'x
+  return
+
+MkVar: procedure = .string expose TVAR
+  arg nm = .string
+  return TVAR || nm
+
+MkQAtom: procedure = .string expose TQATOM TSPACE
+  arg text = .string
+  esc = ''
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    if ch = ' ' then esc = esc || TSPACE
+    else esc = esc || ch
+  end
+  return TQATOM || esc
+
+/* MkCompound: functor + a goal-list-style space-separated list of
+   already-encoded argument terms (see GLAppend etc. below) */
+MkCompound: procedure = .string expose TCOMP TARGSEP TARGEND
+  arg functor = .string, argterms = .string
+  out = TCOMP || functor
+  do i = 1 to GLCount(argterms)
+    out = out || TARGSEP || GLNth(argterms, i)
+  end
+  out = out || TARGEND
+  return out
+
+IsVar: procedure = .string expose TVAR
+  arg t = .string
+  if left(t, 1) = TVAR then return '1'
+  return '0'
+
+IsQAtom: procedure = .string expose TQATOM
+  arg t = .string
+  if left(t, 1) = TQATOM then return '1'
+  return '0'
+
+IsCompound: procedure = .string expose TCOMP
+  arg t = .string
+  if left(t, 1) = TCOMP then return '1'
+  return '0'
+
+/* IsNumber: does t look like a (possibly negative) number, the same
+   trick as apl.crexx's IsNumTok -- this build's datatype(x,'N') does
+   not accept a leading '-', AND (unlike classic Rexx) considers a bare
+   '.' numeric all by itself, so a plain datatype() check isn't enough;
+   require at least one real digit too. */
+IsNumber: procedure = .string
+  arg t = .string
+  if t = '' then return '0'
+  hasdigit = 0
+  do i = 1 to length(t)
+    if IsDigitChar(substr(t,i,1)) = '1' then do
+      hasdigit = 1
+      leave
+    end
+  end
+  if hasdigit \= 1 then return '0'
+  if datatype(t, 'N') = '1' then return '1'
+  if left(t, 1) = '-' & length(t) > 1 & datatype(substr(t, 2), 'N') = '1' then return '1'
+  return '0'
+
+/* IsPlainAtom: an ordinary untagged atom -- i.e. not a variable, not a
+   quoted atom, not a compound, and not a number */
+IsPlainAtom: procedure = .string
+  arg t = .string
+  if IsVar(t) = '1' then return '0'
+  if IsQAtom(t) = '1' then return '0'
+  if IsCompound(t) = '1' then return '0'
+  if IsNumber(t) = '1' then return '0'
+  return '1'
+
+IsAtomic: procedure = .string
+  arg t = .string
+  if IsCompound(t) = '1' then return '0'
+  if IsVar(t) = '1' then return '0'
+  return '1'
+
+IsAtom: procedure = .string
+  arg t = .string
+  if IsQAtom(t) = '1' then return '1'
+  return IsPlainAtom(t)
+
+/* Functor: the functor NAME of a compound, or of an atom treated as a
+   zero-arity term (matches ISO functor/3 semantics) */
+Functor: procedure = .string expose TCOMP TARGSEP
+  arg t = .string
+  if IsCompound(t) = '1' then do
+    p = pos(TARGSEP, t)
+    return substr(t, 2, p - 2)
+  end
+  return AtomText(t)
+
+/* CompoundArgs: the top-level argument list of compound t, as a goal
+   list (space-separated re-encoded terms) -- a single depth-aware scan
+   that correctly skips over any nested compounds' OWN '06'x/'07'x
+   bytes rather than mistaking them for this compound's own separators.
+   Functor/Arity/ArgN all go through this rather than scanning the raw
+   string themselves. */
+CompoundArgs: procedure = .string expose TCOMP TARGSEP TARGEND
+  arg t = .string
+  if IsCompound(t) \= '1' then return ''
+  p = pos(TARGSEP, t)
+  if p = 0 then return ''
+  n = length(t)
+  depth = 0
+  startp = p + 1
+  out = ''
+  i = p + 1
+  do while i <= n
+    ch = substr(t, i, 1)
+    if ch = TCOMP then depth = depth + 1
+    else if ch = TARGEND then do
+      if depth = 0 then do
+        out = GLAppend(out, substr(t, startp, i - startp))
+        i = n + 1
+        iterate
+      end
+      else depth = depth - 1
+    end
+    else if ch = TARGSEP & depth = 0 then do
+      out = GLAppend(out, substr(t, startp, i - startp))
+      startp = i + 1
+    end
+    i = i + 1
+  end
+  return out
+
+Arity: procedure = .string
+  arg t = .string
+  return GLCount(CompoundArgs(t))
+
+/* ArgN(t, n): the n-th argument (1-based) of compound t */
+ArgN: procedure = .string
+  arg t = .string, n = .string
+  return GLNth(CompoundArgs(t), n)
+
+/* AtomText: the raw printable text of an atom (quoted or plain), with
+   any escaped spaces restored */
+AtomText: procedure = .string expose TQATOM TSPACE
+  arg t = .string
+  if left(t, 1) = TQATOM then do
+    raw = substr(t, 2)
+    out = ''
+    do i = 1 to length(raw)
+      ch = substr(raw, i, 1)
+      if ch = TSPACE then out = out || ' '
+      else out = out || ch
+    end
+    return out
+  end
+  return t
+
+/* ======================================================================
+   "GOAL LIST" HELPERS
+   A list of encoded terms, space-separated. Safe because, by
+   construction (see TSPACE above), no encoded term ever contains a
+   literal space. Used both for a clause body's list of goals still to
+   be proved, and generically anywhere an ordered list of terms is
+   convenient to carry around as a single .string (argument lists when
+   building a compound, etc). GL = "Goal List".
+   ====================================================================== */
+GLEmpty: procedure = .string
+  return ''
+
+GLCount: procedure = .string
+  arg gl = .string
+  if strip(gl) = '' then return 0
+  return words(gl)
+
+GLNth: procedure = .string
+  arg gl = .string, n = .string
+  return word(gl, n)
+
+GLFirst: procedure = .string
+  arg gl = .string
+  return word(gl, 1)
+
+/* GLRest: all but the first element */
+GLRest: procedure = .string
+  arg gl = .string
+  n = words(gl)
+  if n <= 1 then return ''
+  out = ''
+  do i = 2 to n
+    out = out word(gl, i)
+  end
+  return strip(out)
+
+GLPrepend: procedure = .string
+  arg item = .string, gl = .string
+  if strip(gl) = '' then return item
+  return item gl
+
+GLAppend: procedure = .string
+  arg gl = .string, item = .string
+  if strip(gl) = '' then return item
+  return gl item
+
+GLConcat: procedure = .string
+  arg gl1 = .string, gl2 = .string
+  if strip(gl1) = '' then return gl2
+  if strip(gl2) = '' then return gl1
+  return gl1 gl2
+
+InitEngine: procedure = .void expose TOK QUERYVARMAP LASTTERMCHAR CLCOUNTER BOOTSTRAPMAXID
+  TOK = .string[]
+  QUERYVARMAP = .stem()
+  LASTTERMCHAR = '.'
+  call InitTags
+  call InitTokTags
+  call InitOps
+  call InitParser
+  call InitBindings
+  call InitDB
+  call InitSolver
+  call InitBuiltins
+  call ConsultString BootstrapLibText()
+  BOOTSTRAPMAXID = CLCOUNTER
+  return
+
+/* ======================================================================
+   CREXX-FACING API
+   ----------------------------------------------------------------------
+   The procedures in this section are what a CREXX program calls to use
+   this file as an embedded Prolog engine, rather than running it as a
+   standalone interpreter. Import this file's namespace and call them
+   qualified, e.g.:
+
+       options levelb
+       import prolog
+
+       ok = prolog..PrologCall("factorial(5, X)")
+       if ok = '1' then say prolog..PrologGetVar("X")   -- "120"
+
+   Running `crexx prolog.crexx` directly still gives the interactive
+   top level / file-consulting behaviour described at the top of this
+   file -- that top-level driver code only runs when this file is
+   itself the program being executed, never when another file imports
+   its namespace, so the two uses don't interfere with each other.
+
+   PrologCall(goalText)
+       Parses goalText as ONE Prolog term (add your own trailing '.'
+       or don't -- both work) and solves it for its FIRST solution.
+       Returns '1' on success or '0' on failure. On success, the
+       bindings of every variable mentioned in goalText remain
+       available via PrologGetVar until the NEXT PrologCall (which
+       releases them first) -- so read out everything you need before
+       calling PrologCall again. A syntax error prints a message and
+       returns '0', same as everywhere else in this file.
+
+   PrologGetVar(varName)
+       The current value of a variable named in the last PrologCall's
+       goal text (e.g. "X"), fully dereferenced and rendered as
+       readable Prolog text (atoms unquoted) -- or '' if that name
+       wasn't in the query, or is still unbound.
+
+   PrologCallGet(goalText, varName)
+       PrologCall(goalText) then PrologGetVar(varName) in one step;
+       '' if the call failed. This is the one-line way to "call a
+       Prolog predicate with parameters and get a return value" --
+       e.g. PrologCallGet("factorial(5, X)", "X").
+
+   PrologConsultFile(path) / PrologConsultString(text)
+       Load facts/rules/directives, exactly like consult/1 or the
+       standalone interpreter's own file loading.
+
+   PrologFindAll(goalText, templateVarName)
+       Collects every solution's value of templateVarName (a variable
+       mentioned in goalText) and returns how many there are. Fetch
+       them with PrologFindAllNth below; avoids the ambiguity of
+       packing multiple results into one delimited CREXX string.
+   PrologFindAllCount()
+       The count from the most recent PrologFindAll (also its own
+       return value; this is here for convenience/symmetry).
+   PrologFindAllNth(n)
+       The n-th (1-based) result from the most recent PrologFindAll,
+       as readable Prolog text.
+
+   PrologReset()
+       Wipes the whole engine back to a fresh state (only the
+       bootstrap library remains defined) -- as if the process had
+       just started.
+   ====================================================================== */
+InitApiOnce: procedure = .void expose TOK APIREADY
+  if APIREADY = "1" then return
+  call InitEngine
+  APIREADY = "1"
+  return
+
+PrologCall: procedure = .string expose TOK PPOS PVARMAP QUERYVARMAP APILASTMARK
+  arg goalText = .string
+  call InitApiOnce
+  if APILASTMARK \= '' then call TrailUndo APILASTMARK
+  txt = strip(goalText)
+  if right(txt, 1) \= '.' then txt = txt || '.'
+  call PTokenize txt
+  goal = ParseClauseTerm()
+  if goal = '' then do
+    APILASTMARK = TrailMark()
+    return '0'
+  end
+  QUERYVARMAP = PVARMAP
+  APILASTMARK = TrailMark()
+  ok = SolveOnce(goal)
+  if ok \= '1' then do
+    call TrailUndo APILASTMARK
+    return '0'
+  end
+  return '1'
+
+PrologGetVar: procedure = .string expose QUERYVARMAP
+  arg varName = .string
+  vref = QUERYVARMAP[varName]
+  if vref = '' then return ''
+  val = Deref(vref)
+  if IsVar(val) = '1' then return ''
+  return WriteTerm(DerefFull(val), 0)
+
+PrologCallGet: procedure = .string
+  arg goalText = .string, varName = .string
+  if PrologCall(goalText) \= '1' then return ''
+  return PrologGetVar(varName)
+
+PrologConsultFile: procedure = .void expose TOK APIREADY
+  arg path = .string
+  call InitApiOnce
+  call ConsultFile path
+  return
+
+PrologConsultString: procedure = .void expose TOK APIREADY
+  arg text = .string
+  call InitApiOnce
+  call ConsultString text
+  return
+
+PrologFindAll: procedure = .string expose TOK PPOS PVARMAP APIFINDALLRESULTS,
+                                          SOLVEMODE FINDALLACC FINDALLTEMPLATE
+  arg goalText = .string, templateVarName = .string
+  call InitApiOnce
+  txt = strip(goalText)
+  if right(txt, 1) \= '.' then txt = txt || '.'
+  call PTokenize txt
+  goal = ParseClauseTerm()
+  APIFINDALLRESULTS = GLEmpty()
+  if goal = '' then return 0
+  tmplref = PVARMAP[templateVarName]
+  if tmplref = '' then do
+    say 'prolog: PrologFindAll: no such variable in the goal text:' templateVarName
+    return 0
+  end
+  savedmode = SOLVEMODE
+  savedacc = FINDALLACC
+  savedtmpl = FINDALLTEMPLATE
+  SOLVEMODE = 'FINDALL'
+  FINDALLACC = GLEmpty()
+  FINDALLTEMPLATE = tmplref
+  mark = TrailMark()
+  call Solve GLAppend(GLEmpty(), goal)
+  call TrailUndo mark
+  results = FINDALLACC
+  SOLVEMODE = savedmode
+  FINDALLACC = savedacc
+  FINDALLTEMPLATE = savedtmpl
+  out = GLEmpty()
+  do i = 1 to GLCount(results)
+    out = GLAppend(out, WriteTerm(GLNth(results, i), 0))
+  end
+  APIFINDALLRESULTS = out
+  return GLCount(out)
+
+PrologFindAllCount: procedure = .string expose APIFINDALLRESULTS
+  return GLCount(APIFINDALLRESULTS)
+
+PrologFindAllNth: procedure = .string expose APIFINDALLRESULTS
+  arg n = .string
+  return GLNth(APIFINDALLRESULTS, n)
+
+PrologReset: procedure = .void expose TOK APIREADY
+  call InitEngine
+  APIREADY = "1"
+  return
+
+/* ======================================================================
+   TOKENIZER
+   Produces a TOK array (like apl.crexx's) of token strings for one
+   clause/query's worth of source text (the caller is responsible for
+   collecting source lines up through the terminating '.' before
+   calling this -- see ReadClauseText below). Tokens carry a tag prefix
+   byte for the few kinds the parser can't tell apart just by looking
+   at the bare text (a variable name looks like plain text; so does a
+   quoted atom once you don't know it was quoted). Everything else
+   (ordinary atoms, symbolic-atom operator runs, solo characters,
+   punctuation, numbers) is stored bare -- the parser tells numbers
+   apart from atoms the same way apl.crexx's IsNumTok does, by shape.
+
+     '10'x   VARIABLE token:      '10'x || name
+     '11'x   QUOTED ATOM token:   '11'x || text  (raw, NOT space-escaped
+                                                   -- that only happens
+                                                   when/if MkQAtom turns
+                                                   it into a term)
+     '12'x   STRING token:        '12'x || text  (double-quoted; becomes
+                                                   a code-list term)
+     '13'x   END token            (bare '13'x, marks the clause-ending
+                                    '.' -- the caller stops on this)
+   ====================================================================== */
+InitTokTags: procedure = .void expose TTVAR TTQATOM TTSTR TTEND TTFOPEN TTQEND
+  TTVAR = '10'x
+  TTQATOM = '11'x
+  TTSTR = '12'x
+  TTEND = '13'x
+  TTFOPEN = '14'x
+  TTQEND = '15'x
+  return
+
+/* the set of characters that form "symbolic atom" runs, e.g. :- --> =.. */
+SymChars: procedure = .string
+  return '+-*/\^<>=~:.?@#&$'
+
+IsSymChar: procedure = .string
+  arg ch = .string
+  if pos(ch, SymChars()) > 0 then return '1'
+  return '0'
+
+IsSoloChar: procedure = .string
+  arg ch = .string
+  if pos(ch, '()[]{}|,!;') > 0 then return '1'
+  return '0'
+
+/* LastTokenIsAtomShaped: is the most recently emitted token something
+   that could legally be a functor name -- a plain atom (identifier or
+   symbolic-operator run) or a quoted atom? Variables, numbers,
+   strings, and punctuation (including a previous "(" or ",") cannot,
+   so a "(" glued onto one of those is a grouping paren, not a functor
+   paren -- see the '(' handling above. */
+LastTokenIsAtomShaped: procedure = .string expose TOK TTVAR TTQATOM TTSTR TTEND TTFOPEN
+  if TOK[0] = 0 then return '0'
+  last = TOK[TOK[0]]
+  if left(last, 1) = TTQATOM then return '1'
+  if left(last, 1) = TTVAR then return '0'
+  if left(last, 1) = TTSTR then return '0'
+  if last = TTEND then return '0'
+  if last = TTFOPEN then return '0'
+  if IsNumber(last) = '1' then return '0'
+  if last = '(' | last = ')' | last = '[' | last = ']' then return '0'
+  if last = '{' | last = '}' | last = ',' | last = '|' then return '0'
+  return '1'
+
+/* IsIdentStart / IsIdentChar: plain-atom / variable identifier shape */
+IsLower: procedure = .string
+  arg ch = .string
+  if datatype(ch, 'A') \= '1' then return '0'
+  if datatype(ch, 'U') = '1' then return '0'
+  return '1'
+
+IsUpperOrUnderscore: procedure = .string
+  arg ch = .string
+  if ch = '_' then return '1'
+  if datatype(ch, 'A') \= '1' then return '0'
+  if datatype(ch, 'U') = '1' then return '1'
+  return '0'
+
+/* IsDigitChar: is ch an ASCII digit 0-9? Deliberately NOT implemented
+   via datatype(ch,'N') -- this build's datatype("." ,"N") returns '1'
+   (a lone period is misclassified as numeric), which would otherwise
+   make identifier/number scanning swallow a clause-ending '.' as part
+   of the previous token. */
+IsDigitChar: procedure = .string
+  arg ch = .string
+  if pos(ch, '0123456789') > 0 then return '1'
+  return '0'
+
+IsIdentChar: procedure = .string
+  arg ch = .string
+  if datatype(ch, 'A') = '1' then return '1'
+  if IsDigitChar(ch) = '1' then return '1'
+  if ch = '_' then return '1'
+  return '0'
+
+/* PTokenize: tokenizes clausetext into the global TOK array */
+PTokenize: procedure = .void expose TOK PPOS TTVAR TTQATOM TTSTR TTEND TTQEND
+  arg src = .string
+  call arraydrop TOK
+  PPOS = 1
+  len = length(src)
+  i = 1
+  j = 0
+  content = ''
+  c2 = ''
+  esc = ''
+  do while i <= len
+    ch = substr(src, i, 1)
+
+    /* layout */
+    if ch = ' ' | ch = '09'x | ch = '0d'x | ch = '0a'x then do
+      i = i + 1
+      iterate
+    end
+
+    /* line comment */
+    if ch = '%' then do
+      do while i <= len & substr(src, i, 1) \= '0a'x
+        i = i + 1
+      end
+      iterate
+    end
+
+    /* block comment */
+    if ch = '/' & substr(src, i+1, 1) = '*' then do
+      i = i + 2
+      do while i <= len & substr(src, i, 2) \= '*/'
+        i = i + 1
+      end
+      i = i + 2
+      iterate
+    end
+
+    /* quoted atom */
+    if ch = "'" then do
+      j = i + 1
+      content = ''
+      do forever
+        if j > len then leave
+        c2 = substr(src, j, 1)
+        if c2 = "'" then do
+          if substr(src, j+1, 1) = "'" then do
+            content = content || "'"
+            j = j + 2
+            iterate
+          end
+          j = j + 1
+          leave
+        end
+        if c2 = '\' then do
+          esc = PReadEscape(src, j)
+          content = content || word(esc, 1)
+          j = j + word(esc, 2)
+          iterate
+        end
+        content = content || c2
+        j = j + 1
+      end
+      call arrayappend TOK, TTQATOM || content
+      i = j
+      iterate
+    end
+
+    /* double-quoted string */
+    if ch = '"' then do
+      j = i + 1
+      content = ''
+      do forever
+        if j > len then leave
+        c2 = substr(src, j, 1)
+        if c2 = '"' then do
+          if substr(src, j+1, 1) = '"' then do
+            content = content || '"'
+            j = j + 2
+            iterate
+          end
+          j = j + 1
+          leave
+        end
+        if c2 = '\' then do
+          esc = PReadEscape(src, j)
+          content = content || word(esc, 1)
+          j = j + word(esc, 2)
+          iterate
+        end
+        content = content || c2
+        j = j + 1
+      end
+      call arrayappend TOK, TTSTR || content
+      i = j
+      iterate
+    end
+
+    /* number */
+    if IsDigitChar(ch) = '1' then do
+      j = i
+      do while j <= len & IsDigitChar(substr(src,j,1)) = '1'
+        j = j + 1
+      end
+      if substr(src, j, 1) = '.' & IsDigitChar(substr(src, j+1, 1)) = '1' then do
+        j = j + 1
+        do while j <= len & IsDigitChar(substr(src,j,1)) = '1'
+          j = j + 1
+        end
+      end
+      /* exponent, e.g. 1.0e10 or 1e-5 */
+      if translate(substr(src,j,1)) = 'E' then do
+        k = j + 1
+        if substr(src,k,1) = '+' | substr(src,k,1) = '-' then k = k + 1
+        if IsDigitChar(substr(src,k,1)) = '1' then do
+          j = k
+          do while j <= len & IsDigitChar(substr(src,j,1)) = '1'
+            j = j + 1
+          end
+        end
+      end
+      call arrayappend TOK, substr(src, i, j - i)
+      i = j
+      iterate
+    end
+
+    /* end-of-clause '.' : a '.' followed by layout, EOF, or a comment */
+    nc = ''
+    if ch = '.' then do
+      nc = substr(src, i+1, 1)
+      if nc = '' | nc = ' ' | nc = '09'x | nc = '0d'x | nc = '0a'x | nc = '%' then do
+        call arrayappend TOK, TTEND
+        i = i + 1
+        iterate
+      end
+    end
+
+    /* end-of-QUERY '?' : a standalone '?' followed by layout, EOF, or a
+       comment terminates a query instead of a fact/rule -- the
+       distinguishing marker the interactive top level uses to tell
+       "remember this" from "ask about this" (see RunTopLevel). A '?'
+       immediately followed by another symbol character (e.g. the '-'
+       in a "?-" prefix) is NOT a terminator -- it falls through to the
+       ordinary symbolic-atom-run scan below instead, exactly like any
+       other operator spelling. */
+    if ch = '?' then do
+      nc = substr(src, i+1, 1)
+      if nc = '' | nc = ' ' | nc = '09'x | nc = '0d'x | nc = '0a'x | nc = '%' then do
+        call arrayappend TOK, TTQEND
+        i = i + 1
+        iterate
+      end
+    end
+
+    /* variable */
+    if IsUpperOrUnderscore(ch) = '1' then do
+      j = i
+      do while j <= len & IsIdentChar(substr(src,j,1)) = '1'
+        j = j + 1
+      end
+      call arrayappend TOK, TTVAR || substr(src, i, j - i)
+      i = j
+      iterate
+    end
+
+    /* plain atom (lowercase-starting identifier) */
+    if IsLower(ch) = '1' then do
+      j = i
+      do while j <= len & IsIdentChar(substr(src,j,1)) = '1'
+        j = j + 1
+      end
+      call arrayappend TOK, substr(src, i, j - i)
+      i = j
+      iterate
+    end
+
+    /* solo characters: each is its own one-character atom/punctuation
+       token -- EXCEPT '(' immediately adjacent to the previous
+       character with no layout in between AND immediately following
+       an atom-shaped token, which is a "functor paren" (compound-term
+       syntax, e.g. foo(X)) rather than a grouping paren (e.g. foo (X),
+       a bare parenthesised expression, or a comma/bracket/another
+       paren immediately followed by "(", e.g. the ",(" that a
+       conjunction immediately followed by a parenthesised group can
+       produce in compact, no-space output) */
+    if ch = '(' then do
+      isfopen = 0
+      if i > 1 then do
+        pc = substr(src, i-1, 1)
+        if pc \= ' ' & pc \= '09'x & pc \= '0d'x & pc \= '0a'x then do
+          if LastTokenIsAtomShaped() = '1' then isfopen = 1
+        end
+      end
+      if isfopen = 1 then call arrayappend TOK, TTFOPEN
+      else call arrayappend TOK, '('
+      i = i + 1
+      iterate
+    end
+    if IsSoloChar(ch) = '1' then do
+      call arrayappend TOK, ch
+      i = i + 1
+      iterate
+    end
+
+    /* symbolic-atom run, e.g. :-  -->  =..  ==  \+ */
+    if IsSymChar(ch) = '1' then do
+      j = i
+      do while j <= len & IsSymChar(substr(src,j,1)) = '1'
+        j = j + 1
+      end
+      call arrayappend TOK, substr(src, i, j - i)
+      i = j
+      iterate
+    end
+
+    /* unrecognised character: skip it */
+    i = i + 1
+  end
+  return
+
+/* PReadEscape(src, j): src[j] is a backslash starting an escape inside
+   a quoted atom/string. Returns "char consumedlen" (consumedlen counts
+   from the backslash itself). Supports the common ISO escapes; an
+   unrecognised escape just yields the character itself (e.g. \\ -> \). */
+PReadEscape: procedure = .string
+  arg src = .string, j = .string
+  c = substr(src, j+1, 1)
+  select
+    when c = 'n' then return '0a'x 2
+    when c = 't' then return '09'x 2
+    when c = 'r' then return '0d'x 2
+    when c = 'a' then return '07'x 2
+    when c = 'b' then return '08'x 2
+    when c = 'f' then return '0c'x 2
+    when c = 'v' then return '0b'x 2
+    when c = '\' then return '\' 2
+    when c = "'" then return "'" 2
+    when c = '"' then return '"' 2
+    when c = '`' then return '`' 2
+    when c = '0a'x then return '' 2   /* line continuation */
+    otherwise return c 2
+  end
+  return c 2
+
+/* ======================================================================
+   OPERATOR TABLE  (a fixed, documented subset of the standard ISO
+   table -- not user-definable via op/3 in this implementation)
+
+     1200  xfx   :-  -->
+     1200  fx    :-  ?-
+     1100  xfy   ;  |
+     1050  xfy   ->
+     1000  xfy   ,
+      900  fy    \+
+      700  xfx   =  \=  ==  \==  @<  @>  @=<  @>=  is
+                 <  >  =<  >=  =:=  =\=  =..
+      500  yfx   +  -  /\  \/  xor
+      400  yfx   *  /  //  mod  rem  <<  >>
+      200  xfy   ^
+      200  fy    -  \
+   ====================================================================== */
+InitOps: procedure = .void expose OPINFIX OPPREFIX
+  OPINFIX = .stem()
+  OPPREFIX = .stem()
+  call SetInfix ':-', 1200, 'xfx'
+  call SetInfix '-->', 1200, 'xfx'
+  call SetInfix ';', 1100, 'xfy'
+  call SetInfix '|', 1100, 'xfy'
+  call SetInfix '->', 1050, 'xfy'
+  call SetInfix ',', 1000, 'xfy'
+  call SetInfix '=', 700, 'xfx'
+  call SetInfix '\=', 700, 'xfx'
+  call SetInfix '==', 700, 'xfx'
+  call SetInfix '\==', 700, 'xfx'
+  call SetInfix '@<', 700, 'xfx'
+  call SetInfix '@>', 700, 'xfx'
+  call SetInfix '@=<', 700, 'xfx'
+  call SetInfix '@>=', 700, 'xfx'
+  call SetInfix 'is', 700, 'xfx'
+  call SetInfix '<', 700, 'xfx'
+  call SetInfix '>', 700, 'xfx'
+  call SetInfix '=<', 700, 'xfx'
+  call SetInfix '>=', 700, 'xfx'
+  call SetInfix '=:=', 700, 'xfx'
+  call SetInfix '=\=', 700, 'xfx'
+  call SetInfix '=..', 700, 'xfx'
+  call SetInfix '+', 500, 'yfx'
+  call SetInfix '-', 500, 'yfx'
+  call SetInfix '/\', 500, 'yfx'
+  call SetInfix '\/', 500, 'yfx'
+  call SetInfix 'xor', 500, 'yfx'
+  call SetInfix '*', 400, 'yfx'
+  call SetInfix '/', 400, 'yfx'
+  call SetInfix '//', 400, 'yfx'
+  call SetInfix 'mod', 400, 'yfx'
+  call SetInfix 'rem', 400, 'yfx'
+  call SetInfix '<<', 400, 'yfx'
+  call SetInfix '>>', 400, 'yfx'
+  call SetInfix '^', 200, 'xfy'
+  call SetInfix '**', 200, 'xfx'
+  call SetPrefix ':-', 1200, 'fx'
+  call SetPrefix '?-', 1200, 'fx'
+  call SetPrefix '\+', 900, 'fy'
+  call SetPrefix '-', 200, 'fy'
+  call SetPrefix '\', 200, 'fy'
+  return
+
+SetInfix: procedure = .void expose OPINFIX
+  arg opname = .string, prec = .string, assoc = .string
+  OPINFIX[opname] = prec assoc
+  return
+
+SetPrefix: procedure = .void expose OPPREFIX
+  arg opname = .string, prec = .string, assoc = .string
+  OPPREFIX[opname] = prec assoc
+  return
+
+IsInfixOp: procedure = .string expose OPINFIX
+  arg opname = .string
+  if OPINFIX[opname] \= '' then return '1'
+  return '0'
+
+IsPrefixOp: procedure = .string expose OPPREFIX
+  arg opname = .string
+  if OPPREFIX[opname] \= '' then return '1'
+  return '0'
+
+InfixPrec: procedure = .string expose OPINFIX
+  arg opname = .string
+  return word(OPINFIX[opname], 1)
+
+InfixAssoc: procedure = .string expose OPINFIX
+  arg opname = .string
+  return word(OPINFIX[opname], 2)
+
+PrefixPrec: procedure = .string expose OPPREFIX
+  arg opname = .string
+  return word(OPPREFIX[opname], 1)
+
+PrefixAssoc: procedure = .string expose OPPREFIX
+  arg opname = .string
+  return word(OPPREFIX[opname], 2)
+
+/* ======================================================================
+   PARSER  (operator-precedence / "precedence climbing")
+
+   Works over the global TOK array and a global cursor PPOS (as in
+   apl.crexx), consuming tokens and building terms in this file's
+   internal encoding directly (there is no separate AST stage).
+
+   PVARMAP is a per-clause-read scratch table mapping a source
+   variable's spelling (e.g. "X", "_Foo") to its freshly-assigned
+   internal variable name for THIS clause being read; the leading '_'
+   solo variable and any run of underscores is always a fresh
+   (non-shared) anonymous variable, matching ISO semantics for "_".
+   ====================================================================== */
+InitParser: procedure = .void expose PPOS PVARMAP PVARCOUNTER
+  PPOS = 1
+  PVARMAP = .stem()
+  PVARCOUNTER = 0
+  return
+
+/* ParseClauseTerm: parses exactly one clause/query/directive's worth
+   of tokens (as produced by PTokenize) into a single term, consuming
+   the trailing END token. Resets PVARMAP first, so each clause gets
+   its own fresh set of variables. Returns '' (and leaves an error
+   message printed) on a syntax error. */
+ParseClauseTerm: procedure = .string expose TOK PPOS PVARMAP TTEND TTQEND LASTTERMCHAR
+  PVARMAP = .stem()
+  LASTTERMCHAR = '.'
+  if PPOS > TOK[0] then return ''
+  t = PParseTerm(1200)
+  if t = '' then return ''
+  if PPOS <= TOK[0] & TOK[PPOS] = TTEND then do
+    PPOS = PPOS + 1
+    LASTTERMCHAR = '.'
+    return t
+  end
+  if PPOS <= TOK[0] & TOK[PPOS] = TTQEND then do
+    PPOS = PPOS + 1
+    LASTTERMCHAR = '?'
+    return t
+  end
+  say 'prolog: syntax error -- expected end of clause (. or ?) near token' PPeekText()
+  return ''
+
+PPeekText: procedure = .string expose TOK PPOS TTVAR TTQATOM TTSTR TTEND TTFOPEN TTQEND
+  if PPOS > TOK[0] then return '<end of input>'
+  t = TOK[PPOS]
+  tag = left(t, 1)
+  select
+    when tag = TTVAR then return substr(t, 2)
+    when tag = TTQATOM then return "'" || substr(t, 2) || "'"
+    when tag = TTSTR then return '"' || substr(t, 2) || '"'
+    when t = TTEND then return '.'
+    when t = TTQEND then return '?'
+    when t = TTFOPEN then return '('
+    otherwise return t
+  end
+  return t
+
+/* PParseTerm(maxPrec): the precedence-climbing core. */
+PParseTerm: procedure = .string expose TOK PPOS TTEND
+  arg maxPrec = .string
+  left = PParsePrimary()
+  if left = '' then return ''
+  do forever
+    if PPOS > TOK[0] then leave
+    if TOK[PPOS] = TTEND then leave
+    opname = PInfixTokenText()
+    if opname = '' then leave
+    if IsInfixOp(opname) \= '1' then leave
+    prec = InfixPrec(opname)
+    if prec > maxPrec then leave
+    assoc = InfixAssoc(opname)
+    rightmax = prec - 1
+    if assoc = 'xfy' then rightmax = prec
+    PPOS = PPOS + 1
+    right = PParseTerm(rightmax)
+    if right = '' then return ''
+    args = GLAppend(GLAppend(GLEmpty(), left), right)
+    left = MkCompound(opname, args)
+  end
+  return left
+
+/* PInfixTokenText: the text an infix operator would have at the
+   current token position, or '' if the current token isn't the kind
+   that could be one (a plain atom-shaped token, or the solo atoms
+   ',' '|' ';'). Does not consume. */
+PInfixTokenText: procedure = .string expose TOK PPOS TTVAR TTQATOM TTSTR TTEND TTFOPEN
+  if PPOS > TOK[0] then return ''
+  t = TOK[PPOS]
+  if left(t, 1) = TTVAR then return ''
+  if left(t, 1) = TTQATOM then return ''
+  if left(t, 1) = TTSTR then return ''
+  if t = TTEND then return ''
+  if t = TTFOPEN then return ''
+  if t = '(' | t = ')' | t = '[' | t = ']' | t = '{' | t = '}' then return ''
+  return t
+
+/* PParsePrimary(maxPrec): a primary term -- possibly a prefix operator
+   applied to a term, otherwise a bare primary (number, variable, atom,
+   compound, list, string, or a parenthesised term). */
+PParsePrimary: procedure = .string expose TOK PPOS TTVAR TTQATOM TTSTR TTEND TTFOPEN
+  if PPOS > TOK[0] | TOK[PPOS] = TTEND then do
+    say 'prolog: syntax error -- unexpected end of clause'
+    return ''
+  end
+  t = TOK[PPOS]
+
+  /* '(' grouping */
+  if t = '(' then do
+    PPOS = PPOS + 1
+    inner = PParseTerm(1200)
+    if inner = '' then return ''
+    if PPOS <= TOK[0] & TOK[PPOS] = ')' then PPOS = PPOS + 1
+    else do
+      say 'prolog: syntax error -- expected ) near' PPeekText()
+      return ''
+    end
+    return inner
+  end
+
+  /* list */
+  if t = '[' then return PParseList()
+
+  /* variable */
+  if left(t, 1) = TTVAR then do
+    PPOS = PPOS + 1
+    return PResolveVar(substr(t, 2))
+  end
+
+  /* number */
+  if IsNumber(t) = '1' then do
+    PPOS = PPOS + 1
+    return t
+  end
+
+  /* double-quoted string -> code list */
+  if left(t, 1) = TTSTR then do
+    PPOS = PPOS + 1
+    return PCodesToList(substr(t, 2))
+  end
+
+  /* quoted atom, possibly used as a compound functor */
+  if left(t, 1) = TTQATOM then do
+    nm = MkQAtom(substr(t, 2))
+    PPOS = PPOS + 1
+    if PPOS <= TOK[0] & TOK[PPOS] = TTFOPEN then return PParseCompoundArgs(AtomText(nm))
+    return nm
+  end
+
+  /* prefix operator (unless immediately followed by '(' with no gap,
+     in which case it's really just a plain atom used as a functor) */
+  if IsPrefixOp(t) = '1' then do
+    nexttok = ''
+    if PPOS + 1 <= TOK[0] then nexttok = TOK[PPOS + 1]
+    if nexttok \= TTFOPEN then do
+      /* special case: '-' directly applied to a number literal folds
+         into a negative number rather than staying a compound -(N) */
+      if t = '-' & nexttok \= '' & IsNumber(nexttok) = '1' then do
+        PPOS = PPOS + 2
+        return '-' || nexttok
+      end
+      /* an operator atom at the very end of a clause, or followed by
+         something that can't start a term (e.g. ')' ']' ',' or another
+         infix operator), is being used as a plain atom, not applied
+         prefix -- e.g. "X = -." or "p(-, X)" */
+      if PLooksLikeTermStart(nexttok) = '1' then do
+        prec = PrefixPrec(t)
+        PPOS = PPOS + 1
+        arg1 = PParseTerm(prec)
+        if arg1 = '' then return ''
+        return MkCompound(t, GLAppend(GLEmpty(), arg1))
+      end
+    end
+  end
+
+  /* plain atom, possibly used as a compound functor, possibly a solo
+     atom like '!' ';' '[]' */
+  if PAtomTokenShape(t) = '1' then do
+    PPOS = PPOS + 1
+    if PPOS <= TOK[0] & TOK[PPOS] = TTFOPEN then return PParseCompoundArgs(t)
+    return t
+  end
+
+  say 'prolog: syntax error -- unexpected token' PPeekText()
+  return ''
+
+/* PLooksLikeTermStart: could the token at TOK[PPOS+1]-ish (passed in
+   as nexttok) legally begin a term? Used to decide whether a prefix-
+   operator-shaped atom should actually be read as a prefix operator
+   application, or as a bare atom (e.g. at the end of an argument list,
+   or in front of an infix operator / closer). */
+PLooksLikeTermStart: procedure = .string expose TTVAR TTQATOM TTSTR TTFOPEN
+  arg tok = .string
+  if tok = '' then return '0'
+  if tok = ')' | tok = ']' | tok = '}' | tok = ',' | tok = '|' then return '0'
+  if left(tok, 1) = TTVAR then return '1'
+  if left(tok, 1) = TTQATOM then return '1'
+  if left(tok, 1) = TTSTR then return '1'
+  if tok = '(' then return '1'
+  if tok = '[' then return '1'
+  if IsNumber(tok) = '1' then return '1'
+  /* an infix-only operator can't itself start a term */
+  if IsInfixOp(tok) = '1' & IsPrefixOp(tok) \= '1' then return '0'
+  return '1'
+
+/* PAtomTokenShape: is t (a bare, untagged token) shaped like a valid
+   atom -- i.e. anything that isn't punctuation reserved for list/args
+   syntax */
+PAtomTokenShape: procedure = .string
+  arg t = .string
+  if t = ')' | t = ']' | t = '}' | t = ',' then return '0'
+  return '1'
+
+/* PParseCompoundArgs: TOK[PPOS] is TTFOPEN, having just read functor
+   name fname; parses "(" arg1 "," arg2 ... ")" (args at precedence 999
+   so a bare top-level comma is never swallowed into one argument) and
+   returns the resulting compound. */
+PParseCompoundArgs: procedure = .string expose TOK PPOS TTEND
+  arg fname = .string
+  PPOS = PPOS + 1  /* consume TTFOPEN */
+  args = GLEmpty()
+  if PPOS <= TOK[0] & TOK[PPOS] = ')' then do
+    PPOS = PPOS + 1
+    return MkCompound(fname, args)  /* note: 0 real args is invalid ISO,
+                                        but harmless to allow here */
+  end
+  do forever
+    a = PParseTerm(999)
+    if a = '' then return ''
+    args = GLAppend(args, a)
+    if PPOS > TOK[0] then do
+      say 'prolog: syntax error -- expected , or ) in argument list'
+      return ''
+    end
+    if TOK[PPOS] = ',' then do
+      PPOS = PPOS + 1
+      iterate
+    end
+    if TOK[PPOS] = ')' then do
+      PPOS = PPOS + 1
+      leave
+    end
+    say 'prolog: syntax error -- expected , or ) near' PPeekText()
+    return ''
+  end
+  return MkCompound(fname, args)
+
+/* PParseList: TOK[PPOS] is '[', parses "[" (term ("," term)* ("|" term)? )? "]" */
+PParseList: procedure = .string expose TOK PPOS
+  PPOS = PPOS + 1  /* consume '[' */
+  if PPOS <= TOK[0] & TOK[PPOS] = ']' then do
+    PPOS = PPOS + 1
+    return '[]'
+  end
+  items = GLEmpty()
+  do forever
+    a = PParseTerm(999)
+    if a = '' then return ''
+    items = GLAppend(items, a)
+    if PPOS > TOK[0] then do
+      say 'prolog: syntax error -- unterminated list'
+      return ''
+    end
+    if TOK[PPOS] = ',' then do
+      PPOS = PPOS + 1
+      iterate
+    end
+    leave
+  end
+  tail = '[]'
+  if PPOS <= TOK[0] & TOK[PPOS] = '|' then do
+    PPOS = PPOS + 1
+    tail = PParseTerm(999)
+    if tail = '' then return ''
+  end
+  if PPOS <= TOK[0] & TOK[PPOS] = ']' then PPOS = PPOS + 1
+  else do
+    say 'prolog: syntax error -- expected ] near' PPeekText()
+    return ''
+  end
+  return PBuildConsChain(items, tail)
+
+/* PBuildConsChain: builds the right-nested '.'(H,T) chain for a list
+   literal's items, ending in tail (normally '[]', or whatever followed
+   '|') */
+PBuildConsChain: procedure = .string
+  arg items = .string, tail = .string
+  n = GLCount(items)
+  result = tail
+  do i = n to 1 by -1
+    result = MkCompound('.', GLAppend(GLAppend(GLEmpty(), GLNth(items, i)), result))
+  end
+  return result
+
+/* PCodesToList: turns a raw (unescaped-at-this-point... actually
+   already-escape-processed by the tokenizer) string into a proper
+   Prolog list of character codes, e.g. "ab" -> ['.'(97,'.'(98,[]))] */
+PCodesToList: procedure = .string
+  arg s = .string
+  result = '[]'
+  do i = length(s) to 1 by -1
+    code = c2d(substr(s, i, 1))
+    result = MkCompound('.', GLAppend(GLAppend(GLEmpty(), code), result))
+  end
+  return result
+
+/* PResolveVar: maps a source variable spelling to its internal fresh
+   name for the CURRENT clause being parsed (see PVARMAP/ParseClauseTerm
+   above); "_" and any name starting with "_" followed by nothing else
+   meaningful is always fresh (never shared with another occurrence). */
+PResolveVar: procedure = .string expose PVARMAP PVARCOUNTER
+  arg srcname = .string
+  if srcname = '_' then do
+    PVARCOUNTER = PVARCOUNTER + 1
+    return MkVar('G' || PVARCOUNTER)
+  end
+  if PVARMAP[srcname] \= '' then return PVARMAP[srcname]
+  PVARCOUNTER = PVARCOUNTER + 1
+  fresh = MkVar(srcname || '_' || PVARCOUNTER)
+  PVARMAP[srcname] = fresh
+  return fresh
+
+/* ======================================================================
+   TERM OUTPUT  (turns an internal-encoded term back into readable
+   Prolog syntax -- used by write/1, the top level's "X = ..." answers,
+   listing/0, and save/1)
+   ====================================================================== */
+
+/* WriteTerm(t, quoted): quoted='1' quotes atoms that need it (as
+   write_canonical/writeq would); quoted='0' prints atoms bare (as
+   write/1 does) */
+WriteTerm: procedure = .string
+  arg t = .string, quoted = .string
+  return WT(t, quoted, 1200)
+
+/* WT(t, quoted, maxPrec): renders t, parenthesising it if its own
+   top-level operator priority would exceed maxPrec (so round-tripping
+   through the parser reproduces the same structure) */
+WT: procedure = .string
+  arg t = .string, quoted = .string, maxPrec = .string
+  prec = 0
+  assoc = ''
+  lp = 0
+  rp = 0
+  sep = ''
+  out = ''
+
+  if IsVar(t) = '1' then return '_' || substr(t, 2)
+
+  if IsNumber(t) = '1' then return t
+
+  if IsCompound(t) \= '1' then do
+    return WTAtom(AtomText(t), quoted)
+  end
+
+  fn = Functor(t)
+  ar = Arity(t)
+
+  /* lists */
+  if fn = '.' & ar = 2 then return WTList(t, quoted)
+
+  /* infix operators */
+  if ar = 2 & IsInfixOp(fn) = '1' then do
+    prec = InfixPrec(fn)
+    assoc = InfixAssoc(fn)
+    lp = prec - 1
+    rp = prec - 1
+    if assoc = 'xfy' then rp = prec
+    if assoc = 'yfx' then lp = prec
+    sep = fn
+    if fn = ',' then sep = ','
+    else sep = ' ' || fn || ' '
+    out = WT(ArgN(t,1), quoted, lp) || sep || WT(ArgN(t,2), quoted, rp)
+    if prec > maxPrec then return '(' || out || ')'
+    return out
+  end
+
+  /* prefix operators */
+  if ar = 1 & IsPrefixOp(fn) = '1' then do
+    prec = PrefixPrec(fn)
+    assoc = PrefixAssoc(fn)
+    rp = prec - 1
+    if assoc = 'fy' then rp = prec
+    argtxt = WT(ArgN(t,1), quoted, rp)
+    sep = ' '
+    if IsSymChar(left(fn,1)) \= '1' then sep = ' '
+    out = fn || sep || argtxt
+    if prec > maxPrec then return '(' || out || ')'
+    return out
+  end
+
+  /* ordinary compound: functor(arg1,arg2,...) */
+  out = WTAtom(fn, quoted) || '('
+  do i = 1 to ar
+    if i > 1 then out = out || ','
+    out = out || WT(ArgN(t,i), quoted, 999)
+  end
+  out = out || ')'
+  return out
+
+/* WTList: t is a '.'(H,T) cons cell; render as [a,b,c] or [a,b|Tail] */
+WTList: procedure = .string
+  arg t = .string, quoted = .string
+  out = '[' || WT(ArgN(t,1), quoted, 999)
+  rest = ArgN(t,2)
+  do forever
+    rd = rest
+    if IsVar(rd) = '1' then rd = DerefTop(rd)
+    if rd = '[]' then do
+      rest = rd
+      leave
+    end
+    if IsCompound(rd) = '1' then do
+      if Functor(rd) = '.' & Arity(rd) = 2 then do
+        out = out || ',' || WT(ArgN(rd,1), quoted, 999)
+        rest = ArgN(rd,2)
+        iterate
+      end
+    end
+    rest = rd
+    leave
+  end
+  if rest \= '[]' then out = out || '|' || WT(rest, quoted, 999)
+  out = out || ']'
+  return out
+
+/* DerefTop: a version of Deref usable before the Deref/BIND machinery
+   is declared later in the file -- Deref itself (defined in the
+   unification section) supersedes plain lookups once bindings exist;
+   this stub is overridden by being called through the real Deref once
+   BIND is initialised. (Kept trivial and safe to call at any time.) */
+DerefTop: procedure = .string expose BIND
+  arg t = .string
+  return Deref(t)
+
+/* WTAtom: prints an atom, quoting it (with '...' and doubled internal
+   quotes) if quoted='1' and the atom's text isn't already a valid bare
+   identifier / symbolic-atom / solo atom */
+WTAtom: procedure = .string
+  arg text = .string, quoted = .string
+  if quoted \= '1' then return text
+  if WTNeedsQuote(text) \= '1' then return text
+  out = "'"
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    if ch = "'" then out = out || "''"
+    else out = out || ch
+  end
+  out = out || "'"
+  return out
+
+WTNeedsQuote: procedure = .string
+  arg text = .string
+  i = 0
+  if text = '[]' | text = '!' | text = ';' | text = '{}' then return '0'
+  if text = '' then return '1'
+  c1 = left(text, 1)
+  if IsLower(c1) = '1' then do
+    do i = 1 to length(text)
+      if IsIdentChar(substr(text,i,1)) \= '1' then return '1'
+    end
+    return '0'
+  end
+  allsym = 1
+  do i = 1 to length(text)
+    if IsSymChar(substr(text,i,1)) \= '1' then do
+      allsym = 0
+      leave
+    end
+  end
+  if allsym = 1 then return '0'
+  return '1'
+
+/* ======================================================================
+   CLAUSE DATABASE
+   Each clause gets a unique increasing integer id. CLHEAD[id] and
+   CLBODY[id] hold its (unrenamed, template) head and body-as-a-goal-
+   list; PRED[functor/arity] holds the space-separated, in-order list
+   of clause ids for that predicate -- assert/z appends, asserta
+   prepends, retract removes one id from the list (there is no stem
+   delete, so as in apl.crexx's SysErase, "remove" means rebuild the
+   id list without that entry; the CLHEAD/CLBODY entries themselves are
+   just left as harmless garbage, since nothing ever looks them up
+   except by walking the id list).
+   ====================================================================== */
+InitDB: procedure = .void expose CLHEAD CLBODY PRED PREDLIST CLCOUNTER
+  CLHEAD = .stem()
+  CLBODY = .stem()
+  PRED = .stem()
+  PREDLIST = ''
+  CLCOUNTER = 0
+  return
+
+PredKey: procedure = .string
+  arg fn = .string, ar = .string
+  return fn || '/' || ar
+
+/* AssertClause: term is either a bare fact (Head) or a rule
+   Head:-Body. atz='1' appends (assert/assertz), '0' prepends (asserta). */
+AssertClause: procedure = .void expose CLHEAD CLBODY PRED PREDLIST CLCOUNTER
+  arg term = .string, atz = .string
+  head = term
+  body = GLEmpty()
+  if IsCompound(term) = '1' & Functor(term) = ':-' & Arity(term) = 2 then do
+    head = ArgN(term, 1)
+    body = FlattenConj(ArgN(term, 2))
+  end
+  key = PredKey(Functor(head), Arity(head))
+  CLCOUNTER = CLCOUNTER + 1
+  id = CLCOUNTER
+  CLHEAD[id] = head
+  CLBODY[id] = body
+  if PRED[key] = '' & wordpos(key, PREDLIST) = 0 then PREDLIST = PREDLIST key
+  if atz = '1' then PRED[key] = GLAppend(PRED[key], id)
+  else PRED[key] = GLPrepend(id, PRED[key])
+  return
+
+/* FlattenConj: turns a ','/2-nested body term into a goal list (see
+   the GL* helpers) -- the operational representation Solve works over */
+FlattenConj: procedure = .string
+  arg t = .string
+  if IsCompound(t) = '1' & Functor(t) = ',' & Arity(t) = 2 then
+    return GLConcat(FlattenConj(ArgN(t,1)), FlattenConj(ArgN(t,2)))
+  return GLAppend(GLEmpty(), t)
+
+/* RetractClause: removes the FIRST clause of the matching predicate
+   whose head and body unify with (head, bodyterm-or-'true') -- true
+   ISO retract/1 semantics, including undoing the trial unification's
+   bindings if nothing is actually removed */
+RetractClause: procedure = .string expose CLHEAD CLBODY PRED
+  arg headpat = .string, bodypat = .string
+  key = PredKey(Functor(headpat), Arity(headpat))
+  ids = PRED[key]
+  do i = 1 to GLCount(ids)
+    id = GLNth(ids, i)
+    mark = TrailMark()
+    call RenameFreshStart
+    rhead = RenameTerm(CLHEAD[id])
+    rbody = FlattenToConjTerm(RenameGoalList(CLBODY[id]))
+    if Unify(headpat, rhead) = '1' & Unify(bodypat, rbody) = '1' then do
+      PRED[key] = RemoveWordFromGL(ids, id)
+      return '1'
+    end
+    call TrailUndo mark
+  end
+  return '0'
+
+/* RenameGoalList: RenameTerm applied to every goal in a goal list,
+   sharing one fresh-variable map across all of them (see RenameTerm) */
+RenameGoalList: procedure = .string
+  arg gl = .string
+  out = GLEmpty()
+  do i = 1 to GLCount(gl)
+    out = GLAppend(out, RenameTerm(GLNth(gl, i)))
+  end
+  return out
+
+/* FlattenToConjTerm: the inverse of FlattenConj -- rebuilds a ','/2
+   chain (or 'true' for an empty body) from a goal list, e.g. for
+   retract/1's second argument and for listing/save */
+FlattenToConjTerm: procedure = .string
+  arg gl = .string
+  n = GLCount(gl)
+  if n = 0 then return 'true'
+  result = GLNth(gl, n)
+  do i = n-1 to 1 by -1
+    result = MkCompound(',', GLAppend(GLAppend(GLEmpty(), GLNth(gl,i)), result))
+  end
+  return result
+
+RemoveWordFromGL: procedure = .string
+  arg gl = .string, w = .string
+  out = GLEmpty()
+  do i = 1 to GLCount(gl)
+    item = GLNth(gl, i)
+    if item \= w then out = GLAppend(out, item)
+  end
+  return out
+
+/* ======================================================================
+   THE SOLVER
+   ----------------------------------------------------------------------
+   Solve(goals) proves a goal list (see the GL* helpers) left to right,
+   trying clauses depth-first, and returns '1'/'0'. What "success"
+   means -- stop entirely and keep these bindings, or record this
+   solution and keep searching for more -- is decided by whatever
+   OnSolution (called when the goal list becomes empty) does, which in
+   turn is decided by the global SOLVEMODE:
+
+     'FIRST'    accept the first solution found and stop (ordinary
+                queries, the CREXX-facing PrologCall, and any construct
+                that needs to solve some sub-goal-list "just once" --
+                if-then-else's condition, \+/1, once/1, forall/2's
+                inner Cond -- saves/restores SOLVEMODE around a nested
+                Solve call to get this in isolation regardless of what
+                the AMBIENT mode is; see IfThenElse/NegationAsFailure
+                below for the pattern)
+     'FINDALL'  record a dereferenced copy of FINDALLTEMPLATE into
+                FINDALLACC and keep searching (findall/3)
+     'INTERACT' print the current top-level query's variable bindings
+                and ask whether to look for another solution
+
+   CUT (!): each activation of a user predicate (each single call to
+   SolveUserPredicate, i.e. each place a NEW clause-selection choice
+   point is created) is given a fresh barrier id. Renaming a clause's
+   body also substitutes any '!' reachable through ,/2 ;/2 ->/2 with
+   $cut(id) for that activation's id (see SubstCutInGoal). Solving
+   $cut(id) succeeds (and continues with the rest of the goal list)
+   exactly like true/0 -- but if backtracking ever unwinds back INTO
+   it, it sets the global CUTSIGNAL to id and fails, and the clause-
+   selection loop whose OWN id matches CUTSIGNAL stops trying further
+   clauses there (clearing CUTSIGNAL); a loop that sees CUTSIGNAL set
+   to some OTHER (necessarily earlier/enclosing) id also stops trying
+   further clauses, but leaves CUTSIGNAL set so it keeps propagating
+   up to the activation it actually belongs to.
+   ====================================================================== */
+InitSolver: procedure = .void expose SOLVEMODE CUTSIGNAL CALLCOUNTER FINDALLACC FINDALLTEMPLATE DEPTHLIMIT
+  SOLVEMODE = 'FIRST'
+  CUTSIGNAL = ''
+  CALLCOUNTER = 0
+  FINDALLACC = ''
+  FINDALLTEMPLATE = ''
+  DEPTHLIMIT = 1000000
+  return
+
+NewBarrierId: procedure = .string expose CALLCOUNTER
+  CALLCOUNTER = CALLCOUNTER + 1
+  return CALLCOUNTER
+
+/* SubstCutInGoal: replaces a bare '!' reachable through ,/2 ;/2 ->/2
+   with $cut(barrierid); everything else (including '!' appearing as
+   DATA inside some other compound, e.g. an argument) is left alone. */
+SubstCutInGoal: procedure = .string
+  arg goal = .string, barrierid = .string
+  if IsPlainAtom(goal) = '1' & goal = '!' then
+    return MkCompound('$cut', GLAppend(GLEmpty(), barrierid))
+  if IsCompound(goal) = '1' then do
+    fn = Functor(goal)
+    if (fn = ',' | fn = ';' | fn = '->') & Arity(goal) = 2 then
+      return MkCompound(fn, GLAppend(GLAppend(GLEmpty(),,
+             SubstCutInGoal(ArgN(goal,1), barrierid)),,
+             SubstCutInGoal(ArgN(goal,2), barrierid)))
+  end
+  return goal
+
+/* OnSolution: called with the (empty) remaining goal list proved --
+   i.e. a solution has been found under the current bindings. Returns
+   '1' to stop searching entirely (propagates all the way back up as
+   overall success), or '0' to make the caller backtrack and keep
+   looking for more solutions. */
+OnSolution: procedure = .string expose SOLVEMODE FINDALLACC FINDALLTEMPLATE
+  select
+    when SOLVEMODE = 'FIRST' then return '1'
+    when SOLVEMODE = 'FINDALL' then do
+      FINDALLACC = GLAppend(FINDALLACC, DerefFull(FINDALLTEMPLATE))
+      return '0'
+    end
+    when SOLVEMODE = 'INTERACT' then return InteractOnSolution()
+    otherwise return '1'
+  end
+  return '1'
+
+/* Solve: the resolution engine's core loop. */
+Solve: procedure = .string expose CLHEAD CLBODY PRED CUTSIGNAL
+  arg goals = .string
+  if GLCount(goals) = 0 then return OnSolution()
+
+  goal = Deref(GLFirst(goals))
+  rest = GLRest(goals)
+
+  if IsVar(goal) = '1' then do
+    say 'prolog: instantiation error (unbound goal)'
+    return '0'
+  end
+
+  fn = Functor(goal)
+  ar = Arity(goal)
+
+  /* --- control constructs -------------------------------------- */
+  if fn = ',' & ar = 2 then do
+    newgoals = GLAppend(GLAppend(GLEmpty(), ArgN(goal,1)), ArgN(goal,2))
+    return Solve(GLConcat(newgoals, rest))
+  end
+
+  if fn = 'true' & ar = 0 then return Solve(rest)
+  if fn = 'fail' & ar = 0 then return '0'
+  if fn = 'false' & ar = 0 then return '0'
+
+  if fn = '!' & ar = 0 then return Solve(rest)   /* a bare ! with no
+    barrier context (e.g. typed directly at the top level) just
+    succeeds like true/0 -- there is no enclosing clause choice point
+    to cut */
+
+  if fn = '$cut' & ar = 1 then return SolveCut(ArgN(goal,1), rest)
+
+  if fn = ';' & ar = 2 then return SolveDisjunction(goal, rest)
+
+  if fn = '->' & ar = 2 then return SolveIfThenNoElse(goal, rest)
+
+  if fn = '\+' & ar = 1 then return SolveNegation(ArgN(goal,1), rest)
+
+  if fn = 'not' & ar = 1 then return SolveNegation(ArgN(goal,1), rest)
+
+  if fn = 'call' & ar >= 1 then return Solve(GLPrepend(BuildCallGoal(goal), rest))
+
+  /* --- built-ins (arithmetic, comparison, type tests, lists, I/O,
+     database, findall, etc.) -- see the BUILT-INS section */
+  if IsBuiltin(fn, ar) = '1' then return SolveBuiltin(fn, ar, goal, rest)
+
+  /* --- user predicate: try each clause in turn ------------------ */
+  return SolveUserPredicate(fn, ar, goal, rest)
+
+/* BuildCallGoal: call(G, A1, A2, ...) -- deref G and append the extra
+   arguments A1.. to it (extending its own argument list), the
+   standard call/N meta-call construction */
+BuildCallGoal: procedure = .string
+  arg callterm = .string
+  i = 0
+  g = Deref(ArgN(callterm, 1))
+  extra = Arity(callterm) - 1
+  if extra = 0 then return g
+  fn = Functor(g)
+  args = GLEmpty()
+  do i = 1 to Arity(g)
+    args = GLAppend(args, ArgN(g, i))
+  end
+  do i = 2 to Arity(callterm)
+    args = GLAppend(args, ArgN(callterm, i))
+  end
+  return MkCompound(fn, args)
+
+SolveCut: procedure = .string expose CUTSIGNAL
+  arg barrierid = .string, rest = .string
+  ok = Solve(rest)
+  if ok = '1' then return '1'
+  CUTSIGNAL = barrierid
+  return '0'
+
+/* SolveDisjunction: (A ; B) -- if A is itself (Cond -> Then), this is
+   full if-then-else; otherwise plain "try A, then try B" */
+SolveDisjunction: procedure = .string
+  arg goal = .string, rest = .string
+  left = ArgN(goal, 1)
+  right = ArgN(goal, 2)
+  if IsCompound(left) = '1' & Functor(left) = '->' & Arity(left) = 2 then
+    return SolveIfThenElse(ArgN(left,1), ArgN(left,2), right, rest)
+  mark = TrailMark()
+  if Solve(GLPrepend(left, rest)) = '1' then return '1'
+  call TrailUndo mark
+  return Solve(GLPrepend(right, rest))
+
+/* SolveIfThenElse: (Cond -> Then ; Else), rest is what follows.
+   Commits to Cond's FIRST solution only (isolated via a saved/
+   restored SOLVEMODE='FIRST', regardless of the ambient mode -- see
+   the header comment on SOLVEMODE). */
+SolveIfThenElse: procedure = .string expose SOLVEMODE
+  arg cond = .string, thengoal = .string, elsegoal = .string, rest = .string
+  mark = TrailMark()
+  savedmode = SOLVEMODE
+  SOLVEMODE = 'FIRST'
+  found = Solve(GLAppend(GLEmpty(), cond))
+  SOLVEMODE = savedmode
+  if found = '1' then return Solve(GLPrepend(thengoal, rest))
+  call TrailUndo mark
+  return Solve(GLPrepend(elsegoal, rest))
+
+/* SolveIfThenNoElse: bare (Cond -> Then) with no ';' -- fails outright
+   if Cond has no solution */
+SolveIfThenNoElse: procedure = .string expose SOLVEMODE
+  arg goal = .string, rest = .string
+  cond = ArgN(goal, 1)
+  thengoal = ArgN(goal, 2)
+  mark = TrailMark()
+  savedmode = SOLVEMODE
+  SOLVEMODE = 'FIRST'
+  found = Solve(GLAppend(GLEmpty(), cond))
+  SOLVEMODE = savedmode
+  if found = '1' then return Solve(GLPrepend(thengoal, rest))
+  call TrailUndo mark
+  return '0'
+
+/* SolveNegation: \+ Goal -- succeeds (continuing with rest) iff Goal
+   has NO solution; never keeps any of Goal's bindings either way */
+SolveNegation: procedure = .string expose SOLVEMODE
+  arg goal = .string, rest = .string
+  mark = TrailMark()
+  savedmode = SOLVEMODE
+  SOLVEMODE = 'FIRST'
+  found = Solve(GLAppend(GLEmpty(), goal))
+  SOLVEMODE = savedmode
+  call TrailUndo mark
+  if found = '1' then return '0'
+  return Solve(rest)
+
+/* SolveOnce: solves goal for exactly one solution, in isolation,
+   KEEPING its bindings on success (unlike \+, which always undoes
+   them) -- used by once/1 and internally wherever a "just the first
+   answer, please" sub-search is needed */
+SolveOnce: procedure = .string expose SOLVEMODE
+  arg goal = .string
+  savedmode = SOLVEMODE
+  SOLVEMODE = 'FIRST'
+  found = Solve(GLAppend(GLEmpty(), goal))
+  SOLVEMODE = savedmode
+  return found
+
+/* SolveUserPredicate: the clause-selection loop for a user-defined
+   predicate goal -- tries each clause of fn/ar in turn (in database
+   order), with its own fresh cut barrier. */
+SolveUserPredicate: procedure = .string expose CLHEAD CLBODY PRED CUTSIGNAL
+  arg fn = .string, ar = .string, goal = .string, rest = .string
+  key = PredKey(fn, ar)
+  ids = PRED[key]
+  if GLCount(ids) = 0 then do
+    if IsKnownPredicate(fn, ar) \= '1' then do
+      say 'prolog: unknown procedure' fn || '/' || ar
+    end
+    return '0'
+  end
+  barrierid = NewBarrierId()
+  do i = 1 to GLCount(ids)
+    id = GLNth(ids, i)
+    mark = TrailMark()
+    call RenameFreshStart
+    rhead = RenameTerm(CLHEAD[id])
+    if Unify(goal, rhead) = '1' then do
+      rbody = RenameGoalList(CLBODY[id])
+      cutbody = GLEmpty()
+      do bi = 1 to GLCount(rbody)
+        cutbody = GLAppend(cutbody, SubstCutInGoal(GLNth(rbody, bi), barrierid))
+      end
+      if Solve(GLConcat(cutbody, rest)) = '1' then return '1'
+    end
+    call TrailUndo mark
+    if CUTSIGNAL \= '' then do
+      if CUTSIGNAL = barrierid then CUTSIGNAL = ''
+      return '0'
+    end
+  end
+  return '0'
+
+/* IsKnownPredicate: has this fn/ar ever had a clause asserted (even if
+   they've since all been retracted)? Used only to decide whether an
+   empty clause list deserves an "unknown procedure" warning versus
+   being an ordinary (silent) failure -- matches how most Prolog
+   top levels only warn about a name that was NEVER defined at all. */
+IsKnownPredicate: procedure = .string expose PREDLIST
+  arg fn = .string, ar = .string
+  if wordpos(PredKey(fn, ar), PREDLIST) > 0 then return '1'
+  return '0'
+
+/* ======================================================================
+   ARITHMETIC EVALUATION  (for is/2 and the arithmetic comparisons)
+   Supports the common ISO functions/operators: + - * / // mod rem **
+   (unary and binary +/-), abs, sign, min, max, sqrt, and the rounding
+   family truncate/round/floor/ceiling/integer/float. Bitwise operators
+   and transcendental functions beyond sqrt are not supported (a
+   documented simplification -- see the port notes).
+
+   ArithEval returns '' (having already printed an error) on failure,
+   e.g. an unbound variable, an unknown function, or a non-arithmetic
+   term (an atom that isn't a recognised 0-ary constant).
+   ====================================================================== */
+ArithEval: procedure = .string
+  arg t = .string
+  t = Deref(t)
+  if IsVar(t) = '1' then do
+    say 'prolog: arithmetic: unbound variable'
+    return ''
+  end
+  if IsNumber(t) = '1' then return t
+  if IsCompound(t) \= '1' then return ArithConst(AtomText(t))
+
+  fn = Functor(t)
+  ar = Arity(t)
+  a = ''
+  b = ''
+
+  if ar = 1 then do
+    a = ArithEval(ArgN(t,1))
+    if a = '' then return ''
+    return ArithEval1(fn, a)
+  end
+  if ar = 2 then do
+    a = ArithEval(ArgN(t,1))
+    if a = '' then return ''
+    b = ArithEval(ArgN(t,2))
+    if b = '' then return ''
+    return ArithEval2(fn, a, b)
+  end
+  say 'prolog: arithmetic: not evaluable:' WriteTerm(t, 1)
+  return ''
+
+ArithConst: procedure = .string
+  arg nm = .string
+  select
+    when nm = 'pi' then return '3.14159265358979'
+    when nm = 'e' then return '2.71828182845905'
+    otherwise do
+      say 'prolog: arithmetic: not evaluable:' nm
+      return ''
+    end
+  end
+  return ''
+
+ArithEval1: procedure = .string
+  arg fn = .string, a = .string
+  select
+    when fn = '-' then return 0 - a
+    when fn = '+' then return a
+    when fn = 'abs' then return abs(a)
+    when fn = 'sign' then do
+      if a > 0 then return 1
+      if a < 0 then return -1
+      return 0
+    end
+    when fn = 'sqrt' then do
+      if a < 0 then do
+        say 'prolog: arithmetic: sqrt of a negative number'
+        return ''
+      end
+      return rxfloat..sqrt(a)
+    end
+    when fn = 'truncate' then return trunc(a)
+    when fn = 'integer' then return trunc(a)
+    when fn = 'float' then return a
+    when fn = 'round' then return format(a, , 0)
+    when fn = 'floor' then do
+      isneg = 0
+      if a < 0 & a \= trunc(a) then isneg = 1
+      return trunc(a) - isneg
+    end
+    when fn = 'ceiling' then do
+      ispos = 0
+      if a > 0 & a \= trunc(a) then ispos = 1
+      return trunc(a) + ispos
+    end
+    otherwise do
+      say 'prolog: arithmetic: unknown function' fn || '/1'
+      return ''
+    end
+  end
+  return ''
+
+ArithEval2: procedure = .string
+  arg fn = .string, a = .string, b = .string
+  select
+    when fn = '+' then return a + b
+    when fn = '-' then return a - b
+    when fn = '*' then return a * b
+    when fn = '/' then do
+      if b = 0 then do
+        say 'prolog: arithmetic: division by zero'
+        return ''
+      end
+      return a / b
+    end
+    when fn = '//' then do
+      if b = 0 then do
+        say 'prolog: arithmetic: division by zero'
+        return ''
+      end
+      return trunc(a / b)
+    end
+    when fn = 'mod' then do
+      if b = 0 then do
+        say 'prolog: arithmetic: division by zero'
+        return ''
+      end
+      m = a // b
+      if m \= 0 then do
+        mneg = 0
+        if m < 0 then mneg = 1
+        bneg = 0
+        if b < 0 then bneg = 1
+        if mneg \= bneg then m = m + b
+      end
+      return m
+    end
+    when fn = 'rem' then do
+      if b = 0 then do
+        say 'prolog: arithmetic: division by zero'
+        return ''
+      end
+      return a // b
+    end
+    when fn = '**' then return a ** b
+    when fn = 'min' then do
+      if a < b then return a
+      return b
+    end
+    when fn = 'max' then do
+      if a > b then return a
+      return b
+    end
+    otherwise do
+      say 'prolog: arithmetic: unknown function' fn || '/2'
+      return ''
+    end
+  end
+  return ''
+
+/* ======================================================================
+   STANDARD ORDER OF TERMS  (for @< @> @=< @>= and sort/msort)
+   Var < Number < Atom < Compound; within a kind, ordered by
+   value/text; compounds by arity, then functor name, then args
+   left to right. Returns -1, 0, or 1.
+   ====================================================================== */
+TermCompare: procedure = .string
+  arg t1 = .string, t2 = .string
+  t1 = Deref(t1)
+  t2 = Deref(t2)
+  k1 = TermKind(t1)
+  k2 = TermKind(t2)
+  if k1 \= k2 then do
+    if k1 < k2 then return -1
+    return 1
+  end
+  select
+    when k1 = 0 then do  /* both variables: order by internal name */
+      n1 = substr(t1,2); n2 = substr(t2,2)
+      if n1 = n2 then return 0
+      if n1 < n2 then return -1
+      return 1
+    end
+    when k1 = 1 then do  /* both numbers */
+      if t1 = t2 then return 0
+      if t1 < t2 then return -1
+      return 1
+    end
+    when k1 = 2 then do  /* both atoms */
+      a1 = AtomText(t1); a2 = AtomText(t2)
+      if a1 = a2 then return 0
+      if a1 < a2 then return -1
+      return 1
+    end
+    otherwise do  /* both compounds */
+      ar1 = Arity(t1); ar2 = Arity(t2)
+      if ar1 \= ar2 then do
+        if ar1 < ar2 then return -1
+        return 1
+      end
+      f1 = Functor(t1); f2 = Functor(t2)
+      if f1 \= f2 then do
+        if f1 < f2 then return -1
+        return 1
+      end
+      do i = 1 to ar1
+        c = TermCompare(ArgN(t1,i), ArgN(t2,i))
+        if c \= 0 then return c
+      end
+      return 0
+    end
+  end
+  return 0
+
+TermKind: procedure = .string
+  arg t = .string
+  if IsVar(t) = '1' then return 0
+  if IsNumber(t) = '1' then return 1
+  if IsCompound(t) \= '1' then return 2
+  return 3
+
+TermEqual: procedure = .string
+  arg t1 = .string, t2 = .string
+  if TermCompare(t1, t2) = 0 then return '1'
+  return '0'
+
+/* ======================================================================
+   CONSULT  (loading clauses from a file or an in-memory string)
+   Reads and tokenizes the WHOLE text in one PTokenize call (which
+   naturally produces multiple END markers scattered through one TOK
+   array, one per clause), then repeatedly calls ParseClauseTerm --
+   which no longer resets PPOS to 1, and instead advances it past each
+   clause's END token -- until the token stream is exhausted. A clause
+   of the form ":- Goal." (i.e. a term whose top-level functor is the
+   PREFIX ':-' , arity 1) is a directive and is executed immediately,
+   in the order encountered, exactly like a real consult; anything else
+   is asserted as a fact or rule.
+   ====================================================================== */
+/* ======================================================================
+   BOOTSTRAP LIBRARY
+   Common list and control predicates that don't need any special
+   native support -- ordinary backtracking through user predicates
+   (already validated) is all they need -- so they're simplest and
+   most authentically defined as plain Prolog source, consulted once
+   at startup, rather than hand-written as native CREXX built-ins.
+   ====================================================================== */
+BootstrapLibText: procedure = .string
+  nl = '0a'x
+  t = 'append([], L, L).' || nl,
+      || 'append([H|T], L, [H|R]) :- append(T, L, R).' || nl,
+      || 'member(X, [X|_]).' || nl,
+      || 'member(X, [_|T]) :- member(X, T).' || nl,
+      || 'length([], 0).' || nl,
+      || 'length([_|T], N) :- length(T, N0), N is N0 + 1.' || nl,
+      || 'reverse(L, R) :- reverse_(L, [], R).' || nl,
+      || 'reverse_([], A, A).' || nl,
+      || 'reverse_([H|T], A, R) :- reverse_(T, [H|A], R).' || nl,
+      || 'last([X], X) :- !.' || nl,
+      || 'last([_|T], X) :- last(T, X).' || nl,
+      || 'nth0(0, [X|_], X) :- !.' || nl,
+      || 'nth0(N, [_|T], X) :- integer(N), N > 0, N1 is N - 1, nth0(N1, T, X).' || nl,
+      || 'nth1(1, [X|_], X) :- !.' || nl,
+      || 'nth1(N, [_|T], X) :- integer(N), N > 1, N1 is N - 1, nth1(N1, T, X).' || nl,
+      || 'sum_list([], 0).' || nl,
+      || 'sum_list([H|T], S) :- sum_list(T, S0), S is S0 + H.' || nl,
+      || 'max_list([X], X) :- !.' || nl,
+      || 'max_list([H|T], M) :- max_list(T, M0), (H >= M0 -> M = H ; M = M0).' || nl,
+      || 'min_list([X], X) :- !.' || nl,
+      || 'min_list([H|T], M) :- min_list(T, M0), (H =< M0 -> M = H ; M = M0).' || nl,
+      || 'between(L, H, L) :- L =< H.' || nl,
+      || 'between(L, H, X) :- L < H, L1 is L + 1, between(L1, H, X).' || nl,
+      || 'forall(Cond, Action) :- \+ (Cond, \+ Action).' || nl,
+      || 'select(X, [X|T], T).' || nl,
+      || 'select(X, [H|T], [H|R]) :- select(X, T, R).' || nl,
+      || 'selectchk(X, L, R) :- select(X, L, R), !.' || nl,
+      || 'permutation([], []).' || nl,
+      || 'permutation(L, [H|T]) :- select(H, L, R), permutation(R, T).' || nl,
+      || 'delete([], _, []).' || nl,
+      || 'delete([X|T], X, R) :- !, delete(T, X, R).' || nl,
+      || 'delete([H|T], X, [H|R]) :- delete(T, X, R).' || nl,
+      || 'exclude(_, [], []).' || nl,
+      || 'exclude(P, [H|T], R) :- (call(P, H) -> exclude(P, T, R) ; R = [H|R1], exclude(P, T, R1)).' || nl,
+      || 'include(_, [], []).' || nl,
+      || 'include(P, [H|T], R) :- (call(P, H) -> R = [H|R1], include(P, T, R1) ; include(P, T, R)).' || nl,
+      || 'maplist(_, []).' || nl,
+      || 'maplist(P, [H|T]) :- call(P, H), maplist(P, T).' || nl,
+      || 'maplist(_, [], []).' || nl,
+      || 'maplist(P, [H|T], [H2|T2]) :- call(P, H, H2), maplist(P, T, T2).' || nl,
+      || 'maplist(_, [], [], []).' || nl,
+      || 'maplist(P, [H|T], [H2|T2], [H3|T3]) :- call(P, H, H2, H3), maplist(P, T, T2, T3).' || nl,
+      || 'msort_insert(X, [], [X]).' || nl,
+      || 'msort_insert(X, [H|T], [X,H|T]) :- X @=< H, !.' || nl,
+      || 'msort_insert(X, [H|T], [H|R]) :- msort_insert(X, T, R).' || nl,
+      || 'msort([], []).' || nl,
+      || 'msort([H|T], S) :- msort(T, S0), msort_insert(H, S0, S).' || nl,
+      || 'sort(L, S) :- msort(L, S0), dedupe_(S0, S).' || nl,
+      || 'dedupe_([], []).' || nl,
+      || 'dedupe_([X], [X]) :- !.' || nl,
+      || 'dedupe_([X,Y|T], R) :- X == Y, !, dedupe_([Y|T], R).' || nl,
+      || 'dedupe_([X,Y|T], [X|R]) :- dedupe_([Y|T], R).' || nl,
+      || "concat_atom([], '')." || nl,
+      || 'concat_atom([A], A) :- !.' || nl,
+      || 'concat_atom([A|T], R) :- concat_atom(T, R0), atom_concat(A, R0, R).'
+  return t
+
+ConsultString: procedure = .void expose TOK PPOS
+  arg text = .string
+  call PTokenize text
+  do while PPOS <= TOK[0]
+    t = ParseClauseTerm()
+    if t = '' then leave
+    if IsCompound(t) = '1' & Functor(t) = ':-' & Arity(t) = 1 then do
+      mark = TrailMark()
+      ok = SolveOnce(ArgN(t, 1))
+      if ok \= '1' then say 'prolog: directive failed:' WriteTerm(t, 1)
+      call TrailUndo mark
+    end
+    else call AssertClause t, '1'
+  end
+  return
+
+/* ======================================================================
+   LISTING / WORKSPACE SAVE
+   Workspace persistence is simply "print every clause in the database
+   as ordinary Prolog source text" (reusing WriteTerm) to a file, which
+   can then be reloaded with exactly the same consult/1 that loads any
+   other Prolog source -- so save/1 and consult/1 (or load/1) together
+   already ARE the save/load mechanism, with no separate serialisation
+   format to invent or maintain.
+   ====================================================================== */
+ClauseText: procedure = .string expose CLHEAD CLBODY
+  arg id = .string
+  head = CLHEAD[id]
+  body = CLBODY[id]
+  if GLCount(body) = 0 then return WriteTerm(head, 1) || '.'
+  bodyterm = FlattenToConjTerm(body)
+  return WriteTerm(head, 1) || ' :-' || '0a'x || '    ' || WT(bodyterm, 1, 1200) || '.'
+
+/* IsUserClauseId: was this clause id added AFTER the bootstrap library
+   finished loading (BOOTSTRAPMAXID, set once in InitEngine)? Used to
+   filter the bootstrap library's ~50 clauses (append, member, length,
+   and so on) out of the default listing/save, so "show/export my
+   session" means what it sounds like, rather than dumping the
+   interpreter's own plumbing every time. */
+IsUserClauseId: procedure = .string expose BOOTSTRAPMAXID
+  arg id = .string
+  if id > BOOTSTRAPMAXID then return '1'
+  return '0'
+
+/* ListingAll(userOnly): userOnly='1' shows only clauses added since
+   the bootstrap library finished loading (the default, via listing/0);
+   userOnly='0' shows everything, bootstrap library included (via
+   listing_all/0). */
+ListingAll: procedure = .void expose PREDLIST PRED
+  arg userOnly = .string
+  do p = 1 to words(PREDLIST)
+    key = word(PREDLIST, p)
+    ids = PRED[key]
+    if GLCount(ids) = 0 then iterate
+    shown = 0
+    do i = 1 to GLCount(ids)
+      id = GLNth(ids, i)
+      if userOnly = '1' & IsUserClauseId(id) \= '1' then iterate
+      say ClauseText(id)
+      shown = 1
+    end
+    if shown = 1 then say ''
+  end
+  return
+
+/* ListingOne always shows every clause of the named predicate,
+   bootstrap or not -- asking for a predicate BY NAME is a deliberate,
+   specific request, unlike the "show me everything" default above. */
+ListingOne: procedure = .void expose PREDLIST PRED
+  arg fnname = .string
+  do p = 1 to words(PREDLIST)
+    key = word(PREDLIST, p)
+    parse var key kfn '/' kar
+    if kfn \= fnname then iterate
+    ids = PRED[key]
+    do i = 1 to GLCount(ids)
+      say ClauseText(GLNth(ids, i))
+    end
+    say ''
+  end
+  return
+
+/* SaveWorkspace(fn, userOnly): userOnly='1' (the default, via save/1)
+   exports only what was added this session -- the bootstrap library
+   is always available by simply starting the interpreter, so it isn't
+   worth re-saving every time; userOnly='0' (via save_all/1) writes a
+   fully self-contained file, bootstrap library included, that doesn't
+   depend on anything but the interpreter itself. */
+SaveWorkspace: procedure = .void expose PREDLIST PRED
+  arg fn = .string, userOnly = .string
+  count = 0
+  do p = 1 to words(PREDLIST)
+    key = word(PREDLIST, p)
+    ids = PRED[key]
+    do i = 1 to GLCount(ids)
+      id = GLNth(ids, i)
+      if userOnly = '1' & IsUserClauseId(id) \= '1' then iterate
+      x = charout(fn, ClauseText(id) || '0a'x || '0a'x)
+      count = count + 1
+    end
+  end
+  call lineout fn
+  if count = 0 & userOnly = '1' then
+    say 'prolog: nothing added this session -- saved an empty file to' fn
+  else say 'prolog: saved' count 'clause(s) to' fn
+  return
+
+/* ClearWorkspace: wipes the database, bindings, and trail back to a
+   fresh session -- as if the interpreter had just started. The
+   bootstrap library is reloaded (it's infrastructure, not session
+   data, the same way apl.crexx's )CLEAR resets user variables/
+   functions but leaves the built-in primitives in place). */
+ClearWorkspace: procedure = .void
+  call InitEngine
+  say 'prolog: workspace cleared.'
+  return
+
+/* SysLib(dir): lists the .pl files available to consult in dir
+   ('' means the current directory) -- apl.crexx's )CLEAR has a
+   counterpart here; this is the counterpart to classic APL's )LIB,
+   adapted from "which saved workspaces exist in library N" (a
+   numbered-library concept that doesn't apply here) to "which .pl
+   files are sitting in this directory, ready to consult." */
+SysLib: procedure = .void
+  arg dir = .string
+  lookin = dir
+  if lookin = '' then lookin = '.'
+  entries = .string[]
+  n = rxfs..listdir(lookin, entries)
+  if n < 0 then do
+    say 'prolog: )lib -- cannot read directory:' lookin
+    return
+  end
+  found = 0
+  do i = 1 to n
+    fname = entries[i]
+    if length(fname) > 3 then do
+      if translate(right(fname, 3)) = '.PL' then do
+        say '  ' fname
+        found = found + 1
+      end
+    end
+  end
+  if found = 0 then say 'prolog: )lib -- no .pl files in' lookin
+  return
+
+ConsultFile: procedure = .void
+  arg fn = .string
+  text = ''
+  do while lines(fn) > 0
+    text = text || linein(fn) || '0a'x
+  end
+  call lineout fn
+  call ConsultString text
+  return
+
+/* ======================================================================
+   SESSION COMMANDS  ( )vars  )listing  )help  )quit )
+   ====================================================================== */
+HandleSysCmd: procedure = .string
+  arg ln = .string
+  parse var ln cmd rest
+  ucmd = translate(cmd)
+  select
+    when ucmd = ')LISTING' then call ListingAll '1'
+    when ucmd = ')CLEAR' then call ClearWorkspace
+    when ucmd = ')LIB' then call SysLib strip(rest)
+    when ucmd = ')HELP' | ucmd = ')?' then call SysHelp
+    when ucmd = ')QUIT' | ucmd = ')EXIT' then return 'QUIT'
+    otherwise say 'prolog: unknown session command:' cmd '(try )help)'
+  end
+  return ''
+
+SysHelp: procedure = .void
+  say 'session commands:'
+  say '  )listing      list what YOU added this session (not the'
+  say '                built-in library -- see listing_all below)'
+  say '  )lib [dir]    list .pl files available to consult (current'
+  say '                directory, or [dir] if given)'
+  say '  )clear        wipe the database back to a fresh session'
+  say '                (the built-in library is reloaded, your own'
+  say '                facts/rules/assertions are gone)'
+  say '  )help  or )?  show this message'
+  say '  )quit )exit   end the session'
+  say ''
+  say 'the terminator says what you mean:'
+  say '  end a QUERY with ?   -- asks whether it is true / for a value:'
+  say '    female(ann)?'
+  say '    parent(tom, X)?'
+  say '  end a FACT or RULE with .  -- adds it to the database:'
+  say '    female(ann).'
+  say '    grandparent(X,Z) :- parent(X,Y), parent(Y,Z).'
+  say '  ?- goal.  and  :- goal.  (SWI/file-directive style, ending in .)',
+      'also work and are treated as queries, for anything pasted in from',
+      'elsewhere.'
+  say ''
+  say 'exporting/reloading what you built this session:'
+  say '  save(File)?          save what YOU added (not the built-in',
+      'library) as loadable Prolog source'
+  say '  save_all(File)?      save EVERYTHING, built-in library',
+      'included -- a fully self-contained file'
+  say '  consult(File)?       load clauses/directives from a file',
+      '(also: load(File)?)'
+  say ''
+  say 'other goals, typed as a query:'
+  say '  listing?             list what you added this session'
+  say '  listing_all?         list the whole database, library included'
+  say '  listing(Name)?       list clauses for Name (any arity),',
+      'library or not'
+  say '  halt?                end the session (or just: halt.)'
+  return
+
+/* ======================================================================
+   INTERACTIVE TOP LEVEL
+   Reads one query per line, solves it with SOLVEMODE='INTERACT' (see
+   InteractOnSolution below), which prints each solution's variable
+   bindings and asks whether to look for another (";" for yes, anything
+   else -- including just pressing return -- to stop there). Session
+   commands ()vars, )listing, )help, etc.) are handled the same way as
+   apl.crexx's; everything else is parsed and solved as an ordinary
+   Prolog goal, exactly like consult/1, listing/0, save/1, and halt/0
+   themselves -- they are just ordinary builtin predicates, not special
+   top-level syntax.
+   ====================================================================== */
+/* IsQueryPrefixed / UnwrapQueryPrefix: is t wrapped in an explicit
+   "?-" or ":-" prefix (SWI/file-directive style), and if so, the goal
+   underneath it. Recognised for compatibility/convenience alongside
+   the primary "." vs "?" terminator convention below, so pasting a
+   line from a real Prolog file or session ("?- foo." or ":- foo.")
+   still does the right thing even though it ends in "." rather than
+   "?". */
+IsQueryPrefixed: procedure = .string
+  arg t = .string
+  if IsCompound(t) \= '1' then return '0'
+  fn = Functor(t)
+  if (fn = '?-' | fn = ':-') & Arity(t) = 1 then return '1'
+  return '0'
+
+UnwrapQueryPrefix: procedure = .string
+  arg t = .string
+  if IsQueryPrefixed(t) = '1' then return ArgN(t, 1)
+  return t
+
+/* IsReservedTopLevelName: true/0, fail/0, false/0, !/0, and anything
+   already registered as a builtin predicate (is/2, write/1, halt/0,
+   consult/1, and so on) can never sensibly be "a fact to add" --
+   nobody wants a database fact literally named halt or listing. These
+   are always solved/called, regardless of which terminator ('.' or
+   '?') was used, so "halt." keeps working exactly as expected even
+   though it isn't phrased as a question. This is deliberately narrow:
+   it does NOT try to guess intent for ordinary user predicates -- that
+   is what the '.' vs '?' terminator is for. */
+IsReservedTopLevelName: procedure = .string
+  arg t = .string
+  fn = Functor(t)
+  ar = Arity(t)
+  if IsCompound(t) \= '1' then do
+    if fn = 'true' | fn = 'fail' | fn = 'false' | fn = '!' then return '1'
+    if IsBuiltin(fn, 0) = '1' then return '1'
+    return '0'
+  end
+  if IsBuiltin(fn, ar) = '1' then return '1'
+  return '0'
+
+/* SolveInteractAndShow: solves g in INTERACT mode (bindings shown,
+   "more (;)?" asked after each solution -- see InteractOnSolution). */
+SolveInteractAndShow: procedure = .void expose QUERYVARMAP PVARMAP SOLVEMODE
+  arg g = .string
+  QUERYVARMAP = PVARMAP
+  SOLVEMODE = 'INTERACT'
+  mark = TrailMark()
+  ok = Solve(GLAppend(GLEmpty(), g))
+  SOLVEMODE = 'FIRST'
+  if ok \= '1' then say 'false.'
+  call TrailUndo mark
+  return
+
+RunTopLevel: procedure = .void expose TOK PPOS PVARMAP QUERYVARMAP SOLVEMODE LASTTERMCHAR
+  say 'Prolog-in-CREXX -- type )help for session commands, halt. to quit'
+  say '(end a QUERY with ? -- e.g. female(ann)?  or parent(tom,X)?',
+      '-- end a FACT or RULE with . to add it -- e.g. female(ann).',
+      'or foo(X):-bar(X).)'
+  do forever
+    say '?-'
+    if lines() <= 0 then do
+      say
+      say 'goodbye.'
+      return
+    end
+    ln = linein()
+    lnstrip = strip(ln)
+    if lnstrip = '' then iterate
+    if left(lnstrip, 1) = ')' then do
+      sysrc = HandleSysCmd(lnstrip)
+      if sysrc = 'QUIT' then do
+        say 'goodbye.'
+        return
+      end
+      iterate
+    end
+    call PTokenize lnstrip
+    do while PPOS <= TOK[0]
+      goal = ParseClauseTerm()
+      if goal = '' then leave
+      if LASTTERMCHAR = '?' then
+        call SolveInteractAndShow UnwrapQueryPrefix(goal)
+      else if IsQueryPrefixed(goal) = '1' then
+        call SolveInteractAndShow UnwrapQueryPrefix(goal)
+      else if IsReservedTopLevelName(goal) = '1' then
+        call SolveInteractAndShow goal
+      else do
+        call AssertClause goal, '1'
+        say '%  added:' WriteTerm(goal, 1)
+      end
+    end
+  end
+  return
+
+/* InteractOnSolution: prints the current bindings of the ORIGINAL
+   query's variables (QUERYVARMAP, a snapshot of PVARMAP taken right
+   after parsing the query -- so it maps each surface variable
+   spelling, e.g. "X", to the internal variable it was resolved to;
+   "_" and other anonymous variables are never in it, so they are
+   never shown, matching ordinary top-level behaviour), then asks
+   whether to keep searching for another solution. */
+InteractOnSolution: procedure = .string expose QUERYVARMAP
+  names = QUERYVARMAP.tails()
+  cnt = names[0]
+  if cnt = 0 then say 'true.'
+  else do
+    line = ''
+    do i = 1 to cnt
+      vname = names[i]
+      vref = QUERYVARMAP[vname]
+      val = WriteTerm(DerefFull(vref), 1)
+      if i > 1 then line = line || ', '
+      line = line || vname || ' = ' || val
+    end
+    say line
+  end
+  call charout , '     more (;)? '
+  if lines() <= 0 then return '1'
+  ans = strip(linein())
+  if ans = ';' then return '0'
+  return '1'
+
+/* ======================================================================
+   UNIFICATION ENGINE
+   BIND[varname] holds the current binding of that internal variable
+   name, or '' if unbound (an unset stem key already reads back as '',
+   so "no entry yet" and "explicitly unbound" are the same thing here).
+   TRAIL is the list of variable names bound since the start of the
+   program, in order; backtracking truncates it back to a saved mark
+   and un-binds (sets back to '') everything trimmed off, using
+   arraydelete -- see apl.crexx's port notes for why array contents are
+   reset via arraydelete/arraydrop rather than by reassigning the
+   exposed global (a real quirk of this build: doing that silently
+   fails to clear old contents on the second and later calls).
+   ====================================================================== */
+InitBindings: procedure = .void expose BIND TRAIL
+  BIND = .stem()
+  TRAIL = .string[]
+  return
+
+/* Deref: follow a variable's binding chain to either an unbound
+   variable or a non-variable term. Everything else (atoms, numbers,
+   compounds) derefs to itself. */
+Deref: procedure = .string expose BIND
+  arg t = .string
+  do while IsVar(t) = '1'
+    vn = substr(t, 2)
+    b = BIND[vn]
+    if b = '' then return t
+    t = b
+  end
+  return t
+
+/* DerefFull: like Deref, but also walks INTO a compound's arguments,
+   returning a fully-dereferenced copy -- used when a result needs to
+   be read out and remain meaningful after further backtracking (e.g.
+   findall/3's template, or a value handed back across the CREXX API). */
+DerefFull: procedure = .string
+  arg t = .string
+  t = Deref(t)
+  if IsCompound(t) \= '1' then return t
+  fn = Functor(t)
+  ar = Arity(t)
+  args = GLEmpty()
+  do i = 1 to ar
+    args = GLAppend(args, DerefFull(ArgN(t, i)))
+  end
+  return MkCompound(fn, args)
+
+TrailMark: procedure = .string expose TRAIL
+  return TRAIL[0]
+
+TrailUndo: procedure = .void expose TRAIL BIND
+  arg mark = .string
+  hi = TRAIL[0]
+  if hi > mark then do
+    do i = mark + 1 to hi
+      BIND[TRAIL[i]] = ''
+    end
+    call arraydelete TRAIL, mark + 1, hi - mark
+  end
+  return
+
+/* BindVar: binds unbound variable (its internal name, already stripped
+   of the tag byte) to value, and records it on the trail */
+BindVar: procedure = .void expose BIND TRAIL
+  arg vn = .string, value = .string
+  BIND[vn] = value
+  call arrayappend TRAIL, vn
+  return
+
+/* Unify: the core unification algorithm. On failure, any bindings it
+   made are left in place for the CALLER to undo via TrailUndo back to
+   a mark taken before calling Unify -- Unify itself never undoes its
+   own partial work, by design, matching how the resolution engine
+   always wraps a unification attempt in its own trail mark/undo. */
+Unify: procedure = .string expose BIND
+  arg t1 = .string, t2 = .string
+  t1 = Deref(t1)
+  t2 = Deref(t2)
+
+  if IsVar(t1) = '1' then do
+    if IsVar(t2) = '1' & substr(t1,2) = substr(t2,2) then return '1'
+    call BindVar substr(t1, 2), t2
+    return '1'
+  end
+  if IsVar(t2) = '1' then do
+    call BindVar substr(t2, 2), t1
+    return '1'
+  end
+
+  if IsCompound(t1) = '1' | IsCompound(t2) = '1' then do
+    if IsCompound(t1) \= '1' then return '0'
+    if IsCompound(t2) \= '1' then return '0'
+    if Functor(t1) \= Functor(t2) then return '0'
+    ar = Arity(t1)
+    if ar \= Arity(t2) then return '0'
+    do i = 1 to ar
+      if Unify(ArgN(t1,i), ArgN(t2,i)) \= '1' then return '0'
+    end
+    return '1'
+  end
+
+  /* two atomics: same iff same printable form (numbers compare as
+     text, which is fine since both came through the same tokenizer/
+     arithmetic-result formatting and so share a canonical spelling) */
+  if t1 = t2 then return '1'
+  return '0'
+
+/* ======================================================================
+   STRUCTURE COPYING (clause instantiation with fresh variables)
+   RVARMAP is a scratch table shared by RenameTerm across the several
+   calls that make up renaming one clause (head + body), reset by
+   RenameFreshStart at the start of each such clause instantiation, so
+   that a variable occurring in both the head and the body gets the
+   SAME fresh name in both places. It is a plain global (not passed as
+   an argument) because plain-argument stem/array objects are copied by
+   value in this build, not shared by reference -- see the port notes.
+   ====================================================================== */
+RenameFreshStart: procedure = .void expose RVARMAP
+  RVARMAP = .stem()
+  return
+
+RenameTerm: procedure = .string expose RVARMAP RVARCOUNTER
+  arg t = .string
+  if IsVar(t) = '1' then do
+    vn = substr(t, 2)
+    if RVARMAP[vn] \= '' then return RVARMAP[vn]
+    RVARCOUNTER = RVARCOUNTER + 1
+    fresh = MkVar(vn || '#' || RVARCOUNTER)
+    RVARMAP[vn] = fresh
+    return fresh
+  end
+  if IsCompound(t) \= '1' then return t
+  fn = Functor(t)
+  ar = Arity(t)
+  args = GLEmpty()
+  do i = 1 to ar
+    args = GLAppend(args, RenameTerm(ArgN(t, i)))
+  end
+  return MkCompound(fn, args)
+
+/* ======================================================================
+   BUILT-IN PREDICATES
+   Everything here is deterministic (succeeds at most once); list
+   utilities and other predicates naturally defined by ordinary
+   backtracking (append/3, member/2, between/3, ...) are instead
+   bootstrapped as plain Prolog source -- see BOOTSTRAP_LIB below.
+   ====================================================================== */
+BuiltinKey: procedure = .string
+  arg fn = .string, ar = .string
+  return fn || '/' || ar
+
+IsBuiltin: procedure = .string expose BUILTINSET
+  arg fn = .string, ar = .string
+  if BUILTINSET[BuiltinKey(fn,ar)] = "1" then return '1'
+  return '0'
+
+InitBuiltins: procedure = .void expose BUILTINSET
+  BUILTINSET = .stem()
+  list = '=/2 \=/2 ==/2 \==/2 @</2 @>/2 @=</2 @>=/2 compare/3',
+         'is/2 </2 >/2 =</2 >=/2 =:=/2 =\=/2',
+         'var/1 nonvar/1 atom/1 atomic/1 number/1 integer/1 float/1',
+         'compound/1 callable/1 is_list/1 ground/1',
+         'functor/3 arg/3 =../2 copy_term/2',
+         'atom_codes/2 atom_chars/2 number_codes/2 number_chars/2',
+         'atom_length/2 char_code/2 atom_concat/3 upcase_atom/2 downcase_atom/2',
+         'assert/1 asserta/1 assertz/1 retract/1 retractall/1',
+         'findall/3 write/1 writeln/1 nl/0 print/1 tab/1',
+         'consult/1 listing/0 listing_all/0 listing/1 save/1 save_all/1 load/1',
+         'crexx_call/2 crexx_call/3',
+         'halt/0 halt/1'
+  do i = 1 to words(list)
+    BUILTINSET[word(list,i)] = "1"
+  end
+  return
+
+/* SolveBuiltin: dispatches and executes goal (a builtin call), then
+   either continues with Solve(rest) on success or returns '0'. */
+SolveBuiltin: procedure = .string expose CLHEAD CLBODY PRED PREDLIST CLCOUNTER
+  arg fn = .string, ar = .string, goal = .string, rest = .string
+  key = BuiltinKey(fn, ar)
+
+  select
+    when key = '=/2' then do
+      if Unify(ArgN(goal,1), ArgN(goal,2)) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = '\=/2' then do
+      mark = TrailMark()
+      ok = Unify(ArgN(goal,1), ArgN(goal,2))
+      call TrailUndo mark
+      if ok \= '1' then return Solve(rest)
+      return '0'
+    end
+    when key = '==/2' then do
+      if TermEqual(ArgN(goal,1), ArgN(goal,2)) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = '\==/2' then do
+      if TermEqual(ArgN(goal,1), ArgN(goal,2)) \= '1' then return Solve(rest)
+      return '0'
+    end
+    when key = '@</2' then do
+      if TermCompare(ArgN(goal,1), ArgN(goal,2)) < 0 then return Solve(rest)
+      return '0'
+    end
+    when key = '@>/2' then do
+      if TermCompare(ArgN(goal,1), ArgN(goal,2)) > 0 then return Solve(rest)
+      return '0'
+    end
+    when key = '@=</2' then do
+      if TermCompare(ArgN(goal,1), ArgN(goal,2)) <= 0 then return Solve(rest)
+      return '0'
+    end
+    when key = '@>=/2' then do
+      if TermCompare(ArgN(goal,1), ArgN(goal,2)) >= 0 then return Solve(rest)
+      return '0'
+    end
+    when key = 'compare/3' then do
+      c = TermCompare(ArgN(goal,2), ArgN(goal,3))
+      symb = '='
+      if c < 0 then symb = '<'
+      if c > 0 then symb = '>'
+      if Unify(ArgN(goal,1), symb) = '1' then return Solve(rest)
+      return '0'
+    end
+
+    when key = 'is/2' then do
+      v = ArithEval(ArgN(goal,2))
+      if v = '' then return '0'
+      if Unify(ArgN(goal,1), v) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = '</2' then return SolveArithCmp('<', goal, rest)
+    when key = '>/2' then return SolveArithCmp('>', goal, rest)
+    when key = '=</2' then return SolveArithCmp('=<', goal, rest)
+    when key = '>=/2' then return SolveArithCmp('>=', goal, rest)
+    when key = '=:=/2' then return SolveArithCmp('=:=', goal, rest)
+    when key = '=\=/2' then return SolveArithCmp('=\=', goal, rest)
+
+    when key = 'var/1' then do
+      if IsVar(Deref(ArgN(goal,1))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'nonvar/1' then do
+      if IsVar(Deref(ArgN(goal,1))) \= '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'atom/1' then do
+      if IsAtom(Deref(ArgN(goal,1))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'atomic/1' then do
+      if IsAtomic(Deref(ArgN(goal,1))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'number/1' then do
+      if IsNumber(Deref(ArgN(goal,1))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'integer/1' then do
+      v = Deref(ArgN(goal,1))
+      if IsNumber(v) = '1' & v = trunc(v) then return Solve(rest)
+      return '0'
+    end
+    when key = 'float/1' then do
+      v = Deref(ArgN(goal,1))
+      if IsNumber(v) = '1' & v \= trunc(v) then return Solve(rest)
+      return '0'
+    end
+    when key = 'compound/1' then do
+      if IsCompound(Deref(ArgN(goal,1))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'callable/1' then do
+      v = Deref(ArgN(goal,1))
+      if IsAtom(v) = '1' | IsCompound(v) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'is_list/1' then do
+      if IsProperList(ArgN(goal,1)) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'ground/1' then do
+      if IsGround(ArgN(goal,1)) = '1' then return Solve(rest)
+      return '0'
+    end
+
+    when key = 'functor/3' then return SolveFunctor(goal, rest)
+    when key = 'arg/3' then return SolveArg3(goal, rest)
+    when key = '=../2' then return SolveUniv(goal, rest)
+    when key = 'copy_term/2' then do
+      call RenameFreshStart
+      copy = RenameTerm(DerefFull(ArgN(goal,1)))
+      if Unify(ArgN(goal,2), copy) = '1' then return Solve(rest)
+      return '0'
+    end
+
+    when key = 'atom_codes/2' then return SolveAtomCodes(goal, rest)
+    when key = 'atom_chars/2' then return SolveAtomChars(goal, rest)
+    when key = 'number_codes/2' then return SolveNumberCodes(goal, rest)
+    when key = 'number_chars/2' then return SolveNumberChars(goal, rest)
+    when key = 'atom_length/2' then do
+      v = Deref(ArgN(goal,1))
+      if Unify(ArgN(goal,2), length(AtomText(v))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'char_code/2' then return SolveCharCode(goal, rest)
+    when key = 'atom_concat/3' then return SolveAtomConcat(goal, rest)
+    when key = 'upcase_atom/2' then do
+      v = Deref(ArgN(goal,1))
+      if Unify(ArgN(goal,2), MkQAtom(translate(AtomText(v)))) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'downcase_atom/2' then do
+      v = Deref(ArgN(goal,1))
+      lc = translate(AtomText(v), xrange('a','z'), xrange('A','Z'))
+      if Unify(ArgN(goal,2), MkQAtom(lc)) = '1' then return Solve(rest)
+      return '0'
+    end
+
+    when key = 'assert/1' then do
+      call AssertClause DerefFull(ArgN(goal,1)), '1'
+      return Solve(rest)
+    end
+    when key = 'assertz/1' then do
+      call AssertClause DerefFull(ArgN(goal,1)), '1'
+      return Solve(rest)
+    end
+    when key = 'asserta/1' then do
+      call AssertClause DerefFull(ArgN(goal,1)), '0'
+      return Solve(rest)
+    end
+    when key = 'retract/1' then do
+      t = DerefFull(ArgN(goal,1))
+      headpat = t
+      bodypat = 'true'
+      if IsCompound(t) = '1' & Functor(t) = ':-' & Arity(t) = 2 then do
+        headpat = ArgN(t,1)
+        bodypat = ArgN(t,2)
+      end
+      if RetractClause(headpat, bodypat) = '1' then return Solve(rest)
+      return '0'
+    end
+    when key = 'retractall/1' then do
+      call RetractAll DerefFull(ArgN(goal,1))
+      return Solve(rest)
+    end
+
+    when key = 'findall/3' then return SolveFindall(goal, rest)
+
+    when key = 'consult/1' then do
+      call ConsultFile AtomText(Deref(ArgN(goal,1)))
+      return Solve(rest)
+    end
+    when key = 'load/1' then do
+      call ConsultFile AtomText(Deref(ArgN(goal,1)))
+      return Solve(rest)
+    end
+    when key = 'listing/0' then do
+      call ListingAll '1'
+      return Solve(rest)
+    end
+    when key = 'listing_all/0' then do
+      call ListingAll '0'
+      return Solve(rest)
+    end
+    when key = 'listing/1' then do
+      call ListingOne AtomText(Deref(ArgN(goal,1)))
+      return Solve(rest)
+    end
+    when key = 'save/1' then do
+      call SaveWorkspace AtomText(Deref(ArgN(goal,1))), '1'
+      return Solve(rest)
+    end
+    when key = 'save_all/1' then do
+      call SaveWorkspace AtomText(Deref(ArgN(goal,1))), '0'
+      return Solve(rest)
+    end
+
+    when key = 'write/1' then do
+      call charout , WriteTerm(DerefFull(ArgN(goal,1)), 0)
+      return Solve(rest)
+    end
+    when key = 'print/1' then do
+      call charout , WriteTerm(DerefFull(ArgN(goal,1)), 1)
+      return Solve(rest)
+    end
+    when key = 'writeln/1' then do
+      say WriteTerm(DerefFull(ArgN(goal,1)), 0)
+      return Solve(rest)
+    end
+    when key = 'nl/0' then do
+      say ''
+      return Solve(rest)
+    end
+    when key = 'tab/1' then do
+      n = ArithEval(ArgN(goal,1))
+      call charout , copies(' ', n)
+      return Solve(rest)
+    end
+
+    when key = 'crexx_call/2' then return SolveCrexxCall(goal, rest, '')
+    when key = 'crexx_call/3' then return SolveCrexxCall(goal, rest, WriteTerm(DerefFull(ArgN(goal,2)), 0))
+
+    when key = 'halt/0' then do
+      say 'prolog: halt'
+      exit 0
+    end
+    when key = 'halt/1' then do
+      n = ArithEval(ArgN(goal,1))
+      exit n
+    end
+
+    otherwise do
+      say 'prolog: internal error -- unimplemented builtin' key
+      return '0'
+    end
+  end
+  return '0'
+
+SolveArithCmp: procedure = .string
+  arg op = .string, goal = .string, rest = .string
+  a = ArithEval(ArgN(goal,1))
+  if a = '' then return '0'
+  b = ArithEval(ArgN(goal,2))
+  if b = '' then return '0'
+  ok = 0
+  select
+    when op = '<' then do; if a < b then ok = 1; end
+    when op = '>' then do; if a > b then ok = 1; end
+    when op = '=<' then do; if a <= b then ok = 1; end
+    when op = '>=' then do; if a >= b then ok = 1; end
+    when op = '=:=' then do; if a = b then ok = 1; end
+    when op = '=\=' then do; if a \= b then ok = 1; end
+    otherwise nop
+  end
+  if ok = 1 then return Solve(rest)
+  return '0'
+
+IsProperList: procedure = .string
+  arg t = .string
+  t = Deref(t)
+  do while IsCompound(t) = '1' & Functor(t) = '.' & Arity(t) = 2
+    t = Deref(ArgN(t,2))
+  end
+  if t = '[]' then return '1'
+  return '0'
+
+IsGround: procedure = .string
+  arg t = .string
+  t = Deref(t)
+  if IsVar(t) = '1' then return '0'
+  if IsCompound(t) \= '1' then return '1'
+  do i = 1 to Arity(t)
+    if IsGround(ArgN(t,i)) \= '1' then return '0'
+  end
+  return '1'
+
+/* SolveFunctor is split into two sub-procedures (rather than one
+   procedure using the same variable names for both directions) to
+   work around a real compiler quirk in this build: a variable that is
+   pre-declared, then assigned and read inside an early-returning "if"
+   block, and ALSO reassigned again later in the same procedure (in
+   code that particular branch can never actually reach, since it
+   already returned) can end up reading a stale value inside the first
+   block instead of what was just computed there. Splitting each
+   direction into its own procedure, so each such variable is only
+   ever assigned once per procedure, reliably avoids it. */
+SolveFunctor: procedure = .string
+  arg goal = .string, rest = .string
+  t = Deref(ArgN(goal,1))
+  if IsVar(t) \= '1' then return SolveFunctorDecompose(t, goal, rest)
+  return SolveFunctorCompose(t, goal, rest)
+
+SolveFunctorDecompose: procedure = .string
+  arg t = .string, goal = .string, rest = .string
+  farty = Arity(t)
+  nm = Functor(t)
+  ftterm = nm
+  if IsNumber(t) = '1' then ftterm = t
+  else if IsCompound(t) \= '1' then ftterm = MkQAtom(AtomText(t))
+  else ftterm = MkQAtom(nm)
+  if Unify(ArgN(goal,2), ftterm) \= '1' then return '0'
+  if Unify(ArgN(goal,3), farty) \= '1' then return '0'
+  return Solve(rest)
+
+SolveFunctorCompose: procedure = .string
+  arg t = .string, goal = .string, rest = .string
+  nm = Deref(ArgN(goal,2))
+  farty = Deref(ArgN(goal,3))
+  if farty = 0 then do
+    if Unify(t, nm) = '1' then return Solve(rest)
+    return '0'
+  end
+  args = GLEmpty()
+  call RenameFreshStart
+  do i = 1 to farty
+    RVARCOUNTER = RVARCOUNTER + 1
+    args = GLAppend(args, MkVar('FA' || RVARCOUNTER))
+  end
+  newterm = MkCompound(AtomText(nm), args)
+  if Unify(t, newterm) = '1' then return Solve(rest)
+  return '0'
+
+SolveArg3: procedure = .string
+  arg goal = .string, rest = .string
+  n = Deref(ArgN(goal,1))
+  t = Deref(ArgN(goal,2))
+  if IsCompound(t) \= '1' then return '0'
+  if n < 1 | n > Arity(t) then return '0'
+  if Unify(ArgN(goal,3), ArgN(t,n)) = '1' then return Solve(rest)
+  return '0'
+
+SolveUniv: procedure = .string
+  arg goal = .string, rest = .string
+  t = Deref(ArgN(goal,1))
+  if IsVar(t) \= '1' then do
+    lst = GLEmpty()
+    if IsCompound(t) = '1' then do
+      lst = GLAppend(lst, MkQAtom(Functor(t)))
+      do i = 1 to Arity(t)
+        lst = GLAppend(lst, ArgN(t, i))
+      end
+    end
+    else if IsNumber(t) = '1' then lst = GLAppend(lst, t)
+    else lst = GLAppend(lst, MkQAtom(AtomText(t)))
+    if Unify(ArgN(goal,2), PBuildConsChain(lst, '[]')) = '1' then return Solve(rest)
+    return '0'
+  end
+  items = ListToGL(Deref(ArgN(goal,2)))
+  if GLCount(items) = 0 then return '0'
+  if GLCount(items) = 1 then do
+    if Unify(t, GLNth(items,1)) = '1' then return Solve(rest)
+    return '0'
+  end
+  fn = AtomText(Deref(GLNth(items,1)))
+  args = GLRest(items)
+  if Unify(t, MkCompound(fn, args)) = '1' then return Solve(rest)
+  return '0'
+
+/* ListToGL: a proper Prolog list -> a goal list of its (un-dereffed)
+   elements; '' if t isn't a proper list */
+ListToGL: procedure = .string
+  arg t = .string
+  t = Deref(t)
+  out = GLEmpty()
+  do while IsCompound(t) = '1' & Functor(t) = '.' & Arity(t) = 2
+    out = GLAppend(out, ArgN(t,1))
+    t = Deref(ArgN(t,2))
+  end
+  return out
+
+SolveAtomCodes: procedure = .string
+  arg goal = .string, rest = .string
+  txt = ''
+  a = Deref(ArgN(goal,1))
+  if IsVar(a) \= '1' then do
+    txt = AtomText(a)
+    if IsNumber(a) = '1' then txt = a
+    if Unify(ArgN(goal,2), PCodesToList(txt)) = '1' then return Solve(rest)
+    return '0'
+  end
+  txt = CodesToText(Deref(ArgN(goal,2)))
+  if Unify(a, MkQAtom(txt)) = '1' then return Solve(rest)
+  return '0'
+
+SolveAtomChars: procedure = .string
+  arg goal = .string, rest = .string
+  txt = ''
+  a = Deref(ArgN(goal,1))
+  if IsVar(a) \= '1' then do
+    txt = AtomText(a)
+    if IsNumber(a) = '1' then txt = a
+    if Unify(ArgN(goal,2), CharsListFromText(txt)) = '1' then return Solve(rest)
+    return '0'
+  end
+  txt = CharsToText(Deref(ArgN(goal,2)))
+  if Unify(a, MkQAtom(txt)) = '1' then return Solve(rest)
+  return '0'
+
+SolveNumberCodes: procedure = .string
+  arg goal = .string, rest = .string
+  a = Deref(ArgN(goal,1))
+  if IsVar(a) \= '1' then do
+    if Unify(ArgN(goal,2), PCodesToList(a)) = '1' then return Solve(rest)
+    return '0'
+  end
+  txt = CodesToText(Deref(ArgN(goal,2)))
+  if IsNumber(txt) \= '1' then do
+    say 'prolog: number_codes: not a number:' txt
+    return '0'
+  end
+  if Unify(a, txt) = '1' then return Solve(rest)
+  return '0'
+
+SolveNumberChars: procedure = .string
+  arg goal = .string, rest = .string
+  a = Deref(ArgN(goal,1))
+  if IsVar(a) \= '1' then do
+    if Unify(ArgN(goal,2), CharsListFromText(a)) = '1' then return Solve(rest)
+    return '0'
+  end
+  txt = CharsToText(Deref(ArgN(goal,2)))
+  if IsNumber(txt) \= '1' then do
+    say 'prolog: number_chars: not a number:' txt
+    return '0'
+  end
+  if Unify(a, txt) = '1' then return Solve(rest)
+  return '0'
+
+CharsListFromText: procedure = .string
+  arg s = .string
+  result = '[]'
+  do i = length(s) to 1 by -1
+    result = MkCompound('.', GLAppend(GLAppend(GLEmpty(), MkQAtom(substr(s,i,1))), result))
+  end
+  return result
+
+CharsToText: procedure = .string
+  arg t = .string
+  gl = ListToGL(t)
+  out = ''
+  do i = 1 to GLCount(gl)
+    out = out || AtomText(Deref(GLNth(gl,i)))
+  end
+  return out
+
+CodesToText: procedure = .string
+  arg t = .string
+  gl = ListToGL(t)
+  out = ''
+  do i = 1 to GLCount(gl)
+    out = out || d2c(Deref(GLNth(gl,i)))
+  end
+  return out
+
+SolveCharCode: procedure = .string
+  arg goal = .string, rest = .string
+  a = Deref(ArgN(goal,1))
+  if IsVar(a) \= '1' then do
+    if Unify(ArgN(goal,2), c2d(AtomText(a))) = '1' then return Solve(rest)
+    return '0'
+  end
+  code = Deref(ArgN(goal,2))
+  if Unify(a, MkQAtom(d2c(code))) = '1' then return Solve(rest)
+  return '0'
+
+SolveAtomConcat: procedure = .string
+  arg goal = .string, rest = .string
+  a = Deref(ArgN(goal,1))
+  b = Deref(ArgN(goal,2))
+  if IsVar(a) \= '1' & IsVar(b) \= '1' then do
+    ta = AtomText(a)
+    if IsNumber(a) = '1' then ta = a
+    tb = AtomText(b)
+    if IsNumber(b) = '1' then tb = b
+    if Unify(ArgN(goal,3), MkQAtom(ta || tb)) = '1' then return Solve(rest)
+    return '0'
+  end
+  /* nondeterministic split mode isn't supported (a documented
+     simplification): both a and b must be given */
+  say 'prolog: atom_concat/3: first two arguments must both be bound (split mode is not supported)'
+  return '0'
+
+RetractAll: procedure = .void expose CLHEAD CLBODY PRED
+  arg pat = .string
+  key = PredKey(Functor(pat), Arity(pat))
+  ids = PRED[key]
+  keep = GLEmpty()
+  do i = 1 to GLCount(ids)
+    id = GLNth(ids, i)
+    mark = TrailMark()
+    call RenameFreshStart
+    rhead = RenameTerm(CLHEAD[id])
+    if Unify(pat, rhead) \= '1' then keep = GLAppend(keep, id)
+    call TrailUndo mark
+  end
+  PRED[key] = keep
+  return
+
+SolveFindall: procedure = .string expose SOLVEMODE FINDALLACC FINDALLTEMPLATE
+  arg goal = .string, rest = .string
+  tmpl = ArgN(goal, 1)
+  innergoal = ArgN(goal, 2)
+  savedmode = SOLVEMODE
+  savedacc = FINDALLACC
+  savedtmpl = FINDALLTEMPLATE
+  SOLVEMODE = 'FINDALL'
+  FINDALLACC = GLEmpty()
+  FINDALLTEMPLATE = tmpl
+  mark = TrailMark()
+  call Solve GLAppend(GLEmpty(), innergoal)
+  call TrailUndo mark
+  results = FINDALLACC
+  SOLVEMODE = savedmode
+  FINDALLACC = savedacc
+  FINDALLTEMPLATE = savedtmpl
+  if Unify(ArgN(goal,3), PBuildConsChain(results, '[]')) = '1' then return Solve(rest)
+  return '0'
+
+/* ======================================================================
+   PROLOG-CALLS-CREXX  ( crexx_call/2, crexx_call/3 )
+   ----------------------------------------------------------------------
+   The reverse direction of the CREXX-FACING API above: a Prolog goal
+   calling out to CREXX code, by name, and getting a value back.
+
+       crexx_call(Name, Result)             -- no argument
+       crexx_call(Name, ArgText, Result)     -- one argument (any term;
+                                                 converted to text the
+                                                 same way write/1 would
+                                                 print it)
+
+   This can't be wired up as directly as the CREXX-calls-Prolog
+   direction, because CREXX has no function values/pointers to hand
+   around at runtime -- there is no way for this file to "receive" an
+   arbitrary caller-supplied procedure to invoke later. Instead, this
+   file has a compile-time import of a FIXED namespace, `crexxcallback`,
+   and calls exactly one procedure in it, `CrexxCallDispatch(name,
+   argtext)`, for every crexx_call/2,3 goal. The accompanying
+   `crexxcallback.crexx` in this package is a working default: it
+   returns the sentinel CREXXCALL_NOTFOUND for every name, so a
+   crexx_call/2,3 goal fails with a clear message rather than silently
+   doing nothing.
+
+   To make your own CREXX functions callable from Prolog: copy
+   `crexxcallback.crexx`, keep its `namespace crexxcallback expose
+   CrexxCallDispatch` declaration and `CrexxCallDispatch(name, argtext)`
+   signature exactly as they are, and fill in your own SELECT/WHEN (or
+   however you prefer to dispatch) routing `name` to whichever of your
+   own procedures you want reachable, returning whatever text you want
+   Result unified with. Then build with all three modules together --
+   see build_with_prolog.sh, which links your caller + prolog.crexx +
+   your crexxcallback.crexx into one combined image; this is required
+   either way, per the note on cross-module calls in PORT_NOTES.md, so
+   providing your own crexxcallback.crexx adds no NEW build step, just
+   one more file in the same rxlink command.
+
+   A returned value that looks like a number is unified with Result as
+   a number; anything else becomes a quoted atom (so arbitrary text,
+   including spaces or uppercase letters, round-trips safely).
+   ====================================================================== */
+CREXXCALL_NOTFOUND: procedure = .string
+  return '$NOCALLBACK$'
+
+SolveCrexxCall: procedure = .string
+  arg goal = .string, rest = .string, argtext = .string
+  nm = AtomText(Deref(ArgN(goal,1)))
+  resultpos = Arity(goal)
+  res = crexxcallback..CrexxCallDispatch(nm, argtext)
+  if res = CREXXCALL_NOTFOUND() then do
+    say 'prolog: crexx_call: no CREXX callback registered for' nm,
+        '-- see crexxcallback.crexx in this package'
+    return '0'
+  end
+  resultterm = res
+  if IsNumber(res) \= '1' then resultterm = MkQAtom(res)
+  if Unify(ArgN(goal, resultpos), resultterm) = '1' then return Solve(rest)
+  return '0'

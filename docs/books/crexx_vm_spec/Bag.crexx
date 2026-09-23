@@ -1,0 +1,265 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+import rxfnsb
+namespace data
+
+Bag: class implements .Printable
+  values = .string[]
+  item_count = .int
+
+  /**
+   * Creates an empty bag.
+   *
+   * @return .Bag Newly created empty bag.
+   */
+  *: factory
+    initial = .string[]
+    values = initial
+    item_count = 0
+    return
+
+  /**
+   * Adds a value to this bag.
+   *
+   * Duplicate values are allowed.
+   *
+   * @param value Value to add.
+   * @return .void
+   */
+  add: method = .void
+    arg value = .string
+    call arrayappend values, value
+    item_count = item_count + 1
+    return
+
+  /**
+   * Returns the number of values in this bag.
+   *
+   * @return .int Number of values in the bag.
+   */
+  size: method = .int
+    return item_count
+
+  /**
+   * Returns the value at the specified position.
+   *
+   * Positions are one-based.
+   *
+   * @param position Position of the value to return.
+   * @return .string Value at the specified position.
+   */
+  at: method = .string
+    arg position = .int
+    return values[position]
+
+  /**
+   * Returns the content of this bag as a string.
+   *
+   * Values are returned in their current storage order. Duplicate values
+   * are included.
+   *
+   * @return .string String representation in [value, ...] form.
+   */
+  toString: method = .string
+    if item_count = 0 then return "[]"
+    text = "["
+    do i = 1 to item_count
+      if i > 1 then text = text || ", "
+      text = text || values[i]
+    end
+    return text || "]"
+
+  /**
+   * Creates a counter that observes the live bag.
+   *
+   * Changes to this bag after creation are visible to the counter.
+   *
+   * @return .LiveCounter Counter referring to this bag.
+   */
+  liveCounter: method = .LiveCounter
+    return .LiveCounter(reference self)
+
+  /**
+   * Creates a counter over a snapshot of this bag.
+   *
+   * Changes to this bag after creation are not visible to the counter.
+   *
+   * @return .SnapshotCounter Counter over a snapshot of this bag.
+   */
+  snapshotCounter: method = .SnapshotCounter
+    return .SnapshotCounter(reference self)
+
+  /**
+   * Creates an iterator over the live bag.
+   *
+   * Values added after creation can be observed by the iterator.
+   *
+   * @return .LiveIterator Iterator referring to this bag.
+   */
+  liveIterator: method = .LiveIterator
+    return .LiveIterator(reference self)
+
+  /**
+   * Creates an iterator over a snapshot of this bag.
+   *
+   * Changes to this bag after creation are not visible to the iterator.
+   *
+   * @return .SnapshotIterator Iterator over a snapshot of this bag.
+   */
+  snapshotIterator: method = .SnapshotIterator
+    return .SnapshotIterator(reference self)
+
+/**
+ * Counter that observes the current state of a live Bag.
+ */
+LiveCounter: class
+  bag_ref = reference .Bag
+
+  /**
+   * Creates a live counter for a bag reference.
+   *
+   * @param source Reference to the bag to observe.
+   * @return .LiveCounter Newly created live counter.
+   */
+  *: factory
+    arg source = reference .Bag
+    bag_ref = source
+    return
+
+  /**
+   * Returns the current size of the referenced bag.
+   *
+   * @return .int Current bag size, or -1 if the reference is invalid.
+   */
+  count: method = .int
+    if <refvalid>(bag_ref) then return -1
+    bag = dereference bag_ref
+    return bag.size()
+
+/**
+ * Counter that observes a snapshot of a Bag.
+ */
+SnapshotCounter: class
+  bag_copy = .Bag
+
+  /**
+   * Creates a counter from a snapshot of a bag reference.
+   *
+   * @param source Reference to the bag to snapshot.
+   * @return .SnapshotCounter Newly created snapshot counter.
+   */
+  *: factory
+    arg source = reference .Bag
+    bag_copy = snapshot source
+    return
+
+  /**
+   * Returns the size of the captured bag snapshot.
+   *
+   * @return .int Size of the snapshot.
+   */
+  count: method = .int
+    return bag_copy.size()
+
+/**
+ * Iterator that reads from a live Bag.
+ */
+LiveIterator: class
+  bag_ref = reference .Bag
+  position = .int
+
+  /**
+   * Creates an iterator for a live bag reference.
+   *
+   * @param source Reference to the bag to iterate.
+   * @return .LiveIterator Newly created live iterator.
+   */
+  *: factory
+    arg source = reference .Bag
+    bag_ref = source
+    position = 1
+    return
+
+  /**
+   * Tests whether another value is currently available.
+   *
+   * @return .int 1 if another value is available, otherwise 0.
+   */
+  hasNext: method = .int
+    if <refvalid>(bag_ref) then return 0
+    bag = dereference bag_ref
+    return position <= bag.size()
+
+  /**
+   * Returns the next value from the live bag.
+   *
+   * @return .string Next value, or an empty string if none is available.
+   */
+  next: method = .string
+    if <refvalid>(bag_ref) then return ''
+    bag = dereference bag_ref
+    if position > bag.size() then return ''
+    value = bag.at(position)
+    position = position + 1
+    return value
+
+/**
+ * Iterator that reads from a snapshot of a Bag.
+ */
+SnapshotIterator: class
+  bag_copy = .Bag
+  position = .int
+
+  /**
+   * Creates an iterator from a snapshot of a bag reference.
+   *
+   * @param source Reference to the bag to snapshot.
+   * @return .SnapshotIterator Newly created snapshot iterator.
+   */
+  *: factory
+    arg source = reference .Bag
+    bag_copy = snapshot source
+    position = 1
+    return
+
+  /**
+   * Tests whether another value exists in the captured snapshot.
+   *
+   * @return .int 1 if another value is available, otherwise 0.
+   */
+  hasNext: method = .int
+    return position <= bag_copy.size()
+
+  /**
+   * Returns the next value from the captured snapshot.
+   *
+   * @return .string Next value, or an empty string if none is available.
+   */
+  next: method = .string
+    if position > bag_copy.size() then return ''
+    value = bag_copy.at(position)
+    position = position + 1
+    return value
