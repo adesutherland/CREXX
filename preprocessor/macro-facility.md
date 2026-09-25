@@ -204,6 +204,50 @@ RexxScript statements are executed while the macro is being expanded. They can p
 
 The RexxScript statements themselves are not copied into the generated CREXX source unless they explicitly generate source.
 
+### `.mcall`: generate a nested RXPP macro call
+
+`.mcall` is a RexxScript statement available inside a script-backed RXPP
+macro. It evaluates the text following `.mcall` and emits the result as RXPP
+source at the current macro-call position. If the emitted text does not begin
+with `##`, RXPP adds that prefix before the generated source is processed.
+
+This lets a script macro invoke an ordinary RXPP macro. For example:
+
+```rexx
+##MACRO EMITSCRIPT
+    say 'say "scripted"'
+    .mcall square 14
+##MEND
+
+##MACRO SQUARE x
+    .gen say &x * &x
+##MEND
+
+##EMITSCRIPT
+```
+
+The `.mcall square 14` statement emits the equivalent of:
+
+```rexx
+##square 14
+```
+
+RXPP then expands that command-style macro, producing:
+
+```rexx
+say 14 * 14
+```
+
+`.mcall` is different from `.gen`: `.gen` emits ordinary CREXX source,
+whereas `.mcall` emits RXPP source that is processed again by RXPP. The
+generated call may use an explicit `##` prefix as well, for example
+`.mcall ##square 14`.
+
+`.mcall` expansion is limited to 16 nested levels. RXPP reports
+`RXPP_MCALL_DEPTH` when a generated `.mcall` would exceed that limit. This is
+a guard for `.mcall` nesting specifically; it does not classify other ways of
+generating RXPP source as nested `.mcall` calls.
+
 ### Factorial Macro
 
 The following macro calculates a factorial during macro expansion and generates the corresponding CREXX statements:
@@ -315,6 +359,88 @@ RexxScript may therefore be used inside a macro for:
 * preparing text for `.gen`, `.tail`, or `.section`.
 
 The RexxScript logic runs at preprocessing time. Only the source produced by the macro output statements is passed to the CREXX compiler.
+
+
+---
+
+# Macro Variables and Generated CREXX Variables
+
+Macro code runs in RexxScript while RXPP is preprocessing the input. The
+variables used by that code exist only during macro expansion. The text
+produced by `.gen`, `.tail`, and `.section` is then compiled as ordinary CREXX
+source, where any declarations and variables in that text belong to the
+generated CREXX program.
+
+The `&variable` form in a generated-output expression refers to a value in the
+macro/RexxScript context and inserts that value into the source text being
+generated. It does not create or access an array, stem, or other CREXX runtime
+variable at macro time.
+
+For example:
+
+```rexx
+##MACRO MAKE_TABLE name, count
+    name = unquote(name)
+    do i = 1 to count
+        .gen &name[&i] = &i * &i
+    end
+##MEND
+```
+
+With `name` equal to `squares` and `i` equal to `2`, the generated line is:
+
+```rexx
+squares[2] = 4
+```
+
+The macro has only used scalar preprocessing values, `name` and `i`, to build
+that line. The `squares` array exists in the generated CREXX program, not in
+the macro's RexxScript state. The same distinction applies when the generated
+line is sent to `.tail` or `.section` instead of `.gen`.
+
+The text after `.gen`, `.tail`, or `.section section-name` is evaluated as a
+RexxScript expression. Its resulting value becomes one generated source line.
+For example, `&i` inside a quoted expression inserts the current macro-time
+value of `i` into that line.
+
+Values for all three output forms are resolved when the macro runs. A `.section`
+line is stored for later placement, but its variables are not re-evaluated when
+the corresponding `##EMIT` directive is processed. This means that a section
+captures the values from the macro invocation that contributed each line.
+
+Macro arguments may retain their call-site quotes. Use `unquote()` when a value
+will be used as an identifier or when the generated source must not contain
+those surrounding quotes:
+
+```rexx
+##MACRO DECLARE name
+    name = unquote(name)
+    .gen &name = .int[]
+##MEND
+```
+
+The macro-time variable `name` and the generated CREXX variable named by its
+value are separate. They may have the same spelling, but they do not share
+storage or scope. Likewise, `.mcall` should not be confused with these output
+forms: `.mcall` generates RXPP source for another preprocessing pass, whereas
+`.gen`, `.tail`, and `.section` generate final CREXX source.
+
+This also applies to generated stems or other CREXX variables. For example,
+`.gen record.&i = &value` constructs source text containing a stem-style name;
+it does not index a macro-time stem. The generated program receives and
+interprets that source only after preprocessing has finished.
+
+The predefined macro context values use the same mechanism. For example,
+`&_module`, `&_file`, `&_mcalls`, `&_sysndx`, `&_macro_calls`, `&_mline`, and
+`&_mlino` can be inserted into generated source. `&_macro_calls` is the
+descriptive alias for the traditional `&_sysndx` name. These values describe
+the current preprocessing context; they are not variables in the generated
+CREXX program unless the generated text explicitly declares or assigns them.
+
+Do not confuse `&variable` in macro-generated output with RXPP's `{variable}`
+preprocessor-variable syntax. The latter is RXPP text substitution for values
+created by directives such as `##SET`; neither form makes a generated CREXX
+array or stem available inside the macro evaluator.
 
 
 
@@ -834,6 +960,7 @@ The new RXPP macro output statements have distinct purposes:
 | Statement              | Destination                 |
 | ---------------------- | --------------------------- |
 | `.gen source`          | Macro invocation position   |
+| `.mcall expression`    | RXPP macro call at the current position |
 | `.tail source`         | End of the generated source |
 | `.section name source` | Named deferred section      |
 | `##EMIT name`          | Current source position     |
@@ -842,7 +969,7 @@ The section facility allows a macro to generate related source fragments for dif
 
 # Advanced Features
 
-- Nested macro calls (`##MCALL`)
+- Nested macro calls from RexxScript (`.mcall`)
 - Named source blocks (`##BEGIN`, `##COPYBLOCK`)
 - Source maps (`srcmap`)
 - Task-aware code generation (`CHANNELFIELD`, `CHANNELCLASS`)

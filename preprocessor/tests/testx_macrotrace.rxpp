@@ -1,0 +1,4 @@
+##CFLAG macrotrace
+##DEFINE TESTX_MACRO(name, value) {say name value}
+
+TESTX_MACRO("macrotrace", "expanded")

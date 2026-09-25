@@ -1,0 +1,25 @@
+/* settings.rxpp */
+
+options levelb
+import rxfnsb
+
+##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes nosrcmap nmaclog
+
+##MACRO SETTING name, value, minimum, maximum
+    name = unquote(name)
+
+   .gen &name = &value
+   .section validation if &name < &minimum | &name > &maximum then say "Invalid setting &name: " &name
+##MEND
+
+##setting "retries", 3, 0, 10
+##setting "buffer_size", 256, 64, 4096
+##settingxy "timeout", 0, 1, 60
+
+say "Settings have been loaded"
+
+/* All checks are inserted at this point. */
+##emit validation
+
+say "Settings have been checked"
+exit 0

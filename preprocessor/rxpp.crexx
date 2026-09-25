@@ -37,7 +37,7 @@ import rexxscript
 import precomp
 import rxfnsb
 import system
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text source_mcall_depth callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath macpath syslib inpath outpath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs external_modules link_target no_run select_count beginblock beginName scriptMacro scriptMacros scriptMacroPath scriptMacroCounter srcmap_source_file srcmap_line_offset dalias
 
 /* ------------------------------------------------------------------
  * CREXX Pre Compiler
@@ -59,11 +59,15 @@ arg command=.string[]
   cnext   = .string
   dalias  = .string
   rexx_version = .string
+  rxpp_timing_mark = .int
+  rxpp_timing_elapsed = .int
+  rxpp_timing_seconds = .float
   assembler rxvers rexx_version
   platform = word(rexx_version,1)' 'word(rexx_version,2)
   rxpp_version = word(rexx_version,3)' 'word(rexx_version,4)
 
   ElapsedTime=time('us')
+  rxpp_timing_mark=ElapsedTime
 
   do i=1 to command.0
      j=i+1
@@ -137,24 +141,55 @@ if verbose then do
  * --------------------------------------------------------------------
  */
   sourceLines=RXPPPassOne(infile,outfile,maclib,syspath'/macsys.rexx')    ## load source file and macro library
-  ## !!! to early is as picked up later-> is in pass 2 now !! if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
+  if rxpp_cflag_present('timing') then do
+     rxpp_timing_elapsed=time('us')-rxpp_timing_mark
+     rxpp_timing_seconds=(rxpp_timing_elapsed as .float)/1000000
+     say '++RXPP-DIAG timing pass1 ' rxpp_timing_seconds 'seconds'
+     rxpp_timing_mark=time('us')
+  end
+  /* 1buf is a pass boundary diagnostic: CFLAG has been picked up by
+   * RXPPPassOne, and the source is now stable until RXPPPassTwo starts. */
+  if pos(' 1buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 1'
 /* ------------------------------------------------------------------
  * Pass Two create ##IF/##IFN/##ELSE/##ENDIF reference table
  * ------------------------------------------------------------------
  */
   call RXPPPassTwo                                  ## pass 2 to pre-expand certain elements (##ELSE)
-    if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
+  if pos(' 2buf',cflags)>0 then call list_array source,-1,-1,'Source Buffer after Pass 2'
+  if rxpp_cflag_present('timing') then do
+     rxpp_timing_elapsed=time('us')-rxpp_timing_mark
+     rxpp_timing_seconds=(rxpp_timing_elapsed as .float)/1000000
+     say '++RXPP-DIAG timing pass2 ' rxpp_timing_seconds 'seconds'
+     rxpp_timing_mark=time('us')
+  end
   if verbose then say 'CRX0200I ['time('l')'] Pre-Compile pass two'
 /* ------------------------------------------------------------------
  *  Pass 3 keep/drop ##IF /##IFN blocks, build Final Output Buffer
  * ------------------------------------------------------------------
  */
   call RXPPPassThree outfile                        ## analyse source and expand macros
+  if rxpp_cflag_present('timing') then do
+     rxpp_timing_elapsed=time('us')-rxpp_timing_mark
+     rxpp_timing_seconds=(rxpp_timing_elapsed as .float)/1000000
+     say '++RXPP-DIAG timing pass3 ' rxpp_timing_seconds 'seconds'
+     rxpp_timing_mark=time('us')
+  end
   if verbose then say 'CRX0310I ['time('l')'] Pre-Compiled REXX saved'
      if pos(' 3buf',cflags)>0 then call list_array outbuf, -1,-1,'Source Buffer after Pass 3'
+  if rxpp_cflag_present('format') then outbuf=formatRexx(outbuf)
+  if rxpp_cflag_present('4buf') then call list_array outbuf, -1,-1,'Source Buffer after Formatting'
   call writeall outbuf,outfile,-1                   ## write generated output to file
  /* call linkerInfo outfile,imported_funcs,external_modules,link_target,link_go,no_run      */      ## linker definition will be calculated out of the normal output file
   call linkerInfo outfile,imported_funcs,external_modules,link_target,no_run      ## linker definition will be calculated out of the normal output file
+
+  if rxpp_cflag_present('timing') then do
+     rxpp_timing_elapsed=time('us')-rxpp_timing_mark
+     rxpp_timing_seconds=(rxpp_timing_elapsed as .float)/1000000
+     say '++RXPP-DIAG timing output ' rxpp_timing_seconds 'seconds'
+     rxpp_timing_elapsed=time('us')-ElapsedTime
+     rxpp_timing_seconds=(rxpp_timing_elapsed as .float)/1000000
+     say '++RXPP-DIAG timing total ' rxpp_timing_seconds 'seconds'
+  end
 
   if verbose then do
      say 'CRX0500I ['time('l')'] Pre-Compile completed, 'mexpanded' macro calls expanded, total source lines 'outbuf.0
@@ -399,14 +434,18 @@ RXPPPassThree: procedure
      else if stype.LineNo='IF' then do
        ##  call writeLine printGen(line,4)
        if findvar(word(line,2))=0 & aifblock.lineno>lineNo then do   ## only forward pointer are permitted, else loop
+           if rxpp_cflag_present('iftrace') then say '++RXPP-DIAG iftrace line='lineNo ' 'strip(line)' -> skipped'
            lineno=aifblock.lineno
         end
+        else if rxpp_cflag_present('iftrace') then say '++RXPP-DIAG iftrace line='lineNo ' 'strip(line)' -> retained'
      end
      else if stype.LineNo='IFN' then do
        ##  call writeLine printGen(line,4)
         if findvar(word(line,2))>0 & aifblock.lineno>lineNo then do  ## only forward pointer are permitted, else loop
+           if rxpp_cflag_present('iftrace') then say '++RXPP-DIAG iftrace line='lineNo ' 'strip(line)' -> skipped'
            lineno=aifblock.lineno
         end
+        else if rxpp_cflag_present('iftrace') then say '++RXPP-DIAG iftrace line='lineNo ' 'strip(line)' -> retained'
      end
 ##     else if stype.LineNo='PARSE' then call parsevar lineNo,line
      else if stype.LineNo='IMPORT' then do
@@ -1273,10 +1312,16 @@ return
 CMD_include: procedure
   arg line_no=.int,incl=.string,mode=.int
   stype.line_no= 'I'
-  file=word(incl,2)
+  requested_file=word(incl,2)
+  file=requested_file
   rc=.int
   insertat=.int
   file=normalisepath(inpath,file)
+  if rxpp_cflag_present('includetrace') then do
+     include_kind='INCLUDE'
+     if mode=2 then include_kind='USE'
+     say '++RXPP-DIAG includetrace line='line_no ' 'include_kind ' requested='requested_file ' resolved='file
+  end
   include=.string[]
   /* new=readall(include,file,-1) */
   include=readLines(file,,,'noRaise')
@@ -1286,7 +1331,10 @@ CMD_include: procedure
      call rxpp_diag 'error','RXPP_TERMINATED'
      exit 8
   end
-  if push_unique(included_files,file)=0 then return      /* already part of the included list */
+  if push_unique(included_files,file)=0 then do
+     if rxpp_cflag_present('includetrace') then say '++RXPP-DIAG includetrace duplicate='file
+     return      /* already part of the included list */
+  end
   if mode=1 then do
      rc= insert_source(line_no+1,new)
      insertat=line_no
@@ -1511,9 +1559,10 @@ insert_source: Procedure=.int
   stemlog=0
   rc=arrayInsert(source,at,new)    ## insert new lines, shift buffer
   rc=arrayInsert(stype, at,new)
-  rc=arrayInsert(source_origin_file, at,new)
-  rc=arrayInsert(source_origin_line, at,new)
-  rc=arrayInsert(source_origin_text, at,new)
+   rc=arrayInsert(source_origin_file, at,new)
+   rc=arrayInsert(source_origin_line, at,new)
+   rc=arrayInsert(source_origin_text, at,new)
+   rc=arrayInsert(source_mcall_depth, at,new)
   i = .int
   do i=0 to new-1                   ## in some cases you want special
      source[at+i]='/* reserved 'at+i i' */'
@@ -1525,6 +1574,8 @@ insert_source: Procedure=.int
       */
      if at>1 then call rxpp_copy_source_origin at+i,at-1
      else call rxpp_clear_source_origin at+i
+     if at>1 then source_mcall_depth[at+i]=source_mcall_depth[at-1]
+     else source_mcall_depth[at+i]=0
   end                               ## example: no further inspection
   if stemlog=0 then return 0
   say 'Insert 'new' lines at 'at
@@ -1748,7 +1799,8 @@ newMacros:  procedure=.string
   end
 
   scriptMacroCounter=scriptMacroCounter+1
-  if scriptMacroCounter>500 then do
+  if rxpp_cflag_present('macrotrace') then say '++RXPP-DIAG macrotrace script='macname ' line='linnum ' source='source_origin_file[linnum]':'source_origin_line[linnum]
+  if scriptMacroCounter>1500 then do
      call rxpp_diag 'warning','RXPP_EXPANSION_LIMIT','count',scriptMacroCounter
      return line
   end
@@ -1767,6 +1819,7 @@ newMacros:  procedure=.string
   end
 /* Prepare RexxScript Call */
    out=.string[]
+   generated_mcall_depth=.int[]
    result=.string[]
    scriptMacro.macname.calls=scriptMacro.macname.calls+1
    instructionSet=scriptMacro.macname
@@ -1810,6 +1863,23 @@ newMacros:  procedure=.string
         call add_section line
         iterate
      end
+     if left(testline, 8) = '@.mcall@' then do
+        main_insert = main_insert + 1
+        p = pos('@.mcall@', line)
+        parent_mcall_depth = source_mcall_depth[linnum]
+        if parent_mcall_depth = '' then parent_mcall_depth = 0
+        mcall_depth = parent_mcall_depth + 1
+        if mcall_depth > 16 then do
+           call rxpp_diag 'error','++RXPP_MCALL_DEPTH','macro',macname,'depth',mcall_depth,'limit',16
+           out[kk] = ''
+           generated_mcall_depth[kk] = 0
+        end
+        else do
+           out[kk] = substr(line, p + 8)
+           generated_mcall_depth[kk] = mcall_depth
+        end
+        iterate
+     end
      if left(testline, 7) = '@.main@' then do
         main_insert = main_insert + 1
         p = pos('@.main@', line)
@@ -1849,6 +1919,7 @@ newMacros:  procedure=.string
         out[kk]=rxpp_srcmap_span(1,source_len,out[kk])
      end
      inew=inject2Source(inew+1,3,out[kk])
+     source_mcall_depth[inew] = generated_mcall_depth[kk]
   end
 return source[linnum]
 
@@ -1894,6 +1965,7 @@ resolveMacro: procedure=.string
 
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
+   if rxpp_cflag_present('macrotrace') then say '++RXPP-DIAG macrotrace macro='name ' line='linnum ' source='source_origin_file[linnum]':'source_origin_line[linnum]
    ## test Macro is variadic
    isVariadic=.int
    if pos('...', args,1) > 0 then do
@@ -3208,6 +3280,179 @@ CommentScan: procedure=.int
   end
   return depth
 /* ------------------------------------------------------------------
+ * formatRexx: Apply the optional indentation-only formatter to the final
+ * generated source buffer.  This is intentionally kept local to RXPP so the
+ * formatter can be selected without changing the build/import graph.
+ * ------------------------------------------------------------------
+ */
+formatRexx: procedure = .string[]
+   arg source = .string[]
+
+   result = .string[]
+   level = 0
+   inProcedure = 0
+   commentDepth = 0
+
+   do lineNo = 1 to source[0]
+      original = source[lineNo]
+      maskedResult = maskRexxLine(original, commentDepth)
+      masked = maskedResult[1]
+      commentDepth = maskedResult[2]
+
+      text = strip(original, 'L')
+      if text = '' then do
+         call appendFormatted result, original
+         iterate
+      end
+
+      /* RXPP directives and source-map control lines must remain at column 1. */
+      if left(text, 2) = '##' | left(text, 1) = '@' then do
+         call appendFormatted result, text
+         iterate
+      end
+
+      syntax = strip(masked)
+      if syntax = '' then do
+         call appendFormatted result, indentLine(text, level, inProcedure)
+         iterate
+      end
+
+      first = translate(word(syntax, 1))
+      label = ''
+      if right(first, 1) = ':' then do
+         label = word(text, 1)
+         syntax = strip(substr(syntax, length(word(syntax, 1)) + 1))
+         first = translate(word(syntax, 1))
+      end
+
+      if first = 'END' then do
+         if level > 0 then level = level - 1
+      end
+
+      line = text
+      if label <> '' then
+         line = label || ' ' || strip(substr(text, length(label) + 1))
+      else if first = 'RETURN' & level = 0 & inProcedure then
+         line = text
+      else
+         line = indentLine(text, level, inProcedure)
+
+      call appendFormatted result, line
+
+      upperSyntax = translate(syntax)
+      if pos('PROCEDURE', upperSyntax) = 1 then
+         inProcedure = 1
+
+      if pos(';', upperSyntax) > 0 then
+         iterate
+
+      if first = 'DO' | first = 'SELECT' then
+         level = level + 1
+      else if first = 'IF' & wordpos('THEN DO', upperSyntax) > 0 then
+         level = level + 1
+      else if first = 'ELSE' & word(upperSyntax, 2) = 'DO' then
+         level = level + 1
+      else if first = 'WHEN' & wordpos('THEN DO', upperSyntax) > 0 then
+         level = level + 1
+      else if first = 'OTHERWISE' & word(upperSyntax, 2) = 'DO' then
+         level = level + 1
+   end
+
+   return result
+
+appendFormatted: procedure = .void
+   arg expose target = .string[], line = .string
+   target[target[0] + 1] = line
+   return
+
+indentLine: procedure = .string
+   arg line = .string, level = .int, inProcedure = .int
+
+   if inProcedure then do
+      if level = 0 then
+         return copies(' ', 2) || strip(line, 'L')
+      return copies(' ', 2 + (level * 3)) || strip(line, 'L')
+   end
+
+   return copies(' ', level * 3) || strip(line, 'L')
+
+maskRexxLine: procedure = .string[]
+   arg line = .string, commentDepth = .int
+
+   masked = copies(' ', length(line))
+   inSingle = 0
+   inDouble = 0
+   i = 1
+
+   do while i <= length(line)
+      ch = substr(line, i, 1)
+      nx = substr(line, i + 1, 1)
+
+      if commentDepth > 0 then do
+         if ch = '/' & nx = '*' then do
+            commentDepth = commentDepth + 1
+            i = i + 2
+         end
+         else if ch = '*' & nx = '/' then do
+            commentDepth = commentDepth - 1
+            i = i + 2
+         end
+         else i = i + 1
+         iterate
+      end
+
+      if inSingle then do
+         if ch = "'" then do
+            if nx = "'" then i = i + 2
+            else do
+               inSingle = 0
+               i = i + 1
+            end
+         end
+         else i = i + 1
+         iterate
+      end
+
+      if inDouble then do
+         if ch = '"' then do
+            if nx = '"' then i = i + 2
+            else do
+               inDouble = 0
+               i = i + 1
+            end
+         end
+         else i = i + 1
+         iterate
+      end
+
+      if ch = '/' & nx = '*' then do
+         commentDepth = commentDepth + 1
+         i = i + 2
+         iterate
+      end
+
+      if ch = "'" then do
+         inSingle = 1
+         i = i + 1
+         iterate
+      end
+
+      if ch = '"' then do
+         inDouble = 1
+         i = i + 1
+         iterate
+      end
+
+      masked = overlay(ch, masked, i, 1)
+      i = i + 1
+   end
+
+   result = .string[]
+   result[1] = masked
+   result[2] = commentDepth
+   return result
+
+/* ------------------------------------------------------------------
  * rxppinit: Initializes RXPP global state, arrays, counters, module name, system path, and default flags.
  * ------------------------------------------------------------------
  */
@@ -3218,6 +3463,7 @@ rxppinit: procedure=.string
   source_origin_file=.string[]
   source_origin_line=.string[]
   source_origin_text=.string[]
+  source_mcall_depth=.string[]
   stype.1='R'
   beginBlock=.string[]
   beginName=.string[]
@@ -3250,7 +3496,7 @@ rxppinit: procedure=.string
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf nvars nparse strictmacrocheck nmaclog'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf n4buf nvars nparse strictmacrocheck nmaclog'
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags

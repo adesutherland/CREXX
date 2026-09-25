@@ -1,0 +1,10 @@
+##CFLAG iftrace
+##SET TESTX_DEFINED 1
+
+##IF TESTX_DEFINED
+say "iftrace retained"
+##ENDIF
+
+##IFN TESTX_DEFINED
+say "iftrace skipped"
+##ENDIF

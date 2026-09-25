@@ -1,0 +1,38 @@
+##cflags ndef nset niflink 1buf buf 3buf nvars nmaclist includes nosrcmap nmaclog
+/* Test member"s macro
+system */
+say 'unterminated string'
+options levelb
+import rxfnsb
+##norun
+##Macro Square value
+  .gen _result = &value * &value
+##mend
+
+##Macro double value
+  .gen _result = &value + &value
+  .section 4711 say "this is a test"
+##mend
+
+##Macro dSquare value
+  .mcall double &value
+  .mcall square _result
+##mend
+
+##macro drop
+  .gen ##emit 4711
+##mend
+
+say datatype('.','N')
+
+
+ ##square 4
+ say _result
+ ##DOUBLE 4
+ say _result
+ ##dSquare 4
+say _result
+
+##emit 4711
+/* emit an ##EMIT via a macro */
+##drop

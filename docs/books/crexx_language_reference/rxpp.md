@@ -280,6 +280,30 @@ When a macro is defined with `CMD`/`COMMAND`, RXPP recognizes its invocations **
 
 Switching to a **blank-separated, command-like syntax** enables macros that read like shell/TSO commands, which can be more ergonomic and natural for pipeline-style tasks while preserving all the power of RXPP’s macro system—keyword/default args, variadics, inclusion, and robust replacement semantics.
 
+### `.mcall` inside a script-backed macro
+
+When a macro body is executed as RexxScript, `.mcall` emits an RXPP macro call
+for a later RXPP expansion pass. RXPP adds `##` when the emitted expression does
+not already begin with it.
+
+```rexx
+##MACRO EMITSCRIPT
+    say 'say "scripted"'
+    .mcall square 14
+##MEND
+
+##MACRO SQUARE x
+    .gen say &x * &x
+##MEND
+
+##EMITSCRIPT
+```
+
+`.mcall square 14` therefore emits `##square 14`, which expands to
+`say 14 * 14`. This differs from `.gen`: `.gen` emits final CREXX source,
+while `.mcall` emits RXPP source for another preprocessing step. The explicit
+form `.mcall ##square 14` is also accepted.
+
 ## 🆕 Keyword Parameters in Macros
 
 RXPP now supports **keyword parameters** in macro definitions.  
@@ -786,26 +810,49 @@ Use Case: Provides a concise method to define system input directly in the scrip
 ##CFLAG — Sets the preprocessor variable from compiler flags or external input during the earliest configuration pass, before normal preprocessing begins.
 The definition must be placed at the very beginning of the source file, before any other ## macro instructions appear.
 
-Use the following flags in `cflags` to control diagnostic output during the pre-compilation process:
+The following flags are recognized by RXPP. Diagnostic reports that are described as
+verbose output are printed only when RXPP is running in verbose mode.
 
-| Option       | Description                                                                                                                                                 |
-|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                                                 |
-| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                                               |
-| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                                                     |
-| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                                                   |
-| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured.                            |
-| **3buf**     | Displays the final source buffer just before it is passed to the preprocessor.                                                                              |
-| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                                                       |
-| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                                               |
-| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.<br/>                                          |
-| **strictmacrocheck** | Prints warnings when a macro call does not satisfy all parameters defined by the macro template. Disable this option when using macros with optional parameters to suppress these warnings.<br/> |
+| Option | Description |
+|---|---|
+| **ndef** | Suppresses the original RXPP definition/directive comment after its expanded result has been emitted. This applies to `##DEFINE` and the generated directive forms handled by RXPP, not just to a diagnostic listing. |
+| **nset** | Suppresses the original `##SET`/`##UNSET` directive comment after the setting has been processed. It also suppresses the corresponding lines inside `##BEGIN` blocks. |
+| **iflink** | In verbose mode, prints the pass-2 links between `##IF`/`##IFN` blocks and their matching `##ELSE`/`##ENDIF` boundaries. |
+| **1buf** | Dumps the source buffer after pass 1, after the source has been loaded and pass-1 processing has completed, but before pass 2 begins. |
+| **2buf** | Dumps the source buffer after pass 2, after `##ELSE` handling and conditional-block links have been established. |
+| **3buf** | Dumps the final output buffer after pass 3, before it is written to the generated file. |
+| **4buf** | Dumps the final output buffer after optional formatting and immediately before it is written to the generated file. |
+| **format** | Applies RXPP's indentation-only formatter to the final output buffer after pass 3 and before writing the generated file. This is opt-in; without it, the existing output is unchanged. |
+| **vars** | In verbose mode, prints the current preprocessor variables, including internal variables and values assigned with `##SET`. |
+| **maclist** | In verbose mode, prints the loaded macro definitions, including macros loaded from macro libraries. |
+| **includes** | In verbose mode, prints the recorded included files and the RXPP `##BEGIN` block information. |
+| **nosrcmap** | Disables RXPP source-map emission in the generated CREXX source. `no-srcmap` is accepted as an alias. |
+| **maclog** | Enables additional RexxScript macro diagnostics and prints each returned script-result line. |
+| **strictmacrocheck** | Prints warnings when the number of arguments at a macro call does not match the macro template. |
+| **macrotrace** | Prints an `RXPP-DIAG` compile-time trace for each source or RexxScript macro expansion, including the macro name and source location. It does not add tracing statements to the generated program. |
+| **iftrace** | Prints an `RXPP-DIAG` record showing whether each `##IF` or `##IFN` block is retained or skipped during pass 3. |
+| **includetrace** | Prints `RXPP-DIAG` records for each `##INCLUDE`/`##USE` request, its normalized path, and duplicate-suppression events. |
+| **timing** | Prints `RXPP-DIAG` elapsed decimal seconds for pass 1, pass 2, pass 3, output/linker handling, and the complete RXPP invocation. |
 
-If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
+Flags are matched as exact words. There is no general `n`-prefix negation
+mechanism. The negative-looking names `ndef`, `nset`, and `nosrcmap` have
+specific implementations; `niflink`, `nvars`, and `nmaclist` simply leave the
+corresponding positive flag absent and do not actively negate anything.
+
+`macrotrace`, `iftrace`, `includetrace`, and `timing` are compile-time
+diagnostics. They write to RXPP's diagnostic output only and do not change the
+generated CREXX source or its runtime behavior.
+
+`def`, `set`, `n1buf`, `n2buf`, `n3buf`, and `n4buf` are not independent enable/disable
+pairs. In particular, `def` and `set` are not required to activate the
+behaviour controlled by `ndef` and `nset`, and `buf` is not a recognized flag.
+`n4buf` is enabled by default; add `4buf` when the post-format buffer should
+be displayed. The `format` flag is independent of `4buf` and controls whether
+the formatter runs at all. Source-map control lines are preserved at column 1.
 
 **Example:**
 ```rexx
-##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage compiler flags */
+##cflags ndef nset niflink n1buf 2buf 3buf nvars nmaclist includes nosrcmap nmaclog
 ```
 
 

@@ -6,6 +6,10 @@ RXPP is a **source-to-source pre-compiler** for CREXX (levelb) Rexx programs. It
 
 RXPP is intended for developers who want to structure larger Rexx programs cleanly while keeping the runtime environment simple and transparent.
 
+For a focused introduction to creating and using RXPP macros, see the
+[RXPP Macro User's Guide](rxpp-macro-users-guide.md). This document remains
+the broader guide to RXPP preprocessing features.
+
 ---
 
 ## 2. Basic Usage and Workflow
@@ -1043,9 +1047,11 @@ Example:
 ##CFLAG dotisstem parse iflink
 ```
 
-Notable flag:
+Notable flags:
 
 - `dotisstem`: **By default, RXPP requires at least two tail segments to recognize a stem**, else it is interpreted as a CREXX array. Setting `dotisstem` relaxes that rule so a single tail can be treated as a stem.
+- `format`: Applies the indentation-only formatter to the final generated CREXX source before it is written. It is opt-in and does not change the default output path.
+- `4buf`: Prints the final buffer after optional formatting and before writing. `n4buf` is enabled by default, so this report is silent unless `4buf` is specified.
 
 ### `##DATA name [callback]` and `##END`
 
