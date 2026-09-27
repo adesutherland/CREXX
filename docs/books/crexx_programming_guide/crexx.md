@@ -75,6 +75,11 @@ normally interpret.
 `-nocompile`
 : Skip the `rxc` and `rxas` phases and reuse an existing `<stem>.rxbin`.
 
+`-lock-timeout seconds`
+: Wait for another ordinary `crexx` invocation using the same output stem.
+The default is 300 seconds; `0` reports contention immediately and `-1`
+waits without a deadline. An inaccessible lock path fails immediately.
+
 `-native`
 : Compile to a native executable; default `--nonative`. This produces an executable file for the current operating system and instruction set architecture. The native route now links the compiled program with `rxlink` before `rxcpack` generates C source.
 
@@ -115,6 +120,18 @@ final link.
 
 `-nokeep`
 : Delete compile/link intermediates after the run.
+
+Ordinary source invocations coordinate through persistent adjacent
+`<stem>.crexx-driver.lock` files. The driver locks all requested output stems
+in a fixed order before preprocessing or compilation, and holds the locks
+through execution and `-nokeep` cleanup. This means two `crexx` processes
+using the same output wait rather than loading an unfinished image. A long
+running program also keeps its output lock until it finishes. The OS releases
+the lock if the process exits; the lock file itself remains and must not be
+removed while drivers may use that output. The coordination is between `crexx`
+driver invocations; direct `rxc`, `rxas`, `rxlink`, or external writers do not
+participate. The separate `-program` and `-library` build modes have their own
+publication lifecycle and are outside this ordinary-output lock contract.
 
 `-decimal`
 : Use decimal arithmetic where the driver has to choose arithmetic mode.

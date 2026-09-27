@@ -140,6 +140,7 @@ typedef struct rxfs_guard {
     rxfs_session *owner;
     size_t refs;
     int status;
+    int busy;
 #ifdef _WIN32
     HANDLE handle;
 #else
@@ -236,6 +237,10 @@ PROCEDURE(make_guard) {
                 guard->handle = CreateFileW(path, GENERIC_READ | GENERIC_WRITE | (lease ? DELETE : 0),
                     lease ? FILE_SHARE_DELETE : 0, NULL, lease ? OPEN_EXISTING : OPEN_ALWAYS,
                     FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+                if (guard->handle == INVALID_HANDLE_VALUE) {
+                    DWORD error = GetLastError();
+                    guard->busy = error == ERROR_SHARING_VIOLATION || error == ERROR_LOCK_VIOLATION;
+                }
                 if (guard->handle != INVALID_HANDLE_VALUE) {
                     BY_HANDLE_FILE_INFORMATION info;
                     if (!GetFileInformationByHandle(guard->handle, &info) ||
@@ -251,7 +256,10 @@ PROCEDURE(make_guard) {
     guard->handle = open(GETSTRING(ARG0), O_RDWR | O_NOFOLLOW | (lease ? 0 : O_CREAT), 0600);
     if (guard->handle >= 0) {
         struct stat info;
-        if (fstat(guard->handle, &info) || !S_ISREG(info.st_mode) || flock(guard->handle, LOCK_EX | LOCK_NB)) {
+        if (fstat(guard->handle, &info) || !S_ISREG(info.st_mode)) {
+            close(guard->handle); guard->handle = -1;
+        } else if (flock(guard->handle, LOCK_EX | LOCK_NB)) {
+            guard->busy = errno == EWOULDBLOCK || errno == EAGAIN;
             close(guard->handle); guard->handle = -1;
         }
     }
@@ -275,6 +283,11 @@ METHODPROCEDURE(guard_status) {
     rxfs_guard *guard = rxfs_guard_resource(ARG0);
     if (!guard || guard->owner != rxfs_current) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "Invalid RXFS.FILEGUARD owner") }
     RETURNINT(guard->status); RESETSIGNAL
+}
+METHODPROCEDURE(guard_busy) {
+    rxfs_guard *guard = rxfs_guard_resource(ARG0);
+    if (!guard || guard->owner != rxfs_current) { RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "Invalid RXFS.FILEGUARD owner") }
+    RETURNINT(guard->busy); RESETSIGNAL
 }
 METHODPROCEDURE(guard_close) {
     rxfs_guard *guard = rxfs_guard_resource(ARG0);

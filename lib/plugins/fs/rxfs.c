@@ -322,6 +322,7 @@ LOADFUNCS
     ADDFACTORYPROC(make_guard, "rxfs.fileguard", ".rxfs..fileguard", "path=.string,mode=.string");
     ADDMETHODPROC(guard_held, "rxfs.fileguard", "held", ".int", "");
     ADDMETHODPROC(guard_status, "rxfs.fileguard", "status", ".int", "");
+    ADDMETHODPROC(guard_busy, "rxfs.fileguard", "busy", ".int", "");
     ADDMETHODPROC(guard_close, "rxfs.fileguard", "close", ".int", "");
     ADDPROC(cwd, "rxfs.cwd", "b", ".string", "");
     ADDPROC(loadpath, "rxfs.loadpath", "b", ".string", "");

@@ -53,7 +53,9 @@ The native `fileguard(path, mode)` factory takes an explicit mode and never wait
   or loaded images prevent acquisition. On Unix it is a cooperative `flock`
   and does **not** exclude unrelated readers or running programs.
 
-`held()` returns 1 while the OS handle is held. `status()` returns 0 after
+`held()` returns 1 while the OS handle is held. `busy()` returns 1 when
+acquisition failed because another process holds an incompatible handle, and
+0 for successful acquisition or other failures. `status()` returns 0 after
 successful acquisition/close or -8 on acquisition/I/O failure. Failed
 acquisition still returns an initialized object. `close()` is idempotent and
 returns 0 or -8. Invalid modes raise `INVALID_ARGUMENTS`.

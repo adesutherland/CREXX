@@ -597,6 +597,24 @@ set_tests_properties(crexx_process_runtime PROPERTIES
     RUN_SERIAL TRUE
     TIMEOUT 600)
 
+# Measured as a standalone aggregate in normal Debug and macOS ASan before
+# registration. Its deliberate process contention must not compete with other
+# compiler or VM aggregates in the broad pool.
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+add_test(NAME crexx_driver_output_lock
+    COMMAND "${Python3_EXECUTABLE}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/crexx_driver_output_lock.py"
+        --crexx "$<TARGET_FILE:crexx>"
+        --rxvme "$<TARGET_FILE:rxvme>"
+        --work "${CMAKE_CURRENT_BINARY_DIR}/crexx_driver_output_lock_ws")
+set_tests_properties(crexx_driver_output_lock PROPERTIES
+    LABELS "driver;concurrency;regression"
+    CREXX_PREP_TARGETS "crexx;rxpp;rxvme"
+    RUN_SERIAL TRUE
+    TIMEOUT 240)
+crexx_label_smoke_tests(crexx_driver_output_lock
+    PREP_TARGETS crexx rxpp rxvme)
+
 add_executable(project_failure_helper project_failure_helper.c)
 set(issue701_diagnostic_command ${CMAKE_COMMAND}
         -DCREXX=$<TARGET_FILE:crexx>

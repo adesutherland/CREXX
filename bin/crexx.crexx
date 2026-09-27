@@ -46,6 +46,7 @@
  options levelb comments_dash
  import rxfnsb
  import rxfs
+ import rxplatform
  import concurrency
  import rxhash
  import crexx_build_worker
@@ -62,6 +63,8 @@ lastfile=0;sourceRoots='';binaryRoots='';importRxas=0;argsStart=0
 linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
 diagnosticsMode='';diagnosticLocale=''
 projectMode='';projectOutput='';projectJobs='auto';projectRebuild=0
+lockTimeoutSeconds=300;lockTimeoutUsed=0
+lockIndex=.int;lockPath=.string;outputGuard=.rxfs..fileguard
 filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  esc             = '1b'X
@@ -206,6 +209,24 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 if fn.i = '-rebuild' then projectRebuild=1
 	 if fn.i = '-keep'       then keep=1
 	 if fn.i = '-nokeep'     then keep=0
+	 if fn.i = '-lock-timeout' then do
+           lockTimeoutUsed = 1
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing seconds after --lock-timeout'
+             return 2
+           end
+           do
+             lockTimeoutSeconds = fn.i as .int
+           on signal
+             say 'invalid --lock-timeout value:' fn.i
+             return 2
+           end
+           if lockTimeoutSeconds < -1 | lockTimeoutSeconds > 86400 then do
+             say '--lock-timeout must be -1 or 0 through 86400 seconds'
+             return 2
+           end
+         end
 	 if fn.i = '-nodecimal'  then decimal=0
 	 if fn.i = '-decimal'    then decimal=1
 	 if fn.i = '-import-rxas' then importRxas=1
@@ -440,6 +461,10 @@ if linkOptionsUsed & \native then do
 end
 
 if projectMode <> '' then do
+  if lockTimeoutUsed then do
+    say '--lock-timeout applies to ordinary source invocations, not --library or --program'
+    return 2
+  end
   if argsStart > 0 then do
     say '--args is not available with --library or --program'
     return 2
@@ -455,6 +480,43 @@ if projectMode <> '' then do
   projectBinaryRoots = rxpath || lpath
   if binaryRoots <> '' then projectBinaryRoots = projectBinaryRoots || ';' || binaryRoots
   return buildProject(projectMode, projectOutput, filenames, projectJobs, projectRebuild, optimize, native, sourceRoots, projectBinaryRoots, binaryRoots, libs, userLibs, importRxas, diagnosticsMode, diagnosticLocale, rxpath, dirsep, platformUpper)
+end
+
+/* Ordinary source builds publish adjacent artifacts. Acquire every output
+ * guard before starting RXPP/rxc, in path order so overlapping multi-source
+ * invocations cannot deadlock. Keep them through VM execution and cleanup. */
+lockPaths = .string[]
+do lockIndex = 1 to filenames[0]
+  lockStem = driverOutputStem(filenames[lockIndex], rxfs..cwd(), dirsep)
+  if lockStem = '' then return 2
+  lockPath = lockStem || '.crexx-driver.lock'
+  if platformUpper = 'WINDOWS' then lockPath = upper(lockPath)
+  call appendArrayUnique lockPaths, lockPath
+end
+ignored = arraysort(lockPaths)
+outputGuards = .rxfs..fileguard[]
+do lockIndex = 1 to lockPaths[0]
+  lockPath = lockPaths[lockIndex]
+  lockStarted = rxplatform..uptime()
+  waitingReported = 0
+  do
+    outputGuard = .rxfs..fileguard(lockPath, 'exclusive')
+    if outputGuard.held() then leave
+    if \outputGuard.busy() then do
+      call emitStderr 'crexx: cannot acquire output lock: ' || lockPath
+      return 2
+    end
+    if lockTimeoutSeconds >= 0 & rxplatform..uptime() - lockStarted >= lockTimeoutSeconds then do
+      call emitStderr 'crexx: timed out waiting for output lock: ' || lockPath
+      return 2
+    end
+    if \waitingReported then do
+      call emitStderr 'crexx: waiting for output lock: ' || lockPath
+      waitingReported = 1
+    end
+    ignored = rxplatform..sleep(50)
+  end
+  outputGuards[lockIndex] = outputGuard
 end
 
 /* Output Arrays for command output */
@@ -903,8 +965,40 @@ end   -- do i
   /* now determine if the compile/link intermediates need to be deleted */
   delrc = .int
   if \keep & native=0 then delrc = deleteFiles(cleanupFiles,verbose)
+
+  do lockIndex = outputGuards[0] to 1 by -1
+    outputGuard = outputGuards[lockIndex]
+    if outputGuard.close() <> 0 then do
+      call emitStderr 'crexx: cannot release output lock: ' || lockPaths[lockIndex]
+      return 2
+    end
+  end
   
 return 0
+
+driverOutputStem: procedure = .string
+arg source = .string, cwd = .string, dirsep = .string
+filename = source
+if lower(right(filename,5)) = '.rxpp' then do
+  dotpos = lastpos('.',filename)
+  sourceStem = left(filename,dotpos-1)
+  buildDir = readRxppBuildDir(filename,cwd,dirsep,0)
+  if buildDir <> '' then do
+    if projectMakeDirectory(buildDir) <> 0 then do
+      call emitStderr 'crexx: cannot prepare RXPP build directory: ' || buildDir
+      return ''
+    end
+    sourceLeaf = sourceStem
+    sourceSlash = max(lastpos('/',sourceLeaf),lastpos('\\',sourceLeaf))
+    if sourceSlash > 0 then sourceLeaf = substr(sourceLeaf,sourceSlash+1)
+    filename = buildDir || dirsep || sourceLeaf
+  end
+  else filename = sourceStem
+end
+if lower(right(filename,6)) = '.crexx' then filename = substr(filename,1,length(filename)-6)
+if lower(right(filename,5)) = '.rexx' then filename = substr(filename,1,length(filename)-5)
+if lower(right(filename,7)) = '.bcrexx' then filename = substr(filename,1,length(filename)-7)
+return rxfs..abspath(chop_suffix(filename))
 
 projectFileHash: procedure = .string
 arg path = .string
@@ -1620,6 +1714,7 @@ say '-exec              -- execute the compiled rxbin (default)'
 say '-noexec            -- compile only; do not execute with rxvme'
 say '-compile           -- enable compilation to rxbin (default)'
 say '-nocompile         -- skip rxc/rxas and reuse an existing .rxbin'
+say '-lock-timeout SEC  -- wait up to SEC for ordinary output locks (default 300; -1 unlimited; 0 no wait)'
 say '-native            -- package a native executable from the compiled program'
 say '-nonative          -- disable native packaging (default)'
 say '-library output    -- incrementally build explicit sources into output.rxbin'
@@ -2158,7 +2253,7 @@ return 0
  * ---------------------------------------------------------------------
  */
 readRxppBuildDir: procedure = .string
-arg file = .string, cwd = .string, dirsep = .string
+arg file = .string, cwd = .string, dirsep = .string, announce = 1
 buildDir = ''
 lineCount = 0
 do while lineCount < 64 & lines(file)
@@ -2168,7 +2263,7 @@ do while lineCount < 64 & lines(file)
     requested = strip(subword(line,2))
     if requested <> '' then do
        buildDir = normalisePath(cwd, requested)
-       say 'CRX0172I Resolved build directory: 'buildDir
+       if announce then say 'CRX0172I Resolved build directory: 'buildDir
     end
   end
 end

@@ -32,7 +32,7 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 non-overwriting `copy`/`hardlink`/`move`, and the C-bound `.rxfs..fileguard(path,
 mode)` owner. Modes are explicit `exclusive` (nonblocking lock-file acquisition)
 and `lease` (existing-file write/delete sharing on Windows; cooperative flock on
-Unix). Use `held()`, `status()` and explicit idempotent `close()`; copies share
+Unix). Use `held()`, `busy()`, `status()` and explicit idempotent `close()`; copies share
 the resource, and last-value/VM teardown finalizes it. Lexical scope exit is not
 a promise of immediate finalization. Guards are VM-local and cannot be worker
 message handles. Reuse these main-library facilities in tools instead of adding
