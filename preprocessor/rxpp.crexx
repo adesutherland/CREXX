@@ -1465,7 +1465,6 @@ CMD_dalias: procedure
       dalias= dalias '<##'upper(word(line,i))'>'
    end
 
-      say 12345 dalias
 return
 /* ------------------------------------------------------------------
  * Load macro names from PATH, Content will loaded if used

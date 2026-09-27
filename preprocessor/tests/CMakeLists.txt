@@ -28,6 +28,25 @@ add_test(NAME rxpp_srcmap
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_srcmap.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+# Measured separately in Debug and macOS ASan before registration. Each mode
+# runs RXPP, the compiler, assembler and VM, so isolate its inner deadline.
+foreach(_rxpp_dalias_mode IN ITEMS opt noopt)
+    add_test(NAME rxpp_dalias_${_rxpp_dalias_mode}
+        COMMAND ${CMAKE_COMMAND}
+            -DCREXX_BIN=$<TARGET_FILE:crexx>
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_dalias_${_rxpp_dalias_mode}
+            -DMODE=${_rxpp_dalias_mode}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_dalias.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxpp_dalias_${_rxpp_dalias_mode} PROPERTIES
+        LABELS "preprocessor;data;regression"
+        CREXX_PREP_TARGETS "crexx;rxpp"
+        RUN_SERIAL TRUE
+        TIMEOUT 180)
+    crexx_label_smoke_tests(rxpp_dalias_${_rxpp_dalias_mode}
+        PREP_TARGETS crexx rxpp)
+endforeach()
+
 add_test(NAME rxpp_relative_include
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
