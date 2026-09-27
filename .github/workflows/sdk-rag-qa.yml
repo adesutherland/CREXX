@@ -29,7 +29,7 @@ jobs:
             toolchain: msvc
             backend: vulkan
     env:
-      CREXX_COMMIT: afb59547a3cbf2aa3ec74ae3006e0bdbdfea857a
+      CREXX_COMMIT: 02d1fc3812628706741e5e084eec0a3bed6615d7
       RAG_COMMIT: 186c729e1f8e10f53528fee0c3de289017ec29c5
       RELEASE_PLATFORM: ${{ matrix.platform }}
       RELEASE_BACKEND: ${{ matrix.backend }}
