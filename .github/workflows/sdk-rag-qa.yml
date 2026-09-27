@@ -90,7 +90,7 @@ jobs:
           build_jobs=$(python -c 'import os; print(min(4, os.cpu_count() or 2))')
           cmake -S rag -B "$RUNNER_TEMP/rag-build" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$prefix" \
-            -DCREXX_DIR="$prefix/lib/cmake/CREXX" \
+            -DCREXX_DIR:PATH="$prefix/lib/cmake/CREXX" \
             -DCREXXRAG_BUILD_TESTS=OFF -DCREXXRAG_REXX_BUILD_JOBS="$build_jobs"
           python - "$RUNNER_TEMP/rag-build/CMakeCache.txt" "$prefix/lib/cmake/CREXX" <<'PY'
           from pathlib import Path
