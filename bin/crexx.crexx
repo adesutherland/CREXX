@@ -65,6 +65,7 @@ diagnosticsMode='';diagnosticLocale=''
 projectMode='';projectOutput='';projectJobs='auto';projectRebuild=0
 lockTimeoutSeconds=300;lockTimeoutUsed=0
 lockIndex=.int;lockPath=.string;outputGuard=.rxfs..fileguard
+diagnosticIndex=.int
 filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  esc             = '1b'X
@@ -679,7 +680,15 @@ do i=.int(1) to filenames[0]
     call appendArrayValue asmArgs, binfile
     asmcmd = renderCommand(asmArgs, platformUpper)
     address crexx "run :asmArgs[]" output out error err
-    if RC<>0 then say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
+    if RC<>0 then do
+      say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
+      do diagnosticIndex = 1 to out[0]
+        call emitStderr out[diagnosticIndex]
+      end
+      do diagnosticIndex = 1 to err[0]
+        call emitStderr err[diagnosticIndex]
+      end
+    end
     if verbose then do
       if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
       res = .string
@@ -964,7 +973,9 @@ end   -- do i
 
   /* now determine if the compile/link intermediates need to be deleted */
   delrc = .int
-  if \keep & native=0 then delrc = deleteFiles(cleanupFiles,verbose)
+  if \keep & native=0 then do
+    delrc = deleteFiles(cleanupFiles,verbose,1)
+  end
 
   do lockIndex = outputGuards[0] to 1 by -1
     outputGuard = outputGuards[lockIndex]
@@ -973,6 +984,7 @@ end   -- do i
       return 2
     end
   end
+  if delrc <> 0 then return delrc
   
 return 0
 
@@ -1814,11 +1826,25 @@ call lineout toread
  * @return .int
  */
 deleteFiles: procedure = .int
-arg filenames = .string[], verbosity = .int
+arg filenames = .string[], verbosity = .int, requireGone = 0
 loop i=1 to filenames[0]
   filename = filenames[i]
   if verbosity > 2 then say 'deleting' filename
-  rc = delete(filename)
+  retries = 0
+  removed = 0
+  do while \removed
+    rc = delete(filename)
+    if \requireGone then removed = 1
+    else if (rc = 0 | rc = -4) & rxfs..pathkind(filename) = 0 then removed = 1
+    else do
+      if retries >= 200 then do
+        call emitStderr 'crexx: cannot remove output after execution: ' || filename
+        return 2
+      end
+      retries = retries + 1
+      ignored = rxplatform..sleep(50)
+    end
+  end
 end
 return 0
 
