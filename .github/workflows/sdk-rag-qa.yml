@@ -1,0 +1,144 @@
+name: Exact SDK downstream RAG QA
+
+on:
+  push:
+    branches: ['temp/sdk-rag-qa']
+
+permissions:
+  contents: read
+
+jobs:
+  rag:
+    name: RAG ${{ matrix.platform }} from published SDK
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-arm64
+            os: macos-15
+            toolchain: clang
+            backend: metal
+          - platform: macos-x86_64
+            os: macos-15-intel
+            toolchain: clang
+            backend: cpu
+          - platform: windows-x64
+            os: windows-2025
+            toolchain: msvc
+            backend: vulkan
+    env:
+      CREXX_COMMIT: 835059062e6c5e271c1f9c0a188f5d98e2f59816
+      RAG_COMMIT: 186c729e1f8e10f53528fee0c3de289017ec29c5
+      RELEASE_PLATFORM: ${{ matrix.platform }}
+      RELEASE_BACKEND: ${{ matrix.backend }}
+      RELEASE_TOOLCHAIN: ${{ matrix.toolchain }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: adesutherland/crexx-rag
+          ref: 186c729e1f8e10f53528fee0c3de289017ec29c5
+          path: rag
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
+          toolset: '14.44'
+      - name: Install Windows installer tooling
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nsis --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS installation failed' }
+          Add-Content $env:GITHUB_PATH "${env:ProgramFiles(x86)}\NSIS"
+      - name: Download exact SDK and matching llama release archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/sdk-download"
+          gh release view dev-snapshot -R adesutherland/CREXX --json assets \
+            > "$RUNNER_TEMP/sdk-download/release-assets.json"
+          gh release download dev-snapshot -R adesutherland/CREXX \
+            --pattern "CREXX-sdk-${CREXX_COMMIT}-${RELEASE_PLATFORM}.zip" \
+            --dir "$RUNNER_TEMP/sdk-download"
+          gh release download dev-snapshot -R adesutherland/CREXX \
+            --pattern "llama.rexx-dev-snapshot-${RELEASE_PLATFORM}-${RELEASE_BACKEND}.zip" \
+            --dir "$RUNNER_TEMP/sdk-download"
+          python scripts/verify-sdk-overlay.py \
+            --sdk "$RUNNER_TEMP/sdk-download/CREXX-sdk-${CREXX_COMMIT}-${RELEASE_PLATFORM}.zip" \
+            --llama "$RUNNER_TEMP/sdk-download/llama.rexx-dev-snapshot-${RELEASE_PLATFORM}-${RELEASE_BACKEND}.zip" \
+            --assets-json "$RUNNER_TEMP/sdk-download/release-assets.json" \
+            --output "$RUNNER_TEMP/sdk consumer with spaces" \
+            --commit "$CREXX_COMMIT" --platform "$RELEASE_PLATFORM" \
+            --toolchain "$RELEASE_TOOLCHAIN" --backend "$RELEASE_BACKEND"
+      - name: Configure and build RAG using the downloaded SDK
+        run: |
+          set -euo pipefail
+          prefix="$RUNNER_TEMP/sdk consumer with spaces/sdk/CREXX-sdk-${RELEASE_PLATFORM}"
+          build_jobs=$(python -c 'import os; print(min(4, os.cpu_count() or 2))')
+          cmake -S rag -B "$RUNNER_TEMP/rag-build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$prefix" \
+            -DCREXX_DIR="$prefix/lib/cmake/CREXX" \
+            -DCREXXRAG_BUILD_TESTS=OFF -DCREXXRAG_REXX_BUILD_JOBS="$build_jobs"
+          python - "$RUNNER_TEMP/rag-build/CMakeCache.txt" "$prefix/lib/cmake/CREXX" <<'PY'
+          from pathlib import Path
+          import sys
+          lines = Path(sys.argv[1]).read_text().splitlines()
+          entries = [line.split('=', 1)[1] for line in lines if line.startswith('CREXX_DIR:PATH=')]
+          if len(entries) != 1 or Path(entries[0]).resolve() != Path(sys.argv[2]).resolve():
+              raise SystemExit('RAG CMake resolved CREXX outside the downloaded SDK')
+          PY
+          cmake --build "$RUNNER_TEMP/rag-build" --parallel "$build_jobs"
+          cmake --install "$RUNNER_TEMP/rag-build" --prefix "$RUNNER_TEMP/rag-payload"
+          cp "$prefix/LICENSE" "$RUNNER_TEMP/rag-payload/CREXX-LICENSE"
+      - name: Package and smoke RAG ZIP and installer
+        run: |
+          set -euo pipefail
+          python rag/scripts/release/package.py package \
+            --prefix "$RUNNER_TEMP/rag-payload" \
+            --output "$RUNNER_TEMP/release-assets" \
+            --version 0.1.0-dev.sdkqa --commit "$RAG_COMMIT" \
+            --crexx-commit "$CREXX_COMMIT" --platform "$RELEASE_PLATFORM"
+          for archive in "$RUNNER_TEMP/release-assets/"*.zip; do
+            python rag/scripts/release/smoke.py --archive "$archive"
+          done
+      - name: Check Windows install, reinstall, PATH and safe uninstall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = @(Get-ChildItem "$env:RUNNER_TEMP/release-assets/*-setup.exe")
+          if ($installer.Count -ne 1) { throw 'Expected one Windows installer' }
+          & ./rag/scripts/release/test-windows-installer.ps1 -Installer $installer[0].FullName
+      - name: Install and smoke macOS package
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          for installer in "$RUNNER_TEMP/release-assets/"*.pkg; do
+            sudo installer -pkg "$installer" -target /
+          done
+          test -L /usr/local/bin/crexxrag
+          python rag/scripts/release/smoke.py --prefix /usr/local/lib/crexxrag
+      - name: Retain downstream receipts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdk-rag-${{ matrix.platform }}-${{ env.CREXX_COMMIT }}
+          path: |
+            ${{ runner.temp }}/sdk consumer with spaces/receipt.json
+            ${{ runner.temp }}/rag-build/crexxrag-native/package/native-build.txt
+            ${{ runner.temp }}/rag-build/CMakeCache.txt
+            ${{ runner.temp }}/release-assets/*
+          if-no-files-found: ignore
+          retention-days: 14
