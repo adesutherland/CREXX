@@ -119,7 +119,8 @@ final link.
 : Keep compile/link intermediates (default).
 
 `-nokeep`
-: Delete compile/link intermediates after the run.
+: Delete compile/link intermediates after the run. The driver waits for their
+removal before releasing the output lock and reports a cleanup failure.
 
 Ordinary source invocations coordinate through persistent adjacent
 `<stem>.crexx-driver.lock` files. The driver locks all requested output stems
