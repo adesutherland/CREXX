@@ -173,7 +173,7 @@ jobs:
         shell: bash
         run: |
           cmake --build "${{ runner.temp }}/build" \
-            --target stage-product stage-optional \
+            --target stage-product stage-optional sqlite sqlite_static vector vector_static \
             --parallel ${{ matrix.build_jobs }}
 
       - name: Run fast candidate QA
@@ -190,7 +190,7 @@ jobs:
         run: |
           cmake -S . -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
-          cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional --parallel ${{ matrix.build_jobs }}
+          cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional sqlite sqlite_static vector vector_static --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target qa-smoke --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
@@ -459,6 +459,33 @@ jobs:
             --toolchain "${{ matrix.toolchain }}" --preferred-vm "${{ matrix.preferred_vm }}" \
             --commit "${{ needs.version.outputs.commit }}"
 
+      - name: Package and smoke the installed SDK ZIP
+        if: matrix.core_platform == 'windows-x64' || matrix.core_platform == 'macos-arm64' || matrix.core_platform == 'macos-x86_64'
+        shell: bash
+        run: |
+          python scripts/package-sdk-release.py --build "${{ runner.temp }}/build" \
+            --core "${{ runner.temp }}/core-package/extracted/CREXX-${{ matrix.core_platform }}" \
+            --output "${{ runner.temp }}/sdk-package" --platform "${{ matrix.core_platform }}" \
+            --toolchain "${{ matrix.toolchain }}" --commit "${{ needs.version.outputs.commit }}"
+
+      - name: Retain SDK QA evidence
+        if: always() && (matrix.core_platform == 'windows-x64' || matrix.core_platform == 'macos-arm64' || matrix.core_platform == 'macos-x86_64')
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdk-qa-${{ matrix.core_platform }}-${{ needs.version.outputs.commit }}
+          path: ${{ runner.temp }}/sdk-package/qa
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload qualified SDK for exact-revision consumers
+        if: matrix.core_platform == 'windows-x64' || matrix.core_platform == 'macos-arm64' || matrix.core_platform == 'macos-x86_64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdk-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}
+          path: ${{ runner.temp }}/sdk-package/assets/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Retain core QA evidence
         if: always()
         uses: actions/upload-artifact@v7
@@ -509,6 +536,14 @@ jobs:
           mkdir -p "$asset_dir"
           cp "${{ runner.temp }}/core-package/assets/CREXX-user-test-${{ needs.version.outputs.commit }}-${suffix}.zip" "$asset_dir/$asset"
           echo "CREXX_RELEASE_ASSET=$asset_dir/$asset" >> "$GITHUB_ENV"
+
+      - name: Add exact-revision SDK snapshot asset
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && (matrix.core_platform == 'windows-x64' || matrix.core_platform == 'macos-arm64' || matrix.core_platform == 'macos-x86_64')
+        shell: bash
+        run: |
+          mkdir -p "${{ runner.temp }}/release-assets"
+          cp "${{ runner.temp }}/sdk-package/assets/CREXX-sdk-${{ needs.version.outputs.commit }}-${{ matrix.core_platform }}.zip" \
+             "${{ runner.temp }}/release-assets/"
 
       - name: Package release asset
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'windows'
@@ -1640,7 +1675,7 @@ jobs:
           mkdir -p "$asset_dir"
 
           find "$download_dir" \
-            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' \) \
+            \( -name 'llama.rexx-dev-snapshot-*.zip' -o -name 'llama.rexx-dev-snapshot-*.pkg' -o -name 'llama.rexx-dev-snapshot-*-unsigned-setup.exe' -o -name 'CREXX-dev-snapshot-*.zip' -o -name 'CREXX-dev-snapshot-*.deb' -o -name 'CREXX-dev-snapshot-*.pkg' -o -name 'CREXX-dev-snapshot-*.exe' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) \
             -type f -exec cp {} "$asset_dir/" \;
 
           expected_assets=(
@@ -1655,6 +1690,9 @@ jobs:
             llama.rexx-dev-snapshot-windows-x64-vulkan-unsigned-setup.exe
             CREXX-dev-snapshot-macos-arm64.zip
             CREXX-dev-snapshot-macos-x86_64.zip
+            "CREXX-sdk-${GITHUB_SHA}-windows-x64.zip"
+            "CREXX-sdk-${GITHUB_SHA}-macos-arm64.zip"
+            "CREXX-sdk-${GITHUB_SHA}-macos-x86_64.zip"
           )
 
           pkg_count="$(find "$asset_dir" -maxdepth 1 -name 'CREXX-dev-snapshot-macos-*.pkg' -type f | wc -l | tr -d ' ')"
@@ -1679,7 +1717,7 @@ jobs:
             fi
           done
 
-          asset_count="$(find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name 'llama.rexx-dev-snapshot-*' \) -type f | wc -l | tr -d ' ')"
+          asset_count="$(find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name 'llama.rexx-dev-snapshot-*' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" \) -type f | wc -l | tr -d ' ')"
           if [ "$asset_count" != "${#expected_assets[@]}" ]; then
             echo "Expected ${#expected_assets[@]} dev snapshot assets, found $asset_count" >&2
             find "$asset_dir" -maxdepth 1 -type f -print >&2
@@ -1709,6 +1747,7 @@ jobs:
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
             echo "Core downloads contain cREXX. For local inference, add the matching llama.rexx platform/backend ZIP and download a supported model separately. One MSVC Windows core supports either Vulkan or CUDA. MinGW is a core quality gate only."
+            echo "Exact-revision installed SDK ZIPs are available as \`CREXX-sdk-${GITHUB_SHA}-{windows-x64,macos-arm64,macos-x86_64}.zip\`. Verify the SHA-256 digest below before use. The separate llama runtime overlay must come from the same source revision and its backend must be qualified by the downstream application."
             echo
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
             echo "Windows testers: use \`CREXX-dev-snapshot-windows-x64-unsigned-setup.exe\` for installation, or \`CREXX-dev-snapshot-windows-x64.zip\` as the portable archive. Both are built automatically from commit \`${short_sha}\`. Unsigned applications may show Windows security warnings or be blocked by policy."
@@ -1720,7 +1759,7 @@ jobs:
             echo '### Automatic asset SHA-256 checksums'
             echo
             echo '```text'
-            (cd "${{ runner.temp }}/dev-snapshot-assets" && sha256sum CREXX-dev-snapshot-* llama.rexx-dev-snapshot-*)
+            (cd "${{ runner.temp }}/dev-snapshot-assets" && sha256sum CREXX-dev-snapshot-* "CREXX-sdk-${GITHUB_SHA}-"*.zip llama.rexx-dev-snapshot-*)
             echo '```'
           } > "$notes_file"
 
@@ -1780,7 +1819,7 @@ jobs:
               gh release view "$SNAPSHOT_TAG" \
                 -R "$GITHUB_REPOSITORY" \
                 --json assets \
-                --jq '.assets[] | select(.name | (startswith("CREXX-dev-snapshot-") or startswith("llama.rexx-dev-snapshot-")) and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
+                --jq '.assets[] | select(.name | (startswith("CREXX-dev-snapshot-") or startswith("CREXX-sdk-") or startswith("llama.rexx-dev-snapshot-")) and (endswith(".tmp.zip") or endswith(".tmp.deb") or endswith(".tmp.pkg") or endswith(".tmp.exe") or endswith(".tmp.json"))) | .apiUrl' |
                 sed 's#^https://api.github.com/##'
             )
           }
@@ -1807,7 +1846,7 @@ jobs:
           }
 
           mapfile -t expected_assets < <(
-            find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name 'llama.rexx-dev-snapshot-*' \) -type f -exec basename {} \; |
+            find "$asset_dir" -maxdepth 1 \( -name 'CREXX-dev-snapshot-*' -o -name "CREXX-sdk-${GITHUB_SHA}-*.zip" -o -name 'llama.rexx-dev-snapshot-*' \) -type f -exec basename {} \; |
               sort
           )
           if [ "${#expected_assets[@]}" -eq 0 ]; then

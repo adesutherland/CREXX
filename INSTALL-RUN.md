@@ -5,6 +5,8 @@ These instructions are for binary packages downloaded from the
 Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
 pre-release is a moving interim build from the `develop` branch; its assets are
 replaced by the next successful `develop` build.
+The exact-revision SDK ZIPs described below retain the source SHA in their
+names and are kept as separate assets so a downstream build can pin them.
 
 ZIP packages expand to a platform directory such as `CREXX-linux-x64`,
 `CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`. macOS
@@ -17,6 +19,39 @@ file, and a small `examples/` directory.
 `VERSION` contains the exact build identity reported by the packaged tools.
 `BUILDINFO` includes the base version, build channel, timestamp, and source
 commit used to produce the package.
+
+## Installed SDK snapshots
+
+For downstream native builds on Windows x64, macOS arm64 or macOS x86_64,
+download `CREXX-sdk-<full-source-SHA>-<platform>.zip` from the Dev Snapshot
+release. Pin the full SHA and the asset SHA-256 printed in that release's
+checksum block; fail the download if either differs. Do not substitute the
+moving `CREXX-dev-snapshot-<platform>.zip` runtime archive for an SDK. The
+SDK ZIP contains the normal CMake install, public RXPA headers, runtime and
+native toolchain, SQLite and vector dynamic and static providers, and
+`sdk-package.json` with hashes for its extracted files. `BUILDINFO`,
+`core-package.json` and `sdk-package.json` must identify the pinned source
+revision and platform.
+
+Extract the ZIP into a private directory, then point CMake at its extracted
+`CREXX-sdk-<platform>` prefix, for example:
+
+```sh
+cmake -S my-application -B my-application-build \
+  -DCMAKE_PREFIX_PATH="/path with spaces/CREXX-sdk-macos-arm64"
+```
+
+The archive is checked during packaging after relocation into a path with
+spaces: `find_package(CREXX CONFIG REQUIRED)` must resolve its installed
+exports, and a native consumer must use the installed SQLite and vector
+static providers. The SDK ZIP itself is llama-free. An application requiring
+llama.rexx must separately overlay the `bin/` and `share/` contents of the
+matching `llama.rexx` archive into this SDK prefix. Check the add-on's
+`llama-package.json` source SHA, platform, toolchain and backend against the
+SDK identity and verify both archive digests before overlay. On Apple Silicon
+the qualified RAG control uses Metal; on Intel macOS it uses CPU. A Windows
+Vulkan-labelled add-on also contains CPU support, but downstream CPU use
+requires its own qualification; the label alone is not that proof.
 
 The next inference-enabled delivery is being qualified as a small core download
 plus a separate optional `llama.rexx` plugin download. The core works on its own.
