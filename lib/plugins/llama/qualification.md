@@ -103,15 +103,20 @@ check above does not supply trained-model evidence. Windows ARM and other
 combinations are not implied by another cell's result. Unavailable agreed hardware cells remain open for an explicit
 disposition; no documentation claim silently removes them from acceptance.
 
+The model names in the table below identify retained reference evidence, not
+an exclusive list of models accepted by the general profiles. Admission of a
+compatible GGUF is separate from qualification of that artifact, preparation,
+backend and device.
+
 | Capability | Current contract |
 | --- | --- |
 | In-process hosting | Packaged llama.cpp/GGML; no separate inference server or runtime CLI. Models provisioned separately. |
 | Automatic hardware use | Select one eligible packaged GPU within budget, otherwise CPU; explicit overrides and required-GPU errors. |
 | Persistent processing | Explicit model load and context preparation; repeated bounded batches retain state/resources. |
 | Shared weights | Compatible owners in one process share immutable weights; contexts and request state stay private. Local 1/2/4-owner evidence. |
-| Embeddings | BGE-small EN v1.5 F16, CLS/L2, 384 dimensions, query/document preparation, packed output. |
-| Generation | SmolLM2 360M Q8_0, independent system/user prompts, greedy decoding, bounded incremental complete UTF-8 and explicit finishes. |
-| Other models/samplers | Other model artifacts are rejected by the profile/hash allowlist, including alternative quantizations. Only greedy sampling is accepted. See [models](models.md). |
+| Embeddings | Retained reference evidence uses BGE-small EN v1.5 F16, CLS/L2, 384 dimensions, query/document preparation and packed output. The general `embedding` profile admits compatible GGUFs with explicit preparation and model-derived dimensions. |
+| Generation | Retained reference evidence uses SmolLM2 360M Q8_0, independent system/user prompts, greedy decoding, bounded incremental complete UTF-8 and explicit finishes. The general `generation` profile admits compatible GGUFs with a supported chat template or explicit raw mode. |
+| Other models/samplers | General profiles admit compatible local GGUFs and supported quantizations subject to engine and geometry checks. Exact reference presets retain their model-hash and preparation checks. Only greedy sampling is accepted. See [models](models.md). |
 | Multi-GPU placement / cross-process model registry | Not implemented by this contract; single device and in-process sharing only. |
 | Automatic model downloads / conversation history / RAG index management | Application/provisioning responsibilities. |
 
